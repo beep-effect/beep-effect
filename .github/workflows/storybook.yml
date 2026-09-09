@@ -89,7 +89,14 @@ jobs:
 
       - name: Install Playwright Chromium
         if: steps.lane-gate.outputs.should_run == 'true'
-        run: bunx playwright install --with-deps chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Playwright downloads its own Chromium. The hosted image's unused
+          # Chrome feed can break apt update with inconsistent package hashes.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome*.list \
+            /etc/apt/sources.list.d/google-chrome*.sources
+          bunx playwright install --with-deps chromium
 
       - name: Save Playwright Chromium cache
         if: steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push' && steps.playwright-cache-restore.outputs.cache-hit != 'true'

@@ -2,6 +2,25 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — An unused Chrome package feed blocked Storybook twice
+
+- What: final hosted proof for the lean runner-image PR #1062.
+- Evidence: Storybook run `34383237868`, attempts 1 and 2, failed at
+  `Install Playwright Chromium` before the build. APT reported `Hash Sum
+  mismatch` for Google's `chrome-stable/deb` package index. A bounded retry
+  reproduced the same expected and received digest mismatch.
+- Attribution: an external feed on the GitHub-hosted Ubuntu image, separate
+  from the EC2 image change. Playwright installs its own browser; its system
+  dependency installation does not need Google's Chrome package feed.
+- Repair: remove only Chrome feed definitions from the disposable runner
+  before the existing `playwright install --with-deps chromium` command.
+  Keep dependency installation and package integrity verification enabled.
+  GitHub's own [image installer](https://github.com/actions/runner-images/blob/main/images/ubuntu/scripts/build/install-google-chrome.sh)
+  already removes the older Chrome list name; cover current Chrome-prefixed
+  `.list` and `.sources` definitions in this workflow as well.
+- Prevention: scope job package sources to the dependencies the job needs,
+  and require a successful hosted rerun before closing the incident.
+
 ## 2026-09-09 — A fresh image passed integrity but regressed setup time
 
 - What: comparing the existing image with a fresh Bun 1.4.2 image before
