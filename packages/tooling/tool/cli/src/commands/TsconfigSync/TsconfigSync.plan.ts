@@ -42,6 +42,7 @@ import {
   byPlannedChangeAscending,
   byStringAscending,
   byWorkspaceRelativeDirAscending,
+  CHECK_TSCONFIG_FILENAME,
   DOCGEN_CONFIG_FILENAME,
   isBeepScopedPackageName,
   isCanonicalAliasKey,
@@ -309,6 +310,9 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
         })
       )
     );
+    const hasCheckTsconfig = yield* fs
+      .exists(path.join(absoluteDir, CHECK_TSCONFIG_FILENAME))
+      .pipe(Effect.orElseSucceed(thunkFalse));
     const hasDocgenConfig = yield* fs
       .exists(path.join(absoluteDir, DOCGEN_CONFIG_FILENAME))
       .pipe(Effect.orElseSucceed(thunkFalse));
@@ -362,6 +366,7 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
         relativeDir,
         ownerTsconfigPath,
         hasProjectTsconfig,
+        hasCheckTsconfig,
         hasDocgenConfig,
         ...aliasTargetFields,
       })
@@ -991,6 +996,100 @@ const planPackageReferenceSync = Effect.fn(function* (
   return plannedChanges;
 });
 
+// The check overlay extends `./tsconfig.json`, but `references` is not
+// inherited through `extends`: an overlay with `"references": []` typechecks
+// every upstream package from source, while one that carries the canonical
+// references consumes their built declarations (quality-lane audit D3). The
+// planner therefore copies the canonical reference list verbatim, reading it
+// from the content planned for `tsconfig.json` in this run when there is one
+// so a single sync leaves both files in agreement.
+const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
+  workspace: WorkspaceDescriptor,
+  plannedCanonicalContent: HashMap.HashMap<string, string>
+) {
+  if (!workspace.hasCheckTsconfig || !workspace.hasProjectTsconfig) {
+    return O.none<PlannedFileChange>();
+  }
+
+  const path = yield* Path.Path;
+  const canonicalPath = path.join(workspace.absoluteDir, "tsconfig.json");
+  const overlayPath = path.join(workspace.absoluteDir, CHECK_TSCONFIG_FILENAME);
+
+  const canonicalContent = yield* pipe(
+    HashMap.get(plannedCanonicalContent, canonicalPath),
+    O.match({ onNone: () => readFileString(canonicalPath), onSome: Effect.succeed })
+  );
+  const canonical = yield* parseJsonc(canonicalContent, canonicalPath, TsconfigWithReferences);
+  const expected = compareReferencePathsInOrder(canonical);
+
+  const original = yield* readFileString(overlayPath);
+  const overlay = yield* parseJsonc(original, overlayPath, TsconfigWithReferences);
+  const current = compareReferencePathsInOrder(overlay);
+  if (arraysEqual(current, expected)) {
+    return O.none<PlannedFileChange>();
+  }
+
+  const nextContent = applyJsoncModification(original, ["references"], referenceEntries(expected));
+  if (Str.equivalence(nextContent, original)) {
+    return O.none<PlannedFileChange>();
+  }
+
+  return O.some(
+    PlannedFileChange.cases["package-check-references"].make({
+      filePath: overlayPath,
+      summary: summaryCounts(current, expected, "references"),
+      content: nextContent,
+    })
+  );
+});
+
+/**
+ * Plan per-package `tsconfig.check.json` reference edits so every check
+ * overlay carries exactly the references of its canonical `tsconfig.json`.
+ *
+ * **Details**
+ *
+ * `plannedCanonicalContent` maps a canonical `tsconfig.json` path to the
+ * content another planner already scheduled for it in this run; the overlay
+ * is planned against that content instead of the file on disk so one sync
+ * never leaves the overlay one run behind its canonical project.
+ *
+ * **Example** (Plan tsconfig synchronization)
+ *
+ * ```ts
+ * import { planPackageCheckReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect, HashMap } from "effect"
+ *
+ * const program = planPackageCheckReferenceSync("/repo", [], undefined, HashMap.empty())
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param rootDir - Absolute repository root.
+ * @param workspaces - Every discovered workspace descriptor.
+ * @param filter - Optional workspace name or relative path that narrows the planned packages.
+ * @param plannedCanonicalContent - Canonical `tsconfig.json` content already planned by this run, by absolute path.
+ * @returns One planned change per overlay whose references drift from its canonical project.
+ * @category utilities
+ * @since 0.0.0
+ */
+const planPackageCheckReferenceSync = Effect.fn(function* (
+  rootDir: string,
+  workspaces: ReadonlyArray<WorkspaceDescriptor>,
+  filter: string | undefined,
+  plannedCanonicalContent: HashMap.HashMap<string, string>
+) {
+  const targetWorkspaces = yield* resolveTargetWorkspacesForPackageSync(workspaces, filter);
+  const plannedChanges = A.empty<PlannedFileChange>();
+
+  for (const workspace of targetWorkspaces) {
+    const change = yield* planOnePackageCheckReferenceSync(workspace, plannedCanonicalContent);
+    pipe(change, O.match({ onNone: thunkUndefined, onSome: (planned) => A.appendInPlace(plannedChanges, planned) }));
+  }
+
+  yield* Effect.annotateCurrentSpan("tsconfig-sync.check-overlays.root", rootDir);
+  return plannedChanges;
+});
+
 /**
  * Plan package docgen config edits.
  *
@@ -1099,6 +1198,8 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
       TsconfigSyncChange.cases["root-syncpack"].make({ filePath, summary }),
     "package-references": ({ filePath, summary }): TsconfigSyncChange =>
       TsconfigSyncChange.cases["package-references"].make({ filePath, summary }),
+    "package-check-references": ({ filePath, summary }): TsconfigSyncChange =>
+      TsconfigSyncChange.cases["package-check-references"].make({ filePath, summary }),
     "package-docgen": ({ filePath, summary }): TsconfigSyncChange =>
       TsconfigSyncChange.cases["package-docgen"].make({ filePath, summary }),
   });
@@ -1120,6 +1221,7 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
 export const TsconfigSyncPlan = {
   buildAdjacency,
   buildWorkspaceDescriptors,
+  planPackageCheckReferenceSync,
   planPackageDocgenSync,
   planPackageReferenceSync,
   planRootAliasSync,

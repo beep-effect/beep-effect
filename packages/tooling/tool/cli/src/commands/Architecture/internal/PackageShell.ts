@@ -279,8 +279,6 @@ const packageShellCheckTsconfigContent = (): string => `{
     "declarationMap": false,
     "incremental": false,
     "noEmit": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "rootDir": "../../.."
   }
 }

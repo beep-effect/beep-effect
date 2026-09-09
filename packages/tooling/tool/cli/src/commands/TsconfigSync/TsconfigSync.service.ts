@@ -7,7 +7,7 @@
 
 import { buildRepoDependencyIndex, detectCycles } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Effect } from "effect";
+import { Effect, HashMap } from "effect";
 import { dual } from "effect/Function";
 import { TsconfigSyncCycleError, TsconfigSyncDriftError } from "./TsconfigSync.errors.ts";
 import { TsconfigSyncPlan } from "./TsconfigSync.plan.ts";
@@ -22,6 +22,7 @@ import type { PlannedFileChange, TsconfigSyncRunOptions } from "./TsconfigSync.s
 const {
   buildAdjacency,
   buildWorkspaceDescriptors,
+  planPackageCheckReferenceSync,
   planPackageDocgenSync,
   planPackageReferenceSync,
   planRootAliasSync,
@@ -55,7 +56,7 @@ export type TsconfigSyncError =
   | TsconfigSyncDriftError
   | TsconfigSyncFilterError;
 /**
- * Synchronize tsconfig references and root aliases under a specific repository root.
+ * Synchronize tsconfig references, check-overlay references, and root aliases under a specific repository root.
  *
  * **Example** (Run the tsconfig-sync service)
  *
@@ -126,6 +127,19 @@ export const syncTsconfigAtRoot: {
       options.verbose
     );
     A.appendAllInPlace(plannedChanges, packageChanges);
+
+    // Overlays are planned against the canonical content scheduled above so a
+    // single sync never leaves tsconfig.check.json one run behind tsconfig.json.
+    const plannedCanonicalContent = HashMap.fromIterable(
+      A.map(packageChanges, (change) => [change.filePath, change.content] as const)
+    );
+    const checkOverlayChanges = yield* planPackageCheckReferenceSync(
+      rootDir,
+      workspaces,
+      options.filter,
+      plannedCanonicalContent
+    );
+    A.appendAllInPlace(plannedChanges, checkOverlayChanges);
 
     const docgenChanges = yield* planPackageDocgenSync(rootDir, workspaces, options.filter);
     A.appendAllInPlace(plannedChanges, docgenChanges);
