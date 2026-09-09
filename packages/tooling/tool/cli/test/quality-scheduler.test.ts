@@ -834,7 +834,10 @@ describe("quality-scheduler", () => {
       // A genuine platform failure from the same layer stands in for a removal
       // the operating system refuses.
       const refusal = yield* fs.readFileString(`${directory}/missing`).pipe(Effect.flip);
-      const fileSystem = FileSystem.FileSystem.of({ ...fs, remove: () => Effect.fail(refusal) });
+      const fileSystem = FileSystem.FileSystem.of({
+        ...fs,
+        remove: Effect.fn("FileSystem.FileSystem.remove")(() => Effect.fail(refusal)),
+      });
 
       const created = yield* tryCreateExclusiveForTesting(filePath, "replacement").pipe(
         Effect.provideService(FileSystem.FileSystem, fileSystem)
