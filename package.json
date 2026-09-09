@@ -348,7 +348,7 @@
     "audit:full": "bun run audit:fresh && bun run audit:github quality",
     "audit:github": "beep-cli audit github",
     "beep": "bun run packages/tooling/tool/cli/src/bin.ts --",
-    "beep:preflight": "bun run beep tsconfig-sync && bun run fallow:boundaries:write && bun run beep quality jsdoc-inventory && bun run beep lint schema-first --write && bun run beep lint package-scripts --write && bun run beep lint policy-fingerprint --write && bun run beep quality test-tsgo && bun run beep ci lane repo-sanity && bun run beep ci lane jsdoc-ratchet && bun run beep ci lane knip && bun run beep lint policy",
+    "beep:preflight": "bun run beep tsconfig-sync && bun run fallow:boundaries:write && bun run beep quality jsdoc-inventory --ci-output-json .beep/ci/jsdoc-documentation.inventory.jsonc --ci-output-markdown .beep/ci/jsdoc-documentation.inventory.md && bun run beep lint schema-first --write && bun run beep lint package-scripts --write && bun run beep lint policy-fingerprint --write && bun run beep quality test-tsgo && bun run beep ci lane repo-sanity && bun run beep ci lane jsdoc-ratchet --inventory .beep/ci/jsdoc-documentation.inventory.jsonc && bun run beep ci lane knip && bun run beep lint policy",
     "build": "beep-cli build",
     "changeset": "changeset",
     "changeset:status": "bun run beep quality changeset-status",
