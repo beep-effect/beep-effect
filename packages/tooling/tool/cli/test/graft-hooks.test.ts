@@ -1,11 +1,22 @@
 import { fileURLToPath } from "node:url";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
 
 const helpers = fileURLToPath(new URL("../../../../../.claude/helpers/", import.meta.url));
+
+const WiringStamp = S.Struct({
+  version: S.String,
+  hosts: S.Array(S.String),
+  opts: S.optional(S.Struct({ global: S.Boolean, mcp: S.Boolean, hooks: S.Boolean, statusline: S.Boolean })),
+  at: S.String,
+});
+const decodeWiringStamp = S.decodeUnknownEffect(S.fromJsonString(WiringStamp));
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const makeFixture = Effect.fn("GraftHooksTest.makeFixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -211,6 +222,54 @@ layer(NodeServices.layer)("Graft hook installation trust", (it) => {
       expect(
         yield* runNode(fixture.project, fixture.bin, ["-e", program, fixture.pkg, `${helpers}graft-loader.cjs`])
       ).toBe("null\nnull\n");
+    })
+  );
+
+  it.effect("records the running Graft version in the wiring stamp before the entry runs", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeFixture();
+      // The entry prints the stamp it can read at call time, so the first assertion
+      // proves the guard ran before Graft's own code, the ordering upkeep depends on.
+      yield* fs.writeFileString(
+        path.join(fixture.pkg, "dist", "claude", "hooks.js"),
+        [
+          'import { readFileSync } from "node:fs";',
+          "export const main = (event) =>",
+          '  console.log(event + ":" + JSON.parse(readFileSync(process.env.CLAUDE_PROJECT_DIR + "/graft/.cache/wiring-stamp.json", "utf8")).version);',
+          "",
+        ].join("\n")
+      );
+      const stampPath = path.join(fixture.project, "graft", ".cache", "wiring-stamp.json");
+      const readStamp = Effect.flatMap(fs.readFileString(stampPath), decodeWiringStamp);
+      const runHook = runNode(fixture.project, fixture.bin, [`${helpers}graft-hooks.cjs`, "session-start"]);
+      expect(yield* fs.exists(stampPath)).toBe(false);
+      expect(yield* runHook).toBe("session-start:0.16.0\n");
+      const written = yield* readStamp;
+      expect(written).toMatchObject({
+        version: "0.16.0",
+        hosts: ["claude"],
+        opts: { global: false, mcp: false, hooks: true, statusline: true },
+      });
+      expect(typeof written.at).toBe("string");
+
+      // A stamp from another Graft version is replaced; a current one is left untouched.
+      yield* fs.writeFileString(stampPath, encodeJson({ version: "0.1.0", hosts: ["claude"], at: "stale" }));
+      expect(yield* runHook).toBe("session-start:0.16.0\n");
+      expect((yield* readStamp).at).not.toBe("stale");
+      yield* fs.writeFileString(stampPath, encodeJson({ version: "0.16.0", hosts: ["claude"], at: "current" }));
+      expect(yield* runHook).toBe("session-start:0.16.0\n");
+      expect((yield* readStamp).at).toBe("current");
+
+      // Host detection matches what Graft reads off disk, so a refresh could never
+      // widen the host set on its own.
+      yield* fs.writeFileString(path.join(fixture.project, "AGENTS.md"), "# agents\n");
+      yield* fs.makeDirectory(path.join(fixture.project, ".grok", "skills", "graft"), { recursive: true });
+      yield* fs.writeFileString(path.join(fixture.project, ".grok", "skills", "graft", "SKILL.md"), "# graft\n");
+      yield* fs.remove(stampPath);
+      expect(yield* runHook).toBe("session-start:0.16.0\n");
+      expect((yield* readStamp).hosts).toEqual(["agents", "claude", "grok"]);
     })
   );
 });

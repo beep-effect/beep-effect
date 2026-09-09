@@ -7,9 +7,16 @@ come from local configuration changes even when the committed source is correct.
 The repository owns `.claude/helpers/graft-hooks.cjs`,
 `.claude/helpers/graft-statusline.cjs`, and their settings. Both shims delegate
 to [graft-loader.cjs](../../.claude/helpers/graft-loader.cjs), which resolves a
-trusted installation from `PATH`. Graft initialization can replace these shims
-with generated loaders that contain an installation path and project fallbacks.
-It can also broaden the command permissions in `.claude/settings.json`.
+trusted installation from `PATH` and, before any Graft code runs, records the
+running version in the wiring stamp inside the git-ignored Graft cache. That
+stamp is what Graft's session upkeep consults; without it, every fresh checkout and every upgrade
+would have its tracked wiring rewritten on the first session. Graft
+initialization can still replace these shims with generated loaders that
+contain an installation path and project fallbacks, and it can broaden the
+command permissions in `.claude/settings.json`, which is why `graft init`,
+`graft uninstall`, and `graft upgrade` are denied in the checked-in policy.
+There is no Graft MCP server in this repository; the CLI and the skill are the
+integration (decision log, 2026-09-09).
 
 ## Keep the existing integration
 
@@ -130,19 +137,34 @@ been reviewed.
 
 ## Verify the repair
 
-Repeat the configuration and hook checks above for quick feedback. Then run the
-complete commands from the affected checkout:
+A drift repair restores already-committed files, so the two focused checks are
+the proof; the full lint, check, and coverage lanes are for source changes and
+run hosted:
 
 ```sh
-bun run lint
-bun run check
-bun run coverage
+bun run --cwd packages/tooling/library/ai-sync ai-sync check
+bun run --cwd packages/tooling/tool/cli test -- test/graft-hooks.test.ts
+git diff --exit-code HEAD -- .claude/settings.json .claude/helpers .mcp.json AGENTS.md .ignore
 ```
-
-Require a successful exit from each command. The root check includes additional
-TypeScript rule, test, and smoke checks after Turbo finishes. Coverage must also
-finish its regression check after the test shards pass.
 
 A local repair that restores already-correct committed files does not require
 a source PR. If a failure also reproduces from a clean current base, attribute
 it and use the [Yeet workflow](../../.claude/skills/yeet/SKILL.md) for the source fix.
+
+## After a Graft upgrade
+
+The installed package is pinned under the user-local prefix, off any Node
+version manager tree, and `graft telemetry disable` has been run once on the
+workstation:
+
+```sh
+npm install -g --prefix "$HOME/.local" @nanonets/graft@0.16.0
+graft --version
+```
+ The workstation also carries a local patch to the installed
+`dist/context/build.js` that checkpoints the synthesis cache after every batch
+(the original is kept beside it as `build.js.orig-<version>`); a reinstall or
+upgrade removes it, so re-apply it before the next deep build. The loader's
+stamp guard keeps upkeep quiet across upgrades, so an upgrade needs no
+`graft init`: run `graft --version`, re-apply the patch, and run the two
+focused checks above.
