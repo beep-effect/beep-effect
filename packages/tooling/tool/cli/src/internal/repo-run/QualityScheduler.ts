@@ -647,8 +647,10 @@ const tryCreateExclusive = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { writeFileAtomicForTesting } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
  *
  * const publication = writeFileAtomicForTesting("/repo/state.json", "{}")
+ * console.log(Effect.isEffect(publication)) // true
  * ```
  *
  * @param filePath - Destination replaced atomically once the content is staged.
@@ -666,8 +668,10 @@ export const writeFileAtomicForTesting = writeFileAtomic;
  *
  * ```ts
  * import { tryCreateExclusiveForTesting } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
  *
  * const publication = tryCreateExclusiveForTesting("/repo/existing", "replacement")
+ * console.log(Effect.isEffect(publication)) // true
  * ```
  *
  * @param filePath - Destination that must not already exist.
