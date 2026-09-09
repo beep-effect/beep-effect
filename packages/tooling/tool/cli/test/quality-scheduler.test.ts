@@ -2928,16 +2928,20 @@ describe("quality-scheduler", () => {
               )
             );
 
-            yield* Effect.sleep("100 millis");
+            // Loaded runners can enqueue and stamp the contender later than a fixed
+            // sleep allows, so poll for the ticket and then for its origin stamp.
+            const currentName = yield* Effect.repeat(
+              listDirectory(tempRoot.queue).pipe(Effect.map(A.findFirst((name) => !Str.startsWith("legacy-")(name)))),
+              { until: O.isSome, schedule: Schedule.spaced(Duration.millis(10)) }
+            ).pipe(Effect.timeout(Duration.seconds(5)), Effect.map(O.getOrThrow));
+            const currentTicket = yield* Effect.repeat(
+              fs.readFileString(path.join(tempRoot.queue, currentName)).pipe(Effect.flatMap(decodeTicket)),
+              {
+                until: (ticket) => ticket.blockedOnOriginAtMillis > 0,
+                schedule: Schedule.spaced(Duration.millis(10)),
+              }
+            ).pipe(Effect.timeout(Duration.seconds(5)));
             expect(current.pollUnsafe()).toBeUndefined();
-            const currentName = pipe(
-              yield* listDirectory(tempRoot.queue),
-              A.findFirst((name) => !Str.startsWith("legacy-")(name)),
-              O.getOrThrow
-            );
-            const currentTicket = yield* fs
-              .readFileString(path.join(tempRoot.queue, currentName))
-              .pipe(Effect.flatMap(decodeTicket));
             expect(currentTicket.coordinationProtocol).toBe("scheduler-origin-concurrency/v1");
             expect(currentTicket.blockedOnOriginAtMillis).toBeGreaterThan(0);
 
@@ -2965,8 +2969,10 @@ describe("quality-scheduler", () => {
               )
             );
 
-            yield* Effect.sleep("80 millis");
-            const currentName = pipe(yield* listDirectory(tempRoot.queue), A.head, O.getOrThrow);
+            const currentName = yield* Effect.repeat(listDirectory(tempRoot.queue).pipe(Effect.map(A.head)), {
+              until: O.isSome,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)), Effect.map(O.getOrThrow));
             const currentPath = path.join(tempRoot.queue, currentName);
             const firstCurrent = yield* fs.readFileString(currentPath).pipe(Effect.flatMap(decodeTicket));
             expect(firstCurrent.coordinationProtocol).toBe("scheduler-origin-concurrency/v1");
