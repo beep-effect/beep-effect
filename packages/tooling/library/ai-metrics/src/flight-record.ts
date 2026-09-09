@@ -493,7 +493,7 @@ const FlightRecordMechanicalArbitrary = Arbitrary.schema(S.Struct(FlightRecordMe
  * console.log(Arbitrary.sampleEffect(FlightRecordCompositionInputArbitrary, { count: 3 }))
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const FlightRecordCompositionInputArbitrary = Arbitrary.all([

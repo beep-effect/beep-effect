@@ -1,4 +1,3 @@
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Contradiction-candidate value objects.
  *
@@ -24,6 +23,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Confidence } from "../EvidenceSpan/index.ts";
 import { canonicalJson } from "../internal/CanonicalJson.ts";
 import { LogicalEdgeKey } from "../LogicalEdgeIdentity/index.ts";
@@ -1527,7 +1527,7 @@ export const contradictionCandidateDigest = (
  * const sample = Arbitrary.sampleEffect(ContradictionBeliefPairArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const ContradictionBeliefPairArbitrary = Arbitrary.schema(ContradictionBeliefPairStruct).pipe(
@@ -1547,7 +1547,7 @@ export const ContradictionBeliefPairArbitrary = Arbitrary.schema(ContradictionBe
  * const sample = Arbitrary.sampleEffect(CanonicalContradictionBeliefPairArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const CanonicalContradictionBeliefPairArbitrary = ContradictionBeliefPairArbitrary.pipe(
@@ -1570,7 +1570,7 @@ export const CanonicalContradictionBeliefPairArbitrary = ContradictionBeliefPair
  * const sample = Arbitrary.sampleEffect(ContradictionMatchBasisArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const ContradictionMatchBasisArbitrary = Arbitrary.all({
@@ -1613,7 +1613,7 @@ export const ContradictionMatchBasisArbitrary = Arbitrary.all({
  * const sample = Arbitrary.sampleEffect(ContradictionResolutionProposalArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const ContradictionResolutionProposalArbitrary = Arbitrary.schema(ContradictionResolutionProposalStruct).pipe(
@@ -1637,7 +1637,7 @@ export const ContradictionResolutionProposalArbitrary = Arbitrary.schema(Contrad
  * const sample = Arbitrary.sampleEffect(ContradictionAssessmentArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const ContradictionAssessmentArbitrary = Arbitrary.all({
@@ -1661,7 +1661,7 @@ export const ContradictionAssessmentArbitrary = Arbitrary.all({
  * const sample = Arbitrary.sampleEffect(ContradictionCandidateContentArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const ContradictionCandidateContentArbitrary = Arbitrary.all({

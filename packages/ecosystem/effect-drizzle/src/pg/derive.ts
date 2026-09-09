@@ -1,4 +1,3 @@
-import { tag as matchTag } from "effect/Match";
 /**
  * Column derivation for bare schema fields.
  *
@@ -40,7 +39,7 @@ import {
 } from "effect/Array";
 import { equals } from "effect/Equal";
 import { dual, flow } from "effect/Function";
-import { orElse as matchOrElse, type as matchType, withReturnType } from "effect/Match";
+import { orElse as matchOrElse, tag as matchTag, type as matchType, withReturnType } from "effect/Match";
 import { fromUndefinedOr, getOrElse, map as mapOption, none, some as someOption } from "effect/Option";
 import { hasProperty, isBigInt, isBoolean, isNumber, isString, isTagged, not } from "effect/Predicate";
 import { isSchema } from "effect/Schema";

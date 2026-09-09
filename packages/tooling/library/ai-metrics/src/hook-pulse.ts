@@ -980,7 +980,7 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
  * console.log(Arbitrary.sampleEffect(HookPulseV1Arbitrary, { count: 3 }))
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const HookPulseV1Arbitrary = Arbitrary.schema(S.Struct(HookPulseV1.fields)).pipe(

@@ -1,4 +1,3 @@
-import { tag as matchTag } from "effect/Match";
 /**
  * SQLite storage-class descriptors and their colocated Drizzle compilers.
  *
@@ -12,7 +11,13 @@ import { append, contains, empty, isArray, isReadonlyArrayNonEmpty, some as some
 import { taggedEnum } from "effect/Data";
 import { equals } from "effect/Equal";
 import { dual } from "effect/Function";
-import { orElse as matchOrElse, type as matchType, when as matchWhen, withReturnType } from "effect/Match";
+import {
+  orElse as matchOrElse,
+  tag as matchTag,
+  type as matchType,
+  when as matchWhen,
+  withReturnType,
+} from "effect/Match";
 import { none, some } from "effect/Option";
 import { hasProperty, isBoolean, isNumber, isString, Struct as StructPredicate } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";

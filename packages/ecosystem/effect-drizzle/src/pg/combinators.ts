@@ -1,4 +1,3 @@
-import { tag as matchTag } from "effect/Match";
 /**
  * Postgres combinators.
  *
@@ -31,6 +30,7 @@ import { constFalse, constTrue } from "effect/Function";
 import {
   exhaustive,
   orElse as matchOrElse,
+  tag as matchTag,
   type as matchType,
   value as matchValue,
   when as matchWhen,

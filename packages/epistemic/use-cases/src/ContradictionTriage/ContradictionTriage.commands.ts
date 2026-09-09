@@ -478,7 +478,7 @@ export class ReviewContradictionCandidate extends S.Class<ReviewContradictionCan
  * const sample = Arbitrary.sampleEffect(SubmitContradictionCandidateArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const SubmitContradictionCandidateArbitrary = Arbitrary.all({

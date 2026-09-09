@@ -592,7 +592,7 @@ export const ContradictionRpcs = RpcGroup.make(
  * const sample = Arbitrary.sampleEffect(EvidenceSourceHighlightArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const EvidenceSourceHighlightArbitrary = Arbitrary.schema(
@@ -623,7 +623,7 @@ export const EvidenceSourceHighlightArbitrary = Arbitrary.schema(
  * const sample = Arbitrary.sampleEffect(EvidenceSourcePageArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const EvidenceSourcePageArbitrary = Arbitrary.all({

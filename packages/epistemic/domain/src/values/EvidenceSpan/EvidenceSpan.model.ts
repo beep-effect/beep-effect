@@ -215,7 +215,7 @@ export const isEvidenceSpanInternallyConsistent = EvidenceSpan.isInternallyConsi
  * const sample = Arbitrary.sampleEffect(EvidenceSpanArbitrary, { count: 1 })
  * ```
  *
- * @category arbitraries
+ * @category testing
  * @since 0.0.0
  */
 export const EvidenceSpanArbitrary = Arbitrary.schema(
