@@ -1,0 +1,509 @@
+{
+  "schemaVersion": "cache-runtime-partition-observation/v1",
+  "authority": "Bounded native experiment: hash the effective installed tree using the existing inspector inside the read-only namespace, replace the installed-tree member of the reviewed toolchain and compute the complete toolchain digest with the existing fingerprint function, then provide that digest as a declared task environment input. The base retained tree and observed host toolchain are verified before and after. No live activation, production entrypoint enforcement or full qualification authority.",
+  "sourceRevision": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/installed-launcher-activation-preview.json",
+    "sha256": "f14d924d04b823b9a251010e2eae89aa3a89330406ac138dbbb1a16803248ee7"
+  },
+  "baseDependencyTreeSha256": "1d6688b88253605123970d0b4a9051431996c7a7fa70957f10c4c077da6636e6",
+  "lockfileSha256": "769ec9946aeb49d5e581acac05677086d2627b03bab8b3a119a5210cc50e8f25",
+  "tools": {
+    "bun": {
+      "version": "1.4.2",
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+    },
+    "node": {
+      "version": "v24.20.0",
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    }
+  },
+  "clients": [
+    {
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-runtime-key-stable-v1"
+      }
+    },
+    {
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-runtime-key-canary-v1"
+      }
+    }
+  ],
+  "observer": {
+    "path": ".beep/qualification-local-preflight/probe-installed-partition-v3.py",
+    "sha256": "428a9b0a208fb5e8106ffc952893cbd929b9d4055e74f6df16636d1233fd2823"
+  },
+  "keyObserver": {
+    "path": ".beep/qualification-local-preflight/installed-partition-v3/key.ts",
+    "sha256": "1987ad25ec0cae4b70c7b9a6d521980d0368ad9f13048963a1e5667f144d2ae8"
+  },
+  "viewObserver": {
+    "path": ".beep/qualification-local-preflight/installed-partition-v3/view.ts",
+    "sha256": "ad7cba76ae9d041f9f0be7f155bc00c878b389d0b751734519ff19908eb7dab2"
+  },
+  "records": [
+    {
+      "channel": "stable",
+      "mode": "producer",
+      "runtimeKeyValue": "499162307f8d13f28d7fe7f79375a9072132cddd9d30cd881d4be6b66313ccf7",
+      "runtimeKeyObservationSha256": "cc62f9253da2c6aac7e885e8a5afb754d1022d10df69cbf10bf9bfe44240ab20",
+      "effectiveDependencyTreeSha256": "07b3df5e50708501e5b29990388a302b916536428e9407a5930d0172586f902a",
+      "dependencyTreeObservationSha256": "27b4cac430d45a46e1b5227f210e96b90d98d5b8b7f7aa23f3c641138b06e137",
+      "runtimeEnvironmentNames": [
+        "BEEP_CACHE_TOOLCHAIN_DIGEST"
+      ],
+      "configurationSha256": "14bd39016684859c1f0fe8ba499377fd0f73fab97f76734e19942bdedcdc52c4",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "6a3169cb0d19e34ac3f13515cbee0db52da517f20388f701fd244cc4b06f45f4"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "1e21a4a366d76aea2e0fed80726a6c0e2cf669d37bb3732b0900436e3122b79c"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 0,
+      "taskHash": "3b65b4acba7ac637",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "57dbcded30e06e77415cc01015232f0ce946de8c369d696efdc87915d7dc7d5c",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "4b183c4150be3fbd2b8d92639667ee6632ac2145a3a5f184b4574b7b5e4ae43f",
+      "stdoutSha256": "783bb7c8e018e8b9966afb68bdc4a8a77ebb6de2da47e6716f5958c0246532a0",
+      "stderrSha256": "f5c075ad72344f8e7f213c5b074f163660c25c92e4c55632f06d9c698f403008",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-partition-v29swq0q/stable/producer"
+    },
+    {
+      "channel": "stable",
+      "mode": "reuse-after-deprecation",
+      "runtimeKeyValue": "750f46a98bc5540985f6d7a20ee43eec2a0578c96839ea38cbede8ceff8ae9dc",
+      "runtimeKeyObservationSha256": "c34efb8bc5d38ec2c45dfa147dc789a447ceafc17e1fb5a697389258f8d4f7ea",
+      "effectiveDependencyTreeSha256": "fa495d6613d1946130203ccc2c8266fb4581c62d3efcbe0b4cd136300b834fed",
+      "dependencyTreeObservationSha256": "6659604ae22074d35a56884d11d024b1984580ff936dfda797e0ac4b184cc003",
+      "runtimeEnvironmentNames": [
+        "BEEP_CACHE_TOOLCHAIN_DIGEST"
+      ],
+      "configurationSha256": "14bd39016684859c1f0fe8ba499377fd0f73fab97f76734e19942bdedcdc52c4",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 1,
+      "taskHash": "3d698cfaa205c0ac",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "57dbcded30e06e77415cc01015232f0ce946de8c369d696efdc87915d7dc7d5c",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "34f41ffef87125cf4a88548fb52b5ae9791c1d6061217ac2428eb113d5ca2e4d",
+      "stdoutSha256": "efe992b89a352ec24d5c3c6949cae1f24b9d54518ce640e8c3c090c837178ba9",
+      "stderrSha256": "62d5e3238a07d2523b3f401686d00271f4a1bd4a9972df48351a9943984fcd2a",
+      "taskLog": {
+        "bytes": 138,
+        "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-partition-v29swq0q/stable/reuse-after-deprecation"
+    },
+    {
+      "channel": "stable",
+      "mode": "fresh-after-deprecation",
+      "runtimeKeyValue": "750f46a98bc5540985f6d7a20ee43eec2a0578c96839ea38cbede8ceff8ae9dc",
+      "runtimeKeyObservationSha256": "c34efb8bc5d38ec2c45dfa147dc789a447ceafc17e1fb5a697389258f8d4f7ea",
+      "effectiveDependencyTreeSha256": "fa495d6613d1946130203ccc2c8266fb4581c62d3efcbe0b4cd136300b834fed",
+      "dependencyTreeObservationSha256": "6659604ae22074d35a56884d11d024b1984580ff936dfda797e0ac4b184cc003",
+      "runtimeEnvironmentNames": [
+        "BEEP_CACHE_TOOLCHAIN_DIGEST"
+      ],
+      "configurationSha256": "14bd39016684859c1f0fe8ba499377fd0f73fab97f76734e19942bdedcdc52c4",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 1,
+      "taskHash": "3d698cfaa205c0ac",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "57dbcded30e06e77415cc01015232f0ce946de8c369d696efdc87915d7dc7d5c",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "0caaad42bf471aa0312c7e2a567e595810850d903700c06e8409d206d9d92bb3",
+      "stdoutSha256": "dcc2a804ce0f79bcd0183f5c3401301d28becea21dba06378212a5d1fa06c87d",
+      "stderrSha256": "b3a9a1949fd2a978da6bb3dc764f5398dc28f6f109875eeba685dae2b857dae5",
+      "taskLog": null,
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-partition-v29swq0q/stable/fresh-after-deprecation"
+    },
+    {
+      "channel": "stable",
+      "mode": "replay-after-restoration",
+      "runtimeKeyValue": "499162307f8d13f28d7fe7f79375a9072132cddd9d30cd881d4be6b66313ccf7",
+      "runtimeKeyObservationSha256": "cc62f9253da2c6aac7e885e8a5afb754d1022d10df69cbf10bf9bfe44240ab20",
+      "effectiveDependencyTreeSha256": "07b3df5e50708501e5b29990388a302b916536428e9407a5930d0172586f902a",
+      "dependencyTreeObservationSha256": "27b4cac430d45a46e1b5227f210e96b90d98d5b8b7f7aa23f3c641138b06e137",
+      "runtimeEnvironmentNames": [
+        "BEEP_CACHE_TOOLCHAIN_DIGEST"
+      ],
+      "configurationSha256": "14bd39016684859c1f0fe8ba499377fd0f73fab97f76734e19942bdedcdc52c4",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "6a3169cb0d19e34ac3f13515cbee0db52da517f20388f701fd244cc4b06f45f4"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "1e21a4a366d76aea2e0fed80726a6c0e2cf669d37bb3732b0900436e3122b79c"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 0,
+      "taskHash": "3b65b4acba7ac637",
+      "cache": {
+        "local": true,
+        "remote": false,
+        "status": "HIT",
+        "source": "LOCAL",
+        "timeSaved": 2097,
+        "sha": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+        "dirtyHash": "a1afac16e372fc57087d65701d7c37d3f19e48e822bb0b38b63c22ac9db19d56"
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "57dbcded30e06e77415cc01015232f0ce946de8c369d696efdc87915d7dc7d5c",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "96e5c1682dc86fae2ccf7be18f5619cdbf7d9c4f076563ae285cb09c2541029d",
+      "stdoutSha256": "987a5565d244d1356cec5f1eae534267ac6e9238caa8df1087f12daeb1779db3",
+      "stderrSha256": "f5c075ad72344f8e7f213c5b074f163660c25c92e4c55632f06d9c698f403008",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-partition-v29swq0q/stable/replay-after-restoration"
+    },
+    {
+      "channel": "canary",
+      "mode": "producer",
+      "runtimeKeyValue": "499162307f8d13f28d7fe7f79375a9072132cddd9d30cd881d4be6b66313ccf7",
+      "runtimeKeyObservationSha256": "cc62f9253da2c6aac7e885e8a5afb754d1022d10df69cbf10bf9bfe44240ab20",
+      "effectiveDependencyTreeSha256": "07b3df5e50708501e5b29990388a302b916536428e9407a5930d0172586f902a",
+      "dependencyTreeObservationSha256": "27b4cac430d45a46e1b5227f210e96b90d98d5b8b7f7aa23f3c641138b06e137",
+      "runtimeEnvironmentNames": [
+        "BEEP_CACHE_TOOLCHAIN_DIGEST"
+      ],
+      "configurationSha256": "14bd39016684859c1f0fe8ba499377fd0f73fab97f76734e19942bdedcdc52c4",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "6a3169cb0d19e34ac3f13515cbee0db52da517f20388f701fd244cc4b06f45f4"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "1e21a4a366d76aea2e0fed80726a6c0e2cf669d37bb3732b0900436e3122b79c"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 0,
+      "taskHash": "3b65b4acba7ac637",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "57dbcded30e06e77415cc01015232f0ce946de8c369d696efdc87915d7dc7d5c",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "e42831b2fd00ecf82f2d79e7942ef8ab8128a8cff6bc6f3400e71e7a3c640253",
+      "stdoutSha256": "cbbfad91d4acba57f19e40b01429c4274234181276ad3f065e93b24b9cfc65a7",
+      "stderrSha256": "f5c075ad72344f8e7f213c5b074f163660c25c92e4c55632f06d9c698f403008",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-partition-v29swq0q/canary/producer"
+    },
+    {
+      "channel": "canary",
+      "mode": "reuse-after-deprecation",
+      "runtimeKeyValue": "750f46a98bc5540985f6d7a20ee43eec2a0578c96839ea38cbede8ceff8ae9dc",
+      "runtimeKeyObservationSha256": "c34efb8bc5d38ec2c45dfa147dc789a447ceafc17e1fb5a697389258f8d4f7ea",
+      "effectiveDependencyTreeSha256": "fa495d6613d1946130203ccc2c8266fb4581c62d3efcbe0b4cd136300b834fed",
+      "dependencyTreeObservationSha256": "6659604ae22074d35a56884d11d024b1984580ff936dfda797e0ac4b184cc003",
+      "runtimeEnvironmentNames": [
+        "BEEP_CACHE_TOOLCHAIN_DIGEST"
+      ],
+      "configurationSha256": "14bd39016684859c1f0fe8ba499377fd0f73fab97f76734e19942bdedcdc52c4",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 1,
+      "taskHash": "3d698cfaa205c0ac",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "57dbcded30e06e77415cc01015232f0ce946de8c369d696efdc87915d7dc7d5c",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "50328c017f23452f0ca2d0b107813954783307ec5194aba53236a5593e069520",
+      "stdoutSha256": "7f53266c2d816260c72770be13cf4acb9dd3c866262430ba515278f0cab9078f",
+      "stderrSha256": "62d5e3238a07d2523b3f401686d00271f4a1bd4a9972df48351a9943984fcd2a",
+      "taskLog": {
+        "bytes": 138,
+        "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-partition-v29swq0q/canary/reuse-after-deprecation"
+    },
+    {
+      "channel": "canary",
+      "mode": "fresh-after-deprecation",
+      "runtimeKeyValue": "750f46a98bc5540985f6d7a20ee43eec2a0578c96839ea38cbede8ceff8ae9dc",
+      "runtimeKeyObservationSha256": "c34efb8bc5d38ec2c45dfa147dc789a447ceafc17e1fb5a697389258f8d4f7ea",
+      "effectiveDependencyTreeSha256": "fa495d6613d1946130203ccc2c8266fb4581c62d3efcbe0b4cd136300b834fed",
+      "dependencyTreeObservationSha256": "6659604ae22074d35a56884d11d024b1984580ff936dfda797e0ac4b184cc003",
+      "runtimeEnvironmentNames": [
+        "BEEP_CACHE_TOOLCHAIN_DIGEST"
+      ],
+      "configurationSha256": "14bd39016684859c1f0fe8ba499377fd0f73fab97f76734e19942bdedcdc52c4",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 1,
+      "taskHash": "3d698cfaa205c0ac",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "57dbcded30e06e77415cc01015232f0ce946de8c369d696efdc87915d7dc7d5c",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "cd3c0dd0d76aa3e8a1bc9274c7a9d8ef0596ec2161b4208b68595389e034aeb3",
+      "stdoutSha256": "e0d480970d843c5e680b027b3b6c84b39c0ca848c0a8a6547588ced21a2b0195",
+      "stderrSha256": "b3a9a1949fd2a978da6bb3dc764f5398dc28f6f109875eeba685dae2b857dae5",
+      "taskLog": null,
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-partition-v29swq0q/canary/fresh-after-deprecation"
+    },
+    {
+      "channel": "canary",
+      "mode": "replay-after-restoration",
+      "runtimeKeyValue": "499162307f8d13f28d7fe7f79375a9072132cddd9d30cd881d4be6b66313ccf7",
+      "runtimeKeyObservationSha256": "cc62f9253da2c6aac7e885e8a5afb754d1022d10df69cbf10bf9bfe44240ab20",
+      "effectiveDependencyTreeSha256": "07b3df5e50708501e5b29990388a302b916536428e9407a5930d0172586f902a",
+      "dependencyTreeObservationSha256": "27b4cac430d45a46e1b5227f210e96b90d98d5b8b7f7aa23f3c641138b06e137",
+      "runtimeEnvironmentNames": [
+        "BEEP_CACHE_TOOLCHAIN_DIGEST"
+      ],
+      "configurationSha256": "14bd39016684859c1f0fe8ba499377fd0f73fab97f76734e19942bdedcdc52c4",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "6a3169cb0d19e34ac3f13515cbee0db52da517f20388f701fd244cc4b06f45f4"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "1e21a4a366d76aea2e0fed80726a6c0e2cf669d37bb3732b0900436e3122b79c"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 0,
+      "taskHash": "3b65b4acba7ac637",
+      "cache": {
+        "local": true,
+        "remote": false,
+        "status": "HIT",
+        "source": "LOCAL",
+        "timeSaved": 2143,
+        "sha": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+        "dirtyHash": "a1afac16e372fc57087d65701d7c37d3f19e48e822bb0b38b63c22ac9db19d56"
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "57dbcded30e06e77415cc01015232f0ce946de8c369d696efdc87915d7dc7d5c",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "b8f7d8fca0866b32e8a1c2293060e39ae9fb884d3bc0b2bab4b0601af50ecd7a",
+      "stdoutSha256": "79033a82af8bd4ba77849f7cc84f94e5f820c4a51cd9e33ea08ecab1475e0d4d",
+      "stderrSha256": "f5c075ad72344f8e7f213c5b074f163660c25c92e4c55632f06d9c698f403008",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-partition-v29swq0q/canary/replay-after-restoration"
+    }
+  ],
+  "checks": [
+    {
+      "channel": "stable",
+      "installedDigestChanges": true,
+      "nativeHashInvalidates": true,
+      "freshDeprecationFails": true,
+      "restoringBytesRestoresSafeReuse": true,
+      "configurationAndSelectedSourceUnchanged": true
+    },
+    {
+      "channel": "canary",
+      "installedDigestChanges": true,
+      "nativeHashInvalidates": true,
+      "freshDeprecationFails": true,
+      "restoringBytesRestoresSafeReuse": true,
+      "configurationAndSelectedSourceUnchanged": true
+    }
+  ],
+  "registeredSourceUnchanged": true,
+  "retainedDependencyOverlayTargetsUnchanged": true
+}

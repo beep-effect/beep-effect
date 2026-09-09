@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
 
 Source: [ops/manifest.json](./ops/manifest.json).
 Authored but not started. Launch begins P0; see [PLAN.md](./PLAN.md) for resume

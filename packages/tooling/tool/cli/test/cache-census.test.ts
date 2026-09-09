@@ -3,7 +3,11 @@ import {
   CacheCensusReport,
   CacheCensusSource,
   CacheCensusWorkspace,
+  CacheDependencyTree,
   CacheExecutablePin,
+  CacheLinkedFile,
+  CacheLinkerResolution,
+  CacheRuntimeLinkerSnapshot,
   CacheToolchainSnapshot,
 } from "@beep/repo-cli/commands/Cache";
 import { fingerprintCacheComputation, joinCacheCensusPlan, projectCacheActivation } from "@beep/repo-cli/test/Cache";
@@ -280,6 +284,127 @@ describe("executable cache census", () => {
 });
 
 describe("computation configuration fingerprint", () => {
+  it.effect(
+    "invalidates runtime identity for library bytes, alias targets, loader and selected client linkage",
+    Effect.fnUntraced(function* () {
+      const census = yield* fingerprintFixture();
+      const file = CacheLinkedFile.make({ path: "/usr/lib/lib.so", target: "/usr/lib/lib-v1.so", sha256: digest });
+      const dynamic = CacheLinkerResolution.cases.Dynamic.make({ files: [file] });
+      const linker = CacheRuntimeLinkerSnapshot.make({
+        format: "glibc-ldd/v1",
+        detector: CacheLinkedFile.make({ ...file, path: "/usr/bin/ldd", target: "/usr/bin/ldd" }),
+        loader: CacheLinkedFile.make({ ...file, path: "/lib64/ld.so", target: "/usr/lib/ld.so" }),
+        executables: {
+          bun: dynamic,
+          node: dynamic,
+          biome: dynamic,
+          bash: dynamic,
+          sh: dynamic,
+          turbo: CacheLinkerResolution.cases.Static.make({}),
+        },
+      });
+      const observe = Effect.fn("CacheCensusTest.observeLinker")((runtimeLinker: CacheRuntimeLinkerSnapshot) =>
+        fingerprintCacheComputation(
+          key,
+          census,
+          CacheToolchainSnapshot.make({ ...toolchain, runtimeLinker: O.some(runtimeLinker) })
+        )
+      );
+      const before = yield* observe(linker);
+      const changedFiles = [
+        CacheLinkedFile.make({ ...file, sha256: changedDigest }),
+        CacheLinkedFile.make({ ...file, target: "/usr/lib/lib-v2.so" }),
+      ];
+      const changes = [
+        ...A.map(changedFiles, (changed) =>
+          CacheRuntimeLinkerSnapshot.make({
+            ...linker,
+            executables: {
+              ...linker.executables,
+              node: CacheLinkerResolution.cases.Dynamic.make({ files: [changed] }),
+            },
+          })
+        ),
+        CacheRuntimeLinkerSnapshot.make({
+          ...linker,
+          loader: CacheLinkedFile.make({ ...linker.loader, sha256: changedDigest }),
+        }),
+        CacheRuntimeLinkerSnapshot.make({ ...linker, executables: { ...linker.executables, turbo: dynamic } }),
+      ];
+      for (const changed of changes) {
+        const after = yield* observe(changed);
+        expect(after.configurationDigest).toBe(before.configurationDigest);
+        expect(after.toolchainDigest).not.toBe(before.toolchainDigest);
+      }
+      expect((yield* fingerprintCacheComputation(key, census, toolchain)).toolchainDigest).not.toBe(
+        before.toolchainDigest
+      );
+    }, provideCrypto)
+  );
+
+  it.effect(
+    "invalidates runtime identity when dependency, helper or client bytes change",
+    Effect.fnUntraced(function* () {
+      const census = yield* fingerprintFixture();
+      const tree = CacheDependencyTree.make({
+        format: "canonical-gnu-tar/v1",
+        sha256: digest,
+        regularFiles: 1,
+        entries: 2,
+        bytes: 1,
+        links: [],
+      });
+      const first = yield* fingerprintCacheComputation(
+        key,
+        census,
+        CacheToolchainSnapshot.make({
+          ...toolchain,
+          installedDependencies: O.some(tree),
+        })
+      );
+      const second = yield* fingerprintCacheComputation(
+        key,
+        census,
+        CacheToolchainSnapshot.make({
+          ...toolchain,
+          installedDependencies: O.some(CacheDependencyTree.make({ ...tree, sha256: changedDigest })),
+        })
+      );
+      expect(first.configurationDigest).toBe(second.configurationDigest);
+      expect(first.toolchainDigest).not.toBe(second.toolchainDigest);
+      const absent = yield* fingerprintCacheComputation(key, census, toolchain);
+      expect(first.toolchainDigest).not.toBe(absent.toolchainDigest);
+      const helperBefore = yield* fingerprintCacheComputation(
+        key,
+        census,
+        CacheToolchainSnapshot.make({
+          ...toolchain,
+          sources: [CacheCensusSource.make({ path: "/usr/bin/ldd", sha256: digest })],
+        })
+      );
+      const helperAfter = yield* fingerprintCacheComputation(
+        key,
+        census,
+        CacheToolchainSnapshot.make({
+          ...toolchain,
+          sources: [CacheCensusSource.make({ path: "/usr/bin/ldd", sha256: changedDigest })],
+        })
+      );
+      expect(helperBefore.configurationDigest).toBe(helperAfter.configurationDigest);
+      expect(helperBefore.toolchainDigest).not.toBe(helperAfter.toolchainDigest);
+      const client = yield* fingerprintCacheComputation(
+        key,
+        census,
+        CacheToolchainSnapshot.make({
+          ...toolchain,
+          turbo: CacheExecutablePin.make({ ...toolchain.turbo, sha256: changedDigest }),
+        })
+      );
+      expect(absent.configurationDigest).toBe(client.configurationDigest);
+      expect(absent.toolchainDigest).not.toBe(client.toolchainDigest);
+    }, provideCrypto)
+  );
+
   it.effect(
     "isolates Bun profiles and rejects a relabeled runtime",
     Effect.fnUntraced(function* () {

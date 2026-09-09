@@ -1,0 +1,253 @@
+{
+  "schemaVersion": "cache-installed-pilot-checkpoint/v1",
+  "authority": "Local installed-view observations and package verification. No signed-remote authority, complete host equivalence, tuple qualification or live cache activation.",
+  "sourceRevision": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+  "sourceEditsCommitted": false,
+  "key": {
+    "computation": "@beep/identity#lint",
+    "layer": "turbo-task-result",
+    "profile": "local-linux-x64-bun1.4.2",
+    "epoch": "qualification-v2"
+  },
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/installed-launcher-activation-preview.json",
+    "sha256": "f14d924d04b823b9a251010e2eae89aa3a89330406ac138dbbb1a16803248ee7"
+  },
+  "sourceConfigurationDigest": "33b3c819ce394158e5ac5c1d4f29e73a208f3cc8524583cb4d2deb9157f2fae7",
+  "toolchainDigest": "cd534958140e4c797791a78b5cb25cef090ea20154b396734914fdb5f1552964",
+  "installedDependenciesSha256": "1d6688b88253605123970d0b4a9051431996c7a7fa70957f10c4c077da6636e6",
+  "baseline": {
+    "path": "standards/cache-qualification-baseline.json",
+    "sha256": "83d7ef4afb987f37c5f9f4cb087072f9bd79bfdc9e7f91cd073514daa6dc28bc"
+  },
+  "ledger": {
+    "path": "standards/cache-qualification.json",
+    "sha256": "06a4ce7d4ca481d5dd93dacfdb4dff16108ca5683f67c4a68af173ff07fd05ac"
+  },
+  "ledgerUnchanged": true,
+  "perClient": [
+    {
+      "channel": "stable",
+      "receipt": {
+        "path": "goals/turborepo-task-qualification/research/pilot-installed-launcher-v4-stable.json",
+        "sha256": "7e182bff9905d4682c65c051f5b36083656ffc47f867d5f3a602bff4299c929a"
+      },
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-pilot-local-stable-bun142-installed-launcher-v4"
+      },
+      "clientSelection": "pinned-native-skip-infer",
+      "observations": 67,
+      "checks": 40,
+      "allChecksPassed": true,
+      "freshSuccessfulSelected": 44,
+      "freshFailedSelected": 4,
+      "localHits": 19,
+      "freshDependencyExecutions": 65,
+      "mutations": 8,
+      "nonExecutions": 4,
+      "shadowDecisions": 10
+    },
+    {
+      "channel": "canary",
+      "receipt": {
+        "path": "goals/turborepo-task-qualification/research/pilot-installed-launcher-v4-canary.json",
+        "sha256": "eee6e9dc32c3539123d10a1a82c8b7dc13aafd1c7794f58c6f89ace20961791c"
+      },
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-pilot-local-canary-bun142-installed-launcher-v4"
+      },
+      "clientSelection": "pinned-native-skip-infer",
+      "observations": 67,
+      "checks": 40,
+      "allChecksPassed": true,
+      "freshSuccessfulSelected": 44,
+      "freshFailedSelected": 4,
+      "localHits": 19,
+      "freshDependencyExecutions": 65,
+      "mutations": 8,
+      "nonExecutions": 4,
+      "shadowDecisions": 10
+    }
+  ],
+  "population": {
+    "workspaces": 142,
+    "configuredNodes": 2840,
+    "executableNodes": 1474
+  },
+  "policyAudit": {
+    "blockingFindings": 0,
+    "unassessedCachedComputations": 922,
+    "pilotState": "excluded",
+    "pilotCacheEnabled": false
+  },
+  "entrypoints": {
+    "attachment": {
+      "path": ".beep/qualification-local-preflight/census-installed-launcher-attached.json",
+      "sha256": "b8610a6d3c2ea575fc37cadefc53b660e8337e7523753b23c31e6ebec5aac1ae"
+    },
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/installed-launcher-entrypoint-request.json",
+      "sha256": "a5acfef247ed9ee9e696df5ed49d620ad4b74553e45b5e53b4be7ab0787fd697"
+    },
+    "sourceBindings": 294,
+    "completeDocuments": 6,
+    "unresolved": [
+      "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+      "Classify nested workspace and root command semantics.",
+      "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+      "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+      "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts.",
+      "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes."
+    ]
+  },
+  "observerSources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "203592d1bd999ed9a865d828bec9d49064bbc811f966fd211a8075d84e09608e"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts",
+      "sha256": "97d600ed0c4d9cc3cb97da7dc3011bcee24d27ce52eed074504cd1fae0d4fd36"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "sha256": "db967f613d590745903d473c9466b5d5784d7fd178e63db141c4c63b2cf043e4"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "18dc55ab6bebce28fa53ba513bec8e1010cb4bcb81bd4bde080debef2e32a768"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "sha256": "51e752937bbef28303b59fa8682d8de55cc354a3991a3dabfb25517900d2397c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "d289a910a677657435c2dd9c1e1399f4ef7f053ea916df058c46816cec122a03"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "f9390c8e5f028a4cb4985d4910c46c9497647370ed7735d74f3e5001884ff4dc"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "sha256": "29c3a6044a35963a964d7a1d149e0412c8447ca112f064eff6e4d665c1ce1786"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "goals/turborepo-task-qualification/research/installed-runtime-elf-metadata.json",
+      "sha256": "2a1ef073f2cf8514947cf5228aff1de925c28042dba02ade8a80ff2f3d3548ae"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/installed-dependency-materialization.json",
+      "sha256": "0abf47839a01ad4bdffaebb43d16ae4f75e74f25e7a0336713f9668747ea10f8"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/installed-view-execution-observation.json",
+      "sha256": "3262d897fe1cee0979dbe8cb7081d19d3ed869671becd7004bfb06b19f26b0b6"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/installed-client-selection.json",
+      "sha256": "60bd58295662ffe12db3f023e64d8d473f97858eb33bfbead37116b7ae810070"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/dependencies-main-baseline-review.md",
+      "sha256": "3724974ddd928ac6a6bb90c58d7e94591e8ce715c0f93c8f56514046144bcbbc"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/dependencies-main-baseline-delta.json",
+      "sha256": "94aa1d3aee2864aee5aaf0efde3d3f2f230907f16287baa35469a4c3df398533"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/dependencies-main-baseline-request.json",
+      "sha256": "42e5d67c2c44c30198bf081cd45df2d45d7248c4ad76429664cd778f59078606"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/installed-launcher-entrypoint-review.md",
+      "sha256": "a8e57a0605625f0c42c9825219a7c11951e5b70124286f2844ccd0e6e838e38b"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-installed-v3-stable.json",
+      "sha256": "41bc8c8316270bd4ebb8713074fd496fe163f35df5d0a50dd23008125e83c6b7"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-installed-v4-stable.json",
+      "sha256": "f285cd1af856810449871d647f816b988f32dce219807f5260a92ba4baca5287"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-installed-v4-canary.json",
+      "sha256": "a1f160c6dcf691cd7f11447b0f79564e836b8e191b81a5a995b5320e80f41ebe"
+    }
+  ],
+  "verification": {
+    "package": "@beep/repo-cli",
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "result": "passed",
+    "auditSeconds": 419.6,
+    "docgenSeconds": 19.9,
+    "log": {
+      "path": ".beep/qualification-local-preflight/installed-launcher-package-verify.log",
+      "sha256": "da868ffe5c2131477daa1bd9d4faccc90781117717f9bfa547ddd1800705d95d"
+    },
+    "supportingLogs": [
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-focused-tests.log",
+        "sha256": "9392dbdfce54f55ce041271af59393ebe5c164e937fdbe4636c25cb603128f75"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-check.log",
+        "sha256": "42eae8ca35dc810a852e8a6c2db191e1c6d01f1204d2bb11b88ade4a66300cee"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-test-typecheck.log",
+        "sha256": "30be653c8cc3e71229abce455ac49b11310af2f595ea868dd2b6daafb96f6c1e"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-schema-first.log",
+        "sha256": "92cdfc88b77af58c49edb6143b3ba44e5a03a38ff30e124dd2d3811d646819b3"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-cache-policy.log",
+        "sha256": "72176981b8eae3f56b598318b7c1cb8d3e517482d639a5513184df5438a005ac"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-goals-doctor.log",
+        "sha256": "83248b4d9820dbab6331d52fd946a2ab0945205cedc7c9f0ef6e9c18d8ee50a1"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-reflection.log",
+        "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+      }
+    ],
+    "finalPacketLogs": [
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-final-goals-doctor.log",
+        "sha256": "83248b4d9820dbab6331d52fd946a2ab0945205cedc7c9f0ef6e9c18d8ee50a1"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-final-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/installed-launcher-final-reflection.log",
+        "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+      }
+    ]
+  },
+  "remaining": [
+    "Complete shared-library and normal-host ambient-input analysis.",
+    "Exercise installed dependency/runtime invalidation and complete semantic read/write/capture adversaries.",
+    "Consume accepted signed conformance and trust runtime receipts.",
+    "Complete dynamic entrypoint/external verdict coverage and adoption handoff.",
+    "Run final Yeet proof, publish and reach merge-ready before same-PR reflection/lifecycle closeout."
+  ]
+}

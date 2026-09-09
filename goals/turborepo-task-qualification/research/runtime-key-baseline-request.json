@@ -1,0 +1,17 @@
+{
+  "previous": "83d7ef4afb987f37c5f9f4cb087072f9bd79bfdc9e7f91cd073514daa6dc28bc",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Declare the verified toolchain digest as an identity-lint cache input while retaining disabled reuse.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/runtime-key-baseline-review.md",
+      "sha256": "27bd2a0be2b131ac8a779e8e7d1bcd3c28e0e6d3ec1a2cd28b4e1951ba3a3b61"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

@@ -16,7 +16,9 @@ import * as Str from "effect/String";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { hashFileSha256, readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
-import { resolveCacheTurboBinary } from "./Cache.census.ts";
+import { collectCacheCensus, resolveCacheTurboBinary } from "./Cache.census.ts";
+import { inspectCacheDependencyTree } from "./Cache.dependencies.ts";
+import { collectCacheRuntimeLinker } from "./Cache.linker.ts";
 import {
   CacheCensusDefinition,
   CacheCensusNode,
@@ -107,11 +109,19 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
     `local-linux-x64-bun${bun.version}`
   );
   const sources = yield* Effect.forEach(
-    [".nvmrc", "bun.lock", "node_modules/turbo/bin/turbo", "node_modules/@biomejs/biome/bin/biome"],
-    Effect.fn("CacheFingerprint.toolSource")(function* (relative) {
+    [
+      ".nvmrc",
+      "bun.lock",
+      "node_modules/turbo/bin/turbo",
+      "node_modules/@biomejs/biome/bin/biome",
+      "/usr/bin/bash",
+      "/usr/bin/sh",
+      "/usr/bin/ldd",
+    ],
+    Effect.fn("CacheFingerprint.toolSource")(function* (source) {
       return CacheCensusSource.make({
-        path: relative,
-        sha256: yield* hashFileSha256(path.join(root, relative), (cause) =>
+        path: source,
+        sha256: yield* hashFileSha256(path.resolve(root, source), (cause) =>
           CacheCommandError.new("Cannot hash a required toolchain declaration.", cause)
         ),
       });
@@ -125,6 +135,19 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
     node: yield* fingerprintExecutable(root, nodePath),
     turbo: yield* fingerprintExecutable(root, turboPath),
     biome: yield* fingerprintExecutable(root, biomePath),
+    runtimeLinker: O.some(
+      yield* collectCacheRuntimeLinker(root, {
+        bun: bunPath,
+        node: nodePath,
+        turbo: turboPath,
+        biome: biomePath,
+        bash: "/usr/bin/bash",
+        sh: "/usr/bin/sh",
+      })
+    ),
+    installedDependencies: O.some(
+      yield* inspectCacheDependencyTree(root, (yield* collectCacheCensus(root)).workspaces)
+    ),
     sources: [
       CacheCensusSource.make({ path: ".bun-version", sha256: yield* S.decodeEffect(Sha256HexFromBytes)(declaration) }),
       ...sources,

@@ -52,6 +52,13 @@ const sourcePaths = A.sort(
     ...A.fromIterable(new Bun.Glob("packages/tooling/tool/cli/src/commands/Cache/*.ts").scanSync()),
     "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
     "packages/tooling/tool/cli/test/cache-pilot.test.ts",
+    "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
+    "packages/tooling/tool/cli/test/cache-census.test.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/TsconfigOverlay.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/internal/WorkspaceWalk.ts",
+    "scripts/ci-job-env.mjs",
+    "scripts/ci-change-profile.sh",
+    "tsconfig.configs.json",
     "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
   ]),
   Order.String

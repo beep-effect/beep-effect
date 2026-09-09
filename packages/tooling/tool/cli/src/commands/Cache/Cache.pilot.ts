@@ -21,9 +21,13 @@ import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { resolveWorktreeContext } from "../Worktree/index.ts";
 import { collectCacheCensus, joinCacheCensusPlan } from "./Cache.census.ts";
+import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
+import { verifyCacheDependencies } from "./Cache.dependencies.ts";
 import { readCacheEvidenceBytes } from "./Cache.evidence.ts";
 import { CacheSyntheticCheck, CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 import { inspectCacheFixtureCapture } from "./Cache.experiment.ts";
+import { fingerprintCacheComputation } from "./Cache.fingerprint.ts";
+import { collectCacheRuntimeLinker, inspectCacheLinkedFile, parseCacheLinkerOutput } from "./Cache.linker.ts";
 import { extractCachePilotLog } from "./Cache.pilot.capture.ts";
 import {
   CachePilotLogInput,
@@ -35,7 +39,18 @@ import {
   CachePilotShadow,
   CachePilotTask,
 } from "./Cache.pilot.schemas.ts";
-import { CacheActivationPreview, CacheActivationRequest, CacheCommandError } from "./Cache.schemas.ts";
+import {
+  CacheActivationPreview,
+  CacheActivationRequest,
+  CacheCommandError,
+  CacheDependencyTree,
+  CacheExecutablePin,
+  CacheLinkedFile,
+  CacheLinkerResolution,
+  CacheRuntimeExecutable,
+  CacheRuntimeLinkerSnapshot,
+  CacheToolchainSnapshot,
+} from "./Cache.schemas.ts";
 import { CacheQualificationService } from "./Cache.service.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
@@ -66,6 +81,7 @@ const NativeTask = S.Struct({
   }),
   hash: CacheSyntheticRun.fields.taskHash,
   cache: S.Struct({ status: S.Literals(["HIT", "MISS"]), local: S.Boolean, remote: S.Boolean }),
+  environmentVariables: S.Struct({ configured: S.Array(S.String) }),
   execution: S.OptionFromOptionalKey(S.Struct({ exitCode: S.OptionFromOptionalKey(S.Int) })),
 });
 const NativeSummary = S.Struct({ tasks: S.Array(NativeTask) });
@@ -188,6 +204,22 @@ const runPilot = Effect.fn("CachePilot.run")(
     const current = yield* cache.activation(root, activationRequest);
     if (!S.toEquivalence(CacheActivationPreview)(current, preview))
       return yield* CacheCommandError.new("The pilot activation preview is stale.");
+    const dependencies = yield* readCacheEvidenceBytes(root, request.dependencies).pipe(
+      Effect.flatMap(decodeText),
+      Effect.flatMap(JsonStringCodec(CacheDependencyMaterialization).decode)
+    );
+    yield* verifyCacheDependencies(root, dependencies);
+    const installed = yield* current.source.toolchain.installedDependencies.pipe(
+      Effect.fromOption(() => CacheCommandError.new("Pilot qualification requires an installed dependency identity."))
+    );
+    if (!S.toEquivalence(CacheDependencyTree)(installed, dependencies.tree))
+      return yield* CacheCommandError.new("Pilot dependency snapshot differs from the observed normal installation.");
+    const selectedNode = yield* A.findFirst(
+      current.source.configuration.nodes,
+      (node) => node.id === identityTask
+    ).pipe(Effect.fromOption(() => CacheCommandError.new("The pilot computation is absent.")));
+    if (!A.contains(selectedNode.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST"))
+      return yield* CacheCommandError.new("The pilot must declare BEEP_CACHE_TOOLCHAIN_DIGEST as a hashed input.");
     const dependencyNodes = A.filter(current.source.configuration.nodes, (node) => node.id !== identityTask);
     if (A.some(dependencyNodes, (node) => node.id !== typesTask || node.configuration.cache))
       return yield* CacheCommandError.new("Pilot dependencies must be limited to fresh, unqualified types lint.");
@@ -218,11 +250,13 @@ const runPilot = Effect.fn("CachePilot.run")(
     }
     const bun = yield* fs.realPath(process.execPath);
     const biome = yield* fs.realPath(request.biomeExecutable);
+    const node = yield* fs.realPath(request.nodeExecutable);
     const turbo = yield* fs.realPath(request.executable);
     const verifyTools = Effect.fn("CachePilot.verifyTools")(function* () {
       for (const [executable, expected] of [
         [bun, current.source.toolchain.bun.sha256],
         [biome, current.source.toolchain.biome.sha256],
+        [node, current.source.toolchain.node.sha256],
         [turbo, request.client.sha256],
       ]) {
         if ((yield* hashExecutable(executable)) !== expected)
@@ -230,6 +264,31 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
     });
     yield* verifyTools();
+    const runtimeExecutables = { bun, biome, node, turbo, bash: "/usr/bin/bash", sh: "/usr/bin/sh" };
+    const reviewedLinker = yield* current.source.toolchain.runtimeLinker.pipe(
+      Effect.fromOption(() => CacheCommandError.new("Pilot qualification requires startup library identity."))
+    );
+    const runtimeLinker = yield* collectCacheRuntimeLinker(root, runtimeExecutables);
+    if (
+      !S.toEquivalence(CacheRuntimeLinkerSnapshot)(
+        runtimeLinker,
+        CacheRuntimeLinkerSnapshot.make({
+          ...reviewedLinker,
+          executables: { ...reviewedLinker.executables, turbo: runtimeLinker.executables.turbo },
+        })
+      )
+    )
+      return yield* CacheCommandError.new("Pilot libraries differ from the reviewed normal runtime.");
+    const runtimeIdentity = yield* fingerprintCacheComputation(
+      current.source.key,
+      census,
+      CacheToolchainSnapshot.make({
+        ...current.source.toolchain,
+        turbo: CacheExecutablePin.make({ version: request.client.version, sha256: request.client.sha256 }),
+        runtimeLinker: O.some(runtimeLinker),
+      })
+    );
+    const runtimeKeyObservation = `BEEP_CACHE_TOOLCHAIN_DIGEST=${yield* hashText(runtimeIdentity.toolchainDigest)}`;
     if ((request.channel === "canary") !== Str.includes("-canary.")(request.client.version))
       return yield* CacheCommandError.new("Pilot client version and channel disagree.");
     if (
@@ -301,6 +360,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       const replacements: Readonly<Record<string, string>> = {
         ...fixture.rootFiles,
         ".git": fixture.gitFile,
+        node_modules: path.join(dependencies.directory, "node_modules"),
         ".turbo": path.join(fixture.directory, "run"),
         [identityDirectory]: fixture.identity,
         [typesDirectory]: fixture.types,
@@ -382,6 +442,9 @@ const runPilot = Effect.fn("CachePilot.run")(
           biome,
           "/tools/biome",
           "--ro-bind",
+          node,
+          "/tools/node",
+          "--ro-bind",
           turbo,
           "/tools/turbo",
           "--ro-bind",
@@ -394,7 +457,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           "--chdir",
           guest,
           "--",
-          ...args,
+          ...(args[0] === "/tools/turbo" ? ["/tools/turbo", "--skip-infer", ...A.drop(args, 1)] : args),
         ],
         cwd: root,
         extendEnv: false,
@@ -413,6 +476,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           GIT_CONFIG_NOSYSTEM: "1",
           GIT_OPTIONAL_LOCKS: "0",
           ...env,
+          BEEP_CACHE_TOOLCHAIN_DIGEST: runtimeIdentity.toolchainDigest,
         },
         bound: captureBound,
       }).pipe(Effect.timeout(Duration.seconds(60)));
@@ -422,15 +486,41 @@ const runPilot = Effect.fn("CachePilot.run")(
       yield* prepare(sourceRoots[1], "root-b", "initial-b"),
     ];
     const firstRoot = O.getOrThrow(A.head(roots));
+    for (const role of CacheRuntimeExecutable.Options) {
+      const executable = CacheRuntimeExecutable.$match({
+        bun: () => "/tools/bun",
+        node: () => "/tools/node",
+        turbo: () => "/tools/turbo",
+        biome: () => `/fixture/node_modules/@biomejs/cli-linux-x64/biome`,
+        bash: () => "/usr/bin/bash",
+        sh: () => "/usr/bin/sh",
+      })(role);
+      const observed = yield* invoke(firstRoot, "/fixture", ["/usr/bin/ldd", "--", executable]);
+      if (observed.exitCode !== 0 || observed.truncated || Str.trim(observed.stderr) !== "")
+        return yield* CacheCommandError.new(`Sandbox ${role} library discovery failed.`);
+      const paths = yield* parseCacheLinkerOutput(observed.stdout);
+      const expectedFiles = CacheLinkerResolution.match(runtimeLinker.executables[role], {
+        Static: A.empty<CacheLinkedFile>,
+        Dynamic: ({ files }): ReadonlyArray<CacheLinkedFile> => files,
+      });
+      const expected = A.map(expectedFiles, (file) => file.path);
+      if (!S.toEquivalence(S.Array(S.String))(paths, expected))
+        return yield* CacheCommandError.new(`Sandbox ${role} library resolution differs from the reviewed runtime.`);
+      for (const file of expectedFiles)
+        if (!S.toEquivalence(CacheLinkedFile)(file, yield* inspectCacheLinkedFile(file.path)))
+          return yield* CacheCommandError.new(`Sandbox ${role} library target changed during validation.`);
+    }
     for (const [executable, expected] of [
       ["bun", current.source.toolchain.bun.version],
       ["biome", current.source.toolchain.biome.version],
+      ["node", current.source.toolchain.node.version],
       ["turbo", request.client.version],
     ]) {
       const observed = yield* invoke(firstRoot, "/fixture", [`/tools/${executable}`, "--version"]);
       if (observed.exitCode !== 0 || observed.truncated || Str.trim(observed.stdout) !== expected)
         return yield* CacheCommandError.new(`Sandbox ${executable} version check failed (exit ${observed.exitCode}).`);
     }
+    yield* Effect.logInfo(`Pilot ${request.channel}: installed runtime and exact client checks passed.`);
     for (const fixture of roots) {
       const dry = yield* invoke(fixture, "/fixture", [
         "/tools/turbo",
@@ -445,6 +535,14 @@ const runPilot = Effect.fn("CachePilot.run")(
       if (dry.exitCode !== 0 || dry.truncated)
         return yield* CacheCommandError.new("Pilot dry-run setup failed or exceeded its capture bound.");
       const plan = yield* JsonStringCodec(NativeSummary).decode(dry.stdout);
+      if (
+        !A.some(
+          plan.tasks,
+          (task) =>
+            task.taskId === identityTask && A.contains(task.environmentVariables.configured, runtimeKeyObservation)
+        )
+      )
+        return yield* CacheCommandError.new("The native pilot plan omitted the verified runtime key.");
       const joined = yield* joinCacheCensusPlan(census.workspaces, plan);
       if (
         !S.toEquivalence(S.Array(S.String))(
@@ -556,6 +654,8 @@ const runPilot = Effect.fn("CachePilot.run")(
           return CachePilotOutcome.cases.Blocked.make({ failedDependencies: failed });
         }),
         onSome: Effect.fn("CachePilot.executed")(function* (task: typeof NativeTask.Type) {
+          if (!fixture.omitChild && !A.contains(task.environmentVariables.configured, runtimeKeyObservation))
+            return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified runtime key.`);
           const observation = yield* taskObservation(task);
           if (task.command !== "bun run beep:lint" || (captured.exitCode === 0) !== (observation.exitCode === 0))
             return yield* CacheCommandError.new("Selected pilot command or verdict disagrees with its graph.");
@@ -598,6 +698,9 @@ const runPilot = Effect.fn("CachePilot.run")(
         }),
       });
       return CachePilotRun.make({
+        nativeRuntimeKeyObserved: A.some(selected, (task) =>
+          A.contains(task.environmentVariables.configured, runtimeKeyObservation)
+        ),
         id,
         root: fixture.label,
         cacheEnabled: enabled,
@@ -851,8 +954,13 @@ const runPilot = Effect.fn("CachePilot.run")(
             const config = yield* decodeJsoncTextAs(S.JsonObject)(text);
             const tasks = yield* S.decodeUnknownEffect(S.JsonObject)(config.tasks);
             const lint = yield* S.decodeUnknownEffect(S.JsonObject)(tasks.lint);
+            const declared = yield* S.decodeUnknownEffect(S.Array(S.String))(lint.env);
             const encoded = yield* JsonStringCodec(S.JsonObject).encode(
-              R.set(config, "tasks", R.set(tasks, "lint", R.set(lint, "env", ["QUALIFICATION_CHILD_INPUT"])))
+              R.set(
+                config,
+                "tasks",
+                R.set(tasks, "lint", R.set(lint, "env", A.append(declared, "QUALIFICATION_CHILD_INPUT")))
+              )
             );
             yield* writeContainedFileString(fixture.identity, "turbo.json", encoded);
             const formatted = yield* invoke(fixture, "/fixture", [
@@ -1036,6 +1144,13 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
     }
     yield* verifyTools();
+    if (
+      !S.toEquivalence(CacheRuntimeLinkerSnapshot)(
+        runtimeLinker,
+        yield* collectCacheRuntimeLinker(root, runtimeExecutables)
+      )
+    )
+      return yield* CacheCommandError.new("Pilot startup libraries changed during execution.");
     if (!S.toEquivalence(CacheActivationPreview)(yield* cache.activation(root, activationRequest), current))
       return yield* CacheCommandError.new("Pilot source configuration drifted during execution.");
     for (const source of sourceRoots)
@@ -1044,8 +1159,15 @@ const runPilot = Effect.fn("CachePilot.run")(
         (yield* captureHost(source, ["rev-parse", "HEAD"])) !== revision
       )
         return yield* CacheCommandError.new("Read-only pilot worktree changed during execution.");
+    yield* verifyCacheDependencies(root, dependencies);
+    yield* Effect.logInfo(
+      `Pilot ${request.channel}: completed ${runs.length} observations and ${checks.length} checks.`
+    );
     return CachePilotReceipt.make({
-      schemaVersion: "cache-pilot-local/v2",
+      schemaVersion: "cache-pilot-local/v5",
+      clientSelection: "pinned-native-skip-infer",
+      runtimeKeying: "toolchain-sha256-env/v1",
+      runtimeKeyDigest: runtimeIdentity.toolchainDigest,
       authority: "local-observation-only",
       key: current.source.key,
       sourceRevision: revision,
@@ -1053,6 +1175,8 @@ const runPilot = Effect.fn("CachePilot.run")(
       client: request.client,
       bun: current.source.toolchain.bun,
       biome: current.source.toolchain.biome,
+      node: current.source.toolchain.node,
+      installedDependencies: dependencies.tree,
       activation: request.activation,
       configurationDigest: current.source.configurationDigest,
       toolchainDigest: current.source.toolchainDigest,
@@ -1064,6 +1188,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       nonExecutions,
       remaining: [
         "Complete native read/write and capture-adversary coverage",
+        "Enforce verified runtime-key calculation in ordinary entrypoints before enabling live reuse",
         "Accepted signed remote comparisons and final qualification",
         ...(request.selection === "controls"
           ? ["Run the full matrix before using these control-only observations"]

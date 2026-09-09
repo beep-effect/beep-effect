@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "lint": {
+      "cache": true,
+      "dependsOn": ["^lint"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/biome.jsonc",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/rules/**",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**",
+        "$TURBO_ROOT$/.gitignore",
+        "$TURBO_ROOT$/packages/.gitignore",
+        "$TURBO_ROOT$/packages/foundation/.gitignore",
+        "$TURBO_ROOT$/packages/foundation/modeling/.gitignore",
+        "!.beep/**"
+      ],
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"]
+    }
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "cache-runtime-key-baseline-delta/v1",
+  "executableBefore": 1474,
+  "executableAfter": 1474,
+  "globalConfigurationChanged": false,
+  "definitionChanges": [
+    {
+      "computation": "@beep/identity#lint",
+      "fields": [
+        "configuration"
+      ],
+      "before": {
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!.beep/**",
+            "../../../../.bun-version",
+            "../../../../.gitignore",
+            "../../../../.nvmrc",
+            "../../../../biome.jsonc",
+            "../../../../package.json",
+            "../../../../packages/.gitignore",
+            "../../../../packages/foundation/.gitignore",
+            "../../../../packages/foundation/modeling/.gitignore",
+            "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+            "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+            "../../../../tsconfig.base.json",
+            "../../../../tsconfig.json",
+            "../../../../tsconfig.packages.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "^lint"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      "after": {
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!.beep/**",
+            "../../../../.bun-version",
+            "../../../../.gitignore",
+            "../../../../.nvmrc",
+            "../../../../biome.jsonc",
+            "../../../../package.json",
+            "../../../../packages/.gitignore",
+            "../../../../packages/foundation/.gitignore",
+            "../../../../packages/foundation/modeling/.gitignore",
+            "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+            "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+            "../../../../tsconfig.base.json",
+            "../../../../tsconfig.json",
+            "../../../../tsconfig.packages.json"
+          ],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "^lint"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      }
+    }
+  ],
+  "inputDigestChanges": [
+    {
+      "computation": "@beep/identity#audit",
+      "before": "d5687cc9480d66e4d0756d78792fff3a0d648e20f219a01f698967d4ee0d5158",
+      "after": "54f821850a92f888534552514fe0e4f7ba1507e0a5d6176a792dfa8f24d5cd6d"
+    },
+    {
+      "computation": "@beep/identity#build",
+      "before": "a36fb7e1ddb01c769c70f53ee8a3f9002885a9cba1b9f4f5794e283fec6d9b6f",
+      "after": "d3a7ef4e2769a594b8419e1380e61b4f76b163e87ca7b92cea0beab0c1e266e9"
+    },
+    {
+      "computation": "@beep/identity#check",
+      "before": "a36fb7e1ddb01c769c70f53ee8a3f9002885a9cba1b9f4f5794e283fec6d9b6f",
+      "after": "d3a7ef4e2769a594b8419e1380e61b4f76b163e87ca7b92cea0beab0c1e266e9"
+    },
+    {
+      "computation": "@beep/identity#codegen",
+      "before": "a36fb7e1ddb01c769c70f53ee8a3f9002885a9cba1b9f4f5794e283fec6d9b6f",
+      "after": "d3a7ef4e2769a594b8419e1380e61b4f76b163e87ca7b92cea0beab0c1e266e9"
+    },
+    {
+      "computation": "@beep/identity#coverage",
+      "before": "1432d506ec5f07a36eb3e17cca3fc6f0edbb72ffecc6c3f1034cbafae3009c6e",
+      "after": "4e4a6e57e98e57121e468eaf3c6331652d4ab7dd94004e6c7ee6be18b313873a"
+    },
+    {
+      "computation": "@beep/identity#docgen",
+      "before": "a36fb7e1ddb01c769c70f53ee8a3f9002885a9cba1b9f4f5794e283fec6d9b6f",
+      "after": "d3a7ef4e2769a594b8419e1380e61b4f76b163e87ca7b92cea0beab0c1e266e9"
+    },
+    {
+      "computation": "@beep/identity#lint",
+      "before": "48a0f7087f0ac06005656fac053be5b21165a6a6051666cf9395f204054a3d2a",
+      "after": "87d2cc884be1400b81ed4692da4d9292407b86980ec9ed3cfb3c8daf63feabb7"
+    },
+    {
+      "computation": "@beep/identity#lint:fix",
+      "before": "6738bdfbbffe4ce0ef1a9395a9ba4324f9bcf59f3978b468fe75ad5ac27923b0",
+      "after": "0b68f6d8e12596186c78136c68f124c6b3b3454487c57474df7bd66988119411"
+    },
+    {
+      "computation": "@beep/identity#package-test-typecheck",
+      "before": "24e949912bcded24119c230af0713ae26881148e391b629c9e487ded5c8622db",
+      "after": "2ce2ca97aba198fca23b2527b372c76350908ddc34d1efba4148454f19286b8f"
+    },
+    {
+      "computation": "@beep/identity#test",
+      "before": "6d9282cabd4513235a1fbd844a295dcf883092a37c744bba536a9cc2430331ac",
+      "after": "5a212c2cf47345a61a9b362706e64cede6592ca058c62bc2be798440a5811df0"
+    },
+    {
+      "computation": "@beep/identity#test:property",
+      "before": "6d9282cabd4513235a1fbd844a295dcf883092a37c744bba536a9cc2430331ac",
+      "after": "5a212c2cf47345a61a9b362706e64cede6592ca058c62bc2be798440a5811df0"
+    },
+    {
+      "computation": "@beep/repo-cli#audit",
+      "before": "896e386a1c57f697b55bbc5152f524de5ea86adaa92d9ade1eff3d244a279b8f",
+      "after": "300d8c96d591633056ddf4f029bc8ae6525717f4c4b0b7d113be64288daff97a"
+    },
+    {
+      "computation": "@beep/repo-cli#build",
+      "before": "0bd1b10f979e535f02527c4da8cdc248e62cad462cc4f1a45690525c8ceff31a",
+      "after": "ac4852e9ad7575341d94f45aa619cf3f26918fa2de454b4e928246c4df577870"
+    },
+    {
+      "computation": "@beep/repo-cli#check",
+      "before": "0bd1b10f979e535f02527c4da8cdc248e62cad462cc4f1a45690525c8ceff31a",
+      "after": "ac4852e9ad7575341d94f45aa619cf3f26918fa2de454b4e928246c4df577870"
+    },
+    {
+      "computation": "@beep/repo-cli#coverage",
+      "before": "a6a3988914626b7e285e51d2bef05d17faf59f063af43a142355aab66dc6b3be",
+      "after": "2eb06e68cddcdb1b1286b8c7cde14e6fa464eb3d30c4998e7623b03035b6b402"
+    },
+    {
+      "computation": "@beep/repo-cli#docgen",
+      "before": "0bd1b10f979e535f02527c4da8cdc248e62cad462cc4f1a45690525c8ceff31a",
+      "after": "ac4852e9ad7575341d94f45aa619cf3f26918fa2de454b4e928246c4df577870"
+    },
+    {
+      "computation": "@beep/repo-cli#lint",
+      "before": "3868ef30a32b5a5afdf2bfa02edfafc625787f03570cb95f9a9b2d2c8991bd50",
+      "after": "f605884e29cde6ba507743ea2813aebf9a201e870cfde3cdde120fd14fce0496"
+    },
+    {
+      "computation": "@beep/repo-cli#lint:fix",
+      "before": "9550a93107dc2b3d147003c13112fc8fe29456cce8211ac74db29890425fd9e4",
+      "after": "4dfce14696da2cc905f7cdb21891b8072a50ac2af30af738b53211f1e32b5874"
+    },
+    {
+      "computation": "@beep/repo-cli#package-test-typecheck",
+      "before": "4867b570ddf43244a29d0598fa7da8aafb6128268e747f0bae06889210bff93e",
+      "after": "be268c0757dffeec0a48a16ad0827dd540698fff21bf3ed7100d75fc276c46bf"
+    },
+    {
+      "computation": "@beep/repo-cli#test",
+      "before": "28564e1f9b3f8f9cdf4aec8ee3e193fc4cd1a8876a67c5f65dbd0c595b0cd32f",
+      "after": "06f47abd58505a482cf0cf1db32f0daba5cef2d99df960c609fe13d19ab9f59b"
+    },
+    {
+      "computation": "@beep/repo-cli#test:property",
+      "before": "28564e1f9b3f8f9cdf4aec8ee3e193fc4cd1a8876a67c5f65dbd0c595b0cd32f",
+      "after": "06f47abd58505a482cf0cf1db32f0daba5cef2d99df960c609fe13d19ab9f59b"
+    }
+  ]
+}

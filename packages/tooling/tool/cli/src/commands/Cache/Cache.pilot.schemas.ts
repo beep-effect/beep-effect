@@ -15,7 +15,7 @@ import { GitObjectId } from "@beep/schema/Conformance";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CacheLocalOrigin, CacheSyntheticCheck, CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
-import { CacheExecutablePin } from "./Cache.schemas.ts";
+import { CacheDependencyTree, CacheExecutablePin } from "./Cache.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.schemas");
 
@@ -38,6 +38,8 @@ export class CachePilotRequest extends S.Class<CachePilotRequest>($I`CachePilotR
     client: CacheClientPin,
     executable: S.NonEmptyString,
     biomeExecutable: S.NonEmptyString,
+    nodeExecutable: S.NonEmptyString,
+    dependencies: CacheEvidenceReference,
     worktrees: S.Tuple([S.NonEmptyString, S.NonEmptyString]),
     activation: CacheEvidenceReference,
     selection: LiteralKit(["full", "controls"]).pipe(
@@ -157,6 +159,7 @@ export type CachePilotOutcome = typeof CachePilotOutcome.Type;
  */
 export class CachePilotRun extends S.Class<CachePilotRun>($I`CachePilotRun`)(
   {
+    nativeRuntimeKeyObserved: S.Boolean,
     id: S.NonEmptyString,
     root: LiteralKit(["root-a", "root-b"]),
     cacheEnabled: S.Boolean,
@@ -265,6 +268,13 @@ export class CachePilotNonExecution extends S.Class<CachePilotNonExecution>($I`C
 /**
  * Local real-pilot results with no signed-remote or promotion authority.
  *
+ * **Details**
+ *
+ * `toolchainDigest` binds the reviewed installation. `runtimeKeyDigest` uses
+ * the requested native Turbo client and is provided as the declared
+ * `BEEP_CACHE_TOOLCHAIN_DIGEST` input. Each run records whether native metadata
+ * confirms that key; the named missing-child control can remove its declaration.
+ *
  * **Example** (Inspect the explicit authority limit)
  *
  * ```ts
@@ -277,7 +287,10 @@ export class CachePilotNonExecution extends S.Class<CachePilotNonExecution>($I`C
  */
 export class CachePilotReceipt extends S.Class<CachePilotReceipt>($I`CachePilotReceipt`)(
   {
-    schemaVersion: S.Literal("cache-pilot-local/v2"),
+    schemaVersion: S.Literal("cache-pilot-local/v5"),
+    clientSelection: S.Literal("pinned-native-skip-infer"),
+    runtimeKeying: S.Literal("toolchain-sha256-env/v1"),
+    runtimeKeyDigest: Sha256Hex,
     authority: S.Literal("local-observation-only"),
     key: CacheQualificationKey,
     sourceRevision: GitObjectId,
@@ -285,6 +298,8 @@ export class CachePilotReceipt extends S.Class<CachePilotReceipt>($I`CachePilotR
     client: CacheClientPin,
     bun: CacheExecutablePin,
     biome: CacheExecutablePin,
+    node: CacheExecutablePin,
+    installedDependencies: CacheDependencyTree,
     activation: CacheEvidenceReference,
     configurationDigest: Sha256Hex,
     toolchainDigest: Sha256Hex,

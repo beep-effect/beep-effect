@@ -1,0 +1,347 @@
+{
+  "schemaVersion": "cache-installed-invalidation-observation/v1",
+  "authority": "Bounded native cache comparison across controlled installed-export overlays. The base retained tree is verified before and after by the Effect wrapper. No qualification or repair authority.",
+  "sourceRevision": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/installed-launcher-activation-preview.json",
+    "sha256": "f14d924d04b823b9a251010e2eae89aa3a89330406ac138dbbb1a16803248ee7"
+  },
+  "baseDependencyTreeSha256": "1d6688b88253605123970d0b4a9051431996c7a7fa70957f10c4c077da6636e6",
+  "lockfileSha256": "769ec9946aeb49d5e581acac05677086d2627b03bab8b3a119a5210cc50e8f25",
+  "tools": {
+    "bun": {
+      "version": "1.4.2",
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+    },
+    "node": {
+      "version": "v24.20.0",
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    }
+  },
+  "clients": [
+    {
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-installed-invalidation-stable-v1"
+      }
+    },
+    {
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-installed-invalidation-canary-v1"
+      }
+    }
+  ],
+  "observer": {
+    "path": ".beep/qualification-local-preflight/probe-installed-cache.py",
+    "sha256": "ce780d7ed8ec3e4ac3e83237e7fa242f5493a0c3c470e0e6d11e939bbb2a3119"
+  },
+  "records": [
+    {
+      "channel": "stable",
+      "mode": "producer",
+      "configurationSha256": "e862a8633ff682925d9af493e52aaace0cb332d4f7a4832b4a4c51360ab8bc07",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "6a3169cb0d19e34ac3f13515cbee0db52da517f20388f701fd244cc4b06f45f4"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "1e21a4a366d76aea2e0fed80726a6c0e2cf669d37bb3732b0900436e3122b79c"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 0,
+      "taskHash": "f8ba834ac1ecb02a",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "bac2d5840ec325a841755088f45f09e1f084176c5bef1b5f166684b2a24e2c69",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "3ba3c011ad8fcc59ed916578cf22374e105ee1dcf89d41dae46aa207006ee51e",
+      "stdoutSha256": "4ff487c82f7f9a33295f08cbe14fcb8817ca2dbbc124609148580c1272f81638",
+      "stderrSha256": "f5c075ad72344f8e7f213c5b074f163660c25c92e4c55632f06d9c698f403008",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-cache-5gjqws7p/stable/producer"
+    },
+    {
+      "channel": "stable",
+      "mode": "reuse-after-deprecation",
+      "configurationSha256": "e862a8633ff682925d9af493e52aaace0cb332d4f7a4832b4a4c51360ab8bc07",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 0,
+      "taskHash": "f8ba834ac1ecb02a",
+      "cache": {
+        "local": true,
+        "remote": false,
+        "status": "HIT",
+        "source": "LOCAL",
+        "timeSaved": 2099,
+        "sha": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+        "dirtyHash": "23d4495d9057bd858637048d27158139af8b90a3bd1b2d76e78b4f68d13d7cba"
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "bac2d5840ec325a841755088f45f09e1f084176c5bef1b5f166684b2a24e2c69",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "40397b8c8359833ae18f96a206ea1592dc70678a962e018f360b9435d3b801a2",
+      "stdoutSha256": "550a70114c965c1c3214eebec90852fa8b284b9fc38caad13fe505959fbd5f35",
+      "stderrSha256": "f5c075ad72344f8e7f213c5b074f163660c25c92e4c55632f06d9c698f403008",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-cache-5gjqws7p/stable/reuse-after-deprecation"
+    },
+    {
+      "channel": "stable",
+      "mode": "fresh-after-deprecation",
+      "configurationSha256": "e862a8633ff682925d9af493e52aaace0cb332d4f7a4832b4a4c51360ab8bc07",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 1,
+      "taskHash": "f8ba834ac1ecb02a",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "bac2d5840ec325a841755088f45f09e1f084176c5bef1b5f166684b2a24e2c69",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "5ad2f49e2847354f005b1c70a7b8e19f2c17f58096b893d33721a2a62864e50b",
+      "stdoutSha256": "75869d504bbfa2f5d81af78895cc55f9c20980dccbabaf5283f4e340fd1feb58",
+      "stderrSha256": "b3a9a1949fd2a978da6bb3dc764f5398dc28f6f109875eeba685dae2b857dae5",
+      "taskLog": null,
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-cache-5gjqws7p/stable/fresh-after-deprecation"
+    },
+    {
+      "channel": "canary",
+      "mode": "producer",
+      "configurationSha256": "e862a8633ff682925d9af493e52aaace0cb332d4f7a4832b4a4c51360ab8bc07",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "6a3169cb0d19e34ac3f13515cbee0db52da517f20388f701fd244cc4b06f45f4"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "1e21a4a366d76aea2e0fed80726a6c0e2cf669d37bb3732b0900436e3122b79c"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 0,
+      "taskHash": "f8ba834ac1ecb02a",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "bac2d5840ec325a841755088f45f09e1f084176c5bef1b5f166684b2a24e2c69",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "1b841e6abf76ca1f47b450da7a63d889c0058df108cd0b2dc75bd96705c6477d",
+      "stdoutSha256": "c156815b049bca6513f0f282c3574f3056e8d44b92aee35b63fcbf4ffc646f87",
+      "stderrSha256": "f5c075ad72344f8e7f213c5b074f163660c25c92e4c55632f06d9c698f403008",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-cache-5gjqws7p/canary/producer"
+    },
+    {
+      "channel": "canary",
+      "mode": "reuse-after-deprecation",
+      "configurationSha256": "e862a8633ff682925d9af493e52aaace0cb332d4f7a4832b4a4c51360ab8bc07",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 0,
+      "taskHash": "f8ba834ac1ecb02a",
+      "cache": {
+        "local": true,
+        "remote": false,
+        "status": "HIT",
+        "source": "LOCAL",
+        "timeSaved": 2182,
+        "sha": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+        "dirtyHash": "23d4495d9057bd858637048d27158139af8b90a3bd1b2d76e78b4f68d13d7cba"
+      },
+      "taskExecutionExitCode": 0,
+      "inputsDigest": "bac2d5840ec325a841755088f45f09e1f084176c5bef1b5f166684b2a24e2c69",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "d019b2c2e731d3aa1e0da3662aa71f25363982f23152b5b331bd964693f9eaff",
+      "stdoutSha256": "d4b7169df7cfea2ca5f95d05530fdb2707f0ff6de696209ab082a381ea536ac4",
+      "stderrSha256": "f5c075ad72344f8e7f213c5b074f163660c25c92e4c55632f06d9c698f403008",
+      "taskLog": {
+        "bytes": 53,
+        "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+      },
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-cache-5gjqws7p/canary/reuse-after-deprecation"
+    },
+    {
+      "channel": "canary",
+      "mode": "fresh-after-deprecation",
+      "configurationSha256": "e862a8633ff682925d9af493e52aaace0cb332d4f7a4832b4a4c51360ab8bc07",
+      "dependencyOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "identitySourceSha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "processExitCode": 1,
+      "taskHash": "f8ba834ac1ecb02a",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "taskExecutionExitCode": 1,
+      "inputsDigest": "bac2d5840ec325a841755088f45f09e1f084176c5bef1b5f166684b2a24e2c69",
+      "dependencyTasks": [
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "exitCode": 0
+        }
+      ],
+      "summarySha256": "e72172603e7acddd7e13f79fe859ebd415017fa945d3b7b2c09ec42971584838",
+      "stdoutSha256": "93e554eee7f59e85f71fd4a73c1ae9d0532a22cc326bd071e8b6feb7b0c3536a",
+      "stderrSha256": "b3a9a1949fd2a978da6bb3dc764f5398dc28f6f109875eeba685dae2b857dae5",
+      "taskLog": null,
+      "privateOutputPrefix": ".beep/qualification-local-preflight/installed-cache-5gjqws7p/canary/fresh-after-deprecation"
+    }
+  ],
+  "checks": [
+    {
+      "channel": "stable",
+      "staleSuccessReproduced": true,
+      "freshDeprecationFails": true,
+      "configurationAndSelectedSourceUnchanged": true
+    },
+    {
+      "channel": "canary",
+      "staleSuccessReproduced": true,
+      "freshDeprecationFails": true,
+      "configurationAndSelectedSourceUnchanged": true
+    }
+  ],
+  "registeredSourceUnchanged": true,
+  "retainedDependencyOverlayTargetsUnchanged": true
+}

@@ -15,4 +15,10 @@ export {
   fingerprintCacheComputation,
   projectCacheActivation,
 } from "../commands/Cache/Cache.fingerprint.ts";
+export {
+  collectCacheRuntimeLinker,
+  inspectCacheLinkedFile,
+  inspectCacheLinkerResolution,
+  parseCacheLinkerOutput,
+} from "../commands/Cache/Cache.linker.ts";
 export { extractCachePilotLog } from "../commands/Cache/Cache.pilot.capture.ts";

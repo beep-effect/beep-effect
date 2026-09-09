@@ -449,6 +449,174 @@ export class CacheExecutablePin extends S.Class<CacheExecutablePin>($I`CacheExec
 ) {}
 
 /**
+ * A package-tree link restricted to the installed tree or a declared workspace.
+ *
+ * **Example** (Inspect workspace-link evidence)
+ *
+ * ```ts
+ * import { CacheDependencyLink } from "@beep/repo-cli/commands/Cache"
+ * console.assert("Workspace" in CacheDependencyLink.cases)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheDependencyLink = S.TaggedUnion({
+  Internal: { path: S.NonEmptyString, target: S.NonEmptyString },
+  Workspace: { path: S.NonEmptyString, target: S.NonEmptyString, workspace: S.NonEmptyString },
+}).pipe(
+  $I.annoteSchema("CacheDependencyLink", {
+    description: "Validated relative symlink topology of an installed dependency tree.",
+  })
+);
+/**
+ * An installed-tree or declared-workspace link.
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheDependencyLink = typeof CacheDependencyLink.Type;
+
+/**
+ * A bounded canonical archive digest with separately validated link topology.
+ *
+ * **Details**
+ *
+ * The digest preserves paths, file bytes, modes and symlink targets. GNU tar
+ * normalizes ownership and timestamps and dereferences hard links into bytes.
+ * It does not attest registry provenance, ACLs or extended attributes.
+ *
+ * **Example** (Inspect the content identity)
+ *
+ * ```ts
+ * import { CacheDependencyTree } from "@beep/repo-cli/commands/Cache"
+ * console.assert("sha256" in CacheDependencyTree.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CacheDependencyTree extends S.Class<CacheDependencyTree>($I`CacheDependencyTree`)(
+  {
+    format: S.Literal("canonical-gnu-tar/v1"),
+    sha256: Sha256Hex,
+    regularFiles: NonNegativeInt.check(S.isLessThanOrEqualTo(400000)),
+    entries: NonNegativeInt.check(S.isLessThanOrEqualTo(600000)),
+    bytes: NonNegativeInt.check(S.isLessThanOrEqualTo(16 * 1024 * 1024 * 1024)),
+    links: S.Array(CacheDependencyLink).check(S.isMaxLength(4096)),
+  },
+  $I.annote("CacheDependencyTree", {
+    description: "A bounded installed tree fingerprint, independent of checkout location and file timestamps.",
+  })
+) {}
+
+/**
+ * An observed library or loader alias, its physical target, and exact bytes.
+ *
+ * **Example** (Inspect content and resolution bindings)
+ *
+ * ```ts
+ * import { CacheLinkedFile } from "@beep/repo-cli/commands/Cache"
+ * console.assert("target" in CacheLinkedFile.fields && "sha256" in CacheLinkedFile.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CacheLinkedFile extends S.Class<CacheLinkedFile>($I`CacheLinkedFile`)(
+  {
+    path: S.NonEmptyString.check(S.isPattern(/^\/[^\0\r\n]*$/)),
+    target: S.NonEmptyString.check(S.isPattern(/^\/[^\0\r\n]*$/)),
+    sha256: Sha256Hex,
+  },
+  $I.annote("CacheLinkedFile", {
+    description: "Absolute loader-reported path and resolved physical target bound to a content digest.",
+  })
+) {}
+
+/**
+ * Explicit static linkage or the files resolved by the glibc loader.
+ *
+ * **Details**
+ *
+ * This records startup linkage under the discovery environment. It does not
+ * claim coverage of later dynamic loading or asynchronous file access.
+ *
+ * **Example** (Represent inspected static linkage)
+ *
+ * ```ts
+ * import { CacheLinkerResolution } from "@beep/repo-cli/commands/Cache"
+ * console.assert(CacheLinkerResolution.guards.Static(CacheLinkerResolution.cases.Static.make({})))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheLinkerResolution = S.TaggedUnion({
+  Static: {},
+  Dynamic: { files: S.NonEmptyArray(CacheLinkedFile).check(S.isMaxLength(256)) },
+}).pipe(
+  $I.annoteSchema("CacheLinkerResolution", {
+    description: "Inspected static linkage or bounded startup library resolution, never inferred from failure.",
+  })
+);
+/**
+ * A successfully inspected executable's startup linkage.
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheLinkerResolution = typeof CacheLinkerResolution.Type;
+
+/**
+ * Executable roles observed in the supported local lint runtime.
+ *
+ * **Example** (Enumerate required observations)
+ *
+ * ```ts
+ * import { CacheRuntimeExecutable } from "@beep/repo-cli/commands/Cache"
+ * console.assert(CacheRuntimeExecutable.Options.length === 6)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheRuntimeExecutable = LiteralKit(["bun", "node", "turbo", "biome", "bash", "sh"]).pipe(
+  $I.annoteSchema("CacheRuntimeExecutable", {
+    description: "Native runtimes, selected cache client, lint engine and script shells requiring linkage evidence.",
+  })
+);
+/**
+ * An executable role requiring startup linkage evidence.
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheRuntimeExecutable = typeof CacheRuntimeExecutable.Type;
+
+/**
+ * Bounded startup resolution with exact discovery helper and loader identities.
+ *
+ * **Example** (Require explicit discovery provenance)
+ *
+ * ```ts
+ * import { CacheRuntimeLinkerSnapshot } from "@beep/repo-cli/commands/Cache"
+ * console.assert("loader" in CacheRuntimeLinkerSnapshot.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CacheRuntimeLinkerSnapshot extends S.Class<CacheRuntimeLinkerSnapshot>($I`CacheRuntimeLinkerSnapshot`)(
+  {
+    format: S.Literal("glibc-ldd/v1"),
+    detector: CacheLinkedFile,
+    loader: CacheLinkedFile,
+    executables: S.Record(CacheRuntimeExecutable, CacheLinkerResolution),
+  },
+  $I.annote("CacheRuntimeLinkerSnapshot", {
+    description: "Clean-environment glibc startup resolution for every supported executable role.",
+  })
+) {}
+
+/**
  * Actual tools and platform for the explicitly supported qualification profiles.
  *
  * **Example** (Reject an unsupported profile)
@@ -471,6 +639,12 @@ export class CacheToolchainSnapshot extends S.Class<CacheToolchainSnapshot>($I`C
     node: CacheExecutablePin,
     turbo: CacheExecutablePin,
     biome: CacheExecutablePin,
+    installedDependencies: S.OptionFromOptionalKey(CacheDependencyTree).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    runtimeLinker: S.OptionFromOptionalKey(CacheRuntimeLinkerSnapshot).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     sources: S.Array(CacheCensusSource),
   },
   $I.annote("CacheToolchainSnapshot", {

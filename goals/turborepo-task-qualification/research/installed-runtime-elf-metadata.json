@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "cache-runtime-elf-metadata/v1",
+  "authority": "Read-only ELF metadata observed with readelf. This records declared linker dependencies, not successful library loads, a complete runtime read set or qualification.",
+  "observer": {
+    "path": "/usr/bin/readelf",
+    "sha256": "76bf1b2996e4374b48174efffa7a3905d67f235aeda560e945bc7bde4f0ba967"
+  },
+  "executables": [
+    {
+      "executable": "bun",
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "interpreter": [
+        "/lib64/ld-linux-x86-64.so.2"
+      ],
+      "declaredNeededLibraries": [
+        "libc.so.6",
+        "ld-linux-x86-64.so.2",
+        "libpthread.so.0",
+        "libdl.so.2",
+        "libm.so.6"
+      ],
+      "rawObservation": {
+        "path": ".beep/qualification-local-preflight/elf-bun.txt",
+        "sha256": "dceb3a2147c9c59c33690f5118a707d35f2f94a1794b1fa2a3cd43562b6a3973"
+      }
+    },
+    {
+      "executable": "node",
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "interpreter": [
+        "/lib64/ld-linux-x86-64.so.2"
+      ],
+      "declaredNeededLibraries": [
+        "libdl.so.2",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libpthread.so.0",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "rawObservation": {
+        "path": ".beep/qualification-local-preflight/elf-node.txt",
+        "sha256": "e257e392a455120129dd1483c384c452c92d434e6800d83ca75720fbad41f7ae"
+      }
+    },
+    {
+      "executable": "biome",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "interpreter": [
+        "/lib64/ld-linux-x86-64.so.2"
+      ],
+      "declaredNeededLibraries": [
+        "libgcc_s.so.1",
+        "libpthread.so.0",
+        "libm.so.6",
+        "libdl.so.2",
+        "libc.so.6"
+      ],
+      "rawObservation": {
+        "path": ".beep/qualification-local-preflight/elf-biome.txt",
+        "sha256": "97e31ea285e7208be3773f20526309b6c44fec3dfd1e5a2a09bb7306c8e97a37"
+      }
+    },
+    {
+      "executable": "turbo-stable",
+      "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+      "interpreter": [],
+      "declaredNeededLibraries": [],
+      "rawObservation": {
+        "path": ".beep/qualification-local-preflight/elf-turbo-stable.txt",
+        "sha256": "ac082e67fa1fc8edd6293c8af6278f11fa04603493c498fc2a62bab07519e1da"
+      }
+    },
+    {
+      "executable": "turbo-canary",
+      "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "interpreter": [],
+      "declaredNeededLibraries": [],
+      "rawObservation": {
+        "path": ".beep/qualification-local-preflight/elf-turbo-canary.txt",
+        "sha256": "1cfba17a861c8b51a78e00b010c08b4213410eae78d1897cf322819a4b3c07b9"
+      }
+    },
+    {
+      "executable": "bash",
+      "sha256": "07a2331ac400749cc7740fac9999e36cf104c743b612c307ef155fc5dca7fe2e",
+      "interpreter": [
+        "/lib64/ld-linux-x86-64.so.2"
+      ],
+      "declaredNeededLibraries": [
+        "libreadline.so.8",
+        "libc.so.6"
+      ],
+      "rawObservation": {
+        "path": ".beep/qualification-local-preflight/elf-bash.txt",
+        "sha256": "d22e29810f9a9e7e3937a4c0575454644e901f4404ecb1499885e7376f0d5839"
+      }
+    }
+  ],
+  "remaining": [
+    "Resolve and observe the libraries actually loaded in the supported namespace.",
+    "Bind required loader/library content and any relevant lookup configuration before accepting a complete runtime identity.",
+    "Dynamic loading and ambient host inputs can extend beyond ELF NEEDED entries."
+  ]
+}

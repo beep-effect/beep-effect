@@ -571,3 +571,116 @@ package verification's lint/check subset. The canonical tsconfig writer
 restored the cache-policy package alias; config synchronization and a final
 CLI type check then passed. Full Yeet proof and refreshed qualification
 attachments remain pending for this integrated state.
+
+## Installed dependency and launcher boundary: 2026-09-09
+
+The dependency materializer is now exposed through `beep cache dependencies`.
+A native snapshot retains 226,802 regular files, 249,090 entries and
+5,382,236,500 bytes with 355 validated relative links. Source/copy/source
+identity checks pass. The pilot requires this receipt, mounts the copied tree
+read-only and verifies it again after execution. The runtime fingerprint now
+includes the installed-tree identity and the Node launcher pin.
+
+Eight fresh quiet/verbose commands reproduce the external-deprecation control
+with installed dependencies present: ordinary exports pass and the deprecated
+export fails. Successful execve records establish the installed Biome launcher,
+Node and native Biome chain. Omitting the installed tree still hides the
+failure. The [materialization review](./research/installed-dependency-materialization.json)
+and [execution observations](./research/installed-view-execution-observation.json)
+retain bounded hashes and distinguish copied-tree verification from a complete
+normal-host equivalence claim.
+
+Installed Turbo inference initially redirected the requested canary to stable.
+The version check rejected that run before any matrix observation. The pilot
+now supplies `--skip-infer` on every native Turbo invocation and records that
+selection contract in v4 receipts. Both corrected clients pass 67 observations,
+40 checks and ten shadow decisions. The later system-helper fingerprint adds
+the observed shells and `ldd`; both clients pass the same complete local
+matrix against this expanded runtime identity. Earlier receipts remain bound
+to their original toolchain identity. Full CLI package verification passes:
+419.6-second audit and 19.9-second docgen. Source/test type checks and all 20
+focused cache tests pass. The [verification report](./research/installed-launcher-verification.md)
+and [checkpoint](./research/installed-launcher-checkpoint.json) bind the final
+local receipts, observer sources and supporting checks.
+
+The merged baseline accepts 123 complete-script-map digest changes from main,
+with no new executable computation or task/configuration/edge change. The
+[entrypoint review](./research/installed-launcher-entrypoint-review.md) and
+[accepted request](./research/installed-launcher-entrypoint-request.json) bind
+294 source files and six complete snapshots. The population remains 1,474
+executables, with zero blocking policy findings and 922 unassessed cached
+computations. The ledger is unchanged; both live pilot tasks remain excluded
+and cache-disabled.
+
+Shared-library and ambient-input semantics, complete read/write/capture
+adversaries, signed sibling integration, dynamic entrypoint coverage, adoption
+and final Yeet acceptance remain required. These local results grant no tuple
+qualification or live activation.
+
+## Installed runtime invalidation and native task key: 2026-09-09
+
+Both exact clients reproduce stale success after an installed Effect export
+becomes deprecated, while forced fresh execution fails at the same native
+task hash. Separate read-only installed-tree and complete-toolchain digest
+experiments invalidate that hash and restore safe reuse when the original
+bytes return. All five repair assertions pass for each client. The bounded
+[native evidence](./research/runtime-keyed-invalidation-observation.json)
+does not yet implement ordinary entrypoint enforcement.
+
+The child lint configuration now declares `BEEP_CACHE_TOOLCHAIN_DIGEST` while
+keeping live caching disabled. The baseline writer accepts this single env
+declaration change; the ledger remains unchanged. The durable pilot derives
+the runtime value from observed installed bytes and tools, substitutes the
+requested native client pin and requires matching native environment metadata.
+It records the actual value and per-run metadata observation in v5 receipts.
+
+The first full matrices stop because the child-config perturbation replaces
+the complete env list. The corrected control appends its test variable;
+deliberate removal remains isolated to the missing-child negative. The failed
+attempts receive no complete-matrix credit. Both corrected native matrices
+now pass 67 observations, all 40 checks and ten shadow decisions. Each reports
+the native runtime key in 65 runs; exactly the named missing-child changed and
+replay controls omit it. Stable retains the reviewed runtime digest, and the
+canary digest includes its different requested client pin. Both derived values
+were independently reconstructed from the reviewed toolchain serialization.
+Final CLI package verification passes its audit in 411.4
+seconds and docgen in 26.9 seconds. The corrected source check, focused tests,
+schema-first and cache-policy checks pass. Identity's full package audit/docgen
+pass.
+
+The current [entrypoint attachment](./research/runtime-key-entrypoint-request.json)
+binds 294 sources and six snapshots. All five planner/workflow projections
+remain byte-identical. The population stays at 1,474 executable computations,
+with zero blocking policy findings and 922 unassessed cached computations.
+The [verification review](./research/runtime-key-verification.md) and
+[entrypoint seams](./research/runtime-key-entrypoint-seams.md) retain the
+remaining ordinary invocation, full runtime/semantic, signed sibling, dynamic
+entrypoint, adoption and final Yeet requirements. The goal remains active.
+
+The historical [queued checkpoint](./research/runtime-key-queued-checkpoint.json)
+retains the earlier admission state. The [final runtime-key checkpoint](./research/runtime-key-checkpoint.json)
+binds the completed stable/canary v5 receipts, actual per-client runtime keys,
+corrected observer sources and verification results. These remain local
+evidence, with no ordinary-entrypoint, signed-remote or promotion authority.
+
+A refreshed sibling lookup covers 122 registered roots and 18 identical
+copies of the two paused packets. None of their manifests registers new
+runtime evidence. The existing launch question remains pending. The admitted
+installed-lint [mapping probe](./research/installed-executable-mappings.md)
+also completes: nine successful exec events and eight executable system
+backing files in a 185,160-byte trace, with verified installed/runtime identity
+before and after. Two executable protection changes correlate with a prior
+Node anonymous reservation, and ten io_uring ring mappings establish presence
+only. The current snapshot does not hash the eight system backing files.
+Binding their actual targets and observing asynchronous I/O remain concrete
+next steps.
+
+## Operator pause: 2026-09-09
+
+The operator requested a draft PR to save the work and pause implementation.
+The packet is paused, with no completion claims or qualification granted.
+See [the pause checkpoint](./research/paused-pr-checkpoint.md) for the exact
+source/evidence boundary and resume order, and
+[checkpoint validation](./research/paused-pr-verification.json) for checks.
+The v5 native matrices predate startup-library fingerprinting and remain
+historical. Final Yeet and hosted acceptance are deferred until resumption.

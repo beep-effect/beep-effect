@@ -58,3 +58,22 @@ invalidation, capture-safety, concurrency and shadow work. P3 still requires
 the accepted signed-boundary milestone from the conformance/trust owners.
 No historical source review or successful local execution substitutes for
 that runtime evidence, and no remote receipt schema is duplicated here.
+
+## Later packet and task refresh
+
+A later read-only refresh enumerated the same 36 checkout entrypoints and
+their current Git registries, now covering 122 roots with no unavailable
+registry. It found 18 sibling packet copies across those roots. Every copy
+remains paused, with all phases pending and only `SOURCES.md` and
+`OPPORTUNITIES.md` registered as research reports. Their manifests register
+no new accepted runtime evidence or indication that either sibling has started.
+
+The current Codex view contains 50 recent tasks and four pinned tasks. Its
+only matching task titles are `Follow Turborepo task goal` and `TURBO_AUDIT`.
+This refresh covers live task metadata and the named packet manifests; it
+does not repeat the earlier full transcript/artifact search or inspect cloud
+stores. The detailed root and manifest inventory is retained privately in
+`.beep/qualification-local-preflight/sibling-packet-refresh.json`.
+
+The signed-runtime dependency remains unsatisfied. The earlier sibling-launch
+question is still pending; this read-only refresh does not authorize launch.

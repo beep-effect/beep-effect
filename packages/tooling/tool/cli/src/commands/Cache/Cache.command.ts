@@ -20,6 +20,8 @@ import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
+import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
+import { materializeCacheDependencies } from "./Cache.dependencies.ts";
 import { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
 import { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
 import { CacheSyntheticReceipt, CacheSyntheticRequest } from "./Cache.experiment.schemas.ts";
@@ -760,6 +762,16 @@ const cacheSyntheticCommand = Command.make(
   Command.provide(MemoryStatsLive)
 );
 
+const cacheDependenciesCommand = Command.make("dependencies", { output: outputFlag }, ({ output }) =>
+  Effect.gen(function* () {
+    const report = yield* materializeCacheDependencies(process.cwd());
+    yield* writeEncoded(report, JsonStringCodec(CacheDependencyMaterialization), output, O.isNone(output));
+  }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Copy and verify the installed dependency tree; retain the machine-local receipt privately"),
+  Command.provide(MemoryStatsLive)
+);
+
 const cachePilotCommand = Command.make(
   "pilot",
   { request: Flag.file("request"), output: outputFlag },
@@ -793,7 +805,7 @@ const cachePilotCommand = Command.make(
  */
 export const cacheCommand = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, pilot, warm, probe, dashboard"
+    "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, dependencies, pilot, warm, probe, dashboard"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -806,6 +818,7 @@ export const cacheCommand = Command.make("cache", {}, () =>
     cacheActivationCommand,
     cacheTransitionCommand,
     cacheSyntheticCommand,
+    cacheDependenciesCommand,
     cachePilotCommand,
     cacheWarmCommand,
     cacheProbeCommand,

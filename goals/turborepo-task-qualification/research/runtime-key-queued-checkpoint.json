@@ -1,0 +1,179 @@
+{
+  "schemaVersion": "cache-runtime-key-queued-checkpoint/v1",
+  "authority": "Verified local invalidation experiments and package checks; corrected full native matrices remain queued. No ordinary entrypoint enforcement, completed matrix, signed remote or qualification authority.",
+  "sourceRevision": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+  "sourceEditsCommitted": false,
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/runtime-key-activation-preview.json",
+    "sha256": "d847d365cd68fa59f58c30c3aba09f591be4149b43b8ea55722b80c97f92aa0f"
+  },
+  "sourceConfigurationDigest": "c2dd1938d167a38268081a447f79386a71c305e0b53db98c03be3260bccae466",
+  "sourceToolchainDigest": "cd534958140e4c797791a78b5cb25cef090ea20154b396734914fdb5f1552964",
+  "ledger": {
+    "path": "standards/cache-qualification.json",
+    "sha256": "06a4ce7d4ca481d5dd93dacfdb4dff16108ca5683f67c4a68af173ff07fd05ac"
+  },
+  "ledgerUnchanged": true,
+  "pilotCacheEnabled": false,
+  "pendingNativeMatrices": [
+    {
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-pilot-local-stable-bun142-runtime-key-v5"
+      },
+      "status": "awaiting-admission",
+      "request": {
+        "path": ".beep/qualification-local-preflight/pilot-full-stable-runtime-key-v5-r2-request.json",
+        "sha256": "4d166bdd2d626facd2df2abcba4fafa87b97022538fe21c5d17f3905215cf0f3"
+      },
+      "progressSnapshot": {
+        "path": ".beep/qualification-local-preflight/pilot-full-stable-runtime-key-v5-queued.log",
+        "sha256": "fdb2f1c77d7b2138203dbf8dfa2dcce197f299ec9882034e31f3bdb5d85f76be"
+      },
+      "expectedOutput": ".beep/qualification-local-preflight/pilot-full-stable-runtime-key-v5-r2.json",
+      "runtimeCredit": false
+    },
+    {
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-pilot-local-canary-bun142-runtime-key-v5"
+      },
+      "status": "awaiting-admission",
+      "request": {
+        "path": ".beep/qualification-local-preflight/pilot-full-canary-runtime-key-v5-r2-request.json",
+        "sha256": "03cfdf755ac88876f34711d6321eae6b195df5747f57ccb4a1f7eb91f54c1d23"
+      },
+      "progressSnapshot": {
+        "path": ".beep/qualification-local-preflight/pilot-full-canary-runtime-key-v5-queued.log",
+        "sha256": "35924120e6644375af8456f3b295e56fe15da91c05e79eae8a2e5babfa488297"
+      },
+      "expectedOutput": ".beep/qualification-local-preflight/pilot-full-canary-runtime-key-v5-r2.json",
+      "runtimeCredit": false
+    }
+  ],
+  "observerSources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "203592d1bd999ed9a865d828bec9d49064bbc811f966fd211a8075d84e09608e"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts",
+      "sha256": "97d600ed0c4d9cc3cb97da7dc3011bcee24d27ce52eed074504cd1fae0d4fd36"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "sha256": "db967f613d590745903d473c9466b5d5784d7fd178e63db141c4c63b2cf043e4"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "18dc55ab6bebce28fa53ba513bec8e1010cb4bcb81bd4bde080debef2e32a768"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "sha256": "d19da15eca8d1ab2b5ada5801f3eb58631d95d74f65176764c53d8399c3d21e8"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "ca3af6ac1164b4c0313db1539c473ffa40ca390c0fbae156051d6177da2afd18"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "f9390c8e5f028a4cb4985d4910c46c9497647370ed7735d74f3e5001884ff4dc"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "sha256": "0258b27f79a7619979fda87fa0188c3d4a6434a19626f35720aec0ce55bd255f"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/turbo.json",
+      "sha256": "7f816fd987072a7b69c2d0a96b931a6bafae70f4e6312a47456f3ef918e6b75e"
+    }
+  ],
+  "entrypoints": {
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/runtime-key-entrypoint-request.json",
+      "sha256": "e8e7ee0aaf102a4877ffece72b80fa7a6204aa5ca519327a303f6ff9d221e4b4"
+    },
+    "attachment": {
+      "path": ".beep/qualification-local-preflight/census-runtime-key-attached.json",
+      "sha256": "f90c5c10a7d3471f53b940eea6092bd01057c42546009243706f54a08be31b4e"
+    },
+    "sourceBindings": 294,
+    "completeDocuments": 6,
+    "configuredNodes": 2840,
+    "executableNodes": 1474
+  },
+  "experiments": [
+    {
+      "path": "goals/turborepo-task-qualification/research/installed-dependency-cache-counterexample.json",
+      "sha256": "43191f71d08df286e6722cbabf012fe70d13ec9fe87406c9d0e30dbc6c1c9714"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/installed-dependency-keyed-observation.json",
+      "sha256": "cc74d7ac491978ed9beb1da13378a7468f38bb6f596f9c9e04458b7e83180054"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/runtime-keyed-invalidation-observation.json",
+      "sha256": "a2a210793aa738fae4cc626d8061b7ec309076051bf831c153a00d8e387988a7"
+    }
+  ],
+  "verification": {
+    "packages": [
+      {
+        "package": "@beep/repo-cli",
+        "result": "passed",
+        "auditSeconds": 411.4,
+        "docgenSeconds": 26.9,
+        "log": {
+          "path": ".beep/qualification-local-preflight/runtime-key-child-cli-package-verify.log",
+          "sha256": "5e87266d55fb54c48592b54c3a53caef6198db060591a04f4b07c884b5399d6b"
+        }
+      },
+      {
+        "package": "@beep/identity",
+        "result": "passed",
+        "auditSeconds": 5.2,
+        "docgenSeconds": 2.5,
+        "log": {
+          "path": ".beep/qualification-local-preflight/runtime-key-identity-package-verify.log",
+          "sha256": "d0a5629f1bc53beaf730c587a03c40755139a2dc27c77317ea0920494bed1f70"
+        }
+      }
+    ],
+    "supportingLogs": [
+      {
+        "path": ".beep/qualification-local-preflight/runtime-key-child-source-check.log",
+        "sha256": "42eae8ca35dc810a852e8a6c2db191e1c6d01f1204d2bb11b88ade4a66300cee"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-key-final-focused-tests.log",
+        "sha256": "1378875ed4270222a46876b9c26ce8b1a89af3a424370f0406475eb04b53f519"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-key-final-schema-first.log",
+        "sha256": "92cdfc88b77af58c49edb6143b3ba44e5a03a38ff30e124dd2d3811d646819b3"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-key-final-cache-policy.log",
+        "sha256": "72176981b8eae3f56b598318b7c1cb8d3e517482d639a5513184df5438a005ac"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-key-goals-doctor.log",
+        "sha256": "83248b4d9820dbab6331d52fd946a2ab0945205cedc7c9f0ef6e9c18d8ee50a1"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-key-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-key-reflection.log",
+        "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+      }
+    ]
+  },
+  "resume": "Retain and observe the active native requests; do not restart after an observation timeout. If both pass, preserve their original receipt bytes and validate per-client runtime key metadata before replacing pending status with complete local evidence. Ordinary entrypoint enforcement and remaining SPEC gates still require work."
+}

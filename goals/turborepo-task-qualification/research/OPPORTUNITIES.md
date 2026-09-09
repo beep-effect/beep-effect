@@ -1,5 +1,23 @@
 # Friction and opportunities
 
+## 2026-09-09: paused PR publication checks
+
+The first library-fingerprinting typecheck caught a curried Effect String
+helper called with two arguments and a finite-role record assembled with a
+general record constructor. The next check caught nonempty-array inference
+across static/dynamic cases. The exact local helper signature, a schema decode
+of the complete role record, and an explicit readonly-array result resolved
+the introduced errors. Source checking and all 26 focused tests then passed.
+
+The publication scan of the packet reported 20 generic-key detections in four
+runtime-key receipts. They are the public SHA-256 fields `runtimeKeyDigest`,
+`runtimeKeyValue`, and `runtimeKeyObservationSha256`, not credentials. The
+allowance requires both one of those exact field forms with a 64-character
+lowercase hex value and one of the four reviewed receipt paths. A redacted
+report is retained privately. The already-committed branch history passed its
+separate scan. Keep evidence-field exceptions constrained to both schema and
+path; do not rewrite hash-bound historical receipts to satisfy a heuristic.
+
 ## 2026-09-09: an absent installed dependency hides a lint failure
 
 The read-only source worktrees contain no node_modules tree. A fresh probe
@@ -548,3 +566,113 @@ controls disable reuse and may still run after this comparison stops reuse.
   needed main's config type-check lane retained beside this branch's cache gate.
 - Prevention: validate generated aliases and lane membership after each main
   integration, including merges that Git resolves without a config conflict.
+
+### Supply census services in private dependency probes
+
+- Activity: verify the retained installed tree before a traced native probe.
+- Evidence: the first wrapper stopped before running the probe with
+  `Service not found: @beep/repo-utils/FsUtils/FsUtils`. The CLI materializer
+  and stable pilot had passed using the full CLI environment; the private
+  wrapper supplied only platform and scheduler services.
+- Correction: use the existing test platform composition, including FsUtils
+  and crypto, in a new wrapper revision. Preserve the failed run and credit
+  it as no native probe execution.
+- Prevention: type-check the standalone wrapper's complete service environment
+  before entering scheduler admission.
+
+### Prevent installed Turbo from replacing the requested client
+
+- Activity: run the exact canary matrix with the verified installed dependency
+  tree mounted read-only.
+- Evidence: the canary stopped at `Sandbox turbo version check failed (exit 0)`
+  before recording a matrix. The native CLI documents `--skip-infer` as the
+  option that disables project-version inference. The installed tree contains
+  the stable Turbo package, a condition absent from the old source fixtures.
+- Correction: pass `--skip-infer` at the common native invocation boundary,
+  including version checks, and retain the client-selection observation.
+  Rerun both clients with the direct invocation contract; the earlier stable
+  installed-tree receipt remains preliminary local evidence.
+- Prevention: verify the executed version after dependency installation and
+  bind the client-selection mode in each runtime receipt.
+
+### Bind the observed installed launcher helpers
+
+- Activity: inspect successful execve records from the installed lint probe.
+- Evidence: Biome's package launcher runs Node, `/bin/sh`, `/usr/bin/ldd` and
+  the installed native Biome binary. The old toolchain snapshot did not bind
+  the `ldd` file; binary version strings alone did not describe this chain.
+- Correction: hash the observed system shell/helper files in the runtime
+  fingerprint and rerun the exact clients against the expanded identity.
+  Preserve the preceding receipts under their original identities.
+- Prevention: inspect successful native execve events before calling a
+  launcher chain pinned. Shared-library and ambient-input evidence remains a
+  separate obligation.
+
+### Read large runtime receipts through bounded summaries
+
+- Activity: inspect the final lines of a native pilot log.
+- Evidence: `cache pilot --output` also prints the complete receipt, so the
+  log's final line duplicated roughly 100 KB of structured evidence and
+  overwhelmed an otherwise short status read.
+- Prevention: parse selected fields from the output receipt and filter bounded
+  progress lines from logs. A file-output quiet mode would avoid this duplicate
+  diagnostic volume; the current receipt bytes remain preserved.
+
+### Carry installed dependency identity into the native task hash
+
+- Activity: warm the isolated lint cache, deprecate an installed export through
+  read-only file overlays, and compare local replay with forced fresh execution.
+- Evidence: both exact clients return a local hit and exit zero at the unchanged
+  hash; fresh lint exits one. Selected source, task configuration and lockfile
+  bytes are unchanged. The counterexample is retained in
+  `installed-dependency-cache-counterexample.json`.
+- Consequence: a reviewed toolchain fingerprint does not by itself partition
+  Turbo's native cache key. Live identity/types reuse remains disabled.
+- Next test: derive the effective installed-tree digest from the mounted view
+  before invoking Turbo and declare it as a hashed task environment input.
+  This scoped experiment must not be mistaken for complete runtime qualification
+  or for production entrypoint enforcement.
+
+### Use the existing test facade for the tree inspector
+
+- Activity: run the installed-tree partition experiment's namespace observer.
+- Evidence: the first helper imported `inspectCacheDependencyTree` from the
+  command facade. Typechecking reported no such export, and the native helper
+  stopped with `Export named 'inspectCacheDependencyTree' not found` before any
+  selected lint execution. That attempt receives no comparison credit.
+- Correction: the focused dependency tests already use the curated
+  `@beep/repo-cli/test/Cache` export. Use that existing facade in a new helper
+  revision and complete its type check before entering the runtime lane.
+- Prevention: read the existing consumer import before wiring an internal
+  operation into a standalone probe; do not launch after a failed type check.
+
+### Preserve required inputs in configuration perturbations
+
+- Activity: run the full stable/canary pilots after declaring the verified
+  runtime key as a native task input.
+- Evidence: both runs stop with `The native pilot summary omitted the verified
+  runtime key.` The child-config control replaces its complete environment
+  declaration with one test variable, removing the new required input. The
+  initial dry-plan checks had accepted the declaration. These failed runs
+  provide no complete-matrix credit.
+- Correction: append the control variable to the existing declaration, keeping
+  removal isolated to the named missing-child negative. Include the run id in
+  subsequent metadata rejection messages and rerun the native matrices.
+- Prevention: perturb a single reviewed property without silently deleting
+  prerequisite inputs; retain separate deliberate-removal adversaries.
+
+### Trace asynchronous runtime I/O after installation
+
+- Activity: inspect executable mappings of the installed identity lint chain.
+- Evidence: the bounded trace records eight executable system-library files,
+  two executable protection changes within a prior Node anonymous reservation,
+  and ten mappings of `anon_inode:[io_uring]`. The current snapshot does not
+  hash those system backing files. Ring mappings alone establish no I/O
+  submission or outcome, and the earlier source-only fixture lacks this
+  installed launcher path.
+- Next action: bind observed system targets before execution and verify them
+  afterward; include actual asynchronous operations in the read/write audit.
+  Keep executable mappings, generated-memory transitions and observed I/O
+  outcomes distinct in the evidence.
+- Prevention: establish the installed process and runtime boundary before
+  treating a restricted syscall trace as complete read/write coverage.

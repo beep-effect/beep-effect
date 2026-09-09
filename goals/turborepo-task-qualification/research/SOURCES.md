@@ -400,6 +400,104 @@ below; they are not covered by the earlier checkpoint.
 - `packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts`
   and `Cache.dependencies.ts`: installed-tree snapshot model, bounded canonical
   archive identity, topology checks, copy parity and retained-view verification.
-  The library operations are not yet integrated with the pilot runtime.
+  The library-only checkpoint preceded their installed pilot integration below.
 - `packages/tooling/tool/cli/test/cache-dependencies.test.ts`: four focused
   schema and native filesystem tests for content identity and symlink limits.
+
+# Installed dependency and launcher evidence: 2026-09-09
+
+- [Merged baseline review](./dependencies-main-baseline-review.md),
+  [complete delta](./dependencies-main-baseline-delta.json) and
+  [writer request](./dependencies-main-baseline-request.json): 123 inherited
+  command-map digest changes with no task configuration or edge change.
+- [Dependency materialization review](./installed-dependency-materialization.json):
+  native source/copy parity, complete installed-tree counts and bounded digest
+  semantics, with the private typed receipt retained by hash.
+- [Successful execution observations](./installed-view-execution-observation.json):
+  eight fresh commands, external-deprecation behavior, actual launcher paths
+  and before/after retained-tree verification. Failed PATH attempts do not
+  count as executed tools.
+- [Client-selection observations](./installed-client-selection.json): native
+  canary inference in an installed workspace and direct `--skip-infer` behavior.
+- [Preliminary installed stable v3](./pilot-installed-v3-stable.json),
+  [direct stable v4](./pilot-installed-v4-stable.json) and
+  [direct canary v4](./pilot-installed-v4-canary.json): preserved local matrices
+  under their original installed-tree/toolchain identities. The v3 run predates
+  the explicit direct-client selection contract.
+- [Expanded launcher activation preview](./installed-launcher-activation-preview.json):
+  installed-tree identity plus the observed system shell/helper hashes, with
+  the same disabled/enabled v5 configuration fragments used only in fixtures.
+- [Stable with launcher pins](./pilot-installed-launcher-v4-stable.json) and
+  [canary with launcher pins](./pilot-installed-launcher-v4-canary.json): each
+  completes 67 observations, 40 checks and ten matching local shadow decisions
+  against the expanded runtime fingerprint.
+- [ELF runtime metadata](./installed-runtime-elf-metadata.json): interpreter
+  and declared library dependencies for six pinned executables, retained with
+  the original readelf output hashes. This is neither a loaded-library trace
+  nor a complete runtime identity.
+- [Entrypoint review](./installed-launcher-entrypoint-review.md) and
+  [source-bound request](./installed-launcher-entrypoint-request.json): 294
+  sources and six complete snapshots after the second quality-lane integration.
+  Planner snapshots remain source evidence, with dynamic runtime and external
+  verdict obligations explicit.
+- [Installed pilot verification](./installed-launcher-verification.md) and
+  [checkpoint](./installed-launcher-checkpoint.json): final exact-client
+  receipts, observer/source bindings, full CLI package verification and the
+  remaining runtime, signed-remote and adoption requirements.
+
+# Installed invalidation and native runtime key: 2026-09-09
+
+- [Stale installed-dependency success](./installed-dependency-cache-counterexample.json):
+  six observations across exact stable/canary; unchanged native hash, cached
+  success and forced fresh failure after an external export becomes deprecated.
+- [Installed-tree key experiment](./installed-dependency-keyed-observation.json):
+  eight native observations and all five repair checks per client, using the
+  digest of the effective read-only tree as a declared task input.
+- [Toolchain key experiment](./runtime-keyed-invalidation-observation.json):
+  eight native observations and all five repair checks per client, using the
+  existing fingerprint function and effective installed tree. This prototype
+  retains the reviewed stable client pin when calculating either channel's
+  runtime value; the durable runner separately substitutes the requested pin.
+- [Baseline review](./runtime-key-baseline-review.md),
+  [delta](./runtime-key-baseline-delta.json) and
+  [writer request](./runtime-key-baseline-request.json): exactly one task env
+  declaration added, with unchanged population, command, edge and ledger.
+- [Activation preview](./runtime-key-activation-preview.json): immutable v6
+  disabled/enabled fixture configurations; the live child remains disabled.
+- [Planner parity](./runtime-key-planner-parity.json),
+  [entrypoint review](./runtime-key-entrypoint-review.md) and
+  [attachment request](./runtime-key-entrypoint-request.json): five regenerated
+  projections remain byte-identical; six snapshots and 294 source bindings
+  attach to the new census.
+- [Runtime key verification](./runtime-key-verification.md) and
+  [ordinary entrypoint seams](./runtime-key-entrypoint-seams.md): durable v5
+  metadata checks, the rejected env-replacement control and its correction,
+  supporting package checks and outstanding execution-boundary requirements.
+- [Queued native checkpoint](./runtime-key-queued-checkpoint.json): corrected
+  full requests, immutable progress snapshots, current observer hashes and
+  completed package proof as observed before native admission. It retains that
+  historical pending state.
+- [Stable v5](./pilot-runtime-key-v5-stable.json),
+  [canary v5](./pilot-runtime-key-v5-canary.json) and
+  [final runtime-key checkpoint](./runtime-key-checkpoint.json): each client
+  passes 67 observations, 40 checks and ten shadows, with native key metadata
+  present except in the two deliberate missing-child controls. Reconstructed
+  runtime digests match the actual requested client pins. The checkpoint
+  binds final package proof and preserves the failed first attempts.
+- [Installed executable mappings](./installed-executable-mappings.md) and
+  [raw-bound review](./installed-executable-mappings-review.json): nine
+  successful exec events, eight executable system backing files, two
+  anonymous-range protection correlations and ten io_uring ring mappings.
+  Post-run hashes and mapped rings do not establish unchanged system bytes
+  during execution or actual asynchronous I/O outcomes.
+- [Refreshed sibling lookup](./sibling-evidence-search.md): 122 registered
+  roots, 18 paused packet copies and current Codex task metadata. The named
+  manifests register no new runtime receipt; the earlier full history search
+  remains separately scoped historical evidence.
+
+## Paused draft PR checkpoint: 2026-09-09
+
+- [Pause checkpoint](./paused-pr-checkpoint.md): operator-requested pause,
+  preserved implementation/evidence boundary and explicit resume order.
+- [Checkpoint validation](./paused-pr-verification.json): source, tests, package
+  handoff, publication scans and packet checks for the saved work.

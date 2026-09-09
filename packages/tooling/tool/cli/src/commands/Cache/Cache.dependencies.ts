@@ -221,9 +221,11 @@ export const materializeCacheDependencies = Effect.fn("CacheDependencies.materia
     const pins = yield* toolPins();
     const lockfileSha256 = yield* hash(path.join(root, "bun.lock"));
     const rootManifestSha256 = yield* hash(path.join(root, "package.json"));
+    yield* Effect.logInfo("Inspecting the installed dependency tree before copying.");
     const tree = yield* inspectCacheDependencyTree(root, census.workspaces);
     const directory = yield* fs.makeTempDirectory({ directory: parent, prefix: "view-" });
     return yield* Effect.gen(function* () {
+      yield* Effect.logInfo(`Copying ${tree.regularFiles} dependency files (${tree.bytes} bytes).`);
       yield* capture(root, "/usr/bin/cp", [
         "--archive",
         "--reflink=auto",
@@ -232,6 +234,7 @@ export const materializeCacheDependencies = Effect.fn("CacheDependencies.materia
         path.join(root, "node_modules"),
         path.join(directory, "node_modules"),
       ]);
+      yield* Effect.logInfo("Verifying dependency copy and source parity.");
       const copied = yield* inspectCacheDependencyTree(directory, census.workspaces);
       const after = yield* inspectCacheDependencyTree(root, census.workspaces);
       if (!S.toEquivalence(CacheDependencyTree)(tree, copied) || !S.toEquivalence(CacheDependencyTree)(tree, after))

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "cache-runtime-key-planner-parity/v1",
+  "authority": "Fresh pure planner/source projections only; no lane or hosted execution.",
+  "observations": [
+    {
+      "recipe": "goals/turborepo-task-qualification/research/refresh-entrypoint-plans.ts",
+      "hosted": false,
+      "retainedReference": {
+        "path": "goals/turborepo-task-qualification/research/entrypoint-plans-installed-v3.json",
+        "sha256": "662fae10b9903795a9926858f133c8fef103bf67d8469f86e5a436b16481a4f8"
+      },
+      "freshReference": {
+        "path": ".beep/qualification-local-preflight/validation-runtime-entrypoint-local.json",
+        "sha256": "662fae10b9903795a9926858f133c8fef103bf67d8469f86e5a436b16481a4f8"
+      },
+      "byteIdentical": true
+    },
+    {
+      "recipe": "goals/turborepo-task-qualification/research/refresh-entrypoint-plans.ts",
+      "hosted": true,
+      "retainedReference": {
+        "path": "goals/turborepo-task-qualification/research/entrypoint-plans-hosted-installed-v3.json",
+        "sha256": "c96bcc398b7a6b1fc57bdd3a7b199d2ab4cdb09b1c50d906310e9d8299e7d7a5"
+      },
+      "freshReference": {
+        "path": ".beep/qualification-local-preflight/validation-runtime-entrypoint-hosted.json",
+        "sha256": "c96bcc398b7a6b1fc57bdd3a7b199d2ab4cdb09b1c50d906310e9d8299e7d7a5"
+      },
+      "byteIdentical": true
+    },
+    {
+      "recipe": "goals/turborepo-task-qualification/research/refresh-yeet-plans.ts",
+      "hosted": false,
+      "retainedReference": {
+        "path": "goals/turborepo-task-qualification/research/yeet-plans-installed-v3.json",
+        "sha256": "5713f7516c5058a25f8dc6226c056b0e8cd09ddbf9106cdccaff8eff0992668b"
+      },
+      "freshReference": {
+        "path": ".beep/qualification-local-preflight/validation-runtime-yeet-local.json",
+        "sha256": "5713f7516c5058a25f8dc6226c056b0e8cd09ddbf9106cdccaff8eff0992668b"
+      },
+      "byteIdentical": true
+    },
+    {
+      "recipe": "goals/turborepo-task-qualification/research/refresh-yeet-plans.ts",
+      "hosted": true,
+      "retainedReference": {
+        "path": "goals/turborepo-task-qualification/research/yeet-plans-hosted-installed-v3.json",
+        "sha256": "8fd4cae6f3f12c9b669be302f5088c7ac51e0656f67b7c135c53296735dba562"
+      },
+      "freshReference": {
+        "path": ".beep/qualification-local-preflight/validation-runtime-yeet-hosted.json",
+        "sha256": "8fd4cae6f3f12c9b669be302f5088c7ac51e0656f67b7c135c53296735dba562"
+      },
+      "byteIdentical": true
+    },
+    {
+      "recipe": "goals/turborepo-task-qualification/research/refresh-workflow-sources.ts",
+      "hosted": false,
+      "retainedReference": {
+        "path": "goals/turborepo-task-qualification/research/workflow-sources-installed-v3.json",
+        "sha256": "4d38fc18ad83af15221a28d5523e413accbd7ca7f0a998a9c27ca86ba5f24888"
+      },
+      "freshReference": {
+        "path": ".beep/qualification-local-preflight/validation-runtime-workflows.json",
+        "sha256": "4d38fc18ad83af15221a28d5523e413accbd7ca7f0a998a9c27ca86ba5f24888"
+      },
+      "byteIdentical": true
+    }
+  ]
+}
