@@ -411,8 +411,8 @@ describe("goals adopt --plan index parity", () => {
           expect(O.isSome(first)).toBe(true);
           if (O.isNone(first)) return;
           expect(A.every(generated, (content) => content === first.value)).toBe(true);
-          const local = yield* fs.readFileString(`${repoRoot}/${PORTFOLIO_INDEX_PATH}`).pipe(Effect.option);
-          if (O.isSome(local)) expect(local.value).toBe(first.value);
+          // The local goals/INDEX.md projection is git-ignored workstation state; drift against it is
+          // the `goals index --check` command's job (covered below on a temp dir), not this test's.
         })
       ),
     60_000
