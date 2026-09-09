@@ -4,7 +4,7 @@
 
 Remediate every open Codex Cloud security finding visible at
 `https://chatgpt.com/codex/cloud/security/findings/` for
-`kriegcloud/beep-effect` in the 11-finding batch captured on 2026-09-08. Publish
+`kriegcloud/beep-effect` in the 12-finding batch captured on 2026-09-08. Publish
 the work through Yeet, reach mergeable hosted state, merge, then resolve the
 exact captured findings until no packet-applicable finding remains open.
 
@@ -45,12 +45,12 @@ exact captured findings until no packet-applicable finding remains open.
 - Security controls may not be simplified away for diff size.
 - Full reports stay in ignored `raw/`; tracked records contain only sanitized
   metadata, summaries, validation, decisions, changed files, and proof.
-- Browser closure happens after merge, against the exact 11-ID allowlist.
+- Browser closure happens after merge, against the exact 12-ID allowlist.
 - Preserve unrelated work and stage only reviewed packet intent.
 
 ## Acceptance Criteria
 
-- [x] All 11 findings have sanitized tracked CSF records with Codex ID, severity,
+- [x] All 12 findings have sanitized tracked CSF records with Codex ID, severity,
       title, source commit, and public summary.
 - [x] Every finding has a current-HEAD verdict, disposition, lane, rationale,
       remediation state, changed-file set, and verification evidence.
@@ -61,7 +61,7 @@ exact captured findings until no packet-applicable finding remains open.
 - [ ] Yeet repair and verify are green on the complete remediation scope.
 - [ ] The branch is published, hosted checks and reviews are closed, and the PR
       is mergeable and merged.
-- [ ] All 11 captured Codex findings are resolved after merge and the live view
+- [ ] All 12 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
 
 These boxes record pre-merge evidence. Final local and hosted proof, the merge,
@@ -74,8 +74,8 @@ remains active while any part of the completion gate is pending.
 | --- | --- | --- |
 | Launcher size | `test "$(wc -m < goals/codex-security-findings-2026-09-08/GOAL.md)" -le 4000` | Pass |
 | JSON shape | `jq .` over both files in `ops/` | Pass |
-| Finding count | CSF file count equals 11 | Pass |
-| Severity count | 3 Low, 8 Informational | Pass |
+| Finding count | CSF file count equals 12 | Pass |
+| Severity count | 1 Medium, 3 Low, 8 Informational | Pass |
 | Raw ignored | `git status --short -- .../raw` | Only `.gitignore` tracked |
 | Sanitization | tracked packet secret/path pattern scan | No matches |
 | Per-finding proof | command recorded in finding and triage ledger | Pass |
@@ -100,3 +100,8 @@ the current findings before publication and include any additions in this PR.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Post-merge receipt location | Packet bookkeeping only | Operator instruction | Resolve all findings in one PR; retain external closure evidence on PR #1026 without a second publication. Local and hosted proof, review, merge, and exact-ID closure remain required. | Actual completion gate satisfied |
+
+The operator authorized a follow-up PR on September 9 because PR #1026 merged
+while the newly surfaced CSF-012 fix was being finalized. That authorization
+supersedes the original one-PR limit. Prior findings remain covered by #1026;
+CSF-012 must merge before its Codex finding is closed.

@@ -69,3 +69,46 @@
   Both fleet suites pass (42 tests); branches 78.98%, lines 90.42%, and statements
   88.57% exceed the unchanged floors. Include coverage for each new recovery
   branch when validating a security boundary.
+
+- A fresh findings export during PR #1026 closeout added CSF-012 from newly
+  merged corpus tooling. The three standalone generators shared a PID pattern
+  that missed quoted keys and escaped whitespace; both fleet pins retained
+  affected message values. Exercise serialization depth at public-output
+  boundaries, and keep the reject scan aligned with the redactor. Repairing the
+  saved bytes with provenance receipts avoids unrelated live recapture drift.
+
+- PR #1032 review exposed single-quoted PID forms and ambiguous whitespace
+  repetition in the expanded regex. Cover both quote styles and bound long
+  non-matching scans in a child process. Derive the manifest description from
+  the actual pattern and reject stale descriptions during pin verification.
+- Yeet restored pre-format goal JSON after an interrupted staged-only proof,
+  causing a formatting-only conflict. The saved and committed JSON decoded to
+  identical data; the unrelated settings bytes matched their pre-run hash.
+  Format intended JSON before staging so the saved overlay contains only
+  unrelated work. The recovery stash remains available.
+
+- PR #1032 review found that replacing an entire PID match damaged embedded JSON,
+  HEAD-only generator lookup prevented replay after commit, and a repeat repair
+  overwrote its original provenance. Parse every serialization layer in redaction
+  tests, exercise repair from a synthetic committed history, and retain the initial
+  receipt with append-only update records. Replaying the original committed pins
+  restored the message structure without live recapture.
+
+- Main advanced with PR #1034 after the previous merge conflict was fixed,
+  introducing another copy of the same vulnerable redactor and 11 affected raw
+  files. Refresh GitHub mergeability immediately before reporting it cleared,
+  and include newly merged copies when validating a shared security boundary.
+
+- The committed-history regression imported the packet repair script and left
+  Python bytecode inside the packet. The canonical refresh then rejected the
+  `__pycache__` path. Disable bytecode writing for this test import so executing
+  a repair regression leaves the packet eligible for its normal safety scan.
+
+- Stage B repair-history coverage requested in PR #1032 exposed a real
+  projection false positive: a redacted PID null inside message text was
+  rejected as a raw identity member. Include an edited message in each
+  population's repair fixture, and validate its actual projection bytes.
+
+- A broad report-row replacement updated both the current hash table and a
+  historical inventory table. Scope replacements to the named table and check
+  column counts so refreshed integrity evidence does not corrupt older proofs.

@@ -87,7 +87,16 @@ MANIFEST_SCHEMA = "beep-ci-ops-fleet-corpus/v1"
 DROP_ADMISSION_FIELDS = ("pid", "procStart")
 PROJECTION_KIND = "properties_projection"
 
-PID_IN_TEXT = re.compile(r"\b(pid)[ =:]?[0-9]+")
+# String leaves may contain JSON serialized through several escaping layers.
+PID_IN_TEXT = re.compile(
+    r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
+    re.IGNORECASE,
+)
+PID_REDACTION_RULE = (
+    "In string values, replace case-insensitive PID matches, including single or double "
+    "quotes and repeated JSON escapes. Preserve delimiters; replace numeric JSON values "
+    "with null and quoted or free-text values with <redacted>. Pattern: " + PID_IN_TEXT.pattern
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -214,13 +223,19 @@ def same_json(left: JsonValue, right: JsonValue) -> bool:
     return left == right
 
 
+def redact_pid_match(match: re.Match[str]) -> str:
+    """Preserve JSON punctuation and escaping while removing only PID digits."""
+    replacement = "null" if match["key_quote"] and not match["value_quote"] else "<redacted>"
+    return match["prefix"] + replacement
+
+
 def redact_string(value: str) -> str:
     """Apply the ordered fleet path and free-text PID rules to one value."""
 
     redacted = value.replace(FLEET_PATH_PREFIX, "<fleet>/")
     redacted = redacted.replace(HOME_PATH_PREFIX, "<home>")
     redacted = redacted.replace(SYSTEM_TEMP_PATH_PREFIX, "<tmp>/")
-    return PID_IN_TEXT.sub("pid <redacted>", redacted)
+    return PID_IN_TEXT.sub(redact_pid_match, redacted)
 
 
 def redact_string_values(value: JsonValue) -> JsonValue:
@@ -751,6 +766,8 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Hard-fail public-output host-path and secret byte patterns."""
 
     for path, data in files:
+        if PID_IN_TEXT.search(path + "\n" + data.decode("utf-8")):
+            fail("residue scan failed: free-text process identifier")
         if b"/home/" in data:
             fail(f"host-path scan failed for {path}: forbidden /home/ bytes")
         if b"/tmp/" in data:
@@ -858,10 +875,7 @@ def build_manifest(emitted: list[EmittedFile]) -> bytes:
                 "operator-home prefix with <home>, then the system temporary-directory prefix "
                 "with <tmp>/."
             ),
-            (
-                r"In those string values, replace each case-sensitive match of "
-                r"\b(pid)[ =:]?[0-9]+ with pid <redacted>."
-            ),
+            PID_REDACTION_RULE,
             "Never transform structural keys, booleans, nulls, or numeric values.",
         ],
         "projection_rules": [
@@ -1007,6 +1021,8 @@ def verify_output_tree(root: Path) -> VerificationSummary:
         fail(f"{MANIFEST_NAME} has an unsupported schema")
     if manifest.get("generator_sha256") != sha256(SCRIPT.read_bytes()):
         fail("generator digest differs from the pinned manifest; use --refresh deliberately")
+    if PID_REDACTION_RULE not in manifest.get("redaction_rules", []):
+        fail("manifest PID redaction rule differs from the generator")
     if re.search(rb"/(?:home|tmp)(?:/|\b)", manifest_bytes):
         fail(f"{MANIFEST_NAME} contains a non-portable home or temporary path")
     if re.search(rb"(?:^|[ \t:'\"])/(?!/)", manifest_bytes, flags=re.MULTILINE):

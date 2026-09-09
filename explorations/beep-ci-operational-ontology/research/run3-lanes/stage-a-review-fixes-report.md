@@ -1,5 +1,40 @@
 # Run-3 Stage A PR review-fix report
 
+## Current security repair proof — PR #1032
+
+CSF-012 changed the generators and repaired saved message values after the
+Stage A review below. The historical report, hashes, byte totals, and unchanged
+claims below describe the pre-CSF-012 commit `e9f5e0700a8c`; they are not current
+integrity evidence. The following values supersede them for the repaired pins.
+
+The repair was replayed from committed source `247d22465bdf5b0bb97388bc22c66c01f8eb54d2`
+with the then-three-pin `resanitize-corpora.py --source-ref <commit>`.
+The current five-pin script can replay pre-security source `86990e28f9`, which
+also contains both Stage B pins. It preserved embedded JSON,
+capture instants, event counts, owner references, and the original manifest
+digests. No live source was recaptured and no ontology ratification was rerun.
+Both fleet pins retain the original count of 12 repaired raw files; the identity
+pin required no raw-value changes. Future repairs append provenance updates
+without replacing the initial record. A second ordinary repair verifies every
+pin unchanged.
+
+Whole-tree hashes use the length-framed method documented below and include
+each manifest. Each generator's full pin verifier passes.
+
+| Pin | Whole-tree SHA-256 | Files | Records | Bytes |
+| --- | --- | ---: | ---: | ---: |
+| run2-fleet | `dc2558688389236e5a7974bd1badc359a6772980f5a141a0905622073cfcf995` | 1589 | 6213 | 13316735 |
+| run3-fleet | `3a20640a2df3da8e50760d5d511ed2d03a9dcea26c74750fbc5b23c201080d96` | 1873 | 7641 | 18263265 |
+| run3-checkout-identity | `cfd02834094938cad232cd0d6400650c2c8f547ea68606ca065bb2d102dcbd8e` | 217 | 108 | 894779 |
+
+Current generator SHA-256 pins:
+
+- run2-fleet: `962759f2ee171b171a23f5ca0c048f43c0c0586d0446e51adb3ae3f007851229`.
+- run3-fleet: `06f61533f1c0cc9e5aa8a61a1729df620a3f833950361d869724b5787ba1ac17`.
+- run3-checkout-identity: `ae9db0102c4cbc4b39862872a099edc88d2874202641b6d3ffb27aef77010854`.
+
+## Historical Stage A report — before CSF-012
+
 Date: 2026-09-08 (America/Chicago; capture instants are UTC).
 Branch: `ontology-run3-stage-a`. PR: #1027. Lane: Codex review fixes.
 

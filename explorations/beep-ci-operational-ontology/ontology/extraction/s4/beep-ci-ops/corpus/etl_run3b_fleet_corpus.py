@@ -47,7 +47,11 @@ def _repo_root() -> Path:
 
 REPO_ROOT = _repo_root()
 FLEET_ROOT = REPO_ROOT.parent
-PID_IN_TEXT = re.compile(r"\b(pid)[ =:]?[0-9]+")
+# String leaves may contain JSON serialized through several escaping layers.
+PID_IN_TEXT = re.compile(
+    r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
+    re.IGNORECASE,
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -164,6 +168,12 @@ def host_prefixes() -> list[tuple[str, str]]:
     return sorted(roots.items(), key=lambda item: -len(item[0]))
 
 
+def redact_pid_match(match: re.Match[str]) -> str:
+    """Preserve JSON punctuation and escaping while removing only PID digits."""
+    replacement = "null" if match["key_quote"] and not match["value_quote"] else "<redacted>"
+    return match["prefix"] + replacement
+
+
 def redact_string(value: str, aliases: dict[str, str] | None = None) -> str:
     for prefix, token in sorted((aliases or {}).items(), key=lambda item: -len(item[0])):
         value = re.sub(re.escape(prefix) + r"(?=/|$|[\s\"'=,:;)\]])", lambda _: token, value)
@@ -182,7 +192,7 @@ def redact_string(value: str, aliases: dict[str, str] | None = None) -> str:
     value = value.replace(sha256(hostname.encode())[:12], "<host>")
     value = value.replace(hostname, "<host>")
     value = re.sub(r"\buid-\d+", "uid-<uid>", value)
-    return PID_IN_TEXT.sub("pid <redacted>", value)
+    return PID_IN_TEXT.sub(redact_pid_match, value)
 
 
 def process_member(key: str) -> bool:
@@ -445,7 +455,11 @@ def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
             fail("residue scan failed: user identity in runtime or unit name")
         if re.search(rb"(?:merged-preview-\d+|-\d+\.(?:lease|ticket)\.json)", combined):
             fail("residue scan failed: process identity in state or preview filename")
-        if re.search(rb'"(?:pid|ppid|ownerPid|parentPid|processId|procStart|procStartTime)"\s*:', combined):
+        # Projections retain string leaves verbatim, including embedded JSON
+        # whose PID digits were replaced by null. Raw JSON members still fail.
+        member_bytes = (re.sub(rb'"pid"\s*:\s*null\b', b"", combined)
+                        if _label.endswith(".properties") else combined)
+        if re.search(rb'"(?:pid|ppid|ownerPid|parentPid|processId|procStart|procStartTime)"\s*:', member_bytes):
             fail("residue scan failed: process identity member")
         if PID_IN_TEXT.search(combined.decode("utf-8")):
             fail("residue scan failed: free-text process identifier")
