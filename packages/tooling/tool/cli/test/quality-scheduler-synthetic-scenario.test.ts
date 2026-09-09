@@ -85,6 +85,8 @@ const steps = [
   "Reap both fixtures through the real eviction and attempt-termination writers; acknowledge all claims.",
   "Finish A, assert the complete per-nonce chains, then reap again to prove idempotence and lock cleanup.",
 ];
+type ScenarioChain = { readonly label: string; readonly nonce: string; readonly tags: ReadonlyArray<string> };
+
 const eventTag = (event: AdmissionJournalEvent) => event._tag;
 const journalLines = (text: string) => pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty));
 const isLockPath = Str.includes(".lock");
@@ -186,7 +188,7 @@ const copyWithoutLocks = Effect.fn("SyntheticAdmission.copyWithoutLocks")(functi
 const exportScenario = Effect.fn("SyntheticAdmission.exportScenario")(function* (
   runtimeDir: string,
   target: string,
-  chains: ReadonlyArray<{ readonly label: string; readonly nonce: string; readonly tags: ReadonlyArray<string> }>
+  chains: ReadonlyArray<ScenarioChain>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -219,6 +221,58 @@ const exportScenario = Effect.fn("SyntheticAdmission.exportScenario")(function* 
   yield* fs.writeFileString(path.join(target, "scenario.json"), `${scenario}\n`);
   // Stage B may consume the export only once every copy and the manifest have completed.
   yield* fs.writeFileString(path.join(target, "READY"), "");
+});
+
+const expectV3ExceptAdmitted = (events: ReadonlyArray<AdmissionJournalEvent>): void => {
+  for (const event of events) {
+    expect(AdmissionJournalEvent.guards[event._tag](event)).toBe(true);
+    expect(event.schemaVersion).toBe(
+      AdmissionJournalEvent.guards["admission-admitted"](event)
+        ? "yeet-admission-journal/v1"
+        : "yeet-admission-journal/v3"
+    );
+  }
+};
+
+const expectExportCheck = Effect.fnUntraced(function* (
+  runtimeDir: string,
+  root: string,
+  chains: ReadonlyArray<ScenarioChain>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  // Exercise export completeness and refusal within the disposable root on ordinary regression runs too.
+  const exportCheck = path.join(runtimeDir, "export-check");
+  yield* fs.makeDirectory(exportCheck);
+  yield* exportScenario(runtimeDir, exportCheck, chains);
+  expect(yield* fs.readFileString(path.join(exportCheck, "READY"))).toBe("");
+  expect(yield* fs.readFileString(path.join(exportCheck, "admission", "journal.ndjson"))).toBe(
+    yield* fs.readFileString(yield* admissionJournalPath(root))
+  );
+  const manifest = yield* fs.readFileString(path.join(exportCheck, "scenario.json"));
+  expect(yield* decodeJsonObject(manifest)).toMatchObject({
+    producer: {
+      path: producerPath,
+      sha256: createHash("sha256")
+        .update(yield* fs.readFile(fileURLToPath(import.meta.url)))
+        .digest("hex"),
+    },
+    steps,
+    expected: { tags: expectedTags, chains },
+  });
+  for (const label of ["contender-a", "dead-lease", "dead-ticket"]) {
+    const relative = path.join("checkouts", label, ".beep", "yeet", "runs");
+    expect(yield* fs.readDirectory(path.join(exportCheck, relative), { recursive: true })).toStrictEqual(
+      yield* fs.readDirectory(path.join(runtimeDir, relative), { recursive: true })
+    );
+  }
+  for (const directory of ["leases", "queue", "claims", "quarantine"]) {
+    expect(yield* fs.readDirectory(path.join(exportCheck, "admission", directory))).toStrictEqual([]);
+  }
+  const refusal = yield* exportScenario(runtimeDir, exportCheck, chains).pipe(Effect.flip);
+  expect(refusal.message).toContain("refusing to overwrite a non-empty export target");
+  expect(yield* fs.readFileString(path.join(exportCheck, "scenario.json"))).toBe(manifest);
+  expect(A.filter(yield* fs.readDirectory(exportCheck, { recursive: true }), isLockPath)).toStrictEqual([]);
 });
 
 describe("synthetic admission scenario", () => {
@@ -361,14 +415,7 @@ describe("synthetic admission scenario", () => {
           expect(
             R.map(expectedTags, (_count, tag) => A.countBy(events, AdmissionJournalEvent.guards[tag]))
           ).toStrictEqual(expectedTags);
-          for (const event of events) {
-            expect(AdmissionJournalEvent.guards[event._tag](event)).toBe(true);
-            expect(event.schemaVersion).toBe(
-              AdmissionJournalEvent.guards["admission-admitted"](event)
-                ? "yeet-admission-journal/v1"
-                : "yeet-admission-journal/v3"
-            );
-          }
+          expectV3ExceptAdmitted(events);
           const enqueues = A.filter(events, AdmissionJournalEvent.guards["admission-enqueued"]);
           const enqueuedA = O.getOrThrow(A.findFirst(enqueues, (event) => event.checkoutRoot === checkoutA));
           const enqueuedB = O.getOrThrow(A.findFirst(enqueues, (event) => event.checkoutRoot === checkoutB));
@@ -433,38 +480,7 @@ describe("synthetic admission scenario", () => {
           }
           expect(A.filter(yield* fs.readDirectory(runtimeDir, { recursive: true }), isLockPath)).toStrictEqual([]);
 
-          // Exercise export completeness and refusal within the disposable root on ordinary regression runs too.
-          const exportCheck = path.join(runtimeDir, "export-check");
-          yield* fs.makeDirectory(exportCheck);
-          yield* exportScenario(runtimeDir, exportCheck, chains);
-          expect(yield* fs.readFileString(path.join(exportCheck, "READY"))).toBe("");
-          expect(yield* fs.readFileString(path.join(exportCheck, "admission", "journal.ndjson"))).toBe(
-            yield* fs.readFileString(yield* admissionJournalPath(root))
-          );
-          const manifest = yield* fs.readFileString(path.join(exportCheck, "scenario.json"));
-          expect(yield* decodeJsonObject(manifest)).toMatchObject({
-            producer: {
-              path: producerPath,
-              sha256: createHash("sha256")
-                .update(yield* fs.readFile(fileURLToPath(import.meta.url)))
-                .digest("hex"),
-            },
-            steps,
-            expected: { tags: expectedTags, chains },
-          });
-          for (const label of ["contender-a", "dead-lease", "dead-ticket"]) {
-            const relative = path.join("checkouts", label, ".beep", "yeet", "runs");
-            expect(yield* fs.readDirectory(path.join(exportCheck, relative), { recursive: true })).toStrictEqual(
-              yield* fs.readDirectory(path.join(runtimeDir, relative), { recursive: true })
-            );
-          }
-          for (const directory of ["leases", "queue", "claims", "quarantine"]) {
-            expect(yield* fs.readDirectory(path.join(exportCheck, "admission", directory))).toStrictEqual([]);
-          }
-          const refusal = yield* exportScenario(runtimeDir, exportCheck, chains).pipe(Effect.flip);
-          expect(refusal.message).toContain("refusing to overwrite a non-empty export target");
-          expect(yield* fs.readFileString(path.join(exportCheck, "scenario.json"))).toBe(manifest);
-          expect(A.filter(yield* fs.readDirectory(exportCheck, { recursive: true }), isLockPath)).toStrictEqual([]);
+          yield* expectExportCheck(runtimeDir, root, chains);
 
           if (O.isSome(exportTarget)) {
             yield* exportScenario(runtimeDir, exportTarget.value, chains);
