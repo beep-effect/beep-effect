@@ -1,45 +1,42 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
-import * as fs from "node:fs";
 import { createRequire } from "node:module";
-import * as os from "node:os";
-import * as path from "node:path";
 import { PassThrough } from "node:stream";
 import { Script } from "node:vm";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { NodeServices } from "@effect/platform-node";
+import { expect, it } from "@effect/vitest";
+import { Cause, Effect, FileSystem, Match, Order, Path } from "effect";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import { strToU8, zipSync } from "fflate";
 
 const require = createRequire(import.meta.url);
-const installerPath = path.resolve(path.dirname(require.resolve("onnxruntime-node")), "../script/install-utils.js");
-const installerRequire = createRequire(installerPath);
 const packageInfo = { name: "Test.Runtime", versions: [{ feed: "test", version: "1.0.0" }] };
 const entry = "runtimes/linux-x64/native/libonnxruntime.so";
 const binary = strToU8("test native binary");
 const timestamp = 1_754_546_950;
 
+// Contract of the upstream CommonJS installer, loaded into the test VM below.
 type InstallPackages = (
   packages: ReadonlyArray<typeof packageInfo>,
   manifests: ReadonlyArray<{ packagesInfo: typeof packageInfo; pathInPackage: string; filepath: string }>,
   feeds: Record<string, { type: string; index: string }>
 ) => Promise<void>;
 
-describe("ONNX Runtime's patched NuGet installer", { concurrent: false }, () => {
-  let root: string;
-  let temp: string;
-  let destination: string;
+const fixture = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-onnx-installer-test-" });
+  const temp = path.join(root, "tmp");
+  yield* fs.makeDirectory(temp);
+  const destination = path.join(root, "bin", "libonnxruntime.so");
+  const installerPath = path.resolve(path.dirname(require.resolve("onnxruntime-node")), "../script/install-utils.js");
+  const installerRequire = createRequire(installerPath);
+  const source = yield* fs.readFileString(installerPath);
 
-  beforeEach(() => {
-    root = fs.mkdtempSync(path.join(os.tmpdir(), "beep-onnx-installer-test-"));
-    temp = path.join(root, "tmp");
-    fs.mkdirSync(temp);
-    destination = path.join(root, "bin", "libonnxruntime.so");
-  });
-
-  afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
-
-  // Exercise the installed upstream script with real ZIP bytes and real filesystem
-  // operations. Only NuGet's HTTP responses, the temp root, and the clock are fake.
-  const install = async (archive: Uint8Array) => {
+  // Real ZIP bytes and filesystem operations exercise the installed upstream script.
+  // Only NuGet responses, the temp root, and the clock are controlled by the test.
+  const install = Effect.fn("OnnxRuntimeInstall.install")(function* (archive: Uint8Array) {
     const module: { exports: { installPackages?: InstallPackages } } = { exports: {} };
     const https = {
       get: (url: string, receive: (response: PassThrough) => void) => {
@@ -47,13 +44,14 @@ describe("ONNX Runtime's patched NuGet installer", { concurrent: false }, () => 
           statusCode: 200,
           headers: { "content-type": "application/json" },
         });
-        const payload = url.endsWith(".nupkg")
-          ? archive
-          : JSON.stringify(
-              url === "https://test.invalid/index.json"
-                ? { resources: [{ "@type": "PackageBaseAddress/3.0.0", "@id": "https://test.invalid/packages/" }] }
-                : { versions: ["1.0.0"] }
-            );
+        const payload = Match.value(url).pipe(
+          Match.when(Str.endsWith(".nupkg"), () => archive),
+          Match.when(
+            "https://test.invalid/index.json",
+            () => '{"resources":[{"@type":"PackageBaseAddress/3.0.0","@id":"https://test.invalid/packages/"}]}'
+          ),
+          Match.orElse(() => '{"versions":["1.0.0"]}')
+        );
         queueMicrotask(() => {
           receive(response);
           response.end(payload);
@@ -61,86 +59,118 @@ describe("ONNX Runtime's patched NuGet installer", { concurrent: false }, () => 
         return new EventEmitter();
       },
     };
-    new Script(fs.readFileSync(installerPath, "utf8"), { filename: installerPath }).runInNewContext({
-      module,
-      require: (id: string) => {
-        switch (id) {
-          case "https":
-            return https;
-          case "os":
-            return { tmpdir: () => temp };
-          default:
-            return installerRequire(id);
-        }
-      },
-      console: { log: () => {}, warn: () => {} },
-      Date: { now: () => timestamp },
-    });
-    assert(module.exports.installPackages);
-    await module.exports.installPackages(
-      [packageInfo],
-      [{ packagesInfo: packageInfo, pathInPackage: entry, filepath: destination }],
-      { test: { type: "nuget", index: "https://test.invalid/index.json" } }
+    yield* Effect.sync(() =>
+      new Script(source, { filename: installerPath }).runInNewContext({
+        module,
+        require: Match.type<string>().pipe(
+          Match.when("https", () => https),
+          Match.when("os", () => ({ tmpdir: () => temp })),
+          Match.orElse(installerRequire)
+        ),
+        console: { log: () => {}, warn: () => {} },
+        Date: { now: () => timestamp },
+      })
     );
-  };
-
-  it("loads fflate through the narrowly scoped installer dependency", () => {
-    expect(installerRequire("adm-zip/package.json").name).toBe("fflate");
-    expect(installerRequire("onnxruntime-node/package.json").version).toBe("1.29.0");
+    const installPackages = module.exports.installPackages;
+    assert(installPackages);
+    yield* Effect.tryPromise(() =>
+      installPackages([packageInfo], [{ packagesInfo: packageInfo, pathInPackage: entry, filepath: destination }], {
+        test: { type: "nuget", index: "https://test.invalid/index.json" },
+      })
+    );
   });
+  return { fs, path, root, temp, destination, install, installerRequire };
+}).pipe(Effect.withSpan("OnnxRuntimeInstall.fixture"));
 
-  it("installs the selected binary and replaces an existing binary", async () => {
-    await install(zipSync({ [entry]: binary }));
-    expect(fs.readFileSync(destination)).toEqual(Buffer.from(binary));
-    await install(zipSync({ [entry]: strToU8("updated binary") }));
-    expect(fs.readFileSync(destination, "utf8")).toBe("updated binary");
-    expect(fs.readdirSync(temp)).toEqual([]);
-    expect(fs.readdirSync(path.dirname(destination))).toEqual(["libonnxruntime.so"]);
-  });
+it.layer(NodeServices.layer)("ONNX Runtime's patched NuGet installer", (it) => {
+  it.effect(
+    "loads fflate through the narrowly scoped installer dependency",
+    Effect.fnUntraced(function* () {
+      const { installerRequire } = yield* fixture;
+      expect(installerRequire("adm-zip/package.json").name).toBe("fflate");
+      expect(installerRequire("onnxruntime-node/package.json").version).toBe("1.29.0");
+    })
+  );
 
-  it("does not follow a symlink planted at the former predictable extraction path", async () => {
-    const sentinel = path.join(root, "sentinel");
-    fs.writeFileSync(sentinel, "untouched");
-    const planted = path.join(temp, `onnxruntime-node-pkgs_${timestamp}`, "extracted");
-    fs.mkdirSync(planted, { recursive: true });
-    fs.symlinkSync(sentinel, path.join(planted, "libonnxruntime.so"));
+  it.effect(
+    "installs the selected binary and replaces an existing binary",
+    Effect.fnUntraced(function* () {
+      const { fs, path, temp, destination, install } = yield* fixture;
+      yield* install(zipSync({ [entry]: binary }));
+      expect(yield* fs.readFileString(destination)).toBe("test native binary");
+      yield* install(zipSync({ [entry]: strToU8("updated binary") }));
+      expect(yield* fs.readFileString(destination)).toBe("updated binary");
+      expect(yield* fs.readDirectory(temp)).toEqual([]);
+      expect(yield* fs.readDirectory(path.dirname(destination))).toEqual(["libonnxruntime.so"]);
+    })
+  );
 
-    await install(zipSync({ [entry]: binary }));
+  it.effect(
+    "does not follow a symlink planted at the former predictable extraction path",
+    Effect.fnUntraced(function* () {
+      const { fs, path, root, temp, destination, install } = yield* fixture;
+      const sentinel = path.join(root, "sentinel");
+      yield* fs.writeFileString(sentinel, "untouched");
+      const planted = path.join(temp, `onnxruntime-node-pkgs_${timestamp}`, "extracted");
+      yield* fs.makeDirectory(planted, { recursive: true });
+      yield* fs.symlink(sentinel, path.join(planted, "libonnxruntime.so"));
+      yield* install(zipSync({ [entry]: binary }));
+      expect(yield* fs.readFileString(sentinel)).toBe("untouched");
+      expect(yield* fs.readFileString(destination)).toBe("test native binary");
+      expect(yield* fs.readDirectory(temp)).toEqual([`onnxruntime-node-pkgs_${timestamp}`]);
+    })
+  );
 
-    expect(fs.readFileSync(sentinel, "utf8")).toBe("untouched");
-    expect(fs.readFileSync(destination)).toEqual(Buffer.from(binary));
-    expect(fs.readdirSync(temp)).toEqual([`onnxruntime-node-pkgs_${timestamp}`]);
-  });
+  it.effect(
+    "replaces a destination symlink without overwriting the linked file",
+    Effect.fnUntraced(function* () {
+      const { fs, path, root, destination, install } = yield* fixture;
+      const sentinel = path.join(root, "sentinel");
+      yield* fs.writeFileString(sentinel, "untouched");
+      yield* fs.makeDirectory(path.dirname(destination));
+      yield* fs.symlink(sentinel, destination);
+      yield* install(zipSync({ [entry]: binary }));
+      expect(yield* fs.readFileString(sentinel)).toBe("untouched");
+      expect(yield* fs.readFileString(destination)).toBe("test native binary");
+      // A regular file cannot be read as a symlink after atomic replacement.
+      expect(yield* fs.readLink(destination).pipe(Effect.isFailure)).toBe(true);
+    })
+  );
 
-  it("replaces a destination symlink without overwriting the linked file", async () => {
-    const sentinel = path.join(root, "sentinel");
-    fs.writeFileSync(sentinel, "untouched");
-    fs.mkdirSync(path.dirname(destination));
-    fs.symlinkSync(sentinel, destination);
+  it.effect(
+    "ignores archive paths outside the selected manifest entry",
+    Effect.fnUntraced(function* () {
+      const { fs, path, root, temp, destination, install } = yield* fixture;
+      yield* install(zipSync({ [entry]: binary, "../../escaped": strToU8("unwanted") }));
+      expect(A.sort(yield* fs.readDirectory(root), Order.String)).toEqual(["bin", "tmp"]);
+      expect(yield* fs.readDirectory(temp)).toEqual([]);
+      expect(yield* fs.readDirectory(path.dirname(destination))).toEqual(["libonnxruntime.so"]);
+    })
+  );
 
-    await install(zipSync({ [entry]: binary }));
+  it.effect(
+    "rejects missing entries and cleans up the download",
+    Effect.fnUntraced(function* () {
+      const { fs, temp, destination, install } = yield* fixture;
+      const error = yield* install(zipSync({ other: binary })).pipe(
+        Effect.catchCause((cause) => Effect.succeed(Cause.pretty(cause)))
+      );
+      expect(error).toContain(`Failed to find ${entry}`);
+      expect(yield* fs.exists(destination)).toBe(false);
+      expect(yield* fs.readDirectory(temp)).toEqual([]);
+    })
+  );
 
-    expect(fs.readFileSync(sentinel, "utf8")).toBe("untouched");
-    expect(fs.lstatSync(destination).isSymbolicLink()).toBe(false);
-    expect(fs.readFileSync(destination)).toEqual(Buffer.from(binary));
-  });
-
-  it("ignores archive paths outside the selected manifest entry", async () => {
-    await install(zipSync({ [entry]: binary, "../../escaped": strToU8("unwanted") }));
-    expect(fs.readdirSync(root).sort()).toEqual(["bin", "tmp"]);
-    expect(fs.readdirSync(temp)).toEqual([]);
-    expect(fs.readdirSync(path.dirname(destination))).toEqual(["libonnxruntime.so"]);
-  });
-
-  it("rejects missing entries and cleans up the download", async () => {
-    await expect(install(zipSync({ other: binary }))).rejects.toThrow(`Failed to find ${entry}`);
-    expect(fs.existsSync(destination)).toBe(false);
-    expect(fs.readdirSync(temp)).toEqual([]);
-  });
-
-  it("rejects corrupt archives and cleans up the download", async () => {
-    await expect(install(strToU8("not a ZIP archive"))).rejects.toThrow("Failed to open NuGet package");
-    expect(fs.existsSync(destination)).toBe(false);
-    expect(fs.readdirSync(temp)).toEqual([]);
-  });
+  it.effect(
+    "rejects corrupt archives and cleans up the download",
+    Effect.fnUntraced(function* () {
+      const { fs, temp, destination, install } = yield* fixture;
+      const error = yield* install(strToU8("not a ZIP archive")).pipe(
+        Effect.catchCause((cause) => Effect.succeed(Cause.pretty(cause)))
+      );
+      expect(error).toContain("Failed to open NuGet package");
+      expect(yield* fs.exists(destination)).toBe(false);
+      expect(yield* fs.readDirectory(temp)).toEqual([]);
+    })
+  );
 });
