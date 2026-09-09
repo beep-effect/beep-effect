@@ -2,21 +2,21 @@
 
 ## Status
 
-Status: `active`. All ten findings are validated and implemented. Package and repository proof are in progress.
+Status: `active`. All eleven findings are validated and implemented. Package and repository proof are in progress.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 bootstrap | complete | Create feature branch and packet scaffold. | Branch and launcher exist; packet JSON parses. |
-| P1 capture | complete | Capture the full signed-in CSV snapshot. | 10 IDs reconcile: 2 Low, 8 Informational. |
-| P2 validate | complete | Validate reports at current HEAD. | All 10 have a verdict and disposition. |
-| P3 lane-partition | complete | Assign findings to root-cause lanes. | All 10 have an owner area and lane. |
+| P1 capture | complete | Capture the full signed-in CSV snapshot. | 11 IDs reconcile: 3 Low, 8 Informational. |
+| P2 validate | complete | Validate each report at current HEAD. | All eleven have a verdict and disposition. |
+| P3 lane-partition | complete | Assign findings to root-cause lanes. | The hook loader is assigned to L8; prior lanes remain intact. |
 | P4 remediate | complete | Fix all real findings with focused checks. | Changed files and passing targeted proof recorded per finding. |
-| P5 repo-proof | pending | Run packet validation and Yeet repair/verify. | No packet drift; local proof green. |
-| P6 publish | pending | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
-| P7 monitor | pending | Close hosted checks and actionable reviews. | PR green and mergeable. |
-| P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 10 IDs resolved. |
+| P5 repo-proof | in-progress | Run packet validation and Yeet repair/verify. | No packet drift; local proof green. |
+| P6 publish | in-progress | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
+| P7 monitor | in-progress | Close hosted checks and actionable reviews. | PR green and mergeable. |
+| P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 11 IDs resolved. |
 | P9 close | pending | Record evidence, reflection, and lifecycle. | Packet set to `completed-retained` in the same closeout PR state. |
 
 ## Execution Rules
@@ -34,6 +34,6 @@ Status: `active`. All ten findings are validated and implemented. Package and re
 test "$(wc -m < goals/codex-security-findings-2026-09-08/GOAL.md)" -le 4000
 jq . goals/codex-security-findings-2026-09-08/ops/manifest.json
 jq . goals/codex-security-findings-2026-09-08/ops/triage.json
-test "$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 10
+test "$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 11
 git diff --check -- goals/codex-security-findings-2026-09-08
 ```

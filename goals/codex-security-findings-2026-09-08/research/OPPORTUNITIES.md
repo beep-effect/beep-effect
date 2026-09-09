@@ -29,3 +29,8 @@
   boundary checks were added. Package tests passed, but did not enforce the
   per-file coverage floor. Add rejection-path tests and verify the unchanged
   coverage ratchet before treating package success as repository acceptance.
+
+- A live refresh after publication found another report in newly merged Graft
+  wiring. The generated shims carried an initializing-user path and selected
+  installations by version. Keep a repo-owned trusted loader and regression
+  tests so integration regeneration cannot silently restore cross-account imports.

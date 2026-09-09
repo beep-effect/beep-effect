@@ -435,11 +435,15 @@ of the agent process, because the MCP registrations launch the bare command.
 Install it with `npm install -g @nanonets/graft` (0.16.0 is the version this
 wiring was generated and tested with). On this workstation the global install
 lives under the interactive shell's nvm prefix, so a user-local `bin` symlink
-exposes it to desktop-launched sessions. The committed shims also carry the
-initializing machine's absolute install path as their first lookup candidate;
-on any other machine that candidate misses and the shim falls through to the
-repo `node_modules`, the running node's global prefix, and `npm root -g`,
-taking the highest installed version it finds.
+exposes it to desktop-launched sessions. The repo-owned shims resolve the
+installation behind that executable on the agent's absolute PATH entries. On
+Unix, the canonical executable, metadata, entry module, and their ancestors
+must be owned by the current effective user or root and protected against
+group/world writes (root-owned sticky directories are allowed). The package
+identity and expected entry layout must match. Foreign, missing, or unsupported
+installations leave the optional hooks inactive. No initializing-user path,
+project fallback, or version ranking participates in selection. Regeneration
+must preserve these loaders; their regression tests live in the CLI package.
 
 **Boundaries and watch items:**
 

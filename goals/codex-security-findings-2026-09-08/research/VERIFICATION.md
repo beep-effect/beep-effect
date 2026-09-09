@@ -61,3 +61,8 @@ coverage is 75.64% lines, 74.03% statements, and 68.96% branches; service covera
 is 91.41% lines, 91.20% statements, and 87.87% branches. All six previously
 regressed metrics exceed their unchanged committed floors. The complete hosted
 coverage job remains required.
+
+The final live refresh added CSF-011 (three Low and eight Informational total).
+Canonical CSV refresh preserved the ten prior IDs. Four Graft hook tests pass
+for trusted loading and rejection of unavailable, foreign-owned, writable, or
+escaping module paths. Updated package and repository proof are still required.

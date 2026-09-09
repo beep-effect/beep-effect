@@ -4,11 +4,11 @@
     "repository": "kriegcloud/beep-effect",
     "findingsView": "repo-scoped, status=new",
     "branch": "codex/security-findings-2026-09-08",
-    "expectedCount": 10,
-    "capturedCount": 10,
+    "expectedCount": 11,
+    "capturedCount": 11,
     "capturedAt": "2026-09-08",
     "captureMethod": "signed-in-csv-export",
-    "note": "All ten findings are validated and implemented. Focused regressions and full FreshBooks, AI Sync, and updated CLI package verification pass. Repository proof, publication, merge, and exact-ID closure remain pending."
+    "note": "All eleven findings are validated and implemented. Focused regressions pass. PR #1026 contains the prior fixes; updated package and full repository proof, final publication, merge, and exact-ID closure remain required."
   },
   "lanes": {
     "L1-permissions": {
@@ -38,6 +38,10 @@
     "L7-proof-cache": {
       "status": "implemented",
       "findings": ["CSF-010"]
+    },
+    "L8-hook-loading": {
+      "status": "implemented",
+      "findings": ["CSF-011"]
     }
   },
   "findings": [
@@ -327,11 +331,40 @@
         "verificationCommands": [
           "bunx --bun vitest run test/quality-tasks.test.ts -t 'lane proof|lane-proof|ordinary lane'"
         ],
-        "summary": "Hash selected ambient execution settings for every lane. A real child-process regression verifies reuse at unchanged values and execution after inherited property-test, CI, and Turbo settings change."
+        "summary": "Retain complete inherited environment hashing from main, with a real child-process regression verifying cache invalidation when inherited property-test, CI, and Turbo settings change."
       },
       "ownerArea": "Local verification proof reuse",
       "verdict": "confirmed-vulnerable",
       "lane": "L7-proof-cache"
+    },
+    {
+      "id": "CSF-011",
+      "codexId": "20b2517dcb34819191140b7e040cc595",
+      "title": "Hard-coded user path enables cross-account module hijacking",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "b8eb96213c897288025cd527c67601ced27764bf",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Both tracked loaders preferred a hard-coded user installation and selected candidates using untrusted version metadata before importing executable modules."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          ".claude/helpers/graft-hooks.cjs",
+          ".claude/helpers/graft-statusline.cjs",
+          ".claude/helpers/graft-loader.cjs",
+          "packages/tooling/tool/cli/test/graft-hooks.test.ts",
+          "standards/memory-architecture/04-decision-log.md"
+        ],
+        "verificationCommands": ["bunx vitest run test/graft-hooks.test.ts"],
+        "summary": "Resolve the Graft executable from absolute PATH entries, verify canonical package identity and layout, and reject foreign-owned, writable, or escaping installation paths. Both hooks share the same loader; no baked path or project fallback remains."
+      },
+      "ownerArea": "Graft hook installation trust",
+      "verdict": "confirmed-vulnerable",
+      "lane": "L8-hook-loading"
     }
   ]
 }

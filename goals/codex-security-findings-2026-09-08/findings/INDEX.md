@@ -9,7 +9,7 @@ auth values, email addresses, and raw local paths.
 
 | Severity | Count |
 | --- | ---: |
-| Low | 2 |
+| Low | 3 |
 | Informational | 8 |
 
 ## Findings
@@ -26,6 +26,7 @@ auth values, email addresses, and raw local paths.
 | [CSF-008](./CSF-008.md) | Informational | implemented | Old clients reap live state written by the new client | Process identity compatibility |
 | [CSF-009](./CSF-009.md) | Informational | implemented | Raw worktree names escape the archive residue root | Worktree archive containment |
 | [CSF-010](./CSF-010.md) | Informational | implemented | Lane\-proof cache ignores inherited environment changes | Local verification proof reuse |
+| [CSF-011](./CSF-011.md) | Low | implemented | Hard\-coded user path enables cross\-account module hijacking | Graft hook installation trust |
 
 ## Closeout Mapping
 
@@ -34,5 +35,5 @@ auth values, email addresses, and raw local paths.
 - Accepted risk / `Won't fix` is unavailable.
 
 <!-- codex-findings-refresh:start -->
-Refresh capture: all 10 records are validated, assigned, and implemented. The new ambient-environment cache regression passes.
+Refresh capture: all 11 records are validated and implemented. Updated full proof and PR closeout are in progress.
 <!-- codex-findings-refresh:end -->

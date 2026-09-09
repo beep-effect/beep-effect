@@ -10,14 +10,14 @@
   },
   "packetPath": "goals/codex-security-findings-2026-09-08",
   "lifecycle": "active",
-  "mission": "Remediate and close the 10 Codex Cloud security findings captured on 2026-09-08.",
+  "mission": "Remediate and close the 11 Codex Cloud security findings captured on 2026-09-08.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 10 Codex findings are resolved with zero packet-applicable open findings.",
+    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 11 Codex findings are resolved with zero packet-applicable open findings.",
     "grandfathered": false
   },
   "branch": "codex/security-findings-2026-09-08",
@@ -50,21 +50,21 @@
     "rawCaptureTracked": false
   },
   "catalog": {
-    "expectedCount": 10,
-    "capturedCount": 10,
+    "expectedCount": 11,
+    "capturedCount": 11,
     "severityCountsKnown": true,
     "severityCounts": {
-      "Low": 2,
+      "Low": 3,
       "Informational": 8
     },
     "dispositionCounts": {
-      "remediate": 10,
+      "remediate": 11,
       "already-fixed": 0,
       "false-positive": 0,
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All ten captured IDs are validated and implemented with focused regression proof. Updated package and repository proof, publication, merge, and Codex closure remain pending."
+    "note": "All eleven findings are validated and implemented. Focused regressions pass. PR #1026 contains the prior fixes; updated package and full repository proof, final publication, merge, and exact-ID closure remain required."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -115,17 +115,17 @@
     {
       "id": "P5",
       "name": "Repo proof",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P6",
       "name": "Publish",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P8",
@@ -142,7 +142,7 @@
     "test \"$(wc -m < goals/codex-security-findings-2026-09-08/GOAL.md)\" -le 4000",
     "jq . goals/codex-security-findings-2026-09-08/ops/manifest.json",
     "jq . goals/codex-security-findings-2026-09-08/ops/triage.json",
-    "test \"$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 10",
+    "test \"$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 11",
     "git diff --check -- goals/codex-security-findings-2026-09-08",
     "jq -r '.findings[].commit' goals/codex-security-findings-2026-09-08/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
     "bun run beep lint reflection-artifacts"
