@@ -2545,6 +2545,8 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
       repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
       repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
       repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
+      repoCliStep(repoRoot, "lint:package-scripts", ["lint", "package-scripts", "--check"]),
+      repoCliStep(repoRoot, "lint:policy-fingerprint", ["lint", "policy-fingerprint", "--check"]),
       bunxStep(repoRoot, "lint:typos", ["typos"]),
     ],
     (step) =>

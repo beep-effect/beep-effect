@@ -8,15 +8,24 @@
 /// <reference path="../../../madge.d.ts" />
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { FsUtils, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
+import { Config, Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
+import { PackageScriptsReportFromWire } from "../../internal/package-scripts/PackageScripts.schemas.ts";
+import {
+  PackageScriptsPolicy,
+  PackageScriptsPolicyError,
+} from "../../internal/package-scripts/PackageScriptsPolicy.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
 import { runRootLintPolicyTask } from "../Quality/index.ts";
@@ -632,6 +641,130 @@ const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });
 
+const lintPackageFlag = Flag.string("package").pipe(Flag.optional);
+
+const resolveLintPackage = Effect.fn("Lint.resolvePackage")(function* (root: string, directory: string) {
+  const path = yield* Path.Path;
+  const absolute = path.resolve(directory);
+  if (!isContainedLintPath(path, root, absolute)) {
+    return yield* failWithReportedExit("Lint package directory must stay inside the repository.");
+  }
+  return normalizePath(path.relative(root, absolute)) || ".";
+});
+
+const runEslintWorker = Effect.fn("Lint.eslintWorker")(function* (
+  root: string,
+  profile: string,
+  targets: ReadonlyArray<string>
+) {
+  if (A.isReadonlyArrayEmpty(targets)) return;
+  const path = yield* Path.Path;
+  const nodeOptions = yield* Config.string("NODE_OPTIONS").pipe(Config.withDefault(""));
+  // Workers lint a whole package with type information; @beep/repo-cli exhausts a 4 GiB heap,
+  // so the default matches the shard heap instead of a smaller worker-only budget.
+  const heapOptions = /--max[-_]old[-_]space[-_]size(?:=|\s+)/.test(nodeOptions)
+    ? nodeOptions
+    : `${nodeOptions} ${DEPRECATED_API_LINT_NODE_OPTIONS}`;
+  const exitCode = yield* runToExit({
+    command: path.join(root, DEPRECATED_API_LINT_ESLINT_BIN),
+    args: [
+      "--config",
+      path.join(root, "eslint.config.mjs"),
+      ...(profile === "docs" ? ["--max-warnings=0", "--no-warn-ignored"] : []),
+      ...targets,
+    ],
+    cwd: root,
+    env: { BEEP_ESLINT_PROFILE: profile, NODE_OPTIONS: Str.trim(heapOptions) },
+    extendEnv: true,
+    stdio: "inherit",
+  });
+  if (exitCode !== 0)
+    return yield* failWithReportedExit(`lint ${profile}: failed with exit code ${exitCode}.`, exitCode);
+});
+
+const lintJsdocCommand = Command.make(
+  "jsdoc",
+  {
+    package: lintPackageFlag,
+    rootOnly: Flag.boolean("root-only").pipe(Flag.withDefault(false)),
+  },
+  Effect.fn("Lint.jsdoc")(function* ({ package: directory, rootOnly }) {
+    if (O.isSome(directory) === rootOnly) {
+      return yield* failWithReportedExit("Choose exactly one of --package or --root-only.");
+    }
+    const root = yield* findRepoRoot();
+    if (O.isSome(directory)) {
+      return yield* runEslintWorker(root, "docs", [yield* resolveLintPackage(root, directory.value)]);
+    }
+    const fsUtils = yield* FsUtils;
+    const path = yield* Path.Path;
+    const workspaces = yield* resolveWorkspaceDirs(root);
+    const files = yield* fsUtils.globFiles(["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"], {
+      cwd: root,
+      ignore: [
+        "apps/labs/**",
+        "**/node_modules/**",
+        "**/.context/**",
+        ...A.map(A.fromIterable(HashMap.values(workspaces)), (dir) => `${normalizePath(path.relative(root, dir))}/**`),
+      ],
+    });
+    yield* runEslintWorker(root, "docs", A.sort(files, Order.String));
+  })
+).pipe(Command.withDescription("Check package or non-workspace documentation with the docs ESLint profile"));
+
+const lintLawsCommand = Command.make(
+  "laws",
+  {
+    package: Flag.string("package"),
+  },
+  Effect.fn("Lint.laws")(function* ({ package: directory }) {
+    const root = yield* findRepoRoot();
+    const path = yield* Path.Path;
+    const prefix = yield* resolveLintPackage(root, directory);
+    const fsUtils = yield* FsUtils;
+    const files = A.sort(
+      yield* fsUtils.globFiles([`${prefix}/**/*.{ts,tsx}`], {
+        cwd: root,
+        ignore: [
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**",
+          "**/.turbo/**",
+          "**/coverage/**",
+          "**/*.d.ts",
+          "**/*.d.tsx",
+        ],
+      }),
+      Order.String
+    );
+    const include = A.join(files, ",");
+    const commands = [
+      ...A.flatMap(["terse-effect", "native-runtime", "frozen-grant-set", "effect-fn"], (law) =>
+        A.isReadonlyArrayEmpty(files)
+          ? []
+          : [["laws", law, "--check", ...(law === "terse-effect" ? ["--advisory"] : []), "--include", include]]
+      ),
+      ...(Str.startsWith(prefix, "packages/") ? [["lint", "package-test-imports", "--include-root", prefix]] : []),
+    ];
+    if (A.isReadonlyArrayEmpty(files)) {
+      yield* Console.log(`lint laws: skipping four laws for ${prefix}; no TypeScript source files.`);
+    }
+    if (!Str.startsWith(prefix, "packages/")) {
+      yield* Console.log(`lint laws: skipping package-test-imports for ${prefix}; it only scans packages/.`);
+    }
+    for (const args of commands) {
+      const exitCode = yield* runToExit({
+        command: "bun",
+        args: ["run", path.join(root, "packages/tooling/tool/cli/src/bin.ts"), "--", ...args],
+        cwd: root,
+        extendEnv: true,
+        stdio: "inherit",
+      });
+      if (exitCode !== 0) return yield* failWithReportedExit(`lint laws: ${A.join(args, " ")} failed.`, exitCode);
+    }
+  })
+).pipe(Command.withDescription("Run the package-scoped law checks"));
+
 /**
  * Lint command for circular dependency checks.
  *
@@ -660,9 +793,15 @@ const lintCircularCommand = Command.make("circular", {}, runLintCircular).pipe(
  * @category utilities
  * @since 0.0.0
  */
-const lintDeprecatedApisCommand = Command.make("deprecated-apis", {}, runDeprecatedApiLint).pipe(
-  Command.withDescription("Check TypeScript sources for deprecated third-party API usage")
-);
+const lintDeprecatedApisCommand = Command.make(
+  "deprecated-apis",
+  { package: lintPackageFlag },
+  Effect.fn("Lint.deprecatedApis")(function* ({ package: directory }) {
+    if (O.isNone(directory)) return yield* runDeprecatedApiLint();
+    const root = yield* findRepoRoot();
+    yield* runEslintWorker(root, "deprecated-apis", [yield* resolveLintPackage(root, directory.value)]);
+  })
+).pipe(Command.withDescription("Check TypeScript sources for deprecated third-party API usage"));
 
 /**
  * Lint command for repo-wide root policy checks.
@@ -717,9 +856,200 @@ const lintToolingSchemaFirstCommand = Command.make("tooling-schema-first", {}, r
   Command.withDescription("Check packages/tooling/tool/cli source for schema-first conventions")
 );
 
+const fingerprintPath = "standards/policy-tools.fingerprint.json";
+const rootConfigs = [
+  "eslint.config.mjs",
+  "tsdoc.json",
+  ".oxlintrc.json",
+  "_typos.toml",
+  "knip.jsonc",
+  ".fallowrc.jsonc",
+  "biome.jsonc",
+  "tsconfig.base.json",
+  "tsconfig.json",
+];
+
+/**
+ * Generated checker input declaration; content hashes are computed at task time.
+ * **Example** (Recognize a missing fingerprint)
+ * ```ts
+ * import { PolicyToolsFingerprint } from "@beep/repo-cli/test/PackageScripts"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(PolicyToolsFingerprint)(undefined)) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PolicyToolsFingerprint extends S.Class<PolicyToolsFingerprint>($I`PolicyToolsFingerprint`)(
+  {
+    schemaVersion: S.Literal("policy-tools-fingerprint/v1"),
+    inputs: S.Array(S.String),
+  },
+  $I.annote("PolicyToolsFingerprint", {
+    description: "Declared checker workspace dependency closure and root configuration inputs.",
+  })
+) {}
+
+const decodeFingerprint = S.decodeEffect(S.fromJsonString(PolicyToolsFingerprint));
+const fingerprintEquivalent = S.toEquivalence(PolicyToolsFingerprint);
+const fingerprintIsCurrent = Effect.fnUntraced(function* (file: string, expected: PolicyToolsFingerprint) {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(file))) return false;
+  const text = yield* fs.readFileString(file);
+  return yield* decodeFingerprint(text).pipe(
+    Effect.map((actual) => fingerprintEquivalent(actual, expected)),
+    Effect.catchTag("SchemaError", () => Effect.succeed(false))
+  );
+});
+
+const decodeDependencies = S.decodeEffect(
+  S.fromJsonString(S.Struct({ dependencies: S.optionalKey(S.Record(S.String, S.String)) }))
+);
+const fingerprintPatterns = Effect.fnUntraced(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const workspaces = yield* resolveWorkspaceDirs(repoRoot);
+  let visited = HashSet.empty<string>();
+  const pending = ["@beep/repo-cli"];
+  const patterns: Array<string> = [];
+  const visit = Effect.fnUntraced(function* (name: string) {
+    const dir = HashMap.get(workspaces, name);
+    if (O.isNone(dir)) {
+      if (name === "@beep/repo-cli")
+        return yield* PackageScriptsPolicyError.make({ message: "CLI workspace is missing", cause: name });
+      return [];
+    }
+    patterns.push(`${path.relative(repoRoot, dir.value)}/src/**`);
+    const text = yield* fs.readFileString(path.join(dir.value, "package.json"));
+    const manifest = yield* decodeDependencies(text);
+    return A.filter(R.keys(manifest.dependencies ?? {}), (dependency) => HashMap.has(workspaces, dependency));
+  });
+  while (A.isReadonlyArrayNonEmpty(pending)) {
+    const name = pending.pop();
+    if (name === undefined || HashSet.has(visited, name)) continue;
+    visited = HashSet.add(visited, name);
+    pending.push(...(yield* visit(name)));
+  }
+  return patterns;
+});
+
+/**
+ * Declares the CLI's transitive workspace source globs and root checker configs.
+ * **Example** (Prepare a fingerprint computation)
+ * ```ts
+ * import { policyToolsFingerprint } from "@beep/repo-cli/test/PackageScripts"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(policyToolsFingerprint("/repo"))) // true
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
+export const policyToolsFingerprint = Effect.fn("policyToolsFingerprint")(
+  function* (repoRoot: string) {
+    const patterns = yield* fingerprintPatterns(repoRoot);
+    const inputs = A.sort([...patterns, ...rootConfigs, "**/package.json", fingerprintPath], Order.String);
+    return PolicyToolsFingerprint.make({
+      schemaVersion: "policy-tools-fingerprint/v1",
+      inputs,
+    });
+  },
+  Effect.mapError((cause) => PackageScriptsPolicyError.make({ message: "Cannot compute policy fingerprint", cause }))
+);
+
+const encodeScriptsReport = S.encodeEffect(PackageScriptsReportFromWire);
+
+const gateFlags = {
+  check: Flag.boolean("check").pipe(Flag.withDefault(false)),
+  write: Flag.boolean("write").pipe(Flag.withDefault(false)),
+};
+
+const printScriptsReport = Effect.fnUntraced(function* (
+  report: PackageScriptsReportFromWire,
+  wire: typeof PackageScriptsReportFromWire.Encoded,
+  json: boolean
+) {
+  yield* Console.log(
+    json
+      ? yield* jsonStringifyPretty(wire)
+      : `package-scripts: ${report.manifests} manifests, ${HashMap.size(report.drift)} drifting, ${HashSet.size(report.written)} written`
+  );
+  if (!json)
+    for (const [manifest, rows] of report.drift)
+      for (const row of rows) yield* Console.log(`${manifest}: ${row.name}: ${row._tag}`);
+});
+
+/**
+ * Checks or repairs the strict package scripts block.
+ * **Example** (Inspect the gate name)
+ * ```ts
+ * import { lintPackageScriptsCommand } from "@beep/repo-cli/test/PackageScripts"
+ * console.log(lintPackageScriptsCommand.name) // package-scripts
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const lintPackageScriptsCommand = Command.make(
+  "package-scripts",
+  {
+    ...gateFlags,
+    json: Flag.boolean("json").pipe(Flag.withDefault(false)),
+  },
+  Effect.fn("lintPackageScripts")(function* ({ check, write, json }) {
+    if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
+    const root = yield* findRepoRoot();
+    const policy = yield* PackageScriptsPolicy.make(root);
+    const report = yield* write ? policy.write(root) : policy.check(root);
+    const wire = yield* encodeScriptsReport(report);
+    yield* printScriptsReport(report, wire, json);
+    if (HashMap.size(report.drift) > 0) return yield* failWithReportedExit("Package scripts policy drift.");
+  })
+).pipe(Command.withDescription("Check or repair canonical workspace scripts"));
+
+/**
+ * Fails on changed declared checker inputs or writes the current declaration.
+ * **Example** (Inspect the fingerprint gate name)
+ * ```ts
+ * import { lintPolicyFingerprintCommand } from "@beep/repo-cli/test/PackageScripts"
+ * console.log(lintPolicyFingerprintCommand.name) // policy-fingerprint
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const lintPolicyFingerprintCommand = Command.make(
+  "policy-fingerprint",
+  gateFlags,
+  Effect.fn("lintPolicyFingerprint")(function* ({ check, write }) {
+    if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
+    const root = yield* findRepoRoot();
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const file = path.join(root, fingerprintPath);
+    const fingerprint = yield* policyToolsFingerprint(root);
+    const expected = `${yield* jsonStringifyPretty(fingerprint)}\n`;
+    if (write) {
+      yield* fs.writeFileString(file, expected);
+      yield* Console.log("policy-fingerprint: written");
+    } else {
+      if (!(yield* fingerprintIsCurrent(file, fingerprint)))
+        return yield* failWithReportedExit(
+          "Policy fingerprint is stale; run bun run beep lint policy-fingerprint --write."
+        );
+      yield* Console.log("policy-fingerprint: current");
+    }
+  })
+).pipe(Command.withDescription("Check or generate declared checker inputs"));
+
 const lintSubcommands = [
+  lintPackageScriptsCommand,
+  lintPolicyFingerprintCommand,
   lintCircularCommand,
   lintDeprecatedApisCommand,
+  lintJsdocCommand,
+  lintLawsCommand,
   lintEcosystemPolarityCommand,
   lintGoalPacketsCommand,
   lintIdentityRegistryCommand,
