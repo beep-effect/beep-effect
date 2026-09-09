@@ -1,5 +1,8 @@
 encryptionsalt: v1:d1UtUvnQxrA=:v1:wXUDO7YvIR4o36Gt:Wb6zhIDuCMK7/V/y9yw9FswDX7vb5w==
 config:
+  accountCostControls:expectedAccountId: "832907639880"
+  accountCostControls:monthlyBudgetUsd: "500"
+  accountCostControls:anomalyImpactUsd: "10"
   ciRunners:amiId: ami-052355af2a014bd2c
   # The base image is pinned, while boot-time dnf upgrade-minimal still applies package security updates on every launch.
   ciFleetController:amiId: ami-0738c1b69711969bc
@@ -20,3 +23,5 @@ config:
   ciTurboCache:tokenKmsKeyArn: arn:aws:kms:us-east-1:832907639880:key/79ab38d9-2a9d-426b-b704-beb6fc5c971d
   ciTurboCache:trustedWriteTokenSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/beep-ci/cache/trusted-write-token
   ciTurboCache:writerSharedSecretSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/beep-ci/cache/writer-hmac-secret
+  accountCostControls:notificationEmailAddresses:
+    secure: v1:oy6rYlHU/E24Aa59:euJ1XxBFO3/MxS81igRGnLkEcMiPKU2KdbQaUZzHe/8C5MOi/Kg=

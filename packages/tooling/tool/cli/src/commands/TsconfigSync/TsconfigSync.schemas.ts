@@ -33,6 +33,22 @@ const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.schemas");
 export const DOCGEN_CONFIG_FILENAME = "docgen.json" as const;
 
 /**
+ * Filename of the package check overlay that mirrors the canonical `tsconfig.json` references.
+ *
+ * **Example** (Use tsconfig-sync schemas)
+ *
+ * ```ts
+ * import { CHECK_TSCONFIG_FILENAME } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * console.log(CHECK_TSCONFIG_FILENAME) // "tsconfig.check.json"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const CHECK_TSCONFIG_FILENAME = "tsconfig.check.json" as const;
+
+/**
  * Synthetic root key in repo-utils dependency maps.
  *
  * **Example** (Use tsconfig-sync schemas)
@@ -576,6 +592,7 @@ export const TsconfigSyncSection = LiteralKit([
   "root-aliases",
   "root-syncpack",
   "package-references",
+  "package-check-references",
   "package-docgen",
 ]).pipe(
   $I.annoteSchema("TsconfigSyncSection", {
@@ -644,6 +661,17 @@ class PackageReferencesChange extends S.Class<PackageReferencesChange>($I`Packag
   })
 ) {}
 
+class PackageCheckReferencesChange extends S.Class<PackageCheckReferencesChange>($I`PackageCheckReferencesChange`)(
+  {
+    filePath: S.String,
+    summary: S.String,
+    section: S.tag("package-check-references"),
+  },
+  $I.annote("PackageCheckReferencesChange", {
+    description: "Planned change entry for package tsconfig.check.json overlay references.",
+  })
+) {}
+
 class PackageDocgenChange extends S.Class<PackageDocgenChange>($I`PackageDocgenChange`)(
   {
     filePath: S.String,
@@ -678,6 +706,7 @@ export const TsconfigSyncChange = TsconfigSyncSection.mapMembers(
     () => RootAliasesChange,
     () => RootSyncpackChange,
     () => PackageReferencesChange,
+    () => PackageCheckReferencesChange,
     () => PackageDocgenChange,
   ])
 ).pipe(
@@ -756,6 +785,20 @@ class PackageReferencesPlannedFileChange extends S.Class<PackageReferencesPlanne
   })
 ) {}
 
+class PackageCheckReferencesPlannedFileChange extends S.Class<PackageCheckReferencesPlannedFileChange>(
+  $I`PackageCheckReferencesPlannedFileChange`
+)(
+  {
+    filePath: S.String,
+    summary: S.String,
+    section: S.tag("package-check-references"),
+    content: S.String,
+  },
+  $I.annote("PackageCheckReferencesPlannedFileChange", {
+    description: "Planned file content change for package tsconfig.check.json overlay references.",
+  })
+) {}
+
 class PackageDocgenPlannedFileChange extends S.Class<PackageDocgenPlannedFileChange>(
   $I`PackageDocgenPlannedFileChange`
 )(
@@ -793,6 +836,7 @@ export const PlannedFileChange = TsconfigSyncSection.mapMembers(
     () => RootAliasesPlannedFileChange,
     () => RootSyncpackPlannedFileChange,
     () => PackageReferencesPlannedFileChange,
+    () => PackageCheckReferencesPlannedFileChange,
     () => PackageDocgenPlannedFileChange,
   ])
 ).pipe(
@@ -918,6 +962,7 @@ export class WorkspaceDescriptor extends S.Class<WorkspaceDescriptor>($I`Workspa
     relativeDir: S.String,
     ownerTsconfigPath: S.UndefinedOr(S.String),
     hasProjectTsconfig: S.Boolean,
+    hasCheckTsconfig: S.Boolean,
     hasDocgenConfig: S.Boolean,
     rootAliasTarget: S.String.pipe(S.UndefinedOr, S.optionalKey),
     wildcardAliasTarget: S.String.pipe(S.UndefinedOr, S.optionalKey),
@@ -1049,6 +1094,7 @@ export class TsconfigWithPaths extends S.Class<TsconfigWithPaths>($I`TsconfigWit
  *   relativeDir: "packages/schema",
  *   ownerTsconfigPath: undefined,
  *   hasProjectTsconfig: true,
+ *   hasCheckTsconfig: true,
  *   hasDocgenConfig: true
  * })
  * console.log(byWorkspaceRelativeDirAscending(descriptor, descriptor)) // 0

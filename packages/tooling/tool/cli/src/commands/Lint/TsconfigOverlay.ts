@@ -1,14 +1,14 @@
 /**
- * Check-overlay allowlist lint: a workspace `tsconfig.check.json` may only
- * turn build concerns off, never widen the program it typechecks.
+ * Check-overlay lint: a workspace `tsconfig.check.json` may only turn build
+ * concerns off, never widen the program it typechecks, and must carry its
+ * canonical project's references verbatim.
  *
  * **Details**
  * Every overlay extends the package's canonical `tsconfig.json` so
- * `tsgo -p tsconfig.check.json` can typecheck the same program without
- * emitting or consuming project references. The moment it widens the program
- * (`types`, `lib`, `paths`, `plugins`, `strict`, ...) the check lane and the
- * build lane typecheck different programs and a green `check` stops proving
- * the package compiles.
+ * `tsgo -p tsconfig.check.json` typechecks the same program without emitting.
+ * The moment it widens the program (`types`, `lib`, `paths`, `plugins`,
+ * `strict`, ...) the check lane and the build lane typecheck different
+ * programs and a green `check` stops proving the package compiles.
  *
  * Apps used to guard that equivalence by running a second compiler pass over
  * `tsconfig.json` on every check. `.bin/tsc` is the same patched Effect
@@ -18,7 +18,15 @@
  * in {@link TsconfigOverlayCompilerOptionKey}. Anything else must live in the
  * canonical `tsconfig.json` where both lanes inherit it.
  *
- * The lint is ratchet-free: one non-allowlisted key anywhere fails the gate.
+ * `references` is not inherited through `extends`, so the overlay must
+ * repeat the canonical list exactly (quality-lane audit D3): with it the
+ * check consumes upstream `dist/*.d.ts` that turbo's `^build` already
+ * produced; without it every upstream package is typechecked from source
+ * again. `beep tsconfig-sync` writes that list; this lint proves it stayed
+ * in sync.
+ *
+ * The lint is ratchet-free: one non-allowlisted key or one drifted
+ * reference list anywhere fails the gate.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -28,7 +36,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, O, pipe, R, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, Order, Path } from "effect";
+import { Console, Effect, FileSystem, HashSet, Order, Path } from "effect";
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
@@ -40,7 +48,13 @@ import { TsconfigOverlayReadError } from "./Lint.errors.ts";
 const $I = $RepoCliId.create("commands/Lint/TsconfigOverlay");
 
 const overlayFileName = "tsconfig.check.json";
+const canonicalFileName = "tsconfig.json";
+// tsconfig-sync writes references into tsconfig.build.json when a package has
+// one (its owner project), so the overlay must mirror the same file.
+const buildOwnerFileName = "tsconfig.build.json";
+const allowlistDetail = "outside the overlay allowlist";
 const checkCommand = "bun run beep lint tsconfig-overlay";
+const syncCommand = "bun run beep tsconfig-sync --write";
 // Mirrors the package test-typecheck lint's search roots so every overlay a
 // package owns is judged; the shared WorkspaceWalk prunes build outputs.
 const overlaySearchRoots = ["apps", "infra", "packages"] as const;
@@ -51,10 +65,11 @@ const renderedViolationLimit = 40;
  *
  * **Details**
  * `$schema` is editor metadata, not a compiler input, so it is tolerated.
- * `references` is allowed because the overlay's whole purpose is to drop the
- * canonical project's references (`extends` does not inherit them); `include`
- * and `exclude` are allowed so an overlay can widen the file set to a sibling
- * directory the build must not emit (scripts, examples).
+ * `references` is allowed because `extends` does not inherit it and the
+ * overlay must repeat the canonical project's list (the references rule
+ * checks that it does); `include` and `exclude` are allowed so an overlay
+ * can widen the file set to a sibling directory the build must not emit
+ * (scripts, examples).
  *
  * **Example** (Check a document key)
  *
@@ -104,10 +119,10 @@ export type TsconfigOverlayDocumentKey = typeof TsconfigOverlayDocumentKey.Type;
  * These are the options that turn emit and project-reference machinery off
  * (`composite`, `incremental`, `declaration`, `declarationMap`,
  * `emitDeclarationOnly`, `noEmit`, `tsBuildInfoFile`) plus `rootDir`, which
- * the overlay must re-anchor once references are dropped. `module` and
- * `moduleResolution` stay allowed until the reference-keeping overlay census
- * (quality-lane audit D3) proves they can be removed without diagnostic
- * deltas; tighten this list in that PR.
+ * the overlay re-anchors at the repository root so upstream declaration
+ * files are legal program members. `module` and `moduleResolution` left the
+ * list once the reference-keeping census (quality-lane audit D3) proved the
+ * base config's `NodeNext` produces identical diagnostics.
  *
  * **Example** (Check a compiler option key)
  *
@@ -129,8 +144,6 @@ export const TsconfigOverlayCompilerOptionKey = LiteralKit([
   "emitDeclarationOnly",
   "rootDir",
   "tsBuildInfoFile",
-  "module",
-  "moduleResolution",
 ]).pipe(
   $I.annoteSchema("TsconfigOverlayCompilerOptionKey", {
     description: "Compiler options a tsconfig.check.json overlay may set.",
@@ -155,7 +168,12 @@ export const TsconfigOverlayCompilerOptionKey = LiteralKit([
 export type TsconfigOverlayCompilerOptionKey = typeof TsconfigOverlayCompilerOptionKey.Type;
 
 /**
- * Where in the overlay document a violating key was found.
+ * Where in the overlay document a violation was found.
+ *
+ * **Details**
+ * `document` and `compilerOptions` name a key outside the allowlist at that
+ * level; `references` names the reference list drifting from the canonical
+ * `tsconfig.json`.
  *
  * **Example** (Check a violation scope)
  *
@@ -168,14 +186,14 @@ export type TsconfigOverlayCompilerOptionKey = typeof TsconfigOverlayCompilerOpt
  * @category models
  * @since 0.0.0
  */
-export const TsconfigOverlayViolationScope = LiteralKit(["document", "compilerOptions"]).pipe(
+export const TsconfigOverlayViolationScope = LiteralKit(["document", "compilerOptions", "references"]).pipe(
   $I.annoteSchema("TsconfigOverlayViolationScope", {
-    description: "Whether a violating key sits at the overlay's top level or inside compilerOptions.",
+    description: "Whether a violation names a top-level key, a compilerOptions key, or the drifted references list.",
   })
 );
 
 /**
- * Where in the overlay document a violating key was found.
+ * Where in the overlay document a violation was found.
  *
  * **Example** (Annotate a value as TsconfigOverlayViolationScope)
  *
@@ -192,7 +210,9 @@ export const TsconfigOverlayViolationScope = LiteralKit(["document", "compilerOp
 export type TsconfigOverlayViolationScope = typeof TsconfigOverlayViolationScope.Type;
 
 /**
- * One key a `tsconfig.check.json` overlay sets outside the allowlist.
+ * One finding against a `tsconfig.check.json` overlay: a key set outside the
+ * allowlist, or (scope `references`) a reference list that drifts from the
+ * owner tsconfig's, with `detail` explaining the finding.
  *
  * **Example** (Construct a violation)
  *
@@ -202,7 +222,8 @@ export type TsconfigOverlayViolationScope = typeof TsconfigOverlayViolationScope
  * const violation = TsconfigOverlayViolation.make({
  *   file: "packages/drivers/example/tsconfig.check.json",
  *   scope: "compilerOptions",
- *   key: "types"
+ *   key: "types",
+ *   detail: "outside the overlay allowlist"
  * })
  * console.log(violation.key) // "types"
  * ```
@@ -215,9 +236,11 @@ export class TsconfigOverlayViolation extends S.Class<TsconfigOverlayViolation>(
     file: S.String,
     scope: TsconfigOverlayViolationScope,
     key: S.String,
+    detail: S.String,
   },
   $I.annote("TsconfigOverlayViolation", {
-    description: "A key a tsconfig.check.json overlay sets outside the allowlisted overlay key set.",
+    description:
+      "A key a tsconfig.check.json overlay sets outside the allowlist, or its references drifting from its owner tsconfig.",
   })
 ) {}
 
@@ -228,6 +251,16 @@ const decodeOverlayDocument = decodeJsoncTextAs(TsconfigOverlayRawDocument);
 const isRawDocument = S.is(TsconfigOverlayRawDocument);
 const isAllowedDocumentKey = S.is(TsconfigOverlayDocumentKey);
 const isAllowedCompilerOptionKey = S.is(TsconfigOverlayCompilerOptionKey);
+
+// The reference list of either file; a missing key reads as no references.
+const TsconfigReferenceList = S.Struct({
+  references: S.Struct({ path: S.String }).pipe(S.Array, S.optionalKey),
+});
+const decodeReferenceList = S.decodeUnknownEffect(TsconfigReferenceList);
+const decodeCanonicalReferenceList = decodeJsoncTextAs(TsconfigReferenceList);
+const referencePathsOf = (document: typeof TsconfigReferenceList.Type): ReadonlyArray<string> =>
+  A.map(document.references ?? A.empty(), (entry) => entry.path);
+const referenceListEquivalence = A.makeEquivalence(Str.equivalence);
 
 const violationOrder: Order.Order<TsconfigOverlayViolation> = Order.Struct({
   file: Order.String,
@@ -261,7 +294,7 @@ const violationsOf = (
   const documentViolations = pipe(
     R.keys(document),
     A.filter((key) => !isAllowedDocumentKey(key)),
-    A.map((key) => TsconfigOverlayViolation.make({ file, scope: "document", key }))
+    A.map((key) => TsconfigOverlayViolation.make({ file, scope: "document", key, detail: allowlistDetail }))
   );
   const compilerOptionViolations = pipe(
     R.get(document, "compilerOptions"),
@@ -269,19 +302,79 @@ const violationsOf = (
     O.map(R.keys),
     O.getOrElse(A.empty<string>),
     A.filter((key) => !isAllowedCompilerOptionKey(key)),
-    A.map((key) => TsconfigOverlayViolation.make({ file, scope: "compilerOptions", key }))
+    A.map((key) => TsconfigOverlayViolation.make({ file, scope: "compilerOptions", key, detail: allowlistDetail }))
   );
   return A.appendAll(documentViolations, compilerOptionViolations);
 };
 
+// Exact, order-sensitive comparison: tsconfig-sync writes both lists in the
+// same canonical order, so anything but equality is drift.
+const referenceViolationOf = (
+  file: string,
+  expected: ReadonlyArray<string>,
+  actual: ReadonlyArray<string>,
+  ownerName: string
+): O.Option<TsconfigOverlayViolation> => {
+  if (referenceListEquivalence(expected, actual)) {
+    return O.none();
+  }
+  const expectedSet = HashSet.fromIterable(expected);
+  const actualSet = HashSet.fromIterable(actual);
+  const missing = HashSet.size(HashSet.difference(expectedSet, actualSet));
+  const extra = HashSet.size(HashSet.difference(actualSet, expectedSet));
+  const reordered = missing === 0 && extra === 0 ? ", reordered" : "";
+
+  return O.some(
+    TsconfigOverlayViolation.make({
+      file,
+      scope: "references",
+      key: "references",
+      detail: `expected the ${A.length(expected)} reference(s) of ${ownerName}, found ${A.length(actual)} (missing ${missing}, extra ${extra}${reordered})`,
+    })
+  );
+};
+
+// Canonical references next to the overlay: tsconfig.build.json owns them when
+// it exists (matching tsconfig-sync's owner choice), else tsconfig.json; an
+// absent owner has none.
+const canonicalReferencePaths = Effect.fn("TsconfigOverlay.canonicalReferencePaths")(function* (
+  overlayFile: string,
+  relativeFile: string
+): Effect.fn.Return<
+  { readonly ownerName: string; readonly paths: ReadonlyArray<string> },
+  TsconfigOverlayReadError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = path.dirname(overlayFile);
+  const ownerName = (yield* pathExists(fs, path.join(directory, buildOwnerFileName)))
+    ? buildOwnerFileName
+    : canonicalFileName;
+  const canonicalFile = path.join(directory, ownerName);
+  if (!(yield* pathExists(fs, canonicalFile))) {
+    return { ownerName, paths: A.empty() };
+  }
+  const text = yield* fs
+    .readFileString(canonicalFile)
+    .pipe(TsconfigOverlayReadError.mapError(`Failed to read the ${ownerName} next to ${relativeFile}.`));
+  const document = yield* decodeCanonicalReferenceList(text).pipe(
+    TsconfigOverlayReadError.mapError(`Failed to decode references from the ${ownerName} next to ${relativeFile}.`)
+  );
+  return { ownerName, paths: referencePathsOf(document) };
+});
+
 /**
  * Scan every workspace `tsconfig.check.json` and report the keys each one
- * sets outside the overlay allowlist.
+ * sets outside the overlay allowlist plus any reference list that drifts
+ * from the canonical `tsconfig.json` beside it.
  *
  * **Details**
  * Files are read as JSONC (comments and trailing commas are fine) and judged
- * by their raw key set. Findings are sorted by file, scope, and key so output
- * is stable across runs.
+ * by their raw key set; the reference comparison is exact and
+ * order-sensitive, with a missing `references` key on either side reading
+ * as an empty list. Findings are sorted by file, scope, and key so output is
+ * stable across runs.
  *
  * **Example** (Collect overlay violations)
  *
@@ -324,7 +417,15 @@ export const collectTsconfigOverlayViolations = Effect.fn("TsconfigOverlay.colle
         const document = yield* decodeOverlayDocument(text).pipe(
           TsconfigOverlayReadError.mapError(`Failed to parse ${relativeFile} as a JSONC object.`)
         );
-        return violationsOf(relativeFile, document);
+        const overlayReferences = yield* decodeReferenceList(document).pipe(
+          TsconfigOverlayReadError.mapError(`Failed to decode references from ${relativeFile}.`),
+          Effect.map(referencePathsOf)
+        );
+        const canonical = yield* canonicalReferencePaths(overlayFile, relativeFile);
+        return A.appendAll(
+          violationsOf(relativeFile, document),
+          A.fromOption(referenceViolationOf(relativeFile, canonical.paths, overlayReferences, canonical.ownerName))
+        );
       }),
       { concurrency: 1 }
     );
@@ -333,20 +434,33 @@ export const collectTsconfigOverlayViolations = Effect.fn("TsconfigOverlay.colle
   }
 );
 
-const renderViolation = (violation: TsconfigOverlayViolation): string =>
-  `  - ${violation.file} ${violation.scope === "compilerOptions" ? "compilerOptions." : ""}${violation.key}`;
+// Every line reads `<file> <location>: <detail>`; the location names the
+// offending key at its scope.
+const renderViolation = (violation: TsconfigOverlayViolation): string => {
+  const location = TsconfigOverlayViolationScope.$match(violation.scope, {
+    document: () => violation.key,
+    compilerOptions: () => `compilerOptions.${violation.key}`,
+    references: () => "references",
+  });
+  return `  - ${violation.file} ${location}: ${violation.detail}`;
+};
 
 const allowlistHint = `[tsconfig-overlay] an overlay may set only ${A.join(TsconfigOverlayDocumentKey.Options, ", ")} and compilerOptions { ${A.join(TsconfigOverlayCompilerOptionKey.Options, ", ")} }; move anything else into the package's tsconfig.json so build and check inherit it together`;
+const referencesHint = `[tsconfig-overlay] an overlay's references must equal those of its owner tsconfig (tsconfig.build.json when present, else tsconfig.json) verbatim (extends does not inherit them); regenerate with: ${syncCommand}`;
+const isReferencesViolation = (violation: TsconfigOverlayViolation): boolean =>
+  TsconfigOverlayViolationScope.is.references(violation.scope);
 
 /**
  * Fail when any workspace `tsconfig.check.json` sets a key outside the
- * overlay allowlist.
+ * overlay allowlist or carries references that drift from its
+ * `tsconfig.json`.
  *
  * **Details**
  * Ratchet-free by design: there is no baseline to grow, because a widened
- * overlay silently changes what `check` proves. The command logs one `ok`
- * line with the overlay count on success and lists every violation on
- * standard error before exiting non-zero.
+ * overlay silently changes what `check` proves and a drifted reference list
+ * silently re-typechecks upstream source. The command logs one `ok` line
+ * with the overlay count on success and lists every violation on standard
+ * error, with the matching remediation hint, before exiting non-zero.
  *
  * **Example** (Run the overlay lint)
  *
@@ -358,7 +472,7 @@ const allowlistHint = `[tsconfig-overlay] an overlay may set only ${A.join(Tscon
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @returns Effect that fails with a reported exit when at least one overlay violates the allowlist.
+ * @returns Effect that fails with a reported exit when at least one overlay violates the allowlist or drifts.
  * @category use-cases
  * @since 0.0.0
  */
@@ -380,19 +494,24 @@ export const runTsconfigOverlayLint = Effect.fn("TsconfigOverlay.runTsconfigOver
         A.map((violation) => violation.file),
         A.dedupe
       );
+      const hints = A.appendAll(
+        A.some(violations, (violation) => !isReferencesViolation(violation)) ? A.of(allowlistHint) : A.empty<string>(),
+        A.some(violations, isReferencesViolation) ? A.of(referencesHint) : A.empty<string>()
+      );
       yield* Console.error(
         A.join(
           [
-            `[tsconfig-overlay] violation: ${A.length(violations)} key(s) across ${A.length(files)} overlay(s) fall outside the allowlist`,
+            `[tsconfig-overlay] violation: ${A.length(violations)} finding(s) across ${A.length(files)} overlay(s)`,
             ...renderTruncatedLines({ items: violations, render: renderViolation, limit: renderedViolationLimit }),
-            allowlistHint,
+            ...hints,
             `[tsconfig-overlay] re-check with: ${checkCommand}`,
           ],
           "\n"
         )
       );
       return yield* CliReportedExit.make({
-        message: "tsconfig-overlay: a tsconfig.check.json sets keys outside the overlay allowlist.",
+        message:
+          "tsconfig-overlay: a tsconfig.check.json sets keys outside the overlay allowlist or drifts from its tsconfig.json references.",
         exitCode: 1,
       });
     }
@@ -403,7 +522,8 @@ export const runTsconfigOverlayLint = Effect.fn("TsconfigOverlay.runTsconfigOver
 
 /**
  * `bun run beep lint tsconfig-overlay` — fail when a `tsconfig.check.json`
- * sets keys outside the overlay allowlist.
+ * sets keys outside the overlay allowlist or drifts from its `tsconfig.json`
+ * references.
  *
  * **Example** (Usage)
  *
@@ -417,5 +537,7 @@ export const runTsconfigOverlayLint = Effect.fn("TsconfigOverlay.runTsconfigOver
  * @since 0.0.0
  */
 export const lintTsconfigOverlayCommand = Command.make("tsconfig-overlay", {}, () => runTsconfigOverlayLint()).pipe(
-  Command.withDescription("Fail when a tsconfig.check.json overlay sets keys outside the allowlisted overlay key set")
+  Command.withDescription(
+    "Fail when a tsconfig.check.json overlay sets keys outside the allowlist or drifts from its tsconfig.json references"
+  )
 );

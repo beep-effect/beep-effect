@@ -1288,6 +1288,8 @@ describe("yeet planner", () => {
       "prepare:laws:effect-imports",
       "prepare:laws:terse-effect",
       "prepare:config-sync",
+      "prepare:goals:index",
+      "prepare:explore:atlas",
       "feedback:cheap-gates",
       "feedback:lint:fix",
       "feedback:docgen",
@@ -1303,6 +1305,20 @@ describe("yeet planner", () => {
       "effect-imports",
       "--write",
     ]);
+    // The ignored projections are regenerated before the cheap tier proves them,
+    // so a stale local copy left behind by a pull never fails repair.
+    expect(findStep(plan.steps, "prepare:goals:index")).toMatchObject({
+      args: ["run", "beep", "goals", "index", "--write"],
+      mutability: "write",
+      phase: "prepare",
+      scope: "repo",
+    });
+    expect(findStep(plan.steps, "prepare:explore:atlas")).toMatchObject({
+      args: ["run", "beep", "explore", "atlas", "--write"],
+      mutability: "write",
+      phase: "prepare",
+      scope: "repo",
+    });
     expect(findStep(plan.steps, "feedback:cheap-gates").args).toEqual([
       "run",
       "beep",
@@ -1411,6 +1427,8 @@ describe("yeet planner", () => {
       "prepare:laws:effect-imports",
       "prepare:laws:terse-effect",
       "prepare:config-sync",
+      "prepare:goals:index",
+      "prepare:explore:atlas",
       "feedback:cheap-gates",
       "feedback:lint:fix",
       "feedback:docgen",

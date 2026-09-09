@@ -14,6 +14,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as YAML from "yaml";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { formatCommandLine, runCaptured } from "../../internal/process/StepExec.ts";
 import { RunnersCommandError } from "./Runners.errors.ts";
@@ -25,6 +26,7 @@ import {
   AwsRunInstancesResponse,
   AwsTag,
   BakeCheckReport,
+  BakeManifestJson,
   BakePlan,
   BakePlanStep,
   BakeReport,
@@ -187,6 +189,7 @@ export class BakeLocalInputs extends S.Class<BakeLocalInputs>($I`BakeLocalInputs
 export interface RunnersServiceShape {
   readonly bake: (config: BakeConfig, reportPath: O.Option<string>) => Effect.Effect<BakeReport, RunnersCommandError>;
   readonly check: (region: string) => Effect.Effect<BakeCheckReport, RunnersCommandError>;
+  readonly checkManifest: (manifestPath: string) => Effect.Effect<BakeCheckReport, RunnersCommandError>;
   readonly plan: Effect.Effect<BakePlan, RunnersCommandError>;
 }
 
@@ -753,6 +756,10 @@ const checkBake = Effect.fn("Runners.check")(function* (region: string) {
     O.flatMap((image) => O.fromUndefinedOr(image.Tags)),
     O.getOrElse(A.empty<AwsTag>)
   );
+  return compareBakeInputs(inputs, amiId, tags);
+});
+
+const compareBakeInputs = (inputs: BakeLocalInputs, amiId: string, tags: ReadonlyArray<AwsTag>): BakeCheckReport => {
   const rawLockfile = tagValue(tags, "beep-ci:lockfile-sha256");
   const actualLockfileSha256 = pipe(rawLockfile, O.flatMap(decodeUnknownSha256HexOption));
   const rawBunArchive = tagValue(tags, "beep-ci:bun-archive-sha256");
@@ -784,6 +791,43 @@ const checkBake = Effect.fn("Runners.check")(function* (region: string) {
     bunVersionMatches,
     fresh: lockfileMatches && bunArchiveMatches && bunVersionMatches,
   });
+};
+
+const IntendedRunnerPin = S.Struct({
+  config: S.Struct({ "ciFleetController:amiId": S.NonEmptyString }),
+}).pipe(
+  $I.annoteSchema("IntendedRunnerPin", { description: "Production controller image pin read without AWS access." })
+);
+const decodeIntendedRunnerPin = S.decodeUnknownEffect(IntendedRunnerPin);
+
+const checkBakeManifest = Effect.fn("Runners.checkManifest")(function* (manifestPath: string) {
+  const inputs = yield* loadLocalInputs();
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const rawManifest = yield* fs
+    .readFileString(path.resolve(inputs.repoRoot, manifestPath))
+    .pipe(RunnersCommandError.mapError("Failed to read the intended runner bake manifest."));
+  const manifest = yield* BakeManifestJson.decode(rawManifest).pipe(
+    RunnersCommandError.mapError("Invalid intended runner bake manifest.")
+  );
+  const rawConfig = yield* fs
+    .readFileString(path.join(inputs.repoRoot, "infra/ci-runners/Pulumi.production.yaml"))
+    .pipe(RunnersCommandError.mapError("Failed to read the production runner image pin."));
+  const parsedConfig = yield* Effect.try({
+    try: (): unknown => YAML.parse(rawConfig),
+    catch: () => runnersError("Invalid production runner YAML configuration."),
+  });
+  const config = yield* decodeIntendedRunnerPin(parsedConfig).pipe(
+    RunnersCommandError.mapError("Production configuration has no controller image pin.")
+  );
+  if (!Str.Equivalence(manifest.amiId, config.config["ciFleetController:amiId"])) {
+    return yield* runnersError("Runner bake manifest does not describe the intended production AMI pin.");
+  }
+  return compareBakeInputs(inputs, manifest.amiId, [
+    AwsTag.make({ Key: "beep-ci:lockfile-sha256", Value: manifest.lockfileSha256 }),
+    AwsTag.make({ Key: "beep-ci:bun-archive-sha256", Value: manifest.bunArchiveSha256 }),
+    AwsTag.make({ Key: "beep-ci:bun-version", Value: manifest.bunVersion }),
+  ]);
 });
 
 const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, reportPath: O.Option<string>) {
@@ -834,6 +878,9 @@ const makeRunnersService = Effect.fn("RunnersService.make")(function* () {
   return RunnersService.of({
     plan: makePlan().pipe(Effect.provide(context)),
     check: Effect.fn("RunnersService.check")((region) => checkBake(region).pipe(Effect.provide(context))),
+    checkManifest: Effect.fn("RunnersService.checkManifest")((manifestPath) =>
+      checkBakeManifest(manifestPath).pipe(Effect.provide(context))
+    ),
     bake: Effect.fn("RunnersService.bake")((config, reportPath) =>
       bakeImage(config, reportPath).pipe(Effect.provide(context))
     ),
