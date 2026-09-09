@@ -300,9 +300,9 @@ constant and using those observed prices:
 | Platform and purchase choice | Illustrative compute and control-plane cost |
 | --- | --- |
 | Autoscaled EC2, On-Demand | About $618. |
-| Autoscaled EC2, Spot | About $254–302 before additional retry hours. |
+| Autoscaled EC2, Spot | About $254–302 before any additional billable retry hours. |
 | EKS with On-Demand EC2 workers | About $691 before other cluster costs. |
-| EKS with Spot EC2 workers | About $327–375 before retries and other cluster costs. |
+| EKS with Spot EC2 workers | About $327–375 before billable retries and other cluster costs. |
 
 This is a comparison scenario, not the August invoice or a forecast. Worker
 hours may change after moving to pods. EBS, network, controller/listener
@@ -323,10 +323,21 @@ controller/listener in that comparison. See
 [Actions Runner Controller](https://docs.github.com/en/actions/concepts/runners/actions-runner-controller)
 and [Spot interruption notices](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-instance-termination-notices.html).
 
+Interruption billing must distinguish elapsed work from billed usage. For
+Linux excluding SUSE, an AWS-initiated Spot interruption during the first
+instance hour incurs no instance-usage charge. User-initiated stop/termination
+is billed for seconds used; AWS interruptions after the first hour are also
+billed for seconds used. The distinction uses instance age and termination
+initiator, not the verification step's elapsed time. EBS and other supporting
+charges can remain. Do not multiply every interrupted minute by the Spot
+rate: that overstates the compute cost of short AWS reclamations. See
+[AWS interrupted-Spot billing](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/billing-for-interrupted-spot-instances.html).
+
 The recorded interruption incidents establish a reliability problem, not
-proof that Spot's total bill exceeded On-Demand. Compare all billed attempt
-minutes per successful lane, including interrupted work, setup, retries and
-idle cleanup, alongside queue and completion times. The current decision
+proof that Spot's total bill exceeded On-Demand. Compare actual billed attempt
+minutes per successful lane, accounting for interruption waivers, setup,
+retries and idle cleanup, alongside queue and completion times. Spot remains
+the likely lower compute bill at the observed prices. The current decision
 remains On-Demand because the operator prioritizes reliability and speed.
 The next experiments are a fresh baked AMI and lane-specific resource
 measurement. A hybrid Spot pool or EKS migration needs a separate measured

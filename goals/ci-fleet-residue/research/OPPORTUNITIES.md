@@ -2,6 +2,19 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — Spot retry estimates must use billed usage
+
+- What: comparing Spot, autoscaled On-Demand EC2 and EKS after the operator
+  asked which option actually costs less.
+- Evidence: AWS does not charge instance usage when it interrupts Linux
+  Spot capacity, excluding SUSE, during the first instance hour. Charging
+  every failed 20-minute attempt in a cost model overstates those compute
+  costs. User-initiated termination and older instances have different rules.
+- Prevention: join termination initiator and instance age to billing evidence;
+  report delay, repeat setup and supporting-resource charges separately.
+  Keep the On-Demand reliability decision distinct from a claim that Spot
+  had a higher invoice. The cost runbook links the canonical billing table.
+
 ## 2026-09-09 — Full coverage exposed untested cost-control boundaries
 
 - What: the final local proof passed build, lint, checks and unit tests, then
