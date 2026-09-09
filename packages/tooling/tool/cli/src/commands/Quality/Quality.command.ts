@@ -856,7 +856,10 @@ const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function*
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment
 > {
-  const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
+  const changesetStatusLanes = A.map(
+    yield* githubCheckChangesetStatusLanes(repoRoot),
+    githubCheckLanePlan.githubCheckLaneInTier("cheap-gates")
+  );
   yield* runGithubCheckLaneGroup(
     "github-checks:cheap-gates",
     [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)],
@@ -1512,7 +1515,7 @@ const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPack
 
   const result = yield* collectOutput(
     QualityTaskStep.make({
-      label: `check:tsgo:tests:${groupLabel}`,
+      label: `quality:test-tsgo:${groupLabel}`,
       command: path.join(repoRoot, "node_modules", ".bin", "tsgo"),
       args: ["-p", syntheticConfigPath, "--pretty", "false", ...extraArgs],
       cwd: repoRoot,
@@ -1801,7 +1804,7 @@ export const missingTestTsgoTaskMessageForTesting = (groups: ReadonlyArray<TestT
   return A.isReadonlyArrayEmpty(missingPackageNames)
     ? O.none()
     : O.some(
-        `[check:tsgo:tests] missing required "${testTsgoPackageTaskName}" package script for ${A.join(
+        `[quality:test-tsgo] missing required "${testTsgoPackageTaskName}" package script for ${A.join(
           missingPackageNames,
           ", "
         )}. Add "${testTsgoPackageTaskName}": "${testTsgoPackageTaskScript}" to each named package.json.`
@@ -2417,7 +2420,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   });
 
   if (A.isReadonlyArrayNonEmpty(parseErrors)) {
-    yield* Console.error("[check:tsgo-rules] failed to parse tsconfig.base.json");
+    yield* Console.error("[lint:tsgo-rules] failed to parse tsconfig.base.json");
     yield* Console.error(
       A.join(
         A.map(parseErrors, (error) => `parse error ${error.error} at offset ${error.offset}`),
@@ -2496,7 +2499,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   );
 
   if (A.isReadonlyArrayNonEmpty(diagnostics)) {
-    yield* Console.error("[check:tsgo-rules] @effect/tsgo diagnostics are not globally enforced.");
+    yield* Console.error("[lint:tsgo-rules] @effect/tsgo diagnostics are not globally enforced.");
     yield* Console.error(A.join(diagnostics, "\n"));
     return yield* QualityScriptCommandError.make({
       message: "@effect/tsgo rule enforcement drift found.",
@@ -2505,7 +2508,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   }
 
   yield* Console.log(
-    `[check:tsgo-rules] verified ${A.length(installedRuleNames)} installed @effect/tsgo rule(s) are configured as error`
+    `[lint:tsgo-rules] verified ${A.length(installedRuleNames)} installed @effect/tsgo rule(s) are configured as error`
   );
 });
 
@@ -2535,7 +2538,7 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
   ).pipe(Effect.map(A.flatten));
 
   if (A.isReadonlyArrayEmpty(discoveredFiles)) {
-    yield* Console.log("[check:tsgo:tests] no test files found");
+    yield* Console.log("[quality:test-tsgo] no test files found");
     return;
   }
 
@@ -2552,7 +2555,7 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
   }
 
   yield* Console.log(
-    `[check:tsgo:tests] checking ${A.length(discoveredFiles)} file(s) across ${A.length(packageGroups)} package(s)`
+    `[quality:test-tsgo] checking ${A.length(discoveredFiles)} file(s) across ${A.length(packageGroups)} package(s)`
   );
   const results = yield* runTestTsgoTurboTasks(repoRoot, packageGroups, normalizedExtraArgs).pipe(
     Effect.ensuring(
@@ -2569,7 +2572,7 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
 
   if (A.isReadonlyArrayNonEmpty(effectDiagnosticLines)) {
     yield* Console.error(
-      `[check:tsgo:tests] found ${A.length(effectDiagnosticLines)} Effect diagnostic(s) in test files`
+      `[quality:test-tsgo] found ${A.length(effectDiagnosticLines)} Effect diagnostic(s) in test files`
     );
     yield* Console.error(A.join(effectDiagnosticLines, "\n"));
   }
@@ -2578,7 +2581,7 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
     for (const failure of failures) {
       const packageName = tsgoTestPackageLabel(repoRoot, failure.group.packageDir);
       const configName = pipe(failure.group.tsconfigPath, Str.replace(`${failure.group.packageDir}/`, ""));
-      yield* Console.error(`[check:tsgo:tests] ${packageName} failed with ${configName}`);
+      yield* Console.error(`[quality:test-tsgo] ${packageName} failed with ${configName}`);
       if (Str.isNonEmpty(failure.output)) {
         yield* Console.error(failure.output);
       }
@@ -2587,7 +2590,7 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
 
   if (A.isReadonlyArrayNonEmpty(effectDiagnosticLines) || A.isReadonlyArrayNonEmpty(failures)) {
     return yield* withExitCode(
-      "check:tsgo:tests",
+      "quality:test-tsgo",
       path.join(repoRoot, "node_modules", ".bin", "tsgo"),
       ["-p", "<package-test-tsconfig>"],
       1
@@ -2662,7 +2665,7 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
     .pipe(QualityScriptCommandError.mapError(`Failed to write ${tsconfigPath}.`));
   const result = yield* collectOutput(
     QualityTaskStep.make({
-      label: "check:tsgo:smoke",
+      label: "quality:tsgo-smoke",
       command: tsgoPath,
       args: ["-p", tsconfigPath, "--pretty", "false"],
       cwd: repoRoot,
@@ -2670,7 +2673,9 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
   ).pipe(Effect.ensuring(fs.remove(smokeDir, { recursive: true }).pipe(Effect.ignore)));
 
   if (result.exitCode === 0) {
-    yield* Console.error("[check:tsgo:smoke] expected tsgo to fail on effectFnOpportunity but it exited successfully");
+    yield* Console.error(
+      "[quality:tsgo-smoke] expected tsgo to fail on effectFnOpportunity but it exited successfully"
+    );
     if (Str.isNonEmpty(result.output)) {
       yield* Console.error(result.output);
     }
@@ -2682,7 +2687,7 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
 
   if (!Str.includes("effect(effectFnOpportunity)")(result.output)) {
     yield* Console.error(
-      "[check:tsgo:smoke] tsgo failed, but did not report the expected effectFnOpportunity diagnostic"
+      "[quality:tsgo-smoke] tsgo failed, but did not report the expected effectFnOpportunity diagnostic"
     );
     if (Str.isNonEmpty(result.output)) {
       yield* Console.error(result.output);
@@ -2693,7 +2698,7 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
     });
   }
 
-  yield* Console.log("[check:tsgo:smoke] verified tsgo CLI reports effectFnOpportunity under the repo base config");
+  yield* Console.log("[quality:tsgo-smoke] verified tsgo CLI reports effectFnOpportunity under the repo base config");
 });
 
 /**

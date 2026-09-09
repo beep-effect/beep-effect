@@ -247,9 +247,9 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "policy-preflight",
       POLICY_PREFLIGHT_BASIS
     ),
-    policyHostedRow("pre-push:secrets", 54, 11, 4 / 832, O.some(31)),
+    policyHostedRow("quality:secrets", 54, 11, 4 / 832, O.some(31)),
     policyHostedRow(
-      "pre-push:security",
+      "quality:security",
       28,
       12,
       5 / 832,
@@ -258,7 +258,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "A4 environment-only attribution: Docker daemon and image-pull failures share this lane's exit."
     ),
     policyHostedRow(
-      "pre-push:sast",
+      "quality:sast",
       82,
       13,
       0,
@@ -267,7 +267,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "A4 environment-only attribution: Docker daemon and image-pull failures share this lane's exit."
     ),
     policyHostedRow(
-      "pre-push:nix",
+      "quality:nix",
       102,
       14,
       0,

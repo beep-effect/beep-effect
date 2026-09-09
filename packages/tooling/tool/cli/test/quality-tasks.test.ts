@@ -152,6 +152,7 @@ import {
   Sink,
   Stream,
 } from "effect";
+import * as HM from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -417,6 +418,7 @@ const githubCheckTestLane = (
     orderEstimate,
     stage: "repo-quality",
     step: bunScriptStep(id, source),
+    tier: "pre-push",
     wave,
   });
 
@@ -465,6 +467,7 @@ const laneProofTestLane = (
 ): GithubCheckLaneSpec =>
   GithubCheckLaneSpec.make({
     id,
+    tier: "pre-push",
     stage: "repo-quality",
     wave,
     blockedBy: [],
@@ -840,33 +843,60 @@ describe("quality task adapter", () => {
     const lanes = githubCheckCheapGateLanes("/repo");
 
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
-      "cheap-gates:goals-index",
-      "cheap-gates:exploration-atlas",
-      "cheap-gates:config-sync",
-      "cheap-gates:effect-imports",
-      "cheap-gates:schema-first",
-      "cheap-gates:allowlist-check",
-      "cheap-gates:goals-doctor",
-      "cheap-gates:jsdoc-ratchet",
-      "cheap-gates:knip",
+      "goals:index-check",
+      "explore:atlas-check",
+      "repo-sanity:tsconfig-sync",
+      "lint:effect-imports",
+      "lint:schema-first",
+      "lint:allowlist",
+      "goals:doctor",
+      "quality:jsdoc-ratchet:committed",
+      "quality:knip",
       "fallow:audit",
       "fallow:dead-code",
       "fallow:health",
     ]);
     expect(A.every(lanes, (lane) => lane.wave === "preflight")).toBe(true);
     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual(["preflight"]);
-    expect(qualityLaneArgs(lanes, "cheap-gates:config-sync")).toEqual(["run", "config-sync:check"]);
-    expect(qualityLaneArgs(lanes, "cheap-gates:effect-imports")).toEqual([
+    expect(qualityLaneArgs(lanes, "repo-sanity:tsconfig-sync")).toEqual(["run", "config-sync:check"]);
+    expect(qualityLaneArgs(lanes, "lint:effect-imports")).toEqual(["run", "beep", "laws", "effect-imports", "--check"]);
+    expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
       "run",
       "beep",
-      "laws",
-      "effect-imports",
-      "--check",
+      "quality",
+      "jsdoc-ratchet",
     ]);
-    expect(qualityLaneArgs(lanes, "cheap-gates:jsdoc-ratchet")).toEqual(["run", "beep", "quality", "jsdoc-ratchet"]);
     expect(A.map(githubCheckLanesForModeForTesting("/repo", "cheap-gates"), (lane) => lane.id)).toEqual(
       A.map(lanes, (lane) => lane.id)
     );
+  });
+
+  // TTC ruling 28: a lane id names the command it runs and doubles as the step
+  // label (the `[beep-cli] <label>` log prefix); the tier is metadata, so one
+  // command keeps one id whichever tier schedules it.
+  it("names every registered lane after its command with the label as its log prefix", () => {
+    const cheapGateLanes = githubCheckLanesForModeForTesting("/repo", "cheap-gates");
+    const prePushLanes = githubCheckLanesForModeForTesting("/repo", "pre-push");
+    const registered = [githubCheckChangesetStatusLane("/repo"), ...cheapGateLanes, ...prePushLanes];
+    const commandOf = (lane: GithubCheckLaneSpec): string => A.join([lane.step.command, ...lane.step.args], " ");
+    const idsByCommand = A.reduce(registered, HM.empty<string, ReadonlyArray<string>>(), (acc, lane) =>
+      HM.modifyAt(acc, commandOf(lane), (ids) => O.some(A.dedupe(A.append(O.getOrElse(ids, A.empty<string>), lane.id))))
+    );
+
+    expect(A.filter(registered, (lane) => lane.step.label !== lane.id)).toEqual([]);
+    expect(
+      A.filter(registered, (lane) => Str.startsWith("cheap-gates:")(lane.id) || Str.startsWith("pre-push:")(lane.id))
+    ).toEqual([]);
+    expect(A.filter(HM.toEntries(idsByCommand), ([, ids]) => A.length(ids) > 1)).toEqual([]);
+    expect(A.every(cheapGateLanes, (lane) => lane.tier === "cheap-gates")).toBe(true);
+    expect(A.every(prePushLanes, (lane) => lane.tier === "pre-push")).toBe(true);
+    // The same command keeps its id across tiers, so the lane-proof ledger can match it.
+    expect(
+      A.map(
+        A.filter(cheapGateLanes, (lane) => lane.id === "quality:knip"),
+        (lane) => lane.step.args
+      )
+    ).toEqual([qualityLaneArgs(prePushLanes, "quality:knip")]);
   });
 
   // ship-velocity B1: a local green must mean what a hosted green means, so the
@@ -992,10 +1022,10 @@ describe("quality task adapter", () => {
     const lanes = githubCheckPrePushExternalLanesForTesting("/repo");
 
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
-      "pre-push:secrets",
-      "pre-push:security",
-      "pre-push:sast",
-      "pre-push:nix",
+      "quality:secrets",
+      "quality:security",
+      "quality:sast",
+      "quality:nix",
     ]);
     expect(A.map(lanes, (lane) => lane.stage)).toEqual([
       "diff-security",
@@ -1699,6 +1729,7 @@ describe("quality task adapter", () => {
           yield* initializeLaneProofRepository(tempRoot);
           const lane = GithubCheckLaneSpec.make({
             id: "quality:test-unit",
+            tier: "pre-push",
             stage: "repo-quality",
             wave: "heavy",
             blockedBy: [],
@@ -1769,6 +1800,7 @@ describe("quality task adapter", () => {
 
       const lane = GithubCheckLaneSpec.make({
         id: "proof:local-env",
+        tier: "pre-push",
         stage: "repo-quality",
         wave: "preflight",
         blockedBy: [],
@@ -1806,6 +1838,7 @@ describe("quality task adapter", () => {
 
       const lane = GithubCheckLaneSpec.make({
         id: "proof:isolated-env",
+        tier: "pre-push",
         stage: "repo-quality",
         wave: "preflight",
         blockedBy: [],
@@ -1903,7 +1936,7 @@ describe("quality task adapter", () => {
 
       const secretsLane = laneProofTestLane(
         tempRoot,
-        "pre-push:secrets",
+        "quality:secrets",
         "preflight",
         "echo secrets >> .beep/secrets-history.txt"
       );
@@ -1988,7 +2021,7 @@ describe("quality task adapter", () => {
       const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-security-" });
       yield* initializeLaneProofRepository(tempRoot);
 
-      const lane = laneProofTestLane(tempRoot, "pre-push:security", "preflight", "echo security >> .beep/security.txt");
+      const lane = laneProofTestLane(tempRoot, "quality:security", "preflight", "echo security >> .beep/security.txt");
       const run = collectGithubCheckLaneWavesForTesting(
         "proof-security",
         [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
@@ -2097,8 +2130,8 @@ describe("quality task adapter", () => {
           GithubCheckLaneWaveSpec.make({
             wave: "preflight",
             lanes: [
-              githubCheckTestLane("cheap-gates:config-sync", "preflight", "process.exit(2)"),
-              githubCheckTestLane("cheap-gates:effect-imports", "preflight", "process.exit(3)"),
+              githubCheckTestLane("repo-sanity:tsconfig-sync", "preflight", "process.exit(2)"),
+              githubCheckTestLane("lint:effect-imports", "preflight", "process.exit(3)"),
             ],
           }),
         ],
@@ -2108,8 +2141,8 @@ describe("quality task adapter", () => {
           expect(report.schemaVersion).toBe("github-check-run/v1");
           expect(report.failurePolicy).toBe("collect-all");
           expect(A.map(failures, (failure) => failure.label)).toEqual([
-            "cheap-gates:config-sync",
-            "cheap-gates:effect-imports",
+            "repo-sanity:tsconfig-sync",
+            "lint:effect-imports",
           ]);
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "failed"]);
         }),
@@ -2181,8 +2214,8 @@ describe("quality task adapter", () => {
     const spawned: Array<string> = [];
     const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
     const failedCommands = [
-      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "cheap-gates:config-sync")], " "),
-      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "cheap-gates:effect-imports")], " "),
+      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "repo-sanity:tsconfig-sync")], " "),
+      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "lint:effect-imports")], " "),
     ];
     const lastLane = O.getOrThrow(A.last(cheapGateLanes));
     const lastCommand = A.join([lastLane.step.command, ...lastLane.step.args], " ");
@@ -2200,8 +2233,8 @@ describe("quality task adapter", () => {
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
             if (isQualityTaskGroupFailed(failure)) {
               expect(A.map(failure.failures, (step) => step.label)).toEqual([
-                "cheap-gates:config-sync",
-                "cheap-gates:effect-imports",
+                "repo-sanity:tsconfig-sync",
+                "lint:effect-imports",
               ]);
             }
           }
@@ -2210,8 +2243,8 @@ describe("quality task adapter", () => {
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
           expect(logText).toContain('"failurePolicy":"collect-all"');
-          expect(logText).toContain('"id":"cheap-gates:config-sync","stage":"repo-sanity","status":"failed"');
-          expect(logText).toContain('"id":"cheap-gates:effect-imports","stage":"repo-quality","status":"failed"');
+          expect(logText).toContain('"id":"repo-sanity:tsconfig-sync","stage":"repo-sanity","status":"failed"');
+          expect(logText).toContain('"id":"lint:effect-imports","stage":"repo-quality","status":"failed"');
           expect(logText).toContain('"status":"passed"');
         })
       ).pipe(provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, failedCommands), PullRequestConfigLayer)))
@@ -2518,12 +2551,12 @@ describe("quality task adapter", () => {
     // tsgo-rules is owned by lint-policy alone (`lint:tsgo-rules`); check carries no copy.
     expect(A.slice(steps, { start: 1 })).toEqual([
       expect.objectContaining({
-        label: "check:tsgo:tests",
+        label: "quality:test-tsgo",
         command: "bun",
         args: repoCliEntryArgs("quality", "test-tsgo"),
       }),
       expect.objectContaining({
-        label: "check:tsgo:smoke",
+        label: "quality:tsgo-smoke",
         command: "bun",
         args: repoCliEntryArgs("quality", "tsgo-smoke"),
       }),
@@ -2552,7 +2585,7 @@ describe("quality task adapter", () => {
       ])
     ).toEqual(
       O.some(
-        '[check:tsgo:tests] missing required "package-test-typecheck" package script for @beep/alpha, ' +
+        '[quality:test-tsgo] missing required "package-test-typecheck" package script for @beep/alpha, ' +
           '@beep/zulu. Add "package-test-typecheck": "beep-cli quality test-tsgo-package" to each named package.json.'
       )
     );
@@ -5890,7 +5923,7 @@ describe("labs turbo exclusion", () => {
   it("ends check argvs with the labs exclude while repo-wide tsgo steps survive", () => {
     for (const argv of [["check", "--affected", "--summarize"], ["check"]]) {
       const steps = rootQualityStepsForTesting("/repo", getInvocation(argv));
-      expect(A.map(steps, (step) => step.label)).toEqual(["check", "check:tsgo:tests", "check:tsgo:smoke"]);
+      expect(A.map(steps, (step) => step.label)).toEqual(["check", "quality:test-tsgo", "quality:tsgo-smoke"]);
       expectEndsWithLabsExclude(steps[0]);
     }
   });

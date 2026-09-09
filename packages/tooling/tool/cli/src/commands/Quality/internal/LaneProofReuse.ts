@@ -25,7 +25,7 @@ const isLaneProofMode = S.is(LaneProofMode);
 const ActiveLaneProofMode = LiteralKit(["shadow", "active"]);
 // These lanes query live vulnerability data. A tree-exact record cannot prove
 // that the external advisory set is still current, so they always run.
-const NonReusableLaneProofId = LiteralKit(["pre-push:security", "repo-sanity:bun-audit"]);
+const NonReusableLaneProofId = LiteralKit(["quality:security", "repo-sanity:bun-audit"]);
 const isNonReusableLaneProofId = S.is(NonReusableLaneProofId);
 
 class LaneProofRecord extends S.Class<LaneProofRecord>($I`LaneProofRecord`)(

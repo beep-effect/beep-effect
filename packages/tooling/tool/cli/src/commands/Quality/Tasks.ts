@@ -2386,11 +2386,11 @@ const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
   // the check root task carries only the test-file and smoke tsgo extras.
   ...optionalQualityTaskStep({
     enabled: shouldRunRepoWideSteps(args),
-    step: () => repoCliStep(repoRoot, "check:tsgo:tests", ["quality", "test-tsgo"]),
+    step: () => repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]),
   }),
   ...optionalQualityTaskStep({
     enabled: shouldRunRepoWideSteps(args),
-    step: () => repoCliStep(repoRoot, "check:tsgo:smoke", ["quality", "tsgo-smoke"]),
+    step: () => repoCliStep(repoRoot, "quality:tsgo-smoke", ["quality", "tsgo-smoke"]),
   }),
 ];
 
