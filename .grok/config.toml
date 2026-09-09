@@ -1,0 +1,3 @@
+[mcp_servers.graft]
+command = "graft"
+args = ["mcp"]

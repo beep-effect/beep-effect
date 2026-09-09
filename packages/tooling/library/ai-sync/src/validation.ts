@@ -133,10 +133,11 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(rm -rf .beep/fallow)",
   "Bash(bunx commitlint:*)",
   "Bash(bun install:*)",
+  "Bash(graft:*)",
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 50-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and stale-lane cleanup (stash drop, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI).",
+      "Exact 51-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, and stale-lane cleanup (stash drop, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI), plus the read-only Graft code-graph CLI.",
   })
 );
 

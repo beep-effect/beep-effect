@@ -573,7 +573,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
   );
 
   it.effect(
-    "keeps checked-in Claude grants inside the exact 50-value allow domain",
+    "keeps checked-in Claude grants inside the exact 51-value allow domain",
     Effect.fn(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -581,7 +581,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       const settingsText = yield* fs.readFileString(path.join(repoRoot, ".claude/settings.json"));
       const settings = yield* decodeStructInlineSchemaJson(settingsText);
 
-      assert.lengthOf(settings.permissions.allow, 50);
+      assert.lengthOf(settings.permissions.allow, 51);
       assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git worktree remove:*)");
