@@ -4406,6 +4406,7 @@ exit 74
           yield* fs.writeFileString(path.join(rawDir, "extensionless"), "notes");
           yield* fs.makeDirectory(path.join(rawDir, "nested.jpg"));
           yield* writeSvgFile(path.join(rawDir, "vector.svg"), 2, 2);
+          yield* fs.symlink(path.join(rawDir, "missing.png"), path.join(rawDir, "broken.png"));
 
           yield* runFilesCommand(["normalize", "--dir", rawDir, "--out-dir", outDir]);
 
@@ -4414,6 +4415,7 @@ exit 74
           expect(yield* sortedDirectoryEntries(outDir)).toEqual(["foo.png", "foo_01.png", "normalize-manifest.json"]);
           expect(A.map(manifest.entries, (entry) => entry.outputName)).toEqual(["foo.png", "foo_01.png"]);
           expect(A.map(manifest.skipped, (entry) => entry.reason)).toEqual([
+            "symlink",
             "video",
             "extensionless",
             "directory",
@@ -4426,7 +4428,7 @@ exit 74
             normalizedCount: 2,
             plannedCount: 2,
             resizedCount: 0,
-            skippedCount: 5,
+            skippedCount: 6,
           });
         })
       )

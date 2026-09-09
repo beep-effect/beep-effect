@@ -58,13 +58,10 @@ const fromAdjacencyList = (
 
     // Second pass: add edges (package -> dependency)
     for (const [name, deps] of adjacencyList) {
-      const sourceIdxOpt = MutableHashMap.get(nameToIndex, name);
+      const sourceIdx = O.getOrThrow(MutableHashMap.get(nameToIndex, name));
       for (const dep of deps) {
-        const targetIdxOpt = MutableHashMap.get(nameToIndex, dep);
-
-        if (O.isSome(sourceIdxOpt) && O.isSome(targetIdxOpt)) {
-          G.addEdge(mutable, sourceIdxOpt.value, targetIdxOpt.value, undefined);
-        }
+        const targetIdx = O.getOrThrow(MutableHashMap.get(nameToIndex, dep));
+        G.addEdge(mutable, sourceIdx, targetIdx, undefined);
       }
     }
   });
@@ -128,6 +125,30 @@ export const topologicalSort: (
   return pipe(A.fromIterable(G.values(walker)), A.reverse);
 });
 
+const cyclePathFromComponent = (
+  graph: G.DirectedGraph<string, void>,
+  scc: ReadonlyArray<G.NodeIndex>,
+  indexToName: MutableHashMap.MutableHashMap<G.NodeIndex, string>
+): O.Option<ReadonlyArray<string>> =>
+  pipe(
+    A.get(scc, 0),
+    O.flatMap((first) => {
+      if (A.length(scc) > 1) {
+        const memberSet = MutableHashSet.fromIterable(scc);
+        const path = buildCyclePath(graph, first, memberSet, indexToName);
+        return O.liftPredicate(path, A.isReadonlyArrayNonEmpty);
+      }
+
+      return pipe(
+        MutableHashMap.get(indexToName, first),
+        O.filter(() =>
+          P.isNotUndefined(G.findEdge(graph, (_data, source, target) => source === first && target === first))
+        ),
+        O.map((name): ReadonlyArray<string> => [name, name])
+      );
+    })
+  );
+
 /**
  * Detect all cycles in a directed dependency graph.
  *
@@ -173,48 +194,11 @@ export const detectCycles: (
 
   const sccs = G.stronglyConnectedComponents(graph);
 
-  // Filter to SCCs with more than one node, or a single node with a
-  // self-edge.
-  let cyclePaths: ReadonlyArray<ReadonlyArray<string>> = A.empty();
-
-  for (const scc of sccs) {
-    const firstOpt = A.get(scc, 0);
-    if (O.isNone(firstOpt)) continue;
-    const first = firstOpt.value;
-
-    if (A.length(scc) > 1) {
-      // Reconstruct a cycle path through this SCC.
-      const memberSet = MutableHashSet.fromIterable(scc);
-      const names = pipe(
-        scc,
-        A.map((idx) => MutableHashMap.get(indexToName, idx)),
-        A.getSomes
-      );
-
-      // Build a path by DFS within the SCC starting from the first member
-      const path = buildCyclePath(graph, first, memberSet, indexToName);
-      if (A.length(path) > 0) {
-        cyclePaths = A.append(cyclePaths, path);
-      } else {
-        // Fallback: just list the members with the first repeated
-        const firstNameOpt = A.get(names, 0);
-        if (O.isSome(firstNameOpt)) {
-          cyclePaths = A.append(cyclePaths, A.append(names, firstNameOpt.value));
-        }
-      }
-    } else {
-      // Check for self-loop
-      const nameOpt = MutableHashMap.get(indexToName, first);
-      if (O.isNone(nameOpt)) continue;
-
-      const selfEdge = G.findEdge(graph, (_data, source, target) => source === first && target === first);
-      if (P.isNotUndefined(selfEdge)) {
-        cyclePaths = A.append(cyclePaths, [nameOpt.value, nameOpt.value]);
-      }
-    }
-  }
-
-  return cyclePaths;
+  return pipe(
+    sccs,
+    A.map((scc) => cyclePathFromComponent(graph, scc, indexToName)),
+    A.getSomes
+  );
 });
 
 /**
@@ -256,13 +240,7 @@ const buildCyclePath = (
           A.map((idx) => MutableHashMap.get(indexToName, idx)),
           A.getSomes
         );
-        return pipe(
-          MutableHashMap.get(indexToName, startIdx),
-          O.match({
-            onNone: () => pathNames,
-            onSome: (startName) => A.append(pathNames, startName),
-          })
-        );
+        return A.append(pathNames, O.getOrThrow(MutableHashMap.get(indexToName, startIdx)));
       }
 
       if (!MutableHashSet.has(visited, neighbor)) {

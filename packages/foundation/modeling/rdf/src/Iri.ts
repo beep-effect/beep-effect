@@ -632,6 +632,13 @@ const parseIFragment = (input: string, start: number): ParseEnd =>
     () => false
   );
 
+const parseOptionalComponent = (
+  input: string,
+  start: number,
+  marker: "?" | "#",
+  parseComponent: (input: string, start: number) => ParseEnd
+): ParseEnd => (input[start] === marker ? parseComponent(input, start + 1) : start);
+
 const parseIHierPart = (input: string, start: number): ParseEnd => {
   if (input[start] === "/" && input[start + 1] === "/") {
     const authorityEnd = parseAuthority(input, start + 2);
@@ -706,46 +713,23 @@ const parseAbsoluteIriEnd = (input: string): ParseEnd => {
     return undefined;
   }
 
-  let index = schemeEnd + 1;
-  const hierPartEnd = parseIHierPart(input, index);
+  const hierPartEnd = parseIHierPart(input, schemeEnd + 1);
 
   if (hierPartEnd === undefined) {
     return undefined;
   }
 
-  index = hierPartEnd;
-
-  if (input[index] === "?") {
-    const queryEnd = parseIQuery(input, index + 1);
-
-    if (queryEnd === undefined) {
-      return undefined;
-    }
-
-    index = queryEnd;
-  }
-
-  return index;
+  return parseOptionalComponent(input, hierPartEnd, "?", parseIQuery);
 };
 
 const parseIriEnd = (input: string): ParseEnd => {
-  let index = parseAbsoluteIriEnd(input);
+  const index = parseAbsoluteIriEnd(input);
 
   if (index === undefined) {
     return undefined;
   }
 
-  if (input[index] === "#") {
-    const fragmentEnd = parseIFragment(input, index + 1);
-
-    if (fragmentEnd === undefined) {
-      return undefined;
-    }
-
-    index = fragmentEnd;
-  }
-
-  return index;
+  return parseOptionalComponent(input, index, "#", parseIFragment);
 };
 
 const parseRelativeIriReferenceEnd = (input: string): ParseEnd => {
@@ -755,27 +739,13 @@ const parseRelativeIriReferenceEnd = (input: string): ParseEnd => {
     return undefined;
   }
 
-  if (input[index] === "?") {
-    const queryEnd = parseIQuery(input, index + 1);
+  index = parseOptionalComponent(input, index, "?", parseIQuery);
 
-    if (queryEnd === undefined) {
-      return undefined;
-    }
-
-    index = queryEnd;
+  if (index === undefined) {
+    return undefined;
   }
 
-  if (input[index] === "#") {
-    const fragmentEnd = parseIFragment(input, index + 1);
-
-    if (fragmentEnd === undefined) {
-      return undefined;
-    }
-
-    index = fragmentEnd;
-  }
-
-  return index;
+  return parseOptionalComponent(input, index, "#", parseIFragment);
 };
 
 const isAbsoluteIri = (input: string): boolean => parseAbsoluteIriEnd(input) === Str.length(input);

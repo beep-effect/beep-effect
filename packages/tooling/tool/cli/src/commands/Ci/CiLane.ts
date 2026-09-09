@@ -1207,8 +1207,8 @@ const codegenDriverStep = (repoRoot: string, packageDir: CodegenDriverPackageDir
 const codegenDriverSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
   A.map(CODEGEN_DRIVER_PACKAGE_DIRS.Options, (packageDir) => codegenDriverStep(repoRoot, packageDir));
 
-const FALLOW_BLOCKING_LANES = ["audit", "dead-code"] as const;
-const FALLOW_ADVISORY_LANES = ["health", "boundaries", "flags", "security", "fix-preview"] as const;
+const FALLOW_BLOCKING_LANES = ["audit", "dead-code", "health"] as const;
+const FALLOW_ADVISORY_LANES = ["boundaries", "flags", "security", "fix-preview"] as const;
 const FALLOW_ENVELOPE_REQUIRED_FIELDS = "schemaVersion,status,command,exitStatus,baseRef,rawOutputRef";
 
 const fallowReportPath = (lane: string, advisory: boolean): string =>

@@ -12,6 +12,7 @@ import {
   FaceDetectionPoint,
   FaceDetectionResult,
   FaceDetectionService,
+  FaceDetectionServiceTestKit,
   FaceDetectionTopK,
   NonNegativeImageCoordinate,
   PositivePixelDimension,
@@ -218,6 +219,23 @@ describe("@beep/face-detection", () => {
     expect(RawFaceDetectionConfidence.decodeUnknownSync(-0.2)).toBe(0);
     expect(RawFaceDetectionConfidence.decodeUnknownSync(0.5)).toBe(0.5);
     expect(RawFaceDetectionConfidence.decodeUnknownSync(1.2)).toBe(1);
+  });
+
+  it("computes padded and fixed-model preprocessing geometry", () => {
+    expect(FaceDetectionServiceTestKit.preprocessGeometry(33, 17)).toEqual({
+      offsetX: 0,
+      offsetY: 0,
+      padHeight: 32,
+      padWidth: 64,
+      scale: 1,
+    });
+    expect(FaceDetectionServiceTestKit.preprocessGeometry(400, 200, { height: 320, width: 320 })).toEqual({
+      offsetX: 0,
+      offsetY: 80,
+      padHeight: 320,
+      padWidth: 320,
+      scale: 0.8,
+    });
   });
 
   it.effect("runs workflows through the service contract", () =>

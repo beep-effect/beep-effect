@@ -46,6 +46,8 @@ const generate = Effect.gen(function* () {
   const policyDigest = sha256(artifacts.abox);
   const journalDigest = sha256(artifacts.journal);
   const report = yield* replayAdmissionJournal(policy, events, policyDigest, journalDigest);
+  // Check mode recomputes and validates the frozen replay without regenerating
+  // the historical report (whose explanatory prose belongs to its packet).
   if (A.contains(process.argv, "--check")) {
     yield* Console.log(renderReplayEvidence(report, journalDigest));
   } else {

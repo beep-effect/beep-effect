@@ -888,6 +888,72 @@ const resolveMode = (check: boolean, dryRun: boolean): Effect.Effect<SkillsRunMo
   return Effect.succeed(check ? "check" : dryRun ? "dry-run" : "write");
 };
 
+const evaluateRemoteSkillDrift = Effect.fnUntraced(function* (
+  repoRoot: string,
+  fetchedSnapshots: ReadonlyArray<readonly [RemoteSkillSource, SkillSnapshot]>,
+  mode: SkillsRunMode
+) {
+  const path = yield* Path.Path;
+  const drift: Array<SkillDrift> = [];
+  for (const [source, snapshot] of fetchedSnapshots) {
+    const localHash = yield* hashSkillDirectory(path.join(repoRoot, CLAUDE_SKILLS_DIR, source.name), source.name);
+    if (O.isNone(localHash) || localHash.value !== snapshot.hash) {
+      drift.push({ _tag: "RemoteSkillDrift", name: source.name });
+      if (mode === "write") {
+        yield* writeRemoteSkill(repoRoot, source, snapshot);
+      }
+    }
+  }
+  return drift;
+});
+
+const evaluateLockDrift = Effect.fnUntraced(function* (
+  repoRoot: string,
+  snapshotsByName: Readonly<Record<string, SkillSnapshot>>,
+  mode: SkillsRunMode
+) {
+  const path = yield* Path.Path;
+  const desiredLock = yield* buildDesiredLock(repoRoot, snapshotsByName);
+  const desiredLockText = renderLockFile(desiredLock);
+  const lockPath = path.join(repoRoot, SKILLS_LOCK_PATH);
+  yield* readLockFile(repoRoot).pipe(Effect.ignore);
+  const currentLockText = yield* readExistingFile(lockPath);
+  if (O.isSome(currentLockText) && currentLockText.value === desiredLockText) {
+    return O.none<SkillDrift>();
+  }
+  if (mode === "write") {
+    yield* writeStringFile(lockPath, desiredLockText);
+  }
+  return O.some<SkillDrift>({ _tag: "LockDrift" });
+});
+
+const evaluateCodexConfigDrift = Effect.fnUntraced(function* (repoRoot: string, mode: SkillsRunMode) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const desiredCodexConfig = yield* renderDesiredCodexConfig(repoRoot);
+  const configPath = path.join(repoRoot, CODEX_CONFIG_PATH);
+  const currentCodexConfig = yield* fs
+    .readFileString(configPath)
+    .pipe(SkillsCommandError.mapError(`Failed to read ${CODEX_CONFIG_PATH}.`, configPath));
+  if (currentCodexConfig === desiredCodexConfig) {
+    return O.none<SkillDrift>();
+  }
+  if (mode === "write") {
+    yield* writeStringFile(configPath, desiredCodexConfig);
+  }
+  return O.some<SkillDrift>({ _tag: "CodexConfigDrift" });
+});
+
+const evaluateAgentsMirrorDrift = Effect.fnUntraced(function* (repoRoot: string, mode: SkillsRunMode) {
+  if (yield* agentsMirrorIsCurrent(repoRoot)) {
+    return O.none<SkillDrift>();
+  }
+  if (mode === "write") {
+    yield* writeAgentsMirror(repoRoot);
+  }
+  return O.some<SkillDrift>({ _tag: "AgentsMirrorDrift" });
+});
+
 /**
  * Run the skills update workflow.
  *
@@ -913,8 +979,6 @@ export const runSkillsUpdate = Effect.fn("Skills.runSkillsUpdate")(function* (op
   SkillsCommandError | SkillsDriftError,
   FileSystem.FileSystem | Path.Path | Crypto.Crypto | HttpClient.HttpClient
 > {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(SkillsCommandError.mapError("Failed to locate repository root."));
   const sources = yield* resolveSourcesToFetch(options.skill);
   const fetchedSnapshots = yield* Effect.forEach(sources, fetchRemoteSkillSnapshot, {
@@ -925,49 +989,11 @@ export const runSkillsUpdate = Effect.fn("Skills.runSkillsUpdate")(function* (op
     A.map(([source, snapshot]) => [source.name, snapshot] as const),
     R.fromEntries
   );
-  const drift: Array<SkillDrift> = [];
-
-  for (const [source, snapshot] of fetchedSnapshots) {
-    const localHash = yield* hashSkillDirectory(path.join(repoRoot, CLAUDE_SKILLS_DIR, source.name), source.name);
-    if (O.isNone(localHash) || localHash.value !== snapshot.hash) {
-      drift.push({ _tag: "RemoteSkillDrift", name: source.name });
-      if (options.mode === "write") {
-        yield* writeRemoteSkill(repoRoot, source, snapshot);
-      }
-    }
-  }
-
-  const desiredLock = yield* buildDesiredLock(repoRoot, snapshotsByName);
-  const desiredLockText = renderLockFile(desiredLock);
-  const lockPath = path.join(repoRoot, SKILLS_LOCK_PATH);
-  yield* readLockFile(repoRoot).pipe(Effect.ignore);
-  const currentLockText = yield* readExistingFile(lockPath);
-  if (O.isNone(currentLockText) || currentLockText.value !== desiredLockText) {
-    drift.push({ _tag: "LockDrift" });
-    if (options.mode === "write") {
-      yield* writeStringFile(lockPath, desiredLockText);
-    }
-  }
-
-  const desiredCodexConfig = yield* renderDesiredCodexConfig(repoRoot);
-  const configPath = path.join(repoRoot, CODEX_CONFIG_PATH);
-  const currentCodexConfig = yield* fs
-    .readFileString(configPath)
-    .pipe(SkillsCommandError.mapError(`Failed to read ${CODEX_CONFIG_PATH}.`, configPath));
-  if (currentCodexConfig !== desiredCodexConfig) {
-    drift.push({ _tag: "CodexConfigDrift" });
-    if (options.mode === "write") {
-      yield* writeStringFile(configPath, desiredCodexConfig);
-    }
-  }
-
-  const mirrorCurrent = yield* agentsMirrorIsCurrent(repoRoot);
-  if (!mirrorCurrent) {
-    drift.push({ _tag: "AgentsMirrorDrift" });
-    if (options.mode === "write") {
-      yield* writeAgentsMirror(repoRoot);
-    }
-  }
+  const remoteDrift = yield* evaluateRemoteSkillDrift(repoRoot, fetchedSnapshots, options.mode);
+  const lockDrift = yield* evaluateLockDrift(repoRoot, snapshotsByName, options.mode);
+  const configDrift = yield* evaluateCodexConfigDrift(repoRoot, options.mode);
+  const mirrorDrift = yield* evaluateAgentsMirrorDrift(repoRoot, options.mode);
+  const drift = A.appendAll(remoteDrift, A.getSomes([lockDrift, configDrift, mirrorDrift]));
 
   yield* printDriftReport(options.mode, drift);
 

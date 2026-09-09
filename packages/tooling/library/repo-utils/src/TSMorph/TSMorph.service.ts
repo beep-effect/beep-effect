@@ -62,7 +62,7 @@ import {
   readSignature,
 } from "./TSMorph.shared.ts";
 import type * as Crypto from "effect/Crypto";
-import type { SourceFile } from "ts-morph";
+import type { ClassDeclaration, SourceFile, Statement } from "ts-morph";
 import type {
   ProjectCacheKey,
   TsMorphDiagnosticsRequest,
@@ -608,6 +608,61 @@ const resolveSymbolFilePath = Effect.fn(function* (
   );
 });
 
+const collectClassOutlineEntries = Effect.fnUntraced(function* (
+  sourceText: string,
+  symbolFilePath: SymbolFilePath,
+  declaration: ClassDeclaration
+): Effect.fn.Return<ReadonlyArray<ScopeSymbolEntry>, TSMorphServiceError, Crypto.Crypto> {
+  const classEntry = yield* normalizeOutlineSymbol(sourceText, symbolFilePath, declaration, O.none());
+
+  if (O.isNone(classEntry)) {
+    return A.empty();
+  }
+
+  let entries = A.of(classEntry.value);
+  for (const member of declaration.getMembers()) {
+    if (
+      Node.isConstructorDeclaration(member) ||
+      Node.isMethodDeclaration(member) ||
+      Node.isGetAccessorDeclaration(member) ||
+      Node.isSetAccessorDeclaration(member)
+    ) {
+      const memberEntry = yield* normalizeOutlineSymbol(
+        sourceText,
+        symbolFilePath,
+        member,
+        O.some(classEntry.value.symbol)
+      );
+      entries = pipe(memberEntry, O.match({ onNone: () => entries, onSome: (entry) => A.append(entries, entry) }));
+    }
+  }
+  return entries;
+});
+
+const collectStatementOutlineEntries = Effect.fnUntraced(function* (
+  sourceText: string,
+  symbolFilePath: SymbolFilePath,
+  statement: Statement
+): Effect.fn.Return<ReadonlyArray<ScopeSymbolEntry>, TSMorphServiceError, Crypto.Crypto> {
+  if (Node.isClassDeclaration(statement)) {
+    return yield* collectClassOutlineEntries(sourceText, symbolFilePath, statement);
+  }
+
+  if (
+    !Node.isFunctionDeclaration(statement) &&
+    !Node.isInterfaceDeclaration(statement) &&
+    !Node.isTypeAliasDeclaration(statement) &&
+    !Node.isEnumDeclaration(statement)
+  ) {
+    return A.empty();
+  }
+
+  return pipe(
+    yield* normalizeOutlineSymbol(sourceText, symbolFilePath, statement, O.none()),
+    O.match({ onNone: A.empty<ScopeSymbolEntry>, onSome: A.of })
+  );
+});
+
 const collectOutlineEntries = Effect.fn(function* (
   filePath: TypeScriptFilePath,
   sourceFile: SourceFile
@@ -618,51 +673,7 @@ const collectOutlineEntries = Effect.fn(function* (
   const sourceText = sourceFile.getFullText();
 
   for (const statement of sourceFile.getStatements()) {
-    if (Node.isFunctionDeclaration(statement)) {
-      const entry = yield* normalizeOutlineSymbol(sourceText, symbolFilePath, statement, O.none());
-      if (O.isSome(entry)) {
-        entries = A.append(entries, entry.value);
-      }
-      continue;
-    }
-
-    if (Node.isClassDeclaration(statement)) {
-      const classEntry = yield* normalizeOutlineSymbol(sourceText, symbolFilePath, statement, O.none());
-      if (O.isSome(classEntry)) {
-        entries = A.append(entries, classEntry.value);
-
-        for (const member of statement.getMembers()) {
-          if (
-            Node.isConstructorDeclaration(member) ||
-            Node.isMethodDeclaration(member) ||
-            Node.isGetAccessorDeclaration(member) ||
-            Node.isSetAccessorDeclaration(member)
-          ) {
-            const memberEntry = yield* normalizeOutlineSymbol(
-              sourceText,
-              symbolFilePath,
-              member,
-              O.some(classEntry.value.symbol)
-            );
-            if (O.isSome(memberEntry)) {
-              entries = A.append(entries, memberEntry.value);
-            }
-          }
-        }
-      }
-      continue;
-    }
-
-    if (
-      Node.isInterfaceDeclaration(statement) ||
-      Node.isTypeAliasDeclaration(statement) ||
-      Node.isEnumDeclaration(statement)
-    ) {
-      const entry = yield* normalizeOutlineSymbol(sourceText, symbolFilePath, statement, O.none());
-      if (O.isSome(entry)) {
-        entries = A.append(entries, entry.value);
-      }
-    }
+    entries = A.appendAll(entries, yield* collectStatementOutlineEntries(sourceText, symbolFilePath, statement));
   }
 
   return entries;

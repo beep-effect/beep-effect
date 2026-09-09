@@ -518,7 +518,8 @@ const attributionKindSetDiagnostics = (
 
 // Promoted blocking lanes (goals/fallow-quality-enforcement feature matrix):
 // dead-code blocks on any finding against its zero baseline; audit blocks only
-// on introduced findings under the new-only gate. All other lanes stay advisory.
+// on introduced findings under the new-only gate; health blocks on findings
+// that remain after comparison with its committed regression baseline.
 const promotedBlockingFinding = (feature: FallowFeature, attribution: typeof FindingAttributionKind.Type): boolean =>
   FallowFeatureFamily.$match(feature, {
     audit: () => sameAttributionKind(attribution, "introduced"),
@@ -526,7 +527,7 @@ const promotedBlockingFinding = (feature: FallowFeature, attribution: typeof Fin
     "dead-code": () => true,
     "fix-preview": () => false,
     flags: () => false,
-    health: () => false,
+    health: () => true,
     security: () => false,
   });
 
@@ -893,7 +894,8 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
       "--format",
       "json",
       ...quietArgs,
-      "--report-only",
+      "--baseline",
+      "standards/fallow.health.regression-baseline.jsonc",
       "--top",
       "50",
     ],
@@ -1503,7 +1505,115 @@ const exactEnvelopeKeyDiagnostics = (document: unknown): ReadonlyArray<string> =
     : A.empty();
 };
 
-const reportInvariantDiagnostics = (document: unknown): ReadonlyArray<string> => {
+const countMismatchDiagnostics = (actual: number, expected: number, message: string): ReadonlyArray<string> =>
+  actual === expected ? A.empty() : A.of(message);
+
+const okReportInvariantDiagnostics = (document: unknown): ReadonlyArray<string> =>
+  pipe(
+    decodeFallowReportOkOption(document),
+    O.match({
+      onNone: A.empty<string>,
+      onSome: (envelope) => {
+        const actualCount = A.length(envelope.report.findings);
+        const expectedSummary = attributionSummary(envelope.report.findings);
+        return [
+          ...countMismatchDiagnostics(
+            envelope.report.findingCount,
+            actualCount,
+            `Fallow envelope report findingCount ${envelope.report.findingCount} does not match findings length ${actualCount}.`
+          ),
+          ...countMismatchDiagnostics(
+            envelope.findingAttributionSummary.introduced,
+            expectedSummary.introduced,
+            `Fallow envelope introduced attribution count ${envelope.findingAttributionSummary.introduced} does not match findings count ${expectedSummary.introduced}.`
+          ),
+          ...countMismatchDiagnostics(
+            envelope.findingAttributionSummary.inheritedAdjacent,
+            expectedSummary.inheritedAdjacent,
+            `Fallow envelope inheritedAdjacent attribution count ${envelope.findingAttributionSummary.inheritedAdjacent} does not match findings count ${expectedSummary.inheritedAdjacent}.`
+          ),
+          ...countMismatchDiagnostics(
+            envelope.findingAttributionSummary.notApplicable,
+            expectedSummary.notApplicable,
+            `Fallow envelope notApplicable attribution count ${envelope.findingAttributionSummary.notApplicable} does not match findings count ${expectedSummary.notApplicable}.`
+          ),
+          ...attributionKindSetDiagnostics(
+            "Fallow envelope attributionKinds",
+            attributionKinds(envelope.report.findings),
+            envelope.attributionKinds
+          ),
+        ];
+      },
+    })
+  );
+
+const failureAttributionDiagnostics = (
+  status: O.Option<typeof FallowEnvelopeStatus.Type>,
+  introduced: number,
+  inheritedAdjacent: number,
+  notApplicable: number,
+  attributionKindsOption: O.Option<FallowAttributionKinds>
+): ReadonlyArray<string> =>
+  pipe(
+    status,
+    O.match({
+      onNone: A.empty<string>,
+      onSome: (value) =>
+        sameEnvelopeStatus(value, "ok")
+          ? A.empty()
+          : [
+              ...countMismatchDiagnostics(
+                introduced,
+                0,
+                `Fallow ${value} envelope introduced attribution count must be 0.`
+              ),
+              ...countMismatchDiagnostics(
+                inheritedAdjacent,
+                0,
+                `Fallow ${value} envelope inheritedAdjacent attribution count must be 0.`
+              ),
+              ...countMismatchDiagnostics(
+                notApplicable,
+                0,
+                `Fallow ${value} envelope notApplicable attribution count must be 0.`
+              ),
+              ...failureAttributionKindDiagnostics(value, attributionKindsOption),
+            ],
+    })
+  );
+
+const failureAttributionKindDiagnostics = (
+  status: typeof FallowEnvelopeStatus.Type,
+  attributionKinds: O.Option<FallowAttributionKinds>
+): ReadonlyArray<string> =>
+  pipe(
+    attributionKinds,
+    O.match({
+      onNone: () => ["Fallow failure envelope attributionKinds must decode."],
+      onSome: (kinds) =>
+        attributionKindSetDiagnostics(`Fallow ${status} envelope attributionKinds`, ["not-applicable"], kinds),
+    })
+  );
+
+const failureExitStatusDiagnostics = (
+  status: O.Option<typeof FallowEnvelopeStatus.Type>,
+  exitStatus: number
+): ReadonlyArray<string> =>
+  pipe(
+    status,
+    O.match({
+      onNone: A.empty<string>,
+      onSome: (value) => {
+        const requiresPositiveExit =
+          sameEnvelopeStatus(value, "tool-failed") || sameEnvelopeStatus(value, "base-resolution-failed");
+        return requiresPositiveExit && exitStatus <= 0
+          ? [`Fallow ${value} envelope exitStatus must be positive.`]
+          : A.empty();
+      },
+    })
+  );
+
+const failureReportInvariantDiagnostics = (document: unknown): ReadonlyArray<string> => {
   const status = pipe(unknownRecordProperty(document, "status"), O.flatMap(decodeFallowEnvelopeStatusOption));
   const exitStatus = pipe(
     unknownNumberProperty(document, "exitStatus"),
@@ -1526,78 +1636,50 @@ const reportInvariantDiagnostics = (document: unknown): ReadonlyArray<string> =>
     unknownRecordProperty(document, "attributionKinds"),
     O.flatMap(decodeFallowAttributionKindsOption)
   );
-  const decodedOk = decodeFallowReportOkOption(document);
-
-  if (O.isSome(decodedOk)) {
-    const envelope = decodedOk.value;
-    const actualCount = A.length(envelope.report.findings);
-    const expectedSummary = attributionSummary(envelope.report.findings);
-    const expectedKinds = attributionKinds(envelope.report.findings);
-    const diagnostics = [
-      ...(envelope.report.findingCount === actualCount
-        ? []
-        : [
-            `Fallow envelope report findingCount ${envelope.report.findingCount} does not match findings length ${actualCount}.`,
-          ]),
-      ...(envelope.findingAttributionSummary.introduced === expectedSummary.introduced
-        ? []
-        : [
-            `Fallow envelope introduced attribution count ${envelope.findingAttributionSummary.introduced} does not match findings count ${expectedSummary.introduced}.`,
-          ]),
-      ...(envelope.findingAttributionSummary.inheritedAdjacent === expectedSummary.inheritedAdjacent
-        ? []
-        : [
-            `Fallow envelope inheritedAdjacent attribution count ${envelope.findingAttributionSummary.inheritedAdjacent} does not match findings count ${expectedSummary.inheritedAdjacent}.`,
-          ]),
-      ...(envelope.findingAttributionSummary.notApplicable === expectedSummary.notApplicable
-        ? []
-        : [
-            `Fallow envelope notApplicable attribution count ${envelope.findingAttributionSummary.notApplicable} does not match findings count ${expectedSummary.notApplicable}.`,
-          ]),
-      ...attributionKindSetDiagnostics("Fallow envelope attributionKinds", expectedKinds, envelope.attributionKinds),
-    ];
-
-    if (A.isReadonlyArrayNonEmpty(diagnostics)) {
-      return diagnostics;
-    }
-  }
-
-  if (O.isSome(status) && !sameEnvelopeStatus(status.value, "ok")) {
-    const diagnostics = [
-      ...(introduced === 0 ? [] : [`Fallow ${status.value} envelope introduced attribution count must be 0.`]),
-      ...(inheritedAdjacent === 0
-        ? []
-        : [`Fallow ${status.value} envelope inheritedAdjacent attribution count must be 0.`]),
-      ...(notApplicable === 0 ? [] : [`Fallow ${status.value} envelope notApplicable attribution count must be 0.`]),
-      ...pipe(
-        attributionKindsOption,
-        O.match({
-          onNone: () => ["Fallow failure envelope attributionKinds must decode."],
-          onSome: (kinds) =>
-            attributionKindSetDiagnostics(
-              `Fallow ${status.value} envelope attributionKinds`,
-              ["not-applicable"],
-              kinds
-            ),
-        })
-      ),
-    ];
-
-    if (A.isReadonlyArrayNonEmpty(diagnostics)) {
-      return diagnostics;
-    }
-  }
-
-  if (
-    O.isSome(status) &&
-    (sameEnvelopeStatus(status.value, "tool-failed") || sameEnvelopeStatus(status.value, "base-resolution-failed")) &&
-    exitStatus <= 0
-  ) {
-    return [`Fallow ${status.value} envelope exitStatus must be positive.`];
-  }
-
-  return A.empty();
+  const attributionDiagnostics = failureAttributionDiagnostics(
+    status,
+    introduced,
+    inheritedAdjacent,
+    notApplicable,
+    attributionKindsOption
+  );
+  return A.isReadonlyArrayNonEmpty(attributionDiagnostics)
+    ? attributionDiagnostics
+    : failureExitStatusDiagnostics(status, exitStatus);
 };
+
+const reportInvariantDiagnostics = (document: unknown): ReadonlyArray<string> => {
+  const okDiagnostics = okReportInvariantDiagnostics(document);
+  return A.isReadonlyArrayNonEmpty(okDiagnostics) ? okDiagnostics : failureReportInvariantDiagnostics(document);
+};
+
+/**
+ * Evaluates Fallow envelope count and failure-status invariants without file I/O.
+ *
+ * **Details**
+ *
+ * The test seam intentionally returns the same diagnostics consumed by the
+ * blocking envelope checker so malformed tool output can be verified directly.
+ *
+ * **Example** (Reject a zero failure exit status)
+ *
+ * ```ts
+ * import { reportInvariantDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ *
+ * const diagnostics = reportInvariantDiagnosticsForTesting({
+ *   status: "tool-failed",
+ *   exitStatus: 0,
+ *   attributionKinds: ["not-applicable"],
+ *   findingAttributionSummary: { introduced: 0, inheritedAdjacent: 0, notApplicable: 0 }
+ * })
+ * console.log(diagnostics)
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const reportInvariantDiagnosticsForTesting = reportInvariantDiagnostics;
 
 const exactEnvelopeDiagnostics = (document: unknown): ReadonlyArray<string> => [
   ...exactEnvelopeKeyDiagnostics(document),

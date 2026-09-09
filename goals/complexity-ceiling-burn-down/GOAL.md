@@ -4,7 +4,8 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: every function above cognitive complexity 15 has an executed triage
+Outcome: every function above cognitive complexity 15 in the current latest-
+Fallow scan has an executed triage
 verdict (real refactor, `thresholdOverrides` waiver with reason + review date,
 or `ignorePatterns` with provenance), the committed health baseline
 (`standards/fallow.health.regression-baseline.jsonc`) has shrunk to match, and
@@ -28,12 +29,16 @@ refactor seams live in `research/calibration.md`; the target list in
 
 Scope:
 
-- In: tail-function owning packages (mostly `packages/tooling` CLI and
-  `packages/foundation/ui-system`), `.fallowrc.jsonc` overrides/ignores, the
+- In: every current tail-function owning package, `.fallowrc.jsonc`
+  overrides/ignores, the
   health baseline, CiLane/FallowQuality lane wiring (promotion PR only), this
   packet.
 - Out: lowering the ceiling to 6; refactoring the 7-15 band; new fallow
   features beyond the two P0 evaluations; skills plugin; hooks.
+- Also authorized on 2026-09-08: a pinned ONNX installer patch for private
+  extraction directories, regression proof, and an expiring exception for
+  `GHSA-vwc7-r8mq-g2x9`, enforced by a pre-scan mitigation check. The later
+  main fix removes the vulnerable dependency and supersedes the exception.
 
 Workflow:
 
@@ -52,11 +57,15 @@ Workflow:
 
 Acceptance:
 
-- [ ] `SPEC.md` acceptance criteria are satisfied.
-- [ ] `bun run fallow:health:baseline:check` exits 0; zero critical complexity
-      findings remain unwaived.
-- [ ] Suppression totals not above the 2026-07-30 backfilled inventory.
-- [ ] No unrelated refactors or formatting churn.
+- [ ] `SPEC.md` acceptance criteria and published-commit gates are satisfied.
+- [x] `bun run fallow:health:baseline:check` exits 0; zero functions above
+      cognitive complexity 15 remain without an override/ignore. Critical
+      estimated-CRAP findings in the 7-15 band do not expand this scope.
+- [x] Suppression totals do not exceed the latest-main Fallow 3.22.0 inventory
+      of 207, with zero missing/stale reasons and no suppressions added by this
+      campaign. The original P0 total of 194 remains provenance; the +13 landed
+      on main before the final proof.
+- [x] No unrelated refactors or formatting churn.
 
 Verification:
 

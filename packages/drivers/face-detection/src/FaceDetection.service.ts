@@ -25,6 +25,7 @@ import {
   PositivePixelDimension,
   RawFaceDetectionConfidence,
 } from "./FaceDetection.models.ts";
+import type { OutputInfo } from "sharp";
 
 const $I = $FaceDetectionId.create("FaceDetection.service");
 const divisor = 32;
@@ -366,6 +367,90 @@ const releaseSession = (session: OrtSession): Effect.Effect<void> =>
 
 const toPaddedDimension = (value: number): number => Math.ceil(value / divisor) * divisor;
 
+const preprocessGeometry = (width: number, height: number, inputDimensions: O.Option<ModelInputDimensions>) => {
+  const scale = pipe(
+    inputDimensions,
+    O.map((dimensions) => Math.min(dimensions.width / width, dimensions.height / height)),
+    O.getOrElse(() => 1)
+  );
+  const padWidth = pipe(
+    inputDimensions,
+    O.map((dimensions) => dimensions.width),
+    O.getOrElse(() => toPaddedDimension(width))
+  );
+  const padHeight = pipe(
+    inputDimensions,
+    O.map((dimensions) => dimensions.height),
+    O.getOrElse(() => toPaddedDimension(height))
+  );
+  const resizedWidth = Math.round(width * scale);
+  const resizedHeight = Math.round(height * scale);
+  return {
+    scale,
+    padWidth,
+    padHeight,
+    offsetX: O.isSome(inputDimensions) ? (padWidth - resizedWidth) / 2 : 0,
+    offsetY: O.isSome(inputDimensions) ? (padHeight - resizedHeight) / 2 : 0,
+  };
+};
+
+const preprocessGeometryFromDimensions = (
+  width: number,
+  height: number,
+  inputDimensions?: Readonly<{ readonly width: number; readonly height: number }>
+) =>
+  preprocessGeometry(
+    width,
+    height,
+    P.isUndefined(inputDimensions) ? O.none() : O.some(ModelInputDimensions.make(inputDimensions))
+  );
+
+/**
+ * Focused verification seams for deterministic face-detection preprocessing.
+ *
+ * **Details**
+ *
+ * Omitted dimensions use the model-free padded-image path; supplied dimensions
+ * exercise the fixed-model resize and centering path.
+ *
+ * **Example** (Inspect model-free padding)
+ *
+ * ```ts
+ * import { FaceDetectionServiceTestKit } from "@beep/face-detection"
+ *
+ * const geometry = FaceDetectionServiceTestKit.preprocessGeometry(33, 17)
+ * console.log(geometry.padWidth)
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const FaceDetectionServiceTestKit = {
+  preprocessGeometry: preprocessGeometryFromDimensions,
+} as const;
+
+const planarTensorData = (
+  data: Uint8Array,
+  width: number,
+  height: number,
+  channels: number,
+  padWidth: number,
+  padHeight: number
+): Uint8Array => {
+  const tensor = new Uint8Array(3 * padWidth * padHeight);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const sourceOffset = (y * width + x) * channels;
+      const targetOffset = y * padWidth + x;
+      tensor[targetOffset] = data[sourceOffset + 2] ?? 0;
+      tensor[padWidth * padHeight + targetOffset] = data[sourceOffset + 1] ?? 0;
+      tensor[2 * padWidth * padHeight + targetOffset] = data[sourceOffset] ?? 0;
+    }
+  }
+  return tensor;
+};
+
 const checkedPixelCount = (
   operation: string,
   imagePath: string | undefined,
@@ -424,6 +509,68 @@ const fixedInputDimensions = (
   );
 };
 
+const validateSourceImage = Effect.fnUntraced(function* (
+  imagePath: string,
+  width: number,
+  height: number,
+  imageBytes: number
+) {
+  if (width < 1 || height < 1) {
+    return yield* FaceDetectionError.make({
+      imagePath: O.some(imagePath),
+      message: `Image metadata did not return usable dimensions for "${imagePath}"`,
+      operation: "preprocessImage",
+    });
+  }
+  if (imageBytes > MAX_FACE_DETECTION_IMAGE_BYTES) {
+    return yield* FaceDetectionError.make({
+      imagePath: O.some(imagePath),
+      message: `Image file exceeds the ${MAX_FACE_DETECTION_IMAGE_BYTES} byte face-detection safety limit.`,
+      operation: "preprocessImage",
+    });
+  }
+  yield* checkedPixelCount("source image", imagePath, width, height, MAX_FACE_DETECTION_IMAGE_PIXELS);
+});
+
+const decodeImagePixels = Effect.fnUntraced(function* (
+  imagePath: string,
+  inputDimensions: O.Option<ModelInputDimensions>
+) {
+  return yield* Effect.tryPromise({
+    try: () => {
+      let image = sharp(imagePath)
+        .rotate()
+        .flatten({ background: { b: 0, g: 0, r: 0 } })
+        .toColorspace("srgb");
+      if (O.isSome(inputDimensions)) {
+        image = image.resize({
+          background: { b: 0, g: 0, r: 0 },
+          fit: "contain",
+          height: inputDimensions.value.height,
+          width: inputDimensions.value.width,
+        });
+      }
+      return image.raw().toBuffer({ resolveWithObject: true });
+    },
+    catch: (cause) =>
+      FaceDetectionError.fromUnknown("preprocessImage", `Failed to decode image pixels: "${imagePath}"`, {
+        cause,
+        imagePath,
+      }),
+  });
+});
+
+const validateDecodedImage = Effect.fnUntraced(function* (imagePath: string, info: OutputInfo) {
+  if (info.width < 1 || info.height < 1 || info.channels < 3) {
+    return yield* FaceDetectionError.make({
+      imagePath: O.some(imagePath),
+      message: `Image decode did not return usable RGB pixels for "${imagePath}"`,
+      operation: "preprocessImage",
+    });
+  }
+  yield* checkedPixelCount("decoded image", imagePath, info.width, info.height, MAX_FACE_DETECTION_IMAGE_PIXELS);
+});
+
 const preprocessImage = Effect.fn("FaceDetection.preprocessImage")(function* (
   imagePath: string,
   inputDimensions: O.Option<ModelInputDimensions>
@@ -441,100 +588,23 @@ const preprocessImage = Effect.fn("FaceDetection.preprocessImage")(function* (
   const height = metadata.height ?? 0;
   const imageBytes = metadata.size ?? 0;
 
-  if (width < 1 || height < 1) {
-    return yield* FaceDetectionError.make({
-      imagePath: O.some(imagePath),
-      message: `Image metadata did not return usable dimensions for "${imagePath}"`,
-      operation: "preprocessImage",
-    });
-  }
+  yield* validateSourceImage(imagePath, width, height, imageBytes);
 
-  if (imageBytes > MAX_FACE_DETECTION_IMAGE_BYTES) {
-    return yield* FaceDetectionError.make({
-      imagePath: O.some(imagePath),
-      message: `Image file exceeds the ${MAX_FACE_DETECTION_IMAGE_BYTES} byte face-detection safety limit.`,
-      operation: "preprocessImage",
-    });
-  }
-
-  yield* checkedPixelCount("source image", imagePath, width, height, MAX_FACE_DETECTION_IMAGE_PIXELS);
-
-  const scale = pipe(
-    inputDimensions,
-    O.map((dimensions) => Math.min(dimensions.width / width, dimensions.height / height)),
-    O.getOrElse(() => 1)
-  );
-  const padWidth = pipe(
-    inputDimensions,
-    O.map((dimensions) => dimensions.width),
-    O.getOrElse(() => toPaddedDimension(width))
-  );
-  const padHeight = pipe(
-    inputDimensions,
-    O.map((dimensions) => dimensions.height),
-    O.getOrElse(() => toPaddedDimension(height))
-  );
-  const resizedWidth = Math.round(width * scale);
-  const resizedHeight = Math.round(height * scale);
-  const offsetX = O.isSome(inputDimensions) ? (padWidth - resizedWidth) / 2 : 0;
-  const offsetY = O.isSome(inputDimensions) ? (padHeight - resizedHeight) / 2 : 0;
+  const { scale, padWidth, padHeight, offsetX, offsetY } = preprocessGeometry(width, height, inputDimensions);
 
   yield* checkedPixelCount("tensor", imagePath, padWidth, padHeight, MAX_FACE_DETECTION_TENSOR_PIXELS);
 
-  const decoded = yield* Effect.tryPromise({
-    try: () => {
-      let image = sharp(imagePath)
-        .rotate()
-        .flatten({ background: { b: 0, g: 0, r: 0 } })
-        .toColorspace("srgb");
+  const decoded = yield* decodeImagePixels(imagePath, inputDimensions);
+  yield* validateDecodedImage(imagePath, decoded.info);
 
-      if (O.isSome(inputDimensions)) {
-        image = image.resize({
-          background: { b: 0, g: 0, r: 0 },
-          fit: "contain",
-          height: inputDimensions.value.height,
-          width: inputDimensions.value.width,
-        });
-      }
-
-      return image.raw().toBuffer({ resolveWithObject: true });
-    },
-    catch: (cause) =>
-      FaceDetectionError.fromUnknown("preprocessImage", `Failed to decode image pixels: "${imagePath}"`, {
-        cause,
-        imagePath,
-      }),
-  });
-
-  const channels = decoded.info.channels;
-
-  if (decoded.info.width < 1 || decoded.info.height < 1 || channels < 3) {
-    return yield* FaceDetectionError.make({
-      imagePath: O.some(imagePath),
-      message: `Image decode did not return usable RGB pixels for "${imagePath}"`,
-      operation: "preprocessImage",
-    });
-  }
-
-  yield* checkedPixelCount(
-    "decoded image",
-    imagePath,
+  const tensorData = planarTensorData(
+    decoded.data,
     decoded.info.width,
     decoded.info.height,
-    MAX_FACE_DETECTION_IMAGE_PIXELS
+    decoded.info.channels,
+    padWidth,
+    padHeight
   );
-
-  const tensorData = new Uint8Array(3 * padWidth * padHeight);
-
-  for (let y = 0; y < decoded.info.height; y += 1) {
-    for (let x = 0; x < decoded.info.width; x += 1) {
-      const sourceOffset = (y * decoded.info.width + x) * channels;
-      const targetOffset = y * padWidth + x;
-      tensorData[targetOffset] = decoded.data[sourceOffset + 2] ?? 0;
-      tensorData[padWidth * padHeight + targetOffset] = decoded.data[sourceOffset + 1] ?? 0;
-      tensorData[2 * padWidth * padHeight + targetOffset] = decoded.data[sourceOffset] ?? 0;
-    }
-  }
 
   return PreprocessedImage.make({
     height,
@@ -626,6 +696,63 @@ const suppressOverlappingFaces = (
 
 const point = (x: number, y: number): RawFaceDetectionPoint => RawFaceDetectionPoint.make({ x, y });
 
+const tensorValueAt = (data: Float32Array, index: number): number => data[index] ?? 0;
+
+const strideFaceAt = (
+  row: number,
+  col: number,
+  index: number,
+  stride: number,
+  confidence: RawFaceDetectionConfidence,
+  bbox: Float32Array,
+  keypoints: Float32Array
+): RawFaceDetection => {
+  const boxOffset = index * 4;
+  const centerX = (col + tensorValueAt(bbox, boxOffset)) * stride;
+  const centerY = (row + tensorValueAt(bbox, boxOffset + 1)) * stride;
+  const width = Math.exp(tensorValueAt(bbox, boxOffset + 2)) * stride;
+  const height = Math.exp(tensorValueAt(bbox, boxOffset + 3)) * stride;
+  const keypointOffset = index * 10;
+  const keypoint = (offset: number) => tensorValueAt(keypoints, keypointOffset + offset);
+  const scaledPoint = (xOffset: number, yOffset: number) =>
+    point((keypoint(xOffset) + col) * stride, (keypoint(yOffset) + row) * stride);
+
+  return RawFaceDetection.make({
+    box: RawFaceDetectionBox.make({ height, width, x: centerX - width / 2, y: centerY - height / 2 }),
+    confidence,
+    landmarks: RawFaceDetectionLandmarks.make({
+      leftEye: scaledPoint(2, 3),
+      leftMouth: scaledPoint(8, 9),
+      nose: scaledPoint(4, 5),
+      rightEye: scaledPoint(0, 1),
+      rightMouth: scaledPoint(6, 7),
+    }),
+  });
+};
+
+const collectStrideFaces = (
+  rows: number,
+  cols: number,
+  stride: number,
+  minConfidence: number,
+  cls: Float32Array,
+  obj: Float32Array,
+  bbox: Float32Array,
+  keypoints: Float32Array
+): ReadonlyArray<RawFaceDetection> => {
+  let faces = A.empty<RawFaceDetection>();
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const index = row * cols + col;
+      const confidence = confidenceScore(cls[index]) * confidenceScore(obj[index]);
+      const score = Math.sqrt(confidence);
+      if (score >= minConfidence)
+        faces = A.append(faces, strideFaceAt(row, col, index, stride, score, bbox, keypoints));
+    }
+  }
+  return faces;
+};
+
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
 const scalePointToOriginal = (value: RawFaceDetectionPoint, image: PreprocessedImage): FaceDetectionPoint =>
@@ -676,62 +803,7 @@ const decodeStrideFaces = Effect.fn("FaceDetection.decodeStrideFaces")(function*
   const bbox = yield* outputTensor(outputs, bboxName).pipe(Effect.flatMap((tensor) => tensorData(tensor, bboxName)));
   const kpsName = outputNames[strideIndex + strides.length * 3];
   const kps = yield* outputTensor(outputs, kpsName).pipe(Effect.flatMap((tensor) => tensorData(tensor, kpsName)));
-  let faces = A.empty<RawFaceDetection>();
-
-  for (let row = 0; row < rows; row += 1) {
-    for (let col = 0; col < cols; col += 1) {
-      const index = row * cols + col;
-      const confidence = Math.sqrt(confidenceScore(cls[index]) * confidenceScore(obj[index]));
-
-      if (confidence < request.minConfidence) {
-        continue;
-      }
-
-      const boxOffset = index * 4;
-      const centerX = (col + (bbox[boxOffset] ?? 0)) * stride;
-      const centerY = (row + (bbox[boxOffset + 1] ?? 0)) * stride;
-      const width = Math.exp(bbox[boxOffset + 2] ?? 0) * stride;
-      const height = Math.exp(bbox[boxOffset + 3] ?? 0) * stride;
-      const keypointOffset = index * 10;
-
-      faces = A.append(
-        faces,
-        RawFaceDetection.make({
-          box: RawFaceDetectionBox.make({
-            height,
-            width,
-            x: centerX - width / 2,
-            y: centerY - height / 2,
-          }),
-          confidence,
-          landmarks: RawFaceDetectionLandmarks.make({
-            leftEye: point((kps[keypointOffset + 2] ?? 0) + col, (kps[keypointOffset + 3] ?? 0) + row),
-            leftMouth: point((kps[keypointOffset + 8] ?? 0) + col, (kps[keypointOffset + 9] ?? 0) + row),
-            nose: point((kps[keypointOffset + 4] ?? 0) + col, (kps[keypointOffset + 5] ?? 0) + row),
-            rightEye: point((kps[keypointOffset] ?? 0) + col, (kps[keypointOffset + 1] ?? 0) + row),
-            rightMouth: point((kps[keypointOffset + 6] ?? 0) + col, (kps[keypointOffset + 7] ?? 0) + row),
-          }),
-        })
-      );
-    }
-  }
-
-  return A.map(faces, (face) => {
-    const scalePoint = (value: RawFaceDetectionPoint): RawFaceDetectionPoint =>
-      RawFaceDetectionPoint.make({ x: value.x * stride, y: value.y * stride });
-
-    return RawFaceDetection.make({
-      box: face.box,
-      confidence: face.confidence,
-      landmarks: RawFaceDetectionLandmarks.make({
-        leftEye: scalePoint(face.landmarks.leftEye),
-        leftMouth: scalePoint(face.landmarks.leftMouth),
-        nose: scalePoint(face.landmarks.nose),
-        rightEye: scalePoint(face.landmarks.rightEye),
-        rightMouth: scalePoint(face.landmarks.rightMouth),
-      }),
-    });
-  });
+  return collectStrideFaces(rows, cols, stride, request.minConfidence, cls, obj, bbox, kps);
 });
 
 const postprocess = Effect.fn("FaceDetection.postprocess")(function* (

@@ -1,16 +1,11 @@
 /** @effect-diagnostics globalConsole:skip-file */
-// Polyfill the `process` global for the Storybook dev server. Stories that import
-// `next/link` reference the bare `process` global at eval time, which Vite's browser
-// runtime does not define (the vitest test runner does, so test:storybook passes
-// while the dev server throws `ReferenceError: process is not defined`). This preview
-// config module body evaluates before any story module is loaded, so the shim is in
-// place in time. (The ES imports below are hoisted and run before this line, which is
-// fine: none of them reference `process` at eval time. `??=` never clobbers a real one.)
+// `previewHead` installs this shape before hoisted imports evaluate. Keep the
+// fallback for preview consumers that evaluate this module outside Storybook.
 const globalWithProcess = globalThis as unknown as {
   process?: unknown;
 };
 
-globalWithProcess.process ??= { env: { NODE_ENV: "development" } };
+globalWithProcess.process ??= { env: { NODE_ENV: "development" }, platform: "browser", arch: "browser" };
 
 // react-grab auto-initializes its overlay in the importing document, so it must load
 // here in the preview iframe (where stories render), never in the manager. The MODE
