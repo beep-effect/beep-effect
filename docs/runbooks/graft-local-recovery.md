@@ -196,32 +196,90 @@ The meaning tier (`graft build --deep`) adds the concept map and the per-symbol
 summary and crux. It spends model quota through the local proxy, so it is an
 operator batch job, never something an agent runs. It has three model-backed
 passes: per-file summaries (one request per file, content-hash cached, cheap
-to repeat), concept synthesis (142 sequential batches on this repo; effort
-barely changes their duration because the time goes to writing nodes), and the
-per-symbol crux pass (one batched request per file, checkpointed every 15 s).
-Run it as two systemd user services so a closed terminal cannot kill it and
-the proxy token stays in an environment file rather than on a command line:
-phase A at medium effort until the crux pass starts (the synthesis quality is
-what every later query ranks on), then phase B at low effort to completion
-(synthesis replays from cache; the crux pass is mechanical).
+to repeat), concept synthesis (143 sequential batches on this repo; the time
+goes to writing nodes, so effort barely changes it), and the per-symbol crux
+pass (one batched request per file, checkpointed every 15 s). Run each pass
+as a systemd user service so a closed terminal cannot kill it and the proxy
+token stays in an environment file rather than on a command line. The first
+full build of this repo (2026-09-09) measured:
+
+| Pass | Model | Concurrency | Measured |
+| --- | --- | --- | --- |
+| Summaries + synthesis | `gpt-6-astra(high)` then `grok-4.6` | sequential batches | 105 to 125 s per batch at high effort, about 150 s on grok; 7 of 143 grok batches came back empty and were refilled by a retry |
+| Crux pass | `grok-4.6` (default effort) | `-j 8` | 10 files/min, 23 s mean request latency |
+| Crux pass | `grok-4.6(low)` | `-j 8` | 25 files/min, 10 s mean latency |
+| Crux pass | `grok-4.6(low)` | `-j 16` | 40 to 80 files/min, no rate limiting across 15,000 requests |
+
+Whole run: 5,216 files, 39,115 symbols, 143 synthesis batches, about 10 h of
+wall clock including two restarts and one full crux re-pass; the final crux
+pass over 4,138 files took 80 min. Coverage ended at 98% (38,520 symbols);
+the remainder is one 800 KB generated file whose single request cannot finish
+inside the proxy's 5 min limit.
+
+Prerequisite: the installed Graft must carry the repo's dist patches (the
+crux id normalization is what keeps grok's crux pass above 31% coverage):
 
 ```sh
-install -m 600 /dev/null "${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-medium.env"
-# GRAFT_PROVIDER=openai, GRAFT_BASE_URL=http://127.0.0.1:8317/v1, GRAFT_API_KEY=<proxy client token>,
-# GRAFT_MODEL=gpt-6-astra(medium), GRAFT_LLM_RETRIES=12, DO_NOT_TRACK=1; same file with (low) for phase B
-systemd-run --user --unit graft-deep-A --working-directory="$PWD" --collect \
-  -p EnvironmentFile="${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-medium.env" \
-  -p StandardOutput=append:"$HOME/data-home/graft-cache/deep-build.log" -p StandardError=inherit \
-  graft build --deep -j 4
-# when the log shows `summarizing 1/…`: systemctl --user stop graft-deep-A, then the same
-# command as graft-deep-B with the (low) environment file; it runs to completion
+scripts/graft/apply-dist-patches.sh --check   # every line must read "applied"
 ```
 
-Leave `--allow-partial` off so an incomplete meaning tier fails loudly; rerun
-the same command to retry only the failed files. `-j` reaches the crux pass
-only; the concept pass runs eight summaries in parallel regardless. The
-synthesis checkpoint patch described below must be present before phase A, or
-a provider error discards every finished batch.
+Run the build in two phases with two environment files. Phase A covers the
+summary and synthesis passes at the model's default effort (an unsuffixed
+grok request reasons at roughly the xhigh rate; `gpt-6-astra(high)` is the
+equivalent on the Codex pool) because the concept map is what every later
+query ranks on. Phase B runs the crux pass at `(low)`. The switch happens the
+moment the log shows `summarizing 1/…`, before any crux file has completed,
+so nothing is lost; do not switch later (see the restart rule below).
+
+```sh
+install -m 600 /dev/null "${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-grok.env"
+# GRAFT_PROVIDER=openai, GRAFT_BASE_URL=http://127.0.0.1:8317/v1, GRAFT_API_KEY=<proxy client token>,
+# GRAFT_MODEL=grok-4.6, GRAFT_LLM_RETRIES=12, DO_NOT_TRACK=1
+# graft-deep-grok-low.env: the same file with GRAFT_MODEL=grok-4.6(low) and GRAFT_CRUX_EMPTY_RETRIES=2
+systemd-run --user --unit graft-deep-A --working-directory="$PWD" --collect \
+  -p EnvironmentFile="${XDG_CACHE_HOME:-$HOME/.cache}/beep/graft-deep-grok.env" \
+  -p StandardOutput=append:"$HOME/data-home/graft-cache/deep-build.log" -p StandardError=inherit \
+  graft build --deep -j 16
+# when the log shows `summarizing 1/…`: systemctl --user stop graft-deep-A, then the same
+# command as graft-deep-B with graft-deep-grok-low.env; it resumes from the cache and runs
+# the crux pass to completion
+```
+
+Rules learned from that run:
+
+- The proxy's `model(effort)` suffix works for grok as well as astra; the
+  registry lists `low|medium|high|xhigh` for grok-4.6 and an unsuffixed
+  request reasons at roughly the xhigh rate. Use `(low)` for the crux pass;
+  it is mechanical and the tool call is what matters.
+- grok-4.6 returns the whole target row (`id | kind | lines Lx-Ly`) as the
+  entry id instead of the id verbatim, which drops every symbol of the file
+  and reports `no usable symbol summaries [empty-parsed, finish_reason=null]`.
+  The first crux pass ended at 31% coverage because of it. The repo records
+  the fix and its companions as unified diffs under
+  `scripts/graft/patches/<graft version>/`: `ai-crux` keeps the segment before
+  the separator (352 of 352 fixture ids match after it, 84 before) and retries
+  a prose answer a bounded number of times; `context-build` retries an empty
+  synthesis batch and checkpoints the synthesis cache after every batch;
+  `ai-llm-openai` adds the `GRAFT_DUMP_DIR` response dump used below.
+  `scripts/graft/apply-dist-patches.sh` applies whatever is missing and is
+  safe to rerun; astra honors the id contract without the crux patch.
+- Never restart the crux pass to tune it. A file is skipped on resume only
+  when every symbol in it is already ready; one omitted symbol keeps the whole
+  file dirty, so a restart re-requests most finished files (909 reported, 239
+  skipped). Read the end-of-run `computed / cached / pending` line instead and
+  run `graft build --deep` again, which touches only dirty files.
+- Leave `--allow-partial` off so an incomplete meaning tier fails loudly. `-j`
+  reaches the crux pass only; the concept pass runs sequentially regardless.
+- Diagnose a bad pass on a copy, not the real graph: copy a failing directory
+  into a throwaway repo, `git init`, `graft build`, then `graft build --deep`
+  with `GRAFT_DUMP_DIR=<dir>` set (local patch in `dist/ai/llm/openai.js`)
+  and read `responses.jsonl` for what the model actually returned.
+- After seeding, `graft check` in a clone at a different commit reports
+  `STALE` with the changed files listed. That is the concept layer's snapshot
+  digest disagreeing with the tree, not a broken graph; queries keep working
+  with the old summaries as hints. Refresh by running `graft build --deep` in
+  one clone (it re-summarizes only changed files and re-synthesizes only the
+  batches they belong to) and seeding again.
 
 ## After a Graft upgrade
 
@@ -233,10 +291,17 @@ workstation:
 npm install -g --prefix "$HOME/.local" @nanonets/graft@0.16.0
 graft --version
 ```
- The workstation also carries a local patch to the installed
-`dist/context/build.js` that checkpoints the synthesis cache after every batch
-(the original is kept beside it as `build.js.orig-<version>`); a reinstall or
-upgrade removes it, so re-apply it before the next deep build. The loader's
-stamp guard keeps upkeep quiet across upgrades, so an upgrade needs no
-`graft init`: run `graft --version`, re-apply the patch, and run the two
-focused checks above.
+The deep build depends on three workstation-local patches to the installed
+`dist/` (`ai/crux.js`, `ai/llm/openai.js`, `context/build.js`), recorded as
+unified diffs under `scripts/graft/patches/<graft version>/`. A reinstall or
+upgrade removes them, and a new Graft version needs them ported into a new
+version directory first. After the install, apply and verify them, then run
+the two focused checks above:
+
+```sh
+scripts/graft/apply-dist-patches.sh          # applies what is missing, keeps *.orig-<version> backups
+scripts/graft/apply-dist-patches.sh --check  # exit 0 only when every recorded patch is present
+```
+
+The loader's stamp guard keeps upkeep quiet across upgrades, so an upgrade
+needs no `graft init`.
