@@ -623,30 +623,8 @@ export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>(
   })
 ) {}
 
-/**
- * Released event view accepted from live or S6-redacted journal records.
- *
- * **Example** (Construct a redacted released event)
- *
- * ```ts
- * import { AdmissionJournalReleased } from "@/projection/Schemas"
- * import { NonNegativeInt } from "@beep/schema"
- * import * as O from "effect/Option"
- *
- * const event = AdmissionJournalReleased.make({
- *   schemaVersion: "yeet-admission-journal/v1",
- *   nonce: "request-1",
- *   pid: O.none(),
- *   releasedAtMillis: NonNegativeInt.make(3000),
- *   memoryPeakBytes: O.none()
- * })
- * console.log(event._tag) // "admission-released"
- * ```
- *
- * @category domain-events
- * @since 0.0.0
- */
-export class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>($I`AdmissionJournalReleased`)(
+/** Legacy release view, including the optional owner fields redacted by S6. */
+class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>($I`AdmissionJournalReleased`)(
   {
     schemaVersion: S.Literal("yeet-admission-journal/v1"),
     _tag: S.tag("admission-released"),
@@ -674,32 +652,8 @@ const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death"]).pip
   })
 );
 
-/**
- * Lease-eviction event accepted from the v2 admission journal.
- *
- * **Example** (Construct an eviction event)
- *
- * ```ts
- * import { AdmissionJournalLeaseEvicted } from "@/projection/Schemas"
- * import { NonNegativeInt } from "@beep/schema"
- * import * as O from "effect/Option"
- *
- * const event = AdmissionJournalLeaseEvicted.make({
- *   schemaVersion: "yeet-admission-journal/v2",
- *   nonce: "request-1",
- *   pid: O.none(),
- *   evictedAtMillis: NonNegativeInt.make(3000),
- *   reason: "owner-dead-or-reused"
- * })
- * console.log(event._tag) // "admission-lease-evicted"
- * ```
- *
- * @category domain-events
- * @since 0.0.0
- */
-export class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseEvicted>(
-  $I`AdmissionJournalLeaseEvicted`
-)(
+/** Legacy v2 lease eviction retained in the mixed-version replay union. */
+class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseEvicted>($I`AdmissionJournalLeaseEvicted`)(
   {
     schemaVersion: S.Literal("yeet-admission-journal/v2"),
     _tag: S.tag("admission-lease-evicted"),
