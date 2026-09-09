@@ -16,7 +16,6 @@ import {
 } from "@beep/editor/chat/config";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, pipe, Result } from "effect";
-import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -25,6 +24,12 @@ const decodeMentionOptionsResult = S.decodeResult(MentionOptions);
 const decodeSlashItemResult = S.decodeResult(SlashItem);
 const decodeSlashItemsResult = S.decodeResult(SlashItems);
 const decodeAttachmentRejectionSync = S.decodeSync(AttachmentRejection);
+// Round-trip comparisons use each codec's declared equivalence: raw Equal.equals
+// can see runtime metadata outside the encoded schema contract.
+const sendOnEquivalence = S.toEquivalence(SendOn);
+const imageAttachmentMimeTypeEquivalence = S.toEquivalence(ImageAttachmentMimeType);
+const composerFeaturesEquivalence = S.toEquivalence(ComposerFeatures);
+const attachmentRejectionEquivalence = S.toEquivalence(AttachmentRejection);
 const decodeComposerFeaturesSync = S.decodeSync(ComposerFeatures);
 const decodeImageAttachmentMimeTypeSync = S.decodeSync(ImageAttachmentMimeType);
 const decodeSendOnSync = S.decodeSync(SendOn);
@@ -79,7 +84,7 @@ describe("@beep/editor schema crispening parity", () => {
     expect(
       Effect.runSync(
         Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(SendOn)]), ([value]) => {
-          expect(Equal.equals(decodeSendOnSync(encodeSendOnSync(value)), value)).toBe(true);
+          expect(sendOnEquivalence(decodeSendOnSync(encodeSendOnSync(value)), value)).toBe(true);
 
           return true;
         })
@@ -88,9 +93,12 @@ describe("@beep/editor schema crispening parity", () => {
     expect(
       Effect.runSync(
         Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(ImageAttachmentMimeType)]), ([value]) => {
-          expect(Equal.equals(decodeImageAttachmentMimeTypeSync(encodeImageAttachmentMimeTypeSync(value)), value)).toBe(
-            true
-          );
+          expect(
+            imageAttachmentMimeTypeEquivalence(
+              decodeImageAttachmentMimeTypeSync(encodeImageAttachmentMimeTypeSync(value)),
+              value
+            )
+          ).toBe(true);
 
           return true;
         })
@@ -99,7 +107,9 @@ describe("@beep/editor schema crispening parity", () => {
     expect(
       Effect.runSync(
         Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(ComposerFeatures)]), ([value]) => {
-          expect(Equal.equals(decodeComposerFeaturesSync(encodeComposerFeaturesSync(value)), value)).toBe(true);
+          expect(
+            composerFeaturesEquivalence(decodeComposerFeaturesSync(encodeComposerFeaturesSync(value)), value)
+          ).toBe(true);
 
           return true;
         })
@@ -108,9 +118,12 @@ describe("@beep/editor schema crispening parity", () => {
     expect(
       Effect.runSync(
         Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(AttachmentRejection)]), ([value]) => {
-          expect(pipe(value, encodeAttachmentRejectionSync, decodeAttachmentRejectionSync, Equal.equals(value))).toBe(
-            true
-          );
+          expect(
+            attachmentRejectionEquivalence(
+              pipe(value, encodeAttachmentRejectionSync, decodeAttachmentRejectionSync),
+              value
+            )
+          ).toBe(true);
 
           return true;
         })
