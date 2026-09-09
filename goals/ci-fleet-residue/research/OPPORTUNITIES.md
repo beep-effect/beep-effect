@@ -34,8 +34,18 @@ Record receipts at the moment friction happens; redact for the public repo.
   deletion or fail to follow same-name role replacement. The final source owns
   six key grants instead, with exact parameter contexts and immutable role IDs
   in grant names. Lambda discovery explicitly uses the controller region. The
-  initial three deployed policies remain until the attended grant migration;
-  add grants before removing working access and verify real reads afterward.
+  attended migration created the grants before removing the three initial
+  policies. Final preview: 201 unchanged. Post-removal CloudTrail events prove
+  successful SSM reads and KMS decrypts for both parameters; natural cleanup
+  reached GitHub. Add access before removing working access and verify reads.
+- Migration preview friction: targeting only the six new grant URNs reported
+  `Target ... could not be found in the stack` before dependent invokes resolved.
+  A full program preview excluding the three existing policy URNs produced
+  exactly six creates. Save and constrain that creation plan, then preview the
+  three policy removals separately after the grants exist and have propagated.
+- Verification friction: concurrent AWS metadata commands briefly encountered
+  `CreateOAuth2Token: Rate exceeded`; a serialized retry completed. Let the CLI
+  refresh its login credentials before starting a metadata fan-out.
 
 ## Seed context (2026-08-13, from the split)
 

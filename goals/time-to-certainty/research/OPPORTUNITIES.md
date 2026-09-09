@@ -622,15 +622,22 @@ subprocess diagnostics would make inventory stalls attributable.
   [Heavy / Docgen](https://github.com/beep-effect/beep-effect/actions/runs/34332600371/job/102408052217).
   The probe worker then terminated normally. Full deployment details and reproduction
   commands are in `docs/runbooks/ci-runner-reliability.md`.
-- Review migration: create the six KMS grants, allow their propagation, then remove the
-  initial three policies in attended applies. Verify real SSM reads after removal;
-  IAM simulation does not account for KMS grants. Preserve both this investigation and
-  the newly landed reap-claim settlement receipt when merging the shared ledger.
+- Review migration completed in attended stages: six KMS grants created, their scopes
+  checked, five minutes allowed for propagation, then three initial policies removed
+  at 09:56:32 UTC. Final preview: 201 unchanged. At 09:57:25 UTC, CloudTrail recorded
+  successful SSM reads and KMS decrypts for both App parameters after policy removal;
+  natural cleanup reached GitHub. IAM simulation does not account for KMS grants.
+  Both this investigation and the newly landed reap-claim settlement receipt are
+  preserved in the merged ledger.
 - Publication friction: `changeset-status --since origin/main` evaluates the committed
   range. The pre-deployment dirty-tree check reported no product workspace, while the
   first published range correctly required an `@beep/infra` release note. Add the
   infrastructure changeset before publication; a dirty-tree zero count is not proof
   that the committed change is exempt from the release-note rule.
+- Merge publication friction: Yeet's stale-base check runs before its commit step, so
+  a resolved but uncommitted merge still appears behind `origin/main`. Complete the
+  reviewed merge commit first, then resume normal Yeet publication; do not bypass
+  freshness checks or force-push a rebase.
 
 ## 2026-09-09 — The reap-claim settlement window was a 25 ms sleep
 

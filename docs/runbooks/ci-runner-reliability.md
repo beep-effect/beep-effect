@@ -74,7 +74,8 @@ runner workload identity.
    separate attribution before apply.
 4. Apply the reviewed plan with the operator attending. When migrating the
    initial three `github-app-ssm-decrypt` inline policies, create the six grants
-   first with a reviewed targeted apply. Allow five minutes for KMS propagation,
+   first with a saved plan that excludes those three policy URNs. Allow five
+   minutes for KMS propagation,
    then remove only those three policies with the reviewed remaining apply.
    Inspect the live scale-up configuration for
    On-Demand and cap 14. Newly launched matching EC2 instances must have no Spot
@@ -117,9 +118,17 @@ for each running VM until its ephemeral teardown completes.
   names, and absence of external role policies.
 - PR review identified the external-policy role-deletion hazard and ambient
   Lambda-region lookup. The source replaces those policies with six KMS grants
-  and explicit regional lookups. Migration of the initial production policies
-  requires the attended sequence above; the initial simulation results describe
-  those policies, not the replacement grants.
+  and explicit regional lookups. The attended migration created six grants,
+  verified their exact principals and contexts, allowed five minutes for
+  propagation, and removed the three initial policies at 09:56:32 UTC. AWS
+  confirmed all three policies were absent; the final
+  `pulumi preview --expect-no-changes` reported 201 unchanged resources.
+- At 09:57:25 UTC, after policy removal, CloudTrail recorded successful
+  `GetParameter` reads with decryption and corresponding KMS `Decrypt` events
+  for both App parameters by the notification role. The natural termination
+  handler reached GitHub and confirmed the runner was already deregistered.
+  This validates the replacement grants through real operations; the earlier
+  IAM simulations describe only the initial policies.
 
 At deployment, the AWS Price List API quoted $0.504/hour for `r6i.2xlarge`
 Linux shared-tenancy On-Demand in `us-east-1`. The four allowed instance types
