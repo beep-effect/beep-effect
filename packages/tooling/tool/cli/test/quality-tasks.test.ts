@@ -2699,6 +2699,7 @@ describe("quality task adapter", () => {
       packageDir: "/repo/packages/example",
       tsconfigPath: "/repo/packages/example/tsconfig.test.json",
       files: ["/repo/packages/example/test/example.test.ts"],
+      scripts: {},
       hasTaskScript: true,
     };
 

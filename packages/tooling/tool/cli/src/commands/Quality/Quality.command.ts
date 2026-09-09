@@ -39,6 +39,7 @@ import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
 import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
+import { checkScriptTestTypecheckCoverage } from "../../internal/quality/TestTypecheckCoverage.ts";
 import {
   AdmissionConfig,
   admissionProtocolStatus,
@@ -1363,7 +1364,16 @@ type TestTsgoPackageGroup = {
   readonly packageDir: string;
   readonly tsconfigPath: string;
   readonly files: ReadonlyArray<string>;
+  readonly scripts: Readonly<Record<string, string>>;
   readonly hasTaskScript: boolean;
+};
+
+// Package groups split by whether their own `check` script already typechecks
+// every discovered test file (D1). Covered groups are the lane's skip set; the
+// uncovered ones are the blind spots the lane still has to compile.
+type TestTsgoCoveragePartition = {
+  readonly covered: ReadonlyArray<TestTsgoPackageGroup>;
+  readonly uncovered: ReadonlyArray<TestTsgoPackageGroup>;
 };
 
 type TestTsgoPackageResult = {
@@ -1472,16 +1482,41 @@ const collectTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.collectTes
         A.map(([, filePath]) => filePath),
         A.sort(Order.String)
       );
+      const scripts = packageManifest.scripts ?? R.empty<string, string>();
       return {
         packageName: packageManifest.name,
         packageDir,
         tsconfigPath,
         files,
-        hasTaskScript: R.has(packageManifest.scripts ?? {}, testTsgoPackageTaskName),
+        scripts,
+        hasTaskScript: R.has(scripts, testTsgoPackageTaskName),
       } satisfies TestTsgoPackageGroup;
     }),
     { concurrency: 1 }
   );
+});
+
+const partitionTestTsgoPackageGroupsByCoverage = Effect.fn(
+  "QualityScriptCommands.partitionTestTsgoPackageGroupsByCoverage"
+)(function* (
+  groups: ReadonlyArray<TestTsgoPackageGroup>
+): Effect.fn.Return<TestTsgoCoveragePartition, never, FileSystem.FileSystem | Path.Path> {
+  const judged = yield* Effect.forEach(
+    groups,
+    (group) =>
+      checkScriptTestTypecheckCoverage(group.packageDir, group.scripts, group.files).pipe(
+        Effect.map((coverage) => [group, coverage.covered] as const)
+      ),
+    { concurrency: 1 }
+  );
+  const groupsWhere = (wanted: boolean): ReadonlyArray<TestTsgoPackageGroup> =>
+    pipe(
+      judged,
+      A.filter(([, isCovered]) => isCovered === wanted),
+      A.map(([group]) => group)
+    );
+
+  return { covered: groupsWhere(true), uncovered: groupsWhere(false) };
 });
 
 const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPackageGroup")(function* (
@@ -1624,6 +1659,7 @@ export const testTsgoPlanningForTesting = {
   isIgnoredDirectory: isIgnoredTestTsgoDirectory,
   packageLabel: tsgoTestPackageLabel,
   packageResultPath: testTsgoPackageResultPath,
+  partitionByCoverage: partitionTestTsgoPackageGroupsByCoverage,
   turboArgs: testTsgoTurboArgs,
   turboSummaryPath: testTsgoTurboSummaryPath,
 };
@@ -2533,7 +2569,42 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
 export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChecks")(function* (
   extraArgs: unknown
 ): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
-  const { fs, path, repoRoot } = yield* qualityFileContext();
+  const { repoRoot } = yield* qualityFileContext();
+  yield* runTestTsgoChecksAt(repoRoot, extraArgs);
+});
+
+/**
+ * Run the repo-wide test-file tsgo lane against an explicit repository root.
+ *
+ * **Details**
+ *
+ * Packages whose own `check` script already typechecks every discovered test
+ * file are skipped (quality-lane audit 2026-09-09, D1): the lane is the net
+ * under `standards/test-typecheck.blindspot-baseline.jsonc`, not a second
+ * compile of every package, and it shrinks as the baseline shrinks. When every
+ * package is covered the lane says so and exits 0 without invoking Turbo.
+ *
+ * **Example** (Run the lane against a fixture root)
+ *
+ * ```ts
+ * import { runTestTsgoChecksAt } from "@beep/repo-cli/commands/Quality/Quality.command"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runTestTsgoChecksAt("/repo", undefined))) // true
+ * ```
+ *
+ * @param repoRoot - Repository root whose `apps`, `packages`, and `infra` trees are searched.
+ * @param extraArgs - Additional arguments passed to tsgo.
+ * @returns Effect that runs the test-file tsgo lane.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runTestTsgoChecksAt = Effect.fn("QualityScriptCommands.runTestTsgoChecksAt")(function* (
+  repoRoot: string,
+  extraArgs: unknown
+): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const discoveredFiles = yield* Effect.forEach(
     testSearchRoots,
     (root) => collectTestTsgoFilesUnder(path.join(repoRoot, root)),
@@ -2547,7 +2618,21 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
 
   const tempDir = path.join(repoRoot, "node_modules", ".tmp", "tsgo-test-checks");
   const normalizedExtraArgs = normalizeExtraArgs(extraArgs);
-  const packageGroups = yield* collectTestTsgoPackageGroups(repoRoot, discoveredFiles);
+  const { covered, uncovered: packageGroups } = yield* partitionTestTsgoPackageGroupsByCoverage(
+    yield* collectTestTsgoPackageGroups(repoRoot, discoveredFiles)
+  );
+
+  if (A.isReadonlyArrayNonEmpty(covered)) {
+    yield* Console.log(
+      `[quality:test-tsgo] skipped ${A.length(covered)} package(s) already covered by their check script`
+    );
+  }
+
+  if (A.isReadonlyArrayEmpty(packageGroups)) {
+    yield* Console.log("[quality:test-tsgo] every package's check script already typechecks its test files");
+    return;
+  }
+
   const missingTaskMessage = missingTestTsgoTaskMessageForTesting(packageGroups);
 
   if (O.isSome(missingTaskMessage)) {
@@ -2557,8 +2642,9 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
     });
   }
 
+  const checkedFileCount = A.length(A.flatMap(packageGroups, (group) => group.files));
   yield* Console.log(
-    `[quality:test-tsgo] checking ${A.length(discoveredFiles)} file(s) across ${A.length(packageGroups)} package(s)`
+    `[quality:test-tsgo] checking ${checkedFileCount} file(s) across ${A.length(packageGroups)} package(s)`
   );
   const results = yield* runTestTsgoTurboTasks(repoRoot, packageGroups, normalizedExtraArgs).pipe(
     Effect.ensuring(
