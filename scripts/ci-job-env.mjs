@@ -22,8 +22,13 @@
 //   BEEP_CI_APP_SECRETS        "true" to export the application secret block
 //   BEEP_CI_TURBO_API          vars.TURBO_API
 //   BEEP_CI_TURBO_TEAM         vars.TURBO_TEAM
-//   BEEP_CI_SECRETS_JSON       toJSON(secrets) from the calling job; only the
-//                              names below are read and nothing is printed.
+//   BEEP_CI_SECRET_<NAME>      one variable per secret the policy reads
+//                              (TURBO_TOKEN, TURBO_READ_TOKEN, and every
+//                              APP_SECRET_NAMES entry), mapped by the composite
+//                              action from its explicit inputs. The calling job
+//                              passes only those names, never toJSON(secrets),
+//                              so no step input carries the repository's secret
+//                              inventory. Nothing is printed.
 import { randomUUID } from "node:crypto";
 import { appendFileSync } from "node:fs";
 
@@ -45,23 +50,7 @@ if (!outputPath) {
   process.exit(1);
 }
 
-const parseSecrets = (raw) => {
-  if (!raw) return {};
-  let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    console.error("ci-job-env: BEEP_CI_SECRETS_JSON is not valid JSON");
-    process.exit(1);
-  }
-  return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
-};
-
-const secrets = parseSecrets(env.BEEP_CI_SECRETS_JSON);
-const secret = (name) => {
-  const value = secrets[name];
-  return typeof value === "string" ? value : "";
-};
+const secret = (name) => env[`BEEP_CI_SECRET_${name}`] ?? "";
 
 const eventName = env.GITHUB_EVENT_NAME ?? "";
 const repository = env.GITHUB_REPOSITORY ?? "";

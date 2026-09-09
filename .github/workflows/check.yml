@@ -149,7 +149,16 @@ jobs:
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          repository-secrets: ${{ toJSON(secrets) }}
+          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          database-url-unpooled: ${{ secrets.DATABASE_URL_UNPOOLED }}
+          email-resend-api-key: ${{ secrets.EMAIL_RESEND_API_KEY }}
+          auth-secret: ${{ secrets.AUTH_SECRET }}
+          better-auth-secret: ${{ secrets.BETTER_AUTH_SECRET }}
+          better-auth-url: ${{ secrets.BETTER_AUTH_URL }}
+          security-trusted-origins: ${{ secrets.SECURITY_TRUSTED_ORIGINS }}
+          liveblocks-secret-key: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
 
       - name: Verify regenerate merge-driver bootstrap
         if: matrix.id == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
@@ -289,7 +298,16 @@ jobs:
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          repository-secrets: ${{ toJSON(secrets) }}
+          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          database-url-unpooled: ${{ secrets.DATABASE_URL_UNPOOLED }}
+          email-resend-api-key: ${{ secrets.EMAIL_RESEND_API_KEY }}
+          auth-secret: ${{ secrets.AUTH_SECRET }}
+          better-auth-secret: ${{ secrets.BETTER_AUTH_SECRET }}
+          better-auth-url: ${{ secrets.BETTER_AUTH_URL }}
+          security-trusted-origins: ${{ secrets.SECURITY_TRUSTED_ORIGINS }}
+          liveblocks-secret-key: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
 
       - name: Run Lint shard
         if: steps.lane-gate.outputs.should_run == 'true'
@@ -393,7 +411,16 @@ jobs:
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          repository-secrets: ${{ toJSON(secrets) }}
+          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          database-url-unpooled: ${{ secrets.DATABASE_URL_UNPOOLED }}
+          email-resend-api-key: ${{ secrets.EMAIL_RESEND_API_KEY }}
+          auth-secret: ${{ secrets.AUTH_SECRET }}
+          better-auth-secret: ${{ secrets.BETTER_AUTH_SECRET }}
+          better-auth-url: ${{ secrets.BETTER_AUTH_URL }}
+          security-trusted-origins: ${{ secrets.SECURITY_TRUSTED_ORIGINS }}
+          liveblocks-secret-key: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
 
       - name: Run Test Unit shard
         if: steps.lane-gate.outputs.should_run == 'true'
@@ -591,7 +618,16 @@ jobs:
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          repository-secrets: ${{ toJSON(secrets) }}
+          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          database-url-unpooled: ${{ secrets.DATABASE_URL_UNPOOLED }}
+          email-resend-api-key: ${{ secrets.EMAIL_RESEND_API_KEY }}
+          auth-secret: ${{ secrets.AUTH_SECRET }}
+          better-auth-secret: ${{ secrets.BETTER_AUTH_SECRET }}
+          better-auth-url: ${{ secrets.BETTER_AUTH_URL }}
+          security-trusted-origins: ${{ secrets.SECURITY_TRUSTED_ORIGINS }}
+          liveblocks-secret-key: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
 
       - name: Run property laws lane
         shell: bash
@@ -659,7 +695,8 @@ jobs:
           turbo-remote-cache: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          repository-secrets: ${{ toJSON(secrets) }}
+          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
 
       - name: Run Fallow envelopes
         id: fallow
@@ -826,7 +863,16 @@ jobs:
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          repository-secrets: ${{ toJSON(secrets) }}
+          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          database-url-unpooled: ${{ secrets.DATABASE_URL_UNPOOLED }}
+          email-resend-api-key: ${{ secrets.EMAIL_RESEND_API_KEY }}
+          auth-secret: ${{ secrets.AUTH_SECRET }}
+          better-auth-secret: ${{ secrets.BETTER_AUTH_SECRET }}
+          better-auth-url: ${{ secrets.BETTER_AUTH_URL }}
+          security-trusted-origins: ${{ secrets.SECURITY_TRUSTED_ORIGINS }}
+          liveblocks-secret-key: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
 
       - name: Run build checks
         if: steps.lane-gate.outputs.should_run == 'true'

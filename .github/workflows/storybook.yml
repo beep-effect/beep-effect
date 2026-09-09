@@ -67,7 +67,8 @@ jobs:
           turbo-remote-cache: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          repository-secrets: ${{ toJSON(secrets) }}
+          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
 
       # Every event restores the browser cache; only trusted pushes save it, so
       # a pull request cannot seed the entry main restores. The install step is

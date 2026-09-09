@@ -13,11 +13,35 @@ import type { Document } from "yaml";
 
 const SETUP_MONOREPO_ACTION = "./.github/actions/setup-monorepo-ci";
 
+// Explicit secret inputs of setup-monorepo-ci: the Turbo tokens plus the
+// application secret block scripts/ci-job-env.mjs allowlists. The script,
+// the action's inputs, and every calling job carry the same names; the
+// credential-policy assertions pin the three copies together.
+const TURBO_SECRET_INPUTS: ReadonlyArray<readonly [string, string]> = [
+  ["turbo-token", "TURBO_TOKEN"],
+  ["turbo-read-token", "TURBO_READ_TOKEN"],
+];
+const APP_SECRET_INPUTS: ReadonlyArray<readonly [string, string]> = [
+  ["database-url", "DATABASE_URL"],
+  ["database-url-unpooled", "DATABASE_URL_UNPOOLED"],
+  ["email-resend-api-key", "EMAIL_RESEND_API_KEY"],
+  ["auth-secret", "AUTH_SECRET"],
+  ["better-auth-secret", "BETTER_AUTH_SECRET"],
+  ["better-auth-url", "BETTER_AUTH_URL"],
+  ["security-trusted-origins", "SECURITY_TRUSTED_ORIGINS"],
+  ["liveblocks-secret-key", "LIVEBLOCKS_SECRET_KEY"],
+];
+const SECRET_INPUTS: ReadonlyArray<readonly [string, string]> = [...TURBO_SECRET_INPUTS, ...APP_SECRET_INPUTS];
+const secretInputLine = ([input, name]: readonly [string, string]): string => `${input}: \${{ secrets.${name} }}`;
+const SECRET_INPUT_LINES = A.map(SECRET_INPUTS, secretInputLine);
+const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${name}`);
+
 const WorkflowStep = S.Struct({
   name: S.optionalKey(S.String),
   if: S.optionalKey(S.String),
   uses: S.optionalKey(S.String),
   with: S.optionalKey(S.Record(S.String, S.Unknown)),
+  env: S.optionalKey(S.Record(S.String, S.Unknown)),
 });
 type WorkflowStep = typeof WorkflowStep.Type;
 const WorkflowJobs = S.Record(S.String, S.Struct({ steps: S.optionalKey(S.Array(WorkflowStep)) }));
@@ -379,6 +403,7 @@ describe("CI runner security", () => {
       const heavyWorkflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml"));
       const storybookText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/storybook.yml"));
       const actionText = yield* fs.readFileString(path.join(repoRoot, ".github/actions/setup-monorepo-ci/action.yml"));
+      const jobEnvScriptText = yield* fs.readFileString(path.join(repoRoot, "scripts/ci-job-env.mjs"));
       const workflow = parseDocument(workflowText);
       const heavyWorkflow = parseDocument(heavyWorkflowText);
       const storybook = parseDocument(storybookText);
@@ -392,7 +417,10 @@ describe("CI runner security", () => {
       assert.isDefined(workflow.getIn(["on", "pull_request"]));
 
       // No workflow hand-copies the credential tuple any more: the selection
-      // lives once in scripts/ci-job-env.mjs behind the composite action.
+      // lives once in scripts/ci-job-env.mjs behind the composite action. The
+      // only secret references left are the explicit input pass-throughs the
+      // policy allowlists; `toJSON(secrets)` never reaches a step input, so a
+      // job's log header cannot inventory the repository's secret names.
       for (const [name, text] of [
         ["check.yml", workflowText],
         ["heavy.yml", heavyWorkflowText],
@@ -402,12 +430,30 @@ describe("CI runner security", () => {
         assert.lengthOf(A.filter(lines, Str.includes("TURBO_TOKEN:")), 0, name);
         assert.lengthOf(A.filter(lines, Str.includes("TURBO_CACHE:")), 0, name);
         assert.lengthOf(A.filter(lines, Str.includes("TURBO_API:")), 0, name);
-        assert.notInclude(text, "secrets.TURBO_TOKEN", name);
-        assert.notInclude(text, "secrets.TURBO_READ_TOKEN", name);
+        assert.notInclude(text, "toJSON(secrets)", name);
+        assert.notInclude(text, "repository-secrets", name);
         assert.notInclude(text, "secrets.TURBO_TEAM", name);
+        const secretLines = A.filter(lines, (line) =>
+          A.some(SECRET_REFERENCES, (reference) => Str.includes(reference)(line))
+        );
+        for (const line of secretLines) {
+          assert.include(SECRET_INPUT_LINES, Str.trim(line), `${name}: ${Str.trim(line)}`);
+        }
       }
       assert.include(actionText, "run: bun scripts/ci-job-env.mjs");
       assert.include(actionText, "BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}");
+      // The action maps each explicit input to BEEP_CI_SECRET_<NAME>; the
+      // script's allowlist names the same secrets.
+      assert.notInclude(actionText, "toJSON(secrets)");
+      assert.isUndefined(action.getIn(["inputs", "repository-secrets"]));
+      const exportEnvironment =
+        stepByName(decodeWorkflowSteps(action.toJS().runs.steps), "Export job environment").env ?? {};
+      assert.isUndefined(exportEnvironment.BEEP_CI_SECRETS_JSON);
+      for (const [input, name] of SECRET_INPUTS) {
+        assert.strictEqual(action.getIn(["inputs", input, "default"]), "", input);
+        assert.strictEqual(exportEnvironment[`BEEP_CI_SECRET_${name}`], `\${{ inputs.${input} }}`, input);
+        assert.include(jobEnvScriptText, `"${name}"`, name);
+      }
 
       const turboJobs: ReadonlyArray<readonly [WorkflowJobs, string, boolean]> = [
         [workflowJobs(workflow), "verify", true],
@@ -424,7 +470,17 @@ describe("CI runner security", () => {
         assert.strictEqual(setup.with?.["turbo-remote-cache"], "true", jobId);
         assert.strictEqual(setup.with?.["turbo-api"], "${{ vars.TURBO_API }}", jobId);
         assert.strictEqual(setup.with?.["turbo-team"], "${{ vars.TURBO_TEAM }}", jobId);
-        assert.strictEqual(setup.with?.["repository-secrets"], "${{ toJSON(secrets) }}", jobId);
+        assert.isUndefined(setup.with?.["repository-secrets"], jobId);
+        for (const [input, name] of TURBO_SECRET_INPUTS) {
+          assert.strictEqual(setup.with?.[input], `\${{ secrets.${name} }}`, `${jobId} ${input}`);
+        }
+        for (const [input, name] of APP_SECRET_INPUTS) {
+          assert.strictEqual(
+            setup.with?.[input],
+            appSecrets ? `\${{ secrets.${name} }}` : undefined,
+            `${jobId} ${input}`
+          );
+        }
         assert.strictEqual(setup.with?.["app-secrets"], appSecrets ? "true" : undefined, jobId);
       }
       // Pull requests never publish a cache entry; Build saves only on push.
@@ -477,6 +533,11 @@ describe("CI runner security", () => {
         AUTH_SECRET: "auth-secret\nwith newline",
         UNRELATED_SECRET: "never exported",
       };
+      // The composite action hands the script one BEEP_CI_SECRET_<NAME>
+      // variable per explicit input; the allowlist still decides what is
+      // exported, so UNRELATED_SECRET stays out even when it is present.
+      const secretEnvironment = (values: Readonly<Record<string, string>>) =>
+        R.mapKeys(values, (name) => `BEEP_CI_SECRET_${name}`);
       let scenario = 0;
       const jobEnv = Effect.fnUntraced(function* (input: {
         readonly eventName: string;
@@ -484,7 +545,7 @@ describe("CI runner security", () => {
         readonly turboRemoteCache: boolean;
         readonly appSecrets: boolean;
         readonly turboApi?: string;
-        readonly secretsJson?: string;
+        readonly secrets?: Readonly<Record<string, string>>;
       }) {
         scenario += 1;
         const outputPath = path.join(tempRoot, `job-env-${scenario}.txt`);
@@ -493,6 +554,7 @@ describe("CI runner security", () => {
           cwd: repoRoot,
           env: {
             ...process.env,
+            ...secretEnvironment(input.secrets ?? secrets),
             GITHUB_EVENT_NAME: input.eventName,
             GITHUB_REPOSITORY: "beep-effect/beep-effect",
             GITHUB_ENV: outputPath,
@@ -501,7 +563,6 @@ describe("CI runner security", () => {
             BEEP_CI_APP_SECRETS: input.appSecrets ? "true" : "false",
             BEEP_CI_TURBO_API: input.turboApi ?? "https://cache.example.test",
             BEEP_CI_TURBO_TEAM: "team_beep",
-            BEEP_CI_SECRETS_JSON: input.secretsJson ?? JSON.stringify(secrets),
           },
           stderr: "pipe",
           stdout: "pipe",
@@ -579,7 +640,7 @@ describe("CI runner security", () => {
         headRepository: "",
         turboRemoteCache: true,
         appSecrets: true,
-        secretsJson: "",
+        secrets: {},
       });
       assert.strictEqual(emptySecrets.TURBO_CACHE, "local:rw");
       assert.strictEqual(emptySecrets.DATABASE_URL, "");
