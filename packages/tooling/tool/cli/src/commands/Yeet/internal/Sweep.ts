@@ -1389,7 +1389,7 @@ const operatorCommands = (report: SweepReport): ReadonlyArray<string> =>
  *
  * @param report - Executed sweep report to render.
  * @returns Multi-line operator summary, ending with the handoff block when one is needed.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderSweepReport = (report: SweepReport): string => {

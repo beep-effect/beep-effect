@@ -241,10 +241,15 @@ export const emptyTurboPlanSnapshot = (warnings: ReadonlyArray<string>): TurboPl
   });
 
 // Deterministic auto-fixers run sequentially (runPhase concurrency:1). Code
-// rewriters run first, then config generation. The collected cheap tier runs
-// before formatting, docgen, or affected feedback can consume heavyweight work.
-// terse-effect applies only safe rewrites here; its manual candidates stay
-// advisory during verification. Schema-first remains excluded from repair.
+// rewriters run first, then config generation, then the git-ignored local
+// projections (`goals/INDEX.md`, `explorations/ATLAS.md` plus the generated
+// README status regions). Those projections are regenerated here so their
+// cheap gates prove current bytes instead of a stale copy left behind by a
+// pull; hosted lanes never carry the ignored files, so only local proofs were
+// going red on them. The collected cheap tier runs before formatting, docgen,
+// or affected feedback can consume heavyweight work. terse-effect applies only
+// safe rewrites here; its manual candidates stay advisory during verification.
+// Schema-first remains excluded from repair.
 const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
   bunRunStep(
     context,
@@ -267,6 +272,26 @@ const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
     "repo"
   ),
   bunRunStep(context, "prepare:03-config-sync", "prepare:config-sync", "prepare", "config-sync", [], "write", "repo"),
+  bunRunStep(
+    context,
+    "prepare:04-goals-index",
+    "prepare:goals:index",
+    "prepare",
+    "beep",
+    ["goals", "index", "--write"],
+    "write",
+    "repo"
+  ),
+  bunRunStep(
+    context,
+    "prepare:05-explore-atlas",
+    "prepare:explore:atlas",
+    "prepare",
+    "beep",
+    ["explore", "atlas", "--write"],
+    "write",
+    "repo"
+  ),
 ];
 
 const packageNameForFeedbackTask =
