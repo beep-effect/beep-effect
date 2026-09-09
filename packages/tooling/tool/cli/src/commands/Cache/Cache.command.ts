@@ -592,7 +592,7 @@ const cacheCensusCommand = Command.make(
  *
  * ```ts
  * import { runCachePolicyAudit } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(runCachePolicyAudit("/repo", false)))
  * ```
  *

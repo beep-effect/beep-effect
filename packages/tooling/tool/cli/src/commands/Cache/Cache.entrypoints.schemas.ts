@@ -35,6 +35,14 @@ export const CacheEntrypointArtifactFormat = LiteralKit([
 );
 
 /**
+ * The decoded source-review dialect name accepted by the attachment boundary.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheEntrypointArtifactFormat = typeof CacheEntrypointArtifactFormat.Type;
+
+/**
  * Exact source snapshot bytes and their declared document dialect.
  *
  * **Example** (Reject an unbound snapshot)

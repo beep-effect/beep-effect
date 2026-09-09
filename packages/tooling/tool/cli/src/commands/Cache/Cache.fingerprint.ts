@@ -79,7 +79,7 @@ const toDefinition = (node: CacheCensusNode): CacheCensusDefinition =>
  *
  * ```ts
  * import { collectCacheToolchain } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(collectCacheToolchain("/repo")))
  * ```
  *
@@ -164,7 +164,7 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
  * import { collectCacheCensus } from "@beep/repo-cli/commands/Cache"
  * import { collectCacheToolchain, fingerprintCacheComputation } from "@beep/repo-cli/test/Cache"
  * import { CacheQualificationKey } from "@beep/repo-configs/cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const observe = Effect.gen(function* () {
  *   const key = CacheQualificationKey.make({
  *     computation: "@beep/identity#lint", layer: "turbo-task-result",

@@ -17,7 +17,7 @@ import type { CacheEvidenceReference } from "@beep/repo-configs/cache";
  *
  * ```ts
  * import { readCacheExperimentBytes } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(readCacheExperimentBytes("/repo", "fixture.txt", 4096)))
  * ```
  *
@@ -43,7 +43,7 @@ export const readCacheExperimentBytes = Effect.fn("CacheEvidence.readExperimentB
  *
  * ```ts
  * import { decodeCacheExperimentText } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(decodeCacheExperimentText(new TextEncoder().encode("fixture"))))
  * ```
  *
@@ -64,7 +64,7 @@ export const decodeCacheExperimentText = (bytes: Uint8Array) =>
  *
  * ```ts
  * import { hashCacheExperimentExecutable } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(hashCacheExperimentExecutable("/tools/turbo")))
  * ```
  *

@@ -111,7 +111,7 @@ const inspectDependencyLink = Effect.fn("CacheDependencies.inspectLink")(functio
  *
  * ```ts
  * import { inspectCacheDependencyTree } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(inspectCacheDependencyTree("/repo", [])))
  * ```
  *
@@ -211,7 +211,7 @@ export const verifyCacheDependencies = Effect.fn("CacheDependencies.verify")(fun
  *
  * ```ts
  * import { materializeCacheDependencies } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(materializeCacheDependencies("/repo")))
  * ```
  *

@@ -49,7 +49,7 @@ const validatePilotStreams = Effect.fn("CachePilot.validateStreams")(function* (
  * ```ts
  * import { CachePilotLogInput } from "@beep/repo-cli/commands/Cache"
  * import { extractCachePilotLog } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const input = CachePilotLogInput.make({
  *   computation: "@beep/identity#lint", taskHash: "0123456789abcdef",
  *   origin: "fresh", cacheEnabled: false, truncated: false, stderr: "",

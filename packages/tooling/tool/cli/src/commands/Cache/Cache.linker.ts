@@ -39,7 +39,7 @@ const hash = (file: string) =>
  *
  * ```ts
  * import { parseCacheLinkerOutput } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const inspection = parseCacheLinkerOutput("\tstatically linked\n")
  * console.assert(Effect.isEffect(inspection))
  * ```
@@ -74,7 +74,7 @@ export const parseCacheLinkerOutput = Effect.fn("CacheLinker.parse")(function* (
  *
  * ```ts
  * import { inspectCacheLinkedFile } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(inspectCacheLinkedFile("/lib64/ld-linux-x86-64.so.2")))
  * ```
  *
@@ -100,7 +100,7 @@ export const inspectCacheLinkedFile = Effect.fn("CacheLinker.file")(function* (f
  *
  * ```ts
  * import { inspectCacheLinkerResolution } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(inspectCacheLinkerResolution("/repo", "/usr/bin/bash")))
  * ```
  *
@@ -139,7 +139,7 @@ export const inspectCacheLinkerResolution = Effect.fn("CacheLinker.inspect")(fun
  *
  * ```ts
  * import { collectCacheRuntimeLinker } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const inspect = collectCacheRuntimeLinker("/repo", {
  *   bun: "/tools/bun", node: "/tools/node", turbo: "/tools/turbo",
  *   biome: "/tools/biome", bash: "/usr/bin/bash", sh: "/usr/bin/sh",

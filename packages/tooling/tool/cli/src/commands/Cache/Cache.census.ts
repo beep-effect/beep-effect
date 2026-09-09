@@ -55,7 +55,7 @@ const TurboPlan = S.Struct({
  *
  * ```ts
  * import { resolveCacheTurboBinary } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * console.assert(Effect.isEffect(resolveCacheTurboBinary("/repo")))
  * ```
  *
@@ -119,7 +119,7 @@ const capture = Effect.fn("CacheCensus.capture")(function* (
  *
  * ```ts
  * import { joinCacheCensusPlan } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const invalid = joinCacheCensusPlan([], { tasks: [] })
  * console.assert(Effect.isEffect(invalid))
  * ```
@@ -194,7 +194,7 @@ export const joinCacheCensusPlan = Effect.fn("CacheCensus.joinPlan")(function* (
  *
  * ```ts
  * import { collectCacheCensus } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const computation = collectCacheCensus(".")
  * console.assert(Effect.isEffect(computation))
  * ```

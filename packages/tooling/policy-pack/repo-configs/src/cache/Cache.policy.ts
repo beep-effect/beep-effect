@@ -478,7 +478,7 @@ const requiredKindFailures = (
  *
  * ```ts
  * import * as Cache from "@beep/repo-configs/cache"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as A from "effect/Array"
  * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
  * const key = Cache.CacheQualificationKey.make({ computation: "fixture#lint", layer: "turbo-task-result", profile: "fixture", epoch: "v1" })

@@ -126,7 +126,7 @@ export class CacheQualificationEvent extends S.Class<CacheQualificationEvent>($I
  *
  * ```ts
  * import { CacheQualificationStore } from "@beep/repo-configs/cache"
- * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * const store = CacheQualificationStore.make({ revision: NonNegativeInt.make(0), entries: [], history: [] })
  * console.assert(store.entries.length === 0)
  * ```
@@ -358,7 +358,7 @@ const sameEntries = S.toEquivalence(S.Array(CacheQualificationEntry));
  *
  * ```ts
  * import { CacheQualificationStore, cacheLedgerFailures } from "@beep/repo-configs/cache"
- * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * const store = CacheQualificationStore.make({ revision: NonNegativeInt.make(0), entries: [], history: [] })
  * console.assert(cacheLedgerFailures(store).length === 0)
  * ```
@@ -477,7 +477,8 @@ const auditSourceDrift = (baseline: CachePolicyProjection, current: CachePolicyP
  *
  * ```ts
  * import * as Cache from "@beep/repo-configs/cache"
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema/Number"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
  * const projection = Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] })
  * const baseline = Cache.CachePolicyBaseline.make({

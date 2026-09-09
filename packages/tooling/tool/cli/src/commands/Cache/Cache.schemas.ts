@@ -346,7 +346,7 @@ export class CacheCensusSource extends S.Class<CacheCensusSource>($I`CacheCensus
  *
  * ```ts
  * import { CacheCensusReport } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  * const rejected = S.decodeUnknownEffect(CacheCensusReport)({ schemaVersion: "cache-executable-census/v0" }).pipe(Effect.isFailure)
  * console.assert(await Effect.runPromise(rejected))

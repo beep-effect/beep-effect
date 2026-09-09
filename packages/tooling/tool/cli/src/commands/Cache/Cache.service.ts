@@ -485,7 +485,7 @@ export interface CacheQualificationServiceShape {
  *
  * ```ts
  * import { CacheQualificationService } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const program = Effect.gen(function* () {
  *   const cache = yield* CacheQualificationService
  *   return yield* cache.inspect("/repo")
@@ -528,7 +528,7 @@ const makeService = Effect.fn("CacheQualificationService.make")(function* () {
  *
  * ```ts
  * import { CacheQualificationLive, CacheQualificationService } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const program = CacheQualificationService.pipe(Effect.provide(CacheQualificationLive))
  * console.assert(Effect.isEffect(program))
  * ```

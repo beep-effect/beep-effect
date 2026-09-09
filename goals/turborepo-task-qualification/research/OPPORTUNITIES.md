@@ -23,6 +23,14 @@ entries, so a newly written changeset does not satisfy it until committed.
 The first CLI package pass caught an introduced prior-contract reference typo
 and inline JSDoc tags; both were corrected before rerunning package proof.
 
+The full proof on the merged branch then found JSDoc regressions that the
+committed inventory check had not observed: root imports in new examples and
+an absent same-name runtime type alias on the entrypoint dialect schema.
+The fresh inventory took roughly five minutes before reporting them. Use
+module subpaths in examples, retain the schema runtime alias at authoring
+time, and treat a committed-inventory pass as supporting evidence only.
+The examples and alias were corrected; no totals baseline was raised.
+
 ## 2026-09-09: paused PR publication checks
 
 The first library-fingerprinting typecheck caught a curried Effect String
