@@ -1,0 +1,425 @@
+{
+  "schemaVersion": "cache-activation-preview/v1",
+  "activation": {
+    "path": "packages/foundation/modeling/identity/turbo.json",
+    "before": {
+      "path": "goals/turborepo-task-qualification/research/activation/identity-turbo.disabled.v2.json",
+      "sha256": "20aa945348385b7947c2ee01f1a23d3ee4f73ebc517842861a55bcb750d8051e"
+    },
+    "after": {
+      "path": "goals/turborepo-task-qualification/research/activation/identity-turbo.enabled.v2.json",
+      "sha256": "218501e001cdb90a811c9cfe43fdf6198d8be2740f18728cbead902226fb9ecf"
+    },
+    "sourceConfiguration": "0f03cde212ecf82dca77966eb451a7b9f5a81a1fbeb9ee4a715d38c84cffc559"
+  },
+  "source": {
+    "schemaVersion": "cache-live-identity/v1",
+    "key": {
+      "computation": "@beep/identity#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.1",
+      "epoch": "qualification-v1"
+    },
+    "configuration": {
+      "computation": "@beep/identity#lint",
+      "globalConfiguration": {
+        "futureFlags": {
+          "affectedUsingTaskInputs": true,
+          "filterUsingTasks": true,
+          "globalConfiguration": true
+        },
+        "global": {
+          "ui": "tui",
+          "inputs": [
+            ".bun-version",
+            ".nvmrc",
+            "package.json",
+            "tsconfig.json",
+            "tsconfig.base.json",
+            "tsconfig.packages.json"
+          ],
+          "env": ["BEEP_ESLINT_PROFILE", "VITE_COSMOS_SPIKE"],
+          "passThroughEnv": [
+            "BEEP_AGENT_SESSION_ID",
+            "BEEP_NODE_BIN",
+            "BEEP_DOCGEN_CONCURRENCY",
+            "BEEP_QUALITY_CHECK_CONCURRENCY",
+            "BEEP_YEET_ADMISSION_LEASE_ID",
+            "BEEP_YEET_ADMISSION_WORKLOAD_PATH",
+            "BEEP_YEET_LANE_PROOF_MODE",
+            "BEEP_YEET_PROOF_BASE",
+            "BEEP_YEET_PUSH_REFSPEC",
+            "BEEP_YEET_STATE_ROOT",
+            "CLAUDE_CODE_CHILD_SESSION",
+            "CLAUDE_CODE_ENTRYPOINT",
+            "CLAUDE_CODE_HOST_SESSION_ID",
+            "CLAUDE_CODE_SESSION_ID",
+            "CLAUDE_PID",
+            "CLAUDE_SESSION_ID",
+            "CODEX_COMPANION_TRANSCRIPT_PATH",
+            "CODEX_SESSION_ID",
+            "CODEX_THREAD_ID",
+            "GITHUB_ACTIONS",
+            "REGEN_GOLDENS",
+            "TURBO_CACHE",
+            "TURBO_FORCE",
+            "TURBO_TOKEN",
+            "TURBO_TEAM",
+            "XDG_RUNTIME_DIR",
+            "NODE_TLS_REJECT_UNAUTHORIZED",
+            "CHAT_TRANSPORT",
+            "EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST",
+            "EPISTEMIC_POLICY_REVISION",
+            "ONTOLOGY_MCP_MUTATIONS_ENABLED",
+            "ONTOLOGY_WORKSPACE_ROOT",
+            "PORTLESS_*",
+            "AWS_*",
+            "SST_*"
+          ]
+        }
+      },
+      "nodes": [
+        {
+          "id": "@beep/identity#lint",
+          "command": "biome check . > /dev/null 2>&1",
+          "commandDigest": "17eb2bba661fffd2013f18f1303652d805993a0cc91035ca328f929aa8c8336c",
+          "dependencies": ["@beep/types#lint"],
+          "configuration": {
+            "cache": false,
+            "inputs": [
+              "!../../../../tsconfig*.json",
+              "!.beep/**",
+              "../../../../.bun-version",
+              "../../../../.nvmrc",
+              "../../../../biome.jsonc",
+              "../../../../package.json",
+              "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+              "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+              "../../../../tsconfig.base.json",
+              "../../../../tsconfig.json",
+              "../../../../tsconfig.packages.json"
+            ],
+            "env": [],
+            "passThroughEnv": [],
+            "outputs": [],
+            "dependsOn": ["^lint"],
+            "persistent": false,
+            "interactive": false,
+            "interruptible": false,
+            "outputLogs": "full"
+          }
+        },
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "commandDigest": "d72ad018e1723bbc2fddad757f15e3efae7ae094df64debe2bf8bc8443403920",
+          "dependencies": [],
+          "configuration": {
+            "cache": true,
+            "inputs": [
+              "!../../../../tsconfig*.json",
+              "!.beep/**",
+              "../../../../.bun-version",
+              "../../../../.nvmrc",
+              "../../../../biome.jsonc",
+              "../../../../package.json",
+              "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+              "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+              "../../../../tsconfig.base.json",
+              "../../../../tsconfig.json",
+              "../../../../tsconfig.packages.json"
+            ],
+            "env": [],
+            "passThroughEnv": [],
+            "outputs": [],
+            "dependsOn": ["^lint"],
+            "persistent": false,
+            "interactive": false,
+            "interruptible": false,
+            "outputLogs": "full"
+          }
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/labs/api-docs/turbo.json",
+          "sha256": "50c35daaf1baadfed63c5e654335ade48064505a8776915c3961b7e9ecf0ed66"
+        },
+        {
+          "path": "apps/professional-desktop/turbo.json",
+          "sha256": "04b142c3785b4415a4de0a1410c9e557447a345b4d9d6555fd589d6182cee5e0"
+        },
+        {
+          "path": "apps/storybook/turbo.json",
+          "sha256": "99ada50fe2fa86350fdddd1d517d78ddbaa6f3df341869c726b4ae9f37c4f1d8"
+        },
+        {
+          "path": "infra/turbo.json",
+          "sha256": "3466632a41e387b7b6fe8c455d81771b77bb3997fa521bf5559624c499df4340"
+        },
+        {
+          "path": "packages/foundation/modeling/identity/turbo.json",
+          "sha256": "20aa945348385b7947c2ee01f1a23d3ee4f73ebc517842861a55bcb750d8051e"
+        },
+        {
+          "path": "packages/tooling/library/ai-sync/turbo.json",
+          "sha256": "f60da7b6c86dd068fdcf9dbcf200dfb9baa8a5aed6312b69e756e37c5aec9923"
+        },
+        {
+          "path": "turbo.json",
+          "sha256": "32a4cf3d89cc2553c80ba68727fb2262e77a6d371ce93a7271b077a76bb42590"
+        }
+      ]
+    },
+    "configurationDigest": "0f03cde212ecf82dca77966eb451a7b9f5a81a1fbeb9ee4a715d38c84cffc559",
+    "toolchain": {
+      "profile": "local-linux-x64-bun1.4.1",
+      "kernel": "Linux 7.2.0-1-cachyos",
+      "libc": "glibc 2.44",
+      "bun": {
+        "version": "1.4.1",
+        "sha256": "69293d3be4f0d6d624ca8581af4574435fa39209ab67e89eb03912866f3e14cb"
+      },
+      "node": {
+        "version": "v24.20.0",
+        "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7"
+      },
+      "turbo": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde"
+      },
+      "biome": {
+        "version": "Version: 2.5.6",
+        "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+      },
+      "sources": [
+        {
+          "path": ".bun-version",
+          "sha256": "7d072b48526b023950e4c48db01e8c273554a6401119f5691e7589ba9bc65d9d"
+        },
+        {
+          "path": ".nvmrc",
+          "sha256": "68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53"
+        },
+        {
+          "path": "bun.lock",
+          "sha256": "c7ee991bf11105d0f959678eb80867354674476f0e36d2b46931fa05dafecc5b"
+        },
+        {
+          "path": "node_modules/turbo/bin/turbo",
+          "sha256": "dd000efaa64f567f0986a84d363bbe7cf95a831010f6f6dbfd21770c89a8523d"
+        },
+        {
+          "path": "node_modules/@biomejs/biome/bin/biome",
+          "sha256": "7ffb4d217e5ddefcc19ca6afe76bb982f5eb36c9a124448105195fbcfc84bd77"
+        }
+      ]
+    },
+    "toolchainDigest": "b0ab7f5f428f53d83a073f183e3dbb6715f8ccf45e2b36a5dd409d0afad4a437"
+  },
+  "target": {
+    "schemaVersion": "cache-live-identity/v1",
+    "key": {
+      "computation": "@beep/identity#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.1",
+      "epoch": "qualification-v1"
+    },
+    "configuration": {
+      "computation": "@beep/identity#lint",
+      "globalConfiguration": {
+        "futureFlags": {
+          "affectedUsingTaskInputs": true,
+          "filterUsingTasks": true,
+          "globalConfiguration": true
+        },
+        "global": {
+          "ui": "tui",
+          "inputs": [
+            ".bun-version",
+            ".nvmrc",
+            "package.json",
+            "tsconfig.json",
+            "tsconfig.base.json",
+            "tsconfig.packages.json"
+          ],
+          "env": ["BEEP_ESLINT_PROFILE", "VITE_COSMOS_SPIKE"],
+          "passThroughEnv": [
+            "BEEP_AGENT_SESSION_ID",
+            "BEEP_NODE_BIN",
+            "BEEP_DOCGEN_CONCURRENCY",
+            "BEEP_QUALITY_CHECK_CONCURRENCY",
+            "BEEP_YEET_ADMISSION_LEASE_ID",
+            "BEEP_YEET_ADMISSION_WORKLOAD_PATH",
+            "BEEP_YEET_LANE_PROOF_MODE",
+            "BEEP_YEET_PROOF_BASE",
+            "BEEP_YEET_PUSH_REFSPEC",
+            "BEEP_YEET_STATE_ROOT",
+            "CLAUDE_CODE_CHILD_SESSION",
+            "CLAUDE_CODE_ENTRYPOINT",
+            "CLAUDE_CODE_HOST_SESSION_ID",
+            "CLAUDE_CODE_SESSION_ID",
+            "CLAUDE_PID",
+            "CLAUDE_SESSION_ID",
+            "CODEX_COMPANION_TRANSCRIPT_PATH",
+            "CODEX_SESSION_ID",
+            "CODEX_THREAD_ID",
+            "GITHUB_ACTIONS",
+            "REGEN_GOLDENS",
+            "TURBO_CACHE",
+            "TURBO_FORCE",
+            "TURBO_TOKEN",
+            "TURBO_TEAM",
+            "XDG_RUNTIME_DIR",
+            "NODE_TLS_REJECT_UNAUTHORIZED",
+            "CHAT_TRANSPORT",
+            "EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST",
+            "EPISTEMIC_POLICY_REVISION",
+            "ONTOLOGY_MCP_MUTATIONS_ENABLED",
+            "ONTOLOGY_WORKSPACE_ROOT",
+            "PORTLESS_*",
+            "AWS_*",
+            "SST_*"
+          ]
+        }
+      },
+      "nodes": [
+        {
+          "id": "@beep/identity#lint",
+          "command": "biome check . > /dev/null 2>&1",
+          "commandDigest": "17eb2bba661fffd2013f18f1303652d805993a0cc91035ca328f929aa8c8336c",
+          "dependencies": ["@beep/types#lint"],
+          "configuration": {
+            "cache": true,
+            "inputs": [
+              "!../../../../tsconfig*.json",
+              "!.beep/**",
+              "../../../../.bun-version",
+              "../../../../.nvmrc",
+              "../../../../biome.jsonc",
+              "../../../../package.json",
+              "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+              "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+              "../../../../tsconfig.base.json",
+              "../../../../tsconfig.json",
+              "../../../../tsconfig.packages.json"
+            ],
+            "env": [],
+            "passThroughEnv": [],
+            "outputs": [],
+            "dependsOn": ["^lint"],
+            "persistent": false,
+            "interactive": false,
+            "interruptible": false,
+            "outputLogs": "full"
+          }
+        },
+        {
+          "id": "@beep/types#lint",
+          "command": "bun run beep:lint",
+          "commandDigest": "d72ad018e1723bbc2fddad757f15e3efae7ae094df64debe2bf8bc8443403920",
+          "dependencies": [],
+          "configuration": {
+            "cache": true,
+            "inputs": [
+              "!../../../../tsconfig*.json",
+              "!.beep/**",
+              "../../../../.bun-version",
+              "../../../../.nvmrc",
+              "../../../../biome.jsonc",
+              "../../../../package.json",
+              "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+              "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+              "../../../../tsconfig.base.json",
+              "../../../../tsconfig.json",
+              "../../../../tsconfig.packages.json"
+            ],
+            "env": [],
+            "passThroughEnv": [],
+            "outputs": [],
+            "dependsOn": ["^lint"],
+            "persistent": false,
+            "interactive": false,
+            "interruptible": false,
+            "outputLogs": "full"
+          }
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/labs/api-docs/turbo.json",
+          "sha256": "50c35daaf1baadfed63c5e654335ade48064505a8776915c3961b7e9ecf0ed66"
+        },
+        {
+          "path": "apps/professional-desktop/turbo.json",
+          "sha256": "04b142c3785b4415a4de0a1410c9e557447a345b4d9d6555fd589d6182cee5e0"
+        },
+        {
+          "path": "apps/storybook/turbo.json",
+          "sha256": "99ada50fe2fa86350fdddd1d517d78ddbaa6f3df341869c726b4ae9f37c4f1d8"
+        },
+        {
+          "path": "infra/turbo.json",
+          "sha256": "3466632a41e387b7b6fe8c455d81771b77bb3997fa521bf5559624c499df4340"
+        },
+        {
+          "path": "packages/foundation/modeling/identity/turbo.json",
+          "sha256": "218501e001cdb90a811c9cfe43fdf6198d8be2740f18728cbead902226fb9ecf"
+        },
+        {
+          "path": "packages/tooling/library/ai-sync/turbo.json",
+          "sha256": "f60da7b6c86dd068fdcf9dbcf200dfb9baa8a5aed6312b69e756e37c5aec9923"
+        },
+        {
+          "path": "turbo.json",
+          "sha256": "32a4cf3d89cc2553c80ba68727fb2262e77a6d371ce93a7271b077a76bb42590"
+        }
+      ]
+    },
+    "configurationDigest": "1d82a4a30379c01eebfacc87f8524df61c8ec4afb12291f6896be64ffbc726c2",
+    "toolchain": {
+      "profile": "local-linux-x64-bun1.4.1",
+      "kernel": "Linux 7.2.0-1-cachyos",
+      "libc": "glibc 2.44",
+      "bun": {
+        "version": "1.4.1",
+        "sha256": "69293d3be4f0d6d624ca8581af4574435fa39209ab67e89eb03912866f3e14cb"
+      },
+      "node": {
+        "version": "v24.20.0",
+        "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7"
+      },
+      "turbo": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde"
+      },
+      "biome": {
+        "version": "Version: 2.5.6",
+        "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+      },
+      "sources": [
+        {
+          "path": ".bun-version",
+          "sha256": "7d072b48526b023950e4c48db01e8c273554a6401119f5691e7589ba9bc65d9d"
+        },
+        {
+          "path": ".nvmrc",
+          "sha256": "68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53"
+        },
+        {
+          "path": "bun.lock",
+          "sha256": "c7ee991bf11105d0f959678eb80867354674476f0e36d2b46931fa05dafecc5b"
+        },
+        {
+          "path": "node_modules/turbo/bin/turbo",
+          "sha256": "dd000efaa64f567f0986a84d363bbe7cf95a831010f6f6dbfd21770c89a8523d"
+        },
+        {
+          "path": "node_modules/@biomejs/biome/bin/biome",
+          "sha256": "7ffb4d217e5ddefcc19ca6afe76bb982f5eb36c9a124448105195fbcfc84bd77"
+        }
+      ]
+    },
+    "toolchainDigest": "b0ab7f5f428f53d83a073f183e3dbb6715f8ccf45e2b36a5dd409d0afad4a437"
+  }
+}

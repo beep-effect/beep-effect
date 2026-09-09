@@ -1,0 +1,171 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "turborepo-task-qualification",
+    "title": "Turborepo task qualification",
+    "status": "active",
+    "created": "2026-09-08",
+    "updated": "2026-09-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/turborepo-task-qualification",
+  "lifecycle": "active",
+  "mission": "Make cache reuse an enforced, evidence-backed contract for each quality computation, reuse layer, environment profile and epoch.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/turborepo-quality-cache",
+    "graduated": "2026-09-08",
+    "note": "Approved BRIEF and MAP; conditional backend migration remains queued in the exploration."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Make cache reuse an enforced, evidence-backed contract for each quality computation, reuse layer, environment profile and epoch. Complete only after SPEC acceptance, representative evidence, final same-PR reflection/lifecycle, and Yeet merge-ready: yes.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/turborepo-task-qualification/README.md",
+    "goals/turborepo-task-qualification/SPEC.md",
+    "goals/turborepo-task-qualification/PLAN.md",
+    "goals/turborepo-task-qualification/GOAL.md",
+    "goals/turborepo-task-qualification/research/SOURCES.md",
+    "explorations/turborepo-quality-cache/DECISIONS.md",
+    "explorations/turborepo-quality-cache/MAP.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/OPPORTUNITIES.md",
+    "research/census-refresh.json",
+    "research/qualification-contract.md",
+    "research/executable-census.json",
+    "research/identity-lint-contract.md",
+    "research/verification-2026-09-09.md",
+    "research/baseline-review.md",
+    "research/baseline-request.json",
+    "research/command-decomposition.md",
+    "research/command-groups.json",
+    "research/entrypoint-plans.json",
+    "research/governance-verification-2026-09-09.md",
+    "research/governance-checkpoint.json",
+    "research/unsafe-lint-review.md",
+    "research/exclusion-request.json",
+    "research/local-preflight-observations.json",
+    "research/sibling-evidence-search.md",
+    "research/reporters-observations.json",
+    "research/diagnostic-limit-observations.json",
+    "research/runtime-boundary-verification-2026-09-09.md",
+    "research/runtime-boundary-checkpoint.json",
+    "research/synthetic-local-verification-2026-09-09.md",
+    "research/synthetic-local-checkpoint.json",
+    "research/synthetic-local-stable.json",
+    "research/synthetic-local-canary.json",
+    "research/activation-verification-2026-09-09.md",
+    "research/activation/identity-turbo.disabled.json",
+    "research/activation/identity-turbo.enabled.json",
+    "research/activation/preview-request.json",
+    "research/activation-checkpoint.json",
+    "research/dynamic-entrypoints.md",
+    "research/dynamic-entrypoints-checkpoint.json",
+    "research/entrypoint-plans-hosted.json",
+    "research/refresh-entrypoint-plans.ts",
+    "research/quiet-lint-preflight.md",
+    "research/activation/identity-turbo.disabled.v2.json",
+    "research/activation/identity-turbo.enabled.v2.json",
+    "research/refresh-yeet-plans.ts",
+    "research/yeet-plans.json",
+    "research/yeet-plans-hosted.json",
+    "research/quality-yeet-entrypoints.md",
+    "research/quality-yeet-checkpoint.json",
+    "research/activation-native-stable.json",
+    "research/quiet-lint-stable-partial.json",
+    "research/synthetic-local-v2-checkpoint.json",
+    "research/workflow-boundaries.md",
+    "research/refresh-workflow-sources.ts",
+    "research/workflow-sources.json",
+    "research/workflow-sources-checkpoint.json",
+    "research/synthetic-local-v2-verification.md",
+    "research/scm-device-preflight.md",
+    "research/quiet-lint-complete.json",
+    "research/quiet-lint-baseline-review.md",
+    "research/quiet-lint-baseline-request.json",
+    "research/quiet-lint-repair-checkpoint.json",
+    "research/synthetic-local-v2-stable.json",
+    "research/synthetic-local-v2-canary.json",
+    "research/scm-device-stable.json",
+    "research/entrypoint-census-integration.md",
+    "research/entrypoint-census-checkpoint.json",
+    "research/entrypoint-review-request.json",
+    "research/refresh-entrypoint-review.ts",
+    "research/entrypoint-plans-current.json",
+    "research/entrypoint-plans-hosted-current.json",
+    "research/yeet-plans-current.json",
+    "research/yeet-plans-hosted-current.json",
+    "research/command-groups-current.json",
+    "research/quiet-lint-activation-preview.json"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/turborepo-task-qualification/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Refresh and contract",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "Policy and discovery",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Local pilot and shadow",
+      "status": "in-progress"
+    },
+    {
+      "id": "P3",
+      "name": "Signed replay integration",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Verify and hand off",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "wc -m < goals/turborepo-task-qualification/GOAL.md",
+    "jq . goals/turborepo-task-qualification/ops/manifest.json",
+    "bun run beep goals doctor",
+    "bun run beep explore --check",
+    "git diff --check -- goals/turborepo-task-qualification",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Semantic divergence, failed invalidation, sensitive output, or unauthorized read/write/tenant crossing stops affected reuse.",
+    "Missing exact-version or milestone evidence prevents crossing that gate; continue independent work.",
+    "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
+    "Do not overwrite another owner's artifacts or weaken hosted proof."
+  ],
+  "statusNote": "P0/P1/P2 active. Exact-stable native activation projection passed. A v2 synthetic runner adds three fresh/fresh pairs, fresh orchestration invariance, execution metadata checks and distinct absent-script observations. The current CLI package audit/docgen and schema-first checks pass; exact stable/canary runtime remains queued. Four planner snapshots and the complete ten-document workflow source snapshot regenerate byte-identically. Census integration, remaining workflow boundaries, real pilot/shadow/signed integration and Yeet closeout remain. The quiet-lint full rerun is queued. Identity remains excluded with its original lint script and cache disabled. Sibling task launch awaits the operator answer."
+}

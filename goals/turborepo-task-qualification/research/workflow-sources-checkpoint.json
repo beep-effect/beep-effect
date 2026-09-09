@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "cache-workflow-source-checkpoint/v1",
+  "authority": "Complete local YAML population and source-boundary review only; no expanded matrix execution, deployed posture, remote action validation or qualification.",
+  "sources": [
+    {
+      "path": ".github/actions/setup-monorepo-ci/action.yml",
+      "sha256": "6ba5b595afae80ddaf13d260c8d8d75ec779da7c81cbceee9aac7fabda625062"
+    },
+    {
+      "path": ".github/workflows/cache-warm.yml",
+      "sha256": "f64bf8a2ef78064991aaf2050eeebe7b9033392814121691b4cfd05707d45563"
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "sha256": "dc82e98e8b70519c4f6933f9ce1a1277fdd55bd3e22a3155f4b12dcc6c4a3bf3"
+    },
+    {
+      "path": ".github/workflows/data-sync.yml",
+      "sha256": "5d8079de3277d1207b0a4471e9d60f63eec27350903616ed50d7c654b6d1b1a8"
+    },
+    {
+      "path": ".github/workflows/fleet-lane-probe.yml",
+      "sha256": "7cde83e845dced4b1ce433558cd190762a4d4377f76383bfd5008c9b553e30bc"
+    },
+    {
+      "path": ".github/workflows/fleet-shadow-check.yml",
+      "sha256": "df4ea6a8b050158ef9f3f067eaf1e951b22e056755ed3b701e05992287f10992"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "94945bd41a99e6ae458a237bf4fc3cac0de719f2da854d87265d8f091180016c"
+    },
+    {
+      "path": ".github/workflows/property-laws-nightly.yml",
+      "sha256": "239636e26a80c5251dd5cdf06884fb32ac3d66d793370e432a7c586633fafd0b"
+    },
+    {
+      "path": ".github/workflows/release-desktop.yml",
+      "sha256": "b15cf4d2c2870bd27ca5141ca080bb9abef6d8fc607fb3d4aab77760aa59e57e"
+    },
+    {
+      "path": ".github/workflows/storybook.yml",
+      "sha256": "03ec06e03fac4022c1320bbaa8c2d76c0b4bc03b658324bcbd46679e2bc86f6c"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/refresh-workflow-sources.ts",
+      "sha256": "b8443e0d5f588b2700b276d591819cec53d189f2fff04500c6042a12b97e4a75"
+    },
+    {
+      "path": "packages/foundation/modeling/schema/src/Yaml.ts",
+      "sha256": "39a9aa8718ab5a7ef839b10086da21e2f2f1176cd72d67f7cfcd1f48f5c2f1c9"
+    },
+    {
+      "path": "scripts/ci-change-profile.sh",
+      "sha256": "c71177689a61478dd7b6f818fb152b832dfe6313becb2133e43264cd2bca407c"
+    }
+  ],
+  "snapshot": {
+    "path": "goals/turborepo-task-qualification/research/workflow-sources.json",
+    "sha256": "2772335b14b4427df65031eeb78639fc8b4c57d28fc81b28f746e979a63996fe"
+  },
+  "validation": {
+    "workflowFiles": 9,
+    "compositeActions": 1,
+    "jobDefinitions": 28,
+    "stepDefinitions": 171,
+    "currentPathPopulationMatchesInventory": true,
+    "byteIdenticalRegeneration": true,
+    "fullDocumentsRetained": true
+  },
+  "remaining": [
+    "Operational census integration",
+    "Nested shell/runtime and artifact observations for candidates",
+    "Hosted resolved workflow/action provenance under existing ownership"
+  ]
+}

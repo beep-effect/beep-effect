@@ -1,0 +1,810 @@
+{
+  "schemaVersion": "cache-quiet-lint-preflight/v1",
+  "authority": "Exploratory isolated capture/exit checks; no shadow, signed replay or qualification credit.",
+  "command": "biome check . > /dev/null 2>&1",
+  "tools": {
+    "bun": {
+      "version": "1.4.1",
+      "sha256": "69293d3be4f0d6d624ca8581af4574435fa39209ab67e89eb03912866f3e14cb"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    }
+  },
+  "records": [
+    {
+      "case": "success",
+      "kind": "direct-exit-parity",
+      "normal": {
+        "id": "direct-success",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 45,
+            "sha256": "18d9e4a1ff92ac842c406a7184e305808e7827c8c47ade3e41f53b8071aa1b8e"
+          },
+          "stderr": {
+            "bytes": 16,
+            "sha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d"
+          }
+        }
+      },
+      "quiet": {
+        "id": "quiet-success",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 33,
+            "sha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa"
+          }
+        }
+      },
+      "exitParity": true
+    },
+    {
+      "case": "source-warning",
+      "kind": "direct-exit-parity",
+      "normal": {
+        "id": "direct-source-warning",
+        "exitCode": 0,
+        "syntheticSecretExposed": true,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 62,
+            "sha256": "8c1525db43639fdeb54b9c36aa7b614f38b6b30a4c10faa211fa3702e98087ba"
+          },
+          "stderr": {
+            "bytes": 673,
+            "sha256": "fc6f9bd7381d73f2c95e62f75207825a844a5ed96475b6c06999fe0bf6eae9f2"
+          }
+        }
+      },
+      "quiet": {
+        "id": "quiet-source-warning",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 33,
+            "sha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa"
+          }
+        }
+      },
+      "exitParity": true
+    },
+    {
+      "case": "source-syntax",
+      "kind": "direct-exit-parity",
+      "normal": {
+        "id": "direct-source-syntax",
+        "exitCode": 1,
+        "syntheticSecretExposed": true,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 60,
+            "sha256": "f119f36fbd8d2c61d161b5e077670a707e2e276d032286df6cccf1b2f79a7b03"
+          },
+          "stderr": {
+            "bytes": 1167,
+            "sha256": "7413e2f62ea9652a80a6360f838d14f865f4bb37c6fc0fab2510f8985ab68909"
+          }
+        }
+      },
+      "quiet": {
+        "id": "quiet-source-syntax",
+        "exitCode": 1,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 73,
+            "sha256": "2c3c034ff796289e35b5d31e173e67ea0a9b8fcd381889f3e0d7dd34032f2f41"
+          }
+        }
+      },
+      "exitParity": true
+    },
+    {
+      "case": "sensitive-filename",
+      "kind": "direct-exit-parity",
+      "normal": {
+        "id": "direct-sensitive-filename",
+        "exitCode": 0,
+        "syntheticSecretExposed": true,
+        "filenameCanaryExposed": true,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 62,
+            "sha256": "25a2d9ba99fc962426aa75fbb959f213cbbe555c35f86d796eb09b3601514e2a"
+          },
+          "stderr": {
+            "bytes": 509,
+            "sha256": "fc2c2511eeda1fb27abb4db9f145da6f57b88ffeca43c3f004f4ea3ebdd5b2e5"
+          }
+        }
+      },
+      "quiet": {
+        "id": "quiet-sensitive-filename",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 33,
+            "sha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa"
+          }
+        }
+      },
+      "exitParity": true
+    },
+    {
+      "case": "schema-warning",
+      "kind": "direct-exit-parity",
+      "normal": {
+        "id": "direct-schema-warning",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 45,
+            "sha256": "08da8a6037025da3fe1fd456a6536713fc43e3e1550bfc598e429799a52b55d5"
+          },
+          "stderr": {
+            "bytes": 16,
+            "sha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d"
+          }
+        }
+      },
+      "quiet": {
+        "id": "quiet-schema-warning",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 33,
+            "sha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa"
+          }
+        }
+      },
+      "exitParity": true
+    },
+    {
+      "case": "invalid-config",
+      "kind": "direct-exit-parity",
+      "normal": {
+        "id": "direct-invalid-config",
+        "exitCode": 1,
+        "syntheticSecretExposed": true,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 1273,
+            "sha256": "91f08760662110c0012df8d32e340f81d0969325fae95bad4776b7cae88db1ca"
+          }
+        }
+      },
+      "quiet": {
+        "id": "quiet-invalid-config",
+        "exitCode": 1,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": false,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 73,
+            "sha256": "2c3c034ff796289e35b5d31e173e67ea0a9b8fcd381889f3e0d7dd34032f2f41"
+          }
+        }
+      },
+      "exitParity": true
+    },
+    {
+      "case": "success",
+      "kind": "turbo-graph-execution",
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-local-stable-v1"
+      },
+      "process": {
+        "id": "stable-success",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 565,
+            "sha256": "7d2338e89b535ae85fb323eb6c77ac7c57c38bee3f2b978d4c30ca3ac1299fa2"
+          },
+          "stderr": {
+            "bytes": 543,
+            "sha256": "d1cbab58e094d90d083b156a38865e8f0eab48ff7ba48e7f6d46b562c521a5d0"
+          }
+        }
+      },
+      "summarySha256": "0f9981c62a929d6f34c891e9f7d7c9df7a2d26ffc09081b99b9ca729f9fd7d25",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "356c78253d8f9544",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 0
+        },
+        "logPresent": true,
+        "logBytes": 33,
+        "logSha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "source-warning",
+      "kind": "turbo-graph-execution",
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-local-stable-v1"
+      },
+      "process": {
+        "id": "stable-source-warning",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 566,
+            "sha256": "c9714ded812c068f5d35ed5f99be7c1deab8557001f728bd473c6e65789ccab9"
+          },
+          "stderr": {
+            "bytes": 543,
+            "sha256": "d1cbab58e094d90d083b156a38865e8f0eab48ff7ba48e7f6d46b562c521a5d0"
+          }
+        }
+      },
+      "summarySha256": "f066864ce703ab0b1e0a987077273fac58d805fcbad294508e204b191d7318b0",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "123d301d1446cb00",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 0
+        },
+        "logPresent": true,
+        "logBytes": 33,
+        "logSha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "source-syntax",
+      "kind": "turbo-graph-execution",
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-local-stable-v1"
+      },
+      "process": {
+        "id": "stable-source-syntax",
+        "exitCode": 1,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 659,
+            "sha256": "f677b22127fed03e5d14b7a2769c23b835414fbbb2ba8c51abe7338d1a1ad207"
+          },
+          "stderr": {
+            "bytes": 700,
+            "sha256": "6121508776a4ac97df78549bdbc94cc09fd466be584725bf8d30456d85e6d484"
+          }
+        }
+      },
+      "summarySha256": "26c3ce2f12f43a28c3b1074ca5971a2b3a6b51124196b6095042b67f451bbe7c",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "087ad89c7fb3de51",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 1
+        },
+        "logPresent": true,
+        "logBytes": 73,
+        "logSha256": "2c3c034ff796289e35b5d31e173e67ea0a9b8fcd381889f3e0d7dd34032f2f41",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "sensitive-filename",
+      "kind": "turbo-graph-execution",
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-local-stable-v1"
+      },
+      "process": {
+        "id": "stable-sensitive-filename",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 566,
+            "sha256": "a108f4c87a1b3f1dc1aba1fd2b67fe837fa35b9c27cbe548bfc4e707c9d48f2b"
+          },
+          "stderr": {
+            "bytes": 543,
+            "sha256": "d1cbab58e094d90d083b156a38865e8f0eab48ff7ba48e7f6d46b562c521a5d0"
+          }
+        }
+      },
+      "summarySha256": "46b80071ede6c99ede9f1d5fd07c8a625e507ffc8433a6c95904fca3fbd2a49f",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "4cb80c95533db6ac",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 0
+        },
+        "logPresent": true,
+        "logBytes": 33,
+        "logSha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "schema-warning",
+      "kind": "turbo-graph-execution",
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-local-stable-v1"
+      },
+      "process": {
+        "id": "stable-schema-warning",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 566,
+            "sha256": "240d4a6571f79d718ea91011373a5ffb5657c933b802f793760deb703faa5b25"
+          },
+          "stderr": {
+            "bytes": 543,
+            "sha256": "d1cbab58e094d90d083b156a38865e8f0eab48ff7ba48e7f6d46b562c521a5d0"
+          }
+        }
+      },
+      "summarySha256": "687892c33d8f8facd9da81b8b91e58a801ce440b9e9267b4e272689144c731ef",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "23bee1308c812786",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 0
+        },
+        "logPresent": true,
+        "logBytes": 33,
+        "logSha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "invalid-config",
+      "kind": "turbo-graph-blocked-before-selected-task",
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-local-stable-v1"
+      },
+      "process": {
+        "id": "stable-invalid-config",
+        "exitCode": 1,
+        "syntheticSecretExposed": true,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 2397,
+            "sha256": "a72dc78e87277262e393023ea2d50175d782df3bf61105fa0b5b0086643dadd3"
+          },
+          "stderr": {
+            "bytes": 695,
+            "sha256": "7e726ee29397b0d5c5174d5244685d76c9967934fdd0888caf354b62b51381d1"
+          }
+        }
+      },
+      "summarySha256": "1201d83a72865ab4460d515a844f0cfe60c2404cfffe7ee29f69f848abda0798",
+      "observedTaskIds": ["@beep/types#lint"],
+      "failedTaskIds": ["@beep/types#lint"],
+      "selectedTask": null,
+      "selectedTaskExecuted": false
+    },
+    {
+      "case": "success",
+      "kind": "turbo-graph-execution",
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-local-canary-v1"
+      },
+      "process": {
+        "id": "canary-success",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 565,
+            "sha256": "e097a2a0323905ea8b3a14e4f331199e820358857da69210297e3ba5116e1596"
+          },
+          "stderr": {
+            "bytes": 552,
+            "sha256": "7eff679aaf1b0676c840f20cd06b7df79ca36ea7d5a1da52c253d076fa94e4fb"
+          }
+        }
+      },
+      "summarySha256": "b7f92e4f355401a9f5d0cc2c4ab16d6afd9e6fb30a6392a233111d5153b4c0ae",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "356c78253d8f9544",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 0
+        },
+        "logPresent": true,
+        "logBytes": 33,
+        "logSha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "source-warning",
+      "kind": "turbo-graph-execution",
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-local-canary-v1"
+      },
+      "process": {
+        "id": "canary-source-warning",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 566,
+            "sha256": "734daa044e50f71c74b7410c2e131abfecca6f18bd398caf70be5e07d2ff9989"
+          },
+          "stderr": {
+            "bytes": 552,
+            "sha256": "7eff679aaf1b0676c840f20cd06b7df79ca36ea7d5a1da52c253d076fa94e4fb"
+          }
+        }
+      },
+      "summarySha256": "f919e6aa35bbb8547152874767c807807d3c1454530dbbec7b6d96ccc7baf3ef",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "123d301d1446cb00",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 0
+        },
+        "logPresent": true,
+        "logBytes": 33,
+        "logSha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "source-syntax",
+      "kind": "turbo-graph-execution",
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-local-canary-v1"
+      },
+      "process": {
+        "id": "canary-source-syntax",
+        "exitCode": 1,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 659,
+            "sha256": "4840aece05758436ef5cc319e4397b1e945c0af1e44ec2650a37df3a893b97ec"
+          },
+          "stderr": {
+            "bytes": 709,
+            "sha256": "c96f3bfeebc489cfc7045ad8d42bdeddaf751e8b33d3a062608bfa9cc2356ef8"
+          }
+        }
+      },
+      "summarySha256": "f064368c9279f503d600a2da7a551ba809fb4a88a25fa15bb52155664a817847",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "087ad89c7fb3de51",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 1
+        },
+        "logPresent": true,
+        "logBytes": 73,
+        "logSha256": "2c3c034ff796289e35b5d31e173e67ea0a9b8fcd381889f3e0d7dd34032f2f41",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "sensitive-filename",
+      "kind": "turbo-graph-execution",
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-local-canary-v1"
+      },
+      "process": {
+        "id": "canary-sensitive-filename",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 566,
+            "sha256": "6b1f4a806d50255c8f7eb82ed362b8d86ac0e612389c7bf899029888125defc1"
+          },
+          "stderr": {
+            "bytes": 552,
+            "sha256": "7eff679aaf1b0676c840f20cd06b7df79ca36ea7d5a1da52c253d076fa94e4fb"
+          }
+        }
+      },
+      "summarySha256": "c9085a2e1af22121ec583d605298561e7946af9e00b515319d6284133ef49900",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "4cb80c95533db6ac",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 0
+        },
+        "logPresent": true,
+        "logBytes": 33,
+        "logSha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "schema-warning",
+      "kind": "turbo-graph-execution",
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-local-canary-v1"
+      },
+      "process": {
+        "id": "canary-schema-warning",
+        "exitCode": 0,
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 566,
+            "sha256": "e92a84ff6769ca0ba1dfb2db6a2d8bb73d62ae882c7ed46b2eb4aadd5f781c81"
+          },
+          "stderr": {
+            "bytes": 552,
+            "sha256": "7eff679aaf1b0676c840f20cd06b7df79ca36ea7d5a1da52c253d076fa94e4fb"
+          }
+        }
+      },
+      "summarySha256": "bcc6698d86aa7bdc1a5b156d0047aec80854327722b69ff1e0ffce0886391f81",
+      "observedTaskIds": ["@beep/identity#lint", "@beep/types#lint"],
+      "selectedTask": {
+        "hash": "23bee1308c812786",
+        "cache": {
+          "local": false,
+          "remote": false,
+          "status": "MISS",
+          "timeSaved": 0
+        },
+        "execution": {
+          "exitCode": 0
+        },
+        "logPresent": true,
+        "logBytes": 33,
+        "logSha256": "bd8bbddd675b0cba2c78e6ff6fd79cbd92561c809f362128f0c54f984bb20afa",
+        "syntheticSecretExposed": false,
+        "filenameCanaryExposed": false,
+        "absolutePathExposed": false
+      }
+    },
+    {
+      "case": "invalid-config",
+      "kind": "turbo-graph-blocked-before-selected-task",
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-local-canary-v1"
+      },
+      "process": {
+        "id": "canary-invalid-config",
+        "exitCode": 1,
+        "syntheticSecretExposed": true,
+        "filenameCanaryExposed": false,
+        "guestPathExposed": true,
+        "hostPathExposed": false,
+        "streams": {
+          "stdout": {
+            "bytes": 2397,
+            "sha256": "5010558c5728d720123a69cc5930fe7111508e357c2d06e646fa87fec2be5c2e"
+          },
+          "stderr": {
+            "bytes": 704,
+            "sha256": "d1c9e4bed0ad1e00eed2f0d895d5279db060f7f9dae70675ea2a95948e3b2048"
+          }
+        }
+      },
+      "summarySha256": "92d7c7eb939e91e58a0468dfd87f474fad666a99dca2142f0336e629b04ae4ca",
+      "observedTaskIds": ["@beep/types#lint"],
+      "failedTaskIds": ["@beep/types#lint"],
+      "selectedTask": null,
+      "selectedTaskExecuted": false
+    }
+  ],
+  "trackedBytesRestored": true
+}

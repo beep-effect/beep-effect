@@ -53,6 +53,7 @@ import {
   setAdmissionEvictionProtocol,
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
+import { CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
@@ -3158,6 +3159,13 @@ const knipCommand = Command.make(
     )
 ).pipe(Command.withDescription("Run Knip as a fail-on-growth regression-baseline gate"));
 
+const cachePolicyCommand = Command.make("cache-policy", {}, () =>
+  findRepoRoot().pipe(Effect.flatMap((root) => runCachePolicyAudit(root, false)))
+).pipe(
+  Command.withDescription("Enforce Cache's reviewed qualification policy without writing qualification state"),
+  Command.provide(CacheQualificationLive)
+);
+
 const turboConfigProofCommand = Command.make(
   "turbo-config-proof",
   {
@@ -3709,6 +3717,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     jsdocMigrateCommand,
     knipCommand,
     turboConfigProofCommand,
+    cachePolicyCommand,
     qualityProfileCommand,
     qualitySchedulerCommand,
     tmpfsReapCommand,

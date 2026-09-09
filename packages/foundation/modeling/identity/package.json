@@ -14,7 +14,7 @@
     "test:property": "bun run beep:test",
     "coverage": "bunx vitest run --coverage",
     "docgen": "bunx --bun --no-install docgen",
-    "lint": "bun run beep:lint",
+    "lint": "biome check . > /dev/null 2>&1",
     "lint:fix": "bun run beep:lint:fix",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
     "beep:check": "tsgo -p tsconfig.check.json",

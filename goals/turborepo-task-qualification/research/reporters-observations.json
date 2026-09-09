@@ -1,0 +1,104 @@
+[
+  {
+    "reporter": "error-on-warnings",
+    "case": "success",
+    "exitCode": 0,
+    "canaryExposed": false,
+    "rootExposed": false,
+    "streams": {
+      "stdout": {
+        "bytes": 45,
+        "sha256": "c944936c55535eac0789295d8eaa8e7ce0a6029238f24fa04038c6289baffcf0"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "reporter": "error-on-warnings",
+    "case": "warning",
+    "exitCode": 1,
+    "canaryExposed": true,
+    "rootExposed": false,
+    "streams": {
+      "stdout": {
+        "bytes": 62,
+        "sha256": "64cffa1a8d594b675077e9cf0ad89cc18d49c12af51c2060800512185e793043"
+      },
+      "stderr": {
+        "bytes": 1021,
+        "sha256": "df520d2782d19a2202ceba0d600a5e114ac8a176fb13aff6e1539c92888d6785"
+      }
+    }
+  },
+  {
+    "reporter": "error-on-warnings",
+    "case": "error",
+    "exitCode": 1,
+    "canaryExposed": true,
+    "rootExposed": false,
+    "streams": {
+      "stdout": {
+        "bytes": 60,
+        "sha256": "a2fdfbba8a8ee2bafff6b8b5af87b7eecc9d27f2c2e494cde45f03e4d1adfd59"
+      },
+      "stderr": {
+        "bytes": 1154,
+        "sha256": "6787977f976e75e5b6b5cc1a2f482ab12a5a5f09e56fb4664c2d0f0e39301395"
+      }
+    }
+  },
+  {
+    "reporter": "summary",
+    "case": "success",
+    "exitCode": 0,
+    "canaryExposed": false,
+    "rootExposed": false,
+    "streams": {
+      "stdout": {
+        "bytes": 46,
+        "sha256": "d28a5215afebb2959f6268dbe69d0a384fe7e665b2c1b897fea849097dda96dd"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "reporter": "summary",
+    "case": "warning",
+    "exitCode": 0,
+    "canaryExposed": false,
+    "rootExposed": false,
+    "streams": {
+      "stdout": {
+        "bytes": 630,
+        "sha256": "dd5e1edf8b75edc20ccea5f73e61b2bc72c43dbff67ed36f3fba825eedb5fc7c"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "reporter": "summary",
+    "case": "error",
+    "exitCode": 1,
+    "canaryExposed": false,
+    "rootExposed": false,
+    "streams": {
+      "stdout": {
+        "bytes": 401,
+        "sha256": "31db3e7c70d56e47c2dc113a5fbf4c33230c0cece33c002535b24f7416856412"
+      },
+      "stderr": {
+        "bytes": 346,
+        "sha256": "3778742eb77ea95da48f14bdc6b51d83626240ca4fe03830562adc84b5d41d57"
+      }
+    }
+  }
+]

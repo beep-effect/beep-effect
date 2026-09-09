@@ -1,0 +1,53 @@
+[
+  {
+    "reporter": "zero-diagnostics",
+    "case": "success",
+    "exitCode": 0,
+    "canaryExposed": false,
+    "rootExposed": false,
+    "streams": {
+      "stdout": {
+        "bytes": 45,
+        "sha256": "1c91743c17466453d2cfee0c1e5140cc8895864edcb591bebda7190f2f6160a2"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "reporter": "zero-diagnostics",
+    "case": "warning",
+    "exitCode": 0,
+    "canaryExposed": false,
+    "rootExposed": false,
+    "streams": {
+      "stdout": {
+        "bytes": 179,
+        "sha256": "39b8a8e77598afa48f17205ca908b2edab5b535459d57566db27dbbcf389da99"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "reporter": "zero-diagnostics",
+    "case": "error",
+    "exitCode": 1,
+    "canaryExposed": false,
+    "rootExposed": false,
+    "streams": {
+      "stdout": {
+        "bytes": 177,
+        "sha256": "1ac5093b4718c6d9a6905a3df044af7f11aef698de0428839103879f9e2ed806"
+      },
+      "stderr": {
+        "bytes": 346,
+        "sha256": "3778742eb77ea95da48f14bdc6b51d83626240ca4fe03830562adc84b5d41d57"
+      }
+    }
+  }
+]

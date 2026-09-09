@@ -1,0 +1,278 @@
+{
+  "schemaVersion": "remote-cache-conformance-corpus-plan/v1",
+  "capturedAt": "2026-09-04",
+  "generatedBaseline": {
+    "source": "official Remote Cache OpenAPI",
+    "openapiVersion": "3.0.3",
+    "apiVersion": "1.0.0",
+    "gitBlob": "4938812fcc199b66bbbe15c2e9c29fc9c84f5dbe",
+    "sha256": "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8",
+    "mountPrefix": "/v8",
+    "regenerationRule": "Regenerate wire-shape cases when the pinned blob changes; retain hand-authored semantic and adversarial cases."
+  },
+  "clientLanes": [
+    {
+      "id": "stable-linux-x64",
+      "version": "2.10.12",
+      "executableSha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+      "scoring": true,
+      "productionAuthority": true
+    },
+    {
+      "id": "canary-linux-x64",
+      "version": "2.10.13-canary.1",
+      "executableSha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "scoring": true,
+      "productionAuthority": false,
+      "namespace": "isolated-canary-epoch"
+    },
+    {
+      "id": "upstream-main-appendix",
+      "commit": "fd8dc599507a0a1b6cf47a63868aca650c1da9ec",
+      "scoring": false,
+      "productionAuthority": false
+    }
+  ],
+  "backendLanes": [
+    {
+      "id": "beep-incumbent",
+      "topology": "API Gateway + authorizer + reader/writer Lambda + S3 + Ducktors 2.12.0",
+      "mode": "disposable replica before any live read-only parity probe"
+    },
+    {
+      "id": "beep-incumbent-evolved",
+      "topology": "incumbent with opaque tag passthrough, tenant binding, structured receipts, and payload remediation candidate",
+      "mode": "design candidate, not preselected"
+    },
+    {
+      "id": "bruno-4.0.17",
+      "topology": "pinned release behind Beep-compatible auth/tenant boundary and S3-compatible storage",
+      "mode": "disposable"
+    },
+    {
+      "id": "ducktors-2.12.3",
+      "topology": "pinned release in a non-Lambda and, where useful, Lambda topology",
+      "mode": "disposable"
+    }
+  ],
+  "verdictDimensions": [
+    "strict-openapi",
+    "published-stable-client",
+    "published-canary-client",
+    "beep-security-policy",
+    "observability",
+    "performance-envelope"
+  ],
+  "cases": [
+    {
+      "id": "RC-001",
+      "class": "generated",
+      "operation": "status",
+      "assertion": "authenticated status response matches schema and content type"
+    },
+    {
+      "id": "RC-002",
+      "class": "generated",
+      "operation": "put-head-get",
+      "assertion": "zero-byte artifact round-trips exactly"
+    },
+    {
+      "id": "RC-003",
+      "class": "generated",
+      "operation": "put-head-get",
+      "assertion": "small binary artifact round-trips exactly"
+    },
+    {
+      "id": "RC-004",
+      "class": "generated",
+      "operation": "put",
+      "assertion": "Content-Length and octet-stream requirements are enforced or correctly accepted"
+    },
+    {
+      "id": "RC-005",
+      "class": "generated",
+      "operation": "metadata",
+      "assertion": "duration round-trips; absent duration becomes zero; malformed duration is attributable"
+    },
+    {
+      "id": "RC-006",
+      "class": "generated",
+      "operation": "metadata",
+      "assertion": "tag, SHA, and dirty-hash preservation are scored separately"
+    },
+    {
+      "id": "RC-007",
+      "class": "generated-optional",
+      "operation": "batch-query",
+      "assertion": "absence is optional; an implemented route matches the documented map"
+    },
+    {
+      "id": "RC-008",
+      "class": "generated-optional",
+      "operation": "events",
+      "assertion": "absence is optional; an implemented route accepts the documented event shape"
+    },
+    {
+      "id": "RC-009",
+      "class": "semantic",
+      "operation": "client-status",
+      "assertion": "documented response status and actual client acceptance are separate verdicts"
+    },
+    {
+      "id": "RC-010",
+      "class": "semantic",
+      "operation": "miss",
+      "assertion": "genuine 404 is distinguishable from every fail-soft error class"
+    },
+    {
+      "id": "RC-011",
+      "class": "security",
+      "operation": "auth",
+      "assertion": "missing, malformed, unknown, read, and write bearer cases follow the policy matrix"
+    },
+    {
+      "id": "RC-012",
+      "class": "security",
+      "operation": "write-boundary",
+      "assertion": "read bearer cannot PUT and reader execution role cannot write storage"
+    },
+    {
+      "id": "RC-013",
+      "class": "security",
+      "operation": "direct-invoke",
+      "assertion": "writer cannot be invoked outside the authorized gateway path"
+    },
+    {
+      "id": "RC-014",
+      "class": "security",
+      "operation": "tenant-binding",
+      "assertion": "a valid bearer cannot select or retrieve another namespace"
+    },
+    {
+      "id": "RC-015",
+      "class": "security",
+      "operation": "tenant-normalization",
+      "assertion": "empty, conflicting, traversal-like, encoded, and oversized selectors fail closed"
+    },
+    {
+      "id": "RC-016",
+      "class": "security",
+      "operation": "artifact-hash",
+      "assertion": "invalid, traversal-like, encoded, empty, and oversized hashes fail closed"
+    },
+    {
+      "id": "RC-017",
+      "class": "integrity",
+      "operation": "signed-cycle",
+      "assertion": "valid Turbo HMAC tag is preserved and accepted by the producing client epoch"
+    },
+    {
+      "id": "RC-018",
+      "class": "integrity",
+      "operation": "missing-tag",
+      "assertion": "signed client rejects a response with no tag and direct receipt identifies the cause"
+    },
+    {
+      "id": "RC-019",
+      "class": "integrity",
+      "operation": "tampered-tag",
+      "assertion": "signed client rejects a modified tag without materializing outputs"
+    },
+    {
+      "id": "RC-020",
+      "class": "integrity",
+      "operation": "tampered-body",
+      "assertion": "signed client rejects modified bytes without materializing outputs"
+    },
+    {
+      "id": "RC-021",
+      "class": "integrity",
+      "operation": "wrong-team",
+      "assertion": "tag produced for another team identity is rejected"
+    },
+    {
+      "id": "RC-022",
+      "class": "integrity",
+      "operation": "epoch-rotation",
+      "assertion": "old and new namespace epochs do not silently cross-restore or downgrade to unsigned"
+    },
+    {
+      "id": "RC-023",
+      "class": "fault",
+      "operation": "read",
+      "assertion": "401, 403, 429, 5xx, timeout, reset, and truncated body have distinct direct receipts"
+    },
+    {
+      "id": "RC-024",
+      "class": "fault",
+      "operation": "write",
+      "assertion": "failed and ambiguous writes do not produce a success receipt or corrupt a prior object"
+    },
+    {
+      "id": "RC-025",
+      "class": "concurrency",
+      "operation": "same-hash-write",
+      "assertion": "concurrent identical and conflicting writes have a defined atomic result"
+    },
+    {
+      "id": "RC-026",
+      "class": "concurrency",
+      "operation": "read-during-write",
+      "assertion": "readers observe either the prior complete artifact or the new complete artifact"
+    },
+    {
+      "id": "RC-027",
+      "class": "capacity",
+      "operation": "payload-envelope",
+      "assertion": "p50, p95, p99, and twice observed p99 sizes complete within declared bounds"
+    },
+    {
+      "id": "RC-028",
+      "class": "capacity",
+      "operation": "concurrency-envelope",
+      "assertion": "observed peak and 1.5 times peak preserve correctness and bounded latency"
+    },
+    {
+      "id": "RC-029",
+      "class": "lifecycle",
+      "operation": "retention",
+      "assertion": "expiry and namespace cleanup affect only the intended epoch and remain observable"
+    },
+    {
+      "id": "RC-030",
+      "class": "privacy",
+      "operation": "logs",
+      "assertion": "synthetic bearer, signature key, artifact content, and sensitive paths are absent from logs and traces"
+    },
+    {
+      "id": "RC-031",
+      "class": "telemetry",
+      "operation": "correlation",
+      "assertion": "client run, task hash, backend request, object operation, and result class correlate without secret or unbounded-cardinality fields"
+    },
+    {
+      "id": "RC-032",
+      "class": "rollback",
+      "operation": "cutback",
+      "assertion": "incumbent endpoint and epoch can be restored from a rehearsed receipt without mixed writes"
+    }
+  ],
+  "evidencePerCase": [
+    "exact client package and platform executable digest",
+    "backend image/package/commit and deployment digest",
+    "OpenAPI blob digest",
+    "namespace epoch and environment profile",
+    "sanitized request/response receipt",
+    "server/storage receipt",
+    "client-visible result",
+    "strict, stable, and canary verdicts",
+    "bounded raw-artifact references and retention"
+  ],
+  "executionBoundary": {
+    "authorizedInExploration": false,
+    "graduatedGoal": "turborepo-cache-conformance",
+    "productionWrites": false,
+    "capacityDefault": "twice observed p99 artifact size and 1.5 times observed peak concurrency",
+    "teardownRequired": true
+  }
+}

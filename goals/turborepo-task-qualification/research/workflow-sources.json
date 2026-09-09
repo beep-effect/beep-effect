@@ -1,0 +1,1898 @@
+{
+  "schemaVersion": "cache-workflow-source-snapshot/v1",
+  "authority": "Complete parsed local workflow/action source. Expressions, shell bodies, remote references and permission declarations are unevaluated data. No execution, deployed posture or qualification is established.",
+  "files": [
+    {
+      "path": ".github/actions/setup-monorepo-ci/action.yml",
+      "sha256": "6ba5b595afae80ddaf13d260c8d8d75ec779da7c81cbceee9aac7fabda625062",
+      "document": {
+        "name": "Setup monorepo CI",
+        "description": "Restore caches and install dependencies for CI jobs after checkout.",
+        "inputs": {
+          "cache-turbo": {
+            "description": "Restore the Turbo cache for jobs that execute Turbo tasks.",
+            "required": false,
+            "default": "false"
+          },
+          "cache-write": {
+            "description": "Save restored caches after install when cache misses occur.",
+            "required": false,
+            "default": "true"
+          },
+          "turbo-cache-key-suffix": {
+            "description": "Stable suffix that isolates local Turbo caches for matrix lanes sharing one job id.",
+            "required": false,
+            "default": ""
+          },
+          "use-node": {
+            "description": "Setup Node.js runtime when workflow steps require it.",
+            "required": false,
+            "default": "true"
+          }
+        },
+        "runs": {
+          "using": "composite",
+          "steps": [
+            {
+              "name": "Record setup start",
+              "shell": "bash",
+              "run": "echo \"BEEP_SETUP_STARTED_AT=$(date +%s)\" >> \"$GITHUB_ENV\"\n"
+            },
+            {
+              "name": "Detect baked runner",
+              "id": "baked",
+              "shell": "bash",
+              "run": "set -euo pipefail\nhit=false\n# Never trust a writable cache inherited from the image or an earlier\n# step. A valid baked image restores it from the authenticated archive.\nrm -rf -- \"${HOME:?}/.bun/install/cache\"\nif [ -f /etc/beep-ci/baked-runner ] \\\n  && [ -f /etc/beep-ci/bun-lock.sha256 ] \\\n  && [ -f /etc/beep-ci/bun-version ] \\\n  && [ -f /etc/beep-ci/bun-archive.sha256 ] \\\n  && [ -f /etc/beep-ci/bun-binary.sha256 ] \\\n  && [ -f /etc/beep-ci/bun-install-cache.sha256 ] \\\n  && [ -x /usr/local/bin/bun ] \\\n  && [ -L /usr/local/bin/bunx ] \\\n  && [ -f /opt/beep-ci/bun-install-cache.tgz ]; then\n  baked_lock=\"$(cat /etc/beep-ci/bun-lock.sha256)\"\n  checkout_lock=\"$(sha256sum bun.lock | cut -d ' ' -f 1)\"\n  baked_bun=\"$(cat /etc/beep-ci/bun-version)\"\n  checkout_bun=\"$(tr -d '[:space:]' < .bun-version)\"\n  baked_archive=\"$(cat /etc/beep-ci/bun-archive.sha256)\"\n  checkout_archive=\"$(tr -d '[:space:]' < .bun-linux-x64.sha256)\"\n  baked_binary=\"$(cat /etc/beep-ci/bun-binary.sha256)\"\n  installed_binary=\"$(sha256sum /usr/local/bin/bun | cut -d ' ' -f 1)\"\n  baked_cache=\"$(cat /etc/beep-ci/bun-install-cache.sha256)\"\n  installed_cache=\"$(sha256sum /opt/beep-ci/bun-install-cache.tgz | cut -d ' ' -f 1)\"\n  bun_owner_mode=\"$(stat -c '%u:%g:%a' /usr/local/bin/bun)\"\n  cache_owner_mode=\"$(stat -c '%u:%g:%a' /opt/beep-ci/bun-install-cache.tgz)\"\n  bunx_target=\"$(readlink /usr/local/bin/bunx)\"\n  if [ \"$baked_lock\" = \"$checkout_lock\" ] \\\n    && [ \"$baked_bun\" = \"$checkout_bun\" ] \\\n    && [ \"$baked_archive\" = \"$checkout_archive\" ] \\\n    && [ \"$baked_binary\" = \"$installed_binary\" ] \\\n    && [ \"$baked_cache\" = \"$installed_cache\" ] \\\n    && [ \"$bun_owner_mode\" = \"0:0:755\" ] \\\n    && [ \"$cache_owner_mode\" = \"0:0:444\" ] \\\n    && [ \"$bunx_target\" = \"bun\" ]; then\n    install -d -m 0755 \"$HOME/.bun/install\"\n    tar -xzf /opt/beep-ci/bun-install-cache.tgz -C \"$HOME/.bun/install\"\n    hit=true\n    echo \"/usr/local/bin\" >> \"$GITHUB_PATH\"\n    echo \"baked runner fast path: bun $baked_bun, binary $baked_binary, lockfile $baked_lock, archive $baked_archive, cache $baked_cache\"\n  else\n    echo \"baked runner stale or failed integrity checks; using full setup\"\n  fi\nfi\necho \"hit=$hit\" >> \"$GITHUB_OUTPUT\"\n"
+            },
+            {
+              "name": "Setup Bun",
+              "if": "${{ steps.baked.outputs.hit != 'true' }}",
+              "uses": "oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6",
+              "with": { "bun-version-file": ".bun-version", "no-cache": "true" }
+            },
+            {
+              "name": "Setup Node.js",
+              "if": "${{ inputs.use-node == 'true' }}",
+              "uses": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+              "with": { "node-version-file": ".nvmrc" }
+            },
+            {
+              "name": "Restore Bun dependencies cache",
+              "if": "${{ steps.baked.outputs.hit != 'true' }}",
+              "id": "bun-cache-restore",
+              "continue-on-error": true,
+              "uses": "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "with": {
+                "path": "~/.bun/install/cache",
+                "key": "bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ hashFiles('bun.lock') }}",
+                "restore-keys": "bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-"
+              }
+            },
+            {
+              "name": "Restore Turbo cache (local fallback only)",
+              "if": "${{ inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') }}",
+              "id": "turbo-cache-restore",
+              "continue-on-error": true,
+              "uses": "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "with": {
+                "path": ".turbo/cache",
+                "key": "turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}",
+                "restore-keys": "turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-\n"
+              }
+            },
+            {
+              "name": "Install dependencies",
+              "shell": "bash",
+              "run": "install_started_at=\"$(date +%s)\"\necho \"BEEP_SETUP_INSTALL_STARTED_AT=$install_started_at\" >> \"$GITHUB_ENV\"\nbun install --frozen-lockfile\ninstall_finished_at=\"$(date +%s)\"\necho \"BEEP_SETUP_INSTALL_SECONDS=$((install_finished_at - install_started_at))\" >> \"$GITHUB_ENV\"\n"
+            },
+            {
+              "name": "Save Bun dependencies cache",
+              "if": "${{ inputs.cache-write == 'true' && steps.baked.outputs.hit != 'true' && steps.bun-cache-restore.outputs.cache-hit != 'true' }}",
+              "continue-on-error": true,
+              "uses": "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "with": {
+                "path": "~/.bun/install/cache",
+                "key": "bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ hashFiles('bun.lock') }}"
+              }
+            },
+            {
+              "name": "Save Turbo cache (local fallback only)",
+              "if": "${{ inputs.cache-write == 'true' && inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') && steps.turbo-cache-restore.outputs.cache-hit != 'true' }}",
+              "continue-on-error": true,
+              "uses": "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "with": {
+                "path": ".turbo/cache",
+                "key": "turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}"
+              }
+            },
+            {
+              "name": "Report setup timing and cache metadata",
+              "if": "${{ always() }}",
+              "shell": "bash",
+              "run": "set -euo pipefail\n\nfinished_at=\"$(date +%s)\"\nsetup_seconds=\"n/a\"\nif [[ \"${BEEP_SETUP_STARTED_AT:-}\" =~ ^[0-9]+$ ]]; then\n  setup_seconds=\"$((finished_at - BEEP_SETUP_STARTED_AT))\"\nfi\n\ninstall_seconds=\"${BEEP_SETUP_INSTALL_SECONDS:-n/a}\"\nbun_cache_hit=\"${{ steps.bun-cache-restore.outputs.cache-hit }}\"\nturbo_cache_hit=\"${{ steps.turbo-cache-restore.outputs.cache-hit }}\"\nbun_cache_hit=\"${bun_cache_hit:-unknown}\"\nturbo_cache_hit=\"${turbo_cache_hit:-skipped}\"\nbun_cache_size=\"$(du -sh ~/.bun/install/cache 2>/dev/null | awk '{ print $1 }' || true)\"\nturbo_cache_size=\"$(du -sh .turbo/cache 2>/dev/null | awk '{ print $1 }' || true)\"\nbun_cache_size=\"${bun_cache_size:-missing}\"\nturbo_cache_size=\"${turbo_cache_size:-missing}\"\nnode_version=\"not requested\"\nif command -v node >/dev/null 2>&1; then\n  node_version=\"$(node --version)\"\nfi\n\n{\n  echo \"### Setup monorepo CI timing\"\n  echo\n  echo \"| Metric | Value |\"\n  echo \"| --- | --- |\"\n  echo \"| Setup total seconds | \\`${setup_seconds}\\` |\"\n  echo \"| Baked fast path | \\`${{ steps.baked.outputs.hit }}\\` |\"\n  echo \"| Install seconds | \\`${install_seconds}\\` |\"\n  echo \"| Bun version | \\`$(bun --version)\\` |\"\n  echo \"| Node version | \\`${node_version}\\` |\"\n  echo \"| Bun cache key | \\`bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}\\` |\"\n  echo \"| Bun cache hit | \\`${bun_cache_hit}\\` |\"\n  echo \"| Bun cache size | \\`${bun_cache_size}\\` |\"\n  echo \"| Turbo cache enabled | \\`${{ inputs.cache-turbo }}\\` |\"\n  echo \"| Turbo cache key | \\`turbo-${{ runner.os }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}\\` |\"\n  echo \"| Turbo cache hit | \\`${turbo_cache_hit}\\` |\"\n  echo \"| Turbo cache size | \\`${turbo_cache_size}\\` |\"\n  echo \"| Cache write enabled | \\`${{ inputs.cache-write }}\\` |\"\n} >> \"${GITHUB_STEP_SUMMARY:-/dev/stdout}\"\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": ".github/workflows/cache-warm.yml",
+      "sha256": "f64bf8a2ef78064991aaf2050eeebe7b9033392814121691b4cfd05707d45563",
+      "document": {
+        "name": "Cache Warm",
+        "on": {
+          "workflow_dispatch": null,
+          "schedule": [{ "cron": "17 6 1,15 * *" }]
+        },
+        "concurrency": {
+          "group": "cache-warm-main",
+          "cancel-in-progress": false
+        },
+        "permissions": { "contents": "read" },
+        "jobs": {
+          "warm": {
+            "name": "Warm Turbo cache",
+            "runs-on": "beep-ec2-heavy",
+            "timeout-minutes": 60,
+            "environment": "turbo-cache-write",
+            "env": {
+              "TURBO_API": "${{ vars.TURBO_API }}",
+              "TURBO_TOKEN": "${{ secrets.TURBO_TOKEN }}",
+              "TURBO_TEAM": "${{ vars.TURBO_TEAM }}",
+              "TURBO_CACHE": "local:rw,remote:rw"
+            },
+            "steps": [
+              {
+                "name": "Checkout exact main",
+                "uses": "actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false,
+                  "ref": "main"
+                }
+              },
+              {
+                "name": "Setup pinned toolchain",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "false", "cache-write": "false" }
+              },
+              {
+                "name": "Warm cache and write receipt",
+                "run": "bun run beep cache warm --output .beep/cache-warm.json"
+              },
+              {
+                "name": "Upload warm receipt and Turbo summaries",
+                "if": "always()",
+                "uses": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+                "with": {
+                  "name": "cache-warm-${{ github.run_id }}",
+                  "path": ".beep/cache-warm.json\n.turbo/runs/*.json\n",
+                  "if-no-files-found": "warn",
+                  "retention-days": 30
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "sha256": "dc82e98e8b70519c4f6933f9ce1a1277fdd55bd3e22a3155f4b12dcc6c4a3bf3",
+      "document": {
+        "name": "Check",
+        "on": {
+          "pull_request": { "branches": ["main"] },
+          "push": { "branches": ["main"] }
+        },
+        "concurrency": {
+          "group": "${{ github.workflow }}-${{ github.ref }}",
+          "cancel-in-progress": "${{ github.event_name == 'pull_request' }}"
+        },
+        "permissions": { "contents": "read" },
+        "jobs": {
+          "pr-size": {
+            "name": "PR Size Label",
+            "if": "github.event_name == 'pull_request'",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 4,
+            "permissions": { "pull-requests": "write" },
+            "steps": [
+              {
+                "name": "Label PR by size",
+                "uses": "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd",
+                "with": {
+                  "script": "const files = await github.paginate(github.rest.pulls.listFiles, {\n  owner: context.repo.owner,\n  repo: context.repo.repo,\n  pull_number: context.issue.number,\n  per_page: 100\n});\nconst count = files.length;\nlet label = 'size/S';\nif (count > 50) label = 'size/XL';\nelse if (count > 20) label = 'size/L';\nelse if (count > 10) label = 'size/M';\nawait github.rest.issues.addLabels({\n  owner: context.repo.owner,\n  repo: context.repo.repo,\n  issue_number: context.issue.number,\n  labels: [label]\n});\nawait core.summary.addRaw(`Changed files: ${count}; applied label: ${label}`).write();\n"
+                }
+              }
+            ]
+          },
+          "heavy": {
+            "name": "Heavy",
+            "permissions": { "contents": "read" },
+            "uses": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+            "secrets": "inherit"
+          },
+          "verify": {
+            "name": "${{ matrix.name }}",
+            "runs-on": "${{ matrix.runner }}",
+            "timeout-minutes": "${{ matrix.timeout_minutes }}",
+            "environment": "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}",
+            "permissions": { "contents": "read" },
+            "strategy": {
+              "fail-fast": false,
+              "matrix": {
+                "include": [
+                  {
+                    "id": "repo-sanity",
+                    "name": "Repo Sanity",
+                    "runner": "ubuntu-24.04",
+                    "timeout_minutes": 30,
+                    "uses_turbo": "false",
+                    "install_typos": "false"
+                  },
+                  {
+                    "id": "ecosystem",
+                    "name": "Ecosystem Contracts",
+                    "runner": "ubuntu-24.04",
+                    "timeout_minutes": 30,
+                    "uses_turbo": "false",
+                    "install_typos": "false"
+                  },
+                  {
+                    "id": "codegen",
+                    "name": "Codegen Drift",
+                    "runner": "ubuntu-24.04",
+                    "timeout_minutes": 30,
+                    "uses_turbo": "false",
+                    "install_typos": "false"
+                  },
+                  {
+                    "id": "labs",
+                    "name": "Labs",
+                    "runner": "ubuntu-24.04",
+                    "timeout_minutes": 40,
+                    "uses_turbo": "true",
+                    "install_typos": "true"
+                  }
+                ]
+              }
+            },
+            "env": {
+              "TURBO_API": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}",
+              "TURBO_TOKEN": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}",
+              "TURBO_TEAM": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}",
+              "TURBO_CACHE": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}",
+              "TURBO_LOG_ORDER": "stream",
+              "DATABASE_URL": "${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}",
+              "DATABASE_URL_UNPOOLED": "${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}",
+              "EMAIL_RESEND_API_KEY": "${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}",
+              "AUTH_SECRET": "${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}",
+              "BETTER_AUTH_SECRET": "${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}",
+              "BETTER_AUTH_URL": "${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}",
+              "SECURITY_TRUSTED_ORIGINS": "${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}",
+              "LIVEBLOCKS_SECRET_KEY": "${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Fetch pull request base",
+                "if": "github.event_name == 'pull_request'",
+                "shell": "bash",
+                "run": "git fetch --quiet --no-tags origin \"+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n"
+              },
+              {
+                "name": "Determine lane execution",
+                "id": "lane-gate",
+                "shell": "bash",
+                "run": "set -euo pipefail\nshould_run=true\neval \"$(scripts/ci-change-profile.sh \"origin/${GITHUB_BASE_REF:-main}\")\"\nif [[ \"$goals_only\" == \"true\" ]]; then\n  should_run=false\nfi\nif [[ \"${{ matrix.id }}\" == \"codegen\" && \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  base_ref=\"origin/${GITHUB_BASE_REF:-main}\"\n  if ! git rev-parse --verify \"$base_ref\" >/dev/null 2>&1; then\n    git fetch --quiet --no-tags --depth=100 origin \"${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n  fi\n  changed_files=\"$(git diff --name-only \"${base_ref}...HEAD\")\"\n  # Root dependency resolution changes the resolved generator or formatter, so these files are drift inputs.\n  if ! grep -Eq '(^packages/drivers/(acp|ecfr|govinfo|runpod)/(openapi[^/]*\\.json|spec/|scripts/|src/_generated/)|^packages/tooling/library/codegen-kit/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\\.ts$|^packages/_internal/db-admin/drizzle/|^apps/professional-desktop/(package\\.json|scripts/sync-migration-bundle\\.ts|src/runtime/Migrations\\.gen\\.ts)$|^(package\\.json|bun\\.lock)$)' <<< \"$changed_files\"; then\n    should_run=false\n  fi\nfi\n\n# lab-apps-lifecycle P2 (ratified row 10): PR runs of the labs lane\n# only fire for direct labs-path or shared-toolchain changes; push\n# events always run the full labs set.\nif [[ \"${{ matrix.id }}\" == \"labs\" && \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  base_ref=\"origin/${GITHUB_BASE_REF:-main}\"\n  if ! git rev-parse --verify \"$base_ref\" >/dev/null 2>&1; then\n    git fetch --quiet --no-tags --depth=100 origin \"${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n  fi\n  changed_files=\"$(git diff --name-only \"${base_ref}...HEAD\")\"\n  if ! grep -Eq '(^apps/labs/|^\\.github/workflows/check\\.yml$|^(bun\\.lock|package\\.json|turbo\\.json)$)' <<< \"$changed_files\"; then\n    should_run=false\n  fi\nfi\n\necho \"should_run=$should_run\" >> \"$GITHUB_OUTPUT\"\n"
+              },
+              {
+                "name": "Free runner disk for verification lanes",
+                "if": "steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-')",
+                "shell": "bash",
+                "run": "set -euo pipefail\necho \"Disk before cleanup:\"\ndf -h /\nsudo rm -rf \\\n  /opt/ghc \\\n  /usr/local/.ghcup \\\n  /usr/local/lib/android \\\n  /usr/local/share/boost \\\n  /usr/share/dotnet\nsudo apt-get clean\ndocker system prune --all --force --volumes || true\necho \"Disk after cleanup:\"\ndf -h /\n"
+              },
+              {
+                "name": "Setup monorepo CI",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": {
+                  "cache-turbo": "${{ matrix.uses_turbo }}",
+                  "cache-write": "false",
+                  "turbo-cache-key-suffix": "-${{ matrix.id }}"
+                }
+              },
+              {
+                "name": "Install typos",
+                "if": "steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'",
+                "uses": "taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c",
+                "with": { "tool": "typos-cli@1.44.0" }
+              },
+              {
+                "name": "Verify regenerate merge-driver bootstrap",
+                "if": "matrix.id == 'codegen' && steps.lane-gate.outputs.should_run == 'true'",
+                "shell": "bash",
+                "run": "set -euo pipefail\nbash scripts/setup-regenerate-merge-driver.sh \"$PWD\"\nconfigured=\"$(git config --local --get merge.regenerate.driver)\"\n[[ \"$configured\" == *\"scripts/regenerate-merge-driver.sh\"* ]]\n[[ \"$(git check-attr merge -- tsconfig.json)\" == \"tsconfig.json: merge: regenerate\" ]]\n"
+              },
+              {
+                "name": "Run verification lane",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "run": "set -euo pipefail\n# Lane bodies live in the beep CLI (one-round-loop P0 inversion;\n# same-SHA parity proof recorded in\n# goals/one-round-loop/history/p0-parity-evidence.md). This case\n# block carries only GitHub-context orchestration: the\n# event-dependent shape flags each lane receives.\n#\n# Orphaned lane grandchildren (stuck bun wrappers, daemon sockets)\n# inherit this step's stdio pipes, and the runner does not end a\n# step until those pipes close — so a lane can print success, exit,\n# and still wedge the job for its full timeout (ship-velocity SPEC\n# A7; proven on Docgen run 31797064763). Run each lane in its own\n# session and reap the entire process group once the lane process\n# finishes, success and failure alike.\nrun_lane() {\n  setsid bun run beep \"$@\" < /dev/null &\n  local pgid=$!\n  local status=0\n  wait \"$pgid\" || status=$?\n  kill -TERM -- \"-$pgid\" 2>/dev/null || true\n  sleep 2\n  kill -KILL -- \"-$pgid\" 2>/dev/null || true\n  return \"$status\"\n}\n\nshape_args=()\n\nif [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  shape_args+=(--affected --base \"origin/${GITHUB_BASE_REF:-main}\")\nfi\n\nshape_args+=(--summarize)\n\ncase \"${{ matrix.id }}\" in\n  check|test-integration|coverage)\n    run_lane ci lane \"${{ matrix.id }}\" \"${shape_args[@]}\"\n    ;;\n  lint-policy|codegen|ecosystem)\n    run_lane ci lane \"${{ matrix.id }}\"\n    ;;\n  repo-sanity)\n    if [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n      run_lane ci lane repo-sanity --changeset-status\n    else\n      run_lane ci lane repo-sanity\n    fi\n    ;;\n  labs)\n    # No --affected: the lane's positive labs filter must not union\n    # with an affected selector (lab-apps-lifecycle P2, row 10).\n    run_lane ci lane labs --summarize\n    ;;\nesac\n"
+              },
+              {
+                "name": "Append Turbo summary",
+                "if": "matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()",
+                "run": "if [[ \"${{ matrix.id }}\" == \"coverage\" ]]; then\n  bun run beep ci append-turbo-summary --all\nelse\n  bun run beep ci append-turbo-summary\nfi\n"
+              },
+              {
+                "name": "Save post-lane Turbo fallback",
+                "if": "github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()",
+                "continue-on-error": true,
+                "uses": "actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830",
+                "with": {
+                  "path": ".turbo/cache",
+                  "key": "turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.id }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}"
+                }
+              },
+              {
+                "name": "Skip lane",
+                "if": "steps.lane-gate.outputs.should_run != 'true'",
+                "run": "echo \"Skipping ${{ matrix.name }} for this change set.\""
+              }
+            ]
+          },
+          "lint-shard": {
+            "name": "Lint (${{ matrix.partition }})",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 60,
+            "environment": "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}",
+            "permissions": { "contents": "read" },
+            "strategy": {
+              "fail-fast": false,
+              "matrix": { "partition": ["lint-a", "lint-b"] }
+            },
+            "env": {
+              "TURBO_API": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}",
+              "TURBO_TOKEN": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}",
+              "TURBO_TEAM": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}",
+              "TURBO_CACHE": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}",
+              "TURBO_LOG_ORDER": "stream",
+              "DATABASE_URL": "${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}",
+              "DATABASE_URL_UNPOOLED": "${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}",
+              "EMAIL_RESEND_API_KEY": "${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}",
+              "AUTH_SECRET": "${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}",
+              "BETTER_AUTH_SECRET": "${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}",
+              "BETTER_AUTH_URL": "${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}",
+              "SECURITY_TRUSTED_ORIGINS": "${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}",
+              "LIVEBLOCKS_SECRET_KEY": "${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Fetch pull request base",
+                "if": "github.event_name == 'pull_request'",
+                "shell": "bash",
+                "run": "git fetch --quiet --no-tags origin \"+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n"
+              },
+              {
+                "name": "Determine lane execution",
+                "id": "lane-gate",
+                "shell": "bash",
+                "run": "set -euo pipefail\nshould_run=true\neval \"$(scripts/ci-change-profile.sh \"origin/${GITHUB_BASE_REF:-main}\")\"\nif [[ \"$goals_only\" == \"true\" ]]; then\n  should_run=false\nfi\necho \"should_run=$should_run\" >> \"$GITHUB_OUTPUT\"\n"
+              },
+              {
+                "name": "Free runner disk for Lint shard",
+                "if": "steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-')",
+                "shell": "bash",
+                "run": "set -euo pipefail\navailable_gib=\"$(df --output=avail -B1G / | tail -n 1 | tr -d '[:space:]')\"\necho \"Root free space before cleanup: ${available_gib} GiB\"\nif (( available_gib >= 64 )); then\n  echo \"At least 64 GiB is available; skipping runner image cleanup.\"\n  exit 0\nfi\necho \"Disk before cleanup:\"\ndf -h /\nsudo rm -rf \\\n  /opt/ghc \\\n  /usr/local/.ghcup \\\n  /usr/local/lib/android \\\n  /usr/local/share/boost \\\n  /usr/share/dotnet\nsudo apt-get clean\ndocker system prune --all --force --volumes || true\necho \"Disk after cleanup:\"\ndf -h /\n"
+              },
+              {
+                "name": "Setup monorepo CI",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": {
+                  "cache-turbo": "true",
+                  "cache-write": "false",
+                  "turbo-cache-key-suffix": "-${{ matrix.partition }}"
+                }
+              },
+              {
+                "name": "Install typos",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "uses": "taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c",
+                "with": { "tool": "typos-cli@1.44.0" }
+              },
+              {
+                "name": "Run Lint shard",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "run": "set -euo pipefail\nrun_lane() {\n  setsid bun run beep \"$@\" < /dev/null &\n  local pgid=$!\n  local status=0\n  wait \"$pgid\" || status=$?\n  kill -TERM -- \"-$pgid\" 2>/dev/null || true\n  sleep 2\n  kill -KILL -- \"-$pgid\" 2>/dev/null || true\n  return \"$status\"\n}\n\nshape_args=()\nif [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  shape_args+=(--affected --base \"origin/${GITHUB_BASE_REF:-main}\")\nfi\nshape_args+=(--summarize)\nrun_lane ci lane lint --partition \"${{ matrix.partition }}\" \"${shape_args[@]}\"\n"
+              },
+              {
+                "name": "Append Turbo summary",
+                "if": "steps.lane-gate.outputs.should_run == 'true' && always()",
+                "run": "bun run beep ci append-turbo-summary"
+              },
+              {
+                "name": "Save post-lane Turbo fallback",
+                "if": "github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()",
+                "continue-on-error": true,
+                "uses": "actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830",
+                "with": {
+                  "path": ".turbo/cache",
+                  "key": "turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.partition }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}"
+                }
+              },
+              {
+                "name": "Skip lane",
+                "if": "steps.lane-gate.outputs.should_run != 'true'",
+                "run": "echo \"Skipping Lint (${{ matrix.partition }}) for this change set.\""
+              }
+            ]
+          },
+          "lint": {
+            "name": "Lint",
+            "needs": ["lint-shard"],
+            "if": "${{ always() }}",
+            "runs-on": "ubuntu-24.04",
+            "steps": [
+              {
+                "name": "Require every Lint shard",
+                "shell": "bash",
+                "run": "if [[ \"${{ needs.lint-shard.result }}\" != \"success\" ]]; then\n  echo \"Lint shards finished with result: ${{ needs.lint-shard.result }}\"\n  exit 1\nfi\n"
+              }
+            ]
+          },
+          "test-unit-shard": {
+            "name": "Test Unit (${{ matrix.partition }})",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 60,
+            "environment": "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}",
+            "permissions": { "contents": "read" },
+            "strategy": {
+              "fail-fast": false,
+              "matrix": { "partition": ["repo-cli", "unit-a", "unit-b"] }
+            },
+            "env": {
+              "TURBO_API": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}",
+              "TURBO_TOKEN": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}",
+              "TURBO_TEAM": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}",
+              "TURBO_CACHE": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}",
+              "TURBO_LOG_ORDER": "stream",
+              "DATABASE_URL": "${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}",
+              "DATABASE_URL_UNPOOLED": "${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}",
+              "EMAIL_RESEND_API_KEY": "${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}",
+              "AUTH_SECRET": "${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}",
+              "BETTER_AUTH_SECRET": "${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}",
+              "BETTER_AUTH_URL": "${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}",
+              "SECURITY_TRUSTED_ORIGINS": "${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}",
+              "LIVEBLOCKS_SECRET_KEY": "${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Fetch pull request base",
+                "if": "github.event_name == 'pull_request'",
+                "shell": "bash",
+                "run": "git fetch --quiet --no-tags origin \"+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n"
+              },
+              {
+                "name": "Determine lane execution",
+                "id": "lane-gate",
+                "shell": "bash",
+                "run": "set -euo pipefail\nshould_run=true\neval \"$(scripts/ci-change-profile.sh \"origin/${GITHUB_BASE_REF:-main}\")\"\nif [[ \"$goals_only\" == \"true\" ]]; then\n  should_run=false\nfi\necho \"should_run=$should_run\" >> \"$GITHUB_OUTPUT\"\n"
+              },
+              {
+                "name": "Free runner disk for Test Unit shard",
+                "if": "steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-')",
+                "shell": "bash",
+                "run": "set -euo pipefail\navailable_gib=\"$(df --output=avail -B1G / | tail -n 1 | tr -d '[:space:]')\"\necho \"Root free space before cleanup: ${available_gib} GiB\"\nif (( available_gib >= 64 )); then\n  echo \"At least 64 GiB is available; skipping runner image cleanup.\"\n  exit 0\nfi\necho \"Disk before cleanup:\"\ndf -h /\nsudo rm -rf \\\n  /opt/ghc \\\n  /usr/local/.ghcup \\\n  /usr/local/lib/android \\\n  /usr/local/share/boost \\\n  /usr/share/dotnet\nsudo apt-get clean\ndocker system prune --all --force --volumes || true\necho \"Disk after cleanup:\"\ndf -h /\n"
+              },
+              {
+                "name": "Setup monorepo CI",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": {
+                  "cache-turbo": "true",
+                  "cache-write": "false",
+                  "turbo-cache-key-suffix": "-${{ matrix.partition }}"
+                }
+              },
+              {
+                "name": "Run Test Unit shard",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "run": "set -euo pipefail\nrun_lane() {\n  setsid bun run beep \"$@\" < /dev/null &\n  local pgid=$!\n  local status=0\n  wait \"$pgid\" || status=$?\n  kill -TERM -- \"-$pgid\" 2>/dev/null || true\n  sleep 2\n  kill -KILL -- \"-$pgid\" 2>/dev/null || true\n  return \"$status\"\n}\n\nshape_args=()\nif [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  shape_args+=(--affected --base \"origin/${GITHUB_BASE_REF:-main}\")\nfi\nshape_args+=(--summarize)\nrun_lane ci lane test-unit --partition \"${{ matrix.partition }}\" \"${shape_args[@]}\"\n"
+              },
+              {
+                "name": "Append Turbo summary",
+                "if": "steps.lane-gate.outputs.should_run == 'true' && always()",
+                "run": "bun run beep ci append-turbo-summary"
+              },
+              {
+                "name": "Save post-lane Turbo fallback",
+                "if": "github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()",
+                "continue-on-error": true,
+                "uses": "actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830",
+                "with": {
+                  "path": ".turbo/cache",
+                  "key": "turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.partition }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}"
+                }
+              },
+              {
+                "name": "Skip lane",
+                "if": "steps.lane-gate.outputs.should_run != 'true'",
+                "run": "echo \"Skipping Test Unit (${{ matrix.partition }}) for this change set.\""
+              }
+            ]
+          },
+          "test-unit": {
+            "name": "Test Unit",
+            "needs": ["test-unit-shard"],
+            "if": "${{ always() }}",
+            "runs-on": "ubuntu-24.04",
+            "steps": [
+              {
+                "name": "Require every Test Unit shard",
+                "shell": "bash",
+                "run": "if [[ \"${{ needs.test-unit-shard.result }}\" != \"success\" ]]; then\n  echo \"Test Unit shards finished with result: ${{ needs.test-unit-shard.result }}\"\n  exit 1\nfi\n"
+              }
+            ]
+          },
+          "professional-desktop-ipc-stdio": {
+            "name": "Professional Desktop IPC Stdio",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 40,
+            "permissions": { "contents": "read" },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": { "fetch-depth": 100, "persist-credentials": false }
+              },
+              {
+                "name": "Fetch pull request base",
+                "if": "github.event_name == 'pull_request'",
+                "shell": "bash",
+                "run": "git fetch --quiet --no-tags --depth=100 origin \"${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n"
+              },
+              {
+                "name": "Determine lane execution",
+                "id": "lane-gate",
+                "shell": "bash",
+                "run": "set -euo pipefail\nshould_run=true\n\nif [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  base_ref=\"origin/${GITHUB_BASE_REF:-main}\"\n  changed_files=\"$(git diff --name-only \"${base_ref}...HEAD\")\"\n\n  if [[ -z \"$changed_files\" ]]; then\n    should_run=false\n  elif ! printf \"%s\\n\" \"$changed_files\" | grep -Eq '(^apps/professional-desktop/|^packages/(foundation/|(agents|workspace|shared|epistemic)(/|-)|drivers/(pglite|postgres)/)|^\\.github/(actions/setup-monorepo-ci/|workflows/check\\.yml$)|^(bun\\.lock|package\\.json|turbo\\.json)$)'; then\n    should_run=false\n  fi\nfi\n\necho \"should_run=$should_run\" >> \"$GITHUB_OUTPUT\"\n"
+              },
+              {
+                "name": "Setup Rust toolchain",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "uses": "actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659",
+                "with": {
+                  "toolchain": "stable",
+                  "cache": true,
+                  "cache-workspaces": "apps/professional-desktop/src-tauri"
+                }
+              },
+              {
+                "name": "Setup monorepo CI",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "false", "cache-write": "false" }
+              },
+              {
+                "name": "Run desktop IPC stdio proof",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "run": "bun run beep ci lane desktop-ipc"
+              },
+              {
+                "name": "Skip lane",
+                "if": "steps.lane-gate.outputs.should_run != 'true'",
+                "run": "echo \"Skipping desktop IPC stdio proof for this change set.\""
+              }
+            ]
+          },
+          "property-laws": {
+            "name": "Property Laws",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 60,
+            "environment": "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}",
+            "permissions": { "contents": "read" },
+            "env": {
+              "TURBO_API": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}",
+              "TURBO_TOKEN": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}",
+              "TURBO_TEAM": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}",
+              "TURBO_CACHE": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Fetch pull request base",
+                "if": "github.event_name == 'pull_request'",
+                "shell": "bash",
+                "run": "git fetch --quiet --no-tags origin \"+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n"
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "true", "cache-write": "false" }
+              },
+              {
+                "name": "Run property laws lane",
+                "shell": "bash",
+                "run": "set -euo pipefail\nshape_args=()\n\nif [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  shape_args+=(--affected --base \"origin/${GITHUB_BASE_REF:-main}\")\nfi\n\nshape_args+=(--summarize)\n\nbun run beep ci lane property \"${shape_args[@]}\"\n"
+              },
+              {
+                "name": "Append Turbo summary",
+                "if": "always()",
+                "run": "bun run beep ci append-turbo-summary"
+              }
+            ]
+          },
+          "fallow-advisory": {
+            "name": "Fallow Advisory Envelopes",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 60,
+            "environment": "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}",
+            "permissions": { "contents": "read" },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": { "fetch-depth": 100, "persist-credentials": false }
+              },
+              {
+                "name": "Determine audit base",
+                "id": "base",
+                "shell": "bash",
+                "env": { "BEFORE_SHA": "${{ github.event.before }}" },
+                "run": "set -euo pipefail\n\nfetch_status=0\nif [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  base_ref=\"origin/${GITHUB_BASE_REF:-main}\"\n  git fetch --quiet --no-tags --depth=100 origin \"${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\" || fetch_status=$?\nelif [[ -n \"${BEFORE_SHA:-}\" && ! \"$BEFORE_SHA\" =~ ^0+$ ]]; then\n  base_ref=\"$BEFORE_SHA\"\n  git rev-parse --verify \"${base_ref}^{commit}\" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=100 origin \"$base_ref\" || fetch_status=$?\nelse\n  base_ref=\"HEAD~1\"\nfi\n\necho \"base_ref=$base_ref\" >> \"$GITHUB_OUTPUT\"\necho \"base_fetch_status=$fetch_status\" >> \"$GITHUB_OUTPUT\"\n"
+              },
+              {
+                "name": "Free runner disk for Fallow",
+                "if": "runner.os == 'Linux' && !startsWith(runner.name, 'beep-')",
+                "shell": "bash",
+                "run": "set -euo pipefail\n# This job only needs the monorepo toolchain plus Fallow. The shared\n# setup step can exhaust the default runner image when cleanup is\n# skipped, so clear the large preinstalled stacks before installing.\necho \"Disk before cleanup:\"\ndf -h /\nsudo rm -rf \\\n  /opt/ghc \\\n  /usr/local/.ghcup \\\n  /usr/local/lib/android \\\n  /usr/local/share/boost \\\n  /usr/share/dotnet\nsudo apt-get clean\ndocker system prune --all --force --volumes || true\necho \"Disk after cleanup:\"\ndf -h /\n"
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "false", "cache-write": "false" }
+              },
+              {
+                "name": "Run Fallow envelopes",
+                "id": "fallow",
+                "shell": "bash",
+                "env": {
+                  "TURBO_API": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}",
+                  "TURBO_TOKEN": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}",
+                  "TURBO_TEAM": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}",
+                  "TURBO_CACHE": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}"
+                },
+                "run": "# Lane body (blocking audit/dead-code, advisory sweep, status.md\n# accounting, envelope existence) lives in the beep CLI; envelope\n# validation, the step summary, and artifact upload stay below.\nbun run beep ci lane fallow --base \"${{ steps.base.outputs.base_ref }}\"\n"
+              },
+              {
+                "name": "Validate Fallow envelopes",
+                "if": "always()",
+                "shell": "bash",
+                "run": "set -euo pipefail\n\nfor lane in audit dead-code; do\n  test -s \".beep/fallow/${lane}.check.json\"\ndone\n\nfor lane in health boundaries flags security fix-preview; do\n  bun run beep quality fallow envelope-check \".beep/fallow/${lane}.advisory.json\" \\\n    --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \\\n    --expect-subcommand \"$lane\" \\\n    --expect-report-path \".beep/fallow/${lane}.advisory.json\" \\\n    --require-raw-output\ndone\n\nfor lane in audit dead-code; do\n  bun run beep quality fallow envelope-check \".beep/fallow/${lane}.check.json\" \\\n    --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \\\n    --expect-subcommand \"$lane\" \\\n    --expect-report-path \".beep/fallow/${lane}.check.json\" \\\n    --require-raw-output\ndone\n"
+              },
+              {
+                "name": "Append Fallow summary",
+                "if": "always()",
+                "shell": "bash",
+                "run": "{\n  echo \"### Fallow Advisory Envelopes\"\n  echo\n  echo \"- base ref: \\`${{ steps.base.outputs.base_ref }}\\`\"\n  echo \"- base fetch status: \\`${{ steps.base.outputs.base_fetch_status }}\\`\"\n  echo\n  cat .beep/fallow/status.md 2>/dev/null || echo \"- lane status: unavailable\"\n  echo\n  jq -r '\"- audit envelope status: `\\(.status // \"unknown\")`\\n- audit tool exit status: `\\(.exitStatus // \"unknown\")`\\n- audit finding count: `\\(.report.findingCount // \"unknown\")`\\n- audit introduced findings: `\\(.findingAttributionSummary.introduced // \"unknown\")`\\n- audit inherited-adjacent findings: `\\(.findingAttributionSummary.inheritedAdjacent // \"unknown\")`\"' .beep/fallow/audit.check.json 2>/dev/null || echo \"- audit summary: unavailable\"\n} >> \"$GITHUB_STEP_SUMMARY\"\n"
+              },
+              {
+                "name": "Upload Fallow envelopes",
+                "if": "always()",
+                "uses": "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                "with": {
+                  "name": "fallow-envelopes-${{ github.event_name }}-${{ github.run_attempt }}",
+                  "path": ".beep/fallow/**",
+                  "if-no-files-found": "error"
+                }
+              }
+            ]
+          },
+          "knip": {
+            "name": "Knip",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 20,
+            "permissions": { "contents": "read" },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": {
+                  "cache-turbo": "false",
+                  "cache-write": "false",
+                  "use-node": "false"
+                }
+              },
+              {
+                "name": "Run Knip regression gate",
+                "run": "bun run beep ci lane knip"
+              }
+            ]
+          },
+          "jsdoc-ratchet": {
+            "name": "JSDoc Ratchet",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 30,
+            "permissions": { "contents": "read" },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": {
+                  "cache-turbo": "false",
+                  "cache-write": "false",
+                  "use-node": "false"
+                }
+              },
+              {
+                "name": "Run JSDoc inventory ratchet",
+                "shell": "bash",
+                "run": "set -euo pipefail\nSECONDS=0\nbun run beep ci lane jsdoc-ratchet\ntotal_seconds=\"$SECONDS\"\n{\n  echo \"### JSDoc Ratchet\"\n  echo\n  echo \"- command: \\`bun run beep ci lane jsdoc-ratchet\\` (inventory + ratchet)\"\n  echo \"- total wall time: \\`${total_seconds}s\\`\"\n} >> \"$GITHUB_STEP_SUMMARY\"\n"
+              }
+            ]
+          },
+          "build": {
+            "name": "Build",
+            "if": "github.event_name == 'push'",
+            "runs-on": "beep-ec2-heavy",
+            "timeout-minutes": 40,
+            "environment": "turbo-cache-write",
+            "permissions": { "contents": "read" },
+            "env": {
+              "TURBO_API": "${{ vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}",
+              "TURBO_TOKEN": "${{ vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || '' }}",
+              "TURBO_TEAM": "${{ vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}",
+              "TURBO_CACHE": "${{ vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}",
+              "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
+              "DATABASE_URL_UNPOOLED": "${{ secrets.DATABASE_URL_UNPOOLED }}",
+              "EMAIL_RESEND_API_KEY": "${{ secrets.EMAIL_RESEND_API_KEY }}",
+              "AUTH_SECRET": "${{ secrets.AUTH_SECRET }}",
+              "BETTER_AUTH_SECRET": "${{ secrets.BETTER_AUTH_SECRET }}",
+              "BETTER_AUTH_URL": "${{ secrets.BETTER_AUTH_URL }}",
+              "SECURITY_TRUSTED_ORIGINS": "${{ secrets.SECURITY_TRUSTED_ORIGINS }}",
+              "LIVEBLOCKS_SECRET_KEY": "${{ secrets.LIVEBLOCKS_SECRET_KEY }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": true, "cache-write": "true" }
+              },
+              {
+                "name": "Run build checks",
+                "run": "bun run beep ci lane build --summarize"
+              },
+              {
+                "name": "Append Turbo summary",
+                "if": "always()",
+                "run": "bun run beep ci append-turbo-summary"
+              }
+            ]
+          },
+          "commitlint": {
+            "name": "Commitlint",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 20,
+            "permissions": { "contents": "read" },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Determine commit range",
+                "id": "range",
+                "shell": "bash",
+                "env": {
+                  "BEFORE_SHA": "${{ github.event.before }}",
+                  "PR_BASE_REF": "${{ github.event.pull_request.base.ref }}",
+                  "PR_HEAD_SHA": "${{ github.event.pull_request.head.sha }}"
+                },
+                "run": "set -euo pipefail\n\nmode=range\nfrom_ref=\"\"\nto_ref=\"HEAD\"\n\nif [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  # Lint only the pull request's own commits. The checkout is the merge\n  # ref and `pull_request.base.sha` is frozen when the PR opens, so\n  # base.sha..HEAD also linted every commit the base branch gained\n  # since — including the bodies GitHub generates for squash merges.\n  to_ref=\"${PR_HEAD_SHA:?missing pull request head sha}\"\n  base_branch=\"${PR_BASE_REF:-main}\"\n  git fetch --quiet --no-tags origin \"+refs/heads/${base_branch}:refs/remotes/origin/${base_branch}\"\n  git rev-parse --verify \"${to_ref}^{commit}\" >/dev/null 2>&1 || git fetch --quiet --no-tags origin \"$to_ref\"\n  from_ref=\"$(git merge-base \"refs/remotes/origin/${base_branch}\" \"$to_ref\")\"\nelif [[ -n \"${BEFORE_SHA:-}\" && ! \"$BEFORE_SHA\" =~ ^0+$ ]]; then\n  from_ref=\"$BEFORE_SHA\"\n  to_ref=\"${GITHUB_SHA:-HEAD}\"\n  git rev-parse --verify \"${from_ref}^{commit}\" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=1 origin \"$from_ref\"\n  git rev-parse --verify \"${to_ref}^{commit}\" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=1 origin \"$to_ref\"\nelse\n  mode=last\nfi\n\necho \"mode=$mode\" >> \"$GITHUB_OUTPUT\"\necho \"from_ref=$from_ref\" >> \"$GITHUB_OUTPUT\"\necho \"to_ref=$to_ref\" >> \"$GITHUB_OUTPUT\"\n"
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": {
+                  "cache-turbo": "false",
+                  "cache-write": "false",
+                  "use-node": "false"
+                }
+              },
+              {
+                "name": "Run commitlint",
+                "shell": "bash",
+                "run": "set -euo pipefail\n\nif [[ \"${{ steps.range.outputs.mode }}\" == \"range\" ]]; then\n  bun run beep ci lane commitlint --from \"${{ steps.range.outputs.from_ref }}\" --to \"${{ steps.range.outputs.to_ref }}\"\nelse\n  bun run beep ci lane commitlint --last\nfi\n"
+              }
+            ]
+          },
+          "secrets": {
+            "name": "Secret Scanning",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 30,
+            "permissions": { "contents": "read" },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": { "fetch-depth": 0, "persist-credentials": false }
+              },
+              {
+                "name": "Fetch pull request base",
+                "if": "github.event_name == 'pull_request'",
+                "shell": "bash",
+                "run": "git fetch --quiet --no-tags origin \"${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n"
+              },
+              {
+                "name": "Gitleaks",
+                "shell": "bash",
+                "env": { "BEFORE_SHA": "${{ github.event.before }}" },
+                "run": "set -euo pipefail\n\nlog_opts=\"-1\"\nconfig_path=\".gitleaks.toml\"\nif [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  log_opts=\"origin/${GITHUB_BASE_REF:-main}..HEAD\"\n\n  # The secret-scanning gate must NOT trust a PR-controlled scanner\n  # config: a PR could broaden the allowlist (or add .gitleaksignore\n  # fingerprints) in the SAME change to hide a planted secret and still\n  # pass the required check. For pull_request runs, scan with the base\n  # branch's already-reviewed config + ignore file instead of the PR's.\n  base_ref=\"origin/${GITHUB_BASE_REF:-main}\"\n  if git cat-file -e \"${base_ref}:.gitleaks.toml\" 2>/dev/null; then\n    git show \"${base_ref}:.gitleaks.toml\" > .gitleaks.base.toml\n    config_path=\".gitleaks.base.toml\"\n  fi\n  # Pin .gitleaksignore to the base too (gitleaks auto-reads it from the\n  # source root): use the base version, or none if the base has none, so\n  # a PR cannot add suppression fingerprints to its own scan.\n  if git cat-file -e \"${base_ref}:.gitleaksignore\" 2>/dev/null; then\n    git show \"${base_ref}:.gitleaksignore\" > .gitleaksignore\n  else\n    rm -f .gitleaksignore\n  fi\nelif [[ -n \"${BEFORE_SHA:-}\" && ! \"$BEFORE_SHA\" =~ ^0+$ ]]; then\n  log_opts=\"${BEFORE_SHA}..HEAD\"\nfi\n\ndocker run --rm \\\n  -v \"$PWD:/repo\" \\\n  -w /repo \\\n  zricethezav/gitleaks@sha256:5d0147dc25c78f8cc2b9861ff8f5c9b4a41419ed60a9ce2217de5a215270b42b \\\n  detect --source=/repo --config=\"/repo/${config_path}\" --log-opts=\"$log_opts\" --redact --no-banner\n"
+              }
+            ]
+          },
+          "security": {
+            "name": "Security",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 20,
+            "permissions": { "contents": "read", "pull-requests": "write" },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "OSV vulnerability scan",
+                "uses": "google/osv-scanner-action/osv-scanner-action@c5996e0193a3df57d695c1b8a1dec2a4c62e8730",
+                "with": {
+                  "scan-args": "--lockfile=bun.lock\n--config=osv-scanner.toml"
+                }
+              },
+              {
+                "name": "Check dependency graph availability",
+                "if": "github.event_name == 'pull_request'",
+                "id": "dependency-graph",
+                "shell": "bash",
+                "env": { "GH_TOKEN": "${{ github.token }}" },
+                "run": "set -euo pipefail\n\n# Security property (CSF-022): never silently FAIL OPEN on a\n# transient/attacker-induced gh-api error. The real attack vector is an\n# unreachable or failing API call, so an actual `gh api` COMMAND failure\n# (non-zero exit) fails CLOSED below.\n#\n# We capture the gh exit code explicitly instead of letting `set -e`\n# abort, so we can distinguish a genuine api failure (fail closed) from\n# a benign condition where the api SUCCEEDS but the\n# security_and_analysis.dependency_graph.status field is absent — e.g.\n# the GITHUB_TOKEN lacks permission to read it, or the feature config is\n# not exposed. That benign case must NOT hard-fail; the\n# dependency-review action that runs afterward is the real gate.\nset +e\nstatus=\"$(\n  gh api \"repos/${GITHUB_REPOSITORY}\" \\\n    --jq '.security_and_analysis.dependency_graph.status // \"unavailable\"'\n)\"\ngh_exit=$?\nset -e\n\nif [ \"$gh_exit\" -ne 0 ]; then\n  echo \"::error::gh api call to read dependency graph status failed (exit ${gh_exit}); failing closed instead of skipping the dependency review gate.\"\n  exit 1\nfi\n\ncase \"$status\" in\n  enabled)\n    echo \"enabled=true\" >> \"$GITHUB_OUTPUT\"\n    ;;\n  disabled)\n    echo \"enabled=false\" >> \"$GITHUB_OUTPUT\"\n    echo \"::notice::Skipping dependency review because GitHub dependency graph is explicitly disabled for this repository.\"\n    ;;\n  *)\n    # api ok but status absent/unavailable: benign token-permission or\n    # feature-config condition (the CI token cannot read\n    # security_and_analysis, or the feature config is not exposed). The\n    # actions/dependency-review-action HARD-FAILS when dependency graph\n    # is not actually enabled for the repo, so running it here would fail\n    # on a non-finding condition rather than perform a real review.\n    # SKIP it instead (fail open on undetectable availability); a genuine\n    # gh api COMMAND failure still fails closed above, and OSV scanning\n    # continues to cover dependency vulnerabilities. Enable Dependency\n    # graph in repo Settings -> Security & analysis to activate this gate.\n    echo \"enabled=false\" >> \"$GITHUB_OUTPUT\"\n    echo \"::warning::Dependency graph status could not be determined (got '${status:-unavailable}'); skipping the dependency-review gate (OSV still covers dependency vulns). Enable Dependency graph in repo settings to activate it.\"\n    ;;\nesac\n"
+              },
+              {
+                "name": "Dependency review",
+                "if": "github.event_name == 'pull_request' && steps.dependency-graph.outputs.enabled == 'true'",
+                "uses": "actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294",
+                "with": {
+                  "fail-on-severity": "high",
+                  "deny-licenses": "AGPL-3.0, GPL-3.0",
+                  "comment-summary-in-pr": "on-failure"
+                }
+              }
+            ]
+          },
+          "nix": {
+            "name": "Nix Shell",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 20,
+            "permissions": { "contents": "read" },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": { "persist-credentials": false }
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "false", "cache-write": "false" }
+              },
+              {
+                "name": "Install Nix",
+                "uses": "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72",
+                "with": { "nix_path": "nixpkgs=channel:nixos-unstable" }
+              },
+              {
+                "name": "Setup Cachix (read-only)",
+                "if": "github.event_name != 'push'",
+                "uses": "cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71",
+                "with": { "name": "beep-effect" },
+                "continue-on-error": true
+              },
+              {
+                "name": "Setup Cachix (trusted push)",
+                "if": "github.event_name == 'push'",
+                "uses": "cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71",
+                "with": {
+                  "name": "beep-effect",
+                  "authToken": "${{ secrets.CACHIX_AUTH_TOKEN }}"
+                },
+                "continue-on-error": true
+              },
+              { "name": "Run Nix checks", "run": "bun run beep ci lane nix" }
+            ]
+          },
+          "sast": {
+            "name": "SAST",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 20,
+            "permissions": { "contents": "read", "security-events": "write" },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Fetch pull request base",
+                "if": "github.event_name == 'pull_request'",
+                "shell": "bash",
+                "run": "git fetch --quiet --no-tags origin \"+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n"
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "false", "cache-write": "false" }
+              },
+              {
+                "name": "Run SAST",
+                "run": "# Semgrep runs the four registry packs (p/typescript, p/javascript,\n# p/security-audit, p/secrets) plus the vendored, offline rules in\n# .semgrep/first-party.yml, with --error so findings fail the lane.\n# Config is byte-identical to the local replay (`beep ci lane sast`)\n# — no SEMGREP_APP_TOKEN, which would only exist in CI and break that\n# parity. See goals/one-round-loop/history/p0-parity-evidence.md §2.\nbun run beep ci lane sast\n"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": ".github/workflows/data-sync.yml",
+      "sha256": "5d8079de3277d1207b0a4471e9d60f63eec27350903616ed50d7c654b6d1b1a8",
+      "document": {
+        "name": "Official Data Sync",
+        "on": {
+          "workflow_dispatch": null,
+          "schedule": [{ "cron": "0 6 15 * *" }]
+        },
+        "permissions": { "contents": "write", "pull-requests": "write" },
+        "jobs": {
+          "sync-data": {
+            "name": "Sync Official Data",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 40,
+            "env": {
+              "TURBO_TOKEN": "${{ secrets.TURBO_TOKEN }}",
+              "TURBO_TEAM": "${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": { "fetch-depth": 0 }
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": true, "cache-write": "true" }
+              },
+              {
+                "name": "Sync official datasets",
+                "env": {
+                  "BEEP_ISO3166_PART1_CSV_URL": "${{ secrets.BEEP_ISO3166_PART1_CSV_URL }}",
+                  "BEEP_ISO3166_PART2_CSV_URL": "${{ secrets.BEEP_ISO3166_PART2_CSV_URL }}",
+                  "BEEP_ISO3166_AUTH_HEADER": "${{ secrets.BEEP_ISO3166_AUTH_HEADER }}"
+                },
+                "run": "bun run beep sync-data-to-ts --all --include-authenticated --report-dir \"$RUNNER_TEMP/data-sync-report\""
+              },
+              {
+                "name": "Upload data sync report",
+                "uses": "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                "with": {
+                  "name": "data-sync-report",
+                  "path": "${{ runner.temp }}/data-sync-report",
+                  "if-no-files-found": "error"
+                }
+              },
+              {
+                "name": "Run focused check verification",
+                "id": "focused-check",
+                "run": "bun run check -- --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/law-practice-domain --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize"
+              },
+              {
+                "name": "Append Turbo summary (check)",
+                "if": "always() && steps.focused-check.outcome != 'skipped'",
+                "run": "bun run beep ci append-turbo-summary"
+              },
+              {
+                "name": "Run focused unit verification",
+                "id": "focused-test",
+                "if": "steps.focused-check.outcome == 'success'",
+                "run": "bun run test -- --unit --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/law-practice-domain --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize"
+              },
+              {
+                "name": "Prepare pull request body",
+                "id": "pr-body",
+                "if": "always()",
+                "run": "delimiter=\"EOF_$(openssl rand -hex 16)\"\nreport=\"$RUNNER_TEMP/data-sync-report/data-sync-report.md\"\n{\n  echo \"body<<${delimiter}\"\n  if [ -f \"$report\" ]; then\n    cat \"$report\"\n  else\n    echo \"_Data sync report unavailable: a sync or verification step failed._\"\n  fi\n  echo\n  echo 'This PR was opened automatically by `.github/workflows/data-sync.yml`.'\n  echo \"${delimiter}\"\n} >> \"$GITHUB_OUTPUT\"\n"
+              },
+              {
+                "name": "Append Turbo summary (test)",
+                "if": "always() && steps.focused-test.outcome != 'skipped'",
+                "run": "bun run beep ci append-turbo-summary"
+              },
+              {
+                "name": "Create or update pull request",
+                "uses": "peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1",
+                "with": {
+                  "token": "${{ secrets.BEEP_DATA_SYNC_TOKEN != '' && secrets.BEEP_DATA_SYNC_TOKEN || github.token }}",
+                  "branch": "automation/data-sync",
+                  "delete-branch": true,
+                  "commit-message": "chore(data): sync official datasets",
+                  "title": "chore(data): sync official datasets",
+                  "body": "${{ steps.pr-body.outputs.body }}"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": ".github/workflows/fleet-lane-probe.yml",
+      "sha256": "7cde83e845dced4b1ce433558cd190762a4d4377f76383bfd5008c9b553e30bc",
+      "document": {
+        "name": "Fleet Lane Probe",
+        "on": {
+          "workflow_dispatch": {
+            "inputs": {
+              "target_label": {
+                "description": "Runner label to dispatch the probe onto",
+                "required": false,
+                "type": "string",
+                "default": "beep-ec2-heavy"
+              },
+              "lane": {
+                "description": "Verification lane id (summarize-capable: lint, check, test-unit, test-integration, coverage)",
+                "required": false,
+                "type": "string",
+                "default": "test-integration"
+              }
+            }
+          }
+        },
+        "permissions": { "contents": "read" },
+        "jobs": {
+          "lane-probe": {
+            "name": "Lane Probe (${{ inputs.lane }})",
+            "runs-on": "${{ inputs.target_label }}",
+            "timeout-minutes": 120,
+            "env": {
+              "PROBE_LANE": "${{ inputs.lane }}",
+              "TURBO_CACHE": "local:rw"
+            },
+            "steps": [
+              {
+                "name": "Report worker identity",
+                "shell": "bash",
+                "run": "echo \"runner: ${RUNNER_NAME:-unset} on $(hostname)\"\nnproc\nfree -g\n"
+              },
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": { "fetch-depth": 0, "persist-credentials": false }
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "false", "cache-write": "false" }
+              },
+              {
+                "name": "Install typos",
+                "if": "inputs.lane == 'lint'",
+                "uses": "taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c",
+                "with": { "tool": "typos-cli@1.44.0" }
+              },
+              {
+                "name": "Run verification lane",
+                "shell": "bash",
+                "run": "set -euo pipefail\nbun run beep ci lane \"$PROBE_LANE\" --summarize\n"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": ".github/workflows/fleet-shadow-check.yml",
+      "sha256": "df4ea6a8b050158ef9f3f067eaf1e951b22e056755ed3b701e05992287f10992",
+      "document": {
+        "name": "Fleet Shadow Check",
+        "on": {
+          "workflow_dispatch": {
+            "inputs": {
+              "redteam": {
+                "description": "Run the live security-boundary gates",
+                "required": false,
+                "type": "boolean",
+                "default": false
+              },
+              "jit_replay": {
+                "description": "Attempt an operator-controlled replay of the one-use JIT configuration",
+                "required": false,
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        },
+        "permissions": {},
+        "jobs": {
+          "shadow-probe": {
+            "name": "Shadow Probe",
+            "runs-on": "beep-ec2-heavy",
+            "timeout-minutes": 10,
+            "steps": [
+              {
+                "name": "Prove the ephemeral worker",
+                "run": "echo \"runner: $(hostname)\"\nuname -a\nnproc\nfree -g\necho \"shadow probe OK\"\n"
+              },
+              {
+                "name": "Preflight - pull digest-pinned curl probe image",
+                "if": "${{ inputs.redteam }}",
+                "shell": "bash",
+                "run": "set -euo pipefail\ndocker pull 'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6'\n"
+              },
+              {
+                "name": "Gate E - require armed runner IMDS hook",
+                "if": "${{ inputs.redteam }}",
+                "id": "gate_e_runner_imds_hook",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -u\necho \"RUNNER_NAME: ${RUNNER_NAME:-unset}\"\necho \"hostname: $(hostname)\"\n\n# CSF-003 denies IMDS to the runner user by design; RUNNER_NAME carries the instance ID.\nif [[ \"${RUNNER_NAME:-}\" =~ ^beep-ci-(i-[0-9a-f]+)$ ]]; then\n  instance_id=\"${BASH_REMATCH[1]}\"\nelse\n  echo \"Could not recover an instance ID from RUNNER_NAME\"\n  exit 1\nfi\necho \"Runner instance-id: ${instance_id}\"\n\nif curl --noproxy '*' --silent --show-error --fail \\\n  --connect-timeout 3 --max-time 3 \\\n  --request PUT \\\n  --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\\n  --output /dev/null \\\n  http://169.254.169.254/latest/api/token; then\n  echo \"FORBIDDEN SUCCESS: runner reached IMDSv2\"\n  exit 1\nelse\n  echo \"DENIED AS EXPECTED: runner could not reach IMDSv2\"\nfi\n"
+              },
+              {
+                "name": "Gate F - deny root IMDS reachability",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_f_root_imds",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -u\nfailed=0\nfor endpoint in \\\n  'http://169.254.169.254/latest/api/token' \\\n  'http://[fd00:ec2::254]/latest/api/token'; do\n  if sudo curl --noproxy '*' --silent --show-error --fail --globoff \\\n    --connect-timeout 2 --max-time 3 \\\n    --request PUT \\\n    --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\\n    --output /dev/null \\\n    \"${endpoint}\"; then\n    echo \"FORBIDDEN SUCCESS: root reached ${endpoint}\"\n    failed=1\n  else\n    echo \"DENIED AS EXPECTED: root could not reach ${endpoint}\"\n  fi\ndone\nexit \"${failed}\"\n"
+              },
+              {
+                "name": "Gate G - deny host-network container IMDS reachability",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_g_hostnet_container_imds",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -u\nfailed=0\nprobe_number=0\nfor endpoint in \\\n  'http://169.254.169.254/latest/api/token' \\\n  'http://[fd00:ec2::254]/latest/api/token'; do\n  probe_number=$(( probe_number + 1 ))\n  probe_output=\"${RUNNER_TEMP}/gate-g-probe-${probe_number}.stdout\"\n  docker_exit=0\n  if docker run --rm --network host --entrypoint sh \\\n    'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6' \\\n    -c '\n      set -u\n      echo PROBE_RAN\n      if curl --noproxy \"*\" --silent --show-error --fail --globoff \\\n        --connect-timeout 2 --max-time 3 \\\n        --request PUT \\\n        --header \"X-aws-ec2-metadata-token-ttl-seconds: 60\" \\\n        --output /dev/null \\\n        \"$1\"; then\n        echo IMDS_REACHABLE\n      fi\n    ' sh \"${endpoint}\" >\"${probe_output}\"; then\n    :\n  else\n    docker_exit=$?\n  fi\n  cat -- \"${probe_output}\"\n  if ! grep -Fxq PROBE_RAN \"${probe_output}\"; then\n    echo \"PROBE FAILED TO RUN: host-network container did not run curl for ${endpoint} (docker exit ${docker_exit})\"\n    failed=1\n  elif grep -Fxq IMDS_REACHABLE \"${probe_output}\"; then\n    echo \"FORBIDDEN SUCCESS: host-network container reached ${endpoint}\"\n    failed=1\n  else\n    echo \"DENIED AS EXPECTED: host-network container could not reach ${endpoint}\"\n  fi\ndone\nexit \"${failed}\"\n"
+              },
+              {
+                "name": "Gate H - deny privileged host-network container IMDS reachability",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_h_privileged_container_imds",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -u\nfailed=0\nprobe_number=0\nfor endpoint in \\\n  'http://169.254.169.254/latest/api/token' \\\n  'http://[fd00:ec2::254]/latest/api/token'; do\n  probe_number=$(( probe_number + 1 ))\n  probe_output=\"${RUNNER_TEMP}/gate-h-probe-${probe_number}.stdout\"\n  docker_exit=0\n  if docker run --rm --privileged --network host --entrypoint sh \\\n    'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6' \\\n    -c '\n      set -u\n      echo PROBE_RAN\n      if curl --noproxy \"*\" --silent --show-error --fail --globoff \\\n        --connect-timeout 2 --max-time 3 \\\n        --request PUT \\\n        --header \"X-aws-ec2-metadata-token-ttl-seconds: 60\" \\\n        --output /dev/null \\\n        \"$1\"; then\n        echo IMDS_REACHABLE\n      fi\n    ' sh \"${endpoint}\" >\"${probe_output}\"; then\n    :\n  else\n    docker_exit=$?\n  fi\n  cat -- \"${probe_output}\"\n  if ! grep -Fxq PROBE_RAN \"${probe_output}\"; then\n    echo \"PROBE FAILED TO RUN: privileged host-network container did not run curl for ${endpoint} (docker exit ${docker_exit})\"\n    failed=1\n  elif grep -Fxq IMDS_REACHABLE \"${probe_output}\"; then\n    echo \"FORBIDDEN SUCCESS: privileged host-network container reached ${endpoint}\"\n    failed=1\n  else\n    echo \"DENIED AS EXPECTED: privileged host-network container could not reach ${endpoint}\"\n  fi\ndone\nexit \"${failed}\"\n"
+              },
+              {
+                "name": "Gate J - require the owner IMDS hook to remain armed",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_j_hook_still_armed",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -euo pipefail\nexpected_hook='ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/beep/imds-job-started-hook.sh'\ngrep -Fxq \"${expected_hook}\" /opt/actions-runner/.env\ntest -x /opt/beep/imds-job-started-hook.sh\nrunner_uid=\"$(id -u)\"\nsudo iptables -C OUTPUT \\\n  -d 169.254.169.254/32 \\\n  -m owner --uid-owner \"${runner_uid}\" \\\n  -j DROP\nif command -v ip6tables >/dev/null 2>&1; then\n  sudo ip6tables -C OUTPUT \\\n    -d fd00:ec2::254/128 \\\n    -m owner --uid-owner \"${runner_uid}\" \\\n    -j DROP\nfi\necho \"Gate E owner DROP remains armed\"\n"
+              },
+              {
+                "name": "Gate L - require live IAM edge dry-runs",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_l_iam_edges",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -euo pipefail\nedge_log=\"${RUNNER_TEMP}/imds-edges.log\"\nif ! sudo journalctl -t beep-imds-edges --no-pager -o cat > \"${edge_log}\"; then\n  sudo grep -h beep-imds-edges /var/log/messages > \"${edge_log}\" || : > \"${edge_log}\"\nfi\ngrep -E \\\n  'IMDS_EDGE (self_disable|self_reenable|self_redisable|other_disable): (PASS|FAIL|INCONCLUSIVE)' \\\n  \"${edge_log}\" || true\nedge_count() { grep -Ec \"$1\" \"${edge_log}\" || true; }\n[[ \"$(edge_count 'IMDS_EDGE self_disable: PASS$'):$(edge_count 'IMDS_EDGE self_disable: ')\" == 1:1 ]]\n[[ \"$(edge_count 'IMDS_EDGE self_reenable: PASS$'):$(edge_count 'IMDS_EDGE self_reenable: ')\" == 1:1 ]]\n[[ \"$(edge_count 'IMDS_EDGE self_redisable: PASS$'):$(edge_count 'IMDS_EDGE self_redisable: ')\" == 1:1 ]]\ncase \"$(edge_count 'IMDS_EDGE other_disable: PASS$'):$(edge_count \\\n  'IMDS_EDGE other_disable: INCONCLUSIVE( \\([A-Za-z0-9._-]+\\))?$'):$(edge_count \\\n  'IMDS_EDGE other_disable: ')\" in\n  1:0:1) ;;\n  0:1:1) echo \"NOTE: other-instance authorization order was inconclusive; accepting Gate L\" ;;\n  *) exit 1 ;;\nesac\n"
+              },
+              {
+                "name": "Ensure AWS CLI is available",
+                "if": "${{ inputs.redteam }}",
+                "id": "aws_cli",
+                "shell": "bash",
+                "run": "set -euo pipefail\nif command -v aws >/dev/null 2>&1; then\n  aws --version\n  exit 0\nfi\n\ncase \"$(uname -m)\" in\n  x86_64) aws_arch=x86_64 ;;\n  aarch64|arm64) aws_arch=aarch64 ;;\n  *) echo \"Unsupported AWS CLI architecture: $(uname -m)\"; exit 1 ;;\nesac\ncommand -v curl >/dev/null\ncommand -v python3 >/dev/null\ninstall_dir=\"${RUNNER_TEMP}/aws-cli\"\nbin_dir=\"${RUNNER_TEMP}/bin\"\nmkdir -p \"${bin_dir}\"\ncurl --silent --show-error --fail --location \\\n  \"https://awscli.amazonaws.com/awscli-exe-linux-${aws_arch}.zip\" \\\n  --output \"${RUNNER_TEMP}/awscliv2.zip\"\npython3 -m zipfile -e \"${RUNNER_TEMP}/awscliv2.zip\" \"${RUNNER_TEMP}/awscliv2\"\n\"${RUNNER_TEMP}/awscliv2/aws/install\" \\\n  --install-dir \"${install_dir}\" --bin-dir \"${bin_dir}\"\necho \"${bin_dir}\" >> \"${GITHUB_PATH}\"\n\"${bin_dir}/aws\" --version\n"
+              },
+              {
+                "name": "Gate I - deny root STS identity",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_i_root_sts",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -u\nif ! sudo aws --version >/dev/null 2>&1; then\n  echo \"AWS CLI unavailable to root; denial cannot be proven\"\n  exit 1\nfi\nif ! sudo env -i PATH=/usr/local/bin:/usr/bin:/bin aws --version >/dev/null 2>&1; then\n  echo \"AWS CLI unavailable to clean-environment root; denial cannot be proven\"\n  exit 1\nfi\nfailed=0\nif sudo aws sts get-caller-identity >/dev/null 2>&1; then\n  echo \"FORBIDDEN SUCCESS: sudo aws obtained an STS identity\"\n  failed=1\nelse\n  echo \"DENIED AS EXPECTED: sudo aws could not obtain an STS identity\"\nfi\nif sudo env -i PATH=/usr/local/bin:/usr/bin:/bin \\\n  aws sts get-caller-identity >/dev/null 2>&1; then\n  echo \"FORBIDDEN SUCCESS: clean-environment root obtained an STS identity\"\n  failed=1\nelse\n  echo \"DENIED AS EXPECTED: clean-environment root could not obtain an STS identity\"\nfi\nexit \"${failed}\"\n"
+              },
+              {
+                "name": "Informational K - report JIT argv residue",
+                "if": "${{ always() && inputs.redteam }}",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -u\njit_visible=false\nfor cmdline in /proc/[0-9]*/cmdline; do\n  if [[ -r \"${cmdline}\" ]] && \\\n    tr '\\0' '\\n' < \"${cmdline}\" 2>/dev/null | grep -Fxq -- '--jitconfig'; then\n    jit_visible=true\n    break\n  fi\ndone\nif [[ \"${jit_visible}\" == true ]]; then\n  echo \"JIT residue: visible\"\nelse\n  echo \"JIT residue: absent\"\nfi\n"
+              },
+              {
+                "name": "Probe M - JIT configuration replay",
+                "if": "${{ inputs.redteam && inputs.jit_replay }}",
+                "id": "gate_m_jit_replay",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -euo pipefail\nscratch_runner=\"${RUNNER_TEMP}/jit-replay-runner\"\nlistener_log=\"${RUNNER_TEMP}/jit-replay-listener.log\"\ntrap 'unset jit_value; rm -rf -- \"${scratch_runner}\"' EXIT\nmkdir -p \"${scratch_runner}\"\ncp -a /opt/actions-runner/bin \"${scratch_runner}/bin\"\ncp -a /opt/actions-runner/externals \"${scratch_runner}/externals\"\n(cd \"${scratch_runner}\" && \"${scratch_runner}/bin/Runner.Listener\" --help >/dev/null 2>&1 || true)\n\njit_value=\"$(\n  for f in /proc/[0-9]*/cmdline; do\n    tr '\\0' ' ' < \"$f\" 2>/dev/null\n  done | grep -o -- '--jitconfig [A-Za-z0-9+/=_-]*' \\\n    | grep -E '^--jitconfig [A-Za-z0-9+/=_-]+$' | head -1 || true\n)\"\njit_value=\"${jit_value#--jitconfig }\"\nif [[ -z \"${jit_value}\" ]]; then\n  echo \"JIT replay: inconclusive (running listener configuration was not readable)\"\n  exit 1\nfi\n\nreplay_runner_name=\"$(\n  printf '%s' \"${jit_value}\" | python3 -c '\nimport base64, json, re, sys\nencoded = sys.stdin.read().strip()\nencoded += \"=\" * (-len(encoded) % 4)\ntry:\n    payload = json.loads(base64.urlsafe_b64decode(encoded))\nexcept Exception:\n    payload = {}\nrunner = payload.get(\"runner\")\nname = runner.get(\"name\") if isinstance(runner, dict) else None\nname = name if isinstance(name, str) else payload.get(\"agentName\")\nif isinstance(name, str) and re.fullmatch(r\"[A-Za-z0-9._-]{1,128}\", name):\n    print(name)\n' || true\n)\"\n\nset +e\n(cd \"${scratch_runner}\" && timeout 90 \"${scratch_runner}/bin/Runner.Listener\" run \\\n  --jitconfig \"${jit_value}\" > \"${listener_log}\" 2>&1)\nlistener_status=$?\nset -e\n\n# Only a recognized server-side rejection marker may classify the replay as rejected.\n# A marker-free non-zero exit is a local setup or runtime failure and must stay\n# inconclusive, or the gate reports PASS without evidence GitHub rejected the replay.\n# Markers are case-sensitive and phrase-anchored so a local diagnostic that merely\n# contains a keyword (for example a missing shared library reported as \"not found\")\n# cannot pass as a server-side rejection; an unanticipated rejection phrase fails\n# inconclusive, which is the safe direction for this gate.\nerror_line=\"$(grep -Em1 \\\n  -e 'already (been )?(registered|used|configured|exists)' \\\n  -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \\\n  -e '(token|configuration|JIT config|jitconfig) (has )?expired' \\\n  -e '\\bUnauthorized\\b' \\\n  -e '[Rr]unner (was )?not found' \\\n  -e '(access|permission) denied' \\\n  \"${listener_log}\" | tr -d '\\r' || true)\"\ndiag_line=\"\"\nif [[ -z \"${error_line}\" && \"${listener_status}\" -ne 0 && \"${listener_status}\" -ne 124 ]]; then\n  diag_line=\"$(sed -n '/[^[:space:]]/{s/\\r$//;p;q;}' \"${listener_log}\")\"\n  diag_line=\"${diag_line:-no listener output}\"\n  diag_line=\"${diag_line//${jit_value}/[redacted]}\"\n  diag_line=\"$(printf '%s' \"${diag_line}\" | sed -E \\\n    's/--jitconfig[ =]+[A-Za-z0-9+\\/_=-]+/--jitconfig [redacted]/g' | cut -c1-240)\"\nfi\nif [[ -n \"${error_line}\" ]]; then\n  error_line=\"${error_line//${jit_value}/[redacted]}\"\n  error_line=\"$(printf '%s' \"${error_line}\" | sed -E \\\n    's/--jitconfig[ =]+[A-Za-z0-9+\\/_=-]+/--jitconfig [redacted]/g' | cut -c1-240)\"\n  unset jit_value\n  echo \"JIT replay: rejected (${error_line})\"\n  exit 0\nfi\n\nunset jit_value\nif grep -Eq 'Listening for Jobs|Connected to GitHub' \"${listener_log}\" || [[ \"${listener_status}\" -eq 124 ]]; then\n  echo \"JIT replay: accepted\"\n  [[ -z \"${replay_runner_name}\" ]] || echo \"JIT replay runner: ${replay_runner_name}\"\n  exit 1\nfi\n\nif [[ -n \"${diag_line}\" ]]; then\n  echo \"JIT replay: inconclusive (listener exited with status ${listener_status}: ${diag_line})\"\n  exit 1\nfi\n\necho \"JIT replay: inconclusive (listener exited without a rejection or connection marker)\"\nexit 1\n"
+              },
+              {
+                "name": "Gate A - deny GitHub App secrets",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_a",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -u\nif ! command -v aws >/dev/null 2>&1; then\n  echo \"AWS CLI unavailable; denial cannot be proven\"\n  exit 1\nfi\n\n# CSF-003 denies IMDS credentials to the runner user by design.\nfailed=0\nfor parameter in github_app_key_base64 github_app_webhook_secret; do\n  error_file=\"${RUNNER_TEMP}/ssm-${parameter}.error\"\n  if aws ssm get-parameter \\\n    --name \"/github-action-runners/app/${parameter}\" \\\n    --with-decryption --region us-east-1 \\\n    >/dev/null 2>\"${error_file}\"; then\n    echo \"FORBIDDEN SUCCESS: read ${parameter}\"\n    failed=1\n  elif grep -Eqi 'AccessDenied|not authorized' \"${error_file}\"; then\n    echo \"DENIED AS EXPECTED: ${parameter}\"\n  elif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' \"${error_file}\"; then\n    echo \"DENIED AS EXPECTED: ${parameter} (guest credentials unavailable)\"\n  else\n    echo \"UNEXPECTED ERROR: ${parameter}\"\n    sed -n '1,8p' \"${error_file}\"\n    failed=1\n  fi\ndone\nexit \"${failed}\"\n"
+              },
+              {
+                "name": "Gate B - deny S3 access",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_b",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -u\nif ! command -v aws >/dev/null 2>&1; then\n  echo \"AWS CLI unavailable; denial cannot be proven\"\n  exit 1\nfi\n\n# CSF-003 denies IMDS credentials to the runner user by design.\nfailed=0\nif aws s3api list-buckets >/dev/null 2>\"${RUNNER_TEMP}/s3-list.error\"; then\n  echo \"FORBIDDEN SUCCESS: listed S3 buckets\"\n  failed=1\nelif grep -Eqi 'AccessDenied|not authorized' \"${RUNNER_TEMP}/s3-list.error\"; then\n  echo \"DENIED AS EXPECTED: list-buckets\"\nelif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' \"${RUNNER_TEMP}/s3-list.error\"; then\n  echo \"DENIED AS EXPECTED: list-buckets (guest credentials unavailable)\"\nelse\n  echo \"UNEXPECTED ERROR: list-buckets\"\n  sed -n '1,8p' \"${RUNNER_TEMP}/s3-list.error\"\n  failed=1\nfi\nif aws s3api put-object \\\n  --bucket beep-ci-dist-8xycw0prvbhmjow8r6vp4uqv \\\n  --key redteam-probe.txt \\\n  --body /etc/hostname \\\n  >/dev/null 2>\"${RUNNER_TEMP}/s3-put.error\"; then\n  echo \"FORBIDDEN SUCCESS: wrote redteam-probe.txt\"\n  failed=1\nelif grep -Eqi 'AccessDenied|not authorized' \"${RUNNER_TEMP}/s3-put.error\"; then\n  echo \"DENIED AS EXPECTED: put-object\"\nelif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' \"${RUNNER_TEMP}/s3-put.error\"; then\n  echo \"DENIED AS EXPECTED: put-object (guest credentials unavailable)\"\nelse\n  echo \"UNEXPECTED ERROR: put-object\"\n  sed -n '1,8p' \"${RUNNER_TEMP}/s3-put.error\"\n  failed=1\nfi\nexit \"${failed}\"\n"
+              },
+              {
+                "name": "Gate C - deny tailnet and LAN reachability",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_c_tailnet_lan",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -u\nfailed=0\nfor target in 100.100.100.100 192.168.1.1 10.0.0.1; do\n  if curl --noproxy '*' --silent --show-error \\\n    --connect-timeout 3 --max-time 3 \\\n    --output /dev/null \"http://${target}/\"; then\n    echo \"FORBIDDEN SUCCESS: HTTP response from ${target}\"\n    failed=1\n  else\n    echo \"DENIED AS EXPECTED: ${target}\"\n  fi\ndone\nexit \"${failed}\"\n"
+              },
+              {
+                "name": "Gate D - deny container IMDS reachability",
+                "if": "${{ always() && inputs.redteam }}",
+                "id": "gate_d_container_imds",
+                "continue-on-error": true,
+                "shell": "bash",
+                "run": "set -euo pipefail\nprobe_output=\"${RUNNER_TEMP}/gate-d-container-imds.stdout\"\ndocker_exit=0\nif docker run --rm --entrypoint sh \\\n  'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6' \\\n  -c '\n  set -u\n  echo PROBE_RAN\n  if curl --noproxy \"*\" --silent --show-error --fail \\\n    --connect-timeout 2 --max-time 3 \\\n    --request PUT \\\n    --header \"X-aws-ec2-metadata-token-ttl-seconds: 60\" \\\n    --output /dev/null \\\n    http://169.254.169.254/latest/api/token; then\n    echo IMDS_REACHABLE\n  fi\n' >\"${probe_output}\"; then\n  :\nelse\n  docker_exit=$?\nfi\ncat -- \"${probe_output}\"\nif ! grep -Fxq PROBE_RAN \"${probe_output}\"; then\n  echo \"PROBE FAILED TO RUN: bridged container did not run curl (docker exit ${docker_exit})\"\n  exit 1\nfi\nif grep -Fxq IMDS_REACHABLE \"${probe_output}\"; then\n  echo \"FORBIDDEN SUCCESS: container reached IMDSv2\"\n  exit 1\nfi\necho \"DENIED AS EXPECTED: container could not reach IMDSv2\"\n"
+              },
+              {
+                "name": "Summarize red-team gates",
+                "if": "${{ always() && inputs.redteam }}",
+                "shell": "bash",
+                "run": "failed=0\nif [[ \"${{ steps.gate_a.outcome }}\" == success ]]; then\n  echo \"GATE A_APP_SECRET_SSM: PASS\"\nelse\n  echo \"GATE A_APP_SECRET_SSM: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_b.outcome }}\" == success ]]; then\n  echo \"GATE B_S3: PASS\"\nelse\n  echo \"GATE B_S3: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_c_tailnet_lan.outcome }}\" == success ]]; then\n  echo \"GATE C_TAILNET_LAN: PASS\"\nelse\n  echo \"GATE C_TAILNET_LAN: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_d_container_imds.outcome }}\" == success ]]; then\n  echo \"GATE D_CONTAINER_IMDS: PASS\"\nelse\n  echo \"GATE D_CONTAINER_IMDS: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_e_runner_imds_hook.outcome }}\" == success ]]; then\n  echo \"GATE E_RUNNER_IMDS_HOOK: PASS\"\nelse\n  echo \"GATE E_RUNNER_IMDS_HOOK: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_f_root_imds.outcome }}\" == success ]]; then\n  echo \"GATE F_ROOT_IMDS: PASS\"\nelse\n  echo \"GATE F_ROOT_IMDS: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_g_hostnet_container_imds.outcome }}\" == success ]]; then\n  echo \"GATE G_HOSTNET_CONTAINER_IMDS: PASS\"\nelse\n  echo \"GATE G_HOSTNET_CONTAINER_IMDS: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_h_privileged_container_imds.outcome }}\" == success ]]; then\n  echo \"GATE H_PRIVILEGED_CONTAINER_IMDS: PASS\"\nelse\n  echo \"GATE H_PRIVILEGED_CONTAINER_IMDS: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_i_root_sts.outcome }}\" == success ]]; then\n  echo \"GATE I_ROOT_STS: PASS\"\nelse\n  echo \"GATE I_ROOT_STS: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_j_hook_still_armed.outcome }}\" == success ]]; then\n  echo \"GATE J_HOOK_STILL_ARMED: PASS\"\nelse\n  echo \"GATE J_HOOK_STILL_ARMED: FAIL\"\n  failed=1\nfi\nif [[ \"${{ steps.gate_l_iam_edges.outcome }}\" == success ]]; then\n  echo \"GATE L_IAM_EDGES: PASS\"\nelse\n  echo \"GATE L_IAM_EDGES: FAIL\"\n  failed=1\nfi\nif [[ \"${{ inputs.jit_replay }}\" != true ]]; then\n  echo \"GATE M_JIT_REPLAY: SKIPPED\"\nelif [[ \"${{ steps.gate_m_jit_replay.outcome }}\" == success ]]; then\n  echo \"GATE M_JIT_REPLAY: PASS\"\nelse\n  echo \"GATE M_JIT_REPLAY: FAIL\"\n  failed=1\nfi\nexit \"${failed}\"\n"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "94945bd41a99e6ae458a237bf4fc3cac0de719f2da854d87265d8f091180016c",
+      "document": {
+        "name": "Heavy",
+        "on": { "workflow_call": null },
+        "permissions": { "contents": "read" },
+        "jobs": {
+          "verify": {
+            "name": "${{ matrix.name }}",
+            "runs-on": "beep-ec2-heavy",
+            "timeout-minutes": "${{ matrix.timeout_minutes }}",
+            "environment": "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}",
+            "permissions": { "contents": "read" },
+            "strategy": {
+              "fail-fast": false,
+              "matrix": {
+                "include": [
+                  {
+                    "id": "lint-policy",
+                    "name": "Lint Policy",
+                    "timeout_minutes": 50,
+                    "uses_turbo": "false",
+                    "install_typos": "true"
+                  },
+                  {
+                    "id": "check",
+                    "name": "Check",
+                    "timeout_minutes": 120,
+                    "uses_turbo": "true",
+                    "install_typos": "false"
+                  },
+                  {
+                    "id": "test-integration",
+                    "name": "Test Integration",
+                    "timeout_minutes": 40,
+                    "uses_turbo": "true",
+                    "install_typos": "false"
+                  },
+                  {
+                    "id": "coverage",
+                    "name": "Coverage Regression",
+                    "timeout_minutes": 80,
+                    "uses_turbo": "true",
+                    "install_typos": "false"
+                  },
+                  {
+                    "id": "docgen",
+                    "name": "Docgen",
+                    "timeout_minutes": 60,
+                    "uses_turbo": "false",
+                    "install_typos": "false",
+                    "docgen_concurrency": 6
+                  },
+                  {
+                    "id": "doctest",
+                    "name": "Doctest",
+                    "timeout_minutes": 60,
+                    "uses_turbo": "false",
+                    "install_typos": "false"
+                  }
+                ]
+              }
+            },
+            "env": {
+              "TURBO_API": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}",
+              "TURBO_TOKEN": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}",
+              "TURBO_TEAM": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}",
+              "TURBO_CACHE": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}",
+              "BEEP_DOCGEN_CONCURRENCY": "${{ matrix.docgen_concurrency || 3 }}",
+              "TURBO_LOG_ORDER": "stream",
+              "DATABASE_URL": "${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}",
+              "DATABASE_URL_UNPOOLED": "${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}",
+              "EMAIL_RESEND_API_KEY": "${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}",
+              "AUTH_SECRET": "${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}",
+              "BETTER_AUTH_SECRET": "${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}",
+              "BETTER_AUTH_URL": "${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}",
+              "SECURITY_TRUSTED_ORIGINS": "${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}",
+              "LIVEBLOCKS_SECRET_KEY": "${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "filter": "blob:none",
+                  "persist-credentials": false
+                }
+              },
+              {
+                "name": "Fetch pull request base",
+                "if": "github.event_name == 'pull_request'",
+                "shell": "bash",
+                "run": "git fetch --quiet --no-tags origin \"+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n"
+              },
+              {
+                "name": "Determine lane execution",
+                "id": "lane-gate",
+                "shell": "bash",
+                "run": "set -euo pipefail\nshould_run=true\ndoctest_mode=full\neval \"$(scripts/ci-change-profile.sh \"origin/${GITHUB_BASE_REF:-main}\")\"\nif [[ \"$goals_only\" == \"true\" ]]; then\n  should_run=false\nfi\n\nif [[ \"${{ matrix.id }}\" == \"docgen\" && \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  changed_files=\"$(git diff --name-only \"origin/${GITHUB_BASE_REF:-main}...HEAD\")\"\n  if [[ -z \"$changed_files\" ]] || ! grep -Eq '(^apps/|^packages/|^infra/|/docgen\\.json$|\\.(ts|tsx|mts|cts|md)$)' <<< \"$changed_files\"; then\n    should_run=false\n  fi\nfi\n\nif [[ \"${{ matrix.id }}\" == \"doctest\" && \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  doctest_mode=affected\n  base_ref=\"origin/${GITHUB_BASE_REF:-main}\"\n  if ! git rev-parse --verify \"$base_ref\" >/dev/null 2>&1; then\n    git fetch --quiet --no-tags --depth=100 origin \\\n      \"${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}\"\n  fi\n\n  changed_files=\"$(git diff --name-only \"${base_ref}...HEAD\")\"\n  if grep -Eq '(^vitest\\.docs\\.ts$|^vitest\\.shared\\.ts$|^package\\.json$|^bun\\.lock$|^\\.github/workflows/heavy\\.yml$|^packages/tooling/tool/cli/src/commands/Docgen/|^packages/tooling/tool/cli/src/internal/jsdoc/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\\.ts$)' <<< \"$changed_files\"; then\n    doctest_mode=full\n  else\n    # Any package/app source or package-level config can\n    # affect marked examples in that workspace or its dependents.\n    # The CLI owns package-graph expansion, existence filtering,\n    # and marker discovery.\n    mapfile -t affected_inputs < <(\n      git diff --name-only \"${base_ref}...HEAD\" -- \\\n        ':(glob)packages/**/src/**/*.ts' \\\n        ':(glob)packages/**/src/**/*.tsx' \\\n        ':(glob)apps/**/src/**/*.ts' \\\n        ':(glob)apps/**/src/**/*.tsx' \\\n        ':(glob)packages/**/package.json' \\\n        ':(glob)packages/**/docgen.json' \\\n        ':(glob)packages/**/tsconfig*.json' \\\n        ':(glob)apps/**/package.json' \\\n        ':(glob)apps/**/docgen.json' \\\n        ':(glob)apps/**/tsconfig*.json'\n    )\n\n    if (( ${#affected_inputs[@]} == 0 )); then\n      should_run=false\n    fi\n  fi\nfi\n\necho \"should_run=$should_run\" >> \"$GITHUB_OUTPUT\"\necho \"doctest_mode=$doctest_mode\" >> \"$GITHUB_OUTPUT\"\n"
+              },
+              {
+                "name": "Free runner disk for verification lanes",
+                "if": "steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-')",
+                "shell": "bash",
+                "run": "set -euo pipefail\necho \"Disk before cleanup:\"\ndf -h /\nsudo rm -rf \\\n  /opt/ghc \\\n  /usr/local/.ghcup \\\n  /usr/local/lib/android \\\n  /usr/local/share/boost \\\n  /usr/share/dotnet\nsudo apt-get clean\ndocker system prune --all --force --volumes || true\necho \"Disk after cleanup:\"\ndf -h /\n"
+              },
+              {
+                "name": "Setup monorepo CI",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": {
+                  "cache-turbo": "${{ matrix.uses_turbo }}",
+                  "cache-write": "false",
+                  "turbo-cache-key-suffix": "-${{ matrix.id }}"
+                }
+              },
+              {
+                "name": "Restore main Docgen Turbo cache",
+                "if": "matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'pull_request'",
+                "id": "docgen-turbo-cache-restore",
+                "continue-on-error": true,
+                "uses": "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+                "with": {
+                  "path": ".turbo/cache",
+                  "key": "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}",
+                  "restore-keys": "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-\n"
+                }
+              },
+              {
+                "name": "Install typos",
+                "if": "steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'",
+                "uses": "taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c",
+                "with": { "tool": "typos-cli@1.44.0" }
+              },
+              {
+                "name": "Run verification lane",
+                "if": "steps.lane-gate.outputs.should_run == 'true'",
+                "run": "set -euo pipefail\n# Lane bodies live in the beep CLI (one-round-loop P0 inversion;\n# same-SHA parity proof recorded in\n# goals/one-round-loop/history/p0-parity-evidence.md). This case\n# block carries only GitHub-context orchestration: the\n# event-dependent shape flags each lane receives.\n#\n# Orphaned lane grandchildren (stuck bun wrappers, daemon sockets)\n# inherit this step's stdio pipes, and the runner does not end a\n# step until those pipes close — so a lane can print success, exit,\n# and still wedge the job for its full timeout (ship-velocity SPEC\n# A7; proven on Docgen run 31797064763). Run each lane in its own\n# session and reap the entire process group once the lane process\n# finishes, success and failure alike.\nrun_lane() {\n  setsid bun run beep \"$@\" < /dev/null &\n  local pgid=$!\n  local status=0\n  wait \"$pgid\" || status=$?\n  kill -TERM -- \"-$pgid\" 2>/dev/null || true\n  sleep 2\n  kill -KILL -- \"-$pgid\" 2>/dev/null || true\n  return \"$status\"\n}\n\nshape_args=()\n\nif [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n  shape_args+=(--affected --base \"origin/${GITHUB_BASE_REF:-main}\")\nfi\n\nshape_args+=(--summarize)\n\ncase \"${{ matrix.id }}\" in\n  check|test-integration|coverage)\n    run_lane ci lane \"${{ matrix.id }}\" \"${shape_args[@]}\"\n    ;;\n  lint-policy)\n    run_lane ci lane \"${{ matrix.id }}\"\n    ;;\n  docgen)\n    if [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n      run_lane ci lane docgen --mode auto --base \"origin/${GITHUB_BASE_REF:-main}\" --head HEAD\n    else\n      run_lane ci lane docgen --mode full\n    fi\n    ;;\n  doctest)\n    if [[ \"$GITHUB_EVENT_NAME\" == \"pull_request\" ]]; then\n      run_lane ci lane doctest \\\n        --mode \"${{ steps.lane-gate.outputs.doctest_mode }}\" \\\n        --base \"origin/${GITHUB_BASE_REF:-main}\" \\\n        --head HEAD\n    else\n      run_lane ci lane doctest --mode full\n    fi\n    ;;\nesac\n"
+              },
+              {
+                "name": "Save main Docgen Turbo cache",
+                "if": "matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push'",
+                "continue-on-error": true,
+                "uses": "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+                "with": {
+                  "path": ".turbo/cache",
+                  "key": "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}"
+                }
+              },
+              {
+                "name": "Append Turbo summary",
+                "if": "matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()",
+                "run": "if [[ \"${{ matrix.id }}\" == \"coverage\" ]]; then\n  bun run beep ci append-turbo-summary --all\nelse\n  bun run beep ci append-turbo-summary\nfi\n"
+              },
+              {
+                "name": "Save post-lane Turbo fallback",
+                "if": "github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()",
+                "continue-on-error": true,
+                "uses": "actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830",
+                "with": {
+                  "path": ".turbo/cache",
+                  "key": "turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.id }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}"
+                }
+              },
+              {
+                "name": "Append Turbo summary (docgen)",
+                "if": "matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && always()",
+                "run": "bun run beep ci append-turbo-summary"
+              },
+              {
+                "name": "Skip lane",
+                "if": "steps.lane-gate.outputs.should_run != 'true'",
+                "run": "echo \"Skipping ${{ matrix.name }} for this change set.\""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": ".github/workflows/property-laws-nightly.yml",
+      "sha256": "239636e26a80c5251dd5cdf06884fb32ac3d66d793370e432a7c586633fafd0b",
+      "document": {
+        "name": "Property Laws Nightly",
+        "on": {
+          "schedule": [{ "cron": "17 9 * * *" }],
+          "workflow_dispatch": {
+            "inputs": {
+              "runs": {
+                "description": "BEEP_FC_NUM_RUNS floor for the sweep",
+                "required": false,
+                "default": "1000"
+              }
+            }
+          }
+        },
+        "concurrency": {
+          "group": "${{ github.workflow }}",
+          "cancel-in-progress": false
+        },
+        "permissions": { "contents": "read", "issues": "write" },
+        "jobs": {
+          "property-sweep": {
+            "name": "Property Laws Sweep",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 180,
+            "env": {
+              "TURBO_TOKEN": "${{ secrets.TURBO_TOKEN }}",
+              "TURBO_TEAM": "${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": { "fetch-depth": 0 }
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "true", "cache-write": "false" }
+              },
+              {
+                "name": "Run full property sweep",
+                "shell": "bash",
+                "env": { "BEEP_PROPERTY_RUNS": "${{ inputs.runs || '1000' }}" },
+                "run": "set -euo pipefail\n\nif [[ ! \"${BEEP_PROPERTY_RUNS}\" =~ ^[1-9][0-9]{0,5}$ ]]; then\n  echo \"::error::runs must be a positive integer with at most 6 digits.\"\n  exit 1\nfi\n\nBEEP_PROPERTY_SEED=\"$((GITHUB_RUN_ID % 2147483647))\"\necho \"BEEP_FC_SEED=${BEEP_PROPERTY_SEED}\"\nbun run beep ci lane property \\\n  --runs \"${BEEP_PROPERTY_RUNS}\" \\\n  --seed \"${BEEP_PROPERTY_SEED}\" \\\n  --summarize\n"
+              },
+              {
+                "name": "Append Turbo summary",
+                "if": "always()",
+                "run": "bun run beep ci append-turbo-summary"
+              },
+              {
+                "name": "Open or update the tracking issue",
+                "if": "failure()",
+                "uses": "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd",
+                "with": {
+                  "script": "const title = \"Nightly property-law sweep failures\";\nconst label = \"property-laws-nightly\";\nconst runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;\nconst body = [\n  `Nightly sweep failed on ${context.sha} (run: ${runUrl}).`,\n  \"\",\n  \"Seed-dependent property-law failures belong to the PR that\",\n  \"introduced the schema, not to unrelated later PRs — triage the\",\n  \"failing suite, reproduce with the logged seed, and fix or\",\n  \"seed-exclude with a ledger note\",\n  \"(goals/one-round-loop/SPEC.md stop conditions).\",\n].join(\"\\n\");\nconst existing = await github.rest.issues.listForRepo({\n  owner: context.repo.owner,\n  repo: context.repo.repo,\n  labels: label,\n  state: \"open\",\n  per_page: 1,\n});\nif (existing.data.length > 0) {\n  await github.rest.issues.createComment({\n    owner: context.repo.owner,\n    repo: context.repo.repo,\n    issue_number: existing.data[0].number,\n    body,\n  });\n} else {\n  await github.rest.issues.create({\n    owner: context.repo.owner,\n    repo: context.repo.repo,\n    title,\n    labels: [label],\n    body,\n  });\n}\n"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": ".github/workflows/release-desktop.yml",
+      "sha256": "b15cf4d2c2870bd27ca5141ca080bb9abef6d8fc607fb3d4aab77760aa59e57e",
+      "document": {
+        "name": "Release Desktop",
+        "on": {
+          "push": { "tags": ["professional-desktop-v*"] },
+          "workflow_dispatch": {
+            "inputs": {
+              "version": {
+                "description": "Release tag to publish, e.g. professional-desktop-v0.1.0",
+                "required": true,
+                "type": "string"
+              }
+            }
+          }
+        },
+        "concurrency": {
+          "group": "release-desktop-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}",
+          "cancel-in-progress": false
+        },
+        "permissions": { "contents": "read" },
+        "jobs": {
+          "release-desktop-preflight": {
+            "name": "Validate desktop release inputs",
+            "runs-on": "ubuntu-22.04",
+            "timeout-minutes": 10,
+            "env": {
+              "RELEASE_DESKTOP_TAG": "${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}"
+            },
+            "steps": [
+              {
+                "name": "Validate release tag",
+                "shell": "bash",
+                "env": { "GH_TOKEN": "${{ github.token }}" },
+                "run": "if [[ ! \"$RELEASE_DESKTOP_TAG\" =~ ^professional-desktop-v.+$ ]]; then\n  echo \"::error::Release tag must match professional-desktop-v*, got '$RELEASE_DESKTOP_TAG'\"\n  exit 1\nfi\nif ! gh api \"repos/${GITHUB_REPOSITORY}/git/ref/tags/${RELEASE_DESKTOP_TAG}\" >/dev/null; then\n  echo \"::error::Release tag '${RELEASE_DESKTOP_TAG}' does not exist. Push the tag before running this workflow.\"\n  exit 1\nfi\n"
+              }
+            ]
+          },
+          "release-desktop": {
+            "name": "${{ matrix.name }}",
+            "runs-on": "${{ matrix.os }}",
+            "needs": "release-desktop-preflight",
+            "environment": "professional-desktop-release",
+            "timeout-minutes": 120,
+            "env": {
+              "RELEASE_DESKTOP_TAG": "${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}"
+            },
+            "strategy": {
+              "fail-fast": false,
+              "matrix": {
+                "include": [
+                  {
+                    "name": "macOS arm64",
+                    "os": "macos-14",
+                    "rust-target": "aarch64-apple-darwin",
+                    "args": "--target aarch64-apple-darwin",
+                    "release-target": "darwin-aarch64",
+                    "asset-arch": "aarch64",
+                    "updater-platform": "darwin-aarch64",
+                    "updater-suffixes": "[\".app.tar.gz\"]"
+                  },
+                  {
+                    "name": "macOS x64",
+                    "os": "macos-15-intel",
+                    "rust-target": "x86_64-apple-darwin",
+                    "args": "--target x86_64-apple-darwin",
+                    "release-target": "darwin-x86_64",
+                    "asset-arch": "x64",
+                    "updater-platform": "darwin-x86_64",
+                    "updater-suffixes": "[\".app.tar.gz\"]"
+                  },
+                  {
+                    "name": "Linux x64",
+                    "os": "ubuntu-22.04",
+                    "rust-target": "x86_64-unknown-linux-gnu",
+                    "args": "",
+                    "release-target": "linux-x86_64",
+                    "asset-arch": "x86_64",
+                    "updater-platform": "linux-x86_64",
+                    "updater-suffixes": "[\".AppImage.tar.gz\",\".AppImage\"]"
+                  },
+                  {
+                    "name": "Windows x64",
+                    "os": "windows-latest",
+                    "rust-target": "x86_64-pc-windows-msvc",
+                    "args": "",
+                    "release-target": "windows-x86_64",
+                    "asset-arch": "x64",
+                    "updater-platform": "windows-x86_64",
+                    "updater-suffixes": "[\".msi.zip\",\".nsis.zip\"]"
+                  }
+                ]
+              }
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": {
+                  "fetch-depth": 0,
+                  "ref": "${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.version) || github.ref }}"
+                }
+              },
+              {
+                "name": "Verify release tag checkout",
+                "uses": "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd",
+                "with": {
+                  "script": "const { execFileSync } = require(\"node:child_process\");\n\nconst tag = process.env.RELEASE_DESKTOP_TAG;\nexecFileSync(\"git\", [\"fetch\", \"--force\", \"--tags\", \"origin\", `refs/tags/${tag}:refs/tags/${tag}`], {\n  stdio: \"inherit\",\n});\nconst tagCommit = execFileSync(\"git\", [\"rev-list\", \"-n\", \"1\", `refs/tags/${tag}`], {\n  encoding: \"utf8\",\n}).trim();\nconst headCommit = execFileSync(\"git\", [\"rev-parse\", \"HEAD\"], {\n  encoding: \"utf8\",\n}).trim();\nif (headCommit !== tagCommit) {\n  throw new Error(`Checked out ${headCommit}, but ${tag} points to ${tagCommit}.`);\n}\n"
+                }
+              },
+              {
+                "name": "Validate updater signing secret",
+                "shell": "bash",
+                "env": {
+                  "TAURI_SIGNING_PRIVATE_KEY": "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}"
+                },
+                "run": "if [[ -z \"${TAURI_SIGNING_PRIVATE_KEY}\" ]]; then\n  echo \"::error::TAURI_SIGNING_PRIVATE_KEY must be configured in the professional-desktop-release environment for updater signing.\"\n  exit 1\nfi\n"
+              },
+              {
+                "name": "Install Tauri Linux system dependencies",
+                "if": "runner.os == 'Linux'",
+                "shell": "bash",
+                "run": "sudo apt-get update\nsudo apt-get install -y \\\n  libwebkit2gtk-4.1-dev \\\n  libgtk-3-dev \\\n  librsvg2-dev \\\n  patchelf \\\n  libayatana-appindicator3-dev \\\n  build-essential \\\n  curl \\\n  wget \\\n  file \\\n  libssl-dev\n"
+              },
+              {
+                "name": "Setup Rust toolchain",
+                "uses": "actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659",
+                "with": {
+                  "toolchain": "stable",
+                  "target": "${{ matrix.rust-target }}",
+                  "cache": true,
+                  "cache-workspaces": "apps/professional-desktop/src-tauri"
+                }
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "false", "cache-write": "false" }
+              },
+              {
+                "name": "Build Bun sidecar",
+                "shell": "bash",
+                "run": "bun run --cwd apps/professional-desktop build:sidecar"
+              },
+              {
+                "name": "Build desktop bundle",
+                "id": "tauri",
+                "uses": "tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5",
+                "env": {
+                  "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
+                  "TAURI_SIGNING_PRIVATE_KEY": "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}",
+                  "TAURI_SIGNING_PRIVATE_KEY_PASSWORD": "${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}",
+                  "APPLE_CERTIFICATE": "${{ secrets.APPLE_CERTIFICATE }}",
+                  "APPLE_CERTIFICATE_PASSWORD": "${{ secrets.APPLE_CERTIFICATE_PASSWORD }}",
+                  "APPLE_SIGNING_IDENTITY": "${{ secrets.APPLE_SIGNING_IDENTITY }}",
+                  "APPLE_ID": "${{ secrets.APPLE_ID }}",
+                  "APPLE_PASSWORD": "${{ secrets.APPLE_PASSWORD }}",
+                  "APPLE_TEAM_ID": "${{ secrets.APPLE_TEAM_ID }}"
+                },
+                "with": {
+                  "projectPath": "apps/professional-desktop",
+                  "includeUpdaterJson": false,
+                  "args": "${{ matrix.args }}"
+                }
+              },
+              {
+                "name": "Stage desktop bundle artifact",
+                "uses": "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd",
+                "env": {
+                  "ARTIFACT_PATHS": "${{ steps.tauri.outputs.artifactPaths }}",
+                  "RELEASE_DESKTOP_ASSET_ARCH": "${{ matrix.asset-arch }}",
+                  "RELEASE_DESKTOP_TARGET": "${{ matrix.release-target }}",
+                  "STAGING_DIR": "${{ runner.temp }}/desktop-release-${{ matrix.release-target }}",
+                  "UPDATER_PLATFORM": "${{ matrix.updater-platform }}",
+                  "UPDATER_SUFFIXES": "${{ matrix.updater-suffixes }}"
+                },
+                "with": {
+                  "script": "const fs = require(\"node:fs\");\nconst path = require(\"node:path\");\n\nconst artifactPaths = JSON.parse(process.env.ARTIFACT_PATHS || \"[]\");\nconst assetArch = process.env.RELEASE_DESKTOP_ASSET_ARCH;\nconst stagingDir = process.env.STAGING_DIR;\nconst target = process.env.RELEASE_DESKTOP_TARGET;\nconst updaterPlatform = process.env.UPDATER_PLATFORM;\nconst updaterSuffixes = JSON.parse(process.env.UPDATER_SUFFIXES || \"[]\");\n\nif (!assetArch || !stagingDir || !target || !updaterPlatform) {\n  throw new Error(\"Missing desktop release staging metadata.\");\n}\n\nfs.mkdirSync(stagingDir, { recursive: true });\n\nconst releaseAssetName = (artifactPath) => {\n  const name = path.basename(artifactPath);\n  if (target.startsWith(\"darwin-\") && name.endsWith(\".app.tar.gz\")) {\n    return `${name.slice(0, -\".app.tar.gz\".length)}_${assetArch}.app.tar.gz`;\n  }\n  if (target.startsWith(\"darwin-\") && name.endsWith(\".app.tar.gz.sig\")) {\n    return `${name.slice(0, -\".app.tar.gz.sig\".length)}_${assetArch}.app.tar.gz.sig`;\n  }\n  return name;\n};\n\nconst assets = [];\nconst artifactPathSet = new Set(artifactPaths);\nfor (const artifactPath of artifactPaths) {\n  if (!fs.existsSync(artifactPath)) {\n    throw new Error(`Expected tauri artifact path does not exist: ${artifactPath}`);\n  }\n\n  const stat = fs.statSync(artifactPath);\n  if (stat.isDirectory()) {\n    const archivePath = `${artifactPath}.tar.gz`;\n    const hasUpdaterArchive =\n      artifactPath.endsWith(\".app\") &&\n      artifactPathSet.has(archivePath) &&\n      fs.existsSync(archivePath) &&\n      fs.statSync(archivePath).isFile();\n\n    if (hasUpdaterArchive) {\n      continue;\n    }\n\n    throw new Error(`Expected tauri artifact path to be a file: ${artifactPath}`);\n  }\n\n  if (!stat.isFile()) {\n    throw new Error(`Expected tauri artifact path to be a file: ${artifactPath}`);\n  }\n\n  const assetName = releaseAssetName(artifactPath);\n  fs.copyFileSync(artifactPath, path.join(stagingDir, assetName));\n  assets.push(assetName);\n}\n\nconst selectUpdaterPair = () => {\n  for (const suffix of updaterSuffixes) {\n    const updaterAsset = assets.find((name) => name.endsWith(suffix));\n    if (!updaterAsset) {\n      continue;\n    }\n    const signatureAsset = `${updaterAsset}.sig`;\n    if (assets.includes(signatureAsset)) {\n      return { updaterAsset, signatureAsset };\n    }\n  }\n  return null;\n};\n\nconst updaterPair = selectUpdaterPair();\nif (!updaterPair) {\n  throw new Error(\n    `Could not find an updater asset/signature pair for ${updaterPlatform}. Observed assets: ${assets.join(\", \")}`,\n  );\n}\n\nfs.writeFileSync(\n  path.join(stagingDir, \"manifest.json\"),\n  JSON.stringify(\n    {\n      target,\n      updaterPlatform,\n      assets,\n      ...updaterPair,\n    },\n    null,\n    2,\n  ),\n);\n"
+                }
+              },
+              {
+                "name": "Upload desktop bundle artifact",
+                "uses": "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                "with": {
+                  "name": "desktop-release-${{ matrix.release-target }}",
+                  "path": "${{ runner.temp }}/desktop-release-${{ matrix.release-target }}",
+                  "if-no-files-found": "error"
+                }
+              }
+            ]
+          },
+          "release-desktop-ready": {
+            "name": "Desktop release draft ready",
+            "runs-on": "ubuntu-22.04",
+            "environment": "professional-desktop-release",
+            "permissions": { "actions": "read", "contents": "write" },
+            "needs": ["release-desktop"],
+            "if": "${{ needs.release-desktop.result == 'success' }}",
+            "env": {
+              "EXPECTED_RELEASE_TARGETS": "darwin-aarch64,darwin-x86_64,linux-x86_64,windows-x86_64",
+              "RELEASE_DESKTOP_TAG": "${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": { "fetch-depth": 1 }
+              },
+              {
+                "name": "Verify every desktop target completed",
+                "shell": "bash",
+                "env": {
+                  "RELEASE_DESKTOP_RESULT": "${{ needs.release-desktop.result }}"
+                },
+                "run": "if [[ \"${RELEASE_DESKTOP_RESULT}\" == \"cancelled\" ]]; then\n  echo \"::error title=Desktop release draft cancelled::The desktop release matrix was cancelled after approval. Keep the draft unpublished or delete it before retrying.\"\n  exit 1\nfi\nif [[ \"${RELEASE_DESKTOP_RESULT}\" != \"success\" ]]; then\n  echo \"::error title=Desktop release draft incomplete::At least one desktop release target failed. Keep the draft unpublished or delete it before retrying.\"\n  exit 1\nfi\necho \"::notice::All desktop release targets completed successfully. Staging the draft release.\"\n"
+              },
+              {
+                "name": "Download desktop bundle artifacts",
+                "if": "${{ needs.release-desktop.result == 'success' }}",
+                "uses": "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+                "with": {
+                  "pattern": "desktop-release-*",
+                  "path": "${{ runner.temp }}/desktop-release-artifacts",
+                  "merge-multiple": false
+                }
+              },
+              {
+                "name": "Stage and verify draft release assets",
+                "if": "${{ needs.release-desktop.result == 'success' }}",
+                "shell": "bash",
+                "env": { "GH_TOKEN": "${{ github.token }}" },
+                "run": "artifact_root=\"${RUNNER_TEMP}/desktop-release-artifacts\"\nmapfile -t manifests < <(find \"${artifact_root}\" -name manifest.json -type f | sort)\nif [[ \"${#manifests[@]}\" -eq 0 ]]; then\n  echo \"::error::No desktop release manifests were downloaded.\"\n  exit 1\nfi\n\nexpected_assets=\"${RUNNER_TEMP}/desktop-expected-assets.txt\"\nexpected_platforms=\"${RUNNER_TEMP}/desktop-expected-platforms.txt\"\nexpected_targets=\"${RUNNER_TEMP}/desktop-expected-targets.txt\"\nactual_targets=\"${RUNNER_TEMP}/desktop-actual-targets.txt\"\ntr ',' '\\n' <<<\"${EXPECTED_RELEASE_TARGETS}\" | sort > \"${expected_targets}\"\nexpected_target_count=\"$(wc -l < \"${expected_targets}\")\"\nif [[ \"${#manifests[@]}\" -ne \"${expected_target_count}\" ]]; then\n  echo \"::error::Expected ${expected_target_count} desktop release manifests, found ${#manifests[@]}.\"\n  exit 1\nfi\n\njq -r '.target' \"${manifests[@]}\" | sort > \"${actual_targets}\"\nif ! diff -u \"${expected_targets}\" \"${actual_targets}\"; then\n  echo \"::error::Downloaded desktop release manifests do not match the release matrix targets.\"\n  exit 1\nfi\n\njq -r '.assets[]' \"${manifests[@]}\" | sort > \"${expected_assets}\"\njq -r '.updaterPlatform' \"${manifests[@]}\" | sort > \"${expected_platforms}\"\n\nif [[ \"$(wc -l < \"${expected_assets}\")\" != \"$(sort -u \"${expected_assets}\" | wc -l)\" ]]; then\n  echo \"::error::Desktop release manifests contain duplicate asset names.\"\n  exit 1\nfi\nif [[ \"$(wc -l < \"${expected_platforms}\")\" != \"$(sort -u \"${expected_platforms}\" | wc -l)\" ]]; then\n  echo \"::error::Desktop release manifests contain duplicate updater platform keys.\"\n  exit 1\nfi\n\nrelease_json=\"$(gh release view \"${RELEASE_DESKTOP_TAG}\" --repo \"${GITHUB_REPOSITORY}\" --json databaseId,isDraft 2>/dev/null || true)\"\nif [[ -z \"${release_json}\" ]]; then\n  gh release create \"${RELEASE_DESKTOP_TAG}\" \\\n    --repo \"${GITHUB_REPOSITORY}\" \\\n    --draft \\\n    --verify-tag \\\n    --title \"Professional Desktop ${RELEASE_DESKTOP_TAG}\" \\\n    --notes \"Draft desktop release staged by CI after every native target completed.\"\n  release_json=\"$(gh release view \"${RELEASE_DESKTOP_TAG}\" --repo \"${GITHUB_REPOSITORY}\" --json databaseId,isDraft)\"\nfi\n\nif [[ \"$(jq -r '.isDraft' <<<\"${release_json}\")\" != \"true\" ]]; then\n  echo \"::error::Release ${RELEASE_DESKTOP_TAG} is not a draft. Do not publish updater artifacts before manual smoke testing.\"\n  exit 1\nfi\n\nrelease_id=\"$(jq -r '.databaseId' <<<\"${release_json}\")\"\nwhile IFS=$'\\t' read -r asset_id asset_name; do\n  if [[ -z \"${asset_id}\" ]]; then\n    continue\n  fi\n  echo \"Deleting stale draft asset ${asset_name}.\"\n  gh api -X DELETE \"repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}\" >/dev/null\ndone < <(gh api \"repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?per_page=100\" --paginate --jq '.[] | [.id, .name] | @tsv')\n\nwhile IFS= read -r asset_name; do\n  asset_file=\"$(find \"${artifact_root}\" -type f -name \"${asset_name}\" -print -quit)\"\n  if [[ -z \"${asset_file}\" ]]; then\n    echo \"::error::Expected desktop asset ${asset_name} is missing from downloaded artifacts.\"\n    exit 1\n  fi\n  gh release upload \"${RELEASE_DESKTOP_TAG}\" \"${asset_file}\" --repo \"${GITHUB_REPOSITORY}\" --clobber\ndone < \"${expected_assets}\"\n\nrelease_assets=\"${RUNNER_TEMP}/desktop-release-assets.jsonl\"\ngh api \"repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?per_page=100\" \\\n  --paginate \\\n  --jq '.[] | {name, browser_download_url}' > \"${release_assets}\"\n\nuploaded_assets=\"${RUNNER_TEMP}/desktop-uploaded-assets.txt\"\njq -r '.name' \"${release_assets}\" | sort > \"${uploaded_assets}\"\ncomm -23 \"${expected_assets}\" \"${uploaded_assets}\" | sed 's/^/missing asset: /' > \"${RUNNER_TEMP}/desktop-missing-assets.txt\"\nif [[ -s \"${RUNNER_TEMP}/desktop-missing-assets.txt\" ]]; then\n  cat \"${RUNNER_TEMP}/desktop-missing-assets.txt\"\n  echo \"::error::Draft release is missing one or more matrix-declared assets.\"\n  exit 1\nfi\n\nlatest_json=\"${RUNNER_TEMP}/latest.json\"\napp_version=\"$(jq -r '.version' apps/professional-desktop/package.json)\"\njq -n \\\n  --arg version \"${app_version}\" \\\n  --arg notes \"Professional Desktop ${RELEASE_DESKTOP_TAG}\" \\\n  '{ version: $version, notes: $notes, pub_date: (now | todateiso8601), platforms: {} }' > \"${latest_json}\"\n\nfor manifest in \"${manifests[@]}\"; do\n  platform=\"$(jq -r '.updaterPlatform' \"${manifest}\")\"\n  updater_asset=\"$(jq -r '.updaterAsset' \"${manifest}\")\"\n  signature_asset=\"$(jq -r '.signatureAsset' \"${manifest}\")\"\n  updater_url=\"$(jq -r --arg name \"${updater_asset}\" 'select(.name == $name) | .browser_download_url' \"${release_assets}\" | head -n 1)\"\n  signature_file=\"$(find \"${artifact_root}\" -type f -name \"${signature_asset}\" -print -quit)\"\n\n  if [[ -z \"${updater_url}\" ]]; then\n    echo \"::error::Matrix platform ${platform} references updater asset ${updater_asset}, which was not uploaded.\"\n    exit 1\n  fi\n  if [[ -z \"${signature_file}\" ]]; then\n    echo \"::error::Matrix platform ${platform} references signature asset ${signature_asset}, which is missing from artifacts.\"\n    exit 1\n  fi\n\n  signature=\"$(tr -d '\\r\\n' < \"${signature_file}\")\"\n  if [[ -z \"${signature}\" ]]; then\n    echo \"::error::Signature asset ${signature_asset} for ${platform} is empty.\"\n    exit 1\n  fi\n\n  tmp_latest=\"${latest_json}.tmp\"\n  jq \\\n    --arg platform \"${platform}\" \\\n    --arg url \"${updater_url}\" \\\n    --arg signature \"${signature}\" \\\n    '.platforms[$platform] = { signature: $signature, url: $url }' \\\n    \"${latest_json}\" > \"${tmp_latest}\"\n  mv \"${tmp_latest}\" \"${latest_json}\"\ndone\n\nactual_platforms=\"${RUNNER_TEMP}/desktop-actual-platforms.txt\"\njq -r '.platforms | keys[]' \"${latest_json}\" | sort > \"${actual_platforms}\"\nif ! diff -u \"${expected_platforms}\" \"${actual_platforms}\"; then\n  echo \"::error::latest.json platform keys do not match the matrix manifests.\"\n  exit 1\nfi\n\nfor manifest in \"${manifests[@]}\"; do\n  platform=\"$(jq -r '.updaterPlatform' \"${manifest}\")\"\n  updater_asset=\"$(jq -r '.updaterAsset' \"${manifest}\")\"\n  signature_asset=\"$(jq -r '.signatureAsset' \"${manifest}\")\"\n  expected_url=\"$(jq -r --arg name \"${updater_asset}\" 'select(.name == $name) | .browser_download_url' \"${release_assets}\" | head -n 1)\"\n  actual_url=\"$(jq -r --arg platform \"${platform}\" '.platforms[$platform].url' \"${latest_json}\")\"\n  expected_signature=\"$(tr -d '\\r\\n' < \"$(find \"${artifact_root}\" -type f -name \"${signature_asset}\" -print -quit)\")\"\n  actual_signature=\"$(jq -r --arg platform \"${platform}\" '.platforms[$platform].signature' \"${latest_json}\")\"\n\n  if [[ \"${actual_url}\" != \"${expected_url}\" ]]; then\n    echo \"::error::latest.json URL for ${platform} does not match uploaded asset ${updater_asset}.\"\n    exit 1\n  fi\n  if [[ \"${actual_signature}\" != \"${expected_signature}\" ]]; then\n    echo \"::error::latest.json signature for ${platform} does not match ${signature_asset}.\"\n    exit 1\n  fi\ndone\n\ngh release upload \"${RELEASE_DESKTOP_TAG}\" \"${latest_json}\" --repo \"${GITHUB_REPOSITORY}\" --clobber\ngh release view \"${RELEASE_DESKTOP_TAG}\" --repo \"${GITHUB_REPOSITORY}\" --json assets,isDraft \\\n  --jq 'select(.isDraft == true) | .assets[].name' | grep -Fx latest.json >/dev/null\necho \"::notice::Draft release ${RELEASE_DESKTOP_TAG} contains all matrix-declared assets and a complete latest.json.\"\n"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": ".github/workflows/storybook.yml",
+      "sha256": "03ec06e03fac4022c1320bbaa8c2d76c0b4bc03b658324bcbd46679e2bc86f6c",
+      "document": {
+        "name": "Storybook",
+        "on": {
+          "pull_request": { "branches": ["main"] },
+          "push": { "branches": ["main"] }
+        },
+        "concurrency": {
+          "group": "${{ github.workflow }}-${{ github.ref }}",
+          "cancel-in-progress": true
+        },
+        "permissions": { "contents": "read" },
+        "jobs": {
+          "build-and-test": {
+            "name": "Build And Test",
+            "runs-on": "ubuntu-24.04",
+            "timeout-minutes": 60,
+            "env": {
+              "TURBO_API": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}",
+              "TURBO_TOKEN": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}",
+              "TURBO_TEAM": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}",
+              "TURBO_CACHE": "${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}"
+            },
+            "steps": [
+              {
+                "name": "Checkout repository",
+                "uses": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+                "with": { "fetch-depth": 100, "persist-credentials": false }
+              },
+              {
+                "name": "Free runner disk",
+                "if": "runner.os == 'Linux' && !startsWith(runner.name, 'beep-')",
+                "shell": "bash",
+                "run": "set -euo pipefail\necho \"Disk before cleanup:\"\ndf -h /\nsudo rm -rf \\\n  /opt/ghc \\\n  /usr/local/.ghcup \\\n  /usr/local/lib/android \\\n  /usr/local/share/boost \\\n  /usr/share/dotnet\nsudo apt-get clean\ndocker system prune --all --force --volumes || true\necho \"Disk after cleanup:\"\ndf -h /\n"
+              },
+              {
+                "name": "Setup monorepo CI",
+                "uses": "./.github/actions/setup-monorepo-ci",
+                "with": { "cache-turbo": "true", "cache-write": "false" }
+              },
+              {
+                "name": "Install Playwright Chromium",
+                "run": "bunx playwright install --with-deps chromium"
+              },
+              {
+                "name": "Build Storybook",
+                "run": "bunx turbo run storybook:build --filter=@beep/storybook --summarize"
+              },
+              {
+                "name": "Run Storybook browser tests",
+                "run": "bunx turbo run test:storybook --filter=@beep/storybook"
+              },
+              {
+                "name": "Prove static artifact",
+                "run": "test -f apps/storybook/storybook-static/index.html"
+              },
+              {
+                "name": "Upload Storybook static artifact",
+                "uses": "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                "with": {
+                  "name": "storybook-static",
+                  "path": "apps/storybook/storybook-static",
+                  "if-no-files-found": "error"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

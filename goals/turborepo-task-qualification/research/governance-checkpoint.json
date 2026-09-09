@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "cache-governance-checkpoint/v1",
+  "scope": "Uncommitted governance increment; no pilot or hosted qualification",
+  "audit": {
+    "blockingFindings": 0,
+    "unassessedCachedComputations": 928
+  },
+  "packages": [
+    {
+      "name": "@beep/repo-configs",
+      "auditSeconds": 8.9,
+      "docgenSeconds": 4.7,
+      "passed": true
+    },
+    {
+      "name": "@beep/repo-cli",
+      "auditSeconds": 359.5,
+      "docgenSeconds": 19.6,
+      "passed": true
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "standards/cache-qualification-baseline.json",
+      "sha256": "0e3f15dd12a64dd36b0ca46a4557338bd8f72c8d2016f6dc1f86615e4f86853e",
+      "bytes": 1274854
+    },
+    {
+      "path": "standards/cache-qualification.json",
+      "sha256": "3c253f3ccf58b056e9bdb2c2beb2f4303a301a5f4b7213d68a7ef79070e2e0d5",
+      "bytes": 75
+    }
+  ]
+}

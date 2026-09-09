@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "cache-entrypoint-census-checkpoint/v1",
+  "authority": "Current source integration passed focused/property tests, schema-first, live census attachment and the full CLI package audit/docgen gate. Source documents grant no task execution, signed replay, shadow or qualification credit.",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.schemas.ts",
+      "sha256": "b7543e458d93c233330ea5ac54a5a9027b93ccb2eefaa8eeb1279ee83bdd7f07"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.ts",
+      "sha256": "ec260bde6f61908dc70c3b3757c5aaf5d61d06a9255b836acab89b15459eb35c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
+      "sha256": "ea4a2ccfaf6d10167449023f5fb2a49095a858cfb26aa1f82f20a6aa7efcbd42"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "34bcec22e78d06177c70e30257b1f60066c5b0338c8b6d8e2c7400cb88e9c059"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+      "sha256": "03f3129ee22fddd2624ce11f5e21719abfcadd19243bc7803ce8057c8323f9be"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "cdaabbb8d4bc2ecaee383804923507b4bd27b4679547e23d3d9fad3f625dc488"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "442a562ec53037d1572ce9e1299f9f5e3a210286394eb057d2bfd9961ce028c1"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "f5c5903fc2356a9f27a21a35cda06b3c61e41741422e46bae8da840716b53bb5"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-entrypoints.test.ts",
+      "sha256": "5ee356eb4f085801223c15cd6636daff3eb72611931d9a120c81723b71c79eda"
+    }
+  ],
+  "request": {
+    "path": "goals/turborepo-task-qualification/research/entrypoint-review-request.json",
+    "sha256": "37158be809f3c5143562425f071aa7169fa41cf4c43d0f38642da0dbeafcde2e"
+  },
+  "liveCensus": {
+    "path": ".beep/qualification-local-preflight/census-with-entrypoint-review.json",
+    "sha256": "ff1b6d7bc93f8520d6cba73ac1524d4bf1ab187d04309140eb83030d681803c7",
+    "bytes": 3381582,
+    "workspaces": 142,
+    "configuredNodes": 2840,
+    "executableNodes": 1503,
+    "sourceBindings": 274,
+    "artifacts": 6,
+    "reviews": 5,
+    "unresolved": [
+      "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+      "Classify nested workspace and root command semantics.",
+      "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+      "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+      "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts.",
+      "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes."
+    ],
+    "completeDocumentsPreserved": true
+  },
+  "verification": {
+    "focusedInitial": {
+      "passed": true,
+      "tests": 24,
+      "path": ".beep/qualification-local-preflight/entrypoint-integration-tests-v2.log",
+      "sha256": "04ef2c9160e5b8d3c4f5b1ca239719c6371290b817358c178882895faa2dab75"
+    },
+    "attachmentPropertySuite": {
+      "passed": true,
+      "tests": 7,
+      "path": ".beep/qualification-local-preflight/entrypoint-property-test.log",
+      "sha256": "2702273c7ee20636ab34fc472b02e36b81bba96d2eeb05865b3887b9b4f3898f"
+    },
+    "typeCheck": {
+      "passed": true,
+      "path": ".beep/qualification-local-preflight/entrypoint-integration-check-v2.log",
+      "sha256": "974993c2ca103531cde55bf67ea81306d30d277f87728341ae73bbd23332d687"
+    },
+    "schemaFirst": {
+      "passed": true,
+      "advisories": 0,
+      "path": ".beep/qualification-local-preflight/entrypoint-integration-schema-first-v2.log",
+      "sha256": "78340a86a19891e37439c64e0d6badd5a555e377eaf4f3fdb2bcfc2f0b4f7529"
+    },
+    "packageVerify": {
+      "passed": true,
+      "auditSeconds": 377.4,
+      "docgenSeconds": 18.1,
+      "path": ".beep/qualification-local-preflight/entrypoint-integration-package-verify-v3.log",
+      "sha256": "3a04523651fd7b3b4c1671e552932aea357fc1a7842545cc8ee86e63728e1001"
+    },
+    "initialPackageVerify": {
+      "auditPassed": true,
+      "auditSeconds": 366.9,
+      "docgenPassed": false,
+      "docgenSeconds": 16.7,
+      "attribution": "Introduced example import failed outside its source directory; changed to the existing test facade.",
+      "path": ".beep/qualification-local-preflight/entrypoint-integration-package-verify.log",
+      "sha256": "df5df9704be23a1e4e1d75c7e9fdbdbfc3c6b53c6311635f11002fe720051b1b"
+    },
+    "plannerRefresh": {
+      "ciQualityBytesUnchangedBothContexts": true,
+      "yeetOnlyQuietLintCommandChangedBothContexts": true,
+      "changedValuesPerYeetContext": 60
+    },
+    "secondPackageVerify": {
+      "auditPassed": false,
+      "auditSeconds": 340.7,
+      "docgenPassed": true,
+      "docgenSeconds": 16.0,
+      "testFilesPassed": 166,
+      "testsPassed": 3177,
+      "attribution": "The new test-facade export needed import/export ordering; the complete touched file set has now passed the formatter.",
+      "path": ".beep/qualification-local-preflight/entrypoint-integration-package-verify-v2.log",
+      "sha256": "c1ac9f622916a81ddf92f15224eab1bfc529cd2fb77689928250fe24451e5cdc"
+    },
+    "goalsDoctor": {
+      "passed": true,
+      "path": ".beep/qualification-local-preflight/entrypoint-goals-doctor-final.log",
+      "sha256": "7746539511f69ca57a66a706bae0a59ffb7392c9657bf27df62d1a459d9b9d7d",
+      "newBlockingFindings": 0,
+      "inheritedAdvisories": 4
+    },
+    "exploreCheck": {
+      "passed": true,
+      "path": ".beep/qualification-local-preflight/entrypoint-explore-check.log",
+      "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+    }
+  },
+  "remaining": [
+    "Complete dynamic interpreter and candidate runtime coverage",
+    "Signed sibling, remote comparison and shadow evidence",
+    "Final adoption handoff and Yeet acceptance"
+  ]
+}

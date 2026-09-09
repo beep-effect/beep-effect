@@ -762,6 +762,7 @@ describe("quality task adapter", () => {
     const lanes = githubCheckCheapGateLanes("/repo");
 
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
+      "cheap-gates:cache-policy",
       "cheap-gates:goals-index",
       "cheap-gates:exploration-atlas",
       "cheap-gates:config-sync",
@@ -904,11 +905,21 @@ describe("quality task adapter", () => {
       "repo-sanity:syncpack",
       "repo-sanity:sherif",
       "repo-sanity:bun-audit",
+      "repo-sanity:cache-policy",
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-sanity")).toBe(true);
     expect(lanes[0]?.step.args).toEqual(["run", "beep", "quality", "changeset-graph"]);
     expect(lanes[2]?.step.args).toEqual(["run", "beep", "quality", "fallow", "boundaries", "config-check", "--check"]);
     expect(lanes[6]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
+    expect(qualityLaneArgs(lanes, "repo-sanity:cache-policy")).toEqual(["run", "beep", "quality", "cache-policy"]);
+    for (const mode of ["repo-sanity", "quality", "pre-push"] as const) {
+      expect(qualityLaneArgs(githubCheckLanesForModeForTesting("/repo", mode), "repo-sanity:cache-policy")).toEqual([
+        "run",
+        "beep",
+        "quality",
+        "cache-policy",
+      ]);
+    }
   });
 
   it("maps pre-push external gates after repo diagnostics", () => {

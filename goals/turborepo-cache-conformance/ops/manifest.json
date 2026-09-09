@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "turborepo-cache-conformance",
+    "title": "Turborepo cache conformance",
+    "status": "paused",
+    "created": "2026-09-08",
+    "updated": "2026-09-08",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/turborepo-cache-conformance",
+  "lifecycle": "paused",
+  "mission": "Deliver a reusable exact-version Remote Cache conformance corpus and a bounded, evidence-neutral comparison of the named backend topologies.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/turborepo-quality-cache",
+    "graduated": "2026-09-08",
+    "note": "Approved BRIEF and MAP; conditional backend migration remains queued in the exploration."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Deliver a reusable exact-version Remote Cache conformance corpus and a bounded, evidence-neutral comparison of the named backend topologies. Complete only after SPEC acceptance, representative evidence, final same-PR reflection/lifecycle, and Yeet merge-ready: yes.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/turborepo-cache-conformance/README.md",
+    "goals/turborepo-cache-conformance/SPEC.md",
+    "goals/turborepo-cache-conformance/PLAN.md",
+    "goals/turborepo-cache-conformance/GOAL.md",
+    "goals/turborepo-cache-conformance/research/SOURCES.md",
+    "explorations/turborepo-quality-cache/DECISIONS.md",
+    "explorations/turborepo-quality-cache/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/turborepo-cache-conformance/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Pins, corpus and budget plan",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Local differential runner",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Disposable AWS lab",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Execute and compare",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Verify and tear down",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "wc -m < goals/turborepo-cache-conformance/GOAL.md",
+    "jq . goals/turborepo-cache-conformance/ops/manifest.json",
+    "bun run beep goals doctor",
+    "bun run beep explore --check",
+    "git diff --check -- goals/turborepo-cache-conformance",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Semantic divergence, failed invalidation, sensitive output, or unauthorized read/write/tenant crossing stops affected reuse.",
+    "Missing exact-version or milestone evidence prevents crossing that gate; continue independent work.",
+    "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
+    "Do not overwrite another owner's artifacts or weaken hosted proof."
+  ],
+  "statusNote": "Graduated 2026-09-08 after user approval; authored but not started. Launch GOAL.md to activate P0. SPEC/PLAN define milestone dependencies and measured deployment gates."
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "cache-quality-yeet-checkpoint/v1",
+  "authority": "Source and illustrative pure planner evidence only. No planned command, proof lookup, Git mutation or hosted action executed.",
+  "sourceCoverage": "Reviewed planner/interpreter files and invoked recipe inputs; not a complete runtime read-set.",
+  "sources": [
+    {
+      "path": "goals/turborepo-task-qualification/research/refresh-yeet-plans.ts",
+      "sha256": "a91ed3f29fc12eb1d1874dae740f9a7f48e5d33dea71a5f92d4ea0d4eabd1d62"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/package.json",
+      "sha256": "0cf4c765ad3f83c840fa5ef889aa59b7dc76b0603e77cd3d663fe60bfa5aaade"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+      "sha256": "50de930e17173e39b79d379f3fb13ebddc9f3ed51b96724f747f546b44f94dce"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "sha256": "4d2f25fe2d43861ab12a436b35da121810998386eb79c77316433dc3fee09c2e"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
+      "sha256": "80b71abe584c2930f1f478f3333ebefa7eda6216c9509d993b95161be6778e2b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "sha256": "7dd9f508b927a881a05e4779f23e9f1725adcc6f2da721fa70eacd4f03028f62"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "sha256": "43b2e21dc1e3102fd75bccc5e59478f9ff12e13d3a9f204a85d69a710a193bd9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "sha256": "71b087d413d1493eb815e74a79f85e2f78bb56bc2b0f5c9651d2ea27a7306001"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "64aee28fa9a0e8e21b3019135d8052df52e858dfb3bb6311c7de910bad691e4b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts",
+      "sha256": "428284b4615d7800abff6dbc291e7e37222ad7c1229701236125a05486f4c89f"
+    }
+  ],
+  "snapshots": [
+    {
+      "path": "goals/turborepo-task-qualification/research/yeet-plans.json",
+      "sha256": "f2aa4876e6dcac53e2e09959fe19ba5fb2e55c00cae7b48c0331e6289dc4f054"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/yeet-plans-hosted.json",
+      "sha256": "d5c44675adbe8a63a120f55e9ac3cf550a6113237c8fe58fb195e3dc6ce74bcf"
+    }
+  ],
+  "validation": {
+    "plansPerContext": 30,
+    "branchContextsPerSnapshot": 2,
+    "modeVariantsPerBranch": 15,
+    "hardwareExamplesPerContext": 3,
+    "hardwareExamplesAreMeasurements": false,
+    "byteIdenticalRegenerationBothContexts": true,
+    "prePushHookStaticPlanEmptyButHandlerExecutes": true,
+    "publicationPlansExecuted": false,
+    "sourceHomePathsAbsent": true
+  },
+  "remaining": [
+    "Operational census integration of nested interpreters and artifact writes",
+    "Remaining workflow/action boundaries",
+    "Candidate runtime read/write/capture evidence",
+    "Existing-owner hosted proof and workflow provenance"
+  ]
+}

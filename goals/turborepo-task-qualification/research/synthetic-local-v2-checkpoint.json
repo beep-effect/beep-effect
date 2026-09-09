@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "cache-synthetic-local-v2-checkpoint/v1",
+  "authority": "The v2 runner passed exact stable/canary local experiments and its launch-time full package gate. Sources below identify that launch checkpoint; later census integration changes the public barrel and has a separate package gate. No signed replay, shadow or qualification credit.",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "sha256": "0380120130d3ed24278ae8127ad9ed86ebfe72638a121528bc362e842927104a"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.schemas.ts",
+      "sha256": "37b43c532442a8f740d3b5cfef38ba28b180452beec5d7c99d3041b7ca8e794d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "55e92c98834bd189d2aa15e5a490dca01a5e02f6a880ce05d82eb3da0a841e17"
+    }
+  ],
+  "verification": {
+    "format": "passed",
+    "stableRuntime": {
+      "passed": true,
+      "path": "goals/turborepo-task-qualification/research/synthetic-local-v2-stable.json",
+      "sha256": "7e93130a4f59c7281dec4789164ac0e7f519c8f1538dc610fbd9183b0b818663",
+      "executions": 21,
+      "nonExecutions": 1,
+      "checks": 16,
+      "allChecksPassed": true
+    },
+    "canaryRuntime": {
+      "passed": true,
+      "path": "goals/turborepo-task-qualification/research/synthetic-local-v2-canary.json",
+      "sha256": "43908e5c1948c091fcea4ba96410dd4d8f82b47b9b584098894726f122069613",
+      "executions": 21,
+      "nonExecutions": 1,
+      "checks": 16,
+      "allChecksPassed": true
+    },
+    "repoCliFullPackageVerify": {
+      "passed": true,
+      "auditSeconds": 381.7,
+      "docgenSeconds": 19.8,
+      "privateLog": ".beep/qualification-local-preflight/synthetic-v2-package-verify.log",
+      "sha256": "54c169a185defaf6078edd43cbdfe80d78463a6cacfe180f6f98fb32051d2968"
+    },
+    "schemaFirst": "passed-zero-advisories"
+  },
+  "remaining": [
+    "Lockfile and runtime/package-manager perturbations",
+    "Synthetic signed replay and shadow protocol",
+    "Durable real pilot matrix and capture repair",
+    "Accepted sibling integration",
+    "Census integration and Yeet acceptance"
+  ]
+}

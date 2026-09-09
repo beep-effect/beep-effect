@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "cache-qualification-seed/v1",
+  "capturedAt": "2026-09-04",
+  "computationUniverse": {
+    "source": "task-census.json",
+    "count": 1503,
+    "identity": "<workspace-name>#<task-name>",
+    "expansion": "Reconstruct each computation from taskFamilies.population and packages."
+  },
+  "states": [
+    "unassessed",
+    "excluded",
+    "candidate",
+    "shadow",
+    "qualified",
+    "suspended"
+  ],
+  "reuseLayers": [
+    "turbo-task-result",
+    "github-actions-cache-transport",
+    "quality-lane-proof",
+    "yeet-full-proof",
+    "hosted-required-status"
+  ],
+  "environmentProfiles": [
+    "local-same-checkout",
+    "local-linked-worktree",
+    "hosted-ubuntu-shared",
+    "hosted-amazon-linux-fleet",
+    "cross-runner-class"
+  ],
+  "defaultAssessment": {
+    "selector": "every computation x every reuse layer x every applicable environment profile",
+    "state": "unassessed",
+    "reason": "Configuration posture and prior cache hits are not qualification evidence."
+  },
+  "layerPolicies": [
+    {
+      "layer": "hosted-required-status",
+      "state": "excluded",
+      "selector": "all required hosted checks",
+      "reason": "A required job must start and publish its own exact-head or merge-ref status; only pure prerequisites may be reused."
+    },
+    {
+      "layer": "github-actions-cache-transport",
+      "state": "candidate",
+      "selector": "the cache directory as a transport pool, never an individual computation verdict",
+      "reason": "Restoration can improve availability but Turbo must independently accept every entry by task hash."
+    },
+    {
+      "layer": "quality-lane-proof",
+      "state": "excluded",
+      "selector": "pre-push:security and repo-sanity:bun-audit",
+      "reason": "These lanes depend on live advisory or security observations and are already excluded by source policy."
+    }
+  ],
+  "familySeeds": [
+    {
+      "tasks": [
+        "build",
+        "lint",
+        "check",
+        "test",
+        "test:property",
+        "audit",
+        "docgen",
+        "storybook:build"
+      ],
+      "turboProductionPosture": "cache-enabled",
+      "qualificationState": "unassessed",
+      "priority": "audit-first",
+      "reason": "Currently reused without a durable per-computation qualification record."
+    },
+    {
+      "tasks": ["package-test-typecheck"],
+      "turboProductionPosture": "cache-disabled",
+      "qualificationState": "unassessed",
+      "priority": "owner-coordinated",
+      "reason": "A result artifact and Turbo hash seam exist, but ProofLedger adoption belongs to time-to-certainty."
+    },
+    {
+      "tasks": ["coverage"],
+      "turboProductionPosture": "cache-disabled",
+      "qualificationState": "unassessed",
+      "priority": "split-before-qualification",
+      "reason": "Concurrent jobs have destructively shared report state; qualify pure shards separately from aggregation and verdicts."
+    },
+    {
+      "tasks": [
+        "test:integration",
+        "test:integration:parallel",
+        "test:integration:serial",
+        "test:storybook"
+      ],
+      "turboProductionPosture": "cache-disabled",
+      "qualificationState": "unassessed",
+      "priority": "volatile-boundary-first",
+      "reason": "External services, secrets, containers, browsers, concurrency, and live verdicts require decomposition before reuse."
+    },
+    {
+      "tasks": ["lint:fix", "codegen"],
+      "turboProductionPosture": "cache-disabled",
+      "qualificationState": "excluded",
+      "priority": "derive-pure-check-task",
+      "reason": "The current commands mutate source or generated state. A separate check/projection computation may be assessed."
+    },
+    {
+      "tasks": ["dev", "storybook", "storybook:start"],
+      "turboProductionPosture": "cache-disabled-persistent",
+      "qualificationState": "excluded",
+      "priority": "none",
+      "reason": "Persistent services are not finite task-result computations."
+    },
+    {
+      "tasks": ["transit"],
+      "turboProductionPosture": "default-cache-but-no-script",
+      "qualificationState": "excluded",
+      "priority": "graph-only",
+      "reason": "No workspace defines an executable transit script at this snapshot."
+    }
+  ],
+  "qualificationGate": {
+    "freshFreshRunsPerProfile": 3,
+    "freshRemoteHitRunsPerProfile": 3,
+    "minimumRepresentativeShadowDecisions": 10,
+    "maximumUnexplainedDivergence": 0,
+    "requiredEvidence": [
+      "independent perturbation of every semantic input class",
+      "declared output and terminal-log observational equivalence",
+      "negative invalidation tests",
+      "cross-root portability where claimed",
+      "supported runner and toolchain profile parity",
+      "concurrency and shared-path isolation",
+      "secret and sensitive-log capture safety",
+      "genuine remote-hit wire receipt distinct from Actions archive restoration",
+      "exact stable client and isolated exact canary client results"
+    ]
+  },
+  "transitionAuthority": {
+    "configurationMayPromoteState": false,
+    "requiredReceipt": "versioned evidence bundle plus reviewer decision",
+    "failClosedRule": "Any unexplained divergence, missing required input, unsafe log, or environment escape moves the assessment to excluded or suspended."
+  }
+}

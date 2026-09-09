@@ -2,6 +2,14 @@
 useDefault = true
 
 [[allowlists]]
+description = "Exact public synthetic canary used to verify cache capture rejection; never an operator credential."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^QUALIFICATION_SYNTHETIC_SECRET_629a94d2$''']
+paths = ['''^(?:/repo/)?packages/tooling/tool/cli/src/commands/Cache/Cache\.experiment\.ts$''']
+
+[[allowlists]]
 description = "Vendored subtrees (openclaw, effect) contain upstream docs and test fixtures with placeholder secrets"
 paths = [
   '''^\.repos/openclaw/.*$''',

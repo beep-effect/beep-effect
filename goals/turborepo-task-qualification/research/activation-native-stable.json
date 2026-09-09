@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "cache-activation-native-check/v1",
+  "client": {
+    "version": "2.10.12",
+    "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde"
+  },
+  "profile": "local-linux-x64-bun1.4.1",
+  "sourceConfiguration": "b7255729d4a83e00e17a66405c32644432360f76851caf34a0aff03e2c415ea2",
+  "predictedConfiguration": "e9242a98930cc7bfe1b088ca2fedd8fda27412b1c608807a3d20a186aef3537e",
+  "observedConfiguration": "e9242a98930cc7bfe1b088ca2fedd8fda27412b1c608807a3d20a186aef3537e",
+  "matched": true,
+  "changedNodes": ["@beep/identity#lint"],
+  "mainDisabledBytesUnchanged": true,
+  "beforeSource": {
+    "path": "goals/turborepo-task-qualification/research/activation/identity-turbo.disabled.v2.json",
+    "sha256": "20aa945348385b7947c2ee01f1a23d3ee4f73ebc517842861a55bcb750d8051e"
+  },
+  "afterSource": {
+    "path": "goals/turborepo-task-qualification/research/activation/identity-turbo.enabled.v2.json",
+    "sha256": "218501e001cdb90a811c9cfe43fdf6198d8be2740f18728cbead902226fb9ecf"
+  },
+  "authority": "Exact stable native dry-census configuration parity only. No task execution, output/log invariance, shadow decision, signed replay or qualification credit.",
+  "worktreeCleanAfterCleanup": true
+}

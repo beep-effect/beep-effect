@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "turborepo-cache-trust-observability",
+    "title": "Turborepo cache trust and observability",
+    "status": "paused",
+    "created": "2026-09-08",
+    "updated": "2026-09-08",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/turborepo-cache-trust-observability",
+  "lifecycle": "paused",
+  "mission": "Enforce signed artifact reuse, independent upload authorization, tenant isolation and attributable cache outcomes with bounded safe telemetry.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/turborepo-quality-cache",
+    "graduated": "2026-09-08",
+    "note": "Approved BRIEF and MAP; conditional backend migration remains queued in the exploration."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Enforce signed artifact reuse, independent upload authorization, tenant isolation and attributable cache outcomes with bounded safe telemetry. Complete only after SPEC acceptance, representative evidence, final same-PR reflection/lifecycle, and Yeet merge-ready: yes.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/turborepo-cache-trust-observability/README.md",
+    "goals/turborepo-cache-trust-observability/SPEC.md",
+    "goals/turborepo-cache-trust-observability/PLAN.md",
+    "goals/turborepo-cache-trust-observability/GOAL.md",
+    "goals/turborepo-cache-trust-observability/research/SOURCES.md",
+    "explorations/turborepo-quality-cache/DECISIONS.md",
+    "explorations/turborepo-quality-cache/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/turborepo-cache-trust-observability/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Threat and receipt contracts",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Posture and safe events",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Adapter and epoch remediation",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Production hardening and observation",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Verify and hand off",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "wc -m < goals/turborepo-cache-trust-observability/GOAL.md",
+    "jq . goals/turborepo-cache-trust-observability/ops/manifest.json",
+    "bun run beep goals doctor",
+    "bun run beep explore --check",
+    "git diff --check -- goals/turborepo-cache-trust-observability",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Semantic divergence, failed invalidation, sensitive output, or unauthorized read/write/tenant crossing stops affected reuse.",
+    "Missing exact-version or milestone evidence prevents crossing that gate; continue independent work.",
+    "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
+    "Do not overwrite another owner's artifacts or weaken hosted proof."
+  ],
+  "statusNote": "Graduated 2026-09-08 after user approval; authored but not started. Launch GOAL.md to activate P0. SPEC/PLAN define milestone dependencies and measured deployment gates."
+}

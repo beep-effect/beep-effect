@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "cache-qualification-store/v1",
+  "revision": 1,
+  "entries": [
+    {
+      "key": {
+        "computation": "@beep/identity#lint",
+        "layer": "turbo-task-result",
+        "profile": "local-linux-x64-bun1.4.1",
+        "epoch": "qualification-v1"
+      },
+      "status": {
+        "state": "excluded",
+        "review": {
+          "reviewer": "goal executor",
+          "reason": "Successful lint warning exposes source canary; task reuse disabled pending repair and qualification.",
+          "basis": {
+            "path": "goals/turborepo-task-qualification/research/unsafe-lint-review.md",
+            "sha256": "a085a59542f447f3c5042378a30bcde786b9ca430384b7a16e1f31fa79a4ea98"
+          }
+        }
+      }
+    }
+  ],
+  "history": [
+    {
+      "revision": 1,
+      "entry": {
+        "key": {
+          "computation": "@beep/identity#lint",
+          "layer": "turbo-task-result",
+          "profile": "local-linux-x64-bun1.4.1",
+          "epoch": "qualification-v1"
+        },
+        "status": {
+          "state": "excluded",
+          "review": {
+            "reviewer": "goal executor",
+            "reason": "Successful lint warning exposes source canary; task reuse disabled pending repair and qualification.",
+            "basis": {
+              "path": "goals/turborepo-task-qualification/research/unsafe-lint-review.md",
+              "sha256": "a085a59542f447f3c5042378a30bcde786b9ca430384b7a16e1f31fa79a4ea98"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

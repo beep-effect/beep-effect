@@ -84,6 +84,8 @@ metalness = "metalness"
 
 [files]
 extend-exclude = [
+  # Generated Graft cards mirror source identifiers and are re-admitted by .ignore.
+  "graft/**",
   # Vendored upstream API documents drivers generate from (OpenAPI / JSON Schema);
   # kept byte-faithful to upstream, so their spelling is not ours to fix.
   "packages/drivers/*/openapi.json",

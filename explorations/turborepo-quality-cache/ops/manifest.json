@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "turborepo-quality-cache",
+    "title": "Turborepo Quality Cache",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/turborepo-task-qualification",
+        "goals/turborepo-cache-conformance",
+        "goals/turborepo-cache-trust-observability",
+        "goals/turborepo-quality-cache-adoption"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-09-04",
+    "updated": "2026-09-08"
+  }
+}

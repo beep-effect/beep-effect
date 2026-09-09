@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "cache-runtime-boundary-checkpoint/v1",
+  "authority": "Source/package verification and exploratory observations; not qualification or hosted acceptance.",
+  "ownedWorkspaces": ["@beep/repo-configs", "@beep/repo-cli", "@beep/identity"],
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/package.json",
+      "sha256": "3212fa59ddc19a4534543ea235ca58dcec772a18ac1bb83a1ce2b16b99711cf5"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/src/cache/Cache.governance.policy.ts",
+      "sha256": "6eb721f94d6277b05e33999b421efec16875f99ce8bc821f985e073b56e5160d"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/src/cache/Cache.policy.ts",
+      "sha256": "ec1b1fbeea3d6bd7fc4aea42036a2f09775cf894b59ad53d13b26506f8d62223"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/src/cache/index.ts",
+      "sha256": "ca5a664d9a93ebc105225f0b8fe5f74a95ae4d1a7a3454e9650fa8e463e0ffdf"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "sha256": "416ea002ca15ab3d2799df3b10ea623a2e1d09fa27e4571bfb7edec0bb48b03d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "sha256": "63a2fc7f476c45e995c9577f97ba1a269d770b3f04e8ea2faa64a1786d924523"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "2dc69fc6dfb6eb5f2e0dd9f0f68c2f74b80d616fab35faccf4d1b0c53fa95ac4"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "83e619e0c7f11fbb16c3c6d0d4042ee793812fbca983dc013aaa662115462f33"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "c02632360bfbbb571129e0ba5434e80864afbed224086bd1a8304ae2bd2a308b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+      "sha256": "2a7f2e4273d30c008450289d0ed1d3200a39713d653d456a32691abe18fe7add"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "7dd1f59f8e36d0eff1cb7ada38c17496f486bfa5f4c2ebe07b9e97de79848edc"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "20d152beb8e8f1156436a776740ffbc39bba4c6910be4dab0ec5daf22594c268"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "2ba67ed409f33a59babb416afc74907f795b2b2f44252d54b9ce77626dea5f2f"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "sha256": "43b2e21dc1e3102fd75bccc5e59478f9ff12e13d3a9f204a85d69a710a193bd9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "sha256": "e5ecdcbe8fa0b81dc5c22178ab8840c62f50c161b545546d4ae822780545f985"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "sha256": "6d7f917acba54c5aa16d128fa953d587f11c1f87102cfc9e3bff4e37cb08d9c1"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
+      "sha256": "4cfb836f3a39466e371667dc0e4a36288d7752d1ba82720d388c239529df19be"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "sha256": "992c3981c6db5f2cf4d1bb8c94bd84cf92bfc073d399f623b8d988d6555a66a9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "sha256": "9d7a57c7ef2ce4559e9e4088f41442ff781da2a3e94a322e819fdb6311051852"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/turbo.json",
+      "sha256": "20aa945348385b7947c2ee01f1a23d3ee4f73ebc517842861a55bcb750d8051e"
+    },
+    {
+      "path": "standards/cache-qualification-baseline.json",
+      "sha256": "0e3f15dd12a64dd36b0ca46a4557338bd8f72c8d2016f6dc1f86615e4f86853e"
+    },
+    {
+      "path": "standards/cache-qualification.json",
+      "sha256": "6c16ab7960e4118a3d509925fcf1f2c37d6e2d3377f3f59217eda23b3a136bf8"
+    }
+  ],
+  "ledgerRevision": 1,
+  "qualifiedCount": 0,
+  "excludedComputations": ["@beep/identity#lint"],
+  "unassessedCachedCount": 927,
+  "census": {
+    "workspaces": 142,
+    "configuredNodes": 2840,
+    "executableNodes": 1503,
+    "entrypointSources": 106,
+    "sourceDigests": 259,
+    "fullReportSha256": "7f1bd5daa18200720c106394f69900876b7fc845d1808e357220e7a432004363"
+  },
+  "verification": "runtime-boundary-verification-2026-09-09.md",
+  "siblingEvidence": "not found in searched local histories and roots; both goal packets unstarted"
+}
