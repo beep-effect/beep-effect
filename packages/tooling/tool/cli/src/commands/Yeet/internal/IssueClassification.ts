@@ -204,7 +204,7 @@ const knownSubLaneHints: ReadonlyArray<KnownSubLaneHint> = [
     needle: "lint:tsgo-rules",
     subCategory: "tsgo-rules",
     category: "effect-tsgo-policy",
-    remediation: "Repair the reported tsgo or Vitest alias drift, then rerun the cheap-gates tier.",
+    remediation: "Repair the reported tsgo or Vitest alias drift, then rerun `bun run beep quality tsgo-rules`.",
   },
   {
     needle: "lint:effect-imports",

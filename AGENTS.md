@@ -83,8 +83,9 @@ models and effort levels they actually recorded.
 
 - Every workspace manifest's scripts block is generated: run
   `bun run beep lint package-scripts --write` instead of hand-editing task-facing keys.
-- Quality lane ids name the command they run (`quality:knip`, `lint:schema-first`); the tier is
-  `GithubCheckLaneSpec.tier`, never an id prefix, and the step label is the log prefix (TTC ruling 28).
+- Quality lane ids name the command they run (`quality:knip`, `lint:schema-first`);
+  the tier is `GithubCheckLaneSpec.tier`, never an id prefix, and the step label
+  is the log prefix (TTC ruling 28).
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
   `... verify`, `... publish --message "..."`, `... monitor`. Keep those
   commands green.
