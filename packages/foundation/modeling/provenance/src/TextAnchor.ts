@@ -161,7 +161,7 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
         SchemaTransformation.transform({
           decode: (value) =>
             TextAnchor.make({ ...value, endChar: NonNegativeInt.make(value.startChar + Str.length(value.quote)) }),
-          encode: (value) => value,
+          encode: identity,
         })
       ),
     description:

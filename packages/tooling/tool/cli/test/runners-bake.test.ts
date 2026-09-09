@@ -866,6 +866,8 @@ describe("runner bake planning and argv", () => {
           cwd: repoRoot,
           env: {
             HOME: home,
+            // Keep an inherited host nvm installation out of this allocation-failure fixture.
+            NVM_DIR: path.join(home, ".nvm"),
             PATH: `${fakeBin}:/usr/bin:/bin`,
             XDG_CACHE_HOME: path.join(fixtureRoot, "cache"),
           },

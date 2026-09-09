@@ -344,6 +344,7 @@ const withProofCoordinatorRepo = <Result, Error, Requirements>(
         const repositoryIdentity = `https://example.test/${path.basename(repo.tmpDir)}.git`;
         yield* runGit(repo.tmpDir, ["remote", "add", "origin", repositoryIdentity]);
         const lockPath = yield* proofLockPathForContext(repo.tempContext);
+        yield* fs.makeDirectory(path.dirname(lockPath), { recursive: true, mode: 0o700 });
         const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
         yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {
           discard: true,
@@ -368,6 +369,9 @@ const withProofCoordinatorRepo = <Result, Error, Requirements>(
             { discard: true }
           );
         })
+    ).pipe(
+      // Keep every coordinator and nested repository in this test on one disposable root.
+      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${repo.tmpDir}/runtime` }))
     )
   );
 
