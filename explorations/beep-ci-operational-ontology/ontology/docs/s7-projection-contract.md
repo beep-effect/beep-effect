@@ -243,7 +243,7 @@ and episode binding in memory; they do not certify vocabulary ratification.
   `apps/labs/ciops`; it prints the replay report without overwriting frozen
   packet evidence. The v2 emission golden is compared byte-for-byte with
   current emitter output by the package tests, then queried with amended
-  CQ-020 by `scripts/check-emission-cq.py` in that app.
+  CQ-020 by `apps/labs/ciops/scripts/check-emission-cq.py`.
 - `bun run beep quality package-verify @beep/ciops` green before handoff;
   packet gates (`validate_packet.py` base/`--s5`/`--s6`, CQ suite) stay
   green and untouched.
