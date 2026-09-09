@@ -38,6 +38,7 @@ import {
 import * as A from "effect/Array";
 import { constant, dual } from "effect/Function";
 import * as HS from "effect/HashSet";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -59,7 +60,7 @@ import {
   writeAdmissionProtocol,
 } from "./AdmissionJournal.ts";
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
-import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
+import { isProcessIdentityAlive, isProcessPidAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
 import {
   AdmissionClaimSinkState,
   AdmissionConfig,
@@ -519,15 +520,27 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
   return yield* writeAdmissionProtocol(directories.root, eviction);
 });
 
+// Staging siblings are named `<target>.tmp-<pid>-<uuid>`: the pid lets the
+// repair scan tell an orphan (dead writer) from a live in-flight publication.
+const stagingTemporaryPath = (filePath: string): string => `${filePath}.tmp-${process.pid}-${randomUUID()}`;
+
+const stagingFileNamePattern = /\.tmp-(\d+)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+const stagingFileOwnerPid = (name: string): O.Option<number> =>
+  pipe(
+    O.fromNullishOr(stagingFileNamePattern.exec(name)),
+    O.flatMap((match) => O.fromUndefinedOr(match[1])),
+    O.flatMap(Num.parse)
+  );
+
 // Stage the complete content in a sibling temp file so publication (rename or
 // hard link) is atomic and a concurrent repair scan can never observe (and
 // quarantine) a partial write.
 const stageTemporaryFile = Effect.fnUntraced(function* (
-  filePath: string,
+  temporary: string,
   content: string
-): Effect.fn.Return<string, QualitySchedulerError, FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const temporary = `${filePath}.tmp-${process.pid}-${randomUUID()}`;
   yield* Effect.scoped(
     Effect.gen(function* () {
       const file = yield* fs.open(temporary, { flag: "w" });
@@ -535,7 +548,25 @@ const stageTemporaryFile = Effect.fnUntraced(function* (
       yield* file.sync;
     })
   ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission state at ${temporary}.`)));
-  return temporary;
+});
+
+// Stage, then publish. The staged temporary is removed once the pair settles,
+// however it settles: a successful rename already consumed it (the forced
+// remove is a no-op), a hard link or any failure leaves it behind, and an
+// interrupt can land mid-write or between the two steps because every lease
+// release interrupts the heartbeat fiber. `Effect.ensuring` runs its finalizer
+// uninterruptibly, so no exit path can strand a `.tmp-` sibling.
+const withStagedTemporaryFile = Effect.fnUntraced(function* <A>(
+  filePath: string,
+  content: string,
+  publish: (temporary: string) => Effect.Effect<A, QualitySchedulerError, FileSystem.FileSystem>
+): Effect.fn.Return<A, QualitySchedulerError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const temporary = stagingTemporaryPath(filePath);
+  return yield* stageTemporaryFile(temporary, content).pipe(
+    Effect.andThen(publish(temporary)),
+    Effect.ensuring(fs.remove(temporary, { force: true }).pipe(Effect.ignore))
+  );
 });
 
 const writeFileAtomic = Effect.fnUntraced(function* (
@@ -543,10 +574,11 @@ const writeFileAtomic = Effect.fnUntraced(function* (
   content: string
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const temporary = yield* stageTemporaryFile(filePath, content);
-  yield* fs
-    .rename(temporary, filePath)
-    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission state at ${filePath}.`)));
+  yield* withStagedTemporaryFile(filePath, content, (temporary) =>
+    fs
+      .rename(temporary, filePath)
+      .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission state at ${filePath}.`)))
+  );
 });
 
 const tryCreateExclusive = Effect.fnUntraced(function* (
@@ -554,18 +586,36 @@ const tryCreateExclusive = Effect.fnUntraced(function* (
   content: string
 ): Effect.fn.Return<boolean, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const temporary = yield* stageTemporaryFile(filePath, content);
-  const linked = yield* fs.link(temporary, filePath).pipe(
-    Effect.as(true),
-    Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "AlreadyExists"
-        ? Effect.succeed(false)
-        : Effect.fail(QualitySchedulerError.new(`Failed to atomically create ${filePath}.`)(error))
+  return yield* withStagedTemporaryFile(filePath, content, (temporary) =>
+    fs.link(temporary, filePath).pipe(
+      Effect.as(true),
+      Effect.catchTag("PlatformError", (error) =>
+        error.reason._tag === "AlreadyExists"
+          ? Effect.succeed(false)
+          : Effect.fail(QualitySchedulerError.new(`Failed to atomically create ${filePath}.`)(error))
+      )
     )
   );
-  yield* fs.remove(temporary, { force: true }).pipe(Effect.ignore);
-  return linked;
 });
+
+/**
+ * Exercise the atomic stage-and-rename write without entering the scheduler.
+ *
+ * **Example** (Build an atomic write effect)
+ *
+ * ```ts
+ * import { writeFileAtomicForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const publication = writeFileAtomicForTesting("/repo/state.json", "{}")
+ * ```
+ *
+ * @param filePath - Destination replaced atomically once the content is staged.
+ * @param content - Content staged in a sibling temporary before the rename.
+ * @returns An Effect that completes once the destination is published.
+ * @category testing
+ * @since 0.0.0
+ */
+export const writeFileAtomicForTesting = writeFileAtomic;
 
 /**
  * Exercise exclusive-publication collisions without entering the scheduler.
@@ -585,6 +635,33 @@ const tryCreateExclusive = Effect.fnUntraced(function* (
  * @since 0.0.0
  */
 export const tryCreateExclusiveForTesting = tryCreateExclusive;
+
+// Orphaned staging siblings never settle into `.json` state, so the entry scan
+// cannot see them. Under repair, sweep the ones whose writer pid is gone; a
+// live pid is an in-flight publication and is retained.
+const reapStaleStagingFiles = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* Effect.forEach(
+    [directories.claims, directories.leases, directories.promotions, directories.queue],
+    Effect.fnUntraced(function* (directory: string) {
+      const names = yield* fs
+        .readDirectory(directory)
+        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission state in ${directory}.`)));
+      yield* Effect.forEach(
+        A.getSomes(A.map(names, (name) => O.map(stagingFileOwnerPid(name), (pid) => ({ name, pid })))),
+        ({ name, pid }) =>
+          Effect.flatMap(isProcessPidAlive(pid), (alive) =>
+            alive ? Effect.void : fs.remove(path.join(directory, name), { force: true }).pipe(Effect.ignore)
+          ),
+        { discard: true }
+      );
+    }),
+    { discard: true }
+  );
+});
 
 interface LiveAdmissionState {
   readonly dead: ReadonlyArray<string>;
@@ -1260,6 +1337,7 @@ const scanAdmissionState = Effect.fnUntraced(function* (
   retainedDeadLeasePaths: ReadonlyArray<string> = A.empty()
 ): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   yield* repair ? recoverPromotionTransitions(directories) : Effect.void;
+  yield* repair ? reapStaleStagingFiles(directories) : Effect.void;
   const leases = yield* collectAdmissionEntries(
     directories,
     directories.leases,
