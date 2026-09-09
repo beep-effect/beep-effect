@@ -42,9 +42,10 @@ merged at 07:19 UTC on 2026-09-09 with all 18 required hosted checks passed.
 Its final head `3324595a3b` was still queued for local proof; that owned run
 was stopped cleanly after the merge. The final packet update and terminal
 Yeet monitor verdict remain outstanding. The operator approved a successor
-draft closeout PR on 2026-09-09. Branch `codex/inline-schema-packet-closeout`
-starts from the #1038 squash merge and will retain draft status through local
-proof and the final packet update. No successor PR has been opened yet.
+draft closeout PR on 2026-09-09. [PR #1042](https://github.com/beep-effect/beep-effect/pull/1042)
+is open as a draft on branch `codex/inline-schema-packet-closeout`, based on
+the #1038 squash merge. It will remain draft through local proof and the
+final packet update.
 P2 stays open with the canonical repository and hosted acceptance item; the
 completed local and package proofs do not close that remaining gate.
 

@@ -523,9 +523,27 @@
   through local proof and the final packet update.
 - **Evidence:** `bun run beep yeet publish --help` describes `--pr` as creating
   a ready, non-draft PR. There is no draft flag, and `--start-pr-early` requires
-  `--pr`. The supported fallback is a normal verified push followed by
-  `gh pr create --draft`; this delays remote review until that first proof
-  finishes.
+  `--pr`. For #1042, Yeet committed the packet and passed the clean-HEAD
+  installation, then a manual early push and `gh pr create --draft` started
+  remote checks while the same full proof continued. This preserved draft
+  status but required separate publication bookkeeping.
 - **Prevention:** Carry an explicit draft flag through Yeet's PR creation
   path, including early publication, without changing the local proof or
   hosted acceptance requirements.
+
+## 2026-09-09 - Atlas check failed without its diagnostic
+
+- **Work:** Run the first full publication proof for draft PR #1042 after
+  moving onto the latest mainline.
+- **Evidence:** `bun run beep explore atlas --check` exited 1 without the
+  underlying reason; adding `--log-level debug` did not expose it. Calling
+  the existing read-only projection API reported zero derivation issues and
+  exactly one drift path, ignored `explorations/ATLAS.md`. The canonical
+  `--write` regenerated that projection without changing tracked files, and
+  the exact check then passed. The collected wave continued through a
+  461,906 ms TSGo test check after the atlas failure.
+- **Prevention:** Print the typed failure's diagnostic before returning its
+  nonzero exit status, including through aggregate runners. Distinguish local
+  ignored-projection drift from tracked README or source drift, and expose
+  cheap projection failures before long checks. Preserve that distinction in
+  the repair command instead of making operators invoke internal read APIs.

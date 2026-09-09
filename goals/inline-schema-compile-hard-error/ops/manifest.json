@@ -76,13 +76,13 @@
       "id": "P3",
       "name": "Yeet: PR to mergeable",
       "status": "in-progress",
-      "evidence": "PRs #1019, #1022, #1028, and #1038 merged. All thirteen review threads are resolved. Evidence commit 59bba09125 passed full Yeet publication with 67 reported lanes and all 23 local CI-parity stages. PR #1038 merged at 07:19 UTC on 2026-09-09 before its final-head local proof and terminal merge-ready: yes result. The operator approved a successor draft PR on branch codex/inline-schema-packet-closeout, retained as a draft through local proof and the final packet update. Publication and final-head readiness remain outstanding."
+      "evidence": "PRs #1019, #1022, #1028, and #1038 merged. All thirteen predecessor review threads are resolved. Evidence commit 59bba09125 passed full Yeet publication with 67 reported lanes and all 23 local CI-parity stages. PR #1038 merged at 07:19 UTC on 2026-09-09 before its final-head local proof and terminal merge-ready: yes result. Operator-approved successor PR #1042 is open as a draft on branch codex/inline-schema-packet-closeout. It will remain draft through local proof and the final packet update. Final-head readiness remains outstanding."
     },
     {
       "id": "P4",
       "name": "Close",
       "status": "in-progress",
-      "evidence": "The September 8 reflection and September 9 follow-up record the implementation lessons and completed proofs. The corrected package evidence merged in #1038, but that PR merged before its final lifecycle update. The operator approved a successor draft closeout PR on 2026-09-09, with the publication exception recorded in SPEC.md. README.md, PLAN.md, and this manifest remain active until the original verification and packet gates are complete in that successor."
+      "evidence": "The September 8 reflection and September 9 follow-up record the implementation lessons and completed proofs. The corrected package evidence merged in #1038, but that PR merged before its final lifecycle update. The operator approved successor draft PR #1042 on 2026-09-09, with the publication exception recorded in SPEC.md. README.md, PLAN.md, and this manifest remain active until the original verification and packet gates are complete in #1042."
     }
   ],
   "verificationCommands": [

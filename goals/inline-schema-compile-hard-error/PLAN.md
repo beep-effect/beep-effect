@@ -28,9 +28,10 @@ reported lanes, including all 23 local CI-parity stages. PR #1038 merged at
 07:19 UTC before its final-head local proof or packet update. All four of its
 review threads are resolved and all 18 required hosted checks passed. The
 owned queued proof was stopped cleanly after the merge. The operator then
-approved a successor draft PR on branch `codex/inline-schema-packet-closeout`,
-retained as a draft through local proof and the final packet update. The
-successor has not been opened yet. No verification requirement is waived.
+approved [successor PR #1042](https://github.com/beep-effect/beep-effect/pull/1042)
+on branch `codex/inline-schema-packet-closeout`. It is open as a draft and
+will remain draft through local proof and the final packet update. No
+verification requirement is waived.
 P2 remains in progress while the canonical repository and hosted acceptance
 item is open, even though the implementation's local and package proofs passed.
 

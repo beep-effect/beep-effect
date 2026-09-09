@@ -239,7 +239,19 @@ relabeled as proof of `3324595a3b`.
 `yeet status --remote` now reports `merge-ready: no, blocked on pr-open`.
 The packet remains active. The exception naming #1038 cannot be fulfilled
 after its merge. The operator subsequently approved a successor draft
-closeout PR on 2026-09-09. Branch `codex/inline-schema-packet-closeout` starts
-from the #1038 squash merge. It will stay draft through local proof and the
-final packet update, then complete final-head verification before being
-marked ready for the operator to merge. No further PR has been opened yet.
+closeout PR on 2026-09-09. [PR #1042](https://github.com/beep-effect/beep-effect/pull/1042)
+is open as a draft on branch `codex/inline-schema-packet-closeout`, based on
+the #1038 squash merge. It will stay draft through local proof and the final
+packet update, then complete final-head verification before being marked
+ready for the operator to merge.
+
+The opening commit `e749d9a89ec43044ac26e69aad5d8b5a8d1431a6` passed its
+clean-HEAD frozen installation, then was pushed manually while the same Yeet
+publication proof continued. `gh pr create --draft` opened #1042 without
+using Yeet's ready-only PR creation. The local wave found drift only in the
+ignored `explorations/ATLAS.md`; the canonical projection write repaired it
+without changing tracked files, and the exact check then passed. The TSGo
+test check also passed in 461,906 ms. After the new review requested the
+successor PR reference, the already-red publication was interrupted cleanly
+with exit 130 so the correction could be published promptly. These partial
+results are not a completed full proof.
