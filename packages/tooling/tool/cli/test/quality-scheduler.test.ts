@@ -3278,6 +3278,38 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("scheduler reap dispatched without --apply prints the dry-run report and mutates nothing", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            const deadTicket = yield* writeFakeTicket(tempRoot, {
+              pid: DEAD_PID,
+              procStart: "dead-flagless-owner",
+              nonce: "dead-flagless-ticket",
+              originKey: "dead-flagless-origin",
+            });
+            const before = yield* listDirectory(tempRoot.queue);
+            expect(before).toStrictEqual([path.basename(deadTicket)]);
+
+            // Regression: the boolean flag once had no default, so the flagless
+            // invocation failed with "Missing required flag: --apply" and the
+            // documented dry-run path was unreachable from the CLI.
+            const exit = yield* Effect.exit(runQualityCommand(["scheduler", "reap"]));
+            expect(exit._tag, String(exit)).toBe("Success");
+
+            const output = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            expect(output).toContain("dry run — would reap:");
+            expect(output).toContain(deadTicket);
+            expect(output).not.toContain("reaped dead admission state:");
+            expect(yield* listDirectory(tempRoot.queue)).toStrictEqual([path.basename(deadTicket)]);
+          })
+        );
+      }).pipe(provideScopedLayer(TestConsole.layer), provideScopedLayer(SchedulerCommandLayer))
+    ));
+
   it("atomically claims dead leases and tickets before journaling each death once", () =>
     Effect.runPromise(
       Effect.gen(function* () {

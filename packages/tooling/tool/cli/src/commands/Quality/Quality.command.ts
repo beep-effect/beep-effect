@@ -3412,6 +3412,7 @@ const schedulerReapCommand = Command.make(
   "reap",
   {
     apply: Flag.boolean("apply").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Actually remove dead admission state (default: dry-run report)")
     ),
   },
