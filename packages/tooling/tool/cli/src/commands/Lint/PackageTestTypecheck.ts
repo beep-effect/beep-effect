@@ -41,20 +41,20 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, O, pipe, R, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Order, Path } from "effect";
+import { Console, Effect, FileSystem, Order, Path } from "effect";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../internal/artifacts/index.ts";
 import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {
   checkScriptTestTypecheckCoverage,
-  isDirectoryPath,
   pathExists,
   pathTypeOf,
   readOptionalText,
   uncoveredTestSources,
 } from "../../internal/quality/TestTypecheckCoverage.ts";
 import { diffMembership, enforceRatchet } from "../../internal/ratchet/index.ts";
+import { collectOwnedPaths, testFixtureSegment, walkableChildPaths } from "./internal/WorkspaceWalk.ts";
 import { TestTypecheckBaselineError } from "./Lint.errors.ts";
 
 const $I = $RepoCliId.create("commands/Lint/PackageTestTypecheck");
@@ -62,12 +62,10 @@ const $I = $RepoCliId.create("commands/Lint/PackageTestTypecheck");
 const defaultBaselinePath = "standards/test-typecheck.blindspot-baseline.jsonc";
 const regenerationCommand = "bun run beep lint package-test-typecheck --write-baseline";
 const checkCommand = "bun run beep lint package-test-typecheck";
-// Mirrors the repo-wide `beep quality test-tsgo` lane's search roots and ignore
-// sets so both gates agree on what counts as a package test source.
+// Mirrors the repo-wide `beep quality test-tsgo` lane's search roots; the
+// ignore set every Lint walk shares lives in ./internal/WorkspaceWalk.ts.
 const packageSearchRoots = ["apps", "infra", "packages"] as const;
-const ignoredDirectoryNames = HashSet.fromIterable(["node_modules", "dist", "dist-test", "coverage", "tmp", ".turbo"]);
 const testDirectoryName = "test";
-const testFixtureSegment = "/test/fixtures/";
 const testSourcePattern = /\.(?:cts|mts|ts|tsx)$/u;
 const newPackageHandling =
   "New packages scaffolded with `beep create-package` or `beep architecture` already wire `beep:check:tests` into `beep:check`; keep new packages out of this baseline rather than regenerating it.";
@@ -225,45 +223,21 @@ const blindSpotOrder = sameBlindSpotPackage;
 const samePackage = (left: TestTypecheckBlindSpot, right: TestTypecheckBlindSpot): boolean =>
   left.package === right.package;
 
-// Child paths worth descending into: build and vendor directory names are
-// pruned here so every walk in this lint agrees on traversal scope.
-const walkableChildPaths = Effect.fn("PackageTestTypecheck.walkableChildPaths")(function* (
-  currentPath: string
+// A directory owns itself when it carries a package manifest.
+const packageDirectoryOwnedIn = Effect.fn("PackageTestTypecheck.packageDirectoryOwnedIn")(function* (
+  directory: string
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
+  const hasManifest = yield* pathExists(fs, path.join(directory, "package.json"));
 
-  return pipe(
-    entries,
-    A.filter((entry) => !HashSet.has(ignoredDirectoryNames, entry)),
-    A.map((entry) => path.join(currentPath, entry))
-  );
+  return hasManifest ? A.of(normalizePath(path.resolve(directory))) : A.empty<string>();
 });
 
-const collectPackageDirectories = Effect.fn("PackageTestTypecheck.collectPackageDirectories")(function* (
+const collectPackageDirectories = (
   searchRoot: string
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-
-  const walk = Effect.fn("PackageTestTypecheck.collectPackageDirectories.walk")(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-    if (!(yield* isDirectoryPath(fs, currentPath))) {
-      return A.empty<string>();
-    }
-
-    const hasManifest = yield* pathExists(fs, path.join(currentPath, "package.json"));
-    const own = hasManifest ? A.of(normalizePath(path.resolve(currentPath))) : A.empty<string>();
-    const children = yield* walkableChildPaths(currentPath);
-    const nested = yield* Effect.forEach(children, walk, { concurrency: 1 });
-
-    return A.appendAll(own, A.flatten(nested));
-  });
-
-  return yield* walk(searchRoot);
-});
+): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
+  collectOwnedPaths(searchRoot, packageDirectoryOwnedIn);
 
 // Every TypeScript source under a package's test tree, absolute and sorted.
 // This is the exact file set coverage is judged against, so the walk's ignore

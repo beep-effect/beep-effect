@@ -233,7 +233,7 @@ const ExpectedNextjsAppScripts = {
   dev: "portless marketing-web.beep next dev --turbopack",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "next build --turbopack",
-  "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
+  "beep:check": "tsgo -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -255,7 +255,7 @@ const ExpectedTauriAppScripts = {
   "dev:tauri": "tauri dev",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "vite build",
-  "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
+  "beep:check": "tsgo -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -308,7 +308,7 @@ describe("create-package script writers", () => {
       dev: "portless example.labs.beep bun src/main.ts",
       "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
       "beep:build": "tsgo -p tsconfig.check.json",
-      "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
+      "beep:check": "tsgo -p tsconfig.check.json",
       "beep:lint": "biome check .",
       "beep:lint:fix": "biome check . --write",
       "beep:test": "bunx --bun vitest run",
@@ -979,9 +979,7 @@ describe("create-package", { concurrent: false }, () => {
                 yield* readJsonFile(path.join(packageDir, "package.json"))
               );
 
-              expect(generatedPackage.scripts["beep:check"]).toBe(
-                "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit"
-              );
+              expect(generatedPackage.scripts["beep:check"]).toBe("tsgo -p tsconfig.check.json");
               expect(generatedPackage.scripts.dev).toBe(
                 "portless vite-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'"
               );
@@ -1036,9 +1034,7 @@ describe("create-package", { concurrent: false }, () => {
             const generatedPackage = decodeGeneratedPackageManifest(
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
-            expect(generatedPackage.scripts["beep:check"]).toBe(
-              "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit"
-            );
+            expect(generatedPackage.scripts["beep:check"]).toBe("tsgo -p tsconfig.check.json");
 
             const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
             expect(decodeTsconfigIncludes(appTsconfig).include).toContain("../../vitest.aliases.generated.json");
@@ -1075,7 +1071,7 @@ describe("create-package", { concurrent: false }, () => {
               ...ExpectedGeneratedQualityScripts,
               "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
               "beep:build": "tsgo -p tsconfig.check.json",
-              "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
+              "beep:check": "tsgo -p tsconfig.check.json",
               "beep:test": "bunx --bun vitest run",
             });
             expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");

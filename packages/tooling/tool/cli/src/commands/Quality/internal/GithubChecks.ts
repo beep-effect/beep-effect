@@ -419,6 +419,17 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "test",
     ciLaneStep(repoRoot, "quality:test-integration", "test-integration")
   ),
+  // Quality-lane audit D13: additive, non-required hosted context. The
+  // pre-push plan passes the affected shape, which the lane turns into its
+  // change-profile gate, so a branch without Storybook inputs pays one git
+  // diff instead of the 584 s build + browser run.
+  githubCheckLane(
+    "quality:storybook",
+    "pre-push",
+    "repo-quality",
+    "test",
+    ciLaneStep(repoRoot, "quality:storybook", "storybook")
+  ),
 ];
 
 /**
@@ -505,6 +516,15 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
     "repo-sanity",
     "preflight",
     bunxLane(repoRoot, "repo-sanity:sherif", ["sherif@1.10.0", "-r", "non-existent-packages"])
+  ),
+  // Root tsconfig.configs.json: every vitest.*.ts plus the root config files
+  // (syncpack, commitlint), which no package project reaches (D16 blind spot).
+  githubCheckLane(
+    "repo-sanity:config-typecheck",
+    "pre-push",
+    "repo-sanity",
+    "preflight",
+    bunRunLane(repoRoot, "repo-sanity:config-typecheck", ["check:configs"])
   ),
   githubCheckLane(
     "repo-sanity:bun-audit",

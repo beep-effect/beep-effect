@@ -50,24 +50,7 @@ jobs:
             uses_turbo: "false"
             install_typos: "false"
     env:
-      # Same-repository pull requests receive read-only cache access; forks
-      # stay local-only. Trusted main pushes receive read-write access.
-      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}
-      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}
       BEEP_DOCGEN_CONCURRENCY: ${{ matrix.docgen_concurrency || 3 }}
-      # Stream task logs line-by-line so a wedged lane task shows its last
-      # live output instead of buffering everything behind a group header.
-      TURBO_LOG_ORDER: stream
-      DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
-      DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
-      EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
-      AUTH_SECRET: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
-      BETTER_AUTH_SECRET: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
-      BETTER_AUTH_URL: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
-      SECURITY_TRUSTED_ORIGINS: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
-      LIVEBLOCKS_SECRET_KEY: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -140,27 +123,6 @@ jobs:
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
           echo "doctest_mode=$doctest_mode" >> "$GITHUB_OUTPUT"
 
-      - name: Free runner disk for verification lanes
-        # Destructive image cleanup runs on ephemeral hosted images (GitHub-
-        # hosted and lookalikes); owned/workstation runners (beep- prefix)
-        # keep their filesystem.
-        if: steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-')
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Disk before cleanup:"
-          df -h /
-          sudo rm -rf \
-            /opt/ghc \
-            /usr/local/.ghcup \
-            /usr/local/lib/android \
-            /usr/local/share/boost \
-            /usr/share/dotnet
-          sudo apt-get clean
-          docker system prune --all --force --volumes || true
-          echo "Disk after cleanup:"
-          df -h /
-
       - name: Setup monorepo CI
         if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
@@ -168,6 +130,21 @@ jobs:
           cache-turbo: ${{ matrix.uses_turbo }}
           cache-write: "false"
           turbo-cache-key-suffix: -${{ matrix.id }}
+          free-disk: "true"
+          turbo-remote-cache: "true"
+          app-secrets: "true"
+          turbo-api: ${{ vars.TURBO_API }}
+          turbo-team: ${{ vars.TURBO_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
+          database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
+          email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
+          auth-secret: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
+          better-auth-secret: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
+          better-auth-url: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
+          security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
+          liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
       # PRs may restore the post-main local fallback without saving it. Same-
       # repository PRs can also read the remote cache; forks remain tokenless.
