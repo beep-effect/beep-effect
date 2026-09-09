@@ -11,6 +11,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -59,7 +60,7 @@ def fixture_export(root):
              "lease": {"schemaVersion": "yeet-admission-lease/v1", "nonce": "lease", "pid": 4242,
                        "procStart": "start-fixture", "checkoutRoot": str(checkout_roots["dead-lease"]),
                        "heartbeatAtMillis": 2400, "hotPaths": [str(root / "hot")],
-                       "runScope": {"unitName": f"user-{os.getuid()}.slice"}}}
+                       "runScope": {"unitName": f"user-{os.getuid()}.slice", "attachedPid": 4242}}}
     (admission / "claims/claim.reap.json").write_bytes(etl.encode_json(claim))
     (admission / "claims/claim.reap.json.lock.stage-fixture").write_text("must never be read")
     (admission / "queue/ignored.lock").write_text("must never be read")
@@ -89,6 +90,99 @@ def tree_bytes(root):
 
 
 class RedactionTests(unittest.TestCase):
+    def test_fleet_root_covers_clone_and_sibling_worktree_layouts(self):
+        root = Path("/workspace/projects")
+        self.assertEqual(etl.fleet_root(root / "beep-effect8"), root)
+        self.assertEqual(etl.fleet_root(root / "beep-effect8-worktrees/stage-b-review-fixes"), root)
+
+    def test_process_variants_mint_local_custody_before_removal(self):
+        salt = b"a" * 32
+        payload = {"schemaVersion": "yeet-admission-lease/v1", "pid": 4242, "procStart": "lease-start",
+                   "ownerPid": 9, "ownerProcStart": "lower-precedence",
+                   "runScope": {"attachedPid": 1234},
+                   "attempt": {"ownerPid": 4242, "ownerProcStart": "lease-start", "attachedPid": 9}}
+        rows, receipt = etl.transform_source(etl.encode_json(payload), "live", salt, False)
+        actual = rows[0]
+        self.assertEqual(actual["ownerRef"], actual["attempt"]["ownerRef"])
+        self.assertEqual(actual["runScope"]["ownerRef"], etl.sha256(f"1234:<absent>:{salt.hex()}".encode())[:12])
+        self.assertEqual(receipt["owner_refs_by_variant"], {"pid": 1, "ownerpid": 1, "attachedpid": 1, "other": 0})
+        self.assertEqual(receipt["redaction_counts"]["owner_refs_without_proc_start"], 1)
+        etl.scan_output_bytes([("lease.json", etl.encode_json(actual)),
+                               ("lease.properties", etl.encode_properties_projection(rows))])
+        attempt = {"schemaVersion": etl.ATTEMPT_SCHEMA, "_tag": "attempt-started", "attemptId": "fixture",
+                   "ownerPid": 4242, "ownerProcStart": 9876}
+        rows, receipt = etl.transform_source(etl.encode_ndjson([attempt]), "attempts", salt)
+        self.assertEqual(rows[0]["ownerRef"], etl.sha256(f"4242:9876:{salt.hex()}".encode())[:12])
+        self.assertEqual(receipt["owner_refs_by_variant"]["ownerpid"], 1)
+
+    def test_normalized_variants_and_unpaired_identities_have_custody(self):
+        for payload in ({"OWNER_PID": 1234, "owner-proc-start": "start"}, {"ownerProcStart": "start"},
+                        {"parentPid": 1234}, {"futureProcessStartTicks": 42}, {"processId": 1234}):
+            with self.subTest(keys=list(payload)):
+                actual = etl.redact(payload, b"a" * 32, collections.Counter())
+                self.assertEqual(list(actual), ["ownerRef"])
+                self.assertEqual(etl.eligible_property_pairs(payload), [])
+        for missing in (None, ""):
+            counts = collections.Counter()
+            etl.redact({"ownerPid": 1234, "ownerProcStart": missing}, b"a" * 32, counts)
+            self.assertEqual(counts["owner_refs_without_proc_start"], 1)
+        with self.assertRaisesRegex(SystemExit, "ambiguous"):
+            etl.redact({"ownerPid": 1, "owner_pid": 2}, b"a" * 32, collections.Counter())
+
+    def test_deployed_process_schema_members_are_covered(self):
+        files = (etl.REPO_RUN + "RunScope.schemas.ts", etl.YEET + "AttemptJournal.ts",
+                 etl.REPO_RUN + "AttemptTerminationJournal.ts", etl.REPO_RUN + "QualityScheduler.schemas.ts",
+                 etl.REPO_RUN + "AdmissionJournal.ts")
+        observed = set()
+        for file in files:
+            fields = re.findall(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*S\.", (etl.REPO_ROOT / file).read_text(), re.MULTILINE)
+            identities = {key for key in fields if re.search(r"pid|procstart|processstart", key, re.IGNORECASE)}
+            self.assertTrue(identities, file)
+            for key in identities:
+                self.assertTrue(etl.process_member(key), (file, key))
+            observed.update(identities)
+        self.assertTrue({"attachedPid", "ownerPid", "ownerProcStart", "pid", "procStart"} <= observed)
+        self.assertFalse(etl.PROCESS_MEMBER_ALLOWLIST)
+
+    def test_process_residue_uses_keys_in_both_formats(self):
+        keys = ("attachedPid", "ownerPid", "ownerProcStart", "pid", "ppid", "processId",
+                "OWNER_PID", "attached-pid", "owner_proc_start", "futureProcessStartTicks")
+        for key in keys:
+            for data in (etl.encode_json({key: "identity"}), f"{key}=identity\n".encode()):
+                with self.subTest(key=key, data=data):
+                    with self.assertRaisesRegex(SystemExit, "process identity member"):
+                        etl.scan_output_bytes([("fixture", data)])
+        with self.assertRaisesRegex(SystemExit, "process identity member"):
+            etl.scan_output_bytes([("escaped.json", b'{"owner\\u0050id":42}')])
+        benign = {"description": 'rapid cupid lipid attachedPid ownerProcStart "ownerPid": word',
+                  "words": ["pid", "ownerPid", "ownerProcStart"], "rapidly": "safe"}
+        self.assertEqual(etl.redact(benign, b"a" * 32, collections.Counter()), benign)
+        etl.scan_output_bytes([("safe.json", etl.encode_json(benign)),
+                               ("safe.properties", etl.encode_properties_projection([benign]))])
+        self.assertIn(("words", "ownerPid"), etl.eligible_property_pairs(benign))
+
+    def test_host_paths_require_left_boundaries_in_rewrite_and_scan(self):
+        with patch.object(etl, "FLEET_ROOT", Path("/workspace")):
+            for root, token in (("/workspace", "<fleet>"), ("/home", "<home>"), ("/tmp", "<tmp>"),
+                                ("/proc", "<proc>"), ("/dev/shm", "<shm>")):
+                for prefix in ("packages", "word_", "word.", "~", "-", "A", "0", "/"):
+                    relative = prefix + root + "/use-cases/x.test.ts"
+                    self.assertEqual(etl.redact_string(relative), relative)
+                    etl.scan_output_bytes([(relative, relative.encode())])
+                for prefix in ("", " ", '"', "=", "(", ":"):
+                    for suffix in ("", "/beep-effect/x"):
+                        absolute = prefix + root + suffix
+                        self.assertEqual(etl.redact_string(absolute), prefix + token + suffix)
+                        with self.assertRaisesRegex(SystemExit, "host path"):
+                            etl.scan_output_bytes([("fixture", absolute.encode())])
+                self.assertEqual(etl.redact_string(root + "-other/x"), root + "-other/x")
+                etl.scan_output_bytes([("fixture", (root + "-other/x").encode())])
+            for relative in ("packages/run/user/123/state", "packages/proc/123/status", "packages/~/.beep/runtime/state"):
+                self.assertEqual(etl.redact_string(relative), relative)
+                etl.scan_output_bytes([("fixture", relative.encode())])
+            aliases = {"/workspace/fixture": "<synthetic-checkout:contender-a>"}
+            self.assertEqual(etl.redact_string("packages/workspace/fixture/x", aliases), "packages/workspace/fixture/x")
+
     def test_nested_claim_custody_and_per_capture_salt(self):
         payload = {"schemaVersion": "yeet-admission-reap-claim/v1", "_tag": "lease", "nonce": "owner",
                    "sourcePath": str(Path(tempfile.gettempdir()) / "owner-4242.lease.json"),
@@ -225,6 +319,73 @@ class PinContractTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "READY"):
             etl.capture("synthetic", self.export)
         self.assertFalse(self.outputs["synthetic"].exists())
+
+    def test_synthetic_requires_each_termination_journal(self):
+        for label in ("dead-lease", "dead-ticket"):
+            journal = next((self.export / "checkouts" / label).rglob("attempts.ndjson"))
+            original = journal.read_bytes()
+            try:
+                journal.unlink()
+                with self.assertRaisesRegex(SystemExit, "exactly one attempts.ndjson"):
+                    etl.capture("synthetic", self.export)
+            finally:
+                journal.write_bytes(original)
+
+    def test_synthetic_rejects_duplicate_journals_and_termination_rows(self):
+        journal = next((self.export / "checkouts/dead-lease").rglob("attempts.ndjson"))
+        duplicate = journal.parent.with_name("duplicate") / journal.name
+        duplicate.parent.mkdir()
+        duplicate.write_bytes(journal.read_bytes())
+        with self.assertRaisesRegex(SystemExit, "exactly one attempts.ndjson"):
+            etl.capture("synthetic", self.export)
+        duplicate.unlink()
+        journal.write_bytes(journal.read_bytes() * 2)
+        with self.assertRaisesRegex(SystemExit, "exactly one attempt-terminated row"):
+            etl.capture("synthetic", self.export)
+
+    def test_synthetic_rejects_missing_row_mismatched_attempt_and_reason(self):
+        for label in ("dead-lease", "dead-ticket"):
+            journal = next((self.export / "checkouts" / label).rglob("attempts.ndjson"))
+            original = journal.read_bytes()
+            row = etl.decode_ndjson(original, "fixture")[0]
+            for changed, error in (([], "exactly one attempt-terminated row"),
+                                   ([{**row, "attemptId": "wrong"}], "attemptId differs"),
+                                   ([{**row, "reason": "wrong"}], "reason differs")):
+                try:
+                    journal.write_bytes(etl.encode_ndjson(changed))
+                    with self.assertRaisesRegex(SystemExit, error):
+                        etl.capture("synthetic", self.export)
+                finally:
+                    journal.write_bytes(original)
+
+    def test_termination_join_receipt_is_recomputed_at_replay(self):
+        emitted, metadata = etl.capture("synthetic", self.export)
+        joins = metadata["termination_join"]
+        for label, reason in (("dead-lease", "lease-eviction"), ("dead-ticket", "queued-submitter-death")):
+            self.assertEqual(joins[label], {"journal_path": f"attempts/{label}/main-fixture/attempts.ndjson",
+                "attemptId": "lease-attempt" if label == "dead-lease" else "ticket-attempt",
+                "attemptId_match": True, "reason": reason})
+        metadata["termination_join"]["dead-lease"]["reason"] = "invented"
+        # Recompute byte totals and hashes to isolate the receipt binding check.
+        with self.assertRaisesRegex(SystemExit, "synthetic termination join"):
+            etl.write_staged_capture(emitted, etl.finish_manifest(metadata, emitted, "synthetic"), self.outputs["synthetic"], "synthetic")
+
+    def test_termination_join_replay_rejects_coherent_missing_payload(self):
+        emitted, metadata = etl.capture("synthetic", self.export)
+        removed = "attempts/dead-ticket/main-fixture/attempts.ndjson"
+        emitted = [payload for payload in emitted if payload.path not in (removed, etl.projection_path(removed))]
+        metadata["sources"] = [receipt for receipt in metadata["sources"] if receipt.get("path") != removed]
+        next(checkout for checkout in metadata["checkouts"] if checkout["checkout"] == "dead-ticket")["attempt_files"] = 0
+        with self.assertRaisesRegex(SystemExit, "exactly one attempts.ndjson"):
+            etl.write_staged_capture(emitted, etl.finish_manifest(metadata, emitted, "synthetic"), self.outputs["synthetic"], "synthetic")
+
+    def test_contender_a_accepts_absent_journal_but_rejects_nonempty(self):
+        journal = next((self.export / "checkouts/contender-a").rglob("attempts.ndjson"))
+        journal.unlink()
+        etl.capture("synthetic", self.export)
+        journal.write_bytes(next((self.export / "checkouts/dead-lease").rglob("attempts.ndjson")).read_bytes())
+        with self.assertRaisesRegex(SystemExit, "contender-a attempts receipt must be empty"):
+            etl.capture("synthetic", self.export)
 
     def test_expected_mismatch_refuses_pin(self):
         scenario = copy.deepcopy(self.scenario)

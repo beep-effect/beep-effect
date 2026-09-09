@@ -1,0 +1,21 @@
+{
+  "ownerRef": "d704751ab18d",
+  "schemaVersion": "yeet-admission-ticket/v1",
+  "attemptId": "d659a6b6-703a-41b2-bc89-bd6bca87d327",
+  "resolvedHeadSha": "39ca550b70c938813b7d3382d7bb2ee03a3b2698",
+  "diffFingerprint": "95245a916c8280644c354dc69934fe4a78c3c67607bffbe5091791d961a5ecbc",
+  "proofTier": "full",
+  "envProfile": "local",
+  "stage": "pre-push",
+  "kind": "merged-preview",
+  "weightTokens": 5,
+  "priority": "publish",
+  "originKey": "4cc31eeb4dec",
+  "checkoutRoot": "<fleet>/beep-effect12",
+  "branch": "codex/security-corpus-redaction",
+  "coordinationProtocol": "scheduler-origin-concurrency/v1",
+  "enqueuedAtMillis": 1788932466539,
+  "heartbeatAtMillis": 1788932506638,
+  "blockedOnOriginAtMillis": 0,
+  "nonce": "ac3d8ddb-5c36-4212-b781-e216eb9599a4"
+}

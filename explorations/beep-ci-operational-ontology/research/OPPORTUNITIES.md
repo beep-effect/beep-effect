@@ -291,3 +291,44 @@
   test, not captured machine material.
 - **Prevention:** construct the negative assignment at test runtime. The scanner
   remains enabled; the generator and pinned payloads do not change.
+
+## 2026-09-09: Stage B process-identity detection drifted behind deployed writers
+
+- **Work:** addressing the held PR #1034 redaction review in the Stage B follow-up.
+- **Evidence:** the name list missed `runScope.attachedPid` in `RunScope.schemas.ts`
+  and `ownerProcStart` in `AttemptJournal.ts` / `AttemptTerminationJournal.ts`.
+  The merged Stage B pin retained those members; the frozen Stage A pin needs a
+  separate steward ruling.
+- **Prevention:** use one normalized member rule for redaction, projections, and
+  residue checks, plus a regression that extracts deployed `Pid` / `ProcStart`
+  schema fields and asserts that each is covered.
+
+## 2026-09-09: review-fix lane context and remote probes required fallbacks
+
+- **Work:** checking the follow-up lane before editing the Stage B generator.
+- **Evidence:** `graft map` returned `no graph — run graft build first`; the SSH
+  remote probe returned `Bad owner or permissions` for the system SSH proxy config.
+- **Prevention:** provision the graph when preparing a lane and validate the SSH
+  configuration separately. A scoped deterministic graph build restores source
+  retrieval; the read-only GitHub API confirmed the same main commit as local
+  `origin/main`, without changing SSH configuration.
+
+## 2026-09-09: Stage B fleet-root inference missed sibling worktree placement
+
+- **Work:** refreshing the fleet pin from the follow-up worktree after PR #1034.
+- **Evidence:** `FLEET_ROOT = REPO_ROOT.parent` selected the `beep-effect8-worktrees/`
+  directory, producing zero discovered checkouts and only 16 admission/live payloads.
+  That temporary capture is replaced before handoff.
+- **Prevention:** recognize the repository's sibling `*-worktrees/<lane>` layout
+  when resolving the fleet root, test it beside the direct-clone layout, and
+  inspect the refreshed checkout census before accepting a capture.
+
+## 2026-09-09: a refresh overlapped the first Stage B corruption proof
+
+- **Work:** proving both refreshed pins after replacing the incomplete fleet capture.
+- **Evidence:** a second fleet refresh started before the first corruption-check
+  process exited. Its verification crossed the atomic tree replacement and
+  reported `SHA-256 or byte-count mismatch` against the previous manifest.
+- **Prevention:** wait for process completion before any pin mutation. Discard
+  the overlapped proof and rerun all ordinary, corruption, restoration, and
+  whole-tree checks serially after the final refresh exits.

@@ -1,0 +1,15 @@
+{
+  "ownerRef": "f9a814ae29d6",
+  "schemaVersion": "yeet-admission-ticket/v1",
+  "kind": "review-fix",
+  "weightTokens": 1,
+  "priority": "verify",
+  "originKey": "",
+  "checkoutRoot": "<fleet>/beep-effect2",
+  "branch": "codex/turborepo-task-qualification",
+  "coordinationProtocol": "scheduler-origin-concurrency/v1",
+  "enqueuedAtMillis": 1788931608006,
+  "heartbeatAtMillis": 1788932509510,
+  "blockedOnOriginAtMillis": 0,
+  "nonce": "796eac84-a8a2-4074-9844-993339cfa0c5"
+}

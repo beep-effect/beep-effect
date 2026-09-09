@@ -61,7 +61,7 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: publish Stage B after the synthetic fixture PR, then run 3 proper.**
+**NEXT: publish the Stage B follow-up after the synthetic fixture PR, then run 3 proper.**
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
 and one timestamped checkout inventory. The fleet pin covers 89 checkouts; the
@@ -145,6 +145,12 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-09: Stage B review fixes after merged PR #1034: normalized process-identity
+  redaction and custody variants, bounded host-root matching, and verified synthetic
+  termination joins. Refreshed fleet: 94 checkouts, 275 admission rows,
+  732 payloads / 733 files; synthetic: 8 payloads / 9 files.
+  Proof-ledger issuance stays re-parked to run 4. Stage A residue needs a separate ruling.
+  See [the review-fix report](./research/run3-lanes/stage-b-review-fixes-report.md).
 - 2026-09-08: Stage B pinned with one new standalone generator and independent
   `run3b-fleet/` and `run3b-synthetic/` roots. The fleet covers 93 checkouts,
   235 admission rows, 354 attempt journals, one protocol marker, and two live
