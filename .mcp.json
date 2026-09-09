@@ -50,6 +50,10 @@
     "phoenix": {
       "type": "http",
       "url": "https://dankserver.tailc7c348.ts.net:8447/mcp"
+    },
+    "graft": {
+      "command": "graft",
+      "args": ["mcp"]
     }
   }
 }
