@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("commands/Runners/Runners.schemas");
@@ -194,6 +195,35 @@ export class BakeReport extends S.Class<BakeReport>($I`BakeReport`)(
  * @since 0.0.0
  */
 export const BakeReportJson = JsonStringCodec(BakeReport);
+
+const BakeManifest = S.Struct(
+  Struct.pick(BakeReport.fields, ["amiId", "lockfileSha256", "bunArchiveSha256", "bunVersion"])
+).pipe(
+  $I.annoteSchema("BakeManifest", {
+    description: "Freshness fields shared by a complete bake report and an observed existing-image manifest.",
+  })
+);
+
+/**
+ * Read the freshness subset of a bake report or an observed image manifest.
+ *
+ * **Details**
+ *
+ * A legacy image can be recorded from its AWS tags without inventing bake
+ * start/end times. Complete bake reports remain accepted by the same reader.
+ *
+ * **Example** (Inspect the manifest reader)
+ *
+ * ```ts
+ * import { BakeManifestJson } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof BakeManifestJson.decode)
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const BakeManifestJson = JsonStringCodec(BakeManifest);
 
 /**
  * One subprocess invocation shown by `bake --plan`.

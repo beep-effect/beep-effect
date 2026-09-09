@@ -2,6 +2,107 @@
 
 Record receipts at the moment friction happens; redact for the public repo.
 
+## 2026-09-09 — Spot retry estimates must use billed usage
+
+- What: comparing Spot, autoscaled On-Demand EC2 and EKS after the operator
+  asked which option actually costs less.
+- Evidence: AWS does not charge instance usage when it interrupts Linux
+  Spot capacity, excluding SUSE, during the first instance hour. Charging
+  every failed 20-minute attempt in a cost model overstates those compute
+  costs. User-initiated termination and older instances have different rules.
+- Prevention: join termination initiator and instance age to billing evidence;
+  report delay, repeat setup and supporting-resource charges separately.
+  Keep the On-Demand reliability decision distinct from a claim that Spot
+  had a higher invoice. The cost runbook links the canonical billing table.
+
+## 2026-09-09 — Full coverage exposed untested cost-control boundaries
+
+- What: the final local proof passed build, lint, checks and unit tests, then
+  rejected uncovered configuration/error paths in the new account-controls
+  module and a lower branch percentage in the runner command.
+- Repair: exercise Pulumi config loading, reject invalid account/threshold
+  values, verify recipient diagnostics redact their input, and assert the
+  stale intended-manifest error without querying the live image. The focused
+  account module now measures 100% lines/statements/functions; the runner
+  command measures 89.28% branches against its previous 86.36% floor.
+- Test isolation: the shared Vitest configuration enables concurrent tests,
+  while Pulumi config and mocks use a shared runtime. Set `concurrent: false`
+  on this fixture suite so one case cannot replace another case's mock monitor.
+- API compatibility: hosted `lint:deprecated-apis` rejected Vitest's older
+  `sequential` shorthand and `toThrowError` matcher. Use the supported suite
+  option and `toThrow`, and run the exact lint gate after adding test APIs.
+- Prevention: cover real configuration and failure boundaries before the full
+  proof; retain the existing regression baseline instead of lowering it.
+
+## 2026-09-09 — Legacy IAM policies blocked cost remediation
+
+- What: retiring the reviewed old keys and refreshing the stale runner image.
+- Evidence: `kms:ScheduleKeyDeletion` was denied on the first old EKS key;
+  six policies name only `terraform-user` as administrator. The separate old
+  FluentBit key permits current account administration and entered a 30-day
+  pending-deletion period. The current CI key was excluded.
+- Resolution: the operator supplied secret references for the existing
+  `terraform-user`. STS verified that exact identity; fresh metadata confirmed
+  the six approved keys' creation dates, zero grants and matching aliases.
+  All six entered PendingDeletion at 13:15 UTC, with 30-day windows ending
+  October 9. The current CI key remains Enabled. No IAM policy was weakened.
+- Bake evidence: `RunInstances` was rejected before creation by the unrelated
+  `FreedomFramework-CI` policy's explicit `LimitEC2Size` deny, which permits
+  only `t2.micro` for the current operator login.
+- Prevention: capture the required operator identity and exact launch-policy
+  preflight in the bake runbook. Keep the rejection distinct from a broken
+  image or a capacity shortage; do not create credentials or weaken fleet
+  roles to route around a denial.
+
+## 2026-09-09 — Cost audit found stale images and incomplete cleanup evidence
+
+- What: the operator requested an account cost audit after the permanent
+  On-Demand migration. August Cost Explorer usage was $522.10, including
+  $454.78 in EC2 compute. Historical $100 budget and Spot instructions no
+  longer describe the current purchase model or workload.
+- Evidence: all 20 sampled successful heavy jobs used the full setup path,
+  with a 74-second median setup. `bun run beep runners bake --check --json`
+  confirmed mismatches in the live image's Bun version, archive digest and
+  lockfile digest. The image contains Bun 1.4.0; current jobs require 1.4.2.
+  This is freshness drift, with no evidence required of artifact corruption.
+- Paid skip evidence: Doctest job 102413512462 in run 34335406225 allocated
+  an EC2 runner for 14 seconds, skipped setup and verification, and ran only
+  the skip step. Moving eligibility ahead of allocation needs a canary:
+  sampled hosted queues show that a new planning dependency can delay useful
+  heavy work even while reducing EC2 minutes.
+- Audit friction: empty RDS instance inventories missed a retained 2021
+  final snapshot that explains the recurring backup charge. Logs created in
+  2022 included two groups with August 2026 ingestion. Reconcile billed usage
+  types with service-specific backup/version inventories and last activity;
+  creation dates and empty compute lists are insufficient deletion evidence.
+- Observability limitation: Compute Optimizer requires 30 cumulative hours
+  of metrics per EC2 instance. One-job runners require measurements grouped
+  by lane and runner configuration; opting into recommendations alone does
+  not provide rightsizing proof for this fleet.
+- Prevention and decisions: the operator chose a $500 soft guardrail with
+  current reliability and speed preserved, approved standard cost visibility,
+  and confirmed VaultCtx retirement. The owning audit and implementation plan
+  is `docs/runbooks/aws-cost-operations.md`. Exact data candidates and cloud
+  execution receipts remain private. The approved pre-cutoff workload cleanup
+  was executed, including all seven old-key deletion schedules; the runbook
+  separates completed actions from the blocked runner-image bake.
+
+## 2026-09-09 — Runner queue delay resembled a fleet outage
+
+- What: the operator reported that jobs appeared not to pick up runners after
+  the cost-control rollout.
+- Evidence: all 273 scale-up retry warnings in the captured 40-minute window
+  correlated with `maximum number of runners reached` at the unchanged cap of
+  14. Fresh workers subsequently accepted all six heavy lanes in run
+  34354910245; Check, Test Integration, Doctest and Docgen passed while the
+  remaining two continued. Scale-up was Active with a successful update.
+- Prevention: check the organization runner API, queued job timestamps, live
+  EC2 inventory and Lambda retry reasons together before changing capacity.
+  The repository runner endpoint does not list this organization-owned pool.
+  Capacity waiting and zero-idle boot time are distinct from missing runner
+  registration or failed instance launches. Preserve the reliability decision
+  and require measured queue/runtime evidence before changing the cap.
+
 ## 2026-09-09 — Spot reclamation and broken termination credential access
 
 - What: recent PR verification lanes repeatedly lost their EC2 runners. AWS
@@ -307,3 +408,59 @@ Record receipts at the moment friction happens; redact for the public repo.
 - Prevention: anchor the closeout parser to the "Confidence Score:"
   heading, never a bare N/5 match, and re-fetch on updated_at rather than
   trusting a prior parse of an in-place-edited comment.
+
+### Budget adoption exposed a parent/provider import ordering failure
+
+- **Doing:** attended adoption of the existing budget after an approved preview.
+- **Evidence:** the bulk import registered the dedicated provider before its new
+  component parent; Pulumi reported `child resource ... refers to missing parent`
+  while saving the checkpoint. Only provider state was created; no AWS workload
+  changed. A private encrypted export was captured before the operation.
+- **Remediation:** compare and restore that checkpoint, register the component
+  first, then import its provider and existing budget before previewing updates.
+- **Prevention:** adoption runbooks must separate new component registration from
+  child-provider imports and verify a recoverable state export before mutation.
+
+- **Verified recovery:** restored the pre-operation checkpoint, imported the
+  component first, then its provider and budget. The approved saved-plan update
+  completed with ten creates, three updates, 201 unchanged, and no replacements
+  or deletions. A normal encrypted export passed integrity checking afterward.
+  Direct AWS reads confirm the $500 budget, four existing-recipient alerts, six
+  Active tags, standard account-only enrollments, and a confirmed daily $10
+  anomaly subscription. The fleet remains On-Demand with cap 14.
+
+### Account-only Cost Optimization Hub enrollment produced a perpetual diff
+
+- **Doing:** refreshed no-change proof after the approved cost-control apply.
+- **Evidence:** AWS reported the current account Active but returned null for
+  `includeMemberAccounts`; Pulumi repeatedly proposed adding false. Omitting the
+  argument did not help because the provider supplied its false default.
+- **Disposition:** omitting the argument and ignoring only its changes both
+  left a proposed update after refresh. The scoped reconciliation made no AWS
+  changes. Neither ineffective workaround is retained. Keep explicit false and
+  verify actual enrollment separately; 213 other resources show no changes.
+  Revisit on a provider fix; do not loop applies to clear this readback mismatch.
+- **Source:** [provider enrollment contract](https://www.pulumi.com/registry/packages/aws/api-docs/costoptimizationhub/enrollmentstatus/)
+  documents that this argument does not support drift detection.
+
+### Hosted closeout exposed two inherited CI defects
+
+- **Doing:** verifying PR #1055 after merging current main.
+- **Evidence:** the CLI unit job reported 3,313 passing tests and one failure:
+  recursive directory reads returned identical export paths in different orders.
+  Storybook correctly skipped an unaffected build, then its unconditional upload
+  failed because no static artifact existed. Both jobs completed with full logs.
+- **Remediation:** sort both directory inventories before comparing contents, and
+  upload Storybook only when its static index exists. The executed Storybook lane
+  retains its existing required-artifact check, so a missing build output still
+  fails. Both defects were present in the merged base, not caused by AWS cleanup.
+- **Prevention:** compare filesystem inventories independently of enumeration order
+  and make artifact uploads respect successful affected-lane skips.
+- **Companion-test correction:** the initial focused selection missed the workflow
+  security suite, whose literal upload-gate assertion still required the old
+  condition. The full suite exposed it. Update that contract to require both the
+  artifact-presence guard and strict missing-file handling; include security,
+  lane and scheduler suites together when validating the repair.
+  Run that focused selection with the package's `bunx --bun vitest run` runtime:
+  all 120 related tests pass there; a Node invocation exposed a Bun-spawn fixture
+  difference in the pre-existing bootstrap test.

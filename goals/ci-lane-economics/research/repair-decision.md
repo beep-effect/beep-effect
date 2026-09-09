@@ -1,3 +1,10 @@
+> **Operational policy superseded September 9, 2026.** The heavy pool uses
+> On-Demand capacity, 64 GiB instances and a cap of 14. The approved account guardrail is $500/month;
+> alerts never stop CI. Historical Spot, budget and manual teardown
+> instructions below are retained as evidence, not current operating policy.
+> Follow [runner reliability](../../../docs/runbooks/ci-runner-reliability.md)
+> and [cost operations](../../../docs/runbooks/aws-cost-operations.md).
+
 # Lint and Test Unit repair decision — 2026-09-03
 
 ## Decision
