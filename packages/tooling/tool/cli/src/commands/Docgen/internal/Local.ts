@@ -11,7 +11,7 @@ import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
-import { Console, Duration, Effect, flow, HashSet, Order, pipe } from "effect";
+import { Console, Duration, Effect, flow, HashSet, Order, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -66,6 +66,7 @@ export const renderDocgenIssueText: {
 const DEFAULT_LOCAL_PARALLEL = 1 as const;
 const DOCGEN_FULL_COMMAND = "bun run docgen" as const;
 const DOCGEN_FULL_AGGREGATE_ARGS = ["run", "docs:aggregate"] as const;
+const DOCGEN_FULL_METADATA_CHECK_SCOPE = "every package with a canonical docgen.json outDir" as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".md", ".mdx"] as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_PREFIXES = ["src/", "docs/"] as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_FILES = [
@@ -831,6 +832,7 @@ const renderPlan = Effect.fn("DocgenLocal.renderPlan")(function* (plan: DocgenLo
   if (plan.mode === "full") {
     yield* Console.log(`- full turbo command: node_modules/.bin/turbo ${A.join(fullTurboArgs(plan.parallel), " ")}`);
     yield* Console.log(`- full aggregate command: bun ${A.join(DOCGEN_FULL_AGGREGATE_ARGS, " ")}`);
+    yield* Console.log(`- full JSDoc metadata check: ${DOCGEN_FULL_METADATA_CHECK_SCOPE}`);
   }
   if (A.isReadonlyArrayNonEmpty(plan.fullReasons)) {
     yield* Console.log(`- full proof required:\n${renderFullReasons(plan.fullReasons)}`);
@@ -953,7 +955,42 @@ const verifyPackageProofManifest = (pkg: DocgenWorkspacePackage) =>
     )
   );
 
+type DocgenConfiguredPackage = readonly [pkg: DocgenWorkspacePackage, config: DocgenConfigDocument];
+
+const loadConfiguredPackage = (pkg: DocgenWorkspacePackage) =>
+  loadDocgenConfigDocument(pkg.absolutePath).pipe(Effect.map((config): DocgenConfiguredPackage => [pkg, config]));
+
+const canonicalConfigResult = ([pkg, config]: DocgenConfiguredPackage): Result.Result<
+  DocgenWorkspacePackage,
+  DocgenConfiguredPackage
+> => (isCanonicalDocgenAggregateConfigForTesting(config) ? Result.succeed(pkg) : Result.fail([pkg, config]));
+
+const logSkippedMetadataCheck = ([pkg, config]: DocgenConfiguredPackage) =>
+  Console.log(`docgen:local: skipped JSDoc metadata check for ${pkg.name} (non-canonical outDir: ${config.outDir})`);
+
+// The full proof ratchets every package whose generated docs are aggregated
+// into docs/generated, which is also the population the scoped planner can
+// select. A non-canonical outDir (the scratchpad's focused quality-analysis
+// output) is skipped exactly as the aggregate step skips it. Proof manifests
+// are deliberately not consulted: they prove generation, not metadata, and
+// generation alone let an unknown @category merge on main (#1054) that only
+// the next PR's scoped check paid for (#1057).
+const discoverFullMetadataCheckPackages = Effect.fn("DocgenLocal.discoverFullMetadataCheckPackages")(function* (
+  parallel: number
+) {
+  const packages = yield* discoverConfiguredPackages();
+  const configured = yield* Effect.forEach(packages, loadConfiguredPackage, { concurrency: localParallel(parallel) });
+  const [skipped, checked] = A.partition(configured, canonicalConfigResult);
+  yield* Effect.forEach(skipped, logSkippedMetadataCheck, { discard: true });
+  return checked;
+});
+
 const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot: string, parallel: number) {
+  // The scoped proof ratchets JSDoc metadata before it generates; the full
+  // proof must too, or main merges debt that only the next PR pays for.
+  const packages = yield* discoverFullMetadataCheckPackages(parallel);
+  yield* Console.log(`docgen:local: checking JSDoc metadata for ${A.length(packages)} package(s)`);
+  yield* checkPackageDocumentation(packages, parallel);
   // Run Turbo directly so the typed lane concurrency setting governs full and
   // affected proofs through the same local command surface. The full budget is
   // much larger because a cold full proof legitimately runs for tens of minutes.
