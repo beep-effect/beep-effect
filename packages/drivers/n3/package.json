@@ -69,6 +69,7 @@
     "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",
     "@types/node": "catalog:",
+    "bun-types": "catalog:",
     "vitest": "catalog:"
   },
   "beep": {
