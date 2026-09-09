@@ -22,13 +22,14 @@
     "test:property": "bun run beep:test",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json",
-    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:stories",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run",
     "beep:lint": "biome check src/",
     "beep:lint:fix": "biome check src/ --write",
     "beep:test": "bunx --bun vitest run",
-    "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit"
+    "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
