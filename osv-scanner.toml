@@ -27,3 +27,8 @@ reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2; 2.0.2 IS t
 id = "GHSA-5p2g-fcmc-qvqq"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2; same package, same exposure, and same no-fixed-release status as GHSA-w3rx-r6r6-pgpr above. Revisit when image-size publishes a release above 2.0.2."
+
+[[IgnoredVulns]]
+id = "GHSA-38f7-945m-qr2g"
+ignoreUntil = 2026-10-15T00:00:00Z
+reason = "effect v3 advisory (fixed in 3.20.0) reported against the deliberate pkg.pr.new snapshot pin https://pkg.pr.new/Effect-TS/effect/effect@c8349ed: OSV cannot order a URL specifier against the advisory range and falls back to flagged. The pinned snapshot is the 4.0.0-rc lineage (main commit c8349ed, well past the v3 fix), so the vulnerable code is not present. Kept narrow to this advisory id rather than a package-wide override so future effect advisories still surface. Revisit when the catalog returns to registry semver pins."
