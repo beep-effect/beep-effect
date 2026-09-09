@@ -20,6 +20,17 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
 
+const decodePackageJson2 = S.decodeEffect(PackageJson);
+const decodeNpmPackageJsonFieldsPeerDependenciesMetaSync = S.decodeSync(NpmPackageJson.fields.peerDependenciesMeta);
+const decodePackageJsonFieldsDependenciesSync = S.decodeSync(PackageJson.fields.dependencies);
+const decodePackageJsonFieldsPublishConfigSync = S.decodeSync(PackageJson.fields.publishConfig);
+const decodeUnknownPackageJson = S.decodeUnknownEffect(PackageJson);
+const decodeUnknownNpmPackageJsonExit = S.decodeUnknownExit(NpmPackageJson);
+const encodeNpmPackageJsonFieldsPeerDependenciesMetaSync = S.encodeSync(NpmPackageJson.fields.peerDependenciesMeta);
+const encodePackageJsonFieldsDependenciesSync = S.encodeSync(PackageJson.fields.dependencies);
+const encodePackageJsonFieldsPublishConfigSync = S.encodeSync(PackageJson.fields.publishConfig);
+const isPackageJson = S.is(PackageJson);
+
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
 const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll("~1", "/").replaceAll("~0", "~");
 const PackageJsonNameArbitrary = S.toArbitrary(PackageJson.fields.name)(fc);
@@ -46,7 +57,7 @@ describe("PackageJson schema", () => {
         fc.property(PackageJsonNameArbitrary, (name) => {
           const decoded = decodePackageJson({ name });
 
-          expect(S.is(PackageJson)(decoded)).toBe(true);
+          expect(isPackageJson(decoded)).toBe(true);
           expect(decoded.name).toBe(name);
         }),
         fcRuns(20)
@@ -56,8 +67,8 @@ describe("PackageJson schema", () => {
     it("round-trips schema-derived package.json dependency maps through the encoded wire shape", () => {
       fc.assert(
         fc.property(PackageJsonDependenciesArbitrary.filter(O.isSome), (value) => {
-          const encoded = S.encodeSync(PackageJson.fields.dependencies)(value);
-          const decoded = S.decodeSync(PackageJson.fields.dependencies)(encoded);
+          const encoded = encodePackageJsonFieldsDependenciesSync(value);
+          const decoded = decodePackageJsonFieldsDependenciesSync(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -68,8 +79,8 @@ describe("PackageJson schema", () => {
     it("round-trips schema-derived npm peer dependency metadata through the encoded wire shape", () => {
       fc.assert(
         fc.property(NpmPackageJsonPeerDependenciesMetaArbitrary.filter(O.isSome), (value) => {
-          const encoded = S.encodeSync(NpmPackageJson.fields.peerDependenciesMeta)(value);
-          const decoded = S.decodeSync(NpmPackageJson.fields.peerDependenciesMeta)(encoded);
+          const encoded = encodeNpmPackageJsonFieldsPeerDependenciesMetaSync(value);
+          const decoded = decodeNpmPackageJsonFieldsPeerDependenciesMetaSync(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -81,8 +92,8 @@ describe("PackageJson schema", () => {
       fc.assert(
         fc.property(PublishConfigCoreArbitrary, (core) => {
           const value = O.some(core);
-          const encoded = S.encodeSync(PackageJson.fields.publishConfig)(value);
-          const decoded = S.decodeSync(PackageJson.fields.publishConfig)(encoded);
+          const encoded = encodePackageJsonFieldsPublishConfigSync(value);
+          const decoded = decodePackageJsonFieldsPublishConfigSync(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -388,8 +399,7 @@ describe("PackageJson schema", () => {
     });
 
     it("keeps npm-only schema separate from repo-only extensions", () => {
-      const decodeNpmPackageJson = S.decodeUnknownExit(NpmPackageJson);
-      const exit = decodeNpmPackageJson(
+      const exit = decodeUnknownNpmPackageJsonExit(
         {
           name: "pkg",
           catalog: {
@@ -401,7 +411,7 @@ describe("PackageJson schema", () => {
 
       expect(Exit.isFailure(exit)).toBe(true);
 
-      const beepExit = decodeNpmPackageJson(
+      const beepExit = decodeUnknownNpmPackageJsonExit(
         {
           name: "pkg",
           beep: {
@@ -625,8 +635,7 @@ describe("PackageJson schema", () => {
     });
 
     it("keeps npm package names strict even when repo package names allow mixed case", () => {
-      const decodeNpmPackageJson = S.decodeUnknownExit(NpmPackageJson);
-      const exit = decodeNpmPackageJson(
+      const exit = decodeUnknownNpmPackageJsonExit(
         {
           name: "@beep/MixedCase",
           dependencies: {
@@ -889,7 +898,7 @@ describe("PackageJson schema", () => {
     it.effect(
       "formats SchemaError issues with JSON Pointers",
       Effect.fn("PackageJson.test.formatSchemaIssues")(function* () {
-        const issues = yield* S.decodeUnknownEffect(PackageJson)(
+        const issues = yield* decodeUnknownPackageJson(
           {
             name: "",
             private: "true",
@@ -946,7 +955,7 @@ describe("PackageJson schema", () => {
         ] as const;
 
         for (const testCase of cases) {
-          const issues = yield* S.decodeEffect(PackageJson)(testCase.input, {
+          const issues = yield* decodePackageJson2(testCase.input, {
             onExcessProperty: "error",
             errors: "all",
           }).pipe(Effect.flip, Effect.map(getPackageJsonSchemaIssues));

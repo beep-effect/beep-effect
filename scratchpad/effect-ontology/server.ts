@@ -78,6 +78,7 @@ const ServerConfigValue = S.Struct({
     }
   )
 );
+const decodeServerConfigValue = S.decodeEffect(ServerConfigValue);
 
 const ServerConfig = Config.all({
   port: Config.number("PORT").pipe(Config.withDefault(8080)),
@@ -86,7 +87,7 @@ const ServerConfig = Config.all({
   entityRegistryEnabled: Config.boolean("ENTITY_REGISTRY_ENABLED").pipe(Config.withDefault(false)),
 }).pipe(
   Config.mapOrFail((config) =>
-    S.decodeEffect(ServerConfigValue)(config).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
+    decodeServerConfigValue(config).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );
 

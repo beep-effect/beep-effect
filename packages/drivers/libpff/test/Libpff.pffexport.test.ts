@@ -25,6 +25,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeArtifactId = S.decodeEffect(ArtifactId);
+const decodeContentDigest = S.decodeEffect(ContentDigest);
+const decodeOperationId = S.decodeEffect(OperationId);
+const decodePffexportEngineConfig = S.decodeEffect(PffexportEngineConfig);
+const decodePosixPath = S.decodeEffect(PosixPath);
+
 const testLayer = NodeServices.layer;
 
 const provideTestLayer = provideScopedLayer(testLayer);
@@ -252,11 +258,11 @@ const fixture = Effect.fn(function* (stubScript: string) {
   yield* fs.writeFile(sourcePath, sourceBytes);
   const exportRoot = path.join(dir, "out");
 
-  const artifactId = yield* S.decodeEffect(ArtifactId)(`artifact:${fixtureDigestHex}`);
-  const digest = yield* S.decodeEffect(ContentDigest)(`sha256:${fixtureDigestHex}`);
-  const operationId = yield* S.decodeEffect(OperationId)(`operation:${fixtureDigestHex}`);
-  const locatorValue = yield* S.decodeEffect(PosixPath)(sourcePath);
-  const relativePath = yield* S.decodeEffect(PosixPath)("mailbox.pst");
+  const artifactId = yield* decodeArtifactId(`artifact:${fixtureDigestHex}`);
+  const digest = yield* decodeContentDigest(`sha256:${fixtureDigestHex}`);
+  const operationId = yield* decodeOperationId(`operation:${fixtureDigestHex}`);
+  const locatorValue = yield* decodePosixPath(sourcePath);
+  const relativePath = yield* decodePosixPath("mailbox.pst");
 
   const operation = ExportArchiveOperation.make({
     format: "pst",
@@ -300,7 +306,7 @@ describe("makePffexportFileProcessingEngine", () => {
     Effect.fnUntraced(
       function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
-        const config = yield* S.decodeEffect(PffexportEngineConfig)({
+        const config = yield* decodePffexportEngineConfig({
           exportRoot,
           pffexportPath: stubPath,
         });
@@ -1034,7 +1040,7 @@ exec "$mapped_command" "\${mapped[@]}"`
         const path = yield* Path.Path;
         const { exportRoot, operation, stubPath } = yield* fixture(sleepingStub);
         const engine = yield* makePffexportFileProcessingEngine(
-          yield* S.decodeEffect(PffexportEngineConfig)({
+          yield* decodePffexportEngineConfig({
             exportRoot,
             pffexportPath: stubPath,
             timeoutMillis: 250,
@@ -1112,7 +1118,7 @@ exec "$mapped_command" "\${mapped[@]}"`
       function* () {
         const fs = yield* FileSystem.FileSystem;
         const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
-        const config = yield* S.decodeEffect(PffexportEngineConfig)({
+        const config = yield* decodePffexportEngineConfig({
           exportRoot,
           maxOutputBytes: 1,
           pffexportPath: stubPath,

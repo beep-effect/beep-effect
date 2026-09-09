@@ -7,6 +7,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeOrganizationLicenseTierSync = S.decodeSync(Organization.LicenseTier);
+const decodeOrganizationSettingsSync = S.decodeSync(Organization.Settings);
+const decodeUnknownOrganizationSettings = S.decodeUnknownEffect(Organization.Settings);
+const encodeOrganizationSettingsSync = S.encodeSync(Organization.Settings);
+
 const decodeOrganization = S.decodeUnknownEffect(Organization.Model);
 const decodeOrganizationId = S.decodeUnknownEffect(Shared.OrganizationId);
 const LicenseTierArbitrary = S.toArbitrary(Organization.LicenseTier)(fc);
@@ -64,24 +69,23 @@ describe("Organization", () => {
   it.effect(
     "defines license-tier literals and settings decoding",
     Effect.fnUntraced(function* () {
-      const decodeSettings = S.decodeUnknownEffect(Organization.Settings);
-
       expect(Organization.LicenseTier.is.solo("solo")).toBe(true);
       expect(Organization.LicenseTier.is.team("team")).toBe(true);
       expect(Organization.LicenseTier.is.enterprise("enterprise")).toBe(true);
-      expect((yield* decodeSettings({ allowAgentActions: false, defaultRetentionDays: 30 })).defaultRetentionDays).toBe(
-        30
-      );
-      yield* expectFailure(decodeSettings({ allowAgentActions: true, defaultRetentionDays: 0 }));
+      expect(
+        (yield* decodeUnknownOrganizationSettings({ allowAgentActions: false, defaultRetentionDays: 30 }))
+          .defaultRetentionDays
+      ).toBe(30);
+      yield* expectFailure(decodeUnknownOrganizationSettings({ allowAgentActions: true, defaultRetentionDays: 0 }));
     })
   );
 
   it("round-trips schema-derived license tiers and settings", () =>
     fc.assert(
       fc.property(LicenseTierArbitrary, SettingsArbitrary, (licenseTier, settings) => {
-        const decodedTier = S.decodeSync(Organization.LicenseTier)(licenseTier);
-        const encodedSettings = S.encodeSync(Organization.Settings)(settings);
-        const decodedSettings = S.decodeSync(Organization.Settings)(encodedSettings);
+        const decodedTier = decodeOrganizationLicenseTierSync(licenseTier);
+        const encodedSettings = encodeOrganizationSettingsSync(settings);
+        const decodedSettings = decodeOrganizationSettingsSync(encodedSettings);
 
         expect(decodedTier).toBe(licenseTier);
         expect(

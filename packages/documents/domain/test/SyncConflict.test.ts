@@ -7,6 +7,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownSyncConflictSyncConflictSync = S.decodeUnknownSync(SyncConflict.SyncConflict);
+const decodeUnknownSyncConflictSyncConflictKindSync = S.decodeUnknownSync(SyncConflict.SyncConflictKind);
+const decodeUnknownSyncConflictSyncConflictResolutionSync = S.decodeUnknownSync(SyncConflict.SyncConflictResolution);
+const encodeSyncConflictSyncConflictSync = S.encodeSync(SyncConflict.SyncConflict);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
@@ -58,7 +63,7 @@ describe("SyncConflict entity", () => {
   });
 
   it("decodes and encodes a locally mapped drift row", () => {
-    const decoded = S.decodeUnknownSync(SyncConflict.SyncConflict)(mappedDriftRow);
+    const decoded = decodeUnknownSyncConflictSyncConflictSync(mappedDriftRow);
 
     expect(decoded).toBeInstanceOf(SyncConflict.SyncConflict);
     expect(decoded.syncItemId).toEqual(O.some(1));
@@ -66,11 +71,11 @@ describe("SyncConflict entity", () => {
     expect(decoded.remoteEventId).toEqual(O.some("evt-1"));
     expect(decoded.localRelPath).toEqual(O.some("matters/client-default/complaint.pdf"));
     expect(decoded.remotePayload).toEqual({ eventType: "ITEM_MODIFY", itemId: "9001" });
-    expect(S.encodeSync(SyncConflict.SyncConflict)(decoded)).toStrictEqual(mappedDriftRow);
+    expect(encodeSyncConflictSyncConflictSync(decoded)).toStrictEqual(mappedDriftRow);
   });
 
   it("decodes drift for remote items unknown locally as none", () => {
-    const decoded = S.decodeUnknownSync(SyncConflict.SyncConflict)({
+    const decoded = decodeUnknownSyncConflictSyncConflictSync({
       ...mappedDriftRow,
       conflictKind: "remoteCreate",
       localRelPath: null,
@@ -90,8 +95,8 @@ describe("SyncConflict entity", () => {
     expect(SyncConflict.SyncConflictKind.is.remoteDelete("remoteEdit")).toBe(false);
     expect(SyncConflict.SyncConflictResolution.is.open("open")).toBe(true);
     expect(SyncConflict.SyncConflictResolution.Enum.reviewed).toBe("reviewed");
-    expect(() => S.decodeUnknownSync(SyncConflict.SyncConflictKind)("localEdit")).toThrow();
-    expect(() => S.decodeUnknownSync(SyncConflict.SyncConflictResolution)("dismissed")).toThrow();
+    expect(() => decodeUnknownSyncConflictSyncConflictKindSync("localEdit")).toThrow();
+    expect(() => decodeUnknownSyncConflictSyncConflictResolutionSync("dismissed")).toThrow();
   });
 
   it("round-trips schema-derived sync conflict values", () => {

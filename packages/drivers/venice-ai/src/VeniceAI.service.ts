@@ -317,6 +317,7 @@ const VeniceAIEncodedQuery = S.Record(S.String, VeniceAIQueryValue).pipe(
 );
 
 type VeniceAIEncodedQuery = typeof VeniceAIEncodedQuery.Type;
+const decodeVeniceAIEncodedQuery = S.decodeEffect(VeniceAIEncodedQuery);
 
 const VeniceAIFormData = S.FormData.annotate({
   toArbitrary: () => (fc) => fc.constant(null).map(() => new FormData()),
@@ -1587,7 +1588,7 @@ const normalizeQuery = (
     O.match({
       onNone: () => Effect.succeed(O.none<VeniceAIEncodedQuery>()),
       onSome: (value) =>
-        S.decodeEffect(VeniceAIEncodedQuery)(value).pipe(
+        decodeVeniceAIEncodedQuery(value).pipe(
           Effect.asSome,
           Effect.mapError(() => VeniceAIError.fromDescriptor(descriptor, "request encoding"))
         ),

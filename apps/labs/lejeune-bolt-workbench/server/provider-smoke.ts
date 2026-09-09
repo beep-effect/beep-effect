@@ -37,6 +37,11 @@ import { IsoTimestamp } from "@/domain/Ontology";
 import { RFQ_A_OUTLOOK_BODY } from "@/fixtures/Sources";
 import { verifyProviderRecording } from "@/workflows/ProviderRecording";
 
+const decodeProviderCandidateListFromJsonString = S.decodeEffect(ProviderCandidateListFromJsonString);
+const decodeUnknownProviderCandidate = S.decodeUnknownEffect(ProviderCandidate);
+const encodeProviderRecordingFromJsonString = S.encodeEffect(ProviderRecordingFromJsonString);
+const encodeUnknownProviderCandidateListFromJsonString = S.encodeUnknownEffect(ProviderCandidateListFromJsonString);
+
 const $I = $LejeuneBoltWorkbenchId.create("server/provider-smoke");
 const RECORDING_PATH = "src/fixtures/provider-recording.json";
 const DEFAULT_REVIEW_RECORDING_PATH = ".beep/lejeune-provider-recording-review.json";
@@ -285,7 +290,7 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
   const candidates = yield* Effect.forEach(
     groundedExtractions,
     (extraction) =>
-      S.decodeUnknownEffect(ProviderCandidate)({ label: extraction.label, text: extraction.text }).pipe(
+      decodeUnknownProviderCandidate({ label: extraction.label, text: extraction.text }).pipe(
         Effect.mapError((cause) =>
           providerSmokeErrorWithCause(
             "provider-extraction",
@@ -302,12 +307,12 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
       "The selected provider returned no source-grounded candidates for the smoke request."
     );
   }
-  const candidateJson = yield* S.encodeUnknownEffect(ProviderCandidateListFromJsonString)(candidates).pipe(
+  const candidateJson = yield* encodeUnknownProviderCandidateListFromJsonString(candidates).pipe(
     Effect.mapError((cause) =>
       providerSmokeErrorWithCause("serialization", "The sanitized provider candidates could not be encoded.", cause)
     )
   );
-  const verifiedCandidates = yield* S.decodeEffect(ProviderCandidateListFromJsonString)(candidateJson).pipe(
+  const verifiedCandidates = yield* decodeProviderCandidateListFromJsonString(candidateJson).pipe(
     Effect.mapError((cause) =>
       providerSmokeErrorWithCause(
         "provider-extraction",
@@ -341,7 +346,7 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
       )
     )
   );
-  const recordingJson = yield* S.encodeEffect(ProviderRecordingFromJsonString)(verifiedRecording).pipe(
+  const recordingJson = yield* encodeProviderRecordingFromJsonString(verifiedRecording).pipe(
     Effect.mapError((cause) =>
       providerSmokeErrorWithCause("serialization", "The sanitized provider recording could not be encoded.", cause)
     )

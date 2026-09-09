@@ -20,6 +20,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const decodeResidueReapReportJson = S.decodeEffect(S.fromJsonString(ResidueReapReport));
+const encodeResidueReapReportJson = S.encodeEffect(S.fromJsonString(ResidueReapReport));
+
 const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
 const noLiveCwd = () => Effect.succeedSome(false);
 
@@ -652,8 +655,8 @@ describe("residue reap", () => {
           nowMillis: FIXTURE_NOW_MILLIS,
           repoRoot: fixture.repoRoot,
         });
-        const encoded = yield* S.encodeEffect(S.fromJsonString(ResidueReapReport))(report);
-        const decoded = yield* S.decodeEffect(S.fromJsonString(ResidueReapReport))(encoded);
+        const encoded = yield* encodeResidueReapReportJson(report);
+        const decoded = yield* decodeResidueReapReportJson(encoded);
         expect(decoded).toEqual(report);
         expect(decoded.schemaVersion).toBe("residue-reap/v1");
         expect(decoded.classes).toEqual(["turbo-cache"]);

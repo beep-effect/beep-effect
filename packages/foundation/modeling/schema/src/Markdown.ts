@@ -21,6 +21,8 @@ import type { SchemaAST } from "effect";
 import type * as R from "effect/Record";
 import type { MarkdownParseResult } from "./internal/markdown.ts";
 
+const decodeUnknownString = S.decodeUnknownEffect(S.String);
+
 const $I = $SchemaId.create("Markdown");
 
 type MarkdownRenderOptions = R.ReadonlyRecord<string, unknown>;
@@ -76,7 +78,7 @@ const makeRenderMarkdownHtml = (options?: undefined | MarkdownRenderOptions) => 
         ),
     });
 
-    return yield* S.decodeUnknownEffect(S.String)(rendered).pipe(
+    return yield* decodeUnknownString(rendered).pipe(
       Effect.mapError(() => invalidMarkdownInput("Invalid Markdown input (Expected HTML string output)."))
     );
   });

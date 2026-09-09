@@ -4,6 +4,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { Attributes, AttributeValue, EntityId, OptionalConfidence } from "../../../Domain/Model/shared.ts";
+const decodeOptionalConfidenceResult = S.decodeResult(OptionalConfidence);
 
 const sharedSchemas: ReadonlyArray<S.Constraint> = [AttributeValue, Attributes, OptionalConfidence, EntityId];
 
@@ -28,9 +29,9 @@ describe("effect-ontology shared model schemas", () => {
   });
 
   it("normalizes nullish confidence at the schema boundary", () => {
-    const fromNull = Result.getOrThrow(S.decodeResult(OptionalConfidence)(null));
-    const fromUndefined = Result.getOrThrow(S.decodeResult(OptionalConfidence)(undefined));
-    const present = Result.getOrThrow(S.decodeResult(OptionalConfidence)(0.8));
+    const fromNull = Result.getOrThrow(decodeOptionalConfidenceResult(null));
+    const fromUndefined = Result.getOrThrow(decodeOptionalConfidenceResult(undefined));
+    const present = Result.getOrThrow(decodeOptionalConfidenceResult(0.8));
 
     expect(O.isNone(fromNull)).toBe(true);
     expect(O.isNone(fromUndefined)).toBe(true);

@@ -84,6 +84,7 @@ class AtlasArtifact extends S.Class<AtlasArtifact>($I`AtlasArtifact`)(
     description: "Lenient root slice decoded from capability-atlas.json.",
   })
 ) {}
+const decodeAtlasArtifactJson = S.decodeEffect(S.fromJsonString(AtlasArtifact));
 
 const atlasUrl = new URL(
   "../../../../../goals/lexical-playground-capability-atlas/research/capability-atlas.json",
@@ -219,7 +220,7 @@ describe("capability catalog", () => {
     "reconciles every atlas-backed descriptor and command",
     Effect.fnUntraced(function* () {
       const atlasText = yield* Effect.tryPromise(() => Bun.file(atlasUrl).text());
-      const atlas = yield* S.decodeEffect(S.fromJsonString(AtlasArtifact))(atlasText);
+      const atlas = yield* decodeAtlasArtifactJson(atlasText);
       const index = atlasIndex(atlas.capabilities);
       const mismatches = pipe(
         editorCapabilityCatalog,

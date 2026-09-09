@@ -88,6 +88,7 @@ class IanaMediaTypesDocument extends S.Class<IanaMediaTypesDocument>($I`IanaMedi
     description: "Decoded XML document for the official IANA media type registry.",
   })
 ) {}
+const decodeUnknownIanaMediaTypesDocument = S.decodeUnknownEffect(IanaMediaTypesDocument);
 
 class IanaMediaTypeEntry extends S.Class<IanaMediaTypeEntry>($I`IanaMediaTypeEntry`)(
   {
@@ -126,6 +127,7 @@ class IanaMediaTypesCanonical extends S.Class<IanaMediaTypesCanonical>($I`IanaMe
     description: "Checked-in canonical IANA media type registry data.",
   })
 ) {}
+const decodeIanaMediaTypesCanonicalJson = S.decodeEffect(S.fromJsonString(IanaMediaTypesCanonical));
 
 type IanaMediaTypeEntryType = IanaMediaTypeEntry;
 const isTextNode = S.is(IanaMediaTypeTextNode);
@@ -433,7 +435,7 @@ export const OfficialMimeTypeDataByTopLevel = ${formatTsLiteral(byTopLevel(value
 };
 
 const normalizeIanaMediaTypes = Effect.fn("SyncDataToTs.IanaMediaTypes.normalize")(function* (document: unknown) {
-  const decoded = yield* S.decodeUnknownEffect(IanaMediaTypesDocument)(document).pipe(
+  const decoded = yield* decodeUnknownIanaMediaTypesDocument(document).pipe(
     SyncDataToTsError.mapError("Failed to decode the official IANA media types XML payload", targetId)
   );
 
@@ -509,7 +511,7 @@ const acquireIanaMediaTypesFromCanonical = Effect.fn("SyncDataToTs.IanaMediaType
   const content = yield* fs
     .readFileString(path.resolve(repoRoot, canonicalPath))
     .pipe(SyncDataToTsError.mapError("Failed to read checked-in IANA media types data", targetId, canonicalPath));
-  const canonical = yield* S.decodeEffect(S.fromJsonString(IanaMediaTypesCanonical))(content).pipe(
+  const canonical = yield* decodeIanaMediaTypesCanonicalJson(content).pipe(
     SyncDataToTsError.mapError("Failed to decode checked-in IANA media types data", targetId, canonicalPath)
   );
   return yield* projectIanaMediaTypes(

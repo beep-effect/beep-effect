@@ -38,6 +38,8 @@ import { Otlp, OtlpSerialization } from "effect/unstable/observability";
 import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.ts";
 import type { R } from "@beep/utils";
 
+const isLogLevel = S.is(LogLevel);
+
 const readRuntimeString = (key: string): O.Option<string> => {
   const runtime: unknown = globalThis;
   return P.hasProperty(runtime, key) && P.isString(runtime[key]) && Str.isNonEmpty(runtime[key])
@@ -58,7 +60,7 @@ const resolveOtlpBaseUrl = (): O.Option<string> =>
 const resolveMinimumLogLevel = (): LogLevel =>
   O.match(readRuntimeString("__BEEP_LOG_LEVEL__"), {
     onNone: () => LogLevel.Enum.Info,
-    onSome: (value) => (S.is(LogLevel)(value) ? value : LogLevel.Enum.Info),
+    onSome: (value) => (isLogLevel(value) ? value : LogLevel.Enum.Info),
   });
 
 const resourceAttributes = (): R.ReadonlyRecord<string, string> => ({

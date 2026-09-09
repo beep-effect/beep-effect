@@ -52,6 +52,8 @@ import {
 import type { SchemaIssue } from "effect";
 import type { TableCellHeaderState, TextFormatBit } from "./Lexical.model.ts";
 
+const isMdText = S.is(Md.Text);
+
 const $I = $LexicalSchemaId.create("Lexical.codec");
 
 /**
@@ -346,7 +348,7 @@ type ArtifactRef = {
 const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
   pipe(
     A.length(child.children) === 1 ? A.head(child.children) : O.none<Md.Inline>(),
-    O.filter(S.is(Md.Text)),
+    O.filter(isMdText),
     O.filter(({ value }) => Str.isNonEmpty(value) && O.isNone(child.title)),
     O.flatMap(({ value: label }) =>
       pipe(

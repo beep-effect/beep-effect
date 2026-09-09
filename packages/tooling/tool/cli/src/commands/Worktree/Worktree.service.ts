@@ -60,6 +60,7 @@ const GitCountFromString = S.FiniteFromString.pipe(
 );
 
 const decodeGitCount = S.decodeUnknownEffect(GitCountFromString);
+const isWorktreeRemovalName = S.is(WorktreeRemovalRequest.fields.name);
 const decodeGitObjectId = S.decodeUnknownEffect(GitObjectId);
 const decodeIsoString = S.decodeUnknownEffect(ISOStr);
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
@@ -714,7 +715,7 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
         "Removal target must be an exact registered worktree beneath the managed root with the same Git common directory.",
       path: request.targetPath,
     });
-  if (!S.is(WorktreeRemovalRequest.fields.name)(request.name) || target !== path.resolve(managedRoot, request.name)) {
+  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(managedRoot, request.name)) {
     return yield* invalid();
   }
   const listed = yield* runWorktreeGitCapture(

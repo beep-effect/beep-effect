@@ -73,6 +73,10 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
+const isActFrameFieldsSlots = S.is(ActFrame.fields.slots);
+const isAdvantagePositionKind = S.is(AdvantagePositionKind);
+const isLegalActPolarity = S.is(LegalActPolarity);
+
 // ---------------------------------------------------------------------------
 // The donor's competency-question inventory, transcribed
 // ---------------------------------------------------------------------------
@@ -683,7 +687,7 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         expect(A.map(actors, (candidate) => candidate.label)).toEqual(["assignor"]);
         // A frame with no actor slot is not admitted at all, so this question
         // can never come back empty for a recorded frame.
-        expect(S.is(ActFrame.fields.slots)([])).toBe(false);
+        expect(isActFrameFieldsSlots([])).toBe(false);
       })
     );
 
@@ -755,7 +759,7 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         const stored = HashSet.fromIterable(A.map(relators, (relation) => relation.positionKind));
         expect(HashSet.has(stored, "claim")).toBe(true);
         expect(HashSet.has(HashSet.fromIterable(HohfeldPositionKind.Options), "duty")).toBe(true);
-        expect(A.some(relators, (relation) => S.is(AdvantagePositionKind)(relation.positionKind))).toBe(true);
+        expect(A.some(relators, (relation) => isAdvantagePositionKind(relation.positionKind))).toBe(true);
 
         const duties = A.map(
           A.filter(relators, (relation) => relation.positionKind === "claim"),
@@ -1071,7 +1075,7 @@ describe("FLINT's out-of-scope competency questions are excluded from porting", 
         // The donor models positive actions only and says so. Its gap is not
         // inherited: polarity is a required field of act content, and the
         // opposite derivation is unsound without it.
-        expect(S.is(LegalActPolarity)("omission")).toBe(true);
+        expect(isLegalActPolarity("omission")).toBe(true);
         expect(byId(relators, ORIGINAL_CLAIM).content.polarity).toBe("omission");
         expect(A.some(relators, (relation) => relation.content.polarity === "act")).toBe(true);
       })

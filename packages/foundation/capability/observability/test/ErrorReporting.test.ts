@@ -6,6 +6,11 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
+const decodeUnknownConsoleErrorReporterOptionsOption = S.decodeUnknownOption(ConsoleErrorReporterOptions);
+const decodeUnknownErrorReporterLayerOptionsOption = S.decodeUnknownOption(ErrorReporterLayerOptions);
+const encodeConsoleErrorReporterOptionsOption = S.encodeOption(ConsoleErrorReporterOptions);
+const encodeErrorReporterLayerOptionsOption = S.encodeOption(ErrorReporterLayerOptions);
+
 describe("ErrorReporting", () => {
   it("keeps reporter option defaults on the schema", () => {
     expect(ConsoleErrorReporterOptions.make({}).includeCause).toBe(true);
@@ -17,8 +22,8 @@ describe("ErrorReporting", () => {
     fc.assert(
       fc.property(S.toArbitrary(ConsoleErrorReporterOptions)(fc), (options) => {
         const decoded = O.flatMap(
-          S.encodeOption(ConsoleErrorReporterOptions)(options),
-          S.decodeUnknownOption(ConsoleErrorReporterOptions)
+          encodeConsoleErrorReporterOptionsOption(options),
+          decodeUnknownConsoleErrorReporterOptionsOption
         );
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),
@@ -30,8 +35,8 @@ describe("ErrorReporting", () => {
     fc.assert(
       fc.property(S.toArbitrary(ErrorReporterLayerOptions)(fc), (options) => {
         const decoded = O.flatMap(
-          S.encodeOption(ErrorReporterLayerOptions)(options),
-          S.decodeUnknownOption(ErrorReporterLayerOptions)
+          encodeErrorReporterLayerOptionsOption(options),
+          decodeUnknownErrorReporterLayerOptionsOption
         );
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),

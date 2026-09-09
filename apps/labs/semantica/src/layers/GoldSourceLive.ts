@@ -14,6 +14,9 @@ import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
 import type { LedgerDocumentSnapshot } from "@/schema/Ledger";
 
+const decodeGoldFile = S.decodeEffect(GoldFile);
+const encodeModelIdentity = S.encodeEffect(ModelIdentity);
+
 const GoldFileJson = S.fromJsonString(GoldFileEncoded).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
 const GoldRefJson = S.fromJsonString(GoldRef).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
@@ -70,7 +73,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       (file.subset === "entity" && A.isReadonlyArrayEmpty(file.labels)) ||
       (file.subset === "relation" && A.isReadonlyArrayEmpty(file.labels));
     if (empty) {
-      return yield* S.decodeEffect(GoldFile)(file).pipe(
+      return yield* decodeGoldFile(file).pipe(
         Effect.provideService(CurrentGoldDocumentText, ""),
         Effect.mapError(() => unavailable("read-failed", "An empty gold-v1 file failed decoded-shape validation."))
       );
@@ -92,7 +95,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
         unavailable("source-unavailable", "A selected gold-v1 file has no canonical ledger document text.")
       )
     );
-    return yield* S.decodeEffect(GoldFile)(file).pipe(
+    return yield* decodeGoldFile(file).pipe(
       Effect.provideService(CurrentGoldDocumentText, canonical.text),
       Effect.mapError(() =>
         unavailable("digest-failed", "A gold-v1 label digest does not match its canonical document slice.")
@@ -114,7 +117,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
         Effect.provideService(Crypto.Crypto, crypto),
         Effect.mapError(() => unavailable("digest-failed", "The covered gold-v1 files could not be hashed."))
       );
-      const encodedProposer = yield* S.encodeEffect(ModelIdentity)(reference.proposer).pipe(Effect.orDie);
+      const encodedProposer = yield* encodeModelIdentity(reference.proposer).pipe(Effect.orDie);
       if (
         !sha256Equivalence(digest, reference.digest) ||
         A.some(files, (file) => !GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, encodedProposer))

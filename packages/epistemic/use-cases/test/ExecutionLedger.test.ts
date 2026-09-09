@@ -10,6 +10,8 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const isExecutionLedgerError = S.is(ExecutionLedgerError);
+
 describe("ExecutionLedger", () => {
   describe("ExecutionLedgerOperation", () => {
     it("is the closed five-operation domain", () => {
@@ -60,7 +62,7 @@ describe("ExecutionLedger", () => {
       expect(ExecutionLedgerError.is(violation)).toBe(true);
       expect(ExecutionLedgerError.is(unavailable)).toBe(true);
       expect(ExecutionLedgerError.is({ _tag: "SomethingElse" })).toBe(false);
-      expect(S.is(ExecutionLedgerError)(new Error("plain"))).toBe(false);
+      expect(isExecutionLedgerError(new Error("plain"))).toBe(false);
     });
   });
 

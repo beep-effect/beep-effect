@@ -22,6 +22,8 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
+
 const HEAD_A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const HEAD_B = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
@@ -261,7 +263,7 @@ describe("yeet merge readiness", () => {
 
   it.effect("decodes a legacy headless closeout report and treats it as stale", () =>
     Effect.gen(function* () {
-      const report = yield* S.decodeEffect(PrCloseoutReport)({
+      const report = yield* decodePrCloseoutReport({
         actionableReviewThreadCount: 0,
         botCommentCount: 0,
         greptile: {},

@@ -61,6 +61,7 @@ export const CoepValue = CoepValueBase.pipe(
  * @since 0.0.0
  */
 export type CoepValue = typeof CoepValue.Type;
+const isCoepValue = S.is(CoepValue);
 
 const CrossOriginEmbedderPolicyOptionBase = LiteralKit([false, ...CoepValueBase.Options]);
 
@@ -185,7 +186,7 @@ export const CrossOriginEmbedderPolicyHeader = S.Union([CrossOriginEmbedderPolic
         return O.none<string>();
       }
 
-      if (S.is(CoepValue)(option)) {
+      if (isCoepValue(option)) {
         return O.some(option);
       }
 

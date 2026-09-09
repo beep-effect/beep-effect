@@ -21,6 +21,8 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { ProofEpoch } from "./ProofFact.ts";
 import type { ProofInputDigest } from "./ProofFact.ts";
 
+const decodeNonEmptyString = S.decodeEffect(S.NonEmptyString);
+
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofDigest");
 const textEncoder = new TextEncoder();
 const componentSeparator = new Uint8Array([0]);
@@ -82,7 +84,7 @@ const readPin = Effect.fn("Yeet.ProofDigest.readPin")(function* (
       Effect.map(Str.trim),
       Effect.mapError(YeetCommandError.new(`Failed to read ${label} for the proof epoch.`, { file: filePath }))
     );
-  return yield* S.decodeEffect(S.NonEmptyString)(value).pipe(
+  return yield* decodeNonEmptyString(value).pipe(
     Effect.mapError(YeetCommandError.new(`The ${label} proof-epoch pin is empty.`, { file: filePath }))
   );
 });

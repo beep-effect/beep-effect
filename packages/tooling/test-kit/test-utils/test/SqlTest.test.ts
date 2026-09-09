@@ -28,6 +28,14 @@ import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { vi } from "vitest";
 import type { SqlTestHooks } from "@beep/test-utils";
 
+const decodeUnknownSqlTestHarnessError = S.decodeUnknownEffect(SqlTestHarnessError);
+const encodeUnknownPgExternalConnectionUri = S.encodeUnknownEffect(PgExternalConnectionUri);
+const encodeUnknownPgExternalTestDriverConfig = S.encodeUnknownEffect(PgExternalTestDriverConfig);
+const encodeUnknownPgliteSqlTestLayerMode = S.encodeUnknownEffect(PgliteSqlTestLayerMode);
+const encodeUnknownPgliteTestcontainersTestDriverConfig = S.encodeUnknownEffect(PgliteTestcontainersTestDriverConfig);
+const encodeUnknownSqlTestHarnessError = S.encodeUnknownEffect(SqlTestHarnessError);
+const encodeUnknownTestDatabaseInfoShape = S.encodeUnknownEffect(TestDatabaseInfoShape);
+
 const sqlTransportMock = vi.hoisted(() => ({
   builds: 0,
   connections: 0,
@@ -654,11 +662,11 @@ describe("SqlTest", () => {
       phase: "provision",
     });
 
-    expect(Effect.runSync(S.encodeUnknownEffect(PgliteSqlTestLayerMode)("auto"))).toBe("auto");
-    expect(Effect.runSync(S.encodeUnknownEffect(PgExternalConnectionUri)(pgExternalConfig.connectionUri))).toBe(
+    expect(Effect.runSync(encodeUnknownPgliteSqlTestLayerMode("auto"))).toBe("auto");
+    expect(Effect.runSync(encodeUnknownPgExternalConnectionUri(pgExternalConfig.connectionUri))).toBe(
       "postgres://user:pass@localhost:5432/test_db"
     );
-    expect(Effect.runSync(S.encodeUnknownEffect(TestDatabaseInfoShape)(info))).toEqual({
+    expect(Effect.runSync(encodeUnknownTestDatabaseInfoShape(info))).toEqual({
       connectionUri: O.some("postgres://user:pass@localhost:5432/test_db"),
       containerId: O.some("container-1"),
       database: O.some("test_db"),
@@ -670,7 +678,7 @@ describe("SqlTest", () => {
       tempDir: O.none(),
       username: O.some("user"),
     });
-    expect(Effect.runSync(S.encodeUnknownEffect(PgliteTestcontainersTestDriverConfig)(pgliteConfig))).toEqual({
+    expect(Effect.runSync(encodeUnknownPgliteTestcontainersTestDriverConfig(pgliteConfig))).toEqual({
       database: "postgres",
       internalPort: 5432,
       maxConnections: 1,
@@ -678,7 +686,7 @@ describe("SqlTest", () => {
       startupTimeoutMs: 60_000,
       username: "postgres",
     });
-    expect(Effect.runSync(S.encodeUnknownEffect(PgExternalTestDriverConfig)(pgExternalConfig))).toEqual({
+    expect(Effect.runSync(encodeUnknownPgExternalTestDriverConfig(pgExternalConfig))).toEqual({
       connectTimeoutMs: 5_000,
       connectionUri: "postgres://user:pass@localhost:5432/test_db",
       isolation: "schema",
@@ -686,7 +694,7 @@ describe("SqlTest", () => {
       schemaPrefix: "beep_test",
       ssl: false,
     });
-    expect(Effect.runSync(S.encodeUnknownEffect(SqlTestHarnessError)(harnessError))).toEqual({
+    expect(Effect.runSync(encodeUnknownSqlTestHarnessError(harnessError))).toEqual({
       _tag: "SqlTestHarnessError",
       driver: "pg-external",
       message: "setup failed",
@@ -700,15 +708,12 @@ describe("SqlTest", () => {
       message: S.String,
       phase: S.Literals(["provision", "migrate", "seed", "teardown"]),
     });
-    const decode = S.decodeUnknownEffect(SqlTestHarnessError);
-    const encode = S.encodeUnknownEffect(SqlTestHarnessError);
-
     fc.assert(
       fc.property(S.toArbitrary(SqlTestHarnessErrorEncoded)(fc), (encoded) => {
-        const decoded = Effect.runSync(decode(encoded));
+        const decoded = Effect.runSync(decodeUnknownSqlTestHarnessError(encoded));
 
         expect(SqlTestHarnessError.is(decoded)).toBe(true);
-        expect(Effect.runSync(encode(decoded))).toEqual(encoded);
+        expect(Effect.runSync(encodeUnknownSqlTestHarnessError(decoded))).toEqual(encoded);
       }),
       fcRuns(10)
     );

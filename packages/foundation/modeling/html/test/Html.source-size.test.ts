@@ -6,6 +6,9 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const isSourceSizeAnalysis = S.is(SourceSizeAnalysis);
+const isSourceSizeIssue = S.is(SourceSizeIssue);
+
 type IssueCode = SourceSizeIssue["code"];
 
 const expectValid = (value: string, usesAuto = false): void => {
@@ -30,7 +33,7 @@ describe("@beep/html source-size author conformance", () => {
     const valid = inspectSourceSizeList("(max-width: 30em) 100vw, 50vw");
     expect(Result.isSuccess(valid)).toBe(true);
     if (Result.isSuccess(valid)) {
-      expect(S.is(SourceSizeAnalysis)(valid.success)).toBe(true);
+      expect(isSourceSizeAnalysis(valid.success)).toBe(true);
       expect(valid.success.entryCount).toBe(2);
       expect(valid.success.usesAuto).toBe(false);
     }
@@ -38,7 +41,7 @@ describe("@beep/html source-size author conformance", () => {
     const invalid = inspectSourceSizeList("10%");
     expect(Result.isFailure(invalid)).toBe(true);
     if (Result.isFailure(invalid)) {
-      expect(S.is(SourceSizeIssue)(invalid.failure[0])).toBe(true);
+      expect(isSourceSizeIssue(invalid.failure[0])).toBe(true);
       expect(invalid.failure[0]?.code).toBe("invalidSourceSize");
     }
   });

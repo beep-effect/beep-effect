@@ -11,6 +11,19 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
+const decodeDocument = S.decodeEffect(Document);
+const decodeSentence = S.decodeEffect(Sentence);
+const decodeSimilarityScore = S.decodeEffect(SimilarityScore);
+const decodeToken = S.decodeEffect(Token);
+const encodeDocument = S.encodeEffect(Document);
+const encodeSentence = S.encodeEffect(Sentence);
+const encodeSimilarityScore = S.encodeEffect(SimilarityScore);
+const encodeToken = S.encodeEffect(Token);
+const encodeUnknownDocument = S.encodeUnknownEffect(Document);
+const encodeUnknownSentence = S.encodeUnknownEffect(Sentence);
+const encodeUnknownSimilarityScore = S.encodeUnknownEffect(SimilarityScore);
+const encodeUnknownToken = S.encodeUnknownEffect(Token);
+
 const TokenArbitrary = S.toArbitrary(Token)(fc);
 const SentenceArbitrary = S.toArbitrary(Sentence)(fc);
 const DocumentArbitrary = S.toArbitrary(Document)(fc);
@@ -99,14 +112,14 @@ describe("Core models", () => {
       score: UnitInterval.make(0.8),
     });
 
-    expect(Effect.runSync(S.encodeUnknownEffect(Token)(token))).toEqual({
+    expect(Effect.runSync(encodeUnknownToken(token))).toEqual({
       end: 6,
       index: 0,
       start: 0,
       tags: [],
       text: "Effect",
     });
-    const encodedSentence = Effect.runSync(S.encodeUnknownEffect(Sentence)(sentence));
+    const encodedSentence = Effect.runSync(encodeUnknownSentence(sentence));
     expect(encodedSentence).toEqual({
       end: 0,
       index: 0,
@@ -124,7 +137,7 @@ describe("Core models", () => {
       },
     ]);
 
-    const encodedDocument = Effect.runSync(S.encodeUnknownEffect(Document)(document));
+    const encodedDocument = Effect.runSync(encodeUnknownDocument(document));
     expect(encodedDocument).toEqual({
       id: "core-models",
       sentences: encodedDocument.sentences,
@@ -141,7 +154,7 @@ describe("Core models", () => {
         text: "Effect",
       },
     ]);
-    expect(Effect.runSync(S.encodeUnknownEffect(SimilarityScore)(similarity))).toEqual({
+    expect(Effect.runSync(encodeUnknownSimilarityScore(similarity))).toEqual({
       document1Id: "doc-a",
       document2Id: "doc-b",
       method: "set.tversky",
@@ -157,15 +170,15 @@ describe("Core models", () => {
         DocumentArbitrary,
         SimilarityScoreArbitrary,
         (token, sentence, document, similarity) => {
-          const encodedToken = Effect.runSync(S.encodeEffect(Token)(token));
-          const encodedSentence = Effect.runSync(S.encodeEffect(Sentence)(sentence));
-          const encodedDocument = Effect.runSync(S.encodeEffect(Document)(document));
-          const encodedSimilarity = Effect.runSync(S.encodeEffect(SimilarityScore)(similarity));
+          const encodedToken = Effect.runSync(encodeToken(token));
+          const encodedSentence = Effect.runSync(encodeSentence(sentence));
+          const encodedDocument = Effect.runSync(encodeDocument(document));
+          const encodedSimilarity = Effect.runSync(encodeSimilarityScore(similarity));
 
-          expect(Effect.runSync(S.decodeEffect(Token)(encodedToken))).toEqual(token);
-          expect(Effect.runSync(S.decodeEffect(Sentence)(encodedSentence))).toEqual(sentence);
-          expect(Effect.runSync(S.decodeEffect(Document)(encodedDocument))).toEqual(document);
-          expect(Effect.runSync(S.decodeEffect(SimilarityScore)(encodedSimilarity))).toEqual(similarity);
+          expect(Effect.runSync(decodeToken(encodedToken))).toEqual(token);
+          expect(Effect.runSync(decodeSentence(encodedSentence))).toEqual(sentence);
+          expect(Effect.runSync(decodeDocument(encodedDocument))).toEqual(document);
+          expect(Effect.runSync(decodeSimilarityScore(encodedSimilarity))).toEqual(similarity);
         }
       ),
       fcRuns(50)

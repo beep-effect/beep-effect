@@ -19,9 +19,18 @@ const createRuntimeLiteralKit = (
   enumMapping: ReadonlyArray<readonly [unknown, string]>
 ): unknown => Function.prototype.apply.call(LiteralKit, undefined, [{ literals, enumMapping }]);
 
-describe("LiteralKit", () => {
-  const Status = LiteralKit([1, 20n, true, false, "hello"]);
+const Status = LiteralKit([1, 20n, true, false, "hello"]);
+const decodeUnknownStatusSync = S.decodeUnknownSync(Status);
+const encodeStatusSync = S.encodeSync(Status);
+const Direction = LiteralKit(["up", "down", "left", "right"]);
+const EventKind = LiteralKit(["created", "deleted"]);
+const Event = EventKind.toTaggedUnion("kind")({
+  created: { value: S.Literal(1) },
+  deleted: { value: S.Literal(2) },
+});
+const decodeEventSync = S.decodeSync(Event);
 
+describe("LiteralKit", () => {
   it("exposes Options with the original literal tuple", () => {
     expect(Status.Options).toEqual([1, 20n, true, false, "hello"]);
   });
@@ -41,13 +50,10 @@ describe("LiteralKit", () => {
 
   it("round-trips schema-derived literal samples", () => {
     const arbitrary = S.toArbitrary(Status)(fc);
-    const decode = S.decodeUnknownSync(Status);
-    const encode = S.encodeSync(Status);
-
     fc.assert(
       fc.property(arbitrary, (literal) => {
         expect(Status.Options).toContain(literal);
-        expect(decode(encode(literal))).toBe(literal);
+        expect(decodeUnknownStatusSync(encodeStatusSync(literal))).toBe(literal);
       }),
       fcRuns(25)
     );
@@ -166,17 +172,6 @@ describe("LiteralKit", () => {
 });
 
 describe("LiteralKit (string-only)", () => {
-  const Direction = LiteralKit(["up", "down", "left", "right"]);
-  const EventKind = LiteralKit(["created", "deleted"]);
-  const Event = EventKind.toTaggedUnion("kind")({
-    created: {
-      value: S.Literal(1),
-    },
-    deleted: {
-      value: S.Literal(2),
-    },
-  });
-
   it("uses string values as-is for keys (same as StringLiteralKit)", () => {
     expect(Direction.Enum.up).toBe("up");
     expect(Direction.Enum.down).toBe("down");
@@ -196,7 +191,7 @@ describe("LiteralKit (string-only)", () => {
 
   it("builds tagged unions from literal members", () => {
     expect(
-      S.decodeSync(Event)({
+      decodeEventSync({
         kind: "created",
         value: 1,
       })

@@ -5,22 +5,24 @@ import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeArrayBuf = S.decodeEffect(ArrayBuf);
+const decodeUnknownArrayBuf = S.decodeUnknownEffect(ArrayBuf);
+
 const bufferOf = (bytes: ReadonlyArray<number>): ArrayBuffer => new Uint8Array(bytes).buffer;
 
 describe("ArrayBuf", () => {
   it.effect("accepts a live ArrayBuffer", () =>
     Effect.gen(function* () {
-      const value = yield* S.decodeEffect(ArrayBuf)(bufferOf([1, 2, 3]));
+      const value = yield* decodeArrayBuf(bufferOf([1, 2, 3]));
       expect(value.byteLength).toBe(3);
     })
   );
 
   it.effect("rejects views, strings, and shared memory", () =>
     Effect.gen(function* () {
-      const decode = S.decodeUnknownEffect(ArrayBuf);
-      const view = yield* Effect.exit(decode(new Uint8Array([1, 2])));
-      const text = yield* Effect.exit(decode("AQID"));
-      const shared = yield* Effect.exit(decode(new SharedArrayBuffer(4)));
+      const view = yield* Effect.exit(decodeUnknownArrayBuf(new Uint8Array([1, 2])));
+      const text = yield* Effect.exit(decodeUnknownArrayBuf("AQID"));
+      const shared = yield* Effect.exit(decodeUnknownArrayBuf(new SharedArrayBuffer(4)));
       expect(Exit.isFailure(view)).toBe(true);
       expect(Exit.isFailure(text)).toBe(true);
       expect(Exit.isFailure(shared)).toBe(true);
@@ -31,7 +33,7 @@ describe("ArrayBuf", () => {
     Effect.gen(function* () {
       const buffer = new ArrayBuffer(4);
       buffer.transfer();
-      const exit = yield* Effect.exit(S.decodeEffect(ArrayBuf)(buffer));
+      const exit = yield* Effect.exit(decodeArrayBuf(buffer));
       expect(Exit.isFailure(exit)).toBe(true);
     })
   );

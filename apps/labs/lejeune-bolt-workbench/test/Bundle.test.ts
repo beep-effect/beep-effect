@@ -44,6 +44,29 @@ import { buildNormalizedFixtures } from "@/workflows/Normalize";
 import { verifyFrozenProviderRecording, verifyProviderRecording } from "@/workflows/ProviderRecording";
 import { replayOffline } from "@/workflows/Replay";
 import { evaluateRules } from "@/workflows/Rules";
+
+const decodeTupleInlineSchema = S.decodeEffect(S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate]));
+const decodeIsoDate = S.decodeEffect(IsoDate);
+const decodeIsoTimestamp = S.decodeEffect(IsoTimestamp);
+const decodeProviderRecordingFromJsonString = S.decodeEffect(ProviderRecordingFromJsonString);
+const decodeSha256HexFromBytes = S.decodeEffect(Sha256HexFromBytes);
+const decodeUnknownFrozenFixtureManifest = S.decodeUnknownEffect(FrozenFixtureManifest);
+const decodeUnknownImmutableDemoBundle = S.decodeUnknownEffect(ImmutableDemoBundle);
+const decodeUnknownMutableReviewLedger = S.decodeUnknownEffect(MutableReviewLedger);
+const decodeUnknownNormalizedFixture = S.decodeUnknownEffect(NormalizedFixture);
+const decodeUnknownProjectionSnapshot = S.decodeUnknownEffect(ProjectionSnapshot);
+const decodeUnknownProviderRecording = S.decodeUnknownEffect(ProviderRecording);
+const decodeUnknownRetentionAuthorization = S.decodeUnknownEffect(RetentionAuthorization);
+const decodeUnknownRuleResult = S.decodeUnknownEffect(RuleResult);
+const decodeUnknownRetentionAuthorizationSync = S.decodeUnknownSync(RetentionAuthorization);
+const encodeImmutableDemoBundle = S.encodeEffect(ImmutableDemoBundle);
+const encodeNormalizedFixture = S.encodeEffect(NormalizedFixture);
+const encodeProviderCandidateListFromJsonString = S.encodeEffect(ProviderCandidateListFromJsonString);
+const encodeProviderRecording = S.encodeEffect(ProviderRecording);
+const encodeRuleResult = S.encodeEffect(RuleResult);
+const encodeRetentionAuthorizationSync = S.encodeSync(RetentionAuthorization);
+const isFrozenSourceHash = S.is(FrozenSourceHash);
+
 import type {
   IsoDate as IsoDateValue,
   IsoTimestamp as IsoTimestampValue,
@@ -58,11 +81,11 @@ const providerRecordingJson = S.encodeSync(ProviderRecordingFromJsonString)(
 
 describe("LeJeune deterministic fixture bundle", () => {
   it("round-trips schema-derived retention authorizations", () => {
-    const decode = S.decodeUnknownSync(RetentionAuthorization);
-    const encode = S.encodeSync(RetentionAuthorization);
     const equivalent = S.toEquivalence(RetentionAuthorization);
     fc.assert(
-      fc.property(S.toArbitrary(RetentionAuthorization)(fc), (value) => equivalent(decode(encode(value)), value)),
+      fc.property(S.toArbitrary(RetentionAuthorization)(fc), (value) =>
+        equivalent(decodeUnknownRetentionAuthorizationSync(encodeRetentionAuthorizationSync(value)), value)
+      ),
       fcRuns(20)
     );
   });
@@ -73,9 +96,9 @@ describe("LeJeune deterministic fixture bundle", () => {
       const [first, second] = yield* Effect.all([buildFixtureArtifacts, buildFixtureArtifacts], {
         concurrency: 1,
       }).pipe(provideBunCrypto);
-      const manifest = yield* S.decodeUnknownEffect(FrozenFixtureManifest)(fixtureManifestJson);
+      const manifest = yield* decodeUnknownFrozenFixtureManifest(fixtureManifestJson);
 
-      expect(S.is(FrozenSourceHash)(manifest.sources[0])).toBe(true);
+      expect(isFrozenSourceHash(manifest.sources[0])).toBe(true);
       expect(A.map(first.sources, (source) => [source.id, source.sha256])).toEqual([
         ["rfq-a-outlook-body", "ee38c21a1635fa152f1e48914ae2c2ce3761d5ada7f96b8c7c3d5a50e808f3b5"],
         ["rfq-a-xlsx-takeoff", "09c038e5118283ff15382a632ca6c6e9c811ef4e7235128623956f6043b1d4c5"],
@@ -99,7 +122,7 @@ describe("LeJeune deterministic fixture bundle", () => {
     Effect.fnUntraced(function* () {
       const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
       const fixtures = yield* buildNormalizedFixtures(artifacts);
-      const manifest = yield* S.decodeUnknownEffect(FrozenFixtureManifest)(fixtureManifestJson);
+      const manifest = yield* decodeUnknownFrozenFixtureManifest(fixtureManifestJson);
 
       expect(fixtures).toEqual(CanonicalNormalizedFixtures);
       expect(A.map(fixtures, (fixture) => fixture.rfq.id)).toEqual(["rfq-a", "rfq-b"]);
@@ -199,13 +222,13 @@ describe("LeJeune deterministic fixture bundle", () => {
           .disposition
       ).toBe("refuse");
 
-      const encodedRfqA = yield* S.encodeEffect(NormalizedFixture)(rfqA);
+      const encodedRfqA = yield* encodeNormalizedFixture(rfqA);
       const incompatibleComponents = A.map(encodedRfqA.components, (component) =>
         Str.Equivalence(component.kind, "nut")
           ? { ...component, standardId: "astm-a490-type-1", strengthClass: "490" }
           : component
       );
-      const incompatibleAssembly = yield* S.decodeUnknownEffect(NormalizedFixture)({
+      const incompatibleAssembly = yield* decodeUnknownNormalizedFixture({
         ...encodedRfqA,
         components: incompatibleComponents,
       });
@@ -221,7 +244,7 @@ describe("LeJeune deterministic fixture bundle", () => {
       const dtiStandardSwizzleComponents = A.map(encodedRfqA.components, (component) =>
         Str.Equivalence(component.kind, "dti") ? { ...component, standardId: "astm-a563-dh" } : component
       );
-      const dtiStandardSwizzle = yield* S.decodeUnknownEffect(NormalizedFixture)({
+      const dtiStandardSwizzle = yield* decodeUnknownNormalizedFixture({
         ...encodedRfqA,
         components: dtiStandardSwizzleComponents,
       });
@@ -246,7 +269,7 @@ describe("LeJeune deterministic fixture bundle", () => {
           ? { ...source, text: Str.replace("TC assembly", "XX assembly")(source.text) }
           : source
       );
-      const unprovenAssembly = yield* S.decodeUnknownEffect(NormalizedFixture)({
+      const unprovenAssembly = yield* decodeUnknownNormalizedFixture({
         ...encodedRfqA,
         extractedFields: provenanceFields,
         sources: provenanceSources,
@@ -429,15 +452,15 @@ describe("LeJeune deterministic fixture bundle", () => {
   it.effect(
     "rejects impossible semantic dates and timestamps",
     Effect.fnUntraced(function* () {
-      const validDate: IsoDateValue = yield* S.decodeEffect(IsoDate)("2026-09-30");
-      const validTimestamp: IsoTimestampValue = yield* S.decodeEffect(IsoTimestamp)("2026-08-27T12:00:00.000Z");
+      const validDate: IsoDateValue = yield* decodeIsoDate("2026-09-30");
+      const validTimestamp: IsoTimestampValue = yield* decodeIsoTimestamp("2026-08-27T12:00:00.000Z");
       expect([validDate, validTimestamp]).toEqual(["2026-09-30", "2026-08-27T12:00:00.000Z"]);
       const invalidDates = ["2026-99-99", "2026-02-30"] as const;
       for (const value of invalidDates) {
-        const failure = yield* Effect.flip(S.decodeEffect(IsoDate)(value));
+        const failure = yield* Effect.flip(decodeIsoDate(value));
         expect(failure._tag).toBe("SchemaError");
       }
-      const timestampFailure = yield* Effect.flip(S.decodeEffect(IsoTimestamp)("2026-02-30T12:00:00.000Z"));
+      const timestampFailure = yield* Effect.flip(decodeIsoTimestamp("2026-02-30T12:00:00.000Z"));
       expect(timestampFailure._tag).toBe("SchemaError");
     })
   );
@@ -448,13 +471,13 @@ describe("LeJeune deterministic fixture bundle", () => {
       const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
       const fixtures = yield* buildNormalizedFixtures(artifacts);
       const rules = yield* evaluateRules(fixtures);
-      const recording = yield* S.decodeEffect(ProviderRecordingFromJsonString)(providerRecordingJson);
+      const recording = yield* decodeProviderRecordingFromJsonString(providerRecordingJson);
       const replay = yield* replayOffline(recording).pipe(
         provideScopedLayer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer()))
       );
-      const fixture = yield* S.encodeEffect(NormalizedFixture)(fixtures[0]);
-      const rule = yield* S.encodeEffect(RuleResult)(rules[1]);
-      const bundle = yield* S.encodeEffect(ImmutableDemoBundle)(replay.bundle);
+      const fixture = yield* encodeNormalizedFixture(fixtures[0]);
+      const rule = yield* encodeRuleResult(rules[1]);
+      const bundle = yield* encodeImmutableDemoBundle(replay.bundle);
       const [firstField, ...remainingFields] = fixture.extractedFields;
       const [firstFixtureSource, secondFixtureSource] = fixture.sources;
       const [firstManifestField, ...remainingManifestFields] = fixtureManifestJson.extractedFields;
@@ -466,7 +489,7 @@ describe("LeJeune deterministic fixture bundle", () => {
       const [firstBundleOffer, secondBundleOffer] = bundle.offers;
       const [firstBundleStandard, ...remainingBundleStandards] = bundle.standards;
       const [firstBundleTool, secondBundleTool] = bundle.tools;
-      const recordingPayload = yield* S.encodeEffect(ProviderRecording)(recording);
+      const recordingPayload = yield* encodeProviderRecording(recording);
       const [firstBundleFixtureField, secondBundleFixtureField, ...remainingBundleFixtureFields] =
         firstBundleFixture.extractedFields;
       const [firstBundleFixtureSource, secondBundleFixtureSource] = firstBundleFixture.sources;
@@ -874,81 +897,60 @@ describe("LeJeune deterministic fixture bundle", () => {
       };
 
       const corruptions: ReadonlyArray<readonly [string, Effect.Effect<unknown, S.SchemaError>]> = [
-        ["fixture-source-cardinality", S.decodeUnknownEffect(NormalizedFixture)(fixtureSourceCardinality)],
-        ["fixture-duplicate-source-identity", S.decodeUnknownEffect(NormalizedFixture)(fixtureDuplicateSourceIdentity)],
-        ["fixture-dangling-source", S.decodeUnknownEffect(NormalizedFixture)(fixtureDanglingSource)],
-        ["fixture-value-drift", S.decodeUnknownEffect(NormalizedFixture)(fixtureValueDrift)],
-        ["fixture-referential-drift", S.decodeUnknownEffect(NormalizedFixture)(fixtureReferentialDrift)],
-        ["rule-human-stop", S.decodeUnknownEffect(RuleResult)(ruleHumanStop)],
-        ["manifest-source-cardinality", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestSourceCardinality)],
-        ["manifest-duplicate-source", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestDuplicateSource)],
-        ["manifest-hash-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestHashDrift)],
-        ["manifest-dangling-extraction", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestDanglingExtraction)],
-        ["manifest-duplicate-extraction", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestDuplicateExtraction)],
-        ["manifest-missing-field-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestMissingFieldDrift)],
-        ["manifest-span-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestSpanDrift)],
-        ["manifest-quote-value-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestQuoteValueDrift)],
-        ["bundle-fixture-cardinality", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleFixtureCardinality)],
-        ["bundle-source-hash-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleSourceHashDrift)],
-        ["bundle-source-content-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleSourceContentDrift)],
-        ["bundle-source-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleSourceOrderDrift)],
-        ["bundle-extraction-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleExtractionOrderDrift)],
-        ["bundle-component-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleComponentOrderDrift)],
-        [
-          "bundle-missing-field-semantic-drift",
-          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleMissingFieldSemanticDrift),
-        ],
-        ["bundle-project-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleProjectSemanticDrift)],
-        ["bundle-product-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleProductSemanticDrift)],
-        ["bundle-dti-strength-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleDtiStrengthDrift)],
-        ["bundle-fixture-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleFixtureOrderDrift)],
-        ["bundle-rule-cardinality", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleCardinality)],
-        ["bundle-rule-id-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleIdDrift)],
-        ["bundle-rule-source-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceDrift)],
-        ["bundle-rule-source-url-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceUrlDrift)],
-        [
-          "bundle-rule-source-revision-drift",
-          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceRevisionDrift),
-        ],
-        [
-          "bundle-rule-source-evidence-drift",
-          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceEvidenceDrift),
-        ],
-        ["bundle-rule-source-title-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceTitleDrift)],
-        [
-          "bundle-rule-source-research-path-drift",
-          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceResearchPathDrift),
-        ],
-        ["bundle-rule-disposition-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleDispositionDrift)],
-        ["bundle-rule-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleOrderDrift)],
-        ["bundle-rule-facts-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleFactsDrift)],
-        ["bundle-rule-stop-reason-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleStopReasonDrift)],
-        ["bundle-standard-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleStandardSemanticDrift)],
-        ["bundle-finish-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleFinishSemanticDrift)],
-        ["bundle-tool-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleToolSemanticDrift)],
-        ["bundle-offer-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleOfferSemanticDrift)],
-        [
-          "bundle-certificate-semantic-drift",
-          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleCertificateSemanticDrift),
-        ],
-        ["bundle-quote-projection-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleQuoteProjectionDrift)],
-        [
-          "bundle-synthetic-projection-drift",
-          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleSyntheticProjectionDrift),
-        ],
-        ["projection-class-vocabulary", S.decodeUnknownEffect(ProjectionSnapshot)(projectionClassVocabulary)],
-        ["projection-rule-order", S.decodeUnknownEffect(ProjectionSnapshot)(projectionRuleOrderDrift)],
-        ["provider-document-drift", S.decodeUnknownEffect(ProviderRecording)(providerDocumentDrift)],
-        ["bundle-provider-metadata-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleProviderMetadataDrift)],
-        [
-          "bundle-provider-candidate-order-drift",
-          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleProviderCandidateOrderDrift),
-        ],
-        ["ledger-dangling-subject", S.decodeUnknownEffect(MutableReviewLedger)(danglingLedgerSubject)],
-        ["ledger-duplicate-identity", S.decodeUnknownEffect(MutableReviewLedger)(duplicateLedgerIdentity)],
-        ["retention-before-cutoff", S.decodeUnknownEffect(RetentionAuthorization)(retentionBeforeCutoff)],
-        ["retention-at-cutoff", S.decodeUnknownEffect(RetentionAuthorization)(retentionAtCutoff)],
-        ["retention-before-authorization", S.decodeUnknownEffect(RetentionAuthorization)(retentionBeforeAuthorization)],
+        ["fixture-source-cardinality", decodeUnknownNormalizedFixture(fixtureSourceCardinality)],
+        ["fixture-duplicate-source-identity", decodeUnknownNormalizedFixture(fixtureDuplicateSourceIdentity)],
+        ["fixture-dangling-source", decodeUnknownNormalizedFixture(fixtureDanglingSource)],
+        ["fixture-value-drift", decodeUnknownNormalizedFixture(fixtureValueDrift)],
+        ["fixture-referential-drift", decodeUnknownNormalizedFixture(fixtureReferentialDrift)],
+        ["rule-human-stop", decodeUnknownRuleResult(ruleHumanStop)],
+        ["manifest-source-cardinality", decodeUnknownFrozenFixtureManifest(manifestSourceCardinality)],
+        ["manifest-duplicate-source", decodeUnknownFrozenFixtureManifest(manifestDuplicateSource)],
+        ["manifest-hash-drift", decodeUnknownFrozenFixtureManifest(manifestHashDrift)],
+        ["manifest-dangling-extraction", decodeUnknownFrozenFixtureManifest(manifestDanglingExtraction)],
+        ["manifest-duplicate-extraction", decodeUnknownFrozenFixtureManifest(manifestDuplicateExtraction)],
+        ["manifest-missing-field-drift", decodeUnknownFrozenFixtureManifest(manifestMissingFieldDrift)],
+        ["manifest-span-drift", decodeUnknownFrozenFixtureManifest(manifestSpanDrift)],
+        ["manifest-quote-value-drift", decodeUnknownFrozenFixtureManifest(manifestQuoteValueDrift)],
+        ["bundle-fixture-cardinality", decodeUnknownImmutableDemoBundle(bundleFixtureCardinality)],
+        ["bundle-source-hash-drift", decodeUnknownImmutableDemoBundle(bundleSourceHashDrift)],
+        ["bundle-source-content-drift", decodeUnknownImmutableDemoBundle(bundleSourceContentDrift)],
+        ["bundle-source-order-drift", decodeUnknownImmutableDemoBundle(bundleSourceOrderDrift)],
+        ["bundle-extraction-order-drift", decodeUnknownImmutableDemoBundle(bundleExtractionOrderDrift)],
+        ["bundle-component-order-drift", decodeUnknownImmutableDemoBundle(bundleComponentOrderDrift)],
+        ["bundle-missing-field-semantic-drift", decodeUnknownImmutableDemoBundle(bundleMissingFieldSemanticDrift)],
+        ["bundle-project-semantic-drift", decodeUnknownImmutableDemoBundle(bundleProjectSemanticDrift)],
+        ["bundle-product-semantic-drift", decodeUnknownImmutableDemoBundle(bundleProductSemanticDrift)],
+        ["bundle-dti-strength-drift", decodeUnknownImmutableDemoBundle(bundleDtiStrengthDrift)],
+        ["bundle-fixture-order-drift", decodeUnknownImmutableDemoBundle(bundleFixtureOrderDrift)],
+        ["bundle-rule-cardinality", decodeUnknownImmutableDemoBundle(bundleRuleCardinality)],
+        ["bundle-rule-id-drift", decodeUnknownImmutableDemoBundle(bundleRuleIdDrift)],
+        ["bundle-rule-source-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceDrift)],
+        ["bundle-rule-source-url-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceUrlDrift)],
+        ["bundle-rule-source-revision-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceRevisionDrift)],
+        ["bundle-rule-source-evidence-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceEvidenceDrift)],
+        ["bundle-rule-source-title-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceTitleDrift)],
+        ["bundle-rule-source-research-path-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceResearchPathDrift)],
+        ["bundle-rule-disposition-drift", decodeUnknownImmutableDemoBundle(bundleRuleDispositionDrift)],
+        ["bundle-rule-order-drift", decodeUnknownImmutableDemoBundle(bundleRuleOrderDrift)],
+        ["bundle-rule-facts-drift", decodeUnknownImmutableDemoBundle(bundleRuleFactsDrift)],
+        ["bundle-rule-stop-reason-drift", decodeUnknownImmutableDemoBundle(bundleRuleStopReasonDrift)],
+        ["bundle-standard-semantic-drift", decodeUnknownImmutableDemoBundle(bundleStandardSemanticDrift)],
+        ["bundle-finish-semantic-drift", decodeUnknownImmutableDemoBundle(bundleFinishSemanticDrift)],
+        ["bundle-tool-semantic-drift", decodeUnknownImmutableDemoBundle(bundleToolSemanticDrift)],
+        ["bundle-offer-semantic-drift", decodeUnknownImmutableDemoBundle(bundleOfferSemanticDrift)],
+        ["bundle-certificate-semantic-drift", decodeUnknownImmutableDemoBundle(bundleCertificateSemanticDrift)],
+        ["bundle-quote-projection-drift", decodeUnknownImmutableDemoBundle(bundleQuoteProjectionDrift)],
+        ["bundle-synthetic-projection-drift", decodeUnknownImmutableDemoBundle(bundleSyntheticProjectionDrift)],
+        ["projection-class-vocabulary", decodeUnknownProjectionSnapshot(projectionClassVocabulary)],
+        ["projection-rule-order", decodeUnknownProjectionSnapshot(projectionRuleOrderDrift)],
+        ["provider-document-drift", decodeUnknownProviderRecording(providerDocumentDrift)],
+        ["bundle-provider-metadata-drift", decodeUnknownImmutableDemoBundle(bundleProviderMetadataDrift)],
+        ["bundle-provider-candidate-order-drift", decodeUnknownImmutableDemoBundle(bundleProviderCandidateOrderDrift)],
+        ["ledger-dangling-subject", decodeUnknownMutableReviewLedger(danglingLedgerSubject)],
+        ["ledger-duplicate-identity", decodeUnknownMutableReviewLedger(duplicateLedgerIdentity)],
+        ["retention-before-cutoff", decodeUnknownRetentionAuthorization(retentionBeforeCutoff)],
+        ["retention-at-cutoff", decodeUnknownRetentionAuthorization(retentionAtCutoff)],
+        ["retention-before-authorization", decodeUnknownRetentionAuthorization(retentionBeforeAuthorization)],
       ];
 
       for (const [name, decode] of corruptions) {
@@ -961,7 +963,7 @@ describe("LeJeune deterministic fixture bundle", () => {
   it.effect(
     "verifies the committed provider recording digest and source grounding",
     Effect.fnUntraced(function* () {
-      const recording = yield* S.decodeEffect(ProviderRecordingFromJsonString)(providerRecordingJson);
+      const recording = yield* decodeProviderRecordingFromJsonString(providerRecordingJson);
       const verified = yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(provideBunCrypto);
       const frozen = yield* verifyFrozenProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(
         provideBunCrypto
@@ -986,17 +988,13 @@ describe("LeJeune deterministic fixture bundle", () => {
       expect(digestFailure.issue).toBe("candidate-digest");
 
       const [projectCandidate, deliveryCandidate, finishCandidate] = recording.candidates;
-      const swappedCandidates = yield* S.decodeEffect(
-        S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate])
-      )([
+      const swappedCandidates = yield* decodeTupleInlineSchema([
         { label: projectCandidate.label, text: deliveryCandidate.text },
         { label: deliveryCandidate.label, text: projectCandidate.text },
         finishCandidate,
       ]);
-      const swappedCandidateJson = yield* S.encodeEffect(ProviderCandidateListFromJsonString)(swappedCandidates);
-      const swappedDigest = yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(swappedCandidateJson)).pipe(
-        provideBunCrypto
-      );
+      const swappedCandidateJson = yield* encodeProviderCandidateListFromJsonString(swappedCandidates);
+      const swappedDigest = yield* decodeSha256HexFromBytes(strToU8(swappedCandidateJson)).pipe(provideBunCrypto);
       const contractFailure = yield* Effect.flip(
         verifyProviderRecording(
           ProviderRecording.make({ ...recording, candidates: swappedCandidates, responseSha256: swappedDigest }),
@@ -1006,13 +1004,13 @@ describe("LeJeune deterministic fixture bundle", () => {
       expect(contractFailure._tag).toBe("ProviderRecordingIntegrityError");
       expect(contractFailure.issue).toBe("candidate-contract");
 
-      const reorderedCandidates = yield* S.decodeEffect(
-        S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate])
-      )([deliveryCandidate, projectCandidate, finishCandidate]);
-      const reorderedCandidateJson = yield* S.encodeEffect(ProviderCandidateListFromJsonString)(reorderedCandidates);
-      const reorderedDigest = yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(reorderedCandidateJson)).pipe(
-        provideBunCrypto
-      );
+      const reorderedCandidates = yield* decodeTupleInlineSchema([
+        deliveryCandidate,
+        projectCandidate,
+        finishCandidate,
+      ]);
+      const reorderedCandidateJson = yield* encodeProviderCandidateListFromJsonString(reorderedCandidates);
+      const reorderedDigest = yield* decodeSha256HexFromBytes(strToU8(reorderedCandidateJson)).pipe(provideBunCrypto);
       const frozenMutations: ReadonlyArray<readonly [string, ProviderRecording]> = [
         ["provider", ProviderRecording.make({ ...recording, provider: "xai" })],
         ["model", ProviderRecording.make({ ...recording, model: "altered-model" })],
@@ -1055,7 +1053,7 @@ describe("LeJeune deterministic fixture bundle", () => {
   it.live(
     "replays the same bundle identity with provider and network unavailable",
     Effect.fnUntraced(function* () {
-      const recording = yield* S.decodeEffect(ProviderRecordingFromJsonString)(providerRecordingJson);
+      const recording = yield* decodeProviderRecordingFromJsonString(providerRecordingJson);
       yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(provideBunCrypto);
       const rebuild = () =>
         replayOffline(recording).pipe(provideScopedLayer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer())));

@@ -150,9 +150,5 @@ export type JsonlTextToUnknown = typeof JsonlTextToUnknown.Type;
  */
 export const decodeJsonlTextAs = <Schema extends S.Top>(schema: Schema) => {
   const decodeTargetSchema = S.decodeUnknownEffect(schema);
-  const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
-    return yield* decodeTargetSchema(input);
-  });
-
-  return flow(JsonlTextToUnknown.decodeUnknownEffect, Effect.flatMap(decodeTarget));
+  return flow(JsonlTextToUnknown.decodeUnknownEffect, Effect.flatMap(decodeTargetSchema));
 };

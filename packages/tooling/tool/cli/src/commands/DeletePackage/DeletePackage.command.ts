@@ -51,6 +51,8 @@ import type {
   RegistrationPlan,
 } from "../../internal/cli/RegistrationGeometry/index.ts";
 
+const decodeDeletePackageManifestJson = S.decodeEffect(S.fromJsonString(DeletePackageManifest));
+
 const $I = $RepoCliId.create("commands/DeletePackage");
 const RETIRED_REGISTRY_PATH = "standards/changesets.retired-packages.json";
 const IDENTITY_SHAPE_TEST_PATH = "packages/foundation/modeling/identity/test/shape-stable.test.ts";
@@ -77,7 +79,7 @@ const packageNameForInput = (input: string): string =>
       )}`;
 
 const decodeManifest = Effect.fn("DeletePackage.decodeManifest")(function* (file: string, content: string) {
-  return yield* S.decodeEffect(S.fromJsonString(DeletePackageManifest))(content).pipe(
+  return yield* decodeDeletePackageManifestJson(content).pipe(
     Effect.mapError(DomainError.newCause(`Failed to decode package manifest at ${file}.`))
   );
 });

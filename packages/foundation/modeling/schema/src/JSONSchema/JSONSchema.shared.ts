@@ -18,6 +18,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LiteralKit } from "../LiteralKit/index.ts";
 
+const decodeUnknownJsonOption = S.decodeUnknownOption(S.Json);
+
 /**
  * Identity composer for every schema in the JSONSchema module.
  *
@@ -919,7 +921,7 @@ export type ExtensionKey = typeof ExtensionKey.Type;
 export const JsonValue = S.Json.pipe(
   $I.annoteSchema("JsonValue", {
     description: "Any JSON value (depth-bounded generation).",
-    toArbitrary: () => (fc) => fc.jsonValue({ maxDepth: 2 }).map(S.decodeUnknownOption(S.Json)).map(O.getOrNull),
+    toArbitrary: () => (fc) => fc.jsonValue({ maxDepth: 2 }).map(decodeUnknownJsonOption).map(O.getOrNull),
   })
 );
 

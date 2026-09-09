@@ -57,6 +57,7 @@ const decodeResidueManifestValue = S.decodeUnknownEffect(WorktreeResidueManifest
 const residueManifestJson = S.fromJsonString(WorktreeResidueManifest);
 const removalReceiptJson = S.fromJsonString(WorktreeRemovalReceipt);
 const archivePlanJson = S.fromJsonString(WorktreeArchivePlan);
+const isWorktreeRemovalName = S.is(WorktreeRemovalRequest.fields.name);
 
 const collectRemovalReceiptLines = Effect.fn("WorktreeCommandTest.collectRemovalReceiptLines")(function* (
   receipt: WorktreeRemovalReceipt,
@@ -295,11 +296,10 @@ describe("parseWorktreePorcelain", () => {
   });
 
   it("rejects traversal and control characters in removal names", () => {
-    const accepts = S.is(WorktreeRemovalRequest.fields.name);
     for (const name of ["../outside", "/outside", "..", ".", "a/b", "a\\b", "a\nb", "a\rb", "a\0b"]) {
-      expect(accepts(name)).toBe(false);
+      expect(isWorktreeRemovalName(name)).toBe(false);
     }
-    expect(accepts("feature-x")).toBe(true);
+    expect(isWorktreeRemovalName("feature-x")).toBe(true);
   });
 
   it("parses a branch entry, a detached+locked entry, and a prunable entry", () => {

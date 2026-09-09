@@ -49,6 +49,9 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { BoundRemovalOutcome, DirectoryIdentity } from "./DirectoryHandle.ts";
 import type { ResidueReapSkipReason } from "./ResidueReap.schemas.ts";
 
+const decodeResidueReapAgeDays = S.decodeEffect(ResidueReapAgeDays);
+const decodeResidueReapHomeRoot = S.decodeEffect(ResidueReapHomeRoot);
+
 const DEFAULT_MAX_AGE_DAYS = 30;
 const DEFAULT_TURBO_MAX_AGE_DAYS = 14;
 const DEFAULT_CENSUS_ENTRY_CAP = 100_000;
@@ -869,17 +872,15 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   // An empty or relative HOME must fail closed here: resolving it would silently make
   // the current working directory the cleanup root.
   const homeRoot = path.resolve(
-    yield* S.decodeEffect(ResidueReapHomeRoot)(
-      O.isSome(configuredHome) ? configuredHome.value : yield* Config.string("HOME")
-    )
+    yield* decodeResidueReapHomeRoot(O.isSome(configuredHome) ? configuredHome.value : yield* Config.string("HOME"))
   );
   const repoRoot = path.resolve(O.getOrElse(O.fromUndefinedOr(options.repoRoot), () => ""));
   const resolvedRepoRoot =
     Str.isNonEmpty(repoRoot) && O.isSome(O.fromUndefinedOr(options.repoRoot)) ? repoRoot : yield* findRepoRoot();
-  const maxAgeDays = yield* S.decodeEffect(ResidueReapAgeDays)(
+  const maxAgeDays = yield* decodeResidueReapAgeDays(
     O.getOrElse(O.fromUndefinedOr(options.maxAgeDays), () => DEFAULT_MAX_AGE_DAYS)
   );
-  const turboMaxAgeDays = yield* S.decodeEffect(ResidueReapAgeDays)(
+  const turboMaxAgeDays = yield* decodeResidueReapAgeDays(
     O.getOrElse(O.fromUndefinedOr(options.turboMaxAgeDays), () => DEFAULT_TURBO_MAX_AGE_DAYS)
   );
   const classes = A.match(O.getOrElse(O.fromUndefinedOr(options.classes), A.empty<ResidueReapClass>), {

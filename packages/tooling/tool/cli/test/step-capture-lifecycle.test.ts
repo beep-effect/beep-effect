@@ -19,6 +19,8 @@ import * as TestClock from "effect/testing/TestClock";
 import { ChildProcessSpawner } from "effect/unstable/process";
 import type { ChildProcess } from "effect/unstable/process";
 
+const isCaptureCommandTimedOutError = S.is(CaptureCommandTimedOutError);
+
 const encoder = new TextEncoder();
 
 const ActiveAdmissionWorkload = S.fromJsonString(
@@ -30,6 +32,7 @@ const ActiveAdmissionWorkload = S.fromJsonString(
     procStart: S.String,
   })
 );
+const decodeActiveAdmissionWorkload = S.decodeEffect(ActiveAdmissionWorkload);
 
 const processGroupFromStat = (text: string): number | undefined => {
   const commandEnd = text.lastIndexOf(") ");
@@ -353,7 +356,7 @@ BunRuntime.runMain(
               }
               expect(ready).toBe(true);
 
-              const workload = yield* S.decodeEffect(ActiveAdmissionWorkload)(yield* fs.readFileString(workloadPath));
+              const workload = yield* decodeActiveAdmissionWorkload(yield* fs.readFileString(workloadPath));
               const nestedPid = Number(yield* fs.readFileString(readyPath));
               const nestedGroup = processGroupFromStat(yield* fs.readFileString(`/proc/${nestedPid}/stat`));
               expect(nestedGroup).toBe(workload.processGroupId);
@@ -528,7 +531,7 @@ BunRuntime.runMain(
 
       const error = yield* Fiber.join(fiber);
       expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
-      if (S.is(CaptureCommandTimedOutError)(error)) {
+      if (isCaptureCommandTimedOutError(error)) {
         expect(error.commandLine).toBe("fake-step --flag");
       }
       expect(yield* Ref.get(killCount)).toBe(1);

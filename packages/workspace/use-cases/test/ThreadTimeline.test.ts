@@ -9,15 +9,29 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeThreadThreadTimeline = S.decodeEffect(Thread.ThreadTimeline);
+const decodeThreadTimelineTurn = S.decodeEffect(Thread.TimelineTurn);
+const decodeWorkspaceIdentityThreadId = S.decodeEffect(WorkspaceIdentity.ThreadId);
+const decodeWorkspaceIdentityTurnId = S.decodeEffect(WorkspaceIdentity.TurnId);
+const decodeWorkspaceIdentityWorkspaceId = S.decodeEffect(WorkspaceIdentity.WorkspaceId);
+const decodeThreadTimelineMessageItemSync = S.decodeSync(Thread.TimelineMessageItem);
+const decodeThreadTimelineToolCallItemSync = S.decodeSync(Thread.TimelineToolCallItem);
+const decodeUnknownThreadThreadTimeline = S.decodeUnknownEffect(Thread.ThreadTimeline);
+const encodeDocument = S.encodeEffect(Document);
+const encodeServerThreadAppendTurnInput = S.encodeEffect(ServerThread.AppendTurnInput);
+const encodeServerThreadCreateThreadInput = S.encodeEffect(ServerThread.CreateThreadInput);
+const encodeServerThreadThreadStoreError = S.encodeEffect(ServerThread.ThreadStoreError);
+const encodeThreadThreadTimeline = S.encodeEffect(Thread.ThreadTimeline);
+
 describe("ThreadTimeline", () => {
   it.effect(
     "decodes a thread timeline with resolved message and tool-call items",
     Effect.fnUntraced(function* () {
-      const threadId = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(10);
-      const turnId = yield* S.decodeEffect(WorkspaceIdentity.TurnId)(20);
-      const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
+      const threadId = yield* decodeWorkspaceIdentityThreadId(10);
+      const turnId = yield* decodeWorkspaceIdentityTurnId(20);
+      const content = yield* encodeDocument(Document.make({ children: [] }));
 
-      const timeline = yield* S.decodeEffect(Thread.ThreadTimeline)({
+      const timeline = yield* decodeThreadThreadTimeline({
         threadId: 10,
         turns: [
           {
@@ -43,17 +57,17 @@ describe("ThreadTimeline", () => {
   it.effect(
     "keeps thread input and timeline encoded shapes stable",
     Effect.fnUntraced(function* () {
-      const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(7);
-      const threadId = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(10);
-      const turnId = yield* S.decodeEffect(WorkspaceIdentity.TurnId)(20);
+      const workspaceId = yield* decodeWorkspaceIdentityWorkspaceId(7);
+      const threadId = yield* decodeWorkspaceIdentityThreadId(10);
+      const turnId = yield* decodeWorkspaceIdentityTurnId(20);
       const content = Document.make({ children: [] });
-      const encodedContent = yield* S.encodeEffect(Document)(content);
+      const encodedContent = yield* encodeDocument(content);
 
       const createInput = ServerThread.CreateThreadInput.make({
         title: "Matter intake",
         workspaceId,
       });
-      expect(yield* S.encodeEffect(ServerThread.CreateThreadInput)(createInput)).toStrictEqual({
+      expect(yield* encodeServerThreadCreateThreadInput(createInput)).toStrictEqual({
         title: "Matter intake",
         workspaceId: 7,
       });
@@ -64,7 +78,7 @@ describe("ThreadTimeline", () => {
         threadId,
       });
       expect(O.isNone(appendInput.parentTurnId)).toBe(true);
-      expect(yield* S.encodeEffect(ServerThread.AppendTurnInput)(appendInput)).toStrictEqual({
+      expect(yield* encodeServerThreadAppendTurnInput(appendInput)).toStrictEqual({
         content: encodedContent,
         parentTurnId: O.none(),
         role: "user",
@@ -86,12 +100,12 @@ describe("ThreadTimeline", () => {
           },
         ],
       };
-      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)(wireTimeline);
-      expect(yield* S.encodeEffect(Thread.ThreadTimeline)(timeline)).toStrictEqual(wireTimeline);
+      const timeline = yield* decodeUnknownThreadThreadTimeline(wireTimeline);
+      expect(yield* encodeThreadThreadTimeline(timeline)).toStrictEqual(wireTimeline);
       expect(Thread.TimelineItem.is(timeline.turns[0]?.items[0])).toBe(true);
 
       expect(
-        yield* S.decodeEffect(Thread.TimelineTurn)({
+        yield* decodeThreadTimelineTurn({
           turnId: 20,
           turnIndex: 0,
           parentTurnId: null,
@@ -102,7 +116,7 @@ describe("ThreadTimeline", () => {
 
       const unavailable = ServerThread.ThreadStoreUnavailable.make({ reason: "database unavailable" });
       expect(ServerThread.ThreadStoreError.is(unavailable)).toBe(true);
-      expect(yield* S.encodeEffect(ServerThread.ThreadStoreError)(unavailable)).toStrictEqual({
+      expect(yield* encodeServerThreadThreadStoreError(unavailable)).toStrictEqual({
         _tag: "ThreadStoreUnavailable",
         reason: "database unavailable",
       });
@@ -113,8 +127,8 @@ describe("ThreadTimeline", () => {
 
   it("union-derived guards discriminate timeline items by kind", () => {
     const content = Document.encodeSync(Document.make({ children: [] }));
-    const message = S.decodeSync(Thread.TimelineMessageItem)({ kind: "message", role: "user", content });
-    const toolCall = S.decodeSync(Thread.TimelineToolCallItem)({ kind: "tool_call", name: "search" });
+    const message = decodeThreadTimelineMessageItemSync({ kind: "message", role: "user", content });
+    const toolCall = decodeThreadTimelineToolCallItemSync({ kind: "tool_call", name: "search" });
 
     expect(Thread.TimelineItem.guards.message(message)).toBe(true);
     expect(Thread.TimelineItem.guards.message(toolCall)).toBe(false);
@@ -156,7 +170,7 @@ describe("ThreadTimeline", () => {
   it.effect(
     "drops the replaced turn and everything after it from the active branch",
     Effect.fnUntraced(function* () {
-      const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
+      const content = yield* encodeDocument(Document.make({ children: [] }));
       const turn = (turnId: number, turnIndex: number, parentTurnId: number | null) => ({
         turnId,
         turnIndex,
@@ -165,7 +179,7 @@ describe("ThreadTimeline", () => {
         items: [{ kind: "message", role: "user", content }],
       });
 
-      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+      const timeline = yield* decodeUnknownThreadThreadTimeline({
         threadId: 10,
         turns: [
           turn(1, 0, null), // first prompt
@@ -186,8 +200,8 @@ describe("ThreadTimeline", () => {
   it.effect(
     "keeps a timeline with no edits intact, in turn order",
     Effect.fnUntraced(function* () {
-      const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
-      const timeline = yield* S.decodeEffect(Thread.ThreadTimeline)({
+      const content = yield* encodeDocument(Document.make({ children: [] }));
+      const timeline = yield* decodeThreadThreadTimeline({
         threadId: 10,
         turns: [
           {
@@ -216,7 +230,7 @@ describe("ThreadTimeline", () => {
   it.effect(
     "ignores parent links that cannot describe a replacement",
     Effect.fnUntraced(function* () {
-      const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
+      const content = yield* encodeDocument(Document.make({ children: [] }));
       const turn = (turnId: number, turnIndex: number, parentTurnId: number | null) => ({
         turnId,
         turnIndex,
@@ -225,7 +239,7 @@ describe("ThreadTimeline", () => {
         items: [{ kind: "message", role: "user", content }],
       });
 
-      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+      const timeline = yield* decodeUnknownThreadThreadTimeline({
         threadId: 10,
         turns: [
           turn(1, 0, 1), // parents itself

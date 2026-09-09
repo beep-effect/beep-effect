@@ -15,6 +15,8 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { SyncCursorRepositoryShape } from "@beep/documents-use-cases/entities/SyncCursor/server";
 
+const encodeDomainSyncCursorSyncCursorSync = S.encodeSync(DomainSyncCursor.SyncCursor);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
@@ -74,7 +76,7 @@ const makeRepository = (): SyncCursorRepositoryShape => {
           },
           onSome: (existing) => {
             const replaced = decodeSyncCursor({
-              ...S.encodeSync(DomainSyncCursor.SyncCursor)(existing),
+              ...encodeDomainSyncCursorSyncCursorSync(existing),
               lastError: O.getOrNull(seed.lastError),
               lastEventId: O.getOrNull(seed.lastEventId),
               status: seed.status,

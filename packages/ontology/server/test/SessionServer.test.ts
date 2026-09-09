@@ -37,6 +37,10 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { Dataset } from "@beep/rdf/Rdf";
 
+const decodeOntologyFilePath = S.decodeEffect(OntologyFilePath);
+const decodeSessionId = S.decodeEffect(SessionId);
+const decodeOntologyFilePathSync = S.decodeSync(OntologyFilePath);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -73,7 +77,7 @@ const ontologyFileStoreLayerForConfiguration = (configuration: Readonly<Record<s
     Layer.provide(NodeServices.layer)
   );
 
-const fixturePath = (relativePath: string): OntologyFilePath => S.decodeSync(OntologyFilePath)(relativePath);
+const fixturePath = (relativePath: string): OntologyFilePath => decodeOntologyFilePathSync(relativePath);
 
 const turtleFixtures = [
   "foaf-social-network/graph.ttl",
@@ -140,8 +144,8 @@ describe("Ontology server Turtle round-trip", () => {
         const useCases = yield* SessionUseCases;
         const fileStore = yield* OntologyFileStore;
         const turtle = yield* TurtleCodec;
-        const documentPath = yield* S.decodeEffect(OntologyFilePath)("round-trip.ttl");
-        const roundTripSessionId = yield* S.decodeEffect(SessionId)("base-prefix-round-trip");
+        const documentPath = yield* decodeOntologyFilePath("round-trip.ttl");
+        const roundTripSessionId = yield* decodeSessionId("base-prefix-round-trip");
         const opened = yield* useCases.openFile(
           OpenOntologyFileCommand.make({ sessionId: roundTripSessionId, path: documentPath })
         );
@@ -190,7 +194,7 @@ describe("Ontology server Turtle round-trip", () => {
     "rejects derived graph partition changes before Turtle serialization",
     Effect.fnUntraced(function* () {
       const useCases = yield* SessionUseCases;
-      const interopSessionId = yield* S.decodeEffect(SessionId)("interop-derived-leakage");
+      const interopSessionId = yield* decodeSessionId("interop-derived-leakage");
       const opened = yield* useCases.openFile(
         OpenOntologyFileCommand.make({
           sessionId: interopSessionId,
@@ -237,9 +241,7 @@ describe("Ontology server Turtle round-trip", () => {
       const path = yield* Path.Path;
       const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
       const outside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-outside-" });
-      const escapingPath = yield* S.decodeEffect(OntologyFilePath)(
-        path.join("..", path.basename(outside), "escape.ttl")
-      );
+      const escapingPath = yield* decodeOntologyFilePath(path.join("..", path.basename(outside), "escape.ttl"));
       const error = yield* Effect.gen(function* () {
         const fileStore = yield* OntologyFileStore;
         return yield* fileStore.read(ReadOntologyFileRequest.make({ path: escapingPath })).pipe(Effect.flip);
@@ -272,7 +274,7 @@ describe("Ontology server Turtle round-trip", () => {
       const failingFileSystemLayer = Layer.succeed(FileSystem.FileSystem, failingRenameFileSystem);
       const error = yield* Effect.gen(function* () {
         const fileStore = yield* OntologyFileStore;
-        const sessionPath = yield* S.decodeEffect(OntologyFilePath)("session.ttl");
+        const sessionPath = yield* decodeOntologyFilePath("session.ttl");
         return yield* fileStore
           .write(
             WriteOntologyFileRequest.make({
@@ -303,8 +305,8 @@ describe("Ontology file-store security boundary", () => {
 
       const result = yield* Effect.gen(function* () {
         const fileStore = yield* OntologyFileStore;
-        const sourcePath = yield* S.decodeEffect(OntologyFilePath)("source.ttl");
-        const nestedPath = yield* S.decodeEffect(OntologyFilePath)("nested/result.ttl");
+        const sourcePath = yield* decodeOntologyFilePath("source.ttl");
+        const nestedPath = yield* decodeOntologyFilePath("nested/result.ttl");
         const read = yield* fileStore.read(ReadOntologyFileRequest.make({ path: sourcePath }));
         yield* fileStore.write(WriteOntologyFileRequest.make({ path: nestedPath, source: read.source }));
         return read;
@@ -367,7 +369,7 @@ describe("Ontology file-store security boundary", () => {
         const fileStore = yield* OntologyFileStore;
 
         for (const candidate of candidates) {
-          const candidatePath = yield* S.decodeEffect(OntologyFilePath)(candidate);
+          const candidatePath = yield* decodeOntologyFilePath(candidate);
           const readError = yield* fileStore
             .read(ReadOntologyFileRequest.make({ path: candidatePath }))
             .pipe(Effect.flip);
@@ -401,7 +403,7 @@ describe("Ontology file-store security boundary", () => {
 
       yield* Effect.gen(function* () {
         const fileStore = yield* OntologyFileStore;
-        const candidate = yield* S.decodeEffect(OntologyFilePath)("linked.ttl");
+        const candidate = yield* decodeOntologyFilePath("linked.ttl");
         const readError = yield* fileStore.read(ReadOntologyFileRequest.make({ path: candidate })).pipe(Effect.flip);
         const writeError = yield* fileStore
           .write(WriteOntologyFileRequest.make({ path: candidate, source: "attacker-controlled turtle" }))
@@ -431,7 +433,7 @@ describe("Ontology file-store security boundary", () => {
 
       yield* Effect.gen(function* () {
         const fileStore = yield* OntologyFileStore;
-        const candidate = yield* S.decodeEffect(OntologyFilePath)("alias.ttl");
+        const candidate = yield* decodeOntologyFilePath("alias.ttl");
         const readError = yield* fileStore.read(ReadOntologyFileRequest.make({ path: candidate })).pipe(Effect.flip);
         const writeError = yield* fileStore
           .write(WriteOntologyFileRequest.make({ path: candidate, source: "attacker-controlled turtle" }))
@@ -466,7 +468,7 @@ describe("Ontology file-store security boundary", () => {
 
       yield* Effect.gen(function* () {
         const fileStore = yield* OntologyFileStore;
-        const candidate = yield* S.decodeEffect(OntologyFilePath)("alias.ttl");
+        const candidate = yield* decodeOntologyFilePath("alias.ttl");
         const readError = yield* fileStore.read(ReadOntologyFileRequest.make({ path: candidate })).pipe(Effect.flip);
         const writeError = yield* fileStore
           .write(WriteOntologyFileRequest.make({ path: candidate, source: "attacker-controlled turtle" }))
@@ -499,7 +501,7 @@ describe("Ontology file-store security boundary", () => {
 
       yield* Effect.gen(function* () {
         const fileStore = yield* OntologyFileStore;
-        const candidate = yield* S.decodeEffect(OntologyFilePath)("victim.ttl");
+        const candidate = yield* decodeOntologyFilePath("victim.ttl");
 
         yield* fileSystem.rename(configuredRoot, movedRoot);
         yield* fileSystem.symlink(outside, configuredRoot);

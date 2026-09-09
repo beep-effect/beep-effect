@@ -21,6 +21,8 @@ import * as S from "effect/Schema";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Response from "effect/unstable/ai/Response";
 
+const decodeDocumentIntakeDroppedFileInput = S.decodeEffect(Document.IntakeDroppedFileInput);
+
 const testConfig = FilingDecisionLlmConfigValue.make({
   confidenceThreshold: UnitInterval.make(0.6),
   extractionTimeout: Duration.seconds(15),
@@ -160,7 +162,7 @@ describe("@beep/documents-server FilingTextExtraction", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const intake = yield* Document.DocumentIntake;
       const vaultRootPath = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-documents-extraction-fail-" });
-      const input = yield* S.decodeEffect(Document.IntakeDroppedFileInput)({
+      const input = yield* decodeDocumentIntakeDroppedFileInput({
         content: Buffer.from("complaint body").toString("base64"),
         filingContext: DefaultVaultFilingContext,
         intakeBatchId: "batch-extraction-fail",

@@ -34,6 +34,7 @@ const ModelOutputCandidates = S.Array(ExtractionCandidate)
       description: "Bounded extraction candidates accepted from one language-model response.",
     })
   );
+const isModelOutputCandidates = S.is(ModelOutputCandidates);
 
 const ModelOutputJson = S.fromJsonString(Unknown).pipe(
   $I.annoteSchema("ModelOutputJson", {
@@ -57,18 +58,14 @@ const ModelOutput = S.Union([ModelOutputObject, ModelOutputCandidates]).pipe(
   $I.annoteSchema("ModelOutput", {
     description: "Accepted array or object-envelope shape for one language-model extraction response.",
   }),
-  SchemaUtils.withStatics((schema) => {
-    const isCandidateArray = S.is(ModelOutputCandidates);
-
-    return {
-      decodeUnknownEffect: S.decodeUnknownEffect(schema),
-      toCandidates: (output: typeof schema.Type): ReadonlyArray<ExtractionCandidate> =>
-        Match.value(output).pipe(
-          Match.when(isCandidateArray, (candidates) => candidates),
-          Match.orElse((envelope) => envelope.extractions)
-        ),
-    };
-  })
+  SchemaUtils.withStatics((schema) => ({
+    decodeUnknownEffect: S.decodeUnknownEffect(schema),
+    toCandidates: (output: typeof schema.Type): ReadonlyArray<ExtractionCandidate> =>
+      Match.value(output).pipe(
+        Match.when(isModelOutputCandidates, (candidates) => candidates),
+        Match.orElse((envelope) => envelope.extractions)
+      ),
+  }))
 );
 
 const stripJsonFence = (text: string): string => {

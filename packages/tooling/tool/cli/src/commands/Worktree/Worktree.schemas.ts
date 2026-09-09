@@ -429,6 +429,8 @@ const blockEntry = (block: PorcelainBlock): WorktreeListEntry => {
   return accumulatorEntry(accumulator);
 };
 
+const isWorktreeListPath = S.is(WorktreeListEntry.fields.path);
+
 /**
  * Parse `git worktree list --porcelain -z` output into structured entries.
  *
@@ -455,9 +457,7 @@ const blockEntry = (block: PorcelainBlock): WorktreeListEntry => {
 export const parseWorktreePorcelain = (porcelain: string): ReadonlyArray<WorktreeListEntry> =>
   Str.includes("\0")(porcelain)
     ? A.map(
-        A.filter(porcelainBlocks(Str.split(porcelain, "\0")), (block) =>
-          S.is(WorktreeListEntry.fields.path)(block.path)
-        ),
+        A.filter(porcelainBlocks(Str.split(porcelain, "\0")), (block) => isWorktreeListPath(block.path)),
         blockEntry
       )
     : A.empty();

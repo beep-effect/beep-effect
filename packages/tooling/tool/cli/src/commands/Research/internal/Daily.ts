@@ -28,6 +28,8 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ResearchDailyOptions } from "../Research.schemas.ts";
 import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
+const decodeResearchHistorySiftOptions = S.decodeEffect(ResearchHistorySiftOptions);
+
 const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
 
 /**
@@ -133,7 +135,7 @@ export const dailyImpl = Effect.fn("Research.dailyImpl")(function* (
   yield* step(
     "history-sift",
     historySiftImpl(
-      yield* S.decodeEffect(ResearchHistorySiftOptions)({
+      yield* decodeResearchHistorySiftOptions({
         browser: options.browser,
         sinceDays: options.sinceDays,
         vaultRoot: options.vaultRoot,

@@ -26,6 +26,8 @@ import { HtmlSafePolicyConformanceAnnotation } from "./internal/conformance/Html
 import { readonlyStruct } from "./internal/Html.readonly.ts";
 import type { ConformantHtml } from "./Html.conformance.ts";
 
+const encodeHtmlRootResult = S.encodeResult(HtmlRoot);
+
 const $I = $HtmlId.create("Html.policy");
 
 const { class: classAttribute, dir, hidden, id, lang, title } = StandardGlobalAttributes;
@@ -803,7 +805,7 @@ const inspectNode = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyAr
  * @since 0.0.0
  */
 export const inspectSafeHtml = (value: ConformantHtml): ReadonlyArray<HtmlPolicyIssue> =>
-  Result.match(S.encodeResult(HtmlRoot)(conformantRoot(value)), {
+  Result.match(encodeHtmlRootResult(conformantRoot(value)), {
     onFailure: () => [makeIssue([], "encodingFailure", "The conformance proof did not contain an encodable HTML root")],
     onSuccess: (root) => {
       /* istanbul ignore else -- a successful HtmlRoot encoding always yields an object with a string discriminator */

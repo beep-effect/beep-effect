@@ -409,6 +409,7 @@ const ClaimIdPreimage = S.Struct({
   method: ExtractionMethod,
   model: ModelIdentity,
 });
+const encodeClaimIdPreimageResult = S.encodeResult(ClaimIdPreimage);
 
 type ClaimIdSource = Pick<typeof EvidenceClaimFields.Type, "body" | "chunk" | "document" | "method" | "model">;
 
@@ -427,7 +428,7 @@ type ClaimIdSource = Pick<typeof EvidenceClaimFields.Type, "body" | "chunk" | "d
  * @since 0.0.0
  */
 export const claimIdPreimage = (claim: ClaimIdSource): Result.Result<typeof ClaimIdPreimage.Encoded, S.SchemaError> =>
-  S.encodeResult(ClaimIdPreimage)({
+  encodeClaimIdPreimageResult({
     document: claim.document,
     chunk: claim.chunk,
     body: claim.body,
@@ -557,6 +558,7 @@ const BatchIdPreimage = S.Struct({
   model: ModelIdentity,
   inputs: S.NonEmptyArray(ChunkId),
 });
+const encodeBatchIdPreimageResult = S.encodeResult(BatchIdPreimage);
 
 type BatchIdSource = Pick<EvidenceBatchFields, "document" | "inputs" | "method" | "model">;
 
@@ -575,7 +577,7 @@ type BatchIdSource = Pick<EvidenceBatchFields, "document" | "inputs" | "method" 
  * @since 0.0.0
  */
 export const batchIdPreimage = (batch: BatchIdSource): Result.Result<typeof BatchIdPreimage.Encoded, S.SchemaError> =>
-  S.encodeResult(BatchIdPreimage)({
+  encodeBatchIdPreimageResult({
     document: batch.document,
     method: batch.method,
     model: batch.model,
@@ -856,6 +858,7 @@ const ConflictWitnessPreimage = S.Struct({
   right: ClaimId,
   basis: ConflictBasis,
 });
+const encodeConflictWitnessPreimageResult = S.encodeResult(ConflictWitnessPreimage);
 
 const ConflictWitnessChecks = S.makeFilterGroup(
   [
@@ -876,7 +879,7 @@ const ConflictWitnessChecks = S.makeFilterGroup(
     ),
     S.makeFilter(
       (witness: typeof ConflictWitnessFields.Type) =>
-        S.encodeResult(ConflictWitnessPreimage)({
+        encodeConflictWitnessPreimageResult({
           left: witness.left,
           right: witness.right,
           basis: witness.basis,

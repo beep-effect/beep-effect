@@ -730,13 +730,19 @@ export const PublicPrProvenanceAny = S.Union([PublicPrProvenanceV1, PublicPrProv
  */
 export type PublicPrProvenanceAny = typeof PublicPrProvenanceAny.Type;
 
+const decodePrProvenanceEntrypoint = S.decodeUnknownOption(PrProvenanceEntrypoint);
+const decodePrProvenanceLabel = S.decodeUnknownOption(PrProvenanceLabel);
+const decodePrProvenanceNameSource = S.decodeUnknownOption(PrProvenanceNameSource);
+const decodePrProvenanceModel = S.decodeUnknownOption(PrProvenanceModel);
+const decodePrProvenanceLabelOption = S.decodeOption(PrProvenanceLabel);
+const decodePrProvenanceModelOption = S.decodeOption(PrProvenanceModel);
 const recordOrder = Order.mapInput(
   Order.Number,
   (record: PrSessionRecord) => -DateTime.toEpochMillis(record.recordedAt)
 );
 const publicLabel = (record: PrSessionRecord, enabled: boolean): O.Option<PrProvenanceLabel> =>
   enabled && record.harness === "claude-code" && (record.nameSource === "user" || record.nameSource === "derived")
-    ? O.flatMap(record.sessionName, S.decodeUnknownOption(PrProvenanceLabel))
+    ? O.flatMap(record.sessionName, decodePrProvenanceLabel)
     : O.none();
 const sameSession = (left: PrSessionRecord, right: PrSessionRecord): boolean =>
   O.isSome(left.sessionId) && O.isSome(right.sessionId)
@@ -1178,17 +1184,15 @@ const readDetectionEnvironment = Effect.fn("PrProvenance.readDetectionEnvironmen
   });
 });
 const normalizeEntrypoint = (value: O.Option<string>, codex: boolean): PrProvenanceEntrypoint =>
-  O.flatMap(value, S.decodeUnknownOption(PrProvenanceEntrypoint)).pipe(
-    O.getOrElse(() => (codex ? "codex-tui" : "unknown"))
-  );
+  O.flatMap(value, decodePrProvenanceEntrypoint).pipe(O.getOrElse(() => (codex ? "codex-tui" : "unknown")));
 const normalizeNameSource = (value: O.Option<string>): PrProvenanceNameSource => {
-  const decoded = O.flatMap(value, (candidate) => S.decodeUnknownOption(PrProvenanceNameSource)(candidate));
+  const decoded = O.flatMap(value, decodePrProvenanceNameSource);
   return O.isSome(decoded) ? decoded.value : "unknown";
 };
 const normalizeModel = (value: O.Option<string>): PrProvenanceModel =>
-  O.flatMap(value, S.decodeUnknownOption(PrProvenanceModel)).pipe(O.getOrElse(() => "unknown"));
+  O.flatMap(value, decodePrProvenanceModel).pipe(O.getOrElse(() => "unknown"));
 const labelFromBasename = (path: Path.Path, value: string): PrProvenanceLabel =>
-  S.decodeOption(PrProvenanceLabel)(path.basename(value)).pipe(O.getOrElse<PrProvenanceLabel>(() => "unknown"));
+  decodePrProvenanceLabelOption(path.basename(value)).pipe(O.getOrElse<PrProvenanceLabel>(() => "unknown"));
 const readTranscript = Effect.fn("PrProvenance.readTranscript")(function* (transcriptPath: string) {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(transcriptPath);
@@ -1251,7 +1255,7 @@ const findCodexSession = Effect.fn("PrProvenance.findCodexSession")(function* (h
           A.filter((record) => record.type === "turn_context"),
           A.map((record) => O.fromUndefinedOr(record.model)),
           A.getSomes,
-          A.map((model) => S.decodeOption(PrProvenanceModel)(model)),
+          A.map((model) => decodePrProvenanceModelOption(model)),
           A.getSomes,
           A.last
         ),
@@ -1469,7 +1473,7 @@ export const detectPrProvenanceFromPaths = Effect.fn("PrProvenance.detectFromPat
   const workspaceOverride = yield* runGitOutput(checkoutPath, ["config", "--get", "beep.workspace.label"]).pipe(
     Effect.map(Str.trim),
     Effect.option,
-    Effect.map(O.flatMap(S.decodeUnknownOption(PrProvenanceLabel)))
+    Effect.map(O.flatMap(decodePrProvenanceLabel))
   );
   const workspace = O.getOrElse(workspaceOverride, () => labelFromBasename(path, clonePath));
   const evidence = yield* readSessionEvidence(harness, environment, checkoutPath);

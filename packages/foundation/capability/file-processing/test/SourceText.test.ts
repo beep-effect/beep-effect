@@ -17,6 +17,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownSourceTextPageResult = S.decodeUnknownResult(SourceTextPage);
+
 const emptyDigest = SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const identity = SourceTextIdentity.make({
   extractor: SourceTextExtractor.make({ name: "fixture", version: "1" }),
@@ -98,7 +100,6 @@ describe("@beep/file-processing SourceText", () => {
   );
 
   it("rejects impossible page relationships", () => {
-    const decode = S.decodeUnknownResult(SourceTextPage);
     const validPage = {
       endOffset: 5,
       hasNextPage: true,
@@ -112,13 +113,13 @@ describe("@beep/file-processing SourceText", () => {
       totalCodeUnits: 10,
     };
 
-    expect(Result.isSuccess(decode(validPage))).toBe(true);
-    expect(Result.isFailure(decode({ ...validPage, pageIndex: 2 }))).toBe(true);
-    expect(Result.isFailure(decode({ ...validPage, startOffset: 6 }))).toBe(true);
-    expect(Result.isFailure(decode({ ...validPage, endOffset: 11 }))).toBe(true);
-    expect(Result.isFailure(decode({ ...validPage, text: "four" }))).toBe(true);
-    expect(Result.isFailure(decode({ ...validPage, hasPreviousPage: true }))).toBe(true);
-    expect(Result.isFailure(decode({ ...validPage, hasNextPage: false }))).toBe(true);
+    expect(Result.isSuccess(decodeUnknownSourceTextPageResult(validPage))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, pageIndex: 2 }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, startOffset: 6 }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, endOffset: 11 }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, text: "four" }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, hasPreviousPage: true }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, hasNextPage: false }))).toBe(true);
   });
 
   it("derives only relationally valid source-text pages", () =>

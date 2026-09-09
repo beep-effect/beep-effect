@@ -20,6 +20,13 @@ import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
+const decodeDiscordConfigInputResult = S.decodeResult(DiscordConfigInput);
+const decodeDiscordErrorResult = S.decodeResult(DiscordError);
+const decodeDiscordErrorReasonResult = S.decodeResult(DiscordErrorReason);
+const encodeDiscordChannelProofResult = S.encodeResult(DiscordChannelProof);
+const encodeDiscordConfigInputResult = S.encodeResult(DiscordConfigInput);
+const encodeDiscordMessageProofResult = S.encodeResult(DiscordMessageProof);
+
 const channelId = "123456789012345678";
 const guildId = "987654321098765432";
 const messageId = "111111111111111111";
@@ -137,7 +144,7 @@ const makeLayer = () =>
 describe("@beep/discord", () => {
   it("keeps encoded Discord schema wire shapes byte-identical", () => {
     const decodedConfig = Result.getOrThrow(
-      S.decodeResult(DiscordConfigInput)({ baseUrl: "https://discord.example.test/api/v10///" })
+      decodeDiscordConfigInputResult({ baseUrl: "https://discord.example.test/api/v10///" })
     );
     const fullChannelProof = DiscordChannelProof.make({
       channelId,
@@ -172,31 +179,31 @@ describe("@beep/discord", () => {
     });
 
     expect(decodedConfig.baseUrl).toBe("https://discord.example.test/api/v10");
-    expect(Result.getOrThrow(S.encodeResult(DiscordChannelProof)(fullChannelProof))).toEqual({
+    expect(Result.getOrThrow(encodeDiscordChannelProofResult(fullChannelProof))).toEqual({
       channelId,
       guildId,
       name: "proof-channel",
       status: 200,
     });
-    expect(Result.getOrThrow(S.encodeResult(DiscordChannelProof)(minimalChannelProof))).toEqual({
+    expect(Result.getOrThrow(encodeDiscordChannelProofResult(minimalChannelProof))).toEqual({
       channelId,
       status: 200,
     });
-    expect(Result.getOrThrow(S.encodeResult(DiscordMessageProof)(fullMessageProof))).toEqual({
+    expect(Result.getOrThrow(encodeDiscordMessageProofResult(fullMessageProof))).toEqual({
       channelId,
       messageId,
       status: 200,
       timestamp: "2026-05-14T14:30:00.000Z",
     });
-    expect(Result.getOrThrow(S.encodeResult(DiscordMessageProof)(minimalMessageProof))).toEqual({
+    expect(Result.getOrThrow(encodeDiscordMessageProofResult(minimalMessageProof))).toEqual({
       channelId,
       messageId,
       status: 200,
     });
-    expect(Result.getOrThrow(S.decodeResult(DiscordErrorReason)("transport"))).toBe("transport");
+    expect(Result.getOrThrow(decodeDiscordErrorReasonResult("transport"))).toBe("transport");
     expect(
       Result.getOrThrow(
-        S.decodeResult(DiscordError)({
+        decodeDiscordErrorResult({
           _tag: "DiscordError",
           cause: "transport failed",
           method: "GET",
@@ -208,7 +215,7 @@ describe("@beep/discord", () => {
     ).toEqual(fullError);
     expect(
       Result.getOrThrow(
-        S.decodeResult(DiscordError)({
+        decodeDiscordErrorResult({
           _tag: "DiscordError",
           reason: "request",
         })
@@ -235,7 +242,7 @@ describe("@beep/discord", () => {
         ErrorReasonArbitrary,
         (config, channelRequest, createMessageRequest, channelProof, messageProof, errorReason) => {
           const normalizedConfig = Result.getOrThrow(
-            S.decodeResult(DiscordConfigInput)(Result.getOrThrow(S.encodeResult(DiscordConfigInput)(config)))
+            decodeDiscordConfigInputResult(Result.getOrThrow(encodeDiscordConfigInputResult(config)))
           );
 
           expectEncodedRoundTrip(DiscordConfigInput, normalizedConfig);

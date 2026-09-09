@@ -29,6 +29,7 @@ import {
   MemoryStats,
   MemoryStatsLive,
   noAdmissionOriginGate,
+  noteAdmissionWaitForTesting,
   orderAdmissionTicketsForTesting,
   parseAdmissionProcStatStartTime,
   processIdentityStatus,
@@ -86,6 +87,12 @@ import * as Struct from "effect/Struct";
 import { FastCheck as fc, TestClock } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
+
+const decodeUUID = S.decodeEffect(UUID);
+const encodeUnknownAdmissionJournalEventJson = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent));
+
+const decodeAdmissionJournalEventJsonSync = S.decodeSync(S.fromJsonString(AdmissionJournalEvent));
+const encodeAdmissionJournalEventJsonSync = S.encodeSync(S.fromJsonString(AdmissionJournalEvent));
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
@@ -691,6 +698,43 @@ describe("quality-scheduler", () => {
     });
   });
 
+  it.effect("escalates a queued admission after two minutes", () => {
+    const ticket = YeetAdmissionTicket.make({
+      schemaVersion: "yeet-admission-ticket/v1",
+      pid: process.pid,
+      procStart: "test-start",
+      kind: "full-proof",
+      weightTokens: 3,
+      priority: "verify",
+      originKey: "origin-escalation",
+      checkoutRoot: "/repo/escalation",
+      branch: "feat/escalation",
+      enqueuedAtMillis: 0,
+      heartbeatAtMillis: 0,
+      blockedOnOriginAtMillis: 0,
+      nonce: "escalation-ticket",
+    });
+
+    return noteAdmissionWaitForTesting(request(), ticket, 0, { escalated: 0, lastProgressMillis: 0 }, fastConfig, {
+      availableGib: 10,
+      capacityTokens: 0,
+      nowMillis: 120_000,
+      state: {
+        dead: [],
+        deadLeases: [],
+        deadTickets: [],
+        leases: [],
+        quarantined: [],
+        tickets: [],
+      },
+    }).pipe(
+      Effect.map((progress) => {
+        expect(progress.escalated).toBe(1);
+        expect(progress.lastProgressMillis).toBe(120_000);
+      })
+    );
+  });
+
   it("pins the chartered token weights", () => {
     expect(admissionTokenWeight("full-proof")).toBe(3);
     expect(admissionTokenWeight("merged-preview")).toBe(5);
@@ -801,7 +845,7 @@ describe("quality-scheduler", () => {
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
-            const attemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440023");
+            const attemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440023");
             const facts = {
               attemptId: O.some(attemptId),
               resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
@@ -987,7 +1031,7 @@ describe("quality-scheduler", () => {
             yield* fs.writeFileString(journalPath, `${intact}${unknown}\n`);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(2));
             const rewritten = yield* fs.readFileString(journalPath);
-            const second = yield* S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent))(journalAdmitted(2));
+            const second = yield* encodeUnknownAdmissionJournalEventJson(journalAdmitted(2));
             expect(pipe(rewritten, Str.split("\n"), A.filter(Str.isNonEmpty))).toStrictEqual([
               Str.trim(intact),
               unknown,
@@ -2324,13 +2368,13 @@ describe("quality-scheduler", () => {
     const EventArbitrary = S.toArbitrary(AdmissionJournalEvent)(fc);
     fc.assert(
       fc.property(EventArbitrary, (event) => {
-        const encoded = S.encodeSync(S.fromJsonString(AdmissionJournalEvent))(event);
-        const decoded = S.decodeSync(S.fromJsonString(AdmissionJournalEvent))(encoded);
+        const encoded = encodeAdmissionJournalEventJsonSync(event);
+        const decoded = decodeAdmissionJournalEventJsonSync(encoded);
         expect(decoded._tag).toBe(event._tag);
         expect(decoded.nonce).toBe(event.nonce);
         // JSON drops the sign of -0, so the codec law is encode-stability
         // rather than Object.is identity on numeric fields.
-        expect(S.encodeSync(S.fromJsonString(AdmissionJournalEvent))(decoded)).toBe(encoded);
+        expect(encodeAdmissionJournalEventJsonSync(decoded)).toBe(encoded);
       }),
       fcRuns(32)
     );
@@ -2824,8 +2868,8 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
-            const leaseAttemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440021");
-            const ticketAttemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440022");
+            const leaseAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440021");
+            const ticketAttemptId = yield* decodeUUID("550e8400-e29b-41d4-a716-446655440022");
             yield* fs.makeDirectory(checkoutRoot, { recursive: true });
             yield* writeFakeLease(tempRoot, {
               pid: DEAD_PID,
@@ -4294,6 +4338,8 @@ describe("quality-scheduler", () => {
     expect(isOvershootLoserForTesting(state, 8, third)).toBe(true);
     // Within capacity nothing rolls back.
     expect(isOvershootLoserForTesting(state, 15, third)).toBe(false);
+    // A lease absent from the scan cannot be selected as the rollback loser.
+    expect(isOvershootLoserForTesting(state, 8, lease(4, 400, 5))).toBe(false);
   });
 
   it("fails closed when the admission state directory cannot be listed", () =>

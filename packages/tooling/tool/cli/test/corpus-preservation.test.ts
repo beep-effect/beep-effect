@@ -49,6 +49,8 @@ import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
 import { ChildProcessSpawner } from "effect/unstable/process";
 
+const isPreservationManifestRow = S.is(PreservationManifestRow);
+
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeInheritedLossRow = S.decodeUnknownEffect(S.fromJsonString(InheritedLossRow));
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
@@ -1159,7 +1161,7 @@ describe("T7 corpus preservation", () => {
         const encodedRow = yield* PreservationManifestRowJson.encode(row);
         expect(yield* PreservationManifestRowJson.decode(encodedRow)).toEqual(row);
         expect(
-          S.is(PreservationManifestRow)({
+          isPreservationManifestRow({
             ...row,
             outcome: {
               bytesReused: NonNegativeInt.make(0),

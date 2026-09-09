@@ -18,6 +18,23 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
+const decodeBoundaryParamsResult = S.decodeResult(BoundaryParams);
+const decodeNotificationActionResult = S.decodeResult(NotificationAction);
+const decodeNumberInputChangeMetadataResult = S.decodeResult(NumberInputChangeMetadata);
+const decodeReactContextInvariantErrorResult = S.decodeResult(ReactContextInvariantError);
+const decodeReactContextInvariantOptionsResult = S.decodeResult(ReactContextInvariantOptions);
+const decodeSpinParamsResult = S.decodeResult(SpinParams);
+const decodeToastDataResult = S.decodeResult(ToastData);
+const encodeBoundaryParamsResult = S.encodeResult(BoundaryParams);
+const encodeNotificationActionResult = S.encodeResult(NotificationAction);
+const encodeNumberInputChangeMetadataResult = S.encodeResult(NumberInputChangeMetadata);
+const encodeReactContextInvariantErrorResult = S.encodeResult(ReactContextInvariantError);
+const encodeReactContextInvariantOptionsResult = S.encodeResult(ReactContextInvariantOptions);
+const encodeSpinParamsResult = S.encodeResult(SpinParams);
+const encodeToastDataResult = S.encodeResult(ToastData);
+const isCountryCode2 = S.is(CountryCode);
+const isNumberInputError = S.is(NumberInputError);
+
 describe("@beep/ui schema parity", () => {
   it("round-trips exported schema models through encoded form", () => {
     fc.assert(
@@ -31,35 +48,33 @@ describe("@beep/ui schema parity", () => {
         S.toArbitrary(ReactContextInvariantError)(fc),
         (boundary, spin, metadata, action, toast, invariantOptions, invariantError) => {
           const roundTrippedBoundary = Result.getOrThrow(
-            S.decodeResult(BoundaryParams)(Result.getOrThrow(S.encodeResult(BoundaryParams)(boundary)))
+            decodeBoundaryParamsResult(Result.getOrThrow(encodeBoundaryParamsResult(boundary)))
           );
           const roundTrippedSpin = Result.getOrThrow(
-            S.decodeResult(SpinParams)(Result.getOrThrow(S.encodeResult(SpinParams)(spin)))
+            decodeSpinParamsResult(Result.getOrThrow(encodeSpinParamsResult(spin)))
           );
           const roundTrippedMetadata = Result.getOrThrow(
-            S.decodeResult(NumberInputChangeMetadata)(
-              Result.getOrThrow(S.encodeResult(NumberInputChangeMetadata)(metadata))
-            )
+            decodeNumberInputChangeMetadataResult(Result.getOrThrow(encodeNumberInputChangeMetadataResult(metadata)))
           );
           const roundTrippedAction = Result.getOrThrow(
-            S.decodeResult(NotificationAction)(Result.getOrThrow(S.encodeResult(NotificationAction)(action)))
+            decodeNotificationActionResult(Result.getOrThrow(encodeNotificationActionResult(action)))
           );
           const roundTrippedToast = Result.getOrThrow(
-            S.decodeResult(ToastData)(Result.getOrThrow(S.encodeResult(ToastData)(toast)))
+            decodeToastDataResult(Result.getOrThrow(encodeToastDataResult(toast)))
           );
           const roundTrippedInvariantOptions = Result.getOrThrow(
-            S.decodeResult(ReactContextInvariantOptions)(
-              Result.getOrThrow(S.encodeResult(ReactContextInvariantOptions)(invariantOptions))
+            decodeReactContextInvariantOptionsResult(
+              Result.getOrThrow(encodeReactContextInvariantOptionsResult(invariantOptions))
             )
           );
           const roundTrippedInvariantError = Result.getOrThrow(
-            S.decodeResult(ReactContextInvariantError)(
-              Result.getOrThrow(S.encodeResult(ReactContextInvariantError)(invariantError))
+            decodeReactContextInvariantErrorResult(
+              Result.getOrThrow(encodeReactContextInvariantErrorResult(invariantError))
             )
           );
-          const encodedInvariantError = Result.getOrThrow(S.encodeResult(ReactContextInvariantError)(invariantError));
+          const encodedInvariantError = Result.getOrThrow(encodeReactContextInvariantErrorResult(invariantError));
           const encodedRoundTrippedInvariantError = Result.getOrThrow(
-            S.encodeResult(ReactContextInvariantError)(roundTrippedInvariantError)
+            encodeReactContextInvariantErrorResult(roundTrippedInvariantError)
           );
 
           expect(Equal.equals(roundTrippedBoundary, boundary)).toBe(true);
@@ -89,12 +104,12 @@ describe("@beep/ui schema parity", () => {
       style: O.none(),
     });
 
-    expect(Result.getOrThrow(S.encodeResult(NumberInputChangeMetadata)(metadata))).toEqual({
+    expect(Result.getOrThrow(encodeNumberInputChangeMetadataResult(metadata))).toEqual({
       error: null,
       eventType: "blur",
       valueText: "",
     });
-    expect(Result.getOrThrow(S.encodeResult(NotificationAction)(action))).toEqual({
+    expect(Result.getOrThrow(encodeNotificationActionResult(action))).toEqual({
       type: "redirect",
       id: "open",
       label: "Open",
@@ -114,13 +129,12 @@ describe("@beep/ui schema parity", () => {
   });
 
   it("keeps schema-derived guards aligned with helper surfaces", () => {
-    const isCountryCode = S.is(CountryCode);
-    expect(isCountryCode("US")).toBe(true);
-    expect(isCountryCode("NOPE")).toBe(false);
+    expect(isCountryCode2("US")).toBe(true);
+    expect(isCountryCode2("NOPE")).toBe(false);
     expect(PhoneNumberE164.is("+14155552671")).toBe(true);
     expect(PhoneNumberE164.is("")).toBe(false);
     expect(O.getOrUndefined(normalizeHexColorInput("#3bf"))).toBe("#33bbff");
     expect(O.isNone(normalizeHexColorInput("not-a-color"))).toBe(true);
-    expect(S.is(NumberInputError)(NumberInputError.Enum["below-min"])).toBe(true);
+    expect(isNumberInputError(NumberInputError.Enum["below-min"])).toBe(true);
   });
 });

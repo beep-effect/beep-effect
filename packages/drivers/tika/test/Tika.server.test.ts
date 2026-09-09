@@ -23,6 +23,8 @@ import { fixtureText, makeExtractOperationFixture, tikaRmetaResponse, tikaVersio
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import type { TikaFixtureFormat } from "./fixtures.ts";
 
+const decodeTikaServerEngineConfigResult = S.decodeResult(TikaServerEngineConfig);
+
 type Respond = (
   request: HttpClientRequest.HttpClientRequest
 ) => Effect.Effect<Response, HttpClientError.HttpClientError>;
@@ -134,6 +136,15 @@ describe("TikaServerEngineConfig", () => {
       fcRuns(25)
     ));
 
+  it("generates valid Tika Server configs for the nightly regression seed", () =>
+    fc.assert(
+      fc.property(S.toArbitrary(TikaServerEngineConfig)(fc), (config) => {
+        expectRoundTrip(TikaServerEngineConfig, config);
+      }),
+      // Issue #1014: the old host generator could emit invalid punycode labels.
+      { ...fcRuns(1_000), seed: 1_754_546_950 }
+    ));
+
   it("strips trailing slashes from the base URL", () => {
     expect(decode(TikaServerEngineConfig, { baseUrl: "http://localhost:9998/" }).baseUrl).toBe(TIKA_SERVER_URL);
     expect(decode(TikaServerEngineConfig, { baseUrl: "http://localhost:9998///" }).baseUrl).toBe(TIKA_SERVER_URL);
@@ -143,12 +154,12 @@ describe("TikaServerEngineConfig", () => {
   });
 
   it("rejects a base URL carrying a query string or fragment", () => {
-    const withQuery = S.decodeResult(TikaServerEngineConfig)({ baseUrl: "http://localhost:9998/?token=x" });
-    const withFragment = S.decodeResult(TikaServerEngineConfig)({ baseUrl: "http://localhost:9998/#frag" });
+    const withQuery = decodeTikaServerEngineConfigResult({ baseUrl: "http://localhost:9998/?token=x" });
+    const withFragment = decodeTikaServerEngineConfigResult({ baseUrl: "http://localhost:9998/#frag" });
 
     expect(Result.isFailure(withQuery)).toBe(true);
     expect(Result.isFailure(withFragment)).toBe(true);
-    expect(Result.isSuccess(S.decodeResult(TikaServerEngineConfig)({ baseUrl: TIKA_SERVER_URL }))).toBe(true);
+    expect(Result.isSuccess(decodeTikaServerEngineConfigResult({ baseUrl: TIKA_SERVER_URL }))).toBe(true);
   });
 
   it("accepts http and https base URLs", () => {
@@ -176,7 +187,7 @@ describe("TikaServerEngineConfig", () => {
     // "A:/" is the counterexample the round-trip property surfaced: stripping
     // its trailing slash changed the URL's identity because it is opaque.
     for (const baseUrl of ["ftp://tika.internal", "file:///tmp/tika", "A:/"]) {
-      expect(Result.isFailure(S.decodeResult(TikaServerEngineConfig)({ baseUrl }))).toBe(true);
+      expect(Result.isFailure(decodeTikaServerEngineConfigResult({ baseUrl }))).toBe(true);
     }
   });
 });

@@ -132,6 +132,7 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)(
 ) {
   static readonly decodeEffect = S.decodeEffect(RetryPolicy);
 }
+const decodeRetryPolicy = S.decodeEffect(RetryPolicy);
 
 /**
  * Constructor input accepted by {@link RetryPolicy}.
@@ -257,7 +258,7 @@ const retryEffectImpl = Effect.fn("Retry.retryEffect")(function* <A, E, R>(
   self: Effect.Effect<A, E, R>,
   policyInput: RetryPolicyInput
 ): Effect.fn.Return<A, E | Cause.TimeoutError | S.SchemaError, R> {
-  const policy = yield* S.decodeEffect(RetryPolicy)(P.isUndefined(policyInput) ? {} : policyInput);
+  const policy = yield* decodeRetryPolicy(P.isUndefined(policyInput) ? {} : policyInput);
   return yield* self.pipe(
     Effect.timeout(policy.attemptTimeout),
     Effect.retry(makeRetryPolicy(policy)),

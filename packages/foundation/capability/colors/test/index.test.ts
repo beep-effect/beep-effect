@@ -10,6 +10,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const encodeUnknownProcessLikeOption = S.encodeUnknownOption(ProcessLike);
+
 describe("supportsColor", () => {
   it("enables colors for TTY terminals with a non-dumb TERM", () => {
     expect(
@@ -105,11 +107,9 @@ describe("supportsColor", () => {
 
   it("round-trips generated process-like values through the schema", () => {
     const processLikeArbitrary = S.toArbitrary(ProcessLike)(fc);
-    const encodeProcessLike = S.encodeUnknownOption(ProcessLike);
-
     fc.assert(
       fc.property(processLikeArbitrary, (processLike) => {
-        const encoded = encodeProcessLike(processLike);
+        const encoded = encodeUnknownProcessLikeOption(processLike);
 
         expect(O.isSome(encoded)).toBe(true);
 

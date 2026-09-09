@@ -46,6 +46,26 @@ import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import type { TUnsafe } from "@beep/types";
 import type { Layer } from "effect";
 
+const decodeStructInlineSchemaJson = S.decodeEffect(
+  S.fromJsonString(
+    S.Struct({
+      permissions: S.Struct({ allow: S.Array(S.String), deny: S.Array(S.String) }),
+    })
+  )
+);
+const decodeNormalizedAgentInstructionDocument = S.decodeEffect(NormalizedAgentInstructionDocument);
+const decodeRecordStringJson = S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)));
+const decodeUnknownRecordStringOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
+const decodeUnknownStructInlineSchemaOption = S.decodeUnknownOption(S.Struct({ inputs: S.Array(S.String) }));
+const encodeAgentCommandMetadata = S.encodeEffect(AgentCommandMetadata);
+const encodeAgentPluginManifestMetadata = S.encodeEffect(AgentPluginManifestMetadata);
+const encodeAiSyncDriftFinding = S.encodeEffect(AiSyncDriftFinding);
+const encodeAiSyncError = S.encodeEffect(AiSyncError);
+const encodeAiSyncSchemaCell = S.encodeEffect(AiSyncSchemaCell);
+const encodeAiSyncSourceMetadata = S.encodeEffect(AiSyncSourceMetadata);
+const encodeAiSyncValidationResult = S.encodeEffect(AiSyncValidationResult);
+const encodeUnknownNativeSchemaCell = S.encodeEffect(UnknownNativeSchemaCell);
+
 const emptyHash = AiSyncContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const previousHash = AiSyncContentHash.make("0000000000000000000000000000000000000000000000000000000000000000");
 const requiredClaudeRepoDenyPermissions: ReadonlyArray<string> = [
@@ -163,7 +183,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         driftMechanism: "hash",
       });
 
-      expect(yield* S.encodeEffect(AiSyncSourceMetadata)(source)).toEqual({
+      expect(yield* encodeAiSyncSourceMetadata(source)).toEqual({
         id: "codex-config",
         agent: "codex",
         domain: "config",
@@ -174,7 +194,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         isOfficial: true,
         driftMechanism: "version_and_hash",
       });
-      expect(yield* S.encodeEffect(AiSyncSourceMetadata)(sourceWithoutOptionals)).toEqual({
+      expect(yield* encodeAiSyncSourceMetadata(sourceWithoutOptionals)).toEqual({
         id: "rulesync-config",
         agent: "rulesync",
         domain: "unified-config",
@@ -184,7 +204,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         driftMechanism: "hash",
       });
       expect(
-        yield* S.encodeEffect(AiSyncSchemaCell)(
+        yield* encodeAiSyncSchemaCell(
           AiSyncSchemaCell.make({
             agent: "codex",
             domain: "hooks",
@@ -201,7 +221,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         rationale: "Codex publishes hook schemas.",
       });
       expect(
-        yield* S.encodeEffect(AiSyncDriftFinding)(
+        yield* encodeAiSyncDriftFinding(
           AiSyncDriftFinding.make({
             sourceId: AiSyncSourceId.make("codex-config"),
             expectedHash: O.none(),
@@ -215,27 +235,25 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         message: "Source moved",
       });
       expect(
-        yield* S.encodeEffect(AiSyncValidationResult)(
+        yield* encodeAiSyncValidationResult(
           AiSyncValidationResult.make({ relativePath: "AGENTS.md", schemaId: "agent-instruction-document" })
         )
       ).toEqual({
         relativePath: "AGENTS.md",
         schemaId: "agent-instruction-document",
       });
-      expect(yield* S.encodeEffect(AiSyncError)(AiSyncError.make({ message: "Validation failed" }))).toEqual({
+      expect(yield* encodeAiSyncError(AiSyncError.make({ message: "Validation failed" }))).toEqual({
         _tag: "AiSyncError",
         message: "Validation failed",
       });
       expect(
-        yield* S.encodeEffect(AgentCommandMetadata)(
-          AgentCommandMetadata.make({ name: "review", description: "Review repo" })
-        )
+        yield* encodeAgentCommandMetadata(AgentCommandMetadata.make({ name: "review", description: "Review repo" }))
       ).toEqual({
         name: "review",
         description: "Review repo",
       });
       expect(
-        yield* S.encodeEffect(AgentPluginManifestMetadata)(
+        yield* encodeAgentPluginManifestMetadata(
           AgentPluginManifestMetadata.make({ name: "example", version: "0.0.0" })
         )
       ).toEqual({
@@ -243,7 +261,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         version: "0.0.0",
       });
       expect(
-        yield* S.encodeEffect(UnknownNativeSchemaCell)(
+        yield* encodeUnknownNativeSchemaCell(
           UnknownNativeSchemaCell.make({
             agent: "grok-build",
             domain: "hooks",
@@ -255,7 +273,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         domain: "hooks",
         reason: "Native hook payload schema is not public.",
       });
-      expect(yield* S.decodeEffect(NormalizedAgentInstructionDocument)("# Rules  \n\nUse Effect.  ")).toBe(
+      expect(yield* decodeNormalizedAgentInstructionDocument("# Rules  \n\nUse Effect.  ")).toBe(
         "# Rules\n\nUse Effect."
       );
     })
@@ -545,18 +563,12 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       const path = yield* Path.Path;
       const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..", "..");
       const turboText = yield* fs.readFileString(path.join(repoRoot, "packages/tooling/library/ai-sync/turbo.json"));
-      const turboConfig = yield* S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))(turboText);
-      const tasks = R.get(turboConfig, "tasks").pipe(
-        O.flatMap(S.decodeUnknownOption(S.Record(S.String, S.Unknown))),
-        O.getOrThrow
-      );
+      const turboConfig = yield* decodeRecordStringJson(turboText);
+      const tasks = R.get(turboConfig, "tasks").pipe(O.flatMap(decodeUnknownRecordStringOption), O.getOrThrow);
       const configInputs = ["$TURBO_ROOT$/.codex/config.toml", "$TURBO_ROOT$/.claude/settings.json"];
 
       A.forEach(["check", "audit"], (taskName) => {
-        const task = R.get(tasks, taskName).pipe(
-          O.flatMap(S.decodeUnknownOption(S.Struct({ inputs: S.Array(S.String) }))),
-          O.getOrThrow
-        );
+        const task = R.get(tasks, taskName).pipe(O.flatMap(decodeUnknownStructInlineSchemaOption), O.getOrThrow);
         assert.deepEqual(A.intersection(task.inputs, configInputs), configInputs);
       });
     })
@@ -569,13 +581,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       const path = yield* Path.Path;
       const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..", "..");
       const settingsText = yield* fs.readFileString(path.join(repoRoot, ".claude/settings.json"));
-      const settings = yield* S.decodeEffect(
-        S.fromJsonString(
-          S.Struct({
-            permissions: S.Struct({ allow: S.Array(S.String), deny: S.Array(S.String) }),
-          })
-        )
-      )(settingsText);
+      const settings = yield* decodeStructInlineSchemaJson(settingsText);
 
       assert.lengthOf(settings.permissions.allow, 49);
       assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
