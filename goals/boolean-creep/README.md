@@ -38,6 +38,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
+**Campaign execution is paused at Benjamin's request to save the current work
+in a draft PR.** The [pause handoff](./PAUSE.md) records the unfinished audits,
+two pending citation decisions and the order for resuming. Lifecycle remains
+`active`; the save PR grants no GATE 2 or implementation approval.
+
 The moving-main census and design refresh remain in progress. GATE 1 passed on
 2026-08-17. Benjamin's 2026-09-03 amendment revoked the stale zero-findings
 assertion and delegated GATE 2's transition to the packet evidence:
@@ -48,6 +53,12 @@ introduced E1-E4 cases without another user gate; all original qualification
 and compatibility laws remain binding.
 
 ## Latest Evidence
+
+Main `0c975f970b4ac4b101d7c1b11957a799d481af35` is merged through
+`8d4580ae820726732784562c1b6c1c913e5bba00`. The [latest merge receipt](./data/post-r31-main0c-source-forward.json)
+verifies preservation of 1,469 committed packet files. Three audits of the seven
+changed source files stopped at partial inspection when the campaign paused;
+their observations are not completed source or design verification.
 
 The scanner prerequisite [PR #1059](https://github.com/beep-effect/beep-effect/pull/1059)
 is merged as `be5b589aa013c8350a4fad5cdfe36a6f6188db1f`. Its [local full proof](./data/scanner-prerequisite-main702-proof.json)
@@ -62,7 +73,7 @@ The canonical inventory contains **753 records: 145 qualified and 608 disqualifi
 historically `reviewed`, 124 `designed`, and 0 `applied`. All await replacement
 independent review. Four additional owners remain in an [explicit unresolved hold](./data/r31-law-owner-holds.json).
 
-The branch includes main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`
+Before that merge, the branch included main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`
 through merge `854cc9a8862d8a3b63f7deb68c1f2bdcbdbaf5ac`. The
 [merge receipt](./data/post-r31-main-e7b-source-forward.json) confirms all 1,450
 then-present packet files survived unchanged. The [completed owner/design update](./data/pre-r32-main-e7b-parent-integration.json)

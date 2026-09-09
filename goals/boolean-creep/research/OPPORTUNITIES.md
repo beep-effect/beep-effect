@@ -1198,3 +1198,15 @@ runtime directory and bus socket ownership and supplies only those local bus
 coordinates to manager commands. No model or service started in the failed
 attempt. Service fixtures must run from the same private execution directory as
 the controller, rather than relying on the repository shell environment.
+
+
+## 2026-09-09 — Failed remote precheck did not stop its orchestration batch
+
+During the main-forward update, the precheck reported that live main had moved,
+but its tool result was not checked before the following merge command ran. The
+authorized merge therefore included the previously fetched main `8d507287b7`,
+rather than the newest main. That merge was clean; a fresh fetch and an explicitly
+conditional precheck then brought in `0c975f970b`, whose additional changes are
+documentation only. No census or review launched against the stale reference.
+Dependent mutations must branch on the preceding command's exit code; awaiting
+two tool calls in order does not make the first failure abort the second.

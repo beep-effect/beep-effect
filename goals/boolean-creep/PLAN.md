@@ -19,6 +19,14 @@ Mutable execution plan. Contract: [`SPEC.md`](./SPEC.md); binding decisions:
 
 ## Current lane
 
+**Paused at Benjamin's request on 2026-09-09 to publish a draft save PR.**
+The [pause handoff](./PAUSE.md) records the current state, unanswered decisions
+and resume order. Main `0c975f970b4ac4b101d7c1b11957a799d481af35` is merged;
+the [latest source-forward receipt](./data/post-r31-main0c-source-forward.json)
+verifies preservation of 1,469 committed packet files. The three audits of its
+seven changed source files are incomplete and have released their holds.
+No census, independent review, or implementation continues during the pause.
+
 The scanner prerequisite [PR #1059](https://github.com/beep-effect/beep-effect/pull/1059)
 is merged as `be5b589aa013c8350a4fad5cdfe36a6f6188db1f`. Its [local full proof](./data/scanner-prerequisite-main702-proof.json)
 passed all 35 reported steps and the 134-package coverage ratchet on the exact
@@ -94,7 +102,7 @@ refresh. The live inventory is **753 records: 145 qualified and 608 disqualified
 390 / D2 218), with **113 Tier 1 and 32 Tier 2**. Statuses are 21 historically
 `reviewed`, 124 `designed`, and 0 `applied`; all need replacement P3 review.
 
-The branch includes main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`
+Before the latest source-forward merge, the branch included main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`
 through merge `854cc9a8862d8a3b63f7deb68c1f2bdcbdbaf5ac`. The
 [merge receipt](./data/post-r31-main-e7b-source-forward.json) confirms all 1,450
 then-present packet files survived unchanged. The declaration-based check-overlay
@@ -604,7 +612,8 @@ test "$(wc -m < goals/boolean-creep/GOAL.md)" -le 4000
 
 ## Blockers
 
-No user design decision is open. The prior Grok HTTP 402 blocker cleared at
+Two citation decisions remain open, covering the four R31 owner holds in the
+[pause handoff](./PAUSE.md). The prior Grok HTTP 402 blocker cleared at
 the 2026-09-08 preflight. P2R still requires two complete current-source dry
 rounds and corrected designs. P3 and P4 remain evidence-gated on that census,
 the replacement zero-finding review, and the merged packet-only ratification
