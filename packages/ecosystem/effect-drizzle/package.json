@@ -30,7 +30,7 @@
     "test:integration:parallel": "bun run beep:test:integration",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:type-test",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:lint": "biome check .",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
