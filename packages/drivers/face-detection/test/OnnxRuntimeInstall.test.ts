@@ -23,7 +23,7 @@ type InstallPackages = (
   feeds: Record<string, { type: string; index: string }>
 ) => Promise<void>;
 
-describe.sequential("ONNX Runtime's patched NuGet installer", () => {
+describe("ONNX Runtime's patched NuGet installer", { concurrent: false }, () => {
   let root: string;
   let temp: string;
   let destination: string;
