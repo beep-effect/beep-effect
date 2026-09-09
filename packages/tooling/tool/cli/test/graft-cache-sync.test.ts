@@ -64,7 +64,7 @@ const fixture = Effect.fn("GraftCacheSyncTest.fixture")(function* () {
 });
 
 const DeepLayerManifest = S.Struct({
-  version: S.Number,
+  version: S.Int,
   model: S.String,
   repoDigest: S.String,
   files: S.Array(S.Struct({ path: S.String, hash: S.String })),
