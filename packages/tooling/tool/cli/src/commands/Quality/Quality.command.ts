@@ -56,6 +56,7 @@ import {
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
+import { checkCensusCommand } from "./CheckCensus.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
 import {
   githubCheckChangesetStatusLane,
@@ -3731,6 +3732,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality bun-audit",
     "- bun run beep quality test-tsgo",
     "- bun run beep quality tsgo-smoke",
+    "- bun run beep quality check-census [--filter <name>] [--output-json <path>]",
     "- bun run beep quality tsgo-rules",
     "- bun run beep quality jsdoc-module-tags",
     "- bun run beep quality jsdoc-inventory",
@@ -3758,6 +3760,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     testTsgoCommand,
     testTsgoPackageCommand,
     tsgoSmokeCommand,
+    checkCensusCommand,
     tsgoRulesCommand,
     jsdocModuleTagsCommand,
     jsdocInventoryCommand,
