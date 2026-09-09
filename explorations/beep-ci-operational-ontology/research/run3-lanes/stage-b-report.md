@@ -331,8 +331,11 @@ path or refresh flag. Exit code: **0**.
 
 | Pin | Tracked payloads | Manifest payloads | All tracked files | Missing | Extra |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| run3b-fleet | `153464075e4293d5a8970b6d704121a399374dceb2bbe83dbf9c5d02dd78a793` | 719 | 7186 | 15598967 |
-| run3b-synthetic | `606afb04beaeb576d683004778812672ea6b119b407084c0f1478b899c3d8b39` | 9 | 10 | 41126 |
+| run3b-fleet | 718 | 718 | 719 | 0 | 0 |
+| run3b-synthetic | 8 | 8 | 9 | 0 | 0 |
+
+This inventory records the original detached-worktree capture proof. Current
+security-repair hashes and byte totals are in the opening proof table.
 
 The exact path sets match, not only their counts. Every committed pin byte
 matches the final lane capture, including both manifests; the whole-tree hashes

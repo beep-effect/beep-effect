@@ -108,3 +108,7 @@
   projection false positive: a redacted PID null inside message text was
   rejected as a raw identity member. Include an edited message in each
   population's repair fixture, and validate its actual projection bytes.
+
+- A broad report-row replacement updated both the current hash table and a
+  historical inventory table. Scope replacements to the named table and check
+  column counts so refreshed integrity evidence does not corrupt older proofs.
