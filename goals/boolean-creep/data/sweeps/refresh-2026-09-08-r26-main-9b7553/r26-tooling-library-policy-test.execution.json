@@ -1,0 +1,21 @@
+{
+  "lane": "r26-tooling-library-policy-test",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-09T00:27:25.819984+00:00",
+  "finished": "2026-09-09T00:55:09.038179+00:00",
+  "exitCode": 1,
+  "endTurnEvent": false,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [
+    "Provider/tool error event; inspect private transcript.",
+    "Diagnostic; inspect private transcript.",
+    "Provider response exceeded the output token budget."
+  ],
+  "completionSummary": "I'll start the boolean-creep sweep by creating the report file, then search the assigned tooling/library/policy/test paths for `S.Boolean` and `: boolean` clusters.Report file is in place. Next I\u2019ll scan the remaining lane roots and collect `: boolean` / `useState` hits so I can cluster by scope.S.Boolean hits are in. Next I\u2019ll collect `: boolean`, `useState`, and related sibling-state patterns across the same lane.I\u2019ll inspect prior sweep reports and then read the remaining schema/config files for boolean clusters that aren\u2019t already seeded.I\u2019ll compare prior r25/r26 reports for this lane and start reading unseeded files for leftover boolean clusters.r25 already logged the obvious clusters, so I\u2019m hunting leftover structs: remaining `S.Boolean` fields, CLI flag bags, and derived sibling locals.I\u2019ll hunt leftover compiler/Next flags and module latches next, then check seed declarations for line drift.DocgenConfig\u2019s literal true/false compiler bag looks new. I\u2019ll read that struct plus nearby I18N/`noPhoenix` clusters next.",
+  "transcriptSha256": "cd15af4bc0c71ad52550d900be8ab9692aa30a6f7eb1a58bdde3293363454440",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "9635e7ef6ae5c35bedf49420e61ee6a4893e384797dd5f26d67a1602d3c8dc1c"
+}

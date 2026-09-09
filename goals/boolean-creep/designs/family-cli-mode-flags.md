@@ -2,24 +2,17 @@
 
 ## 2026-09-03 drift refresh
 
-Rechecked the ten historical family records against current `main`. Every original
-mutual-exclusion guard and mode chain is still present, and the shared
-`RunMode.ts` target remains reusable. Post-design changes in Docgen, Codex
-findings, Goals index, Runners tests, and Skills shifted line anchors or added
-orthogonal behavior. The mode taxonomies remain unchanged. The Goals index
-check did change operationally: an absent ignored projection is now accepted,
-and the target below preserves that behavior. Current anchors for the affected
-sections are:
+Rechecked the historical family records against current `main`. The seven live
+records still have their original mode guards/chains, and the shared
+`RunMode.ts` target remains reusable. Withdrawn parameter-only records and
+retired source shapes are no longer family consumers. Post-design changes in
+Docgen, Runners tests, and Skills shifted line anchors or added orthogonal
+behavior. The live mode taxonomies remain unchanged. Current anchors for the
+affected sections are:
 
 - Docgen local: options at `Local.ts:141-150`, implication guard and output
   selection at `Local.ts:1364-1380`, CLI adapter at
   `Docgen.command.ts:531-541`, direct test fixture at `docgen.test.ts:1068`.
-- Codex findings: schema flags at `Findings.schemas.ts:381-382`, validator at
-  `Findings.refresh.ts:243-252`, application entry at
-  `Findings.command.ts:406-412`, CLI adapter at lines 440-460.
-- Goals index: flags at `PortfolioIndex.ts:253-260`, mode guard/dispatch at
-  lines 278-299, CLI adapter at lines 321-327. Its generated index is now an
-  ignored local projection; the print/write/check domain is unchanged.
 - Skills: existing literal at `Skills.command.ts:41`, resolver at lines
   879-893, application options at lines 908-912, CLI adapter at lines 988-990.
 - Explore Atlas: flags at `Explore/Atlas.ts:739-746`, conflict and
@@ -33,7 +26,7 @@ until GATE 2 passes.
 
 ## Shared family design
 
-All eleven records are Tier 1 internal command-adapter shapes. The public CLI spellings remain stable: callers may continue to use `--plan`, `--check`, `--write`, `--dry-run`, `--json`, `--all`, `--changed-files`, `--refresh`, and `--force` exactly as today. Boolean values may exist only as the immediate output of Effect's CLI parser. Each command adapter must collapse them once into a schema-owned literal before calling application code; no application options type may carry sibling mode booleans.
+The seven live records are internal command-adapter shapes. The public CLI spellings remain stable: callers may continue to use `--plan`, `--check`, `--write`, `--dry-run`, `--json`, `--all`, and `--changed-files` exactly as today. Boolean values may exist only as the immediate output of Effect's CLI parser. Each command adapter must collapse them once into a schema-owned literal before calling application code; no application options type may carry sibling mode booleans.
 
 The live shared implementation is
 `packages/tooling/tool/cli/src/internal/cli/RunMode.ts:26-203`.
@@ -122,16 +115,11 @@ before constructing its literal mode.
 
 ## Per-instance review surfaces
 
-The shared design is consumed by eleven exact one-per-inventory review files:
+The shared design is consumed by seven exact one-per-inventory review files:
 
 - [runners-bake-cli-mode](./runners-bake-cli-mode.md)
 - [docgen-local-json-requires-plan](./docgen-local-json-requires-plan.md)
 - [tsconfig-sync-mode-flags](./tsconfig-sync-mode-flags.md)
-- [codex-findings-ingest-modes](./codex-findings-ingest-modes.md)
-- [docgen-quality-scope-flags](./docgen-quality-scope-flags.md)
-- [goals-portfolio-index-mode](./goals-portfolio-index-mode.md)
-- [generated-file-drift-mode-flags](./generated-file-drift-mode-flags.md)
 - [fallow-boundaries-mode](./fallow-boundaries-mode.md)
 - [sync-data-to-ts-run-mode](./sync-data-to-ts-run-mode.md)
-- [skills-run-mode](./skills-run-mode.md)
 - [explore-atlas-mode](./explore-atlas-mode.md)

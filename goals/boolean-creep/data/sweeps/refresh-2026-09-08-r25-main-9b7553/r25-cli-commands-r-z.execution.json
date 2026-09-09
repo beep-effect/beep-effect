@@ -1,0 +1,17 @@
+{
+  "lane": "r25-cli-commands-r-z",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:31:19.387932+00:00",
+  "finished": "2026-09-08T22:42:16.612520+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 21,
+  "qualifiedCandidates": 12,
+  "errors": [],
+  "completionSummary": "I'll scan only the assigned CLI command paths, create the report file first, then classify boolean clusters as I go.Report file is in place. Next I\u2019ll grep the lane for boolean clusters and list nested files so nothing is missed.I'll widen the grep for inferred clusters (literals, optionals, latches) and sample an existing inventory record for schema alignment.I\u2019ll inspect the campaign brief and then read clustered scopes file-by-file, starting with Worktree and VersionSync.I'll read the schema clusters that aren't on the skip list, starting with Research, Skills, SyncDataToTs, and Worktree.Seeds still exist. I\u2019ll append the classified records to the report now.goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-cli-commands-r-z.jsonl \u2014 confirmed 12, disqualified 9. All assigned roots covered (Research, Root.ts, Runners, Skills, SyncDataToTs, TopoSort, TsconfigSync, VersionSync, Worktree). Seeds still present; line drift only (PorcelainAccumulator 343\u2192364, residueReasonMatcher 243\u2192265, buildBunReport 540\u2192556, plus smaller shifts on BakeCheckReport/BakeCliOptions/WorktreeRemovalRequest/WorktreeDoctorEntry/SyncDataTargetSelection/runWorktreeRemove.options).",
+  "transcriptSha256": "d5cd15a084ad009094bcb9782b5f315f22925ab60e927ac0a58a045afe435ed7",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

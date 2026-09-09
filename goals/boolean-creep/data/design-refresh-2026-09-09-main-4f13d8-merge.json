@@ -1,0 +1,43 @@
+{
+  "completed": true,
+  "main": "4f13d83e13d61275a57004050ffc62a90d86c014",
+  "mergeTree": "8bb5465eceb93a170e9c1bcf5d6cd515eb0a5157",
+  "newHead": "f03850b762e41217b5a0c26f26041daee490a070",
+  "oldHead": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "onlyRebasedStagedPaths": [
+    ".claude/settings.json",
+    "goals/boolean-creep/ops/manifest.json"
+  ],
+  "originalFailurePreserved": true,
+  "planSha256": "a9b09d63e3e12357fec9e2c279c290862f99a5458c7748c7f49b8465376fbb55",
+  "preservedConcurrentGraftStatisticsSha256": "a332e0caecd8bf094fda693165eeac8daca92e8dc37223aaad8faa8fc086c801",
+  "preservedUnstagedPathCount": 1,
+  "preservedUntrackedPathCount": 0,
+  "protectedContentAndModesVerified": true,
+  "restoredProtectedModes": [
+    ".claude/settings.json",
+    "goals/boolean-creep/DECISIONS.md",
+    "goals/boolean-creep/SPEC.md",
+    "goals/boolean-creep/ops/manifest.json",
+    "goals/boolean-creep/ops/run-design-batch.sh"
+  ],
+  "restoredStagedPathCount": 897,
+  "sourceAndDependencyTreesMatchMain": true,
+  "statusShapePreserved": true,
+  "kind": "verified-forward-main-merge",
+  "scope": "Local forward merge, not a pull-request merge or implementation acceptance",
+  "upstreamPacketChange": "Three routing updates plus P2 name resolution; all other committed campaign amendments preserved",
+  "settingsValuesPrinted": false,
+  "privatePlanSha256": "a9b09d63e3e12357fec9e2c279c290862f99a5458c7748c7f49b8465376fbb55",
+  "privateCompletionSha256": "48e0bdc05d7aeb1e7757d2f99a14fc8f02f9fbe8233817bb282c44a8871e65b2",
+  "canonicalInventorySha256": "7e37a70f69587d2e324b58c4a1531ec12b6b68cfb8105b24ec55fd7d34d58341",
+  "round28Evidence": "Frozen historical-source round remains complete/wet; no dry credit",
+  "nextWork": "Integrate source-bound impact corrections, then freeze a new exact-source census",
+  "packageJsonExtension": {
+    "fromMain": "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943",
+    "toMain": "4f13d83e13d61275a57004050ffc62a90d86c014",
+    "changedExistingManifests": 142,
+    "changedKeys": ["scripts"],
+    "dependencyAndLockChanges": false
+  }
+}

@@ -1,82 +1,83 @@
+# R28 P2 design: r2-tooling-packet-transition-stream-trace
+
+Frozen HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`, origin/main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Native P2 source/design proof is bound by `data/design-refresh-2026-09-09-r28-cli-retained-qualified-gap-audit.md` and the original bytes are archived by `data/r28-cli-retained-integration.json`. Independent replacement P3 design review remains pending; no prior review approval is transferred and no product implementation or test acceptance is claimed. Preserve the complete decoded API, public schema/method/test-kit exports, full payloads and encoded outputs described below. Raw request defaults, typed diagnostics and their ordering remain supported contracts; their D1 owners are not implementation targets of this returned-state migration.
+
 # Instance
 
 - id: `r2-tooling-packet-transition-stream-trace`
-- file:line: `packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts:266`
-- symbol: `PacketTransitionPlan`
-- members: `streamPresent`, `traceWritten`
-- evidence: E4 at `PacketTransitionWriter.ts:542-565` and `:647-683` — a
-  streamless plan always commits with no trace write, while a trace write is
-  reachable only for skipped or append plans backed by a stream.
+- exact source SHA: `93217d998f851e2e93d9864e2b5315552eaa58a7`
+- corpus source SHA: `d1b4d769fbaffddd55717f3b1ba461897dd545c5`
+- file:line: `packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts:304`
+- symbol: `PacketTransitionOutcome`
+- members: `disposition`, `traceWritten`, `tip`
+- evidence: E4 at `PacketTransitionWriter.ts:637-681` — the three commit arms fix appended count/tip presence, while skipped alone permits either trace-write result.
 
 # Current shape
 
-The plan already owns `disposition: append | skipped | streamless` but also
-stores a redundant `streamPresent` boolean. The resulting outcome repeats the
-three-way disposition and adds `traceWritten`. Across the plan/commit aggregate
-the two bits describe one transition phase; tests reconstruct the legal
-combinations with separate assertions.
+PacketTransitionOutcome302–313 is the actual returned schema. It carries
+three-valued disposition, traceWritten:Boolean and optional tip, together
+with required appended:PacketRevision and tracePath. Writers646,658,676
+produce commit observations after exact stream/trace work. Streamless returns
+false/no tip; skipped can return either trace bit with an established tip;
+append returns true/new tip and its complete appended count.
 
 # Cardinality gap
 
-The two booleans represent four combinations and only three are reachable:
-streamless/no trace, stream-backed/fresh trace, and stream-backed/written
-trace. `!streamPresent && traceWritten` cannot occur. The existing disposition
-further distinguishes append from skipped work and must not be erased.
+Actual members [disposition,traceWritten,tip] represent3 ×2 ×2 = **12**
+combinations. The **4** supported projections are streamless/false/absent,
+skipped/false/present, skipped/true/present and append/true/present.
+Required appended is a numeric payload; zero/nonzero does not double this
+finite count. Its value and the positive append invariant remain preserved.
 
 # Target schema
 
-Keep the existing `PacketTransitionDisposition` literal on plans and remove
-`streamPresent`, since `streamless` is already exact. Define a separate
-annotated `PacketTransitionOutcomeDisposition` LiteralKit with
-`streamless`, `skipped-fresh`, `skipped-refreshed`, and `appended`. Replace the
-outcome's old disposition plus `traceWritten` pair with this one exact literal:
-streamless commit selects `streamless`; skipped commit selects `skipped-fresh`
-or `skipped-refreshed` from `writeTraceWhenStale`; append selects `appended`.
+Define a private `PacketTransitionOutcomeDisposition` LiteralKit with `streamless`, `skipped-fresh`, `skipped-refreshed`, and `appended`. Streamless owns no tip and no appended count. Both skipped cases own the folded tip and no appended count. Appended owns a tip and positive appended count. Keep `tracePath` shared and migrate the decoded constructors/readers atomically. This owner is separate from the plan disposition design.
 
 # Migration inventory
 
-- `PacketTransitionWriter.ts:75-80` — retain the plan disposition owner and add
-  the exact outcome disposition owner.
-- `PacketTransitionWriter.ts:238-313` — remove plan `streamPresent`, replace
-  outcome disposition values, remove `traceWritten`, and update exported JSDoc
-  examples.
-- `PacketTransitionWriter.ts:529-565` — remove the sealed-plan true projection
-  and the streamless false projection.
-- `PacketTransitionWriter.ts:633-684` — map the stale-trace result directly to
-  the two skipped outcome variants and construct exact streamless/appended
-  outcomes.
-- `SetStatus.ts:419` — replace the post-commit `outcome.disposition === "skipped"` reader with an exhaustive `PacketTransitionOutcomeDisposition` match that preserves the skipped log for both `skipped-fresh` and `skipped-refreshed`, the append log for `appended`, and existing streamless behavior. The plan disposition read at line 270 remains `skipped` and is a different model.
-- `SetRiskTier.ts` consumes plan events/types only; recheck its exhaustive
-  behavior but do not add compatibility aliases.
-- `test/goals-set-status-stream.test.ts:180-300` — migrate streamless, fresh
-  skipped, refreshed skipped, and append assertions to the exact dispositions.
-- Recheck the `@beep/repo-cli/test/Goals` barrel and doc examples because these
-  decoded models are exported for in-repo tests.
+- `PacketTransitionWriter.ts:75-80,282-313` — add outcome cases and update the exported decoded example.
+- `PacketTransitionWriter.ts:614-652` — select fresh/refreshed only after the moved-stream CAS check and exact trace comparison.
+- `PacketTransitionWriter.ts:655-683` — construct streamless/appended cases; preserve append order, refolding, trace rendering, and count.
+- `SetStatus.ts:417-425` — map both skipped cases to the exact skipped log and appended to the existing append log; preserve current streamless handling.
+- `SetRiskTier.ts:129` — consume the appended case's positive count and trace path.
+- `test/goals-set-status-stream.test.ts:184-317` — cover streamless, both skipped outcomes, append, and CAS refusal with exact files.
 
 # Guard-deletion accounting
 
-Delete `streamPresent`, `traceWritten`, their constructors and examples, and
-the paired test assertions. The plan's existing literal and the outcome's
-four-state literal are the sole phase owners; no compatibility boolean getters
-remain.
+Replace the three paired disposition/traceWritten constructor writes and
+optional-tip spreads646–683 with exact outcomes. Keep writeTraceWhenStale's
+Boolean observation614–628 long enough to select fresh/refreshed; do not
+remove its filesystem comparison. Replace SetStatus417–425 and SetRiskTier129
+coarse disposition/count access with case matching and full payload values.
+Tests' traceWritten assertions migrate to case assertions, but assertions are
+not production guard deletions. Required appended zero writes may become
+case-owned payload facts; they are not independently qualified Boolean axes.
+Keep CAS637–643, append loop671–673 and exact trace rendering/writes.
 
 # Encoded-side impact
 
-None outside decoded in-repo TypeScript. Plans and outcomes are transient CLI
-service values; event JSONL, trace JSON, packet manifests, Goals index output,
-command text, exit behavior, compare-and-set checks, and filesystem writes are
-unchanged. The ratification authorizes the atomic in-repo decoded API migration.
+No live outcome JSON/persisted boundary was found. Module/test-kit exports
+require atomic decoded migration; the PacketCore package subpath stays blocked.
+Event JSONL, trace JSON, manifest bytes, request types, command text, appended
+counts and tip contents remain identical. Preserve exact streamless handling
+from writer-produced plans, rather than supporting malformed hand-built
+streamless plans with arbitrary tips solely because the old schema accepts
+such objects. No positive fixture supplies that contrary operation.
 
 # Test impact
 
-Cover streamless, skipped with already-fresh trace, skipped with missing/stale
-trace, append, risk-tier override append, and moved-stream refusal. Assert
-exact event/trace files and new outcome dispositions, plus schema construction
-for every legal literal. Run focused Goals command/packet-core tests and full
-`@beep/repo-cli` verification with its changeset policy.
+Use schema-derived arbitrary coverage for all four complete cases, including positive appended counts and required stream tips. Retain fresh-trace no-write, missing/stale trace repair with exact regenerated bytes, append event count/order, risk-tier append, streamless no-op, and moved-stream refusal.
 
-# Risk and sequencing
+# Risk
 
-Land in Tier 1E with the repo-CLI internal-domain batch. Do not collapse
-`skipped-refreshed` into `appended`: both write a trace but only the latter
-appends events. Preserve the existing CAS check before any skipped trace repair.
+Tier1 alongside the separate plan migration. A refreshed skip writes trace
+but no event; never collapse it into append. Preserve temporal snapshots,
+skipped CAS, append-before-refold order, full tips/counts and typed errors.
+No current schema or test was changed and no independent review is claimed.
+
+Local Effect v4 schema APIs: `.repos/effect/packages/effect/src/Schema.ts:6105`
+provides S.toTaggedUnion;6255 provides S.TaggedUnion. Use existing LiteralKit
+values for discriminants, named schema classes/cases and derived S.is guards.
+No hand-rolled literal-union replacement or opaque always-true validator.
+
+Landing: use the ordered Tier 1E internal tooling subsystem batches, not singleton PRs per Tier 1 record. Coordinate the Goals packet planner, transition plan and transition outcome in one subsystem batch. Plan precedes outcome in their shared PacketTransitionWriter.ts, with SetStatus/SetRiskTier and migration consumer edits applied serially; each guard deletion has one owner. The D1 Goals request validators remain intact.

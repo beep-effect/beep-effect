@@ -1,0 +1,81 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 813,
+  "afterCount": 802,
+  "beforeInventorySha256": "5374608f7a7b71412236a54780daac9aec2c6650c0649f7d8b8aa88c0675e450",
+  "afterInventorySha256": "c13fe2dc79cb6a90f76ca5d3683cc00a42ec9cc5be8f1b5b0dfbc9c5950e080e",
+  "correctedIds": [
+    "html-datalist-child-grammar",
+    "allow-list-url-policy-relative-flags",
+    "html-picture-source-sizes-auto",
+    "r3-foundation-attribute-requirement-gates",
+    "r2-foundation-html-foreign-entry-flags",
+    "html-media-child-grammar",
+    "r2-domains-ontology-graph-worker-requeue-latches",
+    "thread-transcript-load-state",
+    "composer-send-input-gates",
+    "composer-shell-edit-stream",
+    "r25-apps-streaming-turn-view-active",
+    "desktop-panel-menu-item-state"
+  ],
+  "addedIds": ["r28-foundation-modeling-rest-bun-glob-scan-options"],
+  "newQualifiedIds": ["html-datalist-child-grammar"],
+  "withdrawnIds": [
+    "r3-foundation-source-size-sum-spacing",
+    "r3-foundation-glob-entry-facts",
+    "r3-foundation-img-responsive-presence",
+    "r25-foundation-modeling-rest-img-lazy-auto-sizes",
+    "r3-foundation-link-responsive-presence",
+    "named-graph-partition-excluded",
+    "ontology-sparql-query-request-include-inferred",
+    "durable-locator-options-full-span",
+    "r3-apps-back-to-top-hidden",
+    "r2-apps-editor-proof-profile-picker",
+    "r2-apps-thread-composer-send-gates",
+    "r2-apps-dock-panel-open-active"
+  ],
+  "withdrawnQualifiedIds": ["r2-apps-dock-panel-open-active"],
+  "statusDemotions": {
+    "desktop-panel-menu-item-state": {
+      "from": "reviewed",
+      "to": "designed",
+      "reason": "The replacement design removes the withdrawn callable-owner dependency and has not undergone replacement independent P3 review."
+    }
+  },
+  "rowArchive": "history/inventory/2026-09-09-r28-first-corrections-before.jsonl",
+  "rowArchiveSha256": "e4298be09574b2c10bb4ec986c606009b9dc8435affe47323912b3ed20d4b2e3",
+  "designArchive": "history/designs/2026-09-09-r28-first-corrections",
+  "archivedDesignSha256": {
+    "r2-domains-ontology-graph-worker-requeue-latches": "5000c14ebda54616fc374d61cc365ff98f80dd5e4bda2f1ccd61b281aee98a27",
+    "thread-transcript-load-state": "b74ffaa30546df1dcea2b906f8b1cba22d6e68b043720aa1489926955ba9b890",
+    "desktop-panel-menu-item-state": "b4c75ff4eb1adfdb1bee3bdc61bc420981e55c9df2bd4de0b8a3110731c192e7",
+    "r2-apps-dock-panel-open-active": "8cef4d568db1feb968a5e5dcfbc269416e92fdf38900d28ab4f51220e80c4e32"
+  },
+  "currentDesignSha256": {
+    "html-datalist-child-grammar": "90e2c0feb53716e8cfebf9f4d940e4feef19a18dbb5685cb8bbee195c1da8e6d",
+    "r2-domains-ontology-graph-worker-requeue-latches": "5316d882ed8bd4bf7e5618c4db721bbcfb793ff20a0c38c00f29f1da50d13ad8",
+    "thread-transcript-load-state": "85967cc1beaef9bdb894f52b11b904f6213b445c930e405aeda8fc7d109af30c",
+    "desktop-panel-menu-item-state": "3d25d1747bcda4d49bc8ef4c76e0e76becd7eb02a169f38e212a800f839d8e03"
+  },
+  "inputSha256": {
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-modeling-contract-correction1.execution.json": "d767a58fdd6f50b9722a17bd7c96644da4028d1f73dbb11fa80e46fd884f933f",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-modeling-contract-correction1.jsonl": "25af4fb0caa38a0dfe7901f729d59f9e61f6a835365b2fe09132c6d5beafe009",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-epistemic-contract-correction1.execution.json": "baf4f96f392a4ef078c8f8b59669e4fba0a3a49e133c7414bb6a204fe67fb590",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-epistemic-contract-correction1.jsonl": "ec7c7a929d29f2c42a45a60aad76ee5c8ecdef6a42cfaa3b7c302ebe28347081",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-apps-contract-correction1.execution.json": "4e5d041a6139e26cefae10e10969db8334d0f062bdcd1162ce3ded616f845ac8",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-apps-contract-correction1.jsonl": "8de6717c752e0f154686ddaa85d0c3beea7e0f6b02e4a5011b0ebe11392d6efe",
+    "data/provisional-html-datalist-child-grammar.md": "02a7be1d6ffd996da2e28919fb07cf6514f1983c0070e0ef833276a38df96cc2",
+    "data/provisional-r2-domains-ontology-graph-worker-requeue-latches.md": "cad0ef42fabbf59153cc8647c1d0eff4c4cefec2a15e1f943a888fed77f7b990",
+    "data/provisional-r28-thread-transcript-load-state.md": "9db228e9cf1824ce8190e42ec458c950319e127b87926212d3cd3e3e61c6a39f",
+    "data/provisional-r28-desktop-panel-menu-item-state.md": "58c38e989eb4e875aae255212f9919e4fd7cb2de040c45d52b46ed609e549333"
+  },
+  "formalIndependentReview": false,
+  "qualifiedCount": 164,
+  "statuses": {
+    "reviewed": 30,
+    "designed": 134,
+    "disqualified": 638
+  },
+  "note": "Three completed same-conversation bounded source corrections integrated. Datalist promoted4/3, graph retry repaired12/5, transcript repaired16/7 without fabricated required-array axes, and real menu4/3 design decoupled from withdrawn callable APIs. Five modeling subsets/synthetic rows, three one-Boolean-plus-literal owners and four app synthetic/callable rows withdrawn with exact archives. DurableLocatorOptions uses the same binding net ruling as independently adjudicated NamedGraphPartition/SPARQL request; its full4/4 literal/Boolean source contract remains documented in the single-member audit. Source/tests/encoded behavior unchanged; no applied, independent P3 or dry credit."
+}

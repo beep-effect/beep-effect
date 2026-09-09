@@ -1,0 +1,41 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 891,
+  "afterCount": 871,
+  "beforeInventorySha256": "398b70c89c31b50f7250b6e5666eb1098d93996c79f2c4a81897466e467ea058",
+  "afterInventorySha256": "1a379afa07d78b906e97cf097b59a530ab97c57935fe6ebcf36b957dcd9cff87",
+  "withdrawnIds": [
+    "r3-arch-ecosystem-internal-work-item-status-predicates",
+    "r3-arch-ecosystem-internal-pg-extras-node-probes",
+    "r3-arch-ecosystem-internal-sqlite-extras-node-probes",
+    "r3-drivers-arch-pg-column-numeric-filters",
+    "r3-drivers-arch-pg-column-identity-integer",
+    "r3-drivers-arch-pg-combinators-string-type",
+    "r3-drivers-arch-sqlite-column-spec-guards",
+    "r3-drivers-arch-sqlite-derive-json-nullable",
+    "r3-drivers-arch-pg-array-rectangular-elements",
+    "r3-drivers-arch-entity-id-like-guards",
+    "r3-drivers-arch-meta-fk-references-guards",
+    "r25-architecture-ecosystem-internal-pg-spec-guards",
+    "r25-architecture-ecosystem-internal-sqlite-spec-guards",
+    "wink-token-punctuation-word-like",
+    "venice-response-content-type-classifiers",
+    "xai-response-content-type-classifiers",
+    "r3-drivers-arch-wink-utils-ngram-shape",
+    "r3-drivers-arch-xai-http-ws-base-url",
+    "r3-drivers-arch-venice-content-type-probes",
+    "r3-drivers-arch-uspto-download-host-probes"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-architecture-driver-callables.jsonl",
+  "rowArchiveSha256": "2e13a621e31dd9074c08514e154811676153b632e8b07506552dedce4dc3340c",
+  "audit": "data/design-refresh-2026-09-09-r28-architecture-driver-callables.md",
+  "auditSha256": "b8bc78401064eeeb9684897233dbc40202adcba4d4c0be45f4ef4ca30993d20e",
+  "independentEvidenceSha256": {
+    "r28-architecture-ecosystem-internal.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "r28-architecture-ecosystem-internal.execution.json": "9b2a296ba9e136341290402b8f3b0fb0548e359e8e868ed33da775e34fb4cf8b",
+    "r28-drivers-s-z.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "r28-drivers-s-z.execution.json": "a38a93747173910e1dd5a416b5b3a616df1cc26c0d0c29192eb46cb0c32ca9e8"
+  },
+  "note": "Twenty D1 callable records withdrawn; retained actual data owners unchanged. No P3, applied or dry credit."
+}

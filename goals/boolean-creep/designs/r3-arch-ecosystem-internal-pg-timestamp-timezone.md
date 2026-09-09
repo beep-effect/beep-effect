@@ -1,6 +1,8 @@
 # Instance
 
 - id: `r3-arch-ecosystem-internal-pg-timestamp-timezone`
+- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
+- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
 - file:line: `packages/ecosystem/effect-drizzle/src/pg/Column.ts:222`
 - symbol: `SpecDefinition.timestamp` / `Timestamp`
 - members: `ident`, `withTimezone`
@@ -21,6 +23,11 @@ The identity/boolean pair represents four combinations but only two are legal. T
 
 Use the existing `ident` literal owner rather than creating a duplicate domain. Remove `withTimezone` from `SpecDefinition.timestamp`. Change the exported type to `Timestamp<Mode, Identity extends "timestamp" | "timestamptz">` and derive Drizzle's required boolean only at `toDrizzleBuilder` via identity matching. Keep the user-facing `timestamp({ withTimezone })` option because function parameters are outside this campaign; map it once to the descriptor identity in the combinator's return type and writer.
 
+Preserve defaults exactly: omitted `withTimezone` maps to `timestamptz`, true
+maps to `timestamptz`, false maps to `timestamp`, and omitted mode remains
+runtime `string`. Drizzle still receives `withTimezone: ident === "timestamptz"`
+for both modes; this external builder boolean is projected and never stored.
+
 No `LiteralKit` dependency should be introduced merely to restate the existing tagged-enum identity. The target satisfies the named-owner rider by making `ident` the sole internal domain source.
 
 # Migration inventory
@@ -31,7 +38,12 @@ No `LiteralKit` dependency should be introduced merely to restate the existing t
 - `Column.ts:979-987` — remove `withTimezone` property checks and retain identity/mode validation.
 - `Column.ts:1210` and `pg/table.ts:135-138` — update generic inference to the identity parameter without changing selected Drizzle builder types.
 - `pg/combinators.ts:996-1017` — preserve the public boolean option but map its generic and runtime value to `ident`; stop storing the option in column metadata.
-- `packages/ecosystem/effect-drizzle/test`, including type tests and bundle/import-boundary probes — update metadata expectations and prove both identities compile to the same Drizzle builders as before.
+- `test/unit.test.ts:264-270,358-370` and timestamp fixtures — preserve SQL
+  type/default metadata and add both identities and modes.
+- `test/import-boundary.test.ts:188` — retain the proof that the deleted
+  timestamp mismatch error text is absent from the consumer bundle.
+- Package type tests and `pg/table.ts:135-138` — prove both identities retain
+  date/string Drizzle builder inference.
 
 # Guard-deletion accounting
 

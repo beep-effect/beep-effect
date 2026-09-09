@@ -1,6 +1,8 @@
 ## Instance
 
 - id: `r2-tooling-bin-main-fast-paths`
+- source: `7440cb8c4302ce64b87860069a464bafbf65f576`
+- corpus source: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
 - file:line: `packages/tooling/tool/cli/src/bin-main.ts:197`
 - symbol: `handledByQualityFastPath`
 - members: `handledByQualityFastPath`, `handledByCiFastPath`
@@ -89,6 +91,12 @@ Load `LiteralKit` dynamically from the narrow
 boundary remains byte-for-byte unchanged. The startup-contract test must bind
 the new post-boundary narrow load and reject a root `@beep/schema` load.
 
+Keep `rawArgv` and every load through the `fastLintFixNoop` exit at lines
+11-74 unchanged. Classify the normalized `argv` created at line 109, matching
+the current predicates. If the quality predicate wins but
+`parseQualityTaskInvocation` returns `None`, reset to `none` so the full command
+tree still runs.
+
 ## Migration inventory
 
 - `packages/tooling/tool/cli/src/bin-main.ts:197` — replace
@@ -99,6 +107,9 @@ the new post-boundary narrow load and reject a root `@beep/schema` load.
   `canUse*FastPath` boolean predicates with one `fastPathDispatchFromArgv`
   classifier, and preserve all current quality-task, lint-policy, CI, and
   root-global-flag precedence.
+- `packages/foundation/modeling/schema/package.json:203` — the existing
+  `@beep/schema/LiteralKit` export proves the narrow dynamic-import path. No
+  package export edit is required.
 - `packages/tooling/tool/cli/src/bin-main.ts:197-216` — replace
   `handledByQualityFastPath` with the classifier result, dispatch the quality
   case through the literal guard, and reset to `none` only if the existing
@@ -122,6 +133,11 @@ member or either `canUse*FastPath` predicate.
 ## Encoded-side impact
 
 none (internal). The dispatch is local process state and is never encoded.
+
+Preserve accepted argv behavior for quality task heads, the lint-policy
+exception, `ci`, root-global flags in any position, unknown/default commands,
+and the defensive quality-parser `None` fallback. Only the stored dispatch
+representation changes.
 
 ## Test impact
 

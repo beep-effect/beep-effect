@@ -1,6 +1,8 @@
 # Instance
 
 - id: `r2-foundation-unique-match-search`
+- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
+- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
 - file:line: `packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts:32`
 - symbol: `UniqueMatchSearch` / `MinimalFoldMatchSearch`
 - members: `ambiguous`, `match`, `exhausted`
@@ -33,13 +35,13 @@ or a present match are never written and have no reader meaning.
 First run `bun run beep architecture` because the cycle-free implementation
 adds a schema role file. Create an unbarrelled schema leaf
 `Alignment.search.model.ts`. Move the existing public `MatchedText` schema/type
-owner from `Alignment.model.ts` into that leaf, and define beside it the
-schema-backed `UniqueMatchSearch` tagged union with `none`,
-`unique({ match })`, and `ambiguous` cases. Define the separate
-`MinimalFoldMatchSearch` tagged union there with `none`,
-`unique({ match })`, `ambiguous`, and `exhausted` cases. Both search unions use
-named `LiteralKit` owners and `S.toTaggedUnion("kind")`; only `unique` carries
-the same canonical `MatchedText` schema.
+owner from `Alignment.model.ts` into that leaf. Define shared named `none`,
+`unique({ match })`, `ambiguous`, and `exhausted` schema classes beside it.
+One named four-value `LiteralKit` owns the kinds; derive the three-value base
+kind with `omitOptions(["exhausted"])`. `UniqueMatchSearch` unions the first
+three shared cases, while `MinimalFoldMatchSearch` adds exhausted. Both use
+`S.toTaggedUnion("kind")`; only unique carries canonical `MatchedText`. Do not
+duplicate the three common cases or their literals.
 
 `Alignment.model.ts` imports `MatchedText` from the leaf for its own schema
 definitions and explicitly re-exports only `MatchedText`, preserving the
@@ -68,7 +70,7 @@ retains its current public schema/type export.
 
 - `Alignment.search.model.ts` (new; architecture-approved role) — own the
   existing `MatchedText` schema/type and the module-internal exported
-  `UniqueMatchSearch` and `MinimalFoldMatchSearch` tagged unions. Create an
+  shared cases plus `UniqueMatchSearch` and `MinimalFoldMatchSearch` tagged unions. Create an
   identity composer for this leaf, annotate every schema, and import neither
   `Alignment.model.ts` nor `Alignment.behavior.ts`.
 - `Alignment.model.ts:8-20,55-94` — import `MatchedText` from the new leaf,
@@ -103,6 +105,9 @@ retains its current public schema/type export.
 - `Alignment/index.ts:21` — continue exporting `Alignment.model.ts`; do not add
   an export for `Alignment.search.model.ts` or the internal search domains.
 - `packages/foundation/capability/langextract/test/Alignment.test.ts` — retain observable alignment coverage and add cases for none, unique, and ambiguous behavior through the public alignment entrypoint.
+- `Alignment.test.ts:88-203,239-268,296-330` — preserve Unicode UTF-16 span
+  recovery, optional-hyphen ambiguity, shared transition-budget exhaustion,
+  fuzzy suppression, code-point scoring, and schema-derived span bounds.
 
 # Guard-deletion accounting
 

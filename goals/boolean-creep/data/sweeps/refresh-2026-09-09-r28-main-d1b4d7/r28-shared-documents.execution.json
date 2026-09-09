@@ -1,0 +1,22 @@
+{
+  "lane": "r28-shared-documents",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:55:24.575830+00:00",
+  "finished": "2026-09-09T05:04:54.148685+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-shared-documents.jsonl`\n\nCounts: **0 confirmed**, **1 disqualified**. Validator: `inventory OK: 1 records`.\n\nCoverage: every assigned root was scanned (`packages/shared/{domain,tables,use-cases}/src`, `packages/documents/{domain,server,tables,use-cases}/src`; 216 in-scope files). Explicit `S.Boolean` / `BoolKey` / `: boolean` hits, inferred locals, schema structs, type literals, object-literal option bags, and leftover optionals on seeded owners were inspected.\n\nSeeds: all 21 assigned clusters still exist at the claimed owners and members; current writers/readers still support the prior classifications. No corrections, expansions, or withdrawals. No seed drift. No unresolved source question.",
+  "transcriptSha256": "be33e3a43dc2debdefbb1afeaed105dd5210047846d380d4e4382dedf1671486",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

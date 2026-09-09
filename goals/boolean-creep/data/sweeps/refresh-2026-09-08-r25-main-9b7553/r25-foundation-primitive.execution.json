@@ -1,0 +1,17 @@
+{
+  "lane": "r25-foundation-primitive",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T21:41:19.860473+00:00",
+  "finished": "2026-09-08T21:44:46.240848+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-foundation-primitive.jsonl` \u2014 confirmed 0, disqualified 0. Seeds: none (no drift). Covered both assigned areas (`packages/foundation/primitive/data/src`, `packages/foundation/primitive/types/src`).",
+  "transcriptSha256": "b871ef17432c50a51fa28759735cf8b52794b7da76f0d34c9fd69108e295313a",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

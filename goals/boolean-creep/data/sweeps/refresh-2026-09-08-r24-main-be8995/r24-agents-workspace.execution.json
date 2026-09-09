@@ -1,0 +1,13 @@
+{
+  "lane": "r24-agents-workspace",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "started": "2026-09-08T20:23:49.314034+00:00",
+  "finished": "2026-09-08T20:32:30.367209+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "transcriptSha256": "89f7fd8565aee3d0c1d85887cc698d1bdf8b7f1280d12a5f40f9cfdecd422cd3"
+}

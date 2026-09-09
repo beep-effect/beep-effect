@@ -1,156 +1,78 @@
-## Instance
+# Instance
 
 - id: `runners-bake-freshness`
-- file:line: `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:313`
+- exact source SHA: `3330f9881a50c96d3f2ec0fcad76f0f7a09027e4`
+- corpus source SHA: `52fcc8d1353db9481ef9edb6cc9619500f95568d`
+- file:line: `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:304`
 - symbol: `BakeCheckReport`
-- members: `lockfileMatches`, `bunArchiveMatches`, `bunVersionMatches`, `fresh`
-- evidence classes:
-  - E4 — `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:780`: fresh is a stored conjunction of its three sibling probes: `fresh: lockfileMatches && bunArchiveMatches && bunVersionMatches`.
+- members: `lockfileMatches`, `bunArchiveMatches`, `bunVersionMatches`, `fresh`, `actualLockfileSha256`, `actualBunArchiveSha256`, `actualBunVersion`
+- evidence: E4 at `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:757-785` — each match bit is `Option.exists(actual, equalsExpected)`, and `fresh` is their conjunction.
 
-## Current shape
+# Current shape
 
-Live declaration at `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:304` (the affected fields are lines 313–316):
+`BakeCheckReport` stores three expected runner-image inputs, three optional actual AMI-tag values, three match booleans, and an overall `fresh` boolean. `checkBake` is the sole production writer. It decodes the two SHA tags, reads the Bun-version tag, compares each actual with its expected value, then writes `fresh` as the conjunction.
 
-```ts
-export class BakeCheckReport extends S.Class<BakeCheckReport>($I`BakeCheckReport`)(
-  {
-    amiId: S.NonEmptyString,
-    expectedLockfileSha256: Sha256Hex,
-    actualLockfileSha256: S.OptionFromOptionalKey(Sha256Hex),
-    expectedBunArchiveSha256: Sha256Hex,
-    actualBunArchiveSha256: S.OptionFromOptionalKey(Sha256Hex),
-    expectedBunVersion: S.NonEmptyString,
-    actualBunVersion: S.OptionFromOptionalKey(S.NonEmptyString),
-    lockfileMatches: S.Boolean,
-    bunArchiveMatches: S.Boolean,
-    bunVersionMatches: S.Boolean,
-    fresh: S.Boolean,
-  },
-  $I.annote("BakeCheckReport", {
-    description: "Lockfile, Bun release archive, and Bun version freshness result for the live runner AMI pin.",
-  })
-) {}
-```
+Each probe therefore has three meaningful outcomes: missing actual, present mismatch, or present match. A match requires both actual presence and equality with the expected payload. The overall flag adds no independent information. The three probes remain independent, so one tag may match while another is missing or stale.
 
-## Cardinality gap
+The report is a public repo-CLI schema exported with `BakeCheckReportJson`. `runners bake --check --json` encodes it, the human renderer reads lockfile/Bun-version/overall status, and the command exits unsuccessfully when the overall result is stale. No repository caller decodes `BakeCheckReportJson`; its documented use is command output.
 
-The four booleans represent 16 combinations. Only eight are legal: the three probes vary independently, while `fresh` must equal their conjunction. Name each probe state `fresh | stale`; the overall result is derived as `fresh` only for `(fresh, fresh, fresh)`, otherwise `stale`.
+# Cardinality gap
 
-## Target schema
+At the census abstraction, four booleans plus three actual-presence bits expose 128 combinations. Exactly 27 are coherent: each of the three probes independently selects missing, mismatch, or match, and overall freshness is true only when all three match.
 
-Add the reusable payload-free domain beside `BakeMode`, using the file's existing `LiteralKit`, `S`, and `$I` imports. Do not duplicate `BakeMode`; it describes command execution, not probe freshness.
+For each probe:
 
-```ts
-export const BakeFreshness = LiteralKit(["fresh", "stale"]).pipe(
-  $I.annoteSchema("BakeFreshness", {
-    description: "Whether one runner-image input agrees with the active AMI tag.",
-  })
-)
+| actual | match | state |
+| --- | --- | --- |
+| absent | false | missing |
+| present and unequal to expected | false | mismatch |
+| present and equal to expected | true | match |
 
-export type BakeFreshness = typeof BakeFreshness.Type
+Absent/true is impossible, and present values must agree with the named match state. Crossing the three probe states gives 27 rows. Only match/match/match encodes `fresh: true`; the other 26 encode false.
 
-class BakeCheckReportValue extends S.Class<BakeCheckReportValue>($I`BakeCheckReportValue`)(
-  {
-    amiId: S.NonEmptyString,
-    expectedLockfileSha256: Sha256Hex,
-    actualLockfileSha256: S.OptionFromOptionalKey(Sha256Hex),
-    expectedBunArchiveSha256: Sha256Hex,
-    actualBunArchiveSha256: S.OptionFromOptionalKey(Sha256Hex),
-    expectedBunVersion: S.NonEmptyString,
-    actualBunVersion: S.OptionFromOptionalKey(S.NonEmptyString),
-    lockfileFreshness: BakeFreshness,
-    bunArchiveFreshness: BakeFreshness,
-    bunVersionFreshness: BakeFreshness,
-  },
-  $I.annote("BakeCheckReport", {
-    description: "Lockfile, Bun release archive, and Bun version freshness result for the live runner AMI pin.",
-  })
-) {}
+# Target schema
 
-class BakeCheckReportEncoded extends S.Class<BakeCheckReportEncoded>($I`BakeCheckReportEncoded`)(
-  {
-    amiId: S.NonEmptyString,
-    expectedLockfileSha256: Sha256Hex,
-    actualLockfileSha256: S.OptionFromOptionalKey(Sha256Hex),
-    expectedBunArchiveSha256: Sha256Hex,
-    actualBunArchiveSha256: S.OptionFromOptionalKey(Sha256Hex),
-    expectedBunVersion: S.NonEmptyString,
-    actualBunVersion: S.OptionFromOptionalKey(S.NonEmptyString),
-    lockfileMatches: S.Boolean,
-    bunArchiveMatches: S.Boolean,
-    bunVersionMatches: S.Boolean,
-    fresh: S.Boolean,
-  }
-) {}
+Define a private parameterized schema constructor for one `BakeProbeResult` with three cases:
 
-export const BakeCheckReport = BakeCheckReportEncoded.pipe(
-  S.decodeTo(BakeCheckReportValue, BakeCheckReportTransformation),
-  $I.annoteSchema("BakeCheckReport", {
-    description: "Lockfile, Bun release archive, and Bun version freshness result for the live runner AMI pin.",
-  })
-)
-export type BakeCheckReport = typeof BakeCheckReport.Type
+- `missing { expected }`;
+- `mismatch { expected, actual }`;
+- `match { value }`.
 
-export const bakeCheckReportFreshness = (report: BakeCheckReport): BakeFreshness =>
-  BakeFreshness.is.fresh(report.lockfileFreshness) &&
-  BakeFreshness.is.fresh(report.bunArchiveFreshness) &&
-  BakeFreshness.is.fresh(report.bunVersionFreshness)
-    ? BakeFreshness.Enum.fresh
-    : BakeFreshness.Enum.stale
-```
+Instantiate it with `Sha256Hex` for lockfile and Bun archive and `S.NonEmptyString` for Bun version. The match case owns one value because expected and actual are proven equal; the legacy encoder duplicates it into both old fields. Define the decoded `BakeCheckReport` with `amiId`, `lockfile`, `bunArchive`, and `bunVersion` probe results. Derive overall freshness by checking whether all three cases are `match`; do not store a fourth decoded field.
 
-The decoded report stores exactly three independent literal states.
-`bakeCheckReportFreshness` is the only overall projection; no fourth decoded
-field is stored. The named transformation maps the three old `*Matches` flags
-to literals, ignores contradictory redundant `fresh` input in favor of the
-three probes, and re-encodes all four original boolean keys canonically.
+Keep a private legacy encoded schema with the exact existing seven cluster keys and neighboring fields. Connect it to the honest decoded report with one named full-report transformation. Decoding validates actual presence, actual-versus-expected equality, each match bit, and the overall conjunction. Encoding projects the three cases back to the old expected/actual/match fields and derives `fresh`. Reuse `Sha256Hex`, `JsonStringCodec`, existing schema helpers, and schema-derived case guards; do not enumerate 27 combination literals or create three copy-pasted union definitions.
 
-## Migration inventory
+# Migration inventory
 
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:285` — update the JSDoc construction example to the three `*Freshness` literals and derive the overall value with `bakeCheckReportFreshness`.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:313` — replace the four boolean fields with the three literal fields shown above.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:337` — keep `BakeCheckReportJson` on the encoded side of the compatibility codec so public `runners bake --check --json` preserves all four existing keys and boolean values.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:757-768` — map the three live probe comparisons directly to `BakeFreshness.Enum.fresh` or `.stale` and name them `lockfileFreshness`, `bunArchiveFreshness`, and `bunVersionFreshness`.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:772-781` — construct `BakeCheckReportValue` with the three literals and remove the stored `fresh` conjunction at line 780.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:63` — render `report.lockfileFreshness` directly.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:64` — render `report.bunVersionFreshness` directly; do not expand human CLI output with unrelated presentation changes.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:65` — derive the yes/no summary from `BakeFreshness.is.fresh(bakeCheckReportFreshness(report))`.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:129` — derive the check command's success/failure decision from `bakeCheckReportFreshness(result)` instead of reading the removed field.
-- `packages/tooling/tool/cli/src/commands/Runners/index.ts:35` — export `BakeFreshness`, its type, and `bakeCheckReportFreshness` with `BakeCheckReport`.
+- `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts:1-20` — reuse existing schema imports and add only the transformation helper required by the local codec.
+- `Runners.schemas.ts:279-321` — replace the flat public decoded class with the three typed probe results while preserving `amiId`, documentation, and the public `BakeCheckReport` name.
+- `Runners.schemas.ts:323-337` — retain `BakeCheckReportJson = JsonStringCodec(BakeCheckReport)` over the transformed schema so command JSON remains unchanged.
+- `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:739-760` — retain first-image tag selection, exact tag keys, invalid-SHA-to-missing behavior, and string payloads.
+- `Runners.service.ts:761-785` — construct each probe case from its expected and actual values and remove all four Boolean locals/properties. Preserve `Sha256Hex` and string equivalence semantics.
+- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:59-68` — render lockfile and Bun-version freshness from their cases and derive the exact overall yes/no text. Continue omitting a separate Bun-archive line.
+- `Runners.command.ts:82-88,118-131` — retain the JSON encoder/error mapping and derive command success from all three match cases.
+- `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:183-191` and `commands/Runners/index.ts:30-40` — keep the service result and public barrel routed through the same `BakeCheckReport` owner.
+- `packages/tooling/tool/cli/test/runners-bake.test.ts:69-107` — migrate the coherent fresh/stale service fixtures to probe cases without changing their encoded values.
+- `runners-bake.test.ts:263-301,339-415` — preserve mode conflict, human/JSON check output, stale exit, and live scripted-service freshness behavior; add full schema compatibility tables.
 
-Whole-repo searches found no other production read or write of these members.
+Targeted repository and barrel searches found no additional writer, reader, or decoder of the report or its seven correlated fields.
 
-## Guard-deletion accounting
+# Guard-deletion accounting
 
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts:780` — delete the stored conjunction that manually keeps `fresh` coherent with three probes.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:63` — delete the boolean-to-literal ternary for the lockfile.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:64` — delete the boolean-to-literal ternary for the Bun version.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:65` — delete the direct read of the redundant `fresh` boolean; the summary uses the one schema-derived literal projection.
-- `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:129` — delete the second direct `fresh` read at the command exit boundary.
+Delete the three `*Matches` locals, the stored `fresh` conjunction, all seven correlated decoded fields, the renderer's three Boolean reads/ternaries, and the command's direct `result.fresh` guard. The three probe unions become the sole coherence owners; one derived all-match check supplies display and exit behavior. Keep tag presence/decoding and equality comparisons inside the constructors because they classify real external observations rather than recreating returned Boolean aliases.
 
-## Encoded-side impact
+# Encoded-side impact
 
-Tier 2 compatibility codec. `runners bake --check --json` is a public CLI
-contract even when the repository has no internal consumer. Preserve
-`lockfileMatches`, `bunArchiveMatches`, `bunVersionMatches`, and `fresh` with
-the same boolean values. Decoded `*Freshness` fields and tags never appear in
-JSON. A contradictory legacy `fresh` input is canonicalized from the three
-authoritative probe booleans.
+Tier 2 exact compatibility codec. For all 27 coherent reports, compare the new codec's canonical encoded object and JSON string with the old codec's output. Preserve field names and order, `OptionFromOptionalKey` omission, SHA/string bytes, `amiId`, all expected values, all actual values, three match booleans, and `fresh`.
 
-## Test impact
+The old structural schema could parse 101 incoherent combinations, but no writer, fixture, documentation, or decoder consumer gives those payloads contractual meaning. The new full-report decoder rejects an absent/true probe, a match bit that contradicts actual equality, or a `fresh` bit that contradicts the three matches. It must not silently normalize such input. The public documented all-match example and both test fixtures remain exact compatibility rows.
 
-- `packages/tooling/tool/cli/test/runners-bake.test.ts:92-105` — change `checkReport` to construct the three literal fields and remove the redundant `fresh` constructor property.
-- `packages/tooling/tool/cli/test/runners-bake.test.ts:277` — update the fresh and stale render snapshots at lines 284 and 295 only for the renamed lockfile/Bun-version literal reads and derived yes/no summary. Preserve the current human CLI surface exactly; it does not print a separate Bun-archive line.
-- `packages/tooling/tool/cli/test/runners-bake.test.ts:407` — replace `check.fresh` with `BakeFreshness.is.fresh(bakeCheckReportFreshness(check))`.
-- Add a table covering all eight probe combinations. For each row, prove the
-  decoded literals, derived overall freshness, exact four-key CLI JSON, and
-  canonicalization of a redundant `fresh` value that disagrees with the three
-  probes.
+# Test impact
 
-## Risk & sequencing
+Generate the 27 coherent probe combinations with valid synthetic digests and version strings. For every row, prove decoded cases, exact old/new canonical encoding, optional-key omission, match bits, and derived overall freshness. Add rejection tests for each incoherence class: missing actual with true match, equal actual with false match, unequal actual with true match, and contradictory overall freshness. Ensure schema-derived arbitraries generate all 27 case combinations rather than only all-equal fixture shapes.
 
-This Tier 2 singleton lands after the repo-CLI Tier 1 batch, which may change
-the bake command's run-mode handling. Land schema, transform, service writer,
-renderer, barrel, and runner tests together. The primary risk is accidentally
-serializing the honest decoded literals or trusting redundant `fresh` input;
-exact CLI JSON snapshots are the release gate.
+Retain command tests for exact human output, JSON output, stale typed error and exit, first-image/no-image behavior, malformed SHA tags becoming missing, a stale version payload, AWS parsing errors, and successful live service check. No browser QA applies.
+
+# Risk and sequencing
+
+Tier 2 wire-schema refactor. Land schema, transformation, service writer, renderer, barrel, and tests atomically. The main risks are erasing mismatch payloads, treating malformed SHA text as a mismatch instead of the existing missing result, changing key order or optional omission, trusting redundant legacy booleans over the values, or narrowing generated tests to the single production all-match row. The full 27-row compatibility matrix is the release gate.

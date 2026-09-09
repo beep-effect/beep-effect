@@ -1,0 +1,22 @@
+{
+  "lane": "r28-law-practice-domain",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:55:29.251710+00:00",
+  "finished": "2026-09-09T05:03:40.881254+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-law-practice-domain.jsonl`  \nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root under `packages/law-practice/domain/src` was covered (tests, `_generated`, and `internal/generated` excluded). No new eligible \u22652-boolean carriers. Schema-struct seeds still exist at the same owners/members/lines; D1 and designed classifications still match current writers, readers, and constructors.\n\nSeed drift (ineligible, not re-recorded): `changeCompatibility.driftProbes`, `HohfeldPositionKind.orbitGuards`, `ActFrame.shapeProbes`, and `parseClaim.blockGuards` are callable predicates/`S.is` guards, not co-carried Boolean members. No unresolved source question.\n\n\ud83c\udf31 graft saved ~394,300 tokens this turn (7 calls)",
+  "transcriptSha256": "0a0c5ab3ab1dedd9cb65dc9d8f4a0f10dc417c08394aa38f7e4233edbe4f9859",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

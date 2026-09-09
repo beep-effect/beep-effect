@@ -1,0 +1,62 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 805,
+  "afterCount": 802,
+  "beforeInventorySha256": "12c9df6482f9943cbcbc726c5d6cb9052ed60ae9f2e82f4df62b9d5b7e890066",
+  "afterInventorySha256": "acad72f3f654d83efb3cb9a20b41b949eb031a4c9b2f31cb69db55a233c1474b",
+  "correctedIds": [
+    "r2-apps-hero-clip-playback",
+    "receipt-fallback-draft-occupancy"
+  ],
+  "withdrawnIds": [
+    "r2-domains-anthropic-turn-holding-after-failure",
+    "r3-apps-desktop-shell-rpc-access",
+    "hero-clip-layer-flags"
+  ],
+  "withdrawnQualifiedIds": [
+    "r2-domains-anthropic-turn-holding-after-failure",
+    "r3-apps-desktop-shell-rpc-access"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-agent-app-before.jsonl",
+  "rowArchiveSha256": "54cd603b6a10617ddfa5283976ba6449f373d96341fac315e7c7b46d5f6974b9",
+  "designArchive": "history/designs/2026-09-09-r28-agent-app",
+  "archivedDesignSha256": {
+    "r2-apps-hero-clip-playback": "980a35c9342cb22cb3a0906435ede9424371ecffae464bb4f1ddaff7744e82b5",
+    "receipt-fallback-draft-occupancy": "8e1070589700615ea7b0804716049a44cdfca3eab3a3b8615fe716e1b15a0a2f",
+    "r2-domains-anthropic-turn-holding-after-failure": "e890c5d7878a98ffd4f43ce6c59be967841137ee9e31e0fa27561cfe40caeb05",
+    "r3-apps-desktop-shell-rpc-access": "cf7f92ffc986a815e5d415b86729eb1c6ac32182b72b10aa37a1a4e00c4cfd4e"
+  },
+  "currentDesignSha256": {
+    "r2-apps-hero-clip-playback": "5e5a1a60e1bbbaac3add9ce950384ea76f9b89286f95cdd6d5179e4adf35c51f",
+    "receipt-fallback-draft-occupancy": "05d687a01342d185545ada759b82abc152d9187f4dafea5334a06db4cca36a83"
+  },
+  "inputSha256": {
+    "data/design-refresh-2026-09-09-r28-agent-app-owner-boundaries.md": "a78adcb3630820f2e24837f48abdceaf345c25162261bc9bb4ff6af1fa505510",
+    "data/design-refresh-2026-09-09-r28-receipt-occupancy-type.md": "d04ddeef0fb535540b19b0a78266d1d6ad753731eaf7d1f92c9f707de9c04d50",
+    "data/provisional-r28-hero-clip-playback.md": "99b2fe197e06678eb50f5f5dee7711050d02904ff95e08068413ce5dfe7d6334",
+    "data/provisional-r28-receipt-fallback-draft-occupancy.md": "9e93bdc5e387eafd0bb41b0383196b3b275751f713b8e2974644aecab572eee3"
+  },
+  "sourceSha256": {
+    "packages/agents/server/src/AssistantTurn/AnthropicTurnKernel.ts": "ed0ee6337fcadd0f6421489f248b96511acf80c59789a95ff61820fd7a9af354",
+    "apps/professional-desktop/src/App.tsx": "d29376441f5566e197291c37478ca21bac2dc8f2d0bf2c253525ba6b2de5ec17",
+    "apps/professional-desktop/src/transport/SidecarTransport.ts": "c331eeb810a3b0a361a0fd03470e9e58465402aa155623fcfb8454efad653754",
+    "apps/professional-desktop/src/transport/TauriIpcSocket.ts": "6411dd32eb66dbe36926335bb2d86499baca287865adf22042f5b3a12e17c8e5",
+    "apps/professional-desktop/test/schema-parity.test.ts": "be142de3bef997c73819cbe4e89531616b61d6e69f7beac0c1da62e013a55b7b",
+    "apps/professional-desktop/test/tauri-ipc-socket.test.ts": "44a177d779793dd8cf75aae20f97f4e4c03b5dde37d89745f1c5d82406dfc9d8",
+    "apps/oip-web/src/components/HeroVideo.tsx": "e794854408bf5c76eb73c9a25a021c760ff1f082282ba0021c48990c2b9f469d",
+    "apps/oip-web/src/components/OipHomePage.tsx": "0f206bd0762ea1a65adeb4103c0436b2b7b3f450b7eb578c6989bfe040340b66",
+    "apps/oip-web/test/oip-web.test.tsx": "a8a0cf693a8b5cec5e1adf15771638e4ed410e38564be527d5fde967bc55db9a",
+    "packages/agents/client/src/Chat.atoms.ts": "91d8040ca676201732ecab34e6a8de8951598b1495ac800529b8609d82a0ad6a",
+    "packages/agents/client/test/run-turn-reconciliation.test.ts": "d8e2aa5f7ecff76be42fbfae531e0be62ca039dbe0b0ac3f7bb969da57123e2e"
+  },
+  "formalIndependentReview": false,
+  "independentCorrectionClaimed": false,
+  "currentDryCredit": 0,
+  "notes": [
+    "Parent integration of native exact-source findings and the two-compiler inferred Option<boolean> proof. No second apps Grok correction is claimed or requested.",
+    "Withdrawn array/nested-owner qualifications are out of the original census net; source code remains present and unchanged.",
+    "Hero preserves inactive-playing and full media payloads. Receipt preserves full StreamingTurn and Some(false) versus None distinction while deriving the new state from the actual draft Option.",
+    "The two current corrected designs await independent P3 review; historical reviewed statuses do not supply approval."
+  ]
+}

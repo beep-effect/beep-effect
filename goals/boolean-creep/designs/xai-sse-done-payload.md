@@ -96,7 +96,7 @@ Repository-wide search finds no other source or test read/write of this event mo
 
 # Encoded-side impact
 
-none (internal)
+The schema encoding changes from `{ done, data?, index }` to `{ kind, data?, index }`, with `data` required only in the data member. This is an internal parsed-event codec, not xAI's SSE wire: `parseSseData` consumes the provider's `data:` text and the driver never serializes this model back to xAI. `@beep/xai` is private and repository search finds only the in-package language-model consumer and codec fixtures named above, so the decoded TypeScript and internal encoded shape migrate atomically. No compatibility codec is needed for persisted or external data.
 
 # Test impact
 
@@ -106,4 +106,4 @@ none (internal)
 
 # Risk & sequencing
 
-This exported schema is Tier 1 because it is an internal parsed-stream model, not the provider wire JSON. Still, its structural TypeScript/codec shape changes, so land model, parser, language-model consumer, docs, and tests together. Keep this design synchronized with the Venice twin's `kind: "data" | "done"` pattern to avoid provider adapters drifting into different conventions.
+This exported schema is Tier 1 because it is an internal parsed-stream model in a private package, not the provider wire JSON. Its structural TypeScript/codec shape changes, so land model, parser, language-model consumer, docs, and tests together. Keep this design synchronized with the Venice twin's `kind: "data" | "done"` pattern to avoid provider adapters drifting into different conventions.

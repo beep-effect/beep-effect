@@ -10,6 +10,10 @@
 
 The brief's E4 citation is the second projection line; live re-verification found the cited JSDoc invariant at `apps/professional-desktop/src/intake/Intake.atoms.ts:1103`.
 
+Current source rechecked at `7440cb8c4302ce64b87860069a464bafbf65f576`, with an identical
+packages/apps corpus to main `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`.
+This refresh is design preparation; replacement independent P3 review is pending.
+
 ## 2. Current shape
 
 Live declaration at `apps/professional-desktop/src/intake/Intake.atoms.ts:1109`:
@@ -88,7 +92,11 @@ export interface DocumentIntakeSurface {
 }
 ```
 
-Derive the value from the existing upstream `AsyncResult` rather than storing another state:
+Derive the value from the existing upstream `AsyncResult` rather than storing another state.
+Preserve the exact `isSuccess` policy: a success retained while waiting still
+projects configured/onboarding from its Option; both initial and failure
+project pending. Do not add an `isWaiting` guard that hides a retained success:
+
 
 ```ts
 const vaultStatus = AsyncResult.isSuccess(vaultConfig)
@@ -144,7 +152,8 @@ none (internal)
 
 ## 8. Test impact
 
-No test currently reads `configured` or `needsOnboarding`. `apps/professional-desktop/test/intake-atoms.test.ts` exercises the underlying intake and vault-selection atoms but does not assert the surface projection. Add focused atom assertions for all three `DocumentIntakeVaultStatus` cases so pending, configured, and needs-onboarding remain tied to the upstream `AsyncResult<Option<...>>`. Record the affected portless vault-onboarding and file-intake controls and complete browser-qa-loop record -> extract -> judge evidence with `requiredCount: 0`.
+No test currently reads `configured` or `needsOnboarding`. `apps/professional-desktop/test/intake-atoms.test.ts` exercises the underlying intake and vault-selection atoms but does not assert the surface projection. Include initial, failure, and success-with-waiting fixtures; retained success
+must still select configured/onboarding. Add focused atom assertions for all three `DocumentIntakeVaultStatus` cases so pending, configured, and needs-onboarding remain tied to the upstream `AsyncResult<Option<...>>`. Record the affected portless vault-onboarding and file-intake controls and complete browser-qa-loop record -> extract -> judge evidence with `requiredCount: 0`.
 
 ## 9. Risk & sequencing
 

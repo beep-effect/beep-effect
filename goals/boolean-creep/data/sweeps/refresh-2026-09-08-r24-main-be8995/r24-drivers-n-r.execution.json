@@ -1,0 +1,14 @@
+{
+  "lane": "r24-drivers-n-r",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "started": "2026-09-08T20:14:13.111415+00:00",
+  "finished": "2026-09-08T20:24:04.835330+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "transcriptSha256": "bedeba27606dd0867262f115f0737e9daa5ecf6d00e73ac78a964efb40b86c6b",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-drivers-n-r.jsonl` \u2014 confirmed 0, disqualified 3. All 15 assigned `src` trees covered (`runpod` `_generated` excluded). Skip-list file+symbol seeds all still present; no missing declarations. Minor line drift only (e.g. `EngineProfile` first boolean now 56, `StreamState` 229, `ObsRecordStatus` 1129, `PhoenixPromptReadResult` 827)."
+}

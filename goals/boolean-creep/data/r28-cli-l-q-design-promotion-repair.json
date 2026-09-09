@@ -1,0 +1,11 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "priorIntegration": "data/r28-cli-l-q-integration.json",
+  "design": "designs/r28-cli-quality-coverage-resolved-operation.md",
+  "beforeDesignSha256": "bc2a3fe14fd192d0a8f953bb506fa9b744ebf59736e35c900f895b4e3529ade2",
+  "afterDesignSha256": "93c0c2335ba360acbc15037162a7c4da1d01c93a3597c1136a3fef2d983e7f26",
+  "archive": "history/designs/2026-09-09-r28-cli-l-q-promotion/r28-cli-quality-coverage-resolved-operation.md",
+  "reason": "Remove a retained provisional admission paragraph after the promotion; semantic target and source proof are unchanged. The raw request D1 and resolved qualification supersession are now stated as current facts.",
+  "formalIndependentReview": false,
+  "currentDryCredit": 0
+}

@@ -6,6 +6,8 @@ This is the per-instance GATE 2 review surface. It uses the shared literal schem
 ### 1. Instance
 
 - id: `runners-bake-cli-mode`
+- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
+- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
 - file: `packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts:93`
 - symbol: `BakeCliOptions`
 - members: `plan`, `check`
@@ -59,26 +61,37 @@ At `bakeCommand`, resolve `[[plan, "plan"], [check, "check"]]` with fallback `"b
 
 ### 5. Migration inventory
 
-- `Runners.command.ts:38-45` — delete `resolveBakeMode`; the shared exclusive resolver owns legacy-flag collapse and preserves `RunnersCommandError`.
+- `Runners.command.ts:38-45` — retain exported dual `resolveBakeMode` as a
+  compatibility boundary implemented through the shared exclusive resolver.
+  Preserve both call forms, exact error, and all three mappings. Its public
+  barrel, documentation, and direct tests are supported consumers.
 - `Runners.schemas.ts:63-82` — retain `BakeMode` as owner and add `BakeCliOptions` in this schema module.
 - `Runners.command.ts:15-19` — import runtime `BakeMode`/`BakeCliOptions` and the shared exclusive resolver; remove the old type-only mode import.
 - `Runners.command.ts:93-105` — replace `plan`/`check` with `mode: BakeMode` and make the options schema a class.
 - `Runners.command.ts:107-110` — read `options.mode`; remove the local resolution effect.
 - `Runners.command.ts:172-175` — test seam accepts the schema-backed options with `mode`.
 - `Runners.command.ts:177-211` — keep both Flag declarations, resolve them in the adapter, and pass only `mode` onward.
-- `commands/Runners/index.ts:14` — remove the zero-consumer, never-shipped `resolveBakeMode` export in this atomic migration; add no deprecation shim or alias.
+- `commands/Runners/index.ts:14` — retain `resolveBakeMode`. Export
+  `BakeCliOptions` only if a supported caller requires it; do not widen the
+  barrel solely for internal command construction.
 - `runners-bake.test.ts:106-118,279-281,292` — fixtures write `mode` rather than the two booleans.
-- `runners-bake.test.ts:269-273` — replace direct resolver tests with shared adapter/command parsing coverage for all three modes and the conflict.
+- `runners-bake.test.ts:269-273` — retain direct compatibility coverage for
+  both resolver call forms, all three modes, and conflict; add CLI parsing
+  coverage if absent.
 
 ### 6. Guard-deletion accounting
 
 - `Runners.command.ts:42-44` — delete the `plan && check` coherence check and nested ternary mode chain.
-- `Runners.command.ts:23-45` — delete the comment/API that describes domain resolution in terms of booleans.
-- `runners-bake.test.ts:272-273` — remove the test of the deleted local guard; retain equivalent CLI-boundary conflict coverage.
+- `Runners.command.ts:41-45` — delete only the local conditional
+  implementation; the compatibility wrapper delegates to the shared resolver.
+- `runners-bake.test.ts:272-273` — retain the wrapper conflict test and add
+  equivalent CLI-boundary conflict coverage.
 
 ### 7. Encoded-side impact
 
-none (internal). CLI spellings and messages remain stable; no JSON report schema contains these flags.
+none (internal). CLI spellings and messages remain stable; no JSON report
+schema contains these flags. The exported resolver remains source and behavior
+compatible.
 
 ### 8. Test impact
 
@@ -88,5 +101,5 @@ none (internal). CLI spellings and messages remain stable; no JSON report schema
 
 Requires the shared exclusive resolver with both data-first and data-last forms
 preserved. `Runners.command.ts` and its test seam change together;
-`BakeMode` remains the sole domain owner and `resolveBakeMode` disappears
-without a compatibility alias.
+`BakeMode` remains the sole domain owner and `resolveBakeMode` remains a thin
+compatibility boundary over the shared resolver.

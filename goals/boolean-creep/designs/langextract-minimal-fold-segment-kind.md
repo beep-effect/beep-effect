@@ -1,6 +1,8 @@
 # Instance
 
 - id: `langextract-minimal-fold-segment-kind`
+- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
+- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
 - file:line: `packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts:186`
 - symbol: `minimalFoldTokens.segmentKind`
 - members: `endOfLineHyphen`, `whitespace`
@@ -30,15 +32,22 @@ presence and dispatch through its exhaustive `$match`. Use the existing narrow
 Alignment and Extraction models; do not export a behavior-only helper through
 the package barrel.
 
+Preserve capture precedence: group one selects end-of-line hyphen, group two
+selects whitespace, and both ordinary-text alternatives select text. The
+literal controls only token construction; `match.index`, `Str.length`,
+`lowerSegments`, UTF-16 source offsets, code-unit token expansion, and raw
+source-slice recovery remain unchanged.
+
 # Migration inventory
 
 - `Alignment.behavior.ts:9-17` — import `LiteralKit` from the narrow schema
   subpath and define the private named kit beside the minimal-fold constants.
 - `Alignment.behavior.ts:177-203` — replace the temporary boolean object and
   object-pattern branches with one literal derivation and exhaustive match.
-- `Alignment.test.ts:113-149` — retain whitespace and both end-of-line-hyphen
-  behaviors; add a plain-text minimal-fold case if the existing cases do not
-  isolate the third branch.
+- `Alignment.test.ts:88-203` — retain Unicode lowercase expansion and offsets,
+  whitespace folding, dropped/retained end-of-line hyphens, independent
+  repeated-hyphen choices, and ambiguous raw-slice rejection; add an isolated
+  plain-text segment case only if existing public cases do not cover it.
 - Live barrel search found no public `segmentKind` owner and no consumer beyond
   `minimalFoldTokens`; keep the domain private to Alignment behavior.
 

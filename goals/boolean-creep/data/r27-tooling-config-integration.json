@@ -1,0 +1,36 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "recordsBefore": 919,
+  "recordsAfter": 919,
+  "inventoryBeforeSha256": "0210b9e83ec6f619367e0591d9a6aa2ab78e0e765bc2da8933f5d1fc66e27df4",
+  "inventoryAfterSha256": "bf759a04e81b9c6725763fc98b879a9b34a197b78c9e3ecd7e7671b749338311",
+  "supersededSubsetIds": [
+    "r25-tooling-library-policy-test-experimental-config-residue",
+    "r25-tooling-library-policy-test-tsconfig-compiler-options-residue"
+  ],
+  "updatedStableIds": [
+    "tooling-rest-experimental-config",
+    "ts-node-compiler-options",
+    "tsconfig-compiler-options",
+    "tsconfig-compiler-options-export"
+  ],
+  "newDisqualifiedIds": [
+    "canonical-docgen-examples-compiler-options",
+    "r27-tooling-policy-docs-eslint-file-overview-package-documentation"
+  ],
+  "compilerBooleanMembers": 85,
+  "experimentalBooleanCapableMembers": 98,
+  "qualifiedRecordsUnchanged": true,
+  "qualifiedCount": 162,
+  "disqualifiedCounts": {
+    "D2": 165,
+    "D1": 592
+  },
+  "archives": {
+    "history/inventory/2026-09-09-r27-tooling-config-superseded.jsonl": "788dcfec57ac7fbf0fe8e82c7b73149084bc25ff2b5d5fa50d154aefbfe5b4a4",
+    "history/inventory/2026-09-09-r27-tooling-config-corrections.jsonl": "9f7810fae5d8b72d6cfbd43f9ade0b79ab544f30f9aa6ca6703a8414c25c768b"
+  },
+  "audit": "data/design-refresh-2026-09-09-r27-tooling-config-census.md",
+  "formalIndependentReview": false
+}

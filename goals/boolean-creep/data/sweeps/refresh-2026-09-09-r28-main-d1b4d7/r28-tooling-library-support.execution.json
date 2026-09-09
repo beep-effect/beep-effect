@@ -1,0 +1,22 @@
+{
+  "lane": "r28-tooling-library-support",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T05:04:54.151398+00:00",
+  "finished": "2026-09-09T05:14:53.293066+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tooling-library-support.jsonl`\n\nCounts: **0 confirmed**, **3 disqualified**. Validator: inventory OK (3 records).\n\nCoverage: all four assigned roots scanned (`codegen-kit/src`, `repo-utils/src`, `fc-runs/src`, `test-utils/src`).\n\nSeed drift: eligible schema/CLI/config seeds still exist with the same members and classes (including the 85 compiler-option booleans and designed `codegen-kit-cli-mode`); not re-recorded. Ineligible callable/method seeds withdrawn rather than kept as D1: `makePgliteSqlTestLayer.modeGates`, `addExportDocs.statementGates`, `normalizeJSDocCategoryKey.charClassGates`, `nullableTypeArray.nodeGates`, `firstRelativeDotPath.valueGates`, `TSConfig.optionHelpers`, `FsUtils.statKind`, `ProcessArgs.optionLikeGates`, `Workspaces.patternGates`, `PackageJsonTools.issueGates`. `TSMorph.service.pathErrorGates` was already withdrawn as `r3-tooling-tsmorph-path-error-gates`. `makePgliteIntegrationGate.driverGates` remains a real sibling boolean pair and stays D1.\n\nNo unresolved source question.",
+  "transcriptSha256": "77ed26dbf6d0ab38883f8996a2dd3f7f265332499d5161c21adcc43b404dbe82",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 3 records, 3 unique ids\n"
+}

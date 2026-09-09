@@ -1,0 +1,27 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "advancedIds": [
+    "ai-metrics-source-attribution-thread-spawn",
+    "ai-metrics-discovered-transcript-file-thread-spawn",
+    "ai-metrics-sanitized-transcript-thread-spawn",
+    "ai-metrics-otlp-turn-export-row-thread-spawn"
+  ],
+  "transition": "confirmed -> designed",
+  "inventoryBeforeSha256": "775ae4cefd03eef80542b767a8d496d6a5edfd2fec184b57a17515c82d070e9a",
+  "inventoryAfterSha256": "1ac0b4454801a600ed65fd5a5ae214c6f8a816f6012610d8c6f3de27297c76fe",
+  "designSha256": {
+    "designs/ai-metrics-source-attribution-thread-spawn.md": "912220c2170989862b74633fee2c494f0da6680e905ad88b276cf6d7273b392d",
+    "designs/ai-metrics-discovered-transcript-file-thread-spawn.md": "9081202849f3bfebdf1e4d77b10ba6277bcd3419b524733f4c1832002839d4be",
+    "designs/ai-metrics-sanitized-transcript-thread-spawn.md": "9a271e857b6f7d1512d8b7b2d9d215e3507a6e353b32c8fe10ec1f1f790cdfbe",
+    "designs/ai-metrics-otlp-turn-export-row-thread-spawn.md": "dd4152aab9fcc25eaaa425e574983eb3b881d78fa53c728146ba4ebbc0d53ffb"
+  },
+  "archive": "history/inventory/2026-09-09-r27-attribution-design-advancement.jsonl",
+  "independentCensus": "data/sweeps/refresh-2026-09-09-r27-main-663904/r27-observability-contract-correction1.execution.json",
+  "formalIndependentReview": false,
+  "implementationProofPending": [
+    "Never/Option arbitrary derivation",
+    "whole-union missing-role primary default dispatch",
+    "complete encoded and temporal storage fixture matrix"
+  ]
+}

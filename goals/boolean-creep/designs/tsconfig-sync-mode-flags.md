@@ -6,6 +6,8 @@ This is the per-instance GATE 2 review surface. It uses the shared literal schem
 ### 1. Instance
 
 - id: `tsconfig-sync-mode-flags`
+- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
+- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
 - file: `packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts:425`
 - symbol: `TsconfigSyncModeFlags`
 - members: `check`, `dryRun`, `write`
@@ -19,7 +21,10 @@ export type TsconfigSyncModeFlags = readonly [check: boolean, dryRun: boolean, w
 
 ### 3. Cardinality gap
 
-Eight tuples are representable but the legal semantic states are `check`, `dry-run`, and `sync`. Explicit `--write` and no mode flag both mean `sync`; combined inputs collapse by current precedence.
+All eight CLI tuples are accepted inputs. They resolve to three semantic modes:
+`check`, `dry-run`, and `sync`. Explicit `--write` and no mode flag both mean
+`sync`; combined inputs collapse by current precedence. Do not describe the
+five combined tuples as illegal or newly reject them.
 
 ### 4. Target schema
 
@@ -59,8 +64,14 @@ none (internal). `TsconfigSyncRunOptions` already carries the literal `mode`; ge
 
 ### 8. Test impact
 
-`packages/tooling/tool/cli/test/tsconfig-sync.test.ts` retains the explicit write CLI case. `cli-kits.test.ts:85-99` should own precedence regression coverage after the local predicates disappear.
+`packages/tooling/tool/cli/test/tsconfig-sync.test.ts` retains the explicit
+write CLI case. Add a local table for all eight accepted triples and their
+exact result (`check` wins, then `dry-run`, then `sync`). Generic
+`cli-kits.test.ts` coverage proves the shared helper, but cannot replace this
+command-specific candidate ordering and default.
 
 ### 9. Risk & sequencing
 
-Reuse the existing dual data-first/data-last `resolveRunMode` API. Preserve current combined-flag precedence; changing it to rejection is outside this ratified design.
+Reuse the existing dual data-first/data-last `resolveRunMode` API. Preserve all
+eight accepted inputs and current combined-flag precedence; changing any tuple
+to rejection is outside this ratified design.

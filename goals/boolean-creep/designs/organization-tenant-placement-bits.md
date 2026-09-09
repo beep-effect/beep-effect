@@ -1,6 +1,8 @@
 # Instance
 
 - id: `organization-tenant-placement-bits`
+- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
+- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
 - file:line:
   `packages/shared/domain/src/entities/Organization/Organization.behavior.ts:38`
 - symbol: `hasValidTenantPlacement`
@@ -70,6 +72,11 @@ export const tenantPlacement = (
 existing API deliberately observes both invalid combinations. Do not invent a
 stored placement field or change the encoded `Organization.Model`; derive the
 value from `id`, `orgId`, and `parentOrgId` on every call.
+
+Preserve the existing identifier equivalence and already-decoded
+`Option<OrganizationId>` input. `None` replaces the current false result for
+both invalid placements; it is not a schema decode failure and must not change
+the model's existing invalid-id or nullable-parent decoding errors.
 
 # Migration inventory
 

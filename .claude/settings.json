@@ -57,7 +57,11 @@
       "Bash(graft map:*)",
       "Bash(graft blast:*)",
       "Bash(graft check:*)",
-      "Bash(graft build:*)"
+      "Bash(graft build:*)",
+      "Bash(graft:*)",
+      "Bash(npx graft:*)",
+      "Bash(graft-dev:*)",
+      "Bash(node dist/cli.js:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
@@ -149,7 +153,7 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" post-edit",
-            "timeout": 10
+            "timeout": 10000
           }
         ]
       },
@@ -159,7 +163,7 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" tool-savings",
-            "timeout": 8
+            "timeout": 8000
           }
         ]
       }
@@ -204,7 +208,7 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" prompt",
-            "timeout": 15
+            "timeout": 15000
           }
         ]
       }
@@ -231,7 +235,7 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" session-start",
-            "timeout": 8
+            "timeout": 8000
           }
         ]
       }
@@ -256,7 +260,7 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" stop",
-            "timeout": 8
+            "timeout": 8000
           }
         ]
       }
@@ -293,5 +297,6 @@
   "subagentStatusLine": {
     "type": "command",
     "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
-  }
+  },
+  "footerLinksRegexes": ["graft/[\\w./-]+\\.md"]
 }

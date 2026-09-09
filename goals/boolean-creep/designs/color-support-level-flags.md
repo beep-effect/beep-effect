@@ -6,7 +6,7 @@
 - members: `hasBasic`, `has256`, `has16m`
 - evidence classes:
   - E4 at `packages/foundation/capability/chalk/src/internal/SupportsColor.ts:323` — translateLevel projects one ColorSupportLevel into bits: has16m:=level>=3, has256:=level>=2, hasBasic:=true; level 0 becomes ColorInfo false rather than all-false flags.
-  - E1 at `packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts:41` — Browser writes only the implied stack: truecolor sets all three true; basic sets hasBasic only. Combined-false and inverted stacks are never written.
+  - E4 at `packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts:41` — Browser writes only the implied stack: truecolor sets all three true; basic sets hasBasic only. Combined-false and inverted stacks are never written.
 
 # Current shape
 

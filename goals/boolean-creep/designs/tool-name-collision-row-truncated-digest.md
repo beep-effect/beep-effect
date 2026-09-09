@@ -5,45 +5,47 @@
 - symbol: `ToolNameCollisionRow`
 - members: `truncated`, `digest`
 - evidence classes:
-  - E3 at `packages/drivers/gov-legal-mcp/src/ToolNames.ts:439-440` — the sole projection computes `digest` only when `truncated` is true.
-  - E1 at `packages/drivers/gov-legal-mcp/src/ToolNames.ts:448-457` — production construction emits only full/null or truncated/digest rows.
+  - E3 at `packages/drivers/gov-legal-mcp/src/ToolNames.ts:439-440` — the projection computes a digest only for a truncated name.
+  - E1 at `packages/drivers/gov-legal-mcp/src/ToolNames.ts:448-457` — its sole writer emits full/null or truncated/string rows.
 
 # Current shape
 
-The exported row schema stores `truncated: boolean` beside `digest: string | null`. `projectToolNameCandidate` derives both from the same normalized-length comparison, then derives `finalWireName` from that pair. `ToolNameCollisionReport` embeds the row in the versioned `gov-legal-mcp/tool-name-collision-report/v1` document; the generator commits that JSON under `src/_generated/`.
+`ToolNameCollisionRow` is declared at `ToolNames.ts:144-158`; the inventory’s line 153 points to the `truncated` member, while `digest` is at line 147. It stores `truncated: boolean` beside `digest: string | null`. `projectToolNameCandidate` at `:433-459` derives both and `finalWireName` from one length comparison. `buildToolNameCollisionReport` at `:483-531` rewrites only duplicate verdicts. `ToolNameCollisionReport` embeds rows in `gov-legal-mcp/tool-name-collision-report/v1`; `renderToolNameCollisionReport` at `:554-555` currently canonicalizes the decoded object directly, and `scripts/generate.ts:51-64` writes it under `src/_generated/`.
 
 # Cardinality gap
 
-The pair represents four combinations. Two are legal: a full name with a null digest and a truncated name with its eight-character digest. The other two let callers claim truncation without its suffix or attach a digest to an untruncated name.
+The pair represents four boolean/nullability combinations. Two are legal: full with null digest, and truncated with string digest. The current schema accepts two contradictions.
 
 # Target schema
 
-Keep a legacy encoded `ToolNameCollisionRowEncoded` struct with the exact existing keys. Decode through a fallible compatibility transform to an honest nested tagged union, `nameForm: full | truncated({ digest })`, while retaining candidate, duplicate verdict, final wire name, normalized name, operation id, and source at the row level. Build the union from one named `LiteralKit` and `S.toTaggedUnion`; do not retain a decoded `truncated` projection.
+Keep a private `ToolNameCollisionRowEncoded` with every exact old key and schema, including `truncated: S.Boolean` and `digest: S.NullOr(S.String)`. Define one `LiteralKit(["full", "truncated"])`, named `ToolNameFull` and `ToolNameTruncated` classes discriminated by `form: S.tag(...)`, and `ToolNameForm = S.Union(...).pipe(S.toTaggedUnion("form"))`. The truncated case owns `digest: S.String`; do not strengthen it beyond the existing accepted string domain.
 
-Decode accepts the two coherent legacy shapes and rejects the two contradictory shapes with a typed schema issue. Encode maps the two decoded members back to the exact old `truncated` and `digest` values. The existing public `ToolNameCollisionRow` value remains the compatibility codec and reattaches the decoded union's `cases`, `guards`, and `match` statics.
+Define `ToolNameCollisionRowValue` with unchanged row fields plus `nameForm: ToolNameForm`. Export `ToolNameCollisionRow` as a fallible compatibility codec and its decoded type via `typeof ToolNameCollisionRow.Type`. Decode only false/null and true/string; reject contradictions. Encode both cases back to exact old values. Use the form union’s own derived cases/guards/match; do not graft statics or `.make` onto the transformed row codec.
 
 # Migration inventory
 
-- `packages/drivers/gov-legal-mcp/src/ToolNames.ts:144-158` — split encoded and decoded row schemas, add the compatibility transform, and preserve the public symbol.
-- `packages/drivers/gov-legal-mcp/src/ToolNames.ts:295-321` — ordering/grouping continue to read row-level fields only.
-- `packages/drivers/gov-legal-mcp/src/ToolNames.ts:433-459` — construct `full` or `truncated({ digest })` exactly once from the length branch; derive `finalWireName` from that member.
-- `packages/drivers/gov-legal-mcp/src/ToolNames.ts:483-507` — duplicate-verdict rewriting must preserve `nameForm` while changing only `duplicateVerdict`.
-- `packages/drivers/gov-legal-mcp/src/ToolNames.ts:554-596` — rendering and the production report continue through the compatibility codec.
-- `packages/drivers/gov-legal-mcp/scripts/generate.ts:51-64` — retain the same generated report path and renderer.
-- `packages/drivers/gov-legal-mcp/test/Server.test.ts:471-654` — migrate decoded assertions from `truncated`/`digest` to exhaustive `nameForm` matching while retaining exact JSON assertions.
+- `ToolNames.ts:144-176` — add literal kit, two form cases, exact encoded row, decoded row class, and fallible codec.
+- `ToolNames.ts:295-321` — sorting/grouping read row-level fields only and remain behaviorally unchanged.
+- `ToolNames.ts:433-459` — branch once on normalized length, construct one name-form case, and derive final name from that case.
+- `ToolNames.ts:483-507` — duplicate rewriting reconstructs `ToolNameCollisionRowValue`, preserving `nameForm` and changing only `duplicateVerdict`.
+- `ToolNames.ts:554-555` — encode `ToolNameCollisionReport` through its schema before `renderCanonicalValue`; convert the synchronous Result failure with `Result.getOrThrowWith`. This is required because direct canonicalization of decoded values would emit `nameForm` and an Effect Option representation.
+- `ToolNames.ts:594-596` — production report remains decoded in memory.
+- `scripts/generate.ts:51-64` — keep the same renderer/path; regenerated bytes must be identical.
+- `test/Server.test.ts:467-543,557-655` — migrate decoded assertions to exhaustive `nameForm` matching while retaining collision, arbitrary, generated parity, ordering, and schema decode tests.
+- `src/index.ts` and existing `ToolNames` export path — verify the current wildcard/barrel path already exposes required public symbols; add no parallel helper module.
 
 # Guard-deletion accounting
 
-Delete the `if (row.truncated)` test branch in `Server.test.ts` and the production ternaries that separately maintain `truncated`, `digest`, and `finalWireName`. One exhaustive match over `nameForm` owns digest access. The compatibility transform remains as the required Tier 2 boundary.
+Delete production ternaries that separately derive `truncated`, `digest`, and final name at `ToolNames.ts:439-450`. Delete the test branch `if (row.truncated)` and its null guard at `Server.test.ts:594-600`; exhaustively match `nameForm`, where digest exists only in the truncated case. The boundary transform remains the sole coherence guard.
 
 # Encoded-side impact
 
-None. Encoding must preserve the version, every row key, null versus string digest, boolean `truncated`, ordering, and rendered JSON bytes of the checked-in production report. Both coherent legacy row shapes round-trip exactly; contradictory rows reject instead of entering decoded code.
+The version, row keys, `truncated` boolean, digest null/string, candidate order, key order, LF formatting, and trailing newline remain byte-identical. `renderToolNameCollisionReport` must schema-encode the decoded report before canonical rendering. Both coherent old rows round-trip exactly; contradictory rows reject. `nameForm` and its tag never appear in JSON. No generated file should change when the implementation is correct.
 
 # Test impact
 
-Retain the existing normalization, collision, generated-file parity, schema round-trip, and deterministic-render tests. Add all four encoded boolean/null combinations: prove exact round trips for the two legal shapes and typed rejection for the two contradictory shapes. Compare `renderToolNameCollisionReport(ProductionToolNameCollisionReport)` byte-for-byte with `src/_generated/tool-name-collision-report.json`.
+Test all four old boolean/null combinations: exact round trips for two legal cases and typed rejection for two contradictions. Preserve arbitrary deterministic projection, 64-character cap, frozen digest collision, duplicate annotations, schema JSON decode, and byte comparison against `src/_generated/tool-name-collision-report.json`. Assert old row keys/order and absence of `nameForm`.
 
 # Risk & sequencing
 
-Tier 2 singleton. The public codec, generator, checked-in artifact, projection, duplicate rewrite, and tests land atomically. Run full `@beep/gov-legal-mcp` package verification; do not treat the generated report as disposable output.
+Tier 2 singleton. Directly rendering decoded union values is the main compatibility hazard; schema encoding before canonical rendering is mandatory. Land codec, projection, duplicate rewrite, renderer, generator parity proof, and tests atomically. No new stored state or generic helper abstraction is introduced.

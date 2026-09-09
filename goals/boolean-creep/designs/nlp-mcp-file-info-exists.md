@@ -87,7 +87,7 @@ const FileInfoOutputDecoded = FileInfoKind.mapMembers(
   Tuple.evolve([FileInfoMissing.thunkThis, FileInfoPresent.thunkThis])
 ).pipe(S.toTaggedUnion("kind"));
 
-const FileInfoOutputEncoded = S.Struct({
+export const FileInfoOutputEncoded = S.Struct({
   exists: S.Boolean,
   lineCount: S.optionalKey(NonNegativeInteger),
   sizeBytes: S.optionalKey(NonNegativeInteger),
@@ -150,8 +150,12 @@ Effect-v4 transform form against `.repos/effect`. The decoded discriminator is
 
 # Migration inventory
 
-- `packages/drivers/nlp-mcp/src/StreamingTools.ts:18-20` — import `LiteralKit`, `Effect`, `SchemaIssue`, `SchemaTransformation`, and `Tuple` in addition to existing schema helpers.
+Refreshed against source SHA `be8995e66aeefedf0dabf131deaeaaf25c8e6fc8` on 2026-09-08.
+
+- `packages/drivers/nlp-mcp/src/StreamingTools.ts:1-9` — revise the module prose that claims every output is a plain `S.Struct`; file-info now has a stable structural encoded side and an honest tagged decoded side.
+- `packages/drivers/nlp-mcp/src/StreamingTools.ts:18-20` — add `LiteralKit`, `Effect`, `SchemaIssue`, `SchemaTransformation`, and `Tuple` to the existing schema-helper imports.
 - `packages/drivers/nlp-mcp/src/StreamingTools.ts:110-169` — update examples/types and replace the loose class bag with the encoded schema, decoded tagged union, and transformation above.
+- Export `FileInfoOutputEncoded` from the existing `@beep/nlp-mcp/StreamingTools` subpath as the exact old-shape reference codec used by compatibility tests; keep the root package barrel unchanged.
 - `packages/drivers/nlp-mcp/src/StreamingTools.ts:1537-1544` — keep `FileInfoOutput` as `Tool.make(...).success`; this is the wire encoder that must use the compatibility transformation.
 - `packages/drivers/nlp-mcp/src/StreamingHandlers.ts:27` — import the transformed `FileInfoOutput` value with `StreamingToolkit`; its reattached tagged-union statics are the constructor surface.
 - `packages/drivers/nlp-mcp/src/StreamingHandlers.ts:176-181` — missing writer becomes `FileInfoOutput.cases.missing.make({})`.
@@ -179,14 +183,16 @@ shape-equivalently (property order is not contractual). For compatibility,
 `{ exists: false }` with either or both stale statistic fields also decodes to
 missing and re-encodes canonically as `{ exists: false }`. Reject
 `{ exists: true }`, one-stat present inputs, and other incomplete present
-payloads. Add explicit normalization and rejection proofs before landing.
+payloads. The stale-false normalization and incomplete-true rejection are the
+explicit campaign rider, not claims of byte equality with the old permissive
+codec. Add explicit normalization and rejection proofs before landing.
 
 # Test impact
 
-- `packages/drivers/nlp-mcp/test/Streaming.schema.test.ts:46-60,74-83` — retain schema-derived round trips and add explicit decode/encode assertions for both tagged cases and both stable legacy JSON shapes.
+- `packages/drivers/nlp-mcp/test/Streaming.schema.test.ts:46-60,74-83` — retain schema-derived round trips and add explicit decode/encode assertions for both tagged cases and both stable legacy JSON shapes. For `{ exists: false }` and complete `{ exists: true, lineCount, sizeBytes }`, compare `encodeNew(decodeNew(input))` with `encodeOld(decodeOld(input))` through `FileInfoOutputEncoded`.
 - `packages/drivers/nlp-mcp/test/integration/Streaming.test.ts:195-206` — retain the live tool assertion that the encoded result has `exists: true` and `lineCount: 3`; add `sizeBytes` and a missing-file call asserting exactly `{ exists: false }`.
-- Add false-with-one-stat and false-with-both-stats decode tests proving both normalize to missing and emit no stale statistics.
-- Add true-with-no-stats and both true partial-stat cases proving decode rejection.
+- Add false-with-one-stat and false-with-both-stats decode tests proving the explicitly authorized divergence from the old codec: both normalize to missing and emit no stale statistics.
+- Add true-with-no-stats and both true partial-stat cases proving the explicitly authorized rejection. Do not tighten the complete present row or missing row, and retain the current rejection of null statistics.
 - No external repository test consumes a decoded `FileInfoOutput` member directly.
 
 # Risk & sequencing

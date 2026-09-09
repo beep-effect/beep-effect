@@ -1,0 +1,14 @@
+{
+  "lane": "r24-architecture-ecosystem-internal",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "started": "2026-09-08T20:17:34.022877+00:00",
+  "finished": "2026-09-08T20:27:12.915432+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-architecture-ecosystem-internal.jsonl` \u2014 confirmed 0, disqualified 1. All assigned areas covered. Seeds still present; line drift: Meta 234/271 \u2192 269/275, SpecDefinition.timestamp 222 \u2192 227 (`withTimezone`).",
+  "transcriptSha256": "5eeffa03544553072b637767356ed8b981f598254ad8e1cfbfcc1dbd644d1fba"
+}

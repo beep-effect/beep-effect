@@ -1,0 +1,17 @@
+{
+  "lane": "r25-tool-docgen",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:20:01.196325+00:00",
+  "finished": "2026-09-08T22:25:38.558838+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 5,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-tool-docgen.jsonl` \u2014 confirmed 0, disqualified 5. Covered all of `packages/tooling/tool/docgen/src`. Seed drift: `ConfigurationShape.runExamples` is gone; the other four seed clusters still exist.",
+  "transcriptSha256": "4302483d5c734877f50bddf8a241fbe8a08a3cdb095eb3cc8266818b47a73d1b",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

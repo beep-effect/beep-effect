@@ -1,10 +1,12 @@
 # Instance
 
 - id: `html-select-child-grammar`
-- file:line: `packages/foundation/modeling/html/src/Html.conformance.ts:1912`
+- exact source SHA: `3330f9881a50c96d3f2ec0fcad76f0f7a09027e4`
+- corpus source SHA: `52fcc8d1353db9481ef9edb6cc9619500f95568d`
+- file:line: `packages/foundation/modeling/html/src/Html.conformance.ts:1916`
 - symbol: `inspectElementOrder.select`
 - members: `traditional`, `customizable`
-- evidence: E1 at `Html.conformance.ts:1912-1918` — both values are derived
+- evidence: E1 at `Html.conformance.ts:1916-1922` — both values are derived
   from one `sequenceTags` input; the traditional predicate admits only
   option/optgroup/hr while customizable requires a leading button, so the
   writer cannot produce combined true.
@@ -24,22 +26,26 @@ legal: `traditional`, `customizable`, and `invalid`.
 # Target schema
 
 Define a private named `SelectChildGrammar` LiteralKit with `traditional`,
-`customizable`, and `invalid`. Add one pure classifier over `sequenceTags`
-that preserves traditional precedence (including the empty sequence), then
-match the resulting literal to accept the two valid cases and emit the existing
-issue for `invalid`. Do not store the derived classification.
+`customizable`, and `invalid`. Derive it locally from `sequenceTags`, checking
+traditional first so empty and script-supporting-only sequences remain
+traditional, then customizable, then invalid. Match the literal to accept the
+two valid cases. Invalid retains the parent path, `elementOrder`, and exact
+message `<select> must use either the traditional or customizable-select child grammar`.
+Do not store the classification or add a generic grammar classifier.
 
 # Migration inventory
 
 - `Html.conformance.ts` imports — reuse the package's existing `@beep/schema`
   dependency and add the narrow named LiteralKit beside other conformance
   classifiers.
-- `Html.conformance.ts:1721-1722` — place the private grammar owner next to the
+- `Html.conformance.ts:1725-1726` — place the private grammar owner next to the
   sequence grammar definitions used by `inspectElementOrder`.
-- `Html.conformance.ts:1911-1922` — replace both booleans and their OR with one
+- `Html.conformance.ts:1915-1926` — replace both booleans and their OR with one
   exhaustive classification and literal match; retain the exact issue path,
   rule, and message.
-- `Html.coverage-matrix.test.ts:152-190` and all select-order fixtures — retain
+- `Html.conformance.ts:2153-2169` — no edit; content-model diagnostics remain
+  earlier than element-order diagnostics in the global issue sequence.
+- `Html.coverage-matrix.test.ts:154-192` and all select-order fixtures — retain
   traditional, customizable, and invalid coverage and add an explicit empty
   and mixed-grammar table if not already direct.
 - Whole-source and package-barrel search found no consumer of these private

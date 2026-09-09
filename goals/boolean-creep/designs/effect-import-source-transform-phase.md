@@ -73,3 +73,12 @@ counts/file lists remain stable. Keep package-source imports through
 Tier 1E with the other Effect Imports internal changes. Preserve the
 distinction between manual-review-only and actual rewritten content; never use
 the broader disposition to decide whether to replace a fenced source.
+
+
+The R28 request-boundary audit preserves the raw Effect Imports options and
+both intentional conflict diagnostics. This private transformation migration
+requires no raw-option migration and no FlakeQuarantine predicate refactor.
+The public summary codec belongs to its separate Tier 2 singleton after the
+ordered Tier 1 batches. Coordinate the shared EffectImports.ts file serially.
+R28 source evidence is bound by data/r28-cli-l-q-integration.json; independent
+P3 remains required.

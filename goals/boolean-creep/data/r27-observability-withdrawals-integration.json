@@ -1,0 +1,54 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "recordsBefore": 919,
+  "recordsAfter": 915,
+  "inventoryBeforeSha256": "bf759a04e81b9c6725763fc98b879a9b34a197b78c9e3ecd7e7671b749338311",
+  "inventoryAfterSha256": "b3ffc5e5f4b15359ecc44dee266f19d39b2ec8bcb457233b1c5032f5c0220c2d",
+  "withdrawnOutOfNetIds": [
+    "ai-metrics-scorecard-readiness",
+    "ai-metrics-scorecard-summary-readiness",
+    "r2-tooling-ai-metrics-thread-spawn-wire",
+    "r2-tooling-hook-pulse-interrupt",
+    "r2-tooling-phoenix-insufficient-storage-wire",
+    "r2-tooling-qa-beacon-polarity"
+  ],
+  "withdrawnQualifiedIds": [
+    "ai-metrics-scorecard-readiness",
+    "ai-metrics-scorecard-summary-readiness"
+  ],
+  "addedDisqualifiedIds": [
+    "ai-metrics-benchmark-run-input-passed-quality-gate",
+    "agent-effectiveness-phoenix-sync-new-options"
+  ],
+  "qualifiedCount": 160,
+  "qualifiedTiers": {
+    "1": 126,
+    "2": 34
+  },
+  "qualifiedStatuses": {
+    "reviewed": 36,
+    "designed": 124
+  },
+  "disqualifiedCounts": {
+    "D2": 162,
+    "D1": 593
+  },
+  "archives": {
+    "history/inventory/2026-09-09-r27-observability-withdrawals.jsonl": "cf19e79b7e3a9021832a91bbbdfb022529818c9496d68ad1c4821f0517274ade",
+    "history/designs/2026-09-09-r27-ai-metrics-scorecard-readiness.md": "87b849876c511f7ff5fad7946c6189d28ebe18275cb1a8402b7df1a160f4e2ab",
+    "history/designs/2026-09-09-r27-ai-metrics-scorecard-summary-readiness.md": "215d77928f0dc767dd83cae6d9b5b4d271ade3a024f8dae008586ef2a4b978e7"
+  },
+  "audit": "data/design-refresh-2026-09-09-r27-observability-carriers.md",
+  "auditSha256": "e57ce5bcaa9396177b69ee92b8bb43657ebce68dadaf7738c4396642ee81db1c",
+  "pendingQualifiedProposals": [
+    "r27-tooling-library-observability-outcomes-dataset-scorecard-presence",
+    "r27-tooling-library-observability-config-snapshots-dataset-presence",
+    "hook-pulse-v1-owned-fields",
+    "ai-metrics-source-attribution-thread-spawn",
+    "ai-metrics-discovered-transcript-file-thread-spawn",
+    "ai-metrics-otlp-turn-export-row-thread-spawn"
+  ],
+  "independentCorrectionRequired": true,
+  "formalIndependentReview": false
+}

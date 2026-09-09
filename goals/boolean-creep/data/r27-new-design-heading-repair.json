@@ -1,0 +1,16 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "reason": "Required exact design section names became checkable after canonical admission; existing proof prose retained.",
+  "designs": {
+    "r27-cli-commands-d-k-normalize-manifest-dedupe-move": {
+      "beforeSha256": "44f7ef658af241429555523c8129e647f48bee70c7db68115c349d23758e7eca",
+      "afterSha256": "f8130c5d4b82bdf888ba49df9a78128c1d7ba2fbbcc54d1d4c25cdbe168aca60",
+      "archive": "history/designs/2026-09-09-r27-pre-heading-repair-r27-cli-commands-d-k-normalize-manifest-dedupe-move.md"
+    },
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse": {
+      "beforeSha256": "0ba870ad1f3075b0d02281d54e6a14b817496a738cfb50e9476e510cc94bbe93",
+      "afterSha256": "dab5e5a7d8880a766821c6af266b111c4f279009406eafcbb9e9885ea7e685f8",
+      "archive": "history/designs/2026-09-09-r27-pre-heading-repair-r27-cli-commands-l-q-github-check-lane-proof-reuse.md"
+    }
+  }
+}

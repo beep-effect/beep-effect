@@ -1,7 +1,7 @@
 # Instance
 
 - id: `document-toolbar-busy-disabled`
-- file:line: `packages/ontology/ui/src/aggregates/Session/Session.document.tsx:74`
+- file:line: `packages/ontology/ui/src/aggregates/Session/Session.document.tsx:81`
 - symbol: `documentToolbarState`
 - members: `openBusy`, `openDisabled`, `saveBusy`, `saveDisabled`, `previewBusy`, `previewDisabled`
 - evidence classes:
@@ -10,7 +10,9 @@
 
 # Current shape
 
-Live declaration at `packages/ontology/ui/src/aggregates/Session/Session.document.tsx:74`:
+The function is declared at `packages/ontology/ui/src/aggregates/Session/Session.document.tsx:74`.
+The inventory anchors its returned object at the first output field on line 81;
+the anonymous input parameters are excluded from the campaign.
 
 ```ts
 export const documentToolbarState = (input: {

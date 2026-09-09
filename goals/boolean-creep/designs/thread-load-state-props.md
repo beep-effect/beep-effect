@@ -1,52 +1,38 @@
-## 1. Instance
+# Instance
 
 - id: `thread-load-state-props`
 - file:line: `apps/professional-desktop/src/chat/ui/Thread.tsx:144`
 - symbol: `ThreadLoadState`
 - members: `failed`, `loading`
-- evidence classes:
-  - E1 at `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:326-327` — Both flags are projected in one write from a single AsyncResult: failed=isFailure, loading=isInitial&&waiting — combined-true is unrepresentable.
+- evidence: E1 at `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:326-327`
+  — both props come from the sole transcript writer, where failure and
+  initial-waiting are disjoint AsyncResult cases.
 
-## 2. Current shape
+Reviewed against checkout `7440cb8c4302ce64b87860069a464bafbf65f576`
+and the identical apps/packages corpus on main
+`9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`. This is design preparation;
+replacement independent P3 review remains pending.
 
-Live declaration and reads at `apps/professional-desktop/src/chat/ui/Thread.tsx:144`:
+# Current shape
 
-```tsx
-const ThreadLoadState = ({ failed, loading }: { readonly failed: boolean; readonly loading: boolean }): JSX.Element => (
-  <>
-    {loading ? (
-      <div className="text-sm text-muted-foreground" data-testid="thread-loading">
-        Loading thread…
-      </div>
-    ) : null}
-    {failed ? (
-      <div className="text-sm text-destructive" data-testid="thread-error">
-        Failed to load the thread — is the sidecar running?
-      </div>
-    ) : null}
-  </>
-);
-```
+`ThreadLoadState` accepts independent `failed` and `loading` booleans. It has
+two independent JSX conditionals, so the structurally allowed combined-true
+input renders contradictory messages. The sole call at `Thread.tsx:252` passes
+the paired values from `ThreadTranscriptView`.
 
-The producer call at `apps/professional-desktop/src/chat/ui/Thread.tsx:252` is:
+# Cardinality gap
 
-```tsx
-<ThreadLoadState failed={view.failed} loading={view.loading} />
-```
+Four prop pairs are representable and three are legal: loading, failed, and no
+load message. Upstream `empty` and `ready` both map to no load message. Combined
+loading and failed is unreachable from the atom writer.
 
-## 3. Cardinality gap
+# Target schema
 
-The two props represent four combinations, but the upstream load machine permits only three load-message states:
-
-- `loading`: show the loading message.
-- `failed`: show the failure message.
-- `ready`: show no load message.
-
-The paired atom design additionally has `empty`; for this component, `empty` intentionally behaves like `ready` because `EmptyThread` owns empty-transcript rendering. `loading && failed` is illegal.
-
-## 4. Target schema
-
-Reuse the exact `ThreadTranscriptLoadState` kit exported by `Thread.atoms.ts` for the paired `thread-transcript-load-state` design. Do not mint a second three-state kit:
+Reuse the exact `ThreadTranscriptLoadState` LiteralKit exported by
+`Thread.atoms.ts`; do not create a second UI-only vocabulary. The paired
+transcript design now uses that literal as the discriminator of a payload-aware
+view union, but its four literal values remain `loading | failed | empty |
+ready`.
 
 ```tsx
 import { ThreadTranscriptLoadState } from "./Thread.atoms.ts";
@@ -73,45 +59,59 @@ const ThreadLoadState = ({
   });
 ```
 
-The call becomes:
+The call remains adjacent to empty rendering:
 
 ```tsx
 <ThreadLoadState loadState={view.loadState} />
 <EmptyThread visible={ThreadTranscriptLoadState.is.empty(view.loadState)} />
 ```
 
-`ThreadTranscriptLoadState` is the new literal kit and type named by the paired atom design: `loading | failed | empty | ready`.
+This component consumes only the phase discriminator. Transcript arrays and
+streaming payload remain owned and rendered by `Thread`; no payload narrowing
+is introduced here.
 
-## 5. Migration inventory
+# Migration inventory
 
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:144` — replace the `failed`/`loading` prop type with one `loadState: ThreadTranscriptLoadState` prop.
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:146` — replace the independent loading conditional with the `loading` match arm.
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:151` — replace the independent failure conditional with the `failed` match arm.
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:252` — pass `view.loadState` once.
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:253` — keep empty rendering in `EmptyThread`, guarded from the same shared state.
-- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:253-261` and `:326-332` — paired producer migration supplies `loadState`; these changes are specified fully in `thread-transcript-load-state.md` but are repeated here because this document must land independently intelligibly.
+- `apps/professional-desktop/src/chat/ui/Thread.tsx:144-157` — replace the two
+  boolean props and conditionals with one exhaustive kit match.
+- `apps/professional-desktop/src/chat/ui/Thread.tsx:252-253` — pass the one
+  discriminator and derive the existing `EmptyThread` visibility from it.
+- `apps/professional-desktop/src/chat/ui/Thread.atoms.ts:241-334` — the paired
+  `thread-transcript-load-state` migration defines and writes the shared
+  discriminator; its payload-aware union must land in the same change.
+- `apps/professional-desktop/test/optimistic-user-turn.test.tsx:444-490` — keep
+  failure rendering with retained content.
+- `apps/professional-desktop/test/thread-transcript-view.test.ts:55-116` —
+  update the producer assertions as specified by the paired design.
 
-No other source or test constructs `ThreadLoadState` props directly.
+No source or test constructs `ThreadLoadState` props directly.
 
-## 6. Guard-deletion accounting
+# Guard-deletion accounting
 
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:146` and `:151` — delete two independent JSX conditionals whose combined-true behavior would render contradictory loading and failure messages; an exhaustive literal match renders at most one.
-- `apps/professional-desktop/src/chat/ui/Thread.tsx:252` — delete the call-site obligation to keep `failed` and `loading` coherent.
+- Delete both independent JSX conditionals at `Thread.tsx:146-155`; exhaustive
+  matching renders at most one message.
+- Delete the call-site obligation to keep `failed` and `loading` coherent at
+  `Thread.tsx:252`.
+- Delete duplicate flag assertions in favor of the one discriminator produced
+  by the atom.
 
-There is no legacy normalizer, explicit mutual-exclusion error, or comment-only invariant local to this component.
+# Encoded-side impact
 
-## 7. Encoded-side impact
+None. These private React props are backed by an in-process atom view.
 
-none (internal)
+# Test impact
 
-These are private React props backed by an in-process atom view.
+Cover the loading arm, failure arm, and no-message behavior for both empty and
+ready. Retain the existing failure-with-content assertion at
+`optimistic-user-turn.test.tsx:461`. The atom-level tests in the paired design
+cover the larger seven-tuple transcript contract.
 
-## 8. Test impact
+The recorded portless transcript QA required by the paired design also proves
+the loading/error component behavior; do not create a second recording for
+this prop-only instance.
 
-- `apps/professional-desktop/test/optimistic-user-turn.test.tsx:461` — continue asserting that a failed timeline renders `thread-error`; this exercises the `failed` arm.
-- `apps/professional-desktop/test/thread-transcript-view.test.ts:60-61` — replace the live `view.empty`/`view.failed` assertions and add atom-state coverage for `loading`, `failed`, `empty`, and `ready`; the React component consumes exactly that state.
-- No current test asserts `thread-loading`. Add a focused rendering assertion for the loading arm and a no-load-message assertion for both `empty` and `ready`.
+# Risk and sequencing
 
-## 9. Risk & sequencing
-
-This must land with `thread-transcript-load-state`; otherwise either the call site or atom view will not typecheck. The shared kit belongs in `Thread.atoms.ts`, and `Thread.tsx` must import it rather than define a duplicate. Empty-state ownership stays with `EmptyThread`, preventing an unrelated UI reshuffle.
+Land with `thread-transcript-load-state`. The shared kit belongs in
+`Thread.atoms.ts`. Empty-state UI remains in `EmptyThread`; this migration does
+not rearrange rendering, messages, content retention, scrolling, or streaming.

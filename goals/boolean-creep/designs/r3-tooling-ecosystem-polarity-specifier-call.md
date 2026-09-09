@@ -2,7 +2,7 @@
 
 - id: `r3-tooling-ecosystem-polarity-specifier-call`
 - file:line: `packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts:273`
-- symbol: `runtimeImportSpecifierScan.callKind`
+- symbol: `collectSourceViolations`
 - members: `isDynamicImport`, `isRequire`
 - evidence: E1 at `EcosystemPolarity.ts:273-275` — both flags derive from one
   expression node; an `ImportKeyword` cannot also be an identifier named

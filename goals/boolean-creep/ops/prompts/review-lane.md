@@ -37,14 +37,43 @@ for prose that cannot affect implementation, compatibility, or verification.
    declaration, every writer and reader named by the design, tests, and export
    boundaries. Search live `packages/**/src`, `apps/**/src`, and package barrels
    for missed consumers rather than trusting the migration list.
-2. Verify at least one evidence class exactly:
+2. Establish the actual value carrier before accepting a cardinality claim.
+   Callable predicates, schema guards, methods, non-Boolean command/runtime
+   handles, and names invented for inline expressions are not co-carried Boolean
+   values. Sibling Boolean-valued atoms and React state remain explicitly in
+   scope: an Atom wrapper does not exclude the Boolean state it owns or derives.
+   Read the atom's value type and computation rather than treating a computed
+   Boolean atom as a callable predicate. Anonymous function
+   flag parameters remain excluded; actual named Command/config/props carriers
+   remain in scope. A lone Option-to-Boolean adapter across different owners is
+   not a shared carrier. Do not invent a second member from zero/nonzero tests
+   on a required number, equality of required payloads, or arbitrary nested
+   predicates. Then verify at least one evidence class exactly:
    - E1: one write makes one flag true and siblings false.
    - E2: an exclusive reader/dispatch never admits combined-true as a state.
    - E3: a boolean duplicates sibling payload presence. A coherence guard by
      itself is not E3.
-   - E4: an ordered phase implication such as finished implies started.
-3. Verify the cardinality gap, storage mode, internal/persisted/wire exposure,
-   tier, and target taxonomy. D1 independent axes and D2 mirrors do not qualify.
+   - E4: an ordered phase implication such as finished implies started, or a
+     proved implication between actual co-carried derived aliases. Check AND,
+     OR and complement relations instead of treating derived locals as
+     independent merely because they are transient.
+3. Verify the cardinality gap across the full correlated cluster, including
+   optional payload presence and every declared literal alternative. Evaluate
+   documented constructors with their actual defaults and check supported
+   fixtures for counterexamples. Apply the same evidence standard to every
+   retained or rejected tuple: one producer does not define the whole contract,
+   and schema permissiveness alone does not establish a meaningful state.
+   Count only values that coexist at the observation boundary: an early return
+   can precede a later local declaration. Include typed intersection writers
+   and later overwrites, not only direct constructors. Preserve intentionally
+   broad diagnostic inputs when explicit fixtures and public validation flows
+   support them. A common source input alone does not require two independently
+   adjudicated clusters to collapse into one; do reject duplicate records for
+   the same cluster.
+   Verify storage mode, internal/persisted/wire exposure, tier, and target
+   taxonomy against actual consumers. Exporting a transient schema alone does
+   not create an encoded boundary. D1 independent axes and D2 external mirrors
+   do not qualify; a repository-owned worker protocol is not an external mirror.
 4. Enforce schema-first repository law: reuse a live named owner when one
    exists; otherwise use named LiteralKit, `S.toTaggedUnion(...)`, or
    Option-of-literal as appropriate. Derived booleans stay derived from their
@@ -66,3 +95,6 @@ for prose that cannot affect implementation, compatibility, or verification.
 
 A pass means the record and design can be implemented as written against the
 named source SHA with zero unresolved finding. Do not propose unrelated cleanup.
+Keep individual source reads and search results bounded. Review one assigned id
+at a time, append its complete record immediately, and finish with the short
+report/count pointer so final output cannot exhaust the provider response limit.

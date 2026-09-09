@@ -1,82 +1,296 @@
-# Instance
+# Design: r2-domains-ontology-graph-worker-requeue-latches
 
-- id: `r2-domains-ontology-graph-worker-requeue-latches`
-- file:line: `packages/ontology/client/src/aggregates/Session/Session.atoms.ts:1791`
-- symbol: `ontologyGraphWorkerBridgeAtom.requeueLatches`
-- members: `lastProjectionRequest`, `requeuedAfterFailure`
-- evidence: E4 at `Session.atoms.ts:1905-1918` — the retry marker is set only
-  while matching a present last command; `requeued` without a command is
-  unreachable. Fresh requests and successful results reset the marker while
-  retaining the command.
+Current P2 design on source `93217d998f851e2e93d9864e2b5315552eaa58a7`,
+main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Actual owner `ontologyGraphWorkerBridgeAtom`;
+12 representable / 5 legal; stored/internal, Tier 1.
+The R28 bounded correction confirms the source qualification. This design
+awaits independent P3 review; no implementation or independent P3 approval is claimed.
+Prior design bytes and source receipts are bound in
+`data/r28-first-corrections-integration.json`.
 
-# Current shape
+## Current shape
 
-The worker bridge keeps an optional last projection command beside a boolean
-retry latch. A failure first checks the latch and then separately matches the
-optional command. Fresh projections write `Some(command)` plus `false`; the
-first failure writes `true` and re-dispatches; a second failure is stopped by
-the boolean guard. Success resets only the latch, making the retained command
-retryable again.
+`packages/ontology/client/src/aggregates/Session/Session.atoms.ts:1779–1965`
+declares the exported `ontologyGraphWorkerBridgeAtom`. Inside its mounted
+callback, `lastProjectionRequest: O.Option<WorkerCommand>` at1791 and
+`requeuedAfterFailure = false` at1792 jointly retain a request and its retry
+budget. Both are actual mutable values. `.requeueLatches` is a scanner suffix,
+not a declared symbol; correct the owner symbol to the atom's actual name.
 
-# Cardinality gap
+Independent sibling locals are `worker: Option<Worker>` and
+`previousProjection: Option<OntologyGraphProjection>` at1789–1790. They govern
+worker ownership and incremental graph projection and must remain separate.
+The request's required snapshot/options/delta/previous payloads, request-slot
+sequence counters, callbacks and watchdog are not extra Boolean axes in this
+retry owner. There is no public constructor, persisted field, optional Boolean,
+or encoded key for either retry local.
 
-Treating command presence and the retry boolean as two state dimensions gives
-four representable combinations and three legal states: `absent`,
-`retryable(command)`, and `retried(command)`. `None + true` is illegal.
+The imported `WorkerCommand` is a five-case schema, not a two-case alias:
+`packages/ontology/use-cases/src/aggregates/Session/Session.worker-protocol.ts:24–30`,
+74–99,122. It admits parseTurtle `{request}`, diffDatasets `{before,after}`,
+computeSnapshot `{session}`, projectGraph `{snapshot,options}`, and
+applyGraphDelta `{snapshot,delta,previous,options}`. Its public constructors,
+examples, type alias, and codecs remain authoritative for all five.
 
-# Target schema
+Only the last two commands enter this private slot. The immediate graph-request
+subscription selects apply when both previous projection and delta exist,
+otherwise project; it then installs Some and clears the Boolean at1949–1950.
+Failure tests the Boolean before matching Option, sets true only for Some,
+arms the watchdog and dispatches at1905–1919. Both graph-success handlers clear
+the Boolean while retaining the command at1860/1866.
 
-Introduce a private annotated `OntologyGraphProjectionRetryState` tagged union
-with `absent`, `retryable { command: WorkerCommand }`, and
-`retried { command: WorkerCommand }`. Keep a single local value of that type.
-Fresh graph requests write `retryable`; the first failure atomically changes it
-to `retried` before dispatch; `absent` and `retried` do not dispatch. Successful
-projection and delta results turn `retried` back into `retryable` with the same
-command. Use the union's generated matcher/guards rather than boolean
-conditionals.
+## Cardinality gap
 
-# Migration inventory
+Count the actual declared domain first. None plus five Some command kinds gives
+six finite payload alternatives; multiplying by the Boolean gives 12. The
+producer subset determines legal states, not the declared numerator:
 
-- `Session.atoms.ts` near the worker error schemas — add the three named tagged
-  variants and annotated union using the existing `$I` and `WorkerCommand`
-  schema owner; keep them private to the bridge module.
-- `Session.atoms.ts:1791-1792` — replace only `lastProjectionRequest` plus
-  `requeuedAfterFailure` with one `absent` state. Preserve the independent
-  `worker` and `previousProjection` locals at lines 1789-1790 unchanged.
-- `Session.atoms.ts:1855-1871` — preserve result handling and reset a retried
-  command to retryable without fabricating a command for `absent`.
-- `Session.atoms.ts:1905-1919` — replace the guard-plus-Option match with one
-  exhaustive tagged-state match and atomically advance before dispatch.
-- `Session.atoms.ts:1922-1954` — install every fresh command as `retryable` and
-  remove the separate latch write.
-- `packages/ontology/client/test/Session.atoms.test.ts:152-274` — retain all
-  worker replacement/redaction assertions and make the retry-state transitions
-  explicit through observable post counts.
+| Command alternative | false | true |
+| --- | --- | --- |
+| None | Initial `absent` | Illegal |
+| `projectGraph` | `retryable(project)` | `retried(project)` |
+| `applyGraphDelta` | `retryable(apply)` | `retried(apply)` |
+| `parseTurtle` | Unsupported private payload | Unsupported private payload |
+| `diffDatasets` | Unsupported private payload | Unsupported private payload |
+| `computeSnapshot` | Unsupported private payload | Unsupported private payload |
 
-# Guard-deletion accounting
+Five states are legal. The only true writer is in the Some branch at1914;
+the only command-slot assignment at1949 receives the two constructors at1931
+and1942. Required payload values are preserved without inflating this finite
+control-state count. The old 4/3 design hid all command kinds behind presence;
+the raw 6/5 correction counted only emitted kinds as representable. Both need
+the same owner correction to 12/5.
 
-Delete `lastProjectionRequest`, `requeuedAfterFailure`, the leading retry
-boolean guard, the nested `Option.match`, both success-path boolean resets, and
-the paired fresh-request assignments. One tagged match makes
-commandless-requeued state unrepresentable.
+All five legal states have a producer path: initial None/false; fresh full
+project request; first project failure; a successful projection followed by a
+delta-bearing request; and first failure of that apply command. A graph success
+can additionally restore either retained command to retryable. The worker's
+public parse/diff/compute command arms exist but are not writers of this
+closure-local slot, so they do not add legal private states.
 
-# Encoded-side impact
+## Target schema
 
-None. This state lives inside one mounted client atom. Worker command/result
-wire codecs, structured-clone payloads, watchdog timing, redacted errors,
-renderer projection state, and RPC contracts remain byte-for-byte unchanged.
+Introduce private schema building blocks in `Session.atoms.ts` near the graph
+worker schemas. Reuse the existing command case schemas without reconstructing
+payload fields or narrowing the public protocol. The local Effect v4 reference
+provides typed `.cases` and exhaustive `.match` at
+`.repos/effect/packages/effect/src/Schema.ts:6014–6037`, and `S.toTaggedUnion`
+at6105–6117. The repo LiteralKit implementation returns that tagged-union API at
+`packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:791–813`.
 
-# Test impact
+The intended schema outline is:
 
-Cover absent/no-retry defensively, fresh retryable request, first failure
-requeue with the identical encoded command, second failure suppression, new
-request budget reset, successful result budget reset, malformed result and
-message-error retry behavior, synchronous constructor/send failures, and
-finalizer cleanup. Run focused `Session.atoms` and worker-wire tests plus full
-`@beep/ontology-client` package verification and its changeset policy.
+```ts
+const OntologyGraphProjectionCommand = S.Union([
+  WorkerCommand.cases.projectGraph,
+  WorkerCommand.cases.applyGraphDelta,
+]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("OntologyGraphProjectionCommand", {
+    description: "Existing graph command cases retained by this bridge for retry.",
+  })
+);
 
-# Risk and sequencing
+const OntologyGraphProjectionRetryPhase = LiteralKit([
+  "absent",
+  "retryable",
+  "retried",
+]).annotate($I.annote("OntologyGraphProjectionRetryPhase", {
+  description: "Availability of one automatic retry for the retained graph request.",
+}));
 
-Land in Tier 1D with the other ontology UI/client state migrations. Advance to
-`retried` before dispatch so a synchronous send failure cannot recurse into a
-retry storm. Do not change watchdog ownership or the ontology `/public` barrel.
+const OntologyGraphProjectionRetryState =
+  OntologyGraphProjectionRetryPhase.toTaggedUnion("phase")({
+    absent: {},
+    retryable: { command: OntologyGraphProjectionCommand },
+    retried: { command: OntologyGraphProjectionCommand },
+  }).pipe($I.annoteSchema("OntologyGraphProjectionRetryState", {
+    description: "Retained graph command and its automatic retry budget.",
+  }));
+```
+
+Derive types from these schemas. Initialize one local value with
+`OntologyGraphProjectionRetryState.cases.absent.make({})`; case constructors
+supply their `S.tag` discriminator. The two payload-bearing phases each admit
+the two graph command kinds, giving exactly `1 + 2 + 2 = 5` states. There is no
+Option command or Boolean retry field inside the new state. Keeping the full
+five-case `WorkerCommand` here would produce eleven states and leave six
+unsupported combinations in the target.
+
+Use the private command's individual case constructors for the existing fresh
+project/apply producers so the constructed value is statically narrowed while
+retaining the exact existing `kind` and complete payload. Do not add an `as`
+cast, decode/guard wall, duplicate field list, new public command alias, or a
+temporary compatibility layer. Keep public `WorkerCommand` and dispatch codecs
+as they are; a graph-only command is still a valid input to the full encoder.
+
+Use the retry schema's exhaustive match for transitions:
+
+- Fresh graph request: replace any state with `retryable(command)` before error
+  clearing, watchdog arming and dispatch, keeping the current ordering.
+- First failure from retryable: install `retried(command)` before arming and
+  dispatching. Retain the same command object; synchronous send/construction
+  failure sees retried and cannot create a retry storm.
+- Failure from absent or retried: no dispatch. The caller still performs its
+  existing reset/termination/error-publication work.
+- Successful project/apply result: absent remains absent; retryable stays
+  retryable; retried becomes retryable with its retained command. Keep existing
+  error/projection updates after this transition. Do not fabricate an absent
+  command or clear a retained one.
+- Non-graph successful result: preserve the existing no-op handler. Common
+  watchdog disarm still occurs, but this result does not restore the budget.
+- Finalizer: no retry transition; keep disarm, slot clearing, termination and
+  closure disposal. Do not call the failure-reset routine from the finalizer.
+
+The Atom reactivity skill applies: state remains inside the existing mounted
+atom, with no React hook, global registry, separate persisted atom, or new
+service. Preserve reactive scheduling and effects instead of introducing a new
+queue architecture as part of this schema change.
+
+## Migration inventory
+
+Paths below are relative to `packages/ontology/` unless otherwise stated.
+
+| Writer/consumer | Exact migration and retained behavior |
+| --- | --- |
+| `client/src/aggregates/Session/Session.atoms.ts:46`,52–55,73 | Reuse WorkerCommand, LiteralKit, S and existing identity imports. New schemas remain private to this file. |
+| Same file1650–1654,1789–1795 | Preserve graph-request payload and independent worker/previous-projection locals; replace only the Option command and retry Boolean with one absent retry state. Keep runtime-atom mounts. |
+| Same file1797–1815 | Preserve watchdog generation counters, cancellation, 20-second deadline and timeout failure messages. A retry still arms before dispatch. |
+| Same file1817–1837 | Preserve termination and failure order: disarm, clear previous projection, clear projection/delta/backend atoms, terminate, requeue, then publish/log redacted failure. Do not clear the retained command merely because previousProjection is cleared. |
+| Same file1840–1886 | Keep literal bundler-recognized module-worker constructor, all event listeners, decode boundary, five result cases and specific error messages. Replace only graph-success budget resets with schema transitions. |
+| Same file1888–1903;1745–1763 | Preserve lazy worker reuse and boundary atom that contains constructor/encoding/postMessage exceptions. Dispatch still encodes the command before posting. |
+| Same file1905–1920 | Replace Boolean guard plus Option match with one exhaustive state match; transition to retried before any potentially failing downstream operation. |
+| Same file1922–1957 | Narrow the two constructors using existing command case schemas, retain all fields, install retryable once, and preserve immediate subscription, error clearing, watchdog/dispatch and delta clearing. |
+| Same file1959–1964 | Preserve watchdog cancellation, boundary/failure slot cancellation and worker termination. No retry during cleanup. |
+| `client/src/aggregates/Session/Session.visualizer.worker.ts:23–68` | No shape change: decode full five-command envelope, no-op three non-graph cases, compute project/apply, encode results, throw typed undecodable-command error on decode failure. |
+| `use-cases/src/aggregates/Session/Session.worker-protocol.ts:24–122`,256–344 | Preserve all public case schemas, constructors, tags, annotations, command/result type aliases, encoder wrappers, unary decoders and structured-clone forms. |
+| `client/src/aggregates/Session/index.ts:14`, `client/src/index.ts:31`, `client/package.json:36–40` | Keep atom available through root and aggregates/Session. No private retry or command schema export. There is no current client `/public` export to edit. |
+| `use-cases/src/aggregates/Session/index.ts:84`, `worker.ts:32` | Preserve ordinary aggregate and worker-safe protocol exports; do not add client-state dependencies to the worker import graph. |
+| `ui/src/aggregates/Session/Session.graph.tsx:51` | Existing `useAtomValue(ontologyGraphWorkerBridgeAtom)` mounts the owner. Renderer inputs, graph error/projection/delta/backend atoms remain stable. No UI flow change. |
+| `client/test/Session.atoms.test.ts:151–331`, `client/test/worker-wire.test.ts:51–89` | Keep fake-worker post counts, redaction, bounded constructor/send failures, structured-clone codec tests; extend observable transition coverage below. |
+| `use-cases/test/SchemaParity.test.ts:69`,109 onward; `WorkerImportGraph.test.ts:13`; `BrowserWorkerImportGraph.test.ts:105` | Preserve public five-command schema and browser-worker dependency checks. Their consumers require no production shape migration. |
+
+Full payload preservation is by reusing the two case schemas, not by copying
+selected fields. Snapshot retains sessionId, resources, hierarchy, relationships
+with its existing empty default, and metrics (`Session.projections.ts:348–359`).
+Apply retains the entire previous graph projection and both delta arrays
+(`domain/.../Session.model.ts:275–283`), including every RDF quad and nested
+schema value. Do not replace apply retry with a newly synthesized project
+request solely because failure cleared the independent previousProjection local.
+
+Graph options retain viewMode, foldLevel, focusIri, focusDepth, pinnedNodes,
+structuralFoldThreshold, autoClusterThreshold, communityBucketSize,
+fullLabelThreshold and keyLabelThreshold (`Session.visualizer.ts:173–191`).
+Keep the focus None default and the current default function values at209–221:
+all/L2, None, depth1, empty pins, thresholds24/2500/250/250/2500. No runtime
+option or schema default is simplified as part of this state migration.
+
+The retained projection keeps revision, foldLevel, labelDetail, node/edge
+counts, nodeIds/nodeKinds/nodeFlags, edgeIds/edgeKinds, pointPositions,
+pointDepths with its constructor-only empty legacy fixture default, links,
+nodes/edges/clusters, changed node/edge IDs, and stats
+(`Session.visualizer.ts:418–446`). All typed-array contents and schema behavior
+remain intact. No new payload-axis qualification is inferred from these fields.
+
+## Guard-deletion accounting
+
+| Frozen site | Concrete deletion and replacement |
+| --- | --- |
+| `Session.atoms.ts:1791–1792` | Delete two mutable state declarations; add one schema-derived retry state. |
+| 1906–1908 | Delete the leading retry-Boolean early-return guard. Absent/retried no-op cases replace it in the state match. |
+| 1909–1918 | Delete the nested Option match over the retained request and the true assignment. One retryable arm owns both command presence and budget, then advances before dispatch. |
+| 1860 and1866 | Delete two unconditional Boolean-reset writes; restore a retained command through state matching without creating one for absent. |
+| 1949–1950 | Delete paired Some/false writes; install one retryable value with the exact constructed command. |
+| 1931 and1942 | Reuse narrower case constructors, eliminating the private slot's admission of six non-graph-command/Boolean combinations. No public command case is deleted. |
+
+No deletion credit for the independent worker Option match, previous-projection
+Option selection, missing-Worker check, command/result decode checks, watchdog,
+event handlers, error redaction, atom counters, subscriptions or cleanup. The
+new exhaustive match remains real control flow. No Boolean getter or Option
+compatibility projection may recreate the old pair for downstream readers.
+
+## Encoded-side impact
+
+The retry state has no wire or persistence encoding. Worker messages continue
+to contain only `encodeWorkerCommand(command)`; never post or spread the retry
+envelope. Preserve all five command tags and all five result tags and their
+public constructor examples. Do not change public acceptance of parse, diff or
+snapshot commands because this private bridge sends only graph commands.
+
+Preserve every nested command value and current encoded omission/default
+semantics. In particular, focusIri None is encoded as an omitted optional key;
+posting its decoded Option directly loses prototype data under structured clone
+and is already guarded by `worker-wire.test.ts`. Some focus strings, pinned
+nodes, delta payload, prior typed buffers and all numeric options retain their
+current schema codecs. Results must still be decoded back into domain values
+before projection atoms receive them. `pointDepths` remains a constructor-only
+legacy fixture default, not permission to drop or fill encoded data arbitrarily.
+
+This has no report version, JSON artifact, SQL schema, RPC field, localStorage
+key or public retry codec to migrate. Encoder wrappers and unary decoders retain
+their existing options exposure and signatures. Error strings and redacted
+logging remain observable compatibility surfaces. No unrelated protocol alias,
+new export or worker import is justified by this internal Tier 1 change.
+
+## Test impact
+
+This P2 task does not run or edit tests. Preserve existing tests at
+`client/test/Session.atoms.test.ts:151–271`: one first retry with equivalent
+encoded request, termination of the old worker, second-failure suppression,
+fresh-request budget reset, malformed-result and messageerror handling, and
+redaction. Preserve synchronous constructor and send failure tests at273–331,
+which assert exactly two attempts. These directly protect advancing before
+dispatch and failure containment.
+
+Extend behavior tests through the public atom and fake worker to cover both
+project and apply commands with their full encoded payloads, not only the
+current initial project request. A successful graph result followed by a
+delta-bearing update must select apply. First apply failure must retain the
+original command until actual fresh subscription traffic replaces it; do not
+assert an invented scheduling guarantee around reactive delta clearing.
+Include success restoring the retry budget for each retained command, a second
+retry failure being suppressed, and new graph traffic restoring a fresh
+budget. Preserve graph-success behavior regardless of the latest command kind;
+there is no existing request-ID correlation to add.
+
+Cover malformed result, error, messageerror, silent-worker timeout, synchronous
+constructor/encoding/send failure, missing Worker, and unmount/finalizer cleanup.
+A valid non-graph result must disarm the watchdog but leave the retry budget
+unchanged. The initial absent state must not gain a fabricated command. Test
+observable posts, termination, error/projection state and timer behavior rather
+than exporting private state solely for testing.
+
+Retain `client/test/worker-wire.test.ts:51–89` and extend the encoded structured
+clone round trip to apply with previous/delta/options and focus None/Some.
+Existing use-cases SchemaParity and import-graph tests preserve the five-command
+public protocol. A private schema type check should reject parse/diff/compute
+as retry payloads while public constructors continue accepting them; use normal
+package type verification rather than a runtime compatibility wrapper.
+
+During authorized implementation, run focused Session.atoms and worker-wire
+tests and mandatory `bun run beep quality package-verify @beep/ontology-client`.
+Run protocol/import-graph proof appropriate to the unchanged dependency surface;
+if source in another package becomes necessary, its own package verification
+also applies. Static P2 source inspection is not product acceptance or P3 review.
+
+## Risk
+
+The principal risk is retry recursion: the state must advance before watchdog
+arming and dispatch, because the queued boundary can fail synchronously.
+Preserve failure-reset ordering and reactive subscription behavior; do not clear
+the retained request while clearing previousProjection or assume a delta reset
+cannot produce actual new graph traffic. Preserve all current success-handler
+semantics, including retained commands and lack of request correlation.
+
+The cardinality correction must be independently adjudicated. The raw 6/5
+report cannot substantiate the actual declared 12-state domain. The target must
+narrow its private payload to the existing two graph cases; leaving full
+WorkerCommand inside retryable/retried repeats the current design's overly
+broad payload. That private narrowing cannot retire any of the public five
+command kinds or their encoded forms.
+
+Keep worker lifetime, watchdog cancellation, typed errors, redaction, constructor
+shape required by the bundler, and worker-safe imports intact. Do not add a
+global atom or broader state-machine refactor. Land as the single existing
+Tier 1 owner after independent P3; coordinate with other
+Session.atoms designs by preserving their separate state and source edits.
