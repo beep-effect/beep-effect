@@ -442,3 +442,17 @@ Record receipts at the moment friction happens; redact for the public repo.
   Revisit on a provider fix; do not loop applies to clear this readback mismatch.
 - **Source:** [provider enrollment contract](https://www.pulumi.com/registry/packages/aws/api-docs/costoptimizationhub/enrollmentstatus/)
   documents that this argument does not support drift detection.
+
+### Hosted closeout exposed two inherited CI defects
+
+- **Doing:** verifying PR #1055 after merging current main.
+- **Evidence:** the CLI unit job reported 3,313 passing tests and one failure:
+  recursive directory reads returned identical export paths in different orders.
+  Storybook correctly skipped an unaffected build, then its unconditional upload
+  failed because no static artifact existed. Both jobs completed with full logs.
+- **Remediation:** sort both directory inventories before comparing contents, and
+  upload Storybook only when its static index exists. The executed Storybook lane
+  retains its existing required-artifact check, so a missing build output still
+  fails. Both defects were present in the merged base, not caused by AWS cleanup.
+- **Prevention:** compare filesystem inventories independently of enumeration order
+  and make artifact uploads respect successful affected-lane skips.
