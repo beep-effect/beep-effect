@@ -1,5 +1,11 @@
 # Boolean-Creep Eradication — ratified decisions
 
+> Routing update (2026-09-09): new token-heavy Codex work uses `gpt-6-astra`
+> with `medium` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This supersedes earlier model/effort choices below for future work. Completed
+> runs retain their recorded provenance; lightweight and Grok routes retain
+> their intended roles.
+
 Ratified by Benjamin 2026-08-17 (from the three-lane sample session and the
 operator-prompt grill). These are binding for the campaign; changes require a
 new ratification line with a date.

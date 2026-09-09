@@ -82,7 +82,7 @@ export class BunVercelDocument extends S.Class<BunVercelDocument>($I`BunVercelDo
  */
 const BUN_RELEASE_URL = "https://api.github.com/repos/oven-sh/bun/releases/latest";
 const BUN_ARCHIVE_NAME = "bun-linux-x64.zip";
-const BUN_VERSION_IN_COMMAND_PATTERN = /\bbun@([^\s]+)/;
+const BUN_VERSION_IN_COMMAND_PATTERN = /\bbun@([^\s"'$`]+)/;
 const BUN_ARCHIVE_CHECKSUM_PATTERN = /^([a-f0-9]{64})\s+\*?bun-linux-x64\.zip$/m;
 
 /**
@@ -107,6 +107,22 @@ const extractPackageManagerVersion = Str.replace(/^bun@/, "");
 
 /**
  * Extract an explicit Bun version from a shell command.
+ *
+ * **Details**
+ * Shell substitutions read the canonical version at execution time and are not
+ * independent pins. Quotes delimit literal pins without becoming part of them.
+ *
+ * **Example** (Distinguish literal and derived runtime versions)
+ *
+ * ```ts
+ * import { extractCommandBunVersion } from "@beep/repo-cli/commands/VersionSync/internal/resolvers/BunResolver"
+ * import * as O from "effect/Option"
+ *
+ * const pinned = extractCommandBunVersion('npx --yes "bun@1.4.2" install')
+ * const derived = extractCommandBunVersion('npx --yes "bun@$(cat .bun-version)" install')
+ * console.log(O.getOrElse(pinned, () => "unpinned")) // "1.4.2"
+ * console.log(O.isNone(derived)) // true
+ * ```
  *
  * @param command - Shell command that may contain a `bun@<version>` invocation.
  * @returns The explicit Bun version when present.

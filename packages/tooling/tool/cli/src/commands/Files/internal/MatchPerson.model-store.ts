@@ -29,6 +29,7 @@ const modelDownloadRangeBytes = PosInt.make(16 * 1024 * 1024);
 const modelDownloadRetryCount = 2;
 const modelDownloadRetrySchedule = Schedule.exponential(Duration.seconds(1));
 const RetryableHttpFailureReason = LiteralKit(["DecodeError", "TransportError"]);
+const isRetryableHttpFailureReason = S.is(RetryableHttpFailureReason);
 const insightFaceLicenseNotice =
   "InsightFace pretrained-model terms: https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md";
 const cvlFaceLicenseNotice =
@@ -159,7 +160,7 @@ const httpFailureDetail = (cause: unknown): string => {
 };
 
 const isRetryableHttpFailure = (cause: unknown): boolean =>
-  HttpClientError.isHttpClientError(cause) && S.is(RetryableHttpFailureReason)(cause.reason._tag);
+  HttpClientError.isHttpClientError(cause) && isRetryableHttpFailureReason(cause.reason._tag);
 
 const isRetryableModelDownloadFailure = (
   cause: MatchPersonModelAcquisitionError | MatchPersonModelIntegrityError

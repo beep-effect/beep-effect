@@ -19,6 +19,8 @@ import {
   saveSnapshot,
 } from "./Fixtures.ts";
 
+const encodeDockCommandEnvelope = S.encodeEffect(DockCommandEnvelope);
+
 const workspaceEquals = DockWorkspace.equals;
 
 describe("DockAtoms", () => {
@@ -73,7 +75,7 @@ describe("DockAtoms", () => {
       makeDockAtoms(),
       Effect.fnUntraced(function* (graph) {
         graph.registry.set(graph.operationAtom, dispatch(openPanelOne));
-        const encodedOpenPanelTwo = yield* S.encodeEffect(DockCommandEnvelope)(openPanelTwo);
+        const encodedOpenPanelTwo = yield* encodeDockCommandEnvelope(openPanelTwo);
         graph.registry.set(graph.operationAtom, dispatchUnknown(encodedOpenPanelTwo));
 
         yield* graph.awaitIdle;

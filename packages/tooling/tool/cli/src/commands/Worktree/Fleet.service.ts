@@ -540,13 +540,19 @@ const discoverClones = Effect.fn("Fleet.discoverClones")(function* (
 const cloneStubs = Effect.fn("Fleet.cloneStubs")(function* (
   clone: string
 ): Effect.fn.Return<ReadonlyArray<CheckoutStub>, never, FleetMirrorServiceRequirements> {
-  const porcelain = gitStdout(yield* runGitProbe(clone, ["worktree", "list", "--porcelain"]));
+  const porcelain = gitStdout(yield* runGitProbe(clone, ["worktree", "list", "--porcelain", "-z"]));
   if (O.isNone(porcelain)) {
     const unlisted: CheckoutStub = { path: clone, kind: "clone", entry: null };
     return [unlisted];
   }
+  const entries = yield* Effect.result(parseWorktreePorcelain(porcelain.value));
+  if (Result.isFailure(entries)) {
+    yield* Effect.logWarning("Git worktree listing must use NUL delimiters; retaining the clone as unlisted.");
+    const unlisted: CheckoutStub = { path: clone, kind: "clone", entry: null };
+    return [unlisted];
+  }
   return A.map(
-    parseWorktreePorcelain(porcelain.value),
+    entries.success,
     (entry, index): CheckoutStub => ({
       path: entry.path,
       kind: index === 0 ? "clone" : "linked-worktree",

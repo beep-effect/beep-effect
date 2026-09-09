@@ -27,7 +27,21 @@ import {
   DocgenQualitySubject,
   DocgenQualitySubjectCandidate,
 } from "./Quality.schemas.ts";
-import type { Diagnostic, JSDoc, SourceFile } from "ts-morph";
+import type {
+  ClassDeclaration,
+  Diagnostic,
+  EnumDeclaration,
+  ExportAssignment,
+  ExportDeclaration,
+  ExportSpecifier,
+  FunctionDeclaration,
+  InterfaceDeclaration,
+  JSDoc,
+  ModuleDeclaration,
+  SourceFile,
+  Statement,
+  TypeAliasDeclaration,
+} from "ts-morph";
 import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
 import type { DocgenRelatedSymbol } from "./Quality.schemas.ts";
 
@@ -406,123 +420,165 @@ const isDeclarationAlreadyExported = (declaration: Node): boolean => {
     : false;
 };
 
+const collectDocumentedOverloadNames = (sourceFile: SourceFile): ReadonlySet<string> => {
+  const names = new Set<string>();
+  for (const statement of sourceFile.getStatements()) {
+    if (!Node.isFunctionDeclaration(statement)) continue;
+    if (!statement.isOverload() || Str.trim(getLastJsDocText(statement)).length === 0) continue;
+    const name = statement.getName();
+    if (name !== undefined) names.add(name);
+  }
+  return names;
+};
+
+const declarationsFromExportAssignment = (
+  assignment: ExportAssignment,
+  localDeclarations: ReadonlyArray<LocalDeclaration>
+): ReadonlyArray<Node> => {
+  const expression = assignment.getExpression();
+  if (!Node.isIdentifier(expression)) return [expression];
+  return pipe(
+    localDeclarations,
+    A.filter((entry) => entry.name === expression.getText()),
+    A.filter((entry) => !isDeclarationAlreadyExported(entry.declaration)),
+    A.map((entry) => entry.declaration)
+  );
+};
+
+const candidatesFromExportAssignment = (
+  assignment: ExportAssignment,
+  localDeclarations: ReadonlyArray<LocalDeclaration>
+): ReadonlyArray<ExportedDeclarationCandidate> => {
+  if (assignment.isExportEquals()) return A.empty();
+  const rawJsDoc = getLeadingJsDocCommentText(assignment);
+  return pipe(
+    declarationsFromExportAssignment(assignment, localDeclarations),
+    A.map((declaration) => ({
+      name: "default",
+      declaration,
+      anchorNode: assignment,
+      ...(Str.trim(rawJsDoc).length > 0 ? { rawJsDoc } : {}),
+      exportDeclarationText: boundedText(firstLine(assignment.getText()), 240),
+    }))
+  );
+};
+
+const collectExportAssignmentCandidates = (
+  sourceFile: SourceFile,
+  localDeclarations: ReadonlyArray<LocalDeclaration>
+): ReadonlyArray<ExportedDeclarationCandidate> =>
+  pipe(
+    sourceFile.getExportAssignments(),
+    A.flatMap((assignment) => candidatesFromExportAssignment(assignment, localDeclarations))
+  );
+
+const candidatesFromExportSpecifier = (
+  specifier: ExportSpecifier,
+  exportDeclaration: ExportDeclaration,
+  rawJsDoc: string,
+  localDeclarations: ReadonlyArray<LocalDeclaration>
+): ReadonlyArray<ExportedDeclarationCandidate> => {
+  const localName = specifier.getName();
+  const exportName = specifier.getAliasNode()?.getText() ?? localName;
+  if (localName !== exportName) return A.empty();
+  return pipe(
+    localDeclarations,
+    A.filter((entry) => entry.name === localName),
+    A.map((entry) => ({
+      name: exportName,
+      declaration: entry.declaration,
+      anchorNode: exportDeclaration,
+      ...(Str.trim(rawJsDoc).length > 0 ? { rawJsDoc } : {}),
+      exportDeclarationText: boundedText(firstLine(exportDeclaration.getText()), 240),
+    }))
+  );
+};
+
+const candidatesFromExportDeclaration = (
+  exportDeclaration: ExportDeclaration,
+  localDeclarations: ReadonlyArray<LocalDeclaration>
+): ReadonlyArray<ExportedDeclarationCandidate> => {
+  if (exportDeclaration.getModuleSpecifierValue() !== undefined) return A.empty();
+  const rawJsDoc = getLeadingJsDocCommentText(exportDeclaration);
+  return pipe(
+    exportDeclaration.getNamedExports(),
+    A.flatMap((specifier) => candidatesFromExportSpecifier(specifier, exportDeclaration, rawJsDoc, localDeclarations))
+  );
+};
+
+const collectExportDeclarationCandidates = (
+  sourceFile: SourceFile,
+  localDeclarations: ReadonlyArray<LocalDeclaration>
+): ReadonlyArray<ExportedDeclarationCandidate> =>
+  pipe(
+    sourceFile.getExportDeclarations(),
+    A.flatMap((declaration) => candidatesFromExportDeclaration(declaration, localDeclarations))
+  );
+
+const shouldSkipFunctionCandidate = (statement: Node, documentedOverloadNames: ReadonlySet<string>): boolean => {
+  if (!Node.isFunctionDeclaration(statement)) return false;
+  const name = statement.getName();
+  const hasOwnDocs = Str.trim(getLastJsDocText(statement)).length > 0;
+  if ((statement.isOverload() || !statement.hasBody()) && !hasOwnDocs) return true;
+  return name !== undefined && documentedOverloadNames.has(name) && !statement.isOverload() && !hasOwnDocs;
+};
+
+type DirectNamedDeclaration =
+  | FunctionDeclaration
+  | ClassDeclaration
+  | InterfaceDeclaration
+  | TypeAliasDeclaration
+  | EnumDeclaration
+  | ModuleDeclaration;
+
+const candidatesFromVariableStatement = (statement: Statement): ReadonlyArray<ExportedDeclarationCandidate> => {
+  if (!Node.isVariableStatement(statement) || !statement.isExported()) return A.empty();
+  return A.map(statement.getDeclarations(), (declaration) => ({ name: declaration.getName(), declaration }));
+};
+
+const candidateFromNamedDeclaration = (
+  declaration: DirectNamedDeclaration
+): ReadonlyArray<ExportedDeclarationCandidate> => {
+  if (!declaration.isExported()) return A.empty();
+  const name = declaration.isDefaultExport() ? "default" : declaration.getName();
+  return name === undefined ? A.empty() : A.of({ name, declaration });
+};
+
+const candidatesFromNamedStatement = (statement: Statement): ReadonlyArray<ExportedDeclarationCandidate> =>
+  Match.value(statement).pipe(
+    Match.when(Node.isFunctionDeclaration, candidateFromNamedDeclaration),
+    Match.when(Node.isClassDeclaration, candidateFromNamedDeclaration),
+    Match.when(Node.isInterfaceDeclaration, candidateFromNamedDeclaration),
+    Match.when(Node.isTypeAliasDeclaration, candidateFromNamedDeclaration),
+    Match.when(Node.isEnumDeclaration, candidateFromNamedDeclaration),
+    Match.when(Node.isModuleDeclaration, candidateFromNamedDeclaration),
+    Match.orElse(() => A.empty())
+  );
+
+const candidatesFromDirectStatement = (
+  statement: Statement,
+  documentedOverloadNames: ReadonlySet<string>
+): ReadonlyArray<ExportedDeclarationCandidate> => {
+  if (shouldSkipFunctionCandidate(statement, documentedOverloadNames)) return A.empty();
+  return pipe(candidatesFromVariableStatement(statement), A.appendAll(candidatesFromNamedStatement(statement)));
+};
+
+const collectDirectExportCandidates = (
+  sourceFile: SourceFile,
+  documentedOverloadNames: ReadonlySet<string>
+): ReadonlyArray<ExportedDeclarationCandidate> =>
+  pipe(
+    sourceFile.getStatements(),
+    A.flatMap((statement) => candidatesFromDirectStatement(statement, documentedOverloadNames))
+  );
+
 const collectExportedDeclarationCandidates = (sourceFile: SourceFile): ReadonlyArray<ExportedDeclarationCandidate> => {
-  let candidates = A.empty<ExportedDeclarationCandidate>();
   const localDeclarations = collectLocalDeclarations(sourceFile);
-  const documentedOverloadNames = new Set<string>();
-  for (const statement of sourceFile.getStatements()) {
-    if (
-      Node.isFunctionDeclaration(statement) &&
-      statement.isOverload() &&
-      Str.trim(getLastJsDocText(statement)).length > 0
-    ) {
-      const name = statement.getName();
-      if (name !== undefined) {
-        documentedOverloadNames.add(name);
-      }
-    }
-  }
-
-  for (const exportAssignment of sourceFile.getExportAssignments()) {
-    if (exportAssignment.isExportEquals()) {
-      continue;
-    }
-
-    const rawJsDoc = getLeadingJsDocCommentText(exportAssignment);
-    const expression = exportAssignment.getExpression();
-    const declarations = Node.isIdentifier(expression)
-      ? pipe(
-          localDeclarations,
-          A.filter((entry) => entry.name === expression.getText()),
-          A.filter((entry) => !isDeclarationAlreadyExported(entry.declaration)),
-          A.map((entry) => entry.declaration)
-        )
-      : [expression];
-
-    for (const declaration of declarations) {
-      candidates = A.append(candidates, {
-        name: "default",
-        declaration,
-        anchorNode: exportAssignment,
-        ...(Str.trim(rawJsDoc).length > 0 ? { rawJsDoc } : {}),
-        exportDeclarationText: boundedText(firstLine(exportAssignment.getText()), 240),
-      });
-    }
-  }
-
-  for (const exportDeclaration of sourceFile.getExportDeclarations()) {
-    if (exportDeclaration.getModuleSpecifierValue() !== undefined) {
-      continue;
-    }
-
-    const rawJsDoc = getLeadingJsDocCommentText(exportDeclaration);
-
-    for (const specifier of exportDeclaration.getNamedExports()) {
-      const localName = specifier.getName();
-      const exportName = specifier.getAliasNode()?.getText() ?? specifier.getName();
-      if (localName !== exportName) {
-        continue;
-      }
-      const declarations = pipe(
-        localDeclarations,
-        A.filter((entry) => entry.name === localName),
-        A.map((entry) => entry.declaration)
-      );
-
-      for (const declaration of declarations) {
-        candidates = A.append(candidates, {
-          name: exportName,
-          declaration,
-          anchorNode: exportDeclaration,
-          ...(Str.trim(rawJsDoc).length > 0 ? { rawJsDoc } : {}),
-          exportDeclarationText: boundedText(firstLine(exportDeclaration.getText()), 240),
-        });
-      }
-    }
-  }
-
-  for (const statement of sourceFile.getStatements()) {
-    if (Node.isFunctionDeclaration(statement)) {
-      const name = statement.getName();
-      const hasOwnDocs = Str.trim(getLastJsDocText(statement)).length > 0;
-      if ((statement.isOverload() || !statement.hasBody()) && !hasOwnDocs) {
-        continue;
-      }
-      if (name !== undefined && documentedOverloadNames.has(name) && !statement.isOverload() && !hasOwnDocs) {
-        continue;
-      }
-    }
-
-    if (Node.isVariableStatement(statement) && statement.isExported()) {
-      for (const declaration of statement.getDeclarations()) {
-        candidates = A.append(candidates, {
-          name: declaration.getName(),
-          declaration,
-        });
-      }
-      continue;
-    }
-
-    if (
-      (Node.isFunctionDeclaration(statement) ||
-        Node.isClassDeclaration(statement) ||
-        Node.isInterfaceDeclaration(statement) ||
-        Node.isTypeAliasDeclaration(statement) ||
-        Node.isEnumDeclaration(statement) ||
-        Node.isModuleDeclaration(statement)) &&
-      statement.isExported()
-    ) {
-      const name = statement.isDefaultExport() ? "default" : statement.getName();
-
-      if (name !== undefined) {
-        candidates = A.append(candidates, {
-          name,
-          declaration: statement,
-        });
-      }
-    }
-  }
-
+  const candidates = [
+    ...collectExportAssignmentCandidates(sourceFile, localDeclarations),
+    ...collectExportDeclarationCandidates(sourceFile, localDeclarations),
+    ...collectDirectExportCandidates(sourceFile, collectDocumentedOverloadNames(sourceFile)),
+  ];
   return A.dedupeWith(candidates, (left, right) => left.name === right.name && left.declaration === right.declaration);
 };
 

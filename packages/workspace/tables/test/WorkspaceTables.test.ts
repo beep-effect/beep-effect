@@ -19,6 +19,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownMessageModelSync = S.decodeUnknownSync(MessageModel);
+const decodeUnknownThreadModelSync = S.decodeUnknownSync(ThreadModel);
+const decodeUnknownTurnModelSync = S.decodeUnknownSync(TurnModel);
+const decodeUnknownWorkspaceModelSync = S.decodeUnknownSync(WorkspaceModel);
+
 const ThreadArbitrary = S.toArbitrary(ThreadModel)(fc);
 const ThreadEquivalence = S.toEquivalence(ThreadModel);
 const MessageArbitrary = S.toArbitrary(MessageModel)(fc);
@@ -106,7 +111,7 @@ describe("WorkspaceTables", () => {
   });
 
   it("round-trips Thread, Turn, and Message rows through the converters", () => {
-    const thread = S.decodeUnknownSync(ThreadModel)({
+    const thread = decodeUnknownThreadModelSync({
       ...productEntityFixtureInput("WorkspaceThread", 10),
       title: "Matter intake",
       workspaceId: 2,
@@ -118,7 +123,7 @@ describe("WorkspaceTables", () => {
     expect(threadInsert.entityType).toBe("WorkspaceThread");
     expect(Thread.fromThreadRow({ ...threadInsert, id: 10 }).title).toBe("Matter intake");
 
-    const message = S.decodeUnknownSync(MessageModel)({
+    const message = decodeUnknownMessageModelSync({
       ...productEntityFixtureInput("WorkspaceMessage", 20),
       content: { _tag: "document", children: [] },
       role: "user",
@@ -131,7 +136,7 @@ describe("WorkspaceTables", () => {
     expect(messageInsert.threadId).toBe(10);
     expect(Message.fromMessageRow({ ...messageInsert, id: 20 }).role).toBe("user");
 
-    const turn = S.decodeUnknownSync(TurnModel)({
+    const turn = decodeUnknownTurnModelSync({
       ...productEntityFixtureInput("WorkspaceTurn", 30),
       items: [{ itemType: "message", messageId: 20 }],
       parentTurnId: null,
@@ -156,7 +161,7 @@ describe("WorkspaceTables", () => {
   });
 
   it("round-trips Workspace rows through the converters", () => {
-    const workspace = S.decodeUnknownSync(WorkspaceModel)({
+    const workspace = decodeUnknownWorkspaceModelSync({
       ...productEntityFixtureInput("WorkspaceWorkspace", 40),
       fixtureKey: "workspace.default",
       name: "Default Workspace",

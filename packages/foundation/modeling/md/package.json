@@ -12,16 +12,30 @@
     "directory": "packages/foundation/modeling/md"
   },
   "scripts": {
-    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-    "build": "tsc -b tsconfig.json && bun run babel",
-    "check": "tsgo -b tsconfig.json",
+    "audit": "bun run --if-present beep:audit",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage",
-    "docgen": "bunx --bun --no-install docgen",
-    "lint": "biome check .",
-    "lint:fix": "biome check . --write",
-    "test": "bunx --bun vitest run",
-    "test:property": "bunx --bun vitest run",
-    "package-test-typecheck": "beep-cli quality test-tsgo-package"
+    "docgen": "bun run beep:docgen",
+    "doctest": "bun run beep:doctest",
+    "lint": "bun run beep:lint",
+    "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+    "lint:fix": "bun run beep:lint:fix",
+    "lint:jsdoc": "beep-cli lint jsdoc --package .",
+    "lint:laws": "beep-cli lint laws --package .",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package",
+    "test": "bun run beep:test",
+    "test:property": "bun run beep:test",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:docgen && bun run beep:lint",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
+    "beep:docgen": "bunx --bun --no-install docgen",
+    "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run",
+    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -74,6 +88,7 @@
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
+    "bun-types": "catalog:",
     "micromark": "catalog:"
   },
   "beep": {

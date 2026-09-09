@@ -11,10 +11,13 @@ import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 import { NonEmptyTrimmedStr } from "./String.ts";
 
+const decodeURLFromStringOption = S.decodeOption(S.URLFromString);
+const decodeUnknownURLFromStringOption = S.decodeUnknownOption(S.URLFromString);
+const isNonEmptyTrimmedStr = S.is(NonEmptyTrimmedStr);
+
 const $I = $SchemaId.create("URL");
 
-const isURLStr = (u: unknown): u is URLStr =>
-  S.is(NonEmptyTrimmedStr)(u) && O.isSome(S.decodeOption(S.URLFromString)(u));
+const isURLStr = (u: unknown): u is URLStr => isNonEmptyTrimmedStr(u) && O.isSome(decodeURLFromStringOption(u));
 
 const filterURLStr = S.makeFilter(isURLStr, {
   message: "URL must be a valid URL encoded string",
@@ -72,7 +75,7 @@ export type URLStr = Brand.Branded<NonEmptyTrimmedStr, "URLStr">;
 
 const filterHttpsUrl = S.makeFilter(
   (input: unknown): input is `https://${string}` => {
-    const urlOpt = S.decodeUnknownOption(S.URLFromString)(input);
+    const urlOpt = decodeUnknownURLFromStringOption(input);
 
     if (O.isNone(urlOpt)) return false;
 
@@ -86,6 +89,7 @@ const filterHttpsUrl = S.makeFilter(
 );
 
 const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("HttpsUrl"));
+const decodeHttpsUrlDefinitionSync = S.decodeSync(HttpsUrlDefinition);
 
 /**
  * Branded schema for absolute URL strings that use the `https:` protocol.
@@ -108,7 +112,7 @@ export const HttpsUrl = HttpsUrlDefinition.pipe(
   $I.annoteSchema("HttpsUrl", {
     description: "An absolute URL string constrained to the https protocol.",
     toArbitrary: () => (fc) =>
-      fc.uuid().map((id) => S.decodeSync(HttpsUrlDefinition)(`https://example.test/resource/${id}`)),
+      fc.uuid().map((id) => decodeHttpsUrlDefinitionSync(`https://example.test/resource/${id}`)),
   })
 );
 

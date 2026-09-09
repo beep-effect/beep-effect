@@ -2,7 +2,7 @@
 
 Order is by evidence-returned-per-unit-of-work. No calendar estimates. Every item lands as a
 focused PR through Yeet unless the operator bundles a phase. Packet phase flips ride the same PR as
-their implementation truth. Heavy lanes run on Codex (Sol, high effort); web research on Grok; the
+their implementation truth. Heavy lanes run on Codex (`gpt-6-astra`, `medium` reasoning); web research on Grok; the
 orchestrator owns schemas, contracts, and judgment.
 
 ## P0 — Measure and ratify — COMPLETE 2026-09-03
@@ -92,7 +92,20 @@ orchestrator owns schemas, contracts, and judgment.
         consumes versioned results with its prior rendering and exit semantics, and the run-summary
         `tasks[].hash` is the ledger input).
   - [ ] Lint-policy — heterogeneous sublanes have root-wide inputs; one union glob would recreate a
-        whole-tree hash.
+        whole-tree hash. Grilled 2026-09-08 (rulings 19–25): one task per sublane, in two shapes.
+    - [ ] C3.1 scripts-block schema, generator parity, `beep lint package-scripts` gate, codegen
+          placeholder removal and root `codegen` split (ruling 23, 24).
+    - [ ] C3.2 `lint:deprecated-apis` and `lint:jsdoc` package tasks (eslint profiles); the 4-way
+          shard runner retires (ruling 21).
+    - [ ] C3.3 `lint:laws` package task (sub-second laws plus package-test-imports); `beep:policy`
+          retires (ruling 21).
+    - [ ] C3.4 `doctest` package task; mode branch in `vitest.shared.ts`; the root doctest config
+          and the file-list lane retire (ruling 22).
+    - [ ] C3.5 Turbo root tasks for the graph-wide sublanes (knip, fallow, oxlint, circular,
+          identity-registry, semantic-delta, refs-check, schema-first check, tsgo-rules,
+          jsdoc-inventory, roadmap-refs); `lint policy` and `beep:preflight` run one Turbo plan
+          (ruling 19, 20).
+    - [ ] C3.6 economics re-run over the migrated lanes; the ledger report shows per-lane hashes.
   - [ ] Labs — three task-hash sets rather than one declared action; must keep the PR path gate and
         zero-labs-is-green.
 - [ ] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`

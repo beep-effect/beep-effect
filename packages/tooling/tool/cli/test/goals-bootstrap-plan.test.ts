@@ -37,6 +37,12 @@ import {
 } from "./support/CommandTest.ts";
 import type { Path } from "effect";
 
+const decodeGoalSlugSync = S.decodeSync(GoalSlug);
+const decodeUnknownGoalSlug = S.decodeUnknownEffect(GoalSlug);
+const encodeGoalSlugSync = S.encodeSync(GoalSlug);
+const encodeUnknownMaterializationPlan = S.encodeUnknownEffect(MaterializationPlan);
+const isMaterializationPlan2 = S.is(MaterializationPlan);
+
 const FIXTURES_ROOT = new URL("./fixtures/goals-plan", import.meta.url).pathname;
 // biome-ignore lint/suspicious/noUndeclaredEnvVars: Local golden regeneration is an explicit uncached test-authoring mode.
 const REGEN = Bun.env.REGEN_GOLDENS === "1";
@@ -46,7 +52,7 @@ const PROJECTION_REPEAT_RUNS = 20;
 const encodeGoalManifest = S.encodeUnknownEffect(GoalManifest);
 
 const encodePlan = (plan: MaterializationPlan) =>
-  Effect.map(S.encodeUnknownEffect(MaterializationPlan)(plan), canonicalJsonTextPretty);
+  Effect.map(encodeUnknownMaterializationPlan(plan), canonicalJsonTextPretty);
 
 const minimalInput = BootstrapInput.make({
   slug: "example-goal",
@@ -95,7 +101,7 @@ describe("goals bootstrap --plan golden fixtures", () => {
   it("round-trips arbitrary goal slugs through the schema codec", () => {
     fc.assert(
       fc.property(S.toArbitrary(GoalSlug)(fc), (slug) => {
-        expect(S.decodeSync(GoalSlug)(S.encodeSync(GoalSlug)(slug))).toBe(slug);
+        expect(decodeGoalSlugSync(encodeGoalSlugSync(slug))).toBe(slug);
       }),
       { numRuns: 32 }
     );
@@ -134,12 +140,11 @@ describe("goals bootstrap --plan determinism", () => {
 
   it("property: schema-generated inputs compile deterministic schema-valid plans", () => {
     const BootstrapInputArbitrary = S.toArbitrary(BootstrapInput)(fc);
-    const isMaterializationPlan = S.is(MaterializationPlan);
     fc.assert(
       fc.property(BootstrapInputArbitrary, (input) => {
         const first = compileMaterializationPlan(input, []);
         const second = compileMaterializationPlan(input, []);
-        expect(isMaterializationPlan(first)).toBe(true);
+        expect(isMaterializationPlan2(first)).toBe(true);
         expect(second.planId).toBe(first.planId);
         expect(second.entries).toStrictEqual(first.entries);
       }),
@@ -149,14 +154,12 @@ describe("goals bootstrap --plan determinism", () => {
 });
 
 describe("goals bootstrap --plan input rejection", () => {
-  const decodeSlug = S.decodeUnknownEffect(GoalSlug);
-
   it.each(["Uppercase-Slug", "slug/with/separators", "../escape", "spaced slug", "_template"])(
     "rejects %j at the slug grammar",
     (candidate) =>
       Effect.runPromise(
         Effect.gen(function* () {
-          const outcome = yield* Effect.exit(decodeSlug(candidate));
+          const outcome = yield* Effect.exit(decodeUnknownGoalSlug(candidate));
           expect(outcome._tag).toBe("Failure");
         })
       )
@@ -408,8 +411,8 @@ describe("goals adopt --plan index parity", () => {
           expect(O.isSome(first)).toBe(true);
           if (O.isNone(first)) return;
           expect(A.every(generated, (content) => content === first.value)).toBe(true);
-          const local = yield* fs.readFileString(`${repoRoot}/${PORTFOLIO_INDEX_PATH}`).pipe(Effect.option);
-          if (O.isSome(local)) expect(local.value).toBe(first.value);
+          // The local goals/INDEX.md projection is git-ignored workstation state; drift against it is
+          // the `goals index --check` command's job (covered below on a temp dir), not this test's.
         })
       ),
     60_000

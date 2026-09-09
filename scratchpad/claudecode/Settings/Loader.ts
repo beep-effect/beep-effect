@@ -23,6 +23,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SettingsDecodeError, SettingsParseError, SettingsReadError } from "../Errors.ts";
 import { SettingsFile, SettingsRaw } from "./Schema.ts";
+const decodeSettingsFile = S.decodeEffect(SettingsFile);
+const decodeUnknownSettingsFile = S.decodeUnknownEffect(SettingsFile);
+const decodeUnknownSettingsRaw = S.decodeUnknownEffect(SettingsRaw);
 
 const $I = $ScratchpadId.create("claudecode/Settings/Loader");
 
@@ -147,10 +150,10 @@ const decodeSettingsSource = (
     const parsed = yield* UnknownFromJsonString.decodeEffect(content).pipe(
       Effect.mapError((cause) => SettingsParseError.make({ path, cause }))
     );
-    const raw = yield* S.decodeUnknownEffect(SettingsRaw)(parsed).pipe(
+    const raw = yield* decodeUnknownSettingsRaw(parsed).pipe(
       Effect.mapError((cause) => SettingsDecodeError.make({ path, cause }))
     );
-    yield* S.decodeUnknownEffect(SettingsFile)(parsed).pipe(
+    yield* decodeUnknownSettingsFile(parsed).pipe(
       Effect.mapError((cause) => SettingsDecodeError.make({ path, cause }))
     );
     return raw;
@@ -178,7 +181,7 @@ const mergeSettingsRaw = (base: SettingsRaw, override: SettingsRaw): SettingsRaw
   R.union(base, override, mergeSettingsValue);
 
 const materializeSettings = (raw: SettingsRaw): Effect.Effect<SettingsFile, SettingsDecodeError> =>
-  S.decodeEffect(SettingsFile)(raw).pipe(
+  decodeSettingsFile(raw).pipe(
     Effect.mapError((cause) => SettingsDecodeError.make({ path: "<merged settings>", cause })),
     Effect.map((settings) =>
       SettingsFile.make({

@@ -20,6 +20,9 @@ and what eats token spend. Get a data-driven pulse, then decide improvements.
 
 ## Next Open Question
 
+Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
+`medium` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+
 None — fully graduated. Wave 1 (2026-07-14) →
 [`goals/harness-otel-adoption`](../../goals/harness-otel-adoption/README.md),
 [`goals/harness-hygiene-mechanical`](../../goals/harness-hygiene-mechanical/README.md).
@@ -71,3 +74,9 @@ Forwarder durability still rides `ai-metrics-stack` P7f.
   kickoff decisions logged (new packet, durable revival, whole-fleet mining,
   grill checkpoints, codex-medium subagent economy). Next: pipeline revival,
   then pulse mining.
+- 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
+  this resume surface, and manifest timestamps where needed; retained the existing
+  stage, lifecycle, open questions, and historical execution provenance.
+- 2026-09-09: lowered the Astra default reasoning effort from `xhigh` to `medium`
+  in DECISIONS, this resume surface, and manifest timestamps; historical execution
+  provenance retained.

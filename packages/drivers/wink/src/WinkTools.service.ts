@@ -34,6 +34,8 @@ import type { BM25Norm } from "@beep/nlp/Core/Vectorization";
 import type { AiToolError } from "@beep/nlp-processing/Tools";
 import type { Tool } from "effect/unstable/ai";
 
+const decodeNonEmptyBracketStringToPatternElementArray = S.decodeEffect(S.NonEmptyArray(BracketStringToPatternElement));
+
 const $I = $WinkId.create("Tools/NlpToolkit");
 
 const emptyTermBag = R.empty<string, number>();
@@ -192,31 +194,32 @@ const EntityOutputDetailUnknowns = S.Array(S.Unknown).pipe(
     description: "Raw wink entity detail array before loose detail-object normalization.",
   })
 );
+const decodeUnknownEntityOutputDetailUnknownsOption = S.decodeUnknownOption(EntityOutputDetailUnknowns);
 const EntityOutputSpan = S.Array(S.Finite).pipe(
   $I.annoteSchema("EntityOutputSpan", {
     description: "Finite numeric span returned by wink entity output records.",
   })
 );
+const decodeUnknownEntityOutputSpanOption = S.decodeUnknownOption(EntityOutputSpan);
 const EntityOutputSpanUnknowns = S.Array(S.Unknown).pipe(
   $I.annoteSchema("EntityOutputSpanUnknowns", {
     description: "Raw wink entity span array before loose span normalization.",
   })
 );
+const decodeUnknownEntityOutputSpanUnknownsOption = S.decodeUnknownOption(EntityOutputSpanUnknowns);
 
 const decodeEntityOutputDetails = (value: unknown): ReadonlyArray<EntityOutputDetail> =>
   pipe(
-    S.decodeUnknownOption(EntityOutputDetailUnknowns)(value),
+    decodeUnknownEntityOutputDetailUnknownsOption(value),
     O.map(A.map((detail) => EntityOutputDetail.make(P.isObject(detail) ? detail : R.empty()))),
     O.getOrElse(thunkEmptyReadonlyArray<EntityOutputDetail>())
   );
 
 const decodeEntityOutputSpans = (value: unknown): ReadonlyArray<ReadonlyArray<number>> =>
   pipe(
-    S.decodeUnknownOption(EntityOutputSpanUnknowns)(value),
+    decodeUnknownEntityOutputSpanUnknownsOption(value),
     O.map(
-      A.map((span) =>
-        pipe(S.decodeUnknownOption(EntityOutputSpan)(span), O.getOrElse(thunkEmptyReadonlyArray<number>()))
-      )
+      A.map((span) => pipe(decodeUnknownEntityOutputSpanOption(span), O.getOrElse(thunkEmptyReadonlyArray<number>())))
     ),
     O.getOrElse(thunkEmptyReadonlyArray<ReadonlyArray<number>>())
   );
@@ -712,7 +715,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
             mode: mode ?? "append",
             ...countAttribute("entity_definition_count", A.length(entities)),
           });
-          yield* S.decodeEffect(S.NonEmptyArray(BracketStringToPatternElement))(
+          yield* decodeNonEmptyBracketStringToPatternElementArray(
             pipe(
               entities,
               A.flatMap((entity) => entity.patterns)

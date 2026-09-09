@@ -28,6 +28,7 @@ import {
   DateTime,
   Duration,
   Effect,
+  Encoding,
   Fiber,
   FileSystem,
   Layer,
@@ -36,18 +37,24 @@ import {
   pipe,
 } from "effect";
 import * as A from "effect/Array";
-import { constant, dual } from "effect/Function";
+import * as Bool from "effect/Boolean";
+import { constant, dual, flow } from "effect/Function";
 import * as HS from "effect/HashSet";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   AdmissionEvictionEmission,
   AdmissionJournalAdmitted,
-  AdmissionJournalLeaseEvicted,
-  AdmissionJournalReleased,
-  AdmissionJournalTicketEvicted,
+  AdmissionJournalEnqueued,
+  AdmissionJournalLeaseEvictedV3,
+  AdmissionJournalReleasedV3,
+  AdmissionJournalTicketEvictedV3,
+  AdmissionJournalWithdrawn,
   acquireJournalFileLock,
   appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
@@ -79,6 +86,7 @@ import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeFor
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/schema/String";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -151,7 +159,11 @@ export interface AdmissionEvictionJournalShape {
   /** Publish or acknowledge one eviction event when the admission protocol permits it. */
   readonly appendOnce: (
     root: string,
-    event: AdmissionJournalLeaseEvicted | AdmissionJournalTicketEvicted
+    event:
+      | AdmissionJournalLeaseEvicted
+      | AdmissionJournalTicketEvicted
+      | AdmissionJournalLeaseEvictedV3
+      | AdmissionJournalTicketEvictedV3
   ) => Effect.Effect<boolean, QualitySchedulerError, FileSystem.FileSystem | Path.Path>;
 }
 
@@ -209,7 +221,8 @@ const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(Admissi
 
 const GIB = 1024 * 1024 * 1024;
 const MEMINFO_PATH = "/proc/meminfo";
-const recoveryRecordSettlementWindow = Duration.millis(25);
+const recoveryRecordSettlementWindow = Duration.seconds(5);
+const recoveryRecordSettlementPollInterval = Duration.millis(25);
 const textEncoder = new TextEncoder();
 
 /**
@@ -500,7 +513,7 @@ export const admissionProtocolStatus = Effect.fn("QualityScheduler.admissionProt
  * console.log(typeof setAdmissionEvictionProtocol) // "function"
  * ```
  *
- * @param eviction - Desired v2 eviction-event emission state.
+ * @param eviction - Desired v3 eviction-event emission state under the protocol v2 fence.
  * @returns The protocol marker that was published.
  * @category utilities
  * @since 0.0.0
@@ -512,15 +525,67 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
   return yield* writeAdmissionProtocol(directories.root, eviction);
 });
 
+// Staging siblings are named `<target>.tmp-<pid>[-<start identity>]-<uuid>`.
+// The writer's process start identity rides along hex-encoded (a `ps`-sourced
+// identity contains spaces) so the repair scan classifies an orphan with the
+// same pid-reuse fence leases use, instead of trusting a bare pid.
+const stagingTemporaryPath = (filePath: string, procStart: O.Option<string>): string =>
+  `${filePath}.tmp-${process.pid}${O.match(procStart, {
+    onNone: () => "",
+    onSome: (identity) => `-${Encoding.encodeHex(identity)}`,
+  })}-${randomUUID()}`;
+
+const stagingFileNamePattern =
+  /\.tmp-(\d+)(?:-([0-9a-f]+))?-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+interface StagingFileOwner {
+  readonly pid: number;
+  readonly procStart: string;
+}
+
+// A name without an identity segment (written before identities were recorded)
+// classifies by pid liveness alone, exactly like a legacy lease.
+const stagingFileIdentity = (segment: string | undefined): string =>
+  pipe(
+    O.fromUndefinedOr(segment),
+    O.map(flow(Encoding.decodeHexString, Result.getOrElse(constant(Str.empty)))),
+    O.getOrElse(constant(Str.empty))
+  );
+
+const stagingFileOwner = (name: string): O.Option<StagingFileOwner> =>
+  pipe(
+    O.fromNullishOr(stagingFileNamePattern.exec(name)),
+    O.flatMap((match) =>
+      pipe(
+        O.fromUndefinedOr(match[1]),
+        O.flatMap(Num.parse),
+        O.map((pid) => ({ pid, procStart: stagingFileIdentity(match[2]) }))
+      )
+    )
+  );
+
+// `force` turns an already-consumed temporary into a no-op; any other refusal
+// leaves an orphan behind, so it is reported rather than swallowed.
+const removeStagingFile = Effect.fnUntraced(function* (
+  temporary: string
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.remove(temporary, { force: true }).pipe(
+    Effect.tapError((error) =>
+      Console.error(`[yeet] failed to remove admission staging file ${temporary}: ${error.message}`)
+    ),
+    Effect.ignore
+  );
+});
+
 // Stage the complete content in a sibling temp file so publication (rename or
 // hard link) is atomic and a concurrent repair scan can never observe (and
 // quarantine) a partial write.
 const stageTemporaryFile = Effect.fnUntraced(function* (
-  filePath: string,
+  temporary: string,
   content: string
-): Effect.fn.Return<string, QualitySchedulerError, FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const temporary = `${filePath}.tmp-${process.pid}-${randomUUID()}`;
   yield* Effect.scoped(
     Effect.gen(function* () {
       const file = yield* fs.open(temporary, { flag: "w" });
@@ -528,7 +593,25 @@ const stageTemporaryFile = Effect.fnUntraced(function* (
       yield* file.sync;
     })
   ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission state at ${temporary}.`)));
-  return temporary;
+});
+
+// Stage, then publish. The staged temporary is removed once the pair settles,
+// however it settles: a successful rename already consumed it (the forced
+// remove is a no-op), a hard link or any failure leaves it behind, and an
+// interrupt can land mid-write or between the two steps because every lease
+// release interrupts the heartbeat fiber. `Effect.ensuring` runs its finalizer
+// uninterruptibly, so no exit path can strand a `.tmp-` sibling.
+const withStagedTemporaryFile = Effect.fnUntraced(function* <A>(
+  filePath: string,
+  content: string,
+  publish: (temporary: string) => Effect.Effect<A, QualitySchedulerError, FileSystem.FileSystem>
+): Effect.fn.Return<A, QualitySchedulerError, FileSystem.FileSystem> {
+  const procStart = yield* processStartIdentityForPid(process.pid);
+  const temporary = stagingTemporaryPath(filePath, O.filter(procStart, Str.isNonEmpty));
+  return yield* stageTemporaryFile(temporary, content).pipe(
+    Effect.andThen(publish(temporary)),
+    Effect.ensuring(removeStagingFile(temporary))
+  );
 });
 
 const writeFileAtomic = Effect.fnUntraced(function* (
@@ -536,10 +619,11 @@ const writeFileAtomic = Effect.fnUntraced(function* (
   content: string
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const temporary = yield* stageTemporaryFile(filePath, content);
-  yield* fs
-    .rename(temporary, filePath)
-    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission state at ${filePath}.`)));
+  yield* withStagedTemporaryFile(filePath, content, (temporary) =>
+    fs
+      .rename(temporary, filePath)
+      .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission state at ${filePath}.`)))
+  );
 });
 
 const tryCreateExclusive = Effect.fnUntraced(function* (
@@ -547,17 +631,89 @@ const tryCreateExclusive = Effect.fnUntraced(function* (
   content: string
 ): Effect.fn.Return<boolean, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const temporary = yield* stageTemporaryFile(filePath, content);
-  const linked = yield* fs.link(temporary, filePath).pipe(
-    Effect.as(true),
-    Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "AlreadyExists"
-        ? Effect.succeed(false)
-        : Effect.fail(QualitySchedulerError.new(`Failed to atomically create ${filePath}.`)(error))
+  return yield* withStagedTemporaryFile(filePath, content, (temporary) =>
+    fs.link(temporary, filePath).pipe(
+      Effect.as(true),
+      Effect.catchTag("PlatformError", (error) =>
+        error.reason._tag === "AlreadyExists"
+          ? Effect.succeed(false)
+          : Effect.fail(QualitySchedulerError.new(`Failed to atomically create ${filePath}.`)(error))
+      )
     )
   );
-  yield* fs.remove(temporary, { force: true }).pipe(Effect.ignore);
-  return linked;
+});
+
+/**
+ * Exercise the atomic stage-and-rename write without entering the scheduler.
+ *
+ * **Example** (Build an atomic write effect)
+ *
+ * ```ts
+ * import { writeFileAtomicForTesting } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * const publication = writeFileAtomicForTesting("/repo/state.json", "{}")
+ * console.log(Effect.isEffect(publication)) // true
+ * ```
+ *
+ * @param filePath - Destination replaced atomically once the content is staged.
+ * @param content - Content staged in a sibling temporary before the rename.
+ * @returns An Effect that completes once the destination is published.
+ * @category testing
+ * @since 0.0.0
+ */
+export const writeFileAtomicForTesting = writeFileAtomic;
+
+/**
+ * Exercise exclusive-publication collisions without entering the scheduler.
+ *
+ * **Example** (Build an exclusive publication effect)
+ *
+ * ```ts
+ * import { tryCreateExclusiveForTesting } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * const publication = tryCreateExclusiveForTesting("/repo/existing", "replacement")
+ * console.log(Effect.isEffect(publication)) // true
+ * ```
+ *
+ * @param filePath - Destination that must not already exist.
+ * @param content - Content staged before the exclusive link attempt.
+ * @returns An Effect yielding whether the destination was created.
+ * @category testing
+ * @since 0.0.0
+ */
+export const tryCreateExclusiveForTesting = tryCreateExclusive;
+
+// Orphaned staging siblings never settle into `.json` state, so the entry scan
+// cannot see them. Collect the ones whose writer is dead by the lease liveness
+// rules (pid gone, or pid reused by a process with a different start identity)
+// so a dry run previews exactly what repair removes; a live or unverifiable
+// writer is an in-flight publication and is never listed.
+const collectStaleStagingFiles = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories
+): Effect.fn.Return<ReadonlyArray<string>, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return A.flatten(
+    yield* Effect.forEach(
+      [directories.claims, directories.leases, directories.promotions, directories.queue],
+      Effect.fnUntraced(function* (directory: string) {
+        const names = yield* fs
+          .readDirectory(directory)
+          .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission state in ${directory}.`)));
+        return A.getSomes(
+          yield* Effect.forEach(
+            A.getSomes(A.map(names, (name) => O.map(stagingFileOwner(name), (owner) => ({ name, owner })))),
+            ({ name, owner }) =>
+              Effect.map(isProcessIdentityAlive(owner), (alive) =>
+                alive ? O.none<string>() : O.some(path.join(directory, name))
+              )
+          )
+        );
+      })
+    )
+  );
 });
 
 interface LiveAdmissionState {
@@ -584,7 +740,6 @@ const quarantineEntry = Effect.fnUntraced(function* (
 
 interface AdmissionEntryCodec<Entry, DecodeError> {
   readonly decode: (text: string) => Effect.Effect<Entry, DecodeError>;
-  readonly describe: (entry: Entry) => string;
   readonly ownerOf: (entry: Entry) => { readonly pid: number; readonly procStart: string };
 }
 
@@ -739,22 +894,27 @@ const reasonForReapClaim = (claim: AdmissionReapClaim): "lease-eviction" | "queu
 const admissionEventForReapClaim = (claim: AdmissionReapClaim) =>
   AdmissionReapClaim.match(claim, {
     lease: ({ lease, claimedAtMillis }) =>
-      AdmissionJournalLeaseEvicted.make({
-        schemaVersion: "yeet-admission-journal/v2",
+      AdmissionJournalLeaseEvictedV3.make({
+        schemaVersion: "yeet-admission-journal/v3",
         _tag: "admission-lease-evicted",
         nonce: lease.nonce,
         pid: lease.pid,
         attemptId: lease.attemptId,
+        checkoutRoot: lease.checkoutRoot,
+        branch: lease.branch,
+        lastHeartbeatAtMillis: lease.heartbeatAtMillis,
         evictedAtMillis: claimedAtMillis,
         reason: "owner-dead-or-reused",
       }),
     ticket: ({ ticket, claimedAtMillis }) =>
-      AdmissionJournalTicketEvicted.make({
-        schemaVersion: "yeet-admission-journal/v2",
+      AdmissionJournalTicketEvictedV3.make({
+        schemaVersion: "yeet-admission-journal/v3",
         _tag: "admission-ticket-evicted",
         nonce: ticket.nonce,
         pid: ticket.pid,
         attemptId: ticket.attemptId,
+        checkoutRoot: ticket.checkoutRoot,
+        branch: ticket.branch,
         evictedAtMillis: claimedAtMillis,
         reason: "queued-submitter-death",
       }),
@@ -820,11 +980,11 @@ const recoveryRecordRemainsAfterSettlement = Effect.fnUntraced(function* (
   recoveryPath: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  if (!(yield* fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true))))) {
-    return false;
-  }
-  yield* Effect.sleep(recoveryRecordSettlementWindow);
-  return yield* fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true)));
+  // A healthy owner may need several seconds to finish its sinks on a loaded runner.
+  return yield* Effect.repeat(fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true))), {
+    until: Bool.not,
+    schedule: Schedule.spaced(recoveryRecordSettlementPollInterval),
+  }).pipe(Effect.timeout(recoveryRecordSettlementWindow), Effect.orElseSucceed(constant(true)));
 });
 
 const processAttemptJournalSink = Effect.fnUntraced(function* (
@@ -1229,13 +1389,14 @@ const scanAdmissionState = Effect.fnUntraced(function* (
   retainedDeadLeasePaths: ReadonlyArray<string> = A.empty()
 ): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   yield* repair ? recoverPromotionTransitions(directories) : Effect.void;
+  const staleStaging = yield* collectStaleStagingFiles(directories);
+  yield* repair ? Effect.forEach(staleStaging, removeStagingFile, { discard: true }) : Effect.void;
   const leases = yield* collectAdmissionEntries(
     directories,
     directories.leases,
     {
       decode: decodeLease,
       ownerOf: (lease: YeetAdmissionLease) => lease,
-      describe: (lease: YeetAdmissionLease) => `pid ${lease.pid} (${lease.kind}, ${lease.checkoutRoot})`,
     },
     repair
   );
@@ -1245,7 +1406,6 @@ const scanAdmissionState = Effect.fnUntraced(function* (
     {
       decode: decodeTicket,
       ownerOf: (ticket: YeetAdmissionTicket) => ticket,
-      describe: (ticket: YeetAdmissionTicket) => `pid ${ticket.pid} (queued ${ticket.kind}, ${ticket.checkoutRoot})`,
     },
     repair
   );
@@ -1253,8 +1413,11 @@ const scanAdmissionState = Effect.fnUntraced(function* (
     leases: A.map(leases.live, ({ entry, path: entryPath }) => ({ path: entryPath, lease: entry })),
     tickets: A.map(tickets.live, ({ entry, path: entryPath }) => ({ path: entryPath, ticket: entry })),
     dead: A.appendAll(
-      A.map(leases.dead, ({ path: entryPath }) => entryPath),
-      A.map(tickets.dead, ({ path: entryPath }) => entryPath)
+      A.appendAll(
+        A.map(leases.dead, ({ path: entryPath }) => entryPath),
+        A.map(tickets.dead, ({ path: entryPath }) => entryPath)
+      ),
+      staleStaging
     ),
     deadLeases: A.map(leases.dead, ({ entry, path: entryPath }) => ({ path: entryPath, lease: entry })),
     deadTickets: A.map(tickets.dead, ({ entry, path: entryPath }) => ({ path: entryPath, ticket: entry })),
@@ -1803,6 +1966,23 @@ const noteAdmissionWait = Effect.fnUntraced(function* (
   return O.isSome(escalation) ? { ...next, escalated: escalationLevelFor(waitedMillis) } : next;
 });
 
+/**
+ * Exposes one admission wait-progress step for deterministic scheduler tests.
+ *
+ * **Example** (Reference the wait-progress test seam)
+ *
+ * ```ts import.meta.vitest name="Reference the wait-progress test seam"
+ * import { noteAdmissionWaitForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * typeof noteAdmissionWaitForTesting // => "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const noteAdmissionWaitForTesting = noteAdmissionWait;
+
 // Interruption is masked around promotion (so a scheduler lease and any
 // fallback origin lease can never be created without their release installed)
 // and restored across the sleep, which is where a Ctrl-C lands and unwinds to
@@ -1893,13 +2073,15 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
       const telemetry = yield* readLeaseRunScopeTelemetry(admitted.lease);
       yield* appendAdmissionJournalEvent(
         directories.root,
-        AdmissionJournalReleased.make({
-          schemaVersion: "yeet-admission-journal/v1",
+        AdmissionJournalReleasedV3.make({
+          schemaVersion: "yeet-admission-journal/v3",
           _tag: "admission-released",
           nonce: admitted.lease.nonce,
           pid: admitted.lease.pid,
           releasedAtMillis,
           attemptId: admitted.lease.attemptId,
+          checkoutRoot: admitted.lease.checkoutRoot,
+          branch: admitted.lease.branch,
           ...OptionUtils.getSomesStruct({
             memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
           }),
@@ -1910,6 +2092,35 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
       yield* releaseOrigin(admitted.originLease);
     })
   );
+});
+
+const finalizeAdmissionTicket = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  ticketPath: string,
+  ticket: YeetAdmissionTicket
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  // A promotion may have published its lease before failing to remove the
+  // ticket. That durable grant belongs to promotion/reap recovery, not withdrawal.
+  const leaseExists = yield* fs
+    .exists(path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`))
+    .pipe(Effect.orElseSucceed(constant(true)));
+  // A completed promotion already removed the ticket. Only acknowledge a
+  // withdrawal when this finalizer actually removes a still-queued request.
+  const removed = yield* fs.remove(ticketPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+  if (!removed || leaseExists) {
+    return;
+  }
+  yield* appendAdmissionJournalEvent(
+    directories.root,
+    AdmissionJournalWithdrawn.make({
+      ...ticket,
+      schemaVersion: "yeet-admission-journal/v3",
+      _tag: "admission-withdrawn",
+      withdrawnAtMillis: yield* Clock.currentTimeMillis,
+    })
+  ).pipe(Effect.catch(warnAdmissionJournalError));
 });
 
 /**
@@ -2020,6 +2231,14 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
             message: `Admission ticket ${ticketPath} already exists; remove it and retry.`,
           });
         }
+        yield* appendAdmissionJournalEvent(
+          directories.root,
+          AdmissionJournalEnqueued.make({
+            ...ticket,
+            schemaVersion: "yeet-admission-journal/v3",
+            _tag: "admission-enqueued",
+          })
+        ).pipe(Effect.catch(warnAdmissionJournalError));
         return ticket;
       }),
       Effect.fnUntraced(function* (enqueued) {
@@ -2034,10 +2253,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
         );
         return yield* runAdmitted(directories, admitted, gate.release, use, resolved, restore);
       }),
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(ticketPath, { force: true }).pipe(Effect.ignore);
-      })
+      (enqueued) => finalizeAdmissionTicket(directories, ticketPath, enqueued)
     )
   );
 });

@@ -215,6 +215,59 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `export const h = () => S.decodeSync(Model)({});`
         ),
       },
+      // Nested schema construction rooted in a static schema is also compiled inline.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h2 = () => S.decodeSync(S.Array(Model))([]);`
+        ),
+      },
+      // A static schema namespace member is a hoistable compiler dependency.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `import * as Models from "./models";`,
+          `export const h3 = () => S.decodeSync(Models.User)({});`
+        ),
+      },
+      // Uncurried assertion adapters compile the schema on every invocation too.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h4 = (input: unknown): void => S.asserts(Model, input);`
+        ),
+      },
+      // Static schema fields nested in an object literal remain hoistable.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h5 = () => S.decodeSync(S.Struct({ value: Model }))({});`
+        ),
+      },
+      // Static schema entries nested in an array literal remain hoistable.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h6 = () => S.decodeSync(S.Tuple([Model]))([]);`
+        ),
+      },
+      // Unary numeric literals are static schema arguments.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const h7 = () => S.decodeSync(S.Literal(-1))(-1);`
+        ),
+      },
     ],
     valid: [
       // Module-scope compiler call is allowed (the whole point of the rule).
@@ -232,6 +285,57 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
         source: lines(
           `import { Schema } from "./local-schema";`,
           `export const j = () => Schema.decodeSync(Whatever)({});`
+        ),
+      },
+      // Runtime schema parameters cannot be compiled at module scope.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeRows = (rowSchema: S.Top) => S.decodeSync(S.Array(rowSchema));`
+        ),
+      },
+      // A nested wrapper around a runtime schema parameter remains dynamic.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const encodedGuard = (shape: S.Top) => S.is(S.toEncoded(shape));`
+        ),
+      },
+      // Member expressions rooted in runtime values are dynamic schema parameters.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeSection = (input: { schema: S.Top }) => S.decodeSync(input.schema);`
+        ),
+      },
+      // Runtime schema parameters nested in object literals cannot be hoisted.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeField = (fieldSchema: S.Top) =>`,
+          `  S.decodeSync(S.Struct({ value: fieldSchema }));`
+        ),
+      },
+      // Runtime schema parameters nested in array literals cannot be hoisted.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeTuple = (fieldSchema: S.Top) =>`,
+          `  S.decodeSync(S.Tuple([fieldSchema]));`
+        ),
+      },
+      // Unary runtime values remain parameter-dependent.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeNegated = (value: -1 | 1) =>`,
+          `  S.decodeSync(S.Literal(-value));`
         ),
       },
     ],

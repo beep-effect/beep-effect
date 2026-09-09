@@ -18,8 +18,11 @@ import { HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { CollectorHandle } from "@beep/qa-capture";
 
+const decodeUnknownMarkAccepted = S.decodeUnknownEffect(MarkAccepted);
+
 const MarkPayload = S.Struct({ label: S.String });
 const MarkPayloadJson = S.fromJsonString(MarkPayload);
+const encodeMarkPayloadJson = S.encodeEffect(MarkPayloadJson);
 
 /**
  * Read the live collector handle, failing politely when no session is running.
@@ -122,12 +125,12 @@ export const markLiveSession = Effect.fn("QaControl.markLiveSession")(function* 
     onNone: () => label,
     onSome: (value) => `${label} ${value}`,
   });
-  const json = yield* S.encodeEffect(MarkPayloadJson)({ label: fullLabel }).pipe(
+  const json = yield* encodeMarkPayloadJson({ label: fullLabel }).pipe(
     QaCommandError.mapError("qa could not encode the marker payload.")
   );
   const response = yield* postToCollector(handle, "/mark", HttpBody.text(json, "application/json"));
   const body = yield* response.json.pipe(QaCommandError.mapError("qa could not read the marker acknowledgement."));
-  return yield* S.decodeUnknownEffect(MarkAccepted)(body).pipe(
+  return yield* decodeUnknownMarkAccepted(body).pipe(
     QaCommandError.mapError("qa could not decode the marker acknowledgement.")
   );
 });

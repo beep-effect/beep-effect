@@ -19,6 +19,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const isActFrameElementRef = S.is(ActFrameElementRef);
+const isLegalVerdictFamily = S.is(LegalVerdictFamily);
+
 const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 10): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
@@ -276,14 +279,14 @@ describe("priority basis inputs", () => {
     expect(LegalVerdictFamily.is["principle-collision"]("principle-collision")).toBe(true);
     expect(LegalVerdictFamily.is["interpretation-dispute"]("interpretation-dispute")).toBe(true);
     expect(LegalVerdictFamily.is["factual-dispute"]("factual-dispute")).toBe(true);
-    expect(S.is(LegalVerdictFamily)("rejected")).toBe(false);
+    expect(isLegalVerdictFamily("rejected")).toBe(false);
   });
 
   it("addresses a frame element by part and label", () => {
     const pointer = ActFrameElementRef.make({ label: "no-objection", part: "precondition" });
 
     expect(pointer.part).toBe("precondition");
-    expect(S.is(ActFrameElementRef)({ label: "no-objection", part: "clause" })).toBe(false);
+    expect(isActFrameElementRef({ label: "no-objection", part: "clause" })).toBe(false);
   });
 });
 

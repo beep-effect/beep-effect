@@ -16,25 +16,30 @@
   },
   "scripts": {
     "audit": "bun run --if-present beep:audit",
-    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
+    "docgen": "bun run beep:docgen",
+    "lint": "bun run beep:lint",
+    "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+    "lint:fix": "bun run beep:lint:fix",
+    "lint:jsdoc": "beep-cli lint jsdoc --package .",
+    "lint:laws": "beep-cli lint laws --package .",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package",
+    "test": "bun run beep:test",
+    "test:integration": "bun run beep:test:integration",
+    "test:property": "bun run beep:test",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -p tsconfig.check.json",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
+    "beep:docgen": "bunx --bun --no-install docgen",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "TESTCONTAINERS_RYUK_DISABLED=true bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
     "beep:test:integration": "TESTCONTAINERS_RYUK_DISABLED=true bunx --bun vitest run test/integration --passWithNoTests",
-    "build": "bun run beep:build",
-    "check": "bun run beep:check",
-    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
-    "docgen": "bunx --bun --no-install docgen",
-    "lint": "bun run beep:lint",
-    "lint:fix": "bun run beep:lint:fix",
-    "test": "bun run beep:test",
-    "test:property": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration",
+    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "test:integration:serial": "bun run beep:test:integration",
-    "package-test-typecheck": "beep-cli quality test-tsgo-package"
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -65,6 +70,7 @@
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
   }
 }

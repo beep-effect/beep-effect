@@ -63,6 +63,144 @@ const waveformAriaLabel = (active: boolean, processing: boolean): string => {
   return "Audio waveform idle";
 };
 
+const relevantFrequencyData = (data: Uint8Array): Uint8Array =>
+  data.slice(Math.floor(data.length * 0.05), Math.floor(data.length * 0.4));
+
+const staticBarsFromData = (
+  data: Uint8Array,
+  width: number,
+  barWidth: number,
+  barGap: number,
+  sensitivity: number
+): number[] => {
+  const relevantData = relevantFrequencyData(data);
+  const halfCount = Math.floor(Math.floor(width / (barWidth + barGap)) / 2);
+  const valueAt = (index: number) =>
+    Math.max(
+      0.05,
+      Math.min(1, ((relevantData[Math.floor((index / halfCount) * relevantData.length)] ?? 0) / 255) * sensitivity)
+    );
+  const leftHalf = A.makeBy(halfCount, (index) => valueAt(halfCount - 1 - index));
+  return A.appendAll(leftHalf, A.makeBy(halfCount, valueAt));
+};
+
+const scrollingValueFromData = (data: Uint8Array, sensitivity: number): number => {
+  const relevantData = relevantFrequencyData(data);
+  let sum = 0;
+  for (let index = 0; index < relevantData.length; index++) {
+    sum += relevantData[index] ?? 0;
+  }
+  const average = (sum / relevantData.length / 255) * sensitivity;
+  return Math.min(1, Math.max(0.05, average));
+};
+
+const blendedProcessingValue = (processingValue: number, previousValue: number, transitionProgress: number): number => {
+  const blended = previousValue * (1 - transitionProgress) + processingValue * transitionProgress;
+  return Math.max(0.05, Math.min(1, blended));
+};
+
+const staticProcessingBars = (
+  barCount: number,
+  time: number,
+  previousBars: ReadonlyArray<number>,
+  transitionProgress: number
+): number[] => {
+  const halfCount = Math.floor(barCount / 2);
+  const rightHalf = A.makeBy(halfCount, (index) => {
+    const normalizedPosition = index / halfCount;
+    const centerWeight = 1 - normalizedPosition * 0.4;
+    const combinedWave =
+      Math.sin(time * 1.5 + normalizedPosition * 3) * 0.25 +
+      Math.sin(time * 0.8 - normalizedPosition * 2) * 0.2 +
+      Math.cos(time * 2 + normalizedPosition) * 0.15;
+    const processingValue = (0.2 + combinedWave) * centerWeight;
+    const previousValue = previousBars[Math.min(halfCount + index, A.length(previousBars) - 1)] ?? processingValue;
+    return blendedProcessingValue(processingValue, previousValue, transitionProgress);
+  });
+  return A.appendAll(A.reverse(rightHalf), rightHalf);
+};
+
+const drawWaveformBar = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  centerY: number,
+  value: number,
+  canvasHeight: number,
+  barWidth: number,
+  baseBarHeight: number,
+  barRadius: number,
+  color: string
+) => {
+  const barHeight = Math.max(baseBarHeight, value * canvasHeight * 0.8);
+  const y = centerY - barHeight / 2;
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.4 + value * 0.6;
+  if (barRadius === 0) {
+    ctx.fillRect(x, y, barWidth, barHeight);
+    return;
+  }
+  ctx.beginPath();
+  ctx.roundRect(x, y, barWidth, barHeight, barRadius);
+  ctx.fill();
+};
+
+type BarLayout = {
+  readonly dataIndex: (index: number, length: number) => number;
+  readonly x: (index: number, step: number, width: number) => number;
+};
+
+const barLayouts: Record<"static" | "scrolling", BarLayout> = {
+  static: {
+    dataIndex: (index) => index,
+    x: (index, step) => index * step,
+  },
+  scrolling: {
+    dataIndex: (index, length) => length - 1 - index,
+    x: (index, step, width) => width - (index + 1) * step,
+  },
+};
+
+const renderBars = (
+  ctx: CanvasRenderingContext2D,
+  data: readonly number[],
+  rect: DOMRect,
+  barWidth: number,
+  barGap: number,
+  baseBarHeight: number,
+  barRadius: number,
+  color: string,
+  mode: "static" | "scrolling"
+) => {
+  const step = barWidth + barGap;
+  const barCount = Math.min(Math.floor(rect.width / step), A.length(data));
+  const layout = barLayouts[mode];
+  for (let index = 0; index < barCount; index++) {
+    const dataIndex = layout.dataIndex(index, A.length(data));
+    const x = layout.x(index, step, rect.width);
+    drawWaveformBar(
+      ctx,
+      x,
+      rect.height / 2,
+      data[dataIndex] ?? 0.1,
+      rect.height,
+      barWidth,
+      baseBarHeight,
+      barRadius,
+      color
+    );
+  }
+};
+
+const createEdgeGradient = (ctx: CanvasRenderingContext2D, width: number, fadeWidth: number): CanvasGradient => {
+  const gradient = ctx.createLinearGradient(0, 0, width, 0);
+  const fadePercent = Math.min(0.3, fadeWidth / width);
+  gradient.addColorStop(0, "rgba(255,255,255,1)");
+  gradient.addColorStop(fadePercent, "rgba(255,255,255,0)");
+  gradient.addColorStop(1 - fadePercent, "rgba(255,255,255,0)");
+  gradient.addColorStop(1, "rgba(255,255,255,1)");
+  return gradient;
+};
+
 /**
  * Live waveform component.
  *
@@ -162,27 +300,7 @@ export const LiveWaveform = ({
 
         const processingData =
           mode === "static"
-            ? A.makeBy(barCount, (i) => {
-                const halfCount = Math.floor(barCount / 2);
-                const normalizedPosition = (i - halfCount) / halfCount;
-                const centerWeight = 1 - Math.abs(normalizedPosition) * 0.4;
-
-                const wave1 = Math.sin(time * 1.5 + normalizedPosition * 3) * 0.25;
-                const wave2 = Math.sin(time * 0.8 - normalizedPosition * 2) * 0.2;
-                const wave3 = Math.cos(time * 2 + normalizedPosition) * 0.15;
-                const combinedWave = wave1 + wave2 + wave3;
-                const processingValue = (0.2 + combinedWave) * centerWeight;
-
-                let finalValue = processingValue;
-                if (A.length(lastActiveDataRef.current) > 0 && transitionProgressRef.current < 1) {
-                  const lastDataIndex = Math.min(i, A.length(lastActiveDataRef.current) - 1);
-                  const lastValue = lastActiveDataRef.current[lastDataIndex] ?? 0;
-                  finalValue =
-                    lastValue * (1 - transitionProgressRef.current) + processingValue * transitionProgressRef.current;
-                }
-
-                return Math.max(0.05, Math.min(1, finalValue));
-              })
+            ? staticProcessingBars(barCount, time, lastActiveDataRef.current, transitionProgressRef.current)
             : A.makeBy(barCount, (i) => {
                 const normalizedPosition = (i - barCount / 2) / (barCount / 2);
                 const centerWeight = 1 - Math.abs(normalizedPosition) * 0.4;
@@ -193,15 +311,9 @@ export const LiveWaveform = ({
                 const combinedWave = wave1 + wave2 + wave3;
                 const processingValue = (0.2 + combinedWave) * centerWeight;
 
-                let finalValue = processingValue;
-                if (A.length(lastActiveDataRef.current) > 0 && transitionProgressRef.current < 1) {
-                  const lastDataIndex = Math.floor((i / barCount) * A.length(lastActiveDataRef.current));
-                  const lastValue = lastActiveDataRef.current[lastDataIndex] ?? 0;
-                  finalValue =
-                    lastValue * (1 - transitionProgressRef.current) + processingValue * transitionProgressRef.current;
-                }
-
-                return Math.max(0.05, Math.min(1, finalValue));
+                const lastDataIndex = Math.floor((i / barCount) * A.length(lastActiveDataRef.current));
+                const previousValue = lastActiveDataRef.current[lastDataIndex] ?? processingValue;
+                return blendedProcessingValue(processingValue, previousValue, transitionProgressRef.current);
               });
 
         if (mode === "static") {
@@ -253,20 +365,30 @@ export const LiveWaveform = ({
 
   // Handle microphone setup and teardown
   useEffect(() => {
+    const stopMicrophoneStream = () => {
+      if (streamRef.current === null) return;
+      A.forEach(streamRef.current.getTracks(), (track) => track.stop());
+      streamRef.current = null;
+      onStreamEnd?.();
+    };
+    const closeAudioContext = () => {
+      if (audioContextRef.current === null || audioContextRef.current.state === "closed") return;
+      void audioContextRef.current.close();
+      audioContextRef.current = null;
+    };
+    const cancelAudioAnimation = () => {
+      if (animationRef.current === 0) return;
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = 0;
+    };
+    const teardownMicrophone = () => {
+      stopMicrophoneStream();
+      closeAudioContext();
+      cancelAudioAnimation();
+    };
+
     if (!active) {
-      if (streamRef.current !== null) {
-        A.forEach(streamRef.current.getTracks(), (track) => track.stop());
-        streamRef.current = null;
-        onStreamEnd?.();
-      }
-      if (audioContextRef.current !== null && audioContextRef.current.state !== "closed") {
-        void audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
-      if (animationRef.current !== 0) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = 0;
-      }
+      teardownMicrophone();
       return;
     }
 
@@ -311,21 +433,7 @@ export const LiveWaveform = ({
 
     void setupMicrophone();
 
-    return () => {
-      if (streamRef.current !== null) {
-        A.forEach(streamRef.current.getTracks(), (track) => track.stop());
-        streamRef.current = null;
-        onStreamEnd?.();
-      }
-      if (audioContextRef.current !== null && audioContextRef.current.state !== "closed") {
-        void audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
-      if (animationRef.current !== 0) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = 0;
-      }
-    };
+    return teardownMicrophone;
   }, [active, deviceId, fftSize, hasDeviceId, smoothingTimeConstant, onError, onStreamReady, onStreamEnd]);
 
   // Animation loop
@@ -338,72 +446,59 @@ export const LiveWaveform = ({
 
     let rafId = 0;
 
-    const animate = (currentTime: number) => {
-      // Render waveform
-      const rect = canvas.getBoundingClientRect();
+    const staticDataToRender = (): ReadonlyArray<number> =>
+      processing || active || A.length(staticBarsRef.current) > 0 ? staticBarsRef.current : A.empty();
 
-      // Update audio data if active
-      if (active && currentTime - lastUpdateRef.current > updateRate) {
-        lastUpdateRef.current = currentTime;
+    const shouldApplyEdgeFade = (rect: DOMRect): boolean => fadeEdges && fadeWidth > 0 && rect.width > 0;
 
-        if (analyserRef.current !== null) {
-          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-          analyserRef.current.getByteFrequencyData(dataArray);
+    const resolveBarColor = (): string => barColor ?? (getComputedStyle(canvas).color || "#000");
 
-          if (mode === "static") {
-            // For static mode, update bars in place
-            const startFreq = Math.floor(dataArray.length * 0.05);
-            const endFreq = Math.floor(dataArray.length * 0.4);
-            const relevantData = dataArray.slice(startFreq, endFreq);
-
-            const barCount = Math.floor(rect.width / (barWidth + barGap));
-            const halfCount = Math.floor(barCount / 2);
-
-            // Mirror the data for symmetric display
-            // First half: indices from halfCount-1 down to 0
-            const leftHalf = A.makeBy(halfCount, (idx) => {
-              const i = halfCount - 1 - idx;
-              const dataIndex = Math.floor((i / halfCount) * relevantData.length);
-              const value = Math.min(1, ((relevantData[dataIndex] ?? 0) / 255) * sensitivity);
-              return Math.max(0.05, value);
-            });
-
-            // Second half: indices from 0 to halfCount-1
-            const rightHalf = A.makeBy(halfCount, (i) => {
-              const dataIndex = Math.floor((i / halfCount) * relevantData.length);
-              const value = Math.min(1, ((relevantData[dataIndex] ?? 0) / 255) * sensitivity);
-              return Math.max(0.05, value);
-            });
-
-            const newBars = A.appendAll(leftHalf, rightHalf);
-            staticBarsRef.current = newBars;
-            lastActiveDataRef.current = newBars;
-          } else {
-            // Scrolling mode - original behavior
-            let sum = 0;
-            const startFreq = Math.floor(dataArray.length * 0.05);
-            const endFreq = Math.floor(dataArray.length * 0.4);
-            const relevantData = dataArray.slice(startFreq, endFreq);
-
-            for (let i = 0; i < relevantData.length; i++) {
-              sum += relevantData[i] ?? 0;
-            }
-            const average = (sum / relevantData.length / 255) * sensitivity;
-
-            // Add to history
-            historyRef.current = A.append(historyRef.current, Math.min(1, Math.max(0.05, average)));
-            lastActiveDataRef.current = A.copy(historyRef.current);
-
-            // Maintain history size
-            if (A.length(historyRef.current) > historySize) {
-              historyRef.current = A.drop(historyRef.current, 1);
-            }
-          }
-          needsRedrawRef.current = true;
-        }
+    const updateAudioData = (rect: DOMRect) => {
+      if (analyserRef.current === null) return;
+      const data = new Uint8Array(analyserRef.current.frequencyBinCount);
+      analyserRef.current.getByteFrequencyData(data);
+      if (mode === "static") {
+        const bars = staticBarsFromData(data, rect.width, barWidth, barGap, sensitivity);
+        staticBarsRef.current = bars;
+        lastActiveDataRef.current = bars;
+      } else {
+        historyRef.current = A.append(historyRef.current, scrollingValueFromData(data, sensitivity));
+        lastActiveDataRef.current = A.copy(historyRef.current);
+        if (A.length(historyRef.current) > historySize) historyRef.current = A.drop(historyRef.current, 1);
       }
+      needsRedrawRef.current = true;
+    };
 
-      // Only redraw if needed
+    const renderWaveform = (rect: DOMRect, color: string) => {
+      if (mode === "static") {
+        renderBars(ctx, staticDataToRender(), rect, barWidth, barGap, baseBarHeight, barRadius, color, mode);
+        return;
+      }
+      renderBars(ctx, historyRef.current, rect, barWidth, barGap, baseBarHeight, barRadius, color, mode);
+    };
+
+    const applyEdgeFade = (rect: DOMRect) => {
+      if (!shouldApplyEdgeFade(rect)) return;
+      if (gradientCacheRef.current === null || lastWidthRef.current !== rect.width) {
+        gradientCacheRef.current = createEdgeGradient(ctx, rect.width, fadeWidth);
+        lastWidthRef.current = rect.width;
+      }
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = gradientCacheRef.current;
+      ctx.fillRect(0, 0, rect.width, rect.height);
+      ctx.globalCompositeOperation = "source-over";
+    };
+
+    const updateActiveAudio = (currentTime: number, rect: DOMRect) => {
+      if (!active || currentTime - lastUpdateRef.current <= updateRate) return;
+      lastUpdateRef.current = currentTime;
+      updateAudioData(rect);
+    };
+
+    const animate = (currentTime: number) => {
+      const rect = canvas.getBoundingClientRect();
+      updateActiveAudio(currentTime, rect);
+
       if (!needsRedrawRef.current && !active) {
         rafId = requestAnimationFrame(animate);
         return;
@@ -411,94 +506,9 @@ export const LiveWaveform = ({
 
       needsRedrawRef.current = active;
       ctx.clearRect(0, 0, rect.width, rect.height);
-
-      const computedBarColor =
-        barColor ??
-        (() => {
-          const style = getComputedStyle(canvas);
-          // Try to get the computed color value directly
-          const color = style.color;
-          return color.length > 0 ? color : "#000";
-        })();
-
-      const step = barWidth + barGap;
-      const barCount = Math.floor(rect.width / step);
-      const centerY = rect.height / 2;
-
-      // Draw bars based on mode
-      if (mode === "static") {
-        // Static mode - bars in fixed positions
-        const dataToRender =
-          processing || active || A.length(staticBarsRef.current) > 0 ? staticBarsRef.current : A.empty();
-
-        for (let i = 0; i < barCount && i < A.length(dataToRender); i++) {
-          const value = dataToRender[i] ?? 0.1;
-          const x = i * step;
-          const barHeight = Math.max(baseBarHeight, value * rect.height * 0.8);
-          const y = centerY - barHeight / 2;
-
-          ctx.fillStyle = computedBarColor;
-          ctx.globalAlpha = 0.4 + value * 0.6;
-
-          if (barRadius > 0) {
-            ctx.beginPath();
-            ctx.roundRect(x, y, barWidth, barHeight, barRadius);
-            ctx.fill();
-          } else {
-            ctx.fillRect(x, y, barWidth, barHeight);
-          }
-        }
-      } else {
-        // Scrolling mode - original behavior
-        for (let i = 0; i < barCount && i < A.length(historyRef.current); i++) {
-          const dataIndex = A.length(historyRef.current) - 1 - i;
-          const value = historyRef.current[dataIndex] ?? 0.1;
-          const x = rect.width - (i + 1) * step;
-          const barHeight = Math.max(baseBarHeight, value * rect.height * 0.8);
-          const y = centerY - barHeight / 2;
-
-          ctx.fillStyle = computedBarColor;
-          ctx.globalAlpha = 0.4 + value * 0.6;
-
-          if (barRadius > 0) {
-            ctx.beginPath();
-            ctx.roundRect(x, y, barWidth, barHeight, barRadius);
-            ctx.fill();
-          } else {
-            ctx.fillRect(x, y, barWidth, barHeight);
-          }
-        }
-      }
-
-      // Apply edge fading
-      if (fadeEdges && fadeWidth > 0 && rect.width > 0) {
-        // Cache gradient if width hasn't changed
-        if (gradientCacheRef.current === null || lastWidthRef.current !== rect.width) {
-          const gradient = ctx.createLinearGradient(0, 0, rect.width, 0);
-          const fadePercent = Math.min(0.3, fadeWidth / rect.width);
-
-          // destination-out: removes destination where source alpha is high
-          // We want: fade edges out, keep center solid
-          // Left edge: start opaque (1) = remove, fade to transparent (0) = keep
-          gradient.addColorStop(0, "rgba(255,255,255,1)");
-          gradient.addColorStop(fadePercent, "rgba(255,255,255,0)");
-          // Center stays transparent = keep everything
-          gradient.addColorStop(1 - fadePercent, "rgba(255,255,255,0)");
-          // Right edge: fade from transparent (0) = keep to opaque (1) = remove
-          gradient.addColorStop(1, "rgba(255,255,255,1)");
-
-          gradientCacheRef.current = gradient;
-          lastWidthRef.current = rect.width;
-        }
-
-        ctx.globalCompositeOperation = "destination-out";
-        ctx.fillStyle = gradientCacheRef.current;
-        ctx.fillRect(0, 0, rect.width, rect.height);
-        ctx.globalCompositeOperation = "source-over";
-      }
-
+      renderWaveform(rect, resolveBarColor());
+      applyEdgeFade(rect);
       ctx.globalAlpha = 1;
-
       rafId = requestAnimationFrame(animate);
     };
 

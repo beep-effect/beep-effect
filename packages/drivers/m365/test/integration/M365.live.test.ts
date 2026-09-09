@@ -12,6 +12,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const decodeM365ConfigInputResult = S.decodeResult(M365ConfigInput);
+
 // Treat absent, blank, or unresolved `op://` reference values (present when
 // secrets are not resolved, e.g. no local `op` session) as absent so the suite
 // skips live Graph calls instead of authenticating with a non-token.
@@ -46,7 +48,7 @@ pipe(
       describe.concurrent("@beep/m365 live integration", () => {
         const LiveLayer = M365.makeLiveLayer(
           Result.getOrThrow(
-            S.decodeResult(M365ConfigInput)({
+            decodeM365ConfigInputResult({
               clientId: env.clientId,
               tenantId: env.tenantId,
               tokenCachePath: env.tokenCachePath,

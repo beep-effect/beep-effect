@@ -27,6 +27,9 @@ import { CapabilityToolbar } from "./toolbar.tsx";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { JSX } from "react";
 import type { ProfileResolutionError } from "./errors.ts";
+
+const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
+
 import type { CapabilityCatalog, EditorProfile, Platform } from "./schemas.ts";
 
 /** Props for a mount-immutable capability composer.
@@ -106,7 +109,7 @@ export function CapabilityComposer({
             namespace: "beep-editor-capability",
             theme: editorTheme,
             nodes: [...resolvedNodes(resolved)],
-            ...O.getSomesStruct({ editorState: O.map(runtimeInitialState, S.encodeSync(EditorStateFromJson)) }),
+            ...O.getSomesStruct({ editorState: O.map(runtimeInitialState, encodeEditorStateFromJsonSync) }),
             onError: (error) => logEditorError(error),
           }}
         >

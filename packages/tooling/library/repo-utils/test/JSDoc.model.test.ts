@@ -9,6 +9,17 @@ import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeCategorySignalSync = S.decodeSync(CategorySignal);
+const decodeScoredCategoryCandidateSync = S.decodeSync(ScoredCategoryCandidate);
+const decodeTSCategoryDefinitionSync = S.decodeSync(TSCategoryDefinition);
+const decodeTagNameSync = S.decodeSync(TagName);
+const decodeTagValueSync = S.decodeSync(TagValue);
+const encodeCategorySignalSync = S.encodeSync(CategorySignal);
+const encodeScoredCategoryCandidateSync = S.encodeSync(ScoredCategoryCandidate);
+const encodeTSCategoryDefinitionSync = S.encodeSync(TSCategoryDefinition);
+const encodeTagNameSync = S.encodeSync(TagName);
+const encodeTagValueSync = S.encodeSync(TagValue);
+
 const TagNameArbitrary = S.toArbitrary(TagName)(fc);
 const TagValueArbitrary = S.toArbitrary(TagValue)(fc);
 const TSCategoryDefinitionArbitrary = S.toArbitrary(TSCategoryDefinition)(fc);
@@ -19,8 +30,8 @@ describe("JSDoc schema models", () => {
   it("round-trips schema-derived tag names through the encoded wire shape", () => {
     fc.assert(
       fc.property(TagNameArbitrary, (value) => {
-        const encoded = S.encodeSync(TagName)(value);
-        const decoded = S.decodeSync(TagName)(encoded);
+        const encoded = encodeTagNameSync(value);
+        const decoded = decodeTagNameSync(encoded);
 
         expect(decoded).toEqual(value);
       }),
@@ -31,8 +42,8 @@ describe("JSDoc schema models", () => {
   it("round-trips schema-derived tag values through the encoded wire shape", () => {
     fc.assert(
       fc.property(TagValueArbitrary, (value) => {
-        const encoded = S.encodeSync(TagValue)(value);
-        const decoded = S.decodeSync(TagValue)(encoded);
+        const encoded = encodeTagValueSync(value);
+        const decoded = decodeTagValueSync(encoded);
 
         expect(decoded).toEqual(value);
       }),
@@ -43,8 +54,8 @@ describe("JSDoc schema models", () => {
   it("round-trips schema-derived category definitions and preserves priority bounds", () => {
     fc.assert(
       fc.property(TSCategoryDefinitionArbitrary, (value) => {
-        const encoded = S.encodeSync(TSCategoryDefinition)(value);
-        const decoded = S.decodeSync(TSCategoryDefinition)(encoded);
+        const encoded = encodeTSCategoryDefinitionSync(value);
+        const decoded = decodeTSCategoryDefinitionSync(encoded);
 
         expect(decoded).toEqual(value);
         expect(value.documentationPriority).toBeGreaterThanOrEqual(1);
@@ -57,8 +68,8 @@ describe("JSDoc schema models", () => {
   it("round-trips schema-derived category signal and candidate values", () => {
     fc.assert(
       fc.property(CategorySignalArbitrary, (value) => {
-        const encoded = S.encodeSync(CategorySignal)(value);
-        const decoded = S.decodeSync(CategorySignal)(encoded);
+        const encoded = encodeCategorySignalSync(value);
+        const decoded = decodeCategorySignalSync(encoded);
 
         expect(decoded).toEqual(value);
       }),
@@ -66,8 +77,8 @@ describe("JSDoc schema models", () => {
     );
     fc.assert(
       fc.property(ScoredCategoryCandidateArbitrary, (value) => {
-        const encoded = S.encodeSync(ScoredCategoryCandidate)(value);
-        const decoded = S.decodeSync(ScoredCategoryCandidate)(encoded);
+        const encoded = encodeScoredCategoryCandidateSync(value);
+        const decoded = decodeScoredCategoryCandidateSync(encoded);
 
         expect(decoded).toEqual(value);
       }),

@@ -6,9 +6,15 @@
       "path": "tsconfig.packages.json"
     }
   ],
+  // No lane runs this file as a program: tsconfig.configs.json
+  // (repo-sanity:config-typecheck) typechecks the config sources and each
+  // package's own check project owns its test/ tree. The include list stays
+  // because typescript-eslint's project service uses this root project as the
+  // default for any file no package project claims (the deprecated-apis and
+  // jsdoc lint profiles parse test/ and vitest.*.ts through it), and because
+  // tsconfig-sync regenerates the alias paths the stories projects extend.
   "include": [
     "**/vitest.*.ts",
-    // All vitest config files across all packages
     "./apps/**/test/**/*.ts",
     "./apps/**/test/**/*.tsx",
     "./apps/**/test/**/*.json",
@@ -2126,7 +2132,13 @@
       ],
       "@beep/ui/Version": ["./packages/foundation/ui-system/ui/src/Version.ts"],
       "@beep/freshbooks": ["./packages/drivers/freshbooks/src/index.ts"],
-      "@beep/freshbooks/*": ["./packages/drivers/freshbooks/src/*"]
+      "@beep/freshbooks/*": ["./packages/drivers/freshbooks/src/*"],
+      "@beep/test-utils/MemoryFileSystem": [
+        "./packages/tooling/test-kit/test-utils/src/MemoryFileSystem/index.ts"
+      ],
+      "@beep/repo-cli/commands/Graft": [
+        "./packages/tooling/tool/cli/src/commands/Graft/index.ts"
+      ]
     }
   }
 }

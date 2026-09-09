@@ -17,6 +17,7 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { CodexFindingsRedactionError, CodexPacketWriteError } from "./Findings.errors.ts";
 import { describeSensitiveHits, scanSensitiveText } from "./Findings.scan.ts";
 
@@ -159,7 +160,14 @@ export class PacketDocument extends S.Class<PacketDocument>($I`PacketDocument`)(
  */
 export const assertPacketDocumentsClean = Effect.fnUntraced(function* (documents: ReadonlyArray<PacketDocument>) {
   const strict = A.filter(documents, (document) => document.scan === "reject");
-  const hits = A.flatMap(strict, (document) => scanSensitiveText(document.path, document.contents));
+  const hits = A.flatMap(strict, (document) =>
+    A.filter(
+      scanSensitiveText(document.path, document.contents),
+      // Markdown frontmatter and lists are not spreadsheet cells. Imported
+      // CSV fields still receive the full scan before document rendering.
+      (hit) => hit.code !== "spreadsheet-formula" || !Str.endsWith(".md")(document.path)
+    )
+  );
 
   if (A.isReadonlyArrayNonEmpty(hits)) {
     const surfaces = describeSensitiveHits(hits);

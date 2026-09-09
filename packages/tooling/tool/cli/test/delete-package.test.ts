@@ -725,9 +725,17 @@ describe("delete-package baseline writer stage", () => {
             path.join(repoRoot, "standards", "coverage.regression-baseline.jsonc")
           );
           expect(Str.includes("@beep/courtlistener")(baseline)).toBe(false);
-          expect(spawned).toStrictEqual(
-            A.map(DeletePackageBaselineWriters.steps, (step) => A.join(["bun", ...step.args], " "))
-          );
+          expect(spawned).toStrictEqual([
+            "bun run beep fallow boundaries --write",
+            "bun run fallow:health:baseline:write",
+            "bun run fallow:dead-code:baseline:write",
+            "bun run beep quality jsdoc-inventory",
+            "bun run beep lint schema-first --write",
+            "bun run beep lint package-test-typecheck --write-baseline",
+            "bun run beep lint schema-catalog --write",
+            "bun run beep lint package-scripts --write",
+            "bun run beep quality knip --write-baseline",
+          ]);
         })
       ).pipe(provideScopedLayer(Layer.mergeAll(commandLayer, fakeSpawnerLayer(0, spawned))))
     );

@@ -41,6 +41,7 @@ import {
   readRetiredPackageNames,
 } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
+import { scaffoldPackageScripts } from "../../internal/package-scripts/PackageScripts.schemas.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import {
@@ -54,6 +55,7 @@ import { CreatePackageIdentityRegistration } from "./internal/IdentityRegistrati
 import { LabIdentitySegment } from "./internal/LabIdentitySegment.ts";
 import * as RetiredNameRegistry from "./internal/RetiredNameRegistry.ts";
 import { createTemplateService, StaticAssetSpec, TemplateRenderRequest, TemplateSpec } from "./TemplateService.ts";
+import type { PackageKind as ScriptsPackageKind } from "../../internal/package-scripts/PackageScripts.schemas.ts";
 
 const $I = $RepoCliId.create("commands/CreatePackage/CreatePackage.command");
 const {
@@ -227,10 +229,11 @@ const AppKind = LiteralKit(VALID_APP_KINDS).pipe(
     description: "Supported app scaffold kinds.",
   })
 );
+const decodeUnknownAppKind = S.decodeUnknownEffect(AppKind);
 type AppKind = typeof AppKind.Type;
 const isAppKind = S.is(AppKind);
 const decodeAppKindEffect = (input: unknown) =>
-  S.decodeUnknownEffect(AppKind)(input).pipe(
+  decodeUnknownAppKind(input).pipe(
     Effect.mapError(
       DomainError.newCause(`Invalid app kind "${input}". Must be one of: ${A.join(VALID_APP_KINDS, ", ")}`)
     )
@@ -242,10 +245,11 @@ const PackageFamily = LiteralKit(VALID_FAMILIES).pipe(
     description: "Supported canonical package family scaffold targets.",
   })
 );
+const decodeUnknownPackageFamily = S.decodeUnknownEffect(PackageFamily);
 type PackageFamily = typeof PackageFamily.Type;
 const isPackageFamily = S.is(PackageFamily);
 const decodePackageFamilyEffect = (input: unknown) =>
-  S.decodeUnknownEffect(PackageFamily)(input).pipe(
+  decodeUnknownPackageFamily(input).pipe(
     Effect.mapError(
       DomainError.newCause(`Invalid package family "${input}". Must be one of: ${A.join(VALID_FAMILIES, ", ")}`)
     )
@@ -257,11 +261,12 @@ const FoundationKind = LiteralKit(VALID_FOUNDATION_KINDS).pipe(
     description: "Supported foundation package kinds.",
   })
 );
+const decodeUnknownFoundationKind = S.decodeUnknownEffect(FoundationKind);
 
 type FoundationKind = typeof FoundationKind.Type;
 const isFoundationKind = S.is(FoundationKind);
 const decodeFoundationKindEffect = (input: unknown) =>
-  S.decodeUnknownEffect(FoundationKind)(input).pipe(
+  decodeUnknownFoundationKind(input).pipe(
     Effect.mapError(
       DomainError.newCause(
         `Invalid foundation kind "${input}". Must be one of: ${A.join(VALID_FOUNDATION_KINDS, ", ")}`
@@ -274,10 +279,11 @@ const ToolingKind = LiteralKit(VALID_TOOLING_KINDS).pipe(
     description: "Supported tooling package kinds.",
   })
 );
+const decodeUnknownToolingKind = S.decodeUnknownEffect(ToolingKind);
 type ToolingKind = typeof ToolingKind.Type;
 const isToolingKind = S.is(ToolingKind);
 const decodeToolingKindEffect = (input: unknown) =>
-  S.decodeUnknownEffect(ToolingKind)(input).pipe(
+  decodeUnknownToolingKind(input).pipe(
     Effect.mapError(
       DomainError.newCause(`Invalid tooling kind "${input}". Must be one of: ${A.join(VALID_TOOLING_KINDS, ", ")}`)
     )
@@ -1764,22 +1770,10 @@ const portlessViteDev = (portlessLabel: string, defaultPort: string): string =>
 // the coverage-discovery/disposition exclusions AND omitting the script from lab
 // templates (research/04-governance-gates.md: "Never give labs a `coverage` script").
 const appBaseScripts = (dev: string, build: string, lab: boolean) => ({
-  audit: "bun run --if-present beep:audit",
-  codegen: "echo 'no codegen needed'",
+  ...scaffoldPackageScripts(lab ? "lab" : "app", []),
   dev,
-  "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": build,
-  "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
-  "beep:lint": "biome check .",
-  "beep:lint:fix": "biome check . --write",
-  "beep:test": "bunx --bun vitest run",
-  build: "bun run beep:build",
-  check: "bun run beep:check",
   ...(lab ? {} : { coverage: "bunx vitest run --coverage" }),
-  lint: "bun run beep:lint",
-  "lint:fix": "bun run beep:lint:fix",
-  "package-test-typecheck": "beep-cli quality test-tsgo-package",
-  test: "bun run beep:test",
 });
 
 // Lab-only workspace dependencies layered onto Next.js lab app manifests.
@@ -1831,8 +1825,10 @@ const VITE_APP_DEV_DEPENDENCIES = {
 // One app kind's package.json manifest builder. Named so the four builders
 // share a single declared type: without it their differing object-literal
 // return types form a union that `appManifestBuilderFor` cannot widen under
-// `exactOptionalPropertyTypes` (docgen's tsc rejects it even though tsgo
-// accepts it), and the failure moves whenever a dependency table changes.
+// `exactOptionalPropertyTypes`. Both programs run the same patched compiler
+// (`.bin/tsc` is `tsgo`); the docgen examples project rejects the union under
+// its own generated tsconfig while `tsconfig.check.json` accepts it, and the
+// failure moves whenever a dependency table changes.
 type AppManifestBuilder = (ctx: AppManifestContext) => unknown;
 
 // package.json manifest for a Next.js app workspace.
@@ -1926,38 +1922,48 @@ const appManifestBuilderFor = (kind: AppKind): O.Option<AppManifestBuilder> =>
 const encodeManifestJson = (manifest: unknown): Effect.Effect<string, DomainError | S.SchemaError> =>
   Effect.map(encodePackageJsonCanonicalPrettyEffect(manifest), (json) => `${json}\n`);
 
-// beep:check lane for library/tool packages (stories tsconfig adds a stories lane).
-const packageCheckScript = (withStoriesTsconfig: boolean): string =>
-  withStoriesTsconfig
-    ? "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories"
-    : "tsgo -p tsconfig.check.json && bun run beep:check:tests";
-
 // Script table for library/tool package manifests.
-const packageScripts = (rootRelative: string, packagePath: string, withStoriesTsconfig: boolean) => ({
-  audit: "bun run --if-present beep:audit",
+// Labs are runnable apps and render through `appBaseScripts`; the package renderer never sees them.
+type PackageScriptsKind = Exclude<ScriptsPackageKind, "lab">;
+
+const packageScripts = (
+  kind: PackageScriptsKind,
+  rootRelative: string,
+  packagePath: string,
+  withStoriesTsconfig: boolean
+) => ({
+  ...scaffoldPackageScripts(kind, ["lint:fix", "test:integration", "docgen"]),
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-  "beep:audit":
-    "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
-  "beep:build": "tsc -p tsconfig.json && bun run babel",
-  "beep:check": packageCheckScript(withStoriesTsconfig),
   "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
-  "beep:docgen": `bun run ${rootRelative}packages/tooling/tool/docgen/src/bin.ts`,
-  ...(withStoriesTsconfig ? { "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit" } : {}),
-  "beep:lint": "biome check .",
-  "beep:lint:fix": "biome check . --write",
+  ...(withStoriesTsconfig
+    ? {
+        "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
+        "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",
+      }
+    : {}),
   "beep:policy": `bun --cwd ${rootRelative} run beep lint package-test-imports --include-root ${packagePath}`,
-  "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
-  "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
-  build: "bun run beep:build",
-  check: "bun run beep:check",
   coverage: "bunx vitest run --coverage --exclude=test/integration/**",
-  docgen: "bun run beep:docgen",
-  lint: "bun run beep:lint",
-  "lint:fix": "bun run beep:lint:fix",
-  "package-test-typecheck": "beep-cli quality test-tsgo-package",
-  test: "bun run beep:test",
-  "test:integration": "bun run beep:test:integration",
 });
+
+/**
+ * Shared script renderers used by package and application scaffolds.
+ *
+ * **Example** (Render service app scripts)
+ *
+ * ```ts
+ * import { CreatePackageScripts } from "@beep/repo-cli/commands/CreatePackage"
+ * const scripts = CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsgo -p tsconfig.check.json", false)
+ * console.log(scripts["beep:build"]) // "tsgo -p tsconfig.check.json"
+ * ```
+ *
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
+export const CreatePackageScripts = {
+  app: appBaseScripts,
+  package: packageScripts,
+};
 
 // Dependency table for library/tool package manifests (tools also get platform-node).
 const packageDependencies = (type: PackageType): Readonly<Record<string, string>> => ({
@@ -2007,12 +2013,23 @@ const generatePackageJson: (
       return yield* encodeManifestJson(appManifest.value);
     }
 
-    const scripts = packageScripts(toRootRelative(packagePath), packagePath, withStoriesTsconfig);
-
     const ecosystemMetadata = pipe(
       packageMetadata,
       O.filter((metadata) => packageFamilyEquivalence(metadata.family, "ecosystem"))
     );
+    const kind = Match.value(type).pipe(
+      Match.when(
+        () => O.isSome(ecosystemMetadata),
+        (): PackageScriptsKind => "ecosystem"
+      ),
+      Match.when(
+        () => O.isSome(appKind),
+        (): PackageScriptsKind => "app"
+      ),
+      Match.when("tool", (): PackageScriptsKind => "tool"),
+      Match.orElse((): PackageScriptsKind => "library")
+    );
+    const scripts = packageScripts(kind, toRootRelative(packagePath), packagePath, withStoriesTsconfig);
     if (O.isSome(ecosystemMetadata)) {
       return yield* generateEcosystemPackageJson(
         baseManifest,

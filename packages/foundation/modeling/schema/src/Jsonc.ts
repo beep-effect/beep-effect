@@ -111,6 +111,7 @@ export const JsoncTextToUnknown = S.String.pipe(
  * @since 0.0.0
  */
 export type JsoncTextToUnknown = typeof JsoncTextToUnknown.Type;
+const decodeUnknownJsoncTextToUnknown = S.decodeUnknownEffect(JsoncTextToUnknown);
 
 /**
  * Builds a decoder that parses JSONC text and then decodes the result through a
@@ -137,11 +138,6 @@ export type JsoncTextToUnknown = typeof JsoncTextToUnknown.Type;
  * @since 0.0.0
  */
 export const decodeJsoncTextAs = <Schema extends S.Top>(schema: Schema) => {
-  const decodeJsoncUnknownText = S.decodeUnknownEffect(JsoncTextToUnknown);
   const decodeTargetSchema = S.decodeUnknownEffect(schema);
-  const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
-    return yield* decodeTargetSchema(input);
-  });
-
-  return flow(decodeJsoncUnknownText, Effect.flatMap(decodeTarget));
+  return flow(decodeUnknownJsoncTextToUnknown, Effect.flatMap(decodeTargetSchema));
 };

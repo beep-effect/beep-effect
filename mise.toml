@@ -1,0 +1,2 @@
+[tools]
+bun = "{{ read_file(path=config_root ~ '/.bun-version') | trim }}"

@@ -102,6 +102,7 @@ export const XmlTextToUnknown = S.String.pipe(
  * @since 0.0.0
  */
 export type XmlTextToUnknown = typeof XmlTextToUnknown.Type;
+const decodeUnknownXmlTextToUnknown = S.decodeUnknownEffect(XmlTextToUnknown);
 
 /**
  * Builds a decoder that parses XML text and then decodes the result through a
@@ -128,11 +129,6 @@ export type XmlTextToUnknown = typeof XmlTextToUnknown.Type;
  * @since 0.0.0
  */
 export const decodeXmlTextAs = <Schema extends S.Top>(schema: Schema) => {
-  const decodeXmlUnknownText = S.decodeUnknownEffect(XmlTextToUnknown);
   const decodeTargetSchema = S.decodeUnknownEffect(schema);
-  const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
-    return yield* decodeTargetSchema(input);
-  });
-
-  return flow(decodeXmlUnknownText, Effect.flatMap(decodeTarget));
+  return flow(decodeUnknownXmlTextToUnknown, Effect.flatMap(decodeTargetSchema));
 };

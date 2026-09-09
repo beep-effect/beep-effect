@@ -6,6 +6,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownPrettyLoggerConfigOption = S.decodeUnknownOption(PrettyLoggerConfig);
+const decodeUnknownRenderLogBannerOptionsOption = S.decodeUnknownOption(RenderLogBannerOptions);
+const encodePrettyLoggerConfigOption = S.encodeOption(PrettyLoggerConfig);
+const encodeRenderLogBannerOptionsOption = S.encodeOption(RenderLogBannerOptions);
+
 class CapturedLevels extends Context.Service<CapturedLevels, Array<string>>()(
   "@beep/observability/test/Logging.test/CapturedLevels"
 ) {}
@@ -28,7 +33,7 @@ describe("Logging", () => {
 
     expect(pretty.theme).toBe("ocean");
     expect(pretty.bannerMode).toBe("off");
-    expect(S.encodeOption(PrettyLoggerConfig)(pretty)).toStrictEqual(
+    expect(encodePrettyLoggerConfigOption(pretty)).toStrictEqual(
       O.some({
         theme: "ocean",
         bannerMode: "off",
@@ -39,10 +44,7 @@ describe("Logging", () => {
   it("round-trips schema-derived pretty logger configs", () => {
     fc.assert(
       fc.property(S.toArbitrary(PrettyLoggerConfig)(fc), (pretty) => {
-        const decoded = O.flatMap(
-          S.encodeOption(PrettyLoggerConfig)(pretty),
-          S.decodeUnknownOption(PrettyLoggerConfig)
-        );
+        const decoded = O.flatMap(encodePrettyLoggerConfigOption(pretty), decodeUnknownPrettyLoggerConfigOption);
         expect(O.exists(decoded, (value) => Equal.equals(value, pretty))).toBe(true);
       }),
       fcRuns(50)
@@ -53,8 +55,8 @@ describe("Logging", () => {
     fc.assert(
       fc.property(S.toArbitrary(RenderLogBannerOptions)(fc), (options) => {
         const decoded = O.flatMap(
-          S.encodeOption(RenderLogBannerOptions)(options),
-          S.decodeUnknownOption(RenderLogBannerOptions)
+          encodeRenderLogBannerOptionsOption(options),
+          decodeUnknownRenderLogBannerOptionsOption
         );
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),

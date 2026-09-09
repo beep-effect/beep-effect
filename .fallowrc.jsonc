@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "$schema": "./node_modules/fallow/schema.json",
   // Library packages intentionally expose top-level src modules through package exports.
   // App workspaces are rooted at their framework entrypoints (Next App Router special
   // files, Vite/Tauri main.tsx, proof-app index.ts, Storybook config) so app code is
@@ -59,6 +59,10 @@
     "apps/storybook/.storybook/main.ts",
     "apps/storybook/.storybook/manager.ts",
     "apps/storybook/.storybook/preview.tsx",
+    // The Storybook test runner selects this config with --config, and Vitest
+    // loads its setup file through a file URL rather than a static import.
+    "apps/storybook/vitest.storybook.config.ts",
+    "apps/storybook/vitest.storybook.setup.ts",
     // Story files are tool-loaded roots: the Storybook host discovers them via
     // the stories glob in apps/storybook/.storybook/main.ts.
     "packages/foundation/ui-system/*/stories/**/*.stories.tsx",
@@ -79,6 +83,9 @@
     "eslint.config.mjs",
     "scripts/changeset-changelog.cjs",
     "packages/tooling/tool/cli/test/global-cleanup.ts",
+    // setup-monorepo-ci runs the hosted job-environment policy by path
+    // (`run: bun scripts/ci-job-env.mjs`); no import graph reaches it.
+    "scripts/ci-job-env.mjs",
     // Vendored Impeccable detector CLI: invoked through the root package script
     // and editor integrations, with parser dependencies resolved from the root.
     ".claude/skills/impeccable/scripts/detector/cli/main.mjs",
@@ -102,6 +109,9 @@
   "ignorePatterns": [
     // The GitHub Copilot Impeccable tree mirrors the analyzed Claude Code source.
     ".github/skills/impeccable/**",
+    // Claude Code launches these by path from .claude/settings.json (the two
+    // graft shims and the repo-owned loader); no import graph reaches them.
+    ".claude/helpers/**",
     // Browser QA operators copy this documented harness template beside the app
     // under test; it is a distributed resource, not workspace-owned source.
     ".claude/skills/browser-qa-loop/resources/qa-capture-template.mjs",
@@ -317,7 +327,8 @@
   "duplicates": {
     // Vendored Impeccable scripts keep their upstream shape; dependency graph
     // analysis above must not opt that vendor tree into authored-code cloning.
-    "ignore": [".claude/skills/impeccable/**"]
+    // The two graft shims are one-line delegations to the repo-owned loader.
+    "ignore": [".claude/skills/impeccable/**", ".claude/helpers/**"]
   },
   "health": {
     // Complexity ceilings — ratified 2026-07-30 (law in standards/effect-laws-v1.md;
@@ -332,16 +343,10 @@
     "maxUnitSize": 60,
     // Preserve the vendor tree's prior exclusion from authored-code complexity
     // while its module graph remains visible to dead-code dependency analysis.
-    "ignore": [".claude/skills/impeccable/**"],
+    // The graft shims are generated; the loader's platform trust checks are
+    // security-boundary code kept whole rather than split for a ceiling.
+    "ignore": [".claude/skills/impeccable/**", ".claude/helpers/**"],
     "thresholdOverrides": [
-      {
-        "files": [
-          "packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx"
-        ],
-        "functions": ["sparqlResultPreview", "runSparqlFromKeyboard"],
-        "maxCrap": 57,
-        "reason": "Pre-existing functions unchanged by the import-extension migration; Fallow audit attributes their CRAP findings as introduced when the file's import suffix changes. Review by 2026-10-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
-      },
       {
         "files": [
           "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts"
@@ -373,12 +378,6 @@
         "maxCognitive": 29,
         "maxCrap": 239,
         "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
-      },
-      {
-        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/extras.ts"],
-        "functions": ["isNode"],
-        "maxCognitive": 15,
-        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
       },
       {
         "files": ["packages/ecosystem/effect-drizzle/src/core/Meta.ts"],
@@ -440,6 +439,131 @@
         ],
         "maxCognitive": 20,
         "reason": "Forward scanning preserves linear mixed-output recovery; a bounded reverse fallback resynchronizes after unmatched opening braces without making balanced-object floods quadratic. Review by 2026-11-10: re-measure both passes and reduce or remove these measured ceilings when a simpler equivalent is proven."
+      },
+      {
+        "files": ["packages/foundation/ui-system/ui/src/components/orb.tsx"],
+        "functions": ["Scene"],
+        "maxCognitive": 43,
+        "maxCrap": 111,
+        "maxUnitSize": 225,
+        "reason": "The React and Three.js integration boundary owns one scene lifecycle; splitting hook ownership or grouping the public props would be metric appeasement and an API change. Review by 2026-12-03: re-measure after the frame callback extraction and lower or remove this ceiling if the integration boundary shrinks."
+      },
+      {
+        "files": [
+          "packages/foundation/ui-system/ui/src/components/live-waveform.tsx"
+        ],
+        "functions": ["LiveWaveform"],
+        "maxCognitive": 40,
+        "maxCrap": 31,
+        "maxUnitSize": 465,
+        "reason": "The component is the cohesive owner of its hook bindings and public waveform props; the microphone teardown and animation seams are extracted separately without fragmenting hook ownership. Review by 2026-12-03: re-measure after those extracted seams settle and lower this ceiling to the observed boundary."
+      },
+      {
+        "files": [
+          "packages/foundation/ui-system/ui/src/components/link-preview.tsx"
+        ],
+        "functions": ["LinkPreview"],
+        "maxCyclomatic": 26,
+        "maxCognitive": 28,
+        "maxCrap": 651,
+        "maxUnitSize": 114,
+        "reason": "Atom-backed fetch state and conditional tooltip mounting form one cohesive preview boundary; extraction would redistribute the same JSX branches. Review by 2026-12-03: re-measure against current component behavior and lower or remove any dimension that no longer needs an exception."
+      },
+      {
+        "files": [
+          "packages/foundation/ui-system/ui/src/components/todo-item.tsx"
+        ],
+        "functions": ["TodoItem"],
+        "maxCyclomatic": 26,
+        "maxCognitive": 28,
+        "maxCrap": 651,
+        "maxUnitSize": 143,
+        "reason": "The stable public prop surface and conditional metadata rendering are one item view; grouping props changes the API and splitting the row fragments the contract. Review by 2026-12-03: re-measure the component and lower or remove any ceiling made unnecessary by later API work."
+      },
+      {
+        "files": [
+          "packages/foundation/ui-system/ui/src/components/sidebar.tsx"
+        ],
+        "functions": ["Sidebar"],
+        "maxCognitive": 25,
+        "maxCrap": 307,
+        "maxUnitSize": 142,
+        "reason": "Non-collapsible, mobile, embedded, and fixed layouts are the explicit responsive contract; extracting them duplicates shared state and props. Review by 2026-12-03: re-measure when the responsive contract changes and lower or remove any obsolete dimension."
+      },
+      {
+        "files": [
+          "packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts"
+        ],
+        "functions": ["parseQuotedField"],
+        "maxCognitive": 25,
+        "maxCrap": 72,
+        "maxUnitSize": 81,
+        "reason": "One CSV quote, escape, and closing-delimiter state machine owns the cursor transitions; splitting it would weaken auditability. Review by 2026-12-03: compare against the parser grammar and reduce or remove this ceiling if an equally auditable state model is available."
+      },
+      {
+        "files": [
+          "packages/foundation/ui-system/ui/src/components/speech-input.tsx"
+        ],
+        "functions": ["SpeechInput"],
+        "maxCognitive": 24,
+        "maxUnitSize": 152,
+        "reason": "The public prop surface and hook integration account for the measured boundary; changing the prop contract is out of scope and helper extraction cannot reduce it honestly. Review by 2026-12-03: re-measure after any public component API redesign and remove the exception when the boundary naturally shrinks."
+      },
+      {
+        "files": ["packages/tooling/library/repo-utils/src/FsUtils.ts"],
+        "functions": ["visit"],
+        "maxCognitive": 22,
+        "maxCrap": 32,
+        "reason": "Symlink policy, cycle protection, directory exclusion, and recursion are one filesystem-safety transaction. Review by 2026-12-03: re-audit the safety invariants and lower or remove this ceiling only when an equivalent simpler transaction is proven."
+      },
+      {
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts"
+        ],
+        "functions": ["walk"],
+        "maxCognitive": 19,
+        "maxCrap": 50,
+        "reason": "Path confinement, symlink rejection, cycle protection, exclusions, and recursion intentionally remain one safety boundary. Review by 2026-12-03: re-audit the traversal invariants and remove this exception if a smaller equally explicit boundary is available."
+      },
+      {
+        "files": ["packages/foundation/modeling/identity/src/PnLocal.ts"],
+        "functions": ["tokenizeLocal"],
+        "maxCognitive": 19,
+        "maxCrap": 44,
+        "reason": "This is one single-pass Turtle PN_LOCAL escape, percent, and code-point grammar scanner. Review by 2026-12-03: compare the scanner with the normative grammar and lower or remove the ceiling if a simpler single-pass form preserves it."
+      },
+      {
+        "files": ["packages/foundation/modeling/rdf/src/Iri.ts"],
+        "functions": ["scanComponent"],
+        "maxCognitive": 18,
+        "maxCrap": 32,
+        "reason": "One RFC 3987 component scanner owns percent encoding, bidi rejection, code-point width, stop predicates, and minimum length. Review by 2026-12-03: re-audit against RFC 3987 and remove the exception if a simpler scanner preserves every invariant."
+      },
+      {
+        "files": [
+          "packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts"
+        ],
+        "functions": ["parseRowAt"],
+        "maxCognitive": 18,
+        "maxUnitSize": 73,
+        "reason": "One row cursor state machine owns delimiters, trailing empty fields, and end-of-input transitions. Review by 2026-12-03: compare against the CSV grammar and lower or remove this ceiling if an equally auditable state model is available."
+      },
+      {
+        "files": [
+          "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx"
+        ],
+        "functions": ["CalendarEventCard"],
+        "maxCognitive": 17,
+        "maxCrap": 111,
+        "maxUnitSize": 92,
+        "reason": "The public prop surface plus the small label and action display contract form one cohesive card. Review by 2026-12-03: re-measure after any public component API change and remove the exception when the boundary naturally shrinks."
+      },
+      {
+        "files": ["packages/foundation/ui-system/ui/src/components/chart.tsx"],
+        "functions": ["ChartTooltipContent"],
+        "maxCognitive": 17,
+        "maxUnitSize": 77,
+        "reason": "The Recharts adapter props, label resolution, and container composition are one tooltip boundary; the nested item renderer is refactored separately. Review by 2026-12-03: re-measure after that extraction and lower this ceiling to the observed boundary."
       }
     ]
   },

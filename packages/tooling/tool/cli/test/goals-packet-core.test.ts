@@ -31,6 +31,11 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
+const decodePacketTraceProjectionJson = S.decodeEffect(S.fromJsonString(PacketTraceProjection));
+const decodeUnknownPacketTraceEntrySync = S.decodeUnknownSync(PacketTraceEntry);
+const encodeUnknownPacketDerivedState = S.encodeUnknownEffect(PacketDerivedState);
+const encodeUnknownPacketTraceEntrySync = S.encodeUnknownSync(PacketTraceEntry);
+
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
 
 const FIXTURES_ROOT = new URL("./fixtures/packet-core", import.meta.url).pathname;
@@ -146,14 +151,11 @@ describe("canonical encoding and digests", () => {
 
 describe("schema-derived properties", () => {
   const PacketTraceEntryArbitrary = S.toArbitrary(PacketTraceEntry)(fc);
-  const encodeTraceEntry = S.encodeUnknownSync(PacketTraceEntry);
-  const decodeTraceEntry = S.decodeUnknownSync(PacketTraceEntry);
-
   it("round-trips arbitrary timeline entries through encode/decode byte-stably", () => {
     fc.assert(
       fc.property(PacketTraceEntryArbitrary, (entry) => {
-        const encoded = encodeTraceEntry(entry);
-        const reencoded = encodeTraceEntry(decodeTraceEntry(encoded));
+        const encoded = encodeUnknownPacketTraceEntrySync(entry);
+        const reencoded = encodeUnknownPacketTraceEntrySync(decodeUnknownPacketTraceEntrySync(encoded));
         return canonicalJsonText(reencoded) === canonicalJsonText(encoded);
       }),
       fcRuns(50)
@@ -456,7 +458,7 @@ describe("golden replay (committed fixture)", () => {
           expect(renderedTrace).toBe(expectedTrace);
 
           const expectedDerived = yield* fs.readFileString(`${GOLDEN_PATH}/expected-derived.json`);
-          const encodedDerived = yield* S.encodeUnknownEffect(PacketDerivedState)(derived);
+          const encodedDerived = yield* encodeUnknownPacketDerivedState(derived);
           expect(canonicalJsonTextPretty(encodedDerived)).toBe(expectedDerived);
         }).pipe(provideScopedLayer(testLayer))
       ),
@@ -488,7 +490,7 @@ describe("golden replay (committed fixture)", () => {
           expect(renderedTrace).toBe(expectedTrace);
 
           const expectedDerived = yield* fs.readFileString(`${RISK_OVERRIDE_PATH}/expected-derived.json`);
-          const encodedDerived = yield* S.encodeUnknownEffect(PacketDerivedState)(derived);
+          const encodedDerived = yield* encodeUnknownPacketDerivedState(derived);
           expect(canonicalJsonTextPretty(encodedDerived)).toBe(expectedDerived);
         }).pipe(provideScopedLayer(testLayer))
       ),
@@ -505,7 +507,7 @@ describe("golden replay (committed fixture)", () => {
           // upcast — it fails the v2 decode, explore --check reports it as
           // packet-trace-stale, and the next write regenerates it.
           const v1Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.v1.json`);
-          const decoded = yield* Effect.exit(S.decodeEffect(S.fromJsonString(PacketTraceProjection))(v1Text));
+          const decoded = yield* Effect.exit(decodePacketTraceProjectionJson(v1Text));
           expect(Exit.isFailure(decoded)).toBe(true);
 
           const v2Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.json`);

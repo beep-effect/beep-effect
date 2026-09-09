@@ -1202,6 +1202,14 @@ dead-code baseline demonstrated that a written-but-never-read snapshot enforces
 nothing. The pair — gate for the margin, ratchet for the mass — is the same
 division the dead-code campaign proved.
 
+2026-09-03 revisit result: retain the cognitive ceiling at 8. The refreshed
+Fallow 3.22.0 scan found 49 functions above 15; the burn-down executed 30 real
+refactors and retained 19 explicitly reviewed cohesive boundaries, with no new
+inline suppressions. That remaining exception pressure is evidence against
+lowering the ceiling to 6 now. Revisit 6 only after the dated overrides have
+cycled through review and the blocking health ratchet has accumulated enough
+change history to distinguish durable pressure from the inherited tail.
+
 ## 2026-08-03: Retire The Tstyche Type-Test Surface
 
 - **Status:** Active

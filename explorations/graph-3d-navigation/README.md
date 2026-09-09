@@ -19,6 +19,9 @@ cosmos/ontology rendering stack.
 
 ## Next Open Question
 
+Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
+`medium` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+
 None — **graduated 2026-07-14** into
 [`goals/graph-3d-view`](../../goals/graph-3d-view/README.md). Remaining design
 questions (stack, placement, label technique, layout location) transferred to
@@ -46,3 +49,9 @@ that goal's P0 design gate with the research evidence attached.
 - 2026-07-14: packet opened; capture written (spark, six behaviors, data
   contract, locked interview decisions); SOURCES.md license discipline seeded;
   artifact fetch wave (F1–F5) + codex research lanes launched.
+- 2026-09-08: recorded the operator's Astra/xhigh routing update in DECISIONS,
+  this resume surface, and manifest timestamps where needed; retained the existing
+  stage, lifecycle, open questions, and historical execution provenance.
+- 2026-09-09: lowered the Astra default reasoning effort from `xhigh` to `medium`
+  in DECISIONS, this resume surface, and manifest timestamps; historical execution
+  provenance retained.

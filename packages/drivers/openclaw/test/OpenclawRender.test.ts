@@ -35,6 +35,9 @@ import {
   goldenIntentContentHash,
 } from "./fixtures/golden-intent.expected.ts";
 
+const encodeOpenclawSchemaPlaceholderFindingResult = S.encodeResult(OpenclawSchemaPlaceholderFinding);
+const isRenderedOpenclawConfig = S.is(RenderedOpenclawConfig);
+
 const IntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent)(fc);
 
 const decodeJsonDocument = (json: string): unknown => Result.getOrThrow(UnknownFromJsonString.decodeResult(json));
@@ -93,7 +96,7 @@ describe("@beep/openclaw render adapter", () => {
     expect(rendered.canonicalJson).toBe(goldenIntentCanonicalJson);
     expect(rendered.contentHash).toBe(goldenIntentContentHash);
     expect(rendered.targetVersion).toBe("2026.7.1-2");
-    expect(S.is(RenderedOpenclawConfig)(rendered)).toBe(true);
+    expect(isRenderedOpenclawConfig(rendered)).toBe(true);
   });
 
   it("renders deterministically", () => {
@@ -307,7 +310,7 @@ describe("@beep/openclaw render adapter", () => {
 
     expect(findings).toHaveLength(1);
     expect(findings[0]).toBeInstanceOf(OpenclawSchemaPlaceholderFinding);
-    expect(Result.getOrThrow(S.encodeResult(OpenclawSchemaPlaceholderFinding)(findings[0]))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawSchemaPlaceholderFindingResult(findings[0]))).toEqual({
       reason: "missing",
       surface: "channels.telegram",
     });
@@ -329,12 +332,12 @@ describe("@beep/openclaw render adapter", () => {
     };
     const findings = findLossySchemaPlaceholders(placeholderExport, ["channels.telegram", "models.providers.ollama"]);
 
-    expect(
-      findings.map((finding) => Result.getOrThrow(S.encodeResult(OpenclawSchemaPlaceholderFinding)(finding)))
-    ).toEqual([
-      { reason: "placeholder", surface: "channels.telegram" },
-      { reason: "placeholder", surface: "models.providers.ollama" },
-    ]);
+    expect(findings.map((finding) => Result.getOrThrow(encodeOpenclawSchemaPlaceholderFindingResult(finding)))).toEqual(
+      [
+        { reason: "placeholder", surface: "channels.telegram" },
+        { reason: "placeholder", surface: "models.providers.ollama" },
+      ]
+    );
   });
 
   it("renders deterministically for arbitrary intents", () =>

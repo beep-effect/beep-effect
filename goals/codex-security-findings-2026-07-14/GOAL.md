@@ -1,5 +1,9 @@
 # Codex Security Findings (2026-07-14)
 
+> Future reuse (2026-09-09): use `gpt-6-astra` with `medium` for token-heavy work;
+> see [routing policy](../../AGENTS.md#token-heavy-codex-work).
+> Historical details follow.
+
 Repo root: the current working directory - the `beep-effect` checkout you are
 running in. Do not assume an absolute path. All paths below are repo-relative.
 

@@ -16,6 +16,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownDomainSyncCursorSyncCursorSync = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
+
 const SyncCursorArbitrary = S.toArbitrary(DomainSyncCursor.SyncCursor)(fc);
 const SyncCursorEquivalence = S.toEquivalence(DomainSyncCursor.SyncCursor);
 
@@ -65,7 +67,7 @@ describe("SyncCursor table", () => {
   });
 
   it("round-trips SyncCursor rows through the converters", () => {
-    const syncCursor = S.decodeUnknownSync(DomainSyncCursor.SyncCursor)(activeCursorRow);
+    const syncCursor = decodeUnknownDomainSyncCursorSyncCursorSync(activeCursorRow);
     const insert = toSyncCursorInsert(syncCursor);
 
     expect("id" in insert).toBe(false);

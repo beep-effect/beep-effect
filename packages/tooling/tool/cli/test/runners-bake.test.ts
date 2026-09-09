@@ -2,6 +2,7 @@ import {
   BakeCheckReport,
   BakeConfig,
   BakeLocalInputs,
+  BakeManifestJson,
   BakePlan,
   BakePlanJson,
   BakePlanStep,
@@ -34,6 +35,8 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+
+const decodeBakeConfig = S.decodeEffect(BakeConfig);
 
 const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const bunArchiveDigest = Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f");
@@ -116,6 +119,7 @@ const bakeOptions = () => ({
   instanceType: "r7a.2xlarge",
   tags: O.none<Record<string, string>>(),
   report: O.none<string>(),
+  manifest: O.none<string>(),
 });
 
 const bakeConfig = (instanceProfile: O.Option<string> = O.none()) =>
@@ -183,6 +187,7 @@ const makeBakeSpawner = (
 const stubService = (fresh: boolean) => ({
   plan: Effect.succeed(makePlan()),
   check: () => Effect.succeed(checkReport(fresh)),
+  checkManifest: () => Effect.succeed(checkReport(fresh)),
   bake: () => Effect.succeed(report(O.none())),
 });
 
@@ -192,7 +197,7 @@ const runWithStubService = (fresh: boolean, options: ReturnType<typeof bakeOptio
 describe("runner bake schemas", () => {
   it.effect("round-trips configuration defaults and plan JSON", () =>
     Effect.gen(function* () {
-      const config = yield* S.decodeEffect(BakeConfig)({
+      const config = yield* decodeBakeConfig({
         region: "us-east-1",
         subnetId: "subnet-0123456789abcdef0",
         securityGroupId: "sg-0123456789abcdef0",
@@ -231,6 +236,106 @@ describe("runner bake schemas", () => {
         expect(Effect.runSync(BakeReportJson.decode(encoded))).toStrictEqual(original);
       })
     ));
+});
+
+describe("runner image manifest checks", () => {
+  it.effect("checks all freshness keys and the intended pin without AWS credentials", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const manifestPath = path.join(tmpDir, "runner-image.json");
+        const commands = yield* Ref.make<ReadonlyArray<string>>(A.empty());
+        const spawner = ChildProcessSpawner.make((command) => {
+          if (!ChildProcess.isStandardCommand(command) || command.command !== "git") {
+            return Effect.die("manifest checks must never invoke AWS");
+          }
+          return Ref.update(commands, A.append(command.command)).pipe(
+            Effect.as(stubHandle(A.contains(command.args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567"))
+          );
+        });
+        const testLayer = RunnersServiceLive.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+              Layer.succeed(FileSystem.FileSystem, {
+                ...fs,
+                readFileString: Effect.fn("RunnerBakeTest.readFileString")(
+                  (...[file, options]: Parameters<typeof fs.readFileString>) =>
+                    Str.endsWith("infra/ci-runners/Pulumi.production.yaml")(file)
+                      ? Effect.succeed("config:\n  ciFleetController:amiId: ami-0123456789abcdef0\n")
+                      : fs.readFileString(file, options)
+                ),
+              }),
+              NodePath.layer,
+              NodeCrypto.layer
+            )
+          )
+        );
+        yield* Effect.gen(function* () {
+          const service = yield* RunnersService;
+          const inputs = yield* service.plan;
+          const current = BakeReport.make({
+            ...report(O.none()),
+            lockfileSha256: inputs.lockfileSha256,
+            bunArchiveSha256: inputs.bunArchiveSha256,
+            bunVersion: inputs.bunVersion,
+          });
+          const write = (value: BakeReport) =>
+            BakeReportJson.encode(value).pipe(Effect.flatMap((json) => fs.writeFileString(manifestPath, json)));
+          yield* write(current);
+          expect((yield* service.checkManifest(manifestPath)).fresh).toBe(true);
+          const observed = yield* BakeManifestJson.encode(current);
+          yield* fs.writeFileString(manifestPath, observed);
+          expect((yield* service.checkManifest(manifestPath)).fresh).toBe(true);
+          for (const stale of [
+            BakeReport.make({ ...current, lockfileSha256: digest }),
+            BakeReport.make({ ...current, bunArchiveSha256: bunArchiveDigest }),
+            BakeReport.make({ ...current, bunVersion: "0.0.0" }),
+          ]) {
+            yield* write(stale);
+            expect((yield* service.checkManifest(manifestPath)).fresh).toBe(false);
+          }
+          yield* write(BakeReport.make({ ...current, amiId: "ami-other" }));
+          expect((yield* Effect.flip(service.checkManifest(manifestPath))).message).toContain("production AMI pin");
+          yield* fs.writeFileString(manifestPath, "{}");
+          expect((yield* Effect.flip(service.checkManifest(manifestPath))).message).toContain("Invalid intended");
+        }).pipe(provideScopedLayer(testLayer));
+        expect(A.dedupe(yield* Ref.get(commands))).toEqual(["git"]);
+      })
+    )
+  );
+
+  it.effect("requires check mode and routes manifest checks to the AWS-free service", () =>
+    Effect.gen(function* () {
+      const invalid = yield* Effect.flip(
+        runWithStubService(true, { ...bakeOptions(), manifest: O.some("image.json") })
+      );
+      expect(invalid.message).toContain("--manifest requires --check");
+      yield* runBakeCommandForTesting(
+        { ...bakeOptions(), check: true, manifest: O.some("image.json") },
+        {
+          ...stubService(true),
+          check: () => Effect.die("manifest mode must not query the live image"),
+        }
+      );
+    })
+  );
+
+  it.effect("reports a stale intended manifest without querying the live AMI", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        runBakeCommandForTesting(
+          { ...bakeOptions(), check: true, manifest: O.some("image.json") },
+          { ...stubService(false), check: () => Effect.die("manifest mode must not query the live image") }
+        )
+      );
+      expect(error.message).toBe("runners bake --check: intended AMI manifest is stale.");
+      expect(yield* TestConsole.logLines).toStrictEqual([
+        "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
+      ]);
+    }).pipe(provideScopedLayer(TestConsole.layer))
+  );
 });
 
 describe("runner bake report writer", () => {

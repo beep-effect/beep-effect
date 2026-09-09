@@ -21,6 +21,7 @@ const BaselineProjection = S.Struct({
   follow_ups: S.Record(S.String, S.String),
   packages: S.Record(S.String, S.Struct({ path: S.String })),
 });
+const decodeUnknownBaselineProjection = S.decodeUnknownEffect(BaselineProjection);
 
 const provideNode = <A2, E, R2>(effect: Effect.Effect<A2, E, R2>) =>
   Effect.scoped(
@@ -105,7 +106,7 @@ describe("coverage baseline subtraction", () => {
             expect(Str.startsWith("// Coverage regression baseline. Do not edit by hand.")(text)).toBe(true);
             expect(Str.includes("@beep/courtlistener")(text)).toBe(false);
 
-            const decoded = yield* S.decodeUnknownEffect(BaselineProjection)(parse(text));
+            const decoded = yield* decodeUnknownBaselineProjection(parse(text));
             expect(R.keys(decoded.packages)).toStrictEqual(["@beep/alpha"]);
             expect(R.keys(decoded.exemptions)).toStrictEqual([]);
             expect(R.keys(decoded.follow_ups)).toStrictEqual(["@beep/alpha"]);

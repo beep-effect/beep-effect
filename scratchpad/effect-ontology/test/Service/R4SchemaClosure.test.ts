@@ -10,6 +10,12 @@ import type {
 } from "../../Repository/EntityRegistry.ts";
 import { CanonicalEntityId, EntityAliasId } from "../../Repository/EntityRegistry.ts";
 import { ChunkOptions, OntologySearchResult, TextChunk } from "../../Service/Nlp.ts";
+const decodeChunkOptions = S.decodeEffect(ChunkOptions);
+const decodeClassDefinition = S.decodeEffect(ClassDefinition);
+const decodeTextChunkOption = S.decodeOption(TextChunk);
+const decodeUnknownOntologySearchResultOption = S.decodeUnknownOption(OntologySearchResult);
+const isCanonicalEntityId = S.is(CanonicalEntityId);
+const isEntityAliasId = S.is(EntityAliasId);
 
 type IsAssignable<From, To> = [From] extends [To] ? true : false;
 
@@ -25,8 +31,8 @@ describe("round-four schema closure", () => {
 
       assert.isFalse(canonicalIdIsAliasId);
       assert.isFalse(aliasIdIsCanonicalId);
-      assert.isTrue(S.is(CanonicalEntityId)(canonicalId));
-      assert.isTrue(S.is(EntityAliasId)(aliasId));
+      assert.isTrue(isCanonicalEntityId(canonicalId));
+      assert.isTrue(isEntityAliasId(aliasId));
       yield* Effect.void;
     })
   );
@@ -34,13 +40,13 @@ describe("round-four schema closure", () => {
   it.effect(
     "rejects reversed chunk offsets and resolves strategy-owned defaults",
     Effect.fnUntraced(function* () {
-      const invalidChunk = S.decodeOption(TextChunk)({
+      const invalidChunk = decodeTextChunkOption({
         index: 0,
         text: "Ada",
         startOffset: 4,
         endOffset: 1,
       });
-      const options = yield* S.decodeEffect(ChunkOptions)({ strategy: "fine_grained" });
+      const options = yield* decodeChunkOptions({ strategy: "fine_grained" });
 
       assert.isTrue(O.isNone(invalidChunk));
       assert.strictEqual(options.strategy, "fine_grained");
@@ -54,13 +60,13 @@ describe("round-four schema closure", () => {
     "admits exactly one ontology search-result case",
     Effect.fnUntraced(function* () {
       const iri = IRI.make("https://schema.org/Person");
-      const definition = yield* S.decodeEffect(ClassDefinition)({ id: iri, label: "Person" });
+      const definition = yield* decodeClassDefinition({ id: iri, label: "Person" });
       const result = OntologySearchResult.cases.class.make({
         iri,
         score: 0.9,
         definition,
       });
-      const invalidBag = S.decodeUnknownOption(OntologySearchResult)({
+      const invalidBag = decodeUnknownOntologySearchResultOption({
         iri,
         score: 0.9,
         class: result.definition,

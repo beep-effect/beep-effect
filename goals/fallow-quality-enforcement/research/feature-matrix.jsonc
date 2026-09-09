@@ -1,7 +1,7 @@
 {
   "$schema": "./feature-matrix.schema.json",
   "schemaVersion": "fallow-quality-enforcement/feature-matrix/v1",
-  "updated": "2026-07-09",
+  "updated": "2026-09-08",
   "validatorVersion": "fallow-quality-enforcement-validator/v1",
   "features": [
     {
@@ -187,14 +187,17 @@
       "id": "fqe-feature-health",
       "featureFamily": "health",
       "fallowDocsUrls": ["https://docs.fallow.tools/cli/health"],
-      "fallowCommand": "bun run fallow:health -- --format json --quiet --report-only --top 50",
+      "fallowCommand": "bun run fallow:health -- --format json --quiet --baseline standards/fallow.health.regression-baseline.jsonc --top 50",
       "repoCommandTarget": {
         "command": "beep quality fallow health",
         "phase": "P1",
         "implementationStatus": "implemented",
         "defaultOutputPath": ".beep/fallow/health.json"
       },
-      "configSurfaces": [".fallowrc.jsonc"],
+      "configSurfaces": [
+        ".fallowrc.jsonc",
+        "standards/fallow.health.regression-baseline.jsonc"
+      ],
       "doctrineTargetRefs": [
         "standards/architecture/05-layer-composition.md",
         "standards/architecture/10-cross-slice-coordination.md"
@@ -216,15 +219,18 @@
         "reviewArtifactRefs": ["research/health.md"]
       },
       "baselineStatus": "measured",
-      "baselineArtifact": "standards/fallow.pilot.inventory.jsonc",
+      "baselineArtifact": "standards/fallow.health.regression-baseline.jsonc",
       "baselineSummary": {
         "status": "measured",
-        "counts": "Configured run on 2026-06-11 analyzed 1,868 files and 27,426 functions with average maintainability 92.3, finding 209 functions above threshold: 39 critical, 54 high, 116 moderate; this is the advisory ratchet ceiling.",
-        "notes": "Threshold policy needs Effect/schema-heavy calibration before blocking."
+        "counts": "Fallow 3.23.0 analyzed 4,440 files and 68,513 functions on the 2026-09-08 merged candidate. The committed baseline contains 189 entries; all matched with zero stale or moved entries, and no unwaived function remains above cognitive complexity 15.",
+        "notes": "The calibrated maxCognitive 8 policy is governed by review-dated threshold overrides. Three consecutive clean baseline comparisons are recorded in goals/complexity-ceiling-burn-down/reports/clean-runs.md."
       },
-      "falsePositiveStatus": "unknown",
+      "falsePositiveStatus": "waived-with-expiry",
       "falsePositiveOwner": "@beep-team",
-      "falsePositiveEvidence": ["standards/fallow.pilot.inventory.jsonc"],
+      "falsePositiveEvidence": [
+        "goals/complexity-ceiling-burn-down/research/tail-inventory.md",
+        ".fallowrc.jsonc"
+      ],
       "suppressionPolicy": {
         "recordRequired": true,
         "allowedClasses": ["tool-threshold", "legacy-hotspot"],
@@ -235,28 +241,32 @@
         "category": "repo-law",
         "parser": "fallow/health/v1",
         "subCategoryPrefix": "fallow:health",
-        "blockingDefault": false,
+        "blockingDefault": true,
         "routingSkills": ["effect-first-development", "quality-review-fix-loop"]
       },
-      "ciMode": "advisory-artifact",
-      "promotionStatus": "advisory",
+      "ciMode": "blocking-check",
+      "promotionStatus": "blocking",
       "promotionCriteria": {
         "requiredCommands": [
-          "bun run fallow:health -- --format json --quiet --report-only --top 50"
+          "bun run fallow:health:baseline:check",
+          "bun run audit:github pre-push"
         ],
-        "requiredEvidenceRefs": ["research/health.md"],
+        "requiredEvidenceRefs": [
+          "goals/complexity-ceiling-burn-down/reports/clean-runs.md",
+          "goals/complexity-ceiling-burn-down/research/tail-inventory.md"
+        ],
         "requiredReviewerRoles": ["Effect Law Reviewer"],
         "minimumCleanRuns": 3
       },
       "runtimeScope": "static-only",
       "owner": "@beep-team",
-      "acceptanceCommands": [
-        "bun run fallow:health -- --format json --quiet --report-only --top 50"
-      ],
-      "rollbackNotes": "Keep health output out of Yeet packets until thresholds are calibrated.",
+      "acceptanceCommands": ["bun run fallow:health:baseline:check"],
+      "rollbackNotes": "Move health back to the advisory lane set and restore report-only mode while retaining the baseline artifact for the next promotion attempt.",
       "evidenceRefs": [
         "research/health.md",
-        "standards/fallow.pilot.inventory.jsonc"
+        "standards/fallow.health.regression-baseline.jsonc",
+        "goals/complexity-ceiling-burn-down/reports/clean-runs.md",
+        "goals/complexity-ceiling-burn-down/research/tail-inventory.md"
       ]
     },
     {

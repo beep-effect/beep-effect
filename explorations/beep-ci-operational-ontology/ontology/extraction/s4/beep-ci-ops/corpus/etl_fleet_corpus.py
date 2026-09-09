@@ -32,6 +32,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Any, NoReturn, TypeAlias
@@ -87,7 +88,36 @@ MANIFEST_SCHEMA = "beep-ci-ops-fleet-corpus/v1"
 DROP_ADMISSION_FIELDS = ("pid", "procStart")
 PROJECTION_KIND = "properties_projection"
 
-PID_IN_TEXT = re.compile(r"\b(pid)[ =:]?[0-9]+")
+# String leaves may contain JSON serialized through several escaping layers.
+PID_IN_TEXT = re.compile(
+    r"""(?P<prefix>\bpid(?P<key_quote>\\*["'])?(?:\s|\\+[nrt])*(?:[=:](?:\s|\\+[nrt])*)?(?P<value_quote>\\*["'])?)[0-9]+""",
+    re.IGNORECASE,
+)
+PID_REDACTION_RULE = (
+    "In string values, replace case-insensitive PID matches, including single or double "
+    "quotes and repeated JSON escapes. Preserve delimiters; replace numeric JSON values "
+    "with null and quoted or free-text values with <redacted>. Pattern: " + PID_IN_TEXT.pattern
+)
+UID_IN_TEXT = re.compile(r"\buid-[0-9]+")
+PROOF_LOCK_HOST_IN_TEXT = re.compile(
+    r"(\bbeep-yeet-proof-locks-)[0-9a-fA-F]{12}(?=-uid-(?:[0-9]+|<uid>))"
+)
+REPAIR_REDACTION_RULES = (
+    "Ruling 23 repair only: replace any 12-hex sha12(hostname) in proof-lock directory "
+    "names with <host>, including foreign hosts. Also replace the runtime hostname digest "
+    "in string values; never record it. Pattern: " + PROOF_LOCK_HOST_IN_TEXT.pattern,
+    "Ruling 23 repair only: replace numeric UID tokens in string values with uid-<uid>. "
+    "Pattern: " + UID_IN_TEXT.pattern,
+)
+PROCESS_REDACTION_RULE = (
+    "For attempt and verdict records, drop process identity members, including attachedPid "
+    "and ownerProcStart, case-insensitively with underscore or hyphen separators ignored. "
+    "Preserve all other keys, booleans, nulls, and numeric values."
+)
+PROCESS_METADATA_IN_TEXT = re.compile(
+    r"""\b(?:attached[_-]*pid|owner[_-]*proc[_-]*start)(?:\\*["'])?(?:\s|\\+[nrt])*[:=]""",
+    re.IGNORECASE,
+)
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
@@ -214,24 +244,43 @@ def same_json(left: JsonValue, right: JsonValue) -> bool:
     return left == right
 
 
+def redact_pid_match(match: re.Match[str]) -> str:
+    """Preserve JSON punctuation and escaping while removing only PID digits."""
+    replacement = "null" if match["key_quote"] and not match["value_quote"] else "<redacted>"
+    return match["prefix"] + replacement
+
+
 def redact_string(value: str) -> str:
     """Apply the ordered fleet path and free-text PID rules to one value."""
 
     redacted = value.replace(FLEET_PATH_PREFIX, "<fleet>/")
     redacted = redacted.replace(HOME_PATH_PREFIX, "<home>")
     redacted = redacted.replace(SYSTEM_TEMP_PATH_PREFIX, "<tmp>/")
-    return PID_IN_TEXT.sub("pid <redacted>", redacted)
+    return PID_IN_TEXT.sub(redact_pid_match, redacted)
 
 
-def redact_string_values(value: JsonValue) -> JsonValue:
-    """Recursively redact string values while retaining all keys and numbers."""
+def process_member(key: str) -> bool:
+    return key.replace("_", "").replace("-", "").lower() in {
+        "attachedpid", "ownerprocstart", "pid", "ppid", "ownerpid", "parentpid", "processid", "procstart",
+        "procstarttime", "processstart", "processstarttime", "processstartticks",
+    }
+
+
+def redact_string_values(value: JsonValue, *, repair: bool = False) -> JsonValue:
+    """Drop process members and redact strings; apply Ruling 23 rules only during repair."""
 
     if isinstance(value, str):
-        return redact_string(value)
+        redacted = redact_string(value)
+        if repair:
+            redacted = PROOF_LOCK_HOST_IN_TEXT.sub(r"\1<host>", redacted)
+            redacted = redacted.replace(sha256(socket.gethostname().encode())[:12], "<host>")
+            redacted = UID_IN_TEXT.sub("uid-<uid>", redacted)
+        return redacted
     if isinstance(value, list):
-        return [redact_string_values(item) for item in value]
+        return [redact_string_values(item, repair=repair) for item in value]
     if isinstance(value, dict):
-        return {key: redact_string_values(item) for key, item in value.items()}
+        return {key: redact_string_values(item, repair=repair) for key, item in value.items()
+                if not process_member(key)}
     return value
 
 
@@ -747,10 +796,43 @@ def discover_live_capture() -> list[EmittedFile]:
     return sorted(emitted, key=lambda entry: entry.path)
 
 
+def reject_json_residue(value: JsonValue) -> None:
+    """Reject process fields and numeric UIDs in string leaves, preserving other keys."""
+
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if process_member(key):
+                fail("residue scan failed: process identity member")
+            reject_json_residue(child)
+    elif isinstance(value, list):
+        for child in value:
+            reject_json_residue(child)
+    elif isinstance(value, str) and UID_IN_TEXT.search(value):
+        fail("residue scan failed: numeric UID token")
+
+
 def scan_output_bytes(files: list[tuple[str, bytes]]) -> None:
     """Hard-fail public-output host-path and secret byte patterns."""
 
     for path, data in files:
+        text = path + "\n" + data.decode("utf-8")
+        if PROOF_LOCK_HOST_IN_TEXT.search(text) or sha256(socket.gethostname().encode())[:12] in text:
+            fail("residue scan failed: hostname digest")
+        # JSON keys are structural; only values receive the Ruling 23 UID transformation.
+        if UID_IN_TEXT.search(path if path.endswith((".json", ".ndjson")) else text):
+            fail("residue scan failed: numeric UID token")
+        if PROCESS_METADATA_IN_TEXT.search(text):
+            fail("residue scan failed: schema process metadata")
+        if PID_IN_TEXT.search(text):
+            fail("residue scan failed: free-text process identifier")
+        if path.endswith(".json"):
+            reject_json_residue(decode_json(data, path))
+        elif path.endswith(".ndjson"):
+            reject_json_residue(decode_ndjson(data, path))
+        elif path.endswith(".properties"):
+            for stanza in decode_properties_projection(data, path):
+                if any(process_member(key) for key, _ in stanza):
+                    fail("residue scan failed: process identity member")
         if b"/home/" in data:
             fail(f"host-path scan failed for {path}: forbidden /home/ bytes")
         if b"/tmp/" in data:
@@ -853,16 +935,13 @@ def build_manifest(emitted: list[EmittedFile]) -> bytes:
                 "procStart; retain every other decoded key and value exactly."
             ),
             (
-                "For attempt and verdict records, recursively transform string values only: "
+                "For attempt and verdict records, recursively drop process identity members, then transform strings: "
                 "replace the fleet-project host prefix with <fleet>/, then any remaining "
                 "operator-home prefix with <home>, then the system temporary-directory prefix "
                 "with <tmp>/."
             ),
-            (
-                r"In those string values, replace each case-sensitive match of "
-                r"\b(pid)[ =:]?[0-9]+ with pid <redacted>."
-            ),
-            "Never transform structural keys, booleans, nulls, or numeric values.",
+            PID_REDACTION_RULE,
+            PROCESS_REDACTION_RULE,
         ],
         "projection_rules": [
             (
@@ -1007,6 +1086,10 @@ def verify_output_tree(root: Path) -> VerificationSummary:
         fail(f"{MANIFEST_NAME} has an unsupported schema")
     if manifest.get("generator_sha256") != sha256(SCRIPT.read_bytes()):
         fail("generator digest differs from the pinned manifest; use --refresh deliberately")
+    if PID_REDACTION_RULE not in manifest.get("redaction_rules", []):
+        fail("manifest PID redaction rule differs from the generator")
+    if PROCESS_REDACTION_RULE not in manifest.get("redaction_rules", []):
+        fail("manifest process redaction rule differs from the generator")
     if re.search(rb"/(?:home|tmp)(?:/|\b)", manifest_bytes):
         fail(f"{MANIFEST_NAME} contains a non-portable home or temporary path")
     if re.search(rb"(?:^|[ \t:'\"])/(?!/)", manifest_bytes, flags=re.MULTILINE):

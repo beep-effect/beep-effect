@@ -29,6 +29,17 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeEvidenceSourceHighlightResult = S.decodeResult(EvidenceSourceHighlight);
+const decodeEvidenceSourcePageResult = S.decodeResult(EvidenceSourcePage);
+const decodeUnknownContradictionListPayloadFieldsLimitResult = S.decodeUnknownResult(
+  ContradictionListPayload.fields.limit
+);
+const decodeUnknownEvidenceSourcePageResult = S.decodeUnknownResult(EvidenceSourcePage);
+const decodeUnknownListContradictionCandidatesFieldsLimitResult = S.decodeUnknownResult(
+  ListContradictionCandidates.fields.limit
+);
+const encodeEvidenceSourcePageResult = S.encodeResult(EvidenceSourcePage);
+
 const decodeReviewPayload = S.decodeUnknownResult(ReviewContradictionCandidateRpc.payloadSchema);
 const reviewPayload = (decision: unknown) => ({
   candidateId: 1,
@@ -85,17 +96,14 @@ describe("ContradictionTriage RPC contract", () => {
   });
 
   it("bounds both internal and public queue pages to 1 through 100 rows", () => {
-    const decodeServerLimit = S.decodeUnknownResult(ListContradictionCandidates.fields.limit);
-    const decodePublicLimit = S.decodeUnknownResult(ContradictionListPayload.fields.limit);
-
-    expect(Result.isSuccess(decodeServerLimit(1))).toBe(true);
-    expect(Result.isSuccess(decodeServerLimit(100))).toBe(true);
-    expect(Result.isFailure(decodeServerLimit(0))).toBe(true);
-    expect(Result.isFailure(decodeServerLimit(101))).toBe(true);
-    expect(Result.isSuccess(decodePublicLimit(1))).toBe(true);
-    expect(Result.isSuccess(decodePublicLimit(100))).toBe(true);
-    expect(Result.isFailure(decodePublicLimit(0))).toBe(true);
-    expect(Result.isFailure(decodePublicLimit(101))).toBe(true);
+    expect(Result.isSuccess(decodeUnknownListContradictionCandidatesFieldsLimitResult(1))).toBe(true);
+    expect(Result.isSuccess(decodeUnknownListContradictionCandidatesFieldsLimitResult(100))).toBe(true);
+    expect(Result.isFailure(decodeUnknownListContradictionCandidatesFieldsLimitResult(0))).toBe(true);
+    expect(Result.isFailure(decodeUnknownListContradictionCandidatesFieldsLimitResult(101))).toBe(true);
+    expect(Result.isSuccess(decodeUnknownContradictionListPayloadFieldsLimitResult(1))).toBe(true);
+    expect(Result.isSuccess(decodeUnknownContradictionListPayloadFieldsLimitResult(100))).toBe(true);
+    expect(Result.isFailure(decodeUnknownContradictionListPayloadFieldsLimitResult(0))).toBe(true);
+    expect(Result.isFailure(decodeUnknownContradictionListPayloadFieldsLimitResult(101))).toBe(true);
   });
 
   it("normalizes both review reasons at the RPC payload boundary", () => {
@@ -147,7 +155,7 @@ describe("ContradictionTriage RPC contract", () => {
         expect(highlight.startChar).toBeLessThan(highlight.endChar);
         expect(
           Result.isFailure(
-            S.decodeResult(EvidenceSourceHighlight)({
+            decodeEvidenceSourceHighlightResult({
               ...highlight,
               endChar: highlight.startChar,
             })
@@ -155,7 +163,7 @@ describe("ContradictionTriage RPC contract", () => {
         ).toBe(true);
         expect(
           Result.isFailure(
-            S.decodeResult(EvidenceSourceHighlight)({
+            decodeEvidenceSourceHighlightResult({
               ...highlight,
               endChar: highlight.startChar,
               startChar: highlight.endChar,
@@ -180,7 +188,7 @@ describe("ContradictionTriage RPC contract", () => {
 
         expect(
           Result.isFailure(
-            S.decodeResult(EvidenceSourcePage)({
+            decodeEvidenceSourcePageResult({
               ...sourcePage,
               page: otherPage,
             })
@@ -196,7 +204,7 @@ describe("ContradictionTriage RPC contract", () => {
         expect(sourcePage.highlight.endChar).toBeLessThanOrEqual(sourcePage.page.totalCodeUnits);
         expect(
           Result.isFailure(
-            S.decodeResult(EvidenceSourcePage)({
+            decodeEvidenceSourcePageResult({
               ...sourcePage,
               highlight: {
                 ...sourcePage.highlight,
@@ -211,14 +219,12 @@ describe("ContradictionTriage RPC contract", () => {
     ));
 
   it("round-trips only source-aligned EvidenceSourcePage values", () => {
-    const encode = S.encodeResult(EvidenceSourcePage);
-    const decode = S.decodeUnknownResult(EvidenceSourcePage);
     const equivalent = S.toEquivalence(EvidenceSourcePage);
 
     fc.assert(
       fc.property(S.toArbitrary(EvidenceSourcePage)(fc), (sourcePage) => {
-        const encoded = encode(sourcePage).pipe(Result.getOrThrow);
-        const decoded = decode(encoded).pipe(Result.getOrThrow);
+        const encoded = encodeEvidenceSourcePageResult(sourcePage).pipe(Result.getOrThrow);
+        const decoded = decodeUnknownEvidenceSourcePageResult(encoded).pipe(Result.getOrThrow);
 
         expect(equivalent(decoded, sourcePage)).toBe(true);
         expect(R.keys(encoded.highlight)).toStrictEqual(["endChar", "source", "startChar"]);

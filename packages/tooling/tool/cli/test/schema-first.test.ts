@@ -27,6 +27,9 @@ import { parse } from "jsonc-parser";
 import { Project, SyntaxKind, ts } from "ts-morph";
 import { describe, expect, it } from "vitest";
 
+const decodeFileGenerationPlanInputSync = S.decodeSync(FileGenerationPlanInput);
+const decodeUnknownSchemaCrispeningPolicyDocumentSync = S.decodeUnknownSync(SchemaCrispeningPolicyDocument);
+
 const committedPolicyText = O.getOrElse(
   O.liftPredicate(
     ts.sys.readFile(new URL("../../../../../standards/schema-crispening.policy.jsonc", import.meta.url).pathname),
@@ -37,7 +40,7 @@ const committedPolicyText = O.getOrElse(
 
 describe("packages/tooling/tool/cli schema-first models", () => {
   it("applies decoding defaults for FileGenerationPlanInput.symlinks", () => {
-    const decoded = S.decodeSync(FileGenerationPlanInput)({
+    const decoded = decodeFileGenerationPlanInputSync({
       outputDir: "/tmp/demo",
       directories: ["src"],
       files: [{ relativePath: "src/index.ts", content: "export {};\n" }],
@@ -479,7 +482,7 @@ describe("G4 foundation family-flip regression fixture", () => {
   it("keeps the same ratchet result against the real committed policy document", () => {
     // Bind the fixture to the on-disk policy: if a future edit reverts a
     // family flip, these assertions fail. Flipped so far: foundation, drivers.
-    const policy = O.some(S.decodeUnknownSync(SchemaCrispeningPolicyDocument)(parse(committedPolicyText)));
+    const policy = O.some(decodeUnknownSchemaCrispeningPolicyDocumentSync(parse(committedPolicyText)));
     const isExempt = isSchemaCrispeningPolicyExempt(policy);
 
     expect(isExempt(foundationViolation)).toBe(false);

@@ -35,7 +35,6 @@
       "Bash(git stash push:*)",
       "Bash(git stash show:*)",
       "Bash(git stash list:*)",
-      "Bash(git stash drop:*)",
       "Bash(git update-ref refs/archive/:*)",
       "Bash(bun run beep yeet sweep:*)",
       "Bash(bun run beep yeet repair:*)",
@@ -50,7 +49,15 @@
       "Bash(bun run beep laws:*)",
       "Bash(rm -rf .beep/fallow)",
       "Bash(bunx commitlint:*)",
-      "Bash(bun install:*)"
+      "Bash(bun install:*)",
+      "Bash(graft ask:*)",
+      "Bash(graft grep:*)",
+      "Bash(graft skeleton:*)",
+      "Bash(graft callers:*)",
+      "Bash(graft map:*)",
+      "Bash(graft blast:*)",
+      "Bash(graft check:*)",
+      "Bash(graft build)"
     ],
     "deny": [
       "Bash(git push --force:*)",
@@ -58,6 +65,7 @@
       "Bash(git push --force-with-lease:*)",
       "Bash(git push --mirror:*)",
       "Bash(git stash clear:*)",
+      "Bash(git stash drop:*)",
       "Bash(git stash pop:*)",
       "Bash(git worktree remove --force:*)",
       "Bash(bun run beep worktree remove --force:*)",
@@ -69,7 +77,10 @@
       "Bash(gh repo delete:*)",
       "Edit(**/.github/workflows/**)",
       "Edit(**/docs/_internal/**)",
-      "Edit(**/.claude/settings.json)"
+      "Edit(**/.claude/settings.json)",
+      "Bash(graft init:*)",
+      "Bash(graft uninstall:*)",
+      "Bash(graft upgrade:*)"
     ],
     "defaultMode": "default"
   },
@@ -134,6 +145,16 @@
             "command": "BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 $CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" post-edit",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
@@ -188,6 +209,15 @@
             "statusMessage": "Reading Yeet inbox"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" session-start",
+            "timeout": 8
+          }
+        ]
       }
     ],
     "Stop": [
@@ -202,6 +232,15 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/yeet-inbox.sh claude",
             "timeout": 2,
             "statusMessage": "Checking Yeet inbox"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" stop",
+            "timeout": 8
           }
         ]
       }
@@ -230,5 +269,9 @@
       }
     }
   },
-  "autoMemoryDirectory": "~/.claude/memory/beep-effect"
+  "autoMemoryDirectory": "~/.claude/memory/beep-effect",
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
+  }
 }

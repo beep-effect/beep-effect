@@ -31,6 +31,8 @@ import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
 import type * as Duration from "effect/Duration";
 import type * as Headers from "effect/unstable/http/Headers";
 
+const isFinite = S.is(S.Finite);
+
 const $I = $ApiTransportId.create("Transport");
 
 /**
@@ -126,7 +128,7 @@ const parseHeaderNumber = (raw: string): O.Option<number> =>
       O.flatMap(Str.match(rateLimitHeaderNumberPattern)(raw), (match) => O.fromUndefinedOr(match[0])),
       N.parse
     ),
-    S.is(S.Finite)
+    isFinite
   );
 
 const parseNumberHeader = (headers: Headers.Headers, ...keys: ReadonlyArray<string>): O.Option<number> =>

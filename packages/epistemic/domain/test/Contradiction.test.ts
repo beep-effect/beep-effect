@@ -35,6 +35,16 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeCanonicalContradictionBeliefPairResult = S.decodeResult(CanonicalContradictionBeliefPair);
+const decodeContradictionBeliefPairResult = S.decodeResult(ContradictionBeliefPair);
+const decodeUnknownContradictionAssessmentResult = S.decodeUnknownResult(ContradictionAssessment);
+const decodeUnknownContradictionMatchBasisResult = S.decodeUnknownResult(ContradictionMatchBasis);
+const decodeUnknownContradictionProposalContentResult = S.decodeUnknownResult(ContradictionProposalContent);
+const decodeUnknownContradictionResolutionProposalResult = S.decodeUnknownResult(ContradictionResolutionProposal);
+const encodeUnknownContradictionProposalContentResult = S.encodeUnknownResult(ContradictionProposalContent);
+const encodeUnknownContradictionResolutionProposalResult = S.encodeUnknownResult(ContradictionResolutionProposal);
+const isCanonicalContradictionBeliefPair = S.is(CanonicalContradictionBeliefPair);
+
 const left = BeliefVersionRef.make({
   edgeVersionId: Epistemic.EdgeVersionId.make(1),
   logicalKey: LogicalEdgeKey.make(Str.repeat(64)("a")),
@@ -119,10 +129,16 @@ const supersededDecisionInput = (reason: string) => ({
 describe("Contradiction domain invariants", () => {
   it("rejects duplicate evidence ids on either side of a match basis", () => {
     const duplicate = Epistemic.EvidenceId.make(10);
-    const decode = S.decodeUnknownResult(ContradictionMatchBasis);
-
-    expect(Result.isFailure(decode({ ...matchBasis, leftEvidenceIds: [duplicate, duplicate] }))).toBe(true);
-    expect(Result.isFailure(decode({ ...matchBasis, rightEvidenceIds: [duplicate, duplicate] }))).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionMatchBasisResult({ ...matchBasis, leftEvidenceIds: [duplicate, duplicate] })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionMatchBasisResult({ ...matchBasis, rightEvidenceIds: [duplicate, duplicate] })
+      )
+    ).toBe(true);
   });
 
   it("bounds each evidence set retained by one match basis", () => {
@@ -130,34 +146,49 @@ describe("Contradiction domain invariants", () => {
       Epistemic.EvidenceId.make(index + 1_000)
     );
     const boundedEvidenceIds = A.take(evidenceIds, CONTRADICTION_EVIDENCE_SET_MAX_COUNT);
-    const decode = S.decodeUnknownResult(ContradictionMatchBasis);
-
-    expect(Result.isSuccess(decode({ ...matchBasis, leftEvidenceIds: boundedEvidenceIds }))).toBe(true);
-    expect(Result.isFailure(decode({ ...matchBasis, leftEvidenceIds: evidenceIds }))).toBe(true);
-    expect(Result.isSuccess(decode({ ...matchBasis, rightEvidenceIds: boundedEvidenceIds }))).toBe(true);
-    expect(Result.isFailure(decode({ ...matchBasis, rightEvidenceIds: evidenceIds }))).toBe(true);
+    expect(
+      Result.isSuccess(
+        decodeUnknownContradictionMatchBasisResult({ ...matchBasis, leftEvidenceIds: boundedEvidenceIds })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, leftEvidenceIds: evidenceIds }))
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decodeUnknownContradictionMatchBasisResult({ ...matchBasis, rightEvidenceIds: boundedEvidenceIds })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, rightEvidenceIds: evidenceIds }))
+    ).toBe(true);
   });
 
   it("normalizes and bounds detector identities before candidate-key construction", () => {
     const maximumDetector = Str.repeat(CONTRADICTION_DETECTOR_MAX_LENGTH)("d");
     const oversizedDetector = Str.concat(maximumDetector, "d");
-    const decode = S.decodeUnknownResult(ContradictionMatchBasis);
-    const decodedPadded = Result.getOrThrow(decode({ ...matchBasis, detector: "  fixture-detector  " }));
+    const decodedPadded = Result.getOrThrow(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: "  fixture-detector  " })
+    );
 
     expect(decodedPadded.detector).toBe("fixture-detector");
     expect(contradictionCandidateKey(pair, decodedPadded)).toBe(contradictionCandidateKey(pair, matchBasis));
-    expect(Result.isFailure(decode({ ...matchBasis, detector: " \n\t " }))).toBe(true);
-    expect(Result.isSuccess(decode({ ...matchBasis, detector: maximumDetector }))).toBe(true);
-    expect(Result.isFailure(decode({ ...matchBasis, detector: oversizedDetector }))).toBe(true);
+    expect(Result.isFailure(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: " \n\t " }))).toBe(
+      true
+    );
+    expect(
+      Result.isSuccess(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: maximumDetector }))
+    ).toBe(true);
+    expect(
+      Result.isFailure(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: oversizedDetector }))
+    ).toBe(true);
   });
 
   it("requires independent evidence sets to be disjoint", () => {
     const shared = Epistemic.EvidenceId.make(10);
-    const decode = S.decodeUnknownResult(ContradictionMatchBasis);
-
     expect(
       Result.isFailure(
-        decode({
+        decodeUnknownContradictionMatchBasisResult({
           ...matchBasis,
           leftEvidenceIds: [shared],
           rightEvidenceIds: [shared],
@@ -166,7 +197,7 @@ describe("Contradiction domain invariants", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        decode({
+        decodeUnknownContradictionMatchBasisResult({
           ...matchBasis,
           kind: "same-source-overlap",
           leftEvidenceIds: [shared],
@@ -179,7 +210,7 @@ describe("Contradiction domain invariants", () => {
   it("rejects duplicate proposal ids within one assessment", () => {
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(ContradictionAssessment)({
+        decodeUnknownContradictionAssessmentResult({
           confidence: 0.95,
           proposals: [proposal, proposal],
         })
@@ -198,52 +229,88 @@ describe("Contradiction domain invariants", () => {
         proposalDigest: Result.getOrThrow(contradictionProposalDigest(content)),
       });
     });
-    const encodeProposal = S.encodeUnknownResult(ContradictionResolutionProposal);
-    const encodedProposals = A.map(proposals, (value) => Result.getOrThrow(encodeProposal(value)));
-    const decode = S.decodeUnknownResult(ContradictionAssessment);
-
+    const encodedProposals = A.map(proposals, (value) =>
+      Result.getOrThrow(encodeUnknownContradictionResolutionProposalResult(value))
+    );
     expect(
       Result.isSuccess(
-        decode({
+        decodeUnknownContradictionAssessmentResult({
           confidence: 0.95,
           proposals: A.take(encodedProposals, CONTRADICTION_PROPOSAL_MAX_COUNT),
         })
       )
     ).toBe(true);
-    expect(Result.isFailure(decode({ confidence: 0.95, proposals: encodedProposals }))).toBe(true);
+    expect(
+      Result.isFailure(decodeUnknownContradictionAssessmentResult({ confidence: 0.95, proposals: encodedProposals }))
+    ).toBe(true);
   });
 
   it("rejects empty or reversed proposal validity intervals", () => {
-    const encoded = Result.getOrThrow(S.encodeUnknownResult(ContradictionResolutionProposal)(proposal));
-    const decode = S.decodeUnknownResult(ContradictionResolutionProposal);
-
-    expect(Result.isFailure(decode({ ...encoded, validFrom: 1_000, validTo: 1_000 }))).toBe(true);
-    expect(Result.isFailure(decode({ ...encoded, validFrom: 1_001, validTo: 1_000 }))).toBe(true);
-    expect(Result.isSuccess(decode({ ...encoded, validFrom: 1_000, validTo: 1_001 }))).toBe(true);
+    const encoded = Result.getOrThrow(encodeUnknownContradictionResolutionProposalResult(proposal));
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionResolutionProposalResult({ ...encoded, validFrom: 1_000, validTo: 1_000 })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionResolutionProposalResult({ ...encoded, validFrom: 1_001, validTo: 1_000 })
+      )
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decodeUnknownContradictionResolutionProposalResult({ ...encoded, validFrom: 1_000, validTo: 1_001 })
+      )
+    ).toBe(true);
   });
 
   it("normalizes and bounds detector rationales in proposal content and attached proposals", () => {
-    const encodedContent = Result.getOrThrow(S.encodeUnknownResult(ContradictionProposalContent)(proposalContent));
-    const encodedProposal = Result.getOrThrow(S.encodeUnknownResult(ContradictionResolutionProposal)(proposal));
+    const encodedContent = Result.getOrThrow(encodeUnknownContradictionProposalContentResult(proposalContent));
+    const encodedProposal = Result.getOrThrow(encodeUnknownContradictionResolutionProposalResult(proposal));
     const maximumRationale = Str.repeat(CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH)("r");
     const oversizedRationale = Str.concat(maximumRationale, "r");
     const paddedRationale = "  The signed amendment controls.  ";
     const whitespaceOnlyRationale = " \n\t ";
-    const decodeContent = S.decodeUnknownResult(ContradictionProposalContent);
-    const decodeProposal = S.decodeUnknownResult(ContradictionResolutionProposal);
-
-    expect(Result.getOrThrow(decodeContent({ ...encodedContent, rationale: paddedRationale })).rationale).toBe(
-      "The signed amendment controls."
-    );
-    expect(Result.getOrThrow(decodeProposal({ ...encodedProposal, rationale: paddedRationale })).rationale).toBe(
-      "The signed amendment controls."
-    );
-    expect(Result.isFailure(decodeContent({ ...encodedContent, rationale: whitespaceOnlyRationale }))).toBe(true);
-    expect(Result.isFailure(decodeProposal({ ...encodedProposal, rationale: whitespaceOnlyRationale }))).toBe(true);
-    expect(Result.isSuccess(decodeContent({ ...encodedContent, rationale: maximumRationale }))).toBe(true);
-    expect(Result.isFailure(decodeContent({ ...encodedContent, rationale: oversizedRationale }))).toBe(true);
-    expect(Result.isSuccess(decodeProposal({ ...encodedProposal, rationale: maximumRationale }))).toBe(true);
-    expect(Result.isFailure(decodeProposal({ ...encodedProposal, rationale: oversizedRationale }))).toBe(true);
+    expect(
+      Result.getOrThrow(
+        decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: paddedRationale })
+      ).rationale
+    ).toBe("The signed amendment controls.");
+    expect(
+      Result.getOrThrow(
+        decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: paddedRationale })
+      ).rationale
+    ).toBe("The signed amendment controls.");
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: whitespaceOnlyRationale })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: whitespaceOnlyRationale })
+      )
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: maximumRationale })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: oversizedRationale })
+      )
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: maximumRationale })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: oversizedRationale })
+      )
+    ).toBe(true);
   });
 
   it("separates unordered submissions from canonical persisted pairs", () => {
@@ -255,8 +322,8 @@ describe("Contradiction domain invariants", () => {
     });
     const canonical = canonicalizeContradiction(reversed, reversedBasis);
 
-    expect(Result.isFailure(S.decodeResult(CanonicalContradictionBeliefPair)(reversed))).toBe(true);
-    expect(Result.isSuccess(S.decodeResult(CanonicalContradictionBeliefPair)(canonical.pair))).toBe(true);
+    expect(Result.isFailure(decodeCanonicalContradictionBeliefPairResult(reversed))).toBe(true);
+    expect(Result.isSuccess(decodeCanonicalContradictionBeliefPairResult(canonical.pair))).toBe(true);
     expect(canonical.pair.left).toStrictEqual(left);
     expect(canonical.pair.right).toStrictEqual(right);
     expect(canonical.matchBasis.leftEvidenceIds).toStrictEqual(leftEvidenceIds);
@@ -266,8 +333,8 @@ describe("Contradiction domain invariants", () => {
   it("rejects self-contradictions at submission and canonical persistence boundaries", () => {
     const selfPair = { left, right: left };
 
-    expect(Result.isFailure(S.decodeResult(ContradictionBeliefPair)(selfPair))).toBe(true);
-    expect(Result.isFailure(S.decodeResult(CanonicalContradictionBeliefPair)(selfPair))).toBe(true);
+    expect(Result.isFailure(decodeContradictionBeliefPairResult(selfPair))).toBe(true);
+    expect(Result.isFailure(decodeCanonicalContradictionBeliefPairResult(selfPair))).toBe(true);
   });
 
   it("keys detector identities and versions independently", () => {
@@ -322,16 +389,29 @@ describe("Contradiction domain invariants", () => {
   });
 
   it("rejects proposal facts outside canonical JSON", () => {
-    const decode = S.decodeUnknownResult(ContradictionProposalContent);
-
-    expect(Result.isFailure(decode({ ...proposalContent, fact: { amount: Number.NaN } }))).toBe(true);
-    expect(Result.isFailure(decode({ ...proposalContent, fact: { amount: Number.POSITIVE_INFINITY } }))).toBe(true);
-    expect(Result.isFailure(decode({ ...proposalContent, fact: { amount: undefined } }))).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionProposalContentResult({ ...proposalContent, fact: { amount: Number.NaN } })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionProposalContentResult({
+          ...proposalContent,
+          fact: { amount: Number.POSITIVE_INFINITY },
+        })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decodeUnknownContradictionProposalContentResult({ ...proposalContent, fact: { amount: undefined } })
+      )
+    ).toBe(true);
   });
 
   it("bounds proposal fact bytes, node count, and nesting before digesting", () => {
-    const encodedContent = Result.getOrThrow(S.encodeUnknownResult(ContradictionProposalContent)(proposalContent));
-    const encodedProposal = Result.getOrThrow(S.encodeUnknownResult(ContradictionResolutionProposal)(proposal));
+    const encodedContent = Result.getOrThrow(encodeUnknownContradictionProposalContentResult(proposalContent));
+    const encodedProposal = Result.getOrThrow(encodeUnknownContradictionResolutionProposalResult(proposal));
     const deeplyNestedFact = A.reduce(
       A.makeBy(34, (index) => index),
       { leaf: true } as S.Json,
@@ -342,15 +422,12 @@ describe("Contradiction domain invariants", () => {
       { values: A.makeBy(4_096, () => null) },
       deeplyNestedFact,
     ];
-    const decodeContent = S.decodeUnknownResult(ContradictionProposalContent);
-    const decodeProposal = S.decodeUnknownResult(ContradictionResolutionProposal);
-
     expect(
       A.every(
         rejectedFacts,
         (fact) =>
-          Result.isFailure(decodeContent({ ...encodedContent, fact })) &&
-          Result.isFailure(decodeProposal({ ...encodedProposal, fact }))
+          Result.isFailure(decodeUnknownContradictionProposalContentResult({ ...encodedContent, fact })) &&
+          Result.isFailure(decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, fact }))
       )
     ).toBe(true);
   });
@@ -382,7 +459,7 @@ describe("Contradiction domain invariants", () => {
               })
             )
           ).toBe(true);
-          expect(S.is(CanonicalContradictionBeliefPair)(canonicalPair)).toBe(true);
+          expect(isCanonicalContradictionBeliefPair(canonicalPair)).toBe(true);
         }
       ),
       fcRuns(50)

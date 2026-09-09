@@ -15,6 +15,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownEscapedPnLocalOption = S.decodeUnknownOption(EscapedPnLocal);
+const decodeUnknownSafePnLocalOption = S.decodeUnknownOption(SafePnLocal);
+const decodeUnknownSafePnPrefixOption = S.decodeUnknownOption(SafePnPrefix);
+const encodeEscapedPnLocalOption = S.encodeOption(EscapedPnLocal);
+const encodeSafePnLocalOption = S.encodeOption(SafePnLocal);
+const encodeSafePnPrefixOption = S.encodeOption(SafePnPrefix);
+
 const escapableLocalCharacters = [
   "_",
   "~",
@@ -83,7 +90,7 @@ describe("PnLocal", () => {
   it("round-trips generated safe PN_LOCAL schema values", () => {
     fc.assert(
       fc.property(S.toArbitrary(SafePnLocal)(fc), (local) => {
-        const decoded = O.flatMap(S.encodeOption(SafePnLocal)(local), S.decodeUnknownOption(SafePnLocal));
+        const decoded = O.flatMap(encodeSafePnLocalOption(local), decodeUnknownSafePnLocalOption);
 
         expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
         expect(isSafeLocal(local)).toBe(true);
@@ -94,7 +101,7 @@ describe("PnLocal", () => {
   it("round-trips generated safe PN_PREFIX schema values", () => {
     fc.assert(
       fc.property(S.toArbitrary(SafePnPrefix)(fc), (prefix) => {
-        const decoded = O.flatMap(S.encodeOption(SafePnPrefix)(prefix), S.decodeUnknownOption(SafePnPrefix));
+        const decoded = O.flatMap(encodeSafePnPrefixOption(prefix), decodeUnknownSafePnPrefixOption);
 
         expect(O.exists(decoded, (value) => Equal.equals(value, prefix))).toBe(true);
         expect(isSafePrefix(prefix)).toBe(true);
@@ -105,7 +112,7 @@ describe("PnLocal", () => {
   it("round-trips generated escaped PN_LOCAL schema values", () => {
     fc.assert(
       fc.property(S.toArbitrary(EscapedPnLocal)(fc), (local) => {
-        const decoded = O.flatMap(S.encodeOption(EscapedPnLocal)(local), S.decodeUnknownOption(EscapedPnLocal));
+        const decoded = O.flatMap(encodeEscapedPnLocalOption(local), decodeUnknownEscapedPnLocalOption);
 
         expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
         expect(acceptsEscapedLocal(local)).toBe(true);

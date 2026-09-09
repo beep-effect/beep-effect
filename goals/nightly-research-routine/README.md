@@ -14,7 +14,7 @@ not shipped.
 
 Ship an unattended hybrid nightly research routine whose hosted Grok Bot
 search/writer front half produces typed capability results, whose blinded local
-Sol/Luna lane verifies evidence and checkout facts, and whose deterministic
+Astra/Luna lane verifies evidence and checkout facts, and whose deterministic
 local publisher lands sanitized, novelty-gated packets under top-level
 `research/` as mergeable PRs with per-packet claims truth and
 machine-proposes/human-admits actioning.

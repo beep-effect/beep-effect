@@ -27,6 +27,11 @@ import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeEvidenceSpanResult = S.decodeResult(EvidenceSpan);
+const decodeTextAnchorResult = S.decodeResult(TextAnchor);
+const decodeUnknownCandidateClaimSync = S.decodeUnknownSync(CandidateClaim);
+const decodeUnknownTurnFinalizationUsageAppendSync = S.decodeUnknownSync(TurnFinalizationUsageAppend);
+
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, encoded: Schema["Encoded"]): void => {
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
   expect(Result.getOrThrow(S.encodeResult(schema)(decoded))).toStrictEqual(encoded);
@@ -86,7 +91,7 @@ describe("@beep/epistemic-domain", () => {
   it("rejects inconsistent evidence-span widths and derives only consistent spans", () => {
     expect(
       Result.isFailure(
-        S.decodeResult(EvidenceSpan)({
+        decodeEvidenceSpanResult({
           confidence: 0.92,
           endChar: 13,
           quote: "a claimed fact",
@@ -107,7 +112,7 @@ describe("@beep/epistemic-domain", () => {
 
     expect(
       Result.isSuccess(
-        S.decodeResult(EvidenceSpan)({
+        decodeEvidenceSpanResult({
           confidence: 0.92,
           endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
           quote: maximumQuote,
@@ -117,7 +122,7 @@ describe("@beep/epistemic-domain", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeResult(EvidenceSpan)({
+        decodeEvidenceSpanResult({
           confidence: 0.92,
           endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1,
           quote: overLimitQuote,
@@ -129,7 +134,7 @@ describe("@beep/epistemic-domain", () => {
 
   it("matches an evidence span only to its exact provenance anchor", () => {
     const span = Result.getOrThrow(
-      S.decodeResult(EvidenceSpan)({
+      decodeEvidenceSpanResult({
         confidence: 0.92,
         endChar: 8,
         quote: "amount A",
@@ -137,7 +142,7 @@ describe("@beep/epistemic-domain", () => {
       })
     );
     const matching = Result.getOrThrow(
-      S.decodeResult(TextAnchor)({
+      decodeTextAnchorResult({
         endChar: 8,
         quote: "amount A",
         startChar: 0,
@@ -153,7 +158,7 @@ describe("@beep/epistemic-domain", () => {
   });
 
   it("decodes and constructs a CandidateClaim row", () => {
-    const decoded = S.decodeUnknownSync(CandidateClaim)({
+    const decoded = decodeUnknownCandidateClaimSync({
       ...productEntityFixtureInput("EpistemicCandidateClaim", 3),
       fixtureKey: "claim.patentability",
       lifecycle: "candidate",
@@ -169,7 +174,7 @@ describe("@beep/epistemic-domain", () => {
   });
 
   it("appends a UsageRecord from turn-finalization activity", () => {
-    const decoded = S.decodeUnknownSync(TurnFinalizationUsageAppend)({
+    const decoded = decodeUnknownTurnFinalizationUsageAppendSync({
       ...productEntityFixtureInput("EpistemicUsageRecord", 7),
       activityId: 5,
       actor: systemPrincipal,

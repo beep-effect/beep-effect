@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/fleet-mirror-p0-policy-surface",
+  "committed": true,
+  "createdAt": "2026-08-06T14:34:51.783Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 2117.621589,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "durationMs": 623.815519,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 4710.69835,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "durationMs": 830898.186128,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1883.278858,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_fleet-mirror-p0-policy-surface-c9a62cea0636",
+  "attemptId": "57e3326c-4466-4327-8033-6115f6a1d4e1",
+  "startedAt": "2026-08-06T14:20:51.045Z",
+  "endedAt": "2026-08-06T14:34:51.783Z",
+  "elapsedMs": 840738,
+  "indexPath": "<fleet>/beep-effect5/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 2,
+    "mergeBase": "9d2b12cc67fbcd9787040c0c14cf6dbded17c311",
+    "overlappingPaths": []
+  }
+}

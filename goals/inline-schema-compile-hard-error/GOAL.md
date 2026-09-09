@@ -8,6 +8,9 @@ Outcome: eliminate all remaining inline Effect Schema compiler calls governed
 by `beep(no-inline-schema-compile)`, preserve behavior by compiling once at
 module scope, and promote the rule from warning to error.
 
+Retained closeout launcher. The successor includes the completed packet state
+before publication; its final-head verification and review remain merge gates.
+
 Read first:
 
 - `goals/inline-schema-compile-hard-error/SPEC.md` — normative contract.
@@ -45,11 +48,15 @@ Workflow:
 
 Acceptance:
 
-- [ ] The complete `SPEC.md` contract is satisfied.
-- [ ] The lint rule reports zero warnings at repository scope.
-- [ ] The rule is configured as an error and its focused tests are green.
-- [ ] Generated sources remain reproducible from updated generators.
-- [ ] Required local and hosted checks are green.
+- [x] The complete `SPEC.md` contract is satisfied.
+- [x] The lint rule reports zero warnings at repository scope.
+- [x] The rule is configured as an error and its focused tests are green.
+- [x] Generated sources remain reproducible from updated generators.
+- [x] Required local and hosted checks are green.
+
+The checks above retain implementation acceptance. They do not pre-approve
+the closeout candidate's own publication; inspect its final Yeet receipts and
+PR review state before declaring delivery complete.
 
 Verification:
 

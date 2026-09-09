@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "docs/pr-392-merge-closeout",
+  "committed": false,
+  "createdAt": "2026-07-14T03:35:30.509Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "prepare:01-effect-imports",
+      "label": "prepare:laws:effect-imports",
+      "phase": "prepare",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:02-dual-arity",
+      "label": "prepare:laws:dual-arity",
+      "phase": "prepare",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:03-config-sync",
+      "label": "prepare:config-sync",
+      "phase": "prepare",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:04-lint-fix",
+      "label": "prepare:lint:fix",
+      "phase": "prepare",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:05-docgen",
+      "label": "prepare:docgen",
+      "phase": "prepare",
+      "status": "passed",
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet repair succeeded.",
+  "mode": "repair",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_pr-392-merge-closeout-9b40826064e5",
+  "indexPath": "<fleet>/beep-effect2-worktrees/llm-provider-auth/.beep/yeet/quality-issue-index.json"
+}

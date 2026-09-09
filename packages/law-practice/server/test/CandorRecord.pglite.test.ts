@@ -46,6 +46,11 @@ import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { CitingApplicationIdentity } from "@beep/law-practice-domain";
 import type { CandorRecordRepositoryShape } from "@beep/law-practice-use-cases/CandorRecord";
 
+const decodeUnknownCandorDisposition = S.decodeUnknownEffect(CandorDisposition);
+const decodeUnknownIdsSubmissionFact = S.decodeUnknownEffect(IdsSubmissionFact);
+const decodeUnknownPatentCitationEvent = S.decodeUnknownEffect(PatentCitationEvent);
+const isCandorFilingScope = S.is(CandorFilingScope);
+
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis: PgliteIntegrationTimeout } =
   makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../../_internal/db-admin/drizzle", import.meta.url));
@@ -88,7 +93,7 @@ const decodeScope = S.decodeUnknownEffect(CandorFilingScope);
 
 describe("law-practice candor repository schema laws", () => {
   it("generates valid filing scopes", () => {
-    fc.assert(fc.property(S.toArbitrary(CandorFilingScope)(fc), S.is(CandorFilingScope)), fcRuns(25));
+    fc.assert(fc.property(S.toArbitrary(CandorFilingScope)(fc), isCandorFilingScope), fcRuns(25));
   });
 });
 
@@ -97,7 +102,7 @@ const scopeFor = (citingApplication: CitingApplicationIdentity.Encoded, orgId: n
   decodeScope({ citingApplication, orgId });
 
 const eventFixture = (seed: number, citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>
-  S.decodeUnknownEffect(PatentCitationEvent)({
+  decodeUnknownPatentCitationEvent({
     ...productEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, seed),
     orgId,
     actor: "Applicant",
@@ -123,7 +128,7 @@ const eventFixture = (seed: number, citingApplication: CitingApplicationIdentity
   });
 
 const dispositionFixture = (seed: number, citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>
-  S.decodeUnknownEffect(CandorDisposition)({
+  decodeUnknownCandorDisposition({
     ...productEntityFixtureInput(LawPractice.CandorDispositionId.entityType, seed),
     orgId,
     citingApplication,
@@ -136,7 +141,7 @@ const dispositionFixture = (seed: number, citingApplication: CitingApplicationId
   });
 
 const submissionFactFixture = (seed: number, citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>
-  S.decodeUnknownEffect(IdsSubmissionFact)({
+  decodeUnknownIdsSubmissionFact({
     ...productEntityFixtureInput(LawPractice.IdsSubmissionFactId.entityType, seed),
     orgId,
     candidateWindow: {

@@ -22,6 +22,11 @@ import * as OntologyRegistry from "../../../Domain/Schema/OntologyRegistry.ts";
 import * as Search from "../../../Domain/Schema/Search.ts";
 import * as Shacl from "../../../Domain/Schema/Shacl.ts";
 import * as Timeline from "../../../Domain/Schema/Timeline.ts";
+const decodeApiSubmitJobSource = S.decodeEffect(Api.SubmitJobSource);
+const decodeBatchStatusResponseBatchStatusResponse = S.decodeEffect(BatchStatusResponse.BatchStatusResponse);
+const decodeBatchRequestBatchRequestResult = S.decodeResult(BatchRequest.BatchRequest);
+const decodeUnknownApiSubmitJobRequestResult = S.decodeUnknownResult(Api.SubmitJobRequest);
+const decodeUnknownBatchRequestBatchRequestResult = S.decodeUnknownResult(BatchRequest.BatchRequest);
 
 const schemaModules = [
   ["Api", Api],
@@ -73,7 +78,7 @@ describe("effect-ontology public schema surface", () => {
   });
 
   it("normalizes omitted batch options and requires a non-empty document set", () => {
-    const request = S.decodeResult(BatchRequest.BatchRequest)({
+    const request = decodeBatchRequestBatchRequestResult({
       ontologyId: "premier-league",
       ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
       ontologyVersion: `football/premier-league@${"a".repeat(64)}`,
@@ -85,7 +90,7 @@ describe("effect-ontology public schema surface", () => {
         },
       ],
     });
-    const empty = S.decodeUnknownResult(BatchRequest.BatchRequest)({
+    const empty = decodeUnknownBatchRequestBatchRequestResult({
       ontologyId: "premier-league",
       ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
       ontologyVersion: `football/premier-league@${"a".repeat(64)}`,
@@ -105,12 +110,12 @@ describe("effect-ontology public schema surface", () => {
   it.effect(
     "represents extraction input and terminal output with discriminated variants",
     Effect.fnUntraced(function* () {
-      const source = yield* S.decodeEffect(Api.SubmitJobSource)({
+      const source = yield* decodeApiSubmitJobSource({
         _tag: "Remote",
         value: { url: "https://example.com/report.pdf" },
       });
-      const missingSource = S.decodeUnknownResult(Api.SubmitJobRequest)({});
-      const notFound = yield* S.decodeEffect(BatchStatusResponse.BatchStatusResponse)({
+      const missingSource = decodeUnknownApiSubmitJobRequestResult({});
+      const notFound = yield* decodeBatchStatusResponseBatchStatusResponse({
         _tag: "NotFound",
         value: { batchId: "batch-abc123def456" },
       });

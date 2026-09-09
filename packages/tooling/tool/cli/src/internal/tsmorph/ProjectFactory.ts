@@ -5,7 +5,8 @@
  * @since 0.0.0
  */
 
-import { Project } from "ts-morph";
+import * as A from "effect/Array";
+import { getCompilerOptionsFromTsConfig, Project } from "ts-morph";
 
 type RepoTsMorphProjectInput = {
   readonly tsConfigFilePath: string;
@@ -31,12 +32,22 @@ type RepoTsMorphProjectInput = {
  * @since 0.0.0
  */
 export const createRepoTsMorphProject = (input: RepoTsMorphProjectInput): Project => {
-  const project = new Project({
-    tsConfigFilePath: input.tsConfigFilePath,
-    skipAddingFilesFromTsConfig: true,
-  });
+  const project = new Project();
+  const fileSystem = project.getFileSystem();
+  const readDirSync = fileSystem.readDirSync;
 
-  project.addSourceFilesAtPaths(input.sourceFileGlobs);
+  // Only compiler options are needed from tsconfig. Even skipAddingFilesFromTsConfig
+  // enumerates its include paths, which can race with generated-docs cleanup.
+  fileSystem.readDirSync = A.empty;
+  const { options } = getCompilerOptionsFromTsConfig(input.tsConfigFilePath, { fileSystem });
+  fileSystem.readDirSync = readDirSync;
+  project.compilerOptions.set(options);
+
+  // addSourceFilesAtPaths also recursively registers parent directories, including
+  // excluded docs. Load only the glob matches so excluded directories stay unread.
+  for (const filePath of fileSystem.globSync(input.sourceFileGlobs)) {
+    project.addSourceFileAtPathIfExists(filePath);
+  }
 
   return project;
 };

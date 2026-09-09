@@ -29,6 +29,9 @@ import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
+const decodeUnknownLabManifestFromJsonStringSync = S.decodeUnknownSync(LabManifestFromJsonString);
+const encodeLabManifestFromJsonStringSync = S.encodeSync(LabManifestFromJsonString);
+
 const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
@@ -63,6 +66,7 @@ const AppTsconfig = S.Struct({
     rootDir: S.String,
   }),
 });
+const encodeAppTsconfigSync = S.encodeSync(AppTsconfig);
 const LabCheckTsconfig = S.Struct({
   extends: S.String,
   references: S.Array(S.Unknown),
@@ -72,6 +76,16 @@ const LabCheckTsconfig = S.Struct({
     rootDir: S.String,
   }),
 });
+// `references` is optional on the canonical file: a lab with no workspace
+// dependencies never gains the key, and its overlay must then carry `[]`.
+const TsconfigOptionalReferences = S.Struct({
+  references: S.Struct({ path: S.String }).pipe(S.Array, S.optionalKey),
+  compilerOptions: S.Record(S.String, S.Unknown),
+});
+const decodeTsconfigOptionalReferences = S.decodeUnknownSync(TsconfigOptionalReferences);
+const referencePathsOf = (tsconfig: typeof TsconfigOptionalReferences.Type): ReadonlyArray<string> =>
+  A.map(tsconfig.references ?? [], (entry) => entry.path);
+const encodeLabCheckTsconfigSync = S.encodeSync(LabCheckTsconfig);
 const decodeRootPackage = S.decodeUnknownSync(RootPackage);
 const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
 const decodeAppTsconfig = S.decodeUnknownSync(AppTsconfig);
@@ -348,16 +362,14 @@ describe("create-package --lab", { concurrent: false }, () => {
   it("property: lab tsconfig schemas round-trip derived values", () => {
     fc.assert(
       fc.property(LabTsconfigArbitrary, LabCheckTsconfigArbitrary, (labTsconfig, labCheckTsconfig) => {
-        expect(decodeAppTsconfig(S.encodeSync(AppTsconfig)(labTsconfig))).toEqual(labTsconfig);
-        expect(decodeLabCheckTsconfig(S.encodeSync(LabCheckTsconfig)(labCheckTsconfig))).toEqual(labCheckTsconfig);
+        expect(decodeAppTsconfig(encodeAppTsconfigSync(labTsconfig))).toEqual(labTsconfig);
+        expect(decodeLabCheckTsconfig(encodeLabCheckTsconfigSync(labCheckTsconfig))).toEqual(labCheckTsconfig);
       }),
       fcRuns(16)
     );
   });
 
   it("property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates", () => {
-    const decodeManifest = S.decodeUnknownSync(LabManifestFromJsonString);
-    const encodeManifest = S.encodeSync(LabManifestFromJsonString);
     const manifestEquivalence = S.toEquivalence(LabManifest);
     const isoDate = fc
       .tuple(fc.integer({ min: 1970, max: 2100 }), fc.integer({ min: 1, max: 12 }), fc.integer({ min: 1, max: 28 }))
@@ -375,8 +387,13 @@ describe("create-package --lab", { concurrent: false }, () => {
     fc.assert(
       fc.property(encodedManifest, (encoded) => {
         const json = JSON.stringify(encoded, null, 2);
-        const decoded = decodeManifest(json);
-        expect(manifestEquivalence(decodeManifest(encodeManifest(decoded)), decoded)).toBe(true);
+        const decoded = decodeUnknownLabManifestFromJsonStringSync(json);
+        expect(
+          manifestEquivalence(
+            decodeUnknownLabManifestFromJsonStringSync(encodeLabManifestFromJsonStringSync(decoded)),
+            decoded
+          )
+        ).toBe(true);
       }),
       fcRuns(16)
     );
@@ -433,6 +450,17 @@ describe("create-package --lab", { concurrent: false }, () => {
             );
             expect(labCheckTsconfig.extends).toBe("./tsconfig.json");
             expect(labCheckTsconfig.compilerOptions.noEmit).toBe(true);
+            // The overlay mirrors the canonical references exactly and adds no
+            // module overrides (quality-lane audit D3).
+            const canonicalLabTsconfig = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.json"))
+            );
+            const labOverlay = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
+            );
+            expect(referencePathsOf(labOverlay)).toEqual(referencePathsOf(canonicalLabTsconfig));
+            expect(labOverlay.compilerOptions).not.toHaveProperty("module");
+            expect(labOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
             const nextConfig = yield* fs.readFileString(path.join(packageDir, "next.config.ts"));
             expect(nextConfig).toContain("defineBeepNextConfig");

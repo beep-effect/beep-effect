@@ -61,6 +61,10 @@ type CiLaneEnvironment = FileSystem.FileSystem | FsUtils | Path.Path | ChildProc
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory.md";
+const STORYBOOK_PACKAGE_NAME = "@beep/storybook";
+const STORYBOOK_BUILD_TASK = "storybook:build";
+const STORYBOOK_TURBO_SELECT_FILTER = `--filter=${STORYBOOK_PACKAGE_NAME}`;
+const STORYBOOK_STATIC_INDEX_PATH = "apps/storybook/storybook-static/index.html";
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
 /**
@@ -205,6 +209,7 @@ export const CI_LANE_ID_VALUES = [
   "sast",
   "secrets",
   "security",
+  "storybook",
   "test-integration",
   "test-unit",
 ] as const;
@@ -408,6 +413,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", "--force"],
+    notes:
+      "Runs the unit suites under Bun. Coverage replays them under Node; the dual execution is the deliberate runtime-parity proof (quality-lane audit 2026-09-09, D11), not a duplicate to fold.",
   }),
   CiLaneDescriptor.make({
     id: "test-integration",
@@ -424,6 +431,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Runs under Node because Bun has no istanbul coverage. Test Unit runs the same suites under Bun; packages have passed one runtime and failed the other, so the dual execution is the deliberate runtime-parity proof (D11).",
   }),
   CiLaneDescriptor.make({
     id: "docgen",
@@ -469,7 +478,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "workflow-gated",
     replay: "exact",
     flags: [],
-    notes: "Path filter and Rust toolchain setup stay in the workflow.",
+    notes:
+      "Path filter, Rust toolchain setup, and the src-tauri cargo check + clippy steps (gated on desktop_rust_relevant from scripts/ci-change-profile.sh) stay in the workflow; the lane body builds the sidecar and runs the IPC proof.",
   }),
   CiLaneDescriptor.make({
     id: "fallow",
@@ -495,17 +505,22 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [],
-    notes: "Runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI's sequence.",
+    flags: ["--inventory"],
+    notes:
+      "Runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI's sequence, unless --inventory <path> supplies a prebuilt inventory (then only the ratchet runs).",
   }),
+  // Quality-lane audit D12: Build runs on pull requests affected-scoped with
+  // remote-cache read; trusted main pushes run unscoped and are the only
+  // cache writer. Still non-required until it has a stable green history.
   CiLaneDescriptor.make({
     id: "build",
     contextName: "Build",
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: ["--summarize"],
-    notes: "Push-only in hosted CI.",
+    flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Pull-request runs are affected-scoped (--affected --base) with remote-cache read; push runs are unscoped and write the cache.",
   }),
   CiLaneDescriptor.make({
     id: "commitlint",
@@ -587,6 +602,24 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     notes:
       "Path-gated in the workflow to direct apps/labs/** changes on PRs; push and local replays run the full labs glob. Zero labs => zero tasks (green).",
   }),
+  // Quality-lane audit D13: Storybook used to build and browser-test on every
+  // PR with no gate, no descriptor, and no local replay (584 s per PR). The
+  // lane body now lives here, and its affected shape asks Turbo whether
+  // @beep/storybook sits in the dependency-aware affected set (a dry-run
+  // probe, so transitive workspace changes such as @beep/schema count).
+  // storybook.yml carries only the goals_only gate, the Playwright browser
+  // cache, and the artifact upload. Non-required: never add "Storybook" to
+  // ruleset 10240248 without a stable green history.
+  CiLaneDescriptor.make({
+    id: "storybook",
+    contextName: "Storybook",
+    required: false,
+    laneClass: "workflow-gated",
+    replay: "exact",
+    flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Builds and browser-tests @beep/storybook through one positive Turbo filter. --affected --base first probes `turbo run storybook:build --filter=@beep/storybook --affected --dry-run=json` (Turbo intersects the filter with its dependency-aware affected set) and skips the lane when the plan selects no @beep/storybook task, so local and PR replays run for transitive workspace changes and skip docs-only change sets; storybook.yml keeps only the goals_only gate and lets the lane decide. Requires Playwright Chromium (bunx playwright install chromium).",
+  }),
 ];
 
 /**
@@ -632,6 +665,7 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
     seed: S.optionalKey(S.String),
     filter: S.optionalKey(S.String),
     partition: S.optionalKey(CiLanePartitionId),
+    inventory: S.optionalKey(S.String),
     dryRun: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     force: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   },
@@ -659,6 +693,7 @@ const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
 // Default BEEP_FC_NUM_RUNS floor for the property lane. A blank or
 // whitespace-only `--runs` (e.g. `--runs ""`) would otherwise reach the
 // lane as `BEEP_FC_NUM_RUNS=""`, which the parsers treat as absent — the
+
 // sweep would silently drop to fast-check's 100-run default. Normalize
 // blank input back to the intended floor.
 const DEFAULT_PROPERTY_LANE_RUNS = "400";
@@ -711,16 +746,20 @@ const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>
     cwd: repoRoot,
   });
 
+const jsdocRatchetStep = (repoRoot: string, inventoryPath: string): QualityTaskStep =>
+  bunRunStep(repoRoot, "ci:jsdoc-ratchet:ratchet", ["beep", "quality", "jsdoc-ratchet", "--inventory", inventoryPath]);
+
 // Lint and Test Unit still run on hosted 16GB ubuntu-24.04 runners (check.yml),
 // not the 32GB beep-ec2-heavy fleet, so they keep the 16GB-survival turbo cap
 // instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
 const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
 const QualityCheckConcurrency = LiteralKit(["2", "3"]);
+const decodeUnknownQualityCheckConcurrencyOption = S.decodeUnknownOption(QualityCheckConcurrency);
 
 const qualityCheckConcurrencyArg = (): string =>
   `--concurrency=${pipe(
     // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
-    S.decodeUnknownOption(QualityCheckConcurrency)(Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY),
+    decodeUnknownQualityCheckConcurrencyOption(Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY),
     // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
     O.getOrElse(() => (Bun.env.GITHUB_ACTIONS === "true" ? "2" : "3"))
   )}`;
@@ -1070,26 +1109,27 @@ export const ciLanePartitionArgsForTesting: {
     })
 );
 
-class TurboPartitionDryRunTask extends S.Class<TurboPartitionDryRunTask>($I`TurboPartitionDryRunTask`)(
+class TurboDryRunTask extends S.Class<TurboDryRunTask>($I`TurboDryRunTask`)(
   {
     command: S.String,
     package: S.String,
     task: S.String,
     taskId: S.String,
   },
-  $I.annote("TurboPartitionDryRunTask", {
-    description: "Task entry read from Turbo's JSON dry-run plan for a partitioned CI lane.",
+  $I.annote("TurboDryRunTask", {
+    description: "Task entry read from Turbo's JSON dry-run plan for a CI lane selection probe.",
   })
 ) {}
 
-class TurboPartitionDryRun extends S.Class<TurboPartitionDryRun>($I`TurboPartitionDryRun`)(
-  { tasks: S.Array(TurboPartitionDryRunTask) },
-  $I.annote("TurboPartitionDryRun", {
-    description: "Turbo JSON dry-run document used to prove a partitioned CI lane's selected tasks.",
+class TurboDryRun extends S.Class<TurboDryRun>($I`TurboDryRun`)(
+  { tasks: S.Array(TurboDryRunTask) },
+  $I.annote("TurboDryRun", {
+    description:
+      "Turbo JSON dry-run document read by the partition proof and the Storybook affected probe to learn which tasks Turbo selected.",
   })
 ) {}
 
-const decodeTurboPartitionDryRun = S.decodeUnknownEffect(S.fromJsonString(TurboPartitionDryRun));
+const decodeTurboDryRun = S.decodeUnknownEffect(S.fromJsonString(TurboDryRun));
 const TURBO_NONEXISTENT_TASK_COMMAND = "<NONEXISTENT>";
 
 const turboRootLaneStep = (
@@ -1205,8 +1245,8 @@ const codegenDriverStep = (repoRoot: string, packageDir: CodegenDriverPackageDir
 const codegenDriverSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
   A.map(CODEGEN_DRIVER_PACKAGE_DIRS.Options, (packageDir) => codegenDriverStep(repoRoot, packageDir));
 
-const FALLOW_BLOCKING_LANES = ["audit", "dead-code"] as const;
-const FALLOW_ADVISORY_LANES = ["health", "boundaries", "flags", "security", "fix-preview"] as const;
+const FALLOW_BLOCKING_LANES = ["audit", "dead-code", "health"] as const;
+const FALLOW_ADVISORY_LANES = ["boundaries", "flags", "security", "fix-preview"] as const;
 const FALLOW_ENVELOPE_REQUIRED_FIELDS = "schemaVersion,status,command,exitStatus,baseRef,rawOutputRef";
 
 const fallowReportPath = (lane: string, advisory: boolean): string =>
@@ -1306,9 +1346,7 @@ export const ciLaneStepsForTesting: {
   3,
   (repoRoot: string, laneId: CiLaneId, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
     CiLaneId.$match(laneId, {
-      build: () => [
-        rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
-      ],
+      build: () => [turboRootLaneStep(repoRoot, "build", "build", A.empty<string>(), options)],
       // D2 admission profile: a solo proof uses measured-safe c3; any active
       // sibling lease lowers it to c2. Hosted CI has no local admission lease
       // and therefore takes the conservative c2 default.
@@ -1372,24 +1410,29 @@ export const ciLaneStepsForTesting: {
         }),
       ],
       fallow: () => fallowRunPhaseSteps(repoRoot, options),
-      "jsdoc-ratchet": () => [
-        bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", [
-          "beep",
-          "quality",
-          "jsdoc-inventory",
-          "--output-json",
-          JSDOC_CI_INVENTORY_JSON_PATH,
-          "--output-markdown",
-          JSDOC_CI_INVENTORY_MARKDOWN_PATH,
-        ]),
-        bunRunStep(repoRoot, "ci:jsdoc-ratchet:ratchet", [
-          "beep",
-          "quality",
-          "jsdoc-ratchet",
-          "--inventory",
-          JSDOC_CI_INVENTORY_JSON_PATH,
-        ]),
-      ],
+      // Hosted CI regenerates the inventory into .beep/ci/ and ratchets it. A
+      // caller that already ran the scan (root beep:preflight writes both the
+      // committed artifact and the CI mirror from one `jsdoc-inventory`) passes
+      // `--inventory <path>` and only the ratchet runs (quality-lane audit A3).
+      "jsdoc-ratchet": () =>
+        pipe(
+          O.fromUndefinedOr(options.inventory),
+          O.match({
+            onNone: () => [
+              bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", [
+                "beep",
+                "quality",
+                "jsdoc-inventory",
+                "--output-json",
+                JSDOC_CI_INVENTORY_JSON_PATH,
+                "--output-markdown",
+                JSDOC_CI_INVENTORY_MARKDOWN_PATH,
+              ]),
+              jsdocRatchetStep(repoRoot, JSDOC_CI_INVENTORY_JSON_PATH),
+            ],
+            onSome: (inventoryPath) => [jsdocRatchetStep(repoRoot, inventoryPath)],
+          })
+        ),
       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
       // lab-apps-lifecycle P2 (ratified row 10): one bundled turbo invocation
       // over the labs glob. Deliberately no --affected — turbo unions filter
@@ -1478,6 +1521,33 @@ export const ciLaneStepsForTesting: {
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
+      // Quality-lane audit D13: one positively-filtered build, the browser test
+      // run, then the static-artifact proof storybook.yml uploads. No
+      // --affected on the execution argv: the affected shape is answered once
+      // by the dry-run probe in runCiStepLane, which then runs the lane whole.
+      storybook: () => [
+        QualityTaskStep.make({
+          label: "ci:storybook:build",
+          command: "bunx",
+          args: directTurboArgs(
+            ["storybook:build"],
+            [STORYBOOK_TURBO_SELECT_FILTER, ...(options.summarize ? ["--summarize"] : A.empty<string>())]
+          ),
+          cwd: repoRoot,
+        }),
+        QualityTaskStep.make({
+          label: "ci:storybook:test",
+          command: "bunx",
+          args: directTurboArgs(["test:storybook"], [STORYBOOK_TURBO_SELECT_FILTER]),
+          cwd: repoRoot,
+        }),
+        QualityTaskStep.make({
+          label: "ci:storybook:artifact",
+          command: "test",
+          args: ["-f", STORYBOOK_STATIC_INDEX_PATH],
+          cwd: repoRoot,
+        }),
+      ],
       "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
       "test-unit": () => [
         turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", HOSTED_16GB_TURBO_CONCURRENCY_ARG], options),
@@ -1609,26 +1679,85 @@ export const docgenLaneModeForChangedPaths = (changedPaths: ReadonlyArray<string
 const normalizedOutputPaths = (output: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/u)(output), A.map(normalizeSlashes), A.filter(Str.isNonEmpty), A.dedupe, A.sort(Order.String));
 
-const resolveAutoDocgenLaneMode = Effect.fn("CiLane.resolveAutoDocgenLaneMode")(function* (
+const changedPathsBetween = Effect.fn("CiLane.changedPathsBetween")(function* (
   repoRoot: string,
   base: string,
-  head: string
-): Effect.fn.Return<DocgenLaneMode, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  head: string,
+  purpose: string
+): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runCaptured({
     command: "git",
     args: ["diff", "--name-only", `${base}...${head}`],
     cwd: repoRoot,
     source: "stdout",
-  }).pipe(CiCommandError.mapError("Failed to resolve automatic Docgen scope."));
+  }).pipe(CiCommandError.mapError(`Failed to resolve ${purpose}.`));
   if (result.exitCode !== 0) {
     return yield* CiCommandError.make({
-      message: `git diff for automatic Docgen scope failed with exit code ${result.exitCode}.`,
+      message: `git diff for ${purpose} failed with exit code ${result.exitCode}.`,
     });
   }
-  const changedPaths = normalizedOutputPaths(result.output);
+  return normalizedOutputPaths(result.output);
+});
+
+const resolveAutoDocgenLaneMode = Effect.fn("CiLane.resolveAutoDocgenLaneMode")(function* (
+  repoRoot: string,
+  base: string,
+  head: string
+): Effect.fn.Return<DocgenLaneMode, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const changedPaths = yield* changedPathsBetween(repoRoot, base, head, "automatic Docgen scope");
   const mode = docgenLaneModeForChangedPaths(changedPaths);
   yield* Console.log(`[ci] docgen: auto-selected ${mode} from ${A.length(changedPaths)} changed path(s)`);
   return mode;
+});
+
+// Quality-lane audit D13, revised for PR #1054 review: a path profile cannot
+// see the workspace graph, so a change under packages/foundation/modeling/*
+// that reaches @beep/ui and its stories used to skip the lane. Turbo owns that
+// graph already: `--affected` intersected with the positive filter selects
+// @beep/storybook#storybook:build exactly when its dependency closure (or a
+// global input) changed against TURBO_SCM_BASE, and nothing otherwise.
+const storybookAffectedProbeArgs = (): ReadonlyArray<string> =>
+  directTurboArgs([STORYBOOK_BUILD_TASK], [STORYBOOK_TURBO_SELECT_FILTER, "--affected", "--dry-run=json"]);
+
+const isStorybookBuildTask = (entry: TurboDryRunTask): boolean =>
+  entry.package === STORYBOOK_PACKAGE_NAME &&
+  entry.task === STORYBOOK_BUILD_TASK &&
+  entry.command !== TURBO_NONEXISTENT_TASK_COMMAND;
+
+const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffected")(function* (
+  repoRoot: string,
+  base: string
+): Effect.fn.Return<boolean, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const probeArgs = storybookAffectedProbeArgs();
+  yield* Console.log(`[ci] ci:storybook: bunx ${A.join(probeArgs, " ")}`);
+  const envOverrides = yield* turboEnvOverrides("bunx", probeArgs, Bun.env);
+  const result = yield* runCaptured({
+    command: "bunx",
+    args: probeArgs,
+    cwd: repoRoot,
+    env: { ...envOverrides, TURBO_SCM_BASE: base },
+    extendEnv: turboEnvExtendsAmbient("bunx", probeArgs),
+    source: "stdout",
+    trim: true,
+  }).pipe(CiCommandError.mapError("Failed to spawn Turbo's Storybook affected dry run."));
+  if (result.exitCode !== 0) {
+    return yield* CiCommandError.make({
+      message: `Turbo's Storybook affected dry run exited with code ${result.exitCode}.`,
+    });
+  }
+  if (result.truncated) {
+    return yield* CiCommandError.make({
+      message: "Turbo's Storybook affected dry run exceeded the capture bound.",
+    });
+  }
+  const dryRun = yield* decodeTurboDryRun(result.output).pipe(
+    CiCommandError.mapError("Turbo emitted invalid JSON for the Storybook affected dry run.")
+  );
+  const affected = A.some(dryRun.tasks, isStorybookBuildTask);
+  yield* Console.log(
+    `[ci] storybook: Turbo's affected plan (${base}...HEAD) ${affected ? "selects" : "does not select"} ${STORYBOOK_PACKAGE_NAME}#${STORYBOOK_BUILD_TASK} (${A.length(dryRun.tasks)} task(s) selected)`
+  );
+  return affected;
 });
 
 const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
@@ -1643,6 +1772,13 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
           mode: yield* resolveAutoDocgenLaneMode(repoRoot, options.base, options.head),
         })
       : options;
+  // The Storybook lane's affected shape asks Turbo whether @beep/storybook is
+  // in the dependency-aware affected set; storybook.yml keeps only the
+  // goals_only gate, so PR and local replays skip the same change sets.
+  if (laneId === "storybook" && options.affected && !(yield* resolveStorybookLaneAffected(repoRoot, options.base))) {
+    yield* Console.log("[ci] storybook: @beep/storybook is outside Turbo's affected set for this change set (skipped)");
+    return;
+  }
   const steps = ciLaneStepsForTesting(repoRoot, laneId, resolvedOptions);
   if (A.isReadonlyArrayEmpty(steps)) {
     yield* Console.log(`[ci] ${laneId}: no steps for this configuration (skipped)`);
@@ -1995,7 +2131,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
     );
   }
 
-  const dryRun = yield* decodeTurboPartitionDryRun(selectedResult.output).pipe(
+  const dryRun = yield* decodeTurboDryRun(selectedResult.output).pipe(
     Effect.mapError((cause) =>
       ciLanePartitionError(
         "turbo-dry-run",
@@ -2231,6 +2367,10 @@ export const ciLaneCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Print the machine-readable lane inventory and exit")
     ),
+    inventory: Flag.string("inventory").pipe(
+      Flag.withDescription("jsdoc-ratchet: ratchet this pre-built inventory instead of regenerating it"),
+      Flag.optional
+    ),
     lane: Argument.choice("lane", CI_LANE_ID_VALUES).pipe(
       Argument.withDescription("CI lane id to run"),
       Argument.optional
@@ -2245,6 +2385,7 @@ export const ciLaneCommand = Command.make(
     force,
     from,
     head,
+    inventory,
     lane,
     last,
     list,
@@ -2262,7 +2403,7 @@ export const ciLaneCommand = Command.make(
       head,
       summarize,
       mode,
-      ...O.getSomesStruct({ filter, from, partition }),
+      ...O.getSomesStruct({ filter, from, inventory, partition }),
       to,
       last,
       changesetStatus,
@@ -2309,6 +2450,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "test-unit",
   "ecosystem",
   "labs",
+  "storybook",
   "test-integration",
   "property",
   "docgen",
@@ -2319,7 +2461,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "nix",
 ];
 
-const CI_LOCAL_FAST_SKIPS: ReadonlyArray<CiLaneId> = ["coverage", "test-integration", "nix"];
+const CI_LOCAL_FAST_SKIPS: ReadonlyArray<CiLaneId> = ["coverage", "storybook", "test-integration", "nix"];
 
 type CiLocalOptions = {
   readonly affected: boolean;
@@ -2406,7 +2548,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
   const turboShapeFlags = [...affectedFlags, "--summarize"];
 
   return CiLaneId.$match(laneId, {
-    build: A.empty<string>,
+    build: () => turboShapeFlags,
     check: () => turboShapeFlags,
     codegen: A.empty<string>,
     commitlint: () => ["--from", plan.base],
@@ -2427,6 +2569,9 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     sast: A.empty<string>,
     secrets: A.empty<string>,
     security: A.empty<string>,
+    // The affected shape drives the Turbo dry-run probe, not the execution
+    // argv (see the storybook lane body).
+    storybook: () => turboShapeFlags,
     "test-integration": () => turboShapeFlags,
     "test-unit": () => turboShapeFlags,
   });

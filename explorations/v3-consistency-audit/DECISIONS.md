@@ -1,5 +1,11 @@
 # DECISIONS — v3-consistency-audit
 
+> Routing update (2026-09-09): new token-heavy Codex work uses `gpt-6-astra`
+> with `medium` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This supersedes earlier model/effort choices below for future work. Completed
+> runs retain their recorded provenance; lightweight and Grok routes retain
+> their intended roles.
+
 > One branch-closing question per entry, recommended answer first. Logged with
 > Question / Answer / Rationale. The first four entries were decided by the
 > operator in the brief itself and are recorded here so no later session

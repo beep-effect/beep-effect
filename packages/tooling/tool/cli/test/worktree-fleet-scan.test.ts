@@ -9,7 +9,7 @@ import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { FleetCheckout, FleetSnapshot } from "@beep/repo-cli/commands/Worktree";
 
 const SCAN_TIMEOUT_MILLIS = 60_000;
@@ -159,6 +159,53 @@ describe("fleet mirror scan", () => {
           expect(alphaRow.conflict).toBe("clean");
           expect(alphaRow.policyMovement).toBe("unmoved");
           expect(snapshot.contestedPaths).toEqual([]);
+        })
+      ),
+    SCAN_TIMEOUT_MILLIS
+  );
+
+  it.live(
+    "retains a clone as degraded when its worktree listing omits NUL delimiters",
+    () =>
+      withScratchFleet((fixture) =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+          const linked = path.join(fixture.tmpDir, "linked-worktree");
+          yield* runGit(fixture.alpha, ["worktree", "add", "--detach", linked, "HEAD"]);
+
+          // Simulate Git returning the legacy line-delimited format for one clone.
+          // Every other probe, including the sibling clone's listing, stays real.
+          const legacyListingSpawner = ChildProcessSpawner.make((command) => {
+            if (
+              ChildProcess.isStandardCommand(command) &&
+              command.command === "git" &&
+              command.options.cwd === fixture.alpha &&
+              A.join(command.args, " ") === "worktree list --porcelain -z"
+            ) {
+              return spawner.spawn(ChildProcess.make("git", ["worktree", "list", "--porcelain"], command.options));
+            }
+            return spawner.spawn(command);
+          });
+          const snapshot = yield* scanFixture(fixture).pipe(
+            provideScopedLayer(Layer.fresh(FleetMirrorServiceLive)),
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, legacyListingSpawner)
+          );
+
+          expect(snapshot.target.materialized).toBe(true);
+          expect(snapshot.coverage.clonesDiscovered).toBe(2);
+          expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
+          expect(snapshot.coverage.checkoutsDegraded).toBe(1);
+          expect(A.map(snapshot.checkouts, (row) => row.path)).toEqual([fixture.alpha, fixture.beta]);
+          const alpha = checkoutAt(snapshot, fixture.alpha);
+          expect(alpha.kind).toBe("clone");
+          expect(alpha.head).toBeNull();
+          expect(alpha.branch).toBeNull();
+          expect(alpha.conflict).toBe("unknown");
+          expect(alpha.conflictReason).toBe("head-unknown");
+          expect(alpha.policyMovement).toBe("unknown");
+          expect(alpha.policyReason).toBe("head-unknown");
+          expect(checkoutAt(snapshot, fixture.beta).head).toBe(snapshot.target.sha);
         })
       ),
     SCAN_TIMEOUT_MILLIS

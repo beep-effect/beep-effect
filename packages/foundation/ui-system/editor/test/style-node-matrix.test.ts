@@ -17,6 +17,8 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { $createParagraphNode, $createTextNode, $getRoot } from "lexical";
 
+const decodeUnknownSerializedEditorStateSync = S.decodeUnknownSync(SerializedEditorState);
+
 // The five inline marks under test. Bit values come from the schema package's
 // TextFormatBits (the wire vocabulary's source of truth), never hand-rolled.
 const MARKS = [
@@ -142,7 +144,7 @@ describe("@beep/editor style × node matrix", () => {
 
           // (1) The built state decodes through the @beep/lexical-schema wire
           // vocabulary — the same decode editor-nodes.test.ts asserts against.
-          const decoded = S.decodeUnknownSync(SerializedEditorState)(wire);
+          const decoded = decodeUnknownSerializedEditorStateSync(wire);
 
           // The text leaf's format bitmask carries this case's exact mark set
           // (no context silently drops or rewrites the marks). If a context

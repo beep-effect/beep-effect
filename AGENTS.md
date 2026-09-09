@@ -5,6 +5,27 @@ Canonical rules for all coding agents. Claude Code loads this via the
 directly. Laws only — architecture lives in `standards/ARCHITECTURE.md`,
 workflows in skills.
 
+## Token-heavy Codex work
+
+Use `gpt-6-astra` with `medium` reasoning by default for all token-heavy
+Codex work, including implementation, exploration, review, and distillation.
+Pin both the model and reasoning effort when launching that work:
+
+- Native subagents: `model: "gpt-6-astra"`, `reasoning_effort: "medium"`.
+- Codex CLI: `--model gpt-6-astra -c 'model_reasoning_effort="medium"'`.
+- Codex plugin/companion: `--model gpt-6-astra --effort medium`.
+- Proxy Workflow children: `model: "gpt-6-astra(medium)"`.
+
+Preserve the configured lightweight and Grok web research routes for their
+intended work. Do not set `CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers;
+it overrides explicit Workflow child models.
+
+This operator instruction (2026-09-09) lowers the 2026-09-08 `xhigh` default
+to `medium` and supersedes earlier model and effort guidance for new
+token-heavy Codex work. Historical reports, captured user
+requests, completed-run provenance, and model-parsing fixtures retain the
+models and effort levels they actually recorded.
+
 ## 1Password
 
 - Agents resolve `op` from `PATH`, never the system binary by absolute path.
@@ -61,6 +82,11 @@ workflows in skills.
 
 ## Quality Operator
 
+- Every workspace manifest's scripts block is generated: run
+  `bun run beep lint package-scripts --write` instead of hand-editing task-facing keys.
+- Quality lane ids name the command they run (`quality:knip`, `lint:schema-first`);
+  the tier is `GithubCheckLaneSpec.tier`, never an id prefix, and the step label
+  is the log prefix (TTC ruling 28).
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
   `... verify`, `... publish --message "..."`, `... monitor`. Keep those
   commands green.
@@ -151,9 +177,12 @@ If you touch this, load or run this first. Do not hand-author around it.
 
 - File memory is the memory layer: each agent's own durable files
   (`CLAUDE.md` / `MEMORY.md` auto-memory) plus repo docs. There is no shared
-  external memory service and no code-KG index; basic-memory and codegraph
-  were removed on 2026-08-29 (`standards/memory-architecture/04-decision-log.md`).
-  Do not reintroduce either or wire a successor without a new decision there.
+  external memory service; basic-memory and codegraph were removed on
+  2026-08-29 (`standards/memory-architecture/04-decision-log.md`). Graft is
+  the sanctioned code-structure query path (2026-09-08 entry there): a
+  git-ignored, regenerable tree-sitter code graph, not a memory layer. Do not
+  reintroduce a memory service or wire another code index without a new
+  decision there.
 - If context is missing, fall back to repo-local docs, code search, and this
   file.
 
@@ -182,3 +211,16 @@ If you touch this, load or run this first. Do not hand-author around it.
   of spawning fresh ones.
 - Durable on-disk handoffs: agent/session transitions exchange deliverables as
   files on disk (packet `research/`, scratchpad), never chat-only summaries.
+
+<!-- graft:start -->
+## Graft — repo context graph
+
+`graft/` is a git-ignored tree-sitter code graph (a regenerable cache, not a
+memory layer; decision log 2026-09-08). Before grepping or opening source, run
+`graft ask "<task>" --source` (locate + read), `graft grep "<literal>"`
+(exhaustive), `graft callers <symbol> [--depth N]` (edges), `graft skeleton
+<file>` (API surface), or `graft map` (orientation); the `graft` skill has the
+routing rules and caveats. Refresh with the exact `graft build` (structural,
+no key). Never run `graft init`, `uninstall`, `upgrade`, or `build --deep`
+from an agent: they rewrite tracked wiring or spend model quota.
+<!-- graft:end -->

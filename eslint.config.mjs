@@ -30,6 +30,12 @@ export default [
     "**/src-tauri/target/**",
     ".claude/worktrees/**",
     ".claude/skills/impeccable/**",
+    // Graft-generated wiring (the two shims and the skill files); the repo-owned
+    // graft-loader.cjs beside the shims is linted.
+    ".claude/helpers/graft-hooks.cjs",
+    ".claude/helpers/graft-statusline.cjs",
+    ".claude/skills/graft/**",
+    ".grok/**",
     ".github/skills/impeccable/**",
     "infra/lambda/**/build/**",
   ]),

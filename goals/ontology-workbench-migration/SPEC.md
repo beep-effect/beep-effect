@@ -1,5 +1,10 @@
 # SPEC — Ontology Workbench Migration
 
+> Future reuse (2026-09-09): new token-heavy Codex work uses `gpt-6-astra`
+> with `medium` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+> This completed packet retains its original execution details below as
+> historical provenance; the routing update applies only to future work.
+
 Normative contract for the first step-4 surface migration of the workspace
 substrate: the Ontology workbench monolith
 (`packages/ontology/ui/src/aggregates/Session/Session.workbench.tsx`, ~1160

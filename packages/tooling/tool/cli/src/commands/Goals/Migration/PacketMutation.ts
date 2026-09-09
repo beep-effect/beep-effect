@@ -37,6 +37,8 @@ import type { GoalPacketRecord } from "../Inventory.ts";
 import type { PacketDerivedState } from "../PacketCore/PacketCore.schemas.ts";
 import type { PacketStreamListing } from "../PacketCore/PacketEventStore.ts";
 
+const isPacketEventTimestamp = S.is(PacketEventTimestamp);
+
 const $I = $RepoCliId.create("commands/Goals/Migration/PacketMutation");
 
 /**
@@ -678,7 +680,7 @@ export const planPacketGenesisSeed = Effect.fn("Goals.planPacketGenesisSeed")(fu
   }
   const manifest = yield* decodeGenesisManifest(record, manifestText);
   if (eventsPresent) return yield* planExistingGenesisRecovery(record, manifest, eventsDirectory, tracePath);
-  if (!S.is(PacketEventTimestamp)(at)) {
+  if (!isPacketEventTimestamp(at)) {
     return yield* streamError(record.slug, `adoption timestamp "${at}" is not a full ISO-8601 date-time`);
   }
   return O.some(

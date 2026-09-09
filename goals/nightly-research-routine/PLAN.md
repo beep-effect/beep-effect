@@ -30,7 +30,7 @@ the SPEC before this goal can complete.
 - [ ] Implement the public-safe GitHub-issue envelope with numbered JSONL
       parts, counts, SHA-256 digests, a completion marker, and fail-closed local
       verification. Keep private records in a content-addressed local store.
-- [ ] Add blinded Sol/Luna verification through the local proxy. Require it for
+- [ ] Add blinded Astra/Luna verification through the local proxy. Require it for
       `success`, and emit explicit capability partials otherwise.
 - [ ] Add the deterministic local publisher: dedicated clone, `gh` preflight
       under least-privileged 1Password injection, packet and ledger writes,

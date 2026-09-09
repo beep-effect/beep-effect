@@ -1,10 +1,11 @@
-import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
+import { CreatePackageScripts, createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
 import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -47,6 +48,15 @@ const TsconfigReferences = S.Struct({
 const PackageScripts = S.Struct({
   scripts: S.Record(S.String, S.String),
 });
+// A package tsconfig or its check overlay: `references` is optional because a
+// package with no workspace dependencies never gains the key.
+const TsconfigOptionalReferences = S.Struct({
+  references: S.Struct({ path: S.String }).pipe(S.Array, S.optionalKey),
+  compilerOptions: S.Record(S.String, S.Unknown),
+});
+const decodeTsconfigOptionalReferences = S.decodeUnknownSync(TsconfigOptionalReferences);
+const referencePathsOf = (tsconfig: typeof TsconfigOptionalReferences.Type): ReadonlyArray<string> =>
+  A.map(tsconfig.references ?? [], (entry) => entry.path);
 const TsconfigPaths = S.Struct({
   compilerOptions: S.Struct({
     paths: S.Record(S.String, S.Array(S.String)),
@@ -64,9 +74,11 @@ const StoriesTsconfig = S.Struct({
     types: S.Array(S.String),
   }),
 });
+const encodeStoriesTsconfigSync = S.encodeSync(StoriesTsconfig);
 const StoriesDirectoryTsconfig = S.Struct({
   extends: S.Literal("../tsconfig.stories.json"),
 });
+const encodeStoriesDirectoryTsconfigSync = S.encodeSync(StoriesDirectoryTsconfig);
 const TypeScriptPluginsConfig = S.Struct({
   compilerOptions: S.Struct({
     plugins: S.Array(S.Record(S.String, S.Unknown)),
@@ -142,6 +154,11 @@ const decodeStoriesTsconfig = S.decodeUnknownSync(StoriesTsconfig);
 const decodeStoriesDirectoryTsconfig = S.decodeUnknownSync(StoriesDirectoryTsconfig);
 const decodeTypeScriptPluginsConfig = S.decodeUnknownEffect(TypeScriptPluginsConfig);
 const decodePackageScripts = S.decodeUnknownSync(PackageScripts);
+const ToolPackageManifest = S.Struct({
+  scripts: S.Record(S.String, S.String),
+  dependencies: S.Record(S.String, S.String),
+});
+const decodeToolPackageManifest = S.decodeUnknownSync(ToolPackageManifest);
 const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
 const decodeFoundationPackageMetadata = S.decodeUnknownSync(FoundationPackageMetadata);
 const decodeToolingPackageMetadata = S.decodeUnknownSync(ToolingPackageMetadata);
@@ -196,7 +213,8 @@ const ExpectedGeneratedQualityScripts = {
   "beep:build": "tsc -p tsconfig.json && bun run babel",
   "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
   "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
-  "beep:docgen": expect.any(String),
+  "beep:docgen": "bunx --bun --no-install docgen",
+  docgen: "bun run beep:docgen",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:policy": expect.any(String),
@@ -205,6 +223,10 @@ const ExpectedGeneratedQualityScripts = {
   build: "bun run beep:build",
   check: "bun run beep:check",
   coverage: "bunx vitest run --coverage --exclude=test/integration/**",
+  "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+  "lint:jsdoc": "beep-cli lint jsdoc --package .",
+  "lint:laws": "beep-cli lint laws --package .",
+  "package-test-typecheck": "beep-cli quality test-tsgo-package",
   lint: "bun run beep:lint",
   "lint:fix": "bun run beep:lint:fix",
   test: "bun run beep:test",
@@ -217,17 +239,20 @@ const ExpectedGeneratedStoriesQualityScripts = {
 } as const;
 const ExpectedNextjsAppScripts = {
   audit: "bun run --if-present beep:audit",
-  codegen: "echo 'no codegen needed'",
   dev: "portless marketing-web.beep next dev --turbopack",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "next build --turbopack",
-  "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
+  "beep:check": "tsgo -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
   build: "bun run beep:build",
   check: "bun run beep:check",
   coverage: "bunx vitest run --coverage",
+  "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+  "lint:jsdoc": "beep-cli lint jsdoc --package .",
+  "lint:laws": "beep-cli lint laws --package .",
+  "package-test-typecheck": "beep-cli quality test-tsgo-package",
   lint: "bun run beep:lint",
   "lint:fix": "bun run beep:lint:fix",
   start: "next start",
@@ -235,22 +260,85 @@ const ExpectedNextjsAppScripts = {
 } as const;
 const ExpectedTauriAppScripts = {
   audit: "bun run --if-present beep:audit",
-  codegen: "echo 'no codegen needed'",
   dev: "portless desktop-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
   "dev:tauri": "tauri dev",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "vite build",
-  "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit",
+  "beep:check": "tsgo -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
   build: "bun run beep:build",
   check: "bun run beep:check",
   coverage: "bunx vitest run --coverage",
+  "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+  "lint:jsdoc": "beep-cli lint jsdoc --package .",
+  "lint:laws": "beep-cli lint laws --package .",
+  "package-test-typecheck": "beep-cli quality test-tsgo-package",
   lint: "bun run beep:lint",
   "lint:fix": "bun run beep:lint:fix",
   test: "bun run beep:test",
 } as const;
+
+describe("create-package script writers", () => {
+  it("renders the literal canonical block for library, tool and ecosystem packages", () => {
+    for (const kind of ["library", "ecosystem"] as const) {
+      expect(CreatePackageScripts.package(kind, "../../", "packages/example", false)).toEqual({
+        ...ExpectedGeneratedQualityScripts,
+        "beep:policy": "bun --cwd ../../ run beep lint package-test-imports --include-root packages/example",
+      });
+    }
+    expect(CreatePackageScripts.package("tool", "../../", "packages/example", false)).toEqual({
+      ...R.remove(ExpectedGeneratedQualityScripts, "test:integration"),
+      "beep:policy": "bun --cwd ../../ run beep lint package-test-imports --include-root packages/example",
+    });
+    expect(CreatePackageScripts.package("library", "../../", "packages/example", true)).toEqual({
+      ...ExpectedGeneratedStoriesQualityScripts,
+      "beep:policy": "bun --cwd ../../ run beep lint package-test-imports --include-root packages/example",
+    });
+  });
+  it("renders application and lab blocks without codegen placeholders or unneeded derived tasks", () => {
+    expect({
+      ...CreatePackageScripts.app("portless marketing-web.beep next dev --turbopack", "next build --turbopack", false),
+      start: "next start",
+    }).toEqual(ExpectedNextjsAppScripts);
+    expect({
+      ...CreatePackageScripts.app(
+        "portless desktop-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
+        "vite build",
+        false
+      ),
+      "dev:tauri": "tauri dev",
+    }).toEqual(ExpectedTauriAppScripts);
+    expect(
+      CreatePackageScripts.app("portless example.labs.beep bun src/main.ts", "tsgo -p tsconfig.check.json", true)
+    ).toEqual({
+      audit: "bun run --if-present beep:audit",
+      dev: "portless example.labs.beep bun src/main.ts",
+      "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+      "beep:build": "tsgo -p tsconfig.check.json",
+      "beep:check": "tsgo -p tsconfig.check.json",
+      "beep:lint": "biome check .",
+      "beep:lint:fix": "biome check . --write",
+      "beep:test": "bunx --bun vitest run",
+      build: "bun run beep:build",
+      check: "bun run beep:check",
+      lint: "bun run beep:lint",
+      "lint:fix": "bun run beep:lint:fix",
+      "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+      "lint:laws": "beep-cli lint laws --package .",
+      "package-test-typecheck": "beep-cli quality test-tsgo-package",
+      test: "bun run beep:test",
+    });
+    expect(CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsgo -p tsconfig.check.json", false)).toEqual(
+      {
+        ...R.remove(ExpectedNextjsAppScripts, "start"),
+        dev: "portless api.beep bun src/main.ts",
+        "beep:build": "tsgo -p tsconfig.check.json",
+      }
+    );
+  });
+});
 
 const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -513,8 +601,8 @@ describe("create-package", { concurrent: false }, () => {
   it("property: Storybook tsconfig schemas round-trip derived values", () => {
     fc.assert(
       fc.property(StoriesTsconfigArbitrary, StoriesDirectoryTsconfigArbitrary, (storiesTsconfig, storiesDirectory) => {
-        expect(decodeStoriesTsconfig(S.encodeSync(StoriesTsconfig)(storiesTsconfig))).toEqual(storiesTsconfig);
-        expect(decodeStoriesDirectoryTsconfig(S.encodeSync(StoriesDirectoryTsconfig)(storiesDirectory))).toEqual(
+        expect(decodeStoriesTsconfig(encodeStoriesTsconfigSync(storiesTsconfig))).toEqual(storiesTsconfig);
+        expect(decodeStoriesDirectoryTsconfig(encodeStoriesDirectoryTsconfigSync(storiesDirectory))).toEqual(
           storiesDirectory
         );
       }),
@@ -571,6 +659,37 @@ describe("create-package", { concurrent: false }, () => {
   );
 
   it(
+    "scaffolds tool packages with the tool script block and the platform-node dependency",
+    () =>
+      Effect.runPromise(
+        withBootstrappedRootConfig(PackageParentRootConfig, ({ path, rootDir }) =>
+          Effect.gen(function* () {
+            yield* bootstrapIdentityWorkspace(rootDir);
+
+            yield* runCreatePackageCommand([
+              "example-tool",
+              "--type",
+              "tool",
+              "--parent-dir",
+              "packages",
+              "--description",
+              "A tool package",
+            ]);
+
+            const manifest = decodeToolPackageManifest(
+              yield* readJsonFile(path.join(rootDir, "packages", "example-tool", "package.json"))
+            );
+            expect(manifest.scripts).toEqual(
+              CreatePackageScripts.package("tool", "../../", "packages/example-tool", false)
+            );
+            expect(manifest.dependencies["@effect/platform-node"]).toBe("catalog:");
+          })
+        )
+      ),
+    CreatePackageTestTimeoutMs
+  );
+
+  it(
     "adds top-level package workspaces, identity exports, and shared config sync outputs",
     () =>
       Effect.runPromise(
@@ -612,6 +731,20 @@ describe("create-package", { concurrent: false }, () => {
               "packages/example-domain",
               "packages/foundation/modeling/identity",
             ]);
+
+            // The post-scaffold sync leaves the check overlay carrying exactly
+            // the canonical references (quality-lane audit D3), with no module
+            // overrides of its own.
+            const packageDir = path.join(rootDir, "packages", "example-domain");
+            const canonicalTsconfig = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.json"))
+            );
+            const checkOverlay = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
+            );
+            expect(referencePathsOf(checkOverlay)).toEqual(referencePathsOf(canonicalTsconfig));
+            expect(checkOverlay.compilerOptions).not.toHaveProperty("module");
+            expect(checkOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
 
             const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
             expect(syncpackConfig).toContain(`"packages/example-domain/package.json"`);
@@ -717,7 +850,7 @@ describe("create-package", { concurrent: false }, () => {
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
 
-            expect(generatedPackage.scripts).toMatchObject(ExpectedNextjsAppScripts);
+            expect(generatedPackage.scripts).toEqual(ExpectedNextjsAppScripts);
             expect(generatedPackage.scripts.docgen).toBeUndefined();
             expect(generatedPackage.exports).toBeUndefined();
             expect(generatedPackage.files).toBeUndefined();
@@ -780,7 +913,7 @@ describe("create-package", { concurrent: false }, () => {
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
 
-            expect(generatedPackage.scripts).toMatchObject(ExpectedTauriAppScripts);
+            expect(generatedPackage.scripts).toEqual(ExpectedTauriAppScripts);
             expect(generatedPackage.scripts.docgen).toBeUndefined();
             expect(generatedPackage.exports).toBeUndefined();
             expect(generatedPackage.files).toBeUndefined();
@@ -869,9 +1002,7 @@ describe("create-package", { concurrent: false }, () => {
                 yield* readJsonFile(path.join(packageDir, "package.json"))
               );
 
-              expect(generatedPackage.scripts["beep:check"]).toBe(
-                "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit"
-              );
+              expect(generatedPackage.scripts["beep:check"]).toBe("tsgo -p tsconfig.check.json");
               expect(generatedPackage.scripts.dev).toBe(
                 "portless vite-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'"
               );
@@ -926,12 +1057,24 @@ describe("create-package", { concurrent: false }, () => {
             const generatedPackage = decodeGeneratedPackageManifest(
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
-            expect(generatedPackage.scripts["beep:check"]).toBe(
-              "tsgo -p tsconfig.check.json && tsc -p tsconfig.json --noEmit"
-            );
+            expect(generatedPackage.scripts["beep:check"]).toBe("tsgo -p tsconfig.check.json");
 
             const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
             expect(decodeTsconfigIncludes(appTsconfig).include).toContain("../../vitest.aliases.generated.json");
+
+            // The service app depends on @beep/identity, so the post-scaffold
+            // sync gives tsconfig.json one reference and the check overlay must
+            // carry the same one (quality-lane audit D3).
+            const canonicalTsconfig = decodeTsconfigOptionalReferences(appTsconfig);
+            const checkOverlay = decodeTsconfigOptionalReferences(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
+            );
+            expect(referencePathsOf(canonicalTsconfig)).toEqual([
+              "../../packages/foundation/modeling/identity/tsconfig.json",
+            ]);
+            expect(referencePathsOf(checkOverlay)).toEqual(referencePathsOf(canonicalTsconfig));
+            expect(checkOverlay.compilerOptions).not.toHaveProperty("module");
+            expect(checkOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
           })
         )
       ),
@@ -961,7 +1104,13 @@ describe("create-package", { concurrent: false }, () => {
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
 
-            expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
+            expect(generatedPackage.scripts).toMatchObject({
+              ...ExpectedGeneratedQualityScripts,
+              "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+              "beep:build": "tsgo -p tsconfig.check.json",
+              "beep:check": "tsgo -p tsconfig.check.json",
+              "beep:test": "bunx --bun vitest run",
+            });
             expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
             expect(generatedPackage.exports).toMatchObject({
               ".": "./src/index.ts",

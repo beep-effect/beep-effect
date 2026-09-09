@@ -58,15 +58,21 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] A reproducible inventory accounts for the full opening baseline.
-- [ ] Repository lint reports zero `beep(no-inline-schema-compile)` findings.
-- [ ] The lint rule is configured as an error after zero is reached.
-- [ ] Focused rule tests cover inline rejection and module-scope acceptance.
-- [ ] Every affected workspace package completes its required package verify.
-- [ ] Generated sources are regenerated from their updated owners without
+- [x] A reproducible inventory accounts for the full opening baseline.
+- [x] Repository lint reports zero `beep(no-inline-schema-compile)` findings.
+- [x] The lint rule is configured as an error after zero is reached.
+- [x] Focused rule tests cover inline rejection and module-scope acceptance.
+- [x] Every affected workspace package completes its required package verify.
+- [x] Generated sources are regenerated from their updated owners without
       unexplained drift.
-- [ ] Canonical repository and hosted verification are green.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Canonical repository and hosted verification are green.
+- [x] No unrelated refactors or formatting churn.
+
+These acceptance records refer to the completed implementation and its pinned
+verification evidence. This packet-only closeout candidate must independently
+pass final-head local and hosted verification and terminal Yeet monitoring
+before merge. The lifecycle update is included before publication so that the
+accepted PR lands the completed packet without another metadata-only follow-up.
 
 ## Verification Matrix
 
@@ -76,6 +82,7 @@ Higher sources outrank lower sources when they conflict.
 | Rule tests | Focused policy-pack lint-rule tests | Green |
 | Repository lint | Canonical lint/Yeet lane | Zero findings, error severity enabled |
 | Packages | `bun run beep quality package-verify <package>` | Green for every touched package |
+| Package evidence inventory | `bun test goals/inline-schema-compile-hard-error/research/scripts/package-verification.test.ts` | Primary and linked supplemental receipts cover all 108 affected owners on the pinned head |
 | Packet launcher | `test "$(wc -m < goals/inline-schema-compile-hard-error/GOAL.md)" -le 4000` | Passes |
 | Goal fleet | `bun run beep goals doctor` and index check | Green |
 | Hosted closure | `bun run beep yeet monitor` | `merge-ready: yes` |
@@ -94,4 +101,6 @@ Higher sources outrank lower sources when they conflict.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| Final closeout follows the implementation PR | Packet publication only; PR #1038 | Operator, approved 2026-09-09 | PR #1028 merged before final verification and lifecycle closeout. The operator authorized a final closeout PR; no implementation or verification requirement was waived. | Superseded by the successor-draft exception after #1038 also merged before closeout. |
+| Successor draft carries final closeout | Packet publication only; PR #1042, branch `codex/inline-schema-packet-closeout` | Operator, approved 2026-09-09 | PR #1038 merged while its final-head local proof was queued. The operator authorized a successor draft PR and later marked it ready for review. No implementation or verification requirement was waived. | Unfulfilled at merge: #1042 merged at 09:01:20 UTC on 2026-09-09 before the final packet update. Superseded by the explicitly approved lifecycle-closeout successor below. |
+| Lifecycle update precedes successor publication | Packet publication only; branch `codex/inline-schema-lifecycle-closeout` | Operator, approved 2026-09-09 after #1042 merged | The operator authorized one successor containing the completed packet-state update before publication, with merging held until final verification and reviews complete. This corrects #1042's packet-closeout P1 without waiving any implementation, verification, or review requirement. | The successor contains the synchronized completed-retained lifecycle, completed phase states, and validated reflection; its final head passes local and hosted verification, all review comments are addressed, and Yeet reports `merge-ready: yes`. |

@@ -42,6 +42,7 @@ import {
   byPlannedChangeAscending,
   byStringAscending,
   byWorkspaceRelativeDirAscending,
+  CHECK_TSCONFIG_FILENAME,
   DOCGEN_CONFIG_FILENAME,
   isBeepScopedPackageName,
   isCanonicalAliasKey,
@@ -56,6 +57,8 @@ import {
   WorkspaceDescriptor,
 } from "./TsconfigSync.schemas.ts";
 import type { WorkspaceDeps } from "@beep/repo-utils";
+
+const decodeJsonObjectJson = S.decodeEffect(S.fromJsonString(JsonObject));
 
 const toPosixPath = normalizePath;
 
@@ -86,7 +89,7 @@ const parseJsonc = Effect.fn(function* <Schema extends S.Top>(content: string, f
 });
 
 const parseJsonObject = Effect.fn(function* (content: string, filePath: string) {
-  return yield* S.decodeEffect(S.fromJsonString(JsonObject))(content).pipe(
+  return yield* decodeJsonObjectJson(content).pipe(
     Effect.mapError(DomainError.newCause(`Failed to parse JSON in "${filePath}"`))
   );
 });
@@ -307,6 +310,9 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
         })
       )
     );
+    const hasCheckTsconfig = yield* fs
+      .exists(path.join(absoluteDir, CHECK_TSCONFIG_FILENAME))
+      .pipe(Effect.orElseSucceed(thunkFalse));
     const hasDocgenConfig = yield* fs
       .exists(path.join(absoluteDir, DOCGEN_CONFIG_FILENAME))
       .pipe(Effect.orElseSucceed(thunkFalse));
@@ -360,6 +366,7 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
         relativeDir,
         ownerTsconfigPath,
         hasProjectTsconfig,
+        hasCheckTsconfig,
         hasDocgenConfig,
         ...aliasTargetFields,
       })
@@ -808,6 +815,140 @@ const canonicalizeExistingRefTarget = Effect.fn(function* (
   return O.some(resolvedTarget);
 });
 
+const computedPackageReferenceTargets = Effect.fnUntraced(function* (
+  workspace: WorkspaceDescriptor,
+  workspaceByName: HashMap.HashMap<string, WorkspaceDescriptor>,
+  depIndex: HashMap.HashMap<string, WorkspaceDeps>,
+  adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>
+) {
+  const workspaceDeps = HashMap.get(depIndex, workspace.packageName);
+  if (O.isNone(workspaceDeps)) {
+    return O.none<ReadonlyArray<string>>();
+  }
+
+  const directDeps = A.filter(dependencyNamesFromWorkspaceDeps(workspaceDeps.value), (depName) => {
+    const descriptor = HashMap.get(workspaceByName, depName);
+    return O.isSome(descriptor) && descriptor.value.ownerTsconfigPath !== undefined;
+  });
+  const sortedDeps = yield* A.match(directDeps, {
+    onEmpty: () => Effect.succeed(A.empty<string>()),
+    onNonEmpty: () => topologicalSort(buildSubsetAdjacency(directDeps, adjacency)),
+  });
+  return O.some(
+    pipe(
+      sortedDeps,
+      A.flatMap((depName) => {
+        const descriptor = HashMap.get(workspaceByName, depName);
+        return O.isNone(descriptor) || descriptor.value.ownerTsconfigPath === undefined
+          ? A.empty<string>()
+          : A.of(descriptor.value.ownerTsconfigPath);
+      }),
+      A.map(toPosixPath),
+      uniqueSorted
+    )
+  );
+});
+
+const canonicalExistingReferenceTargets = Effect.fnUntraced(function* (
+  workspace: WorkspaceDescriptor,
+  sourceOwnerTsconfigPath: string,
+  existingRefs: ReadonlyArray<string>,
+  workspaces: ReadonlyArray<WorkspaceDescriptor>
+) {
+  const targets = A.empty<string>();
+  for (const refPath of existingRefs) {
+    const target = yield* canonicalizeExistingRefTarget(workspace, sourceOwnerTsconfigPath, refPath, workspaces);
+    if (O.isSome(target)) {
+      const normalizedTarget = toPosixPath(target.value);
+      if (!A.some(targets, (existingTarget) => Str.equivalence(existingTarget, normalizedTarget))) {
+        A.appendInPlace(targets, normalizedTarget);
+      }
+    }
+  }
+  return targets;
+});
+
+const logPrunedPackageReferences = Effect.fnUntraced(function* (
+  rootDir: string,
+  sourceOwnerTsconfigPath: string,
+  extraTargets: ReadonlyArray<string>
+) {
+  if (A.isReadonlyArrayEmpty(extraTargets)) {
+    return;
+  }
+  const path = yield* Path.Path;
+  const sourcePath = toPosixPath(path.relative(rootDir, sourceOwnerTsconfigPath));
+  const prunedList = pipe(
+    extraTargets,
+    A.map((targetPath) => toPosixPath(path.relative(rootDir, targetPath))),
+    A.join(", ")
+  );
+  yield* Console.log(
+    `[tsconfig-sync] ${sourcePath}: pruning ${extraTargets.length} reference(s) with no declared dependency: ${prunedList}`
+  );
+});
+
+const planOnePackageReferenceSync = Effect.fnUntraced(function* (
+  rootDir: string,
+  workspace: WorkspaceDescriptor,
+  workspaces: ReadonlyArray<WorkspaceDescriptor>,
+  workspaceByName: HashMap.HashMap<string, WorkspaceDescriptor>,
+  depIndex: HashMap.HashMap<string, WorkspaceDeps>,
+  adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>,
+  verbose: boolean
+) {
+  if (workspace.ownerTsconfigPath === undefined) {
+    return O.none<PlannedFileChange>();
+  }
+
+  const path = yield* Path.Path;
+  const sourceOwnerTsconfigPath = workspace.ownerTsconfigPath;
+  const computedTargets = yield* computedPackageReferenceTargets(workspace, workspaceByName, depIndex, adjacency);
+  if (O.isNone(computedTargets)) {
+    return O.none<PlannedFileChange>();
+  }
+
+  const sourceDir = path.dirname(sourceOwnerTsconfigPath);
+  const original = yield* readFileString(sourceOwnerTsconfigPath);
+  const parsed = yield* parseJsonc(original, sourceOwnerTsconfigPath, TsconfigWithReferences);
+  const existingResolvedTargets = yield* canonicalExistingReferenceTargets(
+    workspace,
+    sourceOwnerTsconfigPath,
+    compareReferencePathsInOrder(parsed),
+    workspaces
+  );
+  const computedResolvedTargetSet = HashSet.fromIterable(computedTargets.value);
+  const extraTargets = A.filter(existingResolvedTargets, (target) => !HashSet.has(computedResolvedTargetSet, target));
+  yield* logPrunedPackageReferences(rootDir, sourceOwnerTsconfigPath, extraTargets);
+
+  const finalRefPaths = A.map(computedTargets.value, (targetPath) => normalizeRelativeRef(sourceDir, targetPath, path));
+  const currentResolvedRefPaths = A.map(existingResolvedTargets, (targetPath) =>
+    normalizeRelativeRef(sourceDir, targetPath, path)
+  );
+  if (A.isArrayEmpty(finalRefPaths) && parsed.references === undefined) {
+    return O.none<PlannedFileChange>();
+  }
+
+  const nextContent = applyJsoncModification(original, ["references"], referenceEntries(finalRefPaths));
+  if (Str.equivalence(nextContent, original)) {
+    return O.none<PlannedFileChange>();
+  }
+
+  if (verbose) {
+    const sourcePath = toPosixPath(path.relative(rootDir, sourceOwnerTsconfigPath));
+    yield* Console.log(
+      `[verbose] ${sourcePath}: computed ${computedTargets.value.length} ref(s), pruned ${extraTargets.length} existing ref(s)`
+    );
+  }
+  return O.some(
+    PlannedFileChange.cases["package-references"].make({
+      filePath: sourceOwnerTsconfigPath,
+      summary: summaryCounts(currentResolvedRefPaths, finalRefPaths, "references"),
+      content: nextContent,
+    })
+  );
+});
+
 /**
  * Plan per-package tsconfig reference edits.
  *
@@ -832,8 +973,6 @@ const planPackageReferenceSync = Effect.fn(function* (
   filter: string | undefined,
   verbose: boolean
 ) {
-  const path = yield* Path.Path;
-
   const workspaceByName = HashMap.fromIterable(
     A.map(workspaces, (workspace) => [workspace.packageName, workspace] as const)
   );
@@ -842,115 +981,111 @@ const planPackageReferenceSync = Effect.fn(function* (
   const plannedChanges = A.empty<PlannedFileChange>();
 
   for (const workspace of targetWorkspaces) {
-    if (workspace.ownerTsconfigPath === undefined) {
-      continue;
-    }
-
-    const sourceOwnerTsconfigPath = workspace.ownerTsconfigPath;
-    const sourceDir = path.dirname(sourceOwnerTsconfigPath);
-
-    const workspaceDepsOption = HashMap.get(depIndex, workspace.packageName);
-    if (O.isNone(workspaceDepsOption)) {
-      continue;
-    }
-
-    const directDeps = A.filter(dependencyNamesFromWorkspaceDeps(workspaceDepsOption.value), (depName) => {
-      const descriptor = HashMap.get(workspaceByName, depName);
-      return O.isSome(descriptor) && descriptor.value.ownerTsconfigPath !== undefined;
-    });
-
-    const subsetAdjacency = buildSubsetAdjacency(directDeps, adjacency);
-    const sortedDeps = yield* A.match(directDeps, {
-      onEmpty: () => Effect.succeed(A.empty<string>()),
-      onNonEmpty: () => topologicalSort(subsetAdjacency),
-    });
-
-    const computedTargets = pipe(
-      sortedDeps,
-      A.flatMap((depName) => {
-        const descriptor = HashMap.get(workspaceByName, depName);
-        return O.isNone(descriptor) || descriptor.value.ownerTsconfigPath === undefined
-          ? A.empty<string>()
-          : A.of(descriptor.value.ownerTsconfigPath);
-      })
+    const change = yield* planOnePackageReferenceSync(
+      rootDir,
+      workspace,
+      workspaces,
+      workspaceByName,
+      depIndex,
+      adjacency,
+      verbose
     );
+    pipe(change, O.match({ onNone: thunkUndefined, onSome: (planned) => A.appendInPlace(plannedChanges, planned) }));
+  }
 
-    const original = yield* readFileString(sourceOwnerTsconfigPath);
-    const parsed = yield* parseJsonc(original, sourceOwnerTsconfigPath, TsconfigWithReferences);
+  return plannedChanges;
+});
 
-    const existingRefs = compareReferencePathsInOrder(parsed);
-    const existingResolvedTargets = A.empty<string>();
+// The check overlay extends `./tsconfig.json`, but `references` is not
+// inherited through `extends`: an overlay with `"references": []` typechecks
+// every upstream package from source, while one that carries the canonical
+// references consumes their built declarations (quality-lane audit D3). The
+// planner therefore copies the canonical reference list verbatim, reading it
+// from the content planned for `tsconfig.json` in this run when there is one
+// so a single sync leaves both files in agreement.
+const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
+  workspace: WorkspaceDescriptor,
+  plannedCanonicalContent: HashMap.HashMap<string, string>
+) {
+  if (!workspace.hasCheckTsconfig || !workspace.hasProjectTsconfig) {
+    return O.none<PlannedFileChange>();
+  }
 
-    for (const refPath of existingRefs) {
-      const canonicalTarget = yield* canonicalizeExistingRefTarget(
-        workspace,
-        sourceOwnerTsconfigPath,
-        refPath,
-        workspaces
-      );
-      if (O.isSome(canonicalTarget)) {
-        const normalizedTarget = toPosixPath(canonicalTarget.value);
-        if (!A.some(existingResolvedTargets, (existingTarget) => Str.equivalence(existingTarget, normalizedTarget))) {
-          A.appendInPlace(existingResolvedTargets, normalizedTarget);
-        }
-      }
-    }
+  const path = yield* Path.Path;
+  // The overlay mirrors the project package-references maintains: the owner
+  // tsconfig (tsconfig.build.json when one exists, else tsconfig.json), read
+  // from this run's planned content so a same-run reference change lands in
+  // both files.
+  const canonicalPath = workspace.ownerTsconfigPath ?? path.join(workspace.absoluteDir, "tsconfig.json");
+  const overlayPath = path.join(workspace.absoluteDir, CHECK_TSCONFIG_FILENAME);
 
-    const computedResolvedTargets = uniqueSorted(A.map(computedTargets, toPosixPath));
-    const computedResolvedTargetSet = HashSet.fromIterable(computedResolvedTargets);
+  const canonicalContent = yield* pipe(
+    HashMap.get(plannedCanonicalContent, canonicalPath),
+    O.match({ onNone: () => readFileString(canonicalPath), onSome: Effect.succeed })
+  );
+  const canonical = yield* parseJsonc(canonicalContent, canonicalPath, TsconfigWithReferences);
+  const expected = compareReferencePathsInOrder(canonical);
 
-    const extraTargets = A.filter(existingResolvedTargets, (target) => !HashSet.has(computedResolvedTargetSet, target));
-    // References are derived from the declared dependency closure and nothing
-    // else. An existing reference with no backing dependency lets `tsc -b`
-    // build (write) a package Turbo never ordered — the torn-dist TS2306 race
-    // class — so undeclared references are pruned, never preserved. Declare
-    // the dependency or drop the reference.
-    const finalTargets = computedResolvedTargets;
+  const original = yield* readFileString(overlayPath);
+  const overlay = yield* parseJsonc(original, overlayPath, TsconfigWithReferences);
+  const current = compareReferencePathsInOrder(overlay);
+  if (arraysEqual(current, expected)) {
+    return O.none<PlannedFileChange>();
+  }
 
-    if (!A.isArrayEmpty(extraTargets)) {
-      const sourcePath = toPosixPath(path.relative(rootDir, sourceOwnerTsconfigPath));
-      const prunedList = A.join(
-        A.map(extraTargets, (targetPath) => toPosixPath(path.relative(rootDir, targetPath))),
-        ", "
-      );
-      yield* Console.log(
-        `[tsconfig-sync] ${sourcePath}: pruning ${extraTargets.length} reference(s) with no declared dependency: ${prunedList}`
-      );
-    }
+  const nextContent = applyJsoncModification(original, ["references"], referenceEntries(expected));
+  if (Str.equivalence(nextContent, original)) {
+    return O.none<PlannedFileChange>();
+  }
 
-    const finalRefPaths = A.map(finalTargets, (targetPath) => normalizeRelativeRef(sourceDir, targetPath, path));
-    const currentResolvedRefPaths = A.map(existingResolvedTargets, (targetPath) =>
-      normalizeRelativeRef(sourceDir, targetPath, path)
-    );
+  return O.some(
+    PlannedFileChange.cases["package-check-references"].make({
+      filePath: overlayPath,
+      summary: summaryCounts(current, expected, "references"),
+      content: nextContent,
+    })
+  );
+});
 
-    const existingHasReferences = parsed.references !== undefined;
-    if (A.isArrayEmpty(finalRefPaths) && !existingHasReferences) {
-      continue;
-    }
+/**
+ * Plan per-package `tsconfig.check.json` reference edits so every check
+ * overlay carries exactly the references of its canonical `tsconfig.json`.
+ *
+ * **Details**
+ *
+ * `plannedCanonicalContent` maps a canonical `tsconfig.json` path to the
+ * content another planner already scheduled for it in this run; the overlay
+ * is planned against that content instead of the file on disk so one sync
+ * never leaves the overlay one run behind its canonical project.
+ *
+ * **Example** (Plan tsconfig synchronization)
+ *
+ * ```ts
+ * import { planPackageCheckReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect, HashMap } from "effect"
+ *
+ * const program = planPackageCheckReferenceSync([], undefined, HashMap.empty())
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param workspaces - Every discovered workspace descriptor.
+ * @param filter - Optional workspace name or relative path that narrows the planned packages.
+ * @param plannedCanonicalContent - Canonical `tsconfig.json` content already planned by this run, by absolute path.
+ * @returns One planned change per overlay whose references drift from its canonical project.
+ * @category utilities
+ * @since 0.0.0
+ */
+const planPackageCheckReferenceSync = Effect.fn(function* (
+  workspaces: ReadonlyArray<WorkspaceDescriptor>,
+  filter: string | undefined,
+  plannedCanonicalContent: HashMap.HashMap<string, string>
+) {
+  const targetWorkspaces = yield* resolveTargetWorkspacesForPackageSync(workspaces, filter);
+  const plannedChanges = A.empty<PlannedFileChange>();
 
-    const nextContent = applyJsoncModification(original, ["references"], referenceEntries(finalRefPaths));
-    if (Str.equivalence(nextContent, original)) {
-      continue;
-    }
-
-    const summary = summaryCounts(currentResolvedRefPaths, finalRefPaths, "references");
-    A.appendInPlace(
-      plannedChanges,
-      PlannedFileChange.cases["package-references"].make({
-        filePath: sourceOwnerTsconfigPath,
-        summary,
-        content: nextContent,
-      })
-    );
-
-    if (verbose) {
-      const sourcePath = toPosixPath(path.relative(rootDir, sourceOwnerTsconfigPath));
-      const computedCount = computedResolvedTargets.length;
-      const prunedCount = extraTargets.length;
-      yield* Console.log(
-        `[verbose] ${sourcePath}: computed ${computedCount} ref(s), pruned ${prunedCount} existing ref(s)`
-      );
-    }
+  for (const workspace of targetWorkspaces) {
+    const change = yield* planOnePackageCheckReferenceSync(workspace, plannedCanonicalContent);
+    pipe(change, O.match({ onNone: thunkUndefined, onSome: (planned) => A.appendInPlace(plannedChanges, planned) }));
   }
 
   return plannedChanges;
@@ -1064,6 +1199,8 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
       TsconfigSyncChange.cases["root-syncpack"].make({ filePath, summary }),
     "package-references": ({ filePath, summary }): TsconfigSyncChange =>
       TsconfigSyncChange.cases["package-references"].make({ filePath, summary }),
+    "package-check-references": ({ filePath, summary }): TsconfigSyncChange =>
+      TsconfigSyncChange.cases["package-check-references"].make({ filePath, summary }),
     "package-docgen": ({ filePath, summary }): TsconfigSyncChange =>
       TsconfigSyncChange.cases["package-docgen"].make({ filePath, summary }),
   });
@@ -1085,6 +1222,7 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
 export const TsconfigSyncPlan = {
   buildAdjacency,
   buildWorkspaceDescriptors,
+  planPackageCheckReferenceSync,
   planPackageDocgenSync,
   planPackageReferenceSync,
   planRootAliasSync,

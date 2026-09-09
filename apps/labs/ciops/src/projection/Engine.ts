@@ -198,6 +198,7 @@ const admitInto =
  *   priorityOrder: ["publish", "verify"]
  * })
  * const proposal = Effect.runSync(projectSchedule(ProjectionInput.make({
+ *   episodeId: "verification-1",
  *   policy,
  *   pending: [],
  *   ledger: emptyTokenLedger,
@@ -230,6 +231,7 @@ export const projectSchedule = Effect.fn("CiOpsProjection.project")(function* (
   );
 
   return ScheduleProposal.make({
+    episodeId: input.episodeId,
     proposalId: `schedule-${input.policyDigest}-${input.journalPrefixDigest}-${input.projectionInstantMillis}`,
     projectionInstantMillis: input.projectionInstantMillis,
     steps: folded.steps,

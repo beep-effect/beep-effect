@@ -8,6 +8,9 @@
         "@beep/dock-react#check",
         "@beep/editor#check"
       ]
+    },
+    "storybook": {
+      "passThroughEnv": ["PORTLESS", "PORTLESS_URL"]
     }
   }
 }

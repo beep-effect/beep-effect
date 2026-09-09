@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "explorations/practice-office-provisioning-closeout",
+  "committed": false,
+  "createdAt": "2026-08-30T21:02:53.194Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1707.229994,
+      "peakRssKb": 508536,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "early-publish",
+      "status": "passed",
+      "durationMs": 9666.498577,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "early-publish:git:push",
+      "phase": "early-publish",
+      "status": "passed",
+      "durationMs": 1393.200055,
+      "peakRssKb": 52284,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "early-publish",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "failed",
+      "durationMs": 267395.28201,
+      "exitCode": 1,
+      "repairCommand": "Run `bun run beep goals index`, inspect the update, then rerun the cheap-gates tier."
+    },
+    {
+      "id": "quality:changeset-status",
+      "label": "quality:changeset-status",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:goals-index",
+      "label": "cheap-gates:goals-index",
+      "phase": "full",
+      "status": "failed"
+    },
+    {
+      "id": "cheap-gates:exploration-atlas",
+      "label": "cheap-gates:exploration-atlas",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:config-sync",
+      "label": "cheap-gates:config-sync",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:tsgo-rules",
+      "label": "cheap-gates:tsgo-rules",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:test-tsgo",
+      "label": "cheap-gates:test-tsgo",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:effect-imports",
+      "label": "cheap-gates:effect-imports",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:schema-first",
+      "label": "cheap-gates:schema-first",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:allowlist-check",
+      "label": "cheap-gates:allowlist-check",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:goals-doctor",
+      "label": "cheap-gates:goals-doctor",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:jsdoc-ratchet",
+      "label": "cheap-gates:jsdoc-ratchet",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "cheap-gates:knip",
+      "label": "cheap-gates:knip",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:audit",
+      "label": "fallow:audit",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:dead-code",
+      "label": "fallow:dead-code",
+      "phase": "full",
+      "status": "passed"
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "full:02-ci-parity",
+      "label": "full:ci-parity",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "explorations_practice-office-provisioning-closeout-19b1e08c1fe1",
+  "attemptId": "5ebe5652-1789-425e-9c78-fdea9db09501",
+  "startedAt": "2026-08-30T20:37:51.107Z",
+  "endedAt": "2026-08-30T21:02:53.194Z",
+  "elapsedMs": 1502087,
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "3b27a0c17900a28578ec6a0d59dc70a2887c5bc9",
+    "overlappingPaths": []
+  },
+  "failedStepId": "full:00-cheap-gates",
+  "failureKind": "step-exit"
+}

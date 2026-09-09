@@ -20,6 +20,13 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeEnvVarNameResult = S.decodeResult(EnvVarName);
+const decodeAuthSnapshotSync = S.decodeSync(AuthSnapshot);
+const decodeUnknownProviderInstanceResult = S.decodeUnknownResult(ProviderInstance);
+const decodeUnknownProviderInstanceSync = S.decodeUnknownSync(ProviderInstance);
+const encodeAuthSnapshotResult = S.encodeResult(AuthSnapshot);
+const encodeProviderInstanceResult = S.encodeResult(ProviderInstance);
+
 const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
@@ -29,7 +36,7 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 
 const probedAtIso = "2026-07-11T00:00:00.000Z";
 const probedAt = DateTime.makeUnsafe(probedAtIso);
-const rejectsEnvVarName = (name: string): boolean => Result.isFailure(S.decodeResult(EnvVarName)(name));
+const rejectsEnvVarName = (name: string): boolean => Result.isFailure(decodeEnvVarNameResult(name));
 
 describe("@beep/agents-domain ProviderInstance", () => {
   it("wires ProviderInstance to the agents product-entity identity", () => {
@@ -77,18 +84,18 @@ describe("@beep/agents-domain ProviderInstance", () => {
   });
 
   it("round-trips every AuthSnapshot variant through the tagged union", () => {
-    const authenticated = S.decodeSync(AuthSnapshot)({
+    const authenticated = decodeAuthSnapshotSync({
       status: "authenticated",
       email: "dev@example.com",
       subscriptionLabel: "max",
       tokenSource: "claude.ai",
       probedAt: probedAtIso,
     });
-    const unauthenticated = S.decodeSync(AuthSnapshot)({
+    const unauthenticated = decodeAuthSnapshotSync({
       status: "unauthenticated",
       probedAt: probedAtIso,
     });
-    const probeFailed = S.decodeSync(AuthSnapshot)({
+    const probeFailed = decodeAuthSnapshotSync({
       status: "probe-failed",
       probedAt: probedAtIso,
     });
@@ -104,7 +111,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
     roundTrip(AuthSnapshot, unauthenticated);
     roundTrip(AuthSnapshot, probeFailed);
 
-    expect(Result.getOrThrow(S.encodeResult(AuthSnapshot)(unauthenticated))).toStrictEqual({
+    expect(Result.getOrThrow(encodeAuthSnapshotResult(unauthenticated))).toStrictEqual({
       status: "unauthenticated",
       probedAt: probedAtIso,
     });
@@ -126,7 +133,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
         probedAt: probedAtIso,
       },
     };
-    const decoded = S.decodeUnknownSync(ProviderInstance)(encoded);
+    const decoded = decodeUnknownProviderInstanceSync(encoded);
     const constructed = ProviderInstance.make(decoded);
 
     expect(decoded).toBeInstanceOf(ProviderInstance);
@@ -135,7 +142,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
     expect(constructed.kind).toBe("claude");
     expect(O.isSome(constructed.homePath)).toBe(true);
     expect(O.isSome(constructed.lastProbe)).toBe(true);
-    expect(Result.getOrThrow(S.encodeResult(ProviderInstance)(decoded))).toStrictEqual(encoded);
+    expect(Result.getOrThrow(encodeProviderInstanceResult(decoded))).toStrictEqual(encoded);
   });
 
   it("applies schema defaults for envVars, homePath, and lastProbe at construction", () => {
@@ -148,13 +155,13 @@ describe("@beep/agents-domain ProviderInstance", () => {
       label: "work-plus",
       lastProbe: null,
     };
-    const decoded = S.decodeUnknownSync(ProviderInstance)(encoded);
+    const decoded = decodeUnknownProviderInstanceSync(encoded);
     const constructed = ProviderInstance.make(Struct.omit(decoded, ["envVars", "homePath", "lastProbe"]));
 
     expect(constructed.envVars).toStrictEqual({});
     expect(O.isNone(constructed.homePath)).toBe(true);
     expect(O.isNone(constructed.lastProbe)).toBe(true);
-    expect(Result.getOrThrow(S.encodeResult(ProviderInstance)(constructed))).toStrictEqual(encoded);
+    expect(Result.getOrThrow(encodeProviderInstanceResult(constructed))).toStrictEqual(encoded);
   });
 
   it("never stores token-bearing env-var names on a decoded instance", () => {
@@ -168,7 +175,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
       lastProbe: null,
     };
 
-    expect(Result.isFailure(S.decodeUnknownResult(ProviderInstance)(encoded))).toBe(true);
+    expect(Result.isFailure(decodeUnknownProviderInstanceResult(encoded))).toBe(true);
   });
 
   it("returns exact login guidance for unauthenticated instances", () => {

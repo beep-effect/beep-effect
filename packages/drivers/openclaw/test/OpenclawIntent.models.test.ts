@@ -25,6 +25,23 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeOpenclawDeploymentIntentResult = S.decodeResult(OpenclawDeploymentIntent);
+const decodeOpenclawGatewayIntentResult = S.decodeResult(OpenclawGatewayIntent);
+const decodeOpenclawProviderApiKeyResult = S.decodeResult(OpenclawProviderApiKey);
+const decodeOpenclawSecretReferenceResult = S.decodeResult(OpenclawSecretReference);
+const decodeOpenclawTargetVersionResult = S.decodeResult(OpenclawTargetVersion);
+const decodeOpenclawTelegramIntentResult = S.decodeResult(OpenclawTelegramIntent);
+const decodeUnknownOpenclawModelProviderIntentResult = S.decodeUnknownResult(OpenclawModelProviderIntent);
+const encodeOpenclawAuthProfileIntentResult = S.encodeResult(OpenclawAuthProfileIntent);
+const encodeOpenclawDeploymentIntentResult = S.encodeResult(OpenclawDeploymentIntent);
+const encodeOpenclawGatewayIntentResult = S.encodeResult(OpenclawGatewayIntent);
+const encodeOpenclawProviderApiKeyResult = S.encodeResult(OpenclawProviderApiKey);
+const encodeOpenclawSecretReferenceResult = S.encodeResult(OpenclawSecretReference);
+const encodeOpenclawTargetVersionResult = S.encodeResult(OpenclawTargetVersion);
+const encodeOpenclawTelegramIntentResult = S.encodeResult(OpenclawTelegramIntent);
+const isOpenclawModelProviderIntent = S.is(OpenclawModelProviderIntent);
+const isOpenclawProviderApiKey = S.is(OpenclawProviderApiKey);
+
 const SecretReferenceArbitrary = S.toArbitrary(OpenclawSecretReference)(fc);
 const TargetVersionArbitrary = S.toArbitrary(OpenclawTargetVersion)(fc);
 const ProviderApiKeyArbitrary = S.toArbitrary(OpenclawProviderApiKey)(fc);
@@ -109,7 +126,7 @@ describe("@beep/openclaw intent models", () => {
 
   it("materializes defaults and keeps the minimal intent wire shape byte-identical", () => {
     expect(O.isNone(minimalIntent.telegram)).toBe(true);
-    expect(Result.getOrThrow(S.encodeResult(OpenclawDeploymentIntent)(minimalIntent))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawDeploymentIntentResult(minimalIntent))).toEqual({
       agent: {
         id: "spike3",
         model: "ollama/gemma3:4b",
@@ -174,7 +191,7 @@ describe("@beep/openclaw intent models", () => {
       provider: "ollama",
     });
 
-    expect(Result.getOrThrow(S.encodeResult(OpenclawTelegramIntent)(telegram))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawTelegramIntentResult(telegram))).toEqual({
       botTokenRef: "op://beep-p0-spike3/spike3-telegram/token",
       defaultTo: "@p0_spike1_jul25",
       dmPolicy: "disabled",
@@ -183,7 +200,7 @@ describe("@beep/openclaw intent models", () => {
         "-1004475923698": { groupPolicy: "open", requireMention: false },
       },
     });
-    expect(Result.getOrThrow(S.encodeResult(OpenclawAuthProfileIntent)(authProfile))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawAuthProfileIntentResult(authProfile))).toEqual({
       mode: "api_key",
       profileId: "ollama:manual",
       provider: "ollama",
@@ -196,11 +213,11 @@ describe("@beep/openclaw intent models", () => {
       ref: OpenclawSecretReference.make("op://vault/provider/api-key"),
     });
 
-    expect(Result.getOrThrow(S.encodeResult(OpenclawProviderApiKey)(secretRef))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawProviderApiKeyResult(secretRef))).toEqual({
       _tag: "SecretRef",
       ref: "op://vault/provider/api-key",
     });
-    expect(S.is(OpenclawProviderApiKey)(secretRef)).toBe(true);
+    expect(isOpenclawProviderApiKey(secretRef)).toBe(true);
   });
 
   it("requires HTTPS for secret-backed hosted providers while preserving loopback placeholders", () => {
@@ -216,13 +233,13 @@ describe("@beep/openclaw intent models", () => {
       models: [{ id: "model", input: ["text"], name: "model" }],
     };
 
-    expect(Result.isSuccess(S.decodeUnknownResult(OpenclawModelProviderIntent)(provider))).toBe(true);
+    expect(Result.isSuccess(decodeUnknownOpenclawModelProviderIntentResult(provider))).toBe(true);
     expect(
       Result.isFailure(
-        S.decodeUnknownResult(OpenclawModelProviderIntent)({ ...provider, baseUrl: "http://provider.example/v1" })
+        decodeUnknownOpenclawModelProviderIntentResult({ ...provider, baseUrl: "http://provider.example/v1" })
       )
     ).toBe(true);
-    expect(S.is(OpenclawModelProviderIntent)(ollamaProvider)).toBe(true);
+    expect(isOpenclawModelProviderIntent(ollamaProvider)).toBe(true);
   });
 
   it("round-trips schema-derived intent payloads", () =>
@@ -237,22 +254,18 @@ describe("@beep/openclaw intent models", () => {
         (reference, version, apiKey, gateway, telegram, deployment) => {
           expect(
             Result.getOrThrow(
-              S.decodeResult(OpenclawSecretReference)(
-                Result.getOrThrow(S.encodeResult(OpenclawSecretReference)(reference))
-              )
+              decodeOpenclawSecretReferenceResult(Result.getOrThrow(encodeOpenclawSecretReferenceResult(reference)))
             )
           ).toBe(reference);
           expect(
             Result.getOrThrow(
-              S.decodeResult(OpenclawTargetVersion)(Result.getOrThrow(S.encodeResult(OpenclawTargetVersion)(version)))
+              decodeOpenclawTargetVersionResult(Result.getOrThrow(encodeOpenclawTargetVersionResult(version)))
             )
           ).toBe(version);
           expect(
             sameProviderApiKey(
               Result.getOrThrow(
-                S.decodeResult(OpenclawProviderApiKey)(
-                  Result.getOrThrow(S.encodeResult(OpenclawProviderApiKey)(apiKey))
-                )
+                decodeOpenclawProviderApiKeyResult(Result.getOrThrow(encodeOpenclawProviderApiKeyResult(apiKey)))
               ),
               apiKey
             )
@@ -260,7 +273,7 @@ describe("@beep/openclaw intent models", () => {
           expect(
             sameGatewayIntent(
               Result.getOrThrow(
-                S.decodeResult(OpenclawGatewayIntent)(Result.getOrThrow(S.encodeResult(OpenclawGatewayIntent)(gateway)))
+                decodeOpenclawGatewayIntentResult(Result.getOrThrow(encodeOpenclawGatewayIntentResult(gateway)))
               ),
               gateway
             )
@@ -268,9 +281,7 @@ describe("@beep/openclaw intent models", () => {
           expect(
             sameTelegramIntent(
               Result.getOrThrow(
-                S.decodeResult(OpenclawTelegramIntent)(
-                  Result.getOrThrow(S.encodeResult(OpenclawTelegramIntent)(telegram))
-                )
+                decodeOpenclawTelegramIntentResult(Result.getOrThrow(encodeOpenclawTelegramIntentResult(telegram)))
               ),
               telegram
             )
@@ -278,8 +289,8 @@ describe("@beep/openclaw intent models", () => {
           expect(
             sameDeploymentIntent(
               Result.getOrThrow(
-                S.decodeResult(OpenclawDeploymentIntent)(
-                  Result.getOrThrow(S.encodeResult(OpenclawDeploymentIntent)(deployment))
+                decodeOpenclawDeploymentIntentResult(
+                  Result.getOrThrow(encodeOpenclawDeploymentIntentResult(deployment))
                 )
               ),
               deployment

@@ -5,9 +5,9 @@ import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { FastCheck as fc } from "effect/testing";
 
-describe("URL", () => {
-  const decodeHttpsUrl = S.decodeUnknownEffect(HttpsUrl);
+const decodeUnknownHttpsUrl = S.decodeUnknownEffect(HttpsUrl);
 
+describe("URL", () => {
   it("publishes a canonical arbitrary for URL strings", () => {
     expect(SchemaAST.resolve(URLStr.ast)?.toArbitrary).toBeDefined();
     expect(fc.sample(S.toArbitrary(URLStr)(fc), { numRuns: 20, seed: 0x5eed }).every(URLStr.is)).toBe(true);
@@ -22,8 +22,8 @@ describe("URL", () => {
   it.effect(
     "accepts valid https URL strings",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeHttpsUrl("https://example.com/api/v1")).toBe("https://example.com/api/v1");
-      expect(yield* decodeHttpsUrl("https://localhost:8443/path?ready=true#status")).toBe(
+      expect(yield* decodeUnknownHttpsUrl("https://example.com/api/v1")).toBe("https://example.com/api/v1");
+      expect(yield* decodeUnknownHttpsUrl("https://localhost:8443/path?ready=true#status")).toBe(
         "https://localhost:8443/path?ready=true#status"
       );
     })
@@ -32,8 +32,8 @@ describe("URL", () => {
   it.effect(
     "rejects non-https and malformed URL strings",
     Effect.fnUntraced(function* () {
-      const httpError = yield* Effect.flip(decodeHttpsUrl("http://example.com"));
-      const malformedError = yield* Effect.flip(decodeHttpsUrl("A:!"));
+      const httpError = yield* Effect.flip(decodeUnknownHttpsUrl("http://example.com"));
+      const malformedError = yield* Effect.flip(decodeUnknownHttpsUrl("A:!"));
 
       expect(httpError.message).toContain("URL must use the https protocol");
       expect(malformedError.message).toContain("URL must use the https protocol");

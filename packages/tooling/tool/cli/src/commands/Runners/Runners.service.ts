@@ -14,6 +14,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as YAML from "yaml";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { formatCommandLine, runCaptured } from "../../internal/process/StepExec.ts";
 import { RunnersCommandError } from "./Runners.errors.ts";
@@ -25,6 +26,7 @@ import {
   AwsRunInstancesResponse,
   AwsTag,
   BakeCheckReport,
+  BakeManifestJson,
   BakePlan,
   BakePlanStep,
   BakeReport,
@@ -35,6 +37,9 @@ import {
 import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { BakeConfig } from "./Runners.schemas.ts";
+
+const decodeSha256Hex = S.decodeEffect(Sha256Hex);
+const decodeUnknownSha256HexOption = S.decodeUnknownOption(Sha256Hex);
 
 const $I = $RepoCliId.create("commands/Runners/Runners.service");
 const BAKE_COMPLETE_MARKER = "BEEP_RUNNERS_BAKE_COMPLETE";
@@ -48,6 +53,7 @@ const AWS_POLL_INTERVAL = Duration.seconds(15);
 const BAKE_WAIT_LIMIT = Duration.hours(6);
 // EC2 posts a stopped instance's console output minutes after the stop; the
 // window an empty read is propagation rather than a bake failure. Observed
+
 // live: one bake posted within ~2 minutes, the next took over 6.
 const CONSOLE_POST_LIMIT = Duration.minutes(20);
 const IMAGE_WAIT_LIMIT = Duration.hours(2);
@@ -60,6 +66,7 @@ const BunVersion = S.String.check(
     message: "Expected an exact Bun semantic version",
   })
 ).pipe($I.annoteSchema("BunVersion", { description: "Validated Bun release used by the runner bake." }));
+const decodeBunVersion = S.decodeEffect(BunVersion);
 
 const AwsTagResourceType = LiteralKit(["image", "instance"]).pipe(
   $I.annoteSchema("AwsTagResourceType", { description: "EC2 resource types tagged by the runner bake." })
@@ -182,6 +189,7 @@ export class BakeLocalInputs extends S.Class<BakeLocalInputs>($I`BakeLocalInputs
 export interface RunnersServiceShape {
   readonly bake: (config: BakeConfig, reportPath: O.Option<string>) => Effect.Effect<BakeReport, RunnersCommandError>;
   readonly check: (region: string) => Effect.Effect<BakeCheckReport, RunnersCommandError>;
+  readonly checkManifest: (manifestPath: string) => Effect.Effect<BakeCheckReport, RunnersCommandError>;
   readonly plan: Effect.Effect<BakePlan, RunnersCommandError>;
 }
 
@@ -345,13 +353,13 @@ const loadLocalInputs = Effect.fn("Runners.loadLocalInputs")(function* (): Effec
   const rawBunVersion = yield* fs
     .readFileString(bunVersionPath)
     .pipe(Effect.map(Str.trim), RunnersCommandError.mapError(`Failed to read ${bunVersionPath}.`));
-  const bunVersion = yield* S.decodeEffect(BunVersion)(rawBunVersion).pipe(
+  const bunVersion = yield* decodeBunVersion(rawBunVersion).pipe(
     RunnersCommandError.mapError(`${bunVersionPath} must contain an exact Bun semantic version.`)
   );
   const rawBunArchiveSha256 = yield* fs
     .readFileString(bunArchiveSha256Path)
     .pipe(Effect.map(Str.trim), RunnersCommandError.mapError(`Failed to read ${bunArchiveSha256Path}.`));
-  const bunArchiveSha256 = yield* S.decodeEffect(Sha256Hex)(rawBunArchiveSha256).pipe(
+  const bunArchiveSha256 = yield* decodeSha256Hex(rawBunArchiveSha256).pipe(
     RunnersCommandError.mapError(`${bunArchiveSha256Path} must contain one SHA-256 digest.`)
   );
   const gitRevision = yield* runGitRevision(repoRoot);
@@ -748,10 +756,14 @@ const checkBake = Effect.fn("Runners.check")(function* (region: string) {
     O.flatMap((image) => O.fromUndefinedOr(image.Tags)),
     O.getOrElse(A.empty<AwsTag>)
   );
+  return compareBakeInputs(inputs, amiId, tags);
+});
+
+const compareBakeInputs = (inputs: BakeLocalInputs, amiId: string, tags: ReadonlyArray<AwsTag>): BakeCheckReport => {
   const rawLockfile = tagValue(tags, "beep-ci:lockfile-sha256");
-  const actualLockfileSha256 = pipe(rawLockfile, O.flatMap(S.decodeUnknownOption(Sha256Hex)));
+  const actualLockfileSha256 = pipe(rawLockfile, O.flatMap(decodeUnknownSha256HexOption));
   const rawBunArchive = tagValue(tags, "beep-ci:bun-archive-sha256");
-  const actualBunArchiveSha256 = pipe(rawBunArchive, O.flatMap(S.decodeUnknownOption(Sha256Hex)));
+  const actualBunArchiveSha256 = pipe(rawBunArchive, O.flatMap(decodeUnknownSha256HexOption));
   const actualBunVersion = tagValue(tags, "beep-ci:bun-version");
   const sha256Equivalence = S.toEquivalence(Sha256Hex);
   const lockfileMatches = pipe(
@@ -779,6 +791,43 @@ const checkBake = Effect.fn("Runners.check")(function* (region: string) {
     bunVersionMatches,
     fresh: lockfileMatches && bunArchiveMatches && bunVersionMatches,
   });
+};
+
+const IntendedRunnerPin = S.Struct({
+  config: S.Struct({ "ciFleetController:amiId": S.NonEmptyString }),
+}).pipe(
+  $I.annoteSchema("IntendedRunnerPin", { description: "Production controller image pin read without AWS access." })
+);
+const decodeIntendedRunnerPin = S.decodeUnknownEffect(IntendedRunnerPin);
+
+const checkBakeManifest = Effect.fn("Runners.checkManifest")(function* (manifestPath: string) {
+  const inputs = yield* loadLocalInputs();
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const rawManifest = yield* fs
+    .readFileString(path.resolve(inputs.repoRoot, manifestPath))
+    .pipe(RunnersCommandError.mapError("Failed to read the intended runner bake manifest."));
+  const manifest = yield* BakeManifestJson.decode(rawManifest).pipe(
+    RunnersCommandError.mapError("Invalid intended runner bake manifest.")
+  );
+  const rawConfig = yield* fs
+    .readFileString(path.join(inputs.repoRoot, "infra/ci-runners/Pulumi.production.yaml"))
+    .pipe(RunnersCommandError.mapError("Failed to read the production runner image pin."));
+  const parsedConfig = yield* Effect.try({
+    try: (): unknown => YAML.parse(rawConfig),
+    catch: () => runnersError("Invalid production runner YAML configuration."),
+  });
+  const config = yield* decodeIntendedRunnerPin(parsedConfig).pipe(
+    RunnersCommandError.mapError("Production configuration has no controller image pin.")
+  );
+  if (!Str.Equivalence(manifest.amiId, config.config["ciFleetController:amiId"])) {
+    return yield* runnersError("Runner bake manifest does not describe the intended production AMI pin.");
+  }
+  return compareBakeInputs(inputs, manifest.amiId, [
+    AwsTag.make({ Key: "beep-ci:lockfile-sha256", Value: manifest.lockfileSha256 }),
+    AwsTag.make({ Key: "beep-ci:bun-archive-sha256", Value: manifest.bunArchiveSha256 }),
+    AwsTag.make({ Key: "beep-ci:bun-version", Value: manifest.bunVersion }),
+  ]);
 });
 
 const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, reportPath: O.Option<string>) {
@@ -829,6 +878,9 @@ const makeRunnersService = Effect.fn("RunnersService.make")(function* () {
   return RunnersService.of({
     plan: makePlan().pipe(Effect.provide(context)),
     check: Effect.fn("RunnersService.check")((region) => checkBake(region).pipe(Effect.provide(context))),
+    checkManifest: Effect.fn("RunnersService.checkManifest")((manifestPath) =>
+      checkBakeManifest(manifestPath).pipe(Effect.provide(context))
+    ),
     bake: Effect.fn("RunnersService.bake")((config, reportPath) =>
       bakeImage(config, reportPath).pipe(Effect.provide(context))
     ),

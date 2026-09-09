@@ -22,6 +22,16 @@ import { ClaimRepository } from "../../Repository/Claim.ts";
 import { ConflictRepository, canonicalConflictPair, EqualConflictPairError } from "../../Repository/Conflict.ts";
 import { CurrentConflictActor } from "../../Runtime/HttpMiddleware.ts";
 import { TimelineRouter } from "../../Runtime/HttpServer.ts";
+const decodeTimelineEntityResponseJson = S.decodeEffect(S.fromJsonString(TimelineEntityResponse));
+const decodeUnknownConflictsQuery = S.decodeUnknownEffect(ConflictsQuery);
+const decodeUnknownStructInlineSchema = S.decodeUnknownEffect(S.Struct({ _tag: S.String }));
+const encodeConflictTransitionJson = S.encodeEffect(S.fromJsonString(ConflictTransition));
+const ListResponse = S.Struct({
+  conflicts: S.Array(S.Struct({ _tag: S.String, id: UUID })),
+  total: S.Finite,
+  pendingCount: S.Finite,
+});
+const decodeListResponseJson = S.decodeEffect(S.fromJsonString(ListResponse));
 
 const DatabaseTestLayer = makeDrizzleLayer().pipe(Layer.provideMerge(PgliteTestLayer));
 const RepositoryTestLayer = Layer.mergeAll(
@@ -384,7 +394,7 @@ describe.sequential("ConflictRepository", () => {
     it.effect(
       "requires ontology scope for every conflict query",
       Effect.fnUntraced(function* () {
-        const decoded = yield* S.decodeUnknownEffect(ConflictsQuery)({}).pipe(Effect.option);
+        const decoded = yield* decodeUnknownConflictsQuery({}).pipe(Effect.option);
         assert.isTrue(O.isNone(decoded));
       })
     );
@@ -407,7 +417,7 @@ describe.sequential("ConflictRepository", () => {
           );
           const entityText = yield* Effect.tryPromise(() => entityResponse.text());
           assert.strictEqual(entityResponse.status, 200, entityText);
-          const entityTimeline = yield* S.decodeEffect(S.fromJsonString(TimelineEntityResponse))(entityText);
+          const entityTimeline = yield* decodeTimelineEntityResponseJson(entityText);
           assert.deepStrictEqual(
             A.map(entityTimeline.corrections, (correction) => correction.id),
             [CorrectionA]
@@ -421,21 +431,16 @@ describe.sequential("ConflictRepository", () => {
               requestContext
             )
           );
-          const ListResponse = S.Struct({
-            conflicts: S.Array(S.Struct({ _tag: S.String, id: UUID })),
-            total: S.Finite,
-            pendingCount: S.Finite,
-          });
           const listText = yield* Effect.tryPromise(() => listResponse.text());
           assert.strictEqual(listResponse.status, 200);
-          const list = yield* S.decodeEffect(S.fromJsonString(ListResponse))(listText);
+          const list = yield* decodeListResponseJson(listText);
           const conflict = yield* Effect.fromOption(A.head(list.conflicts), () => "missing HTTP conflict").pipe(
             Effect.orDie
           );
           assert.strictEqual(list.total, 2);
           assert.strictEqual(list.pendingCount, 2);
 
-          const patchBody = yield* S.encodeEffect(S.fromJsonString(ConflictTransition))(
+          const patchBody = yield* encodeConflictTransitionJson(
             ConflictTransition.cases.ignore.make({ notes: O.some("reviewed") })
           );
           const patch = Effect.fnUntraced(function* () {
@@ -458,7 +463,7 @@ describe.sequential("ConflictRepository", () => {
           assert.strictEqual(transitioned.status, 200);
           assert.strictEqual(repeated.status, 409);
           const transitionedJson = yield* Effect.tryPromise(() => transitioned.json());
-          const transitionedTag = yield* S.decodeUnknownEffect(S.Struct({ _tag: S.String }))(transitionedJson);
+          const transitionedTag = yield* decodeUnknownStructInlineSchema(transitionedJson);
           assert.strictEqual(transitionedTag._tag, "ignored");
         }),
         (webHandler) => Effect.promise(webHandler.dispose)

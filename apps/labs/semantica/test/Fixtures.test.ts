@@ -28,12 +28,29 @@ import {
   isF1FixtureId,
 } from "@/fixtures/F1";
 import { RuntimeLayer } from "@/runtime/Layer";
+
+const decodeCorpusManifest = S.decodeEffect(CorpusManifest);
+const decodeF1Fixture = S.decodeEffect(F1Fixture);
+const decodeF1Index = S.decodeEffect(F1Index);
+const decodeUnknownCorpusManifest = S.decodeUnknownEffect(CorpusManifest);
+const encodeCorpusManifest = S.encodeEffect(CorpusManifest);
+const encodeF1Index = S.encodeEffect(F1Index);
+const isFixtureMediaType = S.is(FixtureMediaType);
+
 import { generateF1Pdfs } from "../scripts/generate-f1-pdfs";
 
 const ManifestFromJsonString = S.fromJsonString(CorpusManifest);
+const decodeManifestFromJsonString = S.decodeEffect(ManifestFromJsonString);
+
 const ManifestToJsonString = S.fromJsonString(CorpusManifest, { space: 2 });
+const encodeManifestToJsonString = S.encodeEffect(ManifestToJsonString);
+
 const F1IndexFromJsonString = S.fromJsonString(F1Index);
+const encodeF1IndexFromJsonString = S.encodeEffect(F1IndexFromJsonString);
+const decodeF1IndexFromJsonString = S.decodeEffect(F1IndexFromJsonString);
+
 const RelationPreviewManifestJson = S.fromJsonString(RelationPreviewManifest);
+const decodeRelationPreviewManifestJson = S.decodeEffect(RelationPreviewManifestJson);
 
 const runtimeFromEnv = (env: Record<string, string>) =>
   RuntimeLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env }))));
@@ -47,7 +64,7 @@ const digestRows = (rows: ReadonlyArray<unknown>): Sha256Hex =>
   Sha256Hex.make(Encoding.encodeHex(sha256(new TextEncoder().encode(canonicalJson(rows)))));
 
 const rejectsManifest = (input: unknown) =>
-  S.decodeUnknownEffect(CorpusManifest)(input).pipe(Effect.exit, Effect.map(Exit.isFailure));
+  decodeUnknownCorpusManifest(input).pipe(Effect.exit, Effect.map(Exit.isFailure));
 
 describe("W1 corpus manifest", () => {
   it("decodes the committed E5 cache-preview manifest", () =>
@@ -57,7 +74,7 @@ describe("W1 corpus manifest", () => {
           const fs = yield* FileSystem.FileSystem;
           const manifest = yield* fs
             .readFileString("fixtures/relation-preview.json")
-            .pipe(Effect.flatMap(S.decodeEffect(RelationPreviewManifestJson)));
+            .pipe(Effect.flatMap(decodeRelationPreviewManifestJson));
 
           expect(manifest.schemaVersion).toBe("semantica-relation-preview/v1");
           expect(manifest.cases).toHaveLength(3);
@@ -82,9 +99,9 @@ describe("W1 corpus manifest", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const source = yield* fs.readFileString("fixtures/w1.manifest.json");
-          const manifest = yield* S.decodeEffect(ManifestFromJsonString)(source);
-          const encoded = yield* S.encodeEffect(CorpusManifest)(manifest);
-          const decoded = yield* S.decodeEffect(CorpusManifest)(encoded);
+          const manifest = yield* decodeManifestFromJsonString(source);
+          const encoded = yield* encodeCorpusManifest(manifest);
+          const decoded = yield* decodeCorpusManifest(encoded);
           const first = A.getUnsafe(encoded.rows, 0);
           const second = A.getUnsafe(encoded.rows, 1);
           const tail = A.drop(encoded.rows, 2);
@@ -134,7 +151,7 @@ describe("W1 corpus manifest", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const seedSource = yield* fs.readFileString("fixtures/w1.manifest.json");
-            const seed = yield* S.decodeEffect(ManifestFromJsonString)(seedSource);
+            const seed = yield* decodeManifestFromJsonString(seedSource);
             const corpusRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-w1-" });
             yield* Effect.forEach(
               seed.rows,
@@ -151,7 +168,7 @@ describe("W1 corpus manifest", () => {
             const builder = yield* CorpusManifestBuilder.pipe(Effect.provide(runtimeContext));
             const built = yield* builder.build;
             const manifestPath = path.join(corpusRoot, "w1.manifest.json");
-            const manifestJson = yield* S.encodeEffect(ManifestToJsonString)(built);
+            const manifestJson = yield* encodeManifestToJsonString(built);
             yield* fs.writeFileString(manifestPath, `${manifestJson}\n`);
 
             const mutatedId = A.getUnsafe(built.rows, 0).id;
@@ -179,7 +196,7 @@ describe("W1 corpus manifest", () => {
 describe("F1 fixtures", () => {
   it("generates only media types accepted by the source schema", () => {
     fc.assert(
-      fc.property(S.toArbitrary(FixtureMediaType)(fc), (mediaType) => S.is(FixtureMediaType)(mediaType)),
+      fc.property(S.toArbitrary(FixtureMediaType)(fc), (mediaType) => isFixtureMediaType(mediaType)),
       { numRuns: 12 }
     );
   });
@@ -208,8 +225,8 @@ describe("F1 fixtures", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const source = yield* fs.readFileString("fixtures/f1/index.json");
-          const index = yield* S.decodeEffect(F1IndexFromJsonString)(source);
-          const encoded = yield* S.encodeEffect(F1Index)(index);
+          const index = yield* decodeF1IndexFromJsonString(source);
+          const encoded = yield* encodeF1Index(index);
           const first = A.getUnsafe(encoded.fixtures, 0);
           const tail = A.drop(encoded.fixtures, 1);
           const invalidRelativePaths = A.make(
@@ -224,11 +241,11 @@ describe("F1 fixtures", () => {
             invalidRelativePaths,
             Effect.fnUntraced(function* (relativePath) {
               const invalidFixture = { ...first, relativePath };
-              const fixtureRejected = yield* S.decodeEffect(F1Fixture)(invalidFixture).pipe(
+              const fixtureRejected = yield* decodeF1Fixture(invalidFixture).pipe(
                 Effect.exit,
                 Effect.map(Exit.isFailure)
               );
-              const indexRejected = yield* S.decodeEffect(F1Index)({
+              const indexRejected = yield* decodeF1Index({
                 ...encoded,
                 fixtures: A.make(invalidFixture, ...tail),
               }).pipe(Effect.exit, Effect.map(Exit.isFailure));
@@ -248,8 +265,8 @@ describe("F1 fixtures", () => {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const source = yield* fs.readFileString("fixtures/f1/index.json");
-          const index = yield* S.decodeEffect(F1IndexFromJsonString)(source);
-          const encoded = yield* S.encodeEffect(F1Index)(index);
+          const index = yield* decodeF1IndexFromJsonString(source);
+          const encoded = yield* encodeF1Index(index);
           const first = A.getUnsafe(encoded.fixtures, 0);
           const second = A.getUnsafe(encoded.fixtures, 1);
           const duplicatePathFixtures = A.make(
@@ -257,11 +274,11 @@ describe("F1 fixtures", () => {
             { ...second, relativePath: first.relativePath },
             ...A.drop(encoded.fixtures, 2)
           );
-          const duplicatePathIndex = yield* S.decodeEffect(F1Index)({
+          const duplicatePathIndex = yield* decodeF1Index({
             ...encoded,
             fixtures: duplicatePathFixtures,
           });
-          const duplicatePathSource = yield* S.encodeEffect(F1IndexFromJsonString)(duplicatePathIndex);
+          const duplicatePathSource = yield* encodeF1IndexFromJsonString(duplicatePathIndex);
           const testFileSystem = FileSystem.makeNoop({
             readFileString: () => Effect.succeed(duplicatePathSource),
           });

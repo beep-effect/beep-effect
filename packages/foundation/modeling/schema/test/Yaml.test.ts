@@ -6,6 +6,9 @@ import { Cause, Effect, Exit, Result } from "effect";
 import * as S from "effect/Schema";
 import * as yaml from "yaml";
 
+const decodeYamlTextToUnknown = S.decodeEffect(YamlTextToUnknown);
+const encodeYamlTextToUnknown = S.encodeEffect(YamlTextToUnknown);
+
 const $I = $SchemaId.create("yaml_test");
 
 class YamlPerson extends S.Class<YamlPerson>($I`YamlPerson`)(
@@ -80,7 +83,7 @@ describe("Yaml", () => {
   it.effect(
     "maps invalid YAML into SchemaIssue.InvalidValue",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeEffect(YamlTextToUnknown)("name: [Ada"));
+      const result = yield* Effect.exit(decodeYamlTextToUnknown("name: [Ada"));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {
@@ -95,7 +98,7 @@ describe("Yaml", () => {
     "fails to encode unknown values back into YAML text",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(
-        S.encodeEffect(YamlTextToUnknown)({
+        encodeYamlTextToUnknown({
           name: "Ada",
         })
       );

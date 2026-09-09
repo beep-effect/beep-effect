@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/packet-convention-closeout-recovery",
+  "committed": false,
+  "createdAt": "2026-08-30T22:03:21.322Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 357.69446,
+      "peakRssKb": 56344,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "durationMs": 814.168178,
+      "exitCode": 1,
+      "repairCommand": "Rerun `bun run beep quality github-checks nix` and inspect the Nix error."
+    }
+  ],
+  "message": "yeet monitor failed.",
+  "mode": "monitor",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_packet-convention-closeout-recovery-ccb7febf4b45",
+  "attemptId": "cb9ef247-e55a-41eb-83a2-98dead576f9b",
+  "startedAt": "2026-08-30T22:03:15.673Z",
+  "endedAt": "2026-08-30T22:03:21.322Z",
+  "elapsedMs": 5649,
+  "indexPath": "<fleet>/beep-effect2-worktrees/packet-convention-closeout-recovery/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "monitor:02-pr-checks-watch",
+  "failureKind": "step-exit"
+}

@@ -16,15 +16,20 @@ const LINT_POLICY_SUBCOMMANDS = subcommands(
   "goal-packets",
   "identity-registry",
   "judge-rubric",
+  "jsdoc",
+  "laws",
+  "package-scripts",
   "package-test-imports",
   "package-test-typecheck",
   "policy",
+  "policy-fingerprint",
   "reflection-artifacts",
   "roadmap-refs",
   "schema-catalog",
   "schema-first",
   "schema-topology",
-  "tooling-schema-first"
+  "tooling-schema-first",
+  "tsconfig-overlay"
 );
 
 export { LINT_POLICY_SUBCOMMANDS };

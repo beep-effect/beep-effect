@@ -22,6 +22,7 @@ import {
   JsonMethodReference,
 } from "../interpreter/Interpreter.model.ts";
 import { typeofValue } from "../interpreter/Interpreter.references.ts";
+const isFinite2 = S.is(S.Finite);
 
 /**
  * Guest JSON.parse/stringify adapter with reviver and replacer callbacks.
@@ -244,7 +245,7 @@ const stringifyResult = (
 
 const toJSONValue = (value: unknown): unknown => {
   if (CodeModeDate.is(value)) {
-    return S.is(S.Finite)(value.time) ? DateTime.makeUnsafe(value.time).pipe(DateTime.formatIso) : null;
+    return isFinite2(value.time) ? DateTime.makeUnsafe(value.time).pipe(DateTime.formatIso) : null;
   }
   if (CodeModeURL.is(value)) return value.url.href;
   return value;

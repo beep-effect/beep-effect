@@ -182,6 +182,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     repoSanityRow("repo-sanity:versions", 0),
     repoSanityRow("repo-sanity:syncpack", 0),
     repoSanityRow("repo-sanity:sherif", 0),
+    repoSanityRow("repo-sanity:config-typecheck", 0),
     repoSanityRow("repo-sanity:bun-audit", 13 / 832, O.some(17)),
     seedRow(
       "quality:build",
@@ -206,11 +207,12 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "precise",
       "Terminal reds occur after the established environment-only TS2589 quarantine."
     ),
-    cheapWrapperRow("quality:check:tsgo-tests", 6 / 832, O.some(24), "heavy", HEAVY_BASIS),
-    hostedRow("quality:check:tsgo-smoke", 383, 2, 0),
     policyHostedRow("quality:knip", 80, 9, 11 / 832, O.some(20)),
     hostedRow("quality:jsdoc-ratchet", 82, 16, 0),
     hostedRow("quality:docgen", 115, 5, 0),
+    // Hosted "Heavy / Doctest" is laneRows[16] (p50 82 s); the lane joined the
+    // pre-push set with the quality-lane audit (2026-09-09, D8).
+    hostedRow("quality:doctest", 82, 16, 0),
     hostedRow(
       "quality:coverage",
       603,
@@ -225,6 +227,18 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     hostedRow("quality:desktop-ipc", 69, 15, 0),
     hostedRow("quality:test-unit", 495, 3, 0),
     hostedRow("quality:test-integration", 137, 4, 0),
+    seedRow(
+      "quality:storybook",
+      584,
+      "/hosted/laneRows",
+      "Storybook build-and-test wall time on main run 34323229096 (quality-lane audit 2026-09-09); A1 recorded no row for this non-required context.",
+      0,
+      O.none(),
+      "precise",
+      PRECISE_BASIS,
+      "heavy",
+      HEAVY_BASIS
+    ),
     seedRow(
       "fallow:audit",
       1.863,
@@ -249,9 +263,23 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "policy-preflight",
       POLICY_PREFLIGHT_BASIS
     ),
-    policyHostedRow("pre-push:secrets", 54, 11, 4 / 832, O.some(31)),
+    // Unseeded lanes sort after every seeded one, which put this 2-second gate
+    // behind coverage (quality-lane audit 2026-09-09, D2 / D8).
+    seedRow(
+      "fallow:health",
+      1.863,
+      localDurationPointer(15),
+      "A1 Fallow advisory wrapper P50 proxy; blocking inner-lane durations were not yet recorded.",
+      0,
+      O.none(),
+      "precise",
+      PRECISE_BASIS,
+      "policy-preflight",
+      POLICY_PREFLIGHT_BASIS
+    ),
+    policyHostedRow("quality:secrets", 54, 11, 4 / 832, O.some(31)),
     policyHostedRow(
-      "pre-push:security",
+      "quality:security",
       28,
       12,
       5 / 832,
@@ -260,7 +288,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "A4 environment-only attribution: Docker daemon and image-pull failures share this lane's exit."
     ),
     policyHostedRow(
-      "pre-push:sast",
+      "quality:sast",
       82,
       13,
       0,
@@ -269,7 +297,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "A4 environment-only attribution: Docker daemon and image-pull failures share this lane's exit."
     ),
     policyHostedRow(
-      "pre-push:nix",
+      "quality:nix",
       102,
       14,
       0,

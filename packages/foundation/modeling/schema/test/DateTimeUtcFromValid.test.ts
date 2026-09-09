@@ -20,6 +20,17 @@ import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeDateTimeInputDateSync = S.decodeSync(DateTimeInputDate);
+const decodeDateTimeInputDateTaggedSync = S.decodeSync(DateTimeInputDate.Tagged);
+const decodeDateTimeInputInstantWithZoneSync = S.decodeSync(DateTimeInputInstantWithZone);
+const decodeDateTimeInputKindSync = S.decodeSync(DateTimeInputKind);
+const decodeDateTimeInputNumberSync = S.decodeSync(DateTimeInputNumber);
+const decodeDateTimeInputNumberTaggedSync = S.decodeSync(DateTimeInputNumber.Tagged);
+const decodeDateTimeInputStringSync = S.decodeSync(DateTimeInputString);
+const decodeDateTimeInputStringTaggedSync = S.decodeSync(DateTimeInputString.Tagged);
+const decodeDateTimeUtcFromValidSync = S.decodeSync(DateTimeUtcFromValid);
+const decodeUnknownDateInputToDateTimeSync = S.decodeUnknownSync(DateInputToDateTime);
+
 const NativeDate = globalThis.Date;
 
 const iso = "2024-01-01T00:00:00.000Z";
@@ -35,17 +46,15 @@ const expectEpochMillis = (actual: DateTime.Utc, expected: number) => {
 
 describe("DateTimeInputKind", () => {
   it("decodes supported discriminator values", () => {
-    expect(S.decodeSync(DateTimeInputKind)("Instant")).toBe("Instant");
+    expect(decodeDateTimeInputKindSync("Instant")).toBe("Instant");
   });
 });
 
 describe("DateTime adapter helpers", () => {
   it("decodes nullable adapter input", () => {
-    const decode = S.decodeUnknownSync(DateInputToDateTime);
-
-    expect(decode(null)).toBeNull();
-    expect(decode(undefined)).toBeUndefined();
-    expect(decode(iso)).toBe(iso);
+    expect(decodeUnknownDateInputToDateTimeSync(null)).toBeNull();
+    expect(decodeUnknownDateInputToDateTimeSync(undefined)).toBeUndefined();
+    expect(decodeUnknownDateInputToDateTimeSync(iso)).toBe(iso);
   });
 
   it("creates DateTime values with picker timezone semantics", () => {
@@ -92,20 +101,20 @@ describe("DateTimeInput primitive schemas", () => {
     const numberInput = DateTimeInputNumber.makeTagged(epochMilliseconds);
     const dateInput = DateTimeInputDate.makeTagged(DateTime.toDateUtc(DateTime.makeUnsafe(iso)));
 
-    expect(S.decodeSync(DateTimeInputString.Tagged)(stringInput)).toEqual(stringInput);
-    expect(S.decodeSync(DateTimeInputNumber.Tagged)(numberInput)).toEqual(numberInput);
-    expect(S.decodeSync(DateTimeInputDate.Tagged)(dateInput)).toEqual(dateInput);
+    expect(decodeDateTimeInputStringTaggedSync(stringInput)).toEqual(stringInput);
+    expect(decodeDateTimeInputNumberTaggedSync(numberInput)).toEqual(numberInput);
+    expect(decodeDateTimeInputDateTaggedSync(dateInput)).toEqual(dateInput);
     expect(DateTimeInputString.Tagged.is(stringInput)).toBe(true);
     expect(DateTimeInputNumber.Tagged.is(numberInput)).toBe(true);
     expect(DateTimeInputDate.Tagged.is(dateInput)).toBe(true);
   });
 
   it("rejects invalid primitive inputs", () => {
-    expect(() => S.decodeSync(DateTimeInputString)("not-a-date")).toThrow(
+    expect(() => decodeDateTimeInputStringSync("not-a-date")).toThrow(
       "Expected a string that can be converted into a DateTime.Utc"
     );
-    expect(() => S.decodeSync(DateTimeInputNumber)(Number.POSITIVE_INFINITY)).toThrow();
-    expect(() => S.decodeSync(DateTimeInputDate)(Reflect.construct(NativeDate, ["not-a-date"]) as Date)).toThrow();
+    expect(() => decodeDateTimeInputNumberSync(Number.POSITIVE_INFINITY)).toThrow();
+    expect(() => decodeDateTimeInputDateSync(Reflect.construct(NativeDate, ["not-a-date"]) as Date)).toThrow();
   });
 });
 
@@ -131,7 +140,7 @@ describe("DateTimeInput tagged object schemas", () => {
 
   it("rejects invalid InstantWithZone time zone identifiers", () => {
     expect(() =>
-      S.decodeSync(DateTimeInputInstantWithZone)({
+      decodeDateTimeInputInstantWithZoneSync({
         _tag: "InstantWithZone",
         epochMilliseconds,
         timeZoneId: "Not/AZone",
@@ -231,19 +240,16 @@ describe("DateTimeUtcFromValid", () => {
 
   it("schema-derived values satisfy the encode round-trip law", () => {
     const arbitrary = S.toArbitrary(DateTimeUtcFromValid)(fc);
-    const encode = S.encodeSync(DateTimeUtcFromValid);
-    const decode = S.decodeSync(DateTimeUtcFromValid);
-
     fc.assert(
       fc.property(arbitrary, (utc) => {
         // Encoding is lossy (canonical tagged ISO string), so assert the robust
         // law encode(decode(encode(x))) deep-equals encode(x) plus the Type-level
         // invariant that every decoded value is a DateTime.Utc preserving the instant.
-        const encoded = encode(utc);
-        const roundTripped = decode(encoded);
+        const encoded = encodeUtc(utc);
+        const roundTripped = decodeDateTimeUtcFromValidSync(encoded);
 
         expect(DateTime.isDateTime(roundTripped)).toBe(true);
-        expect(Equal.equals(encode(roundTripped), encoded)).toBe(true);
+        expect(Equal.equals(encodeUtc(roundTripped), encoded)).toBe(true);
         expect(DateTime.toEpochMillis(roundTripped)).toBe(DateTime.toEpochMillis(utc));
       }),
       fcRuns(50)

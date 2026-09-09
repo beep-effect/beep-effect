@@ -10,6 +10,8 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
+const decodePosixPath = S.decodeEffect(PosixPath);
+
 const textEncoder = new TextEncoder();
 
 const fixtureExtensions = {
@@ -114,7 +116,7 @@ export const makeExtractOperationFixture = Effect.fn("TikaFixtures.makeExtractOp
   const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
   const extension = fixtureExtensions[format];
   const name = `fixture.${extension}`;
-  const relativePath = yield* S.decodeEffect(PosixPath)(name);
+  const relativePath = yield* decodePosixPath(name);
   const bytes = overrides.bytes ?? textEncoder.encode(`${format} fixture bytes`);
 
   return ExtractFileOperation.make({

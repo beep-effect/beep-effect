@@ -150,6 +150,9 @@ import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
 
+const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
+const decodeUUID = S.decodeEffect(UUID);
+
 export { defaultYeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Handler");
@@ -171,7 +174,7 @@ const generateAttemptId = Effect.fn("Yeet.generateAttemptId")(function* (): Effe
 > {
   const crypto = yield* Crypto.Crypto;
   return yield* crypto.randomUUIDv4.pipe(
-    Effect.flatMap(S.decodeEffect(UUID)),
+    Effect.flatMap(decodeUUID),
     Effect.mapError(YeetCommandError.new("Failed to generate Yeet attempt id."))
   );
 });
@@ -1185,7 +1188,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
     O.flatMap((result) => O.fromUndefinedOr(result.output)),
     O.getOrElse(() => Str.empty)
   );
-  const pullRequestNumber = yield* S.decodeEffect(S.fromJsonString(GhPrView))(contextOutput).pipe(
+  const pullRequestNumber = yield* decodeGhPrViewJson(contextOutput).pipe(
     Effect.map((pullRequest) => pullRequest.number),
     Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
   );

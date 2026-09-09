@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "codex/security-findings-2026-08-13",
+  "committed": false,
+  "createdAt": "2026-08-13T08:44:24.664Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "prepare:01-effect-imports",
+      "label": "prepare:laws:effect-imports",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 8872.64693,
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:02-terse-effect",
+      "label": "prepare:laws:terse-effect",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 21502.741757,
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:03-config-sync",
+      "label": "prepare:config-sync",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 7376.160943,
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:04-lint-fix",
+      "label": "prepare:lint:fix",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 3651.157642,
+      "exitCode": 0
+    },
+    {
+      "id": "prepare:05-docgen",
+      "label": "prepare:docgen",
+      "phase": "prepare",
+      "status": "passed",
+      "durationMs": 29334.099211,
+      "exitCode": 0
+    },
+    {
+      "id": "feedback:01-build",
+      "label": "feedback:build",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 6668.173386,
+      "exitCode": 0
+    },
+    {
+      "id": "feedback:02-check",
+      "label": "feedback:check",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 4162.145415,
+      "exitCode": 0
+    },
+    {
+      "id": "feedback:03-lint",
+      "label": "feedback:lint",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 5147.328397,
+      "exitCode": 0
+    },
+    {
+      "id": "feedback:04-test",
+      "label": "feedback:test",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 178912.394957,
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet repair succeeded.",
+  "mode": "repair",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "codex_security-findings-2026-08-13-a6e38b8aae20",
+  "attemptId": "bfc73e63-9b5b-4b60-bb55-6a1bc55b69f7",
+  "startedAt": "2026-08-13T08:39:59.015Z",
+  "endedAt": "2026-08-13T08:44:24.664Z",
+  "elapsedMs": 265649,
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json"
+}

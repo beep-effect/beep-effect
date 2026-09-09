@@ -173,3 +173,124 @@ excludes, or reports separately with a count, any red-to-green episode that star
 No archive file and no second writer. Rejected: an append-only economics archive (exact M1 forever,
 unbounded second file); accepting the gap with a report caveat (M1 comparability at close-out
 unproven).
+
+## 2026-09-08 — C3 package-task migration grill, round 6 (seven rulings, steward: Benjamin)
+
+Inputs: the root `package.json` script census (70 scripts) and `turbo.json`; the two manifest
+writers (`packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts` and
+`packages/tooling/tool/cli/src/commands/Architecture/OperationPlanPackageJson.ts`); the policy step
+list in `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts`; the doctest lane in
+`packages/tooling/tool/cli/src/commands/Ci/CiLane.ts`; `research/economics.md` (hosted shares: Lint
+Policy 9.73%, Docgen 5.42%, Doctest 2.65%, Knip 2.49%); and the closed
+`goals/lint-policy-single-digit` packet (4-way eslint shards shipped; PR scoping deferred).
+
+**Ruling 19 — every hosted script lane except labs becomes a Turbo task, one sublane per task, in
+two shapes chosen by input partition.** A sublane whose inputs partition by package becomes a
+package task (per-package cache, `--affected` locally). A sublane whose inputs are the whole graph
+becomes a Turbo root task (declared in `turbo.json` under the root-package prefix) with explicit
+root-relative inputs; root tasks always run unfiltered, because `--affected` marks the root package
+only when root files change, so their reuse comes from the hash alone. Check variants are tasks;
+`--write` variants stay plain scripts. Rejected: promoting by "unit of meaning" with graph-wide
+lanes left as plain scripts (a second class of non-reusable lanes, against ruling 5's one-engine
+rule); one lint-policy task (the union glob recreates a whole-tree hash, per the C3 plan note);
+wrapping every lane as a package task (about 140 boots for tools whose unit is the graph).
+
+**Ruling 20 — scope and order: all hosted script lanes except labs, largest minutes first, then
+precision.** Policy sublanes (deprecated-apis first), then doctest, knip, fallow, jsdoc-ratchet;
+labs stays its own C3 item. Hosted lanes keep full scope and gain speed only from remote-cache
+reads on unchanged inputs; the local pre-push wave uses `--affected` plus the local cache.
+Rejected: policy only (leaves the root doctest config and 5.1% of hosted lane time outside the
+engine); hosted `--affected` (turns the hosted proof into a prediction before the parity ledger has
+evidence).
+
+**Ruling 21 — four package scripts, split by cost class.** `lint:deprecated-apis` (eslint
+deprecated profile, the long pole, own hash), `lint:jsdoc` (eslint docs profile, own hash),
+`lint:laws` (every sub-second `--include-prefix` law plus package-test-imports in one task and one
+hash), and `doctest`. Separate hashes only where cost or precision differ by an order of magnitude.
+Rejected: one script per law (about ten new scripts in 147 manifests for sub-second lanes); one
+package-wide policy script (a one-line law edit reruns the eslint pole for every touched package).
+
+**Ruling 22 — doctest is a package task driven by a mode branch in `vitest.shared.ts`.** The
+package script sets a declared env flag and runs `vitest run`; the shared config branches on it the
+way it already branches on the coverage flags (doctest plugin, in-source tests over the package's
+src tree, serial). The root doctest vitest config retires and the hosted doctest lane runs the
+Turbo task instead of a file list. Rejected: keeping the root file-scoped lane (no cache, no
+filter); a second per-package doctest vitest config (147 files for one flag); both coexisting (two
+truths for one proof surface).
+
+**Ruling 23 — codegen placeholders go, and the root name splits.** Turbo skips packages without a
+script, so the `echo 'no codegen needed'` placeholders leave the fleet and both scaffolds; packages
+define `codegen` only when they generate. Root `codegen` becomes the Turbo task wrapper; the barrel
+generator moves to `beep codegen barrel` (root `codegen:barrel`). Rejected: keeping placeholders
+for explicitness (ceremony that also feeds the task hash); leaving the collision as a follow-up.
+
+**Ruling 24 — one scripts-block schema, two writers, one gate.** A single canonical scripts-block
+schema (a LiteralKit of script names, per-kind variants, the `beep:*` indirection encoded) is
+consumed by create-package, the architecture operation plan, and delete-package; `beep lint
+package-scripts --check` and `--write` join the lint-policy subcommands and `beep:preflight`; the
+fleet is rewritten once with `--write` in the same PR that lands the gate, so the gate is never red
+on main. Rejected: converging writers without a gate (drift returns on the next hand edit); fixing
+new-package scaffolds only (127 packages keep the old docgen form).
+
+**Ruling 25 — home and execution.** The work is C3 sub-items of this packet (no new packet);
+rulings append here and receipts go to `research/OPPORTUNITIES.md`. A Fable orchestrator writes the
+lane-to-task table, the schema, and the `turbo.json` contract before any implementation; Codex
+lanes implement each PR at medium effort; Grok verifies Turbo 2.10 root-task and `--affected`
+semantics against the docs. Rejected: a new goal packet (a second steward surface for one KPI); an
+exploration first (doctrine and rankings are already ratified); a single Codex session end to end
+(no reviewed design gate).
+
+**Orchestrator defaults recorded without a question (routine):** CLI-backed package tasks call
+`beep-cli` directly (the `package-test-typecheck` precedent) while tool-backed ones keep the
+`beep:` indirection; check tasks cache with no outputs, and generators that write tracked files
+stay `cache: false`; the schema module lives under the repo CLI's internal modules; the per-shard
+eslint cache is dropped when the package task lands (one caching engine) and may return with a
+receipt; aggregate steps that read per-package results stay CLI steps after the Turbo run.
+
+## 2026-09-09 — C3 design gate ratified, round 7 (steward: Benjamin, by merge of #1018)
+
+Inputs: `research/c3-lane-task-table.md` revision 4 (one adversarial Codex review, two Greptile
+P1s and thirteen Codex/Greptile PR threads folded, Greptile 5/5), `research/c3-turbo-facts.md`
+with the live-probe amendment, `research/c3-sublane-inputs.md`.
+
+**Ruling 26 — the design gate stands as merged.** Decisions D1–D16 of the table are ratified as
+written under the table's own rule (veto by editing the entry; silence ratifies). The recorded
+defaults of its open questions apply until edited here: Q1 `coverage` stays package-owned; Q2
+`doctest` is stamped only on the workspaces that own `import.meta.vitest` sources; Q3 git, tree,
+ref, time and network lanes are non-reusable; Q4 policy runs in ordered invocations with local
+fail-fast after the cheap gates; Q6 effect-imports code mode stays a root task until it has
+promoted families; Q7 the policy-tool fingerprint covers the repo CLI's computed workspace
+dependency closure.
+
+**Ruling 27 — ruling 19's mechanism is amended (Q5).** With `affectedUsingTaskInputs` on, root
+tasks join the local `--affected` plan through their own declared inputs (probes P3–P7). "Root
+tasks always run unfiltered" now applies to the hosted full-scope run and to the non-reusable
+group of D2, which needs its own unfiltered invocation; it is no longer a general mechanism.
+Rejected: keeping two invocations for every root task (an unverified premise, now contradicted
+by evidence).
+
+**Execution:** PR 1 (C3.1) runs on a Codex lane at medium effort from
+`research/c3-1-brief.md`; the orchestrator publishes and answers review; Benjamin merges.
+
+## 2026-09-09 — Lane identity, round 8 (one ruling, steward: Benjamin, quality-lane audit PLAN D4)
+
+Inputs: quality-lane audit 2026-09-09 (`REPORT-local.md` finding D1: one command carried three or
+four lane ids — `check:tsgo:rules` / `lint:tsgo-rules` / `cheap-gates:tsgo-rules` / log prefix
+`[check:tsgo-rules]` — while the lane-proof ledger, `IssueClassification.knownSubLaneHints`, and the
+WaveOrder seed all key on the id), PLAN decision D4, PR "Lane orchestration, turbo graph, and lane
+identity" (feat/quality-lanes-pr1).
+
+**Ruling 28 — one lane id per command; tier is metadata; label is the log prefix.** A GitHub-check
+lane id names the command it runs and nothing else, uses `:` as its only separator, and equals the
+lane's step label, so the `[beep-cli] <label>` log prefix, the lane-proof ledger key, the
+remediation-hint needle, and the wave-order seed key are one string. The scheduling tier is a
+`tier` field on `GithubCheckLaneSpec` (`cheap-gates` | `pre-push`), never an id prefix: the same
+command keeps one id in both tiers, which is what lets ruling 1's reuse match across tiers when
+the tree is unchanged. A cheap-gates lane that repeats a lint-policy step carries that step's id.
+Enforced by a test over every registered lane (label equals id; no two ids run one command).
+This supersedes the C3 lane table's legend sentence (`research/c3-lane-task-table.md`, line 284,
+"lane ids consumed by `IssueClassification.ts` and WaveOrder keep their names"): task ids are still
+recorded beside lane ids, but the lane ids themselves converge on the command name. Rejected:
+keeping tier-prefixed ids and de-duplicating in the ledger by command digest alone (the hints and
+the seed would still fork on spelling). Consequence accepted: ProofLedger and GateStaleness entries
+keyed on the old spellings are non-reusable for exactly one run after the rename.

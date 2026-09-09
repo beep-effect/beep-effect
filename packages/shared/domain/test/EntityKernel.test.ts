@@ -25,10 +25,23 @@ import { makeEffect } from "effect/SchemaParser";
 import { FastCheck as fc } from "effect/testing";
 import { hasFunctionStatic, invokeStatic } from "./StaticProbes.ts";
 
+const decodeEntityRefEntityType = S.decodeEffect(EntityRef.EntityType);
+const decodePrimitivesEd25519Signature = S.decodeEffect(primitives.Ed25519Signature);
+const decodePrimitivesEncryptionKeyId = S.decodeEffect(primitives.EncryptionKeyId);
+const decodePrimitivesHybridLogicalClock = S.decodeEffect(primitives.HybridLogicalClock);
+const decodePrimitivesSha256 = S.decodeEffect(primitives.Sha256);
+const decodePrimitivesVectorClock = S.decodeEffect(primitives.VectorClock);
+const decodeEntityRefEntityRefSync = S.decodeSync(EntityRef.EntityRef);
+const decodeUnknownEntityIdEntityIdValue = S.decodeUnknownEffect(EntityId.EntityIdValue);
+const encodeEntityRefEntityRefSync = S.encodeSync(EntityRef.EntityRef);
+const isPrincipalSystemPrincipal = S.is(Principal.SystemPrincipal);
+
 const $I = $SharedDomainId.create("entity/test/EntityKernel");
 const makeSharedId = EntityId.factory("shared", $I);
 const DocumentId = makeSharedId("document");
+const decodeDocumentId = S.decodeEffect(DocumentId);
 const DocumentPublicId = PublicEntityId.factory(DocumentId);
+const decodeUnknownDocumentPublicId = S.decodeUnknownEffect(DocumentPublicId);
 const CustomDocumentId = makeSharedId("document", {
   brand: "CustomDocumentId",
   description: "Custom document id.",
@@ -73,13 +86,11 @@ describe("EntityId", () => {
   it.effect(
     "decodes generated entity ids and rejects invalid ids",
     Effect.fnUntraced(function* () {
-      const decode = S.decodeUnknownEffect(EntityId.EntityIdValue);
-
-      expect(yield* decode(1)).toBe(1);
-      expect(yield* decode(2_147_483_647)).toBe(2_147_483_647);
-      yield* expectFailure(decode(0));
-      yield* expectFailure(decode(2_147_483_648));
-      yield* expectFailure(decode(1.5));
+      expect(yield* decodeUnknownEntityIdEntityIdValue(1)).toBe(1);
+      expect(yield* decodeUnknownEntityIdEntityIdValue(2_147_483_647)).toBe(2_147_483_647);
+      yield* expectFailure(decodeUnknownEntityIdEntityIdValue(0));
+      yield* expectFailure(decodeUnknownEntityIdEntityIdValue(2_147_483_648));
+      yield* expectFailure(decodeUnknownEntityIdEntityIdValue(1.5));
     })
   );
 
@@ -148,16 +159,15 @@ describe("PublicEntityId", () => {
   it.effect(
     "derives URL-safe public ids from entity metadata",
     Effect.fnUntraced(function* () {
-      const decode = S.decodeUnknownEffect(DocumentPublicId);
-      const publicId = yield* decode("shared_document_a123");
+      const publicId = yield* decodeUnknownDocumentPublicId("shared_document_a123");
 
       expect(DocumentPublicId.prefix).toBe("shared_document");
       expect(DocumentPublicId.brand).toBe("SharedDocumentPublicId");
       expect(DocumentPublicId.sourceEntityId).toBe(DocumentId);
       expect(PublicEntityId.fromCuid(DocumentId, Cuid.make("a123"))).toBe(publicId);
       expect(DocumentPublicId.equivalence(publicId, publicId)).toBe(true);
-      yield* expectFailure(decode("shared_user_a123"));
-      yield* expectFailure(decode("shared_document_123"));
+      yield* expectFailure(decodeUnknownDocumentPublicId("shared_user_a123"));
+      yield* expectFailure(decodeUnknownDocumentPublicId("shared_document_123"));
     })
   );
 
@@ -307,7 +317,7 @@ describe("EntityRef and shared entity primitives", () => {
   it.effect(
     "builds entity references and validates primitive schemas",
     Effect.fnUntraced(function* () {
-      const id = yield* S.decodeEffect(DocumentId)(1);
+      const id = yield* decodeDocumentId(1);
       const ref = EntityRef.make(DocumentId, id);
       const dataLastRef = EntityRef.make(id)(DocumentId);
       const resultRef = EntityRef.makeResult(DocumentId, id);
@@ -318,13 +328,13 @@ describe("EntityRef and shared entity primitives", () => {
       if (Result.isSuccess(resultRef)) {
         expect(resultRef.success.id).toBe(1);
       }
-      expect(yield* S.decodeEffect(EntityRef.EntityType)("SharedDocument")).toBe("SharedDocument");
+      expect(yield* decodeEntityRefEntityType("SharedDocument")).toBe("SharedDocument");
       const sha256Fixture = Str.repeat("a", 64);
-      expect(yield* S.decodeEffect(primitives.Sha256)(sha256Fixture)).toBe(sha256Fixture);
-      expect(yield* S.decodeEffect(primitives.Ed25519Signature)("signature")).toBe("signature");
-      expect(yield* S.decodeEffect(primitives.EncryptionKeyId)("key")).toBe("key");
-      expect(yield* S.decodeEffect(primitives.HybridLogicalClock)("clock")).toBe("clock");
-      expect(yield* S.decodeEffect(primitives.VectorClock)({ replica: 1 })).toEqual({ replica: 1 });
+      expect(yield* decodePrimitivesSha256(sha256Fixture)).toBe(sha256Fixture);
+      expect(yield* decodePrimitivesEd25519Signature("signature")).toBe("signature");
+      expect(yield* decodePrimitivesEncryptionKeyId("key")).toBe("key");
+      expect(yield* decodePrimitivesHybridLogicalClock("clock")).toBe("clock");
+      expect(yield* decodePrimitivesVectorClock({ replica: 1 })).toEqual({ replica: 1 });
     })
   );
 
@@ -332,8 +342,8 @@ describe("EntityRef and shared entity primitives", () => {
     fc.assert(
       fc.property(S.toArbitrary(DocumentId)(fc), (id) => {
         const ref = EntityRef.make(DocumentId, id);
-        const encodedRef = S.encodeSync(EntityRef.EntityRef)(ref);
-        const decodedRef = S.decodeSync(EntityRef.EntityRef)(encodedRef);
+        const encodedRef = encodeEntityRefEntityRefSync(ref);
+        const decodedRef = decodeEntityRefEntityRefSync(encodedRef);
 
         expect(encodedRef).toEqual({
           entityType: DocumentId.entityType,
@@ -381,7 +391,7 @@ describe("EntityRef and shared entity primitives", () => {
       expect(O.isNone(agent.onBehalfOfTeamId)).toBe(true);
       expect(O.isNone(connector.onBehalfOfUserId)).toBe(true);
       expect(system.component).toBe("Runtime");
-      expect(S.is(Principal.SystemPrincipal)(principal)).toBe(true);
+      expect(isPrincipalSystemPrincipal(principal)).toBe(true);
       expect(SourceKind.SourceKind.is.Agent("Agent")).toBe(true);
       expect(EntityBarrel.ProductEntity.Entity).toBe(ProductEntity.Entity);
       expect(EntityBarrel.EntityId.EntityIdValue).toBe(EntityId.EntityIdValue);

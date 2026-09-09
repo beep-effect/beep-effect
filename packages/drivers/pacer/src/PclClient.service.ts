@@ -40,6 +40,9 @@ import type {
   ReportInfoType,
 } from "./Pcl.models.ts";
 
+const decodeFiniteOption = S.decodeOption(S.Finite);
+const isPacerPclError = S.is(PacerPclError);
+
 const $I = $PacerId.create("pacer/pcl/PclClient.service");
 
 type ReportIdValue = ReportInfoType["reportId"];
@@ -65,7 +68,7 @@ const formatReportDeletePathSegment = (reportId: ReportIdValue): O.Option<string
 const formatServerReportDeletePathSegment = (reportId: ReportIdValue): O.Option<string> =>
   P.isNumber(reportId)
     ? pipe(
-        S.decodeOption(S.Finite)(reportId),
+        decodeFiniteOption(reportId),
         O.map((value) => globalThis.encodeURIComponent(`${value}`))
       )
     : pipe(O.liftPredicate(Str.isNonEmpty)(reportId), O.map(globalThis.encodeURIComponent), O.filter(Str.isNonEmpty));
@@ -108,7 +111,7 @@ const isTerminalReportStatus = (status: ReportStatus): boolean =>
   status === ReportStatus.Enum.COMPLETED || status === ReportStatus.Enum.FAILED;
 
 const mapPclFailure = (error: unknown): PacerPclError => {
-  if (S.is(PacerPclError)(error)) {
+  if (isPacerPclError(error)) {
     return error;
   }
   const status = extractStatus(error);

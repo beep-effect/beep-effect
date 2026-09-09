@@ -28,6 +28,10 @@ import { dual } from "effect/Function";
 import type { TomlStringifyErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
 import { GuardExceeded, MAX_NESTING_DEPTH } from "./limits.ts";
+const isTomlLocalDate = S.is(TomlLocalDate);
+const isTomlLocalDateTime = S.is(TomlLocalDateTime);
+const isTomlLocalTime = S.is(TomlLocalTime);
+const isTomlOffsetDateTime = S.is(TomlOffsetDateTime);
 
 const INT64_MIN = -(2n ** 63n);
 const INT64_MAX = 2n ** 63n - 1n;
@@ -163,10 +167,10 @@ const renderNumber = (value: number): string => {
 const isTomlDateTime = (
   value: unknown
 ): value is TomlLocalDate | TomlLocalDateTime | TomlLocalTime | TomlOffsetDateTime =>
-  S.is(TomlOffsetDateTime)(value) ||
-  S.is(TomlLocalDateTime)(value) ||
-  S.is(TomlLocalDate)(value) ||
-  S.is(TomlLocalTime)(value);
+  isTomlOffsetDateTime(value) ||
+  isTomlLocalDateTime(value) ||
+  isTomlLocalDate(value) ||
+  isTomlLocalTime(value);
 
 /** Plain objects only (null-prototype included) — never arrays or class instances. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {

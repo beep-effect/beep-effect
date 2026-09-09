@@ -28,6 +28,7 @@ const TsconfigReferences = S.Struct({
     })
   ),
 });
+const encodeUnknownTsconfigReferencesSync = S.encodeUnknownSync(TsconfigReferences);
 const TsconfigPaths = S.Struct({
   compilerOptions: S.Struct({
     paths: S.Record(S.String, S.Array(S.String)),
@@ -37,7 +38,7 @@ const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
 const decodeTsconfigPaths = S.decodeUnknownSync(TsconfigPaths);
 
 const expectTsconfigReferencesRoundTrip = (value: typeof TsconfigReferences.Type): void => {
-  const encoded = S.encodeUnknownSync(TsconfigReferences)(value);
+  const encoded = encodeUnknownTsconfigReferencesSync(value);
   expect(decodeTsconfigReferences(encoded)).toEqual(value);
 };
 
@@ -144,6 +145,7 @@ const bootstrapWorkspace = Effect.fn(function* (
     readonly packageName: string;
     readonly dependencies?: Record<string, string>;
     readonly references?: ReadonlyArray<string>;
+    readonly checkReferences?: ReadonlyArray<string>;
     readonly docgenConfig?: unknown;
     readonly exports?: unknown;
   }
@@ -177,6 +179,24 @@ const bootstrapWorkspace = Effect.fn(function* (
   );
   if (options.docgenConfig !== undefined) {
     yield* writeJsonFile(path.join(workspaceDir, "docgen.json"), options.docgenConfig);
+  }
+  if (options.checkReferences !== undefined) {
+    // JSONC on purpose: the overlay writer must keep the comment while it
+    // rewrites `references`.
+    yield* writeTextFile(
+      path.join(workspaceDir, "tsconfig.check.json"),
+      `{
+  // check overlay: references mirror tsconfig.json
+  "extends": "./tsconfig.json",
+  "references": ${encodeJson(A.map(options.checkReferences, (referencePath) => ({ path: referencePath })))},
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "rootDir": "../.."
+  }
+}
+`
+    );
   }
 });
 
@@ -744,7 +764,7 @@ describe("tsconfig-sync", () => {
             const syncResult = yield* syncTsconfigAtRoot(rootDir, {
               mode: "sync",
               filter: "@beep/example-domain",
-              verbose: false,
+              verbose: true,
             });
             const referenceChanges = A.filter(syncResult.changes, (change) => change.section === "package-references");
             expect(referenceChanges).toHaveLength(1);
@@ -753,6 +773,189 @@ describe("tsconfig-sync", () => {
               yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.json"))
             );
             expect(A.map(refs.references, (entry) => entry.path)).toEqual([
+              "../foundation/modeling/identity/tsconfig.json",
+            ]);
+          })
+        )
+      ),
+    20_000
+  );
+
+  it(
+    "mirrors package tsconfig references into tsconfig.check.json overlays in the same run",
+    () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const rootDir = process.cwd();
+
+            // Root references, aliases, and syncpack sources are pre-synced so
+            // the drift below isolates the two package-level files.
+            yield* bootstrapRootConfig(rootDir, {
+              workspaces: ["packages/foundation/*/*", "packages/example-domain"],
+              references: ["packages/example-domain", "packages/foundation/modeling/identity"],
+              paths: {
+                "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
+                "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
+                "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
+                "@beep/example-domain/*": ["./packages/example-domain/src/*"],
+              },
+              syncpackSources: [
+                "package.json",
+                "packages/foundation/*/*/package.json",
+                "packages/example-domain/package.json",
+              ],
+            });
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/foundation/modeling/identity",
+              packageName: "@beep/identity",
+            });
+            // tsconfig.json has no references yet and the overlay carries the
+            // historical `[]`: one sync must plan both, and the overlay must
+            // copy the references planned for tsconfig.json in this run, not
+            // the stale list on disk.
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/example-domain",
+              packageName: "@beep/example-domain",
+              dependencies: {
+                "@beep/identity": "workspace:*",
+              },
+              checkReferences: [],
+            });
+
+            const drift = yield* syncTsconfigAtRoot(rootDir, {
+              mode: "check",
+              filter: "@beep/example-domain",
+              verbose: false,
+            }).pipe(
+              Effect.match({
+                onFailure: (error) => error,
+                onSuccess: () => undefined,
+              })
+            );
+            expect(drift?._tag).toBe("TsconfigSyncDriftError");
+            if (drift?._tag !== "TsconfigSyncDriftError") {
+              return;
+            }
+            expect(drift.fileCount).toBe(2);
+
+            const syncResult = yield* syncTsconfigAtRoot(rootDir, {
+              mode: "sync",
+              filter: "@beep/example-domain",
+              verbose: false,
+            });
+            expect(A.map(syncResult.changes, (change) => change.section)).toEqual([
+              "package-check-references",
+              "package-references",
+            ]);
+            const overlayChange = A.findFirst(
+              syncResult.changes,
+              (change) => change.section === "package-check-references"
+            );
+            expect(O.map(overlayChange, (change) => change.summary)).toEqual(
+              O.some("references: 0 -> 1 (add 1, remove 0)")
+            );
+
+            const expectedReferences = ["../foundation/modeling/identity/tsconfig.json"];
+            const canonicalRefs = decodeTsconfigReferences(
+              yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.json"))
+            );
+            expect(A.map(canonicalRefs.references, (entry) => entry.path)).toEqual(expectedReferences);
+            const overlayPath = path.join(rootDir, "packages", "example-domain", "tsconfig.check.json");
+            const overlayRefs = decodeTsconfigReferences(yield* readJsoncFile(overlayPath));
+            expect(A.map(overlayRefs.references, (entry) => entry.path)).toEqual(expectedReferences);
+            // The overlay is edited in place: its comment and unrelated keys survive.
+            const overlayText = yield* fs.readFileString(overlayPath);
+            expect(overlayText).toContain("// check overlay: references mirror tsconfig.json");
+            expect(overlayText).toContain('"noEmit": true');
+
+            // Steady state: the mirrored overlay causes no further drift.
+            const steadyState = yield* syncTsconfigAtRoot(rootDir, {
+              mode: "check",
+              filter: undefined,
+              verbose: false,
+            });
+            expect(steadyState.changes).toHaveLength(0);
+          })
+        )
+      ),
+    20_000
+  );
+
+  it(
+    "reports an overlay whose references drift from its canonical tsconfig.json",
+    () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            const rootDir = process.cwd();
+
+            yield* bootstrapRootConfig(rootDir, {
+              workspaces: ["packages/foundation/*/*", "packages/example-domain"],
+              references: ["packages/example-domain", "packages/foundation/modeling/identity"],
+              paths: {
+                "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
+                "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
+                "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
+                "@beep/example-domain/*": ["./packages/example-domain/src/*"],
+              },
+              syncpackSources: [
+                "package.json",
+                "packages/foundation/*/*/package.json",
+                "packages/example-domain/package.json",
+              ],
+            });
+            // The identity workspace owns an overlay that already agrees with
+            // its (reference-free) tsconfig.json, so it plans nothing.
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/foundation/modeling/identity",
+              packageName: "@beep/identity",
+              checkReferences: [],
+            });
+            // tsconfig.json is already in sync; only the overlay lags behind
+            // with a hand-edited, extra reference.
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/example-domain",
+              packageName: "@beep/example-domain",
+              dependencies: {
+                "@beep/identity": "workspace:*",
+              },
+              references: ["../foundation/modeling/identity/tsconfig.json"],
+              checkReferences: ["../foundation/modeling/identity/tsconfig.json", "../stale/tsconfig.json"],
+            });
+
+            const drift = yield* syncTsconfigAtRoot(rootDir, {
+              mode: "check",
+              filter: undefined,
+              verbose: false,
+            }).pipe(
+              Effect.match({
+                onFailure: (error) => error,
+                onSuccess: () => undefined,
+              })
+            );
+            expect(drift?._tag).toBe("TsconfigSyncDriftError");
+            if (drift?._tag !== "TsconfigSyncDriftError") {
+              return;
+            }
+            expect(drift.fileCount).toBe(1);
+
+            const syncResult = yield* syncTsconfigAtRoot(rootDir, {
+              mode: "sync",
+              filter: undefined,
+              verbose: false,
+            });
+            expect(syncResult.changes).toHaveLength(1);
+            expect(syncResult.changes[0]?.section).toBe("package-check-references");
+            expect(syncResult.changes[0]?.summary).toBe("references: 2 -> 1 (add 0, remove 1)");
+
+            const overlayRefs = decodeTsconfigReferences(
+              yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.check.json"))
+            );
+            expect(A.map(overlayRefs.references, (entry) => entry.path)).toEqual([
               "../foundation/modeling/identity/tsconfig.json",
             ]);
           })

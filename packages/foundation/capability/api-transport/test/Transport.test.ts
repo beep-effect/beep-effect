@@ -8,6 +8,11 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as Headers from "effect/unstable/http/Headers";
 
+const decodeApiTransportOptions = S.decodeEffect(ApiTransportOptions);
+const decodeUnknownApiTransportOptions = S.decodeUnknownEffect(ApiTransportOptions);
+const encodeApiTransportOptions = S.encodeEffect(ApiTransportOptions);
+const isApiTransportOptions = S.is(ApiTransportOptions);
+
 const RateLimitSnapshotArbitrary = S.toArbitrary(RateLimitSnapshot)(fc);
 const RateLimitSnapshotEquivalence = S.toEquivalence(RateLimitSnapshot);
 const decodeRateLimitSnapshot = S.decodeUnknownEffect(RateLimitSnapshot);
@@ -53,10 +58,10 @@ describe("@beep/api-transport", () => {
         window: "1 hour",
       },
     });
-    const encoded = Effect.runSync(S.encodeEffect(ApiTransportOptions)(options));
-    const decoded = Effect.runSync(S.decodeEffect(ApiTransportOptions)(encoded));
+    const encoded = Effect.runSync(encodeApiTransportOptions(options));
+    const decoded = Effect.runSync(decodeApiTransportOptions(encoded));
 
-    expect(S.is(ApiTransportOptions)(decoded)).toBe(true);
+    expect(isApiTransportOptions(decoded)).toBe(true);
     expect(ApiAuth.$is("ApiKeyQueryAuth")(decoded.auth)).toBe(true);
     expect(ApiAuth.$is("NoAuth")(decoded.auth)).toBe(false);
     expect(ApiAuth.$is("ApiKeyQueryAuth")({ _tag: "ApiKeyQueryAuth" })).toBe(true);
@@ -96,9 +101,9 @@ describe("@beep/api-transport", () => {
     ];
 
     for (const option of options) {
-      const decoded = Effect.runSync(S.decodeUnknownEffect(ApiTransportOptions)(option));
+      const decoded = Effect.runSync(decodeUnknownApiTransportOptions(option));
 
-      expect(S.is(ApiTransportOptions)(decoded)).toBe(true);
+      expect(isApiTransportOptions(decoded)).toBe(true);
     }
   });
 

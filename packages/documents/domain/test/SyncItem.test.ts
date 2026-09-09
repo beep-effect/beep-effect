@@ -7,6 +7,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeUnknownSyncItemSyncItemSync = S.decodeUnknownSync(SyncItem.SyncItem);
+const decodeUnknownSyncItemSyncItemStateSync = S.decodeUnknownSync(SyncItem.SyncItemState);
+const encodeSyncItemSyncItemSync = S.encodeSync(SyncItem.SyncItem);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
@@ -54,7 +58,7 @@ describe("SyncItem entity", () => {
   });
 
   it("decodes and encodes a full file row", () => {
-    const decoded = S.decodeUnknownSync(SyncItem.SyncItem)(fileRow);
+    const decoded = decodeUnknownSyncItemSyncItemSync(fileRow);
 
     expect(decoded).toBeInstanceOf(SyncItem.SyncItem);
     expect(decoded.contentDigest).toEqual(O.some("abc123"));
@@ -62,11 +66,11 @@ describe("SyncItem entity", () => {
     expect(decoded.remoteId).toEqual(O.some("9001"));
     expect(decoded.lastError).toEqual(O.none());
     expect(decoded.syncState).toBe("pending");
-    expect(S.encodeSync(SyncItem.SyncItem)(decoded)).toStrictEqual(fileRow);
+    expect(encodeSyncItemSyncItemSync(decoded)).toStrictEqual(fileRow);
   });
 
   it("decodes folder rows with null content and remote fields as none", () => {
-    const decoded = S.decodeUnknownSync(SyncItem.SyncItem)({
+    const decoded = decodeUnknownSyncItemSyncItemSync({
       ...fileRow,
       contentDigest: null,
       contentSizeBytes: null,
@@ -92,8 +96,8 @@ describe("SyncItem entity", () => {
     expect(SyncItem.SyncItemState.is.pending("pending")).toBe(true);
     expect(SyncItem.SyncItemState.is.conflict("pending")).toBe(false);
     expect(SyncItem.SyncItemState.Enum.current).toBe("current");
-    expect(() => S.decodeUnknownSync(SyncItem.SyncItemState)("unknown")).toThrow();
-    expect(() => S.decodeUnknownSync(SyncItem.SyncItem)({ ...fileRow, syncState: "unknown" })).toThrow();
+    expect(() => decodeUnknownSyncItemSyncItemStateSync("unknown")).toThrow();
+    expect(() => decodeUnknownSyncItemSyncItemSync({ ...fileRow, syncState: "unknown" })).toThrow();
   });
 
   it("round-trips schema-derived sync item values", () => {

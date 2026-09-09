@@ -13,6 +13,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { turboEnvExtendsAmbient } from "../../../internal/cli/EnvConfig.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import type { GithubCheckLaneSpec } from "../Quality.schemas.ts";
 
@@ -20,10 +21,11 @@ const $I = $RepoCliId.create("commands/Quality/internal/LaneProofReuse");
 
 const LaneProofMode = LiteralKit(["off", "shadow", "active"]);
 type LaneProofMode = typeof LaneProofMode.Type;
+const isLaneProofMode = S.is(LaneProofMode);
 const ActiveLaneProofMode = LiteralKit(["shadow", "active"]);
 // These lanes query live vulnerability data. A tree-exact record cannot prove
 // that the external advisory set is still current, so they always run.
-const NonReusableLaneProofId = LiteralKit(["pre-push:security", "repo-sanity:bun-audit"]);
+const NonReusableLaneProofId = LiteralKit(["quality:security", "repo-sanity:bun-audit"]);
 const isNonReusableLaneProofId = S.is(NonReusableLaneProofId);
 
 class LaneProofRecord extends S.Class<LaneProofRecord>($I`LaneProofRecord`)(
@@ -119,28 +121,22 @@ const laneCommandHash = (lane: GithubCheckLaneSpec): string =>
     )
   );
 
-const environmentProfileHash = (lane: GithubCheckLaneSpec): string =>
-  hashText(
+const environmentProfileHash = (lane: GithubCheckLaneSpec): string => {
+  const inheritedEnvironmentHash =
+    lane.step.useLocalEnv === true || turboEnvExtendsAmbient(lane.step.command, lane.step.args)
+      ? hashText(stableRecordText(Bun.env))
+      : undefined;
+  return hashText(
     stableRecordText({
       platform: process.platform,
       architecture: process.arch,
       bunVersion: Bun.version,
       nodeVersion: process.version,
-      CI: Bun.env.CI,
-      // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
-      GITHUB_ACTIONS: Bun.env.GITHUB_ACTIONS,
-      // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
-      TURBO_CACHE: Bun.env.TURBO_CACHE,
-      // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
-      TURBO_FORCE: Bun.env.TURBO_FORCE,
-      // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
-      BEEP_DOCGEN_CONCURRENCY: Bun.env.BEEP_DOCGEN_CONCURRENCY,
-      BEEP_FC_NUM_RUNS: Bun.env.BEEP_FC_NUM_RUNS,
-      BEEP_FC_SEED: Bun.env.BEEP_FC_SEED,
-      NODE_OPTIONS: Bun.env.NODE_OPTIONS,
+      inheritedEnvironmentHash,
       laneEnv: stableRecordText(lane.step.env ?? {}),
     })
   );
+};
 
 const runGit = (
   cwd: string,
@@ -183,12 +179,11 @@ const virtualTreeSha = Effect.fn("LaneProofReuse.virtualTreeSha")(function* (rep
   );
 });
 
-const laneProofMode = (): LaneProofMode =>
-  pipe(
-    // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
-    S.decodeUnknownOption(LaneProofMode)(Bun.env.BEEP_YEET_LANE_PROOF_MODE ?? "off"),
-    O.getOrElse(() => "off" as const)
-  );
+const laneProofMode = (): LaneProofMode => {
+  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
+  const candidate = Bun.env.BEEP_YEET_LANE_PROOF_MODE ?? "off";
+  return isLaneProofMode(candidate) ? candidate : "off";
+};
 
 const LaneProofStoreJson = JsonStringCodec(LaneProofStore);
 
@@ -205,9 +200,10 @@ const loadStore = Effect.fn("LaneProofReuse.loadStore")(function* (storePath: st
  * @category use-cases
  */
 export const prepareLaneProofSession = Effect.fn("LaneProofReuse.prepareSession")(function* (
-  lanes: ReadonlyArray<GithubCheckLaneSpec>
+  lanes: ReadonlyArray<GithubCheckLaneSpec>,
+  modeOverride?: LaneProofSession["mode"]
 ) {
-  const mode = laneProofMode();
+  const mode = modeOverride ?? laneProofMode();
   const first = A.head(lanes);
   if (mode === "off" || O.isNone(first) || A.some(lanes, (lane) => lane.step.cwd !== first.value.step.cwd)) {
     return O.none<LaneProofSession>();
@@ -300,7 +296,10 @@ export const persistLaneProofs = Effect.fn("LaneProofReuse.persist")(function* (
   successes: ReadonlyArray<readonly [lane: GithubCheckLaneSpec, durationMs: number]>
 ) {
   if (A.isReadonlyArrayEmpty(successes)) return;
-  const refreshed = yield* prepareLaneProofSession(A.map(successes, ([lane]) => lane));
+  const refreshed = yield* prepareLaneProofSession(
+    A.map(successes, ([lane]) => lane),
+    session.mode
+  );
   if (O.isNone(refreshed)) return;
   const refreshedSession = refreshed.value;
   const fs = yield* FileSystem.FileSystem;

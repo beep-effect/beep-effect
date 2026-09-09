@@ -40,13 +40,21 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { A, O, pipe, R, Str, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, HashSet, MutableHashSet, Order, Path } from "effect";
+import { A, O, pipe, R, Str } from "@beep/utils";
+import { Console, Effect, FileSystem, Order, Path } from "effect";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../internal/artifacts/index.ts";
 import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import {
+  checkScriptTestTypecheckCoverage,
+  pathExists,
+  pathTypeOf,
+  readOptionalText,
+  uncoveredTestSources,
+} from "../../internal/quality/TestTypecheckCoverage.ts";
 import { diffMembership, enforceRatchet } from "../../internal/ratchet/index.ts";
+import { collectOwnedPaths, testFixtureSegment, walkableChildPaths } from "./internal/WorkspaceWalk.ts";
 import { TestTypecheckBaselineError } from "./Lint.errors.ts";
 
 const $I = $RepoCliId.create("commands/Lint/PackageTestTypecheck");
@@ -54,27 +62,11 @@ const $I = $RepoCliId.create("commands/Lint/PackageTestTypecheck");
 const defaultBaselinePath = "standards/test-typecheck.blindspot-baseline.jsonc";
 const regenerationCommand = "bun run beep lint package-test-typecheck --write-baseline";
 const checkCommand = "bun run beep lint package-test-typecheck";
-// Mirrors the repo-wide `beep quality test-tsgo` lane's search roots and ignore
-// sets so both gates agree on what counts as a package test source.
+// Mirrors the repo-wide `beep quality test-tsgo` lane's search roots; the
+// ignore set every Lint walk shares lives in ./internal/WorkspaceWalk.ts.
 const packageSearchRoots = ["apps", "infra", "packages"] as const;
-const ignoredDirectoryNames = HashSet.fromIterable(["node_modules", "dist", "dist-test", "coverage", "tmp", ".turbo"]);
 const testDirectoryName = "test";
-const testFixtureSegment = "/test/fixtures/";
 const testSourcePattern = /\.(?:cts|mts|ts|tsx)$/u;
-const wildcardPattern = /[*?]/u;
-const recursiveGlobSegment = "**";
-// `bun run [flags] <script>`. Flags between `run` and the script name are
-// skipped so delegation is still followed through `--silent`, `--if-present`,
-// `--filter=<pkg>`, `--bun`, and friends. `--cwd`/`--config`/`--env-file` take
-// their value as a separate token, so those are consumed as a pair before the
-// generic single-token flag alternative can mistake the value for the script.
-// (`bun run-script` is not used anywhere in this repo, so it is not accepted.)
-const scriptReferencePattern =
-  /\bbun\s+run\s+(?:(?:--(?:cwd|config|env-file)\s+\S+|--?[\w-]+(?:=\S+)?)\s+)*([\w:.-]+)/gu;
-const projectFlagPattern = /(?:^|\s)(?:-p|--project|-b|--build)(?:=|\s+)([^\s]+)/gu;
-const typescriptProgramPattern = /^\s*(?:(?:env\s+)?(?:[^\s=]+=[^\s]+\s+)*)(?:bunx\s+)?(?:tsgo|tsc)\b/u;
-const commandSeparatorPattern = /&&|\|\||;|\|/u;
-const defaultProjectFileName = "tsconfig.json";
 const newPackageHandling =
   "New packages scaffolded with `beep create-package` or `beep architecture` already wire `beep:check:tests` into `beep:check`; keep new packages out of this baseline rather than regenerating it.";
 const baselineHeader = `// Regenerate with: ${regenerationCommand}
@@ -225,394 +217,27 @@ class PackageManifestDocument extends S.Class<PackageManifestDocument>($I`Packag
   })
 ) {}
 
-class TsconfigReference extends S.Class<TsconfigReference>($I`TsconfigReference`)(
-  {
-    path: S.String,
-  },
-  $I.annote("TsconfigReference", {
-    description: "One TypeScript project reference entry.",
-  })
-) {}
-
-const TsconfigExtends = S.Union([S.String, S.String.pipe(S.Array)]);
-const TsconfigIncludes = S.String.pipe(S.Array);
-const TsconfigReferences = TsconfigReference.pipe(S.Array);
-
-class TsconfigDocument extends S.Class<TsconfigDocument>($I`TsconfigDocument`)(
-  {
-    extends: S.optionalKey(TsconfigExtends),
-    include: S.optionalKey(TsconfigIncludes),
-    exclude: S.optionalKey(TsconfigIncludes),
-    references: S.optionalKey(TsconfigReferences),
-  },
-  $I.annote("TsconfigDocument", {
-    description: "Minimal tsconfig shape used to decide which files a project's include and exclude globs select.",
-  })
-) {}
-
 const decodePackageManifest = decodeJsoncTextAs(PackageManifestDocument);
-const decodeTsconfigDocument = decodeJsoncTextAs(TsconfigDocument);
 const sameBlindSpotPackage = Order.mapInput(Order.String, (finding: TestTypecheckBlindSpot) => finding.package);
 const blindSpotOrder = sameBlindSpotPackage;
 const samePackage = (left: TestTypecheckBlindSpot, right: TestTypecheckBlindSpot): boolean =>
   left.package === right.package;
 
-const exists = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<boolean> =>
-  fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse));
-
-const readOptionalText = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<O.Option<string>> =>
-  fs.readFileString(filePath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
-
-// `File`, `Directory`, or none when the path is missing or unreadable. Both
-// tree walks classify through this so neither repeats the stat-and-unwrap dance.
-const pathTypeOf = (fs: FileSystem.FileSystem, currentPath: string) =>
-  fs.stat(currentPath).pipe(Effect.option, Effect.map(O.map((info) => info.type)));
-
-const isDirectoryPath = (fs: FileSystem.FileSystem, currentPath: string): Effect.Effect<boolean> =>
-  pathTypeOf(fs, currentPath).pipe(Effect.map(O.match({ onNone: thunkFalse, onSome: (type) => type === "Directory" })));
-
-// Child paths worth descending into: build and vendor directory names are
-// pruned here so every walk in this lint agrees on traversal scope.
-const walkableChildPaths = Effect.fn("PackageTestTypecheck.walkableChildPaths")(function* (
-  currentPath: string
+// A directory owns itself when it carries a package manifest.
+const packageDirectoryOwnedIn = Effect.fn("PackageTestTypecheck.packageDirectoryOwnedIn")(function* (
+  directory: string
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
+  const hasManifest = yield* pathExists(fs, path.join(directory, "package.json"));
 
-  return pipe(
-    entries,
-    A.filter((entry) => !HashSet.has(ignoredDirectoryNames, entry)),
-    A.map((entry) => path.join(currentPath, entry))
-  );
+  return hasManifest ? A.of(normalizePath(path.resolve(directory))) : A.empty<string>();
 });
 
-const capturedGroups = (pattern: RegExp, text: string): ReadonlyArray<string> =>
-  pipe(
-    A.fromIterable(Str.matchAll(pattern)(text)),
-    A.map((match) => pipe(A.get(match, 1), O.filter(Str.isNonEmpty))),
-    A.getSomes
-  );
-
-// Translate one tsconfig glob segment into regex source. Regex metacharacters
-// are escaped first so only `*` and `?` keep their glob meaning, and neither
-// crosses a path separator.
-const globSegmentSource: (segment: string) => string = flow(
-  Str.replace(/[.+^${}()|[\]\\]/g, "\\$&"),
-  Str.replaceAll("*", "[^/]*"),
-  Str.replaceAll("?", "[^/]")
-);
-
-// Translate a resolved tsconfig glob into a whole-path matcher.
-//
-// Semantics verified against this repo's tsgo rather than inferred from the
-// docs. Files were placed under `test/` at several depths and extensions; this
-// is which ones each entry actually typechecked:
-//
-//   test               every file at every depth, every TS extension
-//                      (a bare directory path is a recursive subtree include)
-//   test/**/*          every file at every depth
-//   test/**/*.ts       every depth, but NOT .mts and NOT .tsx
-//   test/**/*.test.ts  only the .test.ts files — helpers alongside them are NOT
-//                      typechecked, at any depth
-//   test/*.ts          depth 1 only
-//   test/*/*.ts        exactly one directory down
-//   test/**            NOTHING — a trailing `**` matches no files at all
-//
-// `**` therefore matches zero or more directories (depth-1 files match
-// `test/**/*.ts`), and a trailing `**` with no file segment after it matches
-// nothing. Both fall out of emitting `(?:[^/]+/)*` for a `**` segment: it
-// consumes its own separator, so as a final segment the pattern can only match
-// a path ending in `/`, which no file does.
-const globToRegExp = (glob: string): RegExp => {
-  const segments = Str.split("/")(glob);
-  const lastIndex = A.length(segments) - 1;
-  const source = pipe(
-    segments,
-    A.map((segment, index) =>
-      segment === recursiveGlobSegment
-        ? "(?:[^/]+/)*"
-        : `${globSegmentSource(segment)}${index === lastIndex ? "" : "/"}`
-    ),
-    A.join("")
-  );
-
-  return new RegExp(`^${source}$`, "u");
-};
-
-// Build a matcher for one resolved `include`/`exclude` entry. A wildcard-free
-// entry naming a directory covers that whole subtree (verified above); any other
-// wildcard-free entry names a single file.
-const makeGlobMatcher = Effect.fn("PackageTestTypecheck.makeGlobMatcher")(function* (
-  entry: string
-): Effect.fn.Return<(filePath: string) => boolean, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-
-  if (wildcardPattern.test(entry)) {
-    const pattern = globToRegExp(entry);
-    return (filePath: string) => pattern.test(filePath);
-  }
-
-  const directory = yield* isDirectoryPath(fs, entry);
-
-  return directory
-    ? (filePath: string) => Str.startsWith(`${entry}/`)(filePath)
-    : (filePath: string) => filePath === entry;
-});
-
-const makeGlobMatchers = Effect.fn("PackageTestTypecheck.makeGlobMatchers")(function* (
-  entries: ReadonlyArray<string>
-): Effect.fn.Return<ReadonlyArray<(filePath: string) => boolean>, never, FileSystem.FileSystem> {
-  return yield* Effect.forEach(entries, makeGlobMatcher, { concurrency: 1 });
-});
-
-// Flatten a package script with every script it transitively invokes through
-// `bun run`. `check` almost always delegates (check -> beep:check ->
-// beep:check:tests), so coverage can only be judged on the flattened text;
-// self-referential script graphs terminate on the visited set.
-const flattenScriptCommand = (input: {
-  readonly scripts: Readonly<Record<string, string>>;
-  readonly entry: string;
-}): string => {
-  const visited = MutableHashSet.empty<string>();
-
-  const collect = (name: string): ReadonlyArray<string> => {
-    if (MutableHashSet.has(visited, name)) {
-      return A.empty<string>();
-    }
-    MutableHashSet.add(visited, name);
-
-    return pipe(
-      R.get(input.scripts, name),
-      O.match({
-        onNone: A.empty<string>,
-        onSome: (command) =>
-          A.appendAll(A.of(command), pipe(capturedGroups(scriptReferencePattern, command), A.flatMap(collect))),
-      })
-    );
-  };
-
-  return A.join(collect(input.entry), " && ");
-};
-
-// TypeScript project configs a flattened command would compile. Only segments
-// that actually invoke tsc/tsgo count, so unrelated tooling flags never
-// register; an invocation with no explicit -p/-b compiles tsconfig.json, as tsc
-// does.
-const referencedProjectConfigs = (command: string): ReadonlyArray<string> =>
-  pipe(
-    Str.split(commandSeparatorPattern)(command),
-    A.filter((segment) => typescriptProgramPattern.test(segment)),
-    A.flatMap((segment) =>
-      pipe(capturedGroups(projectFlagPattern, segment), (configs) =>
-        A.isReadonlyArrayNonEmpty(configs) ? configs : A.of(defaultProjectFileName)
-      )
-    ),
-    A.dedupe
-  );
-
-const readTsconfigDocument = Effect.fn("PackageTestTypecheck.readTsconfigDocument")(function* (
-  configPath: string
-): Effect.fn.Return<O.Option<TsconfigDocument>, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-
-  return yield* pipe(
-    readOptionalText(fs, configPath),
-    Effect.flatMap(
-      O.match({
-        onNone: () => Effect.succeed(O.none<TsconfigDocument>()),
-        onSome: (text) => decodeTsconfigDocument(text).pipe(Effect.option),
-      })
-    )
-  );
-});
-
-// Resolve a config's `include` or `exclude` globs to absolute paths, walking
-// the `extends` chain until one is declared (tsconfig inherits both fields).
-const inheritedGlobs = Effect.fn("PackageTestTypecheck.inheritedGlobs")(function* (
-  configPath: string,
-  field: "include" | "exclude",
-  visited: MutableHashSet.MutableHashSet<string>
-): Effect.fn.Return<O.Option<ReadonlyArray<string>>, never, FileSystem.FileSystem | Path.Path> {
-  const path = yield* Path.Path;
-  const resolved = normalizePath(path.resolve(configPath));
-
-  if (MutableHashSet.has(visited, resolved)) {
-    return O.none();
-  }
-  MutableHashSet.add(visited, resolved);
-
-  const document = yield* readTsconfigDocument(resolved);
-
-  if (O.isNone(document)) {
-    return O.none();
-  }
-
-  const own = document.value[field];
-
-  if (own !== undefined) {
-    return O.some(
-      pipe(
-        own,
-        A.map((glob) => normalizePath(path.resolve(path.dirname(resolved), glob)))
-      )
-    );
-  }
-
-  const parents = pipe(
-    O.fromUndefinedOr(document.value.extends),
-    O.map((value) => (Str.isString(value) ? A.of(value) : value)),
-    O.getOrElse(A.empty<string>)
-  );
-
-  for (const parent of parents) {
-    // Package-manager-resolved bases (`@tsconfig/...`) never carry globs that
-    // select a package's test sources, so only relative bases are walked.
-    if (!Str.startsWith(".")(parent)) {
-      continue;
-    }
-
-    const inherited = yield* inheritedGlobs(path.resolve(path.dirname(resolved), parent), field, visited);
-
-    if (O.isSome(inherited)) {
-      return inherited;
-    }
-  }
-
-  return O.none();
-});
-
-// Narrow a set of test sources to those one resolved project does NOT select.
-//
-// A file is selected when some `include` matches it and no `exclude` does,
-// mirroring tsc. An `include` absent across the whole extends chain means tsc's
-// default of everything under the config directory. `exclude` defaults
-// (node_modules, outDir, ...) are not consulted: none of them can name a file
-// under a package's `test/` tree, so they cannot change this answer.
-const rejectSourcesSelectedByConfig = Effect.fn("PackageTestTypecheck.rejectSourcesSelectedByConfig")(function* (
-  resolvedConfig: string,
-  sources: ReadonlyArray<string>
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-  const path = yield* Path.Path;
-  const includes = yield* inheritedGlobs(resolvedConfig, "include", MutableHashSet.empty<string>());
-  const excludes = yield* inheritedGlobs(resolvedConfig, "exclude", MutableHashSet.empty<string>());
-  const configDirectory = normalizePath(path.dirname(resolvedConfig));
-  const includeMatchers = yield* O.match(includes, {
-    onNone: () => Effect.succeed(A.of((filePath: string) => Str.startsWith(`${configDirectory}/`)(filePath))),
-    onSome: makeGlobMatchers,
-  });
-  const excludeMatchers = yield* O.match(excludes, {
-    onNone: () => Effect.succeed(A.empty<(filePath: string) => boolean>()),
-    onSome: makeGlobMatchers,
-  });
-
-  return A.filter(
-    sources,
-    (source) =>
-      !(A.some(includeMatchers, (matches) => matches(source)) && !A.some(excludeMatchers, (matches) => matches(source)))
-  );
-});
-
-// Project references that stay inside the package: `tsgo -b tsconfig.json`
-// builds those, so they can carry the test include. References to sibling
-// packages point at another package's sources and never can.
-const packageLocalReferenceConfigs = Effect.fn("PackageTestTypecheck.packageLocalReferenceConfigs")(function* (
-  document: TsconfigDocument,
-  resolvedConfig: string,
-  packageDir: string
-): Effect.fn.Return<ReadonlyArray<string>, never, Path.Path> {
-  const path = yield* Path.Path;
-
-  return pipe(
-    document.references ?? A.empty<TsconfigReference>(),
-    A.map((reference) => normalizePath(path.resolve(path.dirname(resolvedConfig), reference.path))),
-    A.filter((referenced) => Str.startsWith(`${packageDir}/`)(referenced)),
-    A.map((referenced) => (Str.endsWith(".json")(referenced) ? referenced : path.join(referenced, "tsconfig.json")))
-  );
-});
-
-// Test sources left with no typechecking project after running every given project (and every
-// in-package project they reference). Empty means the set of projects covers
-// the package's tests; the returned files are the evidence when it does not.
-//
-// Projects are applied in sequence and each one only sees what is still
-// uncovered, so two partial projects that between them select every test source
-// count as coverage — that is what running both actually achieves.
-const uncoveredTestSources = Effect.fn("PackageTestTypecheck.uncoveredTestSources")(function* (
-  packageDir: string,
-  configPaths: ReadonlyArray<string>,
-  testSources: ReadonlyArray<string>
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const visited = MutableHashSet.empty<string>();
-
-  const visit = Effect.fn("PackageTestTypecheck.uncoveredTestSources.visit")(function* (
-    candidate: string,
-    remaining: ReadonlyArray<string>
-  ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-    if (A.isReadonlyArrayEmpty(remaining)) {
-      return remaining;
-    }
-
-    const resolved = normalizePath(path.resolve(candidate));
-
-    if (MutableHashSet.has(visited, resolved) || !(yield* exists(fs, resolved))) {
-      return remaining;
-    }
-    MutableHashSet.add(visited, resolved);
-
-    const document = yield* readTsconfigDocument(resolved);
-
-    if (O.isNone(document)) {
-      return remaining;
-    }
-
-    let next = yield* rejectSourcesSelectedByConfig(resolved, remaining);
-
-    for (const reference of yield* packageLocalReferenceConfigs(document.value, resolved, packageDir)) {
-      next = yield* visit(reference, next);
-    }
-
-    return next;
-  });
-
-  let remaining = testSources;
-
-  for (const configPath of configPaths) {
-    remaining = yield* visit(configPath, remaining);
-
-    if (A.isReadonlyArrayEmpty(remaining)) {
-      return remaining;
-    }
-  }
-
-  return remaining;
-});
-
-const collectPackageDirectories = Effect.fn("PackageTestTypecheck.collectPackageDirectories")(function* (
+const collectPackageDirectories = (
   searchRoot: string
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-
-  const walk = Effect.fn("PackageTestTypecheck.collectPackageDirectories.walk")(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-    if (!(yield* isDirectoryPath(fs, currentPath))) {
-      return A.empty<string>();
-    }
-
-    const hasManifest = yield* exists(fs, path.join(currentPath, "package.json"));
-    const own = hasManifest ? A.of(normalizePath(path.resolve(currentPath))) : A.empty<string>();
-    const children = yield* walkableChildPaths(currentPath);
-    const nested = yield* Effect.forEach(children, walk, { concurrency: 1 });
-
-    return A.appendAll(own, A.flatten(nested));
-  });
-
-  return yield* walk(searchRoot);
-});
+): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
+  collectOwnedPaths(searchRoot, packageDirectoryOwnedIn);
 
 // Every TypeScript source under a package's test tree, absolute and sorted.
 // This is the exact file set coverage is judged against, so the walk's ignore
@@ -671,24 +296,18 @@ const readPackageManifest = Effect.fn("PackageTestTypecheck.readPackageManifest"
   );
 });
 
-// Whether the package's own `check` entry point typechecks its test directory.
-// This is the blind spot the lint exists to find: everything the flattened
-// check-script graph compiles is probed, nothing else.
 // Test sources the package's own `check` entry point never typechecks. Empty
 // means `turbo run check --filter=<pkg>` really does gate this package's tests.
-const uncoveredByCheckScript = Effect.fn("PackageTestTypecheck.uncoveredByCheckScript")(function* (
+// The predicate lives in TestTypecheckCoverage so `beep quality test-tsgo` can
+// skip exactly the packages this lint would not report.
+const uncoveredByCheckScript = (
   packageDir: string,
   scripts: Readonly<Record<string, string>>,
   testSources: ReadonlyArray<string>
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-  const path = yield* Path.Path;
-  const configPaths = pipe(
-    referencedProjectConfigs(flattenScriptCommand({ scripts, entry: "check" })),
-    A.map((config) => path.join(packageDir, config))
+): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
+  checkScriptTestTypecheckCoverage(packageDir, scripts, testSources).pipe(
+    Effect.map((coverage) => coverage.uncoveredSources)
   );
-
-  return yield* uncoveredTestSources(packageDir, configPaths, testSources);
-});
 
 // Whether the package owns any test-covering project at all, wired or not. This
 // separates the two blind-spot kinds: a package with no such project is missing

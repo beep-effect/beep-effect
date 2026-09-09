@@ -251,6 +251,9 @@ describe("skills command", () => {
         expect(codexConfig).not.toContain('name = "stale"');
         expect(agentsRealPath).toBe(claudeRealPath);
         expect(logs).toContain("skills:update: drift (4)");
+
+        const currentDrift = yield* runSkillsUpdate({ mode: "check", skill: O.some("grill-me") });
+        expect(currentDrift).toEqual([]);
       }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()), withTempRepoCommand)
     ));
 

@@ -35,6 +35,8 @@ import * as Str from "effect/String";
 import { SqlClient as SqlClientService } from "effect/unstable/sql/SqlClient";
 import type * as SqlClient from "effect/unstable/sql/SqlClient";
 
+const isUnionInlineSchema = S.is(S.Union([IrToLawExtractionError, LangExtractError]));
+
 const $I = $LawPracticeServerId.create("PracticeKg.claims");
 const docketPattern = /(?<!\d)(\d{5}[A-Z]{2}\d{2})(?!\d)/iu;
 const leadingDocketPattern = /^(\d{5})(?!\d)/u;
@@ -220,6 +222,7 @@ export class PracticeKgClaimsError extends S.TaggedError<PracticeKgClaimsError>(
     description: "Failure while extracting or persisting the practice KG claims batch.",
   })
 ) {}
+const isPracticeKgClaimsError = S.is(PracticeKgClaimsError);
 
 const docketFromFilename = (filename: string): O.Option<string> =>
   Str.match(docketPattern)(filename).pipe(
@@ -398,13 +401,12 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       yield* persistCandidate(sql, candidate, evidence);
       return filename;
     });
-    const isExtractionQualityError = S.is(S.Union([IrToLawExtractionError, LangExtractError]));
     const outcomes = yield* Effect.forEach(
       docketedFiles,
       (entry) =>
         extractOne(entry).pipe(
           Effect.map((filename) => ({ extracted: true as const, filename })),
-          Effect.catchIf(isExtractionQualityError, (error) =>
+          Effect.catchIf(isUnionInlineSchema, (error) =>
             Effect.logWarning("PracticeKgClaims.extractionFailed", {
               error: String(error),
               file: entry.filename,
@@ -489,7 +491,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     });
   },
   Effect.mapError((cause) =>
-    S.is(PracticeKgClaimsError)(cause)
+    isPracticeKgClaimsError(cause)
       ? cause
       : PracticeKgClaimsError.make({ cause, message: "Practice KG claims batch failed." })
   )

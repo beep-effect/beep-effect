@@ -9,6 +9,13 @@ import { Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const decodeConfigurationConfigurationSchemaResult = S.decodeResult(Configuration.ConfigurationSchema);
+const encodeUnknownDomainFileResult = S.encodeUnknownResult(Domain.File);
+const encodeUnknownDomainPositionResult = S.encodeUnknownResult(Domain.Position);
+const encodeUnknownProofManifestDocgenProofManifestFileResult = S.encodeUnknownResult(
+  ProofManifest.DocgenProofManifestFile
+);
+
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 12): void => {
   const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeUnknownResult(schema);
@@ -24,14 +31,12 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, 
 describe("schema parity", () => {
   it("preserves encoded domain wire shapes for branded/defaulted fields", () => {
     const position = Domain.Position.new(8, 4);
-    expect(Result.getOrThrow(S.encodeUnknownResult(Domain.Position)(position))).toEqual({
+    expect(Result.getOrThrow(encodeUnknownDomainPositionResult(position))).toEqual({
       column: 4,
       line: 8,
     });
 
-    expect(
-      Result.getOrThrow(S.encodeUnknownResult(Domain.File)(Domain.File.new("docs/index.md", "# Docs", {})))
-    ).toEqual({
+    expect(Result.getOrThrow(encodeUnknownDomainFileResult(Domain.File.new("docs/index.md", "# Docs", {})))).toEqual({
       content: "# Docs",
       isOverwritable: false,
       path: "docs/index.md",
@@ -45,7 +50,7 @@ describe("schema parity", () => {
       bytes: NonNegativeInt.make(128),
     });
 
-    expect(Result.getOrThrow(S.encodeUnknownResult(ProofManifest.DocgenProofManifestFile)(file))).toEqual({
+    expect(Result.getOrThrow(encodeUnknownProofManifestDocgenProofManifestFileResult(file))).toEqual({
       path: "src/index.ts",
       sha256: "0".repeat(64),
       bytes: 128,
@@ -64,7 +69,7 @@ describe("schema parity", () => {
   });
 
   it("applies docgen.json constant defaults at the schema boundary", () => {
-    expect(Result.getOrThrow(S.decodeResult(Configuration.ConfigurationSchema)({}))).toMatchObject({
+    expect(Result.getOrThrow(decodeConfigurationConfigurationSchemaResult({}))).toMatchObject({
       enableSearch: true,
       enforceDescriptions: false,
       enforceExamples: false,

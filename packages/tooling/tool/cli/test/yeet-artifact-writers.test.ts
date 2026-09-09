@@ -40,6 +40,8 @@ import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import type { YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
+const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+
 const itEffect = <E>(name: string, program: () => Effect.Effect<unknown, E>): void =>
   it(name, () => Effect.runPromise(program()));
 
@@ -164,10 +166,7 @@ describe("writeRunVerdict", () => {
         });
         const reportPath = yield* runArtifactPathForContext(context, "inner-lanes.ndjson");
         yield* fs.makeDirectory(path.dirname(reportPath), { recursive: true });
-        yield* fs.writeFileString(
-          reportPath,
-          `${yield* S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(report)}\n`
-        );
+        yield* fs.writeFileString(reportPath, `${yield* encodeQualityTaskLaneRunReportJson(report)}\n`);
         const extras = yield* Ref.make<YeetVerdictExtrasForTesting>(extrasWith(O.some(blockedMergeReady)));
 
         yield* writeRunVerdictForTesting(

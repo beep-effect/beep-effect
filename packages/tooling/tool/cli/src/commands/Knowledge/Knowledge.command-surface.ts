@@ -362,6 +362,7 @@ const SurfaceNeutralCommandTransform = LiteralKit([
     description: "Effect CLI transforms proven not to change command names, aliases, or descendants.",
   })
 );
+const isSurfaceNeutralCommandTransform = S.is(SurfaceNeutralCommandTransform);
 
 const commandTransformCall = (transform: Expression): CallExpression =>
   Node.isCallExpression(transform) ? transform : failStatic("a command transform is not a call expression");
@@ -417,7 +418,7 @@ const applyCommandTransform = (
   if (Str.equivalence(memberName, "withAlias")) {
     return applyAliasTransform(node, call, bindings);
   }
-  return S.is(SurfaceNeutralCommandTransform)(memberName)
+  return isSurfaceNeutralCommandTransform(memberName)
     ? node
     : failStatic("an unsupported Effect CLI command transform changes the command declaration");
 };

@@ -13,10 +13,11 @@ import { BatchStateHub, BatchStateHubLayer, getBatchStateFromStore, publishState
 import { BatchStateBridge, BatchStateBridgeLive } from "../../Service/BatchStateBridge.ts";
 import { EventBusService, EventBusServiceMemory, EventBusServiceSqlLive } from "../../Service/EventBus.ts";
 import { StorageService, StorageServiceTest } from "../../Service/Storage.ts";
+const decodeBatchState = S.decodeEffect(BatchState);
 
 const makePendingState = Effect.fn("BatchStateEventBusTest.makePendingState")(function* (batchId: BatchId) {
   const now = yield* DateTime.now;
-  return yield* S.decodeEffect(BatchState)({
+  return yield* decodeBatchState({
     _tag: "Pending",
     batchId,
     ontologyId: "premier_league",
@@ -34,6 +35,8 @@ const BatchStateChangedPayload = S.Struct({
   state: BatchState,
   timestamp: S.DateTimeUtcFromString,
 });
+const decodeBatchStateChangedPayload = S.decodeEffect(BatchStateChangedPayload);
+const encodeUnknownBatchStateChangedPayload = S.encodeUnknownEffect(BatchStateChangedPayload);
 
 const StateTestLayer = Layer.merge(BatchStateHubLayer, StorageServiceTest);
 
@@ -167,8 +170,8 @@ describe("BatchStateBridge", () => {
             onSome: Effect.succeed,
           })
         );
-        const encodedPayload = yield* S.encodeUnknownEffect(BatchStateChangedPayload)(first.payload);
-        const payload = yield* S.decodeEffect(BatchStateChangedPayload)(encodedPayload);
+        const encodedPayload = yield* encodeUnknownBatchStateChangedPayload(first.payload);
+        const payload = yield* decodeBatchStateChangedPayload(encodedPayload);
 
         assert.strictEqual(A.length(entries), 2);
         assert.strictEqual(first.event, "BatchStateChanged");

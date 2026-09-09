@@ -57,13 +57,13 @@ full record is retained in this packet's `research/` directory.
 
 ## Agent routing
 
-Implementation and research sub-agents for this packet use **GPT 5.6 Sol**
-explicitly (Codex CLI `codex exec --model gpt-5.6-sol` with
-`-c model_reasoning_effort=medium`, or `claudex` Workflow children with
-`model: "gpt-5.6-sol(medium)"`) — never Claude-model sub-agents by default.
-The Anthropic pool is the scarce quota; Sol carries the volume. Claude sessions
-orchestrate, review, and decide; Sol sub-agents implement. Escalate effort above
-medium only with recorded justification. (Operator instruction, 2026-08-08.)
+Implementation and research sub-agents for this packet use `gpt-6-astra`
+with `medium` reasoning, following [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
+Codex CLI calls pass `--model gpt-6-astra -c 'model_reasoning_effort="medium"'`;
+`claudex` Workflow children select `model: "gpt-6-astra(medium)"` explicitly.
+Claude sessions orchestrate, review, and decide; Astra sub-agents implement.
+This operator instruction (2026-09-09) supersedes the earlier Sol/medium rule
+and the 2026-09-08 Astra/`xhigh` default.
 
 ## Latest Evidence
 

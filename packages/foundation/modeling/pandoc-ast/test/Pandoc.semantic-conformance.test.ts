@@ -9,6 +9,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
+const encodePandocConformanceResult = S.encodeEffect(PandocConformanceResult);
+const isPandocColumnWidth = S.is(PandocColumnWidth);
+
 const attr = ["", [], []];
 const text = (value: string) => ({ c: value, t: "Str" });
 const paragraph = (value: string) => ({ c: [text(value)], t: "Para" });
@@ -133,17 +136,17 @@ describe("Pandoc current constructor semantic conformance", () => {
   });
 
   it("discriminates finite ColWidth from nullary ColWidthDefault", () => {
-    expect(S.is(PandocColumnWidth)({ c: 0.5, t: "ColWidth" })).toBe(true);
-    expect(S.is(PandocColumnWidth)({ t: "ColWidthDefault" })).toBe(true);
-    expect(S.is(PandocColumnWidth)({ c: "wide", t: "ColWidth" })).toBe(false);
-    expect(S.is(PandocColumnWidth)({ c: Number.POSITIVE_INFINITY, t: "ColWidth" })).toBe(false);
-    expect(S.is(PandocColumnWidth)({ c: 0.5, t: "ColWidthDefault" })).toBe(false);
+    expect(isPandocColumnWidth({ c: 0.5, t: "ColWidth" })).toBe(true);
+    expect(isPandocColumnWidth({ t: "ColWidthDefault" })).toBe(true);
+    expect(isPandocColumnWidth({ c: "wide", t: "ColWidth" })).toBe(false);
+    expect(isPandocColumnWidth({ c: Number.POSITIVE_INFINITY, t: "ColWidth" })).toBe(false);
+    expect(isPandocColumnWidth({ c: 0.5, t: "ColWidthDefault" })).toBe(false);
   });
 
   it("accepts every finite generated ColWidth payload", () => {
     fc.assert(
       fc.property(fc.double({ noDefaultInfinity: true, noNaN: true }), (width) =>
-        S.is(PandocColumnWidth)({ c: width, t: "ColWidth" })
+        isPandocColumnWidth({ c: width, t: "ColWidth" })
       ),
       fcRuns(50)
     );
@@ -267,7 +270,7 @@ describe("Pandoc conformance facade", () => {
     if (result._tag === "invalid") {
       expect(result.issues).toEqual([]);
       expect(O.isNone(result.wire)).toBe(true);
-      expect(Effect.runSync(S.encodeEffect(PandocConformanceResult)(result))).not.toHaveProperty("wire");
+      expect(Effect.runSync(encodePandocConformanceResult(result))).not.toHaveProperty("wire");
     }
   });
 
