@@ -582,6 +582,15 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       const settings = yield* decodeStructInlineSchemaJson(settingsText);
 
       assert.lengthOf(settings.permissions.allow, 58);
+      assert.include(settings.permissions.allow, "Bash(graft ask:*)");
+      assert.include(settings.permissions.allow, "Bash(graft grep:*)");
+      assert.include(settings.permissions.allow, "Bash(graft skeleton:*)");
+      assert.include(settings.permissions.allow, "Bash(graft callers:*)");
+      assert.include(settings.permissions.allow, "Bash(graft map:*)");
+      assert.include(settings.permissions.allow, "Bash(graft blast:*)");
+      assert.include(settings.permissions.allow, "Bash(graft check:*)");
+      assert.include(settings.permissions.allow, "Bash(graft build:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(graft:*)");
       assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
       assert.notInclude(settings.permissions.allow, "Bash(git worktree remove:*)");
