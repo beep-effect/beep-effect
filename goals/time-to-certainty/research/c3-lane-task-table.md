@@ -203,7 +203,7 @@ Consequences:
   `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`,
   `fallow:security:advisory`, `fallow:fix-preview:advisory`, `knip:check`,
   `repo-sanity:changeset-graph`, `repo-sanity:syncpack`, `repo-sanity:sherif`,
-  `repo-sanity:versions`, `repo-sanity:bun-audit` (31 new). Existing root scripts keep their text where the meaning is unchanged
+  `repo-sanity:versions`, `repo-sanity:bun-audit`, `fallow:boundaries:config-check` (31 new). Existing root scripts keep their text where the meaning is unchanged
   (`lint:oxlint`, `changeset:status`, `config-sync:check`, `topo-sort`).
 - **D10 Ordered invocations, one shared plan.** `beep lint policy` and the hosted Lint Policy
   lane run one plan definition in ordered invocations: (1) cheap precise gates (every root
@@ -334,12 +334,12 @@ false`, unfiltered, ledger `undeclared`.
 | `changeset:status` | root task | `bun run beep quality changeset-status` | `.changeset/**`, `**/package.json` (explanatory) | D2 (`git diff since`) | C(repo-sanity), F, W, G | Repo Sanity 5.14% |
 | `config-sync:check` | root task | `bun run beep tsconfig-sync --check` | `**/package.json`, `**/tsconfig*.json`, `**/docgen.json`, `syncpack.config.ts`, `tsconfig.base.json` | | C(repo-sanity), F, W(`repo-sanity:tsconfig-sync`), G | |
 | `ci:repo-sanity:changeset-graph` | ★ `repo-sanity:changeset-graph` | `bun run beep quality changeset-graph` | `.changeset/**`, `**/package.json`, `bun.lock` | | C(repo-sanity), W(`repo-sanity:changeset-graph`), G | |
-| `ci:repo-sanity` syncpack | ★ `repo-sanity:syncpack` | `bunx syncpack lint` (today's argv) | `syncpack.config.ts`, `**/package.json`, `bun.lock` | | C, W(`repo-sanity:syncpack`) | |
-| `ci:repo-sanity` sherif | ★ `repo-sanity:sherif` | `bunx sherif` (today's argv) | `**/package.json`, `bun.lock` | | C, W(`repo-sanity:sherif`) | |
-| `ci:repo-sanity` versions | ★ `repo-sanity:versions` | `bun run beep quality versions` (today's step) | `.bun-version`, `.nvmrc`, `**/package.json`, `mise.toml` | | C, W(`repo-sanity:versions`) | |
-| `ci:repo-sanity` bun-audit | ★ `repo-sanity:bun-audit` | `bun run beep quality bun-audit` | `bun.lock`, `osv-scanner.toml` (explanatory) | D2 (network) | C, W(`repo-sanity:bun-audit`) | |
-| `ci:repo-sanity` fallow boundaries | ★ `fallow:boundaries:check` | `bun run beep fallow boundaries --check` | `standards/fallow.boundaries.generated.jsonc`, `.fallowrc.jsonc`, `**/package.json`, `apps/**`, `packages/**`, `infra/**` (explanatory) | D2 (fallow binary walk) | C, W(`repo-sanity:fallow-boundaries-config`), G | |
-| `version-sync` | **cli**; lefthook keeps `--skip-network` (the only repo-sanity member that stays a step: it is a network writer, not a check) | | | network | L | |
+| `ci:repo-sanity` syncpack | ★ `repo-sanity:syncpack` | `bunx syncpack lint` (`GithubChecks.ts:409`) | `syncpack.config.ts`, `**/package.json`, `bun.lock` | | C, W(`repo-sanity:syncpack`) | |
+| `ci:repo-sanity` sherif | ★ `repo-sanity:sherif` | `bunx sherif@1.10.0 -r non-existent-packages` (`GithubChecks.ts:415`) | `**/package.json`, `bun.lock` | | C, W(`repo-sanity:sherif`) | |
+| `ci:repo-sanity` versions | ★ `repo-sanity:versions` | `bun run version-sync --skip-network` (`GithubChecks.ts:403`; the existing root script plus its offline flag) | `.bun-version`, `.nvmrc`, `**/package.json`, `mise.toml` | | C, W(`repo-sanity:versions`) | |
+| `ci:repo-sanity` bun-audit | ★ `repo-sanity:bun-audit` | `bun run beep quality bun-audit` (`GithubChecks.ts:421`, `Quality.command.ts:2942`) | `bun.lock`, `osv-scanner.toml` (explanatory) | D2 (network) | C, W(`repo-sanity:bun-audit`) | |
+| `ci:repo-sanity` fallow boundaries | ★ `fallow:boundaries:config-check` | `bun run beep fallow boundaries config-check --check` (`GithubChecks.ts:397`) | `standards/fallow.boundaries.generated.jsonc`, `.fallowrc.jsonc`, `**/package.json`, `apps/**`, `packages/**`, `infra/**` (explanatory) | D2 (fallow binary walk) | C, W(`repo-sanity:fallow-boundaries-config`), G | |
+| `version-sync` (network mode) | **cli**; the root script keeps its network write mode for operators, lefthook keeps `version-sync --skip-network` direct; the hosted check is the `//#repo-sanity:versions` task above | | | network | L | |
 | `topo-sort` | root task | `bun run beep topo-sort` | `**/package.json` | | F | |
 | `docs:aggregate` | generator script (unchanged) | | | | — | |
 
