@@ -6,12 +6,25 @@
       "path": "tsconfig.packages.json"
     }
   ],
-  // Nothing runs this file as a program: it is the alias carrier the
-  // tsconfig.stories.json projects extend, and tsconfig-sync regenerates its
-  // paths. Config-file sources (vitest.*.ts, root *.ts) are typechecked by
-  // tsconfig.configs.json (repo-sanity:config-typecheck); test/ trees belong
-  // to each package's own check projects.
-  "include": ["./*.json"],
+  // No lane runs this file as a program: tsconfig.configs.json
+  // (repo-sanity:config-typecheck) typechecks the config sources and each
+  // package's own check project owns its test/ tree. The include list stays
+  // because typescript-eslint's project service uses this root project as the
+  // default for any file no package project claims (the deprecated-apis and
+  // jsdoc lint profiles parse test/ and vitest.*.ts through it), and because
+  // tsconfig-sync regenerates the alias paths the stories projects extend.
+  "include": [
+    "**/vitest.*.ts",
+    "./apps/**/test/**/*.ts",
+    "./apps/**/test/**/*.tsx",
+    "./apps/**/test/**/*.json",
+    "./packages/**/test/**/*.ts",
+    "./packages/**/test/**/*.tsx",
+    "./packages/**/test/**/*.json",
+    "./syncpack.config.ts",
+    "./*.ts",
+    "./*.json"
+  ],
   "exclude": [
     "**/node_modules/**",
     "**/dist/**",
