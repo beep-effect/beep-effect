@@ -141,11 +141,11 @@ class RedactionTests(unittest.TestCase):
         with patch.object(fleet, "FLEET_ROOT", Path("/workspace")):
             for root, token in (("/workspace", "<fleet>"), ("/home", "<home>"), ("/tmp", "<tmp>"),
                                 ("/proc", "<proc>"), ("/dev/shm", "<shm>")):
-                for prefix in ("packages", "word_", "word.", "~", "-", "A", "0", "/"):
+                for prefix in ("packages", "packages/", "word_", "word.", "~", "-", "A", "0", "/"):
                     relative = prefix + root + "/use-cases/x.test.ts"
                     self.assertEqual(fleet.redact_string(relative), relative)
                     fleet.scan_output_bytes([(relative, relative.encode())])
-                for prefix in ("", " ", '"', "=", "(", ":"):
+                for prefix in ("", " ", '"', "=", "(", ":", "//", ":/", "file://", "file:/"):
                     for suffix in ("", "/beep-effect/x"):
                         absolute = prefix + root + suffix
                         self.assertEqual(fleet.redact_string(absolute), prefix + token + suffix)
@@ -156,6 +156,24 @@ class RedactionTests(unittest.TestCase):
             for relative in ("packages/run/user/123/state", "packages/proc/123/status", "packages/~/.beep/runtime/state"):
                 self.assertEqual(fleet.redact_string(relative), relative)
                 fleet.scan_output_bytes([("fixture", relative.encode())])
+
+    def test_file_uri_host_roots_preserve_scheme_and_reject_raw_residue(self):
+        # Model Alice's home explicitly so the fixture is independent of the test host.
+        with patch.object(Path, "home", return_value=Path("/home/alice")), \
+                patch.object(fleet, "FLEET_ROOT", Path("/workspace")):
+            for raw, expected in (("file:///home/alice/x", "file://<home>/x"),
+                                  ("file:///proc/123/status", "file://<proc>/<process>/status"),
+                                  ("file:///workspace/project/x", "file://<fleet>/project/x"),
+                                  ("file:///tmp/x", "file://<tmp>/x"),
+                                  ("file:///dev/shm/x", "file://<shm>/x"),
+                                  ("file:///run/user/123/state", "file://<runtime>/state")):
+                with self.subTest(raw=raw):
+                    self.assertEqual(fleet.redact_string(raw), expected)
+                    self.assertEqual(fleet.redact_string(expected), expected)
+                    for label, data in (("fixture", raw.encode()), (raw, b"")):
+                        with self.assertRaisesRegex(SystemExit, "host path"):
+                            fleet.scan_output_bytes([(label, data)])
+                    fleet.scan_output_bytes([(expected, expected.encode())])
 
     def test_embedded_json_remains_parseable_after_redaction(self):
         for module in (fleet, identity, legacy, stage_b):

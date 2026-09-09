@@ -60,7 +60,8 @@ PID_IN_TEXT = re.compile(
 TIMESTAMP_KEY = re.compile(r"(?:^ts$|AtMillis$|At$|TimestampMillis$|Timestamp$)")
 PROPERTY_KEY = re.compile(r"[A-Za-z0-9_]+")
 PROPERTY_RECORD_COMMENT = re.compile(r"# record (0|[1-9][0-9]*)")
-PATH_LEFT_BOUNDARY = r"(?<![A-Za-z0-9_.~/-])"
+# A preceding slash is a boundary only when it follows slash or colon (URI authority).
+PATH_LEFT_BOUNDARY = r"(?:(?<![A-Za-z0-9_.~/-])|(?<=[/:]/))"
 PATH_RIGHT_BOUNDARY = r"(?=/|$|[\s\"'=,:;)\]])"
 # Execution step identifiers, not process identities:
 # packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:592 (failedStepId)
@@ -612,7 +613,7 @@ def finish_manifest(metadata: dict[str, Any], emitted: list[Payload]) -> bytes:
                     "null, empty strings and CR/LF values omitted; duplicate pairs and scalar array leaves retained",
                     "events count raw JSON records once; projections do not double-count events"],
                 "redaction_rules": [
-                    "All families: longest host-root match at start or after a character outside ASCII alphanumeric, underscore, dot, tilde, slash and hyphen; relative path continuations survive",
+                    "All families: longest host-root match at start, after a character outside ASCII alphanumeric, underscore, dot, tilde, slash and hyphen, or after a slash preceded by slash or colon; relative path continuations survive",
                     "fleet root is <fleet>; home is <home>; temp roots are <session-tmp> and <tmp>; runtime is <runtime>; proc is <proc>; shared memory is <shm>",
                     "Per-user systemd unit identifiers become <uid>; proc process-directory identifiers become <process>",
                     "Process identity members dropped recursively; free-text pid numbers replaced",

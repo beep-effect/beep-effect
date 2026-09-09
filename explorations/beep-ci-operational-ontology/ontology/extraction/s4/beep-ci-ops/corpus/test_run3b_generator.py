@@ -201,11 +201,11 @@ class RedactionTests(unittest.TestCase):
         with patch.object(etl, "FLEET_ROOT", Path("/workspace")):
             for root, token in (("/workspace", "<fleet>"), ("/home", "<home>"), ("/tmp", "<tmp>"),
                                 ("/proc", "<proc>"), ("/dev/shm", "<shm>")):
-                for prefix in ("packages", "word_", "word.", "~", "-", "A", "0", "/"):
+                for prefix in ("packages", "packages/", "word_", "word.", "~", "-", "A", "0", "/"):
                     relative = prefix + root + "/use-cases/x.test.ts"
                     self.assertEqual(etl.redact_string(relative), relative)
                     etl.scan_output_bytes([(relative, relative.encode())])
-                for prefix in ("", " ", '"', "=", "(", ":"):
+                for prefix in ("", " ", '"', "=", "(", ":", "//", ":/", "file://", "file:/"):
                     for suffix in ("", "/beep-effect/x"):
                         absolute = prefix + root + suffix
                         self.assertEqual(etl.redact_string(absolute), prefix + token + suffix)
@@ -218,6 +218,27 @@ class RedactionTests(unittest.TestCase):
                 etl.scan_output_bytes([("fixture", relative.encode())])
             aliases = {"/workspace/fixture": "<synthetic-checkout:contender-a>"}
             self.assertEqual(etl.redact_string("packages/workspace/fixture/x", aliases), "packages/workspace/fixture/x")
+
+    def test_file_uri_host_roots_preserve_scheme_and_reject_raw_residue(self):
+        # Model Alice's home explicitly so the fixture is independent of the test host.
+        with patch.object(Path, "home", return_value=Path("/home/alice")), \
+                patch.object(etl, "FLEET_ROOT", Path("/workspace")):
+            for raw, expected in (("file:///home/alice/x", "file://<home>/x"),
+                                  ("file:///proc/123/status", "file://<proc>/<process>/status"),
+                                  ("file:///workspace/project/x", "file://<fleet>/project/x"),
+                                  ("file:///tmp/x", "file://<tmp>/x"),
+                                  ("file:///dev/shm/x", "file://<shm>/x"),
+                                  ("file:///run/user/123/state", "file://<runtime>/state")):
+                with self.subTest(raw=raw):
+                    self.assertEqual(etl.redact_string(raw), expected)
+                    self.assertEqual(etl.redact_string(expected), expected)
+                    for label, data in (("fixture", raw.encode()), (raw, b"")):
+                        with self.assertRaisesRegex(SystemExit, "host path"):
+                            etl.scan_output_bytes([(label, data)])
+                    etl.scan_output_bytes([(expected, expected.encode())])
+            aliases = {"/workspace/fixture": "<synthetic-checkout:contender-a>"}
+            self.assertEqual(etl.redact_string("file:///workspace/fixture/x", aliases),
+                             "file://<synthetic-checkout:contender-a>/x")
 
     def test_nested_claim_custody_and_per_capture_salt(self):
         payload = {"schemaVersion": "yeet-admission-reap-claim/v1", "_tag": "lease", "nonce": "owner",
