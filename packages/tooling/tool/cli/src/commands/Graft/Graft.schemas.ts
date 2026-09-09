@@ -44,7 +44,8 @@ export type GraftCacheArtifact = typeof GraftCacheArtifact.Type;
  *
  * **Details**
  *
- * Refusals retain a reason and never authorize a write.
+ * Refusals retain a reason and never authorize a write. A removal names a
+ * root-level concept node the target still has and the source no longer does.
  *
  * **Example** (Recognize a refusal)
  *
@@ -56,8 +57,10 @@ export type GraftCacheArtifact = typeof GraftCacheArtifact.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const GraftCacheSyncAction = LiteralKit(["copy", "skip-missing-source", "refuse"]).pipe(
-  $I.annoteSchema("GraftCacheSyncAction", { description: "Copy, missing-source skip, or safety refusal for a file." })
+export const GraftCacheSyncAction = LiteralKit(["copy", "skip-missing-source", "refuse", "remove"]).pipe(
+  $I.annoteSchema("GraftCacheSyncAction", {
+    description: "Copy, missing-source skip, safety refusal, or removal of a target-only concept node.",
+  })
 );
 
 /**
@@ -148,11 +151,13 @@ export class GraftCacheSyncPlan extends S.Class<GraftCacheSyncPlan>($I`GraftCach
 ) {}
 
 /**
- * Counts completed file copies, skips, refusals, and bytes written.
+ * Counts completed file copies, removals, skips, refusals, and bytes written.
  *
  * **Details**
  *
- * Counts are per file and target; each concept node contributes one entry.
+ * Counts are per file and target; each concept node contributes one entry. A
+ * plan with any refusal is applied to nothing, so a report never mixes writes
+ * with refused destinations.
  *
  * **Example** (Construct an empty receipt)
  *
@@ -162,7 +167,7 @@ export class GraftCacheSyncPlan extends S.Class<GraftCacheSyncPlan>($I`GraftCach
  * const zero = NonNegativeInt.make(0)
  * const report = GraftCacheSyncReport.make({
  *   plan: GraftCacheSyncPlan.make({ source: "/clones/a", entries: [] }),
- *   copied: zero, skipped: zero, refused: zero, bytes: zero
+ *   copied: zero, removed: zero, skipped: zero, refused: zero, bytes: zero
  * })
  * report.bytes // => 0
  * ```
@@ -174,9 +179,12 @@ export class GraftCacheSyncReport extends S.Class<GraftCacheSyncReport>($I`Graft
   {
     plan: GraftCacheSyncPlan,
     copied: NonNegativeInt,
+    removed: NonNegativeInt,
     skipped: NonNegativeInt,
     refused: NonNegativeInt,
     bytes: NonNegativeInt,
   },
-  $I.annote("GraftCacheSyncReport", { description: "Applied sync plan with file counts and exact bytes copied." })
+  $I.annote("GraftCacheSyncReport", {
+    description: "Applied sync plan with copy, removal, skip, and refusal counts and exact bytes copied.",
+  })
 ) {}

@@ -155,7 +155,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       const sync = yield* GraftCacheSync;
       const plan = yield* sync.plan(source, [target]);
       expect(A.every(plan.entries, (entry) => entry.action === "refuse")).toBe(true);
-      expect((yield* sync.apply(plan)).refused).toBe(5);
+      expect((yield* Effect.flip(sync.apply(plan)))._tag).toBe("GraftCacheTargetError");
       expect(yield* fs.exists(path.join(target, "graft"))).toBe(false);
     })
   );
@@ -172,7 +172,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       const sync = yield* GraftCacheSync;
       const plan = yield* sync.plan(source, [source, alias, nested, directory]);
       expect(A.every(plan.entries, (entry) => entry.action === "refuse")).toBe(true);
-      expect((yield* sync.apply(plan)).copied).toBe(0);
+      expect((yield* Effect.flip(sync.apply(plan)))._tag).toBe("GraftCacheTargetError");
     })
   );
 
@@ -286,7 +286,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       const sync = yield* GraftCacheSync;
       const plan = yield* sync.plan(source, [target]);
       expect(A.every(plan.entries, (entry) => entry.action === "refuse")).toBe(true);
-      expect((yield* sync.apply(plan)).copied).toBe(0);
+      expect((yield* Effect.flip(sync.apply(plan)))._tag).toBe("GraftCacheTargetError");
     })
   );
 
@@ -305,7 +305,7 @@ layer(testLayer)("Graft cache sync", (it) => {
           (entry) => entry.artifact
         )
       ).toEqual(["summaries", "concepts"]);
-      expect((yield* sync.apply(plan)).refused).toBe(2);
+      expect((yield* Effect.flip(sync.apply(plan)))._tag).toBe("GraftCacheTargetError");
       expect(yield* fs.readFileString(path.join(target, "README.md"))).toBe("tracked content\n");
       expect(yield* fs.exists(path.join(target, "missing"))).toBe(false);
     })
@@ -371,7 +371,39 @@ layer(testLayer)("Graft cache sync", (it) => {
       yield* fs.remove(path.join(target, ".git"));
       const refused = yield* runCommand(["cache", "sync", "--from", source, "--to", target, "--json"]);
       expect(Result.isFailure(refused.result)).toBe(true);
-      expect((yield* S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncReport))(refused.output[0])).refused).toBe(5);
+      const refusedPlan = yield* S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncPlan))(refused.output[0]);
+      expect(A.length(A.filter(refusedPlan.entries, (entry) => entry.action === "refuse"))).toBe(5);
+      expect(yield* fs.exists(path.join(target, "graft"))).toBe(false);
+    })
+  );
+
+  it.effect(
+    "removes root concept nodes the source no longer has and leaves cards alone",
+    Effect.fn(function* () {
+      const { fs, source, target, path } = yield* fixture();
+      yield* fs.makeDirectory(path.join(target, "graft", "src"), { recursive: true });
+      yield* fs.writeFileString(path.join(target, "graft", "stale.md"), "# Stale\n");
+      yield* fs.writeFileString(path.join(target, "graft", "src", "file.ts.md"), "target card\n");
+      const sync = yield* GraftCacheSync;
+      const plan = yield* sync.plan(source, [target]);
+      const removals = A.filter(plan.entries, (entry) => entry.action === "remove");
+      expect(A.map(removals, (entry) => entry.targetPath)).toEqual([path.join(target, "graft", "stale.md")]);
+      const report = yield* sync.apply(plan);
+      expect(report.removed).toBe(1);
+      expect(yield* fs.exists(path.join(target, "graft", "stale.md"))).toBe(false);
+      expect(yield* fs.readFileString(path.join(target, "graft", "src", "file.ts.md"))).toBe("target card\n");
+      expect(yield* fs.readFileString(path.join(target, "graft", "effects.md"))).toBe("# Effects\n");
+    })
+  );
+
+  it.effect(
+    "skips dangling sibling links instead of aborting discovery",
+    Effect.fn(function* () {
+      const { fs, source, target, path, directory } = yield* fixture();
+      yield* fs.symlink(path.join(directory, "nowhere"), path.join(directory, "beep-effect9"));
+      yield* fs.writeFileString(path.join(directory, "beep-effect-notes.md"), "not a clone\n");
+      const sync = yield* GraftCacheSync;
+      expect(yield* sync.discoverSiblings(source)).toEqual([target]);
     })
   );
 });

@@ -172,14 +172,18 @@ Sibling discovery uses the source basename with trailing digits removed, so
 The source is excluded. Exactly one of `--to` or `--siblings` is required.
 
 Sync atomically replaces the summaries cache, root-level concept Markdown
-(including `INDEX.md`), and `.graph/wiring.json` when present. Missing files are
+(including `INDEX.md`), and `.graph/wiring.json` when present, and removes
+root-level concept nodes the target still has but the source no longer does,
+so the target's concept set matches the source. Missing source files are
 reported as skipped; a missing summaries cache fails the command. Per-file
 cards in nested directories are left for each target's own structural rebuild.
 All writes stay under the target's `graft/`; overlapping clones, redirected
-artifact paths, and targets without `.git` are refused. Refusals produce a
-non-zero exit after the plan or report is printed. `--json` emits a plan for
-dry runs and a report with copied, skipped, refused, and byte counts for writes.
-The command runs neither Git nor Graft.
+artifact paths, and targets without `.git` are refused, and a plan with any
+refusal is applied to nothing: the plan is printed and the command exits
+non-zero with no files written. `--json` emits a plan for dry runs and refused
+runs, and a report with copied, removed, skipped, refused, and byte counts for
+writes. The command runs neither Git nor Graft. A dangling or unreadable
+sibling entry is skipped by `--siblings` rather than aborting discovery.
 
 ## Build the meaning tier (operator only)
 

@@ -60,7 +60,9 @@ export interface GraftCacheSyncShape {
  *
  * **Details**
  *
- * Planning is read-only. Application atomically replaces only the selected artifact files.
+ * Planning is read-only. Application atomically replaces only the selected
+ * artifact files, removes root concept nodes the source no longer has, and
+ * writes nothing at all when the plan contains a refused destination.
  *
  * **Example** (Prepare a read-only plan)
  *
@@ -152,6 +154,30 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
     return root;
   });
 
+  const targetOnlyConcepts = Effect.fn("GraftCacheSync.targetOnlyConcepts")(function* (
+    source: string,
+    target: GraftCacheSyncTarget,
+    sourceNames: ReadonlyArray<string>
+  ) {
+    const listed = yield* Effect.result(fs.readDirectory(target.graftDir));
+    const names = Result.isSuccess(listed) ? listed.success : [];
+    return A.map(
+      A.sort(
+        A.filter(names, (name) => Str.endsWith(".md")(name) && !A.contains(sourceNames, name)),
+        Order.String
+      ),
+      (name) =>
+        GraftCacheSyncPlanEntry.make({
+          target,
+          artifact: "concepts",
+          action: "remove",
+          reason: "Concept node is no longer in the source.",
+          sourcePath: path.join(source, "graft", name),
+          targetPath: path.join(target.graftDir, name),
+        })
+    );
+  });
+
   const plan: GraftCacheSyncShape["plan"] = Effect.fn("GraftCacheSync.plan")(function* (input, targets) {
     const source = yield* sourceRoot(input);
     const graft = path.join(source, "graft");
@@ -195,7 +221,7 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
         const resolved = yield* Effect.result(targetRoot(source, inputTarget));
         const root = Result.isSuccess(resolved) ? resolved.success : path.resolve(inputTarget);
         const target = GraftCacheSyncTarget.make({ root, graftDir: path.join(root, "graft") });
-        return yield* Effect.forEach(
+        const copies = yield* Effect.forEach(
           A.flatten(artifacts),
           Effect.fn("GraftCacheSync.targetArtifact")(function* (artifact) {
             const relative = path.relative(source, artifact.sourcePath);
@@ -210,6 +236,14 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
             });
           })
         );
+        // A concept node the target still has and the source no longer does would
+        // leave the target with a mixed meaning tier; plan its removal so the
+        // target's root nodes match the source exactly. Cards under subdirectories
+        // are never touched.
+        const removals = Result.isFailure(resolved)
+          ? []
+          : yield* targetOnlyConcepts(source, target, A.append(conceptNames, "INDEX.md"));
+        return A.appendAll(copies, removals);
       })
     );
     return GraftCacheSyncPlan.make({
@@ -229,14 +263,15 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
       );
       return yield* Effect.filter(
         candidates,
+        // A dangling link or an entry that vanished after the listing is not a
+        // clone; it is skipped rather than aborting discovery for the real ones.
         Effect.fn("GraftCacheSync.siblingCandidate")(function* (candidate) {
-          const info = yield* fs.stat(candidate).pipe(Effect.mapError(ioError(candidate)));
-          if (!Eq.equals(info.type, "Directory")) return false;
-          const canonical = yield* fs.realPath(candidate).pipe(Effect.mapError(ioError(candidate)));
-          return (
-            !Eq.equals(canonical, source) &&
-            (yield* fs.exists(path.join(candidate, ".git")).pipe(Effect.mapError(ioError(candidate))))
+          const probe = yield* Effect.result(
+            Effect.all([fs.stat(candidate), fs.realPath(candidate), fs.exists(path.join(candidate, ".git"))])
           );
+          if (Result.isFailure(probe)) return false;
+          const [info, canonical, hasGit] = probe.success;
+          return Eq.equals(info.type, "Directory") && !Eq.equals(canonical, source) && hasGit;
         })
       );
     }
@@ -266,6 +301,16 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
     return bytes.byteLength;
   });
 
+  // Remove a target-only root concept node; a node that is already gone counts as
+  // nothing to do rather than a failure.
+  const remove = Effect.fn("GraftCacheSync.remove")(function* (entry: GraftCacheSyncPlanEntry) {
+    const relative = path.relative(entry.target.root, entry.targetPath);
+    const present = yield* safePath(entry.target.root, relative, false);
+    if (!present) return 0;
+    yield* fs.remove(entry.targetPath).pipe(Effect.mapError(ioError(entry.targetPath)));
+    return 1;
+  });
+
   const apply: GraftCacheSyncShape["apply"] = Effect.fn("GraftCacheSync.apply")(function* (requested) {
     const fresh = yield* plan(requested.source, A.dedupe(A.map(requested.entries, (entry) => entry.target.root)));
     if (!equivalentPlan(requested, fresh)) {
@@ -274,23 +319,34 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
         message: "Sync plan changed or contains unapproved paths; create a fresh plan before applying.",
       });
     }
+    // Fail closed: a plan with any refused destination writes nothing, so a
+    // mixed run can never mutate the good clones and then exit non-zero.
+    const refused = A.filter(fresh.entries, (entry) => GraftCacheSyncAction.is.refuse(entry.action));
+    if (A.isReadonlyArrayNonEmpty(refused)) {
+      return yield* GraftCacheTargetError.make({
+        path: refused[0].targetPath,
+        message: `Refusing to apply: ${A.length(refused)} destination(s) failed the safety checks; nothing was written.`,
+      });
+    }
     let bytes = 0;
     let copied = 0;
+    let removed = 0;
     for (const entry of fresh.entries) {
       if (GraftCacheSyncAction.is.copy(entry.action)) {
         bytes += yield* copy(fresh.source, entry);
         copied += 1;
+      } else if (GraftCacheSyncAction.is.remove(entry.action)) {
+        removed += yield* remove(entry);
       }
     }
     return GraftCacheSyncReport.make({
       plan: fresh,
       copied: NonNegativeInt.make(copied),
+      removed: NonNegativeInt.make(removed),
       skipped: NonNegativeInt.make(
         A.length(A.filter(fresh.entries, (entry) => GraftCacheSyncAction.is["skip-missing-source"](entry.action)))
       ),
-      refused: NonNegativeInt.make(
-        A.length(A.filter(fresh.entries, (entry) => GraftCacheSyncAction.is.refuse(entry.action)))
-      ),
+      refused: NonNegativeInt.make(0),
       bytes: NonNegativeInt.make(bytes),
     });
   });

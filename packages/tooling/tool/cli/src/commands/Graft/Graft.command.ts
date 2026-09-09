@@ -48,7 +48,7 @@ const renderPlan = (plan: GraftCacheSyncPlan): string =>
   );
 
 const renderReport = (report: GraftCacheSyncReport): string =>
-  `${renderPlan(report.plan)}\nCopied: ${report.copied}; skipped: ${report.skipped}; refused: ${report.refused}; bytes: ${report.bytes}`;
+  `${renderPlan(report.plan)}\nCopied: ${report.copied}; removed: ${report.removed}; skipped: ${report.skipped}; refused: ${report.refused}; bytes: ${report.bytes}`;
 
 // JSON goes through the shared chunked stdout writer: a plain Console.log of a
 // multi-target plan exceeds the 64 KiB pipe buffer and is cut off at exit.
@@ -78,16 +78,19 @@ const syncCommand = Command.make(
     const sync = yield* GraftCacheSync;
     const targets = options.siblings ? yield* sync.discoverSiblings(options.from) : options.to;
     const plan = yield* sync.plan(options.from, targets);
-    if (options.dryRun) {
+    const refused = A.some(plan.entries, (entry) => GraftCacheSyncAction.is.refuse(entry.action));
+    // A refused destination fails closed: the plan is printed for the operator
+    // and nothing is applied, so a mixed run never half-mutates the good clones.
+    if (options.dryRun || refused) {
       yield* emit(options.json, plan, GraftCacheSyncPlan, renderPlan(plan));
     } else {
       const report = yield* sync.apply(plan);
       yield* emit(options.json, report, GraftCacheSyncReport, renderReport(report));
     }
-    if (A.some(plan.entries, (entry) => GraftCacheSyncAction.is.refuse(entry.action))) {
+    if (refused) {
       return yield* GraftCacheTargetError.make({
         path: plan.source,
-        message: "Graft cache sync refused one or more destinations; see the report.",
+        message: "Graft cache sync refused one or more destinations; nothing was written. See the plan.",
       });
     }
   })
@@ -105,7 +108,8 @@ const cacheCommand = Command.make("cache", {}, () =>
  *
  * **Details**
  *
- * JSON output precedes failure on refused targets. Dry runs never create directories or files.
+ * JSON output precedes failure on refused targets, and a refused plan is never
+ * applied. Dry runs never create directories or files.
  *
  * **Example** (Inspect the command identity)
  *
