@@ -18,7 +18,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Redacted, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
@@ -81,14 +81,14 @@ const respondWith = (body: string, status = 200, seenUrls?: Array<string>): Laye
 const usptoLayer = (http: Layer.Layer<HttpClient.HttpClient>): Layer.Layer<Uspto> =>
   Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") })).pipe(Layer.provide(http));
 
-const ApplicationNumberArbitrary = S.toArbitrary(UsptoApplicationNumber)(fc);
-const PatentNumberArbitrary = S.toArbitrary(UsptoPatentNumber)(fc);
-const ConfigInputArbitrary = S.toArbitrary(UsptoConfigInput)(fc);
-const ApplicationMetadataArbitrary = S.toArbitrary(UsptoApplicationMetadata)(fc);
-const ContinuityArbitrary = S.toArbitrary(UsptoContinuity)(fc);
-const DocumentReferenceArbitrary = S.toArbitrary(UsptoDocumentReference)(fc);
-const ErrorReasonArbitrary = S.toArbitrary(UsptoErrorReason)(fc);
-const ErrorArbitrary = S.toArbitrary(UsptoError)(fc);
+const ApplicationNumberArbitrary = Arbitrary.schema(UsptoApplicationNumber);
+const PatentNumberArbitrary = Arbitrary.schema(UsptoPatentNumber);
+const ConfigInputArbitrary = Arbitrary.schema(UsptoConfigInput);
+const ApplicationMetadataArbitrary = Arbitrary.schema(UsptoApplicationMetadata);
+const ContinuityArbitrary = Arbitrary.schema(UsptoContinuity);
+const DocumentReferenceArbitrary = Arbitrary.schema(UsptoDocumentReference);
+const ErrorReasonArbitrary = Arbitrary.schema(UsptoErrorReason);
+const ErrorArbitrary = Arbitrary.schema(UsptoError);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -292,28 +292,28 @@ describe("Uspto schema parity", () => {
     });
   });
 
-  it("round-trips schema-derived USPTO payloads through encoded form", () =>
-    fc.assert(
-      fc.property(
-        ApplicationNumberArbitrary,
-        PatentNumberArbitrary,
-        ConfigInputArbitrary,
-        ApplicationMetadataArbitrary,
-        ContinuityArbitrary,
-        DocumentReferenceArbitrary,
-        ErrorReasonArbitrary,
-        ErrorArbitrary,
-        (applicationNumber, patentNumber, config, metadata, continuity, document, errorReason, error) => {
-          expectEncodedRoundTrip(UsptoApplicationNumber, applicationNumber);
-          expectEncodedRoundTrip(UsptoPatentNumber, patentNumber);
-          expectEncodedRoundTrip(UsptoConfigInput, config);
-          expectEncodedRoundTrip(UsptoApplicationMetadata, metadata);
-          expectEncodedRoundTrip(UsptoContinuity, continuity);
-          expectEncodedRoundTrip(UsptoDocumentReference, document);
-          expectEncodedRoundTrip(UsptoErrorReason, errorReason);
-          expectEncodedRoundTrip(UsptoError, error);
-        }
-      ),
-      fcRuns(50)
-    ));
+  it.prop(
+    "round-trips schema-derived USPTO payloads through encoded form",
+    [
+      ApplicationNumberArbitrary,
+      PatentNumberArbitrary,
+      ConfigInputArbitrary,
+      ApplicationMetadataArbitrary,
+      ContinuityArbitrary,
+      DocumentReferenceArbitrary,
+      ErrorReasonArbitrary,
+      ErrorArbitrary,
+    ],
+    ([applicationNumber, patentNumber, config, metadata, continuity, document, errorReason, error]) => {
+      expectEncodedRoundTrip(UsptoApplicationNumber, applicationNumber);
+      expectEncodedRoundTrip(UsptoPatentNumber, patentNumber);
+      expectEncodedRoundTrip(UsptoConfigInput, config);
+      expectEncodedRoundTrip(UsptoApplicationMetadata, metadata);
+      expectEncodedRoundTrip(UsptoContinuity, continuity);
+      expectEncodedRoundTrip(UsptoDocumentReference, document);
+      expectEncodedRoundTrip(UsptoErrorReason, errorReason);
+      expectEncodedRoundTrip(UsptoError, error);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

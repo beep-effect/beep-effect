@@ -1,20 +1,14 @@
 import { DEFAULT_FC_NUM_RUNS, fcRuns, parseFcNumRunsFloor } from "@beep/fc-runs";
-import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
 describe("fcRuns (one-round-loop P1 env-max helper)", () => {
-  it("has the vitest.setup.ts configureGlobal floor engaged", () => {
-    const globalNumRuns = fc.readConfigureGlobal()?.numRuns ?? 0;
-    expect(globalNumRuns).toBeGreaterThanOrEqual(DEFAULT_FC_NUM_RUNS);
-  });
-
-  it("keeps the inline value as a floor and defaults to fast-check's run count", () => {
+  it("keeps the inline value as a floor and defaults to the helper's run count", () => {
     // Effect's default ConfigProvider snapshots the environment at boot, so
     // in this test process the inline value and the default rule the
     // outcome; the raised-floor path is proven end to end by the fresh
     // subprocess probe below.
-    expect(fcRuns(40).numRuns).toBeGreaterThanOrEqual(40);
-    expect(fcRuns().numRuns).toBeGreaterThanOrEqual(DEFAULT_FC_NUM_RUNS);
+    expect(fcRuns(40).runs).toBeGreaterThanOrEqual(40);
+    expect(fcRuns().runs).toBeGreaterThanOrEqual(DEFAULT_FC_NUM_RUNS);
   });
 
   it("parses only positive-integer environment floors (fence 3 input guard)", () => {
@@ -33,8 +27,8 @@ describe("fcRuns (one-round-loop P1 env-max helper)", () => {
     // subprocess with the variable present at spawn.
     const probe = [
       'const { fcRuns } = await import("@beep/fc-runs");',
-      "const raised = fcRuns(40).numRuns;",
-      "const floored = fcRuns(9000).numRuns;",
+      "const raised = fcRuns(40).runs;",
+      "const floored = fcRuns(9000).runs;",
       "process.stdout.write(`${raised}/${floored}`);",
     ].join("\n");
     const result = Bun.spawnSync({

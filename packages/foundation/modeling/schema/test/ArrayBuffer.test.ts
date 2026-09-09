@@ -3,7 +3,7 @@ import { ArrayBuf, isArrayBuf } from "@beep/schema/ArrayBuffer";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeArrayBuf = S.decodeEffect(ArrayBuf);
 const decodeUnknownArrayBuf = S.decodeUnknownEffect(ArrayBuf);
@@ -64,13 +64,20 @@ describe("ArrayBuf", () => {
   });
 
   it("derives an arbitrary of live buffers", () => {
-    const arbitrary = S.toArbitrary(ArrayBuf)(fc);
-    fc.assert(
-      fc.property(arbitrary, (buffer) => {
-        expect(isArrayBuf(buffer)).toBe(true);
-      }),
-      fcRuns(25)
-    );
+    const arbitrary = Arbitrary.schema(ArrayBuf);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([buffer]) => {
+            expect(isArrayBuf(buffer)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("derives a schema-backed guard", () => {

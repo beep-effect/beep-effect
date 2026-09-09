@@ -20,7 +20,7 @@ import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
 import { Defect, LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Effect, pipe, Result, SchemaGetter, Struct } from "effect";
+import { Effect, pipe, Result, SchemaGetter, SchemaTransformation, Struct } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { hasStrictNodeChildren, isStrictLexicalNode } from "./internal/conformance/Lexical.strict-invariants.ts";
@@ -885,11 +885,6 @@ export const SafeInlineStyle = S.String.pipe(
   $I.annoteSchema("SafeInlineStyle", {
     description:
       "Serialized Lexical inline CSS restricted to an allowlist of safe presentation properties; positioning, stacking, animation, transforms, and URL/function-bearing values are stripped on decode and encode.",
-    // The sanitizer runs on both decode and encode, so only its fixed points
-    // survive a round-trip. Projecting the generator through the (idempotent)
-    // sanitizer keeps schema-derived arbitraries on those fixed points and the
-    // round-trip total without weakening the boundary guard itself.
-    toArbitrary: () => (fc) => fc.string().map(sanitizeInlineStyle),
   })
 );
 
@@ -946,9 +941,6 @@ export const SafeStyleValue = S.String.pipe(
   $I.annoteSchema("SafeStyleValue", {
     description:
       "Serialized Lexical single CSS value restricted to a safe form; multi-declaration, URL-bearing, and function-call values are stripped on decode and encode.",
-    // See SafeInlineStyle: keep schema-derived arbitraries on the sanitizer's
-    // (idempotent) fixed points so the encode/decode round-trip stays total.
-    toArbitrary: () => (fc) => fc.string().map(sanitizeStyleValue),
   })
 );
 
@@ -1004,7 +996,6 @@ export const SafeUrl = S.String.pipe(
   $I.annoteSchema("SafeUrl", {
     description:
       "Serialized Lexical link target sanitized to safe URL destinations; active script/data protocols and disallowed absolute protocols collapse to a harmless fragment.",
-    toArbitrary: () => (fc) => fc.string().map(sanitizeUrl),
   })
 );
 
@@ -2643,7 +2634,6 @@ const RawLexicalNode = S.Union([
   S.toTaggedUnion("type"),
   $I.annoteSchema("RawLexicalNode", {
     description: "Internal structural union used to decode recursive Lexical children before tree validation.",
-    parseOptions: strictSemanticParseOptions,
   })
 );
 
@@ -2679,15 +2669,13 @@ export const LexicalNode = pipe(
   $I.annoteSchema("LexicalNode", {
     description:
       "The strict tagged union of v1 serialized Lexical nodes, including recursive parent-child grammar and non-empty root validation.",
-    parseOptions: strictSemanticParseOptions,
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"]),
   (schema) =>
     schema.pipe(
       S.toTaggedUnion("type"),
       SchemaUtils.withStatics(() => ({
-        decodeUnknownOption: schema.decodeUnknownOption,
-        decodeUnknownSync: schema.decodeUnknownSync,
+        decodeUnknownOption: S.decodeUnknownOption(schema, strictSemanticParseOptions),
+        decodeUnknownSync: S.decodeUnknownSync(schema, strictSemanticParseOptions),
       }))
     )
 );
@@ -2821,8 +2809,16 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
     root: StrictRootNode.annotateKey({ description: "The non-empty strict v1 document root node." }),
   },
   $I.annote("SerializedEditorState", {
+    toCodecArbitrary: (): AST.Link =>
+      S.link<SerializedEditorState>()(
+        S.Array(TextNode).check(S.isMaxLength(3)),
+        SchemaTransformation.transform({
+          decode: (children) =>
+            SerializedEditorState.make({ root: RootNode.make({ children: [ParagraphNode.make({ children })] }) }),
+          encode: (): ReadonlyArray<TextNode> => [],
+        })
+      ),
     description: "The runtime-compatible serialized Lexical editor state envelope with a non-empty root.",
-    parseOptions: strictSemanticParseOptions,
   })
 ) {
   /**
@@ -2852,7 +2848,7 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
   static readonly decodeOption: {
     (input: unknown, options?: AST.ParseOptions): O.Option<SerializedEditorState>;
     (options?: AST.ParseOptions): (input: unknown) => O.Option<SerializedEditorState>;
-  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(SerializedEditorState));
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(SerializedEditorState, strictSemanticParseOptions));
 }
 
 /**
@@ -3200,9 +3196,9 @@ export class LexicalCompatibilityResult extends S.Class<LexicalCompatibilityResu
   }
 }
 
-const decodeStrictEditorStateResult = S.decodeUnknownResult(SerializedEditorState);
+const decodeStrictEditorStateResult = S.decodeUnknownResult(SerializedEditorState, strictSemanticParseOptions);
 const decodeLosslessEditorStateResult = S.decodeUnknownResult(SerializedEditorStateWire);
-const inspectStrictEditorState = S.decodeUnknownResult(SerializedEditorState);
+const inspectStrictEditorState = S.decodeUnknownResult(SerializedEditorState, strictSemanticParseOptions);
 const strictEditorStateDecodeError = (cause: unknown): LexicalDecodeError =>
   LexicalDecodeError.make({ cause, message: "Lexical editor state failed strict semantic decoding." });
 const losslessEditorStateDecodeError = (cause: unknown): LexicalDecodeError =>
@@ -3384,6 +3380,5 @@ export const analyzeEditorStateCompatibility = (
 export const EditorStateFromJson = S.fromJsonString(SerializedEditorState).pipe(
   $I.annoteSchema("EditorStateFromJson", {
     description: "Serialized Lexical editor state codec over its JSON string wire form.",
-    parseOptions: strictSemanticParseOptions,
   })
 );

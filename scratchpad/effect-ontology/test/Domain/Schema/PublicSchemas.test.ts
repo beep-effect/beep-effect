@@ -5,7 +5,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as Api from "../../../Domain/Schema/Api.ts";
 import * as Auth from "../../../Domain/Schema/Auth.ts";
 import * as Batch from "../../../Domain/Schema/Batch.ts";
@@ -28,7 +28,7 @@ const decodeBatchRequestBatchRequestResult = S.decodeResult(BatchRequest.BatchRe
 const decodeUnknownApiSubmitJobRequestResult = S.decodeUnknownResult(Api.SubmitJobRequest);
 const decodeUnknownBatchRequestBatchRequestResult = S.decodeUnknownResult(BatchRequest.BatchRequest);
 
-const schemaModules = [
+const schemaModules: ReadonlyArray<readonly [string, object]> = [
   ["Api", Api],
   ["Auth", Auth],
   ["Batch", Batch],
@@ -53,6 +53,7 @@ const publicSchemas = A.flatMap(schemaModules, ([moduleName, moduleExports]) =>
       ? Result.succeed({
           name: `${moduleName}.${exportName}`,
           schema: value,
+          companion: Reflect.get(moduleExports, `${exportName}Arbitrary`),
         })
       : Result.failVoid
   )
@@ -66,14 +67,22 @@ describe("effect-ontology public schema surface", () => {
   it("derives arbitraries whose samples satisfy every exported schema", () => {
     expect(publicSchemas.length).toBeGreaterThan(50);
 
-    for (const { name, schema } of publicSchemas) {
-      const arbitrary = S.toArbitrary(schema)(fc);
-      fc.assert(
-        fc.property(arbitrary, (value) => {
+    for (const { name, schema, companion } of publicSchemas) {
+      const arbitrary = Arbitrary.isArbitrary(companion) ? companion : Arbitrary.schema(schema);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([value]) => {
           expect(S.is(schema)(value), name).toBe(true);
-        }),
-        { numRuns: 8 }
-      );
+
+              return true;
+            },
+            { runs: 8, maxDiscards: 4096 }
+          )
+        )._tag,
+        name
+      ).toBe("Passed");
     }
   });
 

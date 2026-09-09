@@ -5,7 +5,7 @@ import { Cause, Effect, Equal, Exit, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeFFirecrawlApiFailure = S.decodeEffect(F.FirecrawlApiFailure);
 const decodeFFirecrawlConfigInput = S.decodeEffect(F.FirecrawlConfigInput);
@@ -181,12 +181,19 @@ const assertRoundTrip = <SchemaT extends S.ConstraintCodec<unknown, unknown, nev
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
 
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      expect(Equal.equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 describe("@beep/firecrawl", () => {

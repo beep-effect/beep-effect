@@ -44,10 +44,8 @@ const overwriteFlag = Flag.Boolean("overwrite").pipe(
 const printImageIndex = () => printLines(["image commands: extract-frames, extract-frames-dir"]);
 
 const printExtractFramesDirOutcome = Match.type<ExtractFramesDirOutcome>().pipe(
-  Match.discriminators("status")({
-    failure: (outcome) => Console.error(renderExtractFramesDirFailure(outcome)),
-    success: (outcome) => Console.log(renderExtractFramesDirSuccess(outcome)),
-  }),
+  Match.discriminator("status")("failure", (outcome) => Console.error(renderExtractFramesDirFailure(outcome))),
+  Match.discriminator("status")("success", (outcome) => Console.log(renderExtractFramesDirSuccess(outcome))),
   Match.exhaustive
 );
 

@@ -24,7 +24,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Layer, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeFaceDetectionResult = S.encodeResult(FaceDetection);
 const encodeFaceDetectionBoxResult = S.encodeResult(FaceDetectionBox);
@@ -52,21 +52,23 @@ const fakeFace = FaceDetection.make({
   }),
 });
 
-const PositivePixelDimensionArbitrary = S.toArbitrary(PositivePixelDimension)(fc);
-const FaceDetectionConfidenceArbitrary = S.toArbitrary(FaceDetectionConfidence)(fc);
-const RawFaceDetectionConfidenceArbitrary = S.toArbitrary(RawFaceDetectionConfidence)(fc);
-const FaceDetectionPercentageArbitrary = S.toArbitrary(FaceDetectionPercentage)(fc);
-const FaceDetectionTopKArbitrary = S.toArbitrary(FaceDetectionTopK)(fc);
-const NonNegativeImageCoordinateArbitrary = S.toArbitrary(NonNegativeImageCoordinate)(fc);
-const FaceDetectionOperationArbitrary = S.toArbitrary(FaceDetectionOperation)(fc);
-const FaceDetectionImageRequestArbitrary = S.toArbitrary(FaceDetectionImageRequest)(fc);
-const FaceDetectionBoxArbitrary = S.toArbitrary(FaceDetectionBox)(fc);
-const FaceDetectionArbitrary = S.toArbitrary(FaceDetection)(fc);
-const FaceDetectionResultArbitrary = S.toArbitrary(FaceDetectionResult)(fc);
-const FaceDetectionErrorFromUnknownOptionsArbitrary = S.toArbitrary(FaceDetectionErrorFromUnknownOptions)(fc).filter(
-  (options) => O.isNone(options.cause)
+const PositivePixelDimensionArbitrary = Arbitrary.schema(PositivePixelDimension);
+const FaceDetectionConfidenceArbitrary = Arbitrary.schema(FaceDetectionConfidence);
+const RawFaceDetectionConfidenceArbitrary = Arbitrary.schema(RawFaceDetectionConfidence);
+const FaceDetectionPercentageArbitrary = Arbitrary.schema(FaceDetectionPercentage);
+const FaceDetectionTopKArbitrary = Arbitrary.schema(FaceDetectionTopK);
+const NonNegativeImageCoordinateArbitrary = Arbitrary.schema(NonNegativeImageCoordinate);
+const FaceDetectionOperationArbitrary = Arbitrary.schema(FaceDetectionOperation);
+const FaceDetectionImageRequestArbitrary = Arbitrary.schema(FaceDetectionImageRequest);
+const FaceDetectionBoxArbitrary = Arbitrary.schema(FaceDetectionBox);
+const FaceDetectionArbitrary = Arbitrary.schema(FaceDetection);
+const FaceDetectionResultArbitrary = Arbitrary.schema(FaceDetectionResult);
+const FaceDetectionErrorFromUnknownOptionsArbitrary = Arbitrary.schema(FaceDetectionErrorFromUnknownOptions).pipe(
+  Arbitrary.filter((options) => O.isNone(options.cause))
 );
-const FaceDetectionErrorArbitrary = S.toArbitrary(FaceDetectionError)(fc).filter((error) => O.isNone(error.cause));
+const FaceDetectionErrorArbitrary = Arbitrary.schema(FaceDetectionError).pipe(
+  Arbitrary.filter((error) => O.isNone(error.cause))
+);
 
 const expectCodecIdentity = <Schema extends S.Codec<unknown, unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
@@ -166,54 +168,54 @@ describe("@beep/face-detection", () => {
     ).toBe(JSON.stringify({ _tag: "FaceDetectionError", message: "model failed", operation: "loadModel" }));
   });
 
-  it("round-trips schema-derived face-detection values through encoded form", () =>
-    fc.assert(
-      fc.property(
-        PositivePixelDimensionArbitrary,
-        FaceDetectionConfidenceArbitrary,
-        RawFaceDetectionConfidenceArbitrary,
-        FaceDetectionPercentageArbitrary,
-        FaceDetectionTopKArbitrary,
-        NonNegativeImageCoordinateArbitrary,
-        FaceDetectionOperationArbitrary,
-        FaceDetectionImageRequestArbitrary,
-        FaceDetectionBoxArbitrary,
-        FaceDetectionArbitrary,
-        FaceDetectionResultArbitrary,
-        FaceDetectionErrorFromUnknownOptionsArbitrary,
-        FaceDetectionErrorArbitrary,
-        (
-          positivePixelDimension,
-          confidence,
-          rawConfidence,
-          percentage,
-          topK,
-          coordinate,
-          operation,
-          request,
-          box,
-          face,
-          result,
-          errorOptions,
-          error
-        ) => {
-          expectCodecIdentity(PositivePixelDimension, positivePixelDimension);
-          expectCodecIdentity(FaceDetectionConfidence, confidence);
-          expectCodecIdentity(RawFaceDetectionConfidence, rawConfidence);
-          expectCodecIdentity(FaceDetectionPercentage, percentage);
-          expectCodecIdentity(FaceDetectionTopK, topK);
-          expectCodecIdentity(NonNegativeImageCoordinate, coordinate);
-          expectCodecIdentity(FaceDetectionOperation, operation);
-          expectCodecIdentity(FaceDetectionImageRequest, request);
-          expectCodecIdentity(FaceDetectionBox, box);
-          expectCodecIdentity(FaceDetection, face);
-          expectCodecIdentity(FaceDetectionResult, result);
-          expectCodecIdentity(FaceDetectionErrorFromUnknownOptions, errorOptions);
-          expectCodecIdentity(FaceDetectionError, error);
-        }
-      ),
-      fcRuns(20)
-    ));
+  it.prop(
+    "round-trips schema-derived face-detection values through encoded form",
+    [
+      PositivePixelDimensionArbitrary,
+      FaceDetectionConfidenceArbitrary,
+      RawFaceDetectionConfidenceArbitrary,
+      FaceDetectionPercentageArbitrary,
+      FaceDetectionTopKArbitrary,
+      NonNegativeImageCoordinateArbitrary,
+      FaceDetectionOperationArbitrary,
+      FaceDetectionImageRequestArbitrary,
+      FaceDetectionBoxArbitrary,
+      FaceDetectionArbitrary,
+      FaceDetectionResultArbitrary,
+      FaceDetectionErrorFromUnknownOptionsArbitrary,
+      FaceDetectionErrorArbitrary,
+    ],
+    ([
+      positivePixelDimension,
+      confidence,
+      rawConfidence,
+      percentage,
+      topK,
+      coordinate,
+      operation,
+      request,
+      box,
+      face,
+      result,
+      errorOptions,
+      error,
+    ]) => {
+      expectCodecIdentity(PositivePixelDimension, positivePixelDimension);
+      expectCodecIdentity(FaceDetectionConfidence, confidence);
+      expectCodecIdentity(RawFaceDetectionConfidence, rawConfidence);
+      expectCodecIdentity(FaceDetectionPercentage, percentage);
+      expectCodecIdentity(FaceDetectionTopK, topK);
+      expectCodecIdentity(NonNegativeImageCoordinate, coordinate);
+      expectCodecIdentity(FaceDetectionOperation, operation);
+      expectCodecIdentity(FaceDetectionImageRequest, request);
+      expectCodecIdentity(FaceDetectionBox, box);
+      expectCodecIdentity(FaceDetection, face);
+      expectCodecIdentity(FaceDetectionResult, result);
+      expectCodecIdentity(FaceDetectionErrorFromUnknownOptions, errorOptions);
+      expectCodecIdentity(FaceDetectionError, error);
+    },
+    { arbitrary: fcRuns(20) }
+  );
 
   it("normalizes raw model confidence at the schema boundary", () => {
     expect(RawFaceDetectionConfidence.decodeUnknownSync(-0.2)).toBe(0);

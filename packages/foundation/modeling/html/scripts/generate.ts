@@ -1851,59 +1851,57 @@ const buildModel = (
         }
         MutableHashSet.add(constraintAttributes, constraint.attribute);
         Match.value(constraint).pipe(
-          Match.tags({
-            allowedValues: ({ attribute, values }) => {
-              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
-              if (
-                A.length(A.dedupe(values)) !== A.length(values) ||
-                A.some(
-                  values,
-                  (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
-                )
-              ) {
-                failGeneration(
-                  `HTML generator allowed-value constraint for <${tag} ${attribute}> is not an exact classified lowercase subset`
-                );
-              }
-            },
-            containsAllTokens: ({ attribute, values }) => {
-              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
-              if (
-                !isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) ||
-                A.length(A.dedupe(values)) !== A.length(values) ||
-                A.some(
-                  values,
-                  (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
-                )
-              ) {
-                failGeneration(
-                  `HTML generator all-token constraint for <${tag} ${attribute}> is not an exact classified lowercase token subset`
-                );
-              }
-            },
-            containsAnyToken: ({ attribute, values }) => {
-              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
-              if (
-                !isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) ||
-                A.length(A.dedupe(values)) !== A.length(values) ||
-                A.some(
-                  values,
-                  (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
-                )
-              ) {
-                failGeneration(
-                  `HTML generator any-token constraint for <${tag} ${attribute}> is not an exact classified lowercase token subset`
-                );
-              }
-            },
-            equals: ({ attribute, value }) => {
-              const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
-              if (Str.isEmpty(value) || (A.isReadonlyArrayNonEmpty(domain) && !A.contains(domain, value))) {
-                failGeneration(
-                  `HTML generator equality constraint for <${tag} ${attribute}> references unclassified value ${value}`
-                );
-              }
-            },
+          Match.tag("allowedValues", ({ attribute, values }) => {
+            const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
+            if (
+              A.length(A.dedupe(values)) !== A.length(values) ||
+              A.some(
+                values,
+                (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
+              )
+            ) {
+              failGeneration(
+                `HTML generator allowed-value constraint for <${tag} ${attribute}> is not an exact classified lowercase subset`
+              );
+            }
+          }),
+          Match.tag("containsAllTokens", ({ attribute, values }) => {
+            const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
+            if (
+              !isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) ||
+              A.length(A.dedupe(values)) !== A.length(values) ||
+              A.some(
+                values,
+                (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
+              )
+            ) {
+              failGeneration(
+                `HTML generator all-token constraint for <${tag} ${attribute}> is not an exact classified lowercase token subset`
+              );
+            }
+          }),
+          Match.tag("containsAnyToken", ({ attribute, values }) => {
+            const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
+            if (
+              !isClassifiedAs(spaceSeparatedTokenAttrs, tag, attribute) ||
+              A.length(A.dedupe(values)) !== A.length(values) ||
+              A.some(
+                values,
+                (value) => Str.isEmpty(value) || Str.toLowerCase(value) !== value || !A.contains(domain, value)
+              )
+            ) {
+              failGeneration(
+                `HTML generator any-token constraint for <${tag} ${attribute}> is not an exact classified lowercase token subset`
+              );
+            }
+          }),
+          Match.tag("equals", ({ attribute, value }) => {
+            const domain = MutableHashMap.get(enumValues, `${tag}/${attribute}`).pipe(O.getOrElse(A.empty<string>));
+            if (Str.isEmpty(value) || (A.isReadonlyArrayNonEmpty(domain) && !A.contains(domain, value))) {
+              failGeneration(
+                `HTML generator equality constraint for <${tag} ${attribute}> references unclassified value ${value}`
+              );
+            }
           }),
           Match.exhaustive
         );

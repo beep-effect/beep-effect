@@ -29,11 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Inference");
  * @category schemas
  * @since 0.0.0
  */
-export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("rdfs", "rdfs-subclass", "owl-sameas", "custom"),
-  })
-  .annotate(
+export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]).annotate(
     $I.annote("ReasoningProfile", {
       description: "Supported built-in and custom inference reasoning profiles.",
     })
@@ -55,11 +51,7 @@ export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas
  */
 export type ReasoningProfile = typeof ReasoningProfile.Type;
 
-const InferenceGraphFormat = LiteralKit(["turtle", "trig"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("turtle", "trig"),
-  })
-  .annotate(
+const InferenceGraphFormat = LiteralKit(["turtle", "trig"]).annotate(
     $I.annote("InferenceGraphFormat", {
       description: "RDF concrete syntaxes accepted by the inference endpoint.",
     })
@@ -205,11 +197,7 @@ export class InferenceRunRequest extends S.Class<InferenceRunRequest>($I`Inferen
  * @category schemas
  * @since 0.0.0
  */
-export const InferenceStatus = LiteralKit(["complete", "processing", "failed"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("complete", "processing", "failed"),
-  })
-  .annotate(
+export const InferenceStatus = LiteralKit(["complete", "processing", "failed"]).annotate(
     $I.annote("InferenceStatus", {
       description: "Terminal and in-flight statuses emitted by an inference job.",
     })

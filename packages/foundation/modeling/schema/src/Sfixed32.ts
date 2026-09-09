@@ -65,16 +65,12 @@ const Sfixed32Checks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-export const Sfixed32 = S.Finite.annotate({
-  toArbitrary: () => (fc) => fc.integer({ min: sfixed32Minimum, max: sfixed32Maximum }),
-})
-  .check(Sfixed32Checks)
-  .pipe(
-    S.brand("Sfixed32"),
-    $I.annoteSchema("Sfixed32", {
-      description: "A protobuf sfixed32 number in the inclusive signed 32-bit range.",
-    })
-  );
+export const Sfixed32 = S.Finite.check(Sfixed32Checks).pipe(
+  S.brand("Sfixed32"),
+  $I.annoteSchema("Sfixed32", {
+    description: "A protobuf sfixed32 number in the inclusive signed 32-bit range.",
+  })
+);
 
 /**
  * Type-level value inferred from {@link Sfixed32}.

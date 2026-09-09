@@ -56,6 +56,9 @@ const ValidIsoDateCheck = S.makeFilter((value: string) => O.isSome(decodeLocalDa
   title: "Valid ISO Calendar Date",
   description: "Checks that an ISO date names a real calendar day.",
   message: "Expected a valid calendar date.",
+  arbitraryConstraint: {
+    patterns: [{ source: "^20[2-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])$", flags: "" }],
+  },
 });
 
 /**
@@ -105,6 +108,15 @@ const ValidIsoTimestampCheck = S.makeFilter(
     title: "Valid ISO UTC Timestamp",
     description: "Safely reuses the shared ISO timestamp schema to reject impossible instants.",
     message: "Expected a valid ISO UTC timestamp.",
+    arbitraryConstraint: {
+      patterns: [
+        {
+          source:
+            "^20[2-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])T(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]\\.[0-9]{3}Z$",
+          flags: "",
+        },
+      ],
+    },
   }
 );
 

@@ -15,10 +15,10 @@ import {
   SlashItems,
 } from "@beep/editor/chat/config";
 import { describe, expect, it } from "@effect/vitest";
-import { pipe, Result } from "effect";
+import { Effect, pipe, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeMentionOptionResult = S.decodeResult(MentionOption);
 const decodeMentionOptionsResult = S.decodeResult(MentionOptions);
@@ -76,30 +76,46 @@ describe("@beep/editor schema crispening parity", () => {
   });
 
   it("round-trips pure chat schemas with schema-derived arbitraries", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(SendOn)(fc), (value) => {
-        expect(Equal.equals(decodeSendOnSync(encodeSendOnSync(value)), value)).toBe(true);
-      })
-    );
-    fc.assert(
-      fc.property(S.toArbitrary(ImageAttachmentMimeType)(fc), (value) => {
-        expect(Equal.equals(decodeImageAttachmentMimeTypeSync(encodeImageAttachmentMimeTypeSync(value)), value)).toBe(
-          true
-        );
-      })
-    );
-    fc.assert(
-      fc.property(S.toArbitrary(ComposerFeatures)(fc), (value) => {
-        expect(Equal.equals(decodeComposerFeaturesSync(encodeComposerFeaturesSync(value)), value)).toBe(true);
-      })
-    );
-    fc.assert(
-      fc.property(S.toArbitrary(AttachmentRejection)(fc), (value) => {
-        expect(pipe(value, encodeAttachmentRejectionSync, decodeAttachmentRejectionSync, Equal.equals(value))).toBe(
-          true
-        );
-      })
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(SendOn)]), ([value]) => {
+          expect(Equal.equals(decodeSendOnSync(encodeSendOnSync(value)), value)).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(ImageAttachmentMimeType)]), ([value]) => {
+          expect(Equal.equals(decodeImageAttachmentMimeTypeSync(encodeImageAttachmentMimeTypeSync(value)), value)).toBe(
+            true
+          );
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(ComposerFeatures)]), ([value]) => {
+          expect(Equal.equals(decodeComposerFeaturesSync(encodeComposerFeaturesSync(value)), value)).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(AttachmentRejection)]), ([value]) => {
+          expect(pipe(value, encodeAttachmentRejectionSync, decodeAttachmentRejectionSync, Equal.equals(value))).toBe(
+            true
+          );
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("rejects empty menu identity and display fields at the schema boundary", () => {

@@ -31,7 +31,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 import type { BoxBlockedAction } from "@beep/box-provisioning";
 
@@ -43,10 +43,15 @@ const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I>): void => {
   const equivalent = S.toEquivalence(schema);
   const encode = S.encodeSync(schema);
   const decode = S.decodeSync(schema);
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => equivalent(decode(encode(value)), value)),
-    fcRuns(5)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => equivalent(decode(encode(value)), value),
+        fcRuns(5)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 const makeDependencies = (plan: BoxProvisioningPlan, postApplyPlan: BoxProvisioningPlan, applyCalls: Ref.Ref<number>) =>

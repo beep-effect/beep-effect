@@ -6,7 +6,6 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("Double");
@@ -25,7 +24,9 @@ const DoubleChecks = S.makeFilter(isProtobufDoubleValue, {
   message: "Expected a protobuf double number",
 });
 
-const ProtobufNumber = S.declare<number>(P.isNumber, {
+// Protobuf intentionally includes NaN and infinities.
+// @effect-diagnostics-next-line schemaNumber:off
+const ProtobufNumber = S.Number.annotate({
   description: "A JavaScript number, including IEEE-754 special values accepted by protobuf.",
   identifier: $I`ProtobufNumber`,
   title: "Protobuf Number",
@@ -55,22 +56,12 @@ const ProtobufNumber = S.declare<number>(P.isNumber, {
  * @category validation
  * @since 0.0.0
  */
-export const Double = ProtobufNumber.annotate({
-  toArbitrary: () => (fc) =>
-    fc.oneof(
-      fc.double({ noDefaultInfinity: true, noNaN: true }),
-      fc.constant(globalThis.Number.NaN),
-      fc.constant(globalThis.Number.POSITIVE_INFINITY),
-      fc.constant(globalThis.Number.NEGATIVE_INFINITY)
-    ),
-})
-  .check(DoubleChecks)
-  .pipe(
-    S.brand("Double"),
-    $I.annoteSchema("Double", {
-      description: "A protobuf double number represented as an IEEE-754 binary64 JavaScript number.",
-    })
-  );
+export const Double = ProtobufNumber.check(DoubleChecks).pipe(
+  S.brand("Double"),
+  $I.annoteSchema("Double", {
+    description: "A protobuf double number represented as an IEEE-754 binary64 JavaScript number.",
+  })
+);
 
 /**
  * Type-level value inferred from {@link Double}.

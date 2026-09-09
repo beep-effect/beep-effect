@@ -97,7 +97,6 @@ const byteEquivalence = (self: globalThis.ArrayBuffer, that: globalThis.ArrayBuf
  */
 export const ArrayBuf = S.instanceOf(globalThis.ArrayBuffer, {
   expected: "ArrayBuffer",
-  toArbitrary: () => (fc) => fc.uint8Array().map((bytes) => bytes.slice().buffer),
   toCodecJson: () => S.link<globalThis.ArrayBuffer>()(Base64String, arrayBufferFromBase64String),
 })
   .check(NotDetached)

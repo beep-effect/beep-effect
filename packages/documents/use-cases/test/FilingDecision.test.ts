@@ -2,9 +2,10 @@ import { FilingDecisionInput } from "@beep/documents-use-cases/aggregates/Docume
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeFilingDecisionInputFieldsContentDigestSync = S.decodeSync(FilingDecisionInput.fields.contentDigest);
 const decodeUnknownFilingDecisionInputResult = S.decodeUnknownResult(FilingDecisionInput);
@@ -23,14 +24,21 @@ describe("@beep/documents-use-cases FilingDecision port", () => {
   it("round-trips the filing decision input with schema-derived arbitraries", () => {
     const equivalent = S.toEquivalence(FilingDecisionInput);
 
-    fc.assert(
-      fc.property(S.toArbitrary(FilingDecisionInput)(fc), (input) => {
-        const encoded = Result.getOrThrow(encodeFilingDecisionInputResult(input));
-        const decoded = Result.getOrThrow(decodeUnknownFilingDecisionInputResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(FilingDecisionInput),
+          (input) => {
+            const encoded = Result.getOrThrow(encodeFilingDecisionInputResult(input));
+            const decoded = Result.getOrThrow(decodeUnknownFilingDecisionInputResult(encoded));
 
-        expect(equivalent(decoded, input)).toBe(true);
-      }),
-      fcRuns(10)
-    );
+            expect(equivalent(decoded, input)).toBe(true);
+
+            return true;
+          },
+          fcRuns(10)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

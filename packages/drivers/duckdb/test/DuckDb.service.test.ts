@@ -19,7 +19,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as Reactivity from "effect/unstable/reactivity/Reactivity";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { DuckDBConnection } from "@duckdb/node-api";
@@ -99,27 +99,32 @@ const fakeRunResult = {} as Awaited<ReturnType<DuckDBConnection["run"]>>;
 const encodeSchema = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): Schema["Encoded"] =>
   Effect.runSync(S.encodeEffect(schema)(value));
 
-const DuckDbErrorFromUnknownOptionsArbitrary = S.toArbitrary(DuckDbErrorFromUnknownOptions)(fc).filter((options) =>
-  O.isNone(options.cause)
+const DuckDbErrorFromUnknownOptionsArbitrary = Arbitrary.schema(DuckDbErrorFromUnknownOptions).pipe(
+  Arbitrary.filter((options) => O.isNone(options.cause))
 );
-const DuckDbErrorArbitrary = S.toArbitrary(DuckDbError)(fc).filter((error) => O.isNone(error.cause));
+const DuckDbErrorArbitrary = Arbitrary.schema(DuckDbError).pipe(Arbitrary.filter((error) => O.isNone(error.cause)));
 
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
-  arbitrary = S.toArbitrary(schema)(fc),
-  options?: { readonly numRuns?: number }
+  arbitrary = Arbitrary.schema(schema),
+  options?: { readonly runs?: number }
 ): void => {
   const encode = S.encodeEffect(schema);
   const decode = S.decodeUnknownEffect(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      const encoded = Effect.runSync(encode(value));
-      const decoded = Effect.runSync(decode(encoded));
-      return Equal.equals(decoded, value);
-    }),
-    fcRuns(options?.numRuns ?? 20)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          const encoded = Effect.runSync(encode(value));
+          const decoded = Effect.runSync(decode(encoded));
+          return Equal.equals(decoded, value);
+        },
+        fcRuns(options?.runs ?? 20)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 describe("@beep/duckdb", { concurrent: false }, () => {

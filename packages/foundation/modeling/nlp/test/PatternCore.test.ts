@@ -40,7 +40,7 @@ import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { Chunk, Effect, Schema } from "effect";
 import * as O from "effect/Option";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 import type { PatternElement } from "@beep/nlp/Core/index";
 
@@ -57,11 +57,11 @@ const decodeLiteralPatternOptionSync = Schema.decodeSync(LiteralPatternOption);
 const decodePOSPatternOptionSync = Schema.decodeSync(POSPatternOption);
 const encodePatternElement = Schema.encodeEffect(Pattern.Element);
 
-const POSPatternOptionArbitrary = Schema.toArbitrary(POSPatternOption)(fc);
-const EntityPatternOptionArbitrary = Schema.toArbitrary(EntityPatternOption)(fc);
-const LiteralPatternOptionArbitrary = Schema.toArbitrary(LiteralPatternOption)(fc);
-const PatternElementArbitrary = Schema.toArbitrary(Pattern.Element)(fc);
-const PatternArbitrary = Schema.toArbitrary(Pattern)(fc);
+const POSPatternOptionArbitrary = Arbitrary.schema(POSPatternOption);
+const EntityPatternOptionArbitrary = Arbitrary.schema(EntityPatternOption);
+const LiteralPatternOptionArbitrary = Arbitrary.schema(LiteralPatternOption);
+const PatternElementArbitrary = Arbitrary.schema(Pattern.Element);
+const PatternArbitrary = Arbitrary.schema(Pattern);
 
 const firstIncludes = (values: ReadonlyArray<string>, searchString: string): boolean => {
   const first = values[0];
@@ -163,34 +163,40 @@ describe("Core Pattern", () => {
     ));
 
   it("round-trips schema-derived pattern values", () =>
-    fc.assert(
-      fc.property(
-        POSPatternOptionArbitrary,
-        EntityPatternOptionArbitrary,
-        LiteralPatternOptionArbitrary,
-        PatternElementArbitrary,
-        PatternArbitrary,
-        (posOption, entityOption, literalOption, patternElement, pattern) => {
-          const decodedPOSOption = Effect.runSync(decodePOSPatternOption(posOption));
-          const decodedEntityOption = Effect.runSync(decodeEntityPatternOption(entityOption));
-          const decodedLiteralOption = Effect.runSync(decodeLiteralPatternOption(literalOption));
-          const encodedElement = Effect.runSync(encodePatternElement(patternElement));
-          const decodedElement = Effect.runSync(decodePatternElement(encodedElement));
-          const decodedPattern = Pattern.decode(Pattern.encode(pattern));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            POSPatternOptionArbitrary,
+            EntityPatternOptionArbitrary,
+            LiteralPatternOptionArbitrary,
+            PatternElementArbitrary,
+            PatternArbitrary,
+          ]),
+          ([posOption, entityOption, literalOption, patternElement, pattern]) => {
+            const decodedPOSOption = Effect.runSync(decodePOSPatternOption(posOption));
+            const decodedEntityOption = Effect.runSync(decodeEntityPatternOption(entityOption));
+            const decodedLiteralOption = Effect.runSync(decodeLiteralPatternOption(literalOption));
+            const encodedElement = Effect.runSync(encodePatternElement(patternElement));
+            const decodedElement = Effect.runSync(decodePatternElement(encodedElement));
+            const decodedPattern = Pattern.decode(Pattern.encode(pattern));
 
-          expect(decodedPOSOption).toEqual(posOption);
-          expect(decodedEntityOption).toEqual(entityOption);
-          expect(decodedLiteralOption).toEqual(literalOption);
-          expect(decodedElement).toEqual(patternElement);
-          expect(decodedPattern).toEqual(pattern);
-          expect(Pattern.is(decodedPattern)).toBe(true);
-          expect(Pattern.POS.toBracketString(decodedPOSOption)).toEqual(expect.stringMatching(/^\[.*\]$/));
-          expect(Pattern.Entity.toBracketString(decodedEntityOption)).toEqual(expect.stringMatching(/^\[.*\]$/));
-          expect(Pattern.Literal.toBracketString(decodedLiteralOption)).toEqual(expect.stringMatching(/^\[.*\]$/));
-        }
-      ),
-      fcRuns(50)
-    ));
+            expect(decodedPOSOption).toEqual(posOption);
+            expect(decodedEntityOption).toEqual(entityOption);
+            expect(decodedLiteralOption).toEqual(literalOption);
+            expect(decodedElement).toEqual(patternElement);
+            expect(decodedPattern).toEqual(pattern);
+            expect(Pattern.is(decodedPattern)).toBe(true);
+            expect(Pattern.POS.toBracketString(decodedPOSOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
+            expect(Pattern.Entity.toBracketString(decodedEntityOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
+            expect(Pattern.Literal.toBracketString(decodedLiteralOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("parses mixed pattern strings in order", () => {
     const elements = PatternFromString(["[ADJ|NOUN]", "[DATE]", "[|the]"]);

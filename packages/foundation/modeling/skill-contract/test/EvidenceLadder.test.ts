@@ -18,9 +18,9 @@ import {
 } from "@beep/skill-contract";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEvidenceLadderStateResult = S.decodeResult(EvidenceLadderState);
 const encodeUnknownEvidenceLadderStateResult = S.encodeUnknownResult(EvidenceLadderState);
@@ -94,13 +94,20 @@ describe("@beep/skill-contract EvidenceLadder", () => {
   });
 
   it("round-trips schema-derived arbitrary structural ladder states", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(EvidenceLadderState)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(encodeUnknownEvidenceLadderStateResult(candidate));
-        const decoded = Result.getOrThrow(decodeEvidenceLadderStateResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(EvidenceLadderState)]),
+          ([candidate]) => {
+            const encoded = Result.getOrThrow(encodeUnknownEvidenceLadderStateResult(candidate));
+            const decoded = Result.getOrThrow(decodeEvidenceLadderStateResult(encoded));
 
-        expect(S.toEquivalence(EvidenceLadderState)(decoded, candidate)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(EvidenceLadderState)(decoded, candidate)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

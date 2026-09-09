@@ -319,24 +319,11 @@ const VeniceAIEncodedQuery = S.Record(S.String, VeniceAIQueryValue).pipe(
 type VeniceAIEncodedQuery = typeof VeniceAIEncodedQuery.Type;
 const decodeVeniceAIEncodedQuery = S.decodeEffect(VeniceAIEncodedQuery);
 
-const VeniceAIFormData = S.FormData.annotate({
-  toArbitrary: () => (fc) => fc.constant(null).map(() => new FormData()),
-});
+const VeniceAIFormData = S.FormData;
 
-const VeniceAIUnknownPayload = S.Unknown.annotate({
-  toArbitrary: () => (fc) =>
-    fc.oneof(
-      fc.boolean(),
-      fc.constant(null),
-      fc.integer(),
-      fc.record({ ok: fc.boolean(), value: fc.string() }, { requiredKeys: [] }),
-      fc.string()
-    ),
-});
+const VeniceAIUnknownPayload = S.Unknown;
 
-const VeniceAIBytes = S.Uint8Array.annotate({
-  toArbitrary: () => (fc) => fc.uint8Array({ maxLength: 16 }),
-});
+const VeniceAIBytes = S.Uint8Array;
 
 /**
  * Request options accepted by each Venice API operation method.

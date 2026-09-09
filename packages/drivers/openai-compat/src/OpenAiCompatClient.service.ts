@@ -148,12 +148,16 @@ const mapHttpClientError: {
   2,
   (error: HttpClientError.HttpClientError, method: string): Effect.Effect<never, AiError.AiError> =>
     Match.value(error.reason).pipe(
-      Match.tags({
-        StatusCodeError: (reason) => mapStatusError(method, reason),
-        TransportError: (reason) => Effect.fail(makeAiError(method, AiError.NetworkError.fromRequestError(reason))),
-        EncodeError: (reason) => Effect.fail(makeAiError(method, AiError.NetworkError.fromRequestError(reason))),
-        InvalidUrlError: (reason) => Effect.fail(makeAiError(method, AiError.NetworkError.fromRequestError(reason))),
-      }),
+      Match.tag("StatusCodeError", (reason) => mapStatusError(method, reason)),
+      Match.tag("TransportError", (reason) =>
+        Effect.fail(makeAiError(method, AiError.NetworkError.fromRequestError(reason)))
+      ),
+      Match.tag("EncodeError", (reason) =>
+        Effect.fail(makeAiError(method, AiError.NetworkError.fromRequestError(reason)))
+      ),
+      Match.tag("InvalidUrlError", (reason) =>
+        Effect.fail(makeAiError(method, AiError.NetworkError.fromRequestError(reason)))
+      ),
       Match.orElse(() =>
         Effect.fail(makeAiError(method, AiError.InvalidOutputError.make({ description: error.message })))
       )

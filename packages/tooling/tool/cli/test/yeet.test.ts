@@ -146,8 +146,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
 import * as TestClock from "effect/testing/TestClock";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
 const decodeRepoStepRunResult = S.decodeEffect(RepoStepRunResult);
@@ -4112,17 +4112,24 @@ describe("yeet publish scope helpers", () => {
   });
 
   it("property: verdict schema round-trips arbitrary verdicts", () => {
-    const VerdictArbitrary = S.toArbitrary(YeetVerdict)(fc);
-    fc.assert(
-      fc.property(VerdictArbitrary, (verdict) => {
-        const encoded = encodeYeetVerdictSync(verdict);
-        const decoded = decodeYeetVerdictSync(encoded);
-        expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
-        expect(decoded.lanes.length).toBe(verdict.lanes.length);
-        expect(decoded.outcome).toBe(verdict.outcome);
-      }),
-      fcRuns(32)
-    );
+    const VerdictArbitrary = Arbitrary.schema(YeetVerdict);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([VerdictArbitrary]),
+          ([verdict]) => {
+            const encoded = encodeYeetVerdictSync(verdict);
+            const decoded = decodeYeetVerdictSync(encoded);
+            expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
+            expect(decoded.lanes.length).toBe(verdict.lanes.length);
+            expect(decoded.outcome).toBe(verdict.outcome);
+
+            return true;
+          },
+          fcRuns(32)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("parks and restores staged-only residue through a marked stash", () =>

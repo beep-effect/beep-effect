@@ -23,8 +23,8 @@ import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
@@ -81,8 +81,8 @@ const decodeRootPackage = S.decodeUnknownSync(RootPackage);
 const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
 const decodeAppTsconfig = S.decodeUnknownSync(AppTsconfig);
 const decodeLabCheckTsconfig = S.decodeUnknownSync(LabCheckTsconfig);
-const LabTsconfigArbitrary = S.toArbitrary(AppTsconfig)(fc);
-const LabCheckTsconfigArbitrary = S.toArbitrary(LabCheckTsconfig)(fc);
+const LabTsconfigArbitrary = Arbitrary.schema(AppTsconfig);
+const LabCheckTsconfigArbitrary = Arbitrary.schema(LabCheckTsconfig);
 
 const withTempRepoCommand = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>
   Effect.acquireUseRelease(
@@ -351,43 +351,60 @@ const expectNoPackageCeremony = (manifest: {
 
 describe("create-package --lab", { concurrent: false }, () => {
   it("property: lab tsconfig schemas round-trip derived values", () => {
-    fc.assert(
-      fc.property(LabTsconfigArbitrary, LabCheckTsconfigArbitrary, (labTsconfig, labCheckTsconfig) => {
-        expect(decodeAppTsconfig(encodeAppTsconfigSync(labTsconfig))).toEqual(labTsconfig);
-        expect(decodeLabCheckTsconfig(encodeLabCheckTsconfigSync(labCheckTsconfig))).toEqual(labCheckTsconfig);
-      }),
-      fcRuns(16)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([LabTsconfigArbitrary, LabCheckTsconfigArbitrary]),
+          ([labTsconfig, labCheckTsconfig]) => {
+            expect(decodeAppTsconfig(encodeAppTsconfigSync(labTsconfig))).toEqual(labTsconfig);
+            expect(decodeLabCheckTsconfig(encodeLabCheckTsconfigSync(labCheckTsconfig))).toEqual(labCheckTsconfig);
+
+            return true;
+          },
+          fcRuns(16)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates", () => {
     const manifestEquivalence = S.toEquivalence(LabManifest);
-    const isoDate = fc
-      .tuple(fc.integer({ min: 1970, max: 2100 }), fc.integer({ min: 1, max: 12 }), fc.integer({ min: 1, max: 28 }))
-      .map(
-        ([year, month, day]) =>
-          `${Str.padStart(4, "0")(String(year))}-${Str.padStart(2, "0")(String(month))}-${Str.padStart(2, "0")(String(day))}`
-      );
-    const encodedManifest = fc.record({
-      schemaVersion: fc.constant("lab-manifest/v1" as const),
-      purpose: fc.string({ minLength: 1 }),
-      created: isoDate,
-      disposition: fc.constantFrom("active", "promote", "expired"),
-      postgresSchema: fc.option(fc.constant("lab_a"), { nil: undefined }),
-    });
-    fc.assert(
-      fc.property(encodedManifest, (encoded) => {
-        const json = JSON.stringify(encoded, null, 2);
-        const decoded = decodeUnknownLabManifestFromJsonStringSync(json);
-        expect(
-          manifestEquivalence(
-            decodeUnknownLabManifestFromJsonStringSync(encodeLabManifestFromJsonStringSync(decoded)),
-            decoded
-          )
-        ).toBe(true);
-      }),
-      fcRuns(16)
+    const isoDate = Arbitrary.map(
+      Arbitrary.all([
+        Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1970), S.isLessThanOrEqualTo(2100))),
+        Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(12))),
+        Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(28))),
+      ]),
+      ([year, month, day]) =>
+        `${Str.padStart(4, "0")(String(year))}-${Str.padStart(2, "0")(String(month))}-${Str.padStart(2, "0")(String(day))}`
     );
+    const encodedManifest = Arbitrary.all({
+      schemaVersion: Arbitrary.Constant("lab-manifest/v1" as const),
+      purpose: Arbitrary.schema(S.String.check(S.isMinLength(1))),
+      created: isoDate,
+      disposition: Arbitrary.schema(S.Union([S.Literal("active"), S.Literal("promote"), S.Literal("expired")])),
+      postgresSchema: S.Literal("lab_a").pipe(S.UndefinedOr, Arbitrary.schema),
+    });
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([encodedManifest]),
+          ([encoded]) => {
+            const json = JSON.stringify(encoded, null, 2);
+            const decoded = decodeUnknownLabManifestFromJsonStringSync(json);
+            expect(
+              manifestEquivalence(
+                decodeUnknownLabManifestFromJsonStringSync(encodeLabManifestFromJsonStringSync(decoded)),
+                decoded
+              )
+            ).toBe(true);
+
+            return true;
+          },
+          fcRuns(16)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it(

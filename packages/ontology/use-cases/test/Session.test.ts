@@ -61,7 +61,7 @@ import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Layer, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeOntologyGraphProjectionOptionsResult = S.decodeResult(OntologyGraphProjectionOptions);
 const decodePrefixMapSync = S.decodeSync(PrefixMap);
@@ -89,15 +89,20 @@ describe("Session use-cases", () => {
   it.effect(
     "round-trips schema-derived graph projection option samples",
     Effect.fnUntraced(function* () {
-      fc.assert(
-        fc.property(S.toArbitrary(OntologyGraphProjectionOptions)(fc), (options) => {
-          const encoded = Result.getOrThrow(encodeOntologyGraphProjectionOptionsResult(options));
-          const decoded = Result.getOrThrow(decodeOntologyGraphProjectionOptionsResult(encoded));
+      expect(
+        (yield* Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(OntologyGraphProjectionOptions)]),
+          ([options]) => {
+            const encoded = Result.getOrThrow(encodeOntologyGraphProjectionOptionsResult(options));
+            const decoded = Result.getOrThrow(decodeOntologyGraphProjectionOptionsResult(encoded));
 
-          expect(Equal.equals(decoded, options)).toBe(true);
-        }),
-        fcRuns(10)
-      );
+            expect(Equal.equals(decoded, options)).toBe(true);
+
+            return true;
+          },
+          fcRuns(10)
+        ))._tag
+      ).toBe("Passed");
       yield* Effect.void;
     })
   );
@@ -892,15 +897,23 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
   const encode = S.encodeResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      const encoded = Result.getOrThrow(encode(value));
-      const decoded = Result.getOrThrow(decode(encoded));
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          const encoded = Result.getOrThrow(encode(value));
+          const decoded = Result.getOrThrow(decode(encoded));
 
-      expect(equivalent(decoded, value)).toBe(true);
-    }),
-    fcRuns(10)
-  );
+          expect(equivalent(decoded, value)).toBe(true);
+
+          return true;
+        },
+        // Partition/quad coherence rejects more native samples than the default budget allows.
+        { ...fcRuns(10), maxDiscards: fcRuns(10).runs * 100 }
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("Session use-case schema round-trips", () => {

@@ -1,13 +1,3 @@
-/**
- * Proofs for the GraphOperations spine: the ExecutionMetrics monoid laws
- * (associativity + identity), OperationCost scaling, the effectful Operation
- * constructors (pure/transform/expand/filter/identity), the ResultStore
- * store/get/has/delete/clear/gc round-trips, and the GraphExecutor over a small
- * graph (leaf application, caching, validation, cost estimation).
- *
- * Effect v4 + `@effect/vitest` coverage for GraphOperations.
- */
-
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-processing/Graph/GraphOperations";
 import { NonNegativeInt } from "@beep/schema";
@@ -18,7 +8,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeResultStoreStoredResult = S.decodeEffect(ResultStore.StoredResult);
 const encodeResultStoreStoredResult = S.encodeEffect(ResultStore.StoredResult);
@@ -30,26 +20,35 @@ const finiteNonNegativeMillis = (duration: Duration.Duration): Duration.Duration
   return Number.isFinite(millis) ? Duration.millis(Math.min(Math.abs(Math.trunc(millis)), 86_400_000)) : Duration.zero;
 };
 
-const arbMetrics: fc.Arbitrary<Types.ExecutionMetrics> = S.toArbitrary(Types.ExecutionMetrics)(fc).map((metrics) =>
-  Types.ExecutionMetrics.make({
-    ...metrics,
-    duration: finiteNonNegativeMillis(metrics.duration),
-  })
+const arbMetrics: Arbitrary.Arbitrary<Types.ExecutionMetrics> = Arbitrary.schema(Types.ExecutionMetrics).pipe(
+  Arbitrary.map((metrics) =>
+    Types.ExecutionMetrics.make({
+      ...metrics,
+      duration: finiteNonNegativeMillis(metrics.duration),
+    })
+  )
 );
 const metricsEqual = S.toEquivalence(Types.ExecutionMetrics);
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expect(equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expect(equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("ExecutionMetrics monoid laws", () => {
@@ -58,26 +57,36 @@ describe("ExecutionMetrics monoid laws", () => {
   });
 
   it("satisfies left identity: empty ⊕ x = x", () => {
-    fc.assert(
-      fc.property(arbMetrics, (x) => metricsEqual(Types.ExecutionMetrics.combine(Types.ExecutionMetrics.empty(), x), x))
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([arbMetrics]), ([x]) =>
+          metricsEqual(Types.ExecutionMetrics.combine(Types.ExecutionMetrics.empty(), x), x)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("satisfies right identity: x ⊕ empty = x", () => {
-    fc.assert(
-      fc.property(arbMetrics, (x) => metricsEqual(Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.empty()), x))
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([arbMetrics]), ([x]) =>
+          metricsEqual(Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.empty()), x)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)", () => {
-    fc.assert(
-      fc.property(arbMetrics, arbMetrics, arbMetrics, (x, y, z) =>
-        metricsEqual(
-          Types.ExecutionMetrics.combine(Types.ExecutionMetrics.combine(x, y), z),
-          Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.combine(y, z))
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([arbMetrics, arbMetrics, arbMetrics]), ([x, y, z]) =>
+          metricsEqual(
+            Types.ExecutionMetrics.combine(Types.ExecutionMetrics.combine(x, y), z),
+            Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.combine(y, z))
+          )
         )
-      )
-    );
+      )._tag
+    ).toBe("Passed");
   });
 });
 

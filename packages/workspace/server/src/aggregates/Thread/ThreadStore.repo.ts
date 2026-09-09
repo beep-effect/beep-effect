@@ -25,6 +25,7 @@ import { Clock, DateTime, Effect, HashMap, Match, Order, pipe, Ref, Semaphore } 
 import * as O from "effect/Option";
 import { InMemoryState } from "./ThreadStore.repo.internal.ts";
 import type { CuidState } from "@beep/schema/Cuid";
+import type { MessageItem, ToolCallItem } from "@beep/workspace-domain/entities/Turn";
 import type { MessageInsert } from "@beep/workspace-tables/entities/Message";
 import type * as Crypto from "effect/Crypto";
 import type { MessageEntityInput, ThreadEntityInput, TurnEntityInput } from "./ThreadStore.repo.internal.ts";
@@ -170,7 +171,7 @@ const projectTimeline = (
                 Match.value(item),
                 Match.withReturnType<O.Option<ThreadStoreServer.Thread.TimelineItem>>(),
                 Match.discriminatorsExhaustive("itemType")({
-                  message: (item) =>
+                  message: (item: MessageItem) =>
                     pipe(
                       messageFor(item.messageId),
                       O.map((message) =>
@@ -181,7 +182,7 @@ const projectTimeline = (
                         })
                       )
                     ),
-                  tool_call: (item) =>
+                  tool_call: (item: ToolCallItem) =>
                     O.some(
                       ThreadStoreServer.Thread.TimelineToolCallItem.make({
                         name: item.name,

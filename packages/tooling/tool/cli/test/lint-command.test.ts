@@ -658,7 +658,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
               '"severity":"warning","file":"packages/example/test/Example.test.ts","line":4,' +
               '"symbol":"schema-codec-tests",' +
               '"message":"Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage.",' +
-              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema)(fc) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
+              '"remediation":"Add a focused property test using Arbitrary.schema(sourceSchema) and Arbitrary.checkEffect, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
             expect(errorLines).toContain(structuredIssueLine);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -786,7 +786,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
               '"severity":"warning","file":"packages/example/test/Sync.test.ts","line":4,' +
               '"symbol":"schema-codec-tests",' +
               '"message":"Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage.",' +
-              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema)(fc) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
+              '"remediation":"Add a focused property test using Arbitrary.schema(sourceSchema) and Arbitrary.checkEffect, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
             expect(errorLines).toContain(structuredIssueLine);
           })
         ).pipe(provideScopedLayer(testLayer))

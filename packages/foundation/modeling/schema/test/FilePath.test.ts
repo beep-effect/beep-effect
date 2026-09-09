@@ -1,9 +1,9 @@
 import { fcRuns } from "@beep/fc-runs";
 import * as FilePathSchema from "@beep/schema/FilePath";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import * as SchemaAST from "effect/SchemaAST";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownFilePathSchemaFilePathSync = S.decodeUnknownSync(FilePathSchema.FilePath);
 const decodeUnknownFilePathSchemaHasLeafSegmentSync = S.decodeUnknownSync(FilePathSchema.HasLeafSegment);
@@ -79,15 +79,22 @@ describe("FilePath part schemas", () => {
   });
 
   it("derives valid values from the WindowsDriveRoot source schema and round-trips", () => {
-    const arbitrary = S.toArbitrary(FilePathSchema.WindowsDriveRoot)(fc);
+    const arbitrary = Arbitrary.schema(FilePathSchema.WindowsDriveRoot);
 
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        expect(decodeUnknownFilePathSchemaWindowsDriveRootSync(value)).toBe(value);
-        expect(value).toMatch(/^[A-Za-z]:[\\/]?$/);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            expect(decodeUnknownFilePathSchemaWindowsDriveRootSync(value)).toBe(value);
+            expect(value).toMatch(/^[A-Za-z]:[\\/]?$/);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("validates Windows path segments", () => {
@@ -171,11 +178,10 @@ describe("FilePath part schemas", () => {
 
 describe("FilePath", () => {
   it("publishes codec statics and a canonical arbitrary for file paths", () => {
-    expect(SchemaAST.resolve(FilePathSchema.FilePath.ast)?.toArbitrary).toBeDefined();
     expect(
-      fc
-        .sample(S.toArbitrary(FilePathSchema.FilePath)(fc), { numRuns: 20, seed: 0x5eed })
-        .every(FilePathSchema.FilePath.is)
+      Effect.runSync(
+        Arbitrary.sampleEffect(Arbitrary.schema(FilePathSchema.FilePath), { count: 20, seed: 0x5eed })
+      ).every(FilePathSchema.FilePath.is)
     ).toBe(true);
     expect(FilePathSchema.FilePath.decodeUnknownSync("data/ontology.ttl")).toBe("data/ontology.ttl");
   });

@@ -5,9 +5,11 @@
  * @since 0.0.0
  */
 
+import { assert } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { fcRuns } from "./FastCheckRuns.ts";
 
 /**
@@ -25,34 +27,33 @@ import { fcRuns } from "./FastCheckRuns.ts";
  * import * as S from "effect/Schema"
  *
  * const Status = S.Literal("ready")
- * assertSchemaArbitraryDecodesToSelf(Status, { numRuns: 4 })
- * pipe(Status, assertSchemaArbitraryDecodesToSelf({ numRuns: 4 }))
+ * assertSchemaArbitraryDecodesToSelf(Status, { runs: 4 })
+ * pipe(Status, assertSchemaArbitraryDecodesToSelf({ runs: 4 }))
  * ```
  *
  * @param schema - Schema whose generated values must decode back to themselves.
- * @param options - Optional FastCheck tuning for the assertion.
- * @category schema
+ * @param options - Optional Effect Arbitrary tuning for the assertion.
+ * @category testing
  * @since 0.0.0
  */
 export const assertSchemaArbitraryDecodesToSelf: {
-  (options?: { readonly numRuns?: number }): <Schema extends S.Codec<unknown>>(schema: Schema) => void;
-  <Schema extends S.Codec<unknown>>(schema: Schema, options?: { readonly numRuns?: number }): void;
+  (options?: Arbitrary.CheckOptions): <Schema extends S.Codec<unknown>>(schema: Schema) => void;
+  <Schema extends S.Codec<unknown>>(schema: Schema, options?: Arbitrary.CheckOptions): void;
 } = dual(
   (args) => S.isSchema(args[0]),
-  <Schema extends S.Codec<unknown>>(
-    schema: Schema,
-    options?: {
-      readonly numRuns?: number;
-    }
-  ): void => {
-    const arbitrary = S.toArbitrary(schema)(fc);
-    const decode = S.decodeUnknownSync(schema);
+  <Schema extends S.Codec<unknown>>(schema: Schema, options?: Arbitrary.CheckOptions): void => {
+    const arbitrary = Arbitrary.schema(schema);
+    const decode = S.decodeUnknownEffect(schema);
     const equivalent = S.toEquivalence(schema);
     const isValue = S.is(schema);
 
-    fc.assert(
-      fc.property(arbitrary, (value) => isValue(value) && equivalent(decode(value), value)),
-      fcRuns(options?.numRuns ?? 50)
+    const result = Effect.runSync(
+      Arbitrary.checkEffect(
+        arbitrary,
+        (value) => Effect.map(decode(value), (decoded) => isValue(value) && equivalent(decoded, value)),
+        { ...options, ...fcRuns(options?.runs ?? 50) }
+      )
     );
+    assert.deepInclude(result, { _tag: "Passed" });
   }
 );

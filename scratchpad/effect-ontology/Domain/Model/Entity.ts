@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Extracted knowledge-graph entities, relation values, and provenance spans.
  *
@@ -17,9 +18,7 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type { FastCheck } from "effect/testing";
 import { ChunkId, DocumentId, GcsUri } from "../Identity.ts";
 import { Attributes, EntityId } from "./shared.ts";
 
@@ -47,25 +46,7 @@ class EvidenceSpanModel extends S.Class<EvidenceSpanModel>($I`EvidenceSpanModel`
   })
 ) {}
 
-const makeEvidenceSpanArbitrary = (fc: typeof FastCheck) =>
-  fc
-    .tuple(
-      fc.nat(100_000),
-      fc.string({ minLength: 1, maxLength: 128 }),
-      fc.option(S.toArbitrary(Confidence)(fc), { nil: undefined })
-    )
-    .map(([startChar, quote, confidence]) =>
-      EvidenceSpanModel.make({
-        quote,
-        startChar: NonNegativeInt.make(startChar),
-        endChar: NonNegativeInt.make(startChar + quote.length),
-        ...(P.isUndefined(confidence) ? {} : { confidence: O.some(confidence) }),
-      })
-    );
-
-const CanonicalEvidenceSpan = EvidenceSpanModel.check(TextAnchorWidthCheck).annotate({
-  toArbitrary: () => makeEvidenceSpanArbitrary,
-});
+const CanonicalEvidenceSpan = EvidenceSpanModel.check(TextAnchorWidthCheck);
 
 const LegacyEvidenceSpan = S.Struct({
   text: TextAnchorFields.quote,
@@ -122,12 +103,7 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
         confidence: O.map(O.fromUndefinedOr(span.confidence), Confidence.make),
       })
     ),
-  })
-)
-  .annotate({
-    toArbitrary: () => makeEvidenceSpanArbitrary,
-  })
-  .pipe(
+  }),
     $I.annoteSchema("EvidenceSpan", {
       description:
         "Legacy text-field ingress codec decoding to a canonical TextAnchor-backed span with optional confidence.",
@@ -195,12 +171,6 @@ export const GroundingDecision = GroundingStatus.mapMembers(
 ).pipe(
   $I.annoteSchema("GroundingDecision", {
     description: "Auditable grounding lifecycle for an extracted entity or relation.",
-    toArbitrary: () => (fc) =>
-      fc.oneof(
-        S.toArbitrary(GroundingNotEvaluated)(fc),
-        S.toArbitrary(GroundingSupported)(fc),
-        S.toArbitrary(GroundingRejected)(fc)
-      ),
   }),
   S.toTaggedUnion("status")
 );
@@ -511,15 +481,6 @@ export const RelationObject = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("RelationObject", {
     description: "Explicit entity-reference or literal value used in a knowledge-graph relation.",
-    toArbitrary: () =>
-      S.toArbitrary(
-        S.TaggedUnion({
-          EntityReference: { value: EntityId },
-          Text: { value: S.String },
-          Number: { value: S.Finite },
-          Boolean: { value: S.Boolean },
-        })
-      ),
   })
 );
 
@@ -802,3 +763,26 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
     );
   }
 }
+
+/**
+ * Generates values satisfying the schema's cross-field invariant.
+ *
+ * **Example** (Sample consistent values)
+ * ```ts
+ * import { EvidenceSpanArbitrary } from "@effect-ontology/Model/Entity"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * const samples = Arbitrary.sampleEffect(EvidenceSpanArbitrary)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const EvidenceSpanArbitrary = Arbitrary.schema(EvidenceSpanModel).pipe(
+  Arbitrary.map((value) =>
+    EvidenceSpanModel.make({
+      ...value,
+      startChar: NonNegativeInt.make(0),
+      endChar: NonNegativeInt.make(value.quote.length),
+    })
+  )
+);

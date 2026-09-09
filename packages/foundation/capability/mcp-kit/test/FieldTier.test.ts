@@ -1,13 +1,3 @@
-/**
- * Fixture proof: the field-tier projector reduces a large fixture payload
- * (documentBag-shaped) below a configured size budget; minimal/balanced/
- * complete tiers are named Schema variants. When even the minimal tier
- * exceeds the budget, the result is a fetchable-handle outcome, never an
- * oversized inline payload. The columnar reshaper never drops fields for
- * sparse rows.
- *
- * @since 0.0.0
- */
 import {
   ColumnarEnvelope,
   defineFieldTiers,
@@ -20,9 +10,10 @@ import {
 } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const documentTiers = defineFieldTiers({
   balanced: S.Struct({ abstractText: S.String, documentId: S.String, title: S.String }),
@@ -45,17 +36,24 @@ const largeDocumentBagPayload: Record<string, unknown> = {
 };
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      assert.isTrue(equals(decode(encode(value)), value));
-    }),
-    fcRuns(50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          assert.isTrue(equals(decode(encode(value)), value));
+
+          return true;
+        },
+        fcRuns(50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const mintFetchableHandle = (oversized: { readonly sizeBytes: number }): FetchableHandle =>

@@ -33,15 +33,11 @@ const HubSpotContactEmail = S.NonEmptyString.check(
   S.isPattern(hubSpotEmailPattern, {
     message: "HubSpot contact email must be a valid email address.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("tom@example.com", "ada.lovelace@example.org"),
+).pipe(
+  $I.annoteSchema("HubSpotContactEmail", {
+    description: "HubSpot contact email used as the CRM upsert identity.",
   })
-  .pipe(
-    $I.annoteSchema("HubSpotContactEmail", {
-      description: "HubSpot contact email used as the CRM upsert identity.",
-    })
-  );
+);
 const HubSpotFieldName = S.NonEmptyString.pipe(
   $I.annoteSchema("HubSpotFieldName", {
     description: "Non-empty HubSpot form or CRM property field name.",

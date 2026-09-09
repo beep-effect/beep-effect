@@ -37,9 +37,10 @@ import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type {
   ChainVerification,
   DecisionRecordHash as DecisionRecordHashType,
@@ -57,23 +58,28 @@ const encodeFrozenGrantSetSync = S.encodeSync(FrozenGrantSet);
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: {
-    readonly numRuns?: number;
+    readonly runs?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      const encoded = Result.getOrThrow(encode(value));
-      const decoded = Result.getOrThrow(decode(encoded));
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          const encoded = Result.getOrThrow(encode(value));
+          const decoded = Result.getOrThrow(decode(encoded));
 
-      return equivalent(decoded, value);
-    }),
-    fcRuns(options?.numRuns ?? 50)
-  );
+          return equivalent(decoded, value);
+        },
+        fcRuns(options?.runs ?? 50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const sha256HexPattern = /^[0-9a-f]{64}$/;
@@ -496,7 +502,7 @@ describe("ExecutionAuthority", () => {
 
   describe("schema arbitraries", () => {
     it("derives round-tripping arbitraries for execution authority schemas", () => {
-      const options = { numRuns: 10 };
+      const options = { runs: 10 };
 
       assertSchemaArbitraryRoundTrip(ExecutionGrant, options);
       assertSchemaArbitraryRoundTrip(DraftGrantSet, options);

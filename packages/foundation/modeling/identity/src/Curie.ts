@@ -176,14 +176,22 @@ const CoreCurieSchema = S.declare<CoreCurie>(isCoreCurie, {
   identifier: "@beep/identity/Curie/CoreCurie",
   title: "Core CURIE",
   description: "Finite CURIE literal from the built-in identity CoreVocab registry.",
-  toArbitrary: () => (fc) => fc.constantFrom(...CoreCurieArbitraryValues),
+  toCodecArbitrary: () =>
+    S.link<CoreCurie>()(
+      S.Literals<ReadonlyArray<CoreCurie>>(CoreCurieArbitraryValues),
+      SchemaTransformation.transform({ decode: (value) => value, encode: (value) => value })
+    ),
 });
 
 const CoreIriSchema = S.declare<CoreIri>(isCoreIri, {
   identifier: "@beep/identity/Curie/CoreIri",
   title: "Core IRI",
   description: "Finite IRI literal from the built-in identity CoreVocab registry.",
-  toArbitrary: () => (fc) => fc.constantFrom(...CoreIriArbitraryValues),
+  toCodecArbitrary: () =>
+    S.link<CoreIri>()(
+      S.Literals<ReadonlyArray<CoreIri>>(CoreIriArbitraryValues),
+      SchemaTransformation.transform({ decode: (value) => value, encode: (value) => value })
+    ),
 });
 
 const makeCurieTransformation = <const V extends VocabShape>(vocab: V) =>

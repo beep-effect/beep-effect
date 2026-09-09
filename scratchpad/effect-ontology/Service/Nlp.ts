@@ -134,7 +134,6 @@ const TextChunkDefinition = TextChunkModel.check(
     message: "Expected endOffset to be greater than or equal to startOffset.",
   })
 );
-const isTextChunkDefinition = S.is(TextChunkDefinition);
 
 /**
  * Source-aligned text chunk with ordered UTF-16 offsets.
@@ -161,7 +160,6 @@ const isTextChunkDefinition = S.is(TextChunkDefinition);
 export const TextChunk = TextChunkDefinition.pipe(
   $I.annoteSchema("TextChunk", {
     description: "Zero-based source-aligned text chunk whose UTF-16 offsets are non-negative and ordered.",
-    toArbitrary: () => (fc) => S.toArbitrary(TextChunkModel)(fc).filter(isTextChunkDefinition),
   })
 );
 
@@ -241,7 +239,6 @@ export const ChunkOptions = ChunkOptionsInput.pipe(
   SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("ChunkOptions", {
     description: "Optional chunk overrides decoded to one complete canonical strategy parameter set.",
-    toArbitrary: () => (fc) => S.toArbitrary(ResolvedChunkOptions)(fc),
   })
 );
 
@@ -719,10 +716,23 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         const queryVector = yield* embedding
           .embed(query, "search_query")
           .pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(EMBEDDING_TIMEOUT));
-        const docEmbeddings = yield* Effect.forEach(docs, (doc, index) => embedding.embed(doc, "search_document").pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(EMBEDDING_TIMEOUT), Effect.map(docVector => O.some({ doc, index, embedding: docVector })), Effect.tapError(error => Effect.logWarning("Embedding failed after retries", {
+        const docEmbeddings = yield* Effect.forEach(
+          docs,
+          (doc, index) =>
+            embedding.embed(doc, "search_document").pipe(
+              Effect.retry(embeddingRetrySchedule),
+              Effect.timeout(EMBEDDING_TIMEOUT),
+              Effect.map((docVector) => O.some({ doc, index, embedding: docVector })),
+              Effect.tapError((error) =>
+                Effect.logWarning("Embedding failed after retries", {
     docPreview: doc.slice(0, 100),
     error: Inspectable.toStringUnknown(error),
-})), Effect.orElseSucceed(O.none)), { concurrency: 5 });
+                })
+              ),
+              Effect.orElseSucceed(O.none)
+            ),
+          { concurrency: 5 }
+        );
 
         return pipe(
           A.getSomes(docEmbeddings),
@@ -934,10 +944,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         return index;
       }),
       createOntologySemanticIndexFromPrecomputed: Effect.fn("NlpService.createOntologySemanticIndexFromPrecomputed")(
-        function* (
-        ontology: OntologyContext,
-        embeddings: OntologyEmbeddings
-        ): Effect.fn.Return<OntologySemanticIndex> {
+        function* (ontology: OntologyContext, embeddings: OntologyEmbeddings): Effect.fn.Return<OntologySemanticIndex> {
           const embeddingMap = MutableHashMap.empty<string, ReadonlyArray<number>>();
           const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>();
           for (const classEmb of embeddings.classes) {

@@ -1224,15 +1224,19 @@ const attributeRequirementAppliesToAttributes = (requirement: HtmlAttributeRequi
       onNone: () => true,
       onSome: (predicate) =>
         Match.value(predicate).pipe(
-          Match.tags({
-            attributeContainsToken: ({ attribute, value }) =>
-              attributeTokensContainAll(readProperty(attributes, attribute), [value]),
-            attributeEquals: ({ attribute, value }) => attributeEquals(readProperty(attributes, attribute), value),
-            attributeEqualsOrMissing: ({ attribute, value }) =>
+          Match.tag("attributeContainsToken", ({ attribute, value }) =>
+            attributeTokensContainAll(readProperty(attributes, attribute), [value])
+          ),
+          Match.tag("attributeEquals", ({ attribute, value }) =>
+            attributeEquals(readProperty(attributes, attribute), value)
+          ),
+          Match.tag(
+            "attributeEqualsOrMissing",
+            ({ attribute, value }) =>
               !hasAttribute(readProperty(attributes, attribute)) ||
-              attributeEquals(readProperty(attributes, attribute), value),
-            attributePresent: ({ attribute }) => hasAttribute(readProperty(attributes, attribute)),
-          }),
+              attributeEquals(readProperty(attributes, attribute), value)
+          ),
+          Match.tag("attributePresent", ({ attribute }) => hasAttribute(readProperty(attributes, attribute))),
           Match.exhaustive
         ),
     })
@@ -1281,15 +1285,18 @@ const attributeRequirementHasBlankAttribute = (requirement: HtmlAttributeRequire
 
 const attributeValueConstraintIsSatisfied = (constraint: AttributeValueConstraint, attributes: object): boolean =>
   Match.value(constraint).pipe(
-    Match.tags({
-      allowedValues: ({ attribute, values }) => attributeHasAllowedValue(readProperty(attributes, attribute), values),
-      containsAllTokens: ({ attribute, values }) =>
-        attributeTokensContainAll(readProperty(attributes, attribute), values),
-      containsAnyToken: ({ attribute, values }) =>
-        attributeTokensContainAny(readProperty(attributes, attribute), values),
-      equals: ({ asciiCaseInsensitive, attribute, value }) =>
-        attributeHasRequiredValue(readProperty(attributes, attribute), value, asciiCaseInsensitive === true),
-    }),
+    Match.tag("allowedValues", ({ attribute, values }) =>
+      attributeHasAllowedValue(readProperty(attributes, attribute), values)
+    ),
+    Match.tag("containsAllTokens", ({ attribute, values }) =>
+      attributeTokensContainAll(readProperty(attributes, attribute), values)
+    ),
+    Match.tag("containsAnyToken", ({ attribute, values }) =>
+      attributeTokensContainAny(readProperty(attributes, attribute), values)
+    ),
+    Match.tag("equals", ({ asciiCaseInsensitive, attribute, value }) =>
+      attributeHasRequiredValue(readProperty(attributes, attribute), value, asciiCaseInsensitive === true)
+    ),
     Match.exhaustive
   );
 

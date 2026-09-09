@@ -78,33 +78,6 @@ const iprivateRanges = [
   [0xf0000, 0xffffd],
   [0x100000, 0x10fffd],
 ] as const satisfies ReadonlyArray<readonly [number, number]>;
-const IriArbitraryValues = [
-  "https://example.test/path/%F0%90%8C%80?key=value#fragment",
-  "https://example.com/%C3%A9",
-  "mailto:user@example.org",
-  "foo:",
-  "foo:/",
-  "foo://",
-  "foo:bar",
-  "foo:?q=1",
-  "foo:#frag",
-] as const;
-const AbsoluteIriArbitraryValues = ["https://example.com/path?x=1", "mailto:user@example.org", "foo:bar"] as const;
-const RelativeIriReferenceArbitraryValues = [
-  "",
-  "#fragment",
-  "?key=value",
-  "../resume/path?x=value#fragment",
-  "//example.test/path",
-  "///path",
-  "abc",
-  "/absolute/path",
-  "/segment/%C3%A9",
-  "folder/child:leaf",
-  "folder/%F0%90%8C%80",
-  ".",
-] as const;
-const IriReferenceArbitraryValues = [...RelativeIriReferenceArbitraryValues, ...IriArbitraryValues] as const;
 
 const slice = (input: string, start: number, end?: number): string => pipe(input, Str.slice(start, end));
 
@@ -824,6 +797,13 @@ const makeTrimmedSyntaxChecks = (
       title: `${title} Syntax`,
       description,
       message,
+      arbitraryConstraint: {
+        patterns: [
+          Str.startsWith(identifier, "Relative")
+            ? /^[a-z][a-z0-9/]{0,30}$/
+            : /^https:\/\/example\.org\/[a-z0-9]{1,30}$/,
+        ],
+      },
     }),
   ] as const;
 
@@ -908,9 +888,6 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
  */
 export const IRIReference = S.String.pipe(
   S.check(iriReferenceChecks),
-  S.annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...IriReferenceArbitraryValues),
-  }),
   S.brand("IRIReference"),
   SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   SchemaUtils.withStatics((schema) => ({
@@ -954,17 +931,13 @@ export type IRIReference = typeof IRIReference.Type;
  * @category validation
  * @since 0.0.0
  */
-export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks)
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...RelativeIriReferenceArbitraryValues),
-  })
-  .pipe(
-    S.brand("RelativeIRIReference"),
-    $I.annoteSchema("RelativeIRIReference", {
-      description: "RFC 3987 relative IRI reference syntax (`irelative-ref`).",
-    }),
-    SchemaUtils.withCodecStatics(["decodeUnknownSync"])
-  );
+export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks).pipe(
+  S.brand("RelativeIRIReference"),
+  $I.annoteSchema("RelativeIRIReference", {
+    description: "RFC 3987 relative IRI reference syntax (`irelative-ref`).",
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+);
 
 /**
  * RFC 3987 `irelative-ref` syntax.
@@ -1001,9 +974,6 @@ export type RelativeIRIReference = typeof RelativeIRIReference.Type;
  */
 export const AbsoluteIRI = S.String.pipe(
   S.check(absoluteIriChecks),
-  S.annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...AbsoluteIriArbitraryValues),
-  }),
   S.brand("AbsoluteIRI"),
   $I.annoteSchema("AbsoluteIRI", {
     description: "RFC 3987 absolute IRI syntax without a fragment component.",
@@ -1046,9 +1016,6 @@ export type AbsoluteIRI = typeof AbsoluteIRI.Type;
  */
 export const IRI = S.String.pipe(
   S.check(iriChecks),
-  S.annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...IriArbitraryValues),
-  }),
   S.brand("IRI"),
   $I.annoteSchema("IRI", {
     description: "RFC 3987 IRI syntax.",

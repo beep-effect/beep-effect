@@ -221,22 +221,20 @@ const makeEmbedder = Effect.fn("Embedder.make")(function* (provider: O.Option<Em
       const hits = A.getSomes(
         A.map(resolutions, (resolution) =>
           Match.value(resolution).pipe(
-            Match.tagsExhaustive({
-              Degraded: O.none<EmbeddingVector>,
-              Hit: ({ vector }) => O.some(vector),
-              Miss: O.none<EmbeddingVector>,
-            })
+            Match.tag("Degraded", O.none<EmbeddingVector>),
+            Match.tag("Hit", ({ vector }) => O.some(vector)),
+            Match.tag("Miss", O.none<EmbeddingVector>),
+            Match.exhaustive
           )
         )
       );
       const initialDegraded = A.getSomes(
         A.map(resolutions, (resolution) =>
           Match.value(resolution).pipe(
-            Match.tagsExhaustive({
-              Degraded: ({ degraded: value }) => O.some(value),
-              Hit: O.none<DegradedEmbedding>,
-              Miss: O.none<DegradedEmbedding>,
-            })
+            Match.tag("Degraded", ({ degraded: value }) => O.some(value)),
+            Match.tag("Hit", O.none<DegradedEmbedding>),
+            Match.tag("Miss", O.none<DegradedEmbedding>),
+            Match.exhaustive
           )
         )
       );

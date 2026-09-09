@@ -26,7 +26,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ShaclNodeShape } from "@beep/semantic-web/services/shacl-validation";
 
 const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);
@@ -132,26 +132,40 @@ describe("identity RDF binding", () => {
   });
 
   it("derives only pairwise-distinct predicate bindings", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(IdentityRdfBinding)(fc), (generated) => {
-        const predicates = bindingPredicateValues(generated);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(IdentityRdfBinding)]),
+          ([generated]) => {
+            const predicates = bindingPredicateValues(generated);
 
-        assert.strictEqual(HashSet.size(HashSet.fromIterable(predicates)), A.length(predicates));
-      }),
-      { numRuns: 40 }
-    );
+            assert.strictEqual(HashSet.size(HashSet.fromIterable(predicates)), A.length(predicates));
+
+            return true;
+          },
+          { runs: 40 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("derives only unique required-fiber policies", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(IdentityShapePolicy)(fc), (generated) => {
-        assert.strictEqual(
-          HashSet.size(HashSet.fromIterable(generated.requiredFibers)),
-          A.length(generated.requiredFibers)
-        );
-      }),
-      { numRuns: 40 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(IdentityShapePolicy)]),
+          ([generated]) => {
+            assert.strictEqual(
+              HashSet.size(HashSet.fromIterable(generated.requiredFibers)),
+              A.length(generated.requiredFibers)
+            );
+
+            return true;
+          },
+          { runs: 40 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(
@@ -179,7 +193,7 @@ describe("identity RDF binding", () => {
 
       assert.deepStrictEqual(decoded, [generated]);
     }),
-    { fastCheck: { numRuns: 40 } }
+    { arbitrary: { runs: 40 } }
   );
 
   it.effect(

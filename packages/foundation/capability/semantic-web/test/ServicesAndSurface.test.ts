@@ -1,5 +1,5 @@
 import { WebAnnotation } from "@beep/rdf/Adapters/WebAnnotation";
-import { Dataset, makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { Dataset, makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad, Quad } from "@beep/rdf/Rdf";
 import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
@@ -31,8 +31,7 @@ import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as SchemaAST from "effect/SchemaAST";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeCanonicalizeDatasetRequest = S.decodeEffect(CanonicalizeDatasetRequest);
 const decodeDataset = S.decodeEffect(Dataset);
@@ -63,32 +62,28 @@ const dataset = makeDataset([
   makeQuad(makeNamedNode("https://example.com/people/alice"), RDF_TYPE, makeNamedNode("https://schema.org/Person")),
 ]);
 
-const boundDataset = (value: Dataset): Dataset => Dataset.make({ quads: pipe(value.quads, A.take(3)) });
-
-const DatasetArbitrary = S.toArbitrary(Dataset)(fc).map(boundDataset);
-const CanonicalizeDatasetRequestArbitrary = S.toArbitrary(CanonicalizeDatasetRequest)(fc).map((request) =>
-  CanonicalizeDatasetRequest.make({
-    algorithm: request.algorithm,
-    dataset: boundDataset(request.dataset),
-    workLimit: request.workLimit,
-  })
+const BoundedDataset = S.Struct({ quads: S.Array(Quad).check(S.isMaxLength(3)) });
+const DatasetArbitrary = Arbitrary.schema(BoundedDataset).pipe(Arbitrary.map(Dataset.make));
+const CanonicalizeDatasetRequestArbitrary = Arbitrary.schema(
+  S.Struct({ ...CanonicalizeDatasetRequest.fields, dataset: BoundedDataset })
+).pipe(
+  Arbitrary.map((request) => CanonicalizeDatasetRequest.make({ ...request, dataset: Dataset.make(request.dataset) }))
 );
-const FingerprintDatasetRequestArbitrary = S.toArbitrary(FingerprintDatasetRequest)(fc).map((request) =>
-  FingerprintDatasetRequest.make({
-    algorithm: request.algorithm,
-    dataset: boundDataset(request.dataset),
-    workLimit: request.workLimit,
-  })
+const FingerprintDatasetRequestArbitrary = Arbitrary.schema(
+  S.Struct({ ...FingerprintDatasetRequest.fields, dataset: BoundedDataset })
+).pipe(
+  Arbitrary.map((request) => FingerprintDatasetRequest.make({ ...request, dataset: Dataset.make(request.dataset) }))
 );
 
 const ServiceTestLayer = Layer.merge(CanonicalizationServiceLive, UnsupportedSparqlQueryServiceLive);
 
 describe("Services and Surface", () => {
   it("publishes a canonical arbitrary for SHACL severity", () => {
-    expect(SchemaAST.resolve(ShaclSeverity.ast)?.toArbitrary).toBeDefined();
-    expect(fc.sample(S.toArbitrary(ShaclSeverity)(fc), { numRuns: 20, seed: 0x5eed }).every(isShaclSeverity)).toBe(
-      true
-    );
+    expect(
+      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(ShaclSeverity), { count: 20, seed: 0x5eed })).every(
+        isShaclSeverity
+      )
+    ).toBe(true);
   });
 
   it("models validation findings as a severity tagged union", () => {
@@ -152,40 +147,42 @@ describe("Services and Surface", () => {
     "round-trips schema-derived RDF datasets and canonicalization DTOs through boundary encoders",
     {}, // Inherit the deep-sweep timeout from vitest.shared.ts.
     () =>
-      fc.assert(
-        fc.property(
-          DatasetArbitrary,
-          CanonicalizeDatasetRequestArbitrary,
-          FingerprintDatasetRequestArbitrary,
-          (generatedDataset, canonicalizeRequest, fingerprintRequest) => {
-            const encodedDataset = encodeDatasetResult(generatedDataset);
-            const reencodedDataset = pipe(
-              encodedDataset,
-              Result.flatMap(decodeDatasetResult),
-              Result.flatMap(encodeDatasetResult)
-            );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([DatasetArbitrary, CanonicalizeDatasetRequestArbitrary, FingerprintDatasetRequestArbitrary]),
+            ([generatedDataset, canonicalizeRequest, fingerprintRequest]) => {
+              const encodedDataset = encodeDatasetResult(generatedDataset);
+              const reencodedDataset = pipe(
+                encodedDataset,
+                Result.flatMap(decodeDatasetResult),
+                Result.flatMap(encodeDatasetResult)
+              );
 
-            const encodedCanonicalizeRequest = encodeCanonicalizeDatasetRequestResult(canonicalizeRequest);
-            const reencodedCanonicalizeRequest = pipe(
-              encodedCanonicalizeRequest,
-              Result.flatMap(decodeCanonicalizeDatasetRequestResult),
-              Result.flatMap(encodeCanonicalizeDatasetRequestResult)
-            );
+              const encodedCanonicalizeRequest = encodeCanonicalizeDatasetRequestResult(canonicalizeRequest);
+              const reencodedCanonicalizeRequest = pipe(
+                encodedCanonicalizeRequest,
+                Result.flatMap(decodeCanonicalizeDatasetRequestResult),
+                Result.flatMap(encodeCanonicalizeDatasetRequestResult)
+              );
 
-            const encodedFingerprintRequest = encodeFingerprintDatasetRequestResult(fingerprintRequest);
-            const reencodedFingerprintRequest = pipe(
-              encodedFingerprintRequest,
-              Result.flatMap(decodeFingerprintDatasetRequestResult),
-              Result.flatMap(encodeFingerprintDatasetRequestResult)
-            );
+              const encodedFingerprintRequest = encodeFingerprintDatasetRequestResult(fingerprintRequest);
+              const reencodedFingerprintRequest = pipe(
+                encodedFingerprintRequest,
+                Result.flatMap(decodeFingerprintDatasetRequestResult),
+                Result.flatMap(encodeFingerprintDatasetRequestResult)
+              );
 
-            expect(reencodedDataset).toEqual(encodedDataset);
-            expect(reencodedCanonicalizeRequest).toEqual(encodedCanonicalizeRequest);
-            expect(reencodedFingerprintRequest).toEqual(encodedFingerprintRequest);
-          }
-        ),
-        fcRuns(5)
-      )
+              expect(reencodedDataset).toEqual(encodedDataset);
+              expect(reencodedCanonicalizeRequest).toEqual(encodedCanonicalizeRequest);
+              expect(reencodedFingerprintRequest).toEqual(encodedFingerprintRequest);
+
+              return true;
+            },
+            fcRuns(5)
+          )
+        )._tag
+      ).toBe("Passed")
   );
 
   it.effect(

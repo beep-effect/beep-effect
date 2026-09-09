@@ -13,6 +13,7 @@ import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { hashPrivateIdentifier } from "./privacy.ts";
 import { EvidenceTier, InstrumentClass, WaitReason } from "./telemetry-v2.ts";
 
@@ -968,6 +969,36 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
   static readonly decodeJsonSync = S.decodeUnknownSync(S.fromJsonString(HookPulseV1));
   static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(HookPulseV1));
 }
+
+/**
+ * Generates canonical hook pulses with event-owned fields and derived wait reasons.
+ *
+ * **Example** (Sample canonical hook pulses)
+ * ```ts
+ * import { HookPulseV1Arbitrary } from "@beep/repo-ai-metrics"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * console.log(Arbitrary.sampleEffect(HookPulseV1Arbitrary, { count: 3 }))
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const HookPulseV1Arbitrary = Arbitrary.schema(S.Struct(HookPulseV1.fields)).pipe(
+  Arbitrary.map((value) => {
+    const notificationType = filterHookPulseEventOwnedField(
+      "notificationType",
+      value.hookEvent,
+      value.notificationType
+    );
+    return HookPulseV1.make({
+      ...value,
+      notificationType,
+      sessionEndReason: filterHookPulseEventOwnedField("sessionEndReason", value.hookEvent, value.sessionEndReason),
+      isInterrupt: filterHookPulseEventOwnedField("isInterrupt", value.hookEvent, value.isInterrupt),
+      waitReason: deriveWaitReason(value.hookEvent, value.toolName, notificationType),
+    });
+  })
+);
 
 // Deliberately without `isInterrupt`, and the omission is a dating argument
 // rather than an oversight. "Legacy" here means exactly one thing: a row written

@@ -2,9 +2,10 @@ import { fcRuns } from "@beep/fc-runs";
 import { isMutableHashMap, MutableHashMap, MutableHashMapFromSelf } from "@beep/schema/MutableHashMap";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as MutableHashMap_ from "effect/MutableHashMap";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 describe("MutableHashMapFromSelf", () => {
   it("preserves schema metadata and validates existing mutable hash maps", () => {
@@ -114,18 +115,25 @@ describe("MutableHashMap", () => {
       key: S.String,
       value: S.FiniteFromString,
     });
-    const arbitrary = S.toArbitrary(schema)(fc);
+    const arbitrary = Arbitrary.schema(schema);
     const decode = S.decodeSync(schema);
     const encode = S.encodeSync(schema);
     const equivalence = S.toEquivalence(schema);
 
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        const encoded = encode(value);
-        const decoded = decode(encoded);
-        expect(equivalence(decoded, value)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            const encoded = encode(value);
+            const decoded = decode(encoded);
+            expect(equivalence(decoded, value)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

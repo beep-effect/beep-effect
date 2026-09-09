@@ -7,8 +7,8 @@ import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
@@ -158,8 +158,8 @@ const decodeEcosystemPackageMetadata = S.decodeUnknownSync(EcosystemPackageMetad
 const decodeEcosystemProductionTsconfig = S.decodeUnknownSync(EcosystemProductionTsconfig);
 const decodeEcosystemTestTsconfig = S.decodeUnknownSync(EcosystemTestTsconfig);
 const decodeUnknownRecord = S.decodeUnknownSync(S.Record(S.String, S.Unknown));
-const StoriesTsconfigArbitrary = S.toArbitrary(StoriesTsconfig)(fc);
-const StoriesDirectoryTsconfigArbitrary = S.toArbitrary(StoriesDirectoryTsconfig)(fc);
+const StoriesTsconfigArbitrary = Arbitrary.schema(StoriesTsconfig);
+const StoriesDirectoryTsconfigArbitrary = Arbitrary.schema(StoriesDirectoryTsconfig);
 const TestRootTypeScriptPlugins = [
   {
     name: "@effect/language-service",
@@ -590,15 +590,22 @@ describe("create-package", { concurrent: false }, () => {
   });
 
   it("property: Storybook tsconfig schemas round-trip derived values", () => {
-    fc.assert(
-      fc.property(StoriesTsconfigArbitrary, StoriesDirectoryTsconfigArbitrary, (storiesTsconfig, storiesDirectory) => {
-        expect(decodeStoriesTsconfig(encodeStoriesTsconfigSync(storiesTsconfig))).toEqual(storiesTsconfig);
-        expect(decodeStoriesDirectoryTsconfig(encodeStoriesDirectoryTsconfigSync(storiesDirectory))).toEqual(
-          storiesDirectory
-        );
-      }),
-      fcRuns(16)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([StoriesTsconfigArbitrary, StoriesDirectoryTsconfigArbitrary]),
+          ([storiesTsconfig, storiesDirectory]) => {
+            expect(decodeStoriesTsconfig(encodeStoriesTsconfigSync(storiesTsconfig))).toEqual(storiesTsconfig);
+            expect(decodeStoriesDirectoryTsconfig(encodeStoriesDirectoryTsconfigSync(storiesDirectory))).toEqual(
+              storiesDirectory
+            );
+
+            return true;
+          },
+          fcRuns(16)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it(

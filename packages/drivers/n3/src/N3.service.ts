@@ -179,49 +179,48 @@ const isPrefixLabel = (prefix: string): boolean => prefix === "" || Rdf.PrefixLa
 const fromN3Subject = (subject: N3.Quad_Subject): Effect.Effect<Rdf.Subject, N3TurtleCodecError> =>
   Match.value(subject).pipe(
     Match.withReturnType<Effect.Effect<Rdf.Subject, N3TurtleCodecError>>(),
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => Effect.succeed(Rdf.makeNamedNode(value.value)),
-      BlankNode: (value) => Effect.succeed(Rdf.makeBlankNode(value.value)),
-      Variable: (value) => Effect.fail(unsupportedTerm("subject", value.termType)),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => Effect.succeed(Rdf.makeNamedNode(value.value))),
+    Match.discriminator("termType")("BlankNode", (value) => Effect.succeed(Rdf.makeBlankNode(value.value))),
+    Match.discriminator("termType")("Variable", (value) => Effect.fail(unsupportedTerm("subject", value.termType))),
+    Match.exhaustive
   );
 
 const fromN3Predicate = (predicate: N3.Quad_Predicate): Effect.Effect<Rdf.NamedNode, N3TurtleCodecError> =>
   Match.value(predicate).pipe(
     Match.withReturnType<Effect.Effect<Rdf.NamedNode, N3TurtleCodecError>>(),
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => Effect.succeed(Rdf.makeNamedNode(value.value)),
-      Variable: (value) => Effect.fail(unsupportedTerm("predicate", value.termType)),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => Effect.succeed(Rdf.makeNamedNode(value.value))),
+    Match.discriminator("termType")("Variable", (value) => Effect.fail(unsupportedTerm("predicate", value.termType))),
+    Match.exhaustive
   );
 
 const fromN3Object = (object: N3.Quad_Object): Effect.Effect<Rdf.ObjectTerm, N3TurtleCodecError> =>
   Match.value(object).pipe(
     Match.withReturnType<Effect.Effect<Rdf.ObjectTerm, N3TurtleCodecError>>(),
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => Effect.succeed(Rdf.makeNamedNode(value.value)),
-      BlankNode: (value) => Effect.succeed(Rdf.makeBlankNode(value.value)),
-      Literal: (value) =>
-        Effect.succeed(
-          Rdf.makeLiteral(value.value, value.datatype.value, {
-            ...O.getSomesStruct({
-              language: pipe(value.language, O.liftPredicate(Str.isNonEmpty)),
-            }),
-          })
-        ),
-      Variable: (value) => Effect.fail(unsupportedTerm("object", value.termType)),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => Effect.succeed(Rdf.makeNamedNode(value.value))),
+    Match.discriminator("termType")("BlankNode", (value) => Effect.succeed(Rdf.makeBlankNode(value.value))),
+    Match.discriminator("termType")("Literal", (value) =>
+      Effect.succeed(
+        Rdf.makeLiteral(value.value, value.datatype.value, {
+          ...O.getSomesStruct({
+            language: pipe(value.language, O.liftPredicate(Str.isNonEmpty)),
+          }),
+        })
+      )
+    ),
+    Match.discriminator("termType")("Variable", (value) => Effect.fail(unsupportedTerm("object", value.termType))),
+    Match.exhaustive
   );
 
 const fromN3Graph = (graph: N3.Quad_Graph): Effect.Effect<Rdf.GraphTerm, N3TurtleCodecError> =>
   Match.value(graph).pipe(
     Match.withReturnType<Effect.Effect<Rdf.GraphTerm, N3TurtleCodecError>>(),
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => Effect.succeed(Rdf.makeNamedNode(value.value)),
-      BlankNode: (value) => Effect.succeed(Rdf.makeBlankNode(value.value)),
-      DefaultGraph: () => Effect.succeed(Rdf.DefaultGraph.make({ termType: "DefaultGraph", value: "" })),
-      Variable: (value) => Effect.fail(unsupportedTerm("graph", value.termType)),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => Effect.succeed(Rdf.makeNamedNode(value.value))),
+    Match.discriminator("termType")("BlankNode", (value) => Effect.succeed(Rdf.makeBlankNode(value.value))),
+    Match.discriminator("termType")("DefaultGraph", () =>
+      Effect.succeed(Rdf.DefaultGraph.make({ termType: "DefaultGraph", value: "" }))
+    ),
+    Match.discriminator("termType")("Variable", (value) => Effect.fail(unsupportedTerm("graph", value.termType))),
+    Match.exhaustive
   );
 
 const fromN3Quad = Effect.fn("N3.fromN3Quad")(function* (quad: N3.Quad) {

@@ -15,7 +15,7 @@ import { Effect } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSourceTextPageResult = S.decodeUnknownResult(SourceTextPage);
 
@@ -123,15 +123,22 @@ describe("@beep/file-processing SourceText", () => {
   });
 
   it("derives only relationally valid source-text pages", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(SourceTextPage)(fc), (page) => {
-        expect(page.pageIndex).toBeLessThan(page.pageCount);
-        expect(page.startOffset).toBeLessThanOrEqual(page.endOffset);
-        expect(page.endOffset).toBeLessThanOrEqual(page.totalCodeUnits);
-        expect(page.endOffset - page.startOffset).toBe(Str.length(page.text));
-        expect(page.hasPreviousPage).toBe(page.pageIndex > 0);
-        expect(page.hasNextPage).toBe(page.pageIndex + 1 < page.pageCount);
-      }),
-      fcRuns(50)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(SourceTextPage)]),
+          ([page]) => {
+            expect(page.pageIndex).toBeLessThan(page.pageCount);
+            expect(page.startOffset).toBeLessThanOrEqual(page.endOffset);
+            expect(page.endOffset).toBeLessThanOrEqual(page.totalCodeUnits);
+            expect(page.endOffset - page.startOffset).toBe(Str.length(page.text));
+            expect(page.hasPreviousPage).toBe(page.pageIndex > 0);
+            expect(page.hasNextPage).toBe(page.pageIndex + 1 < page.pageCount);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

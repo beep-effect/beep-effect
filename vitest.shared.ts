@@ -41,7 +41,7 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
 
 const configStringEqualsSync = (name: string, expected: string): boolean =>
   pipe(
-    Effect.runSync(Config.option(Config.string(name))),
+    Effect.runSync(Config.option(Config.String(name))),
     O.exists((value) => value === expected)
   );
 const vitestDoctestActive = configStringEqualsSync("BEEP_VITEST_DOCTEST", "1");
@@ -60,7 +60,7 @@ export const vitestCoverageRunActive =
 // like the coverage flags above (boot-snapshot semantics are exactly
 // what the lane wants — CI exports the floor before vitest starts).
 const parsedFcNumRuns = pipe(
-  Effect.runSync(Config.option(Config.string("BEEP_FC_NUM_RUNS"))),
+  Effect.runSync(Config.option(Config.String("BEEP_FC_NUM_RUNS"))),
   O.map(Number),
   O.getOrElse(() => 0)
 );
@@ -73,11 +73,13 @@ export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNu
 // already ran in the unit lane at the default run count; replaying it at
 // 400-1000 runs with rotating seeds cannot change its outcome. The scan is a
 // cheap synchronous walk of `test/` under the vitest root (the package cwd).
-// `effect/testing` re-exports fast-check as `FastCheck` (358 test files import it that way;
-// only 6 import `fast-check` directly), so the marker matches the namespace, the bare package,
-// `it.prop`, and the `fc.<combinator>` call shapes rather than the import specifier alone.
+// The snapshot's native Arbitrary model replaced the fast-check bridge: property
+// files now import `effect/unstable/arbitrary/Arbitrary` and call `it.prop`,
+// `it.effect.prop`, `Arbitrary.checkEffect`, or `Arbitrary.sampleEffect`. The
+// legacy FastCheck/fc shapes stay matched so an unmigrated straggler is still
+// swept rather than silently dropped from the deep lane.
 const propertyTestMarker =
-  /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
+  /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bit\.effect\.prop\b|\bArbitrary\.(?:checkEffect|sampleEffect|schema)\b|\bunstable\/arbitrary\/Arbitrary\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
 const testFilePattern = /\.test\.tsx?$/;
 const scanSkippedDirectories: ReadonlyArray<string> = ["node_modules", ".context", "fixtures"];
 const listTestFiles = (directory: string): ReadonlyArray<string> => {

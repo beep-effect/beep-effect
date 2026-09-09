@@ -6,26 +6,31 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeWorkItemId = S.decodeUnknownEffect(WorkItem.WorkItemId);
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
 const encodeCreateWorkItemInput = S.encodeUnknownSync(WorkItem.CreateWorkItemInput);
 const encodeWorkItem = S.encodeUnknownSync(WorkItem.WorkItem);
 
-const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown, unknown>>(
-  schema: Schema,
-  numRuns = 10
-): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown, unknown>>(schema: Schema, runs = 10): void => {
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeUnknownSync(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => equivalent(decode(encode(value)), value)),
-    { numRuns }
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          const result = equivalent(decode(encode(value)), value);
+          return result;
+        },
+        { runs }
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const makeWorkItem = (id: WorkItem.WorkItemId) =>

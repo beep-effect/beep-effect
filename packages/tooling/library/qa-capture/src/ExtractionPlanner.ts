@@ -310,113 +310,116 @@ export const planWindows: {
     });
 
   const handleEvent = Match.type<ActionEvent>().pipe(
-    Match.discriminators("kind")({
-      animation: (event) => {
-        const key = `${event.selectorPath}|${event.animationName}`;
-        if (event.phase === "start") {
-          MutableHashMap.set(state.openAnimations, key, event);
-          return;
-        }
-        const open = MutableHashMap.get(state.openAnimations, key);
-        MutableHashMap.remove(state.openAnimations, key);
-        closeSpanEvent(animationRule, open, event, `animation:${event.animationName}@${event.selectorPath}`);
-      },
-      marker: (event) => pushSpan(markerRule, event.tEpochMs, event.tEpochMs, `marker:${event.label}`, [event.seq]),
-      "pointer-cancel": (event) => {
-        const open = MutableHashMap.get(state.openPointers, event.pointerId);
-        MutableHashMap.remove(state.openPointers, event.pointerId);
-        O.match(open, {
-          onNone: () => undefined,
-          onSome: (tracked) => {
-            const travelled = Math.max(tracked.maxDistancePx, distancePx(tracked.down, event.x, event.y));
-            const isDrag = O.exists(dragRule, (rule) => travelled >= rule.minDistancePx);
-            // A cancelled press below the drag threshold left nothing on
-            // screen worth judging; a cancelled drag must show the
-            // post-cancel reset, so it keeps the drag window (and its
-            // post-roll) under a label the judge can tell apart.
-            if (isDrag) {
-              pushSpan(dragRule, tracked.down.tEpochMs, event.tEpochMs, `drag-cancel:${tracked.down.selectorPath}`, [
-                tracked.down.seq,
-                event.seq,
-              ]);
-            }
+    Match.discriminator("kind")("animation", (event) => {
+      const key = `${event.selectorPath}|${event.animationName}`;
+      if (event.phase === "start") {
+        MutableHashMap.set(state.openAnimations, key, event);
+        return;
+      }
+      const open = MutableHashMap.get(state.openAnimations, key);
+      MutableHashMap.remove(state.openAnimations, key);
+      closeSpanEvent(animationRule, open, event, `animation:${event.animationName}@${event.selectorPath}`);
+    }),
+    Match.discriminator("kind")("marker", (event) =>
+      pushSpan(markerRule, event.tEpochMs, event.tEpochMs, `marker:${event.label}`, [event.seq])
+    ),
+    Match.discriminator("kind")("pointer-cancel", (event) => {
+      const open = MutableHashMap.get(state.openPointers, event.pointerId);
+      MutableHashMap.remove(state.openPointers, event.pointerId);
+      O.match(open, {
+        onNone: () => undefined,
+        onSome: (tracked) => {
+          const travelled = Math.max(tracked.maxDistancePx, distancePx(tracked.down, event.x, event.y));
+          const isDrag = O.exists(dragRule, (rule) => travelled >= rule.minDistancePx);
+          // A cancelled press below the drag threshold left nothing on
+          // screen worth judging; a cancelled drag must show the
+          // post-cancel reset, so it keeps the drag window (and its
+          // post-roll) under a label the judge can tell apart.
+          if (isDrag) {
+            pushSpan(dragRule, tracked.down.tEpochMs, event.tEpochMs, `drag-cancel:${tracked.down.selectorPath}`, [
+              tracked.down.seq,
+              event.seq,
+            ]);
+          }
+          return undefined;
+        },
+      });
+    }),
+    Match.discriminator("kind")("pointer-down", (event) =>
+      MutableHashMap.set(state.openPointers, event.pointerId, { down: event, maxDistancePx: 0 })
+    ),
+    Match.discriminator("kind")("pointer-enter", (event) =>
+      MutableHashMap.set(state.openHovers, event.selectorPath, event)
+    ),
+    Match.discriminator("kind")("pointer-leave", (event) => {
+      const open = MutableHashMap.get(state.openHovers, event.selectorPath);
+      MutableHashMap.remove(state.openHovers, event.selectorPath);
+      O.match(O.all({ enter: open, rule: hoverRule }), {
+        onNone: () => undefined,
+        onSome: ({ enter, rule }) => {
+          const dwellMs = event.tEpochMs - enter.tEpochMs;
+          if (dwellMs < rule.minDwellMs) {
             return undefined;
-          },
-        });
-      },
-      "pointer-down": (event) =>
-        MutableHashMap.set(state.openPointers, event.pointerId, { down: event, maxDistancePx: 0 }),
-      "pointer-enter": (event) => MutableHashMap.set(state.openHovers, event.selectorPath, event),
-      "pointer-leave": (event) => {
-        const open = MutableHashMap.get(state.openHovers, event.selectorPath);
-        MutableHashMap.remove(state.openHovers, event.selectorPath);
-        O.match(O.all({ enter: open, rule: hoverRule }), {
-          onNone: () => undefined,
-          onSome: ({ enter, rule }) => {
-            const dwellMs = event.tEpochMs - enter.tEpochMs;
-            if (dwellMs < rule.minDwellMs) {
-              return undefined;
-            }
-            const startEpochMs = Math.max(0, enter.tEpochMs - rule.preRollMs);
-            const endEpochMs = event.tEpochMs + rule.postRollMs;
-            // The hover strip is anchored, not fractional: enter-50,
-            // enter+150, leave+50 per the planner doctrine.
-            pushSpan(
-              hoverRule,
-              enter.tEpochMs,
-              event.tEpochMs,
-              `hover:${event.selectorPath}`,
-              [enter.seq, event.seq],
-              sortedUnique([startEpochMs, Math.min(startEpochMs + HOVER_MID_OFFSET_MS, endEpochMs), endEpochMs])
-            );
-            return undefined;
-          },
-        });
-      },
-      "pointer-move": (event) => {
-        const open = MutableHashMap.get(state.openPointers, event.pointerId);
-        O.match(open, {
-          onNone: () => undefined,
-          onSome: (tracked) =>
-            MutableHashMap.set(state.openPointers, event.pointerId, {
-              down: tracked.down,
-              maxDistancePx: Math.max(tracked.maxDistancePx, distancePx(tracked.down, event.x, event.y)),
-            }),
-        });
-      },
-      "pointer-up": (event) => {
-        const open = MutableHashMap.get(state.openPointers, event.pointerId);
-        MutableHashMap.remove(state.openPointers, event.pointerId);
-        O.match(open, {
-          onNone: () => undefined,
-          onSome: (tracked) => {
-            const travelled = Math.max(tracked.maxDistancePx, distancePx(tracked.down, event.x, event.y));
-            const isDrag = O.exists(dragRule, (rule) => travelled >= rule.minDistancePx);
-            if (isDrag) {
-              pushSpan(dragRule, tracked.down.tEpochMs, event.tEpochMs, `drag:${tracked.down.selectorPath}`, [
-                tracked.down.seq,
-                event.seq,
-              ]);
-              return undefined;
-            }
-            pushSpan(clickRule, tracked.down.tEpochMs, event.tEpochMs, `click:${tracked.down.selectorPath}`, [
+          }
+          const startEpochMs = Math.max(0, enter.tEpochMs - rule.preRollMs);
+          const endEpochMs = event.tEpochMs + rule.postRollMs;
+          // The hover strip is anchored, not fractional: enter-50,
+          // enter+150, leave+50 per the planner doctrine.
+          pushSpan(
+            hoverRule,
+            enter.tEpochMs,
+            event.tEpochMs,
+            `hover:${event.selectorPath}`,
+            [enter.seq, event.seq],
+            sortedUnique([startEpochMs, Math.min(startEpochMs + HOVER_MID_OFFSET_MS, endEpochMs), endEpochMs])
+          );
+          return undefined;
+        },
+      });
+    }),
+    Match.discriminator("kind")("pointer-move", (event) => {
+      const open = MutableHashMap.get(state.openPointers, event.pointerId);
+      O.match(open, {
+        onNone: () => undefined,
+        onSome: (tracked) =>
+          MutableHashMap.set(state.openPointers, event.pointerId, {
+            down: tracked.down,
+            maxDistancePx: Math.max(tracked.maxDistancePx, distancePx(tracked.down, event.x, event.y)),
+          }),
+      });
+    }),
+    Match.discriminator("kind")("pointer-up", (event) => {
+      const open = MutableHashMap.get(state.openPointers, event.pointerId);
+      MutableHashMap.remove(state.openPointers, event.pointerId);
+      O.match(open, {
+        onNone: () => undefined,
+        onSome: (tracked) => {
+          const travelled = Math.max(tracked.maxDistancePx, distancePx(tracked.down, event.x, event.y));
+          const isDrag = O.exists(dragRule, (rule) => travelled >= rule.minDistancePx);
+          if (isDrag) {
+            pushSpan(dragRule, tracked.down.tEpochMs, event.tEpochMs, `drag:${tracked.down.selectorPath}`, [
               tracked.down.seq,
               event.seq,
             ]);
             return undefined;
-          },
-        });
-      },
-      transition: (event) => {
-        const key = `${event.selectorPath}|${event.property}`;
-        if (event.phase === "start") {
-          MutableHashMap.set(state.openTransitions, key, event);
-          return;
-        }
-        const open = MutableHashMap.get(state.openTransitions, key);
-        MutableHashMap.remove(state.openTransitions, key);
-        closeSpanEvent(transitionRule, open, event, `transition:${event.property}@${event.selectorPath}`);
-      },
+          }
+          pushSpan(clickRule, tracked.down.tEpochMs, event.tEpochMs, `click:${tracked.down.selectorPath}`, [
+            tracked.down.seq,
+            event.seq,
+          ]);
+          return undefined;
+        },
+      });
+    }),
+    Match.discriminator("kind")("transition", (event) => {
+      const key = `${event.selectorPath}|${event.property}`;
+      if (event.phase === "start") {
+        MutableHashMap.set(state.openTransitions, key, event);
+        return;
+      }
+      const open = MutableHashMap.get(state.openTransitions, key);
+      MutableHashMap.remove(state.openTransitions, key);
+      closeSpanEvent(transitionRule, open, event, `transition:${event.property}@${event.selectorPath}`);
     }),
     Match.orElse(() => undefined)
   );

@@ -21,7 +21,7 @@ import * as R from "@beep/utils/Record";
 import * as Str from "@beep/utils/Str";
 import * as Struct from "@beep/utils/Struct";
 import { thunkFalse, thunkTrue } from "@beep/utils/thunk";
-import { Cause, Effect, Exit, Result, SchemaGetter, SchemaIssue } from "effect";
+import { Cause, Effect, Exit, Result, SchemaAST, SchemaGetter, SchemaIssue, SchemaTransformation } from "effect";
 import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Model from "effect/unstable/schema/Model";
@@ -245,8 +245,8 @@ const JsonRecord = S.Record(TSConfigJsonKey, S.Json).pipe(
 // transform's structural target permissive; decodeRest still validates every
 // actual extension key as JSON in both directions. Preserve JSON-only
 // arbitrary generation so schema-derived values remain encodable.
-const LooseJsonValue = S.Unknown.annotate({
-  toArbitrary: () => (fc) => fc.jsonValue(),
+const LooseJsonValue = S.declare<unknown>((_): _ is unknown => true, {
+  toCodecArbitrary: () => new SchemaAST.Link(S.Json.ast, SchemaTransformation.passthrough()),
 });
 const LooseRecord = S.Record(TSConfigJsonKey, LooseJsonValue);
 

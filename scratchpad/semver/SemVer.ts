@@ -207,7 +207,7 @@ export class SemVer extends Schema.Class<SemVer>($I`SemVer`)(
   static readonly FromString: Schema.Codec<SemVer, string> = Schema.String.pipe(
     Schema.decodeTo(
       SemVer,
-      SchemaTransformation.transformOrFail({
+      SchemaTransformation.transformEffect({
         decode: (input: string) => {
           const result = parseVersion(input);
           return result.ok

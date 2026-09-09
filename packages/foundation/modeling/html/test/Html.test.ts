@@ -26,7 +26,7 @@ import { Effect, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownHtmlDocumentResult = S.decodeUnknownResult(HtmlDocument);
 const decodeUnknownHtmlNodeResult = S.decodeUnknownResult(HtmlNode);
@@ -38,13 +38,13 @@ const encodeInputSync = S.encodeSync(Input);
 
 const decode = S.decodeUnknownSync(HtmlNode);
 const encode = S.encodeSync(HtmlNode);
-const GlobalAttributesArbitrary = S.toArbitrary(GlobalAttributesStruct)(fc);
-const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute)(fc);
-const TextArbitrary = S.toArbitrary(Text)(fc);
-const CommentArbitrary = S.toArbitrary(Comment)(fc);
-const DoctypeArbitrary = S.toArbitrary(Doctype)(fc);
-const InputArbitrary = S.toArbitrary(Input)(fc);
-const HtmlElementMetaArbitrary = S.toArbitrary(HtmlElementMeta)(fc);
+const GlobalAttributesArbitrary = Arbitrary.schema(GlobalAttributesStruct);
+const BooleanAttributeArbitrary = Arbitrary.schema(BooleanAttribute);
+const TextArbitrary = Arbitrary.schema(Text);
+const CommentArbitrary = Arbitrary.schema(Comment);
+const DoctypeArbitrary = Arbitrary.schema(Doctype);
+const InputArbitrary = Arbitrary.schema(Input);
+const HtmlElementMetaArbitrary = Arbitrary.schema(HtmlElementMeta);
 
 const encodeWith = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -256,27 +256,33 @@ describe("HtmlNode AST — schema laws", () => {
   });
 
   it("round-trips schema-derived HTML AST schemas", () =>
-    fc.assert(
-      fc.property(
-        GlobalAttributesArbitrary,
-        BooleanAttributeArbitrary,
-        TextArbitrary,
-        CommentArbitrary,
-        DoctypeArbitrary,
-        InputArbitrary,
-        HtmlElementMetaArbitrary,
-        (attributes, booleanAttribute, text, comment, doctype, input, meta) => {
-          expectRoundTrip(GlobalAttributesStruct, attributes);
-          expectRoundTrip(BooleanAttribute, booleanAttribute);
-          expectRoundTrip(Text, text);
-          expectRoundTrip(Comment, comment);
-          expectRoundTrip(Doctype, doctype);
-          expectRoundTrip(Input, input);
-          expectRoundTrip(HtmlElementMeta, meta);
-        }
-      ),
-      fcRuns(50)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            GlobalAttributesArbitrary,
+            BooleanAttributeArbitrary,
+            TextArbitrary,
+            CommentArbitrary,
+            DoctypeArbitrary,
+            InputArbitrary,
+            HtmlElementMetaArbitrary,
+          ]),
+          ([attributes, booleanAttribute, text, comment, doctype, input, meta]) => {
+            expectRoundTrip(GlobalAttributesStruct, attributes);
+            expectRoundTrip(BooleanAttribute, booleanAttribute);
+            expectRoundTrip(Text, text);
+            expectRoundTrip(Comment, comment);
+            expectRoundTrip(Doctype, doctype);
+            expectRoundTrip(Input, input);
+            expectRoundTrip(HtmlElementMeta, meta);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });
 
 describe("ELEMENT_META", () => {

@@ -457,46 +457,49 @@ const prepareMessage = (
 ): Effect.Effect<ReadonlyArray<OpenAiCompatChatMessage>, AiError.AiError> =>
   pipe(
     Match.type<Prompt.Message>(),
-    Match.discriminatorsExhaustive("role")({
-      assistant: (message) =>
-        pipe(
-          assistantToolCalls(moduleName, toolNameMapper, message.content),
-          Effect.map((toolCalls) => [
-            OpenAiCompatAssistantChatMessage.make({
-              content: pipe(assistantTextContent(message.content), O.getOrNull),
-              role: "assistant",
-              ...O.getSomesStruct({
-                tool_calls: O.filter(O.some(toolCalls), A.isReadonlyArrayNonEmpty),
-              }),
+    Match.discriminator("role")("assistant", (message) =>
+      pipe(
+        assistantToolCalls(moduleName, toolNameMapper, message.content),
+        Effect.map((toolCalls) => [
+          OpenAiCompatAssistantChatMessage.make({
+            content: pipe(assistantTextContent(message.content), O.getOrNull),
+            role: "assistant",
+            ...O.getSomesStruct({
+              tool_calls: O.filter(O.some(toolCalls), A.isReadonlyArrayNonEmpty),
             }),
-          ])
-        ),
-      system: (message) =>
-        Effect.succeed(
-          A.of(
-            OpenAiCompatSystemChatMessage.make({
-              content: message.content,
-              role: "system",
-            })
-          )
-        ),
-      tool: (message) =>
-        pipe(
-          message.content,
-          Effect.forEach((part) => toolResultMessage(moduleName, toolNameMapper, part))
-        ),
-      user: (message) =>
-        pipe(
-          message.content,
-          Effect.forEach((part) => userContentPart(moduleName, part)),
-          Effect.map((content) => [
-            OpenAiCompatUserChatMessage.make({
-              content,
-              role: "user",
-            }),
-          ])
-        ),
-    })
+          }),
+        ])
+      )
+    ),
+    Match.discriminator("role")("system", (message) =>
+      Effect.succeed(
+        A.of(
+          OpenAiCompatSystemChatMessage.make({
+            content: message.content,
+            role: "system",
+          })
+        )
+      )
+    ),
+    Match.discriminator("role")("tool", (message) =>
+      pipe(
+        message.content,
+        Effect.forEach((part) => toolResultMessage(moduleName, toolNameMapper, part))
+      )
+    ),
+    Match.discriminator("role")("user", (message) =>
+      pipe(
+        message.content,
+        Effect.forEach((part) => userContentPart(moduleName, part)),
+        Effect.map((content) => [
+          OpenAiCompatUserChatMessage.make({
+            content,
+            role: "user",
+          }),
+        ])
+      )
+    ),
+    Match.exhaustive
   )(message);
 
 const prepareMessages = (
@@ -605,31 +608,31 @@ const prepareResponseFormat = (
 ): Effect.Effect<O.Option<OpenAiCompatResponseFormat>, AiError.AiError> =>
   pipe(
     Match.type<LanguageModel.ProviderOptions["responseFormat"]>(),
-    Match.discriminatorsExhaustive("type")({
-      json: (responseFormat) =>
-        Effect.try({
-          catch: (error) =>
-            makeUnsupportedSchema(
-              moduleName,
-              "prepareResponseFormat",
-              schemaConversionDescription("Unable to convert structured response schema to JSON Schema.", error)
-            ),
-          try: () =>
-            O.some(
-              OpenAiCompatJsonSchemaResponseFormat.make({
-                json_schema: {
-                  name: responseFormat.objectName,
-                  schema: jsonObjectOrEmpty(
-                    Tool.getJsonSchemaFromSchema(responseFormat.schema, { transformer: toCodecOpenAI })
-                  ),
-                  strict: config.strictJsonSchema,
-                },
-                type: "json_schema",
-              })
-            ),
-        }),
-      text: () => Effect.succeedNone,
-    })
+    Match.discriminator("type")("json", (responseFormat) =>
+      Effect.try({
+        catch: (error) =>
+          makeUnsupportedSchema(
+            moduleName,
+            "prepareResponseFormat",
+            schemaConversionDescription("Unable to convert structured response schema to JSON Schema.", error)
+          ),
+        try: () =>
+          O.some(
+            OpenAiCompatJsonSchemaResponseFormat.make({
+              json_schema: {
+                name: responseFormat.objectName,
+                schema: jsonObjectOrEmpty(
+                  Tool.getJsonSchemaFromSchema(responseFormat.schema, { transformer: toCodecOpenAI })
+                ),
+                strict: config.strictJsonSchema,
+              },
+              type: "json_schema",
+            })
+          ),
+      })
+    ),
+    Match.discriminator("type")("text", () => Effect.succeedNone),
+    Match.exhaustive
   )(responseFormat);
 
 const makeRequest = Effect.fn("OpenAiCompatLanguageModel.makeRequest")(function* (

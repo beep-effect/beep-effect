@@ -76,18 +76,14 @@ const didSyntaxCheck = S.isPattern(didSyntaxPattern, {
  * @category identifiers
  * @since 0.0.0
  */
-export const Did = S.String.check(didSyntaxCheck)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(didSyntaxPattern),
+export const Did = S.String.check(didSyntaxCheck).pipe(
+  S.brand("Did"),
+  $I.annoteSchema("Did", {
+    description:
+      "A W3C DID Core Decentralized Identifier string constrained to generic DID syntax, excluding DID URL path, query, and fragment components.",
+    documentation: "See W3C DID Core section 3.1, DID Syntax: https://www.w3.org/TR/did-core/#did-syntax",
   })
-  .pipe(
-    S.brand("Did"),
-    $I.annoteSchema("Did", {
-      description:
-        "A W3C DID Core Decentralized Identifier string constrained to generic DID syntax, excluding DID URL path, query, and fragment components.",
-      documentation: "See W3C DID Core section 3.1, DID Syntax: https://www.w3.org/TR/did-core/#did-syntax",
-    })
-  );
+);
 
 /**
  * Type for {@link Did}.

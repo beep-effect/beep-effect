@@ -39,7 +39,7 @@ import { Effect } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { envelope, groupOne, groupTwo, panelOne, panelThree, panelTwo, splitOne, splitTwo } from "./Fixtures.ts";
 import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
@@ -559,12 +559,16 @@ describe("floating dock topology", () => {
 describe("anchored box codec properties", () => {
   it.effect("round-trips arbitrary anchored boxes through their codec", () =>
     Effect.sync(() =>
-      fc.assert(
-        fc.property(S.toArbitrary(AnchoredBox)(fc), (box) => {
-          const decoded = O.flatMap(encodeAnchoredBoxOption(box), decodeUnknownAnchoredBoxOption);
-          expect(O.exists(decoded, (value) => Equal.equals(value, box))).toBe(true);
-        })
-      )
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(AnchoredBox)]), ([box]) => {
+            const decoded = O.flatMap(encodeAnchoredBoxOption(box), decodeUnknownAnchoredBoxOption);
+            expect(O.exists(decoded, (value) => Equal.equals(value, box))).toBe(true);
+
+            return true;
+          })
+        )._tag
+      ).toBe("Passed")
     )
   );
 });

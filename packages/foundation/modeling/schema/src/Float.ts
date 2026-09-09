@@ -6,7 +6,6 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("Float");
@@ -29,7 +28,9 @@ const FloatChecks = S.makeFilter(isProtobufFloatValue, {
   message: "Expected a protobuf float value in the binary32 range or an IEEE-754 special value",
 });
 
-const ProtobufNumber = S.declare<number>(P.isNumber, {
+// Protobuf intentionally includes NaN and infinities.
+// @effect-diagnostics-next-line schemaNumber:off
+const ProtobufNumber = S.Number.annotate({
   description: "A JavaScript number, including IEEE-754 special values accepted by protobuf.",
   identifier: $I`ProtobufNumber`,
   title: "Protobuf Number",
@@ -60,22 +61,12 @@ const ProtobufNumber = S.declare<number>(P.isNumber, {
  * @category validation
  * @since 0.0.0
  */
-export const Float = ProtobufNumber.annotate({
-  toArbitrary: () => (fc) =>
-    fc.oneof(
-      fc.float({ max: floatMaximum, min: floatMinimum, noDefaultInfinity: true, noNaN: true }),
-      fc.constant(globalThis.Number.NaN),
-      fc.constant(globalThis.Number.POSITIVE_INFINITY),
-      fc.constant(globalThis.Number.NEGATIVE_INFINITY)
-    ),
-})
-  .check(FloatChecks)
-  .pipe(
-    S.brand("Float"),
-    $I.annoteSchema("Float", {
-      description: "A protobuf float number in the IEEE-754 binary32 range, including valid special values.",
-    })
-  );
+export const Float = ProtobufNumber.check(FloatChecks).pipe(
+  S.brand("Float"),
+  $I.annoteSchema("Float", {
+    description: "A protobuf float number in the IEEE-754 binary32 range, including valid special values.",
+  })
+);
 
 /**
  * Type-level value inferred from {@link Float}.

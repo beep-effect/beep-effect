@@ -38,14 +38,13 @@ const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(Unknown, { sp
 import type { ExtractionError } from "../../Domain/Error/Extraction.ts";
 import type { RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
 
-
 const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Extract");
 
 // =============================================================================
 // Command Options
 // =============================================================================
 
-const ontologyArg = Args.file("ontology").pipe(Args.withDescription("Path to ontology file (Turtle)"));
+const ontologyArg = Args.File("ontology").pipe(Args.withDescription("Path to ontology file (Turtle)"));
 
 const textOption = Flag.String("text").pipe(
   Flag.withAlias("t"),
@@ -168,7 +167,11 @@ const extractHandler = Effect.fn("extractHandler")(function* (
   noExternalVocabs: boolean,
   format: "json" | "turtle",
   concurrency: number
-): Effect.fn.Return<void, ExtractInputError | ExtractionError | PlatformError | RdfError | S.SchemaError | SerializationFailed, ExtractionWorkflow | FileSystem.FileSystem | Path.Path | RdfBuilder | Scope> {
+): Effect.fn.Return<
+  void,
+  ExtractInputError | ExtractionError | PlatformError | RdfError | S.SchemaError | SerializationFailed,
+  ExtractionWorkflow | FileSystem.FileSystem | Path.Path | RdfBuilder | Scope
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const inputText = yield* readInputText(text, file);

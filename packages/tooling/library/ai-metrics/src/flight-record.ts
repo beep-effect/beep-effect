@@ -10,6 +10,7 @@ import { LiteralKit, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import {
   ActivePhase,
@@ -459,6 +460,51 @@ export class FlightRecordCompositionInput extends S.Class<FlightRecordCompositio
     description: "Separate semantic and mechanical inputs from which the telemetry-v2 service derives a flight record.",
   })
 ) {}
+
+const FlightRecordSemanticArbitrary = Arbitrary.schema(S.Struct(FlightRecordSemantic.fields)).pipe(
+  Arbitrary.map((value) =>
+    FlightRecordSemantic.make({
+      ...value,
+      evidenceTier: weakestEvidenceTier([
+        value.objective.evidenceTier,
+        ...A.map(value.semanticTurns, (turn) => turn.evidenceTier),
+      ]),
+    })
+  )
+);
+
+const FlightRecordMechanicalArbitrary = Arbitrary.schema(S.Struct(FlightRecordMechanical.fields)).pipe(
+  Arbitrary.filter(mechanicalTerminalIsConsistent),
+  Arbitrary.map((value) =>
+    FlightRecordMechanical.make({
+      ...value,
+      evidenceTier: weakestEvidenceTier([value.evidenceTier, ...A.map(value.waits, (wait) => wait.evidenceTier)]),
+    })
+  )
+);
+
+/**
+ * Generates composition inputs with consistent lifecycle and evidence attribution.
+ *
+ * **Example** (Sample flight-record composition inputs)
+ * ```ts
+ * import { FlightRecordCompositionInputArbitrary } from "@beep/repo-ai-metrics"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * console.log(Arbitrary.sampleEffect(FlightRecordCompositionInputArbitrary, { count: 3 }))
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const FlightRecordCompositionInputArbitrary = Arbitrary.all([
+  Arbitrary.schema(
+    S.Struct({ ...FlightRecordCompositionInput.fields, semantic: S.Undefined, mechanical: S.Undefined })
+  ),
+  FlightRecordSemanticArbitrary,
+  FlightRecordMechanicalArbitrary,
+]).pipe(
+  Arbitrary.map(([base, semantic, mechanical]) => FlightRecordCompositionInput.make({ ...base, semantic, mechanical }))
+);
 
 /**
  * Composed telemetry-v2 flight record.

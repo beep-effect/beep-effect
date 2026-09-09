@@ -1,5 +1,5 @@
 /**
- * Env-max fast-check run-count helpers for the property-law lane.
+ * Env-max Effect Arbitrary run-count helpers for the property-law lane.
  *
  * **Details**
  *
@@ -14,7 +14,7 @@
  * ```ts
  * import { fcRuns } from "@beep/fc-runs"
  * const options = fcRuns(40)
- * console.log(options.numRuns >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
+ * console.log(options.runs >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
  * ```
  *
  * @packageDocumentation
@@ -29,7 +29,7 @@
  * ```ts
  * import { fcRuns } from "@beep/fc-runs"
  *
- * console.log(fcRuns(40).numRuns >= 40) // true
+ * console.log(fcRuns(40).runs >= 40) // true
  * ```
  *
  * @category testing

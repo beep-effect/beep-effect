@@ -1477,11 +1477,10 @@ const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
   const owners = yield* workspaceCoverageScopeOwners(repoRoot);
   const scope = planCoverageAffectedScope(owners, writerChangedFiles);
   const fullReasons = Match.value(scope).pipe(
-    Match.discriminatorsExhaustive("_tag")({
-      full: ({ reasons }) => reasons,
-      selected: A.empty<string>,
-      noop: A.empty<string>,
-    })
+    Match.discriminator("_tag")("full", ({ reasons }) => reasons),
+    Match.discriminator("_tag")("selected", A.empty<string>),
+    Match.discriminator("_tag")("noop", A.empty<string>),
+    Match.exhaustive
   );
 
   return CoverageBaselineChangeSet.make({
@@ -2406,12 +2405,16 @@ const coverageFailureLocation = (failure: CoverageComparisonFailure): string =>
 
 const renderCoverageFailure = (failure: CoverageComparisonFailure): string =>
   Match.value(failure).pipe(
-    Match.tags({
-      "baseline-drop": (drop) =>
-        `  - ${coverageDiagnosticFragment(drop.packageName)} (${coverageFailureLocation(drop)}) ${drop.metric}: ${drop.actual} < ${drop.baseline}`,
-      "new-uncovered-file": (newFile) =>
-        `  - ${coverageDiagnosticFragment(newFile.packageName)} (${coverageFailureLocation(newFile)}) ${newFile.metric}: new file has ${newFile.uncovered} uncovered unit(s) at ${newFile.actual}% (no baseline file identity)`,
-    }),
+    Match.tag(
+      "baseline-drop",
+      (drop) =>
+        `  - ${coverageDiagnosticFragment(drop.packageName)} (${coverageFailureLocation(drop)}) ${drop.metric}: ${drop.actual} < ${drop.baseline}`
+    ),
+    Match.tag(
+      "new-uncovered-file",
+      (newFile) =>
+        `  - ${coverageDiagnosticFragment(newFile.packageName)} (${coverageFailureLocation(newFile)}) ${newFile.metric}: new file has ${newFile.uncovered} uncovered unit(s) at ${newFile.actual}% (no baseline file identity)`
+    ),
     Match.exhaustive
   );
 

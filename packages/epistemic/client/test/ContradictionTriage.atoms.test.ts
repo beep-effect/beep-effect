@@ -31,7 +31,8 @@ import * as Clock from "effect/Clock";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { AsyncResult, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import * as RpcTest from "effect/unstable/rpc/RpcTest";
 
@@ -118,27 +119,30 @@ const registryWithReviewSuccess = () =>
 
 describe("@beep/epistemic-client contradiction atoms", () => {
   it("round-trips schema-derived detail and source payloads", () =>
-    fc.assert(
-      fc.property(
-        S.toArbitrary(GetContradictionCandidate)(fc),
-        S.toArbitrary(EvidenceSourcePagePayload)(fc),
-        (detailRequest, sourceRequest) => {
-          expect(
-            detailRequestEquivalence(
-              encodeDetailRequest(detailRequest).pipe(Result.getOrThrow, decodeDetailRequest, Result.getOrThrow),
-              detailRequest
-            )
-          ).toBe(true);
-          expect(
-            sourceRequestEquivalence(
-              encodeSourceRequest(sourceRequest).pipe(Result.getOrThrow, decodeSourceRequest, Result.getOrThrow),
-              sourceRequest
-            )
-          ).toBe(true);
-        }
-      ),
-      fcRuns(25)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(GetContradictionCandidate), Arbitrary.schema(EvidenceSourcePagePayload)]),
+          ([detailRequest, sourceRequest]) => {
+            expect(
+              detailRequestEquivalence(
+                encodeDetailRequest(detailRequest).pipe(Result.getOrThrow, decodeDetailRequest, Result.getOrThrow),
+                detailRequest
+              )
+            ).toBe(true);
+            expect(
+              sourceRequestEquivalence(
+                encodeSourceRequest(sourceRequest).pipe(Result.getOrThrow, decodeSourceRequest, Result.getOrThrow),
+                sourceRequest
+              )
+            ).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("starts with an open queue and explicit unselected resource states", () => {
     const registry = AtomRegistry.make();

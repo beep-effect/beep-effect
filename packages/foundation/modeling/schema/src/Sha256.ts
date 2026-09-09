@@ -61,17 +61,13 @@ const computeSha256Hex = Effect.fn("computeSha256Hex")(function* (
  * @category validation
  * @since 0.0.0
  */
-export const Sha256Hex = S.String.check(Sha256HexChecks)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(/^[0-9a-f]{64}$/),
-  })
-  .pipe(
-    S.brand("Sha256Hex"),
-    $I.annoteSchema("Sha256Hex", {
-      description: "A canonical lowercase SHA-256 hex digest.",
-    }),
-    SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
-  );
+export const Sha256Hex = S.String.check(Sha256HexChecks).pipe(
+  S.brand("Sha256Hex"),
+  $I.annoteSchema("Sha256Hex", {
+    description: "A canonical lowercase SHA-256 hex digest.",
+  }),
+  SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
+);
 
 /**
  * Type for {@link Sha256Hex}.

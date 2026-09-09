@@ -1,3 +1,4 @@
+import { tag as matchTag } from "effect/Match";
 /**
  * SQLite storage-class descriptors and their colocated Drizzle compilers.
  *
@@ -11,13 +12,7 @@ import { append, contains, empty, isArray, isReadonlyArrayNonEmpty, some as some
 import { taggedEnum } from "effect/Data";
 import { equals } from "effect/Equal";
 import { dual } from "effect/Function";
-import {
-  orElse as matchOrElse,
-  tags as matchTags,
-  type as matchType,
-  when as matchWhen,
-  withReturnType,
-} from "effect/Match";
+import { orElse as matchOrElse, type as matchType, when as matchWhen, withReturnType } from "effect/Match";
 import { none, some } from "effect/Option";
 import { hasProperty, isBoolean, isNumber, isString, Struct as StructPredicate } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";
@@ -431,18 +426,16 @@ const fromSchemaAST = (node: AST, visited: ReadonlyArray<AST> = empty()): Option
   const nextVisited = append(visited, node);
   return matchType<AST>().pipe(
     withReturnType<Option<Spec>>(),
-    matchTags({
-      String: () => some(Text.make({ mode: "text" })),
-      TemplateLiteral: () => some(Text.make({ mode: "text" })),
-      Boolean: () => some(Integer.make({ mode: "boolean", ident: "integer" })),
-      BigInt: () => some(Blob.make({ mode: "bigint" })),
-      Number: () => some(Real.make({})),
-      Literal: fromLiteralAST,
-      Enum: () => some(Text.make({ mode: "text" })),
-      Objects: () => some(Text.make({ mode: "json" })),
-      Arrays: () => some(Text.make({ mode: "json" })),
-      Suspend: ({ thunk }) => fromSchemaAST(thunk(), nextVisited),
-    }),
+    matchTag("String", () => some(Text.make({ mode: "text" }))),
+    matchTag("TemplateLiteral", () => some(Text.make({ mode: "text" }))),
+    matchTag("Boolean", () => some(Integer.make({ mode: "boolean", ident: "integer" }))),
+    matchTag("BigInt", () => some(Blob.make({ mode: "bigint" }))),
+    matchTag("Number", () => some(Real.make({}))),
+    matchTag("Literal", fromLiteralAST),
+    matchTag("Enum", () => some(Text.make({ mode: "text" }))),
+    matchTag("Objects", () => some(Text.make({ mode: "json" }))),
+    matchTag("Arrays", () => some(Text.make({ mode: "json" }))),
+    matchTag("Suspend", ({ thunk }) => fromSchemaAST(thunk(), nextVisited)),
     matchOrElse(() => none())
   )(node);
 };

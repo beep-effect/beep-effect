@@ -7,11 +7,11 @@ import { describe, expect, it } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import { DateTime, Effect, Option as O } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
-const WorkItemArbitrary = S.toArbitrary(DomainWorkItem.WorkItem)(fc);
+const WorkItemArbitrary = Arbitrary.schema(DomainWorkItem.WorkItem);
 const WorkItemEquivalence = S.toEquivalence(DomainWorkItem.WorkItem);
 const fixedTimestamp = DateTime.toDateUtc(DateTime.makeUnsafe(0));
 
@@ -65,19 +65,26 @@ describe("WorkItem table", () => {
   );
 
   it("round-trips schema-derived WorkItems through the row converters", () =>
-    fc.assert(
-      fc.property(WorkItemArbitrary, (workItem) => {
-        const insert = toWorkItemInsert(workItem);
-        const decoded = fromWorkItemRow({
-          ...insert,
-          assigneeId: insert.assigneeId ?? null,
-          priority: insert.priority ?? null,
-          createdAt: fixedTimestamp,
-          updatedAt: fixedTimestamp,
-        });
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([WorkItemArbitrary]),
+          ([workItem]) => {
+            const insert = toWorkItemInsert(workItem);
+            const decoded = fromWorkItemRow({
+              ...insert,
+              assigneeId: insert.assigneeId ?? null,
+              priority: insert.priority ?? null,
+              createdAt: fixedTimestamp,
+              updatedAt: fixedTimestamp,
+            });
 
-        expect(WorkItemEquivalence(decoded, workItem)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(WorkItemEquivalence(decoded, workItem)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

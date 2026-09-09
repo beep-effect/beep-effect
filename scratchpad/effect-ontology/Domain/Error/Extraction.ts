@@ -12,24 +12,13 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage, OptionalNonNegativeInt } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Extraction");
 
-const OptionalExtractionJson = S.OptionFromNullishOr(S.Json)
-  .pipe(SchemaUtils.withNoneDefault)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const none = fc.constant(O.none());
-      return {
-        arbitrary: fc.oneof(none, S.toArbitrary(S.Json)(fc).map(O.some)),
-        terminal: none,
-      };
-    },
-  })
-  .pipe(
+const OptionalExtractionJson = S.OptionFromNullishOr(S.Json).pipe(
+  SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalExtractionJson", {
       description: "Optional serializable extraction payload normalized to an Effect Option.",
     })
@@ -37,26 +26,14 @@ const OptionalExtractionJson = S.OptionFromNullishOr(S.Json)
 
 const ExtractionJsonArrayDefinition = S.Json.pipe(S.Array);
 
-const ExtractionJsonArray = ExtractionJsonArrayDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(ExtractionJsonArrayDefinition),
-}).pipe(
+const ExtractionJsonArray = ExtractionJsonArrayDefinition.pipe(
   $I.annoteSchema("ExtractionJsonArray", {
     description: "Readonly collection of serializable partial extraction payloads.",
   })
 );
 
-const OptionalExtractionJsonArray = S.OptionFromNullishOr(ExtractionJsonArray)
-  .pipe(SchemaUtils.withNoneDefault)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const none = fc.constant(O.none());
-      return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ExtractionJsonArray)(fc).map(O.some)),
-        terminal: none,
-      };
-    },
-  })
-  .pipe(
+const OptionalExtractionJsonArray = S.OptionFromNullishOr(ExtractionJsonArray).pipe(
+  SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalExtractionJsonArray", {
       description: "Optional collection of partial extraction payloads normalized to an Effect Option.",
     })
@@ -363,7 +340,6 @@ const AnyExtractionErrorDefinition = S.Union([
 export const AnyExtractionError = AnyExtractionErrorDefinition.pipe(
   $I.annoteSchema("AnyExtractionError", {
     description: "Exhaustive tagged union of extraction and row-validation failures.",
-    toArbitrary: () => S.toArbitrary(AnyExtractionErrorDefinition),
   })
 );
 

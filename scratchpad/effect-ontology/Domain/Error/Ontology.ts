@@ -291,7 +291,6 @@ const AnyOntologyErrorDefinition = S.Union([
 export const AnyOntologyError = AnyOntologyErrorDefinition.pipe(
   $I.annoteSchema("AnyOntologyError", {
     description: "Exhaustive tagged union of ontology lookup, loading, and embeddings failures.",
-    toArbitrary: () => S.toArbitrary(AnyOntologyErrorDefinition),
   })
 );
 

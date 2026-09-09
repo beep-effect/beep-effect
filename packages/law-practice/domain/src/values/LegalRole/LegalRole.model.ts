@@ -19,6 +19,7 @@ const isNonEmptyPartyKinds = (kinds: HashSet.HashSet<PartyKind>): boolean => !Ha
 const AdmittedPlayerKinds = StoredHashSet(PartyKind).check(
   S.makeFilter(isNonEmptyPartyKinds, {
     identifier: $I`LegalRoleAdmittedPlayerKindsCheck`,
+    arbitraryConstraint: { minSize: 1 },
     title: "Legal Role Admitted Player Kinds",
     description: "A legal role must admit at least one kind of legal person as a player.",
     message: "A legal role must admit at least one party kind.",

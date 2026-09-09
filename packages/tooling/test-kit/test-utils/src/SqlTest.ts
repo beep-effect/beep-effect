@@ -15,7 +15,6 @@ import { Config, Context, Duration, Effect, FileSystem, Layer, Path, pipe, Redac
 import * as S from "effect/Schema";
 import * as Reactivity from "effect/unstable/reactivity/Reactivity";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
-import { ConnectionError, SqlError } from "effect/unstable/sql/SqlError";
 import type * as PgClient from "@effect/sql-pg/PgClient";
 import type { PgliteClientConfig } from "@effect/sql-pglite/PgliteClient";
 import type * as NodeSqliteClient from "@effect/sql-sqlite-node/SqliteClient";
@@ -1172,69 +1171,15 @@ const buildPgExternalLayer: (
     const config = yield* makePgExternalConfig(configInput);
     const parsed = yield* parsePgExternalConnectionUri(config.connectionUri);
     const Pg = yield* loadPgClientModule("pg-external");
-    const PgNative = yield* loadPgModule;
 
     return Layer.effectContext(
       Effect.gen(function* () {
         const reactivityContext = yield* Layer.build(Reactivity.layer);
         const reactivity = Context.get(reactivityContext, Reactivity.Reactivity);
-        const client = yield* Pg.PgClient.fromClient({
-          acquire: Effect.acquireRelease(
-            Effect.tryPromise({
-              try: () => {
-                const client = new PgNative.Client({
-                  connectionString: config.connectionUri,
-                  connectionTimeoutMillis: config.connectTimeoutMs,
-                  query_timeout: config.connectTimeoutMs,
-                  ssl: config.ssl,
-                });
-                return client
-                  .connect()
-                  .then(() => client.query("SELECT 1"))
-                  .then(() => client);
-              },
-              catch: (cause) =>
-                SqlError.make({
-                  reason: ConnectionError.make({
-                    cause,
-                    message: "PgExternalTestDriver: Failed to connect",
-                    operation: "connect",
-                  }),
-                }),
-            }),
-            (client) =>
-              Effect.tryPromise({
-                try: () => client.end(),
-                catch: (cause) =>
-                  toHarnessError(
-                    "pg-external",
-                    "teardown",
-                    "Failed to close the external PostgreSQL test client.",
-                    cause
-                  ),
-              }).pipe(
-                Effect.timeoutOrElse({
-                  duration: PgExternalClientShutdownTimeout,
-                  orElse: () =>
-                    Effect.sync(() => client.connection.stream.destroy()).pipe(
-                      Effect.andThen(
-                        Effect.logWarning(
-                          "Timed out closing the external PostgreSQL test client; forced the connection stream closed."
-                        )
-                      ),
-                      Effect.catchCause(() =>
-                        Effect.logWarning(
-                          "Timed out closing the external PostgreSQL test client and failed to force-close the connection stream."
-                        )
-                      )
-                    ),
-                }),
-                Effect.catchTag("SqlTestHarnessError", () =>
-                  Effect.logWarning("Failed to close the external PostgreSQL test client.")
-                ),
-                Effect.asVoid
-              )
-          ),
+        const client = yield* Pg.PgClient.makeClient({
+          url: Redacted.make(config.connectionUri),
+          connectTimeout: Duration.millis(config.connectTimeoutMs),
+          ssl: config.ssl,
           acquireForStream: false,
         }).pipe(
           Effect.retry(PgConnectRetryPolicy),

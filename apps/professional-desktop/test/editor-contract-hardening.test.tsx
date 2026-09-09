@@ -29,7 +29,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity";
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from "lexical";
 import { afterEach, beforeEach, describe, expect, vi } from "vitest";
@@ -1079,13 +1079,17 @@ describe("editor contract hardening", { concurrent: false }, () => {
   });
 
   it("round-trips generated composer feature configurations through the production schema", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(ComposerFeatures)(fc), (features) => {
-        const encoded = encodeComposerFeaturesSync(features);
-        expect(decodeComposerFeaturesSync(encoded)).toEqual(features);
-        expect(["enter", "modifierEnter"]).toContain(features.sendOn);
-      })
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.schema(ComposerFeatures), (features) => {
+          const encoded = encodeComposerFeaturesSync(features);
+          expect(decodeComposerFeaturesSync(encoded)).toEqual(features);
+          expect(["enter", "modifierEnter"]).toContain(features.sendOn);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("shows incompatible future wire as escaped read-only text", () => {

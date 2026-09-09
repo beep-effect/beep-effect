@@ -2,7 +2,7 @@
  * Deterministic in-memory `HttpClient` layer for the PACER driver.
  *
  * Routes on the request URL and returns schema-derived bodies from
- * `Pacer.mock-data.ts` (generated via `Schema.toArbitrary`, not hardcoded
+ * `Pacer.mock-data.ts` (generated via `Arbitrary.schema`, not hardcoded
  * JSON), so both the auth and PCL services run with no network and no
  * credentials. Options select the auth + cases error scenarios.
  *

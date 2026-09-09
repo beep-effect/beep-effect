@@ -172,7 +172,7 @@ const decodeInfoString = (info: string): Effect.Effect<CodeSnippetLanguage, Sche
  */
 export const CodeSnippetLanguageFromInfoString = S.String.pipe(
   S.decodeTo(CodeSnippetLanguage, {
-    decode: SchemaGetter.transformOrFail(decodeInfoString),
+    decode: SchemaGetter.transformEffect(decodeInfoString),
     encode: SchemaGetter.passthrough({ strict: false }),
   }),
   SchemaUtils.withCodecStatics(["decodeOption"]),

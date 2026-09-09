@@ -40,7 +40,6 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
@@ -452,14 +451,14 @@ const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
 });
 
 describe("practice KG projections", () => {
-  it("generates schema-valid fixture source rows", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(S.String)(fc), (value) => {
-        expect(isString(value)).toBe(true);
-      }),
-      { numRuns: 10 }
-    );
-  });
+  it.prop(
+    "generates schema-valid fixture source rows",
+    [S.String],
+    ([value]) => {
+      expect(isString(value)).toBe(true);
+    },
+    { arbitrary: { runs: 10 } }
+  );
 
   it("pins the schema-absorbed defaults to their contract values", () => {
     const options = PracticeKgOptions.make({

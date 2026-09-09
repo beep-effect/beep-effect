@@ -2,8 +2,9 @@ import { fcRuns } from "@beep/fc-runs";
 import { LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit";
 import { MappedLiteralDuplicateError, MappedLiteralKit } from "@beep/schema/MappedLiteralKit";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const SqlState = MappedLiteralKit([
   ["SUCCESSFUL_COMPLETION", "00000"],
@@ -27,14 +28,21 @@ describe("MappedLiteralKit", () => {
   });
 
   it("round-trips schema-derived mapped literal samples", () => {
-    const arbitrary = S.toArbitrary(SqlState)(fc);
-    fc.assert(
-      fc.property(arbitrary, (literal) => {
-        expect(SqlState.To.Options).toContain(literal);
-        expect(decodeUnknownSqlStateSync(encodeSqlStateSync(literal))).toBe(literal);
-      }),
-      fcRuns(25)
-    );
+    const arbitrary = Arbitrary.schema(SqlState);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([literal]) => {
+            expect(SqlState.To.Options).toContain(literal);
+            expect(decodeUnknownSqlStateSync(encodeSqlStateSync(literal))).toBe(literal);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("exposes directional enum maps", () => {

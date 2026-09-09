@@ -6,7 +6,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Redacted, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const ArchiveEnvelopeFromJsonString = S.fromJsonString(AiMetricsEncryptedRawArchiveEnvelope);
 const decodeArchiveEnvelope = S.decodeUnknownResult(ArchiveEnvelopeFromJsonString);
@@ -14,7 +14,7 @@ const encodeArchiveEnvelope = S.encodeUnknownResult(ArchiveEnvelopeFromJsonStrin
 const JsonRecord = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeUnknownJson = S.decodeUnknownResult(JsonRecord);
 const encodeUnknownJson = S.encodeUnknownResult(JsonRecord);
-const ArchiveEnvelopeArbitrary = S.toArbitrary(AiMetricsEncryptedRawArchiveEnvelope)(fc);
+const ArchiveEnvelopeArbitrary = Arbitrary.schema(AiMetricsEncryptedRawArchiveEnvelope);
 
 const currentEncoderFixture =
   '{"algorithm":"AES-256-GCM","archiveObjectId":"raw-2222222222222222222222222222222222222222222222222222222222222222","ciphertextBase64":"AAAAAAAAAAAAAAAAAAAAAA==","encryptedAtEpochMillis":1717000000000,"nonceBase64":"AAAAAAAAAAAAAAAA","plaintextContentHash":"0000000000000000000000000000000000000000000000000000000000000000","sourceKind":"codex","sourcePathHash":"1111111111111111111111111111111111111111111111111111111111111111"}';
@@ -27,14 +27,21 @@ describe("AI metrics encrypted raw archive envelope", () => {
   });
 
   it("round-trips schema-derived envelopes", () =>
-    fc.assert(
-      fc.property(ArchiveEnvelopeArbitrary, (envelope) => {
-        const encoded = Result.getOrThrow(encodeArchiveEnvelope(envelope));
-        const decoded = Result.getOrThrow(decodeArchiveEnvelope(encoded));
-        expect(Result.getOrThrow(encodeArchiveEnvelope(decoded))).toBe(encoded);
-      }),
-      fcRuns(25)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ArchiveEnvelopeArbitrary]),
+          ([envelope]) => {
+            const encoded = Result.getOrThrow(encodeArchiveEnvelope(envelope));
+            const decoded = Result.getOrThrow(decodeArchiveEnvelope(encoded));
+            expect(Result.getOrThrow(encodeArchiveEnvelope(decoded))).toBe(encoded);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("rejects malformed cryptographic encodings and identities", () => {
     const fixture = Result.getOrThrow(decodeUnknownJson(currentEncoderFixture));

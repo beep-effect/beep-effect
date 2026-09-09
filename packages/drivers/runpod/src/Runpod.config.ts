@@ -37,7 +37,6 @@ export const RunpodConfigUrl = S.String.pipe(
   }),
   $I.annoteSchema("RunpodConfigUrl", {
     description: "Validated Runpod configuration URL with trailing slash separators removed.",
-    toArbitrary: () => (fc) => fc.webUrl().map(normalizeConfigUrl),
   }),
   SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );

@@ -53,14 +53,8 @@ import { StatutesAtLargeCitation } from "../StatutesAtLargeCitation/index.ts";
 import { SubsequentHistoryEntry } from "../SubsequentHistoryEntry/index.ts";
 import { TreatiseCitation } from "../TreatiseCitation/index.ts";
 import { TreatyCitation } from "../TreatyCitation/index.ts";
-import type { FastCheck } from "effect/testing";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
-
-const parentheticalCitationsToArbitrary: () => (
-  fc: typeof FastCheck
-) => FastCheck.Arbitrary<ReadonlyArray<Citation.Type>> = () => (fc) =>
-  fc.array(S.toArbitrary(DocketCitation)(fc), { maxLength: 2 });
 
 /**
  * Child citations nested within an explanatory {@link Parenthetical} (#851).
@@ -73,9 +67,6 @@ const parentheticalCitationsToArbitrary: () => (
  */
 const ParentheticalCitations = S.Array(S.suspend((): S.Codec<Citation.Type, Citation.Encoded> => Citation)).pipe(
   SchemaUtils.withEmptyArrayDefaults<Citation.Type>(),
-  S.annotate({
-    toArbitrary: parentheticalCitationsToArbitrary,
-  }),
   S.annotateKey({
     description:
       "Child citations nested within this explanatory parenthetical (#851); each carries its own CitationId, may be any citation type, and may itself carry parentheticals (recursive).",

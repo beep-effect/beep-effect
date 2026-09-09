@@ -15,7 +15,7 @@ import {
   validateFileType,
 } from "@beep/schema/FileTypeChecker";
 import { describe, expect, it } from "@effect/vitest";
-import { Match, pipe } from "effect";
+import { Effect, Match, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as Num from "effect/Number";
@@ -24,7 +24,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { FileType as FileTypeValue } from "@beep/schema/FileTypeChecker";
 
 const decodeByteResult = S.decodeResult(Byte);
@@ -250,29 +250,35 @@ describe("FileTypeChecker schemas", () => {
   });
 
   it("derives codec-equivalent arbitrary values from every public schema", () => {
-    fc.assert(
-      fc.property(
-        S.toArbitrary(FileType)(fc),
-        S.toArbitrary(Byte)(fc),
-        S.toArbitrary(FileContent)(fc),
-        S.toArbitrary(FileSignature)(fc),
-        S.toArbitrary(FileTypeInfo)(fc),
-        S.toArbitrary(DetectedFileInfo)(fc),
-        S.toArbitrary(DetectFileOptions)(fc),
-        S.toArbitrary(ValidateFileTypeOptions)(fc),
-        (type, byte, content, signature, info, detected, detectOptions, validateOptions) => {
-          expectSchemaRoundTrip(FileType, type);
-          expectSchemaRoundTrip(Byte, byte);
-          expectSchemaRoundTrip(FileContent, content);
-          expectSchemaRoundTrip(FileSignature, signature);
-          expectSchemaRoundTrip(FileTypeInfo, info);
-          expectSchemaRoundTrip(DetectedFileInfo, detected);
-          expectSchemaRoundTrip(DetectFileOptions, detectOptions);
-          expectSchemaRoundTrip(ValidateFileTypeOptions, validateOptions);
-        }
-      ),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(FileType),
+            Arbitrary.schema(Byte),
+            Arbitrary.schema(FileContent),
+            Arbitrary.schema(FileSignature),
+            Arbitrary.schema(FileTypeInfo),
+            Arbitrary.schema(DetectedFileInfo),
+            Arbitrary.schema(DetectFileOptions),
+            Arbitrary.schema(ValidateFileTypeOptions),
+          ]),
+          ([type, byte, content, signature, info, detected, detectOptions, validateOptions]) => {
+            expectSchemaRoundTrip(FileType, type);
+            expectSchemaRoundTrip(Byte, byte);
+            expectSchemaRoundTrip(FileContent, content);
+            expectSchemaRoundTrip(FileSignature, signature);
+            expectSchemaRoundTrip(FileTypeInfo, info);
+            expectSchemaRoundTrip(DetectedFileInfo, detected);
+            expectSchemaRoundTrip(DetectFileOptions, detectOptions);
+            expectSchemaRoundTrip(ValidateFileTypeOptions, validateOptions);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 

@@ -1,3 +1,4 @@
+import { tag as matchTag } from "effect/Match";
 /**
  * Postgres combinators.
  *
@@ -30,7 +31,6 @@ import { constFalse, constTrue } from "effect/Function";
 import {
   exhaustive,
   orElse as matchOrElse,
-  tags as matchTags,
   type as matchType,
   value as matchValue,
   when as matchWhen,
@@ -86,15 +86,14 @@ import type { EntityIdLike } from "./derive.ts";
 
 const isStringTypeAst = (node: AST, visited: ReadonlyArray<Suspend> = empty()): boolean =>
   matchType<AST>().pipe(
-    matchTags({
-      String: constTrue,
-      TemplateLiteral: constTrue,
-      Literal: ({ literal }) => isString(literal),
-      Enum: ({ enums }) => every(enums, ([, value]) => isString(value)),
-      Union: ({ types }) => every(types, (member) => isStringTypeAst(member, visited)),
-      Suspend: (suspend) =>
-        some(visited, equals(suspend)) ? false : isStringTypeAst(suspend.thunk(), append(visited, suspend)),
-    }),
+    matchTag("String", constTrue),
+    matchTag("TemplateLiteral", constTrue),
+    matchTag("Literal", ({ literal }) => isString(literal)),
+    matchTag("Enum", ({ enums }) => every(enums, ([, value]) => isString(value))),
+    matchTag("Union", ({ types }) => every(types, (member) => isStringTypeAst(member, visited))),
+    matchTag("Suspend", (suspend) =>
+      some(visited, equals(suspend)) ? false : isStringTypeAst(suspend.thunk(), append(visited, suspend))
+    ),
     matchOrElse(constFalse)
   )(node);
 

@@ -16,7 +16,7 @@ import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -51,22 +51,26 @@ const CapturedSanityRequestBody = S.Struct({
   query: S.String,
 });
 const CapturedSanityRequestBodyJson = S.fromJsonString(CapturedSanityRequestBody);
-const ConfigInputArbitrary = S.toArbitrary(SanityConfigInput)(fc).filter((config) => config.apiToken === undefined);
-const QueryParamValueArbitrary = S.toArbitrary(SanityQueryParamValue)(fc);
-const QueryRequestArbitrary = S.toArbitrary(SanityQueryRequest)(fc);
-const QueryResponseArbitrary = S.toArbitrary(SanityQueryResponse)(fc);
-const ErrorReasonArbitrary = S.toArbitrary(SanityErrorReason)(fc);
-const ErrorOptionsArbitrary = S.toArbitrary(SanityErrorOptions)(fc).map((options) =>
-  SanityErrorOptions.make(
-    O.getSomesStruct({
-      status: O.fromUndefinedOr(options.status),
-      url: O.fromUndefinedOr(options.url),
-    })
+const ConfigInputArbitrary = Arbitrary.schema(SanityConfigInput).pipe(
+  Arbitrary.filter((config) => config.apiToken === undefined)
+);
+const QueryParamValueArbitrary = Arbitrary.schema(SanityQueryParamValue);
+const QueryRequestArbitrary = Arbitrary.schema(SanityQueryRequest);
+const QueryResponseArbitrary = Arbitrary.schema(SanityQueryResponse);
+const ErrorReasonArbitrary = Arbitrary.schema(SanityErrorReason);
+const ErrorOptionsArbitrary = Arbitrary.schema(SanityErrorOptions).pipe(
+  Arbitrary.map((options) =>
+    SanityErrorOptions.make(
+      O.getSomesStruct({
+        status: O.fromUndefinedOr(options.status),
+        url: O.fromUndefinedOr(options.url),
+      })
+    )
   )
 );
-const ErrorArbitrary = fc
-  .tuple(ErrorReasonArbitrary, ErrorOptionsArbitrary)
-  .map(([reason, options]) => SanityError.fromReason(reason, options));
+const ErrorArbitrary = Arbitrary.all([ErrorReasonArbitrary, ErrorOptionsArbitrary]).pipe(
+  Arbitrary.map(([reason, options]) => SanityError.fromReason(reason, options))
+);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -209,30 +213,30 @@ describe("@beep/sanity", () => {
     ).toBe(true);
   });
 
-  it("round-trips schema-derived Sanity payloads through encoded form", () =>
-    fc.assert(
-      fc.property(
-        ConfigInputArbitrary,
-        QueryParamValueArbitrary,
-        QueryRequestArbitrary,
-        QueryResponseArbitrary,
-        ErrorReasonArbitrary,
-        ErrorOptionsArbitrary,
-        ErrorArbitrary,
-        (config, queryParamValue, queryRequest, queryResponse, errorReason, errorOptions, error) => {
-          const normalizedConfig = decode(SanityConfigInput, encode(SanityConfigInput, config));
+  it.prop(
+    "round-trips schema-derived Sanity payloads through encoded form",
+    [
+      ConfigInputArbitrary,
+      QueryParamValueArbitrary,
+      QueryRequestArbitrary,
+      QueryResponseArbitrary,
+      ErrorReasonArbitrary,
+      ErrorOptionsArbitrary,
+      ErrorArbitrary,
+    ],
+    ([config, queryParamValue, queryRequest, queryResponse, errorReason, errorOptions, error]) => {
+      const normalizedConfig = decode(SanityConfigInput, encode(SanityConfigInput, config));
 
-          expectRoundTrip(SanityConfigInput, normalizedConfig);
-          expectRoundTrip(SanityQueryParamValue, queryParamValue);
-          expectRoundTrip(SanityQueryRequest, queryRequest);
-          expectRoundTrip(SanityQueryResponse, queryResponse);
-          expectRoundTrip(SanityErrorReason, errorReason);
-          expectRoundTrip(SanityErrorOptions, errorOptions);
-          expectRoundTrip(SanityError, error);
-        }
-      ),
-      fcRuns(50)
-    ));
+      expectRoundTrip(SanityConfigInput, normalizedConfig);
+      expectRoundTrip(SanityQueryParamValue, queryParamValue);
+      expectRoundTrip(SanityQueryRequest, queryRequest);
+      expectRoundTrip(SanityQueryResponse, queryResponse);
+      expectRoundTrip(SanityErrorReason, errorReason);
+      expectRoundTrip(SanityErrorOptions, errorOptions);
+      expectRoundTrip(SanityError, error);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   layer(TestLayer)((it) => {
     it.effect(

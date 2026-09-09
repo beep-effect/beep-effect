@@ -15,7 +15,6 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { pipe, Result, Tuple } from "effect";
 import * as S from "effect/Schema";
-import type { FastCheck } from "effect/testing";
 import { BatchId, ContentHash, DocumentId, Namespace, OntologyName } from "./Identity.ts";
 import { OutputFilename, OutputType } from "./Model/OutputType.ts";
 
@@ -24,11 +23,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/PathLayout");
 const annotateStoragePath =
   (name: string, description: string) =>
   <Schema extends S.Schema<string>>(schema: Schema) =>
-    schema
-      .annotate({
-        toArbitrary: () => S.toArbitrary(schema),
-      })
-      .pipe(
+    schema.pipe(
         $I.annoteSchema(name, {
           description,
         })
@@ -39,11 +34,7 @@ const annotateParser =
   <Schema extends S.Top & S.ConstraintDecoder<unknown>>(schema: Schema) => {
     const decodeResult = S.decodeUnknownResult(schema);
 
-    return schema
-      .annotate({
-        toArbitrary: () => S.toArbitrary(schema),
-      })
-      .pipe(
+    return schema.pipe(
         $I.annoteSchema(name, {
           description,
         }),
@@ -140,11 +131,7 @@ export const StoragePathSegment = S.String.check(
     message:
       "Storage path segment must begin with a letter or digit and contain at most 128 letters, digits, dots, underscores, colons, at-signs, or dashes.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._:@-]{0,63}$/),
-  })
-  .pipe(
+).pipe(
     S.brand("StoragePathSegment"),
     $I.annoteSchema("StoragePathSegment", {
       description: "Traversal-safe single segment for a storage object key.",
@@ -881,11 +868,7 @@ export type RunOutputPath = typeof RunOutputPath.Type;
  * @category value-objects
  * @since 0.0.0
  */
-export const ImageVariantSize = LiteralKit(["thumb", "medium"])
-  .annotate({
-    toArbitrary: () => (fc: typeof FastCheck) => fc.constantFrom("thumb", "medium"),
-  })
-  .pipe(
+export const ImageVariantSize = LiteralKit(["thumb", "medium"]).pipe(
     $I.annoteSchema("ImageVariantSize", {
       description: "Finite size label for a derived image variant.",
     })
@@ -920,11 +903,7 @@ export type ImageVariantSize = typeof ImageVariantSize.Type;
  * @category value-objects
  * @since 0.0.0
  */
-export const ImageOwnerType = LiteralKit(["link", "document"])
-  .annotate({
-    toArbitrary: () => (fc: typeof FastCheck) => fc.constantFrom("link", "document"),
-  })
-  .pipe(
+export const ImageOwnerType = LiteralKit(["link", "document"]).pipe(
     $I.annoteSchema("ImageOwnerType", {
       description: "Finite owner kind used to partition image manifests.",
     })

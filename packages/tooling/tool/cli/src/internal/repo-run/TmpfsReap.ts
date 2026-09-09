@@ -14,7 +14,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { BigInt, Clock, Config, DateTime, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
+import { ByteSize, Clock, Config, DateTime, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -40,7 +40,7 @@ const GIT_WORKTREE_MARKER = "/.git/worktrees/";
 const VitestForksChild = LiteralKit(["ssr", "client"]);
 const PROC_ROOT = "/proc";
 const PROC_LOCKS = "/proc/locks";
-const DANGLING_GIT_FILE_BYTE_LIMIT = FileSystem.Size(4096);
+const DANGLING_GIT_FILE_BYTE_LIMIT = ByteSize.bytes(4096);
 
 const ProcPidName = S.String.pipe(
   S.check(S.isPattern(/^[0-9]+$/u)),
@@ -210,7 +210,7 @@ const gitDirForCandidate = Effect.fnUntraced(function* (
     gitFileInfo,
     O.filter(
       (info) =>
-        Str.Equivalence(info.type, "File") && BigInt.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
+        Str.Equivalence(info.type, "File") && ByteSize.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
     ),
     O.match({
       onNone: () => Effect.succeed(O.none<string>()),
@@ -262,7 +262,7 @@ const danglingStubContentsAreExact = Effect.fnUntraced(function* (
     yield* fs.stat(gitFile).pipe(Effect.option),
     O.exists(
       (info) =>
-        Str.Equivalence(info.type, "File") && BigInt.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
+        Str.Equivalence(info.type, "File") && ByteSize.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
     )
   );
 });

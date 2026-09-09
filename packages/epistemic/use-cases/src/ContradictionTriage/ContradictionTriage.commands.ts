@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Contradiction-triage command and read-model contracts.
  *
@@ -7,8 +8,11 @@
 
 import {
   ContradictionAssessment,
+  ContradictionAssessmentArbitrary,
   ContradictionBeliefPair,
+  ContradictionBeliefPairArbitrary,
   ContradictionMatchBasis,
+  ContradictionMatchBasisArbitrary,
   ContradictionProposalDigest,
   ContradictionProposalId,
   ContradictionReceiptKey,
@@ -74,35 +78,22 @@ class SubmitContradictionCandidateStruct extends S.Class<SubmitContradictionCand
 ) {}
 
 const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
-const submitContradictionCandidateStructArbitrary = S.toArbitrary(SubmitContradictionCandidateStruct);
 
-const SubmitContradictionCandidateSchema = SubmitContradictionCandidateStruct.mapFields(identity)
-  .check(
-    S.makeFilter(
-      ({ validFrom, validTo }) =>
-        O.match(validTo, {
-          onNone: () => true,
-          onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
-        }),
-      {
-        identifier: $I`SubmitContradictionCandidateValidIntervalCheck`,
-        title: "Contradiction Candidate Valid Interval",
-        description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
-        message: "Expected validFrom to be earlier than validTo when validTo is present.",
-      }
-    )
+const SubmitContradictionCandidateSchema = SubmitContradictionCandidateStruct.mapFields(identity).check(
+  S.makeFilter(
+    ({ validFrom, validTo }) =>
+      O.match(validTo, {
+        onNone: () => true,
+        onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
+      }),
+    {
+      identifier: $I`SubmitContradictionCandidateValidIntervalCheck`,
+      title: "Contradiction Candidate Valid Interval",
+      description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
+      message: "Expected validFrom to be earlier than validTo when validTo is present.",
+    }
   )
-  .annotate({
-    toArbitrary: () => (fc) =>
-      submitContradictionCandidateStructArbitrary(fc).map((submission) =>
-        SubmitContradictionCandidateStruct.make({
-          ...submission,
-          validTo: O.filter(submission.validTo, (upperBound) =>
-            validIntervalIsOrdered(submission.validFrom, upperBound)
-          ),
-        })
-      ),
-  });
+);
 
 /**
  * Submit one evidence-backed contradiction proposal.
@@ -481,3 +472,35 @@ export class ReviewContradictionCandidate extends S.Class<ReviewContradictionCan
     description: "Narrow command reviewing one contradiction candidate without accepting caller-owned edge identity.",
   })
 ) {}
+
+/**
+ * Native generator preserving the cross-field invariants of SubmitContradictionCandidate.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { SubmitContradictionCandidateArbitrary } from "@beep/epistemic-use-cases/server"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(SubmitContradictionCandidateArbitrary, { count: 1 })
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const SubmitContradictionCandidateArbitrary = Arbitrary.all({
+  submission: Arbitrary.schema(
+    SubmitContradictionCandidateStruct.mapFields(({ assessment, matchBasis, pair, ...fields }) => fields)
+  ),
+  assessment: ContradictionAssessmentArbitrary,
+  matchBasis: ContradictionMatchBasisArbitrary,
+  pair: ContradictionBeliefPairArbitrary,
+}).pipe(
+  Arbitrary.map(({ submission, ...fields }) =>
+    SubmitContradictionCandidate.make({
+      ...submission,
+      ...fields,
+      validTo: O.filter(submission.validTo, (upperBound) => validIntervalIsOrdered(submission.validFrom, upperBound)),
+    })
+  )
+);

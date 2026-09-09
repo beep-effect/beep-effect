@@ -1034,12 +1034,7 @@ export const ProjectCacheKey = resolvedProjectIdentity.pipe(
 export type ProjectCacheKey = typeof ProjectCacheKey.Type;
 
 /** @internal */
-const symbolIdentity = S.TemplateLiteral([SymbolFilePath, "::", SymbolQualifiedName, "#", SymbolKind]).annotate({
-  toArbitrary: () => (fc) =>
-    fc
-      .tuple(S.toArbitrary(SymbolFilePath)(fc), S.toArbitrary(SymbolQualifiedName)(fc), S.toArbitrary(SymbolKind)(fc))
-      .map(([filePath, qualifiedName, kind]) => `${filePath}::${qualifiedName}#${kind}` as typeof symbolIdentity.Type),
-});
+const symbolIdentity = S.TemplateLiteral([SymbolFilePath, "::", SymbolQualifiedName, "#", SymbolKind]);
 
 /**
  * Stable symbol identity schema.

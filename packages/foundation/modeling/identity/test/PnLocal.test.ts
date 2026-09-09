@@ -10,10 +10,12 @@ import {
   unescapeLocal,
 } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownEscapedPnLocalOption = S.decodeUnknownOption(EscapedPnLocal);
 const decodeUnknownSafePnLocalOption = S.decodeUnknownOption(SafePnLocal);
@@ -71,53 +73,60 @@ describe("PnLocal", () => {
     expect(acceptsEscapedLocal("bad%0Z")).toBe(false);
   });
 
-  it("round-trips escaped PN_LOCAL characters through parser-side acceptance", () => {
-    fc.assert(
-      fc.property(
-        fc
-          .array(fc.constantFrom(...escapableLocalCharacters), { minLength: 1, maxLength: 40 })
-          .map((characters) => characters.join("")),
-        (local) => {
-          const escaped = escapeLocal(local);
-
-          expect(unescapeLocal(escaped)).toBe(local);
-          expect(acceptsEscapedLocal(escaped)).toBe(true);
-        }
-      )
-    );
-  });
+  it.prop(
+    "round-trips escaped PN_LOCAL characters through parser-side acceptance",
+    [S.Array(S.Literals(escapableLocalCharacters)).check(S.isMinLength(1), S.isMaxLength(40))],
+    ([characters]) => {
+      const local = A.join(characters, "");
+      const escaped = escapeLocal(local);
+      expect(unescapeLocal(escaped)).toBe(local);
+      expect(acceptsEscapedLocal(escaped)).toBe(true);
+    }
+  );
 
   it("round-trips generated safe PN_LOCAL schema values", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(SafePnLocal)(fc), (local) => {
-        const decoded = O.flatMap(encodeSafePnLocalOption(local), decodeUnknownSafePnLocalOption);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(SafePnLocal)]), ([local]) => {
+          const decoded = O.flatMap(encodeSafePnLocalOption(local), decodeUnknownSafePnLocalOption);
 
-        expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
-        expect(isSafeLocal(local)).toBe(true);
-      })
-    );
+          expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
+          expect(isSafeLocal(local)).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips generated safe PN_PREFIX schema values", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(SafePnPrefix)(fc), (prefix) => {
-        const decoded = O.flatMap(encodeSafePnPrefixOption(prefix), decodeUnknownSafePnPrefixOption);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(SafePnPrefix)]), ([prefix]) => {
+          const decoded = O.flatMap(encodeSafePnPrefixOption(prefix), decodeUnknownSafePnPrefixOption);
 
-        expect(O.exists(decoded, (value) => Equal.equals(value, prefix))).toBe(true);
-        expect(isSafePrefix(prefix)).toBe(true);
-      })
-    );
+          expect(O.exists(decoded, (value) => Equal.equals(value, prefix))).toBe(true);
+          expect(isSafePrefix(prefix)).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips generated escaped PN_LOCAL schema values", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(EscapedPnLocal)(fc), (local) => {
-        const decoded = O.flatMap(encodeEscapedPnLocalOption(local), decodeUnknownEscapedPnLocalOption);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(EscapedPnLocal)]), ([local]) => {
+          const decoded = O.flatMap(encodeEscapedPnLocalOption(local), decodeUnknownEscapedPnLocalOption);
 
-        expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
-        expect(acceptsEscapedLocal(local)).toBe(true);
-      })
-    );
+          expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
+          expect(acceptsEscapedLocal(local)).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("falls back to full IRI when a local cannot be emitted unescaped", () => {

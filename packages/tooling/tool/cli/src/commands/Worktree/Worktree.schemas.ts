@@ -154,16 +154,12 @@ export const WorktreeRepositoryHash = S.String.check(
     description: "A lowercase 12-hex prefix of the absolute main-checkout SHA-256 digest.",
     message: "Worktree repository hash must contain exactly 12 lowercase hexadecimal characters",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(worktreeRepositoryHashPattern),
+).pipe(
+  S.brand("WorktreeRepositoryHash"),
+  $I.annoteSchema("WorktreeRepositoryHash", {
+    description: "Stable 12-hex repository identity recorded in worktree residue manifests.",
   })
-  .pipe(
-    S.brand("WorktreeRepositoryHash"),
-    $I.annoteSchema("WorktreeRepositoryHash", {
-      description: "Stable 12-hex repository identity recorded in worktree residue manifests.",
-    })
-  );
+);
 
 /**
  * Decoded short repository identity used by archive residue paths.

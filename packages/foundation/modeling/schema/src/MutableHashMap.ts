@@ -7,7 +7,6 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import * as O from "@beep/utils/Option";
 import {
   Effect,
   MutableHashMap as MutableHashMap_,
@@ -236,35 +235,6 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
             encode: toReadonlyEntries,
           })
         ),
-      toArbitrary:
-        ([key, value]) =>
-        (fc, ctx) => {
-          const constraint = ctx.constraint ?? {};
-          const constraints = O.getSomesStruct({
-            minLength: O.fromUndefinedOr(constraint.minLength),
-            maxLength: O.fromUndefinedOr(constraint.maxLength),
-          });
-          const minLength = constraints.minLength ?? 0;
-          const terminalItem =
-            key.terminal === undefined || value.terminal === undefined
-              ? undefined
-              : fc.tuple(key.terminal, value.terminal);
-          const terminalEntries =
-            minLength === 0
-              ? fc.constant<Array<[Key["Type"], Value["Type"]]>>([])
-              : terminalItem === undefined
-                ? undefined
-                : fc.array(terminalItem, { ...constraints, maxLength: minLength });
-          const entries = fc.array(fc.tuple(key.arbitrary, value.arbitrary), constraints);
-          const arbitraryEntries =
-            terminalEntries === undefined || ctx.recursion === undefined
-              ? entries
-              : fc.oneof(ctx.recursion, terminalEntries, entries);
-          return {
-            arbitrary: arbitraryEntries.map(MutableHashMap_.fromIterable),
-            terminal: terminalEntries?.map(MutableHashMap_.fromIterable),
-          };
-        },
       toEquivalence: ([key, value]) => makeMutableHashMapEquivalence(key, value),
       toFormatter:
         ([key, value]) =>

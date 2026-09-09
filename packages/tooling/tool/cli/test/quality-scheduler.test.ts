@@ -97,8 +97,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 
 const decodeUUID = S.decodeEffect(UUID);
@@ -894,19 +895,26 @@ describe("quality-scheduler", () => {
     });
 
     it("never exceeds the cap and never goes negative", () => {
-      fc.assert(
-        fc.property(fc.double({ min: 0, max: 4096, noNaN: true }), (availableGib) => {
-          const config = AdmissionConfig.make({});
-          const capacity = admissionCapacityTokensFor(availableGib, config);
-          expect(capacity).toBeGreaterThanOrEqual(0);
-          expect(capacity).toBeLessThanOrEqual(config.capacityMaxTokens);
-          expect(Number.isInteger(capacity)).toBe(true);
-          if (availableGib < config.hardFloorGib) {
-            expect(capacity).toBe(0);
-          }
-        }),
-        fcRuns()
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(S.Finite.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(4096)))]),
+            ([availableGib]) => {
+              const config = AdmissionConfig.make({});
+              const capacity = admissionCapacityTokensFor(availableGib, config);
+              expect(capacity).toBeGreaterThanOrEqual(0);
+              expect(capacity).toBeLessThanOrEqual(config.capacityMaxTokens);
+              expect(Number.isInteger(capacity)).toBe(true);
+              if (availableGib < config.hardFloorGib) {
+                expect(capacity).toBe(0);
+              }
+
+              return true;
+            },
+            fcRuns()
+          )
+        )._tag
+      ).toBe("Passed");
     });
   });
 
@@ -2925,19 +2933,26 @@ describe("quality-scheduler", () => {
     ));
 
   it("property: admission journal events round-trip through the NDJSON codec", () => {
-    const EventArbitrary = S.toArbitrary(AdmissionJournalEvent)(fc);
-    fc.assert(
-      fc.property(EventArbitrary, (event) => {
-        const encoded = encodeAdmissionJournalEventJsonSync(event);
-        const decoded = decodeAdmissionJournalEventJsonSync(encoded);
-        expect(decoded._tag).toBe(event._tag);
-        expect(decoded.nonce).toBe(event.nonce);
-        // JSON drops the sign of -0, so the codec law is encode-stability
-        // rather than Object.is identity on numeric fields.
-        expect(encodeAdmissionJournalEventJsonSync(decoded)).toBe(encoded);
-      }),
-      fcRuns(32)
-    );
+    const EventArbitrary = Arbitrary.schema(AdmissionJournalEvent);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([EventArbitrary]),
+          ([event]) => {
+            const encoded = encodeAdmissionJournalEventJsonSync(event);
+            const decoded = decodeAdmissionJournalEventJsonSync(encoded);
+            expect(decoded._tag).toBe(event._tag);
+            expect(decoded.nonce).toBe(event.nonce);
+            // JSON drops the sign of -0, so the codec law is encode-stability
+            // rather than Object.is identity on numeric fields.
+            expect(encodeAdmissionJournalEventJsonSync(decoded)).toBe(encoded);
+
+            return true;
+          },
+          fcRuns(32)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("queues while tokens are held and admits when the holder releases", () =>

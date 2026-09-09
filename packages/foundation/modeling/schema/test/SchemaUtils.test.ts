@@ -14,7 +14,7 @@ import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isNonEmptyString = S.is(S.NonEmptyString);
 const OptionalKeySettings = S.Struct({ retries: optionalKeyWithDefault(S.FiniteFromString, 3) });
@@ -321,14 +321,21 @@ describe("withCodecStatics", () => {
   const Slug = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync", "is"]));
 
   it("attached statics agree with the raw schema codecs over schema-derived samples", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(S.NonEmptyString)(fc), (sampled) => {
-        expect(Slug.is(sampled)).toBe(isNonEmptyString(sampled));
-        expect(Slug.decodeUnknownSync(sampled)).toBe(sampled);
-        expect(O.isSome(Slug.decodeUnknownOption(sampled))).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.NonEmptyString)]),
+          ([sampled]) => {
+            expect(Slug.is(sampled)).toBe(isNonEmptyString(sampled));
+            expect(Slug.decodeUnknownSync(sampled)).toBe(sampled);
+            expect(O.isSome(Slug.decodeUnknownOption(sampled))).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("attaches a working `is` guard", () => {

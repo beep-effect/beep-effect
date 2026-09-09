@@ -230,11 +230,10 @@ const TOP_DOCUMENT_COUNT = 10;
 
 const refSubject = (ref: KnowledgeRef): string =>
   Match.value(ref).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      "repo-path": (repoPath) => repoPath.normalized,
-      "host-path": (hostPath) => `${hostPath.anchor} ${hostPath.raw}`,
-      "goal-uri": (goalUri) => `repo://goal/${goalUri.slug}`,
-    })
+    Match.discriminator("kind")("repo-path", (repoPath) => repoPath.normalized),
+    Match.discriminator("kind")("host-path", (hostPath) => `${hostPath.anchor} ${hostPath.raw}`),
+    Match.discriminator("kind")("goal-uri", (goalUri) => `repo://goal/${goalUri.slug}`),
+    Match.exhaustive
   );
 
 const renderObservation = (observation: KnowledgeRefObservation): string => {

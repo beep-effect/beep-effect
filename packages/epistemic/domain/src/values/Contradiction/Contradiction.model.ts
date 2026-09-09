@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Contradiction-candidate value objects.
  *
@@ -346,12 +347,7 @@ const DistinctBeliefPairCheck = S.makeFilter(beliefsAreDistinct, {
   message: "Expected left and right to reference different edge versions.",
 });
 
-const contradictionBeliefPairStructArbitrary = S.toArbitrary(ContradictionBeliefPairStruct);
-const ContradictionBeliefPairSchema = ContradictionBeliefPairStruct.mapFields(identity)
-  .check(DistinctBeliefPairCheck)
-  .annotate({
-    toArbitrary: () => (fc) => contradictionBeliefPairStructArbitrary(fc).filter(beliefsAreDistinct),
-  });
+const ContradictionBeliefPairSchema = ContradictionBeliefPairStruct.mapFields(identity).check(DistinctBeliefPairCheck);
 
 /**
  * Submission-order pair of exact conflicting belief versions.
@@ -391,26 +387,9 @@ const CanonicalBeliefPairCheck = S.makeFilter(
   }
 );
 
-const beliefVersionRefArbitrary = S.toArbitrary(BeliefVersionRef);
-
 const CanonicalContradictionBeliefPairSchema = ContradictionBeliefPair.mapFields(identity)
   .check(DistinctBeliefPairCheck)
-  .check(CanonicalBeliefPairCheck)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(beliefVersionRefArbitrary(fc), beliefVersionRefArbitrary(fc))
-        .filter(([left, right]) => beliefsAreDistinct({ left, right }))
-        .map(([left, right]) =>
-          pipe(
-            beliefRefComesBefore(left, right),
-            Bool.match({
-              onFalse: () => ContradictionBeliefPair.make({ left: right, right: left }),
-              onTrue: () => ContradictionBeliefPair.make({ left, right }),
-            })
-          )
-        ),
-  });
+  .check(CanonicalBeliefPairCheck);
 
 /**
  * Canonically ordered pair persisted inside a contradiction candidate.
@@ -494,7 +473,6 @@ export const ContradictionMatchBasisKind = ContradictionMatchBasisKindBase.pipe(
 export type ContradictionMatchBasisKind = typeof ContradictionMatchBasisKind.Type;
 
 const evidenceIdEquivalence = S.toEquivalence(EpistemicIdentity.EvidenceId);
-const evidenceIdArbitrary = S.toArbitrary(EpistemicIdentity.EvidenceId);
 const evidenceIdOrder = Order.mapInput(Order.String, (evidenceId: EpistemicIdentity.EvidenceId) => `${evidenceId}`);
 const hasUniqueEvidenceIds = (ids: ReadonlyArray<EpistemicIdentity.EvidenceId>): boolean =>
   Eq.equals(A.length(A.dedupeWith(ids, evidenceIdEquivalence)), A.length(ids));
@@ -534,20 +512,16 @@ export const CONTRADICTION_DETECTOR_MAX_LENGTH = 256;
 const ContradictionDetectorIdentity = TrimmedNonEmptyText.check(
   S.isMaxLength(CONTRADICTION_DETECTOR_MAX_LENGTH, {
     identifier: $I`ContradictionDetectorIdentityMaximumLengthCheck`,
+    arbitraryConstraint: { patterns: [{ source: "^[a-zA-Z0-9_-]{1,256}$", flags: "" }] },
     title: "Contradiction Detector Identity Maximum Length",
     description: "Checks that a contradiction detector identity contains at most 256 UTF-16 code units.",
     message: "Expected contradiction detector identity to contain at most 256 UTF-16 code units.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.string({ minLength: 1, maxLength: CONTRADICTION_DETECTOR_MAX_LENGTH }).map(Str.trim).filter(Str.isNonEmpty),
+).pipe(
+  $I.annoteSchema("ContradictionDetectorIdentity", {
+    description: "Trimmed non-empty stable detector identity containing at most 256 UTF-16 code units.",
   })
-  .pipe(
-    $I.annoteSchema("ContradictionDetectorIdentity", {
-      description: "Trimmed non-empty stable detector identity containing at most 256 UTF-16 code units.",
-    })
-  );
+);
 
 const UniqueNonEmptyEvidenceIds = S.NonEmptyArray(EpistemicIdentity.EvidenceId)
   .check(
@@ -566,12 +540,6 @@ const UniqueNonEmptyEvidenceIds = S.NonEmptyArray(EpistemicIdentity.EvidenceId)
       message: "Expected every EvidenceId in the non-empty evidence set to be unique.",
     })
   )
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(evidenceIdArbitrary(fc), fc.array(evidenceIdArbitrary(fc), { maxLength: 7 }))
-        .map(([head, tail]) => A.dedupeWith([head, ...tail], evidenceIdEquivalence)),
-  })
   .pipe(
     $I.annoteSchema("UniqueNonEmptyEvidenceIds", {
       description: "A non-empty side-specific contradiction evidence set containing no repeated EvidenceId.",
@@ -623,35 +591,8 @@ const IndependentEvidenceSetsCheck = S.makeFilter(
   }
 );
 
-const contradictionMatchBasisStructArbitrary = S.toArbitrary(ContradictionMatchBasisStruct);
-
-const ContradictionMatchBasisSchema = ContradictionMatchBasisStruct.mapFields(identity)
-  .check(IndependentEvidenceSetsCheck)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const evidenceIdSeeds = fc.uniqueArray(fc.integer({ min: 2, max: 1_073_741_823 }), { maxLength: 7 });
-
-      return fc
-        .tuple(contradictionMatchBasisStructArbitrary(fc), evidenceIdSeeds, evidenceIdSeeds)
-        .map(([basis, leftSeeds, rightSeeds]) =>
-          ContradictionMatchBasisKind.$match(basis.kind, {
-            "independent-evidence": () =>
-              ContradictionMatchBasisStruct.make({
-                ...basis,
-                leftEvidenceIds: [
-                  EpistemicIdentity.EvidenceId.make(1),
-                  ...A.map(leftSeeds, (seed) => EpistemicIdentity.EvidenceId.make(seed * 2 - 1)),
-                ],
-                rightEvidenceIds: [
-                  EpistemicIdentity.EvidenceId.make(2),
-                  ...A.map(rightSeeds, (seed) => EpistemicIdentity.EvidenceId.make(seed * 2)),
-                ],
-              }),
-            "same-source-overlap": () => basis,
-          })
-        );
-    },
-  });
+const ContradictionMatchBasisSchema =
+  ContradictionMatchBasisStruct.mapFields(identity).check(IndependentEvidenceSetsCheck);
 
 /**
  * Evidence and detector revision that form the repeatable match basis.
@@ -771,23 +712,16 @@ const ContradictionProposalFact = JsonObject.check(
 const ContradictionProposalRationale = TrimmedNonEmptyText.check(
   S.isMaxLength(CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH, {
     identifier: $I`ContradictionProposalRationaleMaximumLengthCheck`,
+    arbitraryConstraint: { patterns: [{ source: "^[a-zA-Z0-9_-]{1,2000}$", flags: "" }] },
     title: "Contradiction Proposal Rationale Maximum Length",
     description: "Checks that a detector-supplied proposal rationale contains at most 2,000 characters.",
     message: "Expected contradiction proposal rationale to contain at most 2,000 characters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .string({ minLength: 1, maxLength: CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH })
-        .map(Str.trim)
-        .filter(Str.isNonEmpty),
+).pipe(
+  $I.annoteSchema("ContradictionProposalRationale", {
+    description: "Trimmed non-empty detector-supplied proposal rationale containing at most 2,000 characters.",
   })
-  .pipe(
-    $I.annoteSchema("ContradictionProposalRationale", {
-      description: "Trimmed non-empty detector-supplied proposal rationale containing at most 2,000 characters.",
-    })
-  );
+);
 
 class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolutionProposalStruct>(
   $I`ContradictionResolutionProposalStruct`
@@ -821,32 +755,21 @@ class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolut
 ) {}
 
 const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
-const contradictionResolutionProposalStructArbitrary = S.toArbitrary(ContradictionResolutionProposalStruct);
-const ContradictionResolutionProposalSchema = ContradictionResolutionProposalStruct.mapFields(identity)
-  .check(
-    S.makeFilter(
-      ({ validFrom, validTo }) =>
-        O.match(validTo, {
-          onNone: () => true,
-          onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
-        }),
-      {
-        identifier: $I`ContradictionResolutionProposalValidIntervalCheck`,
-        title: "Contradiction Resolution Proposal Valid Interval",
-        description: "Checks that a closed proposal validity interval is a non-empty forward half-open range.",
-        message: "Expected validFrom to be earlier than validTo when validTo is present.",
-      }
-    )
+const ContradictionResolutionProposalSchema = ContradictionResolutionProposalStruct.mapFields(identity).check(
+  S.makeFilter(
+    ({ validFrom, validTo }) =>
+      O.match(validTo, {
+        onNone: () => true,
+        onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
+      }),
+    {
+      identifier: $I`ContradictionResolutionProposalValidIntervalCheck`,
+      title: "Contradiction Resolution Proposal Valid Interval",
+      description: "Checks that a closed proposal validity interval is a non-empty forward half-open range.",
+      message: "Expected validFrom to be earlier than validTo when validTo is present.",
+    }
   )
-  .annotate({
-    toArbitrary: () => (fc) =>
-      contradictionResolutionProposalStructArbitrary(fc).map((proposal) =>
-        ContradictionResolutionProposalStruct.make({
-          ...proposal,
-          validTo: O.filter(proposal.validTo, (upperBound) => validIntervalIsOrdered(proposal.validFrom, upperBound)),
-        })
-      ),
-  });
+);
 
 /**
  * Human-reviewable replacement proposed for one conflicting lineage.
@@ -872,7 +795,6 @@ export class ContradictionResolutionProposal extends S.Class<ContradictionResolu
 ) {}
 
 const contradictionProposalIdEquivalence = S.toEquivalence(ContradictionProposalId);
-const contradictionProposalArbitrary = S.toArbitrary(ContradictionResolutionProposal);
 const proposalsShareId = (self: ContradictionResolutionProposal, that: ContradictionResolutionProposal): boolean =>
   contradictionProposalIdEquivalence(self.proposalId, that.proposalId);
 const hasUniqueProposalIds = (proposals: ReadonlyArray<ContradictionResolutionProposal>): boolean =>
@@ -911,12 +833,6 @@ const UniqueNonEmptyContradictionProposals = S.NonEmptyArray(ContradictionResolu
       message: "Expected every proposalId in the non-empty proposal collection to be unique.",
     })
   )
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(contradictionProposalArbitrary(fc), fc.array(contradictionProposalArbitrary(fc), { maxLength: 7 }))
-        .map(([head, tail]) => A.dedupeWith([head, ...tail], proposalsShareId)),
-  })
   .pipe(
     $I.annoteSchema("UniqueNonEmptyContradictionProposals", {
       description: "A non-empty contradiction proposal collection containing no repeated proposal identifier.",
@@ -1443,32 +1359,21 @@ class ContradictionCandidateContentStruct extends S.Class<ContradictionCandidate
   })
 ) {}
 
-const contradictionCandidateContentStructArbitrary = S.toArbitrary(ContradictionCandidateContentStruct);
-const ContradictionCandidateContentSchema = ContradictionCandidateContentStruct.mapFields(identity)
-  .check(
-    S.makeFilter(
-      ({ validFrom, validTo }) =>
-        O.match(validTo, {
-          onNone: () => true,
-          onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
-        }),
-      {
-        identifier: $I`ContradictionCandidateContentValidIntervalCheck`,
-        title: "Contradiction Candidate Valid Interval",
-        description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
-        message: "Expected validFrom to be earlier than validTo when validTo is present.",
-      }
-    )
+const ContradictionCandidateContentSchema = ContradictionCandidateContentStruct.mapFields(identity).check(
+  S.makeFilter(
+    ({ validFrom, validTo }) =>
+      O.match(validTo, {
+        onNone: () => true,
+        onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
+      }),
+    {
+      identifier: $I`ContradictionCandidateContentValidIntervalCheck`,
+      title: "Contradiction Candidate Valid Interval",
+      description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
+      message: "Expected validFrom to be earlier than validTo when validTo is present.",
+    }
   )
-  .annotate({
-    toArbitrary: () => (fc) =>
-      contradictionCandidateContentStructArbitrary(fc).map((candidate) =>
-        ContradictionCandidateContentStruct.make({
-          ...candidate,
-          validTo: O.filter(candidate.validTo, (upperBound) => validIntervalIsOrdered(candidate.validFrom, upperBound)),
-        })
-      ),
-  });
+);
 
 /**
  * Immutable candidate payload with a validated half-open validity interval.
@@ -1573,3 +1478,169 @@ export const contradictionCandidateDigest = (
   Result.map(encodeCandidateContent(content), (encoded) =>
     ContradictionCandidateDigest.make(sha256Hex(`v1\n${canonicalJson(encoded)}`))
   );
+
+/**
+ * Native generator preserving the cross-field invariants of ContradictionBeliefPair.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { ContradictionBeliefPairArbitrary } from "@beep/epistemic-domain/values/Contradiction"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(ContradictionBeliefPairArbitrary, { count: 1 })
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const ContradictionBeliefPairArbitrary = Arbitrary.schema(ContradictionBeliefPairStruct).pipe(
+  Arbitrary.filter(beliefsAreDistinct),
+  Arbitrary.map((pair) => ContradictionBeliefPair.make(pair))
+);
+
+/**
+ * Native generator preserving the cross-field invariants of CanonicalContradictionBeliefPair.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { CanonicalContradictionBeliefPairArbitrary } from "@beep/epistemic-domain/values/Contradiction"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(CanonicalContradictionBeliefPairArbitrary, { count: 1 })
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const CanonicalContradictionBeliefPairArbitrary = ContradictionBeliefPairArbitrary.pipe(
+  Arbitrary.map(({ left, right }) =>
+    CanonicalContradictionBeliefPair.make(
+      beliefRefComesBefore(left, right) ? { left, right } : { left: right, right: left }
+    )
+  )
+);
+
+/**
+ * Native generator preserving the cross-field invariants of ContradictionMatchBasis.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { ContradictionMatchBasisArbitrary } from "@beep/epistemic-domain/values/Contradiction"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(ContradictionMatchBasisArbitrary, { count: 1 })
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const ContradictionMatchBasisArbitrary = Arbitrary.all({
+  basis: Arbitrary.schema(ContradictionMatchBasisStruct),
+  seeds: Arbitrary.schema(
+    S.Struct({
+      left: S.Array(S.Int.check(S.isBetween({ minimum: 2, maximum: 1_073_741_823 }))).check(S.isMaxLength(7)),
+      right: S.Array(S.Int.check(S.isBetween({ minimum: 2, maximum: 1_073_741_823 }))).check(S.isMaxLength(7)),
+    })
+  ),
+}).pipe(
+  Arbitrary.map(({ basis, seeds }) =>
+    ContradictionMatchBasisKind.$match(basis.kind, {
+      "same-source-overlap": () => ContradictionMatchBasis.make(basis),
+      "independent-evidence": () =>
+        ContradictionMatchBasis.make({
+          ...basis,
+          leftEvidenceIds: [
+            EpistemicIdentity.EvidenceId.make(1),
+            ...A.map(A.dedupe(seeds.left), (seed) => EpistemicIdentity.EvidenceId.make(seed * 2 - 1)),
+          ],
+          rightEvidenceIds: [
+            EpistemicIdentity.EvidenceId.make(2),
+            ...A.map(A.dedupe(seeds.right), (seed) => EpistemicIdentity.EvidenceId.make(seed * 2)),
+          ],
+        }),
+    })
+  )
+);
+
+/**
+ * Native generator preserving the cross-field invariants of ContradictionResolutionProposal.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { ContradictionResolutionProposalArbitrary } from "@beep/epistemic-domain/values/Contradiction"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(ContradictionResolutionProposalArbitrary, { count: 1 })
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const ContradictionResolutionProposalArbitrary = Arbitrary.schema(ContradictionResolutionProposalStruct).pipe(
+  Arbitrary.map((proposal) =>
+    ContradictionResolutionProposal.make({
+      ...proposal,
+      validTo: O.filter(proposal.validTo, (upperBound) => validIntervalIsOrdered(proposal.validFrom, upperBound)),
+    })
+  )
+);
+
+/**
+ * Native generator preserving the cross-field invariants of ContradictionAssessment.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { ContradictionAssessmentArbitrary } from "@beep/epistemic-domain/values/Contradiction"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(ContradictionAssessmentArbitrary, { count: 1 })
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const ContradictionAssessmentArbitrary = Arbitrary.all({
+  confidence: Arbitrary.schema(ContradictionAssessment.fields.confidence),
+  proposals: Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 1, maximum: 8 }))).pipe(
+    Arbitrary.flatMap((count) => Arbitrary.all(A.replicate(ContradictionResolutionProposalArbitrary, count))),
+    Arbitrary.filter(A.isArrayNonEmpty),
+    Arbitrary.map((proposals) => A.dedupeWith(proposals, proposalsShareId))
+  ),
+}).pipe(Arbitrary.map((assessment) => ContradictionAssessment.make(assessment)));
+
+/**
+ * Native generator preserving the cross-field invariants of ContradictionCandidateContent.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { ContradictionCandidateContentArbitrary } from "@beep/epistemic-domain/values/Contradiction"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(ContradictionCandidateContentArbitrary, { count: 1 })
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const ContradictionCandidateContentArbitrary = Arbitrary.all({
+  content: Arbitrary.schema(
+    ContradictionCandidateContentStruct.mapFields(({ assessment, matchBasis, pair, ...fields }) => fields)
+  ),
+  assessment: ContradictionAssessmentArbitrary,
+  matchBasis: ContradictionMatchBasisArbitrary,
+  pair: CanonicalContradictionBeliefPairArbitrary,
+}).pipe(
+  Arbitrary.map(({ content, ...fields }) =>
+    ContradictionCandidateContent.make({
+      ...content,
+      ...fields,
+      validTo: O.filter(content.validTo, (upperBound) => validIntervalIsOrdered(content.validFrom, upperBound)),
+    })
+  )
+);

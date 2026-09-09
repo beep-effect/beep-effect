@@ -14,7 +14,7 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const decodeTmpfsReapReportJson = S.decodeEffect(S.fromJsonString(TmpfsReapReport));
@@ -1570,19 +1570,26 @@ describe("tmpfs reap", () => {
   );
 
   it("property: tmpfs-reap reports round-trip through the JSON codec", () => {
-    const ReportArbitrary = S.toArbitrary(TmpfsReapReport)(fc);
-    fc.assert(
-      fc.property(ReportArbitrary, (report) => {
-        const encoded = encodeTmpfsReapReportJsonSync(report);
-        const decoded = decodeTmpfsReapReportJsonSync(encoded);
-        expect(decoded.schemaVersion).toBe(report.schemaVersion);
-        expect(decoded.tmpRoot).toBe(report.tmpRoot);
-        expect(A.length(decoded.candidates)).toBe(A.length(report.candidates));
-        // JSON drops the sign of -0, so the codec law is encode-stability
-        // rather than Object.is identity on numeric fields.
-        expect(encodeTmpfsReapReportJsonSync(decoded)).toBe(encoded);
-      }),
-      fcRuns(32)
-    );
+    const ReportArbitrary = Arbitrary.schema(TmpfsReapReport);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ReportArbitrary]),
+          ([report]) => {
+            const encoded = encodeTmpfsReapReportJsonSync(report);
+            const decoded = decodeTmpfsReapReportJsonSync(encoded);
+            expect(decoded.schemaVersion).toBe(report.schemaVersion);
+            expect(decoded.tmpRoot).toBe(report.tmpRoot);
+            expect(A.length(decoded.candidates)).toBe(A.length(report.candidates));
+            // JSON drops the sign of -0, so the codec law is encode-stability
+            // rather than Object.is identity on numeric fields.
+            expect(encodeTmpfsReapReportJsonSync(decoded)).toBe(encoded);
+
+            return true;
+          },
+          fcRuns(32)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

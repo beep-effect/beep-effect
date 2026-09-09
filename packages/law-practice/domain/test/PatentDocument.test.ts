@@ -14,7 +14,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePatentApplicationDocumentResult = S.decodeResult(PatentApplicationDocument);
 const decodePatentApplicationSectionsResult = S.decodeResult(PatentApplicationSections);
@@ -76,15 +76,18 @@ const dependentClaim = (claimNumber: number, parentClaimNumber: number) =>
 
 describe("PatentDocument", () => {
   it("round-trips schema-derived patent application sections", () => {
-    const arbitrary = S.toArbitrary(PatentApplicationSection)(fc);
     const equivalent = S.toEquivalence(PatentApplicationSection);
 
-    fc.assert(
-      fc.property(arbitrary, (section) =>
-        equivalent(decodeUnknownPatentApplicationSectionSync(encodePatentApplicationSectionSync(section)), section)
-      ),
-      { numRuns: 20 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(PatentApplicationSection),
+          (section) =>
+            equivalent(decodeUnknownPatentApplicationSectionSync(encodePatentApplicationSectionSync(section)), section),
+          { runs: 20 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(

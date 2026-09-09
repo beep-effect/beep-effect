@@ -388,7 +388,7 @@ it.layer(Subject.layer)("MemoryFileSystem public operation boundaries", (it) => 
       assertDescriptorFailure(yield* Effect.flip(readOnly.write(encoder.encode("x"))), "write");
       assertDescriptorFailure(yield* Effect.flip(readOnly.writeAll(encoder.encode("x"))), "writeAll");
       assertDescriptorFailure(yield* Effect.flip(readOnly.truncate()), "truncate");
-      assert.strictEqual(yield* readOnly.seek(0, "current"), Fs.Size(0));
+      assert.strictEqual(yield* readOnly.seek(BigInt(0), "current"), BigInt(0));
       assertSome(O.map(yield* readOnly.readAlloc(3), decode), "abc");
       yield* readOnly.sync;
       const appendOnly = yield* fs.open(path, { flag: "a" });
@@ -396,8 +396,8 @@ it.layer(Subject.layer)("MemoryFileSystem public operation boundaries", (it) => 
       assertDescriptorFailure(yield* Effect.flip(appendOnly.read(output)), "read");
       assertDescriptorFailure(yield* Effect.flip(appendOnly.readAlloc(1)), "readAlloc");
       assert.deepStrictEqual(A.fromIterable(output), [99]);
-      assert.strictEqual(yield* appendOnly.seek(0, "current"), Fs.Size(0));
-      assert.strictEqual(yield* appendOnly.write(encoder.encode("!")), Fs.Size(1));
+      assert.strictEqual(yield* appendOnly.seek(BigInt(0), "current"), BigInt(0));
+      assert.strictEqual(yield* appendOnly.write(encoder.encode("!")), 1);
       assert.strictEqual(yield* fs.readFileString(path), "abc!");
       const readWrite = yield* fs.open(path, { flag: "r+" });
       yield* readWrite.writeAll(encoder.encode("A"));
@@ -423,10 +423,10 @@ it.layer(Subject.layer)("MemoryFileSystem public operation boundaries", (it) => 
           yield* fs.remove(`${root}/alias`);
           assertSome((yield* file.stat).nlink, 0);
           assertSome(O.map(yield* file.readAlloc(3), decode), "abc");
-          yield* file.seek(5, "start");
+          yield* file.seek(BigInt(5), "start");
           yield* file.writeAll(encoder.encode("Z"));
-          assert.strictEqual((yield* file.stat).size, Fs.Size(6));
-          yield* file.seek(0, "start");
+          assert.strictEqual((yield* file.stat).size, BigInt(6));
+          yield* file.seek(BigInt(0), "start");
           assertSome(O.map(yield* file.readAlloc(6), A.fromIterable), [97, 98, 99, 0, 0, 90]);
           yield* file.sync;
           return file;
@@ -448,10 +448,10 @@ it.layer(Subject.layer)("MemoryFileSystem public operation boundaries", (it) => 
       const path = `${root}/file`;
       yield* fs.writeFileString(path, "abc");
       const file = yield* fs.open(path, { flag: "r+" });
-      yield* file.seek(1, "start");
+      yield* file.seek(BigInt(1), "start");
       assertSome(O.map(yield* file.readAlloc(10), decode), "bc");
-      assert.strictEqual(yield* file.seek(0, "current"), Fs.Size(3));
-      yield* file.seek(1, "start");
+      assert.strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(3));
+      yield* file.seek(BigInt(1), "start");
       for (const size of [-1, 0.5, Number.NaN, Number.POSITIVE_INFINITY]) {
         assertArgument(yield* Effect.flip(file.readAlloc(size)), "readAlloc");
       }
@@ -460,13 +460,13 @@ it.layer(Subject.layer)("MemoryFileSystem public operation boundaries", (it) => 
       assertDescriptorFailure(yield* Effect.flip(file.readAlloc(Number.MAX_SAFE_INTEGER)), "readAlloc");
       assertDescriptorFailure(yield* Effect.flip(file.truncate(Number.MAX_SAFE_INTEGER)), "truncate");
       assertFailure(yield* Effect.flip(fs.truncate(path, Number.MAX_SAFE_INTEGER)), "BadResource", "truncate", path);
-      assert.strictEqual(yield* file.seek(0, "current"), Fs.Size(1));
+      assert.strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(1));
       assert.strictEqual(yield* fs.readFileString(path), "abc");
       assertArgument(yield* Effect.flip(fs.writeFileString(path, "replacement", { mode: -1 })), "writeFile");
       assert.strictEqual(yield* fs.readFileString(path), "abc");
       yield* file.truncate();
-      assert.strictEqual((yield* file.stat).size, Fs.Size(0));
-      assert.strictEqual(yield* file.seek(0, "current"), Fs.Size(0));
+      assert.strictEqual((yield* file.stat).size, BigInt(0));
+      assert.strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(0));
       assert.isTrue(O.isNone(yield* file.readAlloc(1)));
     })
   );

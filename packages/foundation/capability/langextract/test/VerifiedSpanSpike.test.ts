@@ -18,7 +18,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeTextOffsetRangeResult = S.decodeResult(TextOffsetRange);
 const decodeUtf16TextRangeResult = S.decodeResult(Utf16TextRange);
@@ -380,18 +380,25 @@ describe("verified-span hostile-text contract", () => {
   });
 
   it("derives only ordered, round-trippable ranges from both schemas", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(TextOffsetRange)(fc), S.toArbitrary(Utf16TextRange)(fc), (offsetRange, utf16Range) => {
-        const encodedOffsetRange = Result.getOrThrow(encodeUnknownTextOffsetRangeResult(offsetRange));
-        const encodedUtf16Range = Result.getOrThrow(encodeUnknownUtf16TextRangeResult(utf16Range));
-        const decodedOffsetRange = Result.getOrThrow(decodeTextOffsetRangeResult(encodedOffsetRange));
-        const decodedUtf16Range = Result.getOrThrow(decodeUtf16TextRangeResult(encodedUtf16Range));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(TextOffsetRange), Arbitrary.schema(Utf16TextRange)]),
+          ([offsetRange, utf16Range]) => {
+            const encodedOffsetRange = Result.getOrThrow(encodeUnknownTextOffsetRangeResult(offsetRange));
+            const encodedUtf16Range = Result.getOrThrow(encodeUnknownUtf16TextRangeResult(utf16Range));
+            const decodedOffsetRange = Result.getOrThrow(decodeTextOffsetRangeResult(encodedOffsetRange));
+            const decodedUtf16Range = Result.getOrThrow(decodeUtf16TextRangeResult(encodedUtf16Range));
 
-        expect(offsetRange.start).toBeLessThan(offsetRange.end);
-        expect(utf16Range.startChar).toBeLessThan(utf16Range.endChar);
-        expect(S.toEquivalence(TextOffsetRange)(decodedOffsetRange, offsetRange)).toBe(true);
-        expect(S.toEquivalence(Utf16TextRange)(decodedUtf16Range, utf16Range)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(offsetRange.start).toBeLessThan(offsetRange.end);
+            expect(utf16Range.startChar).toBeLessThan(utf16Range.endChar);
+            expect(S.toEquivalence(TextOffsetRange)(decodedOffsetRange, offsetRange)).toBe(true);
+            expect(S.toEquivalence(Utf16TextRange)(decodedUtf16Range, utf16Range)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

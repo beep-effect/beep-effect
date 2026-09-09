@@ -22,7 +22,6 @@ const defaultDocsSection = "Docs";
 const RunpodDocsUrl = S.String.check(URLStr.filter).pipe(
   $I.annoteSchema("RunpodDocsUrl", {
     description: "Absolute URL parsed from Runpod documentation index links.",
-    toArbitrary: () => (fc) => fc.webUrl(),
   }),
   SchemaUtils.withCodecStatics(["is"])
 );

@@ -16,16 +16,17 @@ import {
   TurnFinalizationUsageAppend,
   UsageRecord,
 } from "@beep/epistemic-domain";
+import { EvidenceSpanArbitrary } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEvidenceSpanResult = S.decodeResult(EvidenceSpan);
 const decodeTextAnchorResult = S.decodeResult(TextAnchor);
@@ -54,23 +55,28 @@ const expectMadeValueEncodedRoundTrip = <Schema extends S.Codec<unknown>>(
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: {
-    readonly numRuns?: number;
-  }
+    readonly runs?: number;
+  },
+  arbitrary: Arbitrary.Arbitrary<Schema["Type"]> = Arbitrary.schema(schema)
 ): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      const encoded = Result.getOrThrow(encode(value));
-      const decoded = Result.getOrThrow(decode(encoded));
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          const encoded = Result.getOrThrow(encode(value));
+          const decoded = Result.getOrThrow(decode(encoded));
 
-      return equivalent(decoded, value);
-    }),
-    fcRuns(options?.numRuns ?? 50)
-  );
+          return equivalent(decoded, value);
+        },
+        fcRuns(options?.runs ?? 50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("@beep/epistemic-domain", () => {
@@ -78,8 +84,10 @@ describe("@beep/epistemic-domain", () => {
     expect(ClaimLifecycle.is.candidate("candidate")).toBe(true);
   });
 
-  it("publishes canonical arbitrary metadata for Confidence", () => {
-    expect(SchemaAST.resolve(Confidence.ast)?.toArbitrary).toBeDefined();
+  it("derives valid Confidence samples", () => {
+    expect(
+      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(Confidence), { count: 25 })).every(S.is(Confidence))
+    ).toBe(true);
   });
 
   it("wires CandidateClaim to the epistemic product identity", () => {
@@ -100,10 +108,18 @@ describe("@beep/epistemic-domain", () => {
       )
     ).toBe(true);
 
-    fc.assert(
-      fc.property(S.toArbitrary(EvidenceSpan)(fc), (span) => EvidenceSpan.isInternallyConsistent(span)),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([EvidenceSpanArbitrary]),
+          ([span]) => {
+            const result = EvidenceSpan.isInternallyConsistent(span);
+            return result;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("bounds evidence quotes to one source-text page", () => {
@@ -276,7 +292,7 @@ describe("@beep/epistemic-domain", () => {
   });
 
   it("derives schema arbitraries for crispened epistemic schemas", () => {
-    const options = { numRuns: 10 };
+    const options = { runs: 10 };
 
     assertSchemaArbitraryRoundTrip(EpistemicFixtureKey, options);
     assertSchemaArbitraryRoundTrip(Confidence, options);
@@ -284,11 +300,18 @@ describe("@beep/epistemic-domain", () => {
     assertSchemaArbitraryRoundTrip(ClaimGateViolation, options);
     assertSchemaArbitraryRoundTrip(ClaimGateResult, options);
     assertSchemaArbitraryRoundTrip(ClaimLifecycleError, options);
-    assertSchemaArbitraryRoundTrip(EvidenceSpan, options);
+    assertSchemaArbitraryRoundTrip(EvidenceSpan, options, EvidenceSpanArbitrary);
     assertSchemaArbitraryRoundTrip(ClaimProjectionView, options);
     assertSchemaArbitraryRoundTrip(Activity, options);
     assertSchemaArbitraryRoundTrip(CandidateClaim, options);
-    assertSchemaArbitraryRoundTrip(Evidence, options);
+    assertSchemaArbitraryRoundTrip(
+      Evidence,
+      options,
+      Arbitrary.all({
+        fields: Arbitrary.schema(S.Struct(Evidence.fields).mapFields(({ span, ...fields }) => fields)),
+        span: EvidenceSpanArbitrary,
+      }).pipe(Arbitrary.map(({ fields, span }) => Evidence.make({ ...fields, span })))
+    );
     assertSchemaArbitraryRoundTrip(UsageRecord, options);
     assertSchemaArbitraryRoundTrip(TurnFinalizationUsageAppend, options);
   });

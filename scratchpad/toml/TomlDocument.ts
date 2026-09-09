@@ -162,7 +162,7 @@ export class TomlDocument extends Schema.Class<TomlDocument>($I`TomlDocument`)(
     return Schema.String.pipe(
       Schema.decodeTo(
         Schema.instanceOf(TomlDocument),
-        SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
           decode: (input: string) =>
             TomlDocument.parse(input).pipe(
               Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input))

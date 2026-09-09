@@ -543,7 +543,6 @@ const TermDefinition = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]);
 const TermWithCodecStatics = TermDefinition.pipe(
   $I.annoteSchema("Term", {
     description: "RDF term union aligned with RDF/JS.",
-    toArbitrary: () => S.toArbitrary(TermDefinition),
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
       kind: "rdfConstruct",
       canonicalName: "Term",
@@ -612,7 +611,6 @@ const SubjectWithCodecStatics = SubjectDefinition.pipe(
       schema,
       $I.annoteSchema("Subject", {
         description: "RDF subject term union.",
-        toArbitrary: () => S.toArbitrary(schema),
       })
     ),
   SchemaUtils.withCodecStatics(["is"])
@@ -663,7 +661,6 @@ const ObjectTermDefinition = S.Union([NamedNode, BlankNode, Literal]);
 const ObjectTermWithCodecStatics = ObjectTermDefinition.pipe(
   $I.annoteSchema("ObjectTerm", {
     description: "RDF object term union.",
-    toArbitrary: () => S.toArbitrary(ObjectTermDefinition),
   }),
   SchemaUtils.withCodecStatics(["is"])
 );
@@ -714,7 +711,6 @@ const GraphTermDefinition = S.Union([NamedNode, BlankNode, DefaultGraph]);
 const GraphTermWithCodecStatics = GraphTermDefinition.pipe(
   $I.annoteSchema("GraphTerm", {
     description: "RDF graph term union.",
-    toArbitrary: () => S.toArbitrary(GraphTermDefinition),
   }),
   SchemaUtils.withCodecStatics(["is"])
 );

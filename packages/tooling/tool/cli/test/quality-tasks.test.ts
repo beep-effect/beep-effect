@@ -160,8 +160,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { vi } from "vitest";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
@@ -1403,16 +1403,23 @@ describe("quality task adapter", () => {
     ));
 
   it("property: the wave report schema round-trips arbitrary reports", () => {
-    const ReportArbitrary = S.toArbitrary(GithubCheckRunReport)(fc);
-    fc.assert(
-      fc.property(ReportArbitrary, (report) => {
-        const decoded = decodeGithubCheckRunReportSync(encodeGithubCheckRunReportSync(report));
-        expect(decoded.schemaVersion).toBe("github-check-run/v1");
-        expect(decoded.failurePolicy).toBe(report.failurePolicy);
-        expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));
-      }),
-      fcRuns(32)
-    );
+    const ReportArbitrary = Arbitrary.schema(GithubCheckRunReport);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ReportArbitrary]),
+          ([report]) => {
+            const decoded = decodeGithubCheckRunReportSync(encodeGithubCheckRunReportSync(report));
+            expect(decoded.schemaVersion).toBe("github-check-run/v1");
+            expect(decoded.failurePolicy).toBe(report.failurePolicy);
+            expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));
+
+            return true;
+          },
+          fcRuns(32)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(

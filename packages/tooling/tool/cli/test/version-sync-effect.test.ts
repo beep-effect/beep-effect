@@ -24,7 +24,7 @@ import * as S from "effect/Schema";
 
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownJson = S.decodeEffect(S.fromJsonString(S.Unknown));
 const decodeBunVersionStateSync = S.decodeSync(BunVersionState);
@@ -194,11 +194,15 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
     it("round-trips schema-derived Bun version states", () => {
       const equivalent = S.toEquivalence(BunVersionState);
 
-      fc.assert(
-        fc.property(S.toArbitrary(BunVersionState)(fc), (state) => {
-          expect(equivalent(decodeBunVersionStateSync(encodeBunVersionStateSync(state)), state)).toBe(true);
-        })
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(BunVersionState)]), ([state]) => {
+            expect(equivalent(decodeBunVersionStateSync(encodeBunVersionStateSync(state)), state)).toBe(true);
+
+            return true;
+          })
+        )._tag
+      ).toBe("Passed");
     });
 
     it.effect(

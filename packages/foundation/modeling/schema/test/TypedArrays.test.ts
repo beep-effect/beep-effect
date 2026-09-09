@@ -4,8 +4,9 @@ import { Float32Arr, Float32ArrayFromArray } from "@beep/schema/Float32Array";
 import { Float64Arr, Float64ArrayFromArray } from "@beep/schema/Float64Array";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeFloat16ArrSync = S.decodeSync(Float16Arr);
 const decodeFloat16ArrayFromArraySync = S.decodeSync(Float16ArrayFromArray);
@@ -37,16 +38,23 @@ describe("Float16Array schemas", () => {
   });
 
   it("derives Float16Array instances from the source schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Float16ArrayFromArray)(fc);
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        expect(value).toBeInstanceOf(Float16Array);
-        expect(decodeUnknownFloat16ArrayFromArraySync(encodeFloat16ArrayFromArraySync(value))).toBeInstanceOf(
-          Float16Array
-        );
-      }),
-      fcRuns(25)
-    );
+    const arbitrary = Arbitrary.schema(Float16ArrayFromArray);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            expect(value).toBeInstanceOf(Float16Array);
+            expect(decodeUnknownFloat16ArrayFromArraySync(encodeFloat16ArrayFromArraySync(value))).toBeInstanceOf(
+              Float16Array
+            );
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
@@ -67,16 +75,23 @@ describe("Float32Array schemas", () => {
   });
 
   it("derives Float32Array instances from the source schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Float32ArrayFromArray)(fc);
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        expect(value).toBeInstanceOf(Float32Array);
-        expect(decodeUnknownFloat32ArrayFromArraySync(encodeFloat32ArrayFromArraySync(value))).toBeInstanceOf(
-          Float32Array
-        );
-      }),
-      fcRuns(25)
-    );
+    const arbitrary = Arbitrary.schema(Float32ArrayFromArray);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            expect(value).toBeInstanceOf(Float32Array);
+            expect(decodeUnknownFloat32ArrayFromArraySync(encodeFloat32ArrayFromArraySync(value))).toBeInstanceOf(
+              Float32Array
+            );
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
@@ -97,15 +112,22 @@ describe("Float64Array schemas", () => {
   });
 
   it("derives Float64Array instances from the source schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Float64ArrayFromArray)(fc);
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        expect(value).toBeInstanceOf(Float64Array);
-        expect(decodeUnknownFloat64ArrayFromArraySync(encodeFloat64ArrayFromArraySync(value))).toBeInstanceOf(
-          Float64Array
-        );
-      }),
-      fcRuns(25)
-    );
+    const arbitrary = Arbitrary.schema(Float64ArrayFromArray);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            expect(value).toBeInstanceOf(Float64Array);
+            expect(decodeUnknownFloat64ArrayFromArraySync(encodeFloat64ArrayFromArraySync(value))).toBeInstanceOf(
+              Float64Array
+            );
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

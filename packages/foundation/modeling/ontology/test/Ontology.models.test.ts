@@ -12,9 +12,9 @@ import {
 } from "@beep/ontology/Ontology.models";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result, SchemaAST } from "effect";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeHttpUrlResult = S.decodeResult(HttpUrl);
 const decodeOWLClassResult = S.decodeResult(OWLClass);
@@ -22,16 +22,16 @@ const decodeOWLObjectPropertyResult = S.decodeResult(OWLObjectProperty);
 const decodeOWLSearchScoreResult = S.decodeResult(OWLSearchScore);
 const isHttpUrl = S.is(HttpUrl);
 
-const HttpUrlArbitrary = S.toArbitrary(HttpUrl)(fc);
-const GraphInfoArbitrary = S.toArbitrary(GraphInfo)(fc);
-const HealthResponseArbitrary = S.toArbitrary(HealthResponse)(fc);
-const OWLClassArbitrary = S.toArbitrary(OWLClass)(fc);
-const OWLObjectPropertyArbitrary = S.toArbitrary(OWLObjectProperty)(fc);
-const OWLClassListArbitrary = S.toArbitrary(OWLClassList)(fc);
-const OWLObjectPropertyListArbitrary = S.toArbitrary(OWLObjectPropertyList)(fc);
-const OWLSearchScoreArbitrary = S.toArbitrary(OWLSearchScore)(fc);
-const OWLSearchResultsArbitrary = S.toArbitrary(OWLSearchResults)(fc);
-const HTTPValidationErrorArbitrary = S.toArbitrary(HTTPValidationError)(fc);
+const HttpUrlArbitrary = Arbitrary.schema(HttpUrl);
+const GraphInfoArbitrary = Arbitrary.schema(GraphInfo);
+const HealthResponseArbitrary = Arbitrary.schema(HealthResponse);
+const OWLClassArbitrary = Arbitrary.schema(OWLClass);
+const OWLObjectPropertyArbitrary = Arbitrary.schema(OWLObjectProperty);
+const OWLClassListArbitrary = Arbitrary.schema(OWLClassList);
+const OWLObjectPropertyListArbitrary = Arbitrary.schema(OWLObjectPropertyList);
+const OWLSearchScoreArbitrary = Arbitrary.schema(OWLSearchScore);
+const OWLSearchResultsArbitrary = Arbitrary.schema(OWLSearchResults);
+const HTTPValidationErrorArbitrary = Arbitrary.schema(HTTPValidationError);
 
 const encode = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -106,7 +106,9 @@ const httpValidationErrorWire: S.Codec.Encoded<typeof HTTPValidationError> = {
 
 describe("@beep/ontology models", () => {
   it("owns constructive HTTP URL metadata and codec statics", () => {
-    expect(SchemaAST.resolve(HttpUrl.ast)?.toArbitrary).toBeDefined();
+    expect(
+      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(HttpUrl), { count: 20, seed: 0x5eed })).every(isHttpUrl)
+    ).toBe(true);
     expect(HttpUrl.decodeUnknownSync("https://example.com/ontology.owl")).toBe("https://example.com/ontology.owl");
   });
 
@@ -126,47 +128,60 @@ describe("@beep/ontology models", () => {
   });
 
   it("round-trips schema-derived ontology payloads", () =>
-    fc.assert(
-      fc.property(
-        GraphInfoArbitrary,
-        HealthResponseArbitrary,
-        OWLClassArbitrary,
-        OWLObjectPropertyArbitrary,
-        OWLClassListArbitrary,
-        OWLObjectPropertyListArbitrary,
-        OWLSearchResultsArbitrary,
-        HTTPValidationErrorArbitrary,
-        (
-          graphInfo,
-          healthResponse,
-          owlClass,
-          owlObjectProperty,
-          owlClassList,
-          owlObjectPropertyList,
-          searchResults,
-          error
-        ) => {
-          expectRoundTrip(GraphInfo, graphInfo);
-          expectRoundTrip(HealthResponse, healthResponse);
-          expectRoundTrip(OWLClass, owlClass);
-          expectRoundTrip(OWLObjectProperty, owlObjectProperty);
-          expectRoundTrip(OWLClassList, owlClassList);
-          expectRoundTrip(OWLObjectPropertyList, owlObjectPropertyList);
-          expectRoundTrip(OWLSearchResults, searchResults);
-          expectRoundTrip(HTTPValidationError, error);
-        }
-      ),
-      fcRuns(25)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            GraphInfoArbitrary,
+            HealthResponseArbitrary,
+            OWLClassArbitrary,
+            OWLObjectPropertyArbitrary,
+            OWLClassListArbitrary,
+            OWLObjectPropertyListArbitrary,
+            OWLSearchResultsArbitrary,
+            HTTPValidationErrorArbitrary,
+          ]),
+          ([
+            graphInfo,
+            healthResponse,
+            owlClass,
+            owlObjectProperty,
+            owlClassList,
+            owlObjectPropertyList,
+            searchResults,
+            error,
+          ]) => {
+            expectRoundTrip(GraphInfo, graphInfo);
+            expectRoundTrip(HealthResponse, healthResponse);
+            expectRoundTrip(OWLClass, owlClass);
+            expectRoundTrip(OWLObjectProperty, owlObjectProperty);
+            expectRoundTrip(OWLClassList, owlClassList);
+            expectRoundTrip(OWLObjectPropertyList, owlObjectPropertyList);
+            expectRoundTrip(OWLSearchResults, searchResults);
+            expectRoundTrip(HTTPValidationError, error);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("round-trips schema-derived URL and search-score primitives", () =>
-    fc.assert(
-      fc.property(HttpUrlArbitrary, OWLSearchScoreArbitrary, (url, score) => {
-        expectRoundTrip(HttpUrl, url);
-        expectRoundTrip(OWLSearchScore, score);
-      }),
-      fcRuns(50)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([HttpUrlArbitrary, OWLSearchScoreArbitrary]),
+          ([url, score]) => {
+            expectRoundTrip(HttpUrl, url);
+            expectRoundTrip(OWLSearchScore, score);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("rejects malformed values for the absorbed precision invariants", () => {
     expect(Result.isFailure(decodeHttpUrlResult("not a url"))).toBe(true);

@@ -14,7 +14,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
@@ -39,12 +38,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
  * @category value-objects
  * @since 0.0.0
  */
-export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean])
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.oneof(S.toArbitrary(S.String)(fc), S.toArbitrary(S.Finite)(fc), S.toArbitrary(S.Boolean)(fc)),
-  })
-  .pipe(
+export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
     $I.annoteSchema("AttributeValue", {
       description: "JSON-safe scalar attribute value consisting of a string, boolean, or finite number.",
     }),
@@ -91,11 +85,7 @@ export type AttributeValue = typeof AttributeValue.Type;
  * @category models
  * @since 0.0.0
  */
-export const Attributes = S.Record(S.String, AttributeValue)
-  .annotate({
-    toArbitrary: () => (fc) => fc.dictionary(fc.string(), S.toArbitrary(AttributeValue)(fc)),
-  })
-  .pipe(
+export const Attributes = S.Record(S.String, AttributeValue).pipe(
     $I.annoteSchema("Attributes", {
       description: "Open string-keyed attribute record whose values are JSON-safe scalars.",
     }),
@@ -145,11 +135,7 @@ export type Attributes = typeof Attributes.Type;
  * @category value-objects
  * @since 0.0.0
  */
-export const OptionalConfidence = S.OptionFromNullishOr(Confidence)
-  .annotate({
-    toArbitrary: () => (fc) => fc.option(S.toArbitrary(Confidence)(fc), { nil: undefined }).map(O.fromUndefinedOr),
-  })
-  .pipe(
+export const OptionalConfidence = S.OptionFromNullishOr(Confidence).pipe(
     SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalConfidence", {
       description: "Optional confidence normalized from nullish input to an Effect Option.",
@@ -221,11 +207,7 @@ export const EntityId = S.String.check(
       "A local entity identifier beginning with a lowercase ASCII letter and continuing with lowercase letters, digits, or underscores.",
     message: "Entity ID must begin with a lowercase letter and contain only lowercase letters, digits, or underscores.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(ENTITY_ID_PATTERN),
-  })
-  .pipe(
+).pipe(
     S.brand("EntityId"),
     $I.annoteSchema("EntityId", {
       description: "Validated snake-case local identifier for an extracted or resolved entity.",

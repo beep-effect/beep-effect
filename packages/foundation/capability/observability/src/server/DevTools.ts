@@ -96,10 +96,9 @@ export class LayerFilteredDevToolsOptions extends S.Class<LayerFilteredDevToolsO
 
 const toDevToolsSpanStatus = Match.type<Tracer.SpanStatus>().pipe(
   Match.withReturnType<DevToolsSchema.SpanStatus>(),
-  Match.tagsExhaustive({
-    Started: ({ startTime }) => ({ _tag: "Started", startTime }),
-    Ended: ({ startTime, endTime, exit }) => ({ _tag: "Ended", startTime, endTime, exit }),
-  })
+  Match.tag("Started", ({ startTime }) => ({ _tag: "Started", startTime })),
+  Match.tag("Ended", ({ startTime, endTime, exit }) => ({ _tag: "Ended", startTime, endTime, exit })),
+  Match.exhaustive
 );
 
 const toDevToolsParentSpan = (parent: O.Option<Tracer.AnySpan>): O.Option<DevToolsSchema.ParentSpan> =>
@@ -109,19 +108,23 @@ const toDevToolsParentSpan = (parent: O.Option<Tracer.AnySpan>): O.Option<DevToo
       O.some(
         Match.value(value).pipe(
           Match.withReturnType<DevToolsSchema.ParentSpan>(),
-          Match.tagsExhaustive({
-            ExternalSpan: ({ spanId, traceId, sampled }) => ({ _tag: "ExternalSpan", spanId, traceId, sampled }),
-            Span: ({ spanId, traceId, name, sampled, attributes, status, parent }) => ({
-              _tag: "Span",
-              spanId,
-              traceId,
-              name,
-              sampled,
-              attributes,
-              status: toDevToolsSpanStatus(status),
-              parent: toDevToolsParentSpan(parent),
-            }),
-          })
+          Match.tag("ExternalSpan", ({ spanId, traceId, sampled }) => ({
+            _tag: "ExternalSpan",
+            spanId,
+            traceId,
+            sampled,
+          })),
+          Match.tag("Span", ({ spanId, traceId, name, sampled, attributes, status, parent }) => ({
+            _tag: "Span",
+            spanId,
+            traceId,
+            name,
+            sampled,
+            attributes,
+            status: toDevToolsSpanStatus(status),
+            parent: toDevToolsParentSpan(parent),
+          })),
+          Match.exhaustive
         )
       ),
   });
