@@ -3,6 +3,7 @@ import { O, Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, MutableHashMap, pipe, Result } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const validConfigValues = {
@@ -151,13 +152,27 @@ describe("@beep/infra CiFleetController", () => {
       const moduleMetadataOptions = MutableHashMap.empty<string, unknown>();
       const moduleOrganizationRunnerEnabled = MutableHashMap.empty<string, unknown>();
       const moduleRunnerGroupNames = MutableHashMap.empty<string, unknown>();
+      const moduleCapacityTypes = MutableHashMap.empty<string, unknown>();
+      const moduleRunnerCaps = MutableHashMap.empty<string, unknown>();
       const policyDocuments = MutableHashMap.empty<string, string>();
+      const rolePolicyRoles = MutableHashMap.empty<string, unknown>();
+      const lambdaRegions = MutableHashMap.empty<string, unknown>();
+      const decryptGrants = MutableHashMap.empty<string, unknown>();
 
       yield* Effect.acquireUseRelease(
         Effect.tryPromise(() =>
           pulumi.runtime.setMocks(
             {
-              call: () => ({ accountId: "123456789012", partition: "aws" }),
+              call: (args) => {
+                if (args.token === "aws:lambda/getFunction:getFunction" && isString(args.inputs.functionName)) {
+                  MutableHashMap.set(lambdaRegions, args.inputs.functionName, args.inputs.region);
+                  return { role: `arn:aws:iam::123456789012:role/beep-ci/${args.inputs.functionName}-role` };
+                }
+                if (args.token === "aws:iam/getRole:getRole" && isString(args.inputs.name)) {
+                  return { uniqueId: `immutable-id-${args.inputs.name}` };
+                }
+                return { accountId: "123456789012", partition: "aws" };
+              },
               newResource: (args) => {
                 const postInstall = args.inputs.userdata_post_install;
                 if (args.type === "ghaRunners:index:Module" && isString(postInstall)) {
@@ -174,8 +189,17 @@ describe("@beep/infra CiFleetController", () => {
                     args.inputs.enable_organization_runners
                   );
                   MutableHashMap.set(moduleRunnerGroupNames, args.name, args.inputs.runner_group_name);
+                  MutableHashMap.set(moduleCapacityTypes, args.name, args.inputs.instance_target_capacity_type);
+                  MutableHashMap.set(moduleRunnerCaps, args.name, args.inputs.runners_maximum_count);
                 }
                 const policy = args.inputs.policy;
+                if (args.type === "aws:kms/grant:Grant") {
+                  MutableHashMap.set(decryptGrants, args.name, args.inputs);
+                }
+                if (args.type === "aws:iam/rolePolicy:RolePolicy" && isString(policy)) {
+                  MutableHashMap.set(policyDocuments, args.name, policy);
+                  MutableHashMap.set(rolePolicyRoles, args.name, args.inputs.role);
+                }
                 if (args.type === "aws:iam/policy:Policy" && isString(policy)) {
                   MutableHashMap.set(policyDocuments, args.name, policy);
                   return {
@@ -202,7 +226,7 @@ describe("@beep/infra CiFleetController", () => {
                   amiId: "ami-07a5b367e8dc8bd92",
                 })
               ),
-              region: "us-east-1",
+              region: pulumi.output("us-east-1"),
               subnetIds: ["subnet-abc"],
               vpcId: "vpc-123",
               workerSecurityGroupId: "sg-456",
@@ -241,6 +265,36 @@ describe("@beep/infra CiFleetController", () => {
       expect(capturedManagedPolicyArns.value).toEqual(["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"]);
       expect(capturedOrganizationRunnerEnabled.value).toBe(true);
       expect(capturedRunnerGroupName.value).toBe("beep-ec2-heavy");
+      expect(MutableHashMap.get(moduleCapacityTypes, "ci-fleet-controller-test")).toEqual(O.some("on-demand"));
+      expect(MutableHashMap.get(moduleRunnerCaps, "ci-fleet-controller-test")).toEqual(O.some(14));
+      expect(MutableHashMap.size(rolePolicyRoles)).toBe(0);
+      expect(MutableHashMap.size(decryptGrants)).toBe(6);
+      for (const functionName of [
+        "beep-ci-spot-termination-notification",
+        "beep-ci-spot-termination-handler",
+        "beep-ci-deregister-retry",
+      ]) {
+        expect(MutableHashMap.get(lambdaRegions, functionName)).toEqual(O.some("us-east-1"));
+        A.forEach(
+          [
+            { purpose: "id", parameterArn: validConfigValues.githubAppIdSsmParameterArn },
+            { purpose: "key", parameterArn: validConfigValues.githubAppKeyBase64SsmParameterArn },
+          ],
+          ({ purpose, parameterArn }) =>
+            expect(
+              MutableHashMap.get(decryptGrants, `ci-fleet-controller-test-${functionName}-app-${purpose}-decrypt`)
+            ).toEqual(
+              O.some({
+                name: `${functionName}-immutable-id-${functionName}-role-${purpose}`,
+                region: "us-east-1",
+                keyId: validConfigValues.githubAppKmsKeyArn,
+                granteePrincipal: `arn:aws:iam::123456789012:role/beep-ci/${functionName}-role`,
+                operations: ["Decrypt"],
+                constraints: [{ encryptionContextEquals: { PARAMETER_ARN: parameterArn } }],
+              })
+            )
+        );
+      }
       expect(capturedMetadataOptions.value).toEqual({
         http_endpoint: "enabled",
         http_put_response_hop_limit: 1,

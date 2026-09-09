@@ -4,15 +4,16 @@
     "id": "inline-schema-compile-hard-error",
     "packetId": "goal-packet/v1:074c977d8b1b1e8ca85083f82551df8ff41f011b2f83dc88baa9093ef6bcb9a3",
     "title": "Inline Schema Compiler Hard Error",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-30",
     "updated": "2026-09-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/inline-schema-compile-hard-error",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Eliminate the remaining inline Schema compiler calls and promote beep(no-inline-schema-compile) from warning to error.",
-  "executionCapable": true,
+  "executionCapable": false,
+  "statusNote": "This successor carries the final packet-state update before publication. Merge acceptance still requires its final-head Yeet proof, hosted checks, addressed review comments, and merge-ready: yes. Historical receipts retain their original identities.",
   "reflectionRequired": true,
   "provenance": {
     "note": "Mandatory successor created from the 2026-08-30 closing census of schema-utils-selective-codec-statics.",
@@ -69,20 +70,20 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress",
-      "evidence": "The clean v2 matrix passed all 106 expected owners at head 02d88af51c and committed tree 786d98065f3a3628599a4691e0314b5fb004bff3. FreshBooks and effect-drizzle passed supplemental verification, covering all 108 owners in the implementation PR diffs. Full local Yeet verification passed all 34 reported lanes on preview 64a5996a4e, which shares that committed tree. PR #1038 merged with all required hosted checks green while its final head 3324595a3b remained queued for local proof. That run was interrupted cleanly without executing heavy lanes. P2 remains open for final-head verification."
+      "status": "complete",
+      "evidence": "The clean v2 matrix passed all 106 expected owners at head 02d88af51c and committed tree 786d98065f3a3628599a4691e0314b5fb004bff3. Canonical supplemental receipts for FreshBooks and effect-drizzle complete the independently derived 108-owner inventory. Full local verification passed all 34 reported lanes on preview 64a5996a4e, which shares that committed tree. Evidence publication 59bba09125 passed all 67 reported lanes including 23 CI-parity stages. The later bba3d0aa8b checker stages also passed, but its outer publication failed on agent-authored incident notes and is excluded from aggregate acceptance. Final-head verification of this packet-only candidate remains a merge gate."
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress",
-      "evidence": "PRs #1019, #1022, #1028, and #1038 merged. All thirteen predecessor review threads are resolved. Evidence commit 59bba09125 passed full Yeet publication with 67 reported lanes and all 23 local CI-parity stages. PR #1038 merged at 07:19 UTC on 2026-09-09 before its final-head local proof and terminal merge-ready: yes result. Operator-approved successor PR #1042 is open as a draft on branch codex/inline-schema-packet-closeout. It will remain draft through local proof and the final packet update. Final-head readiness remains outstanding."
+      "status": "complete",
+      "evidence": "PRs #1019, #1022, #1028, #1038, and #1042 shipped the implementation and corrected evidence. All thirteen predecessor review threads and #1042's earlier successor-status thread are resolved. All 18 required hosted checks passed on bba3d0aa8b, with a Yeet merge-ready: yes snapshot before the late packet-closeout P1. The operator authorized codex/inline-schema-lifecycle-closeout on 2026-09-09 to include the missing packet update before publication. Its final-head proof, hosted checks, review resolutions, and terminal merge-ready result must be verified before merge; earlier snapshots do not substitute for that acceptance."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress",
-      "evidence": "The September 8 reflection and September 9 follow-up record the implementation lessons and completed proofs. The corrected package evidence merged in #1038, but that PR merged before its final lifecycle update. The operator approved successor draft PR #1042 on 2026-09-09, with the publication exception recorded in SPEC.md. README.md, PLAN.md, and this manifest remain active until the original verification and packet gates are complete in #1042."
+      "status": "complete",
+      "evidence": "This successor synchronizes completed-retained lifecycle, non-executable routing, completed phase states, acceptance records, and the September 9 reflection in one changeset before publication. The reflection preserves the implementation lessons and failed-publication attribution. SPEC.md records the operator's explicit successor authorization after #1042 merged. The final PR's verification and review remain acceptance gates, not claims inferred from these prepared lifecycle fields."
     }
   ],
   "verificationCommands": [
