@@ -121,12 +121,30 @@ const isSchemaArbitraryCallExpression = (callExpression: import("ts-morph").Call
   );
 };
 
+// Matches a bare `Arbitrary.schema` / `S.toArbitrary` reference passed as a
+// pipe argument, e.g. `EvidenceTier.pipe(S.Array, Arbitrary.schema)`.
+const isSchemaArbitraryHelperReference = (expression: import("ts-morph").Expression): boolean =>
+  Node.isPropertyAccessExpression(expression) &&
+  Node.isIdentifier(expression.getExpression()) &&
+  literalMemberEquals(SCHEMA_ARBITRARY_NAMESPACE_NAMES, expression.getExpression().getText()) &&
+  literalMemberEquals(SCHEMA_ARBITRARY_HELPERS, expression.getName());
+
 const isSchemaArbitraryExpression = (
   expression: import("ts-morph").Expression,
   schemaArbitraryIdentifiers: HashSet.HashSet<string>
 ): boolean => {
   if (Node.isIdentifier(expression)) {
-    return HashSet.has(schemaArbitraryIdentifiers, expression.getText());
+    // Repo idiom: cross-field generators are exported as colocated
+    // `<Model>Arbitrary` companions built with `Arbitrary.schema`; imported
+    // companions are schema-derived even though their initializer lives in
+    // another module.
+    return (
+      HashSet.has(schemaArbitraryIdentifiers, expression.getText()) || Str.endsWith("Arbitrary")(expression.getText())
+    );
+  }
+
+  if (isSchemaArbitraryHelperReference(expression)) {
+    return true;
   }
 
   if (Node.isCallExpression(expression)) {
@@ -192,6 +210,22 @@ const isRepoSchemaArbitraryHelperCallExpression = (callExpression: import("ts-mo
   return Node.isIdentifier(expression) && literalMemberEquals(REPO_SCHEMA_ARBITRARY_HELPERS, expression.getText());
 };
 
+// Snapshot @effect/vitest `it.prop` / `it.effect.prop` accept only Schema or
+// native Arbitrary inputs (raw fast-check generators are rejected by type), so
+// any `it....prop(...)` call in a schema-heavy test file is schema-derived
+// property coverage.
+const isVitestPropCallExpression = (callExpression: import("ts-morph").CallExpression): boolean => {
+  const expression = callExpression.getExpression();
+  if (!Node.isPropertyAccessExpression(expression) || !Str.Equivalence(expression.getName(), "prop")) {
+    return false;
+  }
+  let base: import("ts-morph").Expression = expression.getExpression();
+  while (Node.isPropertyAccessExpression(base)) {
+    base = base.getExpression();
+  }
+  return Node.isIdentifier(base) && Str.Equivalence(base.getText(), "it");
+};
+
 const sourceSchemaArbitraryIdentifiers = (sourceFile: import("ts-morph").SourceFile): HashSet.HashSet<string> => {
   let identifiers = HashSet.empty<string>();
   for (const variableDeclaration of sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
@@ -214,6 +248,7 @@ const sourceHasSchemaArbitraryPropertyCoverage = (sourceFile: import("ts-morph")
     sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression),
     (callExpression) =>
       isRepoSchemaArbitraryHelperCallExpression(callExpression) ||
+      isVitestPropCallExpression(callExpression) ||
       isArbitraryPropertyCallExpression(callExpression, schemaArbitraryIdentifiers)
   );
 };

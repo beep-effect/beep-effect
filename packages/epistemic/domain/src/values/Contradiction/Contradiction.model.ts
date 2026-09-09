@@ -755,20 +755,64 @@ class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolut
 ) {}
 
 const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
-const ContradictionResolutionProposalSchema = ContradictionResolutionProposalStruct.mapFields(identity).check(
+
+/**
+ * Build the shared half-open valid-interval filter for contradiction payloads.
+ *
+ * **Details**
+ *
+ * Every contradiction-shaped payload (resolution proposal, candidate content,
+ * triage submission command) carries the same `validFrom`/`validTo` interval
+ * invariant; this factory is the single source for that check.
+ *
+ * **Example** (Build an interval check)
+ *
+ * ```ts
+ * import { makeValidIntervalCheck } from "@beep/epistemic-domain/values/Contradiction"
+ *
+ * const check = makeValidIntervalCheck({
+ *   identifier: "ExampleValidIntervalCheck",
+ *   title: "Example Valid Interval",
+ *   description: "Checks the example interval ordering.",
+ * })
+ * console.log(typeof check) // "object"
+ * ```
+ *
+ * @param annotations - Identifier, title, and description for the filter.
+ * @returns The half-open valid-interval filter.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const makeValidIntervalCheck = (annotations: ValidIntervalCheckAnnotations) =>
   S.makeFilter(
-    ({ validFrom, validTo }) =>
+    ({ validFrom, validTo }: ValidInterval) =>
       O.match(validTo, {
         onNone: () => true,
         onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
       }),
     {
-      identifier: $I`ContradictionResolutionProposalValidIntervalCheck`,
-      title: "Contradiction Resolution Proposal Valid Interval",
-      description: "Checks that a closed proposal validity interval is a non-empty forward half-open range.",
+      ...annotations,
       message: "Expected validFrom to be earlier than validTo when validTo is present.",
     }
-  )
+  );
+
+type ValidIntervalCheckAnnotations = {
+  readonly identifier: string;
+  readonly title: string;
+  readonly description: string;
+};
+
+type ValidInterval = {
+  readonly validFrom: DateTime.Utc;
+  readonly validTo: O.Option<DateTime.Utc>;
+};
+
+const ContradictionResolutionProposalSchema = ContradictionResolutionProposalStruct.mapFields(identity).check(
+  makeValidIntervalCheck({
+    identifier: $I`ContradictionResolutionProposalValidIntervalCheck`,
+    title: "Contradiction Resolution Proposal Valid Interval",
+    description: "Checks that a closed proposal validity interval is a non-empty forward half-open range.",
+  })
 );
 
 /**
@@ -1360,19 +1404,11 @@ class ContradictionCandidateContentStruct extends S.Class<ContradictionCandidate
 ) {}
 
 const ContradictionCandidateContentSchema = ContradictionCandidateContentStruct.mapFields(identity).check(
-  S.makeFilter(
-    ({ validFrom, validTo }) =>
-      O.match(validTo, {
-        onNone: () => true,
-        onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
-      }),
-    {
-      identifier: $I`ContradictionCandidateContentValidIntervalCheck`,
-      title: "Contradiction Candidate Valid Interval",
-      description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
-      message: "Expected validFrom to be earlier than validTo when validTo is present.",
-    }
-  )
+  makeValidIntervalCheck({
+    identifier: $I`ContradictionCandidateContentValidIntervalCheck`,
+    title: "Contradiction Candidate Valid Interval",
+    description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
+  })
 );
 
 /**

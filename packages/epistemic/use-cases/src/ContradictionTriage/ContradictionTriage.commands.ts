@@ -17,6 +17,7 @@ import {
   ContradictionProposalId,
   ContradictionReceiptKey,
   ContradictionReviewReason,
+  makeValidIntervalCheck,
 } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
@@ -80,19 +81,11 @@ class SubmitContradictionCandidateStruct extends S.Class<SubmitContradictionCand
 const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
 
 const SubmitContradictionCandidateSchema = SubmitContradictionCandidateStruct.mapFields(identity).check(
-  S.makeFilter(
-    ({ validFrom, validTo }) =>
-      O.match(validTo, {
-        onNone: () => true,
-        onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
-      }),
-    {
-      identifier: $I`SubmitContradictionCandidateValidIntervalCheck`,
-      title: "Contradiction Candidate Valid Interval",
-      description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
-      message: "Expected validFrom to be earlier than validTo when validTo is present.",
-    }
-  )
+  makeValidIntervalCheck({
+    identifier: $I`SubmitContradictionCandidateValidIntervalCheck`,
+    title: "Contradiction Candidate Valid Interval",
+    description: "Checks that a closed candidate validity interval is a non-empty forward half-open range.",
+  })
 );
 
 /**

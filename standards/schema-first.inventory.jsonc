@@ -142,16 +142,6 @@
       "reason": "Terminal constructor contract intentionally binds schema-modeled ACP identifiers to live request Effects."
     },
     {
-      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 100,
-      "owner": "@beep/duckdb",
-      "reason": "The file's round-trip property suite derives its arbitraries from S.toArbitrary and then sanitizes defect-bearing fields per the repo equivalence precedent; the mapped arbitrary form is schema-derived coverage the detector cannot attribute, and the fixed codec assertions pin encoded wire shapes byte-identically."
-    },
-    {
       "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
       "symbol": "FreshbooksClient.email",
       "kind": "schema-policy-advisory",
@@ -244,6 +234,14 @@
       "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
     },
     {
+      "file": "packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts",
+      "symbol": "EvidenceSpanArbitrary",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Native Arbitrary companion (Arbitrary.schema + combinators) colocated with its S.Class model for cross-field generation; it is a generator value, not an object schema."
+    },
+    {
       "file": "packages/epistemic/server/src/GovernedEgress/GovernedEgress.layer.ts",
       "symbol": "GovernedEgressLiveOptions",
       "kind": "exported-interface",
@@ -320,6 +318,14 @@
       "line": 49,
       "owner": "@beep/epistemic-server",
       "reason": "Restart regression decodes fixed commands to write history in one PGlite scope and re-read it in a second over the same dataDir; what is under test is that the data files carry history, lineage, dispositions, and live constraints across a process boundary, not schema laws."
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts",
+      "symbol": "EvidenceSourceHighlightArbitrary",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/epistemic-use-cases",
+      "reason": "Native Arbitrary companion (Arbitrary.schema + combinators) for the RPC highlight protocol; it is a generator value, not an object schema."
     },
     {
       "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
@@ -657,9 +663,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 16,
+      "line": 15,
       "owner": "@beep/repo-utils",
-      "reason": "Intentionally golden/regression-only coverage: the harness pins byte-identity of JSDocTagDefinition.make before and after the Fibered migration against a committed 113-tag fingerprint snapshot; schema-derived arbitrary coverage for TagValue cases lives in JSDoc.model.test.ts and for the kit in the identity Fibered tests."
+      "reason": "Golden fingerprint test replays captured wire values from its __golden__ fixture; native Arbitrary seeds cannot reproduce the recorded fast-check samples, so schema-derived generation would invalidate the goldens."
     },
     {
       "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",

@@ -42,7 +42,7 @@ import { equals } from "effect/Equal";
 import { dual, flow } from "effect/Function";
 import { orElse as matchOrElse, type as matchType, withReturnType } from "effect/Match";
 import { fromUndefinedOr, getOrElse, map as mapOption, none, some as someOption } from "effect/Option";
-import { hasProperty, isNumber, isString, isTagged, not } from "effect/Predicate";
+import { hasProperty, isBigInt, isBoolean, isNumber, isString, isTagged, not } from "effect/Predicate";
 import { isSchema } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
 import { get as getStruct } from "effect/Struct";
@@ -286,15 +286,9 @@ const atomicCarrierTag = (node: AST): PgColumn.CarrierTag =>
         : fail("(unknown)", node._tag, "Encoded enum is not string-valued.")
     ),
     matchTag("Literal", ({ literal }) =>
-      isString(literal)
-        ? "string"
-        : isNumber(literal)
-          ? "number"
-          : typeof literal === "bigint"
-            ? "bigint"
-            : typeof literal === "boolean"
-              ? "boolean"
-              : fail("(unknown)", node._tag, "Encoded literal has no SQL carrier.")
+      isString(literal) || isNumber(literal) || isBigInt(literal) || isBoolean(literal)
+        ? (typeof literal as "string" | "number" | "bigint" | "boolean")
+        : fail("(unknown)", node._tag, "Encoded literal has no SQL carrier.")
     ),
     matchTag("Declaration", (declaration) =>
       hasProperty(declaration.annotations?.representation, "id") &&
