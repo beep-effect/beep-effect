@@ -61,3 +61,11 @@
 - Main integration left the ignored exploration Atlas stale. Regenerate both
   goal and exploration projections before starting a full proof after a merge;
   the atlas check then passes without a tracked-file change.
+
+- PR #1026 Coverage Regression reached the per-file ratchet after its tests
+  passed, then rejected the new malformed-listing branch in `Fleet.service.ts`.
+  Exercise a real Git listing without NUL delimiters through the fleet service,
+  retaining its clone as degraded and rejecting the untrusted linked entry.
+  Both fleet suites pass (42 tests); branches 78.98%, lines 90.42%, and statements
+  88.57% exceed the unchanged floors. Include coverage for each new recovery
+  branch when validating a security boundary.
