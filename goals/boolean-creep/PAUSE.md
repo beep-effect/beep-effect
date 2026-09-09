@@ -34,6 +34,15 @@ The working estimate remains approximately **30% of the whole campaign**. This
 is an effort estimate, not a count of completed acceptance criteria; source
 implementation, landing and final exact-main convergence remain ahead.
 
+## Publication validation
+
+The [publication proof](./data/pause-publication-proof.json) passed the frozen
+install, 13 cheap gates and 21 pre-push lanes, then failed the fresh JSDoc ratchet
+on the four pre-existing scratchpad prototypes. Nine later lanes were not run.
+The save draft preserves those files unchanged and discloses the failure. It has
+no green full-proof or merge-ready claim; repair the findings before readiness.
+This handoff update follows the tested commit and has commit checks only.
+
 ## Open decisions and paused audits
 
 The [four law-owner holds](./data/r31-law-owner-holds.json) remain outside the

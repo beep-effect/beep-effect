@@ -1210,3 +1210,17 @@ conditional precheck then brought in `0c975f970b`, whose additional changes are
 documentation only. No census or review launched against the stale reference.
 Dependent mutations must branch on the preceding command's exit code; awaiting
 two tool calls in order does not make the first failure abort the second.
+
+
+## 2026-09-09 — Save PR proof includes pre-existing scratchpad documentation debt
+
+The requested pause/save publication passed the frozen HEAD install, all 13
+cheap gates and 21 pre-push lanes before `quality:jsdoc-ratchet` failed. The
+fresh inventory attributes all six regression increases to the four pre-existing
+`scratchpad/yeet-effect/` prototypes; package and app source match main. Nine
+later lanes were not run. The earlier committed-inventory ratchet passed because
+it did not incorporate those new exports. A fresh scoped metadata check before
+the full publication run would have exposed this debt without the five-minute
+inventory wait. The [proof receipt](../data/pause-publication-proof.json) records
+the exact tested head and counts. The user requested preservation and pause;
+the prototypes remain unchanged and the draft discloses the unresolved failure.
