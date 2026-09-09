@@ -329,7 +329,8 @@
     "knip@6.27.0": "patches/knip@6.27.0.patch",
     "sharp@0.35.0": "patches/sharp@0.35.0.patch",
     "drizzle-orm@1.0.0-rc.4-fb12281": "patches/drizzle-orm@1.0.0-rc.4-fb12281.patch",
-    "onnxruntime-node@1.29.0": "patches/onnxruntime-node@1.29.0.patch"
+    "onnxruntime-node@1.29.0": "patches/onnxruntime-node@1.29.0.patch",
+    "@effect/platform-node-shared@4.0.0-rc.112": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.112.patch"
   },
   "private": true,
   "repository": {
@@ -348,7 +349,7 @@
     "audit:full": "bun run audit:fresh && bun run audit:github quality",
     "audit:github": "beep-cli audit github",
     "beep": "bun run packages/tooling/tool/cli/src/bin.ts --",
-    "beep:preflight": "bun run beep tsconfig-sync && bun run fallow:boundaries:write && bun run beep quality jsdoc-inventory && bun run beep lint schema-first --write && bun run beep lint package-scripts --write && bun run beep lint policy-fingerprint --write && bun run beep quality test-tsgo && bun run beep ci lane repo-sanity && bun run beep ci lane jsdoc-ratchet && bun run beep ci lane knip && bun run beep lint policy",
+    "beep:preflight": "bun run beep tsconfig-sync && bun run fallow:boundaries:write && bun run beep quality jsdoc-inventory --ci-output-json .beep/ci/jsdoc-documentation.inventory.jsonc --ci-output-markdown .beep/ci/jsdoc-documentation.inventory.md && bun run beep lint schema-first --write && bun run beep lint package-scripts --write && bun run beep lint policy-fingerprint --write && bun run beep quality test-tsgo && bun run beep ci lane repo-sanity && bun run beep ci lane jsdoc-ratchet --inventory .beep/ci/jsdoc-documentation.inventory.jsonc && bun run beep ci lane knip && bun run beep lint policy",
     "build": "beep-cli build",
     "changeset": "changeset",
     "changeset:status": "bun run beep quality changeset-status",
@@ -365,7 +366,6 @@
     "deps:update": "bunx syncpack update --target=latest --dependency-types=catalog",
     "dev": "bunx turbo run dev",
     "docgen": "bun run beep docgen local --full",
-    "docgen:affected": "bun run docgen:local",
     "docgen:local": "bun run beep docgen local",
     "docs:aggregate": "beep-cli docgen aggregate",
     "fallow": "fallow",
@@ -382,7 +382,6 @@
     "fallow:migrate:dry-run": "fallow migrate --dry-run",
     "files": "bun run beep files",
     "image": "bun run beep image",
-    "images": "bun run beep image",
     "impeccable:detect": "node .claude/skills/impeccable/scripts/detector/cli/main.mjs",
     "infra:prepare-gha-runners": "node infra/node_modules/@pulumi/gharunners/scripts/build.js --compiler node_modules/typescript/bin/tsc",
     "jsdoc:inventory": "bun run beep quality jsdoc-inventory",
