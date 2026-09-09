@@ -72,6 +72,17 @@ the zero-cohort CLI family. All 145 qualified rows remain byte-identical, with
 original rows and designs archived. No dependencies or lockfiles changed. The [Graft audit](./data/post-r31-main284-graft-audit.json)
 is complete and adds no eligible owner; it grants no replacement census or dry credit.
 
+The [R32 controller and launcher preparation](./data/r32-controller-launcher-preparation.json)
+now incorporates the Graft partition directly into the next census controller.
+It also checks predecessor reconciliation and artifact bindings for complete
+rounds, closing a gap in the earlier controller. Ten tests pass, including 31
+negative field/binding mutation cases. The actual read-only plan matches all
+3,056 files and 27 lanes of the prepared partition; all 61 non-TypeScript inputs
+remain included. No census output or model process was created. The controller
+refuses the missing R31 verdict, and the launcher remains unbound until R31 is
+reconciled and fresh exact-input admission pins are installed. Inventory and
+designs remain unchanged.
+
 The [review process preparation](./data/p3-fable-process-preparation.json) passes
 ten local Python child-process tests for output preservation, process identity,
 refusal, cancellation, timeout and interruption handling. No model review ran.

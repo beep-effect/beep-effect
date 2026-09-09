@@ -51,14 +51,25 @@ launcher, runtime/advisory-reference bindings and capability proof, final input
 binding and canonical validator transition remain pending.
 Historical Grok helpers and receipts retain their original provenance.
 
+The [R32 controller and launcher preparation](./data/r32-controller-launcher-preparation.json)
+now incorporates the Graft partition directly into the next census controller.
+It also checks predecessor reconciliation and artifact bindings for complete
+rounds, closing a gap in the earlier controller. Ten tests pass, including 31
+negative field/binding mutation cases. The actual read-only plan matches all
+3,056 files and 27 lanes of the prepared partition; all 61 non-TypeScript inputs
+remain included. No census output or model process was created. The controller
+refuses the missing R31 verdict, and the launcher remains unbound until R31 is
+reconciled and fresh exact-input admission pins are installed. Inventory and
+designs remain unchanged.
+
 The [current input preparation](./data/p3-fable-input-v2-preparation.json) corrects
 the missing Graft partition before the existing exact-one-owner checks. Its
 3,056-file pre-plan covers 27 lanes, preserves all 61 non-TypeScript inputs, and
 adds only the five Graft files since R31. The successful snapshot binds 6,381
 files and assigns 145 qualifications to 35 proposed review lanes. Ten test
 methods pass; the three snapshot methods also pass after classifier-drift
-coverage was added. This new private version leaves the historical launcher
-unchanged. The future R32 launcher must incorporate the correction explicitly;
+coverage was added. This private input version leaves the historical launcher
+unchanged. The R32 preparation above now incorporates its partition correction;
 neither a census nor a Fable review has been admitted or launched.
 
 The 2026-09-03 ratification audit revoked the old zero-findings claim. All 46

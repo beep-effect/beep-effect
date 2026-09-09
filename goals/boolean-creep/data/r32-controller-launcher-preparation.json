@@ -1,0 +1,90 @@
+{
+  "kind": "r32-controller-launcher-preparation/v1",
+  "sourceSha": "43232e5d9fbcc6cb10161531b98ee4bd64e27ce6",
+  "originMainSha": "e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b",
+  "privateBundle": "~/.cache/beep/boolean-creep/r32-controller-launcher-preparation",
+  "privateManifest": {
+    "sha256": "a59c1ac0b5b7e05f04959457ffc5166baa215e6dd43a13898af68bfdaea05d24",
+    "artifacts": 19
+  },
+  "historicalInputsPreserved": {
+    "controllerSha256": "b7b9881335bddf08dd7a0b601e5d07dc3ed48e7f94a56b315d2645109302de34",
+    "launcherSha256": "e8e774d609984db174396b0a355809033f6f8e57b952276f6de842123ce5bcf2"
+  },
+  "changes": [
+    "Add Graft to the D-K census lane before exact-one-owner checks.",
+    "Validate predecessor reconciliation, outcomes and finalization bindings for complete and source-invalid outcomes.",
+    "Require an explicit controller mode and reject optimized Python.",
+    "Prepare an R32 user-systemd launcher that refuses without new exact-input admission pins."
+  ],
+  "unchangedExecutionBody": true,
+  "validation": {
+    "testMethods": 10,
+    "negativeFieldBindingMutationCases": 31,
+    "exitCode": 0,
+    "actualR30PredecessorAccepted": true,
+    "currentR31PredecessorRefused": true
+  },
+  "observation": {
+    "kind": "r32-controller-launcher-readonly-observation/v1",
+    "recordedAt": "2026-09-09T17:41:18.720410+00:00",
+    "sourceSha": "43232e5d9fbcc6cb10161531b98ee4bd64e27ce6",
+    "originMainSha": "e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b",
+    "liveMainVerifiedBeforeAndAfter": true,
+    "corpusFileCount": 3056,
+    "corpusPathsSha256": "f8e60cf9af1e33525706a7289568163e63025ee081562dd14579d1a3ca0c84ce",
+    "laneCount": 27,
+    "nonTypeScriptFileCount": 61,
+    "graftFiles": [
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/index.ts"
+    ],
+    "partitionEquivalentToPriorPreparedInput": true,
+    "inventorySha256": "ed743923428ac9b8d8973a48dcf5f8011526881d64436a0779658a4159f42426",
+    "protectedInputCount": 77,
+    "protectedInputsUnchanged": true,
+    "corpusInputsUnchanged": true,
+    "refusals": [
+      {
+        "operation": "controller-preflight",
+        "exitCode": 1,
+        "reason": "Finalize exactly one preceding round",
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "c58cb861523616fb363c497ca2bd3c5510af06c206ca2c95a8e211d6a22c9af4"
+      },
+      {
+        "operation": "launcher-check",
+        "exitCode": 1,
+        "reason": "launcher is unbound",
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "c74f78cbe9dc39e90ee72c882ee88fbcb77ec30ff768957d43cb549c2124cf3b"
+      }
+    ],
+    "roundOutputsCreated": false,
+    "admissionPinsInstalled": false,
+    "systemdDispatched": false,
+    "modelsInvoked": false,
+    "dryCredit": false,
+    "independentP3Approval": false
+  },
+  "inventory": {
+    "records": 753,
+    "qualified": 145,
+    "disqualified": 608,
+    "sha256": "ed743923428ac9b8d8973a48dcf5f8011526881d64436a0779658a4159f42426",
+    "changedByPreparation": false
+  },
+  "remaining": [
+    "Resolve the two citation questions and finalize R31 reconciliation.",
+    "Create and verify fresh exact-input launch pins in a new admission bundle after merging live main.",
+    "Run the next census only after those admission checks pass."
+  ],
+  "censusLaunched": false,
+  "admissionPinsInstalled": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false
+}

@@ -1174,3 +1174,14 @@ transient and no scanner row existed. Neither fact is a packet exclusion;
 the excluded function parameters are a different surface. The frozen evidence
 supports a small D1 supplement, with no qualification or design. Apply the
 scanner net before the evidence gate, and require a binding rule for exclusions.
+
+
+## 2026-09-09 — Completed predecessor skipped reconciliation checks in the controller
+
+Preparing the R32 launcher exposed an asymmetry in the frozen private v7
+controller: finalization bindings and unresolved-owner checks run only under
+`if previous_verdict.get('complete') is not True`. The R31 launcher separately
+checked its specific R30 predecessor, so no admitted round is shown to have
+bypassed reconciliation. The next controller will check the predecessor for
+both complete and source-invalid outcomes, before creating outputs or invoking
+models. A completed receipt with unresolved questions must be a negative fixture.
