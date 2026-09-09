@@ -614,13 +614,37 @@ const lintLawsCommand = Command.make(
     const root = yield* findRepoRoot();
     const path = yield* Path.Path;
     const prefix = yield* resolveLintPackage(root, directory);
+    const fsUtils = yield* FsUtils;
+    const files = A.sort(
+      yield* fsUtils.globFiles([`${prefix}/**/*.{ts,tsx}`], {
+        cwd: root,
+        ignore: [
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**",
+          "**/.turbo/**",
+          "**/coverage/**",
+          "**/*.d.ts",
+          "**/*.d.tsx",
+        ],
+      }),
+      Order.String
+    );
+    const include = A.join(files, ",");
     const commands = [
-      ["laws", "terse-effect", "--check", "--advisory", "--include-prefix", prefix],
-      ["laws", "native-runtime", "--check", "--include-prefix", prefix],
-      ["laws", "frozen-grant-set", "--check", "--include-prefix", prefix],
-      ["laws", "effect-fn", "--check", "--include-prefix", prefix],
-      ["lint", "package-test-imports", "--include-root", prefix],
+      ...A.flatMap(["terse-effect", "native-runtime", "frozen-grant-set", "effect-fn"], (law) =>
+        A.isReadonlyArrayEmpty(files)
+          ? []
+          : [["laws", law, "--check", ...(law === "terse-effect" ? ["--advisory"] : []), "--include", include]]
+      ),
+      ...(Str.startsWith(prefix, "packages/") ? [["lint", "package-test-imports", "--include-root", prefix]] : []),
     ];
+    if (A.isReadonlyArrayEmpty(files)) {
+      yield* Console.log(`lint laws: skipping four laws for ${prefix}; no TypeScript source files.`);
+    }
+    if (!Str.startsWith(prefix, "packages/")) {
+      yield* Console.log(`lint laws: skipping package-test-imports for ${prefix}; it only scans packages/.`);
+    }
     for (const args of commands) {
       const exitCode = yield* runToExit({
         command: "bun",

@@ -209,3 +209,17 @@ only when `<dir>` is under `packages/`; for apps, labs and infra it runs the fou
 says so in its output. That preserves today's coverage exactly (the root policy step never
 scanned app or infra tests). Add a worker test for an `apps/` directory. This lands at the start
 of Stage E, before the fleet `--write`, so every stamped `lint:laws` script is runnable.
+
+## Amendment 2026-09-09 (6) — laws worker must pass `--include`, and workers must be executed
+
+Only `laws effect-imports` accepts `--include-prefix`; terse-effect, native-runtime,
+frozen-grant-set and effect-fn accept `--include <comma-separated repo-relative files>` only, so
+the stamped `lint:laws` script fails at runtime (`Unrecognized flag: --include-prefix`). The
+`laws --package <dir>` worker expands the package's file surface itself (every `*.ts`/`*.tsx`
+under the directory, excluding `node_modules`, `dist`, `build`, `.turbo`, `coverage`, declaration
+files; reuse the existing `collectTypeScriptFiles` discovery in `Lint.command.ts` or the shared
+TypeScript source exclusions) and passes it as `--include` to those four laws; an empty surface
+skips the law with a printed reason. Worker tests must **execute** the worker end to end against
+a fixture package (a real subprocess run, not argv pinning alone) so a flag mismatch fails the
+test. Apply the same executed-smoke rule to `lint jsdoc --package` and
+`lint deprecated-apis --package`.

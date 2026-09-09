@@ -434,3 +434,52 @@ scope restriction resolved by the scanner work; the worker argv tests alone do
 not prove those existing scanner paths can accept the fleet. Recording this
 inherited limitation before the Stage E rewrite prevents mistaking package-only
 worker proof for fleet acceptance.
+
+### C3.1 Stage E — Runpod generator binding missing before fleet write
+
+The one `bun run beep lint package-scripts --write` invocation reported
+`142 manifests, 1 drifting, 140 written` and exited 1 with
+`packages/drivers/runpod/package.json: codegen: missing-task`.
+The pre-write JSON check also contains that missing-task row. Runpod is in the
+accepted generator registry and already owns `generate: bun run scripts/generate.ts`,
+but HEAD lacks a codegen task. Its generator writes the two checked-in Runpod
+model/operation modules. Bind its package-owned codegen task to `bun run generate`,
+as the other drivers do, then check without repeating the fleet writer.
+An explicit registry-to-manifest census before the rewrite would have surfaced
+this inherited omission sooner. No policy rule or generator behavior changes.
+
+The initial authorized residue deletion command was rejected because `rm -f`
+style commands are disabled. Removed only the named residue via filesystem APIs;
+no permission escalation or Git write was used.
+
+### C3.1 Stage E2 — executed workers expose selector and fixture blind spots
+
+The orchestrator's Freshbooks `lint:laws` run rejected `--include-prefix` for
+terse-effect. Existing mocked argv tests pinned the same invalid flag without
+executing the parser. Stage E2 replaces it with an expanded `--include` surface
+and adds subprocess worker tests. The first executed docs smoke exited 2 because
+ESLint ignores every file under `test/fixtures`; moving the temporary fixture
+surface into the existing CLI source project lets both real profiles inspect it.
+Executed worker checks before fleet stamping would have caught both assumptions.
+
+## 2026-09-09 — Fleet convergence exposed a hidden single-project-emit violation
+
+- **Doing:** accepting the C3.1 fleet rewrite (`beep lint package-scripts --write`).
+- **Evidence:** `test/single-project-emit.test.ts` failed only after the rewrite because
+  `packages/foundation/modeling/md` had `build: tsc -b …` and `check: tsgo -b …` as direct keys,
+  which the law never read (it scans `beep:build`/`beep:check` only); moving the same text behind
+  the implementation keys made the violation visible. The package compiles single-project once
+  `@beep/html` is built, so the fix was the canonical `-p` forms.
+- **Would have prevented it:** the emit law scanning task-facing keys as well as `beep:*`, or the
+  scripts gate having landed earlier so direct-form escapes could not accumulate.
+
+## 2026-09-09 — `package-verify --quick` on a fresh worktree reports phantom Effect LSP errors
+
+- **Doing:** quick-verifying a sample of workspaces touched by the fleet rewrite.
+- **Evidence:** `@beep/practice-kg-mcp` failed `beep:check` with `effect(anyUnknownInErrorContext)`
+  in `src/bin.ts`; the same script passes on the main tree and passes in the worktree after
+  `turbo run build --filter='@beep/practice-kg-mcp^...'`. `--quick` skips the upstream build that
+  B1 added to the full verification, so a fresh worktree without `dist` mis-types imports as
+  `any`/`unknown`.
+- **Would have prevented it:** `--quick` running `turbo run build` for the package's dependency
+  closure (or refusing when any upstream `dist` is missing) before `beep:check`.

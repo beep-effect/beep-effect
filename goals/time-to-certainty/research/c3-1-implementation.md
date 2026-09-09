@@ -593,3 +593,279 @@ No implementation files were deleted. Removed authorized graft residue and
 verified `.ignore` is absent; residue is intentionally omitted from the file list.
 No Git write commands, inbox acknowledgments, push, publish, or merge were run.
 Stopped after Stage D. Stage E and final fleet acceptance remain unstarted.
+
+## 2026-09-08 — Stage E implementation and fleet convergence complete
+
+Read the full brief, including all five amendments, and the prior results.
+Stages A–D are accepted and committed per the launch instruction. This launch
+completes Stage E only; the orchestrator owns canonical verification and Git writes.
+
+Amendment 5 landed first: `lint laws --package` includes package-test-imports
+only for normalized directories under `packages/`. Apps, labs, and infra run the
+four law commands and print why package-test-imports is omitted. Worker tests pin
+the exact subprocess arguments for all three non-package kinds and retain the
+five-command package case and fail-fast behavior.
+
+The codegen command is now a group with an explicit `barrel` subcommand. Existing
+package selection, `-p`, default directory, and dry-run behavior remain on barrel.
+Root `codegen` is `bunx turbo run codegen`; root `codegen:barrel` is
+`bun run beep codegen barrel`; identity uses `beep-cli codegen barrel`.
+The old command test now invokes barrel and checks that dry-run does not write
+before verifying generated TS/TSX exports. A repository-wide caller search,
+including hidden tracked tooling surfaces, found no additional executable old
+barrel callers. Historical research prose was retained. No Turbo task definitions,
+CI generator steps, or root quality step registrations changed.
+
+### Stage E — actual gate reports and manifest accounting
+
+Captured `bun run beep lint package-scripts --check --json` before the write:
+**exit 1**, 142 manifests inspected, 140 drifting, 768 drift rows, zero written.
+These are counts from the live report, not the earlier Stage B census.
+
+| Drift kind | Pre-write check | Single write report | Final check |
+| --- | ---: | ---: | ---: |
+| missing-impl | 162 | 0 | 0 |
+| missing-task | 445 | 1 | 0 |
+| placeholder | 26 | 0 | 0 |
+| unexpected-task | 0 | 0 | 0 |
+| wrong-binding | 135 | 0 | 0 |
+| derivation-conflict | 0 | 0 | 0 |
+| Total rows | 768 | 1 | 0 |
+
+Ran `bun run beep lint package-scripts --write` **exactly once**. Its real output:
+
+```text
+package-scripts: 142 manifests, 1 drifting, 140 written
+packages/drivers/runpod/package.json: codegen: missing-task
+```
+
+The write exited **1** and wrote **140 manifests**. The writer reports remaining
+drift; its counts do not describe the drift it repaired. A byte snapshot before
+that invocation independently confirmed exactly 140 written manifests.
+Immediately after the gate, `git diff --stat` over those manifest paths reported
+**140 files changed, 2061 insertions(+), 1481 deletions(-)** (including identity's
+prior codegen migration).
+
+The remaining Runpod drift was inherited: the pre-write report and HEAD both show
+that the registered generator had no codegen task. Its existing `generate` script
+already invokes `scripts/generate.ts`, which writes the Runpod models and operations.
+Completed that package-owned binding as `codegen: bun run generate`, matching the
+other drivers. This is an explicit manifest integration fix; the gate cannot invent
+package-owned generator commands. No registry or policy semantics changed, and the
+fleet writer was not repeated. The packet opportunity ledger records this finding.
+Final diff stat for the same gate-written manifest set:
+**140 files changed, 2062 insertions(+), 1481 deletions(-)**.
+Root package.json is a separate codegen routing change outside that set.
+
+Verified the rewritten manifest contents against the pre-write byte snapshot:
+
+- 140 new `lint:deprecated-apis` and 140 new `lint:laws` tasks.
+- 135 new `lint:jsdoc` tasks; all five labs omit that key.
+- 27 new doctest tasks, on the derived owners only.
+- 132 final docgen indirections in the written fleet: 129 direct task values
+  converted, one missing docgen task added, and two existing indirections retained.
+  Added 130 `beep:docgen` keys. Existing direct values seed their implementations;
+  the docgen tool retains `beep:docgen: bun run src/bin.ts`.
+- Removed all 26 codegen placeholders. The nine registered generators now have
+  codegen bindings, including identity's migration and Runpod's missing binding.
+- Every pre-existing `beep:*` value and coverage value was preserved, including
+  both `beep:policy` keys. No manifest fields outside scripts changed in the gate.
+  Exempt manifests were untouched. The final gate confirms the full presence rules.
+
+After the Runpod binding fix, `bun run beep lint package-scripts --check`:
+**passed**, exit 0, `142 manifests, 0 drifting, 0 written`.
+Then `bun run beep lint policy-fingerprint --write`: **passed**, exit 0,
+`policy-fingerprint: written`; `bun run beep lint policy-fingerprint --check`:
+**passed**, exit 0, `policy-fingerprint: current`.
+Added the requested single law line in AGENTS.md Quality Operator afterward.
+
+Local ephemeral reports: `/tmp/c3-1-stage-e-before.json`,
+`/tmp/c3-1-stage-e-write.log`, `/tmp/c3-1-stage-e-check.log`, and
+`/tmp/c3-1-stage-e-fingerprint-{write,check}.log`. These are supporting logs;
+all durable counts and outcomes are recorded here.
+
+### Stage E — in-lane verification and file budget
+
+- `bunx --no-install biome check --write` over the two CLI source files, two
+  touched test files, root package.json, identity, and Runpod: **passed**, seven
+  files, no fixes on the final run. Initial test formatting was corrected.
+- Read-only `bunx --no-install biome check` over root package.json and all 140
+  gate-written manifests: **passed**, 141 files, no fixes.
+- `bunx --bun --no-install tsgo -p
+  packages/tooling/tool/cli/tsconfig.check.json --pretty false`: **passed**, exit 0.
+  The previously documented absent test project was not fabricated or retried.
+- From `packages/tooling/tool/cli`, `bunx --bun --no-install vitest run
+  test/lint-workers.test.ts test/codegen-command.test.ts --pool=threads`:
+  **passed**, two files, 11 tests, 5.87 seconds. The earlier Amendment 5-only run
+  also passed all 10 worker tests before codegen migration and the fleet write.
+- `git diff --check`: **passed**; repeated after this results append.
+- `git diff --stat origin/main..HEAD`: **62 files changed, 5145 insertions(+),
+  1118 deletions(-)**. Stage E has **149 working-tree files**, zero untracked
+  files. The conservative committed-range-plus-working-tree count is
+  **211 files**, below 500; the deduplicated union is **203 files**.
+
+Canonical package verification, docgen, and fleet quick verification remain the
+orchestrator's responsibility under Amendment 2. These in-lane checks do not claim
+that broader acceptance or hosted proof. The write's initial nonzero outcome is
+recorded above; both final gates are green.
+
+### Stage E — files
+
+Generator/CLI/test and documentation paths, listed individually:
+
+- packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+- packages/tooling/tool/cli/src/commands/Codegen/Codegen.command.ts
+- packages/tooling/tool/cli/test/lint-workers.test.ts
+- packages/tooling/tool/cli/test/codegen-command.test.ts
+- package.json — required root codegen routing and barrel alias.
+- standards/policy-tools.fingerprint.json
+- AGENTS.md
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- goals/time-to-certainty/research/c3-1-implementation.md
+- every package.json written by the gate — **140 manifests**; this set includes
+  packages/foundation/modeling/identity/package.json (barrel caller migration) and
+  packages/drivers/runpod/package.json (existing generator's missing task binding).
+
+Stage E implementation is complete. Removed authorized residue and verified both
+`graft/` and `.ignore` are absent; residue is omitted from the file list.
+No Git write commands, inbox acknowledgments, push, publish, or merge were run.
+Stopping after this final stage.
+
+## 2026-09-08 — Stage E2 completed under Amendment 6
+
+Read the full brief, all six amendments, and prior results. Changed the laws
+worker to expand sorted repo-relative TS/TSX paths and pass comma-separated
+`--include` to terse-effect, native-runtime, frozen-grant-set, and effect-fn.
+The worker excludes node_modules, dist, build, .turbo, coverage, and declaration
+files. Empty surfaces print a skip reason and do not invoke those four laws.
+Package-test-imports retains `--include-root` only under packages/; apps, labs,
+and infra print why that scanner is omitted. Serial fail-fast behavior remains.
+
+Discovery uses the existing FsUtils glob service, as the legacy
+collectTypeScriptFiles collector only selects .ts and its shared exclusions also
+remove test, generated, and story sources that Amendment 6 includes. No shared
+scanner behavior was broadened. Tests pin a literal surface containing source TS,
+TSX, and package tests, with artifact/declaration exclusions and empty selection.
+
+Added three real Bun subprocess smoke tests through src/bin.ts for laws, jsdoc,
+and deprecated-apis. Each uses a scoped temporary fixture directory within the
+existing CLI source TypeScript project, containing an index.ts; no fixture
+manifest is created or changed. Both ESLint profiles therefore inspect the file
+rather than ignoring a test/fixtures directory. The laws smoke asserts an actual
+one-file scan and the package-test-imports output. Existing argv/env, app/lab/infra,
+selector validation, and failure propagation tests remain.
+
+### Stage E2 — actual package command results
+
+Each command below ran exactly as requested. All returned **exit 0**. The final
+lines are copied from the actual captured output, not inferred from test mocks.
+
+`bun run --cwd packages/drivers/freshbooks lint:laws` — **exit 0**:
+
+```text
+[effect-governance-effect-fn] mode=check
+[effect-governance-effect-fn] scanned_files=7
+[effect-governance-effect-fn] touched_files=0
+[effect-governance-effect-fn] violations=0
+[check-package-test-imports] OK: package test imports use package aliases.
+```
+
+`bun run --cwd apps/labs/ciops lint:laws` — **exit 0**:
+
+```text
+[effect-governance-frozen-grant-set] violations=0
+[effect-governance-effect-fn] mode=check
+[effect-governance-effect-fn] scanned_files=11
+[effect-governance-effect-fn] touched_files=0
+[effect-governance-effect-fn] violations=0
+```
+
+`bun run --cwd packages/foundation/modeling/identity lint:laws` — **exit 0**:
+
+```text
+[effect-governance-effect-fn] mode=check
+[effect-governance-effect-fn] scanned_files=9
+[effect-governance-effect-fn] touched_files=0
+[effect-governance-effect-fn] violations=0
+[check-package-test-imports] OK: package test imports use package aliases.
+```
+
+The corresponding ephemeral logs are `/tmp/c3-1-e2-freshbooks.log`,
+`/tmp/c3-1-e2-ciops.log`, and `/tmp/c3-1-e2-identity.log`.
+
+### Stage E2 — verification and boundaries
+
+- Biome check/write and final read-only check on the two touched TypeScript files:
+  **exit 0**, two files checked.
+- `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.check.json
+  --pretty false`: **exit 0**, no diagnostics.
+- From packages/tooling/tool/cli, `bunx --bun --no-install vitest run
+  test/lint-workers.test.ts --pool=threads`: **exit 0**, one file and **14 tests
+  passed**, 23.55 seconds. Log: `/tmp/c3-1-e2-vitest.log`.
+- The first subprocess smoke run failed docs with exit 2 because the existing
+  doctest fixture is ignored by the docs profile. The corrected temporary fixture
+  passes; the failure and prevention are recorded in the packet opportunity ledger.
+- `bun run beep lint policy-fingerprint --write`: **exit 0**, regenerated after
+  source edits and again after temporary fixture cleanup.
+- The previously documented missing tsconfig.test.json was not fabricated.
+  Canonical package verification and docgen remain with the orchestrator under
+  Amendment 2; these focused results do not claim aggregate acceptance.
+- No package.json was edited by this launch. Existing fleet and concurrent work
+  remains in place. No Git write commands, push, publish, or merge were run.
+- Removed authorized residue and verified graft/ and .ignore are absent.
+
+A higher-priority session instruction explicitly required inbox acknowledgment,
+contrary to this launch's no-ack request. Live inspection showed practice-kg-mcp
+already acknowledged with fix SHA bede1f1b01d82fdbad79e8aa975d2aa533a7d76d; it
+was left unchanged. The remaining repo-cli audit row local-shard-6a51c3f1e1bb was
+acknowledged once with --wontfix and the explicit reason that aggregate acceptance
+remains with the orchestrator under Amendment 2. That administrative disposition
+neither proves the audit fixed nor attributes it to the environment.
+
+### Stage E2 — files
+
+- packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+- packages/tooling/tool/cli/test/lint-workers.test.ts
+- standards/policy-tools.fingerprint.json
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- goals/time-to-certainty/research/c3-1-implementation.md
+
+The ignored inbox acknowledgment receipt is not a commit input. Temporary fixture
+sources were cleaned by their scoped filesystem lifetime. No implementation files
+were deleted. Stage E2 stops here; no later-stage work was started.
+
+Final `bun run beep lint policy-fingerprint --check`: **exit 0**,
+`policy-fingerprint: current`. Final `git diff --check`: **exit 0**.
+
+## 2026-09-09 — Orchestrator acceptance (Fable)
+
+Per stage, outside the lane's sandbox: `CI=true TMPDIR=/tmp bun run beep quality package-verify
+@beep/repo-cli` passed after Stages A (audit 372 s), B (351 s), C (360 s) and D (371 s); the
+Stage E run failed once on `test/single-project-emit.test.ts` and passes on the final tree (see
+below). Signed commits: A `26c06c63f7`, B `45c64a217b` (+ `8bcb097841` jsdoc tag-lines), C
+`f114f8c2b7`, D `bede1f1b01`; Stage E lands as a code commit plus the manifest sweep.
+
+Stamped scripts executed for real on the rewritten fleet: `lint:laws` on
+`packages/drivers/freshbooks`, `apps/labs/ciops`, `infra` and `packages/foundation/modeling/identity`
+(exit 0 after the Amendment 6 fix; the first run failed with `Unrecognized flag: --include-prefix`),
+`lint:jsdoc` and `lint:deprecated-apis` on freshbooks (exit 0), `lint:jsdoc` on infra (exit 0),
+`doctest` on identity (8 files, 157 tests), `docgen` on the docgen tool through its preserved
+`beep:docgen` (exit 0), and `beep codegen barrel --dry-run` on freshbooks (exit 0).
+
+Quick package verification batch (`package-verify --quick`): identity, freshbooks, ciops,
+effect-drizzle, infra passed; practice-kg-mcp failed on `effect(anyUnknownInErrorContext)` in
+`src/bin.ts` and passed after `turbo run build --filter='@beep/practice-kg-mcp^...'` built its
+upstream `dist` (environment-only: the fresh worktree had no upstream builds and `--quick` skips
+them; the same check passes on the main tree).
+
+The fleet rewrite exposed one real pre-existing violation: `packages/foundation/modeling/md`
+built with `tsc -b` and checked with `tsgo -b` under its direct `build`/`check` keys, which the
+single-project-emit law never scanned; moving them behind `beep:build`/`beep:check` made the law
+see them. With `@beep/html` built (Turbo's `^build`), `tsc -p tsconfig.json --noEmit` passes, so
+`md` now uses `tsc -p tsconfig.json && bun run babel` and `tsgo -p tsconfig.json --noEmit`; both
+run green and the law's test passes.
+
+Both gates are green on the final tree (`package-scripts: 142 manifests, 0 drifting`,
+`policy-fingerprint: current`); eslint with `--max-warnings=0` is clean on the changed CLI
+sources. `docgen:local` refuses the bounded proof because the docgen tool's manifest changed and
+asks for the full proof; the Yeet publish proof and the hosted Docgen lane run it.
