@@ -168,6 +168,8 @@ export default defineRule({
               return property.kind === "init" && !property.method && isStaticSchemaExpression(property.value);
             }),
           TemplateLiteral: ({ expressions }) => A.isReadonlyArrayEmpty(expressions),
+          UnaryExpression: ({ argument, operator }) =>
+            (Str.Equivalence(operator, "-") || Str.Equivalence(operator, "+")) && isStaticSchemaExpression(argument),
           CallExpression: (call) =>
             O.match(asSchemaMethodCall(call), {
               onNone: thunkFalse,

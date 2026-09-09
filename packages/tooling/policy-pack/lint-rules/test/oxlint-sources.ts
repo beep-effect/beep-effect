@@ -260,6 +260,14 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `export const h6 = () => S.decodeSync(S.Tuple([Model]))([]);`
         ),
       },
+      // Unary numeric literals are static schema arguments.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const h7 = () => S.decodeSync(S.Literal(-1))(-1);`
+        ),
+      },
     ],
     valid: [
       // Module-scope compiler call is allowed (the whole point of the rule).
@@ -319,6 +327,15 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `import * as S from "effect/Schema";`,
           `export const decodeTuple = (fieldSchema: S.Top) =>`,
           `  S.decodeSync(S.Tuple([fieldSchema]));`
+        ),
+      },
+      // Unary runtime values remain parameter-dependent.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const decodeNegated = (value: -1 | 1) =>`,
+          `  S.decodeSync(S.Literal(-value));`
         ),
       },
     ],
