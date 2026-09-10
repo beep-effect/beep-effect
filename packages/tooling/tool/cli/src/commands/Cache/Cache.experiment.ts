@@ -779,7 +779,7 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
  * console.assert(typeof runCacheSyntheticExperiment === "function")
  * ```
  *
- * @category operations
+ * @category cli-commands
  * @since 0.0.0
  */
 export const runCacheSyntheticExperiment = Effect.fn("Cache.runSyntheticExperiment")(function* (

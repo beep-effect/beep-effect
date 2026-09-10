@@ -39,7 +39,7 @@ const Envelope = S.Struct({ schemaVersion: CacheEntrypointArtifactFormat });
  * console.assert(typeof plan === "function")
  * ```
  *
- * @category operations
+ * @category commands
  * @since 0.0.0
  */
 export const attachCacheEntrypointReview = Effect.fn("CacheEntrypoints.attachReview")(function* (

@@ -596,7 +596,7 @@ const cacheCensusCommand = Command.make(
  * console.assert(Effect.isEffect(runCachePolicyAudit("/repo", false)))
  * ```
  *
- * @category operations
+ * @category queries
  * @since 0.0.0
  */
 export const runCachePolicyAudit = Effect.fn("Cache.runPolicyAudit")(function* (root: string, json: boolean) {

@@ -12,6 +12,12 @@
  */
 
 export { collectCacheCensus, resolveCacheTurboBinary } from "./Cache.census.ts";
+/**
+ * Cache execution and policy commands.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export {
   buildCacheDashboard,
   cacheCommand,
@@ -19,12 +25,30 @@ export {
   runCacheRestorationProbe,
   runCacheWarm,
 } from "./Cache.command.ts";
+/**
+ * Installed dependency identities and materialization contracts.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export {
   CacheDependencyLink,
   CacheDependencyMaterialization,
   CacheDependencyTree,
 } from "./Cache.dependencies.schemas.ts";
+/**
+ * Materialize and verify installed dependency snapshots.
+ *
+ * @category commands
+ * @since 0.0.0
+ */
 export { materializeCacheDependencies, verifyCacheDependencies } from "./Cache.dependencies.ts";
+/**
+ * Source-review artifact and census attachment contracts.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export {
   CacheCensusEntrypointReview,
   CacheEntrypointArtifact,
@@ -32,7 +56,19 @@ export {
   CacheEntrypointArtifactReference,
   CacheEntrypointReviewRequest,
 } from "./Cache.entrypoints.schemas.ts";
+/**
+ * Attach verified source-review evidence to the executable census.
+ *
+ * @category commands
+ * @since 0.0.0
+ */
 export { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
+/**
+ * Synthetic experiment requests and local observation receipts.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export {
   CacheCaptureViolation,
   CacheFixtureRuntime,
@@ -43,7 +79,19 @@ export {
   CacheSyntheticRequest,
   CacheSyntheticRun,
 } from "./Cache.experiment.schemas.ts";
+/**
+ * Run admitted synthetic cache comparisons.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
+/**
+ * Native pilot requests, observations and negative controls.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export {
   CachePilotLogInput,
   CachePilotMutation,
@@ -55,6 +103,12 @@ export {
   CachePilotShadow,
   CachePilotTask,
 } from "./Cache.pilot.schemas.ts";
+/**
+ * Run native identity lint qualification controls.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export { runCachePilotExperiment } from "./Cache.pilot.ts";
 /**
  * Public cache command schemas and errors.
@@ -90,6 +144,12 @@ export {
   CacheWarmReceipt,
   CacheWarmReceiptJson,
 } from "./Cache.schemas.ts";
+/**
+ * Govern qualification lifecycle changes and cache policy queries.
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export {
   CacheQualificationLive,
   CacheQualificationService,

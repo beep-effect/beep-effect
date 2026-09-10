@@ -3,6 +3,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+/**
+ * Reviewed qualification lifecycle state and cache configuration audit policies.
+ *
+ * @category policies
+ * @since 0.0.0
+ */
 export {
   auditCachePolicy,
   CachePolicyAuditReport,
@@ -20,6 +26,12 @@ export {
   CacheReviewDecision,
   cacheLedgerFailures,
 } from "./Cache.governance.policy.ts";
+/**
+ * Computation-scoped qualification contracts and evidence promotion policies.
+ *
+ * @category policies
+ * @since 0.0.0
+ */
 export {
   CacheActivationProjection,
   CacheClientChannel,

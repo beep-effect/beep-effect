@@ -1335,7 +1335,7 @@ const runPilot = Effect.fn("CachePilot.run")(
  * console.assert(typeof runCachePilotExperiment === "function")
  * ```
  *
- * @category operations
+ * @category cli-commands
  * @since 0.0.0
  */
 export const runCachePilotExperiment = Effect.fn("Cache.runPilotExperiment")(function* (

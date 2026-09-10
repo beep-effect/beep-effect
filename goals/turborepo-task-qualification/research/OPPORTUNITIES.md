@@ -31,6 +31,21 @@ module subpaths in examples, retain the schema runtime alias at authoring
 time, and treat a committed-inventory pass as supporting evidence only.
 The examples and alias were corrected; no totals baseline was raised.
 
+Hosted validation also found missing category/version metadata on cache export
+barrels and four noncanonical operation categories. Package docgen compiled the
+examples, but the aggregate metadata gate checks these declarations separately.
+The barrel metadata and categories were corrected. The early-publish proof was
+intentionally interrupted after the exact-head hosted failure (exit 130); it
+must be replaced by a complete green proof.
+
+The hosted secret gate uses the reviewed base-branch policy and scanned 21
+false positives already in the branch history: 20 public SHA-256 receipt fields
+and one fixed synthetic canary. The same-PR exceptions therefore cannot take
+effect until reviewed on main. A separate policy-only branch retains the two
+path-and-content-constrained rules. Boundary fixtures prove all four intended
+exceptions and preserve six nearby detections. Keep the base-policy pinning;
+do not weaken the workflow or rewrite retained receipts to evade history scans.
+
 ## 2026-09-09: paused PR publication checks
 
 The first library-fingerprinting typecheck caught a curried Effect String

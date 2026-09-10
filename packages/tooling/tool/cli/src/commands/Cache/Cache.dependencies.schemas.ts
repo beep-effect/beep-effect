@@ -10,6 +10,12 @@ import { CacheDependencyTree, CacheExecutablePin } from "./Cache.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.dependencies.schemas");
 
+/**
+ * Canonical dependency-link and installed-tree identities shared by evidence consumers.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export { CacheDependencyLink, CacheDependencyTree } from "./Cache.schemas.ts";
 
 /**
