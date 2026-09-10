@@ -224,8 +224,14 @@ const localDefsRefTarget = (schema: JsonObject): O.Option<JsonObject> =>
 // than a bare `type: "object"`, so the object branch has to be recognized too —
 // otherwise a no-argument tool produces an inputSchema with no top-level `type`
 // and fails `McpSchema.Tool`'s validation at registration.
+// rc.113 encodes a no-argument tool's params as the non-null wildcard
+// `{ not: { type: "null" } }`, which admits objects but carries no `type`.
+const isNonNullWildcard = (target: JsonObject): boolean =>
+  Object.keys(target).length === 1 && isJsonObject(target.not) && (target.not as JsonObject).type === "null";
+
 const isObjectInputTarget = (target: JsonObject): boolean =>
   target.type === "object" ||
+  isNonNullWildcard(target) ||
   (A.isArray(target.anyOf) && target.anyOf.some((branch) => isJsonObject(branch) && branch.type === "object"));
 
 const withTopLevelObjectInputSchema = (schema: JsonObject): JsonObject =>
@@ -246,9 +252,12 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
   for (const tool of R.values<string, AiTool.Any>(built.tools)) {
     const annotations = tool.annotations;
     const toolMeta = Context.getOrUndefined(annotations, AiTool.Meta);
-    const wireTool = WireTool.make({
+    const description = AiTool.getDescription(tool);
+    const wireToolInput = {
       name: tool.name,
-      description: AiTool.getDescription(tool),
+      // rc.113 validates optional fields as absent-or-valued: an explicit
+      // undefined no longer decodes, so optionals are spread in conditionally.
+      ...(description === undefined ? {} : { description }),
       inputSchema: withTopLevelObjectInputSchema(AiTool.getJsonSchema(tool)),
       annotations: {
         ...Context.getOption(annotations, AiTool.Title).pipe(
@@ -260,8 +269,9 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
         idempotentHint: Context.get(annotations, AiTool.Idempotent),
         openWorldHint: Context.get(annotations, AiTool.OpenWorld),
       },
-      _meta: toolMeta,
-    });
+      ...(toolMeta === undefined ? {} : { _meta: toolMeta }),
+    };
+    const wireTool = WireTool.make(wireToolInput);
     yield* registry.addTool({
       tool: wireTool,
       annotations,
