@@ -852,3 +852,14 @@ controls disable reuse and may still run after this comparison stops reuse.
 - Correction: run `bun run beep goals index --write`, then its `--check` mode.
   Both use the existing manifests; no lifecycle status or tracked index changes.
 - Prevention: regenerate local packet projections after integrating goal changes.
+
+### Review task inputs after merging quality-policy changes
+
+- Activity: merge main PR #1083 and run the complete Yeet verification command.
+- Evidence: `quality:cache-policy` stopped on `//#lint:policy-fingerprint`;
+  main added `standards/lint-policy.sweeps.jsonc` to its declared inputs.
+- Correction: compare the executable census against the retained baseline,
+  record the single inherited input addition, and use the canonical reviewed
+  baseline writer. Keep qualification scope, states and cache flags unchanged.
+- Prevention: inspect task-configuration deltas when merging policy changes
+  before starting the full proof.

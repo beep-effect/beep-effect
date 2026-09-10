@@ -1,0 +1,17 @@
+{
+  "previous": "95e735109be49bbe5e0d25ba2ff553588388d9d1d4af964b62a84b6eeea0b9ba",
+  "review": {
+    "reviewer": "Codex integration review",
+    "reason": "Bind the inherited main quality-sweep policy input without changing qualification or reuse state.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/sweep-policy-baseline-review.md",
+      "sha256": "265ed3b28805ac205ad3b9e9683bea7bfba9189823252e11b8f91775213b51da"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}
