@@ -829,3 +829,22 @@ controls disable reuse and may still run after this comparison stops reuse.
   package audit on the settled source. Keep the failed receipt for attribution.
 - Prevention: finish source edits before starting an audit that launches fresh
   CLI processes throughout its test phase.
+
+### Serialize package audits and repository-wide source scans
+
+- Activity: run full verification alongside the CLI package audit.
+- Evidence: Knip observed an audit-owned `src/lint-worker-fixture-*/index.ts`
+  while its test was active. The fixture disappeared when its scoped test ended.
+- Correction: finish package verification before starting repository-wide scans;
+  retain the failed run and do not change the unused-code baseline. The settled
+  CLI audit and docgen both passed after source and base integration were frozen.
+- Prevention: treat tests that create temporary source fixtures as checkout
+  writers when scheduling overlapping verification commands.
+
+### Refresh ignored goal projections after integrating packet changes
+
+- Activity: merge main's paused goal packet and run the preliminary gates.
+- Evidence: `goals:index-check` reported a stale ignored `goals/INDEX.md`.
+- Correction: run `bun run beep goals index --write`, then its `--check` mode.
+  Both use the existing manifests; no lifecycle status or tracked index changes.
+- Prevention: regenerate local packet projections after integrating goal changes.
