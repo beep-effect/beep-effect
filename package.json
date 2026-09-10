@@ -391,6 +391,7 @@
     "lint:deprecated-apis": "beep-cli lint deprecated-apis",
     "lint:fix": "beep-cli lint --fix",
     "lint:oxlint": "oxlint",
+    "lint:policy-fingerprint": "beep-cli lint policy-fingerprint --check",
     "nuke": "docker compose down && docker system prune -a -f && docker volume prune -a -f",
     "op": "op run --env-file=.env --",
     "pkg:verify": "beep-cli quality package-verify",

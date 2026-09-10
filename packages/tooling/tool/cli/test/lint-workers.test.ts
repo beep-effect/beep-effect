@@ -4,10 +4,11 @@ import { FsUtils, FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphService
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
+import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
 import { beforeEach, describe, expect, vi } from "vitest";
 
@@ -59,12 +60,31 @@ describe("thin lint workers", { concurrent: false }, () => {
       yield* fs.writeFileString(`${root}/package.json`, '{"name":"fixture","workspaces":["packages/*"]}');
       yield* fs.writeFileString(`${root}/packages/cli/package.json`, '{"name":"@beep/repo-cli"}');
       yield* fs.writeFileString(`${root}/packages/helper/package.json`, '{"name":"@beep/helper"}');
+      const turboFile = `${root}/turbo.json`;
+      const turboBefore =
+        '{\n  "tasks": {\n    "//#lint:policy-fingerprint": {\n      "cache": true,\n      "outputs": [],\n      "inputs": []\n    },\n    "untouched": { "inputs": ["keep/**"] }\n  }\n}\n';
+      yield* fs.writeFileString(turboFile, turboBefore);
       selection.root = root;
       try {
         expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
         yield* run(["policy-fingerprint", "--write"]);
         const file = `${root}/standards/policy-tools.fingerprint.json`;
         const declaration = yield* fs.readFileString(file);
+        const turbo = yield* fs.readFileString(turboFile);
+        expect(turbo).toContain('"untouched": { "inputs": ["keep/**"] }');
+        expect(Str.replace(/"inputs": \[[\s\S]*?\]/, '"inputs": []')(turbo)).toBe(turboBefore);
+        yield* run(["policy-fingerprint", "--write"]);
+        expect(yield* fs.readFileString(file)).toBe(declaration);
+        expect(yield* fs.readFileString(turboFile)).toBe(turbo);
+        yield* fs.writeFileString(turboFile, turboBefore);
+        const turboDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
+        expect(Exit.isFailure(turboDrift)).toBe(true);
+        if (Exit.isFailure(turboDrift)) {
+          const message = Cause.pretty(turboDrift.cause);
+          expect(message).toContain('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
+          expect(message).not.toContain("Policy fingerprint drift: standards/policy-tools.fingerprint.json");
+        }
+        yield* run(["policy-fingerprint", "--write"]);
         yield* fs.writeFileString(file, `  ${declaration}  `);
         yield* fs.writeFileString(`${root}/packages/cli/src/index.ts`, "changed source");
         yield* fs.writeFileString(`${root}/eslint.config.mjs`, "changed config");
@@ -77,6 +97,24 @@ describe("thin lint workers", { concurrent: false }, () => {
         yield* run(["policy-fingerprint", "--write"]);
         yield* run(["policy-fingerprint", "--check"]);
         yield* fs.writeFileString(file, "invalid json");
+        const fileDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
+        expect(Exit.isFailure(fileDrift)).toBe(true);
+        if (Exit.isFailure(fileDrift)) {
+          const message = Cause.pretty(fileDrift.cause);
+          expect(message).toContain("Policy fingerprint drift: standards/policy-tools.fingerprint.json;");
+          expect(message).not.toContain('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
+        }
+        yield* fs.writeFileString(turboFile, "invalid json");
+        expect(yield* run(["policy-fingerprint", "--write"]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* fs.readFileString(file)).toBe("invalid json");
+        const bothDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
+        expect(Exit.isFailure(bothDrift)).toBe(true);
+        if (Exit.isFailure(bothDrift)) {
+          expect(Cause.pretty(bothDrift.cause)).toContain(
+            'Policy fingerprint drift: standards/policy-tools.fingerprint.json; turbo.json tasks["//#lint:policy-fingerprint"].inputs;'
+          );
+        }
+        yield* fs.remove(turboFile);
         expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
       } finally {
         selection.root = "";

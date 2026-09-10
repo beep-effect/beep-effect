@@ -652,3 +652,28 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** the same rule #1039 applied to the legacy-ticket tests, stated once
   for the scheduler: no fixed sleeps as settlement or ordering witnesses; poll with a bounded
   deadline, and gate concurrency in tests with Deferred instead of wall-clock waits.
+
+## 2026-09-09 — C3.2 Stage A: the Effect reference symlink is absent in a fresh worktree
+
+- **Doing:** validating Effect v4 APIs before the fingerprint schema and service work (lane rule:
+  read `.repos/effect` before writing any API).
+- **Evidence:** `.repos/effect/packages/effect/src/Schema.ts` does not exist in the `ttc-c3-2`
+  worktree; the parent checkout holds the machine-local `.repos/effect` symlink that
+  `scripts/setup-effect-ref.sh` provisions. The lane read the parent checkout's reference without
+  changing local wiring.
+- **Would have prevented it:** `beep worktree new` provisioning the reference symlink with each
+  worktree, or the brief naming the parent-checkout fallback.
+
+## 2026-09-09 — C3.2 Stage A: a package typecheck in a fresh worktree has no upstream outputs
+
+- **Doing:** supplementing the Stage A tests with
+  `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.check.json`.
+- **Evidence:** exit 1 with `TS6305: Output file '…/dist/index.d.ts' has not been built from
+  source file` for every workspace dependency, then a cascade of unknown/any diagnostics. A fresh
+  worktree has no `dist` outputs, so the check overlay cannot be a type proof there. A disposable
+  source-resolving config over the three touched tests and their imports was the honest substitute;
+  it surfaced two `effect(lazyEffect)` and two `effect(effectFnIife)` diagnostics on the new service
+  contract that the passing tests alone did not (service members must be lazy Effect values, and
+  never immediately invoked `Effect.fn` expressions).
+- **Would have prevented it:** the package-verify split (which builds dependencies first), or a
+  `beep quality test-tsgo-package` route that resolves sources when outputs are missing.
