@@ -9,17 +9,48 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
 import { A, Str } from "@beep/utils";
 import { Effect, Order, Path, pipe } from "effect";
+import * as Context from "effect/Context";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
-import type { SourceFile } from "ts-morph";
+import type { Project, SourceFile } from "ts-morph";
+
+const $I = $RepoCliId.create("commands/Laws/internal/LawScan");
+
+/**
+ * Supplies the single read-only package project to existing law visitors.
+ *
+ * **Example** (Inspect the service key)
+ * ```ts
+ * import { LawScanProject } from "@beep/repo-cli/commands/Laws"
+ * console.log(LawScanProject.key)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class LawScanProject extends Context.Service<
+  LawScanProject,
+  {
+    readonly project: Project;
+    readonly repoRoot: string;
+  }
+>()($I`LawScanProject`) {}
 
 /**
  * Production TypeScript globs scanned by the repo-local supplemental laws.
+ *
+ * **Example** (Read the default law globs)
+ * ```ts
+ * import { LAW_SCAN_INCLUDED_GLOBS } from "@beep/repo-cli/test/Laws"
+ * console.log(LAW_SCAN_INCLUDED_GLOBS.length) // 3
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -30,6 +61,13 @@ const ECOSYSTEM_MEMBER_SOURCE_PREFIX = "packages/ecosystem/";
 
 /**
  * Reports whether a normalized repo-relative path is inside an ecosystem member.
+ *
+ * **Example** (Recognize an ecosystem member path)
+ * ```ts
+ * import { isEcosystemMemberSourcePath } from "@beep/repo-cli/test/Laws"
+ * console.log(isEcosystemMemberSourcePath("packages/ecosystem/demo/src/index.ts")) // true
+ * console.log(isEcosystemMemberSourcePath("packages/foundation/demo/src/index.ts")) // false
+ * ```
  *
  * @param filePath - Repo-relative source path under consideration.
  * @returns `true` for paths shaped as `packages/ecosystem/<member>/...`.
@@ -90,7 +128,7 @@ export type LawScanOptions<Diagnostic> = {
  * **Example** (Select a changed-file scope)
  *
  * ```ts
- * import { lawScanSourcePaths } from "@beep/repo-cli/commands/Laws/internal/LawScan"
+ * import { lawScanSourcePaths } from "@beep/repo-cli/test/Laws"
  *
  * console.log(lawScanSourcePaths(["packages/demo/src/index.ts"]))
  * ```
@@ -161,30 +199,32 @@ export type LawScanResult<Diagnostic> = {
 /**
  * Scan repo TypeScript source with a per-source-file diagnostic visitor.
  *
+ * **Example** (Build a scan over the default globs)
+ * ```ts
+ * import { LAW_SCAN_INCLUDED_GLOBS, runLawScan } from "@beep/repo-cli/test/Laws"
+ * import * as Effect from "effect/Effect"
+ * const scan = runLawScan({
+ *   sourceFileGlobs: LAW_SCAN_INCLUDED_GLOBS,
+ *   includePaths: undefined,
+ *   excludePaths: [],
+ *   strictCheck: false,
+ *   collect: () => [],
+ * })
+ * console.log(Effect.isEffect(scan)) // true
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
 export const runLawScan = Effect.fn("LawScan.runLawScan")(function* <Diagnostic>(
   options: LawScanOptions<Diagnostic>
 ): Effect.fn.Return<LawScanResult<Diagnostic>, S.SchemaError | TSMorphServiceError, TSMorphService | Path.Path> {
-  const service = yield* TSMorphService;
+  const shared = yield* Effect.serviceOption(LawScanProject);
   const path = yield* Path.Path;
 
-  const request = yield* decodeProjectInspectionRequest({
-    entrypoint: {
-      _tag: "tsconfig",
-      tsConfigPath: "tsconfig.json",
-    },
-    repoRootPath: null,
-    mode: "syntax",
-    referencePolicy: "workspaceOnly",
-    filePaths: A.empty(),
-    sourceFileGlobs: A.fromIterable(options.sourceFileGlobs),
-  });
-
-  return yield* service.inspectProject(request, ({ scope, sourceFiles }) => {
+  const inspect = (repoRoot: string, sourceFiles: ReadonlyArray<SourceFile>) => {
     const scannedSourceFiles = collectScannedSourceFiles(options, sourceFiles, (sourceFile) =>
-      toPosixPath(path.relative(scope.repoRootPath, sourceFile.getFilePath()))
+      toPosixPath(path.relative(repoRoot, sourceFile.getFilePath()))
     );
     const { affectedFiles, diagnostics } = collectLawScanDiagnostics(scannedSourceFiles, options.collect);
     const violationCount = A.length(diagnostics);
@@ -197,5 +237,18 @@ export const runLawScan = Effect.fn("LawScan.runLawScan")(function* <Diagnostic>
       affectedFiles,
       diagnostics,
     };
+  };
+  if (O.isSome(shared)) {
+    return inspect(shared.value.repoRoot, shared.value.project.getSourceFiles());
+  }
+  const service = yield* TSMorphService;
+  const request = yield* decodeProjectInspectionRequest({
+    entrypoint: { _tag: "tsconfig", tsConfigPath: "tsconfig.json" },
+    repoRootPath: null,
+    mode: "syntax",
+    referencePolicy: "workspaceOnly",
+    filePaths: A.empty(),
+    sourceFileGlobs: A.fromIterable(options.sourceFileGlobs),
   });
+  return yield* service.inspectProject(request, ({ scope, sourceFiles }) => inspect(scope.repoRootPath, sourceFiles));
 });

@@ -1809,12 +1809,45 @@ export class TsMorphProjectInspectionRequest extends S.Class<TsMorphProjectInspe
     referencePolicy: TsMorphReferencePolicy,
     filePaths: S.Array(TypeScriptImplementationFilePath),
     sourceFileGlobs: S.Array(S.NonEmptyString),
+    loadTsconfigFiles: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefault(Effect.succeed(true))
+    ),
   },
   $I.annote("TsMorphProjectInspectionRequest", {
     description:
       "Request to inspect a resolved ts-morph project with optional source file loading without persisting edits.",
   })
-) {}
+) {
+  /**
+   * Request one package syntax project through its explicit test overlay.
+   *
+   * **Example** (Select a package overlay)
+   * ```ts
+   * import { TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index"
+   * console.log(TsMorphProjectInspectionRequest.packageSyntax("/repo", "packages/demo/tsconfig.test.json", []))
+   * ```
+   *
+   * @param repoRoot - Absolute repository root the overlay path is resolved against.
+   * @param overlayPath - Repository-relative tsconfig overlay whose compiler options scope the project.
+   * @param files - Absolute source paths added explicitly; the overlay's own include list is not loaded.
+   * @returns The decoded inspection request for a syntax-only, workspace-only package project.
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly packageSyntax = (repoRoot: string, overlayPath: string, files: ReadonlyArray<string>) =>
+    decodePackageProjectInspectionRequest({
+      entrypoint: { _tag: "tsconfig", tsConfigPath: overlayPath },
+      repoRootPath: repoRoot,
+      mode: "syntax",
+      referencePolicy: "workspaceOnly",
+      filePaths: [],
+      sourceFileGlobs: files,
+      loadTsconfigFiles: false,
+    });
+}
+
+const decodePackageProjectInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspectionRequest);
 
 /**
  * Resolved ts-morph project scope payload.
