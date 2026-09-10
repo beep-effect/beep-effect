@@ -17,7 +17,7 @@ the requested choices; rejected alternatives are summarized from that contract.
 | D8 | **MemoryFileSystem** enters as **P0.5**: port upstream `testLayer` into `@beep/test-utils`, run it against Node, Bun and Memory, promote `scratchpad/MemoryFileSystem` to `@beep/test-utils` only when green. Fold the `memfs` seed/fault/inspect facade on top only if P1 rows show codemod/generator tests need seeded volumes. Resource Authoritarian owns it. |
 | D9 | **Scope** = `apps/**`, `packages/**`, `infra/**` test files (955) plus `**/test/**/*.ts` support modules for wrapper-definition findings. Excluded: `scratchpad/**` (lab; only the MemoryFileSystem test graduates with its module), `.claude/**`, `goals/**`, `explorations/**`, `docs/**`, `node_modules`. |
 | D10 | **Harness** = Fable orchestrates; Codex `codex exec` lanes do heavy lifting; Grok headless does adversarial rounds and web research. Lens charters live in `goals/<slug>/ops/prompts/*.md` and are injected into lane prompts — **not** `.claude/agents` subagent files. |
-| D11 | **Knowledge graph** = `standards/effect-vitest.primitives.jsonc`, one entry per export and README section, pinned to the rc.112 tag, decoded by an `S.Class` in the lint command, used for remediation hints, and the lint command **fails when the installed `@effect/vitest` version no longer matches the pin**. |
+| D11 | **Knowledge graph** = `standards/effect-vitest.primitives.jsonc`, one entry per export and README section, pinned to the rc.113 tag, decoded by an `S.Class` in the lint command, used for remediation hints, and the lint command **fails when the installed `@effect/vitest` version no longer matches the pin**. |
 | D12 | **P2 lens order per package** = scope → assertions → property → flake → observability. |
 | D13 | **PRs** = one per topological wave capped near 150 changed files; `foundation/modeling` and `tooling/tool` ship alone. Each PR carries package-verify proofs and before/after timings. |
 | D14 | **Provide rule** = `it.layer` required for any scoped or effectful layer (`Layer.effect`, `Layer.scoped`, `Layer.unwrap`, `acquireRelease`, containers, filesystems, servers, every `withXyz` wrapper). Per-test `Effect.provide` allowed only for pure `Layer.succeed` / `Layer.mock` stubs. Unresolvable constructors go to the Resource lens for judgment. |
@@ -407,3 +407,58 @@ proofs and pending inventory/review gates stated explicitly. This changes the
 publication timing only: P0f is incomplete, P0g ratification and merge remain
 Benjamin's decisions, and P1/P2 cannot begin under the early-draft authorization.
 Resume further implementation only on Benjamin's request.
+
+
+## 2026-09-09 — conditional runner coverage identity adoption for PR #1067
+
+Root reviewed the complete normal scoped test-utils coverage result and the
+source-level residuals in history/lanes/pr1067-runner-coverage-remediation.md.
+All 14 surviving file rows are numerically identical to the current baseline
+under the canonical zero-total normalization. The five new source identities
+are Vitest.ts, Vitest.errors.ts, internal/VitestRuntime.ts,
+internal/VitestInstrumentation.ts and test/Vitest.test-kit.ts. Four are fully
+covered. The instrumentation remainder is five defensive branch alternatives,
+two functions, three lines and four statements; the report names each path and
+distinguishes unrealistic-but-representable budgets from unreachable Proxy
+behavior. No private invalid execution state, disabled assertion, source
+exclusion or artificial direct call is accepted to inflate those measurements.
+
+Root conditionally accepts these five new identities through the scoped
+canonical writer. Before and after writing, verify all existing file rows,
+all existing percentage floors, global policy fields and every unrelated
+package row. Package percentages rise to L/S/B/F96.41/95.74/93.30/91.75. The
+package uncovered counts increase by exactly the new instrumentation remainder;
+this is an explicit new-source budget, not an unchanged count-budget claim.
+The normal scoped ratchet and base-pinned hosted comparison must pass after
+the write. No whole-repository baseline rewrite is authorized. The CLI's new
+identities require their own complete scoped measurements and review.
+
+
+## Active release amendment, 2026-09-10
+
+Benjamin required waiting for PR #1060 to land and then merging main and repairing
+its breaking Effect upgrade. That integration is complete. D11 now pins
+@effect/vitest 4.0.0-rc.113 and effect 4.0.0-rc.113 to
+d3b837aee836f35d625d55205f7d6e61305fc198. The version guard remains fail-closed.
+This supersedes rc.112 for current implementation and proof, while historical
+reports keep their original source identity. Native Arbitrary replaces the
+FastCheck bridge; existing run floors, seeds, assertions and lifecycle guarantees
+remain required. All other decisions and phase gates remain in force.
+
+
+## Inherited test-stack compatibility boundary, 2026-09-10
+
+Root retains the versions installed by #1060: Effect and @effect/vitest rc.113
+with Vitest 4.1.11. The adapter declares Vitest >=5 <6, while the installed and
+currently published Storybook Vitest addon 10.6.0 declares Vitest 3/4. Updating
+that stack would expand the integration task and may require global test-config
+changes reserved for Benjamin. The optional scope question has no answer; its
+silence does not authorize that expansion.
+
+Current runner suites and the shared Memory/Node/Bun filesystem conformance
+suite pass under Node 24.20.0 and Bun 1.4.2, and full test-utils package audit and
+docgen pass. These are compatibility observations for the exercised behavior,
+not a claim that the declared peer range is satisfied or all combinations are
+supported. Final package, coverage and hosted checks remain required. This
+bounded retention decision permits PR closeout on main's existing stack; the
+separate upgrade question does not waive a test failure or reduce a floor.

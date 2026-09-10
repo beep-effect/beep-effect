@@ -66,12 +66,39 @@ const decodeDiagnosticErrors = Schema.decodeEffect(
       errors: Schema.Array(
         Schema.Struct({
           message: Schema.String,
-          cause: Schema.Struct({ message: Schema.String }),
         })
       ),
     })
   )
 );
+
+const retainFixtureEvidence = Effect.fnUntraced(function* (
+  directory: string,
+  runtimeTest: string,
+  readOutput: () => string,
+  explicitEvidenceDirectory?: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const configuredEvidence = yield* Config.option(Config.String("BEEP_VITEST_RUNTIME_EVIDENCE"));
+  const evidenceDirectory = O.orElse(O.fromUndefinedOr(explicitEvidenceDirectory), () => configuredEvidence);
+  // Registered after the temp directory: persist first on success, failure or
+  // cancellation, then let the existing directory finalizer remove its files.
+  if (O.isSome(evidenceDirectory)) {
+    yield* Effect.addFinalizer((exit) =>
+      Effect.gen(function* () {
+        yield* fs.writeFileString(path.join(directory, "process-output.txt"), readOutput());
+        const scopeExit = yield* encodeScopeExit({
+          interrupted: Exit.hasInterrupts(exit),
+        });
+        yield* fs.writeFileString(path.join(directory, "scope-exit.json"), scopeExit);
+        yield* fs.writeFileString(`${runtimeTest}.errors.jsonl`, rawErrorLines(readOutput()));
+        yield* fs.makeDirectory(evidenceDirectory.value, { recursive: true });
+        yield* fs.copy(directory, path.join(evidenceDirectory.value, path.basename(directory)));
+      }).pipe(Effect.orDie)
+    );
+  }
+});
 
 const runFixture = (
   mode: string,
@@ -99,24 +126,7 @@ const runFixture = (
       const resultPath = path.join(directory, "result.json");
       const reporterPath = path.join(directory, "diagnostic-reporter.ts");
       let output = emptyString();
-      const configuredEvidence = yield* Config.option(Config.string("BEEP_VITEST_RUNTIME_EVIDENCE"));
-      const evidenceDirectory = O.orElse(O.fromUndefinedOr(options?.evidenceDirectory), () => configuredEvidence);
-      // Registered after the temp directory: persist first on success, failure or
-      // cancellation, then let the existing directory finalizer remove its files.
-      if (O.isSome(evidenceDirectory)) {
-        yield* Effect.addFinalizer((exit) =>
-          Effect.gen(function* () {
-            yield* fs.writeFileString(path.join(directory, "process-output.txt"), output);
-            const scopeExit = yield* encodeScopeExit({
-              interrupted: Exit.hasInterrupts(exit),
-            });
-            yield* fs.writeFileString(path.join(directory, "scope-exit.json"), scopeExit);
-            yield* fs.writeFileString(`${runtimeTest}.errors.jsonl`, rawErrorLines(output));
-            yield* fs.makeDirectory(evidenceDirectory.value, { recursive: true });
-            yield* fs.copy(directory, path.join(evidenceDirectory.value, path.basename(directory)));
-          }).pipe(Effect.orDie)
-        );
-      }
+      yield* retainFixtureEvidence(directory, runtimeTest, () => output, options?.evidenceDirectory);
       yield* fs
         .readFileString(reporterSource)
         .pipe(Effect.flatMap((source) => fs.writeFileString(reporterPath, source)));
@@ -233,7 +243,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       }
       // Keep this interrupted-scope receipt in the same optional durable sink as
       // ordinary fixtures before this test's temporary evidence directory closes.
-      const configuredEvidence = yield* Config.option(Config.string("BEEP_VITEST_RUNTIME_EVIDENCE"));
+      const configuredEvidence = yield* Config.option(Config.String("BEEP_VITEST_RUNTIME_EVIDENCE"));
       if (O.isSome(configuredEvidence)) {
         yield* fs.copy(retained, path.join(configuredEvidence.value, path.basename(directory)));
       }
@@ -326,10 +336,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       expect(result.exitCode).not.toBe(ChildProcessSpawner.ExitCode(0));
       expect(result.output).toContain("aggregate property deadline");
       expect(result.output).not.toContain("Test timed out in 180ms");
-      expect(result.output).toContain("seed: 4242");
+      expect(result.output).toContain('Replay: [0,\\"4242\\"');
       expect(result.output).toContain("Shrunk");
-      expect(result.diagnostics).toContain("Counterexample: [1]");
-      expect(result.diagnostics).toContain("seed: 4242");
+      expect(result.diagnostics).toContain("Shrunk input: [1]");
+      expect(result.diagnostics).toContain('Replay: [0,\\"4242\\"');
       expect(result.diagnostics).toContain("155ms watchdog");
       expect(result.phases).not.toContain('"aborted":true');
       expect(result.phases).toContain('"phase":"finished"');
@@ -364,12 +374,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       for (const record of records) {
         expect(record.errors).toHaveLength(1);
         for (const error of record.errors) {
-          expect(error.message).toContain("Property failed after 1 tests");
-          expect(error.cause.message).toContain("155ms watchdog");
+          expect(error.message).toContain("Property falsified after 1 run(s)");
+          expect(error.message).toContain("155ms watchdog");
         }
       }
-      expect(result.diagnostics).toContain("seed: 4242");
-      expect(result.diagnostics).toContain("Shrunk 1 time(s)");
+      expect(result.diagnostics).toContain('Replay: [0,\\"4242\\"');
+      expect(result.diagnostics).toContain("and 1 shrink(s)");
       expect(result.phases).not.toContain('"aborted":true');
       expect(result.cleanup.split("outcome=failure durationMillis=155")).toHaveLength(3);
       expect(result.cleanup.split("effect-vitest test start")).toHaveLength(3);
@@ -381,8 +391,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
     Effect.gen(function* () {
       const result = yield* runFixture("property-late-success", { trace: true });
       expect(result.exitCode).not.toBe(ChildProcessSpawner.ExitCode(0));
-      expect(result.diagnostics).toContain("Property failed after 2 tests");
-      expect(result.diagnostics).toContain("seed: 4242");
+      expect(result.diagnostics).toContain("Property falsified after 2 run(s)");
+      expect(result.diagnostics).toContain('Replay: [0,\\"4242\\"');
       expect(result.diagnostics).toContain("155ms watchdog");
       expect(result.phases).not.toContain('"aborted":true');
       expect(Arr.filter(Str.split("\n")(result.cleanup), (line) => line === '["late-body-completed"]')).toHaveLength(1);
@@ -409,7 +419,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
     Effect.gen(function* () {
       const result = yield* runFixture("property-registration-identity", { trace: true });
       expect(result.exitCode).not.toBe(ChildProcessSpawner.ExitCode(0));
-      expect(result.output).toContain("Counterexample: [false]");
+      expect(result.output).toContain("Shrunk input: [false]");
       expect(result.output).toContain('"numPassedTests":1');
       expect(result.output).toContain('"numFailedTests":1');
       expect(result.output).not.toContain("TestHang");

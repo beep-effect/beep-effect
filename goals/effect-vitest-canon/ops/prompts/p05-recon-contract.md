@@ -1,3 +1,7 @@
+> Historical phase contract. For new work after the 2026-09-10 rc.113 integration,
+> use the active SPEC, shared lane-contract and current integration receipt.
+> Recorded pins, model settings and proof below retain their original provenance.
+
 # P0.5 filesystem reconnaissance lane
 
 This is a bounded read-only source and conformance-mapping task. P0e is complete;

@@ -17,7 +17,7 @@ import { EffectVitestLintOptions } from "./Lint.schemas.ts";
  *
  * ```ts
  * import { lintEffectVitestCommand } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { Command } from "effect/unstable/cli"
  *
  * const run = Command.run(lintEffectVitestCommand, { version: "0.0.0" })
@@ -30,15 +30,15 @@ import { EffectVitestLintOptions } from "./Lint.schemas.ts";
 export const lintEffectVitestCommand = Command.make(
   "effect-vitest",
   {
-    census: Flag.boolean("census").pipe(
+    census: Flag.Boolean("census").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Write the authoritative D9 test/support census")
     ),
-    write: Flag.boolean("write").pipe(
+    write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Refresh the full-scan detector baseline")
     ),
-    rows: Flag.string("rows").pipe(
+    rows: Flag.String("rows").pipe(
       Flag.withDescription("Emit schema-validated JSONL rows per owning package"),
       Flag.optional
     ),

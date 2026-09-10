@@ -1,0 +1,38 @@
+// Exact declaration excerpts from packages/effect/src/Logger.ts at
+// @effect/vitest@4.0.0-rc.113 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: 5184062ff0eb45729442c53f7bfd8f6a7f771be5cac051db0360543fe652dd16
+
+// @effect-vitest-anchor Logger.consolePretty 801 807
+export const consolePretty: (
+  options?: {
+    readonly colors?: "auto" | boolean | undefined
+    readonly formatDate?: ((date: Date) => string) | undefined
+    readonly mode?: "browser" | "tty" | "auto" | undefined
+  }
+) => Logger<unknown, void> = effect.consolePretty
+
+// @effect-vitest-anchor Logger.layer 1027 1049
+export const layer = <
+  const Loggers extends ReadonlyArray<Logger<unknown, unknown> | Effect.Effect<Logger<unknown, unknown>, any, any>>
+>(
+  loggers: Loggers,
+  options?: { readonly mergeWithExisting?: boolean | undefined } | undefined
+): Layer.Layer<
+  never,
+  Loggers extends readonly [] ? never : Effect.Error<Loggers[number]>,
+  Exclude<
+    Loggers extends readonly [] ? never : Effect.Services<Loggers[number]>,
+    Scope.Scope
+  >
+> =>
+  Layer.effect(
+    CurrentLoggers,
+    withFiber(effect.fnUntraced(function*(fiber) {
+      const currentLoggers = new Set(options?.mergeWithExisting === true ? fiber.getRef(effect.CurrentLoggers) : [])
+      for (const logger of loggers) {
+        currentLoggers.add(isEffect(logger) ? yield* logger : logger)
+      }
+      return currentLoggers
+    }))
+  )
+

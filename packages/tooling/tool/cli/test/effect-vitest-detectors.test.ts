@@ -879,3 +879,68 @@ it("keeps shared scope-name results equal to fresh resolution in either referenc
     );
   }
 });
+
+it("detects native Arbitrary checks through public barrel, subpath and named aliases", () => {
+  for (const declaration of [
+    'import { Arbitrary as Ar } from "effect/unstable/arbitrary";',
+    'import * as Ar from "effect/unstable/arbitrary/Arbitrary";',
+  ]) {
+    const rows = findings(`${declaration}\nit.effect("native", () => Ar.checkEffect(arb, predicate));`);
+    const row = A.findFirst(rows, (candidate) => candidate.ruleId === "EV007");
+    row.pipe(O.isSome, assertTrue);
+    assertTrue(O.exists(row, (candidate) => candidate.class === "direct-arbitrary-check"));
+    assertTrue(O.exists(row, (candidate) => candidate.mechanization === "detector"));
+    assertTrue(O.exists(row, (candidate) => candidate.replacement.primitive === "it.effect.prop"));
+  }
+  assertTrue(
+    hasRule(
+      'import * as Native from "effect/unstable/arbitrary"; it.effect("barrel", () => Native.Arbitrary.checkEffect(arb, predicate));',
+      "EV007"
+    )
+  );
+  assertTrue(
+    hasRule(
+      'import { checkEffect as check } from "effect/unstable/arbitrary/Arbitrary"; it.effect("native", () => check(arb, predicate));',
+      "EV007"
+    )
+  );
+});
+
+it("keeps native property checks lexical and excludes canonical registrations and sampling", () => {
+  for (const body of [
+    'import { Arbitrary as Ar } from "effect/unstable/arbitrary"; it.effect("shadow", (Ar) => Ar.checkEffect(arb, predicate));',
+    'import { Arbitrary as Ar } from "unrelated"; it.effect("other", () => Ar.checkEffect(arb, predicate));',
+    'import { Arbitrary as Ar } from "effect/unstable/arbitrary"; it.effect("sample", () => Ar.sampleEffect(arb));',
+    'import { Arbitrary as Ar } from "effect/unstable/arbitrary"; it.effect.prop("canonical", { value: arb }, predicate);',
+  ])
+    assertFalse(hasRule(body, "EV007"));
+});
+
+it("retains native property helper reachability, shared judgment and callback execution", () => {
+  const prefix = 'import { Arbitrary as Ar } from "effect/unstable/arbitrary";';
+  const local = findings(`${prefix}
+    const check = Fx.fnUntraced(function* () { yield* Ar.checkEffect(arb, () => Fx.sync(() => true)); });
+    it.effect("first", () => check()); it.effect("second", () => check());`);
+  assertTrue(
+    A.filter(local, (row) => row.ruleId === "EV007" && row.class === "direct-arbitrary-check").length === 1,
+    A.join(
+      A.map(local, (row) => `${row.ruleId}:${row.class}:${row.evidence}`),
+      "\n"
+    )
+  );
+  const shared = findings(`${prefix}
+    const check = () => Ar.checkEffect(arb, predicate);
+    check(); it.effect("test", () => check());`);
+  assertTrue(
+    A.some(
+      shared,
+      (row) =>
+        row.ruleId === "EV007" &&
+        row.class === "shared-helper-property-assertion-review" &&
+        row.mechanization === "judgment"
+    )
+  );
+  const callback = findings(`${prefix}
+    it.effect("callback", () => Ar.checkEffect(arb, () => Fx.runSync(program)));`);
+  assertTrue(A.some(callback, (row) => row.ruleId === "EV001" && row.mechanization === "detector"));
+});

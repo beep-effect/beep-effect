@@ -3,13 +3,13 @@
   "initiative": {
     "id": "effect-vitest-canon",
     "title": "Canonical Effect Vitest idioms",
-    "status": "paused",
+    "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-09",
+    "updated": "2026-09-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-vitest-canon",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Canonical Effect Vitest idioms across every in-scope test, enforced by an empty-baseline lint ratchet.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -117,5 +117,5 @@
     "Never merge without explicit user authorization.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Implementation paused at Benjamin's request on 2026-09-09 while the current foundation is saved and published as an early draft PR. P0f round 1 remains incomplete. Final runner Node/Bun, compiler, export/deadline controls and full test-utils/repo-cli package proofs are green. Current preview: 1101 files, 7580 findings; bounded full-command sample 9.221s, 9.963s, 9.557s, 9.395s with identical outputs. Canonical baseline/census regeneration, row reconciliation, remaining Grok rounds and branch-wide Yeet/hosted gates remain pending. PR #1047 is merged. The early draft does not authorize P1/P2 or merge. Resume only on Benjamin's request; see history/2026-09-09-pause-and-pr.md and history/2026-09-09-p0f-round1-integration.md."
+  "statusNote": "Main including #1060 is integrated; active pin is rc.113. Both package audits/docgen, Node/Bun runner and conformance checks, scoped coverage acceptance, full Fallow and JSDoc ratchet pass. Root accepted complete row reconciliation and canonical regeneration: 1106 files,8023 open findings,zero unexplained losses. The normal ratchet passes but its post-adoption full command takes10.319s, so final D4 performance remains open. Publish verified review fixes early while attributing this issue; then finish round1 integration, rounds2/3 and exact-head hosted/Yeet/review gates. Leave PR open; no P1/P2 authorization."
 }

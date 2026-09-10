@@ -1,9 +1,12 @@
 # P0f round 1 closure ledger
 
-Status: open. Round 1 review coverage is accepted; thirteen findings are
-tracked. R1-011 is fixed and validated; final integration remains pending for
-the other repair dispositions. R1-010 has a narrow dated reference-identity
-waiver, and portions of R1-003/004/007 have dated proposed-fix dispositions; the P0f exit gate remains open. See history/2026-09-09-adversarial-round-1-acceptance.md for coverage proof.
+Status: open for post-adoption performance integration. All thirteen finding
+repairs or narrow dispositions have current source and package evidence. Root
+accepted complete current-row accounting and canonical refresh on rc.113; the
+normal ratchet passes with 8,023 findings across 1,106 paths. Its post-adoption
+full command takes 10.319 seconds, so D4 performance integration remains open.
+Round 2 starts after that disposition. The dated rc.112 evidence below remains
+historical; the September 10 integration record governs current proof.
 
 The first Grok process exited 0 with eleven well-formed findings: one blocker,
 six majors and four minors. Its report disclosed partial reads of several
@@ -96,3 +99,32 @@ mistake. All counts, memberships and non-limitation fields are unchanged; the
 accepted source and canonical artifact hashes also remain unchanged. Evidence
 is in p0f-round1-census-limitations-repair/ and the integration report. This
 correction is included in the round 2 input set after round 1 closes.
+
+
+## Current package acceptance, 2026-09-10
+
+The rc.113 CLI handoff passes all 111 focused scanner tests, compiler and lint.
+After isolating an inherited lint-worker setup mock, full package verification
+passes audit (546.1 seconds) and docgen (19.8 seconds). Root verified the 39
+combined source identities and 165 evidence files. The exception-identity,
+Windows path, helper-reachability, public-harness and graph contract tests remain
+intact. This supplies the package proof previously pending for R1-001 through
+R1-009 and R1-012/013; canonical artifact integration is still open.
+
+Current Node/Bun runner regressions and full package verification pass on
+rc.113. They preserve separate lifecycles for overlapping properties with the
+same title and callback, supporting R1-010's execution-local reference-identity
+disposition. The public TestContext lookup repair is included in that proof;
+no watchdog/deadline outcome logic was weakened. This does not broaden the
+narrow native collection waiver into a general exception to Effect helpers.
+
+R1-011 also passes current goal doctor/index across 178 packets with zero
+blocking findings and four unrelated advisories. The current graph has 100
+entries, all verified against the immutable rc.113 tag, including R1-013's
+standalone timeout and withLive replacement edges. Historical rc.112 line
+anchors and proof counts above are retained as provenance, not current claims.
+
+Remaining integration work is the complete current D9 census/finding delta,
+normal-command timing sample and reviewed canonical regeneration. Scoped
+coverage must retain all old floors, and the required next two adversarial
+rounds and exact-head hosted checks remain open. No P1/P2 or merge is authorized.

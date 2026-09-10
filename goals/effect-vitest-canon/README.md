@@ -2,14 +2,14 @@
 
 ## Status
 
-Lifecycle: `paused`. P0a through P0.5 are complete. P0f adversarial review is incomplete.
-Benjamin requested an early draft PR and a pause on 2026-09-09; resume from
-history/2026-09-09-pause-and-pr.md only when requested.
+Lifecycle: `active`. P0a through P0.5 are complete. P0f adversarial review is incomplete.
+Benjamin resumed PR #1067 closeout on 2026-09-09. Continue from
+history/2026-09-09-pr1067-resume.md; merge and later-phase gates remain.
 The machine-readable state is in [ops/manifest.json](./ops/manifest.json).
 
 ## Mission
 
-Bring every in-scope test to canonical Effect Vitest rc.112 idioms, prove resource
+Bring every in-scope test to canonical Effect Vitest rc.113 idioms, prove resource
 and timing behavior, and enforce the result through a syntax-only lint ratchet.
 
 ## Read first

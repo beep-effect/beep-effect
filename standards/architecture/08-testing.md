@@ -42,9 +42,12 @@ Test pattern:
   remain legal inside `it.effect`; the assertion choice depends on the value,
   not the tester. `assertExitFailure` takes an expected `Cause`, such as
   `Cause.fail(expectedError)`, rather than the bare error.
-- Schema-modeled laws: derive data from the production schema with
-  `S.toArbitrary(schema)` and FastCheck. Add `toArbitrary` annotations to the
-  source schema when the domain needs realistic generated values.
+- Schema-modeled laws: pass production Schemas to `it.prop` or
+  `it.effect.prop`, or derive native generators with `Arbitrary.schema(schema)`
+  from `effect/unstable/arbitrary`. Use `{ arbitrary: fcRuns(n) }` from
+  `@beep/fc-runs` to preserve the repository's run floor and seed. Native
+  Arbitrary has no global run-floor configuration. Shape generated values
+  through valid production constraints and supported native annotations.
 
 `Membership.canRevoke` is a pure predicate. `Membership.revoke` is an
 `Effect.fn` that returns `MembershipAlreadyRevoked` when the lifecycle rule

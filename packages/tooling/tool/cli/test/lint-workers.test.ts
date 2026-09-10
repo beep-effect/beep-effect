@@ -1,6 +1,7 @@
 import { lintCommand } from "@beep/repo-cli/commands/Lint";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
+import { readTurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtils, FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -12,6 +13,10 @@ import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
 import { beforeEach, describe, expect, vi } from "vitest";
+import type {
+  canUseTurboCacheSecretSession,
+  turboEnvironmentHealthWarnings,
+} from "@beep/repo-cli/test/SharedInternals";
 
 const selection = vi.hoisted(() => ({ root: "" }));
 vi.mock("@beep/repo-utils", (importOriginal) =>
@@ -23,6 +28,15 @@ vi.mock("@beep/repo-utils", (importOriginal) =>
 const execution = vi.hoisted(() => vi.fn<typeof StepExec.runToExit>());
 vi.mock("../src/internal/process/StepExec.ts", (importOriginal) =>
   importOriginal<typeof StepExec>().then((original) => ({ ...original, runToExit: execution }))
+);
+// Dispatch tests own process execution; ambient secret-session probes are a separate boundary.
+vi.mock("../src/internal/cli/EnvConfig.ts", (importOriginal) =>
+  importOriginal<object>().then((original) => ({
+    ...original,
+    readTurboCacheEnvironmentSync: () => readTurboCacheEnvironment({}),
+    canUseTurboCacheSecretSession: (() => Effect.succeed(false)) satisfies typeof canUseTurboCacheSecretSession,
+    turboEnvironmentHealthWarnings: (() => Effect.succeed([])) satisfies typeof turboEnvironmentHealthWarnings,
+  }))
 );
 const platform = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(NodeServices.layer));
 const providePlatform = provideScopedLayer(platform);

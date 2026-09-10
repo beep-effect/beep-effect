@@ -18,7 +18,8 @@ import {
   Schema,
   Scope,
 } from "effect";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { TestContext } from "@effect/vitest";
 
 // Vitest's public metadata extension point, scoped to this copied fixture module.
@@ -28,7 +29,7 @@ declare module "vitest" {
   }
 }
 
-const mode = Effect.runSync(Config.string("BEEP_INSTRUMENTED_IT_FIXTURE").pipe(Config.withDefault(undefined)));
+const mode = Effect.runSync(Config.String("BEEP_INSTRUMENTED_IT_FIXTURE").pipe(Config.withDefault(undefined)));
 const encodeCleanup = Schema.encodeEffect(Schema.fromJsonString(Schema.String));
 const encodeReason = Schema.encodeEffect(Schema.Defect({ includeStack: true }));
 const encodePhase = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
@@ -158,13 +159,13 @@ if (mode === "exclude-test-services") {
 if (mode === "property") {
   it.effect.prop(
     "property context",
-    [fc.constant("property-value")],
+    [Arbitrary.Constant("property-value")],
     ([value], ctx) =>
       Effect.sync(() => {
         expect(value).toBe("property-value");
         expect(ctx.task.fullTestName).toContain("property context");
       }),
-    { fastCheck: fcRuns(2), timeout: 500 }
+    { arbitrary: fcRuns(2), timeout: 500 }
   );
 }
 
@@ -214,7 +215,7 @@ if (mode === "property-deadline" || mode === "property-setup-budget" || mode ===
     controlledIt.layer(TraceSink)("property deadline layer", (layerIt) => {
       layerIt.effect.prop(
         "aggregate property deadline",
-        [fc.integer({ min: 1, max: 100 })],
+        [Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 100 }))],
         ([value], context) => {
           controlled.beginTrial();
           return Effect.gen(function* () {
@@ -231,7 +232,7 @@ if (mode === "property-deadline" || mode === "property-setup-budget" || mode ===
             yield* recordPhase(context, "trial-success");
           });
         },
-        { fastCheck: { ...fcRuns(4), seed: 4242 }, timeout: 180 }
+        { arbitrary: { ...fcRuns(4), seed: 4242 }, timeout: 180 }
       );
     });
   }
@@ -254,7 +255,7 @@ if (mode === "property-deadline" || mode === "property-setup-budget" || mode ===
       controlledIt.layer(SetupSink.pipe(Layer.provideMerge(TraceSink)))(`setup ${setupMillis}`, (layerIt) => {
         layerIt.effect.prop(
           `charges ${setupMillis}ms of setup`,
-          [fc.integer({ min: 1, max: 100 })],
+          [Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 100 }))],
           ([value]) => {
             controlled.beginTrial();
             return Effect.gen(function* () {
@@ -266,7 +267,7 @@ if (mode === "property-deadline" || mode === "property-setup-budget" || mode ===
               yield* Effect.log(`setup-${setupMillis}-completed`);
             });
           },
-          { fastCheck: { ...fcRuns(4), seed: 4242 }, timeout: 180 }
+          { arbitrary: { ...fcRuns(4), seed: 4242 }, timeout: 180 }
         );
       });
     }
@@ -278,7 +279,7 @@ if (mode === "property-deadline" || mode === "property-setup-budget" || mode ===
     controlledIt.layer(TraceSink)("late success policy", (layerIt) => {
       layerIt.effect.prop(
         "keeps a late raceFirst success then expires the next trial",
-        [fc.constant("late")],
+        [Arbitrary.Constant("late")],
         () => {
           controlled.beginTrial();
           return Effect.gen(function* () {
@@ -287,7 +288,7 @@ if (mode === "property-deadline" || mode === "property-setup-budget" || mode ===
             yield* Effect.log("late-body-completed");
           });
         },
-        { fastCheck: { ...fcRuns(4), seed: 4242 }, timeout: 180 }
+        { arbitrary: { ...fcRuns(4), seed: 4242 }, timeout: 180 }
       );
     });
   }
@@ -298,21 +299,21 @@ if (mode === "concurrent-property-layer") {
   it.layer(Layer.merge(DelayedLayer, TraceSink))("delayed concurrent property layer", (layerIt) => {
     layerIt.effect.prop(
       "property alpha",
-      [fc.constant("alpha")],
+      [Arbitrary.Constant("alpha")],
       ([value]) => Effect.log(`last-property-${value}`).pipe(Effect.andThen(Effect.never)),
       {
         concurrent: true,
-        fastCheck: { ...fcRuns(2), seed: 101 },
+        arbitrary: { ...fcRuns(2), seed: 101 },
         timeout: 180,
       }
     );
     layerIt.effect.prop(
       "property beta",
-      [fc.constant("beta")],
+      [Arbitrary.Constant("beta")],
       ([value]) => Effect.log(`last-property-${value}`).pipe(Effect.andThen(Effect.never)),
       {
         concurrent: true,
-        fastCheck: { ...fcRuns(2), seed: 202 },
+        arbitrary: { ...fcRuns(2), seed: 202 },
         timeout: 240,
       }
     );
@@ -345,13 +346,13 @@ if (mode === "property-registration-identity") {
   });
 
   it.layer(Layer.merge(BarrierLayer, TraceSink))("property identity layer", (layerIt) => {
-    layerIt.effect.prop("same property title", [fc.constant(true)], propertyBody, {
+    layerIt.effect.prop("same property title", [Arbitrary.Constant(true)], propertyBody, {
       concurrent: true,
-      fastCheck: { ...fcRuns(2), seed: 303 },
+      arbitrary: { ...fcRuns(2), seed: 303 },
     });
-    layerIt.effect.prop("same property title", [fc.constant(false)], propertyBody, {
+    layerIt.effect.prop("same property title", [Arbitrary.Constant(false)], propertyBody, {
       concurrent: true,
-      fastCheck: { ...fcRuns(2), seed: 303 },
+      arbitrary: { ...fcRuns(2), seed: 303 },
     });
   });
 }
@@ -364,10 +365,10 @@ if (mode === "property-repeat-reset") {
   it.layer(TraceSink)("property repeat layer", (layerIt) => {
     layerIt.effect.prop(
       "property repeat resets execution state",
-      [fc.constant(1)],
+      [Arbitrary.Constant(1)],
       () => (execution === 1 ? Effect.log("first-execution-body-log") : Effect.never),
       {
-        fastCheck: { ...fcRuns(2), seed: 808 },
+        arbitrary: { ...fcRuns(2), seed: 808 },
         repeats: 1,
         timeout: 100,
       }
@@ -383,13 +384,13 @@ if (mode === "property-retry-reset") {
   it.layer(TraceSink)("property retry layer", (layerIt) => {
     layerIt.effect.prop(
       "property retry resets execution state",
-      [fc.constant(1)],
+      [Arbitrary.Constant(1)],
       () =>
         Effect.log(`retry-execution-${execution}`).pipe(
           Effect.andThen(execution === 1 ? Effect.fail("retry-once") : Effect.void)
         ),
       {
-        fastCheck: { ...fcRuns(2), seed: 909 },
+        arbitrary: { ...fcRuns(2), seed: 909 },
         retry: 1,
         timeout: 100,
       }

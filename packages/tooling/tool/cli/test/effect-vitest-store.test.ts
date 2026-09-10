@@ -1,4 +1,9 @@
-import { EffectVitestFinding, EffectVitestReplacement, writeEffectVitestRows } from "@beep/repo-cli/commands/Lint";
+import {
+  EffectVitestFinding,
+  EffectVitestReplacement,
+  readEffectVitestInventory,
+  writeEffectVitestRows,
+} from "@beep/repo-cli/commands/Lint";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
@@ -28,6 +33,42 @@ const row = EffectVitestFinding.make({
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("rows filesystem", (it) => {
+  it.effect(
+    "distinguishes a missing inventory from corrupt inventory bytes",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-inventory-read-" });
+      const absent = yield* readEffectVitestInventory(root);
+      assertTrue(O.isNone(absent), "A missing baseline remains absent");
+      yield* fs.makeDirectory(path.join(root, "standards"));
+      yield* fs.writeFileString(path.join(root, "standards/effect-vitest.inventory.jsonc"), "{broken");
+      const failure = yield* readEffectVitestInventory(root).pipe(Effect.flip);
+      assertTrue(failure._tag === "EffectVitestLintError");
+      assertTrue(Str.includes("Unable to decode")(failure.message));
+      yield* fs.remove(path.join(root, "standards/effect-vitest.inventory.jsonc"));
+      yield* fs.makeDirectory(path.join(root, "standards/effect-vitest.inventory.jsonc"));
+      const unreadable = yield* readEffectVitestInventory(root).pipe(Effect.flip);
+      assertTrue(Str.includes("Unable to read")(unreadable.message));
+    })
+  );
+
+  it.effect(
+    "preserves empty and unreadable JSONL entries whose ownership cannot be established",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-unowned-rows-" });
+      const output = path.join(root, "rows");
+      yield* fs.makeDirectory(output);
+      yield* fs.writeFileString(path.join(output, "empty.jsonl"), "\n  \n");
+      yield* fs.makeDirectory(path.join(output, "directory.jsonl"));
+      yield* writeEffectVitestRows(root, "rows", []);
+      assertTrue((yield* fs.readFileString(path.join(output, "empty.jsonl"))) === "\n  \n");
+      assertTrue((yield* fs.stat(path.join(output, "directory.jsonl"))).type === "Directory");
+    })
+  );
+
   it.effect(
     "replaces the generated JSONL set while preserving unrelated files",
     Effect.fnUntraced(function* () {

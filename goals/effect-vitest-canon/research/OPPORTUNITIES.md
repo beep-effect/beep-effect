@@ -1151,3 +1151,191 @@ The first base refresh also raced another fetch advancing origin/main. The
 second fetch succeeded; no ref was reset or forced. Publication is three
 commits behind the refreshed base, whose changed paths do not overlap this
 foundation's staged files. Keep the draft's remaining base/hosted checks explicit.
+
+## 2026-09-09 — full hosted foundation checks exposed missed local policy proof
+
+PR #1067's saved draft passed its focused runtime, package and compiler checks,
+but its first hosted run found Docgen metadata, JSDoc totals, schema compiler
+hoisting and Fallow complexity/duplication regressions. The Docgen metadata
+ratchet arrived through newer main; the other diagnostics need source repair.
+Root retained the exact job logs and Fallow native findings before dispatching
+bounded CLI and runner repairs. No baseline waiver or test weakening is used.
+Run current full policy/ratchet gates before the next final source freeze; the
+prior package receipts remain dated supporting evidence, not full CI proof.
+
+An automatic inbox reminder also named the original checkout's unrelated
+`codex/turborepo-task-qualification` branch. Root verified that its active PR is
+#1068 and acknowledged the row with that PR URL. The Effect Vitest sibling
+worktree and #1067 remain this task's implementation and proof scope.
+
+## 2026-09-09 — package docgen selector expands through dependents
+
+During the runner repair, `bun run docgen:local -- --package @beep/test-utils`
+selected the package but expanded `--filter=...@beep/test-utils` into 123
+packages. The lane stopped its own invocation and retained the interrupted log.
+The direct package `beep:docgen` command passed with 17 modules and 42 examples.
+Use that bounded command while iterating on this package; the selector is not
+an isolation boundary. Generated outputs from the interrupted expansion remain
+for Root to inspect, and the aborted aggregate is not accepted proof.
+
+The first JSDoc attribution pass found five new CLI example imports from the
+Effect root and one new runner-seam example import. Root corrected only the
+five CLI example imports to their stable module subpath. Metadata/parser fixes
+remain with the runner lane. The snapshot and inventory are diagnostic evidence
+because source repairs were running concurrently; final proof must use frozen
+inputs.
+
+## 2026-09-09 — hosted coverage finishes after focused package acceptance
+
+PR #1067's first coverage job completed after the initial runner repair. It
+reports new `Lint.schemas.ts` paths below that existing file's 100 percent
+floors, five new detector files without branch-gap baseline identities, and
+lower test-utils package branch/function percentages. Root retained the exact
+log and dispatched focused coverage/tests within the two owned packages.
+Existing floors remain unchanged. New-file identity adoption, if needed,
+requires reviewed current measurements and preservation of other baseline rows.
+Account for child-process coverage separately from assertions that merely
+observe a subprocess result; use in-process public behavior tests where useful.
+
+## 2026-09-09 — coverage points at an unreachable canonical-key fallback
+
+The CLI coverage repair identified a fallback around `Array.last(String.split(...))`
+that cannot run: pinned `String.split` returns a nonempty array even for an empty
+input. Root verified the exact pinned and installed `split` and `lastNonEmpty`
+declarations, then replaced that one expression with `Array.lastNonEmpty`.
+All valid ID suffix behavior remains unchanged. This removes an impossible
+branch instead of adding an artificial collection failure to cover it. Root
+retains the source delta and API proof; the CLI lane validates real key cases.
+
+
+### 2026-09-09 — isolated Fallow loses full-graph coverage estimates
+
+PR #1067's isolated structural checks showed no cyclomatic/cognitive excess but
+reported many CRAP-only findings without the repository test graph. The final
+full graph audit/health both isolate one real introduced finding:
+`detectResourceWrapper` in `EffectVitestDetectors.ts`, CC10/cognitive8 and
+CRAP31.6 against30 using estimated partial coverage. A bounded source repair is
+being prepared without touching frozen inputs while the running proofs finish.
+Running the full-graph audit immediately after the structural handoff would have
+identified this before starting longer package proof. No suppression or threshold
+change is accepted. Private evidence: `~/.cache/beep/effect-vitest-canon/pr1067-resume/fallow-final/`.
+
+
+### 2026-09-09 — runtime fixtures entered a source-integrity snapshot
+
+Root's post-patch Fallow supervisor captured temporary `.runtime-watchdog-*`
+files while the normal runner coverage suite was active. Cleanup removed one
+before the after-hash pass, so the supervisor failed with FileNotFoundError.
+The command output is retained as diagnostic; no source-stable acceptance is
+claimed. Quiesce runtime fixture producers before repository-wide graph/scope
+snapshots, then capture every intended D9 input and rerun. This is a Root
+proof-orchestration error, not permission to exclude authored tests or alter D9.
+
+### 2026-09-10 — upgrade leaves an unsupported Vitest peer pair
+
+PR #1060 installs Effect / @effect/vitest rc.113 with Vitest 4.1.11. The immutable
+rc.113 package and README require Vitest >=5 <6, while the current Storybook test
+addon declares Vitest 3/4 peers. Frozen installation succeeds despite this gap.
+Package peer-contract inspection before the upgrade's merge would have exposed
+the conflict. Root is retaining main's installed versions during focused repair
+and has requested Benjamin's scope decision before a broader test-stack migration.
+Runtime compatibility requires explicit evidence; installation alone is not proof.
+
+### 2026-09-10 — CLI supervisors vanished without terminal receipts
+
+Three owned rc.113 CLI contexts stopped with their status files still marked
+running. Root found neither their recorded process/supervisor nor any remaining
+process in the worktree; the execution tool no longer recognized the session.
+The cause is unproven. Partial edits, logs and reports are preserved, and no exit
+or completed proof is invented. The same contexts resume under owned user services
+so their supervisors can persist terminal receipts independently of an interactive
+tool session. Check process liveness alongside status files before reusing proof
+or starting replacement work.
+
+Root subsequently attributed their absence to a workstation restart. Current
+uptime places the boot around 13:13:32 UTC, after the original 13:02:15 UTC
+lane launches. The restart explains the missing processes; their uncaptured
+terminal exits remain unknown. Resumed Node/Bun and package proofs have fresh
+receipts from the current boot.
+
+
+### 2026-09-10 — dispatch test counted environment probes as task spawns
+
+Full CLI package verification passed 3,512 tests and failed one lint-worker
+dispatch assertion (expected one process invocation, observed three). The test's
+global process spy also observes real environment/session setup probes before
+the task spawn. Source trace supports this boundary mismatch; captured output
+does not prove the exact three arguments. Isolate the existing environment
+health and secret-session capability seams in the dispatch test, retain its
+one-spawn/argument/failing-exit assertions, and re-prove the package. No production
+secret behavior or global test configuration changes are authorized by this fix.
+
+
+### 2026-09-10 — Release conformance changes missed by a type-only upgrade
+
+While closing PR #1067 after #1060, the immutable rc.113 FileSystem conformance
+source had grown from 435 to 565 lines and from 21 to 36 registrations. The
+shared helper compiled after main's API migration but still registered only 21.
+The read-only audit records all 15 missing cases and two stronger assertions in
+`history/lanes/pr1067-filesystem-rc113-audit.md`. A release upgrade checklist that
+compares upstream conformance cases as well as exported types would have found
+this before final proof. The bounded repair ports the existing shared suite;
+no implementation defect was established by the source audit alone.
+
+
+### 2026-09-10 — Negative observation needs a connected positive control
+
+Normal scoped test-utils coverage after the rc.113 port passed every test but
+reported FileSystemConformance file floors at L/S/B/F 99.7/99.41/71.42/97.59
+against 100/100/80/100. The invalid-stream cases never execute their observer;
+that is the intended negative behavior, but leaves the observation's wiring
+unproved. The bounded repair adds a valid-stream positive control using the
+same observer before asserting zero emission for invalid sizes. A port review
+that checks negative observers against existing file coverage floors would
+catch this before full scoped verification. No floor reduction is authorized.
+
+
+### 2026-09-10 — Scoped coverage commands share cleanup ownership
+
+Root launched filtered repo-cli and test-utils coverage concurrently. The root
+command calls `cleanCoverageRegressionOutputs` before selecting packages; that
+helper removes coverage directories for every coverage-bearing workspace.
+The second run therefore removed the first run's `coverage/.tmp`, and Vitest
+failed with `Something removed the coverage directory`. Source hashes and the
+committed baseline were unchanged. Root owns this scheduling mistake. Future
+coverage supervisors are serialized, and the failed run is retained before a
+fresh CLI attempt. An explicit checkout-wide coverage-output lease or a clear
+single-writer contract would prevent filtered commands appearing independent.
+
+
+## 2026-09-10 — join the final repair before documentation inventory
+
+While closing the rc.113 FileSystem port for PR #1067, Fallow found a duplicate
+nested scope in the strengthened numeric-read case. Reusing the existing
+openTextFixture removed the clone while preserving every assertion. The first
+concurrent JSDoc inventory completed but its source guard found that same file
+changed during the run, so Root retained it as unaccepted and reran only after
+the repair and package handoff joined. The final inventory and ratchet pass.
+A single joined-source barrier before expensive inventory work would have avoided
+the duplicate inventory cost.
+
+## 2026-09-10 — desktop continuation lacks user-bus environment
+
+Launching the current row reconciliation service first failed before dispatch:
+`Failed to connect to user scope bus ... XDG_RUNTIME_DIR not defined`. Root
+verified the existing per-user bus socket and supplied its normal runtime and
+DBus addresses to systemd-run; the same existing Codex context then started. No
+privilege prompt or new session was needed. Preserve the user-bus environment
+when continuing local desktop tasks so an already configured service route works.
+
+
+## 2026-09-10 — benchmark the adopted baseline input
+
+The final three scanner observations passed against the old 5,016-row baseline,
+but normal canonical adoption grew it to 8,023 rows. The next ordinary ratchet
+passed functionally and took 10.319 seconds, beyond D4. Source/runtime hashes were
+unchanged; canonical input size and command mode are now separate attribution
+variables. Root retained the result and reopened final performance integration.
+The prepared benchmark should bind and measure the fully adopted baseline bytes,
+or an exact private copy through the normal supported path, before claiming final
+performance. Earlier current-source timing alone did not cover that input change.

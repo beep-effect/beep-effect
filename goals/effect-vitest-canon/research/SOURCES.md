@@ -215,3 +215,19 @@ pre-port attribution paragraph remains a historical receipt.
 - [Platform follow-up source 12](https://raw.githubusercontent.com/Effect-TS/tsgo/main/internal/directives/parser.go)
 - [Platform follow-up source 13](https://api.github.com/repos/Effect-TS/tsgo/tags)
 - [Platform follow-up source 14](https://github.com/Effect-TS/tsgo)
+
+
+## rc.113 integration, 2026-09-10
+
+The immutable source audit is recorded in
+[pr1067-graph-rc113.md](../history/lanes/pr1067-graph-rc113.md). Both release
+tags resolve to d3b837aee836f35d625d55205f7d6e61305fc198. Installed index, utils,
+internal runner source and README match the archived tagged files byte for byte.
+The 100-entry graph covers every direct export and README heading.
+
+- [Pinned Vitest source](https://github.com/Effect-TS/effect/tree/d3b837aee836f35d625d55205f7d6e61305fc198/packages/vitest)
+- [Pinned native Arbitrary implementation](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/effect/src/unstable/arbitrary/Arbitrary.ts)
+
+The installed package declares Vitest >=5 <6; main supplies Vitest 4.1.11.
+The active integration receipt tracks this compatibility decision separately
+from source-graph acceptance. Earlier rc.112 sources and proofs remain historical.

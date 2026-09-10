@@ -6,6 +6,12 @@
  * @since 0.0.0
  */
 
+/**
+ * Typed failures raised by the instrumented test runner.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export { TestContextUnavailable, TestHang } from "./Vitest.errors.ts";
 
 import { InstrumentedVitestRuntime } from "./internal/VitestRuntime.ts";
@@ -16,7 +22,7 @@ import { InstrumentedVitestRuntime } from "./internal/VitestRuntime.ts";
  * **Details**
  *
  * Plain Vitest calls and the complete Effect/live/layer tester surface delegate
- * to the public rc.112 runner. Effectful bodies gain a live-clock watchdog below
+ * to the public rc.113 runner. Effectful bodies gain a live-clock watchdog below
  * their resolved task timeout. Set `BEEP_TEST_TRACE=1`, or run in CI, to emit
  * annotated start/end diagnostics; JSON reporter durations remain authoritative.
  *
@@ -40,4 +46,4 @@ import { InstrumentedVitestRuntime } from "./internal/VitestRuntime.ts";
  * @category testing
  * @since 0.0.0
  */
-export const { it } = InstrumentedVitestRuntime;
+export const it = InstrumentedVitestRuntime.it;

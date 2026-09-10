@@ -25,9 +25,16 @@ import {
   rootTestBodyCall,
   sourceFunctionDefinitions,
 } from "./EffectVitestSyntax.ts";
-import type { CallExpression, Expression, Identifier, Node as MorphNode, SourceFile } from "ts-morph";
+import type {
+  CallExpression,
+  Expression,
+  Identifier,
+  ImportDeclaration,
+  Node as MorphNode,
+  SourceFile,
+} from "ts-morph";
 import type { EffectVitestRuleId, EffectVitestSeverity } from "../Lint.schemas.ts";
-import type { EffectVitestFunctionNode, EffectVitestImports } from "./EffectVitestSyntax.ts";
+import type { EffectVitestFunctionNode, EffectVitestHarnessIndex, EffectVitestImports } from "./EffectVitestSyntax.ts";
 
 const EFFECT_MODULES = ["effect", "effect/Effect"];
 const LAYER_MODULES = ["effect", "effect/Layer"];
@@ -37,6 +44,7 @@ const EXIT_MODULES = ["effect", "effect/Exit"];
 const CONTEXT_MODULES = ["effect", "effect/Context"];
 const SCHEDULE_MODULES = ["effect", "effect/Schedule"];
 const TEST_CLOCK_MODULES = ["effect/testing", "effect/testing/TestClock"];
+const ARBITRARY_MODULES = ["effect/unstable/arbitrary", "effect/unstable/arbitrary/Arbitrary"];
 const FAST_CHECK_MODULES = ["effect/testing", "effect/testing/FastCheck", "fast-check"];
 const VITEST_MODULES = ["@effect/vitest", "vitest"];
 
@@ -51,6 +59,7 @@ const detectorCallMembers = HashSet.fromIterable([
   "result",
   "expect",
   "assert",
+  "checkEffect",
   "assertTrue",
   "assertFalse",
   "isTrue",
@@ -117,6 +126,9 @@ const initialFinding = (input: FindingInput): EffectVitestFinding => {
     fixSha: O.none(),
   });
 };
+
+const isNativePropertyCheck = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isProvenanceCall(call, imports, ARBITRARY_MODULES, "Arbitrary", ["checkEffect"]);
 
 const callMember = (call: CallExpression): string => {
   let expression = call.getExpression();
@@ -263,23 +275,33 @@ const dataShapeCall = (call: CallExpression, imports: EffectVitestImports): bool
 const containsDataShape = (node: MorphNode, imports: EffectVitestImports): boolean =>
   (Node.isCallExpression(node) && dataShapeCall(node, imports)) ||
   A.some(node.getDescendantsOfKind(SyntaxKind.CallExpression), (call) => dataShapeCall(call, imports));
+const pipedWaitUses = (
+  ancestor: CallExpression,
+  wait: CallExpression,
+  imports: EffectVitestImports,
+  modules: ReadonlyArray<string>,
+  namespace: string,
+  members: ReadonlyArray<string>
+): boolean => {
+  const expression = ancestor.getExpression();
+  return (
+    Node.isPropertyAccessExpression(expression) &&
+    expression.getName() === "pipe" &&
+    scopeContains(expression.getExpression(), wait) &&
+    A.some(
+      ancestor.getArguments(),
+      (argument) =>
+        Node.isExpression(argument) && isProvenanceExpression(argument, imports, modules, namespace, members)
+    )
+  );
+};
+
 const liveClockFor = (wait: CallExpression, imports: EffectVitestImports): boolean =>
   A.some([wait, ...wait.getAncestors()], (ancestor) => {
     if (!Node.isCallExpression(ancestor)) return false;
     if (isProvenanceCall(ancestor, imports, TEST_CLOCK_MODULES, "TestClock", ["withLive"]))
       return A.some(ancestor.getArguments(), (argument) => scopeContains(argument, wait));
-    const expression = ancestor.getExpression();
-    return (
-      Node.isPropertyAccessExpression(expression) &&
-      expression.getName() === "pipe" &&
-      scopeContains(expression.getExpression(), wait) &&
-      A.some(
-        ancestor.getArguments(),
-        (argument) =>
-          Node.isExpression(argument) &&
-          isProvenanceExpression(argument, imports, TEST_CLOCK_MODULES, "TestClock", ["withLive"])
-      )
-    );
+    return pipedWaitUses(ancestor, wait, imports, TEST_CLOCK_MODULES, "TestClock", ["withLive"]);
   });
 
 const controlledWait = (
@@ -293,17 +315,7 @@ const controlledWait = (
     if (!Node.isCallExpression(ancestor) || !scopeContains(callback, ancestor)) return false;
     const forks = ["forkChild", "forkScoped", "forkDetach"];
     if (isProvenanceCall(ancestor, imports, EFFECT_MODULES, "Effect", forks)) return true;
-    const expression = ancestor.getExpression();
-    return (
-      Node.isPropertyAccessExpression(expression) &&
-      expression.getName() === "pipe" &&
-      scopeContains(expression.getExpression(), wait) &&
-      A.some(
-        ancestor.getArguments(),
-        (argument) =>
-          Node.isExpression(argument) && isProvenanceExpression(argument, imports, EFFECT_MODULES, "Effect", forks)
-      )
-    );
+    return pipedWaitUses(ancestor, wait, imports, EFFECT_MODULES, "Effect", forks);
   });
   return (
     forked &&
@@ -396,6 +408,23 @@ const resetInTestOrHook = (
   });
 };
 
+const effectRegistrationBody = (call: CallExpression, effectTest: boolean, imports: EffectVitestImports): boolean =>
+  effectTest ||
+  rootTestBodyCall(call, imports) ||
+  A.some(
+    call.getAncestors(),
+    (ancestor) =>
+      Node.isCallExpression(ancestor) &&
+      O.exists(classifyHarnessCall(ancestor, imports), (mode) => mode === "effect" || mode === "live")
+  );
+
+const appendTokenChildren = (pending: Array<MorphNode>, children: ReadonlyArray<MorphNode>): void => {
+  for (let index = children.length - 1; index >= 0; index--) {
+    const child = children[index];
+    if (child !== undefined) pending.push(child);
+  }
+};
+
 const occurrenceAnchor = (
   node: MorphNode,
   imports: EffectVitestImports,
@@ -433,10 +462,7 @@ const occurrenceAnchor = (
         const text = token.getText();
         tokenParts.push(`${token.getKind()}:${text.length}:${text}`);
       } else {
-        for (let index = children.length - 1; index >= 0; index--) {
-          const child = children[index];
-          if (child !== undefined) pending.push(child);
-        }
+        appendTokenChildren(pending, children);
       }
     }
     const value = digest.update(A.join(tokenParts, "")).digest("hex");
@@ -454,6 +480,451 @@ const assignStableIds = (findings: ReadonlyArray<EffectVitestFinding>): Readonly
     MutableHashMap.set(counts, key, ordinal);
     return EffectVitestFinding.make({ ...finding, id: Str.replace(/#\d+$/u, `#${ordinal}`)(finding.id) });
   });
+};
+
+type DetectorState = {
+  readonly imports: EffectVitestImports;
+  readonly harness: EffectVitestHarnessIndex;
+  readonly makeFinding: (input: FindingInput) => EffectVitestFinding;
+  readonly findings: Array<EffectVitestFinding>;
+  readonly definitions: ReturnType<typeof sourceFunctionDefinitions>;
+  readonly helperNames: ReadonlyArray<string>;
+  readonly calls: ReadonlyArray<CallExpression>;
+  readonly file: string;
+  readonly owner: string;
+};
+
+const inspectContext = (call: CallExpression, member: string, canonicalMember: string, state: DetectorState) => {
+  const { imports, harness, definitions } = state;
+
+  const test = harness.enclosingTest(call);
+  const inTest = O.isSome(test);
+  const effectTest = O.exists(test, ({ mode }) => mode === "effect" || mode === "live");
+  const testClockMode = O.exists(test, ({ mode }) => mode === "effect");
+  const helper =
+    !inTest &&
+    (isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["runPromise", "runSync", "runFork", "scoped"]) ||
+      isProvenanceCall(call, imports, FAST_CHECK_MODULES, "FastCheck", ["assert"]) ||
+      isNativePropertyCheck(call, imports))
+      ? harness.reachableHelper(call)
+      : O.none();
+  const publicProvider = isProvenanceCall(
+    call,
+    imports,
+    ["@beep/test-utils", "@beep/test-utils/Layer"],
+    "provideScopedLayer",
+    ["provideScopedLayer"]
+  );
+  const expression = call.getExpression();
+  const definition = Node.isIdentifier(expression)
+    ? O.flatMap(imports.resolveBinding(expression), (binding) =>
+        A.findFirst(definitions, ({ node }) => scopeContains(binding, node))
+      )
+    : O.none();
+  const localProvider = O.exists(definition, ({ node }) => buildsAndProvidesLayer(node, imports));
+  return {
+    call,
+    member,
+    canonicalMember,
+    test,
+    inTest,
+    effectTest,
+    testClockMode,
+    helper,
+    publicProvider,
+    expression,
+    definition,
+    localProvider,
+  };
+};
+
+const detectRuntimeBoundary = (
+  { call, canonicalMember, inTest, helper }: ReturnType<typeof inspectContext>,
+  state: DetectorState
+): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (
+    (inTest || O.isSome(helper)) &&
+    A.contains(["runPromise", "runSync", "runFork"], canonicalMember) &&
+    isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", [canonicalMember])
+  ) {
+    const shared = O.exists(helper, ({ shared }) => shared);
+    findings.push(
+      makeFinding({
+        ruleId: "EV001",
+        node: call,
+        file,
+        owner,
+        symbol: callMember(call),
+        judgment: shared,
+        ...(shared ? { className: "shared-helper-runtime-boundary-review" } : {}),
+      })
+    );
+  }
+};
+
+const detectLayerProvision = (
+  { call, member, effectTest, publicProvider, localProvider }: ReturnType<typeof inspectContext>,
+  state: DetectorState
+): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (
+    !Node.isCallExpression(call.getExpression()) &&
+    (publicProvider || localProvider || isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["provide"])) &&
+    effectRegistrationBody(call, effectTest, imports)
+  ) {
+    const layer = providedLayer(call);
+    if (O.exists(layer, (value) => !isPureStubLayer(value, imports) && !isContextProvision(value, imports))) {
+      const unresolved = !O.exists(layer, (value) => isResourceExpression(value, imports));
+      findings.push(
+        makeFinding({
+          ruleId: "EV002",
+          node: call,
+          file,
+          owner,
+          symbol: member,
+          judgment: unresolved,
+          ...(unresolved ? { className: "unresolved-layer-provide" } : {}),
+        })
+      );
+    }
+  }
+};
+
+const isUnresolvedImportedWrapper = (
+  { expression, definition }: ReturnType<typeof inspectContext>,
+  imports: EffectVitestImports
+): boolean =>
+  O.isNone(definition) &&
+  Node.isIdentifier(expression) &&
+  O.exists(imports.resolveBinding(expression), Node.isImportDeclaration);
+
+const detectResourceWrapper = (context: ReturnType<typeof inspectContext>, state: DetectorState): void => {
+  const { call, member, canonicalMember, test, definition } = context;
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (
+    (wrapperName(member) ||
+      wrapperName(canonicalMember) ||
+      O.exists(definition, ({ node }) => functionHasResource(node, imports))) &&
+    (rootTestBodyCall(call, imports) || O.exists(test, ({ callback }) => isWholeBodyCall(call, callback)))
+  ) {
+    if (O.exists(definition, ({ node }) => functionHasResource(node, imports))) {
+      findings.push(makeFinding({ ruleId: "EV003", node: call, file, owner, symbol: member }));
+    } else if (isUnresolvedImportedWrapper(context, imports)) {
+      findings.push(
+        makeFinding({
+          ruleId: "EV003",
+          node: call,
+          file,
+          owner,
+          symbol: member,
+          judgment: true,
+          className: "unresolved-resource-wrapper",
+        })
+      );
+    }
+  }
+};
+
+const detectScopeLifetime = (
+  { call, canonicalMember, test, effectTest, helper }: ReturnType<typeof inspectContext>,
+  state: DetectorState
+): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (
+    (effectTest || O.exists(helper, ({ effect }) => effect)) &&
+    canonicalMember === "scoped" &&
+    isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["scoped"])
+  ) {
+    const wholeBody = O.exists(test, ({ callback }) => isWholeBodyCall(call, callback));
+    const scopeClass = O.match(helper, {
+      onNone: () => "shorter-scope-lifetime-review",
+      onSome: ({ callback, shared, plain }) =>
+        shared || plain
+          ? "shared-helper-scope-lifetime-review"
+          : isWholeBodyCall(call, callback)
+            ? "helper-scope-lifetime-review"
+            : "inner-helper-scope-lifetime-review",
+    });
+    findings.push(
+      makeFinding({
+        ruleId: "EV004",
+        node: call,
+        file,
+        owner,
+        symbol: callMember(call),
+        judgment: !wholeBody,
+        ...(wholeBody ? {} : { className: scopeClass }),
+      })
+    );
+  }
+};
+
+const detectResultAssertion = (
+  { call, canonicalMember, inTest }: ReturnType<typeof inspectContext>,
+  state: DetectorState
+): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (
+    inTest &&
+    canonicalMember === "result" &&
+    isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["result"]) &&
+    assertedOutcome(call, imports)
+  ) {
+    findings.push(makeFinding({ ruleId: "EV005", node: call, file, owner, symbol: callMember(call) }));
+  }
+};
+
+const detectExpectDataShape = (
+  { call, canonicalMember, inTest }: ReturnType<typeof inspectContext>,
+  state: DetectorState
+): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (inTest && canonicalMember === "expect" && isExpectCall(call, imports)) {
+    const property = call.getParent();
+    const parentCall = property?.getParent();
+    const matcher: O.Option<CallExpression> =
+      Node.isPropertyAccessExpression(property) && Node.isCallExpression(parentCall) ? O.some(parentCall) : O.none();
+    const matcherArguments: ReadonlyArray<MorphNode> = O.match(matcher, {
+      onNone: A.empty<MorphNode>,
+      onSome: (value) => value.getArguments(),
+    });
+    if (A.some([...call.getArguments(), ...matcherArguments], (candidate) => containsDataShape(candidate, imports))) {
+      findings.push(
+        makeFinding({ ruleId: "EV006", node: O.getOrElse(matcher, () => call), file, owner, symbol: "expect" })
+      );
+    }
+  }
+};
+
+const detectBooleanDataShape = (
+  { call, member, inTest }: ReturnType<typeof inspectContext>,
+  state: DetectorState
+): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (
+    inTest &&
+    isBooleanAssertion(call, imports) &&
+    A.some(call.getArguments(), (argument) => containsDataShape(argument, imports))
+  ) {
+    findings.push(makeFinding({ ruleId: "EV006", node: call, file, owner, symbol: member }));
+  }
+};
+
+const isLegacyPropertyAssertion = (
+  { call, canonicalMember }: ReturnType<typeof inspectContext>,
+  imports: EffectVitestImports
+): boolean =>
+  canonicalMember === "assert" &&
+  isProvenanceCall(call, imports, FAST_CHECK_MODULES, "FastCheck", ["assert"]) &&
+  O.exists(
+    A.head(call.getArguments()),
+    (property) =>
+      Node.isCallExpression(property) &&
+      isProvenanceCall(property, imports, FAST_CHECK_MODULES, "FastCheck", ["property", "asyncProperty"])
+  );
+
+const detectPropertyAssertion = (context: ReturnType<typeof inspectContext>, state: DetectorState): void => {
+  const { call, inTest, helper } = context;
+  const { imports, makeFinding, findings, file, owner } = state;
+  if (!inTest && O.isNone(helper)) return;
+  const native = isNativePropertyCheck(call, imports);
+  if (!native && !isLegacyPropertyAssertion(context, imports)) return;
+  const shared = O.exists(helper, ({ shared }) => shared);
+  findings.push(
+    makeFinding({
+      ruleId: "EV007",
+      node: call,
+      file,
+      owner,
+      symbol: callMember(call),
+      judgment: shared,
+      ...(shared
+        ? { className: "shared-helper-property-assertion-review" }
+        : native
+          ? { className: "direct-arbitrary-check" }
+          : {}),
+    })
+  );
+};
+
+const detectClockWait = (
+  { call, canonicalMember, test, testClockMode }: ReturnType<typeof inspectContext>,
+  state: DetectorState
+): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (
+    testClockMode &&
+    O.isSome(test) &&
+    ((canonicalMember === "sleep" && isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["sleep"])) ||
+      (A.contains(["spaced", "fixed", "exponential"], canonicalMember) &&
+        isProvenanceCall(call, imports, SCHEDULE_MODULES, "Schedule", [canonicalMember]))) &&
+    !liveClockFor(call, imports)
+  ) {
+    const controlled = controlledWait(call, test.value.callback, imports);
+    findings.push(
+      makeFinding({
+        ruleId: "EV008",
+        node: call,
+        file,
+        owner,
+        symbol: callMember(call),
+        judgment: controlled,
+        ...(controlled ? { className: "controlled-clock-wait-review" } : {}),
+      })
+    );
+  }
+};
+
+const detectLiveMode = ({ call }: ReturnType<typeof inspectContext>, state: DetectorState): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (isHarnessMethodCall(call, imports, "live")) {
+    const callbacks = effectVitestTestCallbacks(call, imports);
+    if (A.isReadonlyArrayNonEmpty(callbacks) && !A.some(callbacks, (callback) => liveServiceCall(callback, imports)))
+      findings.push(makeFinding({ ruleId: "EV009", node: call, file, owner, symbol: "it.live", judgment: true }));
+  }
+};
+
+const detectServiceMock = ({ call, member }: ReturnType<typeof inspectContext>, state: DetectorState): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (
+    A.contains(["mock", "spyOn"], member) &&
+    isProvenanceCall(call, imports, VITEST_MODULES, "vi", ["mock", "spyOn", "vi.mock", "vi.spyOn"]) &&
+    serviceMockTarget(call)
+  ) {
+    findings.push(makeFinding({ ruleId: "EV012", node: call, file, owner, symbol: callLabel(call), judgment: true }));
+  }
+};
+
+const detectLayerTimeout = ({ call }: ReturnType<typeof inspectContext>, state: DetectorState): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+
+  if (isHarnessMethodCall(call, imports, "layer") && !Node.isCallExpression(call.getExpression())) {
+    const layer = call.getArguments()[0];
+    if (Node.isExpression(layer) && !isPureStubLayer(layer, imports) && !layerHasTimeout(call)) {
+      findings.push(makeFinding({ ruleId: "EV014", node: call, file, owner, symbol: "it.layer", judgment: true }));
+    }
+  }
+};
+
+const detectLayerClockReset = ({ call, member }: ReturnType<typeof inspectContext>, state: DetectorState): void => {
+  const { imports, harness, makeFinding, findings, file, owner } = state;
+
+  if (member === "adjust" && isProvenanceCall(call, imports, TEST_CLOCK_MODULES, "TestClock", ["adjust"])) {
+    const layer = harness.enclosingLayerBlock(call);
+    if (O.isSome(layer) && !resetInTestOrHook(call, layer.value, imports)) {
+      findings.push(
+        makeFinding({ ruleId: "EV015", node: call, file, owner, symbol: "TestClock.adjust", judgment: true })
+      );
+    }
+  }
+};
+
+const inspectCall = (call: CallExpression, state: DetectorState): void => {
+  const { imports, helperNames } = state;
+
+  const member = callMember(call);
+  const canonicalMember = Node.isIdentifier(call.getExpression())
+    ? O.getOrElse(
+        O.map(
+          A.head(O.getOrElse(MutableHashMap.get(imports.bindingsByLocal, member), A.empty)),
+          (binding) => binding.imported
+        ),
+        () => member
+      )
+    : member;
+  if (
+    !wrapperName(member) &&
+    !wrapperName(canonicalMember) &&
+    !A.contains(helperNames, member) &&
+    !HashSet.has(detectorCallMembers, canonicalMember)
+  )
+    return;
+  const context = inspectContext(call, member, canonicalMember, state);
+  detectRuntimeBoundary(context, state);
+  detectLayerProvision(context, state);
+  detectResourceWrapper(context, state);
+  detectScopeLifetime(context, state);
+  detectResultAssertion(context, state);
+  detectExpectDataShape(context, state);
+  detectBooleanDataShape(context, state);
+  detectPropertyAssertion(context, state);
+  detectClockWait(context, state);
+  detectLiveMode(context, state);
+  detectServiceMock(context, state);
+  detectLayerTimeout(context, state);
+  detectLayerClockReset(context, state);
+};
+
+const detectPlatformImport = (declaration: ImportDeclaration, state: DetectorState): void => {
+  const { imports, makeFinding, findings, calls, file, owner } = state;
+
+  const specifier = declaration.getModuleSpecifier();
+  if (!Node.isStringLiteral(specifier)) return;
+  const moduleName = specifier.getLiteralValue();
+  const osTemp =
+    A.contains(["node:os", "os"], moduleName) &&
+    A.some(calls, (call) => isProvenanceCall(call, imports, ["node:os", "os"], "os", ["tmpdir"]));
+  if (platformFileSystemImport(moduleName, declaration) || osTemp) {
+    findings.push(makeFinding({ ruleId: "EV010", node: declaration, file, owner, symbol: moduleName, judgment: true }));
+  }
+};
+
+const detectPlatformRequire = (call: CallExpression, state: DetectorState): void => {
+  const { imports, makeFinding, findings, calls, file, owner } = state;
+
+  const callee = call.getExpression();
+  const argument = call.getArguments()[0];
+  if (
+    !Node.isIdentifier(callee) ||
+    callee.getText() !== "require" ||
+    O.isSome(imports.resolveBinding(callee)) ||
+    !Node.isStringLiteral(argument)
+  )
+    return;
+  const declaration = call.getFirstAncestorByKind(SyntaxKind.VariableDeclaration) ?? call;
+  const moduleName = argument.getLiteralValue();
+  const osTemp =
+    A.contains(["node:os", "os"], moduleName) &&
+    A.some(calls, (candidate) => {
+      const access = candidate.getExpression();
+      if (!Node.isPropertyAccessExpression(access) || access.getName() !== "tmpdir") return false;
+      const receiver = access.getExpression();
+      return (
+        receiver === call ||
+        (Node.isIdentifier(receiver) &&
+          O.exists(imports.resolveBinding(receiver), (binding) => binding === declaration))
+      );
+    });
+  if (platformFileSystemImport(moduleName, declaration) || osTemp)
+    findings.push(makeFinding({ ruleId: "EV010", node: declaration, file, owner, symbol: moduleName, judgment: true }));
+};
+
+const detectResourceDefinition = (
+  { name, node }: ReturnType<typeof sourceFunctionDefinitions>[number],
+  state: DetectorState
+): void => {
+  const { imports, findings, makeFinding, file, owner } = state;
+  if ((wrapperName(name) && functionHasResource(node, imports)) || buildsAndProvidesLayer(node, imports))
+    findings.push(
+      makeFinding({ ruleId: "EV003", node, file, owner, symbol: name, judgment: !functionHasResource(node, imports) })
+    );
+};
+
+const detectRetryLoop = (loop: MorphNode, state: DetectorState): void => {
+  const { harness, imports, findings, makeFinding, file, owner } = state;
+  if (O.isSome(harness.enclosingTest(loop)) && loopIsRetryCandidate(loop, imports))
+    findings.push(makeFinding({ ruleId: "EV013", node: loop, file, owner, symbol: "retry-loop", judgment: true }));
 };
 
 /**
@@ -501,308 +972,29 @@ export const detectEffectVitestFindings: {
   );
   const helperNames = A.map(definitions, ({ name }) => name);
   const calls = imports.calls;
+  const state: DetectorState = {
+    imports,
+    harness,
+    makeFinding,
+    findings,
+    definitions,
+    helperNames,
+    calls,
+    file,
+    owner,
+  };
 
-  for (const call of calls) {
-    const member = callMember(call);
-    const canonicalMember = Node.isIdentifier(call.getExpression())
-      ? O.getOrElse(
-          O.map(
-            A.head(O.getOrElse(MutableHashMap.get(imports.bindingsByLocal, member), A.empty)),
-            (binding) => binding.imported
-          ),
-          () => member
-        )
-      : member;
-    if (
-      !wrapperName(member) &&
-      !wrapperName(canonicalMember) &&
-      !A.contains(helperNames, member) &&
-      !HashSet.has(detectorCallMembers, canonicalMember)
-    )
-      continue;
-    const test = harness.enclosingTest(call);
-    const inTest = O.isSome(test);
-    const effectTest = O.exists(test, ({ mode }) => mode === "effect" || mode === "live");
-    const testClockMode = O.exists(test, ({ mode }) => mode === "effect");
-    const helper =
-      !inTest &&
-      (isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["runPromise", "runSync", "runFork", "scoped"]) ||
-        isProvenanceCall(call, imports, FAST_CHECK_MODULES, "FastCheck", ["assert"]))
-        ? harness.reachableHelper(call)
-        : O.none();
+  for (const call of calls) inspectCall(call, state);
 
-    if (
-      (inTest || O.isSome(helper)) &&
-      A.contains(["runPromise", "runSync", "runFork"], canonicalMember) &&
-      isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", [canonicalMember])
-    ) {
-      const shared = O.exists(helper, ({ shared }) => shared);
-      findings.push(
-        makeFinding({
-          ruleId: "EV001",
-          node: call,
-          file,
-          owner,
-          symbol: callMember(call),
-          judgment: shared,
-          ...(shared ? { className: "shared-helper-runtime-boundary-review" } : {}),
-        })
-      );
-    }
-    const publicProvider = isProvenanceCall(
-      call,
-      imports,
-      ["@beep/test-utils", "@beep/test-utils/Layer"],
-      "provideScopedLayer",
-      ["provideScopedLayer"]
-    );
-    const expression = call.getExpression();
-    const definition = Node.isIdentifier(expression)
-      ? O.flatMap(imports.resolveBinding(expression), (binding) =>
-          A.findFirst(definitions, ({ node }) => scopeContains(binding, node))
-        )
-      : O.none();
-    const localProvider = O.exists(definition, ({ node }) => buildsAndProvidesLayer(node, imports));
-    if (
-      !Node.isCallExpression(call.getExpression()) &&
-      (publicProvider || localProvider || isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["provide"])) &&
-      (effectTest ||
-        rootTestBodyCall(call, imports) ||
-        A.some(
-          call.getAncestors(),
-          (ancestor) =>
-            Node.isCallExpression(ancestor) &&
-            O.exists(classifyHarnessCall(ancestor, imports), (mode) => mode === "effect" || mode === "live")
-        ))
-    ) {
-      const layer = providedLayer(call);
-      if (O.exists(layer, (value) => !isPureStubLayer(value, imports) && !isContextProvision(value, imports))) {
-        const unresolved = !O.exists(layer, (value) => isResourceExpression(value, imports));
-        findings.push(
-          makeFinding({
-            ruleId: "EV002",
-            node: call,
-            file,
-            owner,
-            symbol: member,
-            judgment: unresolved,
-            ...(unresolved ? { className: "unresolved-layer-provide" } : {}),
-          })
-        );
-      }
-    }
-
-    if (
-      (wrapperName(member) ||
-        wrapperName(canonicalMember) ||
-        O.exists(definition, ({ node }) => functionHasResource(node, imports))) &&
-      (rootTestBodyCall(call, imports) || O.exists(test, ({ callback }) => isWholeBodyCall(call, callback)))
-    ) {
-      if (O.exists(definition, ({ node }) => functionHasResource(node, imports))) {
-        findings.push(makeFinding({ ruleId: "EV003", node: call, file, owner, symbol: member }));
-      } else if (
-        O.isNone(definition) &&
-        Node.isIdentifier(expression) &&
-        O.exists(imports.resolveBinding(expression), Node.isImportDeclaration)
-      ) {
-        findings.push(
-          makeFinding({
-            ruleId: "EV003",
-            node: call,
-            file,
-            owner,
-            symbol: member,
-            judgment: true,
-            className: "unresolved-resource-wrapper",
-          })
-        );
-      }
-    }
-    if (
-      (effectTest || O.exists(helper, ({ effect }) => effect)) &&
-      canonicalMember === "scoped" &&
-      isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["scoped"])
-    ) {
-      const wholeBody = O.exists(test, ({ callback }) => isWholeBodyCall(call, callback));
-      const scopeClass = O.match(helper, {
-        onNone: () => "shorter-scope-lifetime-review",
-        onSome: ({ callback, shared, plain }) =>
-          shared || plain
-            ? "shared-helper-scope-lifetime-review"
-            : isWholeBodyCall(call, callback)
-              ? "helper-scope-lifetime-review"
-              : "inner-helper-scope-lifetime-review",
-      });
-      findings.push(
-        makeFinding({
-          ruleId: "EV004",
-          node: call,
-          file,
-          owner,
-          symbol: callMember(call),
-          judgment: !wholeBody,
-          ...(wholeBody ? {} : { className: scopeClass }),
-        })
-      );
-    }
-    if (
-      inTest &&
-      canonicalMember === "result" &&
-      isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["result"]) &&
-      assertedOutcome(call, imports)
-    ) {
-      findings.push(makeFinding({ ruleId: "EV005", node: call, file, owner, symbol: callMember(call) }));
-    }
-    if (inTest && canonicalMember === "expect" && isExpectCall(call, imports)) {
-      const property = call.getParent();
-      const parentCall = property?.getParent();
-      const matcher: O.Option<CallExpression> =
-        Node.isPropertyAccessExpression(property) && Node.isCallExpression(parentCall) ? O.some(parentCall) : O.none();
-      const matcherArguments: ReadonlyArray<MorphNode> = O.match(matcher, {
-        onNone: A.empty<MorphNode>,
-        onSome: (value) => value.getArguments(),
-      });
-      if (A.some([...call.getArguments(), ...matcherArguments], (candidate) => containsDataShape(candidate, imports))) {
-        findings.push(
-          makeFinding({ ruleId: "EV006", node: O.getOrElse(matcher, () => call), file, owner, symbol: "expect" })
-        );
-      }
-    }
-    if (
-      inTest &&
-      isBooleanAssertion(call, imports) &&
-      A.some(call.getArguments(), (argument) => containsDataShape(argument, imports))
-    ) {
-      findings.push(makeFinding({ ruleId: "EV006", node: call, file, owner, symbol: member }));
-    }
-    if (
-      (inTest || O.isSome(helper)) &&
-      canonicalMember === "assert" &&
-      isProvenanceCall(call, imports, FAST_CHECK_MODULES, "FastCheck", ["assert"])
-    ) {
-      const property = call.getArguments()[0];
-      if (
-        Node.isCallExpression(property) &&
-        isProvenanceCall(property, imports, FAST_CHECK_MODULES, "FastCheck", ["property", "asyncProperty"])
-      ) {
-        const shared = O.exists(helper, ({ shared }) => shared);
-        findings.push(
-          makeFinding({
-            ruleId: "EV007",
-            node: call,
-            file,
-            owner,
-            symbol: callMember(call),
-            judgment: shared,
-            ...(shared ? { className: "shared-helper-property-assertion-review" } : {}),
-          })
-        );
-      }
-    }
-    if (
-      testClockMode &&
-      O.isSome(test) &&
-      ((canonicalMember === "sleep" && isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["sleep"])) ||
-        (A.contains(["spaced", "fixed", "exponential"], canonicalMember) &&
-          isProvenanceCall(call, imports, SCHEDULE_MODULES, "Schedule", [canonicalMember]))) &&
-      !liveClockFor(call, imports)
-    ) {
-      const controlled = controlledWait(call, test.value.callback, imports);
-      findings.push(
-        makeFinding({
-          ruleId: "EV008",
-          node: call,
-          file,
-          owner,
-          symbol: callMember(call),
-          judgment: controlled,
-          ...(controlled ? { className: "controlled-clock-wait-review" } : {}),
-        })
-      );
-    }
-    if (isHarnessMethodCall(call, imports, "live")) {
-      const callbacks = effectVitestTestCallbacks(call, imports);
-      if (A.isReadonlyArrayNonEmpty(callbacks) && !A.some(callbacks, (callback) => liveServiceCall(callback, imports)))
-        findings.push(makeFinding({ ruleId: "EV009", node: call, file, owner, symbol: "it.live", judgment: true }));
-    }
-    if (
-      A.contains(["mock", "spyOn"], member) &&
-      isProvenanceCall(call, imports, VITEST_MODULES, "vi", ["mock", "spyOn", "vi.mock", "vi.spyOn"]) &&
-      serviceMockTarget(call)
-    ) {
-      findings.push(makeFinding({ ruleId: "EV012", node: call, file, owner, symbol: callLabel(call), judgment: true }));
-    }
-    if (isHarnessMethodCall(call, imports, "layer") && !Node.isCallExpression(call.getExpression())) {
-      const layer = call.getArguments()[0];
-      if (Node.isExpression(layer) && !isPureStubLayer(layer, imports) && !layerHasTimeout(call)) {
-        findings.push(makeFinding({ ruleId: "EV014", node: call, file, owner, symbol: "it.layer", judgment: true }));
-      }
-    }
-    if (member === "adjust" && isProvenanceCall(call, imports, TEST_CLOCK_MODULES, "TestClock", ["adjust"])) {
-      const layer = harness.enclosingLayerBlock(call);
-      if (O.isSome(layer) && !resetInTestOrHook(call, layer.value, imports)) {
-        findings.push(
-          makeFinding({ ruleId: "EV015", node: call, file, owner, symbol: "TestClock.adjust", judgment: true })
-        );
-      }
-    }
-  }
-
-  for (const { name, node } of definitions) {
-    if ((wrapperName(name) && functionHasResource(node, imports)) || buildsAndProvidesLayer(node, imports))
-      findings.push(
-        makeFinding({ ruleId: "EV003", node, file, owner, symbol: name, judgment: !functionHasResource(node, imports) })
-      );
-  }
-  if (imports.hasEffectImport) {
-    for (const declaration of imports.plainVitestImports)
+  for (const definition of definitions) detectResourceDefinition(definition, state);
+  for (const declaration of imports.plainVitestImports) {
+    if (imports.hasEffectImport)
       findings.push(makeFinding({ ruleId: "EV011", node: declaration, file, owner, symbol: "vitest-import" }));
   }
-  for (const declaration of sourceFile.getImportDeclarations()) {
-    const specifier = declaration.getModuleSpecifier();
-    if (!Node.isStringLiteral(specifier)) continue;
-    const moduleName = specifier.getLiteralValue();
-    const osTemp =
-      A.contains(["node:os", "os"], moduleName) &&
-      A.some(calls, (call) => isProvenanceCall(call, imports, ["node:os", "os"], "os", ["tmpdir"]));
-    if (platformFileSystemImport(moduleName, declaration) || osTemp) {
-      findings.push(
-        makeFinding({ ruleId: "EV010", node: declaration, file, owner, symbol: moduleName, judgment: true })
-      );
-    }
-  }
-  for (const call of calls) {
-    const callee = call.getExpression();
-    const argument = call.getArguments()[0];
-    if (
-      !Node.isIdentifier(callee) ||
-      callee.getText() !== "require" ||
-      O.isSome(imports.resolveBinding(callee)) ||
-      !Node.isStringLiteral(argument)
-    )
-      continue;
-    const declaration = call.getFirstAncestorByKind(SyntaxKind.VariableDeclaration) ?? call;
-    const moduleName = argument.getLiteralValue();
-    const osTemp =
-      A.contains(["node:os", "os"], moduleName) &&
-      A.some(calls, (candidate) => {
-        const access = candidate.getExpression();
-        if (!Node.isPropertyAccessExpression(access) || access.getName() !== "tmpdir") return false;
-        const receiver = access.getExpression();
-        return (
-          receiver === call ||
-          (Node.isIdentifier(receiver) &&
-            O.exists(imports.resolveBinding(receiver), (binding) => binding === declaration))
-        );
-      });
-    if (platformFileSystemImport(moduleName, declaration) || osTemp)
-      findings.push(
-        makeFinding({ ruleId: "EV010", node: declaration, file, owner, symbol: moduleName, judgment: true })
-      );
-  }
-  for (const loop of imports.loops) {
-    if (O.isSome(harness.enclosingTest(loop)) && loopIsRetryCandidate(loop, imports))
-      findings.push(makeFinding({ ruleId: "EV013", node: loop, file, owner, symbol: "retry-loop", judgment: true }));
-  }
+
+  for (const declaration of sourceFile.getImportDeclarations()) detectPlatformImport(declaration, state);
+
+  for (const call of calls) detectPlatformRequire(call, state);
+  for (const loop of imports.loops) detectRetryLoop(loop, state);
   return assignStableIds(findings);
 });

@@ -1,3 +1,7 @@
+> Historical phase contract. For new work after the 2026-09-10 rc.113 integration,
+> use the active SPEC, shared lane-contract and current integration receipt.
+> Recorded pins, model settings and proof below retain their original provenance.
+
 # P0e instrumented tester lane contract
 
 P0a-P0d are complete. Read history/2026-09-08-p0d-verification.md, SPEC sections

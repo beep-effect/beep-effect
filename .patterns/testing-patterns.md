@@ -458,7 +458,7 @@ assert.isTrue(MyModule.isCustomError(error))
 
 ### Specialized Option, Result, and Exit Assertions
 
-Import helpers from `@effect/vitest/utils`. At rc.112, `assertSome`,
+Import helpers from `@effect/vitest/utils`. At rc.113, `assertSome`,
 `assertSuccess`, `assertFailure`, `assertExitSuccess`, and `assertExitFailure`
 require an expected payload (or Cause for Exit failure), check it with deep
 strict equality, and narrow the container. `assertNone` needs only the Option.

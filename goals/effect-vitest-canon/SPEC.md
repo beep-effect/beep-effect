@@ -8,7 +8,7 @@ adversarial review as requested. Authorship records must describe the actual age
 
 ## Objective and acceptance
 
-Migrate every test file in the D9 scope to canonical rc.112 idioms. Completion
+Migrate every test file in the D9 scope to canonical rc.113 idioms. Completion
 requires zero detector findings, an empty baseline, every judgment finding fixed
 or ledgered with a reason, package verification, before/after timing evidence,
 and hosted proof. Preserve tests and property floors. No coverage-lane speed
@@ -24,20 +24,25 @@ PLAN.md and ops/manifest.json record execution state; GOAL.md is the launcher.
 
 - Initial branch: `@slop/09-02-26`, source HEAD `bf6014ae31531bf4dc18f7f6eedafa96a700d876`.
 - Isolated branch: `feat/effect-vitest-canon` in the sibling worktrees root.
-- Installed Effect and Effect Vitest: `4.0.0-rc.112`; installed Vitest: `4.1.11`.
-- Reference tag commit verified as `2600f62f4532026928454dcea8d1c48557b3f942`.
-- At P0a start, Bun runtime and .bun-version both selected `1.4.1`. During P0c,
-  the workstation's `latest` runtime moved to `1.4.2`; the repository pin remains
-  `1.4.1`. Use the installed pinned runtime for acceptance and record provenance.
+- Current Effect and Effect Vitest: `4.0.0-rc.113`, integrated from PR #1060
+  on 2026-09-10. Both release tags resolve to
+  `d3b837aee836f35d625d55205f7d6e61305fc198`.
+- Main supplied Vitest `4.1.11`, outside rc.113's declared `>=5.0.0 <6.0.0`
+  peer range. This PR retains main's test-stack versions and verifies the
+  exercised behavior on that cohort. The peer mismatch remains explicitly
+  qualified; a Vitest 5 / Storybook test-stack migration is separate scope.
+- Current Bun pin/runtime: `1.4.2`; Node: `24.20.0`. Earlier Bun `1.4.1`
+  and rc.112 receipts retain their original provenance.
 - Historical census of 955 files will be reconciled with the live census.
 - Packet slug uses the proposed default while the text question remains pending.
 - Scratchpad deletion remains unapproved until Benjamin answers the open decision.
 
-## Operational routing update, 2026-09-08
+## Operational routing update, 2026-09-09
 
 Benjamin's later AGENTS instructions supersede the original model/effort example:
 all token-heavy Codex implementation, exploration, review and distillation uses
-`gpt-6-astra` with explicit `xhigh` reasoning. Preserve the Codex CLI lane and
+`gpt-6-astra` with explicit `medium` reasoning. This supersedes the September 8
+`xhigh` default for new work. Preserve the Codex CLI lane and
 Grok research/adversarial assignments in D10. Historical receipts retain their
 actual model. This changes operational routing, not D1-D14 or acceptance gates.
 
@@ -56,12 +61,12 @@ stay in Codex CLI lanes; Grok performs adversarial review and web research.
 **Codex lane invocation** (explicit effort and the authorized session permission profile):
 
 ```bash
-codex exec -m gpt-6-astra -c 'model_reasoning_effort="xhigh"' \
+codex exec -m gpt-6-astra -c 'model_reasoning_effort="medium"' \
   -c 'approval_policy="never"' -c 'sandbox_mode="danger-full-access"' \
   --cd <worktree> "<lane prompt>" </dev/null
 ```
 
-Use `xhigh` for token-heavy work under the later user instruction above. Lane prompt
+Use `medium` for token-heavy work under the later user instruction above. Lane prompt
 contract (paste into every lane): disjoint file ownership with the full lane map; absolute
 no-git-commands rule; create the report file within the first actions and append as you go; the
 final message is a pointer to the report, never the report; package-verify is run by you (the
@@ -89,61 +94,75 @@ report-first is mandatory.
 
 Quota doctrine: Anthropic, OpenAI and xAI pools are separate. Routing is quota arbitrage.
 
-## 1. Ground truth (verified 2026-09-04 — do not re-derive, do re-verify anchors at the tag)
+## 1. Ground truth
+
+The rc.113 amendment below follows Benjamin's explicit upgrade instruction.
+Historical census and earlier proof sections retain their dates; they do not
+establish compatibility with the current release.
 
 ### 1.1 Versions and pins
 
-- Installed `effect` and `@effect/vitest`: **4.0.0-rc.112** (root `package.json` catalog).
-- Reference checkout `.repos/effect` → `~/YeeBois/dev/effect` (fork, branch `main`). Its
-  `packages/vitest/src` has **moved past rc.112** (`it.prop` engine rewrite to
-  `effect/unstable/arbitrary`). Everything in this packet pins to the tag
-  `@effect/vitest@4.0.0-rc.112` = `2600f62f4532026928454dcea8d1c48557b3f942` (2026-08-25).
-  Read source at the tag, never at HEAD:
+- Installed `effect` and `@effect/vitest`: **4.0.0-rc.113** (root catalog and
+  frozen lockfile, verified 2026-09-10).
+- Immutable tags `@effect/vitest@4.0.0-rc.113` and `effect@4.0.0-rc.113`
+  both resolve to `d3b837aee836f35d625d55205f7d6e61305fc198`. Read tagged
+  source from the provisioned reference repository or the verified archive,
+  never its moving HEAD. For example, with the reference symlink available:
 
 ```bash
-git -C .repos/effect show '@effect/vitest@4.0.0-rc.112:packages/vitest/src/internal/internal.ts' | rg -n '<pattern>'
+git -C .repos/effect show '@effect/vitest@4.0.0-rc.113:packages/vitest/src/internal/internal.ts' | rg -n '<pattern>'
 ```
 
-  The installed dist `node_modules/@effect/vitest/dist/internal/internal.js` is the runtime truth
-  and matches the tag.
+  Installed index, utils, internal runner source and README match the tag byte
+  for byte. Runtime proofs must also establish the installed dependency pair.
 
-### 1.2 `it.layer` semantics (tag `internal.ts`, verified line by line)
+### 1.2 `it.layer` semantics at rc.113
 
-- `layer` starts at line 213. One `Scope` per block (242); the build is `Effect.cached` (245) so
-  the layer is built **once per block**, finalizers run once when the block scope closes.
-- Every inner `it.effect` runs its body under its **own** `Effect.scoped` and then
-  `Effect.provide(context)` with the cached built `Context`, not the Layer (263-264). Nothing is
-  rebuilt per test.
-- Nested `it.layer` forks the memo map (275): outer instances are reused by the inner block.
-- Named form `it.layer(L)("name", …)` builds in `beforeAll` (318) and closes in `afterAll`.
-  Unnamed form builds lazily on the block's first test and closes after its last test (298-305).
-- **TestClock is shared across the block**: `TestEnv` (line 44, TestConsole + TestClock) is merged
-  into the shared build unless `excludeTestServices: true`. Time advanced in test 1 persists into
-  test 2. Plain `it.effect` provides a fresh `TestEnv` per test (356); `it.live` provides no test
-  services at all (357).
-- The build runs inside a vitest hook (default hook timeout). Upstream passes
-  `{ timeout: "30 seconds" }` for containers.
-- `it.flakyTest` (331) = `Effect.scoped` + `Effect.sandbox` + `Effect.retry(Schedule.recurs(10)`
-  while elapsed ≤ timeout, default 30 s)` + `Effect.orDie`.
+The pinned graph records current source ranges. Each block caches one built
+Layer context and closes its shared scope once. Each inner Effect test still
+runs under its own scoped body with that context. Nested blocks fork the parent
+memo map and reuse outer instances.
 
-Per-test `Effect.provide(layer)` (`.repos/effect/packages/effect/src/internal/layer.ts:8-22`,
-read at HEAD — re-verify at tag `effect@4.0.0-rc.112`): `scopedWith` opens a **fresh scope per
-run** and `buildWithScope` rebuilds the layer into it. N tests = N acquisitions and N releases of
-the container, temp dir, pglite instance or server. The `withXyz(...)` wrappers do the same thing
-by hand, e.g. `packages/tooling/tool/cli/test/yeet.test.ts:237` (`acquireUseRelease` of a real
-temp dir **plus** a rebuilt platform layer per call). 37 test files define their own copy.
+Named blocks acquire in beforeAll and release in afterAll. Anonymous blocks
+collect their non-skipped tasks, acquire through filtered beforeEach hooks and
+release after the last task through onTestFinished, with afterAll as a cleanup
+fallback. Shared-layer cleanup does not inherit the last test's aborted signal.
+Hook acquisition timeout and body timeout are separate limits.
 
-### 1.3 `it.prop` at rc.112 (differs from checkout HEAD)
+TestClock and TestConsole are shared across the block unless test services are
+excluded. Time advanced by one test remains visible to later tests. Plain
+it.effect provides fresh test services per test; it.live supplies none.
+Named layer suites accept a concurrent option, including nested overrides.
+Anonymous layers inherit their enclosing suite's concurrency. Use ctx.expect
+for concurrent assertion counts and snapshots; concurrency does not isolate
+shared resources or the shared TestClock.
 
-- Sync `it.prop(name, arbs, fn)` uses FastCheck directly and **throws
-  `"Schemas are not supported yet"`** for Schema inputs; it needs `fc` Arbitraries.
-- `it.effect.prop` / `it.live.prop` accept Schemas (`Schema.toArbitrary(schema)(fc)`) or `fc`
-  Arbitraries; the options key is `fastCheck?: FC.Parameters<…>` (numRuns, seed…), **not**
-  `arbitrary`. HEAD's README paragraph about shrinking and interruption does not apply to rc.112.
-- Repo floors: `fcRuns(n)` from `@beep/fc-runs` are floors raised by `BEEP_FC_NUM_RUNS` (PR
-  Property lane 400 + `BEEP_FC_SEED=20260708`, nightly 1000); root `vitest.setup.ts` installs the
-  global floor and `addEqualityTesters()`. `it.prop` sites that pass no params inherit the global
-  floor; sites that pass `fastCheck.numRuns` must use `fcRuns` to keep the floor.
+Per-test Effect.provide(layer) still builds into a fresh scope per run. Expensive
+containers, temporary resources and servers therefore need the shared-layer
+judgment specified by D14. Cheap pure stubs remain exempt.
+
+### 1.3 `it.prop` at rc.113
+
+Sync it.prop, it.effect.prop and it.live.prop all accept tuple or record inputs
+containing Schemas or native Arbitrary values from effect/unstable/arbitrary.
+FastCheck Arbitraries and the old fastCheck option are unsupported. The option
+is arbitrary: Arbitrary.CheckOptions, with runs, seed, replay, size, maxDiscards
+and maxShrinks. Preserve generator constraints and failure/shrinking semantics
+when translating older tests; this is more than a field rename.
+
+Use `{ arbitrary: fcRuns(n) }` for explicit repository run floors. The current
+@beep/fc-runs helper returns native runs/seed options and honors BEEP_FC_NUM_RUNS
+and BEEP_FC_SEED. Native Arbitrary has no global configuration, so omitting the
+option does not inherit the CI floor. PR properties must retain the 400-run
+floor and seed 20260708; nightly retains its higher floor.
+
+Callbacks receive generated values and TestContext. Effect/live callbacks return
+Effect; synchronous callbacks must not return Effect or Promise. Returning false,
+throwing or failing an Effect falsifies the property and triggers shrinking;
+normal non-false completion passes. The test abort signal cancels generation,
+evaluation and shrinking. Synchronous JavaScript that never returns cannot be
+preempted. The instrumented runner must keep one lifecycle and one absolute
+watchdog deadline across the complete property registration, including shrinking.
 
 ### 1.4 Repo census (rg, 2026-09-04, excluding `.claude/worktrees`)
 
@@ -186,10 +205,10 @@ tests, ~10 min under coverage), `apps/professional-desktop` 57, `tooling/library
   `assertMatch` 151, `throws` 163, `throwsAsync`, `assertNone` 217, `assertDefined` 227,
   `assertUndefined` 242, `assertSome` 257, `assertSuccess` 275, `assertFailure` 289,
   `assertExitFailure` 307, `assertExitSuccess` 321.
-- `@effect/vitest` public surface (tag `index.ts`, 259 lines): namespace `Vitest` (`Test`,
+- `@effect/vitest` public surface (rc.113 `index.ts`, 285 lines): namespace `Vitest` (`Test`,
   `Tester` with `skip/skipIf/runIf/only/each/fails/prop`, `MethodsNonLive`, `Methods`),
   `addEqualityTesters`, `effect`, `live`, `layer` (options `memoMap`, `timeout`,
-  `excludeTestServices`), `flakyTest`, `prop`, `it`, `makeMethods`, `describeWrapped`, and
+  `excludeTestServices`, `concurrent`), `flakyTest`, `prop`, `it`, `makeMethods`, `describeWrapped`, and
   `export * from "vitest"`.
 - Upstream canon to mirror: `packages/sql/pg/test/utils.ts` (`PgContainer` service with
   `layer`, `layerClient`… built with `Layer.unwrap` + `Layer.provide`), the nine
@@ -198,8 +217,11 @@ tests, ~10 min under coverage), `apps/professional-desktop` 57, `tooling/library
   (cheap layer provided per test, `Deferred` + `Effect.forkChild` + `TestClock.withLive` for
   watch tests), `packages/effect/test/unstable/persistence/SqlCleanupTest.ts` (`Effect.repeat` +
   `Effect.timeout` + `TestClock.withLive` wait helper), and
-  `packages/effect/test/FileSystem.test-utils.ts` (`testLayer`, 435 lines, identical at tag and
-  HEAD — the FileSystem conformance suite).
+  `packages/effect/test/FileSystem.test-utils.ts` (`testLayer`, 565 lines at rc.113).
+  The shared helper now ports all 36 registrations, including the new
+  invalid-size/cursor/stream cases. Node and Bun each pass all 108 adapter
+  cases, with full package and unchanged coverage-floor proof. The 435-line
+  rc.112 port remains historical evidence.
 
 ### 1.6 The Coverage Regression premise, corrected
 
@@ -260,7 +282,7 @@ promised as the lane fix.** Timings are evidence, measured per package (D1).
 | D8 | **MemoryFileSystem** enters as **P0.5**: port upstream `testLayer` into `@beep/test-utils`, run it against Node, Bun and Memory, promote `scratchpad/MemoryFileSystem` to `@beep/test-utils` only when green. Fold the `memfs` seed/fault/inspect facade on top only if P1 rows show codemod/generator tests need seeded volumes. Resource Authoritarian owns it. |
 | D9 | **Scope** = `apps/**`, `packages/**`, `infra/**` test files (955) plus `**/test/**/*.ts` support modules for wrapper-definition findings. Excluded: `scratchpad/**` (lab; only the MemoryFileSystem test graduates with its module), `.claude/**`, `goals/**`, `explorations/**`, `docs/**`, `node_modules`. |
 | D10 | **Harness** = Fable orchestrates; Codex `codex exec` lanes do heavy lifting; Grok headless does adversarial rounds and web research. Lens charters live in `goals/<slug>/ops/prompts/*.md` and are injected into lane prompts — **not** `.claude/agents` subagent files. |
-| D11 | **Knowledge graph** = `standards/effect-vitest.primitives.jsonc`, one entry per export and README section, pinned to the rc.112 tag, decoded by an `S.Class` in the lint command, used for remediation hints, and the lint command **fails when the installed `@effect/vitest` version no longer matches the pin**. |
+| D11 | **Knowledge graph** = `standards/effect-vitest.primitives.jsonc`, one entry per export and README section, pinned to the rc.113 tag, decoded by an `S.Class` in the lint command, used for remediation hints, and the lint command **fails when the installed `@effect/vitest` version no longer matches the pin**. |
 | D12 | **P2 lens order per package** = scope → assertions → property → flake → observability. |
 | D13 | **PRs** = one per topological wave capped near 150 changed files; `foundation/modeling` and `tooling/tool` ship alone. Each PR carries package-verify proofs and before/after timings. |
 | D14 | **Provide rule** = `it.layer` required for any scoped or effectful layer (`Layer.effect`, `Layer.scoped`, `Layer.unwrap`, `acquireRelease`, containers, filesystems, servers, every `withXyz` wrapper). Per-test `Effect.provide` allowed only for pure `Layer.succeed` / `Layer.mock` stubs. Unresolvable constructors go to the Resource lens for judgment. |
@@ -322,7 +344,7 @@ timings); recommended wave order inside the package.
   signature: string,
   description: string, whenToUse: string, whenNotToUse: string,
   replaces: ReadonlyArray<string>,                   // ruleIds from §7
-  example: string,                                    // compiles at rc.112
+  example: string,                                    // compiles at rc.113
   gotchas: ReadonlyArray<string>
 }
 ```
@@ -380,28 +402,34 @@ container startup exceeding the hook timeout. Evidence sources: `gh run list` / 
 
 ### 6.3 Property Tester (P2 property step)
 
-Belief, kept from the draft: a schema whose checks are loose enough that a failing value can cross
-its boundary is a glorified type, not a schema. Actionable rules: `it.effect.prop` for
-Schema-driven properties at rc.112 (sync `it.prop` needs `fc` Arbitraries); `fc.assert` sites
-migrate to `it.prop` / `it.effect.prop` with `fastCheck: fcRuns(n)`-style floors preserved; when a
-generated value is invalid or surprising, sharpen the production schema or its `toArbitrary`
-annotation — never a weaker test-only schema; bound generators (sparse recursive positions,
-`maxLength`, memoized `S.toArbitrary`) instead of lowering runs or raising timeouts;
-`assertSchemaArbitraryDecodesToSelf` for round-trip laws; reproduce the CI lane with
-`BEEP_FC_NUM_RUNS=400 BEEP_FC_SEED=20260708 bunx --bun vitest run <file>`.
+Use production Schemas with it.prop for synchronous laws or it.effect.prop for
+Effect-returning laws. Migrate direct legacy or native arbitrary checks into
+these registrations with `{ arbitrary: fcRuns(n) }`, preserving seeds, floors,
+replay and domain coverage. When a generated value crosses an invalid production
+boundary, sharpen that production schema or its native arbitrary annotation.
+Do not substitute a weaker test-only schema. Bound recursive generators and
+collections with valid domain constraints instead of reducing trials or raising
+timeouts. Reuse assertSchemaArbitraryDecodesToSelf for round-trip laws where it
+fits. Reproduce the CI floor and seed with BEEP_FC_NUM_RUNS=400 and
+BEEP_FC_SEED=20260708.
 
 ### 6.4 All Seeing Eye (owns D7; P2 observability step)
 
-Design the instrumented `it` in `@beep/test-utils` from public API only: wrap `it.effect` and
-`it.live` testers (`Vitest.Tester` shape: call, `skip`, `skipIf`, `runIf`, `only`, `each`,
-`fails`, `prop`) so each test body is `Effect.raceFirst(body, watchdog)` where
-`watchdog = Effect.sleep(limit).pipe(TestClock.withLive, Effect.andThen(Effect.die(new TestHang({ testName, lastLog }))))`
-(a TestClock-driven timeout never fires under `it.effect`, so the watchdog must run on the live
-clock), with start / end / duration / outcome logged through `Effect.log` + `Effect.annotateLogs`
-and a `Logger.layer([Logger.consolePretty()])` provided only when `BEEP_TEST_TRACE=1` or CI.
-Wrap `it.layer` too, so the `it` handed to a layer block callback is instrumented as well. Keep
-`TestEnv` semantics untouched. Validate every API against the tag before writing. Durations for
-evidence come from the vitest JSON reporter, not from this wrapper.
+Design the instrumented it in @beep/test-utils using public APIs. Preserve the
+complete tester surface, named/anonymous/nested layer callbacks and their
+TestEnv behavior. Record start, end, duration, outcome and last observed log
+through Effect logging, enabled only by BEEP_TEST_TRACE=1 or CI. Preserve user
+loggers, test-console behavior, failures, interruption and finalizers.
+
+Use a live-clock watchdog that beats the resolved Vitest task timeout. Use
+TestClock.withLive only when TestClock is installed; live and excluded-test-service
+modes need the actual live clock without that assumption. Do not advance virtual
+time or change global limits. Each property registration shares one absolute
+deadline across setup, trials and shrinking, with isolated state for overlapping
+registrations. A layer acquisition timeout does not determine the body deadline.
+Disabled timeouts require explicit handling. Validate every public integration
+seam against the tag and installed runtime. P1/P2 timing evidence comes from the
+Node Vitest JSON reporter, not instrumentation duration.
 
 ## 7. Initial detector rule table (counts are rg estimates from 2026-09-04; detectors recount)
 
@@ -413,7 +441,7 @@ evidence come from the vitest JSON reporter, not from this wrapper.
 | EV004 | `Effect.scoped` inside an `it.effect` / `it.live` body | 413 / 160 | delete (runner owns the scope) |
 | EV005 | `Effect.result` used to assert an outcome | 28 / 13 | `Effect.exit` + `assertExitSuccess` / `assertExitFailure` / `assertSuccess` / `assertFailure` |
 | EV006 | Hand-rolled Option / Result / Exit assertions via `expect` | 631 / 196 | `utils.assertSome` / `assertNone` / `assertSuccess` / `assertFailure` / `assertExit*` |
-| EV007 | Direct `fc.assert(fc.property|asyncProperty(...))` inside a test | 468 / 306 | `it.prop` / `it.effect.prop` with `fastCheck` floors |
+| EV007 | Direct `fc.assert(fc.property|asyncProperty(...))` inside a test | 468 / 306 | `it.prop` / `it.effect.prop` with native `arbitrary: fcRuns(n)` floors |
 | EV008 | `Effect.sleep` / `Schedule` under `it.effect` with no `TestClock.adjust` in the same test | ⊂ 46 / 20 | `TestClock.adjust`, or `it.live` with a reason |
 | EV009 | `it.live` with no evident live-clock / live-console need | 40 files | `it.effect` (+ instrumented `it` for logs) |
 | EV010 | `node:fs`, `BunFileSystem` / `NodeFileSystem` layers, `os.tmpdir` in tests whose subject only needs `FileSystem` | 74 + 6 files | `MemoryFileSystem.layer` via `it.layer`; real platform layers only for platform-lifecycle assertions |

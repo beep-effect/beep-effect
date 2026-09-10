@@ -1,4 +1,6 @@
-> Paused by Benjamin on 2026-09-09. Save and publish the current foundation as an early draft PR; resume further implementation only on Benjamin's request. Continue from history/2026-09-09-pause-and-pr.md when resumed.
+> Update, 2026-09-10: PR #1060 merged. Main is integrated at 92fcea6; the installed contract is Effect / @effect/vitest 4.0.0-rc.113 at immutable tag commit d3b837aee836f35d625d55205f7d6e61305fc198. Repair the breaking APIs, refresh affected contracts and proofs, and bring PR #1067 to merge-ready. Prior rc.112 evidence stays historical. See history/2026-09-10-pr1067-rc113-integration.md.
+
+> Resumed by Benjamin on 2026-09-09 to bring PR #1067 to verified mergeable state. Preserve the remaining phase and merge-authorization gates. See history/2026-09-09-pr1067-resume.md.
 
 # GOAL: Canonical Effect Vitest idioms across every test
 
@@ -8,7 +10,7 @@ Read goals/effect-vitest-canon/{README,SPEC,PLAN,DECISIONS}.md and
 ops/manifest.json, then AGENTS.md and the required skills.
 
 Outcome: every apps/packages/infra test and the named test support modules
-satisfy the pinned rc.112 contract, the lint baseline is empty, judgment rows
+satisfy the pinned rc.113 contract, the lint baseline is empty, judgment rows
 are fixed or reasoned exceptions, and timing/package/hosted evidence is complete.
 The historical 955-file count is a dated anchor; reconcile live scope changes.
 
@@ -16,7 +18,7 @@ D1-D14 are locked. Use the packet schemas, public Effect Vitest APIs and the
 verified tag, never upstream HEAD. Extend existing test-utils and lint patterns.
 Codex orchestrates this execution. Codex CLI lanes own bulk work; Grok owns web
 research and adversarial reviews. Use disjoint ownership, report-first lane
-outputs, gpt-6-astra with explicit xhigh effort, and no git in
+outputs, gpt-6-astra with explicit medium effort, and no git in
 lanes. The orchestrator owns package verification and all git/publication work.
 
 Proceed through PLAN.md gates. P0a and P0b overlap; later phases are sequential.

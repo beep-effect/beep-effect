@@ -2,6 +2,7 @@
 
 import { findRepoRoot } from "@beep/repo-utils";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
+import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, Equal, FileSystem, HashMap, Inspectable, MutableHashMap, Order, Path } from "effect";
 import { dual } from "effect/Function";
@@ -30,12 +31,16 @@ import {
   writeEffectVitestInventory,
   writeEffectVitestRows,
 } from "./EffectVitestStore.ts";
+import type { SourceFile } from "ts-morph";
 import type { EffectVitestLintOptions, EffectVitestPrimitiveGraphDocument } from "../Lint.schemas.ts";
 
 const EffectVitestPackageMetadata = S.Struct({
   name: S.Literal("@effect/vitest"),
   version: S.NonEmptyString,
 });
+
+const EffectVitestPackageMetadataJson = S.fromJsonString(EffectVitestPackageMetadata);
+const decodeEffectVitestPackageMetadata = S.decodeEffect(EffectVitestPackageMetadataJson);
 
 /**
  * Fail when the installed Effect Vitest package does not match the decoded graph header.
@@ -74,7 +79,7 @@ export const verifyEffectVitestPin: {
     const text = yield* fs
       .readFileString(packagePath)
       .pipe(EffectVitestLintError.mapError("Unable to read the installed @effect/vitest package metadata."));
-    const installed = yield* S.decodeEffect(S.fromJsonString(EffectVitestPackageMetadata))(text).pipe(
+    const installed = yield* decodeEffectVitestPackageMetadata(text).pipe(
       Effect.mapError((cause) =>
         EffectVitestLintError.new(
           `Unable to decode installed @effect/vitest package metadata: ${Inspectable.toStringUnknown(cause, 0)}`
@@ -295,12 +300,26 @@ export const diffEffectVitestFindings: {
   };
 });
 
+const reportMembership = Effect.fnUntraced(function* (
+  merged: ReadonlyArray<EffectVitestFinding>,
+  baseline: ReadonlyArray<EffectVitestFinding>
+) {
+  const difference = diffEffectVitestFindings(merged, baseline);
+  if (difference.introduced.length > 0) {
+    yield* Console.error(`[effect-vitest] ${difference.introduced.length} new finding(s)`);
+    return yield* failWithReportedExit("effect-vitest: ratchet failed on new instances.");
+  }
+  yield* Console.log(
+    `[effect-vitest] introduced=${difference.introduced.length} resolved=${difference.resolved.length}`
+  );
+});
+
 /**
  * Run the requested P0c census, baseline, rows, or default-ratchet modes.
  *
  * **Details**
  *
- * The operation verifies the installed rc.112 pin, builds one syntax-only
+ * The operation verifies the installed rc.113 pin, builds one syntax-only
  * project from the D9 paths, and returns a scan receipt distinct from package
  * test timing.
  *
@@ -337,13 +356,14 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
   const census = A.empty<EffectVitestCensusRow>();
   const findings = A.empty<EffectVitestFinding>();
   const encoder = new TextEncoder();
+  const path = yield* Path.Path;
 
   const project = new Project({ skipAddingFilesFromTsConfig: true, skipFileDependencyResolution: true });
   project.addSourceFilesAtPaths(sourcePaths);
   yield* Console.log(`[effect-vitest:phase] projectMs=${(performance.now() - started).toFixed(1)}`);
-  for (const sourceFile of project.getSourceFiles()) {
+  const collectSource = (sourceFile: SourceFile): void => {
     const absolute = sourceFile.getFilePath();
-    const file = Str.replace(`${root}/`, "")(absolute);
+    const file = toPosixPath(path.relative(root, absolute));
     const owner = ownerOf(absolute);
     const kind = isEffectVitestTestFilePath(file) ? "test" : "support";
     const text = sourceFile.getFullText();
@@ -358,7 +378,8 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
     );
     const detected = detectEffectVitestFindings(sourceFile, file, owner);
     findings.push(...(kind === "test" ? detected : A.filter(detected, (finding) => finding.ruleId === "EV003")));
-  }
+  };
+  for (const sourceFile of project.getSourceFiles()) collectSource(sourceFile);
   yield* Console.log(
     `[effect-vitest:phase] detectMs=${(performance.now() - started).toFixed(1)} findings=${findings.length}`
   );
@@ -381,15 +402,18 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
     findings: merged,
   });
 
-  if (options.census) yield* writeEffectVitestCensus(root, A.sort(census, censusOrder));
-  if (options.census)
+  if (options.census) {
+    yield* writeEffectVitestCensus(root, A.sort(census, censusOrder));
     yield* Console.log(`[effect-vitest:phase] censusWriteMs=${(performance.now() - started).toFixed(1)}`);
-  if (options.write) yield* writeEffectVitestInventory(root, document);
-  if (options.write)
+  }
+  if (options.write) {
+    yield* writeEffectVitestInventory(root, document);
     yield* Console.log(`[effect-vitest:phase] inventoryWriteMs=${(performance.now() - started).toFixed(1)}`);
-  if (O.isSome(options.rows)) yield* writeEffectVitestRows(root, options.rows.value, merged);
-  if (O.isSome(options.rows))
+  }
+  if (O.isSome(options.rows)) {
+    yield* writeEffectVitestRows(root, options.rows.value, merged);
     yield* Console.log(`[effect-vitest:phase] rowsWriteMs=${(performance.now() - started).toFixed(1)}`);
+  }
 
   const timing = EffectVitestScanTiming.make({
     scanMs: performance.now() - started,
@@ -405,14 +429,7 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
       O.map(existing, (value) => value.findings),
       A.empty<EffectVitestFinding>
     );
-    const difference = diffEffectVitestFindings(merged, baseline);
-    if (difference.introduced.length > 0) {
-      yield* Console.error(`[effect-vitest] ${difference.introduced.length} new finding(s)`);
-      return yield* failWithReportedExit("effect-vitest: ratchet failed on new instances.");
-    }
-    yield* Console.log(
-      `[effect-vitest] introduced=${difference.introduced.length} resolved=${difference.resolved.length}`
-    );
+    yield* reportMembership(merged, baseline);
   }
   return timing;
 });

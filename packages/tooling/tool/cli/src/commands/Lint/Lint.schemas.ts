@@ -1047,7 +1047,7 @@ export class EffectVitestPrimitiveGraphDocument extends S.Class<EffectVitestPrim
  * ```ts
  * import { EffectVitestInventoryDocument } from "@beep/repo-cli/commands/Lint"
  *
- * const document = EffectVitestInventoryDocument.make({ schemaVersion: "effect-vitest-inventory/v1", effectVitestVersion: "4.0.0-rc.112", scope: [], findings: [] })
+ * const document = EffectVitestInventoryDocument.make({ schemaVersion: "effect-vitest-inventory/v1", effectVitestVersion: "4.0.0-rc.113", scope: [], findings: [] })
  * console.log(document.findings.length)
  * ```
  *
@@ -1321,10 +1321,7 @@ export const makeEffectVitestFindingKey = (finding: EffectVitestFinding): string
       finding.class,
       finding.evidence,
       ...O.match(finding.occurrence, { onNone: A.empty<string>, onSome: (anchor) => [anchor] }),
-      O.getOrElse(
-        O.map(A.last(Str.split("#")(finding.id)), (ordinal) => `#${ordinal}`),
-        () => "#1"
-      ),
+      `#${A.lastNonEmpty(Str.split("#")(finding.id))}`,
     ],
     "::"
   );
@@ -1336,7 +1333,7 @@ export const makeEffectVitestFindingKey = (finding: EffectVitestFinding): string
  *
  * ```ts
  * import { decodeEffectVitestPrimitiveGraphDocument } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const decoded = decodeEffectVitestPrimitiveGraphDocument()({})
  * Effect.runPromiseExit(decoded).then((exit) => console.log(exit._tag)) // "Failure"
@@ -1382,11 +1379,11 @@ export const encodeEffectVitestPrimitiveGraphDocument: {
  *
  * ```ts
  * import { decodeEffectVitestInventoryDocument } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const decoded = decodeEffectVitestInventoryDocument({
  *   schemaVersion: "effect-vitest-inventory/v1",
- *   effectVitestVersion: "4.0.0-rc.112",
+ *   effectVitestVersion: "4.0.0-rc.113",
  *   scope: [],
  *   findings: []
  * })
@@ -1407,11 +1404,11 @@ export const decodeEffectVitestInventoryDocument: {
  *
  * ```ts
  * import { EffectVitestInventoryDocument, encodeEffectVitestInventoryDocument } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const document = EffectVitestInventoryDocument.make({
  *   schemaVersion: "effect-vitest-inventory/v1",
- *   effectVitestVersion: "4.0.0-rc.112",
+ *   effectVitestVersion: "4.0.0-rc.113",
  *   scope: [],
  *   findings: []
  * })
@@ -1437,7 +1434,7 @@ export const encodeEffectVitestInventoryDocument: {
  *
  * ```ts
  * import { EffectVitestFinding, EffectVitestReplacement, encodeEffectVitestFindingJson } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  * import * as Str from "effect/String"
  *

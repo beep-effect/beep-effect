@@ -3,8 +3,8 @@
     "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
     "package": "@beep/architecture-lab-proof",
     "kind": "test",
-    "bytes": 2012,
-    "lines": 51
+    "bytes": 2325,
+    "lines": 61
   },
   {
     "file": "apps/labs/api-docs/test/Catalog.test.ts",
@@ -38,8 +38,8 @@
     "file": "apps/labs/ciops/test/projection.test.ts",
     "package": "@beep/ciops",
     "kind": "test",
-    "bytes": 19733,
-    "lines": 475
+    "bytes": 28242,
+    "lines": 644
   },
   {
     "file": "apps/labs/lejeune-bolt-workbench/test/App.test.tsx",
@@ -52,15 +52,15 @@
     "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
     "package": "@beep/lejeune-bolt-workbench",
     "kind": "test",
-    "bytes": 47072,
-    "lines": 1079
+    "bytes": 47642,
+    "lines": 1081
   },
   {
     "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
     "package": "@beep/lejeune-bolt-workbench",
     "kind": "test",
-    "bytes": 22995,
-    "lines": 465
+    "bytes": 24046,
+    "lines": 479
   },
   {
     "file": "apps/labs/semantica/test/App.test.tsx",
@@ -73,22 +73,22 @@
     "file": "apps/labs/semantica/test/C0Input.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 15826,
-    "lines": 368
+    "bytes": 16184,
+    "lines": 377
   },
   {
     "file": "apps/labs/semantica/test/C0Slice.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 11591,
-    "lines": 241
+    "bytes": 11857,
+    "lines": 250
   },
   {
     "file": "apps/labs/semantica/test/Canary.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 6352,
-    "lines": 167
+    "bytes": 6711,
+    "lines": 176
   },
   {
     "file": "apps/labs/semantica/test/Evaluator.test.ts",
@@ -101,29 +101,29 @@
     "file": "apps/labs/semantica/test/Extractor.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 16379,
-    "lines": 426
+    "bytes": 16470,
+    "lines": 429
   },
   {
     "file": "apps/labs/semantica/test/Fixtures.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 14622,
-    "lines": 345
+    "bytes": 15337,
+    "lines": 365
   },
   {
     "file": "apps/labs/semantica/test/Gold.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 24621,
-    "lines": 569
+    "bytes": 24639,
+    "lines": 565
   },
   {
     "file": "apps/labs/semantica/test/GoldSource.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 11708,
-    "lines": 286
+    "bytes": 12033,
+    "lines": 297
   },
   {
     "file": "apps/labs/semantica/test/Ledger.test.ts",
@@ -136,36 +136,36 @@
     "file": "apps/labs/semantica/test/Projection.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 15100,
-    "lines": 364
+    "bytes": 15171,
+    "lines": 367
   },
   {
     "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 1775,
-    "lines": 36
+    "bytes": 1850,
+    "lines": 37
   },
   {
     "file": "apps/labs/semantica/test/ProviderCache.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 34634,
-    "lines": 789
+    "bytes": 34713,
+    "lines": 790
   },
   {
     "file": "apps/labs/semantica/test/Reasoning.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 8996,
-    "lines": 199
+    "bytes": 9177,
+    "lines": 204
   },
   {
     "file": "apps/labs/semantica/test/Schema.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 50233,
-    "lines": 1426
+    "bytes": 51184,
+    "lines": 1449
   },
   {
     "file": "apps/labs/semantica/test/helpers/CrashProbeChild.ts",
@@ -206,8 +206,8 @@
     "file": "apps/oip-web/test/oip-web.test.tsx",
     "package": "@beep/oip-web",
     "kind": "test",
-    "bytes": 31939,
-    "lines": 867
+    "bytes": 32330,
+    "lines": 891
   },
   {
     "file": "apps/oip-web/test/setup.dom.ts",
@@ -269,7 +269,7 @@
     "file": "apps/professional-desktop/test/chat-contract.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 30210,
+    "bytes": 30207,
     "lines": 636
   },
   {
@@ -339,8 +339,8 @@
     "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 57061,
-    "lines": 1344
+    "bytes": 57422,
+    "lines": 1353
   },
   {
     "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
@@ -353,8 +353,8 @@
     "file": "apps/professional-desktop/test/failure-message.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1992,
-    "lines": 58
+    "bytes": 2042,
+    "lines": 60
   },
   {
     "file": "apps/professional-desktop/test/failure-observability.test.ts",
@@ -437,15 +437,15 @@
     "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 28742,
-    "lines": 582
+    "bytes": 28896,
+    "lines": 588
   },
   {
     "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 24984,
-    "lines": 526
+    "bytes": 25098,
+    "lines": 531
   },
   {
     "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
@@ -528,8 +528,8 @@
     "file": "apps/professional-desktop/test/schema-parity.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 11338,
-    "lines": 250
+    "bytes": 11416,
+    "lines": 255
   },
   {
     "file": "apps/professional-desktop/test/setup.dom.ts",
@@ -549,8 +549,8 @@
     "file": "apps/professional-desktop/test/spike-schema.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3421,
-    "lines": 88
+    "bytes": 3511,
+    "lines": 90
   },
   {
     "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
@@ -591,15 +591,15 @@
     "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3207,
-    "lines": 93
+    "bytes": 5891,
+    "lines": 157
   },
   {
     "file": "apps/professional-desktop/test/tauri-youtube-security.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4861,
-    "lines": 106
+    "bytes": 4943,
+    "lines": 107
   },
   {
     "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
@@ -626,8 +626,8 @@
     "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 7470,
-    "lines": 162
+    "bytes": 7532,
+    "lines": 164
   },
   {
     "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
@@ -689,22 +689,29 @@
     "file": "infra/test/AIMetrics.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 7038,
-    "lines": 183
+    "bytes": 7220,
+    "lines": 186
+  },
+  {
+    "file": "infra/test/AccountCostControls.test.ts",
+    "package": "@beep/infra",
+    "kind": "test",
+    "bytes": 7772,
+    "lines": 167
   },
   {
     "file": "infra/test/CiFleetController.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 25887,
-    "lines": 532
+    "bytes": 29018,
+    "lines": 586
   },
   {
     "file": "infra/test/CiRunners.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 6846,
-    "lines": 158
+    "bytes": 6992,
+    "lines": 161
   },
   {
     "file": "infra/test/CiTurboCache.test.ts",
@@ -717,36 +724,36 @@
     "file": "infra/test/OipWeb.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 7491,
-    "lines": 172
+    "bytes": 7631,
+    "lines": 175
   },
   {
     "file": "infra/test/OpenClaw.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 38858,
-    "lines": 828
+    "bytes": 39268,
+    "lines": 835
   },
   {
     "file": "infra/test/Storybook.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 5224,
+    "bytes": 5289,
     "lines": 122
   },
   {
     "file": "infra/test/schemaParity.ts",
     "package": "@beep/infra",
     "kind": "support",
-    "bytes": 605,
-    "lines": 18
+    "bytes": 759,
+    "lines": 25
   },
   {
     "file": "packages/_internal/db-admin/test/ArchitectureLabMigrationTarget.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 3799,
-    "lines": 101
+    "bytes": 3976,
+    "lines": 108
   },
   {
     "file": "packages/_internal/db-admin/test/index.test.ts",
@@ -794,15 +801,22 @@
     "file": "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 14081,
-    "lines": 314
+    "bytes": 14480,
+    "lines": 323
   },
   {
     "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 14268,
-    "lines": 340
+    "bytes": 14604,
+    "lines": 346
+  },
+  {
+    "file": "packages/_internal/db-admin/test/migrate-on-boot.pglite.test.ts",
+    "package": "@beep/db-admin",
+    "kind": "test",
+    "bytes": 1296,
+    "lines": 28
   },
   {
     "file": "packages/agents/client/test/Chat.layer.test.ts",
@@ -815,8 +829,8 @@
     "file": "packages/agents/client/test/Chat.schema-parity.test.ts",
     "package": "@beep/agents-client",
     "kind": "test",
-    "bytes": 4497,
-    "lines": 125
+    "bytes": 5131,
+    "lines": 138
   },
   {
     "file": "packages/agents/client/test/ProviderInstance.atoms.test.ts",
@@ -850,22 +864,22 @@
     "file": "packages/agents/domain/test/AgentsDomain.test.ts",
     "package": "@beep/agents-domain",
     "kind": "test",
-    "bytes": 14286,
-    "lines": 357
+    "bytes": 15498,
+    "lines": 388
   },
   {
     "file": "packages/agents/domain/test/ProviderInstance.test.ts",
     "package": "@beep/agents-domain",
     "kind": "test",
-    "bytes": 8346,
-    "lines": 212
+    "bytes": 8961,
+    "lines": 228
   },
   {
     "file": "packages/agents/server/test/AnthropicTurnCodec.test.ts",
     "package": "@beep/agents-server",
     "kind": "test",
-    "bytes": 2459,
-    "lines": 57
+    "bytes": 2850,
+    "lines": 71
   },
   {
     "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
@@ -878,8 +892,8 @@
     "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
     "package": "@beep/agents-server",
     "kind": "test",
-    "bytes": 2410,
-    "lines": 82
+    "bytes": 2646,
+    "lines": 91
   },
   {
     "file": "packages/agents/server/test/BlockRepair.test.ts",
@@ -899,36 +913,36 @@
     "file": "packages/agents/server/test/scanChunk.test.ts",
     "package": "@beep/agents-server",
     "kind": "test",
-    "bytes": 2253,
-    "lines": 62
+    "bytes": 2980,
+    "lines": 80
   },
   {
     "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
     "package": "@beep/agents-tables",
     "kind": "test",
-    "bytes": 5064,
-    "lines": 131
+    "bytes": 5420,
+    "lines": 143
   },
   {
     "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
     "package": "@beep/agents-use-cases",
     "kind": "test",
-    "bytes": 6571,
-    "lines": 164
+    "bytes": 6766,
+    "lines": 172
   },
   {
     "file": "packages/agents/use-cases/test/Chat.test.ts",
     "package": "@beep/agents-use-cases",
     "kind": "test",
-    "bytes": 2506,
+    "bytes": 2526,
     "lines": 71
   },
   {
     "file": "packages/agents/use-cases/test/ProfessionalRuntime.test.ts",
     "package": "@beep/agents-use-cases",
     "kind": "test",
-    "bytes": 13079,
-    "lines": 348
+    "bytes": 13274,
+    "lines": 356
   },
   {
     "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
@@ -955,8 +969,8 @@
     "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
     "package": "@beep/architecture-lab-config",
     "kind": "test",
-    "bytes": 3558,
-    "lines": 86
+    "bytes": 4172,
+    "lines": 105
   },
   {
     "file": "packages/architecture-lab/domain/test/TaggedError.equivalence.test.ts",
@@ -969,8 +983,8 @@
     "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
     "package": "@beep/architecture-lab-domain",
     "kind": "test",
-    "bytes": 4392,
-    "lines": 123
+    "bytes": 4560,
+    "lines": 128
   },
   {
     "file": "packages/architecture-lab/domain/test/WorkPriority.test.ts",
@@ -990,7 +1004,7 @@
     "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
     "package": "@beep/architecture-lab-server",
     "kind": "test",
-    "bytes": 3894,
+    "bytes": 3888,
     "lines": 96
   },
   {
@@ -1004,36 +1018,36 @@
     "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
     "package": "@beep/architecture-lab-server",
     "kind": "test",
-    "bytes": 7201,
-    "lines": 154
+    "bytes": 7329,
+    "lines": 155
   },
   {
     "file": "packages/architecture-lab/tables/test/WorkItemTable.test.ts",
     "package": "@beep/architecture-lab-tables",
     "kind": "test",
-    "bytes": 3195,
-    "lines": 83
+    "bytes": 3388,
+    "lines": 90
   },
   {
     "file": "packages/architecture-lab/tables/test/WorkerTable.test.ts",
     "package": "@beep/architecture-lab-tables",
     "kind": "test",
-    "bytes": 2775,
-    "lines": 66
+    "bytes": 2944,
+    "lines": 73
   },
   {
     "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
     "package": "@beep/architecture-lab-ui",
     "kind": "test",
-    "bytes": 4692,
-    "lines": 140
+    "bytes": 5562,
+    "lines": 166
   },
   {
     "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
     "package": "@beep/architecture-lab-use-cases",
     "kind": "test",
-    "bytes": 5493,
-    "lines": 168
+    "bytes": 6455,
+    "lines": 185
   },
   {
     "file": "packages/architecture-lab/use-cases/test/TaggedError.equivalence.test.ts",
@@ -1067,29 +1081,29 @@
     "file": "packages/documents/domain/test/SyncConflict.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 4214,
-    "lines": 102
+    "bytes": 4720,
+    "lines": 112
   },
   {
     "file": "packages/documents/domain/test/SyncCursor.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 3408,
-    "lines": 89
+    "bytes": 3781,
+    "lines": 98
   },
   {
     "file": "packages/documents/domain/test/SyncItem.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 4078,
-    "lines": 103
+    "bytes": 4420,
+    "lines": 112
   },
   {
     "file": "packages/documents/domain/test/SyncOperation.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 4187,
-    "lines": 97
+    "bytes": 4701,
+    "lines": 107
   },
   {
     "file": "packages/documents/domain/test/TaggedError.equivalence.test.ts",
@@ -1102,71 +1116,71 @@
     "file": "packages/documents/domain/test/Taxonomy.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 3402,
-    "lines": 93
+    "bytes": 3635,
+    "lines": 101
   },
   {
     "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 37102,
-    "lines": 1022
+    "bytes": 37185,
+    "lines": 1026
   },
   {
     "file": "packages/documents/server/test/DocumentIntake.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 8883,
-    "lines": 189
+    "bytes": 9227,
+    "lines": 198
   },
   {
     "file": "packages/documents/server/test/FilingDecisionLlm.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 6668,
-    "lines": 178
+    "bytes": 6752,
+    "lines": 180
   },
   {
     "file": "packages/documents/server/test/SyncConflictServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 5164,
-    "lines": 143
+    "bytes": 5247,
+    "lines": 147
   },
   {
     "file": "packages/documents/server/test/SyncCursorServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 3502,
-    "lines": 97
+    "bytes": 3585,
+    "lines": 101
   },
   {
     "file": "packages/documents/server/test/SyncItemServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 5894,
-    "lines": 163
+    "bytes": 5977,
+    "lines": 167
   },
   {
     "file": "packages/documents/server/test/SyncOperationServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 6989,
-    "lines": 181
+    "bytes": 7072,
+    "lines": 185
   },
   {
     "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 11427,
-    "lines": 271
+    "bytes": 12926,
+    "lines": 307
   },
   {
     "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 22621,
-    "lines": 535
+    "bytes": 22704,
+    "lines": 539
   },
   {
     "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
@@ -1179,36 +1193,36 @@
     "file": "packages/documents/server/test/integration/SyncRepositoriesDrizzle.pglite.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 13147,
-    "lines": 302
+    "bytes": 13230,
+    "lines": 306
   },
   {
     "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
     "package": "@beep/documents-tables",
     "kind": "test",
-    "bytes": 5729,
-    "lines": 124
+    "bytes": 5693,
+    "lines": 125
   },
   {
     "file": "packages/documents/tables/test/SyncCursorTable.test.ts",
     "package": "@beep/documents-tables",
     "kind": "test",
-    "bytes": 4286,
-    "lines": 106
+    "bytes": 4250,
+    "lines": 107
   },
   {
     "file": "packages/documents/tables/test/SyncItemTable.test.ts",
     "package": "@beep/documents-tables",
     "kind": "test",
-    "bytes": 6476,
-    "lines": 146
+    "bytes": 6424,
+    "lines": 147
   },
   {
     "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
     "package": "@beep/documents-tables",
     "kind": "test",
-    "bytes": 5919,
-    "lines": 128
+    "bytes": 5887,
+    "lines": 129
   },
   {
     "file": "packages/documents/use-cases/test/Document.errors.test.ts",
@@ -1221,43 +1235,43 @@
     "file": "packages/documents/use-cases/test/FilingDecision.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 1310,
-    "lines": 34
+    "bytes": 1715,
+    "lines": 44
   },
   {
     "file": "packages/documents/use-cases/test/Sync.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 9660,
-    "lines": 259
+    "bytes": 10132,
+    "lines": 270
   },
   {
     "file": "packages/documents/use-cases/test/SyncConflict.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 6359,
-    "lines": 161
+    "bytes": 6516,
+    "lines": 167
   },
   {
     "file": "packages/documents/use-cases/test/SyncCursor.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 4815,
-    "lines": 131
+    "bytes": 4982,
+    "lines": 137
   },
   {
     "file": "packages/documents/use-cases/test/SyncItem.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 7720,
-    "lines": 206
+    "bytes": 7803,
+    "lines": 210
   },
   {
     "file": "packages/documents/use-cases/test/SyncOperation.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 8993,
-    "lines": 221
+    "bytes": 9132,
+    "lines": 227
   },
   {
     "file": "packages/documents/use-cases/test/TaggedError.equivalence.test.ts",
@@ -1277,8 +1291,8 @@
     "file": "packages/drivers/acp/test/agent.test.ts",
     "package": "@beep/acp",
     "kind": "test",
-    "bytes": 10070,
-    "lines": 264
+    "bytes": 9982,
+    "lines": 258
   },
   {
     "file": "packages/drivers/acp/test/fixtures/acp-mock-peer.ts",
@@ -1305,22 +1319,22 @@
     "file": "packages/drivers/acp/test/protocol.test.ts",
     "package": "@beep/acp",
     "kind": "test",
-    "bytes": 21805,
-    "lines": 633
+    "bytes": 21654,
+    "lines": 626
   },
   {
     "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
     "package": "@beep/ai-provider-cli",
     "kind": "test",
-    "bytes": 5655,
-    "lines": 170
+    "bytes": 6305,
+    "lines": 177
   },
   {
     "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
     "package": "@beep/ai-provider-cli",
     "kind": "test",
-    "bytes": 11095,
-    "lines": 296
+    "bytes": 11228,
+    "lines": 299
   },
   {
     "file": "packages/drivers/ai-provider-cli/test/AiProviderCliHome.equivalence.test.ts",
@@ -1340,22 +1354,22 @@
     "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
     "package": "@beep/anthropic",
     "kind": "test",
-    "bytes": 3459,
-    "lines": 88
+    "bytes": 3958,
+    "lines": 96
   },
   {
     "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
     "package": "@beep/anthropic",
     "kind": "test",
-    "bytes": 4441,
-    "lines": 114
+    "bytes": 4322,
+    "lines": 110
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 14129,
-    "lines": 365
+    "bytes": 14294,
+    "lines": 372
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
@@ -1375,15 +1389,15 @@
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningArtifactPrivacy.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 1836,
-    "lines": 55
+    "bytes": 2006,
+    "lines": 59
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningIntent.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 3537,
-    "lines": 91
+    "bytes": 3894,
+    "lines": 100
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningInventory.test.ts",
@@ -1396,8 +1410,8 @@
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningPlanner.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 18866,
-    "lines": 516
+    "bytes": 19319,
+    "lines": 525
   },
   {
     "file": "packages/drivers/box-provisioning/test/fixtures.ts",
@@ -1417,8 +1431,8 @@
     "file": "packages/drivers/box/test/Box.service.test.ts",
     "package": "@beep/box",
     "kind": "test",
-    "bytes": 35373,
-    "lines": 1008
+    "bytes": 36048,
+    "lines": 1031
   },
   {
     "file": "packages/drivers/box/test/integration/Box.live.test.ts",
@@ -1452,8 +1466,8 @@
     "file": "packages/drivers/discord/test/Discord.service.test.ts",
     "package": "@beep/discord",
     "kind": "test",
-    "bytes": 10236,
-    "lines": 288
+    "bytes": 10580,
+    "lines": 295
   },
   {
     "file": "packages/drivers/doc-text/test/DocText.equivalence.test.ts",
@@ -1466,8 +1480,8 @@
     "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
     "package": "@beep/doc-text",
     "kind": "test",
-    "bytes": 8337,
-    "lines": 230
+    "bytes": 8689,
+    "lines": 246
   },
   {
     "file": "packages/drivers/drizzle/test/Drizzle.equivalence.test.ts",
@@ -1480,8 +1494,8 @@
     "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
     "package": "@beep/drizzle",
     "kind": "test",
-    "bytes": 16458,
-    "lines": 459
+    "bytes": 17668,
+    "lines": 491
   },
   {
     "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
@@ -1501,8 +1515,8 @@
     "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
     "package": "@beep/duckdb",
     "kind": "test",
-    "bytes": 47072,
-    "lines": 1248
+    "bytes": 47281,
+    "lines": 1254
   },
   {
     "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
@@ -1515,8 +1529,8 @@
     "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
     "package": "@beep/ecfr",
     "kind": "test",
-    "bytes": 14915,
-    "lines": 379
+    "bytes": 14829,
+    "lines": 374
   },
   {
     "file": "packages/drivers/exiftool/test/Exiftool.equivalence.test.ts",
@@ -1529,8 +1543,8 @@
     "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
     "package": "@beep/exiftool",
     "kind": "test",
-    "bytes": 8260,
-    "lines": 258
+    "bytes": 9042,
+    "lines": 281
   },
   {
     "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
@@ -1557,8 +1571,15 @@
     "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
     "package": "@beep/face-detection",
     "kind": "test",
-    "bytes": 8655,
-    "lines": 241
+    "bytes": 9482,
+    "lines": 266
+  },
+  {
+    "file": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts",
+    "package": "@beep/face-detection",
+    "kind": "test",
+    "bytes": 7982,
+    "lines": 176
   },
   {
     "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
@@ -1571,8 +1592,8 @@
     "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
     "package": "@beep/ffmpeg",
     "kind": "test",
-    "bytes": 25242,
-    "lines": 792
+    "bytes": 25540,
+    "lines": 800
   },
   {
     "file": "packages/drivers/ffmpeg/test/FFmpeg.equivalence.test.ts",
@@ -1592,8 +1613,8 @@
     "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
     "package": "@beep/ffmpeg",
     "kind": "test",
-    "bytes": 13886,
-    "lines": 434
+    "bytes": 14527,
+    "lines": 456
   },
   {
     "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
@@ -1613,8 +1634,8 @@
     "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
     "package": "@beep/firecrawl",
     "kind": "test",
-    "bytes": 20641,
-    "lines": 523
+    "bytes": 21751,
+    "lines": 544
   },
   {
     "file": "packages/drivers/firecrawl/test/integration/Firecrawl.live.test.ts",
@@ -1634,22 +1655,22 @@
     "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
     "package": "@beep/freshbooks",
     "kind": "test",
-    "bytes": 8206,
-    "lines": 227
+    "bytes": 10665,
+    "lines": 280
   },
   {
     "file": "packages/drivers/gov-legal-mcp/test/GovLegalMcp.equivalence.test.ts",
     "package": "@beep/gov-legal-mcp",
     "kind": "test",
-    "bytes": 3886,
-    "lines": 96
+    "bytes": 4687,
+    "lines": 119
   },
   {
     "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
     "package": "@beep/gov-legal-mcp",
     "kind": "test",
-    "bytes": 26875,
-    "lines": 658
+    "bytes": 28814,
+    "lines": 691
   },
   {
     "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
@@ -1669,8 +1690,8 @@
     "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
     "package": "@beep/govinfo",
     "kind": "test",
-    "bytes": 13563,
-    "lines": 377
+    "bytes": 14590,
+    "lines": 403
   },
   {
     "file": "packages/drivers/graph-3d/test/Graph3D.equivalence.test.ts",
@@ -1697,8 +1718,8 @@
     "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
     "package": "@beep/hubspot",
     "kind": "test",
-    "bytes": 12918,
-    "lines": 359
+    "bytes": 12839,
+    "lines": 361
   },
   {
     "file": "packages/drivers/libpff/test/Libpff.eml.test.ts",
@@ -1718,22 +1739,22 @@
     "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
     "package": "@beep/libpff",
     "kind": "test",
-    "bytes": 55638,
-    "lines": 1436
+    "bytes": 55851,
+    "lines": 1443
   },
   {
     "file": "packages/drivers/libpff/test/Libpff.service.test.ts",
     "package": "@beep/libpff",
     "kind": "test",
-    "bytes": 8030,
-    "lines": 187
+    "bytes": 7941,
+    "lines": 188
   },
   {
     "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
     "package": "@beep/libpff",
     "kind": "test",
-    "bytes": 8012,
-    "lines": 182
+    "bytes": 8033,
+    "lines": 185
   },
   {
     "file": "packages/drivers/m365-mcp/test/SanitizedSpan.test.ts",
@@ -1746,22 +1767,22 @@
     "file": "packages/drivers/m365-mcp/test/Server.test.ts",
     "package": "@beep/m365-mcp",
     "kind": "test",
-    "bytes": 10208,
-    "lines": 291
+    "bytes": 10441,
+    "lines": 297
   },
   {
     "file": "packages/drivers/m365/test/M365.service.test.ts",
     "package": "@beep/m365",
     "kind": "test",
-    "bytes": 27158,
-    "lines": 719
+    "bytes": 28036,
+    "lines": 735
   },
   {
     "file": "packages/drivers/m365/test/integration/M365.live.test.ts",
     "package": "@beep/m365",
     "kind": "test",
-    "bytes": 3063,
-    "lines": 83
+    "bytes": 3129,
+    "lines": 85
   },
   {
     "file": "packages/drivers/n3/test/N3.equivalence.test.ts",
@@ -1774,8 +1795,8 @@
     "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
     "package": "@beep/n3",
     "kind": "test",
-    "bytes": 5264,
-    "lines": 121
+    "bytes": 5306,
+    "lines": 123
   },
   {
     "file": "packages/drivers/nlp-mcp/test/NlpMcp.equivalence.test.ts",
@@ -1809,8 +1830,8 @@
     "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
     "package": "@beep/nlp-mcp",
     "kind": "test",
-    "bytes": 6026,
-    "lines": 175
+    "bytes": 6230,
+    "lines": 183
   },
   {
     "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
@@ -1837,8 +1858,8 @@
     "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
     "package": "@beep/obs",
     "kind": "test",
-    "bytes": 14121,
-    "lines": 374
+    "bytes": 14033,
+    "lines": 372
   },
   {
     "file": "packages/drivers/obs/test/integration/Obs.live.test.ts",
@@ -1858,14 +1879,14 @@
     "file": "packages/drivers/onepassword-cli/test/OnePasswordCli.service.test.ts",
     "package": "@beep/onepassword-cli",
     "kind": "test",
-    "bytes": 9269,
-    "lines": 245
+    "bytes": 10246,
+    "lines": 254
   },
   {
     "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
     "package": "@beep/openai-compat",
     "kind": "test",
-    "bytes": 33146,
+    "bytes": 33088,
     "lines": 953
   },
   {
@@ -1886,8 +1907,8 @@
     "file": "packages/drivers/openai/test/OpenAi.test.ts",
     "package": "@beep/openai",
     "kind": "test",
-    "bytes": 3640,
-    "lines": 81
+    "bytes": 3578,
+    "lines": 78
   },
   {
     "file": "packages/drivers/openclaw/test/Openclaw.equivalence.test.ts",
@@ -1900,22 +1921,22 @@
     "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 18985,
-    "lines": 442
+    "bytes": 20000,
+    "lines": 452
   },
   {
     "file": "packages/drivers/openclaw/test/OpenclawCli.service.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 22560,
-    "lines": 595
+    "bytes": 23162,
+    "lines": 603
   },
   {
     "file": "packages/drivers/openclaw/test/OpenclawIntent.models.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 10057,
-    "lines": 292
+    "bytes": 10979,
+    "lines": 301
   },
   {
     "file": "packages/drivers/openclaw/test/OpenclawProbe.service.test.ts",
@@ -1928,15 +1949,15 @@
     "file": "packages/drivers/openclaw/test/OpenclawRender.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 12526,
-    "lines": 352
+    "bytes": 12682,
+    "lines": 356
   },
   {
     "file": "packages/drivers/openclaw/test/OpenclawSystemd.service.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 6920,
-    "lines": 175
+    "bytes": 7047,
+    "lines": 178
   },
   {
     "file": "packages/drivers/openclaw/test/fixtures/golden-intent.expected.ts",
@@ -1977,8 +1998,8 @@
     "file": "packages/drivers/pacer/test/Pacer.test.ts",
     "package": "@beep/pacer",
     "kind": "test",
-    "bytes": 15995,
-    "lines": 385
+    "bytes": 16146,
+    "lines": 390
   },
   {
     "file": "packages/drivers/pglite/test/Pglite.equivalence.test.ts",
@@ -1991,8 +2012,8 @@
     "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
     "package": "@beep/pglite",
     "kind": "test",
-    "bytes": 3061,
-    "lines": 79
+    "bytes": 3076,
+    "lines": 80
   },
   {
     "file": "packages/drivers/pglite/test/integration/PgliteClient.persistent.test.ts",
@@ -2012,8 +2033,8 @@
     "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
     "package": "@beep/phoenix",
     "kind": "test",
-    "bytes": 10214,
-    "lines": 289
+    "bytes": 10518,
+    "lines": 297
   },
   {
     "file": "packages/drivers/postgres/test/Postgres.equivalence.test.ts",
@@ -2026,8 +2047,8 @@
     "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
     "package": "@beep/postgres",
     "kind": "test",
-    "bytes": 20350,
-    "lines": 598
+    "bytes": 20578,
+    "lines": 607
   },
   {
     "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
@@ -2068,8 +2089,8 @@
     "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
     "package": "@beep/rdf-canonize",
     "kind": "test",
-    "bytes": 7530,
-    "lines": 212
+    "bytes": 8131,
+    "lines": 233
   },
   {
     "file": "packages/drivers/runpod/test/Runpod.equivalence.test.ts",
@@ -2082,8 +2103,8 @@
     "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
     "package": "@beep/runpod",
     "kind": "test",
-    "bytes": 14859,
-    "lines": 433
+    "bytes": 15229,
+    "lines": 449
   },
   {
     "file": "packages/drivers/runpod/test/integration/Runpod.live.test.ts",
@@ -2103,8 +2124,8 @@
     "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
     "package": "@beep/sanity",
     "kind": "test",
-    "bytes": 9987,
-    "lines": 277
+    "bytes": 10108,
+    "lines": 283
   },
   {
     "file": "packages/drivers/shacl/test/Shacl.equivalence.test.ts",
@@ -2152,36 +2173,36 @@
     "file": "packages/drivers/tika/test/Tika.server.test.ts",
     "package": "@beep/tika",
     "kind": "test",
-    "bytes": 21160,
-    "lines": 571
+    "bytes": 21412,
+    "lines": 582
   },
   {
     "file": "packages/drivers/tika/test/Tika.service.test.ts",
     "package": "@beep/tika",
     "kind": "test",
-    "bytes": 6252,
+    "bytes": 6196,
     "lines": 165
   },
   {
     "file": "packages/drivers/tika/test/Tika.tikaapp.test.ts",
     "package": "@beep/tika",
     "kind": "test",
-    "bytes": 10387,
-    "lines": 274
+    "bytes": 10492,
+    "lines": 278
   },
   {
     "file": "packages/drivers/tika/test/fixtures.ts",
     "package": "@beep/tika",
     "kind": "support",
-    "bytes": 5001,
-    "lines": 137
+    "bytes": 5043,
+    "lines": 139
   },
   {
     "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
     "package": "@beep/tika",
     "kind": "test",
-    "bytes": 6883,
-    "lines": 201
+    "bytes": 6982,
+    "lines": 204
   },
   {
     "file": "packages/drivers/tika/test/integration/live-fixtures.ts",
@@ -2194,8 +2215,8 @@
     "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
     "package": "@beep/uspto-mcp",
     "kind": "test",
-    "bytes": 12977,
-    "lines": 329
+    "bytes": 13719,
+    "lines": 343
   },
   {
     "file": "packages/drivers/uspto/test/Uspto.equivalence.test.ts",
@@ -2208,8 +2229,8 @@
     "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
     "package": "@beep/uspto",
     "kind": "test",
-    "bytes": 11873,
-    "lines": 317
+    "bytes": 11876,
+    "lines": 319
   },
   {
     "file": "packages/drivers/venice-ai/test/VeniceAI.equivalence.test.ts",
@@ -2222,8 +2243,8 @@
     "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
     "package": "@beep/venice-ai",
     "kind": "test",
-    "bytes": 39954,
-    "lines": 1106
+    "bytes": 39883,
+    "lines": 1107
   },
   {
     "file": "packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts",
@@ -2278,8 +2299,8 @@
     "file": "packages/drivers/wink/test/ToolValidation.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 7887,
-    "lines": 220
+    "bytes": 9056,
+    "lines": 239
   },
   {
     "file": "packages/drivers/wink/test/Wink.equivalence.test.ts",
@@ -2292,8 +2313,8 @@
     "file": "packages/drivers/wink/test/Wink.models.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 935,
-    "lines": 20
+    "bytes": 1134,
+    "lines": 26
   },
   {
     "file": "packages/drivers/wink/test/WinkEngineRef.test.ts",
@@ -2320,8 +2341,8 @@
     "file": "packages/drivers/xai/test/XAi.service.test.ts",
     "package": "@beep/xai",
     "kind": "test",
-    "bytes": 28525,
-    "lines": 762
+    "bytes": 28903,
+    "lines": 772
   },
   {
     "file": "packages/ecosystem/effect-drizzle/test/TaggedErrors.equivalence.test.ts",
@@ -2432,8 +2453,8 @@
     "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
     "package": "@beep/epistemic-client",
     "kind": "test",
-    "bytes": 17364,
-    "lines": 443
+    "bytes": 17543,
+    "lines": 447
   },
   {
     "file": "packages/epistemic/client/test/Protocol.test.ts",
@@ -2446,15 +2467,15 @@
     "file": "packages/epistemic/config/test/Config.test.ts",
     "package": "@beep/epistemic-config",
     "kind": "test",
-    "bytes": 5645,
-    "lines": 148
+    "bytes": 5705,
+    "lines": 150
   },
   {
     "file": "packages/epistemic/domain/test/Contradiction.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 19834,
-    "lines": 450
+    "bytes": 21895,
+    "lines": 537
   },
   {
     "file": "packages/epistemic/domain/test/EntityMaterialization.test.ts",
@@ -2467,22 +2488,22 @@
     "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 10025,
-    "lines": 290
+    "bytes": 11081,
+    "lines": 320
   },
   {
     "file": "packages/epistemic/domain/test/EvidenceVerification.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 6008,
-    "lines": 151
+    "bytes": 6784,
+    "lines": 169
   },
   {
     "file": "packages/epistemic/domain/test/ExecutionAuthority.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 19626,
-    "lines": 499
+    "bytes": 20253,
+    "lines": 513
   },
   {
     "file": "packages/epistemic/domain/test/LogicalEdgeIdentity.test.ts",
@@ -2502,8 +2523,8 @@
     "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 4250,
-    "lines": 105
+    "bytes": 8851,
+    "lines": 226
   },
   {
     "file": "packages/epistemic/server/test/ContradictionTriage.observability.test.ts",
@@ -2551,15 +2572,15 @@
     "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 26722,
-    "lines": 635
+    "bytes": 26801,
+    "lines": 638
   },
   {
     "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 55414,
-    "lines": 1328
+    "bytes": 55504,
+    "lines": 1330
   },
   {
     "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
@@ -2600,22 +2621,22 @@
     "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
     "package": "@beep/epistemic-tables",
     "kind": "test",
-    "bytes": 17287,
-    "lines": 474
+    "bytes": 17744,
+    "lines": 488
   },
   {
     "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
     "package": "@beep/epistemic-tables",
     "kind": "test",
-    "bytes": 25443,
-    "lines": 597
+    "bytes": 26213,
+    "lines": 613
   },
   {
     "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
     "package": "@beep/epistemic-tables",
     "kind": "test",
-    "bytes": 10533,
-    "lines": 262
+    "bytes": 11194,
+    "lines": 275
   },
   {
     "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
@@ -2635,15 +2656,15 @@
     "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
     "package": "@beep/epistemic-ui",
     "kind": "test",
-    "bytes": 27521,
-    "lines": 762
+    "bytes": 27917,
+    "lines": 774
   },
   {
     "file": "packages/epistemic/ui/test/EvidenceSourcePanel.test.tsx",
     "package": "@beep/epistemic-ui",
     "kind": "test",
-    "bytes": 1723,
-    "lines": 52
+    "bytes": 2008,
+    "lines": 59
   },
   {
     "file": "packages/epistemic/use-cases/test/ClaimDisposition.test.ts",
@@ -2656,36 +2677,36 @@
     "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 3145,
-    "lines": 69
+    "bytes": 3449,
+    "lines": 78
   },
   {
     "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 9287,
-    "lines": 239
+    "bytes": 10778,
+    "lines": 276
   },
   {
     "file": "packages/epistemic/use-cases/test/EdgeAuthorityCommands.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 4644,
-    "lines": 126
+    "bytes": 5385,
+    "lines": 143
   },
   {
     "file": "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 6529,
-    "lines": 162
+    "bytes": 6957,
+    "lines": 173
   },
   {
     "file": "packages/epistemic/use-cases/test/ExecutionLedger.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 3782,
-    "lines": 95
+    "bytes": 3838,
+    "lines": 97
   },
   {
     "file": "packages/epistemic/use-cases/test/TaggedError.equivalence.test.ts",
@@ -2698,8 +2719,8 @@
     "file": "packages/foundation/capability/api-transport/test/EgressDenied.test.ts",
     "package": "@beep/api-transport",
     "kind": "test",
-    "bytes": 910,
-    "lines": 24
+    "bytes": 1021,
+    "lines": 27
   },
   {
     "file": "packages/foundation/capability/api-transport/test/TaggedError.equivalence.test.ts",
@@ -2712,8 +2733,8 @@
     "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
     "package": "@beep/api-transport",
     "kind": "test",
-    "bytes": 5964,
-    "lines": 154
+    "bytes": 6566,
+    "lines": 173
   },
   {
     "file": "packages/foundation/capability/chalk/test/TaggedError.equivalence.test.ts",
@@ -2726,22 +2747,22 @@
     "file": "packages/foundation/capability/chalk/test/index.test.ts",
     "package": "@beep/chalk",
     "kind": "test",
-    "bytes": 11564,
-    "lines": 306
+    "bytes": 11875,
+    "lines": 315
   },
   {
     "file": "packages/foundation/capability/colors/test/index.test.ts",
     "package": "@beep/colors",
     "kind": "test",
-    "bytes": 5151,
-    "lines": 193
+    "bytes": 5476,
+    "lines": 202
   },
   {
     "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
     "package": "@beep/file-processing",
     "kind": "test",
-    "bytes": 12982,
-    "lines": 318
+    "bytes": 14827,
+    "lines": 387
   },
   {
     "file": "packages/foundation/capability/file-processing/test/PathSafety.test.ts",
@@ -2754,8 +2775,8 @@
     "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
     "package": "@beep/file-processing",
     "kind": "test",
-    "bytes": 5663,
-    "lines": 136
+    "bytes": 7573,
+    "lines": 182
   },
   {
     "file": "packages/foundation/capability/file-processing/test/TaggedError.equivalence.test.ts",
@@ -2768,15 +2789,15 @@
     "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 18070,
-    "lines": 505
+    "bytes": 19212,
+    "lines": 532
   },
   {
     "file": "packages/foundation/capability/langextract/test/Extraction.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 7751,
-    "lines": 217
+    "bytes": 8280,
+    "lines": 230
   },
   {
     "file": "packages/foundation/capability/langextract/test/Handoff.test.ts",
@@ -2803,49 +2824,49 @@
     "file": "packages/foundation/capability/langextract/test/VerifiedSpanHistory.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 26990,
-    "lines": 677
+    "bytes": 27536,
+    "lines": 691
   },
   {
     "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 14791,
-    "lines": 392
+    "bytes": 17170,
+    "lines": 443
   },
   {
     "file": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
     "package": "@beep/mcp-kit",
     "kind": "test",
-    "bytes": 5063,
-    "lines": 138
+    "bytes": 5086,
+    "lines": 140
   },
   {
     "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
     "package": "@beep/mcp-kit",
     "kind": "test",
-    "bytes": 5141,
-    "lines": 144
+    "bytes": 4919,
+    "lines": 142
   },
   {
     "file": "packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts",
     "package": "@beep/mcp-kit",
     "kind": "test",
-    "bytes": 2913,
-    "lines": 85
+    "bytes": 5648,
+    "lines": 145
   },
   {
     "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
     "package": "@beep/mcp-kit",
     "kind": "test",
-    "bytes": 11547,
-    "lines": 275
+    "bytes": 12565,
+    "lines": 298
   },
   {
     "file": "packages/foundation/capability/mcp-kit/test/TierGate.test.ts",
     "package": "@beep/mcp-kit",
     "kind": "test",
-    "bytes": 10258,
+    "bytes": 10115,
     "lines": 258
   },
   {
@@ -2866,36 +2887,36 @@
     "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 4938,
-    "lines": 132
+    "bytes": 4795,
+    "lines": 131
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Backend/NLPBackend.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 5160,
-    "lines": 135
+    "bytes": 5107,
+    "lines": 136
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 6575,
-    "lines": 179
+    "bytes": 6347,
+    "lines": 176
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Graph/EffectGraph.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 4600,
-    "lines": 140
+    "bytes": 4442,
+    "lines": 138
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 12392,
-    "lines": 331
+    "bytes": 12685,
+    "lines": 345
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Graph/TextGraph.test.ts",
@@ -2922,8 +2943,8 @@
     "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 3564,
-    "lines": 92
+    "bytes": 3480,
+    "lines": 90
   },
   {
     "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
@@ -2943,36 +2964,36 @@
     "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 8470,
-    "lines": 203
+    "bytes": 8970,
+    "lines": 217
   },
   {
     "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 787,
-    "lines": 19
+    "bytes": 950,
+    "lines": 22
   },
   {
     "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 2042,
-    "lines": 65
+    "bytes": 2091,
+    "lines": 62
   },
   {
     "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 1585,
-    "lines": 41
+    "bytes": 2308,
+    "lines": 60
   },
   {
     "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 4678,
-    "lines": 140
+    "bytes": 4984,
+    "lines": 150
   },
   {
     "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
@@ -2985,15 +3006,15 @@
     "file": "packages/foundation/capability/observability/test/Logging.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 3189,
-    "lines": 94
+    "bytes": 3810,
+    "lines": 110
   },
   {
     "file": "packages/foundation/capability/observability/test/Metric.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 4412,
-    "lines": 146
+    "bytes": 4754,
+    "lines": 156
   },
   {
     "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
@@ -3006,8 +3027,8 @@
     "file": "packages/foundation/capability/observability/test/Observed.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 2315,
-    "lines": 72
+    "bytes": 3074,
+    "lines": 93
   },
   {
     "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
@@ -3020,8 +3041,8 @@
     "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 4278,
-    "lines": 132
+    "bytes": 4635,
+    "lines": 143
   },
   {
     "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
@@ -3062,8 +3083,8 @@
     "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
     "package": "@beep/semantic-web",
     "kind": "test",
-    "bytes": 11312,
-    "lines": 296
+    "bytes": 13126,
+    "lines": 339
   },
   {
     "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts",
@@ -3076,8 +3097,8 @@
     "file": "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
     "package": "@beep/semantic-web",
     "kind": "test",
-    "bytes": 13313,
-    "lines": 339
+    "bytes": 14558,
+    "lines": 356
   },
   {
     "file": "packages/foundation/capability/semantic-web/test/TaggedError.equivalence.test.ts",
@@ -3097,8 +3118,8 @@
     "file": "packages/foundation/modeling/html/test/Html.browser-conformance.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 19982,
-    "lines": 602
+    "bytes": 20027,
+    "lines": 605
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.browser-import.test.ts",
@@ -3111,22 +3132,22 @@
     "file": "packages/foundation/modeling/html/test/Html.conformance-annotation.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 3986,
-    "lines": 87
+    "bytes": 4039,
+    "lines": 89
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 64037,
-    "lines": 1677
+    "bytes": 65873,
+    "lines": 1719
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 14318,
-    "lines": 381
+    "bytes": 14358,
+    "lines": 383
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.entrypoints.test.ts",
@@ -3139,15 +3160,15 @@
     "file": "packages/foundation/modeling/html/test/Html.form-control.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 6762,
-    "lines": 152
+    "bytes": 7626,
+    "lines": 176
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.generator.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 10147,
-    "lines": 267
+    "bytes": 10213,
+    "lines": 269
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.heading-conformance.test.ts",
@@ -3160,8 +3181,8 @@
     "file": "packages/foundation/modeling/html/test/Html.microsyntax.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 11509,
-    "lines": 283
+    "bytes": 13544,
+    "lines": 332
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts",
@@ -3174,36 +3195,36 @@
     "file": "packages/foundation/modeling/html/test/Html.script.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 11188,
-    "lines": 279
+    "bytes": 11633,
+    "lines": 290
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.security.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 18112,
-    "lines": 505
+    "bytes": 18895,
+    "lines": 525
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.source-size.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 9389,
-    "lines": 337
+    "bytes": 10187,
+    "lines": 367
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.srcset.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 5398,
-    "lines": 154
+    "bytes": 6102,
+    "lines": 179
   },
   {
     "file": "packages/foundation/modeling/html/test/Html.test.ts",
     "package": "@beep/html",
     "kind": "test",
-    "bytes": 10356,
-    "lines": 299
+    "bytes": 10962,
+    "lines": 311
   },
   {
     "file": "packages/foundation/modeling/html/test/TaggedError.equivalence.test.ts",
@@ -3223,22 +3244,22 @@
     "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
     "package": "@beep/identity",
     "kind": "test",
-    "bytes": 3774,
-    "lines": 110
+    "bytes": 5043,
+    "lines": 142
   },
   {
     "file": "packages/foundation/modeling/identity/test/Fibered.test.ts",
     "package": "@beep/identity",
     "kind": "test",
-    "bytes": 6308,
-    "lines": 176
+    "bytes": 7085,
+    "lines": 198
   },
   {
     "file": "packages/foundation/modeling/identity/test/Identity.test.ts",
     "package": "@beep/identity",
     "kind": "test",
-    "bytes": 13302,
-    "lines": 338
+    "bytes": 13854,
+    "lines": 349
   },
   {
     "file": "packages/foundation/modeling/identity/test/IdentityRegistry.test.ts",
@@ -3265,8 +3286,8 @@
     "file": "packages/foundation/modeling/identity/test/PnLocal.test.ts",
     "package": "@beep/identity",
     "kind": "test",
-    "bytes": 4006,
-    "lines": 133
+    "bytes": 6867,
+    "lines": 189
   },
   {
     "file": "packages/foundation/modeling/identity/test/TaggedError.equivalence.test.ts",
@@ -3286,8 +3307,8 @@
     "file": "packages/foundation/modeling/identity/test/Vocab.test.ts",
     "package": "@beep/identity",
     "kind": "test",
-    "bytes": 3595,
-    "lines": 92
+    "bytes": 3949,
+    "lines": 101
   },
   {
     "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
@@ -3307,15 +3328,15 @@
     "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 26875,
-    "lines": 780
+    "bytes": 27614,
+    "lines": 807
   },
   {
     "file": "packages/foundation/modeling/lexical/test/Lexical.conformance-annotation.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 2285,
-    "lines": 53
+    "bytes": 2343,
+    "lines": 55
   },
   {
     "file": "packages/foundation/modeling/lexical/test/Lexical.conformance.test.ts",
@@ -3328,15 +3349,15 @@
     "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 30633,
-    "lines": 903
+    "bytes": 34156,
+    "lines": 992
   },
   {
     "file": "packages/foundation/modeling/lexical/test/Lexical.strict-invariants.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 6165,
-    "lines": 218
+    "bytes": 6257,
+    "lines": 220
   },
   {
     "file": "packages/foundation/modeling/lexical/test/TaggedError.equivalence.test.ts",
@@ -3356,22 +3377,22 @@
     "file": "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts",
     "package": "@beep/md",
     "kind": "test",
-    "bytes": 3281,
-    "lines": 62
+    "bytes": 3329,
+    "lines": 64
   },
   {
     "file": "packages/foundation/modeling/md/test/Md.conformance.test.ts",
     "package": "@beep/md",
     "kind": "test",
-    "bytes": 15728,
-    "lines": 380
+    "bytes": 16642,
+    "lines": 402
   },
   {
     "file": "packages/foundation/modeling/md/test/Md.test.ts",
     "package": "@beep/md",
     "kind": "test",
-    "bytes": 57637,
-    "lines": 1302
+    "bytes": 62223,
+    "lines": 1418
   },
   {
     "file": "packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts",
@@ -3384,22 +3405,22 @@
     "file": "packages/foundation/modeling/nlp/test/Algebra/Monoid.test.ts",
     "package": "@beep/nlp",
     "kind": "test",
-    "bytes": 4663,
-    "lines": 127
+    "bytes": 5334,
+    "lines": 150
   },
   {
     "file": "packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
     "package": "@beep/nlp",
     "kind": "test",
-    "bytes": 6918,
-    "lines": 188
+    "bytes": 8849,
+    "lines": 241
   },
   {
     "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
     "package": "@beep/nlp",
     "kind": "test",
-    "bytes": 8233,
-    "lines": 240
+    "bytes": 8902,
+    "lines": 254
   },
   {
     "file": "packages/foundation/modeling/nlp/test/Graph/GraphOps.test.ts",
@@ -3412,22 +3433,22 @@
     "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
     "package": "@beep/nlp",
     "kind": "test",
-    "bytes": 7521,
-    "lines": 198
+    "bytes": 8407,
+    "lines": 210
   },
   {
     "file": "packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts",
     "package": "@beep/nlp",
     "kind": "test",
-    "bytes": 7396,
-    "lines": 209
+    "bytes": 8812,
+    "lines": 241
   },
   {
     "file": "packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts",
     "package": "@beep/nlp",
     "kind": "test",
-    "bytes": 3859,
-    "lines": 122
+    "bytes": 4265,
+    "lines": 129
   },
   {
     "file": "packages/foundation/modeling/nlp/test/Operations/Composable.test.ts",
@@ -3440,8 +3461,8 @@
     "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
     "package": "@beep/nlp",
     "kind": "test",
-    "bytes": 8944,
-    "lines": 213
+    "bytes": 9983,
+    "lines": 232
   },
   {
     "file": "packages/foundation/modeling/nlp/test/TextVariants.test.ts",
@@ -3461,15 +3482,15 @@
     "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
     "package": "@beep/ontology",
     "kind": "test",
-    "bytes": 6485,
-    "lines": 173
+    "bytes": 7165,
+    "lines": 194
   },
   {
     "file": "packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts",
     "package": "@beep/ontology",
     "kind": "test",
-    "bytes": 24225,
-    "lines": 602
+    "bytes": 25107,
+    "lines": 619
   },
   {
     "file": "packages/foundation/modeling/ontology/test/TaggedError.equivalence.test.ts",
@@ -3489,15 +3510,15 @@
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 48999,
-    "lines": 1465
+    "bytes": 50773,
+    "lines": 1517
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-annotation.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 2120,
-    "lines": 48
+    "bytes": 2178,
+    "lines": 50
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
@@ -3510,15 +3531,15 @@
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 39806,
-    "lines": 1095
+    "bytes": 40487,
+    "lines": 1118
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 10258,
-    "lines": 288
+    "bytes": 10445,
+    "lines": 294
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/TaggedError.equivalence.test.ts",
@@ -3552,22 +3573,22 @@
     "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
     "package": "@beep/provenance",
     "kind": "test",
-    "bytes": 3682,
-    "lines": 86
+    "bytes": 4361,
+    "lines": 108
   },
   {
     "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
     "package": "@beep/provenance",
     "kind": "test",
-    "bytes": 16484,
-    "lines": 408
+    "bytes": 17141,
+    "lines": 423
   },
   {
     "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 4204,
-    "lines": 77
+    "bytes": 4409,
+    "lines": 82
   },
   {
     "file": "packages/foundation/modeling/rdf/test/InteropAndMetadata.test.ts",
@@ -3587,22 +3608,22 @@
     "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 21517,
-    "lines": 507
+    "bytes": 21906,
+    "lines": 519
   },
   {
     "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 33739,
-    "lines": 827
+    "bytes": 35825,
+    "lines": 878
   },
   {
     "file": "packages/foundation/modeling/rdf/test/SemanticSchemaConformance.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 10566,
-    "lines": 285
+    "bytes": 10759,
+    "lines": 288
   },
   {
     "file": "packages/foundation/modeling/rdf/test/TaggedError.equivalence.test.ts",
@@ -3657,71 +3678,71 @@
     "file": "packages/foundation/modeling/schema/test/Address.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 4860,
+    "bytes": 5609,
     "lines": 107
   },
   {
     "file": "packages/foundation/modeling/schema/test/ArrayBuffer.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2915,
-    "lines": 81
+    "bytes": 3174,
+    "lines": 90
   },
   {
     "file": "packages/foundation/modeling/schema/test/AtURI.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3293,
-    "lines": 91
+    "bytes": 3494,
+    "lines": 98
   },
   {
     "file": "packages/foundation/modeling/schema/test/BinaryFileExtension.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 1544,
+    "bytes": 1632,
     "lines": 50
   },
   {
     "file": "packages/foundation/modeling/schema/test/BlockchainRedacted.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2360,
-    "lines": 48
+    "bytes": 2903,
+    "lines": 59
   },
   {
     "file": "packages/foundation/modeling/schema/test/CaseStr.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3037,
-    "lines": 84
+    "bytes": 4084,
+    "lines": 107
   },
   {
     "file": "packages/foundation/modeling/schema/test/Color.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3606,
-    "lines": 79
+    "bytes": 4943,
+    "lines": 106
   },
   {
     "file": "packages/foundation/modeling/schema/test/Conformance.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 17754,
-    "lines": 521
+    "bytes": 18593,
+    "lines": 535
   },
   {
     "file": "packages/foundation/modeling/schema/test/Csp.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 859,
-    "lines": 25
+    "bytes": 1163,
+    "lines": 33
   },
   {
     "file": "packages/foundation/modeling/schema/test/Csv.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 9540,
-    "lines": 313
+    "bytes": 10110,
+    "lines": 329
   },
   {
     "file": "packages/foundation/modeling/schema/test/CsvParser.test.ts",
@@ -3734,43 +3755,43 @@
     "file": "packages/foundation/modeling/schema/test/Cuid.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2120,
-    "lines": 61
+    "bytes": 2409,
+    "lines": 72
   },
   {
     "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 913,
-    "lines": 23
+    "bytes": 1089,
+    "lines": 27
   },
   {
     "file": "packages/foundation/modeling/schema/test/DateTimeUtcFromValid.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 8844,
-    "lines": 252
+    "bytes": 9784,
+    "lines": 266
   },
   {
     "file": "packages/foundation/modeling/schema/test/Did.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2039,
-    "lines": 67
+    "bytes": 2220,
+    "lines": 74
   },
   {
     "file": "packages/foundation/modeling/schema/test/Dom.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3109,
-    "lines": 73
+    "bytes": 3350,
+    "lines": 80
   },
   {
     "file": "packages/foundation/modeling/schema/test/Duration.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3137,
-    "lines": 97
+    "bytes": 3582,
+    "lines": 102
   },
   {
     "file": "packages/foundation/modeling/schema/test/EffectSchema.test.ts",
@@ -3783,29 +3804,29 @@
     "file": "packages/foundation/modeling/schema/test/Email.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 799,
+    "bytes": 851,
     "lines": 27
   },
   {
     "file": "packages/foundation/modeling/schema/test/EthAmount.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 765,
+    "bytes": 867,
     "lines": 25
   },
   {
     "file": "packages/foundation/modeling/schema/test/EthereumValidatorPublicKey.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 1123,
+    "bytes": 1306,
     "lines": 27
   },
   {
     "file": "packages/foundation/modeling/schema/test/EvmAddress.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 1067,
-    "lines": 26
+    "bytes": 1203,
+    "lines": 28
   },
   {
     "file": "packages/foundation/modeling/schema/test/FileDiff.test.ts",
@@ -3818,85 +3839,85 @@
     "file": "packages/foundation/modeling/schema/test/FileInfo.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3125,
-    "lines": 106
+    "bytes": 3635,
+    "lines": 117
   },
   {
     "file": "packages/foundation/modeling/schema/test/FileName.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2679,
-    "lines": 78
+    "bytes": 3225,
+    "lines": 81
   },
   {
     "file": "packages/foundation/modeling/schema/test/FilePath.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 10891,
-    "lines": 263
+    "bytes": 15014,
+    "lines": 288
   },
   {
     "file": "packages/foundation/modeling/schema/test/FileTypeChecker.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 17630,
-    "lines": 390
+    "bytes": 21868,
+    "lines": 475
   },
   {
     "file": "packages/foundation/modeling/schema/test/Fn.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 7921,
-    "lines": 271
+    "bytes": 7963,
+    "lines": 273
   },
   {
     "file": "packages/foundation/modeling/schema/test/Glob.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2209,
-    "lines": 66
+    "bytes": 2671,
+    "lines": 72
   },
   {
     "file": "packages/foundation/modeling/schema/test/Graph.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 16044,
-    "lines": 473
+    "bytes": 16792,
+    "lines": 488
   },
   {
     "file": "packages/foundation/modeling/schema/test/HashSet.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3559,
-    "lines": 89
+    "bytes": 3775,
+    "lines": 97
   },
   {
     "file": "packages/foundation/modeling/schema/test/HttpHeaders.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 29078,
-    "lines": 720
+    "bytes": 30458,
+    "lines": 745
   },
   {
     "file": "packages/foundation/modeling/schema/test/HttpStatus.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2108,
-    "lines": 46
+    "bytes": 2863,
+    "lines": 61
   },
   {
     "file": "packages/foundation/modeling/schema/test/Int.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3458,
-    "lines": 103
+    "bytes": 3907,
+    "lines": 108
   },
   {
     "file": "packages/foundation/modeling/schema/test/JSONSchema.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 23774,
-    "lines": 567
+    "bytes": 24611,
+    "lines": 597
   },
   {
     "file": "packages/foundation/modeling/schema/test/Json.test.ts",
@@ -3909,43 +3930,43 @@
     "file": "packages/foundation/modeling/schema/test/Jsonc.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 1924,
-    "lines": 67
+    "bytes": 2043,
+    "lines": 70
   },
   {
     "file": "packages/foundation/modeling/schema/test/Jsonl.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2021,
-    "lines": 72
+    "bytes": 2140,
+    "lines": 75
   },
   {
     "file": "packages/foundation/modeling/schema/test/LiteralKit.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 11632,
-    "lines": 379
+    "bytes": 11893,
+    "lines": 382
   },
   {
     "file": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 29214,
-    "lines": 859
+    "bytes": 29569,
+    "lines": 876
   },
   {
     "file": "packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 5907,
-    "lines": 175
+    "bytes": 6301,
+    "lines": 185
   },
   {
     "file": "packages/foundation/modeling/schema/test/Markdown.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 6013,
-    "lines": 183
+    "bytes": 6268,
+    "lines": 190
   },
   {
     "file": "packages/foundation/modeling/schema/test/MimeType.test.ts",
@@ -3958,22 +3979,22 @@
     "file": "packages/foundation/modeling/schema/test/MutableHashMap.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 4150,
-    "lines": 131
+    "bytes": 4366,
+    "lines": 139
   },
   {
     "file": "packages/foundation/modeling/schema/test/MutableHashSet.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3981,
-    "lines": 99
+    "bytes": 4197,
+    "lines": 107
   },
   {
     "file": "packages/foundation/modeling/schema/test/Number.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 1126,
-    "lines": 27
+    "bytes": 2126,
+    "lines": 59
   },
   {
     "file": "packages/foundation/modeling/schema/test/Opaque.test.ts",
@@ -3986,15 +4007,15 @@
     "file": "packages/foundation/modeling/schema/test/Options.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2205,
-    "lines": 70
+    "bytes": 2287,
+    "lines": 57
   },
   {
     "file": "packages/foundation/modeling/schema/test/ParserOptions.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2781,
-    "lines": 73
+    "bytes": 2839,
+    "lines": 75
   },
   {
     "file": "packages/foundation/modeling/schema/test/Percentage.test.ts",
@@ -4007,43 +4028,43 @@
     "file": "packages/foundation/modeling/schema/test/Port.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3747,
-    "lines": 112
+    "bytes": 4374,
+    "lines": 120
   },
   {
     "file": "packages/foundation/modeling/schema/test/PosixPath.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 724,
-    "lines": 17
+    "bytes": 770,
+    "lines": 19
   },
   {
     "file": "packages/foundation/modeling/schema/test/PromiseSchema.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 1391,
-    "lines": 42
+    "bytes": 1512,
+    "lines": 45
   },
   {
     "file": "packages/foundation/modeling/schema/test/ProtobufScalars.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 16058,
-    "lines": 390
+    "bytes": 19189,
+    "lines": 473
   },
   {
     "file": "packages/foundation/modeling/schema/test/RegExp.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2336,
-    "lines": 67
+    "bytes": 2976,
+    "lines": 81
   },
   {
     "file": "packages/foundation/modeling/schema/test/SafeObject.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 5193,
-    "lines": 161
+    "bytes": 6376,
+    "lines": 173
   },
   {
     "file": "packages/foundation/modeling/schema/test/SafeRemoteHost.test.ts",
@@ -4056,8 +4077,8 @@
     "file": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 12617,
-    "lines": 340
+    "bytes": 14403,
+    "lines": 363
   },
   {
     "file": "packages/foundation/modeling/schema/test/Semver.test.ts",
@@ -4077,22 +4098,22 @@
     "file": "packages/foundation/modeling/schema/test/Sha256.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3937,
-    "lines": 112
+    "bytes": 4553,
+    "lines": 125
   },
   {
     "file": "packages/foundation/modeling/schema/test/Slug.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2036,
-    "lines": 51
+    "bytes": 2374,
+    "lines": 60
   },
   {
     "file": "packages/foundation/modeling/schema/test/StatusCauseError.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2897,
-    "lines": 75
+    "bytes": 2926,
+    "lines": 76
   },
   {
     "file": "packages/foundation/modeling/schema/test/String.test.ts",
@@ -4105,15 +4126,15 @@
     "file": "packages/foundation/modeling/schema/test/TaggedError.equivalence.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 12334,
-    "lines": 288
+    "bytes": 12489,
+    "lines": 289
   },
   {
     "file": "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2661,
-    "lines": 54
+    "bytes": 3718,
+    "lines": 71
   },
   {
     "file": "packages/foundation/modeling/schema/test/Timestamp.test.ts",
@@ -4126,15 +4147,15 @@
     "file": "packages/foundation/modeling/schema/test/Timezone.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 580,
-    "lines": 15
+    "bytes": 685,
+    "lines": 18
   },
   {
     "file": "packages/foundation/modeling/schema/test/Toml.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2224,
-    "lines": 79
+    "bytes": 2339,
+    "lines": 82
   },
   {
     "file": "packages/foundation/modeling/schema/test/Transformations.test.ts",
@@ -4147,22 +4168,22 @@
     "file": "packages/foundation/modeling/schema/test/TxnHash.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2681,
-    "lines": 59
+    "bytes": 3048,
+    "lines": 57
   },
   {
     "file": "packages/foundation/modeling/schema/test/TypedArrays.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3592,
-    "lines": 101
+    "bytes": 4890,
+    "lines": 133
   },
   {
     "file": "packages/foundation/modeling/schema/test/URL.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 1783,
-    "lines": 42
+    "bytes": 1719,
+    "lines": 43
   },
   {
     "file": "packages/foundation/modeling/schema/test/Unknown.test.ts",
@@ -4175,22 +4196,22 @@
     "file": "packages/foundation/modeling/schema/test/Xml.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 2109,
-    "lines": 74
+    "bytes": 2220,
+    "lines": 77
   },
   {
     "file": "packages/foundation/modeling/schema/test/Yaml.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 3176,
-    "lines": 111
+    "bytes": 3291,
+    "lines": 114
   },
   {
     "file": "packages/foundation/modeling/schema/test/codecStatics.test.ts",
     "package": "@beep/schema",
     "kind": "test",
-    "bytes": 11217,
-    "lines": 257
+    "bytes": 11420,
+    "lines": 264
   },
   {
     "file": "packages/foundation/modeling/schema/test/collectAnnotationsAt.test.ts",
@@ -4203,57 +4224,57 @@
     "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 4392,
-    "lines": 103
+    "bytes": 4685,
+    "lines": 113
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 4074,
-    "lines": 90
+    "bytes": 4503,
+    "lines": 103
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/Gate.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 6830,
-    "lines": 163
+    "bytes": 7716,
+    "lines": 183
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 5840,
-    "lines": 134
+    "bytes": 6390,
+    "lines": 148
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/Recovery.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 11107,
-    "lines": 244
+    "bytes": 11529,
+    "lines": 246
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/SkillCompletion.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 16108,
-    "lines": 379
+    "bytes": 16761,
+    "lines": 394
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/SkillContract.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 3104,
-    "lines": 79
+    "bytes": 3530,
+    "lines": 91
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 8118,
-    "lines": 206
+    "bytes": 8496,
+    "lines": 220
   },
   {
     "file": "packages/foundation/modeling/utils/test/Array.test.ts",
@@ -4294,8 +4315,8 @@
     "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
     "package": "@beep/utils",
     "kind": "test",
-    "bytes": 13639,
-    "lines": 386
+    "bytes": 13673,
+    "lines": 388
   },
   {
     "file": "packages/foundation/modeling/utils/test/Number.test.ts",
@@ -4326,11 +4347,18 @@
     "lines": 71
   },
   {
+    "file": "packages/foundation/modeling/utils/test/Schema.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 1553,
+    "lines": 42
+  },
+  {
     "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
     "package": "@beep/utils",
     "kind": "test",
-    "bytes": 2954,
-    "lines": 89
+    "bytes": 3060,
+    "lines": 94
   },
   {
     "file": "packages/foundation/modeling/utils/test/Str.test.ts",
@@ -4399,8 +4427,8 @@
     "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
     "package": "@beep/brand",
     "kind": "test",
-    "bytes": 5659,
-    "lines": 145
+    "bytes": 6000,
+    "lines": 154
   },
   {
     "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
@@ -4455,15 +4483,15 @@
     "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 9084,
-    "lines": 222
+    "bytes": 9146,
+    "lines": 224
   },
   {
     "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 25036,
-    "lines": 622
+    "bytes": 25502,
+    "lines": 632
   },
   {
     "file": "packages/foundation/ui-system/dock/test/DockPolicy.test.ts",
@@ -4483,8 +4511,8 @@
     "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 20420,
-    "lines": 564
+    "bytes": 20847,
+    "lines": 574
   },
   {
     "file": "packages/foundation/ui-system/dock/test/Geometry.test.ts",
@@ -4497,8 +4525,8 @@
     "file": "packages/foundation/ui-system/dock/test/GestureParity.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 17805,
-    "lines": 487
+    "bytes": 17829,
+    "lines": 489
   },
   {
     "file": "packages/foundation/ui-system/dock/test/HiddenMaximize.test.ts",
@@ -4539,7 +4567,7 @@
     "file": "packages/foundation/ui-system/dock/test/dockview-anchored-box.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 1214,
+    "bytes": 1356,
     "lines": 28
   },
   {
@@ -4567,8 +4595,8 @@
     "file": "packages/foundation/ui-system/editor/test/capability-catalog.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 10751,
-    "lines": 280
+    "bytes": 10808,
+    "lines": 281
   },
   {
     "file": "packages/foundation/ui-system/editor/test/capability-errors.test.ts",
@@ -4588,8 +4616,8 @@
     "file": "packages/foundation/ui-system/editor/test/capability-resolver.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 7004,
-    "lines": 188
+    "bytes": 7135,
+    "lines": 192
   },
   {
     "file": "packages/foundation/ui-system/editor/test/capability-review-fixes.test.ts",
@@ -4609,15 +4637,15 @@
     "file": "packages/foundation/ui-system/editor/test/capability-schemas.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 5957,
-    "lines": 168
+    "bytes": 6425,
+    "lines": 174
   },
   {
     "file": "packages/foundation/ui-system/editor/test/chat-schema-parity.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 4722,
-    "lines": 143
+    "bytes": 6490,
+    "lines": 184
   },
   {
     "file": "packages/foundation/ui-system/editor/test/code-fence.test.ts",
@@ -4627,11 +4655,18 @@
     "lines": 164
   },
   {
+    "file": "packages/foundation/ui-system/editor/test/decorator-node-contracts.test.ts",
+    "package": "@beep/editor",
+    "kind": "test",
+    "bytes": 3131,
+    "lines": 81
+  },
+  {
     "file": "packages/foundation/ui-system/editor/test/editor-nodes.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 12261,
-    "lines": 352
+    "bytes": 12737,
+    "lines": 363
   },
   {
     "file": "packages/foundation/ui-system/editor/test/mermaid-race.test.tsx",
@@ -4651,8 +4686,8 @@
     "file": "packages/foundation/ui-system/editor/test/style-node-matrix.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 6827,
-    "lines": 162
+    "bytes": 6915,
+    "lines": 164
   },
   {
     "file": "packages/foundation/ui-system/editor/test/table-toolbar-selection.test.ts",
@@ -4707,15 +4742,22 @@
     "file": "packages/foundation/ui-system/ui/test/hooks.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 1913,
-    "lines": 52
+    "bytes": 2645,
+    "lines": 65
   },
   {
     "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 5333,
-    "lines": 126
+    "bytes": 6623,
+    "lines": 146
+  },
+  {
+    "file": "packages/foundation/ui-system/ui/test/theme-components.test.ts",
+    "package": "@beep/ui",
+    "kind": "test",
+    "bytes": 1944,
+    "lines": 60
   },
   {
     "file": "packages/foundation/ui-system/ui/test/theme-provider.test.ts",
@@ -4728,8 +4770,8 @@
     "file": "packages/foundation/ui-system/ui/test/ui.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 477,
-    "lines": 15
+    "bytes": 3777,
+    "lines": 105
   },
   {
     "file": "packages/foundation/ui-system/ui/test/url.test.ts",
@@ -4742,8 +4784,8 @@
     "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
     "package": "@beep/law-practice-domain",
     "kind": "test",
-    "bytes": 19451,
-    "lines": 473
+    "bytes": 19580,
+    "lines": 476
   },
   {
     "file": "packages/law-practice/domain/test/Footnote.test.ts",
@@ -4756,22 +4798,22 @@
     "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
     "package": "@beep/law-practice-domain",
     "kind": "test",
-    "bytes": 27940,
-    "lines": 741
+    "bytes": 31462,
+    "lines": 798
   },
   {
     "file": "packages/law-practice/domain/test/LegalPositionTransitions.test.ts",
     "package": "@beep/law-practice-domain",
     "kind": "test",
-    "bytes": 11810,
-    "lines": 308
+    "bytes": 11980,
+    "lines": 312
   },
   {
     "file": "packages/law-practice/domain/test/PatentDocument.test.ts",
     "package": "@beep/law-practice-domain",
     "kind": "test",
-    "bytes": 13080,
-    "lines": 333
+    "bytes": 13468,
+    "lines": 342
   },
   {
     "file": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
@@ -4784,50 +4826,50 @@
     "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 22870,
-    "lines": 492
+    "bytes": 23108,
+    "lines": 499
   },
   {
     "file": "packages/law-practice/server/test/CandorRecord.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 11557,
-    "lines": 276
+    "bytes": 11775,
+    "lines": 280
   },
   {
     "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 50138,
-    "lines": 1192
+    "bytes": 50296,
+    "lines": 1196
   },
   {
     "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 8627,
-    "lines": 179
+    "bytes": 8700,
+    "lines": 181
   },
   {
     "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 22218,
-    "lines": 484
+    "bytes": 22564,
+    "lines": 490
   },
   {
     "file": "packages/law-practice/server/test/LegalPositionRecord.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 13867,
-    "lines": 327
+    "bytes": 14123,
+    "lines": 332
   },
   {
     "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 46715,
-    "lines": 1015
+    "bytes": 46964,
+    "lines": 1020
   },
   {
     "file": "packages/law-practice/server/test/TaggedError.equivalence.test.ts",
@@ -4861,15 +4903,15 @@
     "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
     "package": "@beep/law-practice-tables",
     "kind": "test",
-    "bytes": 23877,
-    "lines": 579
+    "bytes": 24118,
+    "lines": 584
   },
   {
     "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
     "package": "@beep/law-practice-use-cases",
     "kind": "test",
-    "bytes": 27696,
-    "lines": 708
+    "bytes": 28048,
+    "lines": 714
   },
   {
     "file": "packages/law-practice/use-cases/test/LegalPositionRelatorPolicy.test.ts",
@@ -4889,8 +4931,8 @@
     "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
     "package": "@beep/law-practice-use-cases",
     "kind": "test",
-    "bytes": 5949,
-    "lines": 159
+    "bytes": 6290,
+    "lines": 166
   },
   {
     "file": "packages/law-practice/use-cases/test/TaggedError.equivalence.test.ts",
@@ -4903,8 +4945,8 @@
     "file": "packages/ontology/client/test/Session.atoms.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 22101,
-    "lines": 556
+    "bytes": 22397,
+    "lines": 564
   },
   {
     "file": "packages/ontology/client/test/TaggedError.equivalence.test.ts",
@@ -5001,8 +5043,8 @@
     "file": "packages/ontology/server/test/OntoauthorMatCompetency.test.ts",
     "package": "@beep/ontology-server",
     "kind": "test",
-    "bytes": 7916,
-    "lines": 210
+    "bytes": 8021,
+    "lines": 213
   },
   {
     "file": "packages/ontology/server/test/OntologyPublishTools.test.ts",
@@ -5015,15 +5057,15 @@
     "file": "packages/ontology/server/test/OntologyTools.test.ts",
     "package": "@beep/ontology-server",
     "kind": "test",
-    "bytes": 13004,
-    "lines": 342
+    "bytes": 12970,
+    "lines": 344
   },
   {
     "file": "packages/ontology/server/test/SessionServer.test.ts",
     "package": "@beep/ontology-server",
     "kind": "test",
-    "bytes": 24649,
-    "lines": 546
+    "bytes": 24850,
+    "lines": 555
   },
   {
     "file": "packages/ontology/ui/test/Session.workbench.test.ts",
@@ -5057,15 +5099,15 @@
     "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
     "package": "@beep/ontology-use-cases",
     "kind": "test",
-    "bytes": 5250,
-    "lines": 152
+    "bytes": 6708,
+    "lines": 178
   },
   {
     "file": "packages/ontology/use-cases/test/Session.test.ts",
     "package": "@beep/ontology-use-cases",
     "kind": "test",
-    "bytes": 34252,
-    "lines": 907
+    "bytes": 34904,
+    "lines": 924
   },
   {
     "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
@@ -5092,22 +5134,22 @@
     "file": "packages/shared/domain/test/EntityKernel.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 17245,
-    "lines": 397
+    "bytes": 18042,
+    "lines": 407
   },
   {
     "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 16985,
-    "lines": 487
+    "bytes": 17309,
+    "lines": 493
   },
   {
     "file": "packages/shared/domain/test/LocalDate.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 11293,
-    "lines": 309
+    "bytes": 11905,
+    "lines": 317
   },
   {
     "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
@@ -5120,15 +5162,15 @@
     "file": "packages/shared/domain/test/Organization.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 7049,
-    "lines": 181
+    "bytes": 7126,
+    "lines": 184
   },
   {
     "file": "packages/shared/domain/test/SchemaParity.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 8583,
-    "lines": 182
+    "bytes": 9174,
+    "lines": 195
   },
   {
     "file": "packages/shared/domain/test/StaticProbes.ts",
@@ -5148,8 +5190,8 @@
     "file": "packages/shared/domain/test/UserMembership.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 2373,
-    "lines": 67
+    "bytes": 2496,
+    "lines": 70
   },
   {
     "file": "packages/shared/tables/test/OrganizationTable.test.ts",
@@ -5162,8 +5204,15 @@
     "file": "packages/shared/use-cases/test/PromotionGate.test.ts",
     "package": "@beep/shared-use-cases",
     "kind": "test",
-    "bytes": 2007,
+    "bytes": 2000,
     "lines": 49
+  },
+  {
+    "file": "packages/tooling/library/ai-metrics/test/FlightRecordGeneration.test.ts",
+    "package": "@beep/repo-ai-metrics",
+    "kind": "test",
+    "bytes": 1421,
+    "lines": 34
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/TaggedErrors.equivalence.test.ts",
@@ -5176,8 +5225,8 @@
     "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness-laws.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 3291,
-    "lines": 77
+    "bytes": 3459,
+    "lines": 83
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
@@ -5190,8 +5239,8 @@
     "file": "packages/tooling/library/ai-metrics/test/archive.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 3506,
-    "lines": 67
+    "bytes": 3675,
+    "lines": 74
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/circuit-breaker.test.ts",
@@ -5204,8 +5253,8 @@
     "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 18797,
-    "lines": 456
+    "bytes": 19015,
+    "lines": 460
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/data-root.test.ts",
@@ -5246,15 +5295,15 @@
     "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 57528,
-    "lines": 1308
+    "bytes": 57712,
+    "lines": 1316
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 42360,
-    "lines": 1069
+    "bytes": 42831,
+    "lines": 1085
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
@@ -5267,15 +5316,15 @@
     "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 164634,
-    "lines": 3714
+    "bytes": 164895,
+    "lines": 3726
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/install.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 4527,
-    "lines": 112
+    "bytes": 4757,
+    "lines": 122
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/mirror.test.ts",
@@ -5295,36 +5344,36 @@
     "file": "packages/tooling/library/ai-metrics/test/privacy.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 1781,
-    "lines": 48
+    "bytes": 1979,
+    "lines": 55
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 7932,
-    "lines": 221
+    "bytes": 8049,
+    "lines": 226
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/scorecard.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 6371,
-    "lines": 142
+    "bytes": 6759,
+    "lines": 149
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 26355,
-    "lines": 681
+    "bytes": 26763,
+    "lines": 690
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/session-lease.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 12868,
-    "lines": 320
+    "bytes": 13583,
+    "lines": 336
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/source-discovery.test.ts",
@@ -5337,15 +5386,15 @@
     "file": "packages/tooling/library/ai-metrics/test/telemetry-v2-store.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 11216,
-    "lines": 257
+    "bytes": 11623,
+    "lines": 269
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/telemetry-v2.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 9620,
-    "lines": 258
+    "bytes": 9901,
+    "lines": 268
   },
   {
     "file": "packages/tooling/library/ai-sync/test/AiSync.equivalence.test.ts",
@@ -5358,15 +5407,15 @@
     "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
     "package": "@beep/ai-sync",
     "kind": "test",
-    "bytes": 27479,
-    "lines": 710
+    "bytes": 29539,
+    "lines": 749
   },
   {
     "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
     "package": "@beep/codegen-kit",
     "kind": "test",
-    "bytes": 22796,
-    "lines": 616
+    "bytes": 23798,
+    "lines": 640
   },
   {
     "file": "packages/tooling/library/qa-capture/test/ActionEvent.pointer-cancel.test.ts",
@@ -5393,8 +5442,8 @@
     "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 12878,
-    "lines": 357
+    "bytes": 14046,
+    "lines": 393
   },
   {
     "file": "packages/tooling/library/qa-capture/test/QaCapture.equivalence.test.ts",
@@ -5407,8 +5456,8 @@
     "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 3669,
-    "lines": 128
+    "bytes": 3818,
+    "lines": 135
   },
   {
     "file": "packages/tooling/library/qa-capture/test/SessionStore.test.ts",
@@ -5463,15 +5512,15 @@
     "file": "packages/tooling/library/repo-utils/test/JSDoc.model.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 2648,
-    "lines": 77
+    "bytes": 4077,
+    "lines": 124
   },
   {
     "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 3272,
-    "lines": 80
+    "bytes": 3268,
+    "lines": 79
   },
   {
     "file": "packages/tooling/library/repo-utils/test/Root.test.ts",
@@ -5484,15 +5533,15 @@
     "file": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 18692,
-    "lines": 455
+    "bytes": 20155,
+    "lines": 490
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 22198,
-    "lines": 604
+    "bytes": 22399,
+    "lines": 611
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TSMorph.shared.test.ts",
@@ -5526,8 +5575,8 @@
     "file": "packages/tooling/library/repo-utils/test/UniqueDeps.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 4066,
-    "lines": 95
+    "bytes": 4642,
+    "lines": 108
   },
   {
     "file": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
@@ -5603,8 +5652,8 @@
     "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-outline-order/source.ts",
     "package": "@beep/repo-utils",
     "kind": "support",
-    "bytes": 55,
-    "lines": 3
+    "bytes": 80,
+    "lines": 5
   },
   {
     "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
@@ -5631,15 +5680,15 @@
     "file": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 27619,
-    "lines": 966
+    "bytes": 29010,
+    "lines": 1003
   },
   {
     "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 15859,
-    "lines": 460
+    "bytes": 15889,
+    "lines": 465
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/codec.ts",
@@ -5666,22 +5715,22 @@
     "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
     "package": "@beep/lint-rules",
     "kind": "test",
-    "bytes": 2878,
-    "lines": 80
+    "bytes": 4775,
+    "lines": 124
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
     "package": "@beep/lint-rules",
     "kind": "support",
-    "bytes": 11034,
-    "lines": 332
+    "bytes": 14640,
+    "lines": 436
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
     "package": "@beep/lint-rules",
     "kind": "test",
-    "bytes": 4965,
-    "lines": 126
+    "bytes": 5126,
+    "lines": 133
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
@@ -5694,8 +5743,8 @@
     "file": "packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts",
     "package": "@beep/lint-rules",
     "kind": "test",
-    "bytes": 2747,
-    "lines": 73
+    "bytes": 3343,
+    "lines": 95
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/sources.ts",
@@ -5708,8 +5757,8 @@
     "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 1951,
-    "lines": 60
+    "bytes": 2263,
+    "lines": 72
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
@@ -5722,22 +5771,22 @@
     "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 3242,
-    "lines": 97
+    "bytes": 3619,
+    "lines": 107
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.schemas.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 1914,
-    "lines": 39
+    "bytes": 2267,
+    "lines": 53
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 9739,
-    "lines": 298
+    "bytes": 11263,
+    "lines": 366
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/NoNativeRuntimeHotspots.test.ts",
@@ -5750,8 +5799,8 @@
     "file": "packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 7191,
-    "lines": 218
+    "bytes": 7770,
+    "lines": 244
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts",
@@ -5778,8 +5827,22 @@
     "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
     "package": "@beep/fc-runs",
     "kind": "test",
-    "bytes": 2208,
-    "lines": 50
+    "bytes": 2875,
+    "lines": 65
+  },
+  {
+    "file": "packages/tooling/test-kit/test-utils/dist/test/Vitest.test-kit.d.ts",
+    "package": "@beep/test-utils",
+    "kind": "support",
+    "bytes": 3277,
+    "lines": 73
+  },
+  {
+    "file": "packages/tooling/test-kit/test-utils/src/test/Vitest.test-kit.ts",
+    "package": "@beep/test-utils",
+    "kind": "support",
+    "bytes": 1662,
+    "lines": 46
   },
   {
     "file": "packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts",
@@ -5796,6 +5859,27 @@
     "lines": 24
   },
   {
+    "file": "packages/tooling/test-kit/test-utils/test/FileSystemConformance.bun.test.ts",
+    "package": "@beep/test-utils",
+    "kind": "test",
+    "bytes": 470,
+    "lines": 10
+  },
+  {
+    "file": "packages/tooling/test-kit/test-utils/test/FileSystemConformance.node.test.ts",
+    "package": "@beep/test-utils",
+    "kind": "test",
+    "bytes": 283,
+    "lines": 7
+  },
+  {
+    "file": "packages/tooling/test-kit/test-utils/test/FileSystemWriteCompatibility.test.ts",
+    "package": "@beep/test-utils",
+    "kind": "test",
+    "bytes": 4343,
+    "lines": 93
+  },
+  {
     "file": "packages/tooling/test-kit/test-utils/test/Layer.test.ts",
     "package": "@beep/test-utils",
     "kind": "test",
@@ -5803,11 +5887,39 @@
     "lines": 20
   },
   {
+    "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/Characterization.test.ts",
+    "package": "@beep/test-utils",
+    "kind": "test",
+    "bytes": 22073,
+    "lines": 501
+  },
+  {
+    "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/Conformance.test.ts",
+    "package": "@beep/test-utils",
+    "kind": "test",
+    "bytes": 286,
+    "lines": 7
+  },
+  {
+    "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/Coverage.test.ts",
+    "package": "@beep/test-utils",
+    "kind": "test",
+    "bytes": 36404,
+    "lines": 751
+  },
+  {
+    "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/MemoryFileSystem.test.ts",
+    "package": "@beep/test-utils",
+    "kind": "test",
+    "bytes": 12928,
+    "lines": 338
+  },
+  {
     "file": "packages/tooling/test-kit/test-utils/test/Schema.test.ts",
     "package": "@beep/test-utils",
     "kind": "test",
-    "bytes": 644,
-    "lines": 18
+    "bytes": 1037,
+    "lines": 31
   },
   {
     "file": "packages/tooling/test-kit/test-utils/test/SqlTest.equivalence.test.ts",
@@ -5827,8 +5939,8 @@
     "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
     "package": "@beep/test-utils",
     "kind": "test",
-    "bytes": 25924,
-    "lines": 794
+    "bytes": 26647,
+    "lines": 808
   },
   {
     "file": "packages/tooling/test-kit/test-utils/test/SystemTemp.test.ts",
@@ -5841,15 +5953,15 @@
     "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
     "package": "@beep/test-utils",
     "kind": "test",
-    "bytes": 11946,
-    "lines": 264
+    "bytes": 21638,
+    "lines": 470
   },
   {
     "file": "packages/tooling/test-kit/test-utils/test/Vitest.test.ts",
     "package": "@beep/test-utils",
     "kind": "test",
-    "bytes": 5376,
-    "lines": 153
+    "bytes": 13043,
+    "lines": 366
   },
   {
     "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
@@ -5971,6 +6083,13 @@
     "lines": 8
   },
   {
+    "file": "packages/tooling/tool/cli/dist/test/PackageScripts.test-kit.d.ts",
+    "package": "@beep/repo-cli",
+    "kind": "support",
+    "bytes": 433,
+    "lines": 5
+  },
+  {
     "file": "packages/tooling/tool/cli/dist/test/Process.test-kit.d.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
@@ -5981,8 +6100,8 @@
     "file": "packages/tooling/tool/cli/dist/test/Quality.test-kit.d.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
-    "bytes": 3082,
-    "lines": 32
+    "bytes": 3272,
+    "lines": 34
   },
   {
     "file": "packages/tooling/tool/cli/dist/test/Ratchet.test-kit.d.ts",
@@ -6002,8 +6121,8 @@
     "file": "packages/tooling/tool/cli/dist/test/SharedInternals.test-kit.d.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
-    "bytes": 545,
-    "lines": 15
+    "bytes": 607,
+    "lines": 16
   },
   {
     "file": "packages/tooling/tool/cli/dist/test/SyncDataToTs.test-kit.d.ts",
@@ -6139,6 +6258,13 @@
     "lines": 8
   },
   {
+    "file": "packages/tooling/tool/cli/src/test/PackageScripts.test-kit.ts",
+    "package": "@beep/repo-cli",
+    "kind": "support",
+    "bytes": 391,
+    "lines": 11
+  },
+  {
     "file": "packages/tooling/tool/cli/src/test/Process.test-kit.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
@@ -6149,8 +6275,8 @@
     "file": "packages/tooling/tool/cli/src/test/Quality.test-kit.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
-    "bytes": 3139,
-    "lines": 88
+    "bytes": 3331,
+    "lines": 91
   },
   {
     "file": "packages/tooling/tool/cli/src/test/Ratchet.test-kit.ts",
@@ -6170,8 +6296,8 @@
     "file": "packages/tooling/tool/cli/src/test/SharedInternals.test-kit.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
-    "bytes": 492,
-    "lines": 15
+    "bytes": 554,
+    "lines": 16
   },
   {
     "file": "packages/tooling/tool/cli/src/test/SyncDataToTs.test-kit.ts",
@@ -6198,36 +6324,36 @@
     "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 13793,
-    "lines": 348
+    "bytes": 13998,
+    "lines": 354
   },
   {
     "file": "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 6073,
+    "bytes": 6137,
     "lines": 163
   },
   {
     "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 68468,
-    "lines": 1883
+    "bytes": 68675,
+    "lines": 1889
   },
   {
     "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 11809,
-    "lines": 345
+    "bytes": 11879,
+    "lines": 347
   },
   {
     "file": "packages/tooling/tool/cli/test/architecture-operation-plan.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 31139,
-    "lines": 749
+    "bytes": 32990,
+    "lines": 781
   },
   {
     "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
@@ -6258,6 +6384,13 @@
     "lines": 420
   },
   {
+    "file": "packages/tooling/tool/cli/test/check-census.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 8277,
+    "lines": 188
+  },
+  {
     "file": "packages/tooling/tool/cli/test/ci-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
@@ -6275,15 +6408,15 @@
     "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 68065,
-    "lines": 1686
+    "bytes": 80844,
+    "lines": 1999
   },
   {
     "file": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 19100,
-    "lines": 358
+    "bytes": 51336,
+    "lines": 1068
   },
   {
     "file": "packages/tooling/tool/cli/test/cli-json-printer.test.ts",
@@ -6296,8 +6429,8 @@
     "file": "packages/tooling/tool/cli/test/cli-kits.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 10413,
-    "lines": 258
+    "bytes": 10459,
+    "lines": 260
   },
   {
     "file": "packages/tooling/tool/cli/test/cli-stdin.test.ts",
@@ -6310,8 +6443,8 @@
     "file": "packages/tooling/tool/cli/test/codegen-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 1830,
-    "lines": 39
+    "bytes": 2002,
+    "lines": 42
   },
   {
     "file": "packages/tooling/tool/cli/test/codex-findings-csv.test.ts",
@@ -6338,8 +6471,8 @@
     "file": "packages/tooling/tool/cli/test/codex-findings-refresh.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 23341,
-    "lines": 586
+    "bytes": 23702,
+    "lines": 590
   },
   {
     "file": "packages/tooling/tool/cli/test/codex-findings-scan.test.ts",
@@ -6352,8 +6485,8 @@
     "file": "packages/tooling/tool/cli/test/codex-findings-write.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 13645,
-    "lines": 348
+    "bytes": 14996,
+    "lines": 379
   },
   {
     "file": "packages/tooling/tool/cli/test/commitlint-config.test.ts",
@@ -6366,22 +6499,22 @@
     "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 150616,
-    "lines": 3590
+    "bytes": 151811,
+    "lines": 3612
   },
   {
     "file": "packages/tooling/tool/cli/test/corpus-preservation.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 57902,
-    "lines": 1204
+    "bytes": 57985,
+    "lines": 1206
   },
   {
     "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 6931,
-    "lines": 183
+    "bytes": 7004,
+    "lines": 184
   },
   {
     "file": "packages/tooling/tool/cli/test/coverage-turbo-inputs.test.ts",
@@ -6401,8 +6534,8 @@
     "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 36236,
-    "lines": 895
+    "bytes": 38447,
+    "lines": 940
   },
   {
     "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
@@ -6415,8 +6548,8 @@
     "file": "packages/tooling/tool/cli/test/create-package.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 56247,
-    "lines": 1377
+    "bytes": 63869,
+    "lines": 1533
   },
   {
     "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
@@ -6429,8 +6562,8 @@
     "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 34025,
-    "lines": 779
+    "bytes": 34438,
+    "lines": 787
   },
   {
     "file": "packages/tooling/tool/cli/test/directory-handle.test.ts",
@@ -6450,15 +6583,15 @@
     "file": "packages/tooling/tool/cli/test/docgen.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 170350,
-    "lines": 4791
+    "bytes": 175439,
+    "lines": 4941
   },
   {
     "file": "packages/tooling/tool/cli/test/doctest-lane.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 1493,
-    "lines": 46
+    "bytes": 4191,
+    "lines": 111
   },
   {
     "file": "packages/tooling/tool/cli/test/doctest.test.ts",
@@ -6492,36 +6625,36 @@
     "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 7793,
-    "lines": 190
+    "bytes": 24950,
+    "lines": 544
   },
   {
     "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 13468,
-    "lines": 324
+    "bytes": 41989,
+    "lines": 946
   },
   {
     "file": "packages/tooling/tool/cli/test/effect-vitest-primitives.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 17730,
-    "lines": 413
+    "bytes": 22062,
+    "lines": 506
   },
   {
     "file": "packages/tooling/tool/cli/test/effect-vitest-store.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 2550,
-    "lines": 60
+    "bytes": 4613,
+    "lines": 101
   },
   {
     "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 12100,
-    "lines": 301
+    "bytes": 16439,
+    "lines": 402
   },
   {
     "file": "packages/tooling/tool/cli/test/explore-check.test.ts",
@@ -6531,11 +6664,18 @@
     "lines": 375
   },
   {
+    "file": "packages/tooling/tool/cli/test/fallow-quality-invariants.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 1153,
+    "lines": 37
+  },
+  {
     "file": "packages/tooling/tool/cli/test/files-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 221497,
-    "lines": 5507
+    "bytes": 222137,
+    "lines": 5517
   },
   {
     "file": "packages/tooling/tool/cli/test/fixtures/agent-effectiveness/scorer-pass/fixture/src/Contact.ts",
@@ -6550,6 +6690,13 @@
     "kind": "support",
     "bytes": 259,
     "lines": 13
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/fixtures/doctest-lane/package/vitest.config.ts",
+    "package": "@beep/repo-cli",
+    "kind": "support",
+    "bytes": 68,
+    "lines": 1
   },
   {
     "file": "packages/tooling/tool/cli/test/fixtures/doctest-lane/package/vitest.docs.ts",
@@ -6590,8 +6737,8 @@
     "file": "packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 22725,
-    "lines": 582
+    "bytes": 23256,
+    "lines": 599
   },
   {
     "file": "packages/tooling/tool/cli/test/goals-command.test.ts",
@@ -6632,8 +6779,8 @@
     "file": "packages/tooling/tool/cli/test/goals-packet-core.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 41356,
-    "lines": 987
+    "bytes": 41826,
+    "lines": 1002
   },
   {
     "file": "packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts",
@@ -6646,8 +6793,22 @@
     "file": "packages/tooling/tool/cli/test/goals-set-status-stream.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 20299,
-    "lines": 512
+    "bytes": 20369,
+    "lines": 514
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/graft-cache-sync.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 28628,
+    "lines": 636
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/graft-hooks.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 12268,
+    "lines": 275
   },
   {
     "file": "packages/tooling/tool/cli/test/identity-registration-removal.test.ts",
@@ -6681,8 +6842,8 @@
     "file": "packages/tooling/tool/cli/test/jsdoc-migrate.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 27451,
-    "lines": 785
+    "bytes": 27625,
+    "lines": 784
   },
   {
     "file": "packages/tooling/tool/cli/test/knowledge-refs.test.ts",
@@ -6723,8 +6884,8 @@
     "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 96112,
-    "lines": 2233
+    "bytes": 93661,
+    "lines": 2090
   },
   {
     "file": "packages/tooling/tool/cli/test/lint-identity-registry.test.ts",
@@ -6737,8 +6898,8 @@
     "file": "packages/tooling/tool/cli/test/lint-judge-rubric.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 5360,
-    "lines": 132
+    "bytes": 5430,
+    "lines": 134
   },
   {
     "file": "packages/tooling/tool/cli/test/lint-security.test.ts",
@@ -6751,8 +6912,22 @@
     "file": "packages/tooling/tool/cli/test/lint-subcommand-allowlist.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 9387,
-    "lines": 233
+    "bytes": 9759,
+    "lines": 240
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 13957,
+    "lines": 336
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 22701,
+    "lines": 491
   },
   {
     "file": "packages/tooling/tool/cli/test/match-person-model-store.test.ts",
@@ -6765,8 +6940,22 @@
     "file": "packages/tooling/tool/cli/test/native-runtime.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 7681,
-    "lines": 226
+    "bytes": 11961,
+    "lines": 326
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 15900,
+    "lines": 326
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/package-scripts.schemas.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 5648,
+    "lines": 129
   },
   {
     "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
@@ -6790,6 +6979,13 @@
     "lines": 250
   },
   {
+    "file": "packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 18476,
+    "lines": 401
+  },
+  {
     "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
@@ -6800,7 +6996,7 @@
     "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 6026,
+    "bytes": 6234,
     "lines": 139
   },
   {
@@ -6814,8 +7010,8 @@
     "file": "packages/tooling/tool/cli/test/proof-fact.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 5718,
-    "lines": 164
+    "bytes": 6428,
+    "lines": 182
   },
   {
     "file": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
@@ -6842,8 +7038,8 @@
     "file": "packages/tooling/tool/cli/test/qa-judge-contract-parity.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 26225,
-    "lines": 640
+    "bytes": 26923,
+    "lines": 656
   },
   {
     "file": "packages/tooling/tool/cli/test/qa-judge-skill.test.ts",
@@ -6870,22 +7066,22 @@
     "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 9900,
-    "lines": 302
+    "bytes": 11218,
+    "lines": 330
   },
   {
     "file": "packages/tooling/tool/cli/test/quality-command-dispatch.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 7360,
-    "lines": 178
+    "bytes": 8255,
+    "lines": 199
   },
   {
     "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 4711,
-    "lines": 117
+    "bytes": 5781,
+    "lines": 138
   },
   {
     "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
@@ -6895,18 +7091,25 @@
     "lines": 228
   },
   {
+    "file": "packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 24049,
+    "lines": 531
+  },
+  {
     "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 201411,
-    "lines": 4471
+    "bytes": 246157,
+    "lines": 5395
   },
   {
     "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 231228,
-    "lines": 5766
+    "bytes": 252520,
+    "lines": 6253
   },
   {
     "file": "packages/tooling/tool/cli/test/quality-tmpfs-render.test.ts",
@@ -6919,15 +7122,15 @@
     "file": "packages/tooling/tool/cli/test/quality-tsgo-directives.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 909,
-    "lines": 24
+    "bytes": 4044,
+    "lines": 82
   },
   {
     "file": "packages/tooling/tool/cli/test/quality-tsgo-profile.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 5922,
-    "lines": 177
+    "bytes": 6925,
+    "lines": 203
   },
   {
     "file": "packages/tooling/tool/cli/test/ratchet-diff.test.ts",
@@ -6961,22 +7164,22 @@
     "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 25770,
-    "lines": 596
+    "bytes": 31217,
+    "lines": 707
   },
   {
     "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 53770,
+    "bytes": 53802,
     "lines": 1196
   },
   {
     "file": "packages/tooling/tool/cli/test/restoration-transformations-coverage.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 141566,
-    "lines": 3276
+    "bytes": 141644,
+    "lines": 3278
   },
   {
     "file": "packages/tooling/tool/cli/test/roadmap-refs.test.ts",
@@ -6996,8 +7199,8 @@
     "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 36239,
-    "lines": 801
+    "bytes": 40831,
+    "lines": 907
   },
   {
     "file": "packages/tooling/tool/cli/test/runtime-root.test.ts",
@@ -7014,24 +7217,31 @@
     "lines": 168
   },
   {
+    "file": "packages/tooling/tool/cli/test/schema-first-arbitrary-coverage.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 1932,
+    "lines": 41
+  },
+  {
     "file": "packages/tooling/tool/cli/test/schema-first.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 22099,
-    "lines": 498
+    "bytes": 22604,
+    "lines": 507
   },
   {
     "file": "packages/tooling/tool/cli/test/schema-topology.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 557,
-    "lines": 15
+    "bytes": 3414,
+    "lines": 79
   },
   {
     "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 15669,
+    "bytes": 15691,
     "lines": 372
   },
   {
@@ -7052,8 +7262,8 @@
     "file": "packages/tooling/tool/cli/test/skills-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 9417,
-    "lines": 273
+    "bytes": 9559,
+    "lines": 276
   },
   {
     "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
@@ -7066,8 +7276,8 @@
     "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 23402,
-    "lines": 559
+    "bytes": 26009,
+    "lines": 633
   },
   {
     "file": "packages/tooling/tool/cli/test/step-git-exec.test.ts",
@@ -7087,8 +7297,8 @@
     "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 37018,
-    "lines": 944
+    "bytes": 37251,
+    "lines": 949
   },
   {
     "file": "packages/tooling/tool/cli/test/tagged-error-equivalence.test.ts",
@@ -7112,46 +7322,53 @@
     "lines": 234
   },
   {
+    "file": "packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 6303,
+    "lines": 129
+  },
+  {
     "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 72070,
-    "lines": 1582
+    "bytes": 72555,
+    "lines": 1595
   },
   {
     "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 40333,
-    "lines": 1036
+    "bytes": 49192,
+    "lines": 1247
   },
   {
     "file": "packages/tooling/tool/cli/test/turbo-cache.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 8552,
-    "lines": 204
+    "bytes": 8612,
+    "lines": 206
   },
   {
     "file": "packages/tooling/tool/cli/test/version-sync-effect.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 15740,
-    "lines": 405
+    "bytes": 21949,
+    "lines": 550
   },
   {
     "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 50461,
-    "lines": 1171
+    "bytes": 61195,
+    "lines": 1412
   },
   {
     "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 17835,
-    "lines": 419
+    "bytes": 20144,
+    "lines": 466
   },
   {
     "file": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
@@ -7164,7 +7381,7 @@
     "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 26103,
+    "bytes": 26108,
     "lines": 595
   },
   {
@@ -7178,8 +7395,8 @@
     "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 15005,
-    "lines": 385
+    "bytes": 15055,
+    "lines": 384
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
@@ -7199,8 +7416,8 @@
     "file": "packages/tooling/tool/cli/test/yeet-gate-staleness.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 8478,
-    "lines": 210
+    "bytes": 9234,
+    "lines": 226
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
@@ -7290,15 +7507,15 @@
     "file": "packages/tooling/tool/cli/test/yeet-pr-provenance-boundary.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 6171,
-    "lines": 149
+    "bytes": 7522,
+    "lines": 178
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 11228,
-    "lines": 254
+    "bytes": 11329,
+    "lines": 255
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts",
@@ -7311,15 +7528,15 @@
     "file": "packages/tooling/tool/cli/test/yeet-provenance-footer.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 36951,
-    "lines": 830
+    "bytes": 38658,
+    "lines": 863
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet-remediation.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 18326,
-    "lines": 449
+    "bytes": 18390,
+    "lines": 451
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
@@ -7339,8 +7556,8 @@
     "file": "packages/tooling/tool/cli/test/yeet-resume.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 25807,
-    "lines": 541
+    "bytes": 26021,
+    "lines": 548
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
@@ -7353,8 +7570,8 @@
     "file": "packages/tooling/tool/cli/test/yeet-status-triage.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 20301,
-    "lines": 511
+    "bytes": 20357,
+    "lines": 513
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
@@ -7381,22 +7598,22 @@
     "file": "packages/tooling/tool/cli/test/yeet-watch-mode.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 57632,
-    "lines": 1472
+    "bytes": 57719,
+    "lines": 1470
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet-watch-stream.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 12819,
-    "lines": 341
+    "bytes": 12843,
+    "lines": 339
   },
   {
     "file": "packages/tooling/tool/cli/test/yeet.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 217750,
-    "lines": 5328
+    "bytes": 219308,
+    "lines": 5393
   },
   {
     "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
@@ -7409,8 +7626,8 @@
     "file": "packages/tooling/tool/docgen/test/Configuration.test.ts",
     "package": "@beep/repo-docgen",
     "kind": "test",
-    "bytes": 6442,
-    "lines": 189
+    "bytes": 6492,
+    "lines": 191
   },
   {
     "file": "packages/tooling/tool/docgen/test/Core.test.ts",
@@ -7437,8 +7654,8 @@
     "file": "packages/tooling/tool/docgen/test/SchemaParity.test.ts",
     "package": "@beep/repo-docgen",
     "kind": "test",
-    "bytes": 3278,
-    "lines": 92
+    "bytes": 3789,
+    "lines": 103
   },
   {
     "file": "packages/tooling/tool/docgen/test/fixtures/section-example/src/index.ts",
@@ -7472,43 +7689,43 @@
     "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
     "package": "@beep/workspace-domain",
     "kind": "test",
-    "bytes": 9239,
-    "lines": 250
+    "bytes": 10236,
+    "lines": 265
   },
   {
     "file": "packages/workspace/server/test/ThreadStore.test.ts",
     "package": "@beep/workspace-server",
     "kind": "test",
-    "bytes": 16112,
-    "lines": 413
+    "bytes": 16490,
+    "lines": 437
   },
   {
     "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
     "package": "@beep/workspace-server",
     "kind": "test",
-    "bytes": 17888,
-    "lines": 441
+    "bytes": 18175,
+    "lines": 447
   },
   {
     "file": "packages/workspace/server/test/WorkspaceVaultStore.test.ts",
     "package": "@beep/workspace-server",
     "kind": "test",
-    "bytes": 3730,
-    "lines": 88
+    "bytes": 4011,
+    "lines": 98
   },
   {
     "file": "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts",
     "package": "@beep/workspace-server",
     "kind": "test",
-    "bytes": 9231,
-    "lines": 202
+    "bytes": 9267,
+    "lines": 204
   },
   {
     "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
     "package": "@beep/workspace-tables",
     "kind": "test",
-    "bytes": 10489,
-    "lines": 227
+    "bytes": 10320,
+    "lines": 225
   },
   {
     "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
@@ -7521,7 +7738,7 @@
     "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
     "package": "@beep/workspace-use-cases",
     "kind": "test",
-    "bytes": 8936,
-    "lines": 241
+    "bytes": 9883,
+    "lines": 260
   }
 ]

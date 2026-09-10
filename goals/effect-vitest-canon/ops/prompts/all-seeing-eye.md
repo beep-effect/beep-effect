@@ -33,7 +33,7 @@ last-log races, logger replacement, trace noise when disabled, concurrent
 state leaks and watchdogs that themselves wait on frozen test time.
 Audit the complete tester surface: call/skip/skipIf/runIf/only/each/fails/prop
 and named/unnamed/nested layer callbacks. Preserve generic requirements,
-TestContext and property parameters. At rc.112 each supplies only its case;
+TestContext and property parameters. At rc.113 each supplies only its case;
 prop also supplies TestContext. Do not invent missing callback arguments.
 
 Suggested rules: L-OBS-01 missing diagnostic context, L-OBS-02 wrong watchdog
@@ -45,12 +45,12 @@ information or changed semantics, not a generic preference for more logs.
 
 Use the accepted instrumented runner and its Node/Bun fixtures, actual failing
 job/test output, the package's logger conventions and detector residue.
-Pinned graph anchors: Effect.raceFirst (Effect.ts 4894-4912),
-Effect.annotateLogs, Logger.layer (Logger.ts 914-936), Logger.consolePretty
-(775-782), TestClock.withLive (testing/TestClock.ts 580-581), makeMethods,
-it.effect/it.live and their layer/tester interfaces. Vitest 4.1.11 public
-TestContext supplies resolved task identity/timeout; verify the actual public
-integration seam for each variant rather than relying on a registration label.
+Use the current graph anchors for Effect.raceFirst, Effect.annotateLogs,
+Logger.layer, Logger.consolePretty, TestClock.withLive, makeMethods and
+it.effect / it.live with their layer/tester interfaces. The public TestContext
+supplies resolved identity and timeout. Verify the accepted Vitest runtime in
+the integration receipt and prove the public seam for each variant. rc.113's
+native property engine must retain one registration-wide lifecycle and deadline.
 
 ## Worked adoption
 
@@ -81,7 +81,8 @@ it.effect("finishes the operation", Effect.fnUntraced(function* () {
 }))
 ~~~
 
-Both worked examples compile against the pinned APIs. The instrumented runner's
-Node/Bun and package proofs are recorded in history/2026-09-08-p0e-verification.md.
+The initial Node/Bun and package proofs in history/2026-09-08-p0e-verification.md
+are rc.112 evidence. Current acceptance requires the rc.113 integration receipt
+and refreshed Node/Bun, compiler and package results.
 Adoption remains the P2 observability step. Preserve the complete tester-mode
 proof; a standalone race helper alone does not satisfy D7.

@@ -1,10 +1,13 @@
 import { fcRuns } from "@beep/fc-runs";
 import { $TestUtilsId } from "@beep/identity/packages";
-import { it, TestHang } from "@beep/test-utils/Vitest";
-import { afterAll, expect, expectTypeOf, TestRunner } from "@effect/vitest";
+import { makeIt } from "@beep/test-utils/test/Vitest";
+import { it, TestContextUnavailable, TestHang } from "@beep/test-utils/Vitest";
+import { afterAll, expect, expectTypeOf, TestRunner, it as upstreamIt } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Effect, Layer, Option as O, Ref } from "effect";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { Clock, Config, ConfigProvider, Context, Duration, Effect, Layer, Logger, Option as O, Ref } from "effect";
+import * as A from "effect/Array";
+import * as S from "effect/Schema";
+import { TestClock } from "effect/testing";
 import type { Vitest } from "@effect/vitest";
 
 const $I = $TestUtilsId.create("test/Vitest.test");
@@ -91,14 +94,14 @@ it.effect.each([1, 2])("passes each callback only its concrete case: %s", (value
 
 it.effect.prop(
   "preserves generated property values and TestContext",
-  [fc.integer({ min: 1, max: 2 })],
+  [S.Int.check(S.isBetween({ minimum: 1, maximum: 2 }))],
   ([value], ctx) =>
     Effect.sync(() => {
       propertyRuns += 1;
       assertTrue(value === 1 || value === 2);
       assertTrue(ctx.task.fullTestName.includes("preserves generated property values"));
     }),
-  { fastCheck: { ...fcRuns(2), seed: 42 } }
+  { arbitrary: { ...fcRuns(2), seed: 42 } }
 );
 
 it.effect.skip("preserves skipped registration", () => Effect.die("must not run"));
@@ -153,4 +156,211 @@ afterAll(() => {
   expect(layerAcquisitions).toBe(1);
   expect(layerReleases).toBe(1);
   expect(perTestReleases).toBe(1);
+});
+
+const encodeTestHang = S.encodeEffect(TestHang);
+const encodeMissingContext = S.encodeEffect(TestContextUnavailable);
+
+it.effect("preserves typed runner error messages and encoded diagnostic fields", () =>
+  Effect.gen(function* () {
+    const missing = TestContextUnavailable.make({ method: "each" });
+    expect(missing.message).toBe("Instrumented each callback ran without its Vitest execution context");
+    expect(yield* encodeMissingContext(missing)).toEqual({
+      _tag: "TestContextUnavailable",
+      method: "each",
+    });
+    const withoutLog = TestHang.make({ testName: "no output", timeoutMillis: 25 });
+    expect(withoutLog.message).toBe('Instrumented test "no output" exceeded its 25ms watchdog. Last log: <none>');
+    const withLog = TestHang.make({ testName: "queue worker", timeoutMillis: 175, lastLogLine: O.some("waiting") });
+    expect(withLog.message).toBe('Instrumented test "queue worker" exceeded its 175ms watchdog. Last log: waiting');
+    expect(yield* encodeTestHang(withLog)).toEqual({
+      _tag: "TestHang",
+      testName: "queue worker",
+      timeoutMillis: 175,
+      lastLogLine: "waiting",
+    });
+    expect(yield* encodeTestHang(withoutLog)).toEqual({
+      _tag: "TestHang",
+      testName: "no output",
+      timeoutMillis: 25,
+    });
+  })
+);
+
+// Only the source-only watchdog seam advances this logical clock. Body TestClock
+// remains owned by @effect/vitest; no native timers arrange the deadline race.
+const watchdogClock = Effect.runSync(Clock.Clock);
+let watchdogMillis = 0;
+const controlledIt = makeIt({
+  ...watchdogClock,
+  monotonicTimeNanos: Effect.sync(() => BigInt(watchdogMillis) * 1_000_000n),
+  monotonicTimeNanosUnsafe: () => BigInt(watchdogMillis) * 1_000_000n,
+  sleep: (duration) =>
+    Effect.sync(() => {
+      watchdogMillis += Duration.toMillis(duration);
+    }),
+});
+let observedHang = O.none<TestHang>();
+let propertyReleases = 0;
+let deadlineTrials = 0;
+let lifecycleStarts = 0;
+let lifecycleEnds = 0;
+const diagnosticLayer = Layer.merge(
+  ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_TEST_TRACE: "1", CI: false })),
+  Logger.layer(
+    [
+      Logger.make(({ message }) => {
+        const messages = A.ensure(message);
+        observedHang = O.orElse(A.findFirst(messages, TestHang.is), () => observedHang);
+        if (A.contains(messages, "effect-vitest test start")) lifecycleStarts += 1;
+        if (A.some(messages, (part) => part === "effect-vitest test end outcome=failure durationMillis=155"))
+          lifecycleEnds += 1;
+      }),
+    ],
+    { mergeWithExisting: true }
+  )
+);
+
+controlledIt.layer(diagnosticLayer)("in-process property watchdog", (deadlineIt) => {
+  deadlineIt.effect.prop(
+    "charges one budget across real failing trials and shrinking",
+    [S.Int.check(S.isBetween({ minimum: 1, maximum: 100 }))],
+    ([value]) =>
+      Effect.gen(function* () {
+        deadlineTrials += 1;
+        yield* Effect.acquireRelease(Effect.void, () =>
+          Effect.sync(() => {
+            propertyReleases += 1;
+          })
+        );
+        yield* Effect.log(`in-process trial ${value}`);
+        return yield* Effect.never;
+      }),
+    { timeout: 180, fails: true, arbitrary: { ...fcRuns(4), seed: 4242 } }
+  );
+});
+
+it.effect("retains the real watchdog failure and releases its property trial scope", () =>
+  Effect.sync(() => {
+    expect(deadlineTrials).toBe(1);
+    expect(propertyReleases).toBe(1);
+    expect(lifecycleStarts).toBe(1);
+    expect(lifecycleEnds).toBe(1);
+    const hang = O.getOrThrow(observedHang);
+    expect(hang.timeoutMillis).toBe(155);
+    expect(hang.testName).toContain("charges one budget across real failing trials and shrinking");
+    expect(hang.message).toContain("in-process trial");
+  })
+);
+
+controlledIt.effect(
+  "keeps the body TestClock independent with a disabled watchdog",
+  () =>
+    Effect.gen(function* () {
+      yield* TestClock.adjust("2 seconds");
+      expect(yield* Clock.currentTimeMillis).toBe(2_000);
+    }),
+  0
+);
+controlledIt.effect(
+  "accepts an infinite watchdog timeout without scheduling a sleep",
+  () =>
+    Effect.sync(() => {
+      expect(watchdogMillis).toBe(155);
+    }),
+  Number.POSITIVE_INFINITY
+);
+controlledIt.effect(
+  "allows synchronous completion with a tiny positive watchdog budget",
+  () =>
+    Effect.sync(() => {
+      expect(watchdogMillis).toBe(155);
+    }),
+  20
+);
+
+it.layer(ConfigProvider.layer(ConfigProvider.fromUnknown({ CI: "invalid", component: "runner" })))(
+  "invalid trace configuration",
+  (quietIt) => {
+    quietIt.effect("keeps configuration failure from failing the test body", () =>
+      Effect.gen(function* () {
+        expect(yield* Config.String("component")).toBe("runner");
+      })
+    );
+  }
+);
+
+it.layer(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_TEST_TRACE: "1", CI: false })))(
+  "traced ordinary execution",
+  (tracedIt) => {
+    tracedIt.effect("preserves configuration and body services while emitting an ordinary lifecycle", () =>
+      Effect.gen(function* () {
+        expect(yield* Config.Boolean("CI")).toBe(false);
+        yield* TestClock.adjust("1 second");
+        expect(yield* Clock.currentTimeMillis).toBe(1_000);
+      })
+    );
+  }
+);
+let interruptedScopeReleased = false;
+it.effect.fails("preserves intentional interruption and releases the acquired scope", () =>
+  Effect.gen(function* () {
+    yield* Effect.acquireRelease(Effect.void, () =>
+      Effect.sync(() => {
+        interruptedScopeReleased = true;
+      })
+    );
+    return yield* Effect.interrupt;
+  })
+);
+it.effect("observes interruption cleanup after the expected failure", () =>
+  Effect.sync(() => {
+    expect(interruptedScopeReleased).toBe(true);
+  })
+);
+let quietScopeReleases = 0;
+controlledIt.layer(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_TEST_TRACE: "0", CI: false })))(
+  "quiet synchronous setup",
+  (quietIt) => {
+    quietIt.effect.prop(
+      "charges body setup before the watchdog branch sleeps",
+      [S.Int.check(S.isBetween({ minimum: 1, maximum: 100 }))],
+      () =>
+        Effect.gen(function* () {
+          yield* Effect.acquireRelease(Effect.void, () =>
+            Effect.sync(() => {
+              quietScopeReleases += 1;
+            })
+          );
+          watchdogMillis += 155;
+          return yield* Effect.never;
+        }),
+      { timeout: 180, fails: true, arbitrary: { ...fcRuns(4), seed: 4242 } }
+    );
+  }
+);
+it.effect("observes expired setup without resetting the budget during shrinking", () =>
+  Effect.sync(() => {
+    expect(quietScopeReleases).toBe(1);
+    expect(watchdogMillis).toBe(310);
+  })
+);
+
+it.effect("preserves callable tester metadata for tooling that inspects registration functions", () =>
+  Effect.sync(() => {
+    expect(controlledIt.effect.name).toBe(upstreamIt.effect.name);
+    expect(controlledIt.effect.length).toBe(upstreamIt.effect.length);
+  })
+);
+it.layer(Layer.empty)("plain property passthrough", (layerIt) => {
+  layerIt.prop(
+    "preserves the public non-Effect property method in a layer block",
+    [S.Int.check(S.isBetween({ minimum: 1, maximum: 100 }))],
+    ([value], ctx) => {
+      expect(value).toBeGreaterThanOrEqual(1);
+      expect(value).toBeLessThanOrEqual(100);
+      expect(ctx.task.fullTestName).toContain("plain property passthrough");
+    },
+    { arbitrary: { ...fcRuns(4), seed: 4242 } }
+  );
 });

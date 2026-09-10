@@ -10,7 +10,7 @@ and merge. P2 source edits wait for his P1 acknowledgement.
 The orchestrator assigns disjoint packages and explicitly names whether the
 lane is auditing or remediating. You are not alone: preserve concurrent work
 and never revert another lane's edits. Run through Codex CLI with
-gpt-6-astra and explicit xhigh effort, per Benjamin's later AGENTS instructions. No git commands, agents,
+gpt-6-astra and explicit medium effort, per Benjamin's 2026-09-09 AGENTS override. No git commands, agents,
 publication, inbox waivers or phase/status changes inside a lane.
 
 Create the assigned report in your first actions and append evidence as work
@@ -73,11 +73,12 @@ Every file's coverage and every claim must be traceable to its rows.
 
 ## Evidence and delivery
 
-All Effect APIs are pinned to @effect/vitest@4.0.0-rc.112,
-commit 2600f62f4532026928454dcea8d1c48557b3f942. Use the graph's source anchors
+All Effect APIs are pinned to @effect/vitest@4.0.0-rc.113,
+commit d3b837aee836f35d625d55205f7d6e61305fc198. Use the graph's source anchors
 and the supplied verified reference snapshot, never upstream HEAD.
-Installed Vitest is 4.1.11; Bun is command-scoped 1.4.1. A successful
-typecheck does not establish runtime behavior, especially synchronous prop.
+Bun is command-scoped 1.4.2 and Node is 24.20.0. Confirm the accepted Vitest
+version in the current integration receipt; rc.113 declares a Vitest 5 peer
+requirement. A successful typecheck does not establish runtime behavior.
 
 P1/P2 package durations use the Node Vitest JSON reporter from package cwd,
 with absolute output paths. Bun-native package tests are correctness proof,

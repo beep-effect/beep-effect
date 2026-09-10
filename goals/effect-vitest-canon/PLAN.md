@@ -21,11 +21,22 @@ Status: `active`
 P0a research and P0b packet setup overlap as authorized by the first-actions
 contract. Every subsequent phase waits for its predecessor's gate.
 
-## Current evidence
+## Current integration, 2026-09-10
 
-P0a through P0.5 are complete. Their dated verification receipts are in history.
-The source and runtime contract is pinned to @effect/vitest 4.0.0-rc.112 at the
-verified tag; no upstream HEAD API is used as an anchor.
+PR #1060 is merged and main is integrated at 92fcea6. The current source contract
+is rc.113 at d3b837aee836f35d625d55205f7d6e61305fc198. Root adopted the verified
+100-entry graph; runner and the expanded FileSystem conformance suite pass full
+package verification. CLI package verification and test-utils scoped coverage
+pass; CLI scoped coverage is in progress. Native property
+APIs replace the FastCheck bridge. This PR retains main's Vitest 4.1.11 and
+qualifies behavioral proof separately from rc.113's unsatisfied Vitest 5 peer.
+See history/2026-09-10-pr1067-rc113-integration.md. P0f/P0g remain open.
+
+## Historical evidence through rc.112
+
+P0a through P0.5 completed at their recorded revisions. Their dated verification
+receipts remain in history; the following rc.112 results do not establish the
+current upgrade's compatibility or final package/hosted proof.
 
 P0c delivered all 15 syntax-only detector rules, the live census, keyed ratchet
 and package JSONL rows. Its full package verification passed under Bun 1.4.1.
@@ -135,6 +146,26 @@ P0f is now in progress. Benjamin authorizes merges; P0g/P1/P2 remain pending.
 All runtime/verification limitations are in the hosted receipt and lane reports.
 
 ## P0f current work
+
+
+Latest continuation (2026-09-10): main including #1060 is integrated, and the
+active pin is Effect/@effect/vitest rc.113. The scanner has 111 passing focused
+tests and full repo-cli package audit/docgen proof. The final runner and
+FileSystem helper pass full package verification, Node/Bun runtime checks and
+scoped coverage. CLI coverage measurement and the canonical comparison pass
+after nine measured missing identities are adopted with all prior floors and
+other packages preserved. Full Fallow and JSDoc ratchet checks pass.
+
+The final source capture has 1,106 files (996 tests and 110 support) and 8,023
+candidate rows. Initial scan and three ordered repeat commands pass the
+10-second bound; the slowest leaves 0.024 seconds of margin. Root accepted exact current
+row reconciliation and canonical refresh. The post-adoption ratchet passes
+functionally but takes 10.319 seconds; the final D4 bound remains open. Early
+publication starts hosted checks alongside local proof while that timing is
+attributed. Round-one integration and rounds 2/3 still follow. P0g ratification and all P1/P2 gates remain. Current proof and limitations
+are in history/2026-09-10-pr1067-rc113-integration.md and the final timing report.
+
+### Historical pre-resumption integration
 
 Current integration update (2026-09-09): the final runner handoff is terminal,
 joined and accepted. Complete Node/Bun suites, source/test/fixture compilers,

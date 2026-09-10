@@ -1,3 +1,10 @@
+/**
+ * Source-only test access to the instrumented runner with a controlled watchdog clock.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { makeVitestRuntime } from "../internal/VitestRuntime.ts";
 import type { Clock } from "effect";
 
@@ -18,7 +25,8 @@ import type { Clock } from "effect";
  * ```ts
  * import { makeIt } from "@beep/test-utils/test/Vitest";
  * import { expect } from "@effect/vitest";
- * import { Clock, Effect } from "effect";
+ * import * as Clock from "effect/Clock";
+ * import * as Effect from "effect/Effect";
  * import { TestClock } from "effect/testing";
  *
  * const it = makeIt(Effect.runSync(Clock.Clock));

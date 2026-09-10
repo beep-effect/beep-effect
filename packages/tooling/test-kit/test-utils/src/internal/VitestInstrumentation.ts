@@ -26,8 +26,8 @@ const WatchdogMinimumReliableMarginMillis = 25;
 const WatchdogMarginRatio = 0.05;
 
 const traceEnabled = Effect.gen(function* () {
-  const explicit = yield* Config.option(Config.string("BEEP_TEST_TRACE"));
-  const ci = yield* Config.boolean("CI").pipe(Config.withDefault(false));
+  const explicit = yield* Config.option(Config.String("BEEP_TEST_TRACE"));
+  const ci = yield* Config.Boolean("CI").pipe(Config.withDefault(false));
   return O.contains(explicit, "1") || ci;
 }).pipe(Effect.orElseSucceed(() => false));
 
@@ -62,6 +62,10 @@ const makePropertyRunState = (): PropertyRunState => ({
 });
 
 const testExecutionStorage = new NodeAsyncHooks.AsyncLocalStorage<TestExecutionState>();
+// Native Arbitrary resumes trials inside Effect fibers, which may be scheduled
+// from another test's async context. The public callback context retains its
+// execution identity across those resumptions; weak keys do not retain tasks.
+const testExecutions = new WeakMap<TestContext, TestExecutionState>();
 
 const taskName = (task: ResolvedTestTask): string => task.fullTestName || task.name;
 
@@ -112,6 +116,44 @@ const provideLoggerLayer = <A, E, R>(
     Layer.buildWithScope(layer, scope).pipe(Effect.flatMap((context) => Effect.provide(effect, context)))
   );
 
+const startTestLifecycle = Effect.fnUntraced(function* (
+  name: string,
+  shouldTrace: boolean,
+  startedAtMillis: number,
+  monotonicMillis: Effect.Effect<number>,
+  isFirstPropertyTrial: boolean,
+  propertyRun?: PropertyRunState
+) {
+  if (shouldTrace && (propertyRun === undefined || isFirstPropertyTrial)) {
+    yield* Effect.log("effect-vitest test start").pipe(Effect.annotateLogs({ event: "start", testName: name }));
+  }
+
+  if (propertyRun !== undefined && isFirstPropertyTrial && shouldTrace) {
+    const currentLoggers = yield* Logger.CurrentLoggers;
+    const runInContext = Effect.runPromiseWith(yield* Effect.context<never>());
+    propertyRun.finish = O.some(() =>
+      runInContext(
+        monotonicMillis.pipe(
+          Effect.flatMap((endedAtMillis) => {
+            const durationMillis = endedAtMillis - startedAtMillis;
+            return Effect.log(
+              `effect-vitest test end outcome=${propertyRun.outcome} durationMillis=${durationMillis}`
+            ).pipe(
+              Effect.annotateLogs({
+                durationMillis,
+                event: "end",
+                outcome: propertyRun.outcome,
+                testName: name,
+              })
+            );
+          }),
+          Effect.provideService(Logger.CurrentLoggers, currentLoggers)
+        )
+      )
+    );
+  }
+});
+
 const instrumentEffect = <A, E, R>(
   self: Effect.Effect<A, E, R>,
   task: ResolvedTestTask,
@@ -140,34 +182,14 @@ const instrumentEffect = <A, E, R>(
 
     return yield* provideLoggerLayer(
       Effect.gen(function* () {
-        if (shouldTrace && (propertyRun === undefined || isFirstPropertyTrial)) {
-          yield* Effect.log("effect-vitest test start").pipe(Effect.annotateLogs({ event: "start", testName: name }));
-        }
-
-        if (propertyRun !== undefined && isFirstPropertyTrial && shouldTrace) {
-          const currentLoggers = yield* Logger.CurrentLoggers;
-          const runInContext = Effect.runPromiseWith(yield* Effect.context<never>());
-          propertyRun.finish = O.some(() =>
-            runInContext(
-              monotonicMillis.pipe(
-                Effect.flatMap((endedAtMillis) => {
-                  const durationMillis = endedAtMillis - startedAtMillis;
-                  return Effect.log(
-                    `effect-vitest test end outcome=${propertyRun.outcome} durationMillis=${durationMillis}`
-                  ).pipe(
-                    Effect.annotateLogs({
-                      durationMillis,
-                      event: "end",
-                      outcome: propertyRun.outcome,
-                      testName: name,
-                    })
-                  );
-                }),
-                Effect.provideService(Logger.CurrentLoggers, currentLoggers)
-              )
-            )
-          );
-        }
+        yield* startTestLifecycle(
+          name,
+          shouldTrace,
+          startedAtMillis,
+          monotonicMillis,
+          isFirstPropertyTrial,
+          propertyRun
+        );
 
         const body: Effect.Effect<Exit.Exit<A, E | TestHang>, never, R | Scope.Scope> = Effect.exit(
           provideLoggerLayer(self, captureLoggerLayer)
@@ -255,8 +277,8 @@ const instrumentEffect = <A, E, R>(
 const missingTestContext = (method: string): Effect.Effect<never, TestContextUnavailable> =>
   Effect.fail(TestContextUnavailable.make({ method }));
 
-const propertyRunFor = (registration: object): PropertyRunState | undefined => {
-  const execution = testExecutionStorage.getStore();
+const propertyRunFor = (registration: object, context: TestContext): PropertyRunState | undefined => {
+  const execution = testExecutions.get(context);
   if (execution === undefined) {
     return undefined;
   }
@@ -282,7 +304,14 @@ const finishPropertyRuns = (execution: TestExecutionState): Promise<void> =>
 
 aroundEach((runTest, context) => {
   const execution: TestExecutionState = { context, propertyRuns: new Map() };
-  return testExecutionStorage.run(execution, () => runTest().finally(() => finishPropertyRuns(execution)));
+  testExecutions.set(context, execution);
+  return testExecutionStorage.run(execution, () =>
+    runTest()
+      .finally(() => finishPropertyRuns(execution))
+      .finally(() => {
+        testExecutions.delete(context);
+      })
+  );
 });
 
 const instrumentContextCallback =
@@ -296,7 +325,7 @@ const instrumentContextCallback =
     if (propertyRegistration === undefined) {
       return instrumentEffect(self(...args), taskFromContext(context), clock);
     }
-    const propertyRun = propertyRunFor(propertyRegistration);
+    const propertyRun = propertyRunFor(propertyRegistration, context);
     if (propertyRun === undefined) {
       return missingTestContext("property");
     }

@@ -1,30 +1,57 @@
 import { fileURLToPath } from "node:url";
 import {
   countEffectVitestSourceLines,
+  decodeEffectVitestFindingJson,
   detectEffectVitestFindings,
   diffEffectVitestFindings,
   discoverEffectVitestSourcePaths,
   EffectVitestFinding,
   EffectVitestInventoryDocument,
+  EffectVitestInventoryPath,
+  EffectVitestLintOptions,
   EffectVitestPackageTiming,
   EffectVitestReplacement,
   makeEffectVitestFindingKey,
   preserveEffectVitestExceptions,
   readEffectVitestPrimitiveGraph,
+  runEffectVitestLint,
   verifyEffectVitestPin,
 } from "@beep/repo-cli/commands/Lint";
-import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { FsUtils, FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodePath, NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { assertFalse, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
 
+const encodeInventoryJson = S.encodeEffect(S.fromJsonString(EffectVitestInventoryDocument));
+const isEffectVitestFinding = S.is(EffectVitestFinding);
+const isEffectVitestPackageTiming = S.is(EffectVitestPackageTiming);
+
 const discoveryLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 const repositoryRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
+
+const fixtureInventoryFileSystem = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const inventory = path.join(repositoryRoot, EffectVitestInventoryPath);
+  const content = yield* encodeInventoryJson(
+    EffectVitestInventoryDocument.make({
+      schemaVersion: "effect-vitest-inventory/v1",
+      effectVitestVersion: "4.0.0-rc.113",
+      scope: [],
+      findings: [],
+    })
+  );
+  return {
+    ...fs,
+    exists: (file: string) => (file === inventory ? Effect.succeed(true) : fs.exists(file)),
+    readFileString: (file: string) => (file === inventory ? Effect.succeed(content) : fs.readFileString(file)),
+  };
+});
 
 const finding = (line: number, evidence: string, ordinal = 1): EffectVitestFinding =>
   EffectVitestFinding.make({
@@ -48,6 +75,25 @@ const finding = (line: number, evidence: string, ordinal = 1): EffectVitestFindi
     fixSha: O.none(),
   });
 
+it("keeps symbol absence and literal ordinal suffixes distinct in canonical keys", () => {
+  const base = finding(4, "Fx.runSync(program)");
+  const absent = EffectVitestFinding.make({ ...base, symbol: O.none() });
+  assertTrue(
+    makeEffectVitestFindingKey(absent) ===
+      "EV001::packages/example/test/a.test.ts::::runtime-boundary-in-test::Fx.runSync(program)::#1"
+  );
+  assertFalse(makeEffectVitestFindingKey(absent) === makeEffectVitestFindingKey(base));
+  for (const [id, suffix] of [
+    ["legacy", "#legacy"],
+    ["legacy#", "#"],
+    ["legacy#2#3", "#3"],
+  ]) {
+    assertTrue(id !== undefined && suffix !== undefined);
+    const row = EffectVitestFinding.make({ ...base, id });
+    assertTrue(Str.endsWith(`::${suffix}`)(makeEffectVitestFindingKey(row)));
+  }
+});
+
 it("uses the P0a physical-line convention", () => {
   assertTrue(countEffectVitestSourceLines("") === 0);
   assertTrue(countEffectVitestSourceLines("one") === 1);
@@ -56,6 +102,181 @@ it("uses the P0a physical-line convention", () => {
 });
 
 it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it) => {
+  it.effect(
+    "rejects newly detected membership when the baseline is absent",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fsUtils = yield* FsUtils;
+      const absolute = path.join(repositoryRoot, "packages/tooling/tool/cli/test/effect-vitest-store.test.ts");
+      const inventory = path.join(repositoryRoot, EffectVitestInventoryPath);
+      const failure = yield* runEffectVitestLint(EffectVitestLintOptions.make({ census: false, write: false })).pipe(
+        Effect.provideService(FsUtils, { ...fsUtils, globFiles: () => Effect.succeed([absolute]) }),
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          exists: (file) => (file === inventory ? Effect.succeed(false) : fs.exists(file)),
+        }),
+        Effect.flip
+      );
+      assertTrue(failure._tag === "CliReportedExit");
+      assertTrue(failure.message === "effect-vitest: ratchet failed on new instances.");
+    })
+  );
+
+  it.effect(
+    "rejects a mismatched baseline pin even when discovery is empty",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fsUtils = yield* FsUtils;
+      const inventory = path.join(repositoryRoot, EffectVitestInventoryPath);
+      const content = yield* encodeInventoryJson(
+        EffectVitestInventoryDocument.make({
+          schemaVersion: "effect-vitest-inventory/v1",
+          effectVitestVersion: "4.0.0-rc.111",
+          scope: [],
+          findings: [],
+        })
+      );
+      const failure = yield* runEffectVitestLint(EffectVitestLintOptions.make({ census: false, write: false })).pipe(
+        Effect.provideService(FsUtils, { ...fsUtils, globFiles: () => Effect.succeed([]) }),
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          exists: (file) => (file === inventory ? Effect.succeed(true) : fs.exists(file)),
+          readFileString: (file, encoding) =>
+            file === inventory ? Effect.succeed(content) : fs.readFileString(file, encoding),
+        }),
+        Effect.flip
+      );
+      assertTrue(failure._tag === "EffectVitestLintError");
+      assertTrue(
+        Str.includes("Baseline pin 4.0.0-rc.111 does not match graph pin 4.0.0-rc.113")(failure.message),
+        failure.message
+      );
+    })
+  );
+
+  it.effect(
+    "retains resource-wrapper definitions but filters test-only rules from support inputs",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fsUtils = yield* FsUtils;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-support-" });
+      const input = path.join(root, "support.ts");
+      const output = path.join(root, "rows");
+      yield* fs.writeFileString(
+        input,
+        [
+          'import { it } from "@effect/vitest";',
+          'import { Effect } from "effect";',
+          "export const withRepo = () => Effect.acquireRelease(acquire, release);",
+          'it("plain runtime", () => Effect.runSync(program));',
+        ].join("\n")
+      );
+      const timing = yield* runEffectVitestLint(
+        EffectVitestLintOptions.make({ census: false, write: false, rows: O.some(output) })
+      ).pipe(
+        Effect.provideService(FsUtils, { ...fsUtils, globFiles: () => Effect.succeed([input]) }),
+        Effect.provideServiceEffect(FileSystem.FileSystem, fixtureInventoryFileSystem())
+      );
+      assertTrue(timing.fileCount === 1);
+      assertTrue(timing.findingCount === 1);
+      const files = yield* fs.readDirectory(output);
+      assertTrue(files.length === 1);
+      const file = files[0];
+      assertTrue(file !== undefined);
+      const text = yield* fs.readFileString(path.join(output, file));
+      const row = decodeEffectVitestFindingJson(Str.trim(text));
+      assertTrue(O.isSome(row), "Expected the support definition row");
+      assertTrue(row.value.ruleId === "EV003");
+      assertTrue(O.contains(row.value.symbol, "withRepo"));
+    })
+  );
+
+  it.effect(
+    "rejects missing, malformed and wrongly named installed package metadata before version comparison",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-invalid-pin-" });
+      const packagePath = path.join(root, "node_modules/@effect/vitest/package.json");
+      const missing = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
+      assertTrue(Str.includes("Unable to read the installed @effect/vitest package metadata")(missing.message));
+      yield* fs.makeDirectory(path.dirname(packagePath), { recursive: true });
+      for (const content of ["{broken", '{"name":"other-package","version":"4.0.0-rc.113"}']) {
+        yield* fs.writeFileString(packagePath, content);
+        const malformed = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
+        assertTrue(Str.includes("Unable to decode installed @effect/vitest package metadata")(malformed.message));
+        assertFalse(Str.includes("does not match graph pin")(malformed.message));
+      }
+    })
+  );
+
+  it.effect(
+    "passes the default membership ratchet for an empty discovered scope without writing artifacts",
+    Effect.fnUntraced(function* () {
+      const fsUtils = yield* FsUtils;
+      const timing = yield* runEffectVitestLint(EffectVitestLintOptions.make({ census: false, write: false })).pipe(
+        Effect.provideService(FsUtils, { ...fsUtils, globFiles: () => Effect.succeed([]) }),
+        Effect.provideServiceEffect(FileSystem.FileSystem, fixtureInventoryFileSystem())
+      );
+      assertTrue(timing.fileCount === 0);
+      assertTrue(timing.findingCount === 0);
+    })
+  );
+
+  it.effect(
+    "routes scanner identities through platform-relative paths and canonicalizes Windows separators",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fsUtils = yield* FsUtils;
+      const windowsContext = yield* Layer.build(NodePath.layerWin32);
+      const windows = Context.get(windowsContext, Path.Path);
+      const output = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-paths-" });
+      const file = "packages/tooling/tool/cli/test/effect-vitest-store.test.ts";
+      const absolute = path.join(repositoryRoot, file);
+      const scan = Effect.fnUntraced(function* (prefix: string, index: number) {
+        const calls = A.empty<readonly [string, string]>();
+        const rows = path.join(output, `${index}`);
+        const relative = (from: string, to: string): string => {
+          calls.push([from, to]);
+          return windows.relative(`${prefix}${from}`, `${prefix}${to}`);
+        };
+        const timing = yield* runEffectVitestLint(
+          EffectVitestLintOptions.make({ census: false, write: false, rows: O.some(rows) })
+        ).pipe(
+          Effect.provideService(FsUtils, { ...fsUtils, globFiles: () => Effect.succeed([absolute]) }),
+          Effect.provideService(Path.Path, { ...path, relative }),
+          Effect.provideServiceEffect(FileSystem.FileSystem, fixtureInventoryFileSystem())
+        );
+        assertTrue(timing.fileCount === 1);
+        assertTrue(timing.findingCount > 0);
+        assertTrue(
+          A.some(calls, ([from, to]) => path.resolve(from) === path.resolve(repositoryRoot) && to === absolute)
+        );
+        const names = yield* fs.readDirectory(rows);
+        assertTrue(names.length === 1);
+        const name = names[0];
+        assertTrue(name !== undefined);
+        const text = yield* fs.readFileString(path.join(rows, name));
+        const findings = A.map(A.filter(Str.split("\n")(text), Str.isNonEmpty), (line) => {
+          const finding = decodeEffectVitestFindingJson(line);
+          assertTrue(O.isSome(finding), "Expected a schema-valid scanner row");
+          assertTrue(finding.value.file === file);
+          assertFalse(Str.includes("\\")(finding.value.id));
+          return finding.value;
+        });
+        return findings;
+      });
+      const drive = yield* scan("C:", 0);
+      const unc = yield* scan("\\\\server\\share", 1);
+      deepStrictEqual(unc, drive);
+    })
+  );
+
   it.effect(
     "discovers the exact D9 fixture set through FsUtils before constructing the Project",
     Effect.fnUntraced(function* () {
@@ -97,7 +318,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
   );
 
   it.effect(
-    "rejects an installed Effect Vitest version outside the rc.112 pin",
+    "rejects an installed Effect Vitest version outside the rc.113 pin",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -109,32 +330,30 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
 
       const failure = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
       assertTrue(failure._tag === "EffectVitestLintError");
-      assertTrue(Str.includes("4.0.0-rc.112")(failure.message));
+      assertTrue(Str.includes("4.0.0-rc.113")(failure.message));
     })
   );
 });
 
 it("accepts EV and lens rule identifiers at the shared finding boundary", () => {
-  assertTrue(S.is(EffectVitestFinding)(finding(4, "Fx.runSync(program)")));
+  assertTrue(isEffectVitestFinding(finding(4, "Fx.runSync(program)")));
   assertTrue(
-    S.is(EffectVitestFinding)(
-      EffectVitestFinding.make({ ...finding(4, "resource"), ruleId: "L-RES-01", lens: "resource" })
-    )
+    isEffectVitestFinding(EffectVitestFinding.make({ ...finding(4, "resource"), ruleId: "L-RES-01", lens: "resource" }))
   );
 });
 
 it("rejects unordered lines and exceptions without reasons", () => {
   const base = finding(4, "Fx.runSync(program)");
-  assertFalse(S.is(EffectVitestFinding)({ ...base, endLine: O.some(3) }));
-  assertFalse(S.is(EffectVitestFinding)({ ...base, status: "exception", reason: O.none() }));
-  assertFalse(S.is(EffectVitestFinding)({ ...base, class: "flaky-test-wrap", reason: O.none() }));
+  assertFalse(isEffectVitestFinding({ ...base, endLine: O.some(3) }));
+  assertFalse(isEffectVitestFinding({ ...base, status: "exception", reason: O.none() }));
+  assertFalse(isEffectVitestFinding({ ...base, class: "flaky-test-wrap", reason: O.none() }));
   assertTrue(
-    S.is(EffectVitestFinding)(
+    isEffectVitestFinding(
       EffectVitestFinding.make({ ...base, status: "exception", reason: O.some("legacy integration boundary") })
     )
   );
   assertTrue(
-    S.is(EffectVitestFinding)(
+    isEffectVitestFinding(
       EffectVitestFinding.make({ ...base, class: "flaky-test-wrap", reason: O.some("external OS timing") })
     )
   );
@@ -142,7 +361,7 @@ it("rejects unordered lines and exceptions without reasons", () => {
 
 it("keeps package test timing distinct from detector scan timing", () => {
   assertTrue(
-    S.is(EffectVitestPackageTiming)(
+    isEffectVitestPackageTiming(
       EffectVitestPackageTiming.make({
         package: "@beep/example",
         runner: "node-vitest",
@@ -176,7 +395,7 @@ it("preserves a justified exception on the matching live row", () => {
   });
   const document = EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
-    effectVitestVersion: "4.0.0-rc.112",
+    effectVitestVersion: "4.0.0-rc.113",
     scope: [],
     findings: [baselineFinding],
   });
@@ -208,7 +427,7 @@ const occurrences = (body: string) => {
 const withException = (rows: ReadonlyArray<EffectVitestFinding>) =>
   EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
-    effectVitestVersion: "4.0.0-rc.112",
+    effectVitestVersion: "4.0.0-rc.113",
     scope: [],
     findings: A.map(rows, (row, index) =>
       index === 0
@@ -263,9 +482,9 @@ it("retains full token evidence beyond the display limit and significant literal
 
 it("validates optional occurrence anchors without rejecting legacy inventory rows", () => {
   const base = finding(4, "Fx.runSync(program)");
-  assertTrue(S.is(EffectVitestFinding)(base));
-  assertFalse(S.is(EffectVitestFinding)({ ...base, occurrence: O.some("v2:not-a-digest") }));
-  assertTrue(A.every(occurrences('it("x", () => Effect.runSync(program));'), S.is(EffectVitestFinding)));
+  assertTrue(isEffectVitestFinding(base));
+  assertFalse(isEffectVitestFinding({ ...base, occurrence: O.some("v2:not-a-digest") }));
+  assertTrue(A.every(occurrences('it("x", () => Effect.runSync(program));'), isEffectVitestFinding));
 });
 
 it("requires re-review of a unique legacy exception when historical statement or context is unknowable", () => {

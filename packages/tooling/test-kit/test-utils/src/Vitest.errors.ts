@@ -1,3 +1,10 @@
+/**
+ * Typed context and watchdog failures for the instrumented Vitest runner.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $TestUtilsId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";

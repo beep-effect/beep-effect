@@ -19,8 +19,9 @@ import { it } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, HashMap, Number as Num, Path, Schema } from "effect";
 import * as O from "effect/Option";
-import * as fc from "effect/testing/FastCheck";
+import { Arbitrary } from "effect/unstable/arbitrary";
 import { Node, Project, SyntaxKind } from "ts-morph";
+import type { PropertySignature } from "ts-morph";
 
 type SourceAnchor = {
   readonly name: string;
@@ -31,7 +32,7 @@ type SourceAnchor = {
 
 const repositoryRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
 const packageRoot = fileURLToPath(new URL("..", import.meta.url));
-const fixtureRoot = fileURLToPath(new URL("./fixtures/effect-vitest-rc112", import.meta.url));
+const fixtureRoot = fileURLToPath(new URL("./fixtures/effect-vitest-rc113", import.meta.url));
 const indexFile = "packages/vitest/src/index.ts";
 const utilsFile = "packages/vitest/src/utils.ts";
 const readmeFile = "packages/vitest/README.md";
@@ -83,17 +84,17 @@ const assertionFinding = (index: number, evidence: string): EffectVitestFinding 
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph", (it) => {
   it.prop(
-    "executes synchronous property registration with FastCheck Arbitraries",
-    { value: fc.integer() },
+    "executes synchronous property registration with native Effect Arbitraries",
+    { value: Arbitrary.schema(Schema.Int) },
     ({ value }) => assertTrue(Num.round(value, 0) === value),
-    { fastCheck: fcRuns(10) }
+    { arbitrary: fcRuns(10) }
   );
 
   it.effect.prop(
     "executes effect property registration with Schema inputs",
     { value: Schema.Int },
     ({ value }) => Effect.sync(() => assertTrue(Num.round(value, 0) === value)),
-    { fastCheck: fcRuns(10) }
+    { arbitrary: fcRuns(10) }
   );
 
   it.effect(
@@ -102,7 +103,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
-      strictEqual(graph.entries.length, 85);
+      strictEqual(graph.entries.length, 100);
       const byName = indexEffectVitestPrimitives(
         A.map(graph.entries, (entry) => EffectVitestPrimitive.make({ ...entry, id: entry.name }))
       );
@@ -135,7 +136,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
       );
       const namespaceBody = namespace.getBodyOrThrow();
       assertTrue(Node.isModuleBlock(namespaceBody));
-      for (const declaration of [...namespaceBody.getInterfaces(), ...namespaceBody.getTypeAliases()]) {
+      for (const declaration of A.filter(
+        [...namespaceBody.getInterfaces(), ...namespaceBody.getTypeAliases()],
+        (declaration) => declaration.hasExportKeyword()
+      )) {
         anchors.push(
           anchor(
             `Vitest.${declaration.getName()}`,
@@ -145,32 +149,44 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
           )
         );
       }
-      for (const declaration of sourceIndex.getVariableDeclarations()) {
+      for (const declaration of A.filter(sourceIndex.getVariableDeclarations(), (declaration) =>
+        declaration.isExported()
+      )) {
         anchors.push(
           anchor(declaration.getName(), indexFile, declaration.getStartLineNumber(), declaration.getEndLineNumber())
         );
       }
 
-      for (const interfaceName of ["Tester", "MethodsNonLive", "Methods"]) {
-        const declaration = namespaceBody.getInterfaceOrThrow(interfaceName);
-        for (const property of declaration.getProperties()) {
-          const memberName = `Vitest.${interfaceName}.${property.getName()}`;
-          anchors.push(anchor(memberName, indexFile, property.getStartLineNumber(), property.getEndLineNumber()));
-          const typeNode = property.getTypeNode();
-          if (typeNode !== undefined) {
-            for (const option of typeNode.getDescendantsOfKind(SyntaxKind.PropertySignature)) {
-              anchors.push(
-                anchor(
-                  `${memberName}.option.${option.getName()}`,
-                  indexFile,
-                  option.getStartLineNumber(),
-                  option.getEndLineNumber()
-                )
-              );
-            }
+      const collectPropertyOptions = (property: PropertySignature, memberName: string): void => {
+        const typeNode = property.getTypeNode();
+        if (typeNode !== undefined) {
+          for (const option of typeNode.getDescendantsOfKind(SyntaxKind.PropertySignature)) {
+            anchors.push(
+              anchor(
+                `${memberName}.option.${option.getName()}`,
+                indexFile,
+                option.getStartLineNumber(),
+                option.getEndLineNumber()
+              )
+            );
           }
         }
-      }
+      };
+      const collectMethodAnchors = (): void => {
+        for (const interfaceName of ["Tester", "MethodsNonLive", "Methods"]) {
+          const declaration = namespaceBody.getInterfaceOrThrow(interfaceName);
+          for (const property of declaration.getProperties()) {
+            const memberName = `Vitest.${interfaceName}.${property.getName()}`;
+            anchors.push(anchor(memberName, indexFile, property.getStartLineNumber(), property.getEndLineNumber()));
+            collectPropertyOptions(property, memberName);
+          }
+        }
+      };
+      collectMethodAnchors();
+      const liveProperty = namespaceBody.getInterfaceOrThrow("Tester").getPropertyOrThrow("prop");
+      anchors.push(
+        anchor("it.live.prop", indexFile, liveProperty.getStartLineNumber(), liveProperty.getEndLineNumber())
+      );
 
       const layerDeclaration = sourceIndex.getVariableDeclarationOrThrow("layer");
       const layerType = layerDeclaration.getTypeNodeOrThrow();
@@ -191,10 +207,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
 
       const readme = yield* fs.readFileString(path.join(fixtureRoot, readmeFile));
       const readmeLines = Str.split("\n")(readme);
+      let fenced = false;
       const headings = A.map(
         A.filter(
           A.map(readmeLines, (line, index) => ({ index, line })),
-          ({ line }) => Str.startsWith("# ")(line) || Str.startsWith("## ")(line) || Str.startsWith("### ")(line)
+          ({ line }) => {
+            if (Str.startsWith("```")(line)) fenced = !fenced;
+            return (
+              !fenced && (Str.startsWith("# ")(line) || Str.startsWith("## ")(line) || Str.startsWith("### ")(line))
+            );
+          }
         ),
         ({ index, line }) => ({ index, text: readmeHeadingText(line) })
       );
@@ -213,32 +235,50 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
         );
       }
 
-      for (const charterFile of ["Effect.txt", "Layer.txt", "Logger.txt", "TestClock.txt"]) {
-        const text = yield* fs.readFileString(path.join(fixtureRoot, "charter", charterFile));
-        const sourcePathLine = A.findFirst(Str.split("\n")(text), Str.includes("from packages/effect/src/"));
-        assertTrue(O.isSome(sourcePathLine), "Expected the pinned charter source-path receipt");
-        const sourcePath = Str.replace(
-          " at",
-          ""
-        )(
-          Str.replace(
-            "// Exact declaration excerpt from ",
-            ""
-          )(Str.replace("// Exact declaration excerpts from ", "")(sourcePathLine.value))
-        );
-        for (const marker of A.filter(Str.split("\n")(text), Str.includes("@effect-vitest-anchor"))) {
-          const fields = Str.split(" ")(marker);
-          const name = fields[2];
-          const startLine = fields[3];
-          const endLine = fields[4];
-          assertTrue(name !== undefined && startLine !== undefined && endLine !== undefined);
-          anchors.push(
-            anchor(name, sourcePath, globalThis.Number.parseInt(startLine, 10), globalThis.Number.parseInt(endLine, 10))
+      const collectCharterAnchors = Effect.fnUntraced(function* () {
+        for (const charterFile of [
+          "Effect.txt",
+          "Layer.txt",
+          "Logger.txt",
+          "TestClock.txt",
+          "Arbitrary.txt",
+          "Internal.txt",
+        ]) {
+          const text = yield* fs.readFileString(path.join(fixtureRoot, "charter", charterFile));
+          const sourcePathLine = A.findFirst(
+            Str.split("\n")(text),
+            Str.includes("// Exact declaration excerpts from packages/")
           );
+          assertTrue(O.isSome(sourcePathLine), "Expected the pinned charter source-path receipt");
+          const sourcePath = Str.replace(
+            " at",
+            ""
+          )(
+            Str.replace(
+              "// Exact declaration excerpt from ",
+              ""
+            )(Str.replace("// Exact declaration excerpts from ", "")(sourcePathLine.value))
+          );
+          for (const marker of A.filter(Str.split("\n")(text), Str.includes("@effect-vitest-anchor"))) {
+            const fields = Str.split(" ")(marker);
+            const name = fields[2];
+            const startLine = fields[3];
+            const endLine = fields[4];
+            assertTrue(name !== undefined && startLine !== undefined && endLine !== undefined);
+            anchors.push(
+              anchor(
+                name,
+                sourcePath,
+                globalThis.Number.parseInt(startLine, 10),
+                globalThis.Number.parseInt(endLine, 10)
+              )
+            );
+          }
         }
-      }
+      });
+      yield* collectCharterAnchors();
 
-      strictEqual(anchors.length, 85);
+      strictEqual(anchors.length, 100);
       for (const expected of anchors) {
         const actual = HashMap.get(byName, expected.name);
         assertTrue(O.isSome(actual), `Missing pinned primitive for ${expected.name}`);
@@ -250,7 +290,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
   );
 
   it.effect(
-    "compiles every graph example against the installed rc.112 package surface",
+    "compiles every graph example against the installed rc.113 package surface",
     Effect.fnUntraced(function* () {
       const path = yield* Path.Path;
       const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
@@ -325,6 +365,25 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
   );
 
   it.effect(
+    "rejects replacement guidance that omits the policy class while keeping all graph identities",
+    Effect.fnUntraced(function* () {
+      const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
+      const changed = EffectVitestPrimitiveGraphDocument.make({
+        ...graph,
+        entries: A.map(graph.entries, (entry) =>
+          entry.id === "it.effect"
+            ? EffectVitestPrimitive.make({ ...entry, whenToUse: "Use the Effect tester for typed programs." })
+            : entry
+        ),
+      });
+      const failure = yield* applyEffectVitestPrimitiveGraph([], changed).pipe(Effect.flip);
+      assertTrue(Str.includes("Graph replacements for EV001")(failure.message));
+      assertTrue(Str.includes("runtime-boundary-in-test")(failure.message));
+      strictEqual(changed.entries.length, graph.entries.length);
+    })
+  );
+
+  it.effect(
     "rejects an installed package version that differs from the graph pin",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -338,7 +397,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
       );
       const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
       const failure = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
-      assertTrue(Str.includes("does not match graph pin @effect/vitest@4.0.0-rc.112")(failure.message));
+      assertTrue(Str.includes("does not match graph pin @effect/vitest@4.0.0-rc.113")(failure.message));
       assertTrue(Str.includes("Regenerate source anchors")(failure.message));
       assertTrue(Str.includes("review the semantic diff")(failure.message));
       assertTrue(Str.includes("update the graph pin")(failure.message));

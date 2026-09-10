@@ -93,6 +93,65 @@ const functionNode = (node: MorphNode): node is EffectVitestFunctionNode =>
 export const resolveEffectVitestBinding = (identifier: Identifier): O.Option<MorphNode> =>
   bindingResolver()(identifier);
 
+const isLexicalScope = (scope: MorphNode): boolean =>
+  functionNode(scope) ||
+  Node.isBlock(scope) ||
+  Node.isSourceFile(scope) ||
+  Node.isForOfStatement(scope) ||
+  Node.isForInStatement(scope) ||
+  Node.isForStatement(scope) ||
+  Node.isCatchClause(scope);
+
+type BindSyntaxName = (name: MorphNode, declaration: MorphNode) => void;
+type AddSyntaxBinding = (name: string, declaration: MorphNode) => void;
+
+const bindImport = (statement: ImportDeclaration, add: AddSyntaxBinding): void => {
+  const namespace = statement.getNamespaceImport();
+  const defaultImport = statement.getDefaultImport();
+  if (namespace !== undefined) add(namespace.getText(), statement);
+  if (defaultImport !== undefined) add(defaultImport.getText(), statement);
+  for (const specifier of statement.getNamedImports()) {
+    add(specifier.getAliasNode()?.getText() ?? specifier.getName(), statement);
+  }
+};
+
+const bindStatement = (statement: MorphNode, bind: BindSyntaxName, add: AddSyntaxBinding): void => {
+  if (Node.isVariableStatement(statement)) {
+    for (const declaration of statement.getDeclarations()) bind(declaration.getNameNode(), declaration);
+  } else if (Node.isFunctionDeclaration(statement) || Node.isClassDeclaration(statement)) {
+    const name = statement.getName();
+    if (name !== undefined) add(name, statement);
+  } else if (Node.isImportDeclaration(statement)) {
+    bindImport(statement, add);
+  }
+};
+
+const bindLoopInitializer = (initializer: MorphNode | undefined, bind: BindSyntaxName): void => {
+  if (Node.isVariableDeclarationList(initializer)) {
+    for (const declaration of initializer.getDeclarations()) bind(declaration.getNameNode(), declaration);
+  }
+};
+
+const bindLoopOrCatch = (scope: MorphNode, bind: BindSyntaxName): void => {
+  if (Node.isForOfStatement(scope) || Node.isForInStatement(scope) || Node.isForStatement(scope)) {
+    bindLoopInitializer(scope.getInitializer(), bind);
+  }
+  if (Node.isCatchClause(scope)) {
+    const declaration = scope.getVariableDeclaration();
+    if (declaration !== undefined) bind(declaration.getNameNode(), declaration);
+  }
+};
+
+const bindScope = (scope: MorphNode, bind: BindSyntaxName, add: AddSyntaxBinding): void => {
+  if (functionNode(scope)) {
+    for (const parameter of scope.getParameters()) bind(parameter.getNameNode(), parameter);
+  }
+  bindLoopOrCatch(scope, bind);
+  if (Node.isBlock(scope) || Node.isSourceFile(scope)) {
+    for (const statement of scope.getStatements()) bindStatement(statement, bind, add);
+  }
+};
+
 // One immutable analysis pass owns these AST caches. A fresh import context
 // rebuilds them, including after a SourceFile edit or on another scan.
 const bindingResolver = (): ((identifier: Identifier) => O.Option<MorphNode>) => {
@@ -114,72 +173,40 @@ const bindingResolver = (): ((identifier: Identifier) => O.Option<MorphNode>) =>
           }
         }
       };
-      if (functionNode(scope)) {
-        for (const parameter of scope.getParameters()) bind(parameter.getNameNode(), parameter);
-      }
-      if (Node.isForOfStatement(scope) || Node.isForInStatement(scope) || Node.isForStatement(scope)) {
-        const initializer = scope.getInitializer();
-        if (Node.isVariableDeclarationList(initializer)) {
-          for (const declaration of initializer.getDeclarations()) bind(declaration.getNameNode(), declaration);
-        }
-      }
-      if (Node.isCatchClause(scope)) {
-        const declaration = scope.getVariableDeclaration();
-        if (declaration !== undefined) bind(declaration.getNameNode(), declaration);
-      }
-      if (Node.isBlock(scope) || Node.isSourceFile(scope)) {
-        for (const statement of scope.getStatements()) {
-          if (Node.isVariableStatement(statement)) {
-            for (const declaration of statement.getDeclarations()) bind(declaration.getNameNode(), declaration);
-          } else if (Node.isFunctionDeclaration(statement) || Node.isClassDeclaration(statement)) {
-            const name = statement.getName();
-            if (name !== undefined) add(name, statement);
-          } else if (Node.isImportDeclaration(statement)) {
-            const namespace = statement.getNamespaceImport();
-            const defaultImport = statement.getDefaultImport();
-            if (namespace !== undefined) add(namespace.getText(), statement);
-            if (defaultImport !== undefined) add(defaultImport.getText(), statement);
-            for (const specifier of statement.getNamedImports()) {
-              add(specifier.getAliasNode()?.getText() ?? specifier.getName(), statement);
-            }
-          }
-        }
-      }
+
+      bindScope(scope, bind, add);
       scopes.set(scope, bindings);
       return bindings;
     });
+  const scopeResolutions = (current: MorphNode) => {
+    let names = resolvedNames.get(current);
+    if (names === undefined) {
+      names = MutableHashMap.empty<string, O.Option<MorphNode>>();
+      resolvedNames.set(current, names);
+    }
+    return names;
+  };
   return (identifier) =>
     O.getOrElse(O.fromUndefinedOr(resolved.get(identifier)), () => {
       const name = identifier.getText();
       let result = O.none<MorphNode>();
       const traversed = A.empty<MutableHashMap.MutableHashMap<string, O.Option<MorphNode>>>();
-      let scope: MorphNode | undefined = identifier.getParent();
-      while (scope !== undefined) {
-        if (
-          functionNode(scope) ||
-          Node.isBlock(scope) ||
-          Node.isSourceFile(scope) ||
-          Node.isForOfStatement(scope) ||
-          Node.isForInStatement(scope) ||
-          Node.isForStatement(scope) ||
-          Node.isCatchClause(scope)
-        ) {
-          let names = resolvedNames.get(scope);
-          if (names === undefined) {
-            names = MutableHashMap.empty<string, O.Option<MorphNode>>();
-            resolvedNames.set(scope, names);
-          }
-          const cached = MutableHashMap.get(names, name);
-          // Some(None) is a resolved miss; only the outer None needs a walk.
-          if (O.isSome(cached)) {
-            result = cached.value;
-            break;
-          }
-          traversed.push(names);
-          result = MutableHashMap.get(scopeBindings(scope), name);
-          if (O.isSome(result)) break;
+      for (
+        let current: MorphNode | undefined = identifier.getParent();
+        current !== undefined;
+        current = current.getParent()
+      ) {
+        if (!isLexicalScope(current)) continue;
+        const names = scopeResolutions(current);
+        const cached = MutableHashMap.get(names, name);
+        // Some(None) is a resolved miss; only the outer None needs a walk.
+        if (O.isSome(cached)) {
+          result = cached.value;
+          break;
         }
-        scope = scope.getParent();
+        traversed.push(names);
+        result = MutableHashMap.get(scopeBindings(current), name);
+        if (O.isSome(result)) break;
       }
       // Only scopes visited before finding the binding inherit this result.
       // A child's declaration must never populate an unvisited outer scope.
@@ -213,6 +240,38 @@ const isShadowed = (identifier: Identifier, binding: ImportBinding, imports: Eff
     return resolved;
   });
   return O.exists(position, (start) => start !== binding.declaration.getStart());
+};
+
+const collectSyntaxRoles = (sourceFile: SourceFile) => {
+  // Collect parse-tree roles in one traversal. Identifier/token discovery stays
+  // separate because ts-morph includes JSDoc/token children for those queries.
+  const calls = A.empty<CallExpression>();
+  const functions = A.empty<EffectVitestFunctionNode>();
+  const variables = A.empty<VariableDeclaration>();
+  const forLoops = A.empty<MorphNode>();
+  const whileLoops = A.empty<MorphNode>();
+  const doLoops = A.empty<MorphNode>();
+  const collectRole = (node: MorphNode): void => {
+    if (Node.isCallExpression(node)) calls.push(node);
+    else if (functionNode(node)) functions.push(node);
+    else if (Node.isVariableDeclaration(node)) variables.push(node);
+    else if (Node.isForStatement(node)) forLoops.push(node);
+    else if (Node.isWhileStatement(node)) whileLoops.push(node);
+    else if (Node.isDoStatement(node)) doLoops.push(node);
+  };
+  const pending = A.reverse(sourceFile.forEachChildAsArray());
+  while (pending.length > 0) {
+    const node = pending.pop();
+    if (node === undefined) continue;
+    collectRole(node);
+    const children = node.forEachChildAsArray();
+    for (let index = children.length - 1; index >= 0; index--) {
+      const child = children[index];
+      if (child !== undefined) pending.push(child);
+    }
+  }
+
+  return { calls, functions, variables, loops: [...forLoops, ...whileLoops, ...doLoops] };
 };
 
 /**
@@ -264,30 +323,7 @@ export const collectEffectVitestImports = (sourceFile: SourceFile): EffectVitest
       defaultImport === undefined ? [] : [{ declaration, imported: "default", local: defaultImport.getText(), module }];
     return [...namespaceBinding, ...namedBindings, ...defaultBinding];
   });
-  // Collect parse-tree roles in one traversal. Identifier/token discovery stays
-  // separate because ts-morph includes JSDoc/token children for those queries.
-  const calls = A.empty<CallExpression>();
-  const functions = A.empty<EffectVitestFunctionNode>();
-  const variables = A.empty<VariableDeclaration>();
-  const forLoops = A.empty<MorphNode>();
-  const whileLoops = A.empty<MorphNode>();
-  const doLoops = A.empty<MorphNode>();
-  const pending = A.reverse(sourceFile.forEachChildAsArray());
-  while (pending.length > 0) {
-    const node = pending.pop();
-    if (node === undefined) continue;
-    if (Node.isCallExpression(node)) calls.push(node);
-    else if (functionNode(node)) functions.push(node);
-    else if (Node.isVariableDeclaration(node)) variables.push(node);
-    else if (Node.isForStatement(node)) forLoops.push(node);
-    else if (Node.isWhileStatement(node)) whileLoops.push(node);
-    else if (Node.isDoStatement(node)) doLoops.push(node);
-    const children = node.forEachChildAsArray();
-    for (let index = children.length - 1; index >= 0; index--) {
-      const child = children[index];
-      if (child !== undefined) pending.push(child);
-    }
-  }
+  const { calls, functions, variables, loops } = collectSyntaxRoles(sourceFile);
 
   const bindingsByLocal = MutableHashMap.empty<string, ReadonlyArray<ImportBinding>>();
   for (const binding of bindings) {
@@ -305,7 +341,7 @@ export const collectEffectVitestImports = (sourceFile: SourceFile): EffectVitest
       A.flatMap(functions, (node) => A.map(node.getParameters(), (parameter) => parameter.getName()))
     ),
     variables,
-    loops: [...forLoops, ...whileLoops, ...doLoops],
+    loops,
     declarationPositions: MutableHashMap.empty(),
     resolveBinding: bindingResolver(),
     chains: new WeakMap(),
@@ -324,6 +360,38 @@ export const collectEffectVitestImports = (sourceFile: SourceFile): EffectVitest
   };
 };
 
+const matchesBareMember = (joined: string, members: ReadonlyArray<string>, member: string, exported: string): boolean =>
+  joined === member || (member === exported && A.isReadonlyArrayEmpty(members));
+
+const bindingMemberMatches = (
+  binding: ImportBinding,
+  members: ReadonlyArray<string>,
+  namespaceExport: string,
+  member: string
+): boolean => {
+  const joinedMembers = A.join(members, ".");
+  let matches = false;
+  if (
+    binding.imported === "default" &&
+    A.contains(["node:assert", "node:assert/strict", "assert", "assert/strict", "node:os", "os"], binding.module)
+  ) {
+    matches = matchesBareMember(joinedMembers, members, member, namespaceExport);
+  } else if (binding.imported === "*") {
+    matches =
+      joinedMembers === member ||
+      (A.contains(
+        ["effect", "effect/testing", "effect/unstable/arbitrary", "@effect/vitest", "vitest"],
+        binding.module
+      ) &&
+        joinedMembers === `${namespaceExport}.${member}`);
+  } else if (binding.imported === namespaceExport) {
+    matches = matchesBareMember(joinedMembers, members, member, binding.imported);
+  } else {
+    matches = binding.imported === member && A.isReadonlyArrayEmpty(members);
+  }
+  return matches;
+};
+
 const importedBindingMatches = (
   chain: ExpressionChain,
   imports: EffectVitestImports,
@@ -333,23 +401,7 @@ const importedBindingMatches = (
 ): boolean =>
   A.some(O.getOrElse(MutableHashMap.get(imports.bindingsByLocal, chain.local), A.empty<ImportBinding>), (binding) => {
     if (!A.contains(modules, binding.module) || binding.local !== chain.local) return false;
-    const joinedMembers = A.join(chain.members, ".");
-    let matches = false;
-    if (
-      binding.imported === "default" &&
-      A.contains(["node:assert", "node:assert/strict", "assert", "assert/strict", "node:os", "os"], binding.module)
-    ) {
-      matches = joinedMembers === member || (member === namespaceExport && A.isReadonlyArrayEmpty(chain.members));
-    } else if (binding.imported === "*") {
-      matches =
-        joinedMembers === member ||
-        (A.contains(["effect", "effect/testing", "@effect/vitest", "vitest"], binding.module) &&
-          joinedMembers === `${namespaceExport}.${member}`);
-    } else if (binding.imported === namespaceExport) {
-      matches = joinedMembers === member || (binding.imported === member && A.isReadonlyArrayEmpty(chain.members));
-    } else {
-      matches = binding.imported === member && A.isReadonlyArrayEmpty(chain.members);
-    }
+    const matches = bindingMemberMatches(binding, chain.members, namespaceExport, member);
     return matches && !isShadowed(chain.base, binding, imports);
   });
 
@@ -454,20 +506,30 @@ export const isProvenanceCall: {
   ): boolean => isProvenanceExpression(call.getExpression(), imports, modules, namespaceExport, members)
 );
 
+const isImportedHarness = (binding: ImportBinding, chain: ExpressionChain): boolean => {
+  const exports =
+    binding.module === "@effect/vitest" ? ["it", "test", "effect", "live", "layer", "prop"] : ["it", "test"];
+  const importedHarness =
+    A.contains(["@effect/vitest", "vitest"], binding.module) &&
+    (A.contains(exports, binding.imported) ||
+      (binding.imported === "*" && A.contains(exports, chain.members[0] ?? "")));
+  return importedHarness;
+};
+
+const isInstrumentedHarness = (binding: ImportBinding, chain: ExpressionChain): boolean => {
+  const instrumentedHarness =
+    binding.module === "@beep/test-utils/Vitest" &&
+    (binding.imported === "it" || (binding.imported === "*" && chain.members[0] === "it"));
+  return instrumentedHarness;
+};
+
 const importedHarnessBinding = (chain: ExpressionChain, imports: EffectVitestImports): O.Option<ImportBinding> =>
   A.findFirst(
     O.getOrElse(MutableHashMap.get(imports.bindingsByLocal, chain.local), A.empty<ImportBinding>),
     (binding) => {
       if (binding.local !== chain.local) return false;
-      const exports =
-        binding.module === "@effect/vitest" ? ["it", "test", "effect", "live", "layer", "prop"] : ["it", "test"];
-      const importedHarness =
-        A.contains(["@effect/vitest", "vitest"], binding.module) &&
-        (A.contains(exports, binding.imported) ||
-          (binding.imported === "*" && A.contains(exports, chain.members[0] ?? "")));
-      const instrumentedHarness =
-        binding.module === "@beep/test-utils/Vitest" &&
-        (binding.imported === "it" || (binding.imported === "*" && chain.members[0] === "it"));
+      const importedHarness = isImportedHarness(binding, chain);
+      const instrumentedHarness = isInstrumentedHarness(binding, chain);
       return (importedHarness || instrumentedHarness) && !isShadowed(chain.base, binding, imports);
     }
   );
@@ -492,22 +554,27 @@ const registrationForFunction = (
   return O.none();
 };
 
-const layerCallbackTester = (base: Identifier, imports: EffectVitestImports): boolean => {
-  if (!HashSet.has(imports.parameterNames, base.getText())) return false;
+const layerTesterOwner = (base: Identifier, imports: EffectVitestImports): O.Option<EffectVitestFunctionNode> => {
+  if (!HashSet.has(imports.parameterNames, base.getText())) return O.none();
   const binding = imports.resolveBinding(base);
-  if (!O.exists(binding, Node.isParameterDeclaration)) return false;
+  if (!O.exists(binding, Node.isParameterDeclaration)) return O.none();
   let current: MorphNode | undefined = base.getParent();
   while (current !== undefined) {
     if (
       functionNode(current) &&
       A.some(current.getParameters(), (parameter) => parameter.getName() === base.getText())
     ) {
-      return O.exists(registrationForFunction(current, imports), (registration) => registration.mode === "layer");
+      return O.some(current);
     }
     current = current.getParent();
   }
-  return false;
+  return O.none();
 };
+
+const layerCallbackTester = (base: Identifier, imports: EffectVitestImports): boolean =>
+  O.exists(layerTesterOwner(base, imports), (owner) =>
+    O.exists(registrationForFunction(owner, imports), (registration) => registration.mode === "layer")
+  );
 
 const harnessMembers = (chain: ExpressionChain, imports: EffectVitestImports): ReadonlyArray<string> => {
   if (layerCallbackTester(chain.base, imports)) return chain.members;
@@ -762,6 +829,19 @@ type FunctionReachability = {
   uncertain: boolean;
 };
 
+const addsReachability = (from: FunctionReachability, to: FunctionReachability): boolean =>
+  (from.plain && !to.plain) ||
+  (from.effect && !to.effect) ||
+  (from.outside && !to.outside) ||
+  (from.uncertain && !to.uncertain);
+
+const isPropertyName = (reference: Identifier, parent: MorphNode | undefined): boolean =>
+  (Node.isPropertyAccessExpression(parent) || Node.isPropertyAssignment(parent)) && parent.getNameNode() === reference;
+
+const isDeclarationName = (reference: Identifier, declaration: MorphNode): boolean =>
+  (Node.isVariableDeclaration(declaration) || Node.isFunctionDeclaration(declaration)) &&
+  declaration.getNameNode() === reference;
+
 const helperReachability = (
   sourceFile: SourceFile,
   imports: EffectVitestImports,
@@ -782,14 +862,15 @@ const helperReachability = (
   const bindings = MutableHashMap.empty<number, FunctionReachability>();
   const names = MutableHashMap.empty<string, boolean>();
   const boundFunctions = MutableHashMap.empty<number, boolean>();
-  for (const node of functions) {
+  const initializeVertex = (node: EffectVitestFunctionNode): void => {
     const value = vertex(O.some(node));
     const mode = MutableHashMap.get(modes, node.getStart());
     value.plain = O.contains(mode, "plain");
     value.effect = O.exists(mode, (mode) => mode === "effect" || mode === "live");
     value.outside = O.contains(mode, "layer");
     MutableHashMap.set(vertices, node.getStart(), value);
-  }
+  };
+  for (const node of functions) initializeVertex(node);
   const owner = (node: MorphNode): FunctionReachability =>
     O.getOrElse(
       O.flatMap(O.fromUndefinedOr(node.getFirstAncestor(functionNode)), (parent) =>
@@ -810,15 +891,16 @@ const helperReachability = (
         value.value.outside = true;
     }
   };
-  for (const node of functions) {
+  const bindFunctionDeclaration = (node: EffectVitestFunctionNode): void => {
     if (Node.isFunctionDeclaration(node)) {
       const name = node.getName();
       if (name !== undefined) bind(node, name, node);
     }
-  }
-  for (const declaration of imports.variables) {
+  };
+  for (const node of functions) bindFunctionDeclaration(node);
+  const bindVariableHelper = (declaration: VariableDeclaration): void => {
     const initializer = declaration.getInitializer();
-    if (initializer === undefined || !Node.isIdentifier(declaration.getNameNode())) continue;
+    if (initializer === undefined || !Node.isIdentifier(declaration.getNameNode())) return;
     if (functionNode(initializer)) bind(declaration, declaration.getName(), initializer);
     else if (
       Node.isCallExpression(initializer) &&
@@ -827,19 +909,20 @@ const helperReachability = (
       const body = A.head(effectVitestTestCallbacks(initializer, imports));
       if (O.isSome(body)) bind(declaration, declaration.getName(), body.value);
     }
-  }
-  // Literal callbacks to known Effect/FastCheck constructors execute as part of
+  };
+  for (const declaration of imports.variables) bindVariableHelper(declaration);
+  // Literal callbacks to known Effect/property constructors execute as part of
   // their owner. Unknown callback APIs retain reachability with judgment only.
-  for (const node of functions) {
+  const connectLiteralCallback = (node: EffectVitestFunctionNode): void => {
     if (
       O.isSome(MutableHashMap.get(boundFunctions, node.getStart())) ||
       O.isSome(MutableHashMap.get(modes, node.getStart()))
     )
-      continue;
+      return;
     const parent = node.getParent();
-    if (!Node.isCallExpression(parent) || !A.some(parent.getArguments(), (argument) => argument === node)) continue;
+    if (!Node.isCallExpression(parent) || !A.some(parent.getArguments(), (argument) => argument === node)) return;
     const value = MutableHashMap.get(vertices, node.getStart());
-    if (O.isNone(value)) continue;
+    if (O.isNone(value)) return;
     const known =
       isProvenanceCall(parent, imports, ["effect", "effect/Effect"], "Effect", [
         "gen",
@@ -853,70 +936,84 @@ const helperReachability = (
         "acquireRelease",
         "acquireUseRelease",
       ]) ||
+      isProvenanceCall(
+        parent,
+        imports,
+        ["effect/unstable/arbitrary", "effect/unstable/arbitrary/Arbitrary"],
+        "Arbitrary",
+        ["checkEffect"]
+      ) ||
       isProvenanceCall(parent, imports, ["effect/testing", "effect/testing/FastCheck", "fast-check"], "FastCheck", [
         "property",
         "asyncProperty",
       ]);
     value.value.uncertain = !known;
     owner(node).callees.push(value.value);
-  }
-  for (const reference of sourceFile.getDescendantsOfKind(SyntaxKind.Identifier)) {
-    if (O.isNone(MutableHashMap.get(names, reference.getText()))) continue;
-    const parent = reference.getParent();
-    if (reference.getFirstAncestor(Node.isTypeNode) !== undefined) continue;
-    if (
-      (Node.isPropertyAccessExpression(parent) || Node.isPropertyAssignment(parent)) &&
-      parent.getNameNode() === reference
-    )
-      continue;
-    const declaration = imports.resolveBinding(reference);
-    if (O.isNone(declaration)) continue;
-    const target = MutableHashMap.get(bindings, declaration.value.getStart());
-    if (O.isNone(target)) continue;
-    if (
-      (Node.isVariableDeclaration(declaration.value) || Node.isFunctionDeclaration(declaration.value)) &&
-      declaration.value.getNameNode() === reference
-    )
-      continue;
+  };
+  for (const node of functions) connectLiteralCallback(node);
+  const connectRegistrationArgument = (
+    reference: Identifier,
+    parent: CallExpression,
+    target: FunctionReachability
+  ): void => {
+    const registration = classifyHarnessCall(parent, imports);
+    if (O.isSome(registration) && registration.value !== "layer" && parent.getArguments()[0] !== reference) {
+      target.plain ||= registration.value === "plain";
+      target.effect ||= registration.value === "effect" || registration.value === "live";
+    } else {
+      target.uncertain = true;
+      owner(reference).callees.push(target);
+    }
+  };
+  const connectReferenceTarget = (
+    reference: Identifier,
+    parent: MorphNode | undefined,
+    target: FunctionReachability
+  ): void => {
     if (Node.isCallExpression(parent) && parent.getExpression() === reference) {
-      owner(reference).callees.push(target.value);
+      owner(reference).callees.push(target);
     } else if (Node.isCallExpression(parent) && A.some(parent.getArguments(), (argument) => argument === reference)) {
-      const registration = classifyHarnessCall(parent, imports);
-      if (O.isSome(registration) && registration.value !== "layer" && parent.getArguments()[0] !== reference) {
-        target.value.plain ||= registration.value === "plain";
-        target.value.effect ||= registration.value === "effect" || registration.value === "live";
-      } else {
-        target.value.uncertain = true;
-        owner(reference).callees.push(target.value);
-      }
+      connectRegistrationArgument(reference, parent, target);
     } else {
       // An exported/value-escaping function may have callers this file cannot
       // enumerate. Do not turn a test path into exclusive ownership evidence.
-      target.value.outside = true;
+      target.outside = true;
     }
-  }
+  };
+  const connectHelperReference = (reference: Identifier): void => {
+    if (O.isNone(MutableHashMap.get(names, reference.getText()))) return;
+    const parent = reference.getParent();
+    if (reference.getFirstAncestor(Node.isTypeNode) !== undefined) return;
+    if (isPropertyName(reference, parent)) return;
+    const declaration = imports.resolveBinding(reference);
+    if (O.isNone(declaration)) return;
+    const target = MutableHashMap.get(bindings, declaration.value.getStart());
+    if (O.isNone(target)) return;
+    if (isDeclarationName(reference, declaration.value)) return;
+    connectReferenceTarget(reference, parent, target.value);
+  };
+  for (const reference of sourceFile.getDescendantsOfKind(SyntaxKind.Identifier)) connectHelperReference(reference);
   const queue = [
     module,
     ...A.map(functions, (node) => O.getOrElse(MutableHashMap.get(vertices, node.getStart()), () => module)),
   ];
-  for (let index = 0; index < queue.length; index++) {
-    const from = queue[index];
-    if (from === undefined) continue;
-    for (const to of from.callees) {
-      if (
-        (from.plain && !to.plain) ||
-        (from.effect && !to.effect) ||
-        (from.outside && !to.outside) ||
-        (from.uncertain && !to.uncertain)
-      ) {
-        to.plain ||= from.plain;
-        to.effect ||= from.effect;
-        to.outside ||= from.outside;
-        to.uncertain ||= from.uncertain;
-        queue.push(to);
-      }
+  const propagateReachability = (from: FunctionReachability, to: FunctionReachability): void => {
+    if (addsReachability(from, to)) {
+      to.plain ||= from.plain;
+      to.effect ||= from.effect;
+      to.outside ||= from.outside;
+      to.uncertain ||= from.uncertain;
+      queue.push(to);
     }
-  }
+  };
+  const propagateAll = (): void => {
+    for (let index = 0; index < queue.length; index++) {
+      const from = queue[index];
+      if (from === undefined) continue;
+      for (const to of from.callees) propagateReachability(from, to);
+    }
+  };
+  propagateAll();
   return (node) => {
     const value = owner(node);
     return O.flatMap(value.node, (callback) =>
@@ -956,21 +1053,6 @@ export const createEffectVitestHarnessIndex: {
     if (A.contains(members, "live")) return "live";
     return "plain";
   };
-  const layerTesterOwner = (base: Identifier): O.Option<EffectVitestFunctionNode> => {
-    if (!HashSet.has(imports.parameterNames, base.getText())) return O.none();
-    const binding = imports.resolveBinding(base);
-    if (!O.exists(binding, Node.isParameterDeclaration)) return O.none();
-    let current: MorphNode | undefined = base.getParent();
-    while (current !== undefined) {
-      if (
-        functionNode(current) &&
-        A.some(current.getParameters(), (parameter) => parameter.getName() === base.getText())
-      )
-        return O.some(current);
-      current = current.getParent();
-    }
-    return O.none();
-  };
   const registerCallbacks = (call: CallExpression, mode: EffectVitestHarnessMode): boolean => {
     let changed = false;
     const callbacks = effectVitestTestCallbacks(call, imports);
@@ -993,30 +1075,31 @@ export const createEffectVitestHarnessIndex: {
     if (importedHarnessChain(chain.value, imports)) {
       registerCallbacks(call, modeFromMembers(importedHarnessMembers(chain.value, imports)));
     }
-    const owner = layerTesterOwner(chain.value.base);
+    const owner = layerTesterOwner(chain.value.base, imports);
     if (O.isSome(owner)) layerCalls.push({ call, owner: owner.value, members: chain.value.members });
   }
   // Only parameter-based testers depend on the fixed point. Their lexical
   // owners are invariant; retain the same call order on every propagation pass.
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const { call, owner, members } of layerCalls) {
-      if (O.contains(MutableHashMap.get(modes, owner.getStart()), "layer")) {
-        changed = registerCallbacks(call, modeFromMembers(members)) || changed;
+  const propagateLayerRegistrations = (): void => {
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const { call, owner, members } of layerCalls) {
+        if (O.contains(MutableHashMap.get(modes, owner.getStart()), "layer")) {
+          changed = registerCallbacks(call, modeFromMembers(members)) || changed;
+        }
       }
     }
-  }
+  };
+  propagateLayerRegistrations();
   const lookup = (node: MorphNode, layer: boolean) => {
     let current: MorphNode | undefined = node.getParent();
     while (current !== undefined) {
-      if (functionNode(current)) {
-        const mode = MutableHashMap.get(modes, current.getStart());
-        if (O.isSome(mode) && (layer ? mode.value === "layer" : mode.value !== "layer")) {
-          return O.some({ callback: current, mode: mode.value });
-        }
-      }
+      const callback = current;
       current = current.getParent();
+      if (!functionNode(callback)) continue;
+      const mode = MutableHashMap.get(modes, callback.getStart());
+      if (O.exists(mode, (value) => (value === "layer") === layer)) return O.map(mode, (mode) => ({ callback, mode }));
     }
     return O.none<{ readonly callback: EffectVitestFunctionNode; readonly mode: EffectVitestHarnessMode }>();
   };

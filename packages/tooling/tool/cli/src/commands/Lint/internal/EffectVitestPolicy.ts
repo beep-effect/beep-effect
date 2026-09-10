@@ -21,6 +21,8 @@ type RulePolicy = {
   readonly severity: EffectVitestSeverity;
 };
 
+const isEffectVitestRuleId = Schema.is(EffectVitestRuleId);
+
 const entries: ReadonlyArray<readonly [EffectVitestRuleId, RulePolicy]> = [
   [
     "EV001",
@@ -82,7 +84,7 @@ const entries: ReadonlyArray<readonly [EffectVitestRuleId, RulePolicy]> = [
     {
       className: "direct-fast-check-assert",
       primitive: "it.effect.prop",
-      sketch: "Move the property to it.prop/it.effect.prop and preserve fcRuns floors in fastCheck.",
+      sketch: "Move the property to it.prop/it.effect.prop and preserve fcRuns floors in arbitrary options.",
       severity: "major",
     },
   ],
@@ -241,7 +243,7 @@ export const applyEffectVitestPrimitiveGraph: {
       });
     });
     return yield* Effect.forEach(findings, (finding) => {
-      if (!Schema.is(EffectVitestRuleId)(finding.ruleId)) {
+      if (!isEffectVitestRuleId(finding.ruleId)) {
         return Effect.fail(
           EffectVitestPrimitiveGraphError.new(`Finding ${finding.id} uses unknown policy ID ${finding.ruleId}.`)
         );
