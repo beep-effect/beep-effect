@@ -1762,6 +1762,63 @@ export const ProofFixture = 1;
       )
     ));
 
+  it("keeps ceremony-exempt labs workspaces out of docgen discovery and aggregation", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpDir = process.cwd();
+          yield* fs.writeFileString(
+            path.join(tmpDir, "package.json"),
+            encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["packages/foundation/*/*", "apps/labs/*"],
+            })
+          );
+
+          const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
+          const packageDocsModulesDir = path.join(packageDir, "docs", "modules");
+          yield* fs.makeDirectory(packageDocsModulesDir, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(packageDir, "package.json"),
+            encodeJson({ name: "@beep/schema", version: "0.0.0" })
+          );
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(
+            path.join(packageDocsModulesDir, "Schema.md"),
+            `---\nparent: Modules\ntitle: Schema\n---\n\ncontent\n`
+          );
+
+          // A stray docgen.json below the ceremony-exempt labs root must never
+          // turn a lab workspace into a docgen target (goals/lab-apps-lifecycle
+          // D2): the Heavy / Docgen lane failed on exactly this shape when
+          // apps/labs/api-docs carried one.
+          const labsAppDir = path.join(tmpDir, "apps", "labs", "api-docs");
+          const labsDocsModulesDir = path.join(labsAppDir, "docs", "modules");
+          yield* fs.makeDirectory(labsDocsModulesDir, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(labsAppDir, "package.json"),
+            encodeJson({ name: "@beep/api-docs", version: "0.0.0" })
+          );
+          yield* fs.writeFileString(path.join(labsAppDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(
+            path.join(labsDocsModulesDir, "ApiDocs.md"),
+            `---\nparent: Modules\ntitle: ApiDocs\n---\n\ncontent\n`
+          );
+
+          const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
+          const results = yield* aggregateGeneratedDocs();
+          const labsAggregateExists = yield* fs.exists(path.join(tmpDir, "docs", "generated", "labs", "api-docs"));
+
+          expect(A.map(packages, (pkg) => pkg.name)).toEqual(["@beep/schema"]);
+          expect(A.map(results, (result) => result.packageName)).toEqual(["@beep/schema"]);
+          expect(labsAggregateExists).toBe(false);
+        })
+      )
+    ));
+
   it("supports clean aggregation when stale docs paths conflict with nested package docs", () =>
     Effect.runPromise(
       withTempRepo(

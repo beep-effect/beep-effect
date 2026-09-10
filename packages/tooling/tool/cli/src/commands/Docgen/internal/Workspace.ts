@@ -18,7 +18,7 @@ import { Effect, FileSystem, HashMap, MutableHashSet, Order, Path } from "effect
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { LABS_PATH_IGNORE_GLOB } from "../../../internal/cli/Labs/index.ts";
+import { isLabsWorkspacePath, LABS_PATH_IGNORE_GLOB } from "../../../internal/cli/Labs/index.ts";
 import { byRelativePathAscending, DocgenConfigDocument, DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 import type { NoSuchFileError } from "@beep/repo-utils";
 import type { DocgenPackageStatus, ResolveDocgenWorkspacePackageOptions } from "../Docgen.schemas.ts";
@@ -331,8 +331,15 @@ export const discoverDocgenWorkspacePackages: (
   const path = yield* Path.Path;
   const repoRoot = rootDir ?? (yield* findRepoRoot());
   const workspaceDirs = yield* resolveWorkspaceDirs(repoRoot);
-  const packages = yield* Effect.forEach(
+  // Labs are ceremony-exempt (goals/lab-apps-lifecycle D2): lab workspaces are
+  // never docgen participants, so a stray docgen.json below apps/labs must not
+  // turn one into a generation, aggregation, or local-plan target.
+  const docgenWorkspaceEntries = A.filter(
     HashMap.toEntries(workspaceDirs),
+    ([, absolutePath]) => !isLabsWorkspacePath(path.relative(repoRoot, absolutePath))
+  );
+  const packages = yield* Effect.forEach(
+    docgenWorkspaceEntries,
     Effect.fnUntraced(function* ([name, absolutePath]) {
       const relativePath = normalizeSlashes(path.relative(repoRoot, absolutePath));
       const hasDocgenConfig = yield* packageHasDocgenConfig(absolutePath);
