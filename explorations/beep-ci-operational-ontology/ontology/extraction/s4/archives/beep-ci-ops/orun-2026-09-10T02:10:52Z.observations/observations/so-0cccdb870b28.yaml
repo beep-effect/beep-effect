@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:0cccdb870b289d7bd47e8a769286e011a63a4c80aede46b7ceb7f8fa9d665774",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/admission/canonical/protocol.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 3,
+    "content_sha256": "185969f377d28148a4956db2e7133f43c10be691a9e46ccaba9c1bac401550a7"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/protocol.properties",
+    "lexical_name": "eviction",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "eviction=on"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-admission-protocol/v2\neviction=on\n",
+  "epistemic_status": "parser_derived"
+}

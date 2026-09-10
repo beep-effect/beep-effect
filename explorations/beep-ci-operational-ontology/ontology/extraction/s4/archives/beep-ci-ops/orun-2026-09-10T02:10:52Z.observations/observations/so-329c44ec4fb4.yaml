@@ -1,0 +1,84 @@
+{
+  "id": "so:sha256:329c44ec4fb419e458ef5823689c4c600d6d9937ee653719c6e436f5af2d468b",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 3753,
+    "end_line": 3778,
+    "content_sha256": "15ae5ad15f1d7736a6287b4bc52be159b1c589d7917d12d6483d1b94f340dc90"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/journal.properties:nonce=d7ec57f5-4157-46c1-9fca-b7a7775b75ef",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=d2a767b9-43c5-4756-afb3-f543645f32c2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/graft-recovery-runbook"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect2-worktrees/graft-recovery-runbook"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788940362521"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=review-fix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=d7ec57f5-4157-46c1-9fca-b7a7775b75ef"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=4609f97e921e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=verify"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1788940437861"
+    }
+  ],
+  "source_excerpt": "# record 329\nownerRef=4609f97e921e\nownerRefVariant=pid_pair\nattemptId=d2a767b9-43c5-4756-afb3-f543645f32c2\nkind=review-fix\npriority=verify\ncheckoutRoot=<fleet>/beep-effect2-worktrees/graft-recovery-runbook\nbranch=codex/graft-recovery-runbook\nenqueuedAtMillis=1788940362521\nnonce=d7ec57f5-4157-46c1-9fca-b7a7775b75ef\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=1\n# record 330\nownerRef=4609f97e921e\nownerRefVariant=pid_pair\nattemptId=d2a767b9-43c5-4756-afb3-f543645f32c2\nkind=review-fix\npriority=verify\ncheckoutRoot=<fleet>/beep-effect2-worktrees/graft-recovery-runbook\nbranch=codex/graft-recovery-runbook\nenqueuedAtMillis=1788940362521\nnonce=d7ec57f5-4157-46c1-9fca-b7a7775b75ef\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788940437861\n",
+  "epistemic_status": "parser_derived"
+}

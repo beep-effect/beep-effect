@@ -1,0 +1,45 @@
+id: "dh:bind-grant-termination:001"
+observation_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+cq_warrants: ["CQ-008", "CQ-009"]
+proposed_referent:
+  label: "Reported termination of an admission allocation"
+  description: >-
+    A candidate boundary ending an allocation's active holding interval, represented
+    by release and lease eviction. The release terminates the observed admitted
+    chain; eviction reports a different lease's termination. This candidate does
+    not identify either occurrence with work completion, execution cancellation,
+    or termination of a queued request.
+representation_status: domain_referent
+alternatives:
+  - label: "Terminal lease information used to reconstruct active allocations"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Release and lease eviction require separate event models"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    This provenance: synthetic evidence grounds the distinction between an allocation
+    continuing to hold and a reported terminal boundary. That distinction is needed
+    for active-holder and origin-exclusion decisions. Release and eviction remain
+    separate mechanisms; the family interpretation is provisional. No claim is made
+    about file-deletion mechanics, signaling an execution, or a subsequent admission.
+    The evicted lease lacks a correlated admission in this supplied record, so its
+    start time, charge, and origin must not be copied from the other nonce chain.
+    ownerRef and ownerRefVariant supply no domain identity or owner-change evidence.
+    Synthetic labels and path placeholders also remain capture metadata.
+  discriminator: >-
+    The observed admitted nonce "9e91a4e8-cf97-44b4-9b5c-da780e47720e" reaches
+    config_key_value "_tag=admission-released" and "releasedAtMillis=1788931586743".
+    A different record reports "_tag=admission-lease-evicted",
+    "nonce=synthetic-dead-lease", "evictedAtMillis=1788931586728",
+    "lastHeartbeatAtMillis=1788931586718", and "reason=owner-dead-or-reused".
+    These explicit terminal reports change whether the corresponding allocations
+    can be carried forward as active holders. Erasing the represented release
+    would retain the positively observed admitted allocation beyond its recorded
+    holding boundary, changing an active-holder reconstruction.
+epistemic_status: proposed
+confidence: {value: 0.79, use_for_acceptance: false}

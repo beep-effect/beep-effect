@@ -1,0 +1,11 @@
+id: rat:55
+proposal_ref: otp:ov-origin-ordering-key:001
+proposal_sha256: cf71241f1f04628a50565715c2877481a4926a2a1cbba739b85515b64ba24191
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-origin-ordering-key:001 as the hasOriginKey scalar-property reuse supporting
+  ScheduleProposal and AdmissionProjectionSpecification, with repository-origin identity and normalization
+  deferred to run 4 as flagged, within the joint ordering cluster.

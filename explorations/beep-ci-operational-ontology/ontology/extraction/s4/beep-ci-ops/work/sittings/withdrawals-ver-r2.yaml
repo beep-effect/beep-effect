@@ -1,0 +1,16 @@
+run: orun-2026-09-10T02:10:52Z
+seat: orchestrator
+pass: post-r2 concession
+batch: [ver]
+date: '2026-09-10'
+authority: sitting-1 Ruling 1 (a class whose warrant cannot be remapped to an executable CQ is conceded and withdrawn with named run-4 evidence); the r2 adversary review confirmed the retained class still lacks a warrant
+withdrawn:
+- id: otp:ver-wall-time-evidence:001
+  proposal_sha256: 30fbd1df1aace7347865051053999ad016fba6b6e86e92c36356ea6365e88320
+  reviews_removed: [otp-ver-wall-time-evidence-001.review.yaml, otp-ver-wall-time-evidence-001-r2.review.yaml]
+  landed_rules_unanswered: [decision-class-not-required-by-cq]
+  hypothesis: dh:ver-wall-time-evidence:001
+  named_evidence: >-
+    A Must/Should CQ whose executable query requires a separately identified wall-time evidence
+    class (rather than the execution-bound actualWallMs/usedCostEstimate calibration tuples CQ-025
+    already consumes), plus an observed consumer that selects or rejects a verdict on that class.

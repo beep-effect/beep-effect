@@ -1,0 +1,75 @@
+id: ic:admb-ticket-eviction:001
+hypothesis_ref: dh:admb-ticket-eviction:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    The same ticket-eviction event is one causally continuous removal of the same particular registered
+    ticket/demand from the same admission queue. Repeated reporting of that removal is not another
+    event; removal of another registration is distinct even if its submitter or diagnostic reason
+    matches. A nonce and eviction timestamp locate the reported target boundary without proving identity
+    or a unique removal.
+  reidentification_key:
+  - nonce
+  - _tag=admission-ticket-evicted
+  - evictedAtMillis (reported queue-removal boundary only)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One terminal removal of one queued registration. An unobserved enqueue remains a missing boundary;
+    no grant holding, token release or neighboring chain is included in this event's unity.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - Information asserting ticket eviction and a diagnostic reason
+  - The request's terminal queue condition without a separately reified ticket-removal event
+  existential_dependencies:
+  - >-
+    The particular queued registration being removed and its admission context. A positively established
+    capacity grant is not a participant requirement, and the submitter's actual death is not independently
+    evidenced.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: >-
+    Both observations contain only ticket eviction and its queued-submitter-death diagnosis. Borrowing
+    enqueue time or charge from a neighboring admission entry would turn a removed contender into
+    a capacity holder and could falsely subtract active tokens. Interpreting the diagnosis as the
+    submitter's death event would also give the removal and death the same identity and timestamp
+    without liveness evidence.
+status: proposed
+referent_grain: >-
+  One queued-ticket removal transition ending a particular demand's queue participation through ticket
+  eviction. It is separate from a terminal queue condition, the ticket or demand, a lease revocation,
+  a death occurrence and the entry asserting removal.
+analysis_notes:
+  rigidity: >-
+    Rigid on the proposed realized-occurrence interpretation: completing this transition does not
+    turn it into a later event, an ongoing participant or a state. Whether any particular assertion
+    corresponds to such an event remains an evidence question.
+  dependence: >-
+    Dependence is on the specified operational participants and admission relation or transition,
+    not on record storage or capture provenance. These dependencies are proposed model conditions,
+    not proof that every reported instance exists.
+  temporality: >-
+    Eviction unfolds as removal and is indexed by evictedAtMillis. Its duration and the request's
+    opening boundary are unknown. The diagnostic reason supplies no death time, and no admission or
+    holding interval may be reconstructed for these two records. The interval flag remains unresolved
+    because the corpus supplies a timestamp, not start/end duration. The state-change flag distinguishes
+    unfolding from a continuant changing state; no event-state progression is inferred.
+  evidence_limits: >-
+    The two cited entries have the same ticket-specific event tag but distinct target nonces and reported
+    boundaries. CQ-021 concerns queued requests; this target-specific removal must not be interpreted
+    as grant revocation or release of allocated charge.
+  provenance: >-
+    The cited observation records are from the current run's fleet admission journal. No synthetic
+    observation is used. Capture, corpus, generator, sanitization and ownerRef metadata are excluded
+    from identity criteria and reidentification keys.
+evidence_refs:
+- so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+- so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+- CQ-021

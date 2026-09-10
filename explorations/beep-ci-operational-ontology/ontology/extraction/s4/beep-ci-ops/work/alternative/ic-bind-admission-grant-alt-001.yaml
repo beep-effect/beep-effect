@@ -1,0 +1,68 @@
+id: "ic:bind-admission-grant-alt:001"
+hypothesis_ref: "dh:bind-admission-grant:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two granted allocations are the same individual iff they are the same
+    mediation of one admitted demand onto contended admission capacity: the
+    holding that begins at a particular admission occurrence and ends at that
+    holding's own terminal. The synthetic journal
+    (corpus/run3b-synthetic/admission/synthetic/journal.properties;
+    so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f)
+    bounds one such interval for nonce 9e91a4e8-cf97-44b4-9b5c-da780e47720e
+    from admittedAtMillis=1788931586674 (_tag=admission-admitted, weightTokens=3,
+    originKey=synthetic-admission-origin) to releasedAtMillis=1788931586743
+    (_tag=admission-released). Journal nonce is a reidentification key, not the
+    criterion. ownerRef and ownerRefVariant are capture sanitization, including
+    where their values differ between the admitted record (ownerRef=9ee6618545e4)
+    and the correlated release (ownerRef=d47f93b8a97b); they are not identity
+    criteria and do not establish an owner change. Sharing a nonce with the
+    preceding enqueue does not identify the grant with the request.
+  reidentification_key:
+    - "journal nonce 9e91a4e8-cf97-44b4-9b5c-da780e47720e"
+    - "admittedAtMillis=1788931586674"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One mediation spanning the synthetic admittedAt-to-releasedAt interval;
+    charge (weightTokens=3) and nonempty originKey are properties of that
+    mediation, not extra individuals.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - kind
+    - information_object
+  existential_dependencies:
+    - "the distinct demand that was admitted (same-nonce enqueue; not the grant)"
+    - "contended admission capacity / token pool (not named as an individual in so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f)"
+    - "a holder participant whose domain identity is unresolved from ownerRef sanitization"
+    - "origin context when originKey is nonempty (synthetic-admission-origin is a value, not a vocabulary term or fleet-wide exclusion proof)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "released (observed on this synthetic nonce chain)"
+counterexamples:
+  - description: >-
+      Merge the grant with the full-proof procedure execution. so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f
+      reports kind=full-proof and weightTokens=3 on the admitted record but no
+      execution start, finish, or success; CQ-008/CQ-009/CQ-010 concern holders,
+      origin exclusion, and admission charge, not work completion.
+  - description: >-
+      Treat the enqueue and the admit as one entity because they share nonce
+      9e91a4e8-cf97-44b4-9b5c-da780e47720e. The synthetic chain records
+      admission-enqueued before admission-admitted; the other enqueue
+      (nonce d269a27c-6d0e-4613-8ad3-6adaa4353712) reaches admission-withdrawn
+      and never becomes a grant.
+  - description: >-
+      Read weightTokens=3 as a physical memory measurement or a duration bound.
+      CQ-010 treats admissionChargeTokens as the policy charge at admission, not
+      a measured quantity.
+  - description: >-
+      Read ownerRef/ownerRefVariant, schemaVersion, checkoutRoot placeholders, or
+      provenance=synthetic as domain identity or as evidence of a production
+      admission.
+status: proposed

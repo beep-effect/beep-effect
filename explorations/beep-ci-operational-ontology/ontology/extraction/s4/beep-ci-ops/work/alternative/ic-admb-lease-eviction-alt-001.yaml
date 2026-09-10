@@ -1,0 +1,53 @@
+id: "ic:admb-lease-eviction-alt:001"
+hypothesis_ref: "dh:admb-lease-eviction:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two lease-eviction occurrences are the same when they are the same dated
+    revocation of a particular admitted capacity lease. so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+    records nonce=39193b80-5f90-4e70-a432-fc259b3d994c as admission-admitted
+    (admittedAtMillis=1788917803122) then admission-lease-evicted
+    (evictedAtMillis=1788920302809, reason=owner-dead-or-reused,
+    lastHeartbeatAtMillis=1788919833142). The occurrence is not ticket
+    eviction, not admission-released, not the grant itself, and not a proven
+    process-death event. reason=owner-dead-or-reused is a disjunctive
+    diagnosis carried by the record, not a selected identity condition.
+    lastHeartbeatAtMillis neither dates death nor is an expiry policy.
+    ownerRef is not identity. Event time, not journal-append order, dates the
+    assertion.
+  reidentification_key:
+    - "evictedAtMillis (boundary evidence)"
+    - "nonce (chain correlation only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "one atomic dated revocation of one admitted lease"
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - relator
+  existential_dependencies:
+    - "the admitted seat grant/lease being revoked (CQ-008, CQ-009)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "completed (the revocation has occurred)"
+counterexamples:
+  - description: >-
+      Treating ticket eviction as lease eviction fails: so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+      is admission-ticket-evicted with reason=queued-submitter-death and no
+      admission-admitted, so no charged holding is revoked.
+  - description: >-
+      Treating admission-released as lease eviction fails on
+      so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929,
+      which ends in admission-released rather than admission-lease-evicted.
+  - description: >-
+      Taking lastHeartbeatAtMillis=1788919833142 as the death time, or as
+      proof of an expiry/timeout policy, infers a process-death occurrence and
+      a policy from a heartbeat field. Selecting death versus identifier reuse
+      from owner-dead-or-reused likewise overclaims the disjunction.
+status: proposed

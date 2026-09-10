@@ -1,0 +1,57 @@
+id: "fa:bind-admission-grant-alt:001"
+hypothesis_ref: "dh:bind-admission-grant:001"
+identity_card_ref: "ic:bind-admission-grant-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Relator: the grant is the mediation of a holder and contended admission
+      capacity, carrying its own charge, originKey, and holding interval
+      (CQ-008/CQ-009/CQ-010). Relator collapse to a binary holds-property would
+      lose those properties. Preferred on the synthetic admitted-to-released
+      chain in so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f.
+    still_viable: true
+  - label: >-
+      Kind plus phase: SeatGrant is a rigid sortal and ActiveGrant is an
+      anti-rigid intrinsic phase (still holding until terminal). Observationally
+      equivalent on current evidence: one complete synthetic admit-release
+      chain, no historical grant queried after release independently of the
+      relator reading. po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+      reconstructs TokenLedgerState from admitted/released deltas, which fits
+      both.
+    still_viable: true
+  - label: >-
+      Information object: the synthetic admitted/released journal records (and,
+      in deployed store talk, the lease file) are the grant. Observationally
+      equivalent on current evidence because the only carrier is the synthetic
+      journal; no scheduler state is observed independently of those records.
+    still_viable: true
+  - label: >-
+      The execution of the full-proof procedure itself. Weak: no execution
+      interval or success is recorded on this nonce.
+    still_viable: false
+strongest_counterexample: >-
+  Identifying request and grant via nonce, or identifying the grant with work
+  execution. The synthetic journal separates admission-enqueued,
+  admission-admitted, and admission-released; the second enqueue ends in
+  admission-withdrawn. Discarding the represented allocation would still leave
+  the admitted record while removing the holder and charge from an active-grant
+  reconstruction between admittedAtMillis=1788931586674 and
+  releasedAtMillis=1788931586743 (CQ-008/CQ-009).
+verdict: analyzed
+needed_evidence: >-
+  Discriminate relator/kind from information object: a production admission
+  whose capacity charge and origin exclusion continue to apply after the
+  journal/lease file is rewritten or absent, or conversely a store in which
+  deleting the lease file is identical to ending the hold. Discriminate
+  relator from kind-plus-phase: whether the same allocation individual remains
+  queryable after release (historical grant) or perishes with the holding
+  relation. Remaining capacity at admission and a named contended resource
+  individual are still unobserved (CQ-010's capacityAtAdmissionTokens is not
+  in this synthetic journal). Agent identity cannot be read from ownerRef.
+  Synthetic records may bound this lifecycle and must not be treated as
+  production-fleet frequency or as proof of a fleet-wide origin-exclusion
+  invariant.

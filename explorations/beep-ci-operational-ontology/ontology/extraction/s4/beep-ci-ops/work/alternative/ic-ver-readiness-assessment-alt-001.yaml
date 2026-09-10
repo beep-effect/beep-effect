@@ -1,0 +1,76 @@
+id: "ic:ver-readiness-assessment-alt:001"
+hypothesis_ref: "dh:ver-readiness-assessment:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two individuals are the same merge-readiness assessment iff they are the
+    same captured informational snapshot of readiness-component claims for one
+    assessed change/PR state (the jointly recorded ready/closeoutRun/checks
+    flags, thread-resolution, and named failing remainder). This is snapshot
+    identity of assessment content, not a timeless ready-state of the change.
+    checksGreen and requiredChecksGreen are distinct observed fields and are
+    not interchangeable in the criterion. The host verdict's attemptId
+    reidentifies the carrier report; it is not an assessment identity key.
+    greptileScore is a component value inside some snapshots, not confidence
+    in this analysis. Capture path and extractor provenance are not identity.
+  reidentification_key:
+    - carrier attemptId (host verdict only; not an assessment key)
+    - assessed head/runId + captured component-flag tuple
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One assessment snapshot is the bundle of jointly recorded closeout, check,
+    thread, and mergeability claims about one assessed state. Independent
+    dashboard flags are not extra individuals; a single ready= Boolean is not
+    the whole.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - phase
+    - relator
+    - situation
+  existential_dependencies:
+    - the assessed change or PR state the snapshot is about
+    - the component condition claims (closeout run, checks, threads, mergeability)
+    - typically a host attempt-result encoding (observed on verdict.properties)
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Checks-green-is-merge-ready / obligation collapse (CQ-006):
+      so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee
+      records checksGreen=true with failing=closeout-run; the source excerpt
+      also has ready=false, closeoutRun=false, threadsResolved=true, and
+      outcome=success. Green checks do not complete every merge-assurance
+      remainder.
+  - description: >-
+      Equating checksGreen with requiredChecksGreen (CQ-017 local-full vs
+      CI-merge boundary still unmapped):
+      so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1
+      uses checksGreen=false with ready=false, closeoutRun=false,
+      threadsResolved=false;
+      so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30
+      uses requiredChecksGreen=true with ready=true, closeoutRun=true,
+      threadsResolved=true. The two check-fields are not observed as the same
+      predicate.
+  - description: >-
+      Phase-as-kind / timeless ready state: the same assessed-change kind
+      appears as ready=false
+      (so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee)
+      and ready=true
+      (so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30).
+      If Ready were a rigid class of the change, that change could not leave
+      it while persisting. The snapshots are anti-rigid as world-eligibility
+      only under the phase rival; as information objects they are different
+      captured assessments.
+  - description: >-
+      greptileScore=5/5 on
+      so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30
+      is a component of that positive snapshot, not a held assurance tier and
+      not this hypothesis's confidence.
+status: proposed

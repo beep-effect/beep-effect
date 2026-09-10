@@ -1,0 +1,56 @@
+id: "dh:admb-lease-eviction:001"
+observation_refs:
+  - "so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10"
+  - "so:sha256:5abf1599e9268fb3190e199440ba2a0975670561acee0566c6805cd150491b12"
+  - "so:sha256:a03b8e201a23a02a6b82aa0c120aa205b4725195d3985dc468b271c0e4813bca"
+  - "so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb"
+  - "so:sha256:fa16a716b56a1780f96785077dc9274f7a807f38a04770e008febb22d6cad15b"
+cq_warrants: ["CQ-008","CQ-009"]
+proposed_referent:
+  label: "Lease eviction occurrence"
+  description: >-
+    An instance is one revocation/removal of an admitted capacity lease recorded by
+    admission-lease-evicted at evictedAtMillis. It supplies an endpoint for the distinct grant
+    whose positive admission is recorded in the same chain. All five cited chains pair admission
+    with lease eviction. The kind is separate from ticket eviction of a waiting request and from
+    an admission-released endpoint. The reason owner-dead-or-reused remains a disjunctive
+    scheduler diagnosis: neither death nor identifier reuse is selected. Four chains supply
+    lastHeartbeatAtMillis and one does not; that value neither dates death nor establishes an
+    expiry or timeout policy. Event timestamps date the assertions even when journal entry order
+    interleaves or appends an older event later.
+representation_status: domain_referent
+alternatives:
+  - label: "Information asserting that an admitted lease was evicted, including an unverified reason"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A grant's evicted condition or terminal boundary without a separate revocation occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The primary referent is the event terminating a recorded grant's standing. The first batch
+    interprets these chains through the grant and the second through the admission/eviction
+    information; both interpretations are preserved at kind grain. A correlated lease deletion
+    and active-charge change would distinguish the operational endpoint from its assertion.
+    Independently captured process-liveness or reuse evidence would discriminate the two
+    branches of the recorded reason, but is not needed to distinguish lease from ticket
+    eviction. A heartbeat timestamp alone is insufficient for either removal or policy
+    inference.
+  discriminator: >-
+    The reopened first-batch observation records (config_key_value,
+    "nonce=39193b80-5f90-4e70-a432-fc259b3d994c"), (config_key_value,
+    "_tag=admission-admitted"), and (config_key_value, "admittedAtMillis=1788917803122"),
+    followed in event time by (config_key_value, "_tag=admission-lease-evicted"),
+    (config_key_value, "evictedAtMillis=1788920302809"), and (config_key_value,
+    "reason=owner-dead-or-reused"). The second batch pairs the same tags for (config_key_value,
+    "nonce=5ef00241-2520-4a73-9033-d1162608630a"), with (config_key_value,
+    "admittedAtMillis=1788465303136") and (config_key_value, "evictedAtMillis=1788466113838").
+    The positive assertion is that an admitted lease was subsequently evicted; under the
+    no-operational-endpoint null that assertion would be false. It is the eviction assertion,
+    not a heartbeat gap or an independently proved death, that supplies the discriminator.
+epistemic_status: proposed
+confidence:
+  value: 0.78
+  use_for_acceptance: false

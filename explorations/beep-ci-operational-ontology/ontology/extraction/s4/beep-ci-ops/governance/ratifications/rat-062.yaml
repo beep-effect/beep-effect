@@ -1,0 +1,11 @@
+id: rat:62
+proposal_ref: otp:ov-step-position:001
+proposal_sha256: cdd90280d721dfe595422347088ab593320f90758f3e8a51b382357032f95248
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-step-position:001 as the stepIndex zero-based integer property at contextual
+  recorded-value grain, with the quality, precedence and reified-assignment alternatives retained as flags,
+  only with joint ordering-cluster ratification.

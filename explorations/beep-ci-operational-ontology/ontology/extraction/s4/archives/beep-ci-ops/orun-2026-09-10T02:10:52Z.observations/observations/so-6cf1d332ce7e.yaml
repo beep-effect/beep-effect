@@ -1,0 +1,88 @@
+{
+  "id": "so:sha256:6cf1d332ce7ea225c24cf5aea2e2192ab91ec06838463289be284bae7677e60c",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 2972,
+    "end_line": 2999,
+    "content_sha256": "773ccc8c88d59553785a971dc891b24f46076629d9e094601e2f6353c854d3a1"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/admission/canonical/journal.properties:nonce=fbac860b-535a-4576-8976-239b65394257",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=1dd8ada0-3dc5-4518-ae28-8871a94ca9bf"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/security-corpus-redaction"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect12"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788931921468"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=fbac860b-535a-4576-8976-239b65394257"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=83fc564e5185"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1788931939095"
+    }
+  ],
+  "source_excerpt": "# record 265\nownerRef=83fc564e5185\nownerRefVariant=pid_pair\nattemptId=1dd8ada0-3dc5-4518-ae28-8871a94ca9bf\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-corpus-redaction\nenqueuedAtMillis=1788931921468\nnonce=fbac860b-535a-4576-8976-239b65394257\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 266\nownerRef=83fc564e5185\nownerRefVariant=pid_pair\nattemptId=1dd8ada0-3dc5-4518-ae28-8871a94ca9bf\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-corpus-redaction\nenqueuedAtMillis=1788931921468\nnonce=fbac860b-535a-4576-8976-239b65394257\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788931939095\n",
+  "epistemic_status": "parser_derived"
+}

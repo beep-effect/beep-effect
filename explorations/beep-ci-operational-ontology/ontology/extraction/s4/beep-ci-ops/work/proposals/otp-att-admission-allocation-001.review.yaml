@@ -1,0 +1,69 @@
+target: otp:att-admission-allocation:001
+target_sha256: faf65695aed53601da83c0765c89e1e18846c6905b9b3dd5989aa911c11efd6d
+chain_sha256: af5ff0ef5c37768481ba08d5f7f8c133424bf3c7cc3f4b9aaadd80fd90f6d3f3
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: parents is empty. Proposed exact SeatGrant reuse introduces no is-a edge, and neither the
+    execution attachment nor holder role is a parent.
+revision_requests:
+- For discriminator-true-of-dto, add an observation linking this lease to effective charged capacity or
+  a consuming admission decision rather than inferring allocation from asserted lease fields. Preserve
+  explicitly_deferred identity until a single observed lifecycle distinguishes ordinary renewal, release/eviction
+  and fresh admission independently of nonce or copied body equality.
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  counterexample: 'Null-world counterexample: a stale or test lease body is rendered twice with admittedAtMillis=1788941816511,
+    weightTokens=5 and attachedAt unchanged, while a record-maintenance timer updates heartbeatAtMillis
+    from 1788941946764 to 1788942001857. There need be no effective capacity allocation. Both lease-observation
+    fact sets, including support=active as an attachment assertion, still hold. The discriminator moves
+    from these stored assertions to the truth of admission-and-charge, but neither so:430e175a6bdb nor
+    so:afd98d3ec307 records an active-capacity change or a scheduler decision consuming that allocation.'
+  outcome: landed
+  evidence:
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - CQ-008
+  - CQ-010
+- surface: identity
+  rule: unresolved-allocation-continuity
+  counterexample: 'Countermodel: release an allocation and later replay an equal lease body with a fresh
+    heartbeat; compare with an ordinary heartbeat renewal of one uninterrupted allocation. The observed
+    two snapshots fit both. The card explicitly leaves identity supply unresolved, and the proposal is
+    explicitly_deferred rather than treating matching nonce, attempt and origin as proof of continuity.
+    This defeats settled reidentification but is already disclosed by the proposal. It does not warrant
+    accepting either model or transferring the synthetic lifecycle from another chain.'
+  outcome: survived
+  evidence:
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+- surface: warrant
+  rule: exact-reuse-decision-warrant
+  counterexample: 'Counterexample attempt: count the two lease snapshots as two active grants, or use
+    an unadmitted ticket in their place. That changes CQ-008/CQ-009''s grant population and duplicates
+    CQ-010''s five-token charge. An allocation subject distinct from its snapshots and pending request
+    is required by those queries. The proposed reuse is of the existing SeatGrant term, so the optional-new-subclass
+    attack does not apply; the explicit identity deferral remains unresolved.'
+  outcome: survived
+  evidence:
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - CQ-008
+  - CQ-009
+  - CQ-010
+rival_models_still_viable:
+- Instant-indexed admission situation without an enduring grant relator.
+- Lease information objects whose reported allocation persistence is uncommitted.
+evidence:
+- so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+- so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+- CQ-008
+- CQ-010
+- CQ-009

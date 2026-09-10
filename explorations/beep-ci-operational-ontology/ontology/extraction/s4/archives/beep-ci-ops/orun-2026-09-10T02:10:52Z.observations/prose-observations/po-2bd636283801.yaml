@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:2bd636283801ce0554f90ccad18d9af687c0492f9206e9428256c3232db5790d",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 54,
+    "end_line": 54
+  },
+  "quote": "`${subject} rdf:type ciops:SeatRequest .`,",
+  "epistemic_status": "quoted_prose"
+}

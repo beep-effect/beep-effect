@@ -1,0 +1,108 @@
+{
+  "id": "so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 2747,
+    "end_line": 2798,
+    "content_sha256": "a78f50a56a63aae1fc97c4b2c54229cf198c38004dedcafebd31ef3ce3a6ccc5"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/journal.properties:nonce=0ff912cf-d69b-4cd8-bf68-27293f6c0cce",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-released"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1788929720160"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=adc403af-0321-4754-a850-f26286e5a4d1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/security-corpus-redaction"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect12"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788929720146"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "memoryPeakBytes=19179208704"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=0ff912cf-d69b-4cd8-bf68-27293f6c0cce"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=37327e3b427b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=d9abb25e9adb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=1788930321941"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 247\nownerRef=d9abb25e9adb\nownerRefVariant=pid_pair\nattemptId=adc403af-0321-4754-a850-f26286e5a4d1\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-corpus-redaction\nenqueuedAtMillis=1788929720146\nnonce=0ff912cf-d69b-4cd8-bf68-27293f6c0cce\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 248\nownerRef=d9abb25e9adb\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=0ff912cf-d69b-4cd8-bf68-27293f6c0cce\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788929720146\nadmittedAtMillis=1788929720160\nattemptId=adc403af-0321-4754-a850-f26286e5a4d1\n# record 249\nownerRef=2a1fcbf809ce\nownerRefVariant=pid_pair\nattemptId=d5c512f5-3f8e-40a4-97f0-27580a5965f4\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect8-worktrees/ciops-synthetic-fixture\nbranch=feat/ciops-synthetic-admission-fixture\nenqueuedAtMillis=1788929906897\nnonce=ba48571b-eb4c-4d9c-8194-e4a736e2b5cd\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 250\nownerRef=37327e3b427b\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-corpus-redaction\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=0ff912cf-d69b-4cd8-bf68-27293f6c0cce\nreleasedAtMillis=1788930321941\nmemoryPeakBytes=19179208704\nattemptId=adc403af-0321-4754-a850-f26286e5a4d1\n",
+  "epistemic_status": "parser_derived"
+}

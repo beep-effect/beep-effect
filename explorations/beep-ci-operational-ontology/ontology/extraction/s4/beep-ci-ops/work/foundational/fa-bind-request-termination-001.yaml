@@ -1,0 +1,74 @@
+id: "fa:bind-request-termination:001"
+hypothesis_ref: "dh:bind-request-termination:001"
+identity_card_ref: "ic:bind-request-termination:001"
+provenance: synthetic
+evidence_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+  - "CQ-021"
+  - "CQ-023"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    A particular withdrawal or ticket eviction is an occurrence represented at a
+    date, not a withdrawal procedure, starvation policy, or eviction specification.
+    Neither the terminal mechanism nor the reason proves a normative authorization
+    or the steps of an executing cleanup procedure.
+  world_vs_information: >-
+    The event model concerns represented queue exits in the synthetic scenario.
+    The journal assertion about an exit is distinct and can survive, duplicate,
+    or misreport it. A correlated enqueue and withdrawal bound one candidate
+    participation; the evicted ticket supplies a report without its earlier state.
+  role_vs_bearer: >-
+    Ending queued membership does not destroy or identify an enduring demand or
+    its submitter. It is also not a release of an allocated grant. The unresolved
+    identity of a demand across resubmission does not prevent distinguishing two
+    particular queue participations and their distinct termination occurrences.
+  context_reification_needed: >-
+    The target queue participation, boundary, and reported mechanism are needed
+    to stop carrying a historical demand forward as queued for CQ-021 or accruing
+    waiting time for CQ-023. Keep the evicted ticket's missing enqueue and complete
+    wait unknown; do not import the withdrawn request's start or derive a complete
+    current queue from this partial journal.
+rival_models:
+  - label: "Terminal request-state information object"
+    still_viable: true
+    rationale: >-
+      The assertion is directly observed even when its represented queue transition
+      lacks independent confirmation. Assertion identity would differ from event
+      identity under duplication or correction.
+  - label: "Withdrawal and ticket eviction as distinct occurrence models"
+    still_viable: true
+    rationale: >-
+      Withdrawal can end pending demand, while eviction might clean up an already
+      inactive representation. Before/after queue-membership observations around
+      both mechanisms would decide whether one transition family covers both.
+  - label: "No-longer-queued role or state of a demand"
+    still_viable: false
+    rationale: >-
+      The resulting condition can persist or later change on resubmission; the
+      hypothesized referent is the occurrence marking the end of one participation.
+  - label: "Termination of an allocated grant"
+    still_viable: false
+    rationale: >-
+      The withdrawal chain supplies an enqueue without an observed admission.
+      Treating its queue exit as grant release would invent an allocated holder.
+strongest_counterexample: >-
+  Countermodel: synthetic-dead-ticket was already outside the effective queue
+  before the recorded eviction at 1788931586729. Cleanup would then be a different
+  occurrence from queue termination. No earlier membership observation for that
+  ticket is supplied, so the report cannot establish its effective exit time or
+  full waiting interval. The correlated enqueue-to-withdrawal chain supports the
+  bounded event interpretation without resolving the eviction mechanism's scope.
+verdict: analyzed
+needed_evidence: ""
+evidence_limits: >-
+  Eventhood is proposed for the represented end of a particular participation,
+  not for every record bearing a terminal tag. The viable assertion-only and
+  separate-mechanism models remain open. A before/after queue trace is needed
+  before treating eviction as effective queue removal or its reason as an
+  independently established cause. No complete queue, production frequency,
+  starvation violation, or demand-destruction claim follows.

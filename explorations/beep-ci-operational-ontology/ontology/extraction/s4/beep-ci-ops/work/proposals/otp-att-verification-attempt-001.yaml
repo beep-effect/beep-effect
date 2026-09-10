@@ -1,0 +1,146 @@
+id: otp:att-verification-attempt:001
+hypothesis_ref: dh:att-verification-attempt:001
+identity_card_ref: ic:att-verification-attempt:001
+foundational_status: analyzed
+term:
+  preferred_label: verification attempt
+  local_name: VerificationAttempt
+  proposed_iri: https://oip.law/ontology/ci-ops#VerificationAttempt
+  owl_entity_kind: class
+definition:
+  text: >-
+    An information object recording the account of one putative operational command
+    invocation, with its associated start, terminal assertions when supplied, component-status
+    claims and whole-attempt timing values. The originating recorded attempt account and its
+    asserted associations individuate the proposed information unit; faithful copies preserve
+    it; an added boundary or correction creates another content version. Separate reported invocations remain
+    distinct despite a shared command or run. The account can be incomplete, replayed or false
+    and does not establish a causally continuous execution process.
+  source:
+  - CQ-022
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+- from_sha256: e2c44d60e977e3390ed5e88562e9ccef8025773e88547d45f75b53ab978310b5
+  addressed:
+  - discriminator-true-of-dto
+- from_sha256: 8a7cd3f23bd7f5618b7dc43bb98d177a311525d74c763574aa1c3c6121bee59d
+  addressed:
+  - "gate-log-1 category alignment: derive information_object and its identity account from the repaired IC/FA"
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-022
+  semantic_support_for: []
+alternatives_rejected:
+- >-
+  A reusable verification procedure cannot identify the distinct recorded failure and later
+  success accounts. Those dated assertions remain different information even if no execution
+  occurred.
+- >-
+  A single branch-level run cannot supply recorded attempt identity: joining only by that run
+  would move one attempt's failure claims into a separate healthy-retry account.
+- >-
+  An individual journal entry, a duration value or a not-run planned component does not
+  replace the complete attempt-scoped account. Naming a component in that account does not
+  prove it was executed.
+open_issues:
+- >-
+  Decision warrant retained: CQ-022 joins CommittedFailure and running WorkUnitExecution
+  through the same inAttempt subject. That common scope is necessary even without a type
+  pattern on the attempt variable; a run-level join can include a healthy retry. This proposal
+  preserves distinct recorded attempt subjects and only their evidenced start/finish, status
+  and timing associations. It does not promote outcome=failure or failedStepId into an
+  observed committed-failure decision, supply a running-work/cancel-class inventory, or
+  authorize cancellation. Those operational joins require independently observed
+  execution/consumer evidence.
+- >-
+  Sitting-1 Ruling 2 answers discriminator-true-of-dto at the fixed attempt-history
+  information-object grain now ruled by the repaired IC/FA. The process and bounded
+  operational event readings are CONCEDED until an effective execution or consuming-driver
+  observation exists; their original initiating-invocation criterion remains upstream history,
+  not adopted informational identity. STEWARD CHOICE remains explicit between the originating
+  account with fixed asserted content selected here and an enduring corrected history with
+  separate versions. A consumer trace distinguishing copy, correction and independent
+  equal-content histories must decide that choice. No process/event subsumption or
+  information/event equivalence is proposed.
+- >-
+  Joint consideration with otp:att-attempt-verdict:001, otp:ver-attempt-verdict:001 and any
+  retained otp:ver-wall-time-evidence:001 is required if those report and measurement shapes
+  are adopted. The attempt account supplies a common recorded subject; an assessment artifact,
+  whole-attempt duration claim and nested lane claim remain distinct grains. Their support
+  must preserve each claim's own attempt and scope after this recast. The existing
+  result-origin versus result-content identity pair is not decided here, and a later
+  duration-proposal withdrawal must be handled by its owning seat.
+- >-
+  The legacy-unowned-start notice supplies a recorded reconciliation assertion. It does not
+  fill an unobserved execution interval or establish the attempt's actual end, an exhaustive
+  terminal-state domain or queue/lock/repair decomposition. Repeated excerpts preserve the
+  same reported accounts rather than additional invocations. These are observed journal
+  reports; the separate termination-notice chain's synthetic cases supply no occurrence
+  evidence for them.
+- >-
+  No separate proposal from analyzed dh:att-termination-notice:001 /
+  fa:att-termination-notice:001: its only cases are synthetic notices, including a
+  queued-submitter case without an observed execution. The existing CQs do not require a
+  notice class, and the record supplies neither episode membership nor actual execution/wait
+  boundaries establishing a necessary support dependency. Its information-object,
+  modeled-event and assertion-content choices remain open. A consumer using notices with
+  independently observed lifecycle boundaries for episode accounting would reopen admission;
+  the notice cannot be equated with either this account or an executing process.
+- 'No proposals from dh:att-origin-block-marker:001, dh:att-overlap-diagnostic:001, or dh:att-staged-recovery-handle:001:
+  their null hypotheses remain unrejected. Respectively, the needed evidence is an interpretation/transition
+  for zero origin blocking, an overlap-dependent operational decision, and an observed preservation/restoration
+  or evidence-applicability consumer. These implementation payloads do not add invocation kinds.'
+- >-
+  Reuse search: VerificationAttempt is absent from the supplied 38-term taxonomy. Its
+  attempt-account grain differs from VerificationResultArtifact, which records an assessment
+  and is separately proposed through otp:att-attempt-verdict:001 and
+  otp:ver-attempt-verdict:001. Generic PROV entities and the scout report's plan/activity
+  patterns do not fix the attempt-scoped informational subject. No exact reuse, external
+  equivalence or superclass commitment is proposed.
+- >-
+  Attempt-chain identity provenance: the source excerpts in
+  so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31 and
+  so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c associate
+  attemptId d1e2faf7-31d5-4b94-b672-7a70c8f7d015 with start 2026-08-23T16:59:45.919Z, end
+  2026-08-23T17:01:07.524Z, elapsedMs 81605 and failedStepId prepare:05-docgen. Within that
+  finished account docgen reports status=failed, exitCode=1 and durationMs=47356.549767; later
+  feedback components report status=not-run. The later success belongs to attemptId
+  10a92517-8534-475c-8d74-925782da61a9, start 2026-08-23T17:16:21.382Z, end
+  2026-08-23T17:18:36.752Z and elapsedMs 135370. Both excerpts repeat these same accounts.
+  This chain supplies attemptId associations, not an admission nonce; neither the identifier
+  nor the shared run is a global identity criterion.
+- >-
+  Revised information-grain discriminator: the observed source keeps the failed docgen and
+  not-run feedback assertions in the first finished account, distinct from the later success
+  account. A replay with no invocation preserves these parser facts, so the operational null
+  is expressly conceded. It nevertheless preserves distinct attempt-specific informational
+  content and cannot establish informational emptiness. Same-origin copies with unchanged
+  claim associations retain the information unit; a corrected association changes its content.
+  The retained rigid/supplies/relational meta-properties concern that proposed account and its
+  originating assertion context, not executing participants or actual causal continuity.
+- >-
+  Named run-4 evidence for the conceded operational reading: a command-driver trace independently
+  showing a particular invocation performing components, committing failure and initiating a
+  distinct retry, with an observed attempt-scoped stopping consumer. Bind the executed work
+  and cancellation classification to the same attempt while keeping healthy-retry work
+  separate. Include unexecuted/replayed history and correction/copy cases; neither timestamp
+  arithmetic nor another matching attemptId report supplies this discriminator.
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

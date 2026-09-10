@@ -1,0 +1,49 @@
+id: fa:adm-lease-eviction:001
+hypothesis_ref: dh:adm-lease-eviction:001
+identity_card_ref: ic:adm-lease-eviction:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: An information object asserting lease eviction and a disjunctive reason. Time-aligned lease-store
+    removal and holder-accounting evidence would distinguish the operational occurrence; separate liveness
+    evidence would be needed for the cause.
+  still_viable: true
+- label: The grant's terminal condition labeled evicted, with no separate removal-event individual. A
+    trace or decision needing the removal act's participants and effects would distinguish the event model.
+  still_viable: true
+strongest_counterexample: A stale lease can be evicted because a process identifier was reused while a
+  log still reports owner-dead-or-reused. Classifying the event as owner death would choose one disjunct
+  without evidence. Conversely, observing an old heartbeat or repeatedly scanning a missing lease does
+  not itself instantiate another eviction.
+verdict: analyzed
+test_rationales:
+  spec_vs_execution: An eviction policy or repeated reaper procedure is distinct from one dated removal
+    occurrence. A heartbeat age is neither an expiry specification nor proof that any death or process
+    termination occurred.
+  world_vs_information: The eviction assertion is information about removal of an admitted holding. The
+    reported disjunctive reason remains assertion content. Neither the log nor its heartbeat field independently
+    proves removal, owner death, process reuse, or a stopped execution.
+  role_vs_bearer: A grant holder may lose its holding role through eviction. That beneficiary, the grant
+    relation, and the occurrence removing the holding remain distinct; capture owner labels establish
+    no independent bearer identity.
+  context_reification_needed: The admitted grant, removal boundary, and capacity/origin accounting context
+    must be associated. A complete current holder census is separate from these historical reports. Actual
+    cause needs an additional observation distinct from the removal evidence.
+category_rationale: Event is a conditional classification of the proposed admission lease eviction occurrence,
+  because its grain is one occurrence of a transition. It is not selected from the spelling of a tag.
+  The cited evidence directly establishes recorded assertion content; the linked card states the proposed
+  occurrence criterion, rigid event classification, participant dependence, and unresolved duration. A
+  coherent conditional event shape is available, so analysis can finish while the information-only and
+  boundary-only rivals remain viable. Neither rival is resolved by this seat.
+evidence_refs:
+- so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+- so:sha256:675134527a157d157274937b2f8ad90b036d30b77340d61f1e202483d9ac828e
+- CQ-008
+- CQ-009
+evidence_reading: The two matched histories each assert admission and later admission-lease-evicted with
+  reason=owner-dead-or-reused. The first includes admittedAtMillis=1788492468990, evictedAtMillis=1788498598670,
+  and lastHeartbeatAtMillis=1788497733794. Interleaved entries in the wide source span belong to other
+  nonces and supply no additional properties of this removal.

@@ -1,0 +1,11 @@
+id: rat:63
+proposal_ref: otp:ov-step-request-assignment:001
+proposal_sha256: 23210dde3e5ecc61b30ed3855ed18adef5772b096b18e130d0d1dccd9c2c84fc
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-step-request-assignment:001 as the contextual schedulesSeatRequest object
+  property, preserving the distinction from WorkUnitSpecification and carrying SeatRequest's continuity
+  flag, only with joint ordering-cluster ratification.

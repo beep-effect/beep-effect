@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:4bdac49b0f0d0423718b9708077e41abd89e0951d588f18542cac3d01982f247",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-fleet/attempts/a/b/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 3,
+    "content_sha256": "937fc105bed4464b9f901ce90d76fb26705f92adeff533a7d9e0d69c7d0b68d9"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/attempts/a/b/attempts.properties",
+    "lexical_name": "note",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "note=representable"
+    }
+  ],
+  "source_excerpt": "schemaVersion=yeet-attempt-journal/v1\nkey=third\nnote=representable\n",
+  "epistemic_status": "parser_derived"
+}

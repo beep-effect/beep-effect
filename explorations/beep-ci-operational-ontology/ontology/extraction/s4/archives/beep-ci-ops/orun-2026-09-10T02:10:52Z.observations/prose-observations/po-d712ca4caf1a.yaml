@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 84,
+    "end_line": 84
+  },
+  "quote": "`${stepSubject} ciops-prov:stepIndex \"${step.stepIndex}\"^^xsd:integer .`,",
+  "epistemic_status": "quoted_prose"
+}

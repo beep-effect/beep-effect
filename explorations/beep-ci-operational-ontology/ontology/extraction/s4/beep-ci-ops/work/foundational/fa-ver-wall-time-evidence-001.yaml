@@ -1,0 +1,102 @@
+id: "fa:ver-wall-time-evidence:001"
+hypothesis_ref: "dh:ver-wall-time-evidence:001"
+identity_card_ref: "ic:ver-wall-time-evidence:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationales:
+  spec_vs_execution: >-
+    The primary referent reports time for a particular occurrence. A reusable
+    lane specification cannot itself consume that elapsed time, and a later
+    invocation needs a different occurrence binding. Neither a predicted P50/P95,
+    admission charge, nor a hard resource limit is the measured result. CQ-025
+    separately requires the estimate snapshot used by the completed execution;
+    the batch establishes no such calibration join.
+  world_vs_information: >-
+    The record makes a quantitative claim about an interval; the interval,
+    execution, and its duration are different referents. The exact 4456 and
+    11 millisecond timestamp matches in
+    so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446
+    and so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+    support measurement meaning. The one-millisecond discrepancy in
+    so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc
+    shows why those agreements do not establish universal clock accuracy or
+    definitionally identical quantities. No particular clock or rounding cause
+    is inferred.
+  role_vs_bearer: >-
+    The recorded claim can serve as observed-cost evidence in a calibration or
+    accounting decision. Accepting or rejecting that use does not change which
+    assertion it is. It is not the execution bearing a duration quality, nor an
+    intrinsic evidence role of that execution. CQ-007's episode accounting and
+    CQ-025's calibration require scope and applicability relations beyond the
+    existence of a numeric report field.
+  context_reification_needed: >-
+    Preserve a joint binding of quantity, unit/measurement meaning, represented
+    occurrence, and interval scope in a measurement claim or an equivalent
+    qualified report field. Whole-attempt elapsedMs and nested durationMs require
+    separate bindings. Do not invent nested associations from the flattened set
+    in so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465.
+    CQ-025 distinguishes attempt-level from lane-level wall cost, and CQ-007
+    requires additional episode membership and wait/repair accounting; no
+    disjointness, summation rule, or episode completion follows from co-location.
+rival_models:
+  - label: "Duration quality of a bounded execution, described by a separate recorded value"
+    still_viable: true
+    rationale: >-
+      A quality-centered model can represent actual elapsed duration while
+      preserving the information/quality distinction and allowing erroneous
+      measurements. The observations do not determine the true quantity or
+      require a separately individuated information object for each claim.
+  - label: "Measurement-result token individuated by a measurement act"
+    still_viable: true
+    rationale: >-
+      Two independent measurements with equivalent contents could be different
+      result tokens under an act-based criterion, while copies of one token stay
+      associated with it. The primary model instead individuates assertion
+      content. Measurement-act identity is not supplied by capture provenance.
+  - label: "Scoped literal assertion within an execution result report"
+    still_viable: true
+    rationale: >-
+      A report can carry a correctly qualified duration value without a separate
+      measurement node. This remains viable if target occurrence, counted scope,
+      corrections, and estimate links remain distinguishable.
+  - label: "Every reported elapsed value is a lane duration, an episode total, or a predicted cost bound"
+    still_viable: false
+    rationale: >-
+      The attempt/lane distinction in CQ-025, the additional decomposition
+      demanded by CQ-007, and the report with an elapsed interval but not-run
+      steps defeat these substitutions. No estimate, limit, or complete episode
+      partition is observed here.
+strongest_counterexample: >-
+  so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc
+  reports elapsedMs=6199 for timestamps whose difference is 6198 milliseconds.
+  The discrepancy prevents defining the information object as the exact elapsed
+  duration computed from those endpoints. The content remains a measurement
+  assertion even while clock convention, precision, or recording accuracy is
+  unresolved. The two matching examples support measurement interpretation but
+  cannot remove this counterexample.
+verdict: analyzed
+needed_evidence: >-
+  To settle occurrence bindings and the remaining models, obtain one observation
+  preserving the nested association between an attempt, each repeated lane
+  occurrence, its duration field, and its start/end bounds. Include the measuring
+  clock and precision/rounding rule, plus a repeated measurement or correction of
+  the same interval that shows whether the consumer preserves a measurement token
+  or creates a new result. For CQ-025, preserve the completed execution's actual
+  used-estimate binding; for CQ-007, preserve episode membership and observed
+  wait/repair intervals. A retained copied result after its original bearer is
+  removed would discriminate specific-bearer dependence.
+evidence_refs:
+  - "so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446"
+  - "so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c"
+  - "so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc"
+  - "so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465"
+  - "CQ-007"
+  - "CQ-025"
+notes: >-
+  Analysis is complete for recorded measurement content. The unresolved
+  dependence and still-viable rivals must remain visible in synthesis; no true
+  physical duration, unique nested join, additive accounting partition, cost
+  calibration pair, or new ontology commitment is established by this verdict.

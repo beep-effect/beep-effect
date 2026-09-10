@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:5e660542834fa3d2e917207f5764b6905b0654cfb825a0f34b4ac27bfe96bb02",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 253,
+    "end_line": 262
+  },
+  "quote": "## 6. Non-goals (admission v1 / emission v2)\n\n- No lane-DAG planner implementation (seam only).\n- No scheduler replacement or repo-cli integration — the deployed\n  `QualityScheduler` stays the only writer of real admissions.\n- No T-Box changes, no vocabulary ratification (run 3's job), no IRI-scheme\n  changes (S8).\n- No live-journal tailing daemon — v1 projects from explicit inputs; the Tx\n  wrapper holds state in-process only.\n- No KPI ETL (separate incubation lane per the incubation-home decision).",
+  "epistemic_status": "quoted_prose"
+}

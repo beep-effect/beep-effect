@@ -1,0 +1,119 @@
+id: fa:ov-admission-token-charge:001
+hypothesis_ref: dh:ov-admission-token-charge:001
+identity_card_ref: ic:ov-admission-token-charge:001
+referent_grain: >-
+  One contextual recorded integer-charge assertion about a request subject in an emitted
+  description. The assertion content is an information object; it is distinct from the integer
+  magnitude itself, a continuing administrative quality, a policy-application assignment and a
+  grant-time charge.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    The quoted admissibility rule is a reusable policy description. The emitted integer assertion
+    records a requested amount; it is not the policy application, actual resource use or a hard
+    execution limit.
+  world_vs_information: >-
+    Separated at the selected grain: the subject-bound integer assertion is observed. The
+    continuing quality or assignment it may describe is not established. Selecting
+    information_object therefore leaves the operational continuity question open.
+  role_vs_bearer: >-
+    The recorded charge is neither the represented request nor its requester or a charged-holder
+    role. A later grant is a distinct subject unless an observed assessment joins the contexts.
+  context_reification_needed: >-
+    Retain the request subject and emitted description context around each integer assertion.
+    CQ-010 would additionally require a grant assessment and pre-grant remaining capacity; the
+    contract's inequality and the request-side fixture cannot supply those joins.
+analysis:
+  identity: >-
+    Within one emitted description, the same recorded charge content attributes the same integer
+    token amount to the same represented request subject in that assertion context. Different
+    request subjects bearing the literal 5 therefore give distinct contextual assertions, while
+    copying one assertion need not create new content. The subject and datatype/value locate the
+    assertion; their spelling is not a cross-emission identity criterion. Unresolved across
+    changed emission/assessment contexts: the supplied evidence does not establish when a later
+    assertion repeats, revises or replaces an earlier assignment, or whether a request charge
+    continues as a grant charge.
+  rigidity: >-
+    Rigid at fixed assertion-content grain: the assertion remains charge-description information
+    even if inaccurate or superseded. Classification and identity of an enduring operational
+    burden remain outside that bounded ruling.
+  dependence: >-
+    Relational dependence is on the represented subject and assertion context, not on an observed
+    effective charge or a presumed policy bearer. The broader quality/mode dependence question
+    stays deferred.
+  temporality: >-
+    A recorded assertion can remain available after a subject or policy changes; no retention
+    endpoint is supplied. A changed value is changed content within a description, while
+    cross-emission sameness/replacement remains unresolved. No operational assignment interval or
+    terminal transition is observed.
+  category: >-
+    The emission fixture positively contains three subject-bound admissionChargeTokens integer
+    assertions, and the Turtle site copies request.weightTokens into precisely that assertion
+    form. This supports information_object at recorded-value grain without resolving the policy
+    quantity's continuing identity or demanding a new charge individual.
+rival_models:
+  - label: >-
+      quality: an administrative token burden persisting on the same request through repricing
+    still_viable: true
+    rationale: >-
+      Still viable and unsupported by the present fixed assertions. Selecting their recorded-value
+      category does not deny a quality behind them.
+    needed_evidence: >-
+      Observe the same independently reidentified request before and after effective repricing and
+      show whether the burden persists despite the new value.
+  - label: >-
+      mode: a policy-specific charge assignment replaced by a new charging decision
+    still_viable: true
+    rationale: >-
+      Still viable; numeric serialization does not distinguish this assignment from a continuing
+      quality.
+    needed_evidence: >-
+      Observe the effective policy applications and assessment instants, with evidence showing
+      preservation or replacement of the assignment.
+  - label: >-
+      information model: successive assertions only, with no separately reified continuing charge
+      individual
+    still_viable: true
+    rationale: >-
+      Retained for the wider lifecycle question. Fixed assertion content is supported, but whether
+      later emissions repeat the same content or denote new assessments is not observed.
+    needed_evidence: >-
+      Observe paired emissions with independently established request/context continuity and an
+      account of copy, correction or replacement; do not infer it from identical IRIs or values.
+strongest_counterexample: >-
+  The fixture assigns the integer 5 to three distinct request subjects. Identity by magnitude
+  merges three assertions; identity by a request alone also fails to distinguish a later corrected
+  value or a changed assessment context. The emitted assertion can be preserved as information
+  even if no operational charge was assessed. Hypothetical repricing of one still-pending request
+  could change an enduring quality or replace a policy-specific assignment. The current
+  emitter/fixture does not decide either model or establish a request-to-grant charge
+  continuation. Neither five tokens nor its revision measures physical memory.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Obtain paired emissions for one independently reidentified request before and after an effective
+  charging-policy change, with the policy applied, assessment instants, both values, and
+  observation-backed copy/correction/replacement semantics for the assertions. Establish whether
+  the underlying burden persists or a new assignment replaces it independently of value, digest or
+  IRI equality. Include that request's subsequent grant assessment and pre-admission remaining
+  capacity before asserting request/grant charge continuity or applying CQ-010. The present
+  evidence settles only the fixed recorded-value category; this lifecycle and cross-context
+  identity deferral remains explicit.
+analysis_scope: >-
+  The recorded-value category and bounded content criterion are proposed at foundational-analysis
+  authority only. Survival of the hypothesis permits this test; it does not validate the
+  operational discriminator. Remaining operational models and named missing observations are
+  retained without asserting a class equivalence, completing a CQ, or settling broader continuity.
+evidence_refs:
+  - po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+  - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+  - po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+  - po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305
+  - po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8
+  - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+  - CQ-010
+  - CQ-021

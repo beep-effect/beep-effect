@@ -1,0 +1,41 @@
+id: dh:ov-inferred-ledger-removal:001
+observation_refs:
+- po:sha256:519764a98f511e5f2137e8eb2d6b072d92d27b62a4417db97040359034bb3282
+- po:sha256:a3b740b147b88dd94b092bee660c397cabadbbed2f35ddd14b6347c6ccb2f3fe
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- po:sha256:f41f8934b51e0e14a0344efa0b46898ea051035f811e3cee5e8de69c1bf43e2a
+cq_warrants:
+- CQ-008
+- CQ-010
+proposed_referent:
+  label: Possible removal of five active admission tokens during replay
+  description: A candidate operational removal represented only by a report row labeled as an inferred
+    dead-lease eviction. The row reports active weight changing from eight to three at event index 66.
+    Whether that corresponds to an actual grant ending, a dead owner, or a replay reconstruction adjustment
+    is unresolved.
+representation_status: unresolved
+alternatives:
+- label: Replay ledger correction without an independently observed operational event
+  representation_status: implementation_artifact_only
+  plausibility: viable
+- label: Derived information assertion about a possible grant removal
+  representation_status: information_artifact
+  plausibility: viable
+- label: Actual expiration or release of a five-token grant
+  representation_status: domain_referent
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The sole removal-specific observation is a table headed "Inferred dead-lease evictions" with
+    a row showing weight 5 and active totals 8 then 3. This arithmetic is consistent with removal but
+    cannot establish a dead process, a release event, the reason for removal, or its precise lifecycle
+    boundary. The reported 41 admissions and 38 releases and a passing order comparison do not declare
+    complete per-grant histories. Needed evidence is the corresponding journal chain or an observation-backed
+    liveness/reaping event tying the removed charge to a particular active grant and instant. Without
+    that evidence, implementation-level ledger repair remains viable and the null is not rejected.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.64
+  use_for_acceptance: false

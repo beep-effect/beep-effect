@@ -1,0 +1,63 @@
+id: fa:adm-journal-entry:001
+hypothesis_ref: dh:adm-journal-entry:001
+identity_card_ref: ic:adm-journal-entry:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: 'An assertion-content information object: identical operational aboutness and the same asserted
+    propositions can be realized in several copied or serialized blocks. Copies need not create new content
+    objects.'
+  still_viable: true
+- label: 'An assertion-token information object: two separate assertion instances may carry identical
+    content, while one copied token retains its documentary lineage. Independent append and revision behavior
+    is needed to individuate these tokens.'
+  still_viable: true
+- label: 'The operational event described by an entry as another referent of the representation. It can
+    coexist with the information object, but cannot replace it: false or replayed assertions remain information
+    even when no corresponding new event occurs.'
+  still_viable: true
+- label: Serialization-only data with no admission-history assertion. The positive dated claims about
+    acquisition, release, and ticket removal undermine this reading for the scoped entries; the unscoped
+    extraction wrapper is a different candidate.
+  still_viable: false
+strongest_counterexample: Two journal blocks can carry byte-identical claims about the same release because
+  one is a copy or replay; they could realize one assertion content or two distinct documentary assertion
+  instances. Conversely, a corrected reason can change the asserted content while preserving a record
+  lineage. The cited event times are not append times, and a record ordinal, nonce, hash, or capture annotation
+  does not decide which identity persists. Treating any of these entries as the operational event also
+  fails when its assertion is false.
+verdict: explicitly_deferred
+needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical semantic
+  event payloads, with independently distinguished emission occurrences and any revision links, plus an
+  observed consumer treatment of those entries as one repeated assertion or two separately accountable
+  assertions. This would discriminate content-object identity from assertion-token identity and establish
+  whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+  time from record creation time; another file hash or capture label would not resolve the grain.
+test_rationales:
+  spec_vs_execution: The journal schema and any admission rule are repeatable specifications; a particular
+    assertion is produced in a recording context and describes a putative event. Neither the assertion
+    nor its format is the event or authorized execution.
+  world_vs_information: The information object asserts an event and its qualifications without guaranteeing
+    their truth. Copying, deleting, or correcting that assertion does not grant or remove capacity. The
+    reported event time does not establish when the assertion was created.
+  role_vs_bearer: Being used as evidence is a contextual role of the information object, not its identity.
+    A holder or requester mentioned in the content is another bearer, never the entry itself; capture
+    owner labels cannot establish that bearer.
+  context_reification_needed: Keep the asserted transition, target, event time, and reported reason together
+    within the matched block. The information realization and its unobserved creation/revision context
+    remain distinct. Fields from interleaved entries must not be conjoined into one assertion or one operational
+    bearer.
+category_rationale: Information object is supported by the positive admission-history claims; a false
+  report still has informational content. Deferral concerns individuation and persistence of that information,
+  especially content versus token, not whether the assertion automatically proves its referent. The linked
+  card states rigid information-object classification while leaving identity, exact dependence, and correction
+  continuity open.
+evidence_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+- CQ-007
+- CQ-008
+- CQ-021

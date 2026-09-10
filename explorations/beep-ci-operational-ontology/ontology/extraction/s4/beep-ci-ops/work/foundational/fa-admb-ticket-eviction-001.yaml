@@ -1,0 +1,62 @@
+id: fa:admb-ticket-eviction:001
+hypothesis_ref: dh:admb-ticket-eviction:001
+identity_card_ref: ic:admb-ticket-eviction:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: Information asserting ticket eviction and a diagnostic reason
+  still_viable: true
+  rationale: >-
+    An assertion can be copied or fail to correspond to an effective transition. The observations
+    establish reported content, not independent operational corroboration.
+- label: The request's terminal queue condition without a separately reified ticket-removal event
+  still_viable: true
+  rationale: >-
+    Time-qualified participant boundaries may serve the cited decisions without a separately addressable
+    event. Consumer behavior and operational transition evidence must decide that modeling choice.
+strongest_counterexample: >-
+  Both observations contain only ticket eviction and its queued-submitter-death diagnosis. Borrowing
+  enqueue time or charge from a neighboring admission entry would turn a removed contender into a
+  capacity holder and could falsely subtract active tokens. Interpreting the diagnosis as the submitter's
+  death event would also give the removal and death the same identity and timestamp without liveness
+  evidence.
+verdict: analyzed
+needed_evidence: ''
+referent_grain: >-
+  One queued-ticket removal transition ending a particular demand's queue participation through ticket
+  eviction. It is separate from a terminal queue condition, the ticket or demand, a lease revocation,
+  a death occurrence and the entry asserting removal.
+test_rationale:
+  spec_vs_execution: >-
+    The reported removal is an occurrence, not an eviction-policy specification, a policy toggle or
+    a work execution. Its diagnostic tag does not describe a reusable guarantee about process death.
+  world_vs_information: >-
+    The two source records explicitly identify a queued-ticket target and its eviction boundary. Neither
+    includes a separate enqueue entry or requested kind, priority or charge. They do not independently
+    prove removal, actual process death, a grant or a complete queue census.
+  role_vs_bearer: >-
+    The submitting participant can bear a requester role, and the ticket represents a registered demand;
+    neither is the eviction event. The target's queue participation is relational and time-qualified,
+    not a kind of person or process.
+  context_reification_needed: >-
+    The particular target, transition type and occurrence time must remain associated within their
+    admission context. A context-free binary relation or a nonce alone would collapse repeated transitions,
+    target conditions or reports. This contextual requirement does not by itself warrant a separate
+    event term.
+analysis_scope: >-
+  Foundational analysis only. The survivor rule admits this hypothesis for testing; it does not ratify
+  its discriminator, identity criterion, category or occurrence truth. CQ citations identify decision
+  context, not a claim that the supplied records satisfy the query or warrant every possible reification.
+evidence_refs:
+- so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+- so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+- CQ-021
+open_evidence_questions:
+- >-
+  Observe a queued ticket immediately before and after the removal and correlate the effective deletion/reaper
+  result with the ticket-evicted entry, including replay behavior. An independent process-liveness
+  check is separately needed for the diagnosis; a missing enqueue history cannot be reconstructed
+  from adjacent entries.

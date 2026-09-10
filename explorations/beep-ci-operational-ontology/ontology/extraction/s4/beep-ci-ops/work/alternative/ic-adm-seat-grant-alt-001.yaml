@@ -1,0 +1,66 @@
+id: "ic:adm-seat-grant-alt:001"
+hypothesis_ref: "dh:adm-seat-grant:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Same seat grant iff it is the same charged holding of contended admission
+    begun by one granting occurrence for one request. The grant mediates holder
+    and resource for an interval; it is not the request, not the granting
+    occurrence, not the later release or lease eviction, and not the journal
+    entry. Nonce equality is a local evidential join across same-nonce blocks,
+    never the criterion. ownerRef is capture provenance and is observed to
+    change across a chain, so it is never identity. kind, priority, and
+    weightTokens qualify the grant; they do not mint grant kinds.
+  reidentification_key:
+    - "nonce (evidential join only)"
+    - "admittedAtMillis (begin of this holding)"
+    - "weightTokens at admission"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One charged holding from its reported begin until a reported release or
+    lease eviction; not a currently-active snapshot, not an origin-exclusion
+    context object, and not a flattened projection of mixed nonces.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - kind
+    - information_object
+    - event
+  existential_dependencies:
+    - "admission occurrence that begins the holding"
+    - "contended admission resource / capacity being held"
+    - "holder or submitter mediated by the grant (not identified by ownerRef)"
+    - "token charge (weightTokens) of this holding"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - released
+    - lease-evicted
+counterexamples:
+  - description: >-
+      Treating nonce as identity of both request and grant, or treating the
+      grant as the request after admission. Ticket and lease never coexist as
+      one bearer in these reports: enqueue participation ends at admission
+      (so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6,
+      CQ-008, CQ-021).
+  - description: >-
+      Reading an open admission history as a currently active grant.
+      so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67
+      and so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+      report begin without terminal and do not answer CQ-008.
+  - description: >-
+      Taking ownerRef as the grant's identity.
+      so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+      shows ownerRef changing between admit and release of
+      nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088.
+  - description: >-
+      Treating memoryPeakBytes as the token charge, or kind/priority as grant
+      subclasses. The same chain has kind=merged-preview, priority=publish,
+      weightTokens=5, and a later memoryPeakBytes; those remain orthogonal
+      qualities (CQ-010).
+status: proposed

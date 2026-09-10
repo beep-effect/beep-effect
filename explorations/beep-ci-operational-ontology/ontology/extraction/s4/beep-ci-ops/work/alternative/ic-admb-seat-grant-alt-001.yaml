@@ -1,0 +1,64 @@
+id: "ic:admb-seat-grant-alt:001"
+hypothesis_ref: "dh:admb-seat-grant:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two seat grants are the same when they are the same charged holding
+    mediation: the particular authorization of contended capacity that begins
+    at a conferment and ends, if observed, at release or lease eviction. The
+    holding is not the conferment occurrence, not the prior request, and not
+    the holder. so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+    records a holding for nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088 from
+    admission-admitted (admittedAtMillis=1788926595216, weightTokens=5,
+    originKey=4cc31eeb4dec) to admission-released (releasedAtMillis=1788927008574).
+    so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+    records conferment without an endpoint; missing endpoint is not current
+    activity. Nonce correlates assertions; ownerRef is not identity (that chain
+    carries two ownerRef values).
+  reidentification_key:
+    - "nonce (journal correlation only)"
+    - "admittedAtMillis (boundary evidence)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One mediation of holder and charged capacity over one holding; not a sum of
+    enqueue plus admit plus release, and not a census of concurrent grants.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - kind
+    - information_object
+    - event
+    - role
+  existential_dependencies:
+    - "a distinct seat request whose conferment produced this holding (not identity-shared)"
+    - "contended scheduler capacity (CQ-008, CQ-010)"
+    - "a holder/agent, never identified by ownerRef"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "released (admission-released)"
+    - "lease-evicted (admission-lease-evicted)"
+counterexamples:
+  - description: >-
+      Treating a queued request's weightTokens as a grant fails: so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+      has weightTokens=5 with admission-enqueued and admission-withdrawn and no
+      admission-admitted, so CQ-008 ActiveGrant holding is not denoted.
+  - description: >-
+      Identifying the grant with the holder via ownerRef fails on
+      so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929,
+      which carries ownerRef=94e0f7d0c8a3 and ownerRef=f967f84e3ca6 on one nonce
+      chain.
+  - description: >-
+      Taking so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+      (admit without release or lease eviction) as proof of present or
+      indefinite holding infers a snapshot from an open historical tail.
+  - description: >-
+      Collapsing the grant into the conferment event erases the interval that
+      CQ-008/CQ-009 query as a holder; collapsing it into work execution has no
+      lane-success content on the release record.
+status: proposed

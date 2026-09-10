@@ -1,0 +1,1853 @@
+---
+schema_version: carried-clusters/v1
+run_id: orun-2026-09-03T02:46:18Z
+ontology: beep-ci-ops
+authority: provisional-analyst-recommendation; steward-decision-required
+source_index: work/dispositions.index.yaml
+source_archive: explorations/beep-ci-operational-ontology/ontology/extraction/s4/archives/beep-ci-ops/orun-2026-08-29T08:20:55Z.observations
+proposal_basis: current proposal slugs and preferred labels only; no proposal byte or status reliance
+carried_row_count: 149
+archive_record_counts:
+  source_observation: 117
+  prose_observation: 32
+cluster_count: 15
+recommendation_counts:
+  retire-irrelevant: 146
+  keep-unresolved: 3
+clusters:
+- id: elapsed-duration-measurements
+  name: Elapsed and duration measurements
+  row_count: 2
+  observed_run1: The whole-attempt elapsedMs field and the per-lane durationMs field, including the unresolved carrier distinction for CQ-025 actual wall cost.
+  run2_coverage:
+    status: covered-by-proposal
+    assessment: Run-2 journal and verdict observations contain concrete elapsedMs and durationMs values, and both current wall-duration proposal slugs name the measurement vocabulary.
+    proposal_terms:
+    - slug: jv-actual-wall-duration-001
+      preferred_label: recorded wall-duration measurement
+    - slug: jv-actual-wall-duration-002
+      preferred_label: wall-duration measurement record
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: The run-1 measurement evidence identities cannot be emitted at the run-2 pin and are superseded by current journal/verdict observations plus the named wall-duration proposals. Retiring these rows does not reject duration vocabulary.
+- id: verification-attempt-structure
+  name: Verification attempt structure
+  row_count: 7
+  observed_run1: Attempt-started and attempt-finished records, their shared attemptId UUID, the start marker, and the journal-event union that brackets one verification attempt.
+  run2_coverage:
+    status: covered-by-proposal
+    assessment: The fleet attempt journal now supplies paired attempt lifecycle fields and the current verification-attempt proposal names the occurrence.
+    proposal_terms:
+    - slug: jv-verification-attempt-001
+      preferred_label: verification attempt
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: Run 2 re-grounds attempt identity and lifecycle from fleet journal records and carries a verification-attempt proposal. The old parser-bound rows are superseded evidence.
+- id: verification-execution-structure-and-state
+  name: Verification execution structure and state
+  row_count: 11
+  observed_run1: Verdict lanes and executed steps, lane status, the bridge from a planned identifier to an execution, quality-task invocations/results, GitHub lane runs, and repository-step run results.
+  run2_coverage:
+    status: covered-by-proposal
+    assessment: Current proposal labels distinguish WorkUnitExecution, WorkUnitSpecification, VerificationLane, and VerificationResultArtifact, while run-2 verdict records supply concrete step and status fields.
+    proposal_terms:
+    - slug: jv-verification-step-execution-001
+      preferred_label: work unit execution
+    - slug: pa-turbo-task-specification-001
+      preferred_label: work unit specification
+    - slug: pa-turbo-task-specification-002
+      preferred_label: verification lane
+    - slug: pb-planned-lane-status-001
+      preferred_label: verification result artifact
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: The run-2 surface now carries the specification/execution/state split these old declaration rows could not establish. Retire the obsolete run-1 evidence identities rather than duplicate the live vocabulary.
+- id: failure-verdict-and-diagnostics
+  name: Failure verdicts and diagnostic outcomes
+  row_count: 20
+  observed_run1: Yeet failureKind and failedStepId, terminal verdict failure, classified failed jobs, boundary-violation diagnostics, the ts2589 quarantine designation, and repository graph-health result codes.
+  run2_coverage:
+    status: covered-by-proposal
+    assessment: Run-2 verdict and attempt observations expose concrete failure fields; current proposal labels cover FailureSignature, LaneDiagnosticComparison, VerificationEvidence, and VerificationResultArtifact.
+    proposal_terms:
+    - slug: jv-failure-signature-001
+      preferred_label: failure signature
+    - slug: jv-lane-diagnostic-comparison-001
+      preferred_label: lane diagnostic comparison
+    - slug: pa-fallow-audit-evidence-001
+      preferred_label: verification evidence
+    - slug: pa-fallow-audit-evidence-003
+      preferred_label: verification result artifact
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: The domain-bearing failure and diagnostic vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations, so the non-emittable run-1 rows add no separate commitment.
+- id: merge-readiness-and-closeout-outcomes
+  name: Merge readiness and closeout outcomes
+  row_count: 12
+  observed_run1: Hosted-check and Greptile closeout gates, closeout gate/report states, mergeability changes, and merged-or-closed terminal pull-request classifications.
+  run2_coverage:
+    status: covered-by-proposal
+    assessment: Run-2 verdict observations contain required-check, review, mergeability, open/draft, and Greptile signals; the current merge-readiness-assessment slug names their assessment referent.
+    proposal_terms:
+    - slug: jv-merge-readiness-assessment-001
+      preferred_label: verification evidence
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: Current fleet verdict evidence and the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout wrappers need no second ontology commitment.
+- id: admission-origin-key-field
+  name: Admission origin-key field
+  row_count: 1
+  observed_run1: The proof-lock basename used as originKey for origin exclusion, formerly seen only while the handler constructed an admission request.
+  run2_coverage:
+    status: covered-by-observation-only
+    assessment: Current run-2 admission-journal and scheduler-schema observations expose originKey on the operational carrier, but no current proposal slug or preferred label names a dedicated origin-key property.
+    observation_refs:
+    - so:sha256:c627961a8fcde9dca01027cbf052494763b5e6895805c1c0c50d8bf51ba3a7bb
+    - po:sha256:4a30b60df83c527a6da561402d3755e6b194e0f657659d3510c506549f3c9021
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: The old handler-construction observation is superseded by current carrier-level originKey evidence. Retire only the old ID; steward judgment over the current observation remains separate.
+- id: grant-resource-contention-and-paths
+  name: Grant-resource contention and contested paths
+  row_count: 2
+  observed_run1: A proof-lock acquisition callback tentatively read as SeatGrant contention and a FleetContestedPath declaration tentatively read as a path-based contended resource.
+  run2_coverage:
+    status: still-uncovered
+    assessment: Run-2 overlappingPaths fields describe worktree overlap, not a grant-to-resource contention relation, and no current proposal slug or label names that relation.
+  recommendation:
+    action: keep-unresolved
+    index_outcome: unresolved
+    needed_evidence: Run 3 needs a joinable admission/lock event corpus that records grant or lease identity, resource identity or path, acquisition and release instants, and the contention outcome in the same provenance chain.
+- id: fleet-checkout-identity
+  name: Fleet checkout identity
+  row_count: 1
+  observed_run1: The FleetCheckout declaration as a possible machine-local checkout bearer for CQ-015 evidence-transfer decisions.
+  run2_coverage:
+    status: still-uncovered
+    assessment: Run-2 path partitioning and checkoutRoot fields do not establish a stable checkout identity or its cache-mount relations, and no current proposal slug or label names Checkout.
+  recommendation:
+    action: keep-unresolved
+    index_outcome: unresolved
+    needed_evidence: Run 3 needs a timestamped fleet-inventory corpus binding a stable checkout identity to checkout root, remote origin, branch or worktree identity, and shared-cache mounts so CQ-015 transferability can discriminate the bearer.
+- id: affected-package-and-dependency-topology
+  name: Affected-package and dependency topology
+  row_count: 22
+  observed_run1: Turbo affected-query records and reasons, workspace package catalogs/metadata, package identity, direct workspace dependency, and the transitive dependency closure used by CQ-004/CQ-019.
+  run2_coverage:
+    status: covered-by-proposal
+    assessment: Current proposal labels cover PackageRef, dependsOn, dependsOnTransitive, and affected-scope vocabulary; run-2 observations also retain Turbo affected-query and topology evidence.
+    proposal_terms:
+    - slug: pa-package-dependency-closure-001
+      preferred_label: depends on transitively
+    - slug: pb-package-dependency-001
+      preferred_label: depends on
+    - slug: pa-workspace-package-001
+      preferred_label: package reference
+    - slug: pb-docgen-affected-scope-001
+      preferred_label: docgen affected scope
+    - slug: pb-docgen-affected-scope-002
+      preferred_label: docgen affected scope specification
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: Run 2 now names the package, direct-edge, closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded or merely DTO representations.
+- id: work-unit-and-lane-specifications
+  name: Work-unit and lane specifications
+  row_count: 5
+  observed_run1: PackageVerify step specs, GitHub-check lane and wave specs, and the storybook/test:property Turbo task keys as possible reusable verification procedures.
+  run2_coverage:
+    status: covered-by-proposal
+    assessment: Current proposal labels distinguish WorkUnitSpecification and VerificationLane and include the docgen affected work-unit specialization; run-2 task observations supply concrete lane/task vocabulary.
+    proposal_terms:
+    - slug: pa-turbo-task-specification-001
+      preferred_label: work unit specification
+    - slug: pa-turbo-task-specification-002
+      preferred_label: verification lane
+    - slug: pa-docgen-work-unit-001
+      preferred_label: docgen affected work unit
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: The reusable procedure vocabulary is represented by current run-2 proposals. Old class declarations and bare Turbo keys are redundant evidence, not additional specifications.
+- id: repository-plan-control-and-ordering
+  name: Repository-plan control and ordering
+  row_count: 14
+  observed_run1: Plan-step mutability, phase order, step scope, waves, GitHub-check modes, and the compound Turbo planning snapshot used by repository orchestration.
+  run2_coverage:
+    status: covered-by-proposal
+    assessment: The current proposal inventory names VerificationPlanSpecification, ScheduleStep, hasStep, stepIndex, hasScope, and YeetProofTier. Implementation-only controller enum spellings need not become separate terms.
+    proposal_terms:
+    - slug: pa-yeet-verification-workflow-001
+      preferred_label: verification plan specification
+    - slug: ov-has-scope-001
+      preferred_label: has scope
+    - slug: ov-has-step-001
+      preferred_label: has step
+    - slug: ov-schedule-step-001
+      preferred_label: schedule step
+    - slug: ov-step-index-001
+      preferred_label: step index
+    - slug: pb-yeet-proof-tier-001
+      preferred_label: Yeet proof-planning tier
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: Run-2 plan/specification and ordering proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller encodings and should not remain independent ontology candidates.
+- id: gate-staleness-result-artifacts
+  name: Gate-staleness result artifacts
+  row_count: 7
+  observed_run1: GateStalenessVerdict plus GateFresh, GateStale, GateUnproven, GateArtifactDescriptor, and GateFileWitness schema declarations.
+  run2_coverage:
+    status: still-uncovered
+    assessment: No current run-2 proposal slug or preferred label names these exact result variants, and current observations do not establish their lifecycle as exchanged domain artifacts.
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: These are unwarranted implementation result/DTO variants. The CQ suite asks about verification-evidence validity, not the internal GateStaleness union or its file-witness wrappers.
+- id: watch-stream-event-artifacts
+  name: Watch-stream event artifacts
+  row_count: 20
+  observed_run1: Poll snapshots, diff inputs, normalized check signals/transitions, thread/comment/head events, watch termination reasons, and the versioned JSON event envelope.
+  run2_coverage:
+    status: still-uncovered
+    assessment: No current proposal slug or preferred label names the watch transport/event-record vocabulary; the run-2 fleet corpus captures verdict/attempt facts rather than serialized watch streams.
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: The rows describe polling, diffing, rendering, and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes are represented elsewhere, so these wrappers are ontology-irrelevant for v1.
+- id: monitor-rerun-decision-artifacts
+  name: Monitor rerun-decision artifacts
+  row_count: 11
+  observed_run1: Planner/controller records for rerun-job, rerun-spent, needs-code-fix, awaiting-log, and awaiting-run actions, including command rendering and application helpers.
+  run2_coverage:
+    status: still-uncovered
+    assessment: Current run-2 observations include flake labels but not persisted monitor-decision records, and no proposal slug or preferred label names this controller decision union.
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: These are orchestration branch/command artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately; the monitor controller choices need no independent ontology commitment.
+- id: quality-report-and-config-artifacts
+  name: Quality report and configuration artifacts
+  row_count: 14
+  observed_run1: Quality profile config/detection DTOs, PackageVerify reports/documents/workspaces, GitHub-check Fallow matrices/run reports, and TurboConfigProof options/summaries/reports.
+  run2_coverage:
+    status: still-uncovered
+    assessment: No current proposal slug or preferred label covers each of these schema-specific containers, and run-2 observations do not show independent persistence/exchange lifecycles for them.
+  recommendation:
+    action: retire-irrelevant
+    index_outcome: irrelevant
+    reason: Run 1 never rejected the implementation-only null for these unwarranted DTO/config/report declarations. They are software representations, not additional v1 domain referents.
+rows:
+  po:sha256:3d30eb80b619e2b7cf5c9261718d56c4a20637d162845611a655b025482e6325:
+    cluster: elapsed-duration-measurements
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 479
+      end_line: 509
+      observed: 'elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),'
+  po:sha256:7b9e1b59cb9fc7b104034c01453654a7477c36f848673ec924f1c4039fbdb554:
+    cluster: elapsed-duration-measurements
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 143
+      end_line: 152
+      observed: 'durationMs: S.optionalKey(S.Finite),'
+  po:sha256:6e6961e95ee4bef3649372773b103fb170b76da19c610a817da19676417eebad:
+    cluster: verification-attempt-structure
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+      start_line: 100
+      end_line: 105
+      observed: export const YeetAttemptJournalEvent = S.Union([YeetAttemptStarted, YeetAttemptFinished]).pipe(
+  po:sha256:906d0d377522942bb9220bd290bcb71907aa56c1ce497dc2cca550419419d2f8:
+    cluster: verification-attempt-structure
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+      start_line: 42
+      end_line: 53
+      observed: 'attemptId: UUID,'
+  po:sha256:9a531bd73c66cc707e1fd26fe320212022ca346d0bdcf26d549a103cd3fea88c:
+    cluster: verification-attempt-structure
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+      start_line: 29
+      end_line: 29
+      observed: A durable marker written immediately before a Yeet attempt executes.
+  po:sha256:de71f16e82547bcd1c61213b48a0db513d48052cf55563ebb1634d1680d59f53:
+    cluster: verification-attempt-structure
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+      start_line: 73
+      end_line: 80
+      observed: 'attemptId: UUID,'
+  so:sha256:7143eaf354ebb320ca07a95f3274f3aae0cb0323f9e3d1117b88128e4ed6e826:
+    cluster: verification-attempt-structure
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+      start_line: 100
+      end_line: 105
+      observed: YeetAttemptJournalEvent
+      syntactic_kind: variable_declaration
+  so:sha256:7796f616a217b54e8df2f48fbb0f01d5db11232605b3d1b24cb97268fc2a0113:
+    cluster: verification-attempt-structure
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+      start_line: 42
+      end_line: 57
+      observed: YeetAttemptStarted
+      syntactic_kind: class_declaration
+  so:sha256:8de7e1574f6bb139c82c1a54e58cc377cb9b2425574eb104ef6e6d47a051f173:
+    cluster: verification-attempt-structure
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+      start_line: 122
+      end_line: 122
+      observed: YeetAttemptJournalEvent
+      syntactic_kind: type_alias_declaration
+  po:sha256:88e8e724ffb0967198fa555ab886c8a9ea3e14cf26614dd018b57b409b1c79ef:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 48
+      end_line: 53
+      observed: 'description: "Execution status of one planned yeet lane."'
+  po:sha256:96adb15e475d44e88cd7f1edd0a0beb3af5c5dac0aea1a42f03a59bd4b84b3d3:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 143
+      end_line: 152
+      observed: 'id: S.String,'
+  po:sha256:a8757840abf082cf2d3622dc431f79e8a9c66aa38728cafd325c609c3856a27d:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 123
+      end_line: 156
+      observed: One planned lane with its execution status and repair command.
+  po:sha256:fba9735d9ec0b7c541bbfc2ff30b0a3dd19d8e4b8e37874547ce6a0768b5e4d5:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 143
+      end_line: 152
+      observed: 'status: YeetLaneStatus,'
+  so:sha256:0fd0abf7cb302f4f763b3a58aa6af6407d41aed5e9405aeb5ac6b97970e90ff4:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 143
+      end_line: 156
+      observed: YeetVerdictLane
+      syntactic_kind: class_declaration
+  so:sha256:53dfa3562ca91f94710212bf848b73ec946419464d1ed9ce22b9fed4f819bc38:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 405
+      end_line: 420
+      observed: RepoStepRunResult
+      syntactic_kind: class_declaration
+  so:sha256:762d3dd11bc844d2df9f208f0ccba2170033d9af6c1a1c9e04e7e8b0f7c764b0:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 48
+      end_line: 53
+      observed: YeetLaneStatus
+      syntactic_kind: variable_declaration
+  so:sha256:91279c1adf88d29ca0968f9abc4ff9c2ddbeb57de25df9f432b1a272bb20c983:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 243
+      end_line: 252
+      observed: QualityTaskInvocation
+      syntactic_kind: class_declaration
+  so:sha256:cd7765aadf2af4d0764d33623bd15e44f0052b381e6e235565dab25c0e4c8958:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 572
+      end_line: 581
+      observed: YeetExecutedStep
+      syntactic_kind: class_declaration
+  so:sha256:daa315312a71c12c1825a31e0d63f47f647cee075cb885e1c4a244d626f3e9a3:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+      start_line: 148
+      end_line: 161
+      observed: PackageVerifyStepResult
+      syntactic_kind: class_declaration
+  so:sha256:fe44538eca0527dd216b0f0bf5ef18b5b18f14cfd430fc50540bacb847afe8fe:
+    cluster: verification-execution-structure-and-state
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 930
+      end_line: 940
+      observed: GithubCheckLaneRun
+      syntactic_kind: class_declaration
+  po:sha256:2b64e2142eac08b9cd7f1d655caa43c80b1393910f15ac892f734e341dad3f7f:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: standards/fallow.pilot.inventory.jsonc
+      start_line: 37
+      end_line: 47
+      observed: '"boundaryViolations": 0'
+  po:sha256:6a0fc8a8c0fdc7f387b6300ff3899f9c604c1fbf27a9ece7c5559cfa2fd4cef5:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+      start_line: 191
+      end_line: 194
+      observed: LiteralKit(["ts2589-no-location"])
+  po:sha256:855501fcce91a1abd40a2ac7a2efc3fabe445e244e19e5f7f670097ea07cb9f0:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 479
+      end_line: 509
+      observed: 'failedStepId: S.optionalKey(S.String),'
+  po:sha256:86e624235b616a7cec93d1021d31f6e3b7de441af825fd16034e8e7cde6621b0:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+      start_line: 73
+      end_line: 80
+      observed: 'verdict: YeetVerdict,'
+  po:sha256:91dddfd936452b90225013e406a88d962edb7d60f7218fd17b6f3a2a01268981:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 491
+      end_line: 506
+      observed: 'failedStepId: S.optionalKey(S.String),'
+  po:sha256:a4f64e891a25a6cc469a3659587b1addf85901093769fbbb58ce0529735417c8:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: ".fallowrc.jsonc"
+      start_line: 426
+      end_line: 436
+      observed: '"boundary-violation": "error"'
+  po:sha256:bde32fa6682e1b0c1117452303772e61fe6b20fc29764c45ffae977106fd9eaf:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 170
+      end_line: 179
+      observed: export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
+  po:sha256:cb47b23eada8f8e95a7da272596862e4095ac0255417231c54f95e8f7305baa2:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 479
+      end_line: 509
+      observed: 'failureKind: YeetFailureKind.pipe(S.optionalKey),'
+  so:sha256:0016cfe3905b09c22b38a93799cf35fa443f35c6a3f89b192d172679f8c57629:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 176
+      end_line: 180
+      observed: YeetFailureKind
+      syntactic_kind: variable_declaration
+  so:sha256:0a2c5f86ed363ec9af7d18b61cde9a0bd8f3332c6e23b7d14371b102026aa2b0:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 299
+      end_line: 310
+      observed: YeetMonitorFailedJob
+      syntactic_kind: class_declaration
+  so:sha256:1481dce51159e820cdd129b4d588a263707a188896aefe6aa3120e1e6c734b59:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+      start_line: 232
+      end_line: 246
+      observed: QualityTaskStep
+      syntactic_kind: class_declaration
+  so:sha256:559894ea743432ee2425956d8fab59a94f1c385317f35dcbb9aa224dbcfc64fb:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+      start_line: 479
+      end_line: 513
+      observed: YeetVerdict
+      syntactic_kind: class_declaration
+  so:sha256:55c95d54d18f2b82756fa2bd7f23cc3fd7d294e693d77cea47f15b2d0196abfa:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 239
+      end_line: 250
+      observed: TurboPlanSnapshot
+      syntactic_kind: class_declaration
+  so:sha256:5ba757a4aac98e0d3609a7d6642729c8acc1805c69aa7768f425fba4c793a2bf:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+      start_line: 203
+      end_line: 203
+      observed: StepFlakeQuarantinePolicy
+      syntactic_kind: type_alias_declaration
+  so:sha256:5ff32d0655a8cc9fbddace495da9b640c2633351caa4759c92235f53782b68e3:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 154
+      end_line: 158
+      observed: RepoGraphHealthStatus
+      syntactic_kind: variable_declaration
+  so:sha256:b859fe7dc5c52ac10800e3b365fc4da4e1b6fcad4a91bed38c5c97daec171815:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 750
+      end_line: 753
+      observed: GhMonitorRunJobs
+      syntactic_kind: class_declaration
+  so:sha256:b96ad0207aebf7cdd3bf8767dd9d9e076a79928a1d0bad52c86b25a161260e9f:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+      start_line: 73
+      end_line: 84
+      observed: YeetAttemptFinished
+      syntactic_kind: class_declaration
+  so:sha256:c1a4b7a8cbcf4d7a688243597fc3b28d6db614cb6d358c6ca0587fbf06420f48:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+      start_line: 191
+      end_line: 195
+      observed: StepFlakeQuarantinePolicy
+      syntactic_kind: variable_declaration
+  so:sha256:c5638e3942dc3becc40f695c02528ee5b1344a8b002a1091cc84e8de9acc0032:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 857
+      end_line: 883
+      observed: collectYeetMonitorFailedJobs
+      syntactic_kind: variable_declaration
+  so:sha256:ccb76a5f3fd90747552276360f6623e87a823ed693b6cf9caacb9e15d51b2b6b:
+    cluster: failure-verdict-and-diagnostics
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 166
+      end_line: 166
+      observed: RepoGraphHealthStatus
+      syntactic_kind: type_alias_declaration
+  po:sha256:e0d1f36f373003dc34f8128df7d04a4631493aba04f2675ce52ec57792cbf782:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+      start_line: 60
+      end_line: 63
+      observed: LiteralKit(["hosted-checks", "review-threads", "greptile", "coderabbit", "chatgpt"])
+  so:sha256:01e37039cebeb141034280ea9064d32ad90e9c6042b222c941260520dc67e9aa:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 334
+      end_line: 348
+      observed: YeetMergeabilityChanged
+      syntactic_kind: class_declaration
+  so:sha256:177fb3af96fac344cee73f33ab05cddcce1c695f27838693cca1d14538e26c40:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 184
+      end_line: 184
+      observed: YeetMonitorTerminalState
+      syntactic_kind: type_alias_declaration
+  so:sha256:2780de54843e2c073117897235567afa904e090a4ded2c414df0b7b22bd7338f:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 1041
+      end_line: 1066
+      observed: runYeetMonitorUntilMerged
+      syntactic_kind: variable_declaration
+  so:sha256:6305419fa96099617bb98162ac43d2718d51c1b66bcee82bc34027b762df7e60:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+      start_line: 203
+      end_line: 203
+      observed: PrCloseoutReportJson
+      syntactic_kind: variable_declaration
+  so:sha256:85a0c2546f8dc5cdc9a2d646a896bf5eadb4d39c08240549747c6e281006bf37:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+      start_line: 66
+      end_line: 70
+      observed: PrCloseoutGateStatus
+      syntactic_kind: variable_declaration
+  so:sha256:8ee7607038f5041474aaef3747945ec491da23aadf1609c9999cc27d142d093b:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 739
+      end_line: 748
+      observed: yeetMonitorTerminalState
+      syntactic_kind: variable_declaration
+  so:sha256:a48630328a1a6c95febb3aecad4e2c6f9dbe75dbcdf2698acc17f0aa024c407a:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+      start_line: 49
+      end_line: 58
+      observed: GreptileSummary
+      syntactic_kind: class_declaration
+  so:sha256:b614803893bb8f68eb1c45fc4d01e226ece696364727c688bd7320b9f6da0266:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+      start_line: 60
+      end_line: 64
+      observed: PrCloseoutGateName
+      syntactic_kind: variable_declaration
+  so:sha256:dac0c567ff454baf98279c698442d3effa8c8ce8da4a9e26251a1234e99e11b8:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+      start_line: 156
+      end_line: 180
+      observed: PrCloseoutReport
+      syntactic_kind: class_declaration
+  so:sha256:e49d7857a2f1d0c247b2bf32b8005aff0f0790bcba3b74dbf5cc27023140a054:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+      start_line: 92
+      end_line: 103
+      observed: PrCloseoutGateState
+      syntactic_kind: class_declaration
+  so:sha256:f8963ec48e961a04e383747bb395792880b08befbcd942fe659fe7fad0da33cb:
+    cluster: merge-readiness-and-closeout-outcomes
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 171
+      end_line: 176
+      observed: YeetMonitorTerminalState
+      syntactic_kind: variable_declaration
+  po:sha256:9c89bf17f35f4e9ac5dd3791656461492478cbd1e99258fd1e95b5babec7f0e6:
+    cluster: admission-origin-key-field
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+      start_line: 313
+      end_line: 320
+      observed: 'originKey: path.basename(lockPath, ".lock")'
+  po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278:
+    cluster: grant-resource-contention-and-paths
+    recommendation: keep-unresolved
+    recommended_index_outcome: unresolved
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+      start_line: 322
+      end_line: 330
+      observed: 'tryAcquire: acquireFullProofLockOrObserveAtPath(lockPath, context, proofSteps)'
+  so:sha256:b42503da37767cc741db6196fbf13e019bdc59f71166ad4d95318966ca7ae123:
+    cluster: grant-resource-contention-and-paths
+    recommendation: keep-unresolved
+    recommended_index_outcome: unresolved
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+      start_line: 715
+      end_line: 723
+      observed: FleetContestedPath
+      syntactic_kind: class_declaration
+  so:sha256:0d096342f5ba116307ca177adcbc3fc775b860ae0e5fd62dfd4d090d86c660a3:
+    cluster: fleet-checkout-identity
+    recommendation: keep-unresolved
+    recommended_index_outcome: unresolved
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+      start_line: 671
+      end_line: 694
+      observed: FleetCheckout
+      syntactic_kind: class_declaration
+  po:sha256:3842a52c7caada940ed89a9dd852f272f282f21620fd632dc4e92770ec7c49c1:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv
+      start_line: 12
+      end_line: 12
+      observed: PackageRef,class,CQ-004,"@beep/* workspace package identity"
+  po:sha256:47c1ecee6c68dd2abf05cf58cdbdc3944bbad2d1375eccbaa2bd1abea13d3ec9:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/drivers/hubspot/package.json
+      start_line: 62
+      end_line: 62
+      observed: '"@beep/identity": "workspace:^",'
+  po:sha256:648149e8ec61b86770c1c8511b659226c3e8605ab43ac3a0c03439f40b6002fa:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/drivers/hubspot/package.json
+      start_line: 68
+      end_line: 68
+      observed: '"@beep/test-utils": "workspace:^",'
+  po:sha256:7f1b0cc144cf9d58f851e9c6a1857dfd6ffdea2db7c0c4c083d7779b6a5048fd:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml
+      start_line: 116
+      end_line: 116
+      observed: "?pkg ciops:dependsOnTransitive ?touched ."
+  po:sha256:95043bdded97559199ecb0db22c74fb5278abc7814d2c685019f9d1134a81547:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: standards/ARCHITECTURE.md
+      start_line: 189
+      end_line: 194
+      observed: Arrows point from the importing package to the imported package.
+  po:sha256:a790b3398403b1be2e7ced74bd8a5ef6b741760df1667416c0fa1410f18fbde9:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv
+      start_line: 54
+      end_line: 54
+      observed: dependsOnTransitive,property,CQ-004,"Datalog fixpoint over dependsOn (rule-compiled)"
+  po:sha256:c9742edfc85a5c11f0217252b9961631a94a3b86c634c01f2cff9c08508d0533:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 254
+      end_line: 262
+      observed: turbo query affected
+  po:sha256:e1b16485ec1f3285d03674eb6bb8d3da10dad7235a569391e48bbd00697a9e16:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv
+      start_line: 55
+      end_line: 55
+      observed: 'dependsOn,property,CQ-004,"direct workspace dependency edge; semantic-support (two-kind law): supports=dependsOnTransitive — the fixpoint''s base relation (round-3 I-03/H-09 licensing fix)"'
+  so:sha256:0ce3a84de808ba01f895a7dcba0ff39a6d37daae78abd3eef57fa9e37a554808:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 91
+      end_line: 99
+      observed: TurboQueryPackage
+      syntactic_kind: class_declaration
+  so:sha256:19f1e38081aee7b60aecde18430abd809861b1cf6eb9ebf7065e34305b7275be:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/drivers/hubspot/package.json
+      start_line: 1
+      end_line: 72
+      observed: name
+      syntactic_kind: config_document
+  so:sha256:21fd15adfc632d3c13e0b52ed7a7b241aa285daf9e695b7a4f91880efd71422e:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 31
+      end_line: 38
+      observed: TurboQueryAffectedReason
+      syntactic_kind: class_declaration
+  so:sha256:29b24028f0dfacf53ea6e68e56831a4a30aedbe593714f54fc38a7ff1ffcf755:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 61
+      end_line: 71
+      observed: TurboQueryAffectedTaskConnection
+      syntactic_kind: class_declaration
+  so:sha256:308d8cf8a291855a224ef1088b124e39afc4b15550f72bb003ec4966b40acce8:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 73
+      end_line: 80
+      observed: TurboQueryAffectedData
+      syntactic_kind: class_declaration
+  so:sha256:324517ded376b6dfcf6932e4ac2f2ddefd53a76bfb56b19e6fe9de926ea19990:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 214
+      end_line: 222
+      observed: TurboWorkspacePackage
+      syntactic_kind: class_declaration
+  so:sha256:34992167c59b76a419b1c6851c319edceb48b1c97ca392c2dbedc5ae0b01303f:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 269
+      end_line: 278
+      observed: PackageJsonWorkspacesDocument
+      syntactic_kind: class_declaration
+  so:sha256:39221ec0124c17dffbcbed38afe8367929660e07f7f5decf79df8cb8bfb4dc7d:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 49
+      end_line: 59
+      observed: TurboQueryAffectedTask
+      syntactic_kind: class_declaration
+  so:sha256:4a64226d4f4e79c645be3905c847727726f5d1d1488e204b446f2d31bf100854:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+      start_line: 85
+      end_line: 94
+      observed: PackageVerifyWorkspace
+      syntactic_kind: class_declaration
+  so:sha256:61c1bf9440b68549825b36c8f21f161d4eb7214e2703a59c3b8bf34020a06e86:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 111
+      end_line: 119
+      observed: TurboQueryLsDocument
+      syntactic_kind: class_declaration
+  so:sha256:6bc0f2e3af7672616e5fe40dacbc6a0a54ae24399ddd632e6448319c30bf7510:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 82
+      end_line: 89
+      observed: TurboQueryAffectedDocument
+      syntactic_kind: class_declaration
+  so:sha256:d80b78a8b525a1d9d3429688e5907aaa7a926b965d94a29efb3fb9dd1080795f:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 284
+      end_line: 284
+      observed: decodeTurboPlanTasksFromQueryJsonForTesting
+      syntactic_kind: variable_declaration
+  so:sha256:e132249931623c34727a29cb5696b1e031836c6c5106e4e46cd145d2c2650593:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 101
+      end_line: 109
+      observed: TurboQueryPackageConnection
+      syntactic_kind: class_declaration
+  so:sha256:fe1dbd4ba4f52a6957d7a51e6e130fa5ce90e9eb74deab72b30589aaf6973759:
+    cluster: affected-package-and-dependency-topology
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+      start_line: 40
+      end_line: 47
+      observed: TurboQueryAffectedPackageRef
+      syntactic_kind: class_declaration
+  po:sha256:aac8ce7affe0bdd25e59ca5492726e91fb9a3b936009ebef512981bcfdc1c9b4:
+    cluster: work-unit-and-lane-specifications
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: turbo.json
+      start_line: 241
+      end_line: 241
+      observed: '"storybook": {'
+  po:sha256:cd039ccfee27376edd08a5ec9157acfddc84b5004ffa125174bfc5ff2f7fbf6a:
+    cluster: work-unit-and-lane-specifications
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: turbo.json
+      start_line: 111
+      end_line: 111
+      observed: '"test:property": {'
+  so:sha256:1cb8d4e2b4635df071ce9f58a6465718c1536825bf45fc3927bce758959976a1:
+    cluster: work-unit-and-lane-specifications
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+      start_line: 114
+      end_line: 122
+      observed: PackageVerifyStepSpec
+      syntactic_kind: class_declaration
+  so:sha256:67507f3d087ad2239cc47ee9f7622df86e6f79e03730f63cb0ee6ebd0e4c7320:
+    cluster: work-unit-and-lane-specifications
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 871
+      end_line: 879
+      observed: GithubCheckLaneWaveSpec
+      syntactic_kind: class_declaration
+  so:sha256:acf8fc7875146dbe623d9a6d11a4eeeea04d59adf74dc7ecf2fb4a868c7b27c7:
+    cluster: work-unit-and-lane-specifications
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 843
+      end_line: 854
+      observed: GithubCheckLaneSpec
+      syntactic_kind: class_declaration
+  po:sha256:64d90805ebfbc6afee58171bc8f40cc34294e5a165e1e68ee59c3941f5878eea:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: prose-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 70
+      end_line: 73
+      observed: LiteralKit(["readonly", "write", "publish"])
+  so:sha256:193bdccb773affb34025f7d4b136568a01d2a47582a8f3f44e1381a3038fa092:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 82
+      end_line: 82
+      observed: RepoPlanStepMutability
+      syntactic_kind: type_alias_declaration
+  so:sha256:704700c3569c97c04ce6698d167bf38c6ee95850d1a68bd3c0d8a3732107994f:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts
+      start_line: 46
+      end_line: 50
+      observed: GithubCheckMode
+      syntactic_kind: variable_declaration
+  so:sha256:8e80633e942a2d17018c25156dff9f4303f22db8437f15e2c754abb1a9e6bcfe:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 54
+      end_line: 54
+      observed: RepoPlanPhase
+      syntactic_kind: type_alias_declaration
+  so:sha256:906f9d719b7531f4c878c535e72c3cdae60b54bd8ef3ea349d1887b118f54cc9:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 530
+      end_line: 536
+      observed: enforceConservativeResume
+      syntactic_kind: variable_declaration
+  so:sha256:a64dc174173ded5009d4e8d1b7c7f0e8aa1ab75aa53e55eddbf0ab021e440325:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 110
+      end_line: 110
+      observed: RepoPlanStepScope
+      syntactic_kind: type_alias_declaration
+  so:sha256:a6ad40a935472aecb313008c29de7fd676155defa4706d1d7f8b1808a84ac3eb:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 519
+      end_line: 520
+      observed: isConservativeResumeCandidate
+      syntactic_kind: variable_declaration
+  so:sha256:b78c10638ffab60de01ad1bc57cc639ce379fb6e46a3e589c8b9e38329d10828:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 307
+      end_line: 315
+      observed: RepoPlanWave
+      syntactic_kind: class_declaration
+  so:sha256:cffc9352dab29999a8fea11c29898375fb9f5d0140582e5b325a5e361eafdf5a:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts
+      start_line: 58
+      end_line: 58
+      observed: GithubCheckMode
+      syntactic_kind: type_alias_declaration
+  so:sha256:dd4ce73b5f90b6a2cc48a40c200e4ab2a0f7353fbfbd20f5e53251a0d390ee71:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts
+      start_line: 28
+      end_line: 38
+      observed: GITHUB_CHECK_MODE_VALUES
+      syntactic_kind: variable_declaration
+  so:sha256:f71b168a6c2ae3db3894064c6c52de3f29b7464bb4e6d6d6194a7b6ad5e99155:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 34
+      end_line: 46
+      observed: RepoPlanPhase
+      syntactic_kind: variable_declaration
+  so:sha256:f9ff896ab85e892800a541b68651b2f1827025998e2acf58e3c18b7bd73d9c5d:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 276
+      end_line: 290
+      observed: RepoRunContext
+      syntactic_kind: class_declaration
+  so:sha256:fc13da4a27d636493bf0caed7e01a55c91e31a45fe97c80ad34f40e7d9948b43:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 70
+      end_line: 74
+      observed: RepoPlanStepMutability
+      syntactic_kind: variable_declaration
+  so:sha256:fd30915e1d17659297436b33480b65b1417ff9b0274b7beafa8b70cd814d4596:
+    cluster: repository-plan-control-and-ordering
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+      start_line: 98
+      end_line: 102
+      observed: RepoPlanStepScope
+      syntactic_kind: variable_declaration
+  so:sha256:1b632257febcbb643a3ab96bf64a1196964c1bf6edc0376b50cabea2bac2098d:
+    cluster: gate-staleness-result-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+      start_line: 235
+      end_line: 244
+      observed: GateUnproven
+      syntactic_kind: class_declaration
+  so:sha256:2c69da902821ace2904ede4845d9193e0358eb571e5d563d0aaaf080dcfe161a:
+    cluster: gate-staleness-result-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+      start_line: 266
+      end_line: 271
+      observed: GateStalenessVerdict
+      syntactic_kind: variable_declaration
+  so:sha256:505c45f1b6b21cea941e3727724c4453c62fc6afc248ae88a8f3a817372b9afb:
+    cluster: gate-staleness-result-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+      start_line: 279
+      end_line: 279
+      observed: GateStalenessVerdict
+      syntactic_kind: type_alias_declaration
+  so:sha256:9425d788587d694dee636b406feb6512298532c3795a7dc770bdfc7f4dd7487c:
+    cluster: gate-staleness-result-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+      start_line: 139
+      end_line: 147
+      observed: GateFileWitness
+      syntactic_kind: class_declaration
+  so:sha256:a4a2bc6f88d7c94e877af69ce8c4e42f68cf4125076460fb0b59cabf1abf866a:
+    cluster: gate-staleness-result-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+      start_line: 190
+      end_line: 198
+      observed: GateFresh
+      syntactic_kind: class_declaration
+  so:sha256:ab9b40285e051d72072bcdf5cbda763df48c9df2f6d8bf3f0d1660078dc956a9:
+    cluster: gate-staleness-result-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+      start_line: 206
+      end_line: 220
+      observed: GateStale
+      syntactic_kind: class_declaration
+  so:sha256:d5e1b188a11d80b9489f3616a3b705634c3b4fdecee69ef7180d463c7f2dee85:
+    cluster: gate-staleness-result-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+      start_line: 170
+      end_line: 181
+      observed: GateArtifactDescriptor
+      syntactic_kind: class_declaration
+  so:sha256:01ebe52998854e6382ed57cfc9052b2f4fbb29e735679f51e8911afd85469ded:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 529
+      end_line: 529
+      observed: YeetWatchEndReason
+      syntactic_kind: type_alias_declaration
+  so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 617
+      end_line: 618
+      observed: renderYeetWatchEventLine
+      syntactic_kind: variable_declaration
+  so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 694
+      end_line: 740
+      observed: diffYeetWatchSnapshots
+      syntactic_kind: variable_declaration
+  so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 565
+      end_line: 578
+      observed: YeetWatchEvent
+      syntactic_kind: variable_declaration
+  so:sha256:1e993a781d8287c7d8eaef6ac56a139bd3849cf1fc650a91d7db9ac29c4f5fef:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 586
+      end_line: 586
+      observed: YeetWatchEvent
+      syntactic_kind: type_alias_declaration
+  so:sha256:357936bd5c10475bb683a73ef496a31521cdf91e52e444875205b73303f7ab1b:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 60
+      end_line: 60
+      observed: YEET_WATCH_SCHEMA_VERSION
+      syntactic_kind: variable_declaration
+  so:sha256:475cea15f30764a8045bd4d652dbc2c3c65b2cbde1b708f31800facdf6a2fbb1:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 632
+      end_line: 641
+      observed: YeetWatchDiffInput
+      syntactic_kind: class_declaration
+  so:sha256:47b1a59826ab332b9eb041001164f4b492dccb445629cf6fa858330701f649ff:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 289
+      end_line: 304
+      observed: YeetCheckTransition
+      syntactic_kind: class_declaration
+  so:sha256:53871c1d8d3f62889042f3a5d4388e6e993dc3ef0478c837fbe383b75b912edd:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 777
+      end_line: 788
+      observed: yeetWatchEndReason
+      syntactic_kind: variable_declaration
+  so:sha256:72751a9073713f96a4c3bf12a592db87e3b0b3364ab929e8d5fca792681f5ac4:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 242
+      end_line: 254
+      observed: YeetWatchSnapshot
+      syntactic_kind: class_declaration
+  so:sha256:985f8eabadd1ff4531d7bdf639ae2da797f9b2ef8124751b0452456d3551bea6:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 537
+      end_line: 551
+      observed: YeetWatchEnded
+      syntactic_kind: class_declaration
+  so:sha256:98cbdf1184f9cba51246aa80f650640311ce755674f478e3faac85f89074ecda:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 459
+      end_line: 494
+      observed: yeetWatchCommentEvent
+      syntactic_kind: variable_declaration
+  so:sha256:9a050882c859fbe6a493e1313f31f1062c204cb96663c81dfcac83bef8f5d917:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 201
+      end_line: 209
+      observed: YeetWatchThread
+      syntactic_kind: class_declaration
+  so:sha256:a7c6ae0d10535713f109acc2252a5ec84ab4500696ac752d7782c3625caa5747:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 180
+      end_line: 193
+      observed: YeetWatchCheck
+      syntactic_kind: class_declaration
+  so:sha256:b870d15f88a575353b6b0228cd405f21da494b88735fc82c49042a272e0095ab:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 114
+      end_line: 122
+      observed: YeetCheckSignal
+      syntactic_kind: class_declaration
+  so:sha256:be1853aae0f018d491da8f4e61a6144f1a4e2667aee6d3772e8a68897842cc5f:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 312
+      end_line: 326
+      observed: YeetThreadTransition
+      syntactic_kind: class_declaration
+  so:sha256:c30acf2ce6e721bb586765a46dc7f4aa0760f5c25dea64f91deac21f76228ed3:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 815
+      end_line: 816
+      observed: countYeetWatchFailures
+      syntactic_kind: variable_declaration
+  so:sha256:e931fc8b69e9c72f2f382ba6835ae50ed773594333b915a075f1510603035efc:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 403
+      end_line: 423
+      observed: YeetCommentPosted
+      syntactic_kind: class_declaration
+  so:sha256:f44344e14a671f9e5f86859eef0dccb723949c53750e0b7e5ec4c33dd473bf7b:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 516
+      end_line: 521
+      observed: YeetWatchEndReason
+      syntactic_kind: variable_declaration
+  so:sha256:f45109a7f280b3b010b8766d51c4c09c8e315cb04beb5d1ff38b45ad70c7ab86:
+    cluster: watch-stream-event-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+      start_line: 356
+      end_line: 369
+      observed: YeetHeadChanged
+      syntactic_kind: class_declaration
+  so:sha256:0e23613c08bd8703273959a5bf2dc75dd4fdea088a0aed2f5cd6a7684c30a06c:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 479
+      end_line: 479
+      observed: YeetMonitorJobDecision
+      syntactic_kind: type_alias_declaration
+  so:sha256:2be3b248a3b888f63aa21e0598782e2efec976842e70e3d18420d1051487f9ef:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 614
+      end_line: 673
+      observed: planYeetMonitorReruns
+      syntactic_kind: variable_declaration
+  so:sha256:3c67cece44cdfc67ae4bbc448bf87d837a9d92f55e59ff82135d00f2baec589e:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 567
+      end_line: 567
+      observed: yeetMonitorRerunCommand
+      syntactic_kind: variable_declaration
+  so:sha256:538ac118dd5cd92616c9fe8d60133d6795e073e9433a44f749cce9951f291f2e:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 707
+      end_line: 720
+      observed: renderYeetMonitorJobDecision
+      syntactic_kind: variable_declaration
+  so:sha256:7d81fca784579f2d5bf1d2bed62d836c001fedda5a774dbed3b94280174af3f0:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 318
+      end_line: 329
+      observed: YeetMonitorRerunJob
+      syntactic_kind: class_declaration
+  so:sha256:a1c22fb0769c94f71dfe06a5f79cc81acad12d7b6ef289ddec66ee71291a695e:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 460
+      end_line: 471
+      observed: YeetMonitorJobDecision
+      syntactic_kind: variable_declaration
+  so:sha256:a2352db33ca14ce4c1da0bf89decf6bc399e46f050d701ba267129ce31cda2e2:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 924
+      end_line: 933
+      observed: applyYeetMonitorJobDecision
+      syntactic_kind: variable_declaration
+  so:sha256:ade05d26b085f9b2d69b9583ce1f0b4dcb97e42de7725390b49801e6f2b9c533:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 397
+      end_line: 406
+      observed: YeetMonitorAwaitingLog
+      syntactic_kind: class_declaration
+  so:sha256:b05fb409eaff217c8757f9310dedb0581462cc68b81bcc55feaa2e41312a75f9:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 345
+      end_line: 355
+      observed: YeetMonitorRerunSpent
+      syntactic_kind: class_declaration
+  so:sha256:ee1ece20418d730e54254ad7e2e33c3fe0193b1ee493d97e4cacb3717b4a0a4d:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 429
+      end_line: 438
+      observed: YeetMonitorAwaitingRun
+      syntactic_kind: class_declaration
+  so:sha256:fc1a7afac87552a779a76bd632d960cf8a72272ed79d6187cfb88fd040cec99b:
+    cluster: monitor-rerun-decision-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+      start_line: 363
+      end_line: 372
+      observed: YeetMonitorNeedsCodeFix
+      syntactic_kind: class_declaration
+  so:sha256:174bc1e94d345376660ef5fa87113a49198ca33bcb34da61b934af64724b4ace:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 386
+      end_line: 398
+      observed: QualityProfileConfig
+      syntactic_kind: class_declaration
+  so:sha256:3e296553a20a27503388bc986394099c7c5581a8666a9fdd199ce051bdf89b3f:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+      start_line: 183
+      end_line: 193
+      observed: PackageVerifyReport
+      syntactic_kind: class_declaration
+  so:sha256:50b72ba5de1b4f4faa716b9b6d2b8ed6d678cb4950580f0ae8f85dad06eadddd:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 454
+      end_line: 465
+      observed: QualityProfileDetectionInput
+      syntactic_kind: class_declaration
+  so:sha256:61cc360f5e99072fd1fd7b63748a43f8d39a921c4fce5c655e4937f1bfec4169:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 213
+      end_line: 222
+      observed: PackageTaskProfile
+      syntactic_kind: class_declaration
+  so:sha256:814e752549f0f43ad157a175616e3eb5549db881fc1fd9216c46b0faa12575c0:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+      start_line: 194
+      end_line: 207
+      observed: TurboConfigProofReport
+      syntactic_kind: class_declaration
+  so:sha256:8bbc8fc68d7ff8865048928f754aea654b620b9ffbaae0064f8f4f1e9253f8b1:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+      start_line: 153
+      end_line: 166
+      observed: TurboConfigProofCountSummary
+      syntactic_kind: class_declaration
+  so:sha256:957c9ffbcf7ab4c0dd90e7566dfc5080ffcbab33a8a2981a57facc8c571aecdb:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 666
+      end_line: 677
+      observed: GithubChecksFallowFeatureMatrixRow
+      syntactic_kind: class_declaration
+  so:sha256:a86ebcb3d399835d6fe9c78128b16394d23254111ea17aa6e6e6b42ccca24ddc:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+      start_line: 215
+      end_line: 225
+      observed: TurboConfigProofOptions
+      syntactic_kind: class_declaration
+  so:sha256:a99d68de5fb72eb7f8c94c29b881cf9799c47fd386471042b810a019bb4493a1:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 694
+      end_line: 703
+      observed: GithubChecksFallowFeatureMatrix
+      syntactic_kind: class_declaration
+  so:sha256:dcc8e45291ae54f9a3c4762ead3efdc29081b62bda5af6761c676a84f148ba60:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 961
+      end_line: 970
+      observed: GithubCheckRunReport
+      syntactic_kind: class_declaration
+  so:sha256:e34825fda95ce3050968b41d1d89037c85ab81e7f0cbab58d9ea1a2d907163fa:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 427
+      end_line: 437
+      observed: QualityProfileDetection
+      syntactic_kind: class_declaration
+  so:sha256:e78b1a951729f59c449331ce1b39c87d1775a6c55e16f9c27cfcf70d97544f90:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+      start_line: 295
+      end_line: 304
+      observed: PackageJsonDocument
+      syntactic_kind: class_declaration
+  so:sha256:f484833e6327058feb6e879ca5f7ac16995b5cc267ae52ce7cbd7f48c8258285:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+      start_line: 174
+      end_line: 186
+      observed: TurboConfigProofDryRunSummary
+      syntactic_kind: class_declaration
+  so:sha256:f8da674d8c16b9380e097c523f483e16748d4eb10287d3fe570ea4b9bb2986c1:
+    cluster: quality-report-and-config-artifacts
+    recommendation: retire-irrelevant
+    recommended_index_outcome: irrelevant
+    archive_record:
+      kind: source-observation
+      path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+      start_line: 195
+      end_line: 203
+      observed: PackageVerifyPackageJson
+      syntactic_kind: class_declaration

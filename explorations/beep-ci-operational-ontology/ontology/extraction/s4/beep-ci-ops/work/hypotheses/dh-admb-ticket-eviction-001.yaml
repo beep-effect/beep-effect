@@ -1,0 +1,50 @@
+id: "dh:admb-ticket-eviction:001"
+observation_refs:
+  - "so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06"
+  - "so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "Ticket eviction occurrence"
+  description: >-
+    An instance is one removal of a queued admission ticket recorded by admission-ticket-evicted
+    and evictedAtMillis. It supplies a terminal boundary for the affected request's queue
+    participation. The two supplied chains contain only this event, so their enqueue boundary,
+    work kind, priority, and requested charge remain unknown. The target is a queued ticket, not
+    a capacity-holding lease; its eviction neither releases an established token charge nor
+    revokes an evidenced grant. The recorded reason queued-submitter-death is a diagnosis
+    carried by the event record, not independent observation of a process-death occurrence. This
+    kind remains separate from withdrawal and lease eviction.
+representation_status: domain_referent
+alternatives:
+  - label: "An information record asserting ticket eviction and its diagnostic reason"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "The affected request's terminal queue condition without a separately reified eviction occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The primary interpretation denotes the ticket-specific removal described by the positive
+    event. It keeps the operational reading of the first batch and preserves the second batch's
+    information-record reading as viable. An independently correlated queued-ticket
+    deletion/reaper receipt would discriminate actual removal from an assertion; an observed
+    process-liveness check would separately be needed to assess the diagnostic reason. A
+    lease-deletion trace would support a different target kind, not silently turn this record
+    into a lease eviction. No missing admission attributes are borrowed from neighboring
+    entries.
+  discriminator: >-
+    One opened observation contains (config_key_value, "_tag=admission-ticket-evicted"),
+    (config_key_value, "nonce=acb0011d-82cf-4dfc-a812-72d10dbd566c"), (config_key_value,
+    "evictedAtMillis=1788498598672"), and (config_key_value, "reason=queued-submitter-death").
+    The second batch contains the same target-specific tag and reason for (config_key_value,
+    "nonce=90006bc5-d7e0-41a4-9224-813ac343ca6c") with (config_key_value,
+    "evictedAtMillis=1788920302811"). Under the null that no ticket-removal occurrence is
+    denoted, the positive assertion of removal at each boundary would be false. The ticket
+    target, rather than an inferred empty queue or a lexical owner identifier, distinguishes
+    this claim from lease termination.
+epistemic_status: proposed
+confidence:
+  value: 0.78
+  use_for_acceptance: false

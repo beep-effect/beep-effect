@@ -1,0 +1,11 @@
+id: rat:69
+proposal_ref: otp:att-verification-attempt:001
+proposal_sha256: ff3249177f28bf65a9b44da7bef71890273605b6dc20e2eb731a07b64267bc97
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:att-verification-attempt:001 as the VerificationAttempt recorded-history
+  reuse under sitting-1 Ruling 2, with account-version identity and effective invocation continuity deferred
+  to run 4 as flagged.

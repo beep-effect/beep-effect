@@ -1,0 +1,20 @@
+id: "fa:att-attempt-verdict-alt:001"
+hypothesis_ref: "dh:att-attempt-verdict:001"
+identity_card_ref: "ic:att-attempt-verdict-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Information object: persisted yeet-verdict/v2 assessment of a particular attempt, including lane measurements and merge-readiness findings"
+    still_viable: true
+  - label: "Event: the execution or gate-assessment occurrence the verdict describes"
+    still_viable: true
+  - label: "Situation: present-tense merge-readiness of the checkout"
+    still_viable: false
+  - label: "Certificate sufficient by itself to authorize cached proof reuse"
+    still_viable: false
+strongest_counterexample: "Treating a green monitor verdict as enduring correctness or as CQ-005 transferable evidence: so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198 records requiredChecksGreen=true only inside a later attempt's finished payload, after a distinct verify attempt failed at full:00-cheap-gates with durationMs=695899.047175. Head/diff/tier fields identify asserted applicability context, not a cache epoch. The information-object and execution-event models are observationally equivalent on current evidence because only journal assessments are observed."
+verdict: analyzed
+needed_evidence: "An independent observation of the lane execution (process table, turbo run, wall clock) not mediated by the verdict record would discriminate information object from the described event. A demonstrated reuse rule that treats this verdict plus epoch/cache as sufficient would be needed before treating it as VerificationEvidence (CQ-005/CQ-015); none is in the supplied excerpts. Per-lane actualWallMs vs usedCostEstimate pairing (CQ-025) is nested in the failed verify payload and must stay attempt-scoped (CQ-022)."

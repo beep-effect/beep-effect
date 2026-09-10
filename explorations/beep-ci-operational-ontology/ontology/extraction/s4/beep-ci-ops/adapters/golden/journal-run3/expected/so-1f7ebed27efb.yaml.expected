@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:1f7ebed27efbd2cba3d63148ba71bb253bcba780e410c653ff8747dd92544d00",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-fleet/attempts/a/a/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 4,
+    "content_sha256": "11aecd00a4b586adc7ded523c0304207260ad18d1e48b4cefcc4222a4c5d88a9"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/attempts/a/a/attempts.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "key=first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-attempt-journal/v1"
+    }
+  ],
+  "source_excerpt": "schemaVersion=yeet-attempt-journal/v1\nkey=first\nkey=second\nnote=two words\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,48 @@
+id: fa:ov-origin-ordering-key:001
+hypothesis_ref: dh:ov-origin-ordering-key:001
+identity_card_ref: ic:ov-origin-ordering-key:001
+referent_grain: Recorded origin-key assignment used as a request's comparison value in a particular projection
+  input; distinct from the raw literal shared by assignments and from a repository origin.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: The sorting rule, rather than the field spelling, supplies the value's decision
+    use. The analysis is limited to recorded comparison content; it neither designates an origin sortal
+    nor proves repository equality.
+  rigidity: A fixed origin-key assignment remains that informational assignment after the projection becomes
+    obsolete. A request's grouping or position may change in a different input without changing the request.
+  dependence_and_temporality: The value assignment belongs to a projection input. The contract fixes the
+    sort tuple, but the batch supplies no history of origin changes or normalization; no lifecycle for
+    a repository is inferred.
+  spec_vs_execution: A tie-break input helps prescribe order and does not record an execution or a grant.
+  world_vs_information: An emitted origin-key value is observed. A real repository origin and its sameness
+    conditions remain a separate possible referent.
+  role_vs_bearer: Using a value as an ordering key is its contextual function. Neither the key nor its
+    assignment is the request, repository, or grant bearer.
+  context_reification: Keep the request and projection input with the value. Existing request and proposal
+    records can provide this context without creating an independent assignment class.
+  evidence_limit: Repeated literals establish equal illustrated comparison values only. This batch does
+    not supply origin normalization, a grant binding, or active-state evidence.
+rival_models:
+- label: Direct scalar data property used by canonical sorting, with no independently instantiated key
+    object
+  still_viable: true
+- label: Reference to a domain repository origin after an independently observed normalization and sameness
+    contract
+  still_viable: true
+strongest_counterexample: The fixture repeats origin-test on three distinct requests. Treating the common
+  literal as request identity merges all three; treating it as evidence of simultaneous active grants
+  manufactures a grant-exclusion violation. Hypothetically, two spellings for one repository could also
+  sort differently unless normalization is independently specified.
+verdict: analyzed
+needed_evidence: ''
+evidence_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:d4f2e09398646bf875ee3cbeeec6471c327a8a7b9d9d82425c754dbebd84c7f9
+- po:sha256:d5a14f495e7b2778abacb3727637a629965dec0f85bbefec53d76cba5a7690e3
+- po:sha256:fe4b4d49ef566d86584b1cea395485bf0f230233e91478c746d3a8d23208e05c
+- po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d
+- CQ-020

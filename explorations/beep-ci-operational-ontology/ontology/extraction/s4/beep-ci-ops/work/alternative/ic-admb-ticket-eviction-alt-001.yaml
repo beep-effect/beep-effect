@@ -1,0 +1,55 @@
+id: "ic:admb-ticket-eviction-alt:001"
+hypothesis_ref: "dh:admb-ticket-eviction:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two ticket-eviction occurrences are the same when they are the same dated
+    removal of a particular queued admission ticket. so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+    records admission-ticket-evicted for nonce=acb0011d-82cf-4dfc-a812-72d10dbd566c
+    at evictedAtMillis=1788498598672 with reason=queued-submitter-death.
+    so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+    records the same tag and reason for nonce=90006bc5-d7e0-41a4-9224-813ac343ca6c
+    at evictedAtMillis=1788920302811. Both chains contain only this event:
+    enqueue time, work kind, priority, and requested charge remain unknown
+    and are not borrowed. The target is a queued ticket, not a capacity-holding
+    lease; this neither releases an established token charge nor revokes an
+    evidenced grant. reason=queued-submitter-death is a diagnosis on the
+    record, not independent observation of process death. ownerRef is not
+    identity.
+  reidentification_key:
+    - "evictedAtMillis (boundary evidence)"
+    - "nonce (chain correlation only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "one atomic dated removal of one queued ticket"
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - kind
+    - phase
+  existential_dependencies:
+    - "a queued seat request/ticket whose opening boundary is unobserved on these two chains (CQ-021)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "completed (the removal has occurred)"
+counterexamples:
+  - description: >-
+      Treating this as lease eviction fails: neither cited chain carries
+      admission-admitted, weightTokens as an allocated holding, or
+      admission-lease-evicted; so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+      is the lease-eviction kind, not these records.
+  - description: >-
+      Treating this as withdrawal fails: the tag is admission-ticket-evicted,
+      not admission-withdrawn (so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab).
+  - description: >-
+      Taking queued-submitter-death as a witnessed process-death occurrence,
+      or filling kind/priority/charge from neighboring journal records,
+      overclaims the diagnosis and invents CQ-021 attributes these chains
+      lack.
+status: proposed

@@ -1,0 +1,34 @@
+id: dh:att-staged-recovery-handle:001
+observation_refs:
+- so:sha256:462be5edf92fe7d6a3dc7f4a3a376d9c539106fb88bdbaff0fc539751b4b6a41
+- so:sha256:af0e1748d24228e5bcdc90d99c719c2b2f885e68dcb60b31e3805742e4fbbf8f
+cq_warrants: []
+proposed_referent:
+  label: No separately warranted referent for staged-only recovery handles
+  description: The marker and stashSha values are implementation handles for a staged-only recovery
+    artifact. The supplied evidence does not establish that either handle denotes the verified tree,
+    a cache epoch, a restored workspace state, or an evidence-invalidation event.
+representation_status: implementation_artifact_only
+alternatives:
+- label: A repository snapshot information artifact used to preserve work
+  representation_status: information_artifact
+  plausibility: viable
+- label: An operational workspace preservation or restoration event
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The observations supply config_key_value "marker=yeet-staged-only/codex_security-findings-2026-09-08-fca6d1290697/2026-09-09T03:15:12.259Z"
+    and "stashSha=b2675def82c2fb2d4d6c81efa6eef38563db102f". Those are recovery locators, not a demonstrated
+    decision relation. The containing verdict reports "failedStepId=publish:02-pr-create" and "failureKind=handler-error";
+    it does not say that saving or restoring the stash caused the failure or changed proof applicability.
+    No saved-content comparison, restoration outcome, or consumer rule is supplied. Such evidence,
+    together with a required operational decision, would be needed for separate domain standing. ownerRef
+    and ownerRefVariant elsewhere in these excerpts are capture provenance; changing those aliases
+    between captures supplies no extra referent.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

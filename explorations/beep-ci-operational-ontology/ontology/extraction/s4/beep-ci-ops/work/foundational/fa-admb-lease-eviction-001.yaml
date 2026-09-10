@@ -1,0 +1,67 @@
+id: fa:admb-lease-eviction:001
+hypothesis_ref: dh:admb-lease-eviction:001
+identity_card_ref: ic:admb-lease-eviction:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: Information asserting lease eviction and a diagnostic reason
+  still_viable: true
+  rationale: >-
+    An assertion can be copied or fail to correspond to an effective transition. The observations
+    establish reported content, not independent operational corroboration.
+- label: The grant's evicted condition or terminal authorization boundary without a distinct revocation
+    occurrence
+  still_viable: true
+  rationale: >-
+    Time-qualified participant boundaries may serve the cited decisions without a separately addressable
+    event. Consumer behavior and operational transition evidence must decide that modeling choice.
+strongest_counterexample: >-
+  The recorded reason owner-dead-or-reused is disjunctive. An owner may be alive with an identifier-reuse
+  diagnosis, and lastHeartbeatAtMillis is not a death time or expiry threshold. One of the five chains
+  has no heartbeat field at all. Defining eviction identity or cause by process death or heartbeat
+  timeout would misclassify these reported terminations and conflate the diagnosis with what happened.
+verdict: analyzed
+needed_evidence: ''
+referent_grain: >-
+  One revocation/removal transition of an already admitted capacity authorization through lease eviction.
+  It is not a process-death occurrence, a heartbeat, a grant-state snapshot, a ticket eviction or
+  the journal's diagnostic assertion.
+test_rationale:
+  spec_vs_execution: >-
+    The occurrence is neither an eviction-enabling setting nor the rule that decides removals. Neither
+    the recorded reason nor a heartbeat value establishes a governing timeout or policy-adoption event.
+  world_vs_information: >-
+    All five cited eviction chains pair an explicit admission with a lease-evicted assertion. Four
+    carry a heartbeat value and one does not. The journal claims the target was an admitted lease;
+    it does not independently demonstrate lease deletion, active-charge removal, process death or
+    identifier reuse.
+  role_vs_bearer: >-
+    The holder and the revoking admission service participate; neither is the event. Revoking the
+    relation ends a capacity-holder standing without making the holder a kind of eviction. A lease
+    target must not be replaced by a queued-request target.
+  context_reification_needed: >-
+    The particular target, transition type and occurrence time must remain associated within their
+    admission context. A context-free binary relation or a nonce alone would collapse repeated transitions,
+    target conditions or reports. This contextual requirement does not by itself warrant a separate
+    event term.
+analysis_scope: >-
+  Foundational analysis only. The survivor rule admits this hypothesis for testing; it does not ratify
+  its discriminator, identity criterion, category or occurrence truth. CQ citations identify decision
+  context, not a claim that the supplied records satisfy the query or warrant every possible reification.
+evidence_refs:
+- so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+- so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+- so:sha256:5abf1599e9268fb3190e199440ba2a0975670561acee0566c6805cd150491b12
+- so:sha256:a03b8e201a23a02a6b82aa0c120aa205b4725195d3985dc468b271c0e4813bca
+- so:sha256:fa16a716b56a1780f96785077dc9274f7a807f38a04770e008febb22d6cad15b
+- CQ-008
+- CQ-009
+open_evidence_questions:
+- >-
+  Observe the effective lease deletion/revocation and associated active-charge change correlated with
+  the eviction entry. A separate process-liveness or identifier-reuse observation is needed to discriminate
+  the recorded diagnostic branches; policy-consumption evidence would be required for a timeout-rule
+  interpretation.

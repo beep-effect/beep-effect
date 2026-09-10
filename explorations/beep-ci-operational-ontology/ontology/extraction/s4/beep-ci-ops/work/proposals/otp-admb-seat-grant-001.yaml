@@ -1,0 +1,183 @@
+id: otp:admb-seat-grant:001
+hypothesis_ref: dh:admb-seat-grant:001
+identity_card_ref: ic:admb-seat-grant:001
+foundational_status: analyzed
+term:
+  preferred_label: seat grant
+  local_name: SeatGrant
+  proposed_iri: https://oip.law/ontology/ci-ops#SeatGrant
+  owl_entity_kind: class
+definition:
+  text: >-
+    An information object recording one putative grant's charged-admission account, with its
+    asserted founding boundary, associated charge and origin context, and any reported release
+    or lease-eviction boundary. The selected unit is the grant account carried by those
+    associated assertions, not each physical entry or an effective authorization relation.
+    Faithful copies of the same originating account and unchanged claims preserve the
+    information unit; a corrected account is a different content version. Its content can
+    remain available when the reported holding has ended or never became effective.
+  source:
+  - CQ-008
+  - CQ-009
+  - CQ-010
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+  - so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+  - so:sha256:a03b8e201a23a02a6b82aa0c120aa205b4725195d3985dc468b271c0e4813bca
+  - so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+  - so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+  - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+- from_sha256: 0097cf145e26c95ccfbc9dca5ffd5b6cea404a3475c581133dc92977ef8f9778
+  addressed:
+  - discriminator-true-of-dto
+- from_sha256: 367fc9670007fb173bb1d31e604cdfe0e9e950cd93f27610f26b3eac381a6ab4
+  addressed:
+  - "gate-log-1 definition.source: restrict observations to the proposal's own hypothesis observation_refs"
+  - "gate-log-1 category alignment: derive information_object and its identity account from the repaired IC/FA"
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#SeatGrant
+    compatibility: >-
+      Exact reuse of the local SeatGrant term at recorded-value grain under sitting-1 Ruling
+      2. TAXONOMY.yaml supplies the existing request/grant distinction, rigid classification,
+      recorded admissionChargeTokens and literal hasOriginKey; it is a reuse inventory, not
+      evidence of effective authorization. The observed admission and endpoint assertions
+      preserve one grant account with its nonce-chain provenance and its own charge/origin
+      associations. This mapping adds no SeatGrant subclass and does not equate the account
+      with an operational relator. Continuity of effective authorization remains conceded
+      pending the separately named run-4 trace.
+operational_warrant:
+  competency_questions:
+  - CQ-008
+  - CQ-009
+  - CQ-010
+  semantic_support_for: []
+alternatives_rejected:
+- >-
+  The prior operational null rejection is CONCEDED: a replay or serializer can preserve every
+  admitted/released assertion without conferring capacity. At the selected information grain,
+  the observed distinction between an admission claim and its associated release claim rejects
+  only a semantically empty wrapper; the operational null remains standing.
+- >-
+  Treating a recorded enqueue demand, a grant account, the act of granting, the holder or a
+  work execution as one individual conflates their grains. Origin, charge and nonce equality
+  cannot establish effective grant identity.
+- Active, released and evicted as separate rigid grant kinds is unsupported. They describe time-qualified
+  standing or reported endpoints, and a diagnostic reason is not a proved causal occurrence.
+open_issues:
+- >-
+  Consolidation: dh:adm-seat-grant:001, ic:adm-seat-grant:001 and fa:adm-seat-grant:001 remain
+  incorporated through dh:admb-seat-grant:001, ic:admb-seat-grant:001 and
+  fa:admb-seat-grant:001. Definition sources are restricted to this hypothesis's
+  observation_refs; repeated accounts are not independent corroboration. The repaired card
+  now rules information_object for fixed contextual assertion content. The conditional
+  authorization-continuity criterion remains an unsupported operational rival, not the
+  identity criterion of the recorded account.
+- >-
+  Sitting-1 Ruling 2 answers discriminator-true-of-dto by selecting the recorded grant
+  account. The conferred-authorization relator, holder authorization mode, time-indexed
+  effective holding situation and operational conferment/termination reading are CONCEDED
+  until an effective-operation observation exists. STEWARD CHOICE remains explicit for
+  information identity: an originating account plus its asserted content, as selected here,
+  versus content-only identity that merges independent equal-content accounts. A
+  faithful-copy, independent equal-content emission and correction trace must discriminate
+  that choice; no observation of those tests is claimed.
+- 'Needed evidence for the bearer choice: a time-aligned lease and active-charge trace reidentifying the
+  same authorization in at least two admission decisions, an update or heartbeat that preserves it, termination
+  and a fresh conferment, plus a conferral/termination rule clarifying what standing ends. Independently
+  identify the beneficiary, work and admission context. The trace must distinguish effective authorization
+  from a journal assertion and a holder''s mode; the proposed tests are not observed instances.'
+- >-
+  Decision warrant retained: CQ-008 requires the typed SeatGrant subject with contendsFor and
+  ActiveGrant, CQ-009 compares distinct typed active grants by hasOriginKey, and CQ-010 joins
+  admittedBy to that grant's charge and pre-admission capacity. These queries warrant the
+  existing grant term. This exact-reuse mapping preserves recorded charge/origin and boundary
+  associations as evidence about that subject; it does not assert current ActiveGrant, a
+  resource join, an admittedBy link or pre-admission capacity where the journal supplies none.
+  Historical accounts cannot substitute for the queries' independently established evaluation
+  population.
+- 'Standing and coverage: 28 histories positively assert admission, of which 21 report release, five report
+  lease eviction and two provide no endpoint. None proves uninterrupted standing, and the two missing
+  endpoints establish no current activity. Holder and origin-exclusion decisions require a complete relevant
+  active-grant snapshot at the evaluation instant. The preceding request and its requested charge cannot
+  be counted as an allocated holding.'
+- 'Admission accounting: reported weightTokens is a policy charge. The journal lacks the remaining-capacity
+  snapshot immediately before conferment and a sufficient work-execution linkage for a capacity verdict.
+  Neither a post-grant total, an optional release-time memory peak, a predicted duration, a hard execution
+  limit nor a successful execution may be substituted. The prototype mapping does not create those missing
+  observations.'
+- >-
+  Termination interpretation at recorded-value grain: ticket eviction asserts removal of a
+  queued request, while lease eviction asserts an endpoint for an admitted grant. A release
+  assertion carries no successful-work or voluntary-intent guarantee. The lease-eviction
+  diagnosis remains disjunctive; a heartbeat timestamp is not a death time or an expiry rule.
+  These reports establish neither execution cancellation nor which diagnostic branch was true.
+- >-
+  Cluster dependency: otp:admb-seat-request:001 remains the separate recorded demand; nonce
+  correlation must not merge it with this grant account. Align this SeatGrant mapping with
+  otp:att-admission-allocation:001 and otp:bind-admission-grant:001 at the chosen information
+  grain, preserving the former's continuity deferral and the latter's synthetic scope.
+  otp:admb-journal-entry:001 is withdrawn under Ruling 1: qualified assertions preserve the
+  recorded boundaries without a separately required AdmissionJournalEntry class. Request/grant
+  reuse does not depend on that withdrawn class.
+- 'Boundary-model steward choice: dh:adm-admission:001 / fa:adm-admission:001 and dh:admb-grant-conferment:001
+  / fa:admb-grant-conferment:001; dh:adm-release:001 / fa:adm-release:001 and dh:admb-grant-release:001
+  / fa:admb-grant-release:001; dh:adm-lease-eviction:001 / fa:adm-lease-eviction:001 and dh:admb-lease-eviction:001
+  / fa:admb-lease-eviction:001 receive no separate event proposal in this pass. An operational transition,
+  an assertion of that transition, and a qualified grant beginning/ending remain viable models. Preserve
+  the asserted boundaries on their own authorization without reifying six tag-derived event classes by
+  default. Separate event proposals require effective allocation/removal observations, duplicate/retry
+  discrimination, and a decision dependency for addressing the occurrence apart from the grant boundary.
+  The omitted events are neither rejected nor authorized by this proposal.'
+- >-
+  Reuse search: TAXONOMY.yaml lists the existing rigid SeatGrant class with recorded
+  admissionChargeTokens and hasOriginKey. The scout report r2-reuse-scan.md supplies no exact
+  external grant-account term; generic PROV entities and OSLC execution-state vocabulary do
+  not fix the local account grain. The inventory is used only to identify the reused term. No
+  external equivalence or new hierarchy edge is asserted.
+- >-
+  Evidence consists of observed admission-journal assertions from both supplied captures; no
+  synthetic observation is used. Source position and report availability do not establish
+  operational order, continuity or present standing. The revised information object is rigid
+  as an account even when disputed; its relational dependence is on its originating assertion
+  context and intended grant subject, without requiring that a live authorization ever
+  existed. The repaired card's rigid/supplies/relational claims concern this fixed account;
+  effective authorization and its operational dependencies remain unsupported rivals requiring
+  the named evidence.
+- >-
+  Nonce-chain identity provenance:
+  so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929 and its matched
+  so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6 preserve nonce
+  411b3ba7-f32a-4d07-8a0c-c764dc5b8088, enqueue 1788926595182, admission 1788926595216, charge
+  5, origin 4cc31eeb4dec and release 1788927008574. The same-record attemptId
+  e7a8f546-8ae1-4754-b67b-76184b411fcc supplies a recorded association, not independently
+  proved execution. so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  and so:sha256:b0aa81e61691ffc2b4ef587508eae988e450f03407eefbfc524fb38a82c20cdc retain a
+  different account: nonce 0ff912cf-d69b-4cd8-bf68-27293f6c0cce, admission 1788929720160,
+  release 1788930321941. Preserve each record's field associations despite interleaved
+  neighboring entries. These tuples locate the source accounts; they are neither global
+  identity keys nor evidence of uninterrupted authorization.
+- >-
+  Run-4 evidence for the conceded operational reading: correlate a grant account with
+  effective capacity conferral, two consuming admission decisions, an identity-preserving
+  heartbeat/update, effective release or eviction and fresh admission, including the rule
+  distinguishing continuation from re-creation. A logged boundary alone does not satisfy this
+  requirement. The earlier bearer-choice trace remains required; no operational variant is
+  admitted by this information mapping.
+revision_requests: []
+review:
+  foundational_agent: fa:admb-seat-grant:001
+  adversarial_agent: pending
+  steward: pending
+status: proposed

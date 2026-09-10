@@ -1,0 +1,96 @@
+{
+  "id": "so:sha256:4bb535144f06b1e9abc6a8c75f0dcc3fc7d030f9b64214adfd1bed92ca384b08",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 600,
+    "end_line": 643,
+    "content_sha256": "da43d98af08da9224799e45e634506c2a0325816b6978dddfa838d9fbf78aa5c"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/admission/canonical/journal.properties:nonce=5ef00241-2520-4a73-9033-d1162608630a",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-lease-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1788465303136"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=a889a081-fa03-4dbd-bbe8-26b1a2f7aefd"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788465303124"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=1788466113838"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=5ef00241-2520-4a73-9033-d1162608630a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=4bda3c0f28b9"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=db1a82609860"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=owner-dead-or-reused"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 57\nownerRef=4bda3c0f28b9\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=5ef00241-2520-4a73-9033-d1162608630a\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788465303124\nadmittedAtMillis=1788465303136\nattemptId=a889a081-fa03-4dbd-bbe8-26b1a2f7aefd\n# record 58\nownerRef=697e5ffeee64\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=a88ca834-382d-4fac-9ebe-2ab1908e9856\nreleasedAtMillis=1788466065420\nmemoryPeakBytes=34114281472\nattemptId=43030968-420d-4bed-8b4d-3c8580cb0df7\n# record 59\nownerRef=407467a24bd1\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=eccf9854-2bd7-4bd1-a56d-fc2fa1fd8a10\nkind=full-proof\nweightTokens=3\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788465467607\nadmittedAtMillis=1788466068921\nattemptId=967fc1b7-d766-4fa6-954e-208a3a9ac593\n# record 60\nownerRef=db1a82609860\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v2\n_tag=admission-lease-evicted\nnonce=5ef00241-2520-4a73-9033-d1162608630a\nattemptId=a889a081-fa03-4dbd-bbe8-26b1a2f7aefd\nevictedAtMillis=1788466113838\nreason=owner-dead-or-reused\n",
+  "epistemic_status": "parser_derived"
+}

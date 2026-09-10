@@ -1,0 +1,96 @@
+target: otp:att-admission-allocation:001
+target_sha256: 00ed290a4cab224fa382bc80a500190cc2af5eee9a487ff317cdc4b49414480a
+chain_sha256: a133678340fee0034326a9f1e0a3ab4bfdb95a9aa04e5d15f2e911547efc0916
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    There are no proposed parents. Exact reuse of SeatGrant is not an is-a edge, and the two
+    recorded lease snapshots are not asserted as two subclasses or two active grants. The
+    information-object and operational-allocation rivals supply no accepted inheritance relation to
+    test.
+revision_requests: []
+attacks:
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A process can copy the two lease descriptions with matching admission context and differing
+      heartbeat values without retaining any real capacity. That countermodel still defeats an
+      effective-allocation discriminator. The repaired IC/FA and proposal now select recorded lease
+      snapshots that explicitly can exist without an effective allocation, conceding the operational
+      reading under Ruling 2. Their assertion content remains meaningful under the DTO twin. The
+      revision_log names r1's failed digest
+      faf65695aed53601da83c0765c89e1e18846c6905b9b3dd5989aa911c11efd6d and addresses this landed
+      rule. R2 was reread but its earlier assessment of the card does not substitute for reviewing
+      the new information-object ruling.
+    outcome: survived
+    evidence:
+      - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+      - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - surface: identity
+    rule: kind-lacks-identity
+    counterexample: >-
+      The snapshots share nonce 012163b8-ef66-4fb4-aba5-0d4af4072512, admission 1788941816511 and
+      five-token charge, yet report heartbeats 1788941946764 and 1788942001857. Treating nonce
+      equality as information identity wrongly merges the different values; treating every capture
+      as new wrongly separates faithful copies. The repaired card now supplies a contextual
+      fixed-snapshot identity and distinguishes these two recorded values. Its rigid
+      information-object claim therefore does not depend on the previously unresolved operational
+      criterion. The definition and revision_log explicitly separate supplied snapshot identity from
+      deferred allocation continuity.
+    outcome: survived
+    evidence:
+      - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+      - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - surface: identity
+    rule: lease-snapshot-versus-continuous-holding
+    counterexample: >-
+      A stale lease replay after release, or a renewed admission with copied context, can resemble a
+      continuously held lease. Changing heartbeat and attachment provenance cannot independently
+      decide among those worlds, and support=active is an attachment assertion rather than a
+      liveness witness. The current proposal reports two information snapshots about one candidate
+      allocation without establishing one continuous effective allocation or two distinct grants.
+      The FA's explicitly_deferred operational continuity and the retained persistent-report rival
+      are therefore substantive limits, not a covert identity assertion. PASS here accepts the
+      bounded information grain and preserves that deferral.
+    outcome: survived
+    evidence:
+      - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+      - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - surface: warrant
+    rule: exact-reuse-and-double-counting-warrant
+    counterexample: >-
+      CQ-008 and CQ-009 need the typed grant/resource/state and origin associations, while CQ-010
+      needs a grant's recorded charge and pre-admission capacity. Exact SeatGrant reuse has that
+      decision role. Counting the two snapshot versions as two active grants would create false
+      holders and origin conflicts; the proposal expressly rejects that inference. It also cannot
+      populate admittedBy, an active-grant census or capacityAtAdmissionTokens from these snapshots
+      alone. The definition.source contains only the two bound observations and the three CQs, so
+      its surviving warrant does not import an unobserved release or a withdrawn termination class.
+    outcome: survived
+    evidence:
+      - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+      - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+      - CQ-008
+      - CQ-009
+      - CQ-010
+rival_models_still_viable:
+  - >-
+    One enduring report information object with successive heartbeat states instead of distinct
+    fixed snapshots remains a steward grain choice.
+  - >-
+    A continuous effective SeatGrant relator, distinct allocations across renewed admissions, or a
+    capacity-holding situation remain unresolved operational readings; deciding requires an
+    independently observed release/renewal and effective charge continuity.
+evidence:
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - CQ-008
+  - CQ-009
+  - CQ-010

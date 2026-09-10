@@ -1,0 +1,70 @@
+id: "ic:bind-checkout-cache-binding-alt:001"
+hypothesis_ref: "dh:bind-checkout-cache-binding:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two recorded bindings are the same information object iff they are the same
+    time-indexed association of one probed checkout with the reported Git
+    directories, snapshot branch/head, and observed local cache
+    path/presence/entry-count at a stated probe instant. The clone record
+    so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9
+    (identity_key=<fleet>/beep-effect, kind=clone, git_common_dir=<fleet>/beep-effect/.git,
+    turbo_local_cache_present=true, turbo_local_cache_entries=36399,
+    turbo_local_cache_path=<fleet>/beep-effect/.turbo/cache) and the linked-worktree
+    record so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b
+    (identity_key=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup,
+    kind=linked-worktree, same git_common_dir, turbo_local_cache_present=false,
+    turbo_local_cache_entries=0, turbo_local_cache_path=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup/.turbo/cache)
+    are distinct instances. identity_key, scannedAt, and binding_probe_at are
+    reidentification keys, not the criterion. Snapshot branch/head at scannedAt
+    is a different instant from supplementary git/cache probes
+    (binding_probe_at).
+  reidentification_key:
+    - "identity_key=<fleet>/beep-effect"
+    - "identity_key=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup"
+    - "binding_probe_at on each record"
+    - "scannedAt=2026-09-09T03:13:49.440Z"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One snapshot-record per checkout plus the cache facts reported during that
+    record's probe interval. Sharing git_common_dir does not unify the two
+    records: cache presence diverges (36399 vs 0).
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - relator
+    - quality
+  existential_dependencies:
+    - "the probed checkout (clone vs linked-worktree identity_key/snapshot_path)"
+    - "the reported local cache path, which may be absent as a directory"
+    - "the successful binding probe (binding_probe_status=present, binding_probe_matches_snapshot=true, exit_code=0)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Treat a shared git_common_dir as evidence of a shared available local
+      cache. Both records report git_common_dir=<fleet>/beep-effect/.git and
+      binding_probe_matches_snapshot=true, yet the clone has
+      turbo_local_cache_present=true (36399 entries) and the worktree has
+      turbo_local_cache_present=false (0 entries).
+  - description: >-
+      Treat turbo_local_cache_entries as task-hash counts or as matching
+      inputs for CQ-015. Both excerpts state the count is immediate directory
+      entries, not deduplicated task hashes, and that shared cache is
+      necessary not sufficient for evidence transfer.
+  - description: >-
+      Treat TURBO_TOKEN/TURBO_TEAM/TURBO_API=true as each checkout's remote
+      cache configuration. Both excerpts scope those flags to the generator
+      process, repeated per binding; turbo_remote_cache_configured=false on
+      both records.
+  - description: >-
+      Take this pair as a resolved cache posture for an execution (CQ-024) or
+      as licensing a skip. No WorkUnitExecution, no CacheEpoch, and no
+      VerificationEvidence individual is in these observations.
+status: proposed

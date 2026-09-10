@@ -1,0 +1,39 @@
+id: dh:ov-verification-episode:001
+observation_refs:
+- po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4
+- po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+cq_warrants:
+- CQ-020
+proposed_referent:
+  label: Verification occurrence associated with a projection
+  description: A candidate verification episode supplied by the caller as the context for a schedule proposal.
+    The observations establish that the emitted representation claims such an occurrence; they do not
+    supply its temporal boundaries, attempt membership, or sameness conditions.
+representation_status: domain_referent
+alternatives:
+- label: Caller-chosen correlation context represented as an information object
+  representation_status: information_artifact
+  plausibility: viable
+- label: One singleton episode for every projection
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: Both an emitter quotation and a fixture assert episode typing, and the contract requires
+    a non-empty caller-supplied episode identity with no singleton default. The described purpose is occurrence
+    context for the proposal. That supports a denotation candidate at episode grain, while the alternative
+    of a correlation record remains viable and must be tested before an identity criterion is accepted.
+    Fixture typing alone does not establish a real completed episode or the timing data required for episode
+    KPIs.
+  discriminator: The emitter emits "${episodeNode} rdf:type ciops-prov:VerificationEpisode ." and the
+    fixture contains the corresponding type assertion. The contract requires "non-empty `episodeId`" and
+    states "The caller supplies the occurrence identity; there is no singleton default." Under a null
+    denying episode context, this asserted caller-specific occurrence anchoring would have no referent.
+epistemic_status: proposed
+confidence:
+  value: 0.76
+  use_for_acceptance: false

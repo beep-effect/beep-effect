@@ -1,0 +1,78 @@
+id: ic:admb-grant-conferment:001
+hypothesis_ref: dh:admb-grant-conferment:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    The same conferment event is one causally continuous transition establishing the same particular
+    authorization from a registered demand in the same admission context. A second independent authorization
+    creates a distinct conferment even if holder, charge and timestamp coincide; duplicate or reformatted
+    admission reports do not. The duration of any ensuing holding is not the conferment's duration.
+  reidentification_key:
+  - nonce
+  - _tag=admission-admitted
+  - admittedAtMillis (reported conferment boundary only)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One transition from a particular demand awaiting admission to a newly conferred authorization.
+    The request, resulting grant, capacity context and event's own temporal extent form its unity,
+    not all entries in the nonce history.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - The information assertion of admission without separately corroborated operational conferment
+  - The resulting grant's beginning boundary without a separately addressable conferment event
+  existential_dependencies:
+  - >-
+    The demand being admitted, the admission authority/capacity context and the particular resulting
+    authorization. A work execution is not required merely for the authorization to be conferred.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: >-
+    The same weightTokens is present as requested charge at enqueue and as reported conferred charge
+    at admission. Identifying conferment by that quantity would already confer capacity while the
+    request is still waiting. A duplicate admitted entry could also report one conferment twice, or
+    an assertion could be written without effective charge allocation. No independent active-charge
+    trace settles these possibilities.
+status: proposed
+referent_grain: >-
+  One occurrence conferring a particular charged authorization. It is the founding transition, not
+  the resulting persisting grant, the pre-admission request, an instantaneous holder snapshot or the
+  admission assertion.
+analysis_notes:
+  rigidity: >-
+    Rigid on the proposed realized-occurrence interpretation: completing this transition does not
+    turn it into a later event, an ongoing participant or a state. Whether any particular assertion
+    corresponds to such an event remains an evidence question.
+  dependence: >-
+    Dependence is on the specified operational participants and admission relation or transition,
+    not on record storage or capture provenance. These dependencies are proposed model conditions,
+    not proof that every reported instance exists.
+  temporality: >-
+    The transition unfolds and is indexed by admittedAtMillis. Its duration and atomicity are unobserved;
+    the earlier enqueue timestamp and later release/eviction timestamp belong to different boundaries.
+    An admission record retaining enqueue time does not manufacture a separately observed enqueue
+    entry. The interval flag remains unresolved because the corpus supplies a timestamp, not start/end
+    duration. The state-change flag distinguishes unfolding from a continuant changing state; no event-state
+    progression is inferred.
+  evidence_limits: >-
+    The released five-token chain distinguishes registration from conferment, and the three-token
+    chain confirms that the transition is not identified by one charge value. CQ-010 requires the
+    remaining capacity before conferment; neither charge legality nor a capacity snapshot is supplied
+    by these entries.
+  provenance: >-
+    The cited observation records are from the current run's fleet admission journal. No synthetic
+    observation is used. Capture, corpus, generator, sanitization and ownerRef metadata are excluded
+    from identity criteria and reidentification keys.
+evidence_refs:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:7e5702e0af48bd1ca7edc2d5c6350db34d8453874a5cd4344281607977584a90
+- so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+- CQ-008
+- CQ-010

@@ -1,0 +1,28 @@
+id: "ic:ov-admission-token-charge-alt:001"
+hypothesis_ref: "dh:ov-admission-token-charge:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "The referent is a policy-assigned token magnitude inhering in a particular request or grant snapshot, not the integer itself. Equal values (fixture 5) do not make two charges the same individual; sameness tracks the bearer plus the charge-quality at that snapshot (po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944; po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305; CQ-010; CQ-021)."
+  reidentification_key:
+    - "ciops:admissionChargeTokens xsd:integer copied from request.weightTokens"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: "A single scalar in the policy token space per bearer snapshot; not a mereological whole and not a physical-memory aggregate."
+  dependence: relational
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+    - information_object
+    - none
+  existential_dependencies:
+    - "a SeatRequest or SeatGrant bearer to which the policy assigns the charge"
+    - "an admission policy mapping work kind to weightTokens"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+  - description: "Treating the three fixture integers of 5 as a universal work-kind weight, or as measured GiB/wall-time, collapses the tri-split that CQ-010 and the contract keep: charge is the compared policy quantity, not a measurement and not a hard execution guarantee (po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e; po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215; po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99; po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8)."
+status: proposed

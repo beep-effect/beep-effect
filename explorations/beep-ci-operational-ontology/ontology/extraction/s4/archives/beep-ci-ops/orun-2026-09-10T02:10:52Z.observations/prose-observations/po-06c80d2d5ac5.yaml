@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 85,
+    "end_line": 85
+  },
+  "quote": "`${stepSubject} rdf:type ciops-prov:ScheduleStep .`,",
+  "epistemic_status": "quoted_prose"
+}

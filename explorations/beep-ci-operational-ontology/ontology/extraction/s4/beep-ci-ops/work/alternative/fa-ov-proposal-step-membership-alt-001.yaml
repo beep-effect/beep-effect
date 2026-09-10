@@ -1,0 +1,18 @@
+id: "fa:ov-proposal-step-membership-alt:001"
+hypothesis_ref: "dh:ov-proposal-step-membership:001"
+identity_card_ref: "ic:ov-proposal-step-membership-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "Formal parthood / collection property hasStep (no reified membership relator) (preferred)"
+    still_viable: true
+  - label: "Relator of membership with its own identity between prescription and component"
+    still_viable: true
+  - label: "Serializer adjacency with no proposal-membership meaning"
+    still_viable: false
+strongest_counterexample: "If hasStep were adjacency without membership, the fixture could not place step-0 and step-1 on the same proposal as the set from which ordered scope is read, and 'only admitted actions get steps' would have no represented collection (po:sha256:4b06f5efe076d7ed81dd9d5b200c268b1d9e42cbe4f8c78086928bdaf65bb41e; po:sha256:a1e5e0d0916deb0cb33ee62f307e85aabb52833a88511c4c1fdc4885ec667857; po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: unreified parthood property versus membership relator. Discriminator: a property of membership itself (join time, weight) or a step individual reused across proposals, which would break essential parthood."

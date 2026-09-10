@@ -1,0 +1,32 @@
+id: dh:ver-staged-only-marker:001
+observation_refs:
+- so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465
+- so:sha256:481c254ae671522359b48aef2b15eb43ba0b488cc8c1a5daf093aa47bdf9695f
+cq_warrants: []
+proposed_referent:
+  label: Staged-only recovery marker encoding
+  description: No independent domain referent is established for the marker and stashSha pair. The observations
+    expose a serialized handle associated with staged-only work; they do not establish a recovery checkpoint
+    lifecycle or the operational relationship between saved work and verification scope.
+representation_status: implementation_artifact_only
+alternatives:
+- label: Recovery-checkpoint information about temporarily saved work
+  representation_status: information_artifact
+  plausibility: viable
+- label: A workspace isolation and restoration occurrence
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The config_key_value facts pair a marker beginning "yeet-staged-only/" with a stashSha value.
+    They show how a handle is stored, not that a particular scope was isolated, restored, verified, or
+    made admissible by consulting it. A timestamp embedded in a marker and a Git object identifier do
+    not supply identity or an observed recovery transition. No supplied CQ requires the marker as an independent
+    term. Path/host placeholder tokens and capture-provenance members, where present around the record,
+    describe its representation or capture and warrant no domain referent.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

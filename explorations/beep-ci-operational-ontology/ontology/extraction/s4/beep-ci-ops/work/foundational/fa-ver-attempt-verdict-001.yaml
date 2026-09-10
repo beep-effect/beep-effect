@@ -1,0 +1,87 @@
+id: "fa:ver-attempt-verdict:001"
+hypothesis_ref: "dh:ver-attempt-verdict:001"
+identity_card_ref: "ic:ver-attempt-verdict:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationales:
+  spec_vs_execution: >-
+    The referent describes results of one dated attempt. A reusable step or lane
+    specification can be invoked again; neither its name nor its presence among
+    reported steps makes the report that specification or proves that it ran.
+    so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc
+    combines mode=closeout, proofTier=full, outcome=failure, and status=not-run.
+    A selected tier therefore cannot be read as an attained tier or as a completed
+    full-proof execution.
+  world_vs_information: >-
+    The information object is a result assertion set, not the attempted execution,
+    an actual failure occurrence, or a repeatable failure signature. The differing
+    push and failed-step claims in
+    so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+    and so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda
+    justify differentiated report content without certifying what occurred or
+    identifying a common fault. CQ-013's signature grouping and attributed delay
+    require additional identity and attribution observations.
+  role_vs_bearer: >-
+    A result report can be considered, rejected, or cease to be applicable as
+    evidence while remaining that report. The information object bears any such
+    evidential role. CQ-006 requires obligation discharge for a specified tree
+    and epoch with invalidation taken into account; a reported outcome or
+    proofTier value alone does not establish that relation.
+  context_reification_needed: >-
+    Each claim must remain scoped to its represented attempt and, for component
+    claims, to the component occurrence it describes. A context-bearing report
+    node or an equivalent qualified statement representation is needed to avoid
+    assigning one attempt's results to another. This is a requirement to retain
+    informational context, not a finding that the report is a world relator or
+    a specification governing evidence reuse.
+rival_models:
+  - label: "Persistent report document with mutable contents"
+    still_viable: true
+    rationale: >-
+      The corpus supplies snapshots but no observed correction or overwrite
+      lifecycle. A document may retain identity while its report content changes;
+      the primary model instead individuates each distinct content snapshot.
+  - label: "Attempt occurrence with qualified result assertions and no separate report individual"
+    still_viable: true
+    rationale: >-
+      The dated attempt could be the central individual, with the reporting
+      information attached as qualified assertions. This can preserve the
+      record/event distinction if report corrections and evidence provenance
+      remain expressible. The supplied decision CQs do not decide this choice.
+  - label: "Report identical to attained assurance or to a recurring failure signature"
+    still_viable: false
+    rationale: >-
+      Failure with passed or not-run components defeats attained-assurance
+      identity, and repeated failure codes do not establish cross-attempt
+      signature identity. CQ-006 and CQ-013 demand the missing relations.
+strongest_counterexample: >-
+  so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+  reports a committed and pushed change with failed verification, whereas
+  so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda
+  reports a committed change with a failed push. Both say outcome=failure and
+  failureKind=step-exit. An aggregate-result or code-pair identity collapses
+  decision-relevant differences; treating either record as the actual failure
+  also overstates what observation of a report establishes.
+verdict: analyzed
+needed_evidence: >-
+  To settle the remaining content-versus-document and dependence choices, observe
+  one operational attempt's report being copied to another bearer and then
+  corrected, retaining both versions and an explicit statement of which item the
+  reporting consumer treats as the same report. Observe how the copy is treated
+  after the original bearer is removed. These are missing lifecycle observations,
+  not reasons to equate a file path or capture identifier with report identity.
+evidence_refs:
+  - "so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf"
+  - "so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda"
+  - "so:sha256:929aa987fb5e550c58968f28fd06947d1bfd2b788815a77376329f06d9ca765a"
+  - "so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc"
+  - "CQ-006"
+  - "CQ-013"
+notes: >-
+  Analysis is complete for the proposed content-snapshot model. The dependence
+  meta-property and the two viable model choices remain open and must remain
+  visible in later synthesis; analyzed is neither ratification nor a declaration
+  that either CQ is answered by this batch.

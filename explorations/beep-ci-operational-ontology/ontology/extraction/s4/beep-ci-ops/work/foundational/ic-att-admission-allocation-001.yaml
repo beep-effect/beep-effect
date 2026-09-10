@@ -1,0 +1,94 @@
+id: ic:att-admission-allocation:001
+hypothesis_ref: dh:att-admission-allocation:001
+referent_grain: >-
+  One fixed lease-description value at a reported heartbeat state, carrying admission, charge,
+  origin, attempt and attachment assertions. The two supplied heartbeat states are distinct
+  recorded values with matching admission-related content; neither is itself an effective
+  allocation, an extra five-token charge or a live owner.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    One recorded lease value is individuated by its complete selected
+    admission/heartbeat/attachment assertion content bound to the same represented subject and
+    reporting context. A copy of that content is another carrier; a different reported heartbeat
+    produces a distinct snapshot value even when the admission-related fields agree. Agreement on
+    nonce, attempt, origin, admission time and charge supports comparison of the records'
+    descriptions only. Identity or continuity of a real allocation across those snapshots remains
+    unestablished.
+  reidentification_key:
+    - >-
+      nonce and admittedAtMillis for comparing reported admission subjects only
+    - >-
+      attemptId, originKey and enqueuedAtMillis as corroborating recorded context
+    - >-
+      heartbeatAtMillis for distinguishing the observed lease-description values
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    Each record unifies an attributed admission description with one heartbeat assertion and the
+    supplied attachment description. The two versions must not be summed as independent
+    operational charges or merged into a proven continuous grant. A systemd attachment is reported
+    content, not an additional identified participant.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - >-
+      relator: one continuing allocation instituted by an effective admission decision
+    - >-
+      situation: an actual admitted-and-charged configuration at each observation instant
+  existential_dependencies:
+    - >-
+      The described admission subject and reporting context, and a carrier for the
+      lease-description content.
+    - >-
+      The actual persistence of a capacity binding, owner liveness or an effective systemd
+      attachment is not necessary for the record to exist. Capture aliases and unit-name spelling
+      do not establish those dependencies.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      A released lease could be replayed or reused for a fresh admission while retaining nonce,
+      attempt, origin, admission time and charge, then receiving a later heartbeat. This
+      unobserved countermodel fits the supplied record pair. It defeats a continuity inference
+      while leaving two recorded heartbeat values intact.
+  - description: >-
+      Counting the two snapshots as two grants would double-count a recorded five-token amount;
+      treating support=active as owner liveness would promote an attachment assertion into an
+      observed operational fact.
+status: proposed
+analysis_notes:
+  rigidity: >-
+    Rigid for fixed lease-description information. A record remains that information even after
+    its subject is released, its carrier moves, or an attachment report proves stale.
+  dependence: >-
+    Relational dependence is on the represented admission subject and assertion context. No actual
+    holder, admission-capacity relation or running process is inferred as an essential
+    participant.
+  temporality: >-
+    The records share admittedAtMillis=1788941816511 and enqueuedAtMillis=1788941626093;
+    heartbeatAtMillis is 1788941946764 in one and 1788942001857 in the other. These are reported
+    times within retained information, not proof of uninterrupted allocation. A changed heartbeat
+    is a changed snapshot value, not a state change of one fixed value. No record-retention
+    endpoint is observed.
+  evidence_limits: >-
+    Both descriptions contain weightTokens=5, the same nonce/attempt/origin,
+    attachedAt=2026-09-09T08:16:56.539Z and support=active. Only that content correspondence is
+    established. No effective admission/release trace, complete active-grant census, pre-admission
+    capacity or independent attachment-liveness observation is supplied.
+  provenance: >-
+    The paired fleet observations are not synthetic. ownerRef*, including attachedpid aliases, and
+    capture/corpus/generator/security-resanitization metadata are excluded from identity.
+    Different capture provenance does not itself make different informational content.
+evidence_refs:
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - CQ-007
+  - CQ-008
+  - CQ-009
+  - CQ-010

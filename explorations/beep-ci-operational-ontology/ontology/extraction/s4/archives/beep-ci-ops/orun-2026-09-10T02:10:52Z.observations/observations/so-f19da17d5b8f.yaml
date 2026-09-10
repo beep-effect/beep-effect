@@ -1,0 +1,136 @@
+{
+  "id": "so:sha256:f19da17d5b8f8ff5107a9b96cf4ff9256ebf03da52491e0370413f941f085e5d",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect8/refactor_roadmap-refs-fold-in-02bed0b20376/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 31,
+    "content_sha256": "cd4e4a5c2bf5da106d614216342dbbda054c300105cd9d2a105d23cdb447fee4"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect8/refactor_roadmap-refs-fold-in-02bed0b20376/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=5cb76d3f-ae3b-4c64-a895-cbbe3b161076"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=refactor/roadmap-refs-fold-in"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-08-17T15:34:45.726Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=909.089148"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=6270"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-17T15:34:45.726Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=monitor:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:02-pr-checks-watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect8/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-checks:watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=refactor_roadmap-refs-fold-in-02bed0b20376"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-17T15:34:39.456Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=not-run"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=refactor/roadmap-refs-fold-in\ncommitted=false\ncreatedAt=2026-08-17T15:34:45.726Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=failed\ndurationMs=909.089148\nexitCode=1\nrepairCommand=gh pr view --json number,headRefName,state\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=not-run\nmessage=yeet monitor failed.\nmode=monitor\noutcome=failure\npushed=false\nrunId=refactor_roadmap-refs-fold-in-02bed0b20376\nattemptId=5cb76d3f-ae3b-4c64-a895-cbbe3b161076\nstartedAt=2026-08-17T15:34:39.456Z\nendedAt=2026-08-17T15:34:45.726Z\nelapsedMs=6270\nindexPath=<fleet>/beep-effect8/.beep/yeet/quality-issue-index.json\nfailedStepId=monitor:01-pr-context\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

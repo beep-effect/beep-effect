@@ -1,0 +1,77 @@
+id: "ic:ver-wall-time-evidence-alt:001"
+hypothesis_ref: "dh:ver-wall-time-evidence:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two individuals are the same wall-time evidence record iff they are the
+    same captured measurement-content for one scoped operational interval:
+    either the whole-attempt elapsedMs bounded by that attempt's
+    startedAt/endedAt, or a nested step/lane durationMs for one named step.
+    Attempt-level elapsedMs and nested durationMs differ in scope and are
+    never the same individual. Flattened config_key_value bags do not license
+    a cross-product assigning every durationMs to every step id, summing
+    parent and child durations, or treating missing duration as zero.
+    startedAt/endedAt/elapsedMs consistency is evidence of measurement
+    content, not an independent clock identity. These timestamps describe
+    reported attempts, not corpus capture provenance. Numeric field names are
+    not the criterion.
+  reidentification_key:
+    - attemptId + interval-scope (attempt vs named step)
+    - startedAt+endedAt+elapsedMs when internally consistent for that scope
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One measured interval at one declared scope. The bag of all numeric time
+    fields in a verdict file is not one individual; each scoped measurement
+    snapshot is.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - quality
+    - event
+  existential_dependencies:
+    - the scoped execution interval the snapshot measures (attempt or step)
+    - the host attempt-result encoding that carries the figures
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Estimate-as-quality / percentile-as-bound: treating elapsedMs or
+      durationMs as a P50/P95 CostEstimate, admission charge, resource limit,
+      or episode time-to-certainty (CQ-007). No estimate snapshot, queue/lock/
+      repair/CI decomposition, or usedCostEstimate pairing (CQ-025) is in the
+      cited observations.
+  - description: >-
+      Flattening cross-product: so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465
+      lists many durationMs values and many step ids as sibling
+      config_key_value facts. Assigning every duration to every lane, or
+      summing them with elapsedMs=4602023, is not licensed. Nested
+      startedAt/endedAt in the excerpt bind some step intervals; the flattened
+      fact list does not.
+  - description: >-
+      Missing-is-zero: so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+      has elapsedMs=11 matching startedAt/endedAt and no durationMs; that is
+      not a zero-duration claim for the not-run steps. so:sha256:929aa987fb5e550c58968f28fd06947d1bfd2b788815a77376329f06d9ca765a
+      is a v1 closeout report without elapsedMs; absence is not zero cost.
+  - description: >-
+      Snapshot-is-continuant / identifier-is-identity: two internally
+      consistent pairs are different measurement individuals —
+      so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446
+      (startedAt=2026-08-24T01:31:38.047Z, endedAt=2026-08-24T01:31:42.503Z,
+      elapsedMs=4456) and
+      so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+      (startedAt=2026-08-27T15:26:36.585Z, endedAt=2026-08-27T15:26:36.596Z,
+      elapsedMs=11). Each end-minus-start equals its elapsedMs; they are
+      particular actual-cost claims, not one numeric field type.
+  - description: >-
+      Spec/execution merge: whole-attempt elapsedMs on
+      so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+      (elapsedMs=1867770) is not the reusable WorkUnit specification's
+      CostEstimate and may map to CQ-025 actualWallMs only if the execution
+      in view is the whole attempt.
+status: proposed

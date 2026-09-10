@@ -1,0 +1,28 @@
+id: "ic:ov-current-proposal-selection-alt:001"
+hypothesis_ref: "dh:ov-current-proposal-selection:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "The recorded selection is the same assertion when it is the same emitted episode-to-proposal edge in the same projection representation. It does not identify episodes or proposals; currency is not a timeless latest-proposal fact (po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3; po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7; CQ-020)."
+  reidentification_key:
+    - "ciops-prov:hasCurrentProposal edge from episode subject to proposal subject"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: "One asserted selection per emitted episode representation in the observed fixture; no observed multiplicity or supersession chain."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - relator
+    - role
+  existential_dependencies:
+    - "a VerificationEpisode subject that bears the selection"
+    - "a ScheduleProposal selected as current in that representation"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Reading hasCurrentProposal as a rigid subclass CurrentProposal, or as an ordinary unselective association, would make CQ-020's episode-specific current sequence unqueryable and would treat currency as a kind (po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7; CQ-020)."
+status: proposed

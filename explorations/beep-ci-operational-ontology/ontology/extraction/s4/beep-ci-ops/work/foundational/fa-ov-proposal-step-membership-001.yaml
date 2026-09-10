@@ -1,0 +1,49 @@
+id: fa:ov-proposal-step-membership:001
+hypothesis_ref: dh:ov-proposal-step-membership:001
+identity_card_ref: ic:ov-proposal-step-membership:001
+referent_grain: Recorded component-membership assertion connecting one immutable prescription to one of
+  its represented steps; not an admission occurrence.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: Explicit membership and the admitted-step restriction supply schedule-structure
+    content. The primary analysis addresses its record, while direct parthood and sequence encodings remain
+    viable; no autonomous relation class is required.
+  rigidity: A fixed membership assertion remains that assertion throughout its retention. In the chosen
+    immutable-content reading, changing the prescription's constitutive components yields different prescription
+    content.
+  dependence_and_temporality: Membership depends on the containing prescription and component. Its truth
+    is contextual to that version, not a claim about all future versions or an event interval.
+  spec_vs_execution: Belonging to the prescribed step set does not mean a request was granted or its work
+    executed.
+  world_vs_information: The fixture records two memberships; these are facts about represented schedule
+    structure, not two observed real admissions.
+  role_vs_bearer: The represented component bears the part-in-this-plan position. The membership assertion
+    is neither that component nor the scheduled request.
+  context_reification: The containing proposal provides the necessary context. CQ-019 and CQ-020 traverse
+    this structure; joining across proposal versions would misattribute scope or sequence.
+  evidence_limit: The contract prescribes an exactly-once partition between steps and deferred requests.
+    It does not make this batch a complete live-queue inventory or prove a scope-provenance obligation
+    satisfied.
+rival_models:
+- label: A structural part relation recorded directly as a proposal-to-step property
+  still_viable: true
+- label: An ordered prescription with membership implicit in contextual sequence entries
+  still_viable: true
+strongest_counterexample: 'Hypothetical counterexample: two proposals both contain a step at ordinal zero,
+  perhaps scheduling the same request. Merging their membership assertions by ordinal or request erases
+  which prescription each step belongs to. Adding a deferred request as a step would likewise change the
+  prescribed component set, despite no actual admission having occurred.'
+verdict: analyzed
+needed_evidence: ''
+evidence_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:4b06f5efe076d7ed81dd9d5b200c268b1d9e42cbe4f8c78086928bdaf65bb41e
+- po:sha256:8081b5c15707c6f49878d6d871f17862c72605489c31de3a31d56b12a59c5fc9
+- po:sha256:a1e5e0d0916deb0cb33ee62f307e85aabb52833a88511c4c1fdc4885ec667857
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- CQ-020
+- CQ-019

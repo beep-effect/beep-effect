@@ -1,0 +1,52 @@
+id: "ic:admb-request-withdrawal-alt:001"
+hypothesis_ref: "dh:admb-request-withdrawal:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two withdrawal occurrences are the same when they are the same dated
+    removal of a particular request from admission contention. so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+    pairs admission-enqueued (enqueuedAtMillis=1788927435322) with
+    admission-withdrawn (withdrawnAtMillis=1788927676757) for
+    nonce=3234b861-792e-4cde-96b6-5ca188435021. so:sha256:4cac038f3231d162cf516d669b7bbb2f945ecaff574c8f5bea1bfd6399818e09
+    likewise pairs enqueue with withdrawal for
+    nonce=fbac860b-535a-4576-8976-239b65394257. Withdrawal is not ticket
+    eviction, not lease eviction, not grant release, and not the request
+    itself. Cause, voluntary intent, process death, and verification failure
+    are not identity conditions and are unobserved. ownerRef is not identity.
+  reidentification_key:
+    - "withdrawnAtMillis (boundary evidence)"
+    - "nonce (chain correlation only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "one atomic dated removal of one queued request"
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - kind
+    - phase
+  existential_dependencies:
+    - "the seat request being removed from contention (CQ-021)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "completed (the removal has occurred)"
+counterexamples:
+  - description: >-
+      Treating ticket eviction as withdrawal fails: so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+      is tagged admission-ticket-evicted with reason=queued-submitter-death,
+      not admission-withdrawn.
+  - description: >-
+      Treating grant release as withdrawal fails: so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+      has admission-released after admission-admitted; withdrawal chains
+      cited here include enqueue and lack admission.
+  - description: >-
+      Inferring voluntary cancellation, interruption, or an unobserved grant
+      from the withdrawal tag alone reads intent and hidden states into a
+      boundary assertion. Absence of an admission entry is not the
+      discriminator; the positive withdrawn tag is.
+status: proposed

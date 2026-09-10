@@ -1,0 +1,82 @@
+id: "ic:bind-grant-termination:001"
+hypothesis_ref: "dh:bind-grant-termination:001"
+provenance: synthetic
+evidence_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+  - "CQ-008"
+  - "CQ-009"
+referent_grain: >-
+  One concrete termination occurrence represented as ending a particular admission
+  allocation's active holding. The journal assertion reports that occurrence;
+  its tag classifies a mechanism. Neither the assertion nor the tag is the event.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two reports concern the same termination event when they concern the very
+    same causal transition ending the same particular allocation's holding, at
+    the same occurrence boundary. The criterion specializes occurrence identity;
+    it is not equality of timestamps, nonces, reasons, or serialized records.
+    Repeated reports of one transition do not multiply events. Terminating a
+    later allocation is another event even when its beneficiary and charge repeat.
+  reidentification_key:
+    - >-
+      Target allocation's journal-local chain together with the recorded terminal
+      timestamp and mechanism tag; locators requiring correlation to an actual
+      transition, not globally unique event identity.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    The unit is the single change from one allocation holding to that holding
+    having ended. Admission, holding, and termination are distinct grains. Release
+    and eviction are candidate mechanisms; equal mechanism tags neither merge
+    occurrences nor establish separate ontology subclasses.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - "information_object: a terminal journal assertion about an allocation"
+    - "event: release and lease eviction as separately modeled occurrence families"
+  existential_dependencies:
+    - >-
+      A termination of holding historically requires the particular allocation
+      whose holding it ends. The supplied release has a correlated admission.
+      The separate evicted lease has no observed admission; its prior allocation
+      and effective ending are reported, not independently reconstructed.
+    - >-
+      No work completion, execution cancellation, or process-death event is implied.
+      The reason owner-dead-or-reused is a reported explanation, not independent
+      proof of the beneficiary's death or a process identity change.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+temporality_rationale: >-
+  This is an occurrence at a terminal boundary, not a continuant entering a
+  released phase. The reported release is at 1788931586743; the different lease's
+  reported eviction is at 1788931586728. The observation provides timestamp
+  resolution, not event duration. A retained report persists after the event;
+  neither the event nor its report is the allocation's holding interval.
+rigidity_rationale: >-
+  If an occurrence ends an allocation's holding, it is essentially that historical
+  termination. Subsequent admission does not change its category or revive it.
+  Released or active are classifications of an allocation relative to time, not
+  states through which this termination event persists.
+counterexamples:
+  - description: >-
+      Countermodel: a stale lease is already ineffective before cleanup logs an
+      eviction. The cleanup occurrence and recorded eviction instant need not be
+      the earlier ending of resource holding. The supplied evicted lease lacks
+      a pre-eviction admission or active-state observation, so treating every
+      eviction report as a verified holding-ending transition would overclaim.
+  - description: >-
+      Copying or replaying a release assertion can produce two records about one
+      transition. Counting records, mechanism tags, or timestamp values as event
+      identity would multiply or merge events without transition evidence.
+  - description: >-
+      ownerRef differs between the correlated admission and release, but that is
+      sanitization metadata. ownerRef*, security_resanitization*, corpus_*,
+      capture_*, and generator_* neither identify this event nor prove a change
+      of the allocation's beneficiary.
+status: proposed

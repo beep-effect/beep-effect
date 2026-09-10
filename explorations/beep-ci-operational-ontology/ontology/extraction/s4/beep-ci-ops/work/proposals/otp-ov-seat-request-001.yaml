@@ -1,0 +1,104 @@
+id: otp:ov-seat-request:001
+hypothesis_ref: dh:ov-seat-request:001
+identity_card_ref: ic:ov-seat-request:001
+foundational_status: explicitly_deferred
+term:
+  preferred_label: seat request
+  local_name: SeatRequest
+  proposed_iri: https://oip.law/ontology/ci-ops#SeatRequest
+  owl_entity_kind: class
+definition:
+  text: A request for scheduler admission that concerns one submission of work for consideration under
+    an admission policy, distinct from its submission act, its descriptions, and any resulting grant.
+  source:
+  - CQ-020
+  - CQ-021
+  - po:sha256:0c5a0ac360560118bda477d323d7b7ae9977d379ec5a282b0184baf5195d43da
+  - po:sha256:3015f93b003a84d5a9e8ee82ac198ebe5bd86db390fd763e0aef039e2ed6c203
+  - po:sha256:83ac7ce996c2aacaf072f7c6977c423f511a3ec1d1d3b7f21a6fa64fb31ec86f
+  - po:sha256:2bd636283801ce0554f90ccad18d9af687c0492f9206e9428256c3232db5790d
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+  - po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+foundational:
+  ufo_category: unresolved
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: unresolved
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#SeatRequest
+    compatibility: The S5 inventory contains SeatRequest separately from SeatGrant and WorkUnitSpecification,
+      with request charge, enqueue, and origin parameters. The emitter and the pending-to-admission contract
+      describe the same intended request boundary. This is an exact-name reuse proposal for that operational
+      demand, not a mapping of its projection-local description to the demand. Its identity and category
+      remain explicitly deferred on this run's evidence; the mapping is not acceptance of the inventory's
+      rigid classification.
+operational_warrant:
+  competency_questions:
+  - CQ-020
+  - CQ-021
+  semantic_support_for: []
+alternatives_rejected:
+- 'Reusable WorkUnit specification or issued grant under a different name: the quoted journal limitation
+  withholds specification identity, and a request precedes consideration for a distinct grant.'
+- 'Rejected in fa:ov-seat-request:001: Reusable WorkUnit specification or an issued grant merely under
+  another name. The preceding rejection rationale and retained counterexample state the boundary.'
+open_issues:
+- 'Warrant justification: CQ-020 requires typed admission-request targets to identify the prescribed sequence,
+  and CQ-021 asks which requests await admission. A reusable work specification or issued grant cannot
+  supply that pending-request subject without changing the decision being answered.'
+- 'Identity criterion carried from ic:ov-seat-request:001: unresolved: a particular admission demand would
+  need continuity through its initiation and handling, distinguishing rerepresentation of one demand from
+  a new demand for the same work. A projection-local request description instead has contextual information-content
+  identity. The emitted subject, nonce carrier, and described pending interval do not establish that continuity
+  or decide whether request existence ends with pending membership.'
+- 'Steward choice required before ratification of otp:ov-seat-request:001: The steward must choose the
+  operational demand proposed by this definition, a projection-local information object describing a request,
+  or the submission occurrence that establishes a separate demand. A demand/relator account must also
+  decide whether request existence continues after pending membership ends. If the evidence supports only
+  the information record or submission event, do not reuse SeatRequest with altered meaning: park this
+  reuse or require a separately analyzed term and corresponding request-target relation. Still-viable
+  models retained from fa:ov-seat-request:001: Operational demand or relator that persists through pending
+  handling and has a distinct establishing act; Projection-local information object describing a request
+  without established cross-projection identity; Submission occurrence, with pending status belonging
+  to a distinct resulting demand or record.'
+- 'Cluster dependency: otp:ov-step-request-assignment:001, otp:ov-schedule-proposal:001, otp:ov-admission-token-charge:001,
+  otp:ov-origin-ordering-key:001. Coordinate ratification or parking where endpoint grain, component identity,
+  or the stated warrant depends on these proposals; no dependent choice is settled by emission spelling.'
+- 'Reuse search: The local SeatRequest term is the reuse candidate. The scout report marks oslc_auto:AutomationRequest
+  only as related to SeatRequest, because an automation execution request is not interchangeable with
+  a request for scheduler admission.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Foundational deferral retained from fa:ov-seat-request:001. Needed evidence: Observe a single request
+  from enqueue through at least two independently identified snapshots or projections to admission or
+  cancellation, with its requester and handling context. Include a second enqueue for the same work and
+  an explicit observation distinguishing a new request from continued handling of the first. This must
+  establish continuity independently of matching nonce strings and distinguish any grant from the request.'
+- The S5 inventory marks SeatRequest rigid, while this run's identity card leaves rigidity, identity provision,
+  dependence, and category unresolved. Reuse does not overwrite that deferral or silently revise the ratified
+  class; semantic compatibility beyond the stated demand boundary needs steward resolution.
+- The reconstructed pending inequality describes membership at an instant, not the full existence interval
+  of a request. No request-to-grant identity, ownership relation, cancellation history, or repeated-enqueue
+  continuity is established by this batch.
+- The synthetic request subjects are examples of representation. Matching nonce strings or projection-local
+  identifiers are lookup evidence, not demonstrated cross-projection sameness.
+- 'Strongest counterexample carried from fa:ov-seat-request:001: Hypothetical counterexample: the same
+  pending request appears in two projections at different local indexes, while two separate requests for
+  identical work use the same illustrative field values. Identity by projection subject splits the first;
+  identity by matching nonce or work description can merge the second without a uniqueness-and-continuity
+  observation. A later grant with copied values would not by itself be the request.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

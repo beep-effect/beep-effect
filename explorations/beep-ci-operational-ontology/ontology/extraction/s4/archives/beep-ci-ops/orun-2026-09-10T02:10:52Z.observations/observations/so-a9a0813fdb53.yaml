@@ -1,0 +1,396 @@
+{
+  "id": "so:sha256:a9a0813fdb533325632faeda662b8fa72b08b1e4868c9cfdf66c29939927dac9",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect11/feat_semantica-evidence-quote-candidate-712df4004963/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 146,
+    "content_sha256": "9af593914cbfb9dff2a483f5e2bc9e28cf2b88cbae71ed7e339905ad03e815b5"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect11/feat_semantica-evidence-quote-candidate-712df4004963/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=c2b78923-1698-4d0b-84da-fde9f8a7d9a4"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/semantica-evidence-quote-candidate"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-08-31T02:41:43.474Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=14606.369509"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1615.657366"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1639.431226"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=21228.803195"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=22473.133527"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=278641.830916"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3133.948339"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3789.485457"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=41252.32686"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=7522.556753"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=396047"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-31T02:41:43.474Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=feedback:00-cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:allowlist-check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:exploration-atlas"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:goals-doctor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:goals-index"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:schema-first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:test-tsgo"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:tsgo-rules"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow:dead-code"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:00-cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:00-heavy:01-lint-fix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:00-heavy:02-docgen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:01-build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:02-check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:03-lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:04-test"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=prepare:01-effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=prepare:02-terse-effect"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=prepare:03-config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:changeset-status"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect11/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:allowlist-check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:exploration-atlas"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:goals-doctor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:goals-index"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:schema-first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:test-tsgo"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:tsgo-rules"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow:dead-code"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:docgen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:lint:fix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:test"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=prepare:config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=prepare:laws:effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=prepare:laws:terse-effect"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:changeset-status"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=repair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=11117748"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=367920"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=375068"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=383212"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=5120904"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=6917776"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=759380"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=8951196"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=987956"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=prepare"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=feat_semantica-evidence-quote-candidate-712df4004963"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-31T02:35:07.427Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=feat/semantica-evidence-quote-candidate\ncommitted=false\ncreatedAt=2026-08-31T02:41:43.474Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=prepare:01-effect-imports\nlabel=prepare:laws:effect-imports\nphase=prepare\nstatus=passed\ndurationMs=21228.803195\npeakRssKb=8951196\nexitCode=0\nid=prepare:02-terse-effect\nlabel=prepare:laws:terse-effect\nphase=prepare\nstatus=passed\ndurationMs=22473.133527\npeakRssKb=11117748\nexitCode=0\nid=prepare:03-config-sync\nlabel=prepare:config-sync\nphase=prepare\nstatus=passed\ndurationMs=7522.556753\npeakRssKb=759380\nexitCode=0\nid=feedback:00-cheap-gates\nlabel=feedback:cheap-gates\nphase=feedback\nstatus=failed\ndurationMs=278641.830916\nexitCode=1\nrepairCommand=Repair the reported tsgo or Vitest alias drift, then rerun the cheap-gates tier.\nid=feedback:00-heavy:01-lint-fix\nlabel=feedback:lint:fix\nphase=feedback\nstatus=passed\ndurationMs=3789.485457\npeakRssKb=5120904\nexitCode=0\nid=feedback:00-heavy:02-docgen\nlabel=feedback:docgen\nphase=feedback\nstatus=passed\ndurationMs=41252.32686\npeakRssKb=6917776\nexitCode=0\nid=feedback:01-build\nlabel=feedback:build\nphase=feedback\nstatus=passed\ndurationMs=14606.369509\npeakRssKb=987956\nexitCode=0\nid=feedback:02-check\nlabel=feedback:check\nphase=feedback\nstatus=passed\ndurationMs=1639.431226\npeakRssKb=367920\nexitCode=0\nid=feedback:03-lint\nlabel=feedback:lint\nphase=feedback\nstatus=passed\ndurationMs=3133.948339\npeakRssKb=375068\nexitCode=0\nid=feedback:04-test\nlabel=feedback:test\nphase=feedback\nstatus=passed\ndurationMs=1615.657366\npeakRssKb=383212\nexitCode=0\nid=quality:changeset-status\nlabel=quality:changeset-status\nphase=full\nstatus=passed\nid=cheap-gates:goals-index\nlabel=cheap-gates:goals-index\nphase=full\nstatus=passed\nid=cheap-gates:exploration-atlas\nlabel=cheap-gates:exploration-atlas\nphase=full\nstatus=passed\nid=cheap-gates:config-sync\nlabel=cheap-gates:config-sync\nphase=full\nstatus=passed\nid=cheap-gates:tsgo-rules\nlabel=cheap-gates:tsgo-rules\nphase=full\nstatus=passed\nid=cheap-gates:test-tsgo\nlabel=cheap-gates:test-tsgo\nphase=full\nstatus=passed\nid=cheap-gates:effect-imports\nlabel=cheap-gates:effect-imports\nphase=full\nstatus=passed\nid=cheap-gates:schema-first\nlabel=cheap-gates:schema-first\nphase=full\nstatus=passed\nid=cheap-gates:allowlist-check\nlabel=cheap-gates:allowlist-check\nphase=full\nstatus=passed\nid=cheap-gates:goals-doctor\nlabel=cheap-gates:goals-doctor\nphase=full\nstatus=passed\nid=cheap-gates:jsdoc-ratchet\nlabel=cheap-gates:jsdoc-ratchet\nphase=full\nstatus=passed\nid=cheap-gates:knip\nlabel=cheap-gates:knip\nphase=full\nstatus=failed\nid=fallow:audit\nlabel=fallow:audit\nphase=full\nstatus=failed\nid=fallow:dead-code\nlabel=fallow:dead-code\nphase=full\nstatus=failed\nmessage=yeet feedback phase failed.\nmode=repair\noutcome=failure\npushed=false\nrunId=feat_semantica-evidence-quote-candidate-712df4004963\nattemptId=c2b78923-1698-4d0b-84da-fde9f8a7d9a4\nstartedAt=2026-08-31T02:35:07.427Z\nendedAt=2026-08-31T02:41:43.474Z\nelapsedMs=396047\nindexPath=<fleet>/beep-effect11/.beep/yeet/quality-issue-index.json\nfailedStepId=feedback:00-cheap-gates\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

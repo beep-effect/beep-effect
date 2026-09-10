@@ -1,0 +1,68 @@
+{
+  "id": "so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 2357,
+    "end_line": 2367,
+    "content_sha256": "87cfd787794f089d704b69fc7365602bf70ea4f91d7994c0171d5d48afde9791"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/journal.properties:nonce=acb0011d-82cf-4dfc-a812-72d10dbd566c",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-ticket-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=1f52aba4-52ea-4ae0-b737-f9ac47b43917"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/inline-schema-compile-hard-error"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect13"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=1788498598672"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=acb0011d-82cf-4dfc-a812-72d10dbd566c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=0495ba51b730"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=queued-submitter-death"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 214\nownerRef=0495ba51b730\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-compile-hard-error\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-ticket-evicted\nnonce=acb0011d-82cf-4dfc-a812-72d10dbd566c\nattemptId=1f52aba4-52ea-4ae0-b737-f9ac47b43917\nevictedAtMillis=1788498598672\nreason=queued-submitter-death\n",
+  "epistemic_status": "parser_derived"
+}

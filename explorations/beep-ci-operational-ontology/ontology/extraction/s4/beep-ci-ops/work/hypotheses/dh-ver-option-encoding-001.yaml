@@ -1,0 +1,30 @@
+id: dh:ver-option-encoding:001
+observation_refs:
+- so:sha256:5385e1093cb89d44a133f10137a19daf0d881f93573386f0b2c1fd3c7809a7a5
+cq_warrants: []
+proposed_referent:
+  label: Optional-value serialization wrapper
+  description: No operational-domain referent is proposed for the serialized Option/Some wrapper. The
+    supplied record exposes an encoding of presence and a stored value without a source-level binding
+    that would establish which operational participant or occurrence the value denotes.
+representation_status: implementation_artifact_only
+alternatives:
+- label: A lexical rendering of optional presence in a serialization protocol
+  representation_status: lexical_alias
+  plausibility: viable
+- label: An optional item of attempt metadata whose semantic binding was lost in projection
+  representation_status: information_artifact
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The observation contains config_key_value objects "_id=Option", "_tag=Some", and "value=c5776ca7-7aae-4e0c-bbc3-20f3657a07c6".
+    These are compatible with a generic wrapper around unrelated values and do not identify an attempt,
+    grant, execution state, or ontology role. The operational result elsewhere in the enclosing excerpt
+    does not make the wrapper a separate referent. Neither a source binding nor a decision requiring this
+    encoding is supplied; the UUID and the wrapper names cannot reject the implementation-only null.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

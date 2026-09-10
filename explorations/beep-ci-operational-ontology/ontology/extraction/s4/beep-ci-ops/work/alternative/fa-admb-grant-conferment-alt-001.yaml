@@ -1,0 +1,38 @@
+id: "fa:admb-grant-conferment-alt:001"
+hypothesis_ref: "dh:admb-grant-conferment:001"
+identity_card_ref: "ic:admb-grant-conferment-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      event: a conferment occurrence distinct from the resulting grant and
+      from the prior request
+    still_viable: true
+  - label: >-
+      information_object: the admission-admitted journal assertion, with
+      occurrence truth awaiting independent corroboration (observationally
+      equivalent on journal-only evidence)
+    still_viable: true
+  - label: >-
+      relator-boundary: the grant's beginning boundary without a separately
+      reified conferment event
+    still_viable: true
+strongest_counterexample: >-
+  Specification-is-execution analogue: taking the admission-admitted record
+  as itself allocating capacity would treat evidence as the holding. CQ-010
+  needs a charge conferred at an admission boundary, but the journal does not
+  prove a lease-creation operation. Five chains retain enqueuedAtMillis on
+  the admitted record without a separately tagged enqueue entry; that
+  retained timestamp is not a second conferment.
+verdict: analyzed
+needed_evidence: >-
+  A ticket-to-lease transition or charge-allocation receipt independent of
+  the journal assertion would discriminate operational conferment from a
+  recorded claim. Whether any CQ consumer must address that transition
+  independently of the resulting grant (CQ-008/CQ-010) would discriminate
+  event reification from a grant-start-boundary model. A pre-grant capacity
+  snapshot is additionally required for admission legality and is not
+  supplied.

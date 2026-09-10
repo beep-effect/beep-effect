@@ -1,0 +1,67 @@
+target: otp:ov-origin-ordering-key:001
+target_sha256: cf71241f1f04628a50565715c2877481a4926a2a1cbba739b85515b64ba24191
+chain_sha256: ad723646fd6fc348bdd6556f7be2ff691c545b5e89a2dddabdb8d3b6f50ee90d
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'hasOriginKey asserts parents: []; no is-a edge is proposed. Participant, component, or governing-role
+    relations supply no additional subsumption assertion to test. The exact-reuse mapping retains the
+    same IRI and asserts no new subclass edge.'
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: decorative-ordering-key
+  outcome: survived
+  evidence:
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d
+  - po:sha256:d5a14f495e7b2778abacb3727637a629965dec0f85bbefec53d76cba5a7690e3
+  - po:sha256:fe4b4d49ef566d86584b1cea395485bf0f230233e91478c746d3a8d23208e05c
+  counterexample: Take two requests tied on priority and enqueue time, with origin keys a and b and nonces
+    that sort in the opposite order. Removing originKey from the contract's (priority rank, enqueuedAtMillis,
+    originKey, nonce) tuple can reverse their canonical comparison. The emitter records precisely request.originKey.
+    This use, rather than the illustrative origin-test spelling, defeats the decorative-field null; it
+    establishes a comparison value without asserting repository identity.
+- surface: identity
+  rule: identifier-is-identity
+  outcome: survived
+  evidence:
+  - po:sha256:d4f2e09398646bf875ee3cbeeec6471c327a8a7b9d9d82425c754dbebd84c7f9
+  - po:sha256:d5a14f495e7b2778abacb3727637a629965dec0f85bbefec53d76cba5a7690e3
+  - po:sha256:fe4b4d49ef566d86584b1cea395485bf0f230233e91478c746d3a8d23208e05c
+  - po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d
+  counterexample: The fixture assigns origin-test to three different request subjects. A repository-identity
+    or request-identity interpretation would merge them, and a grant interpretation would manufacture
+    active grants. The card instead individuates contextual request/value assignments and treats equal
+    literals as equal comparison values. Two aliases for one repository can consequently remain different
+    comparison strings without contradicting this bounded property; repository normalization is expressly
+    unsettled.
+- surface: warrant
+  rule: support-chain-or-optional-subclass
+  outcome: survived
+  evidence:
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - CQ-020
+  - po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d
+  counterexample: CQ-020 can read an already materialized order without querying hasOriginKey, so calling
+    this a direct CQ decision term would fail. Its actual support targets, otp:ov-schedule-proposal:001
+    and otp:ov-projection-specification:001, both have CQ-020 decision warrants. The tie case identifies
+    the key's role in the governing ordering description. This is exact reuse of the scalar hasOriginKey
+    term, not a new repository subclass or an attempt to warrant an active-grant exclusion claim from
+    repeated request literals.
+rival_models_still_viable:
+- Direct scalar data property used by canonical sorting, with no independently instantiated key object
+- Reference to a domain repository origin after an independently observed normalization and sameness contract
+evidence:
+- CQ-020
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:d4f2e09398646bf875ee3cbeeec6471c327a8a7b9d9d82425c754dbebd84c7f9
+- po:sha256:d5a14f495e7b2778abacb3727637a629965dec0f85bbefec53d76cba5a7690e3
+- po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d
+- po:sha256:fe4b4d49ef566d86584b1cea395485bf0f230233e91478c746d3a8d23208e05c

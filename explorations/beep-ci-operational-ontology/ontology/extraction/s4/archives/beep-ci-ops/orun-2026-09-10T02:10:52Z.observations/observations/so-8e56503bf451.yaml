@@ -1,0 +1,88 @@
+{
+  "id": "so:sha256:8e56503bf451d7edda7047ebe49e71f58f4ee8cf6392773ddcae92e8af59c960",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 2415,
+    "end_line": 2526,
+    "content_sha256": "fbe9f2a0c675d3ba50b2aa70df4142a2df1339e61414a02ad9c7d8c735993da9"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/journal.properties:nonce=36e534bf-4ab9-4c24-811e-345a3ccf7477",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=19eee2ff-fe74-45f8-87e0-432fe8dfe9fd"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/security-findings-2026-09-08"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect12"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788927211337"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=36e534bf-4ab9-4c24-811e-345a3ccf7477"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=4f4a40d7e453"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1788928175409"
+    }
+  ],
+  "source_excerpt": "# record 219\nownerRef=4f4a40d7e453\nownerRefVariant=pid_pair\nattemptId=19eee2ff-fe74-45f8-87e0-432fe8dfe9fd\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-findings-2026-09-08\nenqueuedAtMillis=1788927211337\nnonce=36e534bf-4ab9-4c24-811e-345a3ccf7477\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 220\nownerRef=84373cae5304\nownerRefVariant=pid_pair\nattemptId=f08a87d6-8b94-4c7e-b365-12b23733cfcc\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927168643\nnonce=fc9668e5-e89d-47fe-bd8f-dd3f783f28f3\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788927391458\n# record 221\nownerRef=0133fa1aef49\nownerRefVariant=pid_pair\nattemptId=fff01c8a-4d7f-4651-946e-a703cee128a1\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927435322\nnonce=3234b861-792e-4cde-96b6-5ca188435021\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 222\nownerRef=0133fa1aef49\nownerRefVariant=pid_pair\nattemptId=fff01c8a-4d7f-4651-946e-a703cee128a1\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927435322\nnonce=3234b861-792e-4cde-96b6-5ca188435021\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788927676757\n# record 223\nownerRef=b1e2ecae5b56\nownerRefVariant=pid_pair\nattemptId=659656ba-c07d-4120-860b-c6ca95fd4d95\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927786743\nnonce=355f5fd7-c1d1-49f9-9801-b9fa3048ea05\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 224\nownerRef=b1e2ecae5b56\nownerRefVariant=pid_pair\nattemptId=659656ba-c07d-4120-860b-c6ca95fd4d95\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927786743\nnonce=355f5fd7-c1d1-49f9-9801-b9fa3048ea05\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788928062034\n# record 225\nownerRef=591514ecf971\nownerRefVariant=pid_pair\nattemptId=04be8449-a694-43c6-968f-f66fe48af963\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788928093119\nnonce=0b77e72c-9635-404f-8d2d-06c2dbb123db\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 226\nownerRef=4f4a40d7e453\nownerRefVariant=pid_pair\nattemptId=19eee2ff-fe74-45f8-87e0-432fe8dfe9fd\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-findings-2026-09-08\nenqueuedAtMillis=1788927211337\nnonce=36e534bf-4ab9-4c24-811e-345a3ccf7477\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788928175409\n",
+  "epistemic_status": "parser_derived"
+}

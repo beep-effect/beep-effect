@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:d4f2e09398646bf875ee3cbeeec6471c327a8a7b9d9d82425c754dbebd84c7f9",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/test/fixtures/emission-v2.ttl"
+  },
+  "source_span": {
+    "start_line": 14,
+    "end_line": 14
+  },
+  "quote": "ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-2 ciops:hasOriginKey \"origin-test\" .",
+  "epistemic_status": "quoted_prose"
+}

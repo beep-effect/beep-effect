@@ -1,0 +1,82 @@
+id: ic:att-termination-notice:001
+hypothesis_ref: dh:att-termination-notice:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    One recorded terminal assertion originating in a particular notice emission
+    about one modeled attempt, with its asserted boundary and reason. Copies
+    preserving that same originating assertion are the same information unit;
+    a notice about another attempt, a separate emission, or a corrected boundary
+    assertion is another unit. The grain is a recorded-occurrence information
+    object, not the termination event, a reason classification, a governing
+    eviction rule, or a physical process. Synthetic versus production capture
+    does not change this criterion.
+  reidentification_key:
+    - attemptId as the notice's modeled subject
+    - recordedAt and reason within the same attempt-terminated record
+    - _tag as notice-form evidence, not a unique notice identifier
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One terminal assertion about one attempt and one reported boundary unifies
+    the information object. The common event tag does not unify the
+    lease-eviction and queued-submitter-death notices into one occurrence or one
+    notice; neither does their common fixture provenance.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - >-
+      event: the attempt-lifecycle termination occurrence modeled by each
+      synthetic scenario, with the emitted notice as separate information.
+    - >-
+      information_object: terminal-assertion content shared across identical
+      independent emissions rather than an emission-bound notice unit.
+  existential_dependencies:
+    - >-
+      Some information-bearing realization and the notice emission that
+      originates its assertion; no particular capture copy is essential.
+    - >-
+      The modeled attempt and lifecycle boundary as intended content subjects.
+      A real admitted execution, a live owner, an actual process kill, and an
+      actual capacity release are not required for a synthetic notice to exist.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The queued-submitter-death notice reports a terminal assertion for its own
+      attempt without a start, admission, completed work, or measured queue
+      interval in the supplied observation. Modeling this notice as termination
+      of an admitted execution invents an execution that the record does not
+      establish. This evidence has provenance: synthetic.
+  - description: >-
+      The lease-eviction and queued-submitter-death notices differ in attempt,
+      reason, and recorded instant. Treating the shared attempt-terminated tag
+      or common synthetic provenance as identity collapses two assertions. Their
+      reason codes classify recorded boundaries and are not notice individuals.
+status: proposed
+provenance: synthetic
+evidence_refs:
+  - so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98
+  - so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f
+  - CQ-007
+  - CQ-012
+analysis_notes:
+  rigidity: >-
+    Rigid as an originating terminal-notice information object. Its acceptance
+    or use as lifecycle evidence is contingent and does not change its origin
+    or content. No role or identity is inferred for the modeled submitter.
+  temporality: >-
+    The reported instants are 2026-09-09T05:26:26.737Z for lease eviction and
+    2026-09-09T05:26:26.731Z for queued-submitter death. They are notice-recording
+    boundaries in the synthetic scenarios, not established operating-system
+    death instants. The information persists after emission; attempt termination
+    is not a terminal state of its notice and no notice-retention end is observed.
+  provenance_exclusion: >-
+    provenance: synthetic limits the evidentiary scope to modeled scenarios.
+    It, corpus/capture/generator metadata, resanitization metadata, and ownerRef
+    aliases never provide identity or justify an additional domain participant.

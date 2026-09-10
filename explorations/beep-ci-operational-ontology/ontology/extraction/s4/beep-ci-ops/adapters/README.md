@@ -91,3 +91,59 @@ Run 2 deliberately does not re-extract the configuration corpus covered by
 run 1. Parked configuration candidates are grounded through ProseObservation
 transcription, while any ordering-vocabulary re-proposal is grounded in
 prose.
+
+## v1.1.0 record — auditor run 3
+
+`adapter-journal-run3.py` preserves the v1.0.0 adapter and golden bytes. It reads
+only `.properties` projections under `run3-fleet`, `run3-checkout-identity`,
+`run3b-fleet`, and `run3b-synthetic`, with one observation per selected span.
+The run manifest supplies exactly one well-formed 40-hex commit declaration;
+missing, malformed, and duplicate declarations fail. The independent validator
+still authenticates the commit against HEAD and the pinned source blobs.
+
+| Selection | Deterministic rule | Observation contents |
+| --- | --- | --- |
+| Vocabulary | First representable occurrence of each key per pin and top-level kind; files in lexicographic repo-relative order; root snapshot has its own kind | First-occurrence pairs for newly seen keys; one whole-file record only when keys are added |
+| Synthetic pin | Every properties file, including protocol and both attempt projections | All representable pairs and complete source span; synthetic labels remain as recorded |
+| Checkout bindings | First file per value of `kind`, `turbo_local_cache_present`, `turbo_remote_cache_configured`, and same/linked/absent relation between `git_dir` and `git_common_dir` | All representable pairs; absent classes select the file but never mint an absence fact |
+| Admission tags | First v3 occurrence per tag and root of enqueued, withdrawn, lease-evicted, ticket-evicted, or released with checkoutRoot and branch | Complete event stanza unless an emitted chain already includes it |
+| Contention chains | Every per-pin, per-root nonce chain containing an eviction, or enqueue followed by an admitted/withdrawn outcome in the captured chain | All representable pairs from every chain event; one span from first to last event with complete verbatim excerpt |
+| Failure signatures | First verdict file per `(failureKind, failedStepId)` value pair | All representable pairs, including repeated step ids and statuses, and complete source span |
+| Cache-plan resolution | First verdict file per value of `cachePlan`, `cachePlanTag`, `turboCachePlan`, `turboCachePlanTag`, `cachePosture`, `resolvedCachePosture`, or `resolverResult`; also `tag`/`_tag` values caller-controlled, local-only, remote-read | All representable pairs and complete source span |
+| Other attempts and live projections | Vocabulary only; synthetic attempts use the all-files rule | Newly observed representable keys |
+
+Selection rules overlap. A selected whole-file docket record also carries its
+new vocabulary keys. A nonce chain already containing a first-tag event needs
+no second copy of that event. Keys and values are never renamed or inferred;
+record spans, sorted facts, commit, and adapter version determine canonical ids.
+
+The adapter mirrors v14's properties comment stripping and pairing grammar:
+CR/CRLF normalize for pairing, a document-start BOM is ignored, and leading
+hash/bang comments accept space, tab, and form feed. Quotes and inline comment
+markers remain payload. Values remain verbatim through EOL. Whitespace-valued
+objects, empty values, cross-line separators, and continuation-shaped values
+cannot become config facts. A selected span with only unrepresentable pairs
+uses the separate `unrepresentable_construct` escape record; no value is
+shortened to make it representable. Symbol occurrence uses v14's separate
+union comment stripper.
+
+The golden locks these rules with synthetic inputs and 31 expected records.
+The initial run-3 repository proof emits 152 observations from 1,445 projections.
+It includes 53 nonce chains and 125 selected events in each fleet pin.
+
+Known limits at this pin:
+
+- Checkout kinds are `clone` and `linked-worktree`; there is no recorded
+  `canonical-runtime` kind. Remote-cache configuration is false in every
+  binding. This is configuration evidence, not proof of runtime disablement.
+- The fleet manifest says verdicts have no cache-plan field, and none of the
+  disclosed cache-result keys occur in their projections. That rider remains
+  unsupported by this adapter's live observations.
+- Flattened properties preserve leaf keys and record stanzas, not full JSON
+  nesting. The full excerpt preserves repeated values and event order; facts
+  assert syntactic pairings only. In each fleet's selected chain events,
+  checkoutRoot is absent in 29 events and branch in 31. No value is filled in
+  from another event or capture.
+- Interleaved chains require spanning unrelated events. Their bytes are visible
+  in the excerpt; the facts include only the selected nonce's stanzas. Nonces
+  and owner references are never joined across pin or admission-root boundaries.

@@ -1,0 +1,84 @@
+id: otp:ov-current-proposal-selection:001
+hypothesis_ref: dh:ov-current-proposal-selection:001
+identity_card_ref: ic:ov-current-proposal-selection:001
+foundational_status: analyzed
+term:
+  preferred_label: has current proposal
+  local_name: hasCurrentProposal
+  proposed_iri: https://oip.law/ontology/ci-ops#hasCurrentProposal
+  owl_entity_kind: object_property
+definition:
+  text: A current-selection property that records which admission prescription a represented verification
+    episode designates as current at the reference instant of a particular projection context.
+  source:
+  - CQ-020
+  - po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7
+  - po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-020
+  semantic_support_for: []
+alternatives_rejected:
+- 'Ordinary association without selection content: the emitted predicate explicitly designates the proposal
+  selected as current.'
+open_issues:
+- 'Warrant justification: CQ-020 asks for the CURRENT proposal of the given episode. An ordinary episode-to-proposal
+  association would allow historical prescriptions to join the answer and merge their sequences; the selection
+  assertion supplies the required currentness distinction.'
+- 'Identity criterion carried from ic:ov-current-proposal-selection:001: Proposed at assertion-content
+  grain: sameness consists in expressing one proposition that a particular represented proposal is selected
+  for a particular represented episode at a particular reference instant within a specified projection
+  context. Copying or re-encoding that proposition preserves its content. A different selection, episode
+  denotation, or temporal frame yields a different assertion. The proposition provides the informational
+  criterion; technical carriers are recorded separately as lookup evidence.'
+- 'Steward choice required before ratification of otp:ov-current-proposal-selection:001: The steward must
+  choose a direct time-indexed property represented in a versioned projection context, as proposed here,
+  a separately reified selection assertion, or an operational current-plan situation distinct from its
+  record. A direct binary edge on a timeless union of exports is not this proposal. The choice must include
+  how temporal context is retained and how the episode anchor is identified before ratification. Still-viable
+  models retained from fa:ov-current-proposal-selection:001: A time-indexed property between episode and
+  proposal without an independently reified assertion node; An operational current-plan situation distinct
+  from the record describing it.'
+- 'Cluster dependency: otp:ov-verification-episode:001, otp:ov-schedule-proposal:001. Coordinate ratification
+  or parking where endpoint grain, component identity, or the stated warrant depends on these proposals;
+  no dependent choice is settled by emission spelling.'
+- 'Reuse search: The S5 inventory has no hasCurrentProposal property. The scout report supplies no exact
+  temporal selection relation for an episode''s admission prescription. General association or derivation
+  does not preserve current-selection semantics.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Representation grain: the proposed property encodes contextual information content without requiring
+  a separate assertion individual. The OntoClean fields are inherited from the joined identity card for
+  that candidate content, not asserted as identity criteria for an RDF literal or for the OWL property
+  universal.'
+- Only one synthetic current-selection case is supplied. There is no observed supersession trace, global
+  latest-proposal proof, uniqueness enforcement, or complete selection history.
+- Archiving the assertion preserves its information after the proposal stops being current. The selected
+  proposal's currentness is a contextual status, not its rigid kind or identity criterion.
+- The versioned projection context is a semantic requirement on use of this property; this proposal introduces
+  no new temporal-context class and asserts no closure or functionality axiom.
+- 'Strongest counterexample carried from fa:ov-current-proposal-selection:001: Hypothetical counterexample:
+  one export selects proposal P for episode E at t1 and a later export selects Q at t2. Unioning both
+  exports as timeless current facts produces two answers; deleting the old selection as though its information
+  never existed loses history. The batch contains only one illustrated selection and does not observe
+  this replacement.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

@@ -1,0 +1,75 @@
+id: ic:admb-request-enqueue:001
+hypothesis_ref: dh:admb-request-enqueue:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    The same enqueue event is one particular, causally continuous registration transition of the same
+    demand into the same admission queue. Multiple reports or copied entries can describe that event;
+    another successful registration after a termination is a different event even if demand content,
+    submitter and millisecond timestamp match. The request's later waiting time is not part of enqueue-event
+    identity.
+  reidentification_key:
+  - nonce
+  - _tag=admission-enqueued
+  - enqueuedAtMillis (reported boundary, not an event-identity guarantee)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One completed queue-registration transition with its demand and admission context. The event does
+    not include all later waiting, conferment or removal merely because those records share a nonce.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - The information assertion that an enqueue occurred
+  - The request's queued condition or opening boundary without a separately reified registration event
+  existential_dependencies:
+  - >-
+    The particular demand being registered and the admission context into which it enters; a submitting
+    participant is implicated but not identified by capture pseudonyms.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: >-
+    An admitted record can retain an earlier enqueuedAtMillis without containing an explicit enqueue
+    entry, as in the cited lease-eviction chains. Counting that scalar as another observed enqueue
+    occurrence would inflate the evidence. A replay of an explicit enqueue entry could also produce
+    another record without another insertion. An independent registration trace is required to tell
+    repeated reporting from a second transition.
+status: proposed
+referent_grain: >-
+  One queue-registration occurrence for a particular submitted demand. Its resulting waiting condition,
+  the standing request, a timestamp retained elsewhere, and the journal assertion are separate grains.
+analysis_notes:
+  rigidity: >-
+    Rigid on the proposed realized-occurrence interpretation: completing this transition does not
+    turn it into a later event, an ongoing participant or a state. Whether any particular assertion
+    corresponds to such an event remains an evidence question.
+  dependence: >-
+    Dependence is on the specified operational participants and admission relation or transition,
+    not on record storage or capture provenance. These dependencies are proposed model conditions,
+    not proof that every reported instance exists.
+  temporality: >-
+    The event unfolds as a registration transition; enqueuedAtMillis is its reported boundary time,
+    with no duration or atomicity claim. The subsequent gap to admission or withdrawal is waiting
+    history, not enqueue duration. The interval flag remains unresolved because the corpus supplies
+    a timestamp, not start/end duration. The state-change flag distinguishes unfolding from a continuant
+    changing state; no event-state progression is inferred.
+  evidence_limits: >-
+    The released chains place explicit enqueue before admission; the eviction chains supply only retrospective
+    enqueue timing on admission. CQ-021 motivates keeping registration time and the queued contender
+    distinct. The assertions do not constitute a complete queue census.
+  provenance: >-
+    The cited observation records are from the current run's fleet admission journal. No synthetic
+    observation is used. Capture, corpus, generator, sanitization and ownerRef metadata are excluded
+    from identity criteria and reidentification keys.
+evidence_refs:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+- so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+- CQ-021

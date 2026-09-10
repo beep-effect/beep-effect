@@ -1,47 +1,47 @@
-id: "ic:ov-schedule-step:001"
-hypothesis_ref: "dh:ov-schedule-step:001"
+id: ic:ov-schedule-step:001
+hypothesis_ref: dh:ov-schedule-step:001
+referent_grain: Represented instruction component at a place in one fixed admission prescription; distinct
+  from the same request in other plans, a raw ordinal, and an actual admission event.
 identity:
-  supplies_identity: unresolved
-  identity_criterion: >-
-    Unresolved: the contract supports both reusable step-prescription content
-    and proposal-embedded record tokens; equal ordinal, target, and scope fields
-    do not decide whether faithful copies or identical projections contain one
-    ScheduleStep or several.
+  supplies_identity: false
+  identity_criterion: 'Proposed at immutable-component grain: the same step is the same constitutive instruction
+    in the same containing prescription content, occupying the same place in its prescribed order with
+    the same request assignment and scope content. A corresponding instruction in a different prescription
+    is a different contextual component even when it targets the same request. The source step subject
+    and integer index only help locate it.'
   reidentification_key:
-    - "ScheduleProposal identity, projection instant, and input digests"
-    - "ordinal membership, SeatRequest enqueue lineage, and Scope designation"
-    - "normalized step-content digest as supporting evidence"
+  - step subject within its containing proposal and the emitted stepIndex, for lookup only
 ontoclean:
-  rigidity: unresolved
-  carries_identity: unresolved
-  supplies_identity: unresolved
-  unity: >-
-    One proposal-relative scheduled-content unit combining one ordinal slot,
-    one SeatRequest target, and one Scope designation under one projection
-    interpretation.
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One instruction combines an ordered place, a represented request assignment, and a scope annotation
+    as a component of one prescription. It inherits contextual information identity from that containing
+    schedule.
   dependence: relational
 ufo_analysis:
   candidate_category: information_object
   alternatives:
-    - "the admission-act occurrence represented by the projected step"
-    - "an embedded record token individuated by one ScheduleProposal carrier"
-    - "a reusable step-content object shared across proposal outputs"
-    - "the S.Class instance or provisional RDF node as an implementation carrier"
+  - a position or tuple in the containing sequence without a separately individuated step object
+  - a persistent plan component that can be edited or moved across plan revisions
   existential_dependencies:
-    - "The ScheduleProposal of whose ordered content the step is a component"
-    - "The scheduled SeatRequest and Scope needed to interpret the content"
-    - "At least one faithful documentary or executable carrier"
+  - The containing prescription content supplies the component context.
+  - The instruction refers to a request representation and scope meaning; the request need not have been
+    admitted or executed.
 temporality:
   exists_during_interval: true
-  may_change_state_without_losing_identity: false
-  terminal_states:
-    - "changing ordinal membership, target, scope, or proposal content creates a successor step"
-    - "the information content ceases when no faithful realization remains"
+  may_change_state_without_losing_identity: true
+  terminal_states: []
 counterexamples:
-  - description: >-
-      Two proposals generated at different projection instants can prescribe
-      the same SeatRequest, scope, and numeric position; if ScheduleStep were
-      reusable content rather than proposal-relative content, those equal
-      fields could denote one step, so the observations do not settle the
-      proposal-relative-content versus reusable-content boundary.
+- description: 'Hypothetical counterexample: the same request is first in one proposal and second in a
+    later proposal after priorities change. Identity by request alone merges two different contextual
+    instructions; identity by the raw number zero merges first steps from unrelated proposals. Neither
+    a type assertion nor a step-0 suffix establishes the same execution occurrence.'
+evidence_refs:
+- po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e
+- po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6
+- CQ-020
 status: proposed

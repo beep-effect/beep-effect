@@ -1,0 +1,77 @@
+id: "dh:admb-grant-conferment:001"
+observation_refs:
+  - "so:sha256:0c6e04e7f4362f5d469f9c1eedd838e67a7a91caaba5e3ff6dac566b116bfc5a"
+  - "so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929"
+  - "so:sha256:294d794be09e649b5a17377c1360c0f7f573b667acdb9166a05c0a4df705f8fc"
+  - "so:sha256:2a6e186a42b949bfe289a0229aff20380459316332b5def65dce8cc12d748d3c"
+  - "so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0"
+  - "so:sha256:3614eaf94c332c102fe2fe71112d59f710f5f4b0d2a2d2c6cb4e4bdee2c08619"
+  - "so:sha256:38fffd45bcc04ba58312d36f4694ea9b157f7956d67452bb829952f31cf23385"
+  - "so:sha256:3f9618460b3680449834d6a01f7568a99c6954a085a16a60727100a6c1603ba3"
+  - "so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10"
+  - "so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973"
+  - "so:sha256:54999e877e0a6e55e78be44001d34f072da479c0e7bdbed660299b04759ff27b"
+  - "so:sha256:5abf1599e9268fb3190e199440ba2a0975670561acee0566c6805cd150491b12"
+  - "so:sha256:640a03f63aa4ff13b48b0368fa9f2054cf42454c1cf81394bb0828315f7b9322"
+  - "so:sha256:728a791c0d757d9293790c2acaad9a2c8278eba56866c08cc6c2b2684f8c4584"
+  - "so:sha256:78222350b0c0ed60ecf756d621e27ce6c664b19d324ab61f8421e3aeb7dbaafb"
+  - "so:sha256:7e5702e0af48bd1ca7edc2d5c6350db34d8453874a5cd4344281607977584a90"
+  - "so:sha256:7e691f4aba31633d245206a65503fe36f855c86f4fd54bca5539692438ab900c"
+  - "so:sha256:a03b8e201a23a02a6b82aa0c120aa205b4725195d3985dc468b271c0e4813bca"
+  - "so:sha256:a1f4b4761d924a497c1113cb2b5893bbb6559a8e5c385fdbf0c9c53f8a041b4c"
+  - "so:sha256:ac85cadefefdb5794db9a5111b67dde006ba05251cba3dc49b829b7d89b17665"
+  - "so:sha256:bbf039c9733c9bef609c0b780247a3ac0252404bc8c0708ab5b60b538aadabf2"
+  - "so:sha256:c2dc9c1dc745720dae9ec574e7457be15301687c36071abea1c09b48cbd3ad8d"
+  - "so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a"
+  - "so:sha256:c9dddcabc8c17bd4e94ee006efe37dd3dad3e439c7a0177788f9ae0d3d9593dd"
+  - "so:sha256:d528055a778209ef7ba8c585a447245d9828ec629052779a75a2f65dfc408d40"
+  - "so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb"
+  - "so:sha256:fa16a716b56a1780f96785077dc9274f7a807f38a04770e008febb22d6cad15b"
+  - "so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732"
+cq_warrants: ["CQ-008","CQ-010"]
+proposed_referent:
+  label: "Grant conferment occurrence"
+  description: >-
+    An instance is one admission occurrence that confers a particular charged grant on a
+    request, dated by admission-admitted and admittedAtMillis. That event marks the change from
+    the request's waiting history to the grant's holding history. It is not the holding interval
+    that follows, the request that precedes it, a later release, or execution of a verification
+    lane. All 28 positively admitted chains support this candidate, including five whose
+    admission entry carries enqueuedAtMillis without a separately supplied enqueue event. Only a
+    recorded conferment instant is available; the duration and atomicity of the scheduler
+    operation remain unknown.
+representation_status: domain_referent
+alternatives:
+  - label: "The journal assertion of admission, with occurrence truth awaiting independent corroboration"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A grant's beginning boundary represented without a separate conferment event referent"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The event reading preserves the source alternative that granting is an occurrence distinct
+    from its result. The two batches' domain/information rivalry remains viable at this
+    boundary. A correlated ticket-to-lease transition or charge-allocation receipt, separate
+    from the journal assertion, would discriminate operational conferment from a recorded claim;
+    whether consumers must address that transition independently of the resulting grant would
+    discriminate event reification from a grant-boundary model. A pre-grant capacity snapshot
+    would additionally be needed to judge admission legality. No such snapshot is invented here.
+  discriminator: >-
+    The observed pairs (config_key_value, "_tag=admission-admitted"), (config_key_value,
+    "nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088"), (config_key_value,
+    "admittedAtMillis=1788926595216"), and (config_key_value, "weightTokens=5") record a
+    positive conferment, distinct from the same chain's (config_key_value,
+    "_tag=admission-enqueued") at (config_key_value, "enqueuedAtMillis=1788926595182").
+    Likewise, the second batch pairs (config_key_value,
+    "nonce=50cf32d3-9ced-4f0e-a394-d5d850c221ea") with (config_key_value,
+    "_tag=admission-admitted"), (config_key_value, "admittedAtMillis=1788941118852"), and
+    (config_key_value, "weightTokens=3"). Under the null that no admission occurrence is
+    denoted, the positive claim that a charge was conferred at those boundaries would be false;
+    a request timestamp by itself would not supply this discriminator.
+epistemic_status: proposed
+confidence:
+  value: 0.77
+  use_for_acceptance: false

@@ -1,0 +1,81 @@
+id: ic:adm-seat-grant:001
+hypothesis_ref: dh:adm-seat-grant:001
+identity:
+  supplies_identity: unresolved
+  identity_criterion: 'unresolved: under the candidate relator model, sameness would be continuity of
+    one particular authorization established by one conferral, mediating the same beneficiary and requested
+    work with the same admission authority/capacity pool until its termination. Reacquisition after that
+    termination would create another authorization even if the charge and work were identical. The reports
+    show asserted endpoints but no intermediate reidentification or identity-preserving update rule, so
+    that conditional criterion is not accepted. A nonce links the request and grant reports without making
+    them one individual.'
+  reidentification_key:
+  - Local admission nonce and admittedAtMillis, joined to a matching release or lease-eviction block when
+    present; evidence locators only. Origin and weight are qualifications, not sufficient identity.
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: The relator candidate is one conferred authorization mediating its beneficiary, requested work,
+    and admission capacity context. A whole lifecycle journal is not that unit. Whether the required continuing
+    relation exists, rather than an allocation mode or event-derived situation, remains open.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+  - 'A relational mode of the beneficiary or work: a temporary permission dependent on an admission authority,
+    with identity inherited from its bearer rather than a separate authorization relator. The report does
+    not independently reveal all mediating participants.'
+  - A time-indexed holding situation reconstructed from admission and termination events, without a separately
+    persisting grant bearer. Repeated accounting decisions would need to reidentify an authorization to
+    favor the relator model.
+  - An information object recording charged admission and an observed or unknown endpoint; no independently
+    corroborated authorization is required for that record to exist.
+  existential_dependencies:
+  - 'For the relator hypothesis: a beneficiary, requested work, and an admission authority/capacity pool
+    standing in this particular authorization relation.'
+  - The conferral establishes that relation, and release or lease eviction ends its holding. The same
+    nonce is not proof that the relation and its preceding request have the same identity.
+  - 'Actual work execution is not established as an existential dependency: an authorization can be granted
+    without the journal demonstrating that execution began.'
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+  - Holding ended by release.
+  - Holding ended by lease eviction.
+counterexamples:
+- description: A charged admission entry may remain after its actual lease has ended, while a new admission
+    for identical work and the same origin would be a different authorization. In particular, the two
+    cited histories with admission but no terminal report cannot establish ongoing holding. If the scheduler
+    only reconstructs occupancy from events, the same journal can support all reported endpoints without
+    a persisting authorization relator. Nonce, origin, and charge equality cannot decide between those
+    models.
+status: proposed
+grain: Candidate continuing authorization relation, not its conferral or termination events, an occupancy
+  binding evaluated at a single instant, its journal account, or a governing admission specification.
+metaproperty_rationale: Relator is favored conditionally because the proposed authorization mediates participants
+  and has its own charged holding interval. Relational dependence is part of that hypothesis. Rigidity
+  and identity supply remain unresolved because the reports do not settle whether authorization constitutes
+  the bearer or is a temporary mode/role of another bearer. Active, released, and evicted do not become
+  grant kinds.
+temporality_rationale: 'The interval flag describes the proposed relator: holding extends from conferral
+  to its actual termination. Journal endpoints support reported intervals only. The observations do not
+  decide whether state changes preserve a grant individual beyond ended holding; historical references
+  to a released grant are not evidence of a still-existing active relation. Missing endpoints establish
+  no current activity.'
+evidence_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+- so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67
+- so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+- CQ-008
+- CQ-009
+- CQ-010
+evidence_reading: One matched history asserts admission with weightTokens=5 and a nonempty origin followed
+  by release; another asserts admission followed by lease eviction. The last two assert admission without
+  a supplied terminal report. CQ-008 and CQ-009 require time-qualified active holdings; CQ-010 distinguishes
+  charge from remaining capacity immediately before conferral. Neither charge, origin, nor a release-time
+  memory peak supplies the grant identity or a complete accounting snapshot.
+evidence_limits: Current-run observed journal assertions only. No synthetic observation is used, and no
+  owner-reference, resanitization, corpus, capture, or generator annotation supplies participant identity.

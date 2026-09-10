@@ -1,0 +1,44 @@
+id: dh:ver-readiness-assessment:001
+observation_refs:
+- so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee
+- so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1
+- so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30
+cq_warrants:
+- CQ-006
+- CQ-017
+proposed_referent:
+  label: Reported merge-readiness assessment
+  description: An information artifact reporting satisfaction or failure of closeout and review/check
+    conditions for a particular assessed state. It preserves the distinction between an aggregate readiness
+    result and its component results when assessing remaining assurance obligations. The records support
+    reported assessment content, not a timeless ready state or a universal Boolean formula. In particular,
+    checksGreen and requiredChecksGreen remain distinct observed fields. Their correspondence to lane
+    obligations and the local-full versus CI-merge tier boundary requires further analysis; the recorded
+    Greptile score is a component value, not confidence in this ontology hypothesis.
+representation_status: information_artifact
+alternatives:
+- label: An operational eligibility condition borne by the assessed change at a particular time
+  representation_status: domain_referent
+  plausibility: viable
+- label: A presentation-only collection of independent dashboard flags
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The batch carries positive and negative assessment content and separately records a failing
+    closeout condition even when a checks-green flag is true. This distinction is necessary to avoid collapsing
+    checks success into completion of every merge-assurance obligation. Null rejection is limited to the
+    existence of the reported assessment, not the truth of a complete eligibility rule or a claimed current
+    PR state. No equivalence between all-checks and required-checks results, nor a complete census of
+    all possible readiness criteria, is inferred.
+  discriminator: The config_key_value objects include "checksGreen=true" with "failing=closeout-run";
+    another assessment records "ready=false", "closeoutRun=false", "checksGreen=false", and "threadsResolved=false";
+    a positive assessment records "ready=true", "closeoutRun=true", "requiredChecksGreen=true", and "threadsResolved=true".
+    The first combination specifically reports an outstanding closeout condition alongside green checks.
+    That differentiated assessment of remaining conditions would be absent under a representation-only
+    null with no assessment referent.
+epistemic_status: proposed
+confidence:
+  value: 0.81
+  use_for_acceptance: false

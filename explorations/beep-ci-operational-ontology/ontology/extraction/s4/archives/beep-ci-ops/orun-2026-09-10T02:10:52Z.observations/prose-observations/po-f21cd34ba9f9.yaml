@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 53,
+    "end_line": 53
+  },
+  "quote": "`${subject} ciops:hasOriginKey ${turtleLiteral(request.originKey)} .`,",
+  "epistemic_status": "quoted_prose"
+}

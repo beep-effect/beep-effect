@@ -1,0 +1,93 @@
+id: ic:att-verification-attempt:001
+hypothesis_ref: dh:att-verification-attempt:001
+referent_grain: >-
+  One fixed version of an attempt-history account, joining only the start, verdict and
+  administrative-boundary assertions actually recorded for its reported invocation. This is
+  recorded occurrence-description content, not the execution process, a reusable command, a lane
+  duration or a run encompassing retries.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    The same attempt-history information has the same reported invocation subject and bounded
+    assertion content in the same journal context. Start, verdict and termination entries are
+    correlated only by their supplied attempt reference and compatible recorded context; a
+    different reported start/invocation remains a distinct account even within the same run.
+    Copying the excerpt preserves the information content and does not multiply reported attempts.
+    Appending or correcting a boundary creates another account version. Neither attemptId equality
+    nor repeated command/run content proves causal execution continuity.
+  reidentification_key:
+    - >-
+      attemptId for correlation within the supplied journal context
+    - >-
+      startedAt and the matching start/verdict assertions, checked within their own record blocks
+    - >-
+      runId and mode as contextual checks only
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One reported invocation unifies its recorded start and outcome/boundary account. The whole
+    journal contains several such accounts; neither the container nor a shared reusable command
+    unifies them as one attempt. Recorded component results remain attributed descriptions, and a
+    not-run component is not a performed temporal part.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - >-
+      process: a causally continuous command-invocation execution with performed temporal parts
+    - >-
+      event: the effective invocation treated as an atomic bounded occurrence
+  existential_dependencies:
+    - >-
+      The reported invocation subject, attempt-reporting context and a carrier for the account.
+    - >-
+      The existence of executing participants or an actual causally continuous process is not
+      necessary for this information to exist. The account's truth and any operational
+      execution/termination join require separate evidence.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The supplied excerpt records a failed repair with elapsedMs=81605 and a later repair success
+      with elapsedMs=135370. Merging their accounts by command or run would overwrite distinct
+      start/outcome assertions; copying the excerpt creates neither another failure nor another
+      success.
+  - description: >-
+      The legacy-unowned-start termination notice is recorded long after its associated
+      verify-start report. Treating the notice's recordedAt as an observed execution end would
+      invent activity through the gap. A replayed or mistaken journal account could preserve the
+      same assertions without establishing the claimed process.
+status: proposed
+analysis_notes:
+  rigidity: >-
+    Rigid for fixed attempt-description content. Success or failure is a recorded outcome, not a
+    new identity-supplying kind, and later correction does not turn the retained old account into
+    an execution.
+  dependence: >-
+    Relational dependence is on the account's represented invocation and reporting context, not on
+    an independently identified executor or causal sequence of operations.
+  temporality: >-
+    The account persists as information; its described interval does not become the account's own
+    lifetime. recordedAt, startedAt, endedAt and retention time have distinct roles. Adding a
+    result changes the account version; copying or relocating a carrier preserves its content. No
+    retention terminal state is observed.
+  evidence_limits: >-
+    The two source excerpts are identical. Within them, the first start/finish pair reports
+    2026-08-23T16:59:45.919Z to 17:01:07.524Z, elapsedMs=81605 and prepare:05-docgen failure; that
+    component separately reports durationMs=47356.549767. The later repair reports success and
+    elapsedMs=135370. These are reporting distinctions, not independent proof of activity or
+    cancellation effectiveness.
+  provenance: >-
+    Both observations quote fleet attempt-journal content, not synthetic execution. Repeated
+    capture, corpus/generator metadata and placeholder paths supply no additional occurrence or
+    identity criterion. All ownerRef and resanitization metadata remain excluded.
+evidence_refs:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - CQ-007
+  - CQ-022
+  - CQ-025

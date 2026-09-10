@@ -1,0 +1,69 @@
+id: "fa:bind-checkout-cache-binding:001"
+hypothesis_ref: "dh:bind-checkout-cache-binding:001"
+identity_card_ref: "ic:bind-checkout-cache-binding:001"
+evidence_refs:
+  - "so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9"
+  - "so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b"
+  - "CQ-015"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    The binding record describes probe results. It is neither a probe procedure
+    nor its execution, and the presence of a turbo configuration file does not
+    convert the record into a governing cache specification. No WorkUnit execution
+    or its resolved cache posture is observed by these binding assertions.
+  world_vs_information: >-
+    The primary referent is the information asserting the binding. A record of an
+    absent local cache exists without a cache at the reported path, and a record
+    can outlast the binding it describes. The viable operational relation and
+    situation models concern the world represented and cannot be identified with
+    this persistent information content.
+  role_vs_bearer: >-
+    A checkout can play the role of accessing a cache, but this record is neither
+    that role nor its checkout bearer. Clone and linked-worktree labels do not
+    provide an identity criterion or establish a rigid taxonomy in this analysis.
+  context_reification_needed: >-
+    CQ-015's shared-cache premise must be assessed for a particular checkout and
+    relevant time. Preserve the separate branch/head snapshot and later binding
+    probe contexts, plus the scope of the local directory listing. A common Git
+    directory, directory-entry count, or generator environment is insufficient to
+    assert shared proof availability, matching task inputs, or a shared cache epoch.
+rival_models:
+  - label: "Operational checkout-to-accessible-cache binding relator"
+    still_viable: true
+    rationale: >-
+      Accessibility may be modeled as a contingent operational relation with a
+      checkout and actual cache as participants. Demonstrated access to the same
+      cache and a continuity trace across binding changes would support that model;
+      the absent-cache record cannot itself instantiate a positive access relator.
+  - label: "Temporally qualified checkout/cache situation"
+    still_viable: true
+    rationale: >-
+      A situation can represent the conjunction of positive and negative binding
+      facts at a reference time without asserting a persisting relation. Its
+      existence and temporal boundaries differ from those of the information.
+  - label: "Diagnostic inventory without any binding information referent"
+    still_viable: false
+    rationale: >-
+      Discarding the binding assertions would erase the observed distinction
+      between common Git administration and local-cache availability needed to
+      assess CQ-015's shared-cache prerequisite.
+strongest_counterexample: >-
+  The clone and linked worktree have the same recorded Git common directory but
+  distinct local-cache paths and opposite local-cache presence results. A model
+  identifying bindings or caches by Git common directory would lose this observed
+  difference. Conversely, the absence report is an existing information object
+  even where a positive checkout-to-existing-cache relator cannot be established.
+verdict: analyzed
+needed_evidence: ""
+evidence_limits: >-
+  This category choice is restricted to recorded binding information. It does
+  not settle enduring checkout identity, cache identity across aliases, or the
+  operational relator-versus-situation rival. The two probes are not simultaneous.
+  The 36399 figure counts immediate directory entries, not distinct task hashes;
+  no transferability verdict follows without matching task inputs, epochs, and
+  demonstrated access to the relevant cached evidence.

@@ -1,0 +1,54 @@
+id: "ic:admb-journal-entry-alt:001"
+hypothesis_ref: "dh:admb-journal-entry:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two admission journal entries are the same information object when they are
+    the same bounded assertion: one admission event tag together with that
+    tag's event-specific field association in the journal. Distinct tags on one
+    nonce are distinct entries, as in so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+    (admission-enqueued at enqueuedAtMillis=1788926595182, admission-admitted at
+    admittedAtMillis=1788926595216, admission-released at
+    releasedAtMillis=1788927008574 for nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088)
+    versus so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+    (admission-ticket-evicted at evictedAtMillis=1788920302811). Nonce correlates
+    entries; ownerRef, schemaVersion, and capture metadata are not identity.
+  reidentification_key:
+    - "_tag plus event-specific timestamp field"
+    - "nonce (chain correlation only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One tagged record as a whole; adjacent records in a broad excerpt remain
+    other entries (so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+    interleaves nonce=9f2a6538 and nonce=e9ec7ade between the 411b3ba7 admit and
+    release records).
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - event
+    - none
+  existential_dependencies:
+    - "an admission journal as recording medium"
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Equating the entry with the occurrence it asserts fails a copy/replay
+      test: the same admission-admitted assertion can be retained after the
+      holding has ended, and event timestamps bound the described history, not
+      the entry's creation or destruction (no write-time is observed).
+  - description: >-
+      Merging neighboring tags in so:sha256:0c6e04e7f4362f5d469f9c1eedd838e67a7a91caaba5e3ff6dac566b116bfc5a
+      would collapse distinct nonces (ba48571b enqueue/admit/release versus
+      0ff912cf release versus afb82d54 admit/release) into one assertion.
+  - description: >-
+      Reading schemaVersion=yeet-admission-journal/v1 versus v3, ownerRef, or
+      capture pseudonyms as domain vocabulary or identity criteria treats
+      encoding and provenance as the entry.
+status: proposed

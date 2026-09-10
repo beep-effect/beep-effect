@@ -1,0 +1,2 @@
+# Synthetic fixture pin. No fleet payload bytes are copied.
+commit: "0123456789abcdef0123456789abcdef01234567"

@@ -1,0 +1,128 @@
+{
+  "id": "so:sha256:1d2662aa5e2f9701d80526c67b0cc29db04038e64bb84781c76616fe78f1e174",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-checkout-identity/bindings/external%2Fsystem-temp%2Fbeep-pr869.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 45,
+    "content_sha256": "44fc87b8180db1a39d1e981e1a8a2b0ebf61156e9f526c36ae0c49f4d36e836d"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-checkout-identity/bindings/external%2Fsystem-temp%2Fbeep-pr869.properties",
+    "lexical_name": "identity_key",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "TURBO_API=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "TURBO_TEAM=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "TURBO_TOKEN=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "binding_probe_at=2026-09-09T03:13:53.477Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "binding_probe_status=degraded"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/pr869-closeout"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch_sha12=dd97ae9b07cc"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exit_code=128"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "file=<fleet>/external/system-temp/beep-pr869/turbo.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=e141a0529f69276280965afc95ec342658b9f3b5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "identity_key=<fleet>/external/system-temp/beep-pr869"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=linked-worktree"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "line=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_directory_status=absent"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "scannedAt=2026-09-09T03:13:49.440Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "snapshot_path=<tmp>/beep-pr869"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=unavailable"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_configuration_observed_at=2026-09-09T03:13:53.477Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_configuration_status=absent"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_entries=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_path=<tmp>/beep-pr869/.turbo/cache"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_present=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_remote_cache_configured=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_remote_cache_signature_configured=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "within_fleet_root=false"
+    }
+  ],
+  "source_excerpt": "# record 0\nidentity_key=<fleet>/external/system-temp/beep-pr869\nscannedAt=2026-09-09T03:13:49.440Z\nsnapshot_path=<tmp>/beep-pr869\nwithin_fleet_root=false\nkind=linked-worktree\nbranch=codex/pr869-closeout\nbranch_sha12=dd97ae9b07cc\nhead=e141a0529f69276280965afc95ec342658b9f3b5\ngit_common_dir_role=checkout-binding fact; not a proof cache\nruns_directory_status=absent\nbinding_probe_at=2026-09-09T03:13:53.477Z\ncommand=git remote get-url origin\nstatus=unavailable\nexit_code=128\ncommand=git rev-parse --absolute-git-dir\nstatus=unavailable\nexit_code=128\ncommand=git rev-parse --path-format=absolute --git-common-dir\nstatus=unavailable\nexit_code=128\ncommand=git rev-parse HEAD\nstatus=unavailable\nexit_code=128\ncommand=git branch --show-current\nstatus=unavailable\nexit_code=128\nbinding_probe_status=degraded\nbinding_temporality=snapshot branch/head at scannedAt; supplementary git/cache probes during capture interval\nturbo_local_cache_path=<tmp>/beep-pr869/.turbo/cache\nturbo_local_cache_present=false\nturbo_local_cache_entries=0\nturbo_local_cache_entries_basis=immediate directory entries; not deduplicated task hashes\nturbo_remote_cache_configured=false\nTURBO_TOKEN=true\nTURBO_TEAM=true\nTURBO_API=true\nturbo_remote_cache_env_scope=generator process; repeated per binding, not per-checkout configuration\nturbo_remote_cache_signature_configured=false\nturbo_configuration_status=absent\nfile=<fleet>/external/system-temp/beep-pr869/turbo.json\nline=1\nturbo_configuration_observed_at=2026-09-09T03:13:53.477Z\nturbo_local_cache_complete_within=one immediate directory listing during the binding probe\nproof_cache_caveat=necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required\n",
+  "epistemic_status": "parser_derived"
+}

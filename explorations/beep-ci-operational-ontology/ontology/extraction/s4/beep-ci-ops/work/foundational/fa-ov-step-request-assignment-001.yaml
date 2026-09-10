@@ -1,0 +1,48 @@
+id: fa:ov-step-request-assignment:001
+hypothesis_ref: dh:ov-step-request-assignment:001
+identity_card_ref: ic:ov-step-request-assignment:001
+referent_grain: Recorded prescriptive assignment of a represented request to a step in one projection;
+  separate from the request, its submission, and any executed admission.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: The directed step-to-request assertion records a prescriptive choice. Its content
+    is analyzable even though the request target's cross-projection operational identity remains open.
+    No assertion individual or new relation class is mandated.
+  rigidity: A fixed request-assignment assertion retains its content when archived or when a plan is replaced.
+    Being scheduled here is a contextual role of the request representation.
+  dependence_and_temporality: The assertion is relative to one prescribed step and plan context. Its information
+    can persist without the assignment ever being enacted; no admission or completion instant is supplied.
+  spec_vs_execution: The edge schedules a request in a prescription. It neither schedules a reusable specification
+    by established identity nor reports a completed admission.
+  world_vs_information: The two fixture assignments establish request-targeted representation. Whether
+    those targets denote actual live demands requires separate lifecycle evidence.
+  role_vs_bearer: The represented request bears the scheduled-here role; the step, role assignment, request,
+    and requester are distinct.
+  context_reification: Retain the containing prescription and step. A direct property or request field
+    within that existing context may be enough; no relationship-specific lifetime establishes a relator.
+  evidence_limit: The quoted source limitation rules out inferring WorkUnit specification identity from
+    journal request nodes. It does not establish request-to-grant equivalence.
+rival_models:
+- label: Direct prescriptive relation to an operational request, once that request's denotation and continuity
+    are established
+  still_viable: true
+- label: Request-valued field of a contextual ordered instruction, with no separate assignment individual
+  still_viable: true
+- label: Assignment to a reusable WorkUnit specification inferred from the request target
+  still_viable: false
+strongest_counterexample: 'Hypothetical counterexample: one request is assigned to a first step in an
+  old proposal and a later step in a new proposal. Identifying the assignments by request alone merges
+  distinct prescriptions. Reinterpreting either target as a reusable WorkUnit specification additionally
+  claims an identity which the quoted journal limitation expressly does not supply.'
+verdict: analyzed
+needed_evidence: ''
+evidence_refs:
+- po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a
+- po:sha256:7f9eb7c183ed32fda7d59f429762811cda9842630765794f877ac24984cdbc6e
+- po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+- po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f
+- CQ-020
