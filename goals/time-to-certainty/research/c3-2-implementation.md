@@ -136,3 +136,130 @@ not a ratchet verdict. No package manifest was changed besides the authorized ro
 
 The Stage B dry runs for package `lint:jsdoc` and `lint:deprecated-apis` are deferred with those
 registrations. Stage A ends here; do not begin Stage B from this handoff.
+
+## Stage B
+
+Implemented Stage B only on `ttc/c3-2-eslint-package-tasks`, starting from the clean committed
+Stage A tree. No git write commands ran. The only manifest edit is the authorized root script;
+all workspace manifests retain the C3.1 stamped scripts. Stage C has not begun.
+
+### Decisions and rejected alternatives
+
+1. Added the three Turbo declarations with the verbatim §2 input lists: 16 entries for
+   `lint:deprecated-apis`, eight for `lint:jsdoc`, nine for `//#lint:jsdoc:root`. All cache with
+   empty outputs. Deprecated APIs declares `NODE_OPTIONS` and depends on `^transit` plus
+   `//#lint:policy-fingerprint`; both JSDoc tasks depend only on the fingerprint task.
+   Rejected adding build edges, copying the fingerprint closure into consumers, or changing
+   global inputs. The existing `transit` definition remains intact.
+2. Added root `lint:jsdoc:root: beep-cli lint jsdoc --root-only`. Rejected a Turbo-invoking root
+   task script and another fleet manifest rewrite. Existing workers, shard execution, eslint
+   caches, quality steps, CI routes, lane identities, and packet lifecycle remain as before;
+   their migration belongs to Stage C or later.
+3. Defined `PolicyTaskDefinition` as an annotated schema class before the new fixture helpers,
+   with a minimal configuration boundary and a module-level decoder. Reused Stage A's
+   `FingerprintRunSummary`, file writers, platform layer, and existing StepExec process/service
+   contract. No new runtime service is needed for configuration registration and test fixture
+   orchestration. Rejected widening the production fingerprint-writer schema to own unrelated
+   task fields, adding a source-only test export, or copying the older Bun-only proof runners.
+   The older coverage and tsgo configuration schemas are private task-specific boundaries.
+4. Extended the existing Stage A test file rather than adding a duplicate fixture module.
+   Literal expectations pin the reviewed table contract; the real fixture loads the production
+   task definitions through the schema, including the existing `transit` definition. Thus the
+   behavioral proof exercises the registrations actually shipped. The fixture has separate
+   consumer, typed dependency, checker/helper closure, repo-configs, unrelated package, and
+   root-owned source surfaces. Rejected mock hashes and a fixture that only duplicates the
+   desired configuration without reading the repository configuration.
+5. Every mutation is followed by restoration and an exact baseline comparison. Ten mutations
+   cover consumer source, root source, unrelated source, dependency source, a root
+   `tsconfig.proof.json` outside the fingerprint's named tsconfigs, eslint config, tsdoc config,
+   both repo-configs eslint trees, and a checker helper outside the explicit task input lists.
+   The last case proves all three fingerprint edges independently of direct config inputs.
+   Dependency source changes only the typed task; consumer source changes both package tasks;
+   root source changes only the residual task; unrelated source changes none. All five shared
+   checker/config mutations change all three tasks. Rejected cumulative edits, which could
+   mask a missing edge with a previous invalidation.
+6. Used NodeServices and StepExec on both test runtimes, sequential suites, bounded process
+   timeouts, and local-only fixture cache settings. No git repository was initialized in a
+   fixture. Live smokes use identity as a small package. After the first live run reported
+   read-only shared-cache writes, the second used a writable temporary cache directory.
+   Rejected treating successful execution as proof of warm or remote-cache performance.
+
+### Stage B — files
+
+- goals/time-to-certainty/research/c3-2-implementation.md
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- package.json
+- packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts
+- turbo.json
+
+### Verification commands and exit codes
+
+Vitest commands run from `packages/tooling/tool/cli`. All other commands run at the worktree
+root. Ephemeral logs and dry-run JSON are under `/tmp/c3-2-stage-b-*`; durable outcomes follow.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| Table-to-literal authoring script | 1, then 0 | Initial count assertion caught explanatory backticks in the root input column before Turbo was edited; corrected extraction yields 16/8/9 literal inputs. |
+| `bunx --no-install biome check --write turbo.json package.json packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts` | 0 | Three checked, two formatted. |
+| `bunx --no-install biome check turbo.json package.json packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts` | 0 | Three checked, no fixes, 1,061 ms. |
+| `bunx --bun vitest run --pool=threads test/policy-fingerprint-turbo-inputs.test.ts` | 0 | Four tests passed, 7.81 s; includes existing Stage A proofs and both new Stage B tests. |
+| `bunx --no-install vitest run --pool=threads test/policy-fingerprint-turbo-inputs.test.ts` | 0 | Node: four tests passed, 11.98 s. |
+| `bun run beep lint policy-fingerprint --check` | 0 | `policy-fingerprint: current`; neither declaration nor materialized fingerprint inputs changed. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, zero drifting, zero written. |
+| `bunx turbo run lint:jsdoc --filter=@beep/schema --dry-run=json` | 0 | Expected cached task, empty outputs, fingerprint dependency; counts below. |
+| `bunx turbo run lint:deprecated-apis --filter=@beep/identity --dry-run=json` | 0 | Expected cached task, empty outputs, `NODE_OPTIONS`, transit and fingerprint dependencies. |
+| `bunx turbo run '//#lint:jsdoc:root' --dry-run=json` | 0 | Expected root worker script, empty outputs, fingerprint dependency. |
+| `bunx turbo run lint:jsdoc --filter=@beep/identity --cache=local:rw` | 0 | Two successful executable tasks, 10.73 s; cache-write warning qualified below. |
+| `bunx turbo run lint:deprecated-apis --filter=@beep/identity --cache=local:rw --cache-dir=/tmp/c3-2-stage-b-turbo-cache` | 0 | Two successful executable tasks, 31.525 s; zero cached. |
+| `bunx --bun --no-install tsgo -p /tmp/c3-2-stage-b-tests.tsconfig.json --pretty false` | 0 | No diagnostics; focused source-resolving test configuration described below. |
+| `bunx oxlint --quiet --disable-nested-config packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts` | 0 | No diagnostics. |
+| `git --no-optional-locks diff --check` | 0 | No whitespace errors; read-only git operation. |
+
+Vitest commands used an external 210-second `timeout --signal=INT --kill-after=5s` watchdog;
+live tasks used 120 seconds. None hit the watchdog. The new fixture has a 180-second test
+budget and 20-second per-process timeout. The focused typecheck copies the successful Stage A
+source-resolving config, includes only the touched test and its imports, extends the real CLI
+config, removes project references, and retains the existing synthetic no-emit/non-composite
+compiler posture with workspace rootDir and local Node/Bun type roots. It is supplemental
+proof, not canonical package verification.
+
+### Measurements
+
+Installed Turbo: **2.10.12**. Resolved input counts include the six global input entries;
+matched-file counts are `tasks[].inputs` entries for that target, not its dependency closure.
+
+| Target task | Declared inputs | Resolved inputs | Matched files | Dependency task ids | Total dry-run tasks |
+| --- | ---: | ---: | ---: | --- | ---: |
+| `@beep/schema#lint:jsdoc` | 8 | 14 | 910 | `//#lint:policy-fingerprint` | 2 |
+| `@beep/identity#lint:deprecated-apis` | 16 | 22 | 653 | `//#lint:policy-fingerprint`, `@beep/types#transit` | 4 |
+| `//#lint:jsdoc:root` | 9 | 15 | 906 | `//#lint:policy-fingerprint` | 2 |
+
+- The Stage B hash fixture performs **21 real dry runs** per runtime: one baseline plus ten
+  mutation/restoration pairs, each inspecting all three policy targets and their fingerprint
+  edges. Together with Stage A's seven dry runs, the full test file performs **28 per runtime**.
+- Typed-dependency evidence includes `@fixture/dependency#transit` in the consumer's resolved
+  dependencies. Its source edit invalidates deprecated APIs while preserving both JSDoc hashes.
+- Bun: four tests, **7.81 s** total, **1.64 s** reported test time. Node: four tests,
+  **11.98 s** total, **2.30 s** reported test time.
+- Identity JSDoc smoke: **2/2 successful**, **0/2 cached**, **10.73 s**. Identity deprecated
+  APIs smoke: **2/2 successful**, **0/2 cached**, **31.525 s**. These executable task totals
+  include the fingerprint gate; virtual transit nodes explain the larger typed dry-run count.
+- No fleet scheduling, hosted before/after, warm hit ratio, or remote-cache claim is made in
+  Stage B. Those are Stage D measurements. The fingerprint remains at 73 declared inputs.
+
+### Blockers, friction, and verification split
+
+No Stage B implementation or hash-proof blocker remains. Both runtimes and both live package
+workers executed successfully in this sandbox, exceeding the brief's Bun-only fallback.
+Fable still owns canonical `CI=true TMPDIR=/tmp bun run beep quality package-verify
+@beep/repo-cli`, `bun run docgen:local`, Node coverage, and `bun run beep lint policy` acceptance.
+No new source module or coverage-baseline row was added.
+
+Two tool limitations are recorded in `OPPORTUNITIES.md`: the first Graft read query automatically
+refreshed the ignored graph, conflicting with the brief's no-touch rule for `graft/`; further
+Graft calls were avoided and the cache was left alone. The JSDoc live smoke emitted
+`IO error: Read-only file system (os error 30)` on shared-cache writes while completing both
+workers successfully. The deprecated-API smoke uses a writable temporary cache and has no such
+warning. These are explicit limitations, not permission changes or git writes.
+
+The results file is the Stage B handoff. Stop here; do not start Stage C from this launch.

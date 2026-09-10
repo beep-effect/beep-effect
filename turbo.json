@@ -55,6 +55,61 @@
     ]
   },
   "tasks": {
+    "lint:deprecated-apis": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["^transit", "//#lint:policy-fingerprint"],
+      "env": ["NODE_OPTIONS"],
+      "inputs": [
+        "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+        "package.json",
+        "tsconfig*.json",
+        "$TURBO_ROOT$/eslint.config.mjs",
+        "$TURBO_ROOT$/tsconfig*.json",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/**",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+        "$TURBO_ROOT$/packages/**/tsconfig*.json",
+        "$TURBO_ROOT$/apps/**/tsconfig*.json",
+        "$TURBO_ROOT$/infra/**/tsconfig*.json",
+        "$TURBO_ROOT$/packages/**/package.json",
+        "$TURBO_ROOT$/apps/**/package.json",
+        "$TURBO_ROOT$/infra/package.json",
+        "!node_modules/**",
+        "!.beep/**"
+      ]
+    },
+    "lint:jsdoc": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+        "package.json",
+        "$TURBO_ROOT$/eslint.config.mjs",
+        "$TURBO_ROOT$/tsdoc.json",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/**",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+        "!node_modules/**"
+      ]
+    },
+    "//#lint:jsdoc:root": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+        "!packages/**",
+        "!apps/**",
+        "!infra/**",
+        "!**/node_modules/**",
+        "eslint.config.mjs",
+        "tsdoc.json",
+        "packages/tooling/policy-pack/repo-configs/src/eslint/**",
+        "packages/tooling/policy-pack/repo-configs/src/internal/eslint/**"
+      ]
+    },
     "//#lint:policy-fingerprint": {
       "cache": true,
       "outputs": [],

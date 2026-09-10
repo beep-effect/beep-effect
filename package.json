@@ -390,6 +390,7 @@
     "lint": "beep-cli lint",
     "lint:deprecated-apis": "beep-cli lint deprecated-apis",
     "lint:fix": "beep-cli lint --fix",
+    "lint:jsdoc:root": "beep-cli lint jsdoc --root-only",
     "lint:oxlint": "oxlint",
     "lint:policy-fingerprint": "beep-cli lint policy-fingerprint --check",
     "nuke": "docker compose down && docker system prune -a -f && docker volume prune -a -f",

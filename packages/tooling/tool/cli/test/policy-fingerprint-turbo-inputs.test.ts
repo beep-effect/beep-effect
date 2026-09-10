@@ -30,6 +30,81 @@ class FingerprintRunSummary extends S.Class<FingerprintRunSummary>($I`Fingerprin
   })
 ) {}
 
+class PolicyTaskDefinition extends S.Class<PolicyTaskDefinition>($I`PolicyTaskDefinition`)(
+  { cache: S.Boolean, outputs: S.Array(S.String), inputs: S.Array(S.String), dependsOn: S.Array(S.String) },
+  $I.annote("PolicyTaskDefinition", {
+    description: "Cached policy task declaration copied into the real hash fixture.",
+  })
+) {}
+
+const PolicyTaskConfiguration = S.Struct({
+  tasks: S.Struct({
+    "lint:deprecated-apis": S.Struct({ ...PolicyTaskDefinition.fields, env: S.Array(S.String) }),
+    "lint:jsdoc": PolicyTaskDefinition,
+    "//#lint:jsdoc:root": PolicyTaskDefinition,
+    transit: S.Struct({ dependsOn: S.Array(S.String) }),
+  }),
+});
+const decodePolicyTasks = S.decodeEffect(S.fromJsonString(PolicyTaskConfiguration));
+
+const expectedPolicyTasks = {
+  "lint:deprecated-apis": {
+    cache: true,
+    outputs: [],
+    dependsOn: ["^transit", "//#lint:policy-fingerprint"],
+    env: ["NODE_OPTIONS"],
+    inputs: [
+      "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+      "package.json",
+      "tsconfig*.json",
+      "$TURBO_ROOT$/eslint.config.mjs",
+      "$TURBO_ROOT$/tsconfig*.json",
+      "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json",
+      "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/**",
+      "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+      "$TURBO_ROOT$/packages/**/tsconfig*.json",
+      "$TURBO_ROOT$/apps/**/tsconfig*.json",
+      "$TURBO_ROOT$/infra/**/tsconfig*.json",
+      "$TURBO_ROOT$/packages/**/package.json",
+      "$TURBO_ROOT$/apps/**/package.json",
+      "$TURBO_ROOT$/infra/package.json",
+      "!node_modules/**",
+      "!.beep/**",
+    ],
+  },
+  "lint:jsdoc": {
+    cache: true,
+    outputs: [],
+    dependsOn: ["//#lint:policy-fingerprint"],
+    inputs: [
+      "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+      "package.json",
+      "$TURBO_ROOT$/eslint.config.mjs",
+      "$TURBO_ROOT$/tsdoc.json",
+      "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json",
+      "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/**",
+      "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+      "!node_modules/**",
+    ],
+  },
+  "//#lint:jsdoc:root": {
+    cache: true,
+    outputs: [],
+    dependsOn: ["//#lint:policy-fingerprint"],
+    inputs: [
+      "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+      "!packages/**",
+      "!apps/**",
+      "!infra/**",
+      "!**/node_modules/**",
+      "eslint.config.mjs",
+      "tsdoc.json",
+      "packages/tooling/policy-pack/repo-configs/src/eslint/**",
+      "packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+    ],
+  },
+};
+
 const RootTaskContract = S.Struct({
   tasks: S.Struct({
     "//#lint:policy-fingerprint": S.Struct({ cache: S.Boolean, outputs: S.Array(S.String) }),
@@ -82,6 +157,37 @@ const packageHash = Effect.fn("PolicyFingerprintTurboTest.packageHash")(function
   expect(found.dependencies).toContain("//#lint:policy-fingerprint");
   expect(A.some(summary.tasks, (row) => row.taskId === "//#lint:policy-fingerprint")).toBe(true);
   return found.hash;
+});
+
+const policyHashes = Effect.fn("PolicyFingerprintTurboTest.policyHashes")(function* (root: string, binary: string) {
+  const run = yield* StepExec.runCaptured({
+    command: binary,
+    args: [
+      "run",
+      "lint:jsdoc",
+      "lint:deprecated-apis",
+      "//#lint:jsdoc:root",
+      "--filter=@fixture/consumer",
+      "--dry-run=json",
+      "--cache=local:rw",
+    ],
+    cwd: root,
+    source: "stdout",
+    timeout: "20 seconds",
+    env: { TURBO_TELEMETRY_DISABLED: "1", TURBO_UI: "stream" },
+    extendEnv: true,
+  });
+  expect(run.exitCode, run.output).toBe(0);
+  expect(run.truncated).toBe(false);
+  const summary = yield* decodeSummary(run.output);
+  return A.map(
+    ["@fixture/consumer#lint:deprecated-apis", "@fixture/consumer#lint:jsdoc", "//#lint:jsdoc:root"],
+    (id) => {
+      const task = O.getOrThrow(A.findFirst(summary.tasks, (row) => row.taskId === id));
+      expect(task.dependencies).toContain("//#lint:policy-fingerprint");
+      return task;
+    }
+  );
 });
 
 describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
@@ -164,5 +270,109 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
       expect(yield* packageHash(root, binary)).toBe(baseline);
     }, providePlatform),
     { timeout: 120_000 }
+  );
+});
+
+describe("Stage B eslint task inputs", { concurrent: false }, () => {
+  it.effect(
+    "pins the table declarations and the nonrecursive root residual script",
+    Effect.fnUntraced(function* () {
+      const root = yield* findRepoRoot();
+      const fs = yield* FileSystem.FileSystem;
+      const config = yield* decodePolicyTasks(yield* fs.readFileString(`${root}/turbo.json`));
+      expect(config.tasks["lint:deprecated-apis"]).toEqual(expectedPolicyTasks["lint:deprecated-apis"]);
+      expect(config.tasks["lint:jsdoc"]).toEqual(expectedPolicyTasks["lint:jsdoc"]);
+      expect(config.tasks["//#lint:jsdoc:root"]).toEqual(expectedPolicyTasks["//#lint:jsdoc:root"]);
+      const manifest = yield* decodeScripts(yield* fs.readFileString(`${root}/package.json`));
+      expect(manifest.scripts["lint:jsdoc:root"]).toBe("beep-cli lint jsdoc --root-only");
+    }, providePlatform)
+  );
+
+  it.effect(
+    "isolates package and root sources while invalidating every actual checker input and typed dependency",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const config = yield* decodePolicyTasks(yield* fs.readFileString(`${repoRoot}/turbo.json`));
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "policy-eslint-turbo-" });
+      const binary = path.join(repoRoot, "node_modules", ".bin", "turbo");
+      yield* writeJson(root, "package.json", {
+        name: "policy-eslint-fixture",
+        private: true,
+        packageManager: "bun@1.4.2",
+        workspaces: ["packages/*", "packages/tooling/policy-pack/*"],
+        scripts: { "lint:policy-fingerprint": "echo fingerprint", "lint:jsdoc:root": "echo root" },
+      });
+      yield* writeJson(root, "packages/cli/package.json", {
+        name: "@beep/repo-cli",
+        dependencies: { "@fixture/helper": "workspace:*", "@fixture/repo-configs": "workspace:*" },
+      });
+      yield* writeJson(root, "packages/helper/package.json", { name: "@fixture/helper" });
+      yield* writeJson(root, "packages/tooling/policy-pack/repo-configs/package.json", {
+        name: "@fixture/repo-configs",
+      });
+      yield* writeJson(root, "packages/consumer/package.json", {
+        name: "@fixture/consumer",
+        dependencies: { "@fixture/dependency": "workspace:*" },
+        scripts: { "lint:jsdoc": "echo jsdoc", "lint:deprecated-apis": "echo deprecated" },
+      });
+      yield* writeJson(root, "packages/dependency/package.json", { name: "@fixture/dependency" });
+      yield* writeJson(root, "packages/unrelated/package.json", { name: "@fixture/unrelated" });
+      yield* writeFile(root, ".gitignore", "node_modules\n.turbo\n");
+      // These files exist before configuration is frozen; each mutation is restored before the next.
+      const sourceFiles = [
+        "packages/cli/src/index.ts",
+        "packages/helper/src/index.ts",
+        "packages/consumer/src/index.ts",
+        "packages/dependency/src/index.ts",
+        "packages/unrelated/src/index.ts",
+        "scripts/check.ts",
+        "packages/tooling/policy-pack/repo-configs/src/eslint/rule.ts",
+        "packages/tooling/policy-pack/repo-configs/src/internal/eslint/helper.ts",
+      ];
+      yield* Effect.forEach(sourceFiles, (file) => writeFile(root, file, "export const value = 1;\n"));
+      yield* writeFile(root, "eslint.config.mjs", "export default [];\n");
+      yield* writeFile(root, "tsdoc.json", "{}\n");
+      yield* writeFile(root, "tsconfig.proof.json", "{}\n");
+      const fingerprint = yield* policyToolsFingerprint(root);
+      yield* writeJson(root, "standards/policy-tools.fingerprint.json", fingerprint);
+      yield* writeJson(root, "turbo.json", {
+        futureFlags: { affectedUsingTaskInputs: true, filterUsingTasks: true, globalConfiguration: true },
+        tasks: {
+          ...config.tasks,
+          "//#lint:policy-fingerprint": { cache: true, outputs: [], inputs: fingerprint.inputs },
+        },
+      });
+      const baseline = yield* policyHashes(root, binary);
+      expect(O.getOrThrow(A.head(baseline)).dependencies).toContain("@fixture/dependency#transit");
+      const assertMutation = Effect.fnUntraced(function* (file: string, changed: ReadonlyArray<boolean>) {
+        const original = yield* fs.readFileString(path.join(root, file));
+        yield* writeFile(root, file, `${original}\n`);
+        const mutated = yield* policyHashes(root, binary);
+        A.forEach(mutated, (task, index) => {
+          expect(task.hash === baseline[index]?.hash, `${file}: ${task.taskId}`).toBe(!changed[index]);
+        });
+        yield* writeFile(root, file, original);
+        expect(yield* policyHashes(root, binary)).toEqual(baseline);
+      });
+      yield* assertMutation("packages/consumer/src/index.ts", [true, true, false]);
+      yield* assertMutation("scripts/check.ts", [false, false, true]);
+      yield* assertMutation("packages/unrelated/src/index.ts", [false, false, false]);
+      yield* assertMutation("packages/dependency/src/index.ts", [true, false, false]);
+      // This root tsconfig is deliberately outside the fingerprint's two named tsconfigs.
+      yield* assertMutation("tsconfig.proof.json", [true, false, false]);
+      yield* Effect.forEach(
+        [
+          "eslint.config.mjs",
+          "tsdoc.json",
+          "packages/tooling/policy-pack/repo-configs/src/eslint/rule.ts",
+          "packages/tooling/policy-pack/repo-configs/src/internal/eslint/helper.ts",
+          "packages/helper/src/index.ts",
+        ],
+        (file) => assertMutation(file, [true, true, true])
+      );
+    }, providePlatform),
+    { timeout: 180_000 }
   );
 });

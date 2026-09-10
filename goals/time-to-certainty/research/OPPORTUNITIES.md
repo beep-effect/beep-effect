@@ -677,3 +677,13 @@ subprocess diagnostics would make inventory stalls attributable.
   never immediately invoked `Effect.fn` expressions).
 - **Would have prevented it:** the package-verify split (which builds dependencies first), or a
   `beep quality test-tsgo-package` route that resolves sources when outputs are missing.
+
+## 2026-09-09 — C3.2 Stage B: Graft query refreshed a forbidden cache surface
+
+- **Doing:** following the read-first Graft source-discovery rule before Stage B edits.
+- **Evidence:** the first `graft grep` reported `refreshed the graph (12 files changed)` and
+  copied the parent checkout graph. The brief forbids touching `graft/`, but the query refreshes
+  it automatically. No git write command ran. Subsequent discovery uses direct source reads.
+- **Would have prevented it:** a read-only query mode, or a brief exception that explicitly
+  addresses automatic graph refresh (the orchestrator removed the ignored copy before the
+  Stage B commit).
