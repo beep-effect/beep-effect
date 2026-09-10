@@ -200,13 +200,14 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
     Effect.gen(function* () {
       const result = yield* Arbitrary.checkEffect(
         FingerprintRunSummaryArbitrary,
-        (summary) => {
-          const encoded = Effect.runSync(encodeSummary(summary));
-          const decoded = Effect.runSync(decodeSummary(encoded));
-          expect(summaryEquivalent(decoded, summary)).toBe(true);
-          expect(Effect.runSync(encodeSummary(decoded))).toBe(encoded);
-          return true;
-        },
+        (summary) =>
+          Effect.gen(function* () {
+            const encoded = yield* encodeSummary(summary);
+            const decoded = yield* decodeSummary(encoded);
+            expect(summaryEquivalent(decoded, summary)).toBe(true);
+            expect(yield* encodeSummary(decoded)).toBe(encoded);
+            return true;
+          }),
         fcRuns()
       );
       expect(result._tag).toBe("Passed");
