@@ -211,6 +211,55 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       }),
       TSMORPH_TIMEOUT
     );
+
+    it.effect(
+      "loads only the explicit files of a package syntax request and keeps ordinary inspection separate",
+      Effect.fn(function* () {
+        const service = yield* TSMorphService;
+        const path = yield* Path.Path;
+        const explicit = path.resolve(REPO_ROOT, LATE_FILE_EXTRA_FILE_PATH);
+        const packageRequest = yield* TsMorphProjectInspectionRequest.packageSyntax(
+          REPO_ROOT,
+          LATE_FILE_TSCONFIG_PATH,
+          [explicit]
+        );
+        expect(packageRequest.loadTsconfigFiles).toBe(false);
+        const packageFiles = yield* service.inspectProject(packageRequest, ({ sourceFiles }) =>
+          A.map(sourceFiles, (sourceFile) => sourceFile.getFilePath())
+        );
+        expect(packageFiles).toEqual([explicit]);
+
+        const explicitByPath = yield* service.inspectProject(
+          decodeProjectInspectionRequest({
+            entrypoint: { _tag: "tsconfig", tsConfigPath: LATE_FILE_TSCONFIG_PATH },
+            repoRootPath: REPO_ROOT,
+            mode: "syntax",
+            referencePolicy: "workspaceOnly",
+            filePaths: [LATE_FILE_EXTRA_FILE_PATH],
+            sourceFileGlobs: [],
+            loadTsconfigFiles: false,
+          }),
+          ({ sourceFiles }) => sourceFiles.length
+        );
+        expect(explicitByPath).toBe(1);
+
+        const ordinaryCount = yield* service.inspectProject(
+          decodeProjectInspectionRequest({
+            entrypoint: { _tag: "tsconfig", tsConfigPath: LATE_FILE_TSCONFIG_PATH },
+            repoRootPath: REPO_ROOT,
+            mode: "syntax",
+            referencePolicy: "workspaceOnly",
+            filePaths: [],
+            sourceFileGlobs: [],
+          }),
+          ({ sourceFiles }) => sourceFiles.length
+        );
+        expect(ordinaryCount).toBeGreaterThanOrEqual(1);
+        const packageAgain = yield* service.inspectProject(packageRequest, ({ sourceFiles }) => sourceFiles.length);
+        expect(packageAgain).toBe(1);
+      }),
+      TSMORPH_TIMEOUT
+    );
   });
 
   describe("readSourceText", () => {

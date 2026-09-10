@@ -391,7 +391,10 @@ export type TSMorphServiceShape = {
 export class TSMorphService extends Context.Service<TSMorphService, TSMorphServiceShape>()($I`TSMorphService`) {}
 
 type ProjectPool = {
-  readonly getOrCreate: (scope: TsMorphProjectScope) => Effect.Effect<Project, TsMorphProjectLoadError>;
+  readonly getOrCreate: (
+    scope: TsMorphProjectScope,
+    loadTsconfigFiles?: boolean
+  ) => Effect.Effect<Project, TsMorphProjectLoadError>;
 };
 
 type ScopeSymbolIndex = {
@@ -471,9 +474,11 @@ const ensureExists = Effect.fn("ensureExists")(function* <E extends TSMorphServi
 
 const createProjectPool = (pathApi: Path.Path): ProjectPool => {
   const projects = MutableHashMap.empty<ProjectCacheKey, Project>();
+  const explicitFileProjects = MutableHashMap.empty<ProjectCacheKey, Project>();
 
-  const getOrCreate: ProjectPool["getOrCreate"] = Effect.fn(function* (scope) {
-    const cachedProject = MutableHashMap.get(projects, scope.cacheKey);
+  const getOrCreate: ProjectPool["getOrCreate"] = Effect.fn(function* (scope, loadTsconfigFiles) {
+    const pool = loadTsconfigFiles === false ? explicitFileProjects : projects;
+    const cachedProject = MutableHashMap.get(pool, scope.cacheKey);
     if (O.isSome(cachedProject)) {
       return cachedProject.value;
     }
@@ -483,6 +488,7 @@ const createProjectPool = (pathApi: Path.Path): ProjectPool => {
       try: () =>
         new Project({
           tsConfigFilePath: absoluteTsConfigPath,
+          ...(loadTsconfigFiles === false ? { skipAddingFilesFromTsConfig: true } : {}),
           skipFileDependencyResolution: scope.referencePolicy === TsMorphReferencePolicy.Enum.workspaceOnly,
           skipLoadingLibFiles: scope.mode === TsMorphScopeMode.Enum.syntax,
         }),
@@ -494,7 +500,7 @@ const createProjectPool = (pathApi: Path.Path): ProjectPool => {
         }),
     });
 
-    MutableHashMap.set(projects, scope.cacheKey, project);
+    MutableHashMap.set(pool, scope.cacheKey, project);
     return project;
   });
 
@@ -921,7 +927,8 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
 
   const loadSourceFile = Effect.fnUntraced(function* (
     scope: TsMorphProjectScope,
-    filePath: TypeScriptFilePath
+    filePath: TypeScriptFilePath,
+    loadTsconfigFiles?: boolean
   ): Effect.fn.Return<
     {
       readonly sourceFile: SourceFile;
@@ -945,7 +952,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
       );
     }
 
-    const project = yield* projectPool.getOrCreate(scope);
+    const project = yield* projectPool.getOrCreate(scope, loadTsconfigFiles);
     const existingSourceFile = project.getSourceFile(absoluteFilePath);
     const sourceFile = existingSourceFile ?? project.addSourceFileAtPathIfExists(absoluteFilePath);
 
@@ -1249,7 +1256,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
         request.mode,
         request.referencePolicy
       );
-      const project = yield* projectPool.getOrCreate(scope);
+      const project = yield* projectPool.getOrCreate(scope, request.loadTsconfigFiles);
 
       for (const sourceFileGlob of request.sourceFileGlobs) {
         yield* Effect.try({
@@ -1272,7 +1279,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
       }
 
       for (const filePath of request.filePaths) {
-        yield* loadSourceFile(scope, filePath);
+        yield* loadSourceFile(scope, filePath, request.loadTsconfigFiles);
       }
 
       const sourceFiles = A.filter(project.getSourceFiles(), (sourceFile) => {

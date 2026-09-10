@@ -61,10 +61,7 @@
     }
   ],
   "resume": {
-    "retry": [
-      "x-search",
-      "verify"
-    ],
+    "retry": ["x-search", "verify"],
     "cursor": "enroll X developer App in a Project at https://console.x.com, then re-search window 2026-09-05T08:20-05:00/2026-09-10T09:10-05:00; retry Sol/Luna blinded verify on the same 21 records"
   },
   "repoReplay": {

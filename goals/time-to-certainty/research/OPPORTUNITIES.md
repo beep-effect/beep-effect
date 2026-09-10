@@ -755,6 +755,58 @@ subprocess diagnostics would make inventory stalls attributable.
   config instead of a literal, or a lint that flags explicit `it` timeouts below the coverage
   budget in files that spawn the CLI.
 
+## 2026-09-10 — C3.3 Stage A: the package scanner's overlay assumption and its memory cost
+
+- **Doing:** building the package-local law scanner (one process, one package-scoped syntax
+  project) from the brief, which names `tsconfig.test.json` as the overlay to scan with.
+- **Evidence:** `repo-cli`, `todox`, `ciops` and `infra` have no package-root `tsconfig.test.json`
+  (repo-cli keeps `test/tsconfig.json`), so the lane had to stop and ask; the ratified fallback
+  takes the package's own `tsconfig.json` for compiler options with config preload disabled and
+  the explicit package surface (brief amendment 1). The scanner cut wall time by 79 / 74 / 61 %
+  on identity, schema and repo-cli, but max RSS rose 4 / 17 / 38 % (repo-cli 2.8 → 3.9 GB):
+  one live project now holds the package's test sources beside its production sources.
+- **Would have prevented it:** a fleet census of overlay presence in the brief before naming the
+  overlay, and an acceptance budget that names wall and RSS separately so fleet concurrency is
+  chosen against both.
+
+## 2026-09-10 — C3.3 Stage B: the table's root residual names a flag the law does not have
+
+- **Doing:** registering `//#lint:native-runtime:roots` with the command the C3 table prescribes,
+  `beep-cli laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology`.
+- **Evidence:** the command exits 1 with `Unrecognized flag: --include-prefix`; `laws native-runtime`
+  accepts only `--include` (source-file paths), and C3.1 amendment 6 had already recorded that
+  distinction for the package worker. The registered task therefore fails on execution while its
+  dry run resolves. The lane kept the prescribed script and reported the blocker instead of
+  substituting a wider sweep.
+- **Would have prevented it:** executing a prescribed residual command once while drafting the
+  table row, and a table convention that every root-task command is copied from a green run.
+
+## 2026-09-10 — C3.3 Stage C: legacy native-runtime tests require a process pool
+
+- **Doing:** running the new prefix command fixtures and existing native-runtime regression
+  tests with the brief's prescribed Vitest thread pool on Node and Bun.
+- **Evidence:** the four new executed-command fixtures and nine package-law tests pass on both
+  runtimes; all nine existing `native-runtime.test.ts` cases fail before scanning in
+  `support/CommandTest.ts` with `process.chdir() is not supported in workers`.
+- **Would have prevented it:** declaring the legacy suite's process-pool requirement or moving
+  its cwd-dependent fixtures to child processes (the new prefix fixtures spawn the CLI with a
+  child cwd and run on both runtimes' thread pools; the legacy suite passes on Node forks).
+
+## 2026-09-10 — The coverage ratchet measures each package with its own suite, not the repo's
+
+- **Doing:** reading PR #1082's hosted Coverage Regression run after the local scoped proofs for
+  `@beep/repo-cli` and `@beep/repo-utils` had passed.
+- **Evidence:** seven regressed rows; `TSMorph.model.ts` functions 81.08 → 78.9 and
+  `TSMorph.service.ts` branches 72.32 → 70.97 although every new branch was exercised — by
+  `repo-cli` tests, which do not count toward `repo-utils` rows. `Laws.command.ts` lines
+  41.32 → 37.73 because its new guard ran only in a spawned `bun run bin.ts` child, which the
+  instrumented worker never sees. A TSMorph-only vitest subset then undercounted the model file
+  (75.7 % vs 81.1 % for the full suite), so the honest comparison is full suite on the branch vs
+  full suite on `main` (`bunx vitest run --coverage --coverage.include=<file> --coverage.reporter=lcov`).
+- **Would have prevented it:** the ratchet contract stating "own-package suite, in-process
+  execution" next to the per-file rows, and a local `beep-cli coverage --filter` delta that
+  names which package's suite each regressed row is measured from.
+
 ## 2026-09-10 — C3.2b Stage A: required configuration exposes implicit fixture roots
 
 - **Doing:** adding the required sweep-file boundary and running the prescribed command tests.

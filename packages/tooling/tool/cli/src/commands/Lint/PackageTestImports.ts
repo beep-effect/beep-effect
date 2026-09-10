@@ -14,6 +14,7 @@ import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import type { SourceFile } from "ts-morph";
 
 const $I = $RepoCliId.create("commands/Lint/PackageTestImports");
 
@@ -211,6 +212,10 @@ const collectModuleSpecifierUses = (
   content: string
 ): ReadonlyArray<ModuleSpecifierUse> => {
   const sourceFile = project.createSourceFile(filePath, content, { overwrite: true });
+  return collectSourceModuleSpecifierUses(sourceFile);
+};
+
+const collectSourceModuleSpecifierUses = (sourceFile: SourceFile): ReadonlyArray<ModuleSpecifierUse> => {
   let uses = A.empty<ModuleSpecifierUse>();
 
   for (const declaration of sourceFile.getImportDeclarations()) {
@@ -295,6 +300,33 @@ const collectPackageTestImportViolations = Effect.fn("PackageTestImports.collect
     )
   );
   return A.flatten(violations);
+});
+
+/**
+ * Inspect package tests using the worker's already-loaded source files.
+ *
+ * **Example** (Compose a shared-source scan)
+ * ```ts
+ * import { inspectPackageTestImports } from "@beep/repo-cli/commands/Lint/PackageTestImports"
+ * console.log(inspectPackageTestImports("/repo", []))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const inspectPackageTestImports = Effect.fn("PackageTestImports.inspectPackageTestImports")(function* (
+  repoRoot: string,
+  sourceFiles: ReadonlyArray<SourceFile>
+) {
+  const path = yield* Path.Path;
+  const sources = yield* collectPackageSourceRoots(path.join(repoRoot, "packages"));
+  return A.flatMap(sourceFiles, (file) => {
+    const filePath = file.getFilePath();
+    if (!isPackageTestFilePath(normalizePath(path.relative(repoRoot, filePath)))) return [];
+    return A.getSomes(
+      A.map(collectSourceModuleSpecifierUses(file), (use) => resolveViolation(path, sources, filePath, use))
+    );
+  });
 });
 
 const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTestImports")(function* (
