@@ -84,3 +84,33 @@ DECISIONS.md only.
 No OWL/SHACL (S8). No A-Box ratification beyond named ratified individuals
 (S6). No re-opening of §4b ratifications — lattice trouble with a ratified
 term is a steward question. No corpus extension (auditor run 2, after S5).
+
+## 2026-09-10 amendment
+
+Authority: DECISIONS.md, "2026-09-10 — S5 gate amendment", Rulings 1 and 3.
+The sections above retain the original S5 sitting and its frozen inputs.
+
+The required TAXONOMY set retains the run-1 derivation and accepted candidate
+dispositions, and additionally includes `term.local_name` from every proposal in
+the live work tree or an `archives/beep-ci-ops/orun-*.work/proposals/` shelter
+whose proposal `id` is the `proposal_ref` of a `decision: accept` ratification.
+Ratifications resolve from live governance and the archived per-run governance
+shelters. Authority binds by proposal id and exact proposal bytes: a mismatched
+`proposal_sha256` blocks the gate. Unaccepted later proposals add no required term.
+
+TAXONOMY records may carry `ratification: rat-0NN`, naming an on-disk ratification
+whose accepted proposal has the same `term.local_name` as the record's `term`.
+The optional `flags` field is a non-empty string carrying the verbatim deferral
+clause of the decision. Flagged accepts enter the same taxonomy; their unresolved
+identity and provenance duties remain visible. An unflagged decision needs no
+invented deferral. Reuse preserves existing record fields and any earlier
+ratification annotation.
+
+A DISPOSITIONS candidate row keeps its original single bare accepting `join_ref`.
+An optional additive `later_ratifications` list records subsequent acceptances;
+every member must name a ratification in live governance or an archive shelter.
+The justification records the reuse grain and retained flags. A previously parked
+candidate accepted in a later sitting becomes `accepted-via` with that sitting's
+ratification as its `join_ref`; no candidate row is invented for a taxonomy-only
+term. These additions leave all other totality, join, typing, and parameter laws
+in force.

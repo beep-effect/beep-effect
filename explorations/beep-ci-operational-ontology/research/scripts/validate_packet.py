@@ -7,7 +7,7 @@ BLOCKER; prints BLOCKER/WARN/OK lines. KNOWN LIMITS (round-2 seat G): this check
 proves parse + referential integrity, NOT query semantics — SPARQL-vs-NL fidelity,
 vacuity, and adversarial graphs are run_cq_suite.py's job; it also derives
 traceability expectations from the same YAML it validates, so it cannot see
-requireds-vs-query drift (e.g. an untyped ?subject wider than required_classes).
+required-field/query drift (e.g. an untyped ?subject wider than required_classes).
 
 Run: uv run --with pyyaml,rdflib python validate_packet.py            (packet mode)
      uv run --with pyyaml,rdflib python validate_packet.py --s4-lane <file>
@@ -19,6 +19,7 @@ Run: uv run --with pyyaml,rdflib python validate_packet.py            (packet mo
 """
 import argparse
 import csv
+import hashlib
 import importlib.util
 import io
 import os
@@ -229,8 +230,18 @@ if _args.s6:
     ratified_classes = {
         term["term"] for term in taxonomy.get("terms", []) if term.get("kind") == "class"
     }
-    if len(ratified_classes) != 18:
-        blocker(f"S6 typing expected 18 ratified classes, found {len(ratified_classes)}")
+    # S6-era classes from origin/main:TAXONOMY.yaml at the 2026-09-10
+    # amendment: preserve every named class while admitting later ratifications.
+    S6_REQUIRED_CLASSES = {
+        "AdmissionPolicy", "AdmissionPriorityClass", "AdmissionSnapshot",
+        "AdmissionWorkKind", "Agent", "CachePosture", "ContendedResource",
+        "GrantState", "RequiredCheckDesignation", "ScheduleProposal", "SeatGrant",
+        "SeatRequest", "StarvationException", "VerificationEvidence",
+        "VerificationObligation", "VerificationPlanSpecification",
+        "VerificationResultArtifact", "WorkUnitSpecification",
+    }
+    for name in sorted(S6_REQUIRED_CLASSES - ratified_classes):
+        blocker(f"S6 typing missing required ratified class {name}")
     for label in ("graphs/abox.ttl", "graphs/snapshot-<instant>.ttl"):
         graph = parsed_graphs[label]
         subjects = {subject for subject, _, _ in graph if isinstance(subject, URIRef)}
@@ -626,11 +637,29 @@ if _args.s5:
     # to extraction/s4/archives/ (the v13 scanner has no archive exemption;
     # see the relocation notes in the run-1 rotation README), so the S5
     # joins bound to those records must follow the relocation.
-    rats = {f.stem for f in (BC / "governance/ratifications").glob("rat-*.yaml")}
-    rats |= {
-        f.stem
-        for f in (S4D / "archives").glob("*/orun-*.governance/ratifications/rat-*.yaml")
-    }
+    rat_paths = sorted((BC / "governance/ratifications").glob("rat-*.yaml"))
+    rat_paths += sorted((S4D / "archives").glob("*/orun-*.governance/ratifications/rat-*.yaml"))
+    rats = {f.stem for f in rat_paths}
+    # Later-run authority binds by proposal id and exact bytes, never by name.
+    proposal_paths = sorted((BC / "work/proposals").glob("otp-*.yaml"))
+    proposal_paths += sorted((S4D / "archives/beep-ci-ops").glob("orun-*.work/proposals/otp-*.yaml"))
+    proposals = {}
+    for f in proposal_paths:
+        proposal = yaml.safe_load(f.read_text()) or {}
+        if "term" not in proposal:  # review records are not proposals
+            continue
+        proposals.setdefault(proposal.get("id"), []).append((f, proposal))
+    ratified_terms = {}
+    for f in rat_paths:
+        rat = yaml.safe_load(f.read_text()) or {}
+        matches = proposals.get(rat.get("proposal_ref"), [])
+        if not matches:
+            blocker(f"ratification {f.stem}: proposal_ref {rat.get('proposal_ref')} is not a proposal on disk")
+        for proposal_path, proposal in matches:
+            if rat.get("proposal_sha256") != hashlib.sha256(proposal_path.read_bytes()).hexdigest():
+                blocker(f"ratification {f.stem}: proposal_sha256 does not match proposal {proposal.get('id')} on disk")
+            elif rat.get("decision") == "accept":
+                ratified_terms.setdefault(f.stem, set()).add(proposal["term"]["local_name"])
     con_ids = {c["id"] for c in cons.get("constraints", [])}
     ledger_ids = {e["id"] for e in ledger}
     # constraints reference real ledger entries
@@ -658,6 +687,14 @@ if _args.s5:
         jr = str(r.get("join_ref") or "")
         if jr.startswith("rat-") and jr not in rats:
             blocker(f"candidate seq={r.get('seq')} join_ref {jr} is not a ratification on disk")
+        if "later_ratifications" in r:
+            later = r["later_ratifications"]
+            if not isinstance(later, list):
+                blocker(f"candidate seq={r.get('seq')}: later_ratifications must be a list")
+            else:
+                for ref in later:
+                    if not isinstance(ref, str) or ref not in rats:
+                        blocker(f"candidate seq={r.get('seq')} later_ratification {ref} is not a ratification on disk")
     # ledger totality
     lrows = disp.get("ledger") or []
     if {r.get("entry") for r in lrows} != ledger_ids or len(lrows) != len(ledger):
@@ -703,13 +740,15 @@ if _args.s5:
         # never from what the seats submitted (PR #905 review). The proposals
         # S5 consumed are RUN 1's survivors, which auditor run 2 relocated to
         # extraction/s4/archives/ — the live work/proposals dir belongs to
-        # later runs and must not leak into the S5-era derivation (this gate
-        # already pins run 1's index above for the same reason).
+        # later runs. Keep this original derivation, then add every digest-fresh
+        # accepted proposal from all runs (2026-09-10 amendment, Ruling 1).
         required = set()
         s5_proposals = S4D / "archives/beep-ci-ops/orun-2026-08-29T08:20:55Z.work/proposals"
         for f in sorted(s5_proposals.glob("otp-*.yaml")):
             if "review" not in f.name:
                 required.add(yaml.safe_load(f.read_text())["term"]["local_name"])
+        for rat_terms in ratified_terms.values():
+            required.update(rat_terms)
         allowed_extra = set()
         for r in rows:
             if r.get("ruling") == "accepted-via":
@@ -726,6 +765,12 @@ if _args.s5:
             kind_by_name.setdefault(r.get("candidate"), set()).add(r.get("kind"))
         for t in term_list:
             kind = t.get("kind")
+            if "ratification" in t:
+                ref = t["ratification"]
+                if not isinstance(ref, str) or t.get("term") not in ratified_terms.get(ref, set()):
+                    blocker(f"taxonomy {t.get('term')}: ratification {ref} does not accept this term on disk")
+            if "flags" in t and (not isinstance(t["flags"], str) or not t["flags"].strip()):
+                blocker(f"taxonomy {t.get('term')}: flags must be a non-empty string")
             for field in ("term", "kind"):
                 if not t.get(field):
                     blocker(f"taxonomy record missing required field {field}: {t}")

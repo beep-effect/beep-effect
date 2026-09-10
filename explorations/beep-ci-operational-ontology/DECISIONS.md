@@ -1234,3 +1234,38 @@ decisions adopted as drafted); the eight withdrawn proposals and their reviews r
 (bytes preserved in git history) and their observation rows parked with named evidence; the
 68 carried run-2 rows adjudicated at sitting 2 (14 retired, 54 re-parked with fresh
 evidence); post-scribe gate re-run at the pin.
+
+## 2026-09-10 — S5 gate amendment (four rulings, steward: Benjamin)
+
+Grilled at the run-3 closeout after the projection lane's edits were reverted: the packet
+gate `research/scripts/validate_packet.py --s5` admitted only run-1 proposal terms plus
+`accepted-via` candidates into `s5/TAXONOMY.yaml`, required one bare `join_ref` per
+candidate row, and `--s6` hard-coded eighteen ratified classes, so no run-2 or run-3
+ratification could project (15 + 1 blockers introduced, 0 on the pin; the same rule left
+rat-032/033/037/039 unprojected at the run-2 closeout). All four rulings resolved to the
+recommended arm in one round.
+
+**Ruling 1 — any accepting ratification admits; flags ride the record.** The required
+taxonomy set derives from every proposal (archived run shelters and the live run tree)
+that has a `decision: accept` ratification on disk or in the archive shelters, run 1's
+rule unchanged. TAXONOMY records gain additive `ratification: rat-0NN` and `flags:` fields
+carrying the verbatim deferral text, so consumers see provisional identity at a glance.
+Rejected: admitting only unflagged accepts (run 3 would contribute nothing) and a separate
+provisional file (two artifacts to join).
+
+**Ruling 2 — S6 typing tripwire becomes a superset check.** The gate names the eighteen
+classes ratified at the S6 sitting and requires each to remain in the taxonomy; later
+ratified classes are allowed; the typing law itself (every A-Box subject typed by a
+ratified class) is unchanged. Rejected: a dated class ledger with an exact count, and
+bumping the constant per run.
+
+**Ruling 3 — later ratifications on an accepted candidate are additive.** A DISPOSITIONS
+row keeps its original accepting `join_ref`; an additive `later_ratifications:` list
+(validated against ratifications on disk and in the shelters) records the run-3 reuse
+mappings, with the reuse grain in the justification. Rejected: rewriting `join_ref` to the
+newest ratification and leaving reuse out of DISPOSITIONS.
+
+**Ruling 4 — one PR.** The gate amendment, the dated contract amendments (S5 taxonomy,
+S6 A-Box), and the projection of rat-032/033/037/039 and rat-053..rat-070 land together,
+the projection serving as the gate's own regression exercise, with every packet proof green.
+Rejected: a gate-first PR without real-data exercise.

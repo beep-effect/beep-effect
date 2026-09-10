@@ -2,6 +2,7 @@
 # Steward rulings: DECISIONS.md 2026-08-30 (S5 sittings 1–3).
 # S6 STATUSES PROJECTED by ../s6/scripts/apply_s6_dispositions.py after the
 # steward sitting recorded in ABOX.yaml. Do not hand-edit these transitions.
+# 2026-09-10 amendment: additive run-2/run-3 ratification projection; see the contract.
 generated_by: scripts/build_dispositions.py
 contract: ontology/docs/s5-taxonomy-contract.md
 sittings_ref: DECISIONS.md §'2026-08-30 — S5 sittings 1–2' + sitting 3 (docket policy)
@@ -18,13 +19,27 @@ candidates:
   kind: class
   ruling: accepted-via
   join_ref: rat-017
-  justification: 'exact-name join to ratified term AdmissionPolicy (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term AdmissionPolicy (sitting rule: join pass) DECISIONS.md
+    "2026-09-03 — run-2 sitting 3", rat-040: "Accept the AdmissionPolicy reuse for the base policy content."
+    DECISIONS.md "2026-09-03 — run-2 sitting 3", rat-041: "Accept the priority-aging clause as AdmissionPolicy
+    component content, not a separate kind." DECISIONS.md "2026-09-03 — run-2 sitting 3", rat-044: "Accept
+    the review-fix-class cap as AdmissionPolicy component content." DECISIONS.md "2026-09-03 — run-2 sitting
+    3", rat-046: "Accept the token-capacity policy as AdmissionPolicy content under CQ-010''s direct reads."'
+  later_ratifications:
+  - rat-040
+  - rat-041
+  - rat-044
+  - rat-046
 - seq: 1
   candidate: AdmissionPriorityClass
   kind: class
   ruling: accepted-via
   join_ref: rat-009
-  justification: 'exact-name join to ratified term AdmissionPriorityClass (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term AdmissionPriorityClass (sitting rule: join pass) DECISIONS.md
+    "2026-09-03 — run-2 sitting 3", rat-050: "Accept AdmissionPriorityClass, registry lineage deferred
+    to run 3 as flagged."'
+  later_ratifications:
+  - rat-050
 - seq: 2
   candidate: AdmissionSnapshot
   kind: class
@@ -48,7 +63,11 @@ candidates:
   kind: class
   ruling: accepted-via
   join_ref: rat-013
-  justification: 'exact-name join to ratified term Agent (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term Agent (sitting rule: join pass) DECISIONS.md "2026-09-03
+    — run-2 sitting 3", rat-045: "Accept Agent as the anti-rigid admission-owner role on a continuous
+    OS-process bearer — role, not kind."'
+  later_ratifications:
+  - rat-045
 - seq: 6
   candidate: ArchitectureBoundaryRule
   kind: class
@@ -67,7 +86,11 @@ candidates:
   kind: class
   ruling: accepted-via
   join_ref: rat-005
-  justification: 'exact-name join to ratified term CachePosture (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term CachePosture (sitting rule: join pass) DECISIONS.md
+    "2026-09-03 — run-2 sitting 3", rat-043: "Accept resolved CachePosture as a recorded value on the
+    execution record — information object, not a mode."'
+  later_ratifications:
+  - rat-043
 - seq: 9
   candidate: CommittedFailure
   kind: class
@@ -89,9 +112,11 @@ candidates:
 - seq: 12
   candidate: FailureSignature
   kind: class
-  ruling: parked-run-2
-  join_ref: DECISIONS.md §'2026-08-30 — S5 sittings 1–2' + sitting 3 (docket policy)
-  justification: episode/occurrence/provenance class conceded at §4b (sitting 2c)
+  ruling: accepted-via
+  join_ref: rat-032
+  justification: 'episode/occurrence/provenance class conceded at §4b (sitting 2c) Superseded by DECISIONS.md
+    "2026-09-03 — run-2 sitting 3", rat-032: "Accept FailureSignature — the failedStepId/failureKind tuple
+    as a recorded classification, grain fixed at the signature, not the occurrence."'
 - seq: 13
   candidate: FallowBoundaryRuleProvenance
   kind: class
@@ -122,13 +147,33 @@ candidates:
   kind: class
   ruling: accepted-via
   join_ref: rat-002
-  justification: 'exact-name join to ratified term SeatGrant (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term SeatGrant (sitting rule: join pass) DECISIONS.md "2026-09-10
+    — run-3 sitting 3", rat-066: "Accept otp:admb-seat-grant:001 as the SeatGrant recorded-account reuse
+    under sitting-1 Ruling 2, preserving its nonce-chain associations, with account-copy identity and
+    effective authorization continuity deferred to run 4 as flagged." DECISIONS.md "2026-09-10 — run-3
+    sitting 3", rat-068: "Accept otp:att-admission-allocation:001 as the SeatGrant recorded-lease-value
+    reuse under sitting-1 Ruling 2, treating the two heartbeat reports as snapshots of one candidate subject,
+    with effective allocation continuity deferred to run 4 as flagged."'
+  later_ratifications:
+  - rat-066
+  - rat-068
 - seq: 18
   candidate: SeatRequest
   kind: class
   ruling: accepted-via
   join_ref: rat-007
-  justification: 'exact-name join to ratified term SeatRequest (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term SeatRequest (sitting rule: join pass) DECISIONS.md
+    "2026-09-03 — run-2 sitting 3", rat-034: "Accept the SeatRequest reuse — the queued ticket record,
+    exactly the ratified term." DECISIONS.md "2026-09-10 — run-3 sitting 3", rat-061: "Accept otp:ov-seat-request:001
+    as the SeatRequest reuse within the joint ordering cluster, preserving the request/grant and request/specification
+    distinctions, with demand-versus-description grain and handling/resubmission continuity deferred to
+    run 4 as flagged." DECISIONS.md "2026-09-10 — run-3 sitting 3", rat-067: "Accept otp:admb-seat-request:001
+    as the SeatRequest recorded-demand-account reuse under sitting-1 Ruling 2, with account-copy identity,
+    effective queue participation and withdrawal/resubmission continuity deferred to run 4 as flagged."'
+  later_ratifications:
+  - rat-034
+  - rat-061
+  - rat-067
 - seq: 19
   candidate: StarvationException
   kind: class
@@ -150,15 +195,28 @@ candidates:
 - seq: 22
   candidate: VerificationAttempt
   kind: class
-  ruling: parked-run-2
-  join_ref: DECISIONS.md §'2026-08-30 — S5 sittings 1–2' + sitting 3 (docket policy)
-  justification: episode/occurrence/provenance class conceded at §4b (sitting 2c)
+  ruling: accepted-via
+  join_ref: rat-033
+  justification: 'episode/occurrence/provenance class conceded at §4b (sitting 2c) Superseded by DECISIONS.md
+    "2026-09-03 — run-2 sitting 3", rat-033: "Accept VerificationAttempt — the attempt record as information
+    object, boundaries from the journal''s own start/finish events." DECISIONS.md "2026-09-10 — run-3
+    sitting 3", rat-069: "Accept otp:att-verification-attempt:001 as the VerificationAttempt recorded-history
+    reuse under sitting-1 Ruling 2, with account-version identity and effective invocation continuity
+    deferred to run 4 as flagged."'
+  later_ratifications:
+  - rat-069
 - seq: 23
   candidate: VerificationEvidence
   kind: class
   ruling: accepted-via
   join_ref: rat-004
-  justification: 'exact-name join to ratified term VerificationEvidence (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term VerificationEvidence (sitting rule: join pass) DECISIONS.md
+    "2026-09-03 — run-2 sitting 3", rat-047: "Accept the merge-readiness VerificationEvidence reuse, provenance
+    identity deferred to run 3 as flagged." DECISIONS.md "2026-09-03 — run-2 sitting 3", rat-052: "Accept
+    the evidence-receipt VerificationEvidence reuse, claim-formation provenance deferred as flagged."'
+  later_ratifications:
+  - rat-047
+  - rat-052
 - seq: 24
   candidate: WorkUnit
   kind: class
@@ -188,7 +246,12 @@ candidates:
   kind: property
   ruling: accepted-via
   join_ref: rat-011
-  justification: 'exact-name join to ratified term admissionChargeTokens (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term admissionChargeTokens (sitting rule: join pass) DECISIONS.md
+    "2026-09-10 — run-3 sitting 3", rat-053: "Accept otp:ov-admission-token-charge:001 as the admissionChargeTokens
+    recorded-value property reuse within the joint ordering cluster, with repricing, assertion replacement,
+    request/grant continuity and pre-admission capacity evidence deferred to run 4 as flagged."'
+  later_ratifications:
+  - rat-053
 - seq: 29
   candidate: admissionTokenWeight
   kind: property
@@ -252,21 +315,27 @@ candidates:
 - seq: 39
   candidate: dependsOn
   kind: property
-  ruling: parked-run-2
-  join_ref: §4b 57.75% unresolved-fraction waiver
-  justification: measurement/episode vocabulary parked by the ratified waiver (sitting 1c)
+  ruling: accepted-via
+  join_ref: rat-042
+  justification: 'measurement/episode vocabulary parked by the ratified waiver (sitting 1c) Superseded
+    by DECISIONS.md "2026-09-03 — run-2 sitting 3", rat-042: "Accept dependsOn as a plain property — no
+    relator; S5''s treatment stands."'
 - seq: 40
   candidate: dependsOn
   kind: property
-  ruling: parked-run-2
-  join_ref: §4b 57.75% unresolved-fraction waiver
-  justification: measurement/episode vocabulary parked by the ratified waiver (sitting 1c)
+  ruling: accepted-via
+  join_ref: rat-042
+  justification: 'measurement/episode vocabulary parked by the ratified waiver (sitting 1c) Superseded
+    by DECISIONS.md "2026-09-03 — run-2 sitting 3", rat-042: "Accept dependsOn as a plain property — no
+    relator; S5''s treatment stands."'
 - seq: 41
   candidate: dependsOnTransitive
   kind: property
-  ruling: parked-run-2
-  join_ref: §4b 57.75% unresolved-fraction waiver
-  justification: measurement/episode vocabulary parked by the ratified waiver (sitting 1c)
+  ruling: accepted-via
+  join_ref: rat-037
+  justification: 'measurement/episode vocabulary parked by the ratified waiver (sitting 1c) Superseded
+    by DECISIONS.md "2026-09-03 — run-2 sitting 3", rat-037: "Accept dependsOnTransitive — the closure
+    property CQ-004/CQ-019 traverse."'
 - seq: 42
   candidate: enqueuedAt
   kind: property
@@ -362,7 +431,12 @@ candidates:
   kind: property
   ruling: accepted-via
   join_ref: rat-016
-  justification: 'exact-name join to ratified term hasOriginKey (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term hasOriginKey (sitting rule: join pass) DECISIONS.md
+    "2026-09-10 — run-3 sitting 3", rat-055: "Accept otp:ov-origin-ordering-key:001 as the hasOriginKey
+    scalar-property reuse supporting ScheduleProposal and AdmissionProjectionSpecification, with repository-origin
+    identity and normalization deferred to run 4 as flagged, within the joint ordering cluster."'
+  later_ratifications:
+  - rat-055
 - seq: 58
   candidate: hasPassThroughEnvironmentVariable
   kind: property
@@ -1322,7 +1396,11 @@ candidates:
   kind: individual
   ruling: accepted-via
   join_ref: rat-029
-  justification: 'exact-name join to ratified term DocgenAffectedWorkUnit (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term DocgenAffectedWorkUnit (sitting rule: join pass) DECISIONS.md
+    "2026-09-03 — run-2 sitting 3", rat-035: "Accept the DocgenAffectedWorkUnit reuse against CQ-002''s
+    complete-answer reading."'
+  later_ratifications:
+  - rat-035
 - seq: 218
   candidate: DocgenFullRepoWorkUnit
   kind: individual
@@ -1340,7 +1418,11 @@ candidates:
   kind: individual
   ruling: accepted-via
   join_ref: rat-030
-  justification: 'exact-name join to ratified term FallowAuditLane (sitting rule: join pass)'
+  justification: 'exact-name join to ratified term FallowAuditLane (sitting rule: join pass) DECISIONS.md
+    "2026-09-03 — run-2 sitting 3", rat-036: "Accept the FallowAuditLane reuse — the ratified lane specification
+    carries the Fallow case."'
+  later_ratifications:
+  - rat-036
 - seq: 221
   candidate: FallowAuditOriginMainNewOnlyWorkUnit
   kind: individual

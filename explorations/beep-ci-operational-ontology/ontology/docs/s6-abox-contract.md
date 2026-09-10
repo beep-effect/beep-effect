@@ -121,6 +121,7 @@ enforcement shapes ruled to this stage at final grill.
 
 - No T-Box change: TAXONOMY.yaml stays 38 terms byte-identical; the census class
   stays provisional; VerificationLane placement waits for run 2.
+  2026-09-10: rat-039 ratifies VerificationLane; the projection under §7 discharges this wait.
 - No auditor run 2 (journal/verdict corpus extension, adapter v1.1.0, the 163
   parked candidates, 76 parked ledger rows, 4 waived constraints).
 - No durable telemetry ETL: the golden snapshot is one pinned instant, not a
@@ -151,3 +152,25 @@ gate blocker. The projection therefore waits for an S5 gate and contract amendme
 (accepted set derived from the ratifications on disk and in the archives; one join_ref per
 accepting run), queued in the run-4 intake. VerificationLane placement (§5 non-goal) is
 ratified by rat-039 and awaits the same amendment.
+
+## 7. 2026-09-10 amendment — S6 class superset
+
+Authority: DECISIONS.md, "2026-09-10 — S5 gate amendment", Ruling 2.
+The gate requires every S6-era class to remain present as `kind: class` and
+allows additional ratified classes. The named baseline was read from
+`origin/main`'s TAXONOMY.yaml at this amendment: AdmissionPolicy,
+AdmissionPriorityClass, AdmissionSnapshot, AdmissionWorkKind, Agent,
+CachePosture, ContendedResource, GrantState, RequiredCheckDesignation,
+ScheduleProposal, SeatGrant, SeatRequest, StarvationException,
+VerificationEvidence, VerificationObligation, VerificationPlanSpecification,
+VerificationResultArtifact, and WorkUnitSpecification. The baseline is a fixed
+named set, not a class count that must be raised for each later run.
+
+The typing law is unchanged: every individual in the ratified A-Box and golden
+snapshot must have a ratified-class type, and every asserted type there must be
+a ratified class. Provisional census typing remains quarantined.
+
+Together with the dated S5 amendment and the run-2/run-3 projection, this change
+discharges the gate block recorded in §6 and the VerificationLane placement wait
+in §5. Sections 1–6 remain the historical record. Ratification deferrals remain
+flags; the amendment does not discharge the run-4 identity or provenance duties.
