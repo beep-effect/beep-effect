@@ -8,7 +8,7 @@ ciops:sp-step-scoped a ciops:ScheduleProposal ;
     ciops:hasStep ciops:st-step-scoped .
 ciops:aps-step-scoped a ciops:AdmissionProjectionSpecification .
 ciops:st-step-scoped a ciops:ScheduleStep ;
-    ciops:stepIndex 1 ;
+    ciops:stepIndex 0 ;
     ciops:schedulesSeatRequest ciops:req-step-scoped ;
     ciops:hasScopeTag "admission" .
 ciops:req-step-scoped a ciops:SeatRequest .

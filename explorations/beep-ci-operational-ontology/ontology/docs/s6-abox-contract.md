@@ -129,3 +129,25 @@ enforcement shapes ruled to this stage at final grill.
 - No IRI doctrine ratification — S8 territory; S6 minting is provisional under
   the declared base.
 - No edits to digest-locked §4b run evidence.
+
+## 6. 2026-09-10 — run-2/run-3 ratification projection (deferred, gate-blocked)
+
+Dated closeout note for auditor run 3; sections 1–5 are the original S6 sitting and stay
+as written. The run-2 ratifications rat-032 (FailureSignature), rat-033
+(VerificationAttempt), rat-037 (dependsOnTransitive) and rat-039 (VerificationLane reuse)
+and the run-3 ratifications rat-053..rat-070 (DECISIONS.md "2026-09-10 — run-3 sitting 3")
+are the authority for their terms; the records live under
+`extraction/s4/beep-ci-ops/governance/ratifications/` (run 3) and the run-2 archive
+shelter. Their projection into `extraction/s5/DISPOSITIONS.yaml`,
+`extraction/s5/TAXONOMY.yaml`, and `extraction/s6/PREDICATES.yaml` was attempted at the run-3
+closeout and REVERTED: `research/scripts/validate_packet.py --s5` accepts only the
+run-1-derived term set and one bare `join_ref` per candidate row, and `--s6` counts exactly
+18 ratified classes, so any projection of a NEW ratified term (VerificationAttempt,
+FailureSignature, VerificationLane, ScheduleStep, VerificationEpisode,
+AdmissionProjectionSpecification, hasStep, stepIndex, schedulesSeatRequest, hasScopeTag,
+hasCurrentProposal, hasProjectionSpecification) or of a second ratification on an
+already-accepted term (SeatGrant, SeatRequest, admissionChargeTokens, hasOriginKey) is a
+gate blocker. The projection therefore waits for an S5 gate and contract amendment
+(accepted set derived from the ratifications on disk and in the archives; one join_ref per
+accepting run), queued in the run-4 intake. VerificationLane placement (§5 non-goal) is
+ratified by rat-039 and awaits the same amendment.

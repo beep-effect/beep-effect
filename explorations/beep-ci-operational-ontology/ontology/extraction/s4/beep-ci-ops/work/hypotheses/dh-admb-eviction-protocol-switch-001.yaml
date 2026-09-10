@@ -1,0 +1,38 @@
+id: "dh:admb-eviction-protocol-switch:001"
+observation_refs:
+  - "so:sha256:0cccdb870b289d7bd47e8a769286e011a63a4c80aede46b7ceb7f8fa9d665774"
+cq_warrants: []
+proposed_referent:
+  label: "Eviction protocol switch"
+  description: >-
+    An instance is a protocol configuration representation carrying the eviction toggle. The
+    supplied instance states eviction=on. No admission event dates its activation or retirement,
+    and no event binds a particular removal to this setting. It is distinct from a ticket
+    eviction, a lease eviction, an adopted operational policy, and an operational-change
+    occurrence. The setting alone establishes neither governing use nor a threshold, guarantee,
+    or process-death condition.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "An eviction-enabling operational policy specification, if governing consumption is evidenced"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "An operational change adopting eviction, if an adoption occurrence and time are supplied"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The observation contains only (config_key_value, "eviction=on"); the excerpt additionally
+    carries a serialization-version label. Neither fact connects this switch to a specific
+    admission or eviction decision. The source batch retained the null and the consolidation
+    preserves that result. A supplied observation of the scheduler consuming the switch in a
+    governing decision, together with the conditions it controls, would discriminate policy
+    content from a dormant implementation option. Adoption-qualified timing would additionally
+    be necessary for an operational-change reading. Coexisting eviction histories supply neither
+    binding by themselves.
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false

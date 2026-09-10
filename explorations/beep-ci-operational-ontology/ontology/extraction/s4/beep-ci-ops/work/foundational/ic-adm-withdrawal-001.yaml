@@ -1,0 +1,67 @@
+id: ic:adm-withdrawal:001
+hypothesis_ref: dh:adm-withdrawal:001
+identity:
+  supplies_identity: false
+  identity_criterion: Two descriptions identify one withdrawal only when they concern the same ending,
+    by withdrawal, of one particular solicitation's participation in one queue. The individuating transition
+    is removal from that contention episode, not the requester, work kind, a cancellation intention, or
+    the journal line. A later withdrawal following a fresh insertion is another occurrence even for the
+    same work.
+  reidentification_key:
+  - Local journal nonce together with the matching event block and withdrawnAtMillis; evidence locator
+    only, neither globally unique nor sufficient for operational identity.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One withdrawal boundary closes one period of queue participation. The initiating enqueue and
+    any other cancellation or grant termination remain separate occurrences.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - A journal information object asserting withdrawal. A time-aligned observation of ticket removal by
+    the withdrawal operation would discriminate the operational event from this report-only interpretation.
+  - The terminal boundary of queue participation labeled withdrawn, without a distinct event individual.
+    A decision querying the withdrawal actor, mechanism, or independent effects would distinguish the
+    event model.
+  existential_dependencies:
+  - The particular solicitation and its queue participation immediately before withdrawal.
+  - The queue context and the transition ending that participation. The evidence does not identify a voluntary
+    actor or establish a cancellation cause.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: A withdrawn tag may result from an automatic cleanup or cancellation path with no voluntary
+    decision by the requester. Treating it as intentional abandonment, proof failure, or relinquishment
+    of an admitted grant would add facts that these enqueue/withdrawal pairs never assert. A replayed
+    withdrawal entry can also leave the queue unchanged.
+status: proposed
+grain: One particular operational transition, represented by a dated event assertion; not a classification
+  signature, a current binding snapshot, a governing specification, a journal block, or the whole nonce-linked
+  history.
+metaproperty_rationale: Under the operational reading, this particular transition is essentially the occurrence
+  it was, so its event classification is rigid. It carries occurrence identity and does not establish
+  a new independent continuant identity provider. Its relational dependence is on participants at the
+  transition, not their perpetual future existence. The information-object rival is kept separate, not
+  assigned these meta-properties.
+temporality_rationale: The journal supplies a single asserted boundary time, not independently measured
+  start/end times for the operation, so interval duration remains unresolved. At the selected boundary-event
+  grain it does not persist through mutable continuant states. Withdrawal completes when that queue participation
+  ends. No subsequent request or grant state is a state of this completed occurrence.
+evidence_refs:
+- so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+- so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+- CQ-007
+- CQ-021
+- CQ-023
+evidence_reading: Both cited matched histories contain positive enqueue and withdrawal blocks. One concerns
+  merged-preview work; the other concerns review-fix with weightTokens=1. The reports therefore assert
+  a queue exit across different work descriptions, without supplying a release or eviction of a charged
+  grant.
+evidence_limits: All cited observations are parser-derived records of the current run3-fleet journal,
+  not synthetic observations. Operational reality is not established by the journal alone. Capture, owner-reference,
+  resanitization, corpus, generator, and record-position metadata are not identity criteria. No missing
+  entry is treated as closed-world evidence.

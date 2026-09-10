@@ -1,0 +1,20 @@
+id: "fa:att-recovery-diagnostic-alt:001"
+hypothesis_ref: "dh:att-recovery-diagnostic:001"
+identity_card_ref: "ic:att-recovery-diagnostic-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Information object: diagnostic timing record (policy label, detection instant, standalone vs lane-rerun durations) attached to a successful publish verdict"
+    still_viable: true
+  - label: "Event: the detection and recovery occurrence described by the record"
+    still_viable: true
+  - label: "Reusable recovery-policy kind whose name alone establishes a failure signature"
+    still_viable: false
+  - label: "Quality: the two durations as intrinsic timeless qualities of the lane or package"
+    still_viable: false
+strongest_counterexample: "Reading the policy name as a failed attempt or as CQ-013 FailureSignature membership: so:sha256:37968f126c464470a069ac2051cb358a0a29720dd49df7256625cb4d17bfa2c6 places the diagnostic inside attempt 95843714-fd19-4195-b260-93f7410b95b4 with outcome=success. The information-object and occurrence-event models are observationally equivalent on current evidence; only the dated measurements are observed, not an independent recovery process."
+verdict: analyzed
+needed_evidence: "An independent observation of the standalone rebuild versus the lane rerun (separate process timings not copied from this payload) would discriminate record from occurrence. A demonstrated overlap from this diagnostic to attributedDelayMs or to a FailureSignature taxonomy (CQ-013), or a recovery-policy specification that is reused across attempts, is absent and must not be minted from the label. The two captures must remain one cost."

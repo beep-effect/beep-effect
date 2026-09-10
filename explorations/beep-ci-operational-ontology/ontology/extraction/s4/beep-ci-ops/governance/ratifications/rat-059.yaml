@@ -1,0 +1,11 @@
+id: rat:59
+proposal_ref: otp:ov-schedule-proposal:001
+proposal_sha256: d39e9623cd04f16c83da55866723bf950b5478e076d45e1fee9938e859b52703
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-schedule-proposal:001 as the ScheduleProposal fixed-prescription-content
+  reuse, with issuance-versus-content identity deferred to run 4 as flagged and its episode, governing-specification
+  and request endpoint flags retained within the joint ordering cluster.

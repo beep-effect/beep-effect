@@ -1,0 +1,30 @@
+id: "fa:adm-journal-entry-alt:001"
+hypothesis_ref: "dh:adm-journal-entry:001"
+identity_card_ref: "ic:adm-journal-entry-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      The operational request, grant, or occurrence described by the entry as
+      the primary referent (both can coexist; this entry remains the assertion).
+    still_viable: true
+  - label: >-
+      Serialization-only content with no decision-bearing assertion. Weakened by
+      dated queue and holding transitions in the supplied entries.
+    still_viable: false
+strongest_counterexample: >-
+  Merging distinct event blocks into one bearer via a flat projection, or
+  inferring current holder/queue state from historical entries (CQ-008, CQ-021).
+  so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+  keeps admit and release as separate assertions;
+  so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+  is a single ticket-eviction assertion, not a grant release.
+verdict: analyzed
+needed_evidence: >-
+  Comparing an independently observed operation with a separately appended,
+  copied, or corrected assertion would further discriminate the informational
+  entry from its referent. No additional collection-level warrant is required
+  for this per-entry information object (CQ-007, CQ-008, CQ-021).

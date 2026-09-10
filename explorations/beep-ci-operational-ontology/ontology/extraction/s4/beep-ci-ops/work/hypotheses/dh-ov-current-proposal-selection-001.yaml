@@ -1,0 +1,36 @@
+id: dh:ov-current-proposal-selection:001
+observation_refs:
+- po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7
+- po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+cq_warrants:
+- CQ-020
+proposed_referent:
+  label: Recorded current-proposal selection for an episode
+  description: An information assertion selecting the schedule proposal that an emitted episode representation
+    designates as current. Currency is bounded to the supplied projection representation; no timeless
+    latest-proposal fact or observed update history is claimed.
+representation_status: information_artifact
+alternatives:
+- label: Temporally qualified relationship between a verification occurrence and its current plan
+  representation_status: domain_referent
+  plausibility: viable
+- label: Ordinary association that conveys no selection of current content
+  representation_status: information_artifact
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The exact predicate connects an episode subject to a proposal in the emitter and fixture,
+    enabling the question to select that proposal rather than an undifferentiated history. This rejects
+    an implementation-only reading for the asserted selection. The batch contains no supersession trace,
+    uniqueness enforcement, or completeness contract permitting absence-based conclusions about other
+    proposals.
+  discriminator: The emitter quote is "${episodeNode} ciops-prov:hasCurrentProposal ${proposalNode} .";
+    the fixture asserts that predicate from its episode subject to its schedule subject. If the predicate
+    carried no current-selection content, the observed episode-specific proposal selection required by
+    the current-sequence question would disappear.
+epistemic_status: proposed
+confidence:
+  value: 0.85
+  use_for_acceptance: false

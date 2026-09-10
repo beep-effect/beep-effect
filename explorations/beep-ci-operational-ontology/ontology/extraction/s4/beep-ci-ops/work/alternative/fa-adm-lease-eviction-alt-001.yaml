@@ -1,0 +1,37 @@
+id: "fa:adm-lease-eviction-alt:001"
+hypothesis_ref: "dh:adm-lease-eviction:001"
+identity_card_ref: "ic:adm-lease-eviction-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      Dated journal assertion that a holding was involuntarily ended
+      (information_object). Observationally equivalent on current evidence:
+      no independent lease-store deletion or owner-liveness observation is
+      supplied.
+    still_viable: true
+  - label: >-
+      Grant-end temporal boundary without a separately reified occurrence
+      (fold evictedAtMillis into the seat grant).
+    still_viable: true
+  - label: proved owner-death or owner-reuse occurrence
+    still_viable: false
+  - label: same event kind as ticket eviction
+    still_viable: false
+strongest_counterexample: >-
+  Reifying death from the reason string, or treating this as the same
+  occurrence as a queued ticket eviction.
+  so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+  reports admission then lease eviction for nonce=ab8c8ba0-6132-4e49-9d28-74e2e1873c07
+  with reason=owner-dead-or-reused and lastHeartbeatAtMillis=1788497733794;
+  that is assertion content, not a death event, and it is not a CQ-021 ticket
+  eviction (CQ-008, CQ-009).
+verdict: analyzed
+needed_evidence: >-
+  A contemporaneous observation of lease-store deletion aligned to
+  evictedAtMillis, plus an independent owner-liveness or reuse observation if
+  the reason is to be treated as more than asserted content. Origin-exclusion
+  (CQ-009) still needs originKey on the ended grant, not this occurrence alone.

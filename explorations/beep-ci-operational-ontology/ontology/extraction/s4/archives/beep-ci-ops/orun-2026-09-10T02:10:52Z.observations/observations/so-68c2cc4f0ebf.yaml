@@ -1,0 +1,52 @@
+{
+  "id": "so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic/attempts/dead-ticket/feat_synthetic-dead-ticket-7e2dab5a5a8b/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 8,
+    "content_sha256": "eb3c2d8db33f4475cb304e7bc9201050f3eaf3955e353a1ab57ab43e141f8938"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-synthetic/attempts/dead-ticket/feat_synthetic-dead-ticket-7e2dab5a5a8b/attempts.properties",
+    "lexical_name": "_tag",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=attempt-terminated"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=a2fdba81-945f-4f44-8d93-6f71f706d5cd"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "provenance=synthetic"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=queued-submitter-death"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-09-09T05:26:26.731Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-attempt-journal/v1"
+    }
+  ],
+  "source_excerpt": "# provenance: synthetic\n# record 0\n_tag=attempt-terminated\nschemaVersion=yeet-attempt-journal/v1\nattemptId=a2fdba81-945f-4f44-8d93-6f71f706d5cd\nrecordedAt=2026-09-09T05:26:26.731Z\nreason=queued-submitter-death\nprovenance=synthetic\n",
+  "epistemic_status": "parser_derived"
+}

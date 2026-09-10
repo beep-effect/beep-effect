@@ -1,0 +1,83 @@
+target: otp:att-verification-attempt:001
+target_sha256: 8a7cd3f23bd7f5618b7dc43bb98d177a311525d74c763574aa1c3c6121bee59d
+chain_sha256: 37db9b6fba3d1350d35d3b9519a9c7e9d2449cd4455ac599d36f3ea0bca9f967
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: parents is empty. Information-object selection asserts no process/event subsumption or
+    equivalence with a procedure, run, verdict or physical journal token. No valid is-a edge between
+    those grains is required.
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  counterexample: Replay the 81605 ms failure account and the later 135370 ms success account without
+    invoking a command. The original DH's execution discriminator still fails, and the revised proposal
+    explicitly concedes process and bounded operational-event denotation. Under sitting-1 Ruling
+    2 it instead selects the originating attempt account with its associated claims. The two source
+    excerpts preserve the first account's failed docgen and not-run feedback claims separately from
+    the later success; replay retains that information and therefore does not erase the selected
+    referent. The revision_log covers the failed r1 digest and discriminator-true-of-dto, and effective
+    execution plus an attempt-scoped consumer are named as run-4 evidence for any operational reading.
+  outcome: survived
+  evidence:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - CQ-022
+- surface: identity
+  rule: specification-versus-invocation
+  counterexample: 'Identify the two recorded repair attempts by their common procedure or branch-level
+    run, or let a copied success report overwrite the earlier failure. The revision instead preserves
+    the originating account and fixed asserted associations: d1e2faf7''s 16:59:45.919Z start, failed
+    docgen and 81605 ms elapsed claim differ from 10a92517''s 17:16:21.382Z start and 135370 ms success.
+    Copies of unchanged same-origin content retain that information unit, while correction changes
+    its content version. The linked IC''s causal invocation identity is expressly conceded, and the
+    fixed-content account versus enduring corrected history remains a steward choice rather than
+    an empirical claim of copy/correction behavior.'
+  outcome: survived
+  evidence:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - CQ-022
+- surface: identity
+  rule: recorded-status-versus-performed-work
+  counterexample: Count the first account's not-run feedback steps as performed temporal parts, or
+    use the September legacy-unowned-start notice as the August verify start's actual execution end.
+    Both fabricate occurrence claims beyond the record. The revision preserves those as status and
+    reconciliation assertions, distinguishes account lifetime from described work time, and keeps
+    the rigid informational account dependent on its originating context rather than on continuing
+    executors. Repeated excerpts do not supply independent invocations or a causal execution interval.
+  outcome: survived
+  evidence:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+- surface: warrant
+  rule: attempt-scoped-cancellation-required
+  counterexample: Remove distinct attempt subjects and join the earlier failure and running work
+    only by the shared run. A healthy retry then enters the earlier failure's candidate set. CQ-022's
+    executable query requires CommittedFailure and WorkUnitExecution to share the same inAttempt
+    object, so distinct attempt scope is necessary despite no rdf:type condition on that variable.
+    The revision preserves that account-level subject distinction while declining to infer committed
+    failure, running work or cancel class from the journal claims. Those separately evidenced joins
+    remain required before the recorded account can inform an operational cancellation answer.
+  outcome: survived
+  evidence:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - CQ-022
+rival_models_still_viable:
+- An originating account with fixed asserted content versus an enduring corrected attempt history
+  with separate versions; a copy/correction and independent equal-content consumer trace remains
+  required.
+- Actual invocation process and bounded operational event readings remain conceded pending the named
+  command-driver and attempt-scoped stopping-consumer evidence.
+evidence:
+- so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+- so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+- CQ-022

@@ -1,0 +1,11 @@
+id: rat:56
+proposal_ref: otp:ov-projection-specification:001
+proposal_sha256: 312d1b614d932277c1624d538a30d6b6c339cebd3c54986d334111f3598d40e3
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-projection-specification:001 as the AdmissionProjectionSpecification
+  repeatable-rule proposal within the joint ordering cluster, with rule-versus-application identity explicitly
+  deferred to run 4 as flagged and no equation of rules with input-bound contexts.

@@ -1,0 +1,85 @@
+id: ic:admb-admission-history:001
+hypothesis_ref: dh:admb-admission-history:001
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: common subject matter supplies an aboutness condition, but does not decide sameness
+    of collections. An immutable collection version would be individuated by its fixed, associated
+    assertion contents and coverage boundary; an enduring report would instead require a continuity
+    rule across added or corrected assertions. The supplied observations do not choose between these
+    criteria. Nonce equality correlates entries but cannot identify an aggregate independently of
+    its membership and revision semantics.
+  reidentification_key:
+  - nonce (correlation within the supplied journal only; no aggregate identity or global uniqueness
+    guarantee)
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    Conditional informational unity: every member must assert a boundary of the same particular demand
+    or its distinct resulting grant, preserving entry-level field associations. Common field names,
+    journal adjacency, or shared origin do not unite different chains. A fixed member set versus a
+    continuing report remains unresolved.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - An enduring report whose identity survives appended or corrected member assertions
+  - An immutable assertion collection version identified by its associated contents and coverage
+  - The operational admission lifecycle described by the collection
+  - An extractor grouping with no separately addressable collection beyond the member assertions
+  existential_dependencies:
+  - >-
+    The associated assertion contents and their determinate interpretation are required for a collection
+    version. The operational request or grant need not still exist, and the assertions need not be
+    true, for the information to persist.
+  - >-
+    An enduring report interpretation would additionally require an observed report-maintenance relation;
+    none is supplied.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+- description: >-
+    Counterfactual consistent with the observations: a consumer receives the admitted-only collection
+    for nonce 012163b8-ef66-4fb4-aba5-0d4af4072512, then later receives a release entry for that same
+    demand. Is this the same enriched history or a distinct immutable history version? Nonce equality
+    says nothing about that choice. Treating either the current partial collection as a complete lifecycle
+    or each observation span as a unique history would manufacture an identity rule.
+status: proposed
+referent_grain: >-
+  A correlated information collection about one submitted demand and any resulting authorization,
+  with its constituent assertions kept separate. It is neither a single journal entry, an operational
+  lifecycle, nor a request-grant continuant.
+analysis_notes:
+  rigidity: >-
+    Rigid at the proposed information-object grain: becoming obsolete or false would not turn information
+    into its operational subject. This does not settle which collection sortal supplies identity.
+  dependence: >-
+    Dependence is on informational constitution and interpretation. A particular live operational
+    subject, file, capture pass or pseudonym is not an existential identity provider.
+  temporality: >-
+    An information collection can persist through an interval; the event timestamps describe its subject,
+    not its creation or retention. Whether adding information preserves this individual's identity
+    is unresolved. No collection terminal state is observed.
+  evidence_limits: >-
+    The 53 correlated source chains include 28 admissions, 23 withdrawals and two ticket-eviction-only
+    chains. Two admitted chains have no endpoint in the supplied evidence. These are coverage facts,
+    not evidence of a complete operational census or of 53 independently maintained report objects.
+  provenance: >-
+    The cited observation records are from the current run's fleet admission journal. No synthetic
+    observation is used. Capture, corpus, generator, sanitization and ownerRef metadata are excluded
+    from identity criteria and reidentification keys.
+evidence_refs:
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+- so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+- so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+- so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+- so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+- CQ-008
+- CQ-009
+- CQ-010
+- CQ-021

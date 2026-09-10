@@ -1,0 +1,58 @@
+id: fa:adm-seat-request:001
+hypothesis_ref: dh:adm-seat-request:001
+identity_card_ref: ic:adm-seat-request:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: unresolved
+  context_reification_needed: true
+rival_models:
+- label: A request relator mediating a particular solicitation between a requester and an admission authority
+    for specified work. Its existence would be tied to that solicitation relation, with queue participation
+    a temporally qualified condition. Intermediate ticket and decision observations are needed to show
+    this continuing relation.
+  still_viable: true
+- label: An information object containing a solicitation, bearing a queued-request role only while the
+    scheduler treats it as pending. The same content bearer could survive withdrawal; observing its identity
+    outside queue participation would distinguish it from a relation that ends at queue exit.
+  still_viable: true
+- label: An occurrence-centered model of enqueue and exit, with a minimally identified participant and
+    no independently reidentified continuing request. The journal alone does not exclude it.
+  still_viable: true
+- label: Only a journal information account of requested admission, leaving the operational contender
+    uncorroborated. A before/after ticket-store trace would distinguish it from an established solicitation.
+  still_viable: true
+strongest_counterexample: A withdrawn solicitation can remain as the same archived request content while
+  no longer being queued, and identical work can later be resubmitted as a new operational request. The
+  cited merged-preview and review-fix enqueue/withdrawal pairs do not show which bearer survives either
+  boundary. Identifying the request by its nonce, requested work, requester, or waiting interval would
+  choose among those models without evidence; the ticket-eviction-only record does not even supply its
+  entry time.
+verdict: explicitly_deferred
+needed_evidence: A time-aligned ticket-store trace of one solicitation through at least two queue evaluations,
+  including an in-place priority or ticket refresh, followed by queue exit and resubmission of the same
+  work. The trace must independently link the operational solicitation across those steps and show whether
+  the earlier solicitation remains distinguishable after it ceases waiting. This would distinguish a persisting
+  request bearer from a queue-dependent relation or role and from a journal account; another same-nonce
+  journal entry or a capture owner label would not settle it.
+test_rationales:
+  spec_vs_execution: The requested work description can be reused by multiple solicitations and executions.
+    A solicitation is neither that specification nor evidence that an execution began.
+  world_vs_information: A journal account of a solicitation is distinguished from the contender it purports
+    to describe. Positive entry/exit assertions support the proposed referent without independently corroborating
+    the ticket or its continuing identity.
+  role_vs_bearer: The requester is not the request, and queued is context-dependent. What remains unresolved
+    is whether the hypothesized request is itself the relation, an information bearer with a queued role,
+    or only an event participant; no bearer is silently selected.
+  context_reification_needed: Queue membership is indexed to a particular solicitation, queue, and instant.
+    CQ-021 and CQ-023 need a complete relevant snapshot; the latter also needs an observed wait, declared
+    bound, and exception context. A history cannot be ingested as a timeless current queued request.
+category_rationale: No single request category and identity provider is justified by these reports. The
+  linked card explicitly leaves identity, rigidity, dependence, and bearer temporality unresolved. The
+  queue-entry and exit event shapes can be analyzed separately without admitting a request kind by default.
+evidence_refs:
+- so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+- so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+- so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+- CQ-021
+- CQ-023

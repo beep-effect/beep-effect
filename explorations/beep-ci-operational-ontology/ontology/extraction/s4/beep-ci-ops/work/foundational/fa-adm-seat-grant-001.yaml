@@ -1,0 +1,60 @@
+id: fa:adm-seat-grant:001
+hypothesis_ref: dh:adm-seat-grant:001
+identity_card_ref: ic:adm-seat-grant:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: unresolved
+  context_reification_needed: true
+rival_models:
+- label: 'A relational mode of the beneficiary or work: a temporary permission dependent on an admission
+    authority, with identity inherited from its bearer rather than a separate authorization relator. The
+    report does not independently reveal all mediating participants.'
+  still_viable: true
+- label: A time-indexed holding situation reconstructed from admission and termination events, without
+    a separately persisting grant bearer. Repeated accounting decisions would need to reidentify an authorization
+    to favor the relator model.
+  still_viable: true
+- label: An information object recording charged admission and an observed or unknown endpoint; no independently
+    corroborated authorization is required for that record to exist.
+  still_viable: true
+strongest_counterexample: A charged admission entry may remain after its actual lease has ended, while
+  a new admission for identical work and the same origin would be a different authorization. In particular,
+  the two cited histories with admission but no terminal report cannot establish ongoing holding. If the
+  scheduler only reconstructs occupancy from events, the same journal can support all reported endpoints
+  without a persisting authorization relator. Nonce, origin, and charge equality cannot decide between
+  those models.
+verdict: explicitly_deferred
+needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+  and release or eviction, showing the same allocation counted in at least two separate decisions for
+  the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+  or lease update and termination followed by reacquisition, so continuity versus a new grant can be observed,
+  together with a captured conferral/termination rule stating whether authorization or only charged occupancy
+  persists. This would discriminate a continuing authorization relator from an allocation mode, an event-derived
+  holding situation, and a journal-only account.
+test_rationales:
+  spec_vs_execution: The proposed authorization is established under a policy, while conferral and authorized
+    work are distinct occurrences. A work specification, admission procedure, permission, and actual execution
+    have separate identities.
+  world_vs_information: A grant relation and its journal account are separate candidates. An admission
+    entry is evidence of an asserted conferral; later log availability, or lack of an endpoint, does not
+    prove present holding.
+  role_vs_bearer: The holder role is distinct from the beneficiary who can lose it while persisting. Whether
+    the permission itself constitutes a relator or a relational mode borne by that beneficiary/work remains
+    open and drives the deferral.
+  context_reification_needed: The beneficiary, work, capacity pool, grant interval, charge, and decision
+    instant must remain associated. CQ-009 needs simultaneous active holdings for a nonempty origin; CQ-010
+    needs pre-conferral remaining capacity. Independent binary facts without those contexts could produce
+    false accounting conclusions.
+category_rationale: A relator is a defensible candidate shape for the proposed temporary authorization,
+  but the journal does not settle continuing bearer identity or rigidity. The linked card retains that
+  candidate with explicit unresolved meta-properties; the mode, situation, and information-only rivals
+  remain viable. This deferral does not authorize synthesis to omit the rivals or to assert present activity.
+evidence_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+- so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67
+- so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+- CQ-008
+- CQ-009
+- CQ-010

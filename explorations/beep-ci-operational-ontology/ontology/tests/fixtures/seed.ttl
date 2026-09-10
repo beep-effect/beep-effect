@@ -109,7 +109,7 @@ ciops:sp-2026-08-27-1443 a ciops:ScheduleProposal ;
     ciops:scopedByComputation ciops:affected-2 ;
     ciops:hasStep ciops:st-1 .
 ciops:st-1 a ciops:ScheduleStep ;
-    ciops:stepIndex 1 ;
+    ciops:stepIndex 0 ;
     ciops:schedulesSeatRequest ciops:req-lint-affected-from-main ;
     ciops:hasScopeTag "admission" .
 ciops:req-lint-affected-from-main a ciops:SeatRequest .

@@ -1,0 +1,56 @@
+id: dh:adm-lease-eviction:001
+observation_refs:
+- so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+- so:sha256:126709ea74fec8cb4b03c021d7cf121aac566b19bea91c4ac8a452f33d01a94e
+- so:sha256:27ba4f5468b662c17e401817a599ad4e45c2091d51423b279d8de9fbe97880b7
+- so:sha256:4bb535144f06b1e9abc6a8c75f0dcc3fc7d030f9b64214adfd1bed92ca384b08
+- so:sha256:675134527a157d157274937b2f8ad90b036d30b77340d61f1e202483d9ac828e
+cq_warrants:
+- CQ-008
+- CQ-009
+proposed_referent:
+  label: admission lease eviction occurrence
+  description: An occurrence of removing an admitted lease and ending its grant's reported holding by
+    eviction. An instance is bounded by admission-lease-evicted at evictedAtMillis and refers back to
+    a positively admitted grant. It is distinct from ordinary release and from eviction of a waiting ticket;
+    an admission charge belongs to the holding being removed, not to an additional eviction grant. All
+    five cited histories report reason=owner-dead-or-reused. That disjunction is reported reason content
+    and establishes neither owner death alone nor process reuse alone. A reported lastHeartbeatAtMillis,
+    where present, provides heartbeat context without a liveness guarantee, an expiry policy, a death
+    occurrence, or proof that an execution was stopped. These historical boundaries do not establish a
+    complete current holder census.
+representation_status: domain_referent
+alternatives:
+- label: A journal assertion of lease eviction and its stated reason. An independently observed lease
+    removal with time-aligned holder-accounting evidence would distinguish the occurrence from the report;
+    process-liveness evidence is separately needed to establish whether death or reuse was the actual
+    cause.
+  representation_status: information_artifact
+  plausibility: viable
+- label: A grant's terminal condition carrying an eviction reason, without reifying eviction as an occurrence.
+    Evidence that eviction participants or the removal act must be queried separately would discriminate
+    this domain model.
+  representation_status: domain_referent
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The combination of admitted holding and later lease-eviction assertion concerns removal from
+    the holder population, with different accounting consequences from removal of a queued ticket. It
+    supports the eviction-occurrence candidate while leaving the journal-only interpretation viable. The
+    positive eviction boundary, not an old heartbeat or a resanitized owner identifier, supplies the denotation
+    evidence. No causal choice between death and reuse is made.
+  discriminator: 'For nonce=ab8c8ba0-6132-4e49-9d28-74e2e1873c07, the config_key_value predicate has these
+    rechecked objects: ''_tag=admission-admitted'', ''admittedAtMillis=1788492468990'', ''weightTokens=5'',
+    ''_tag=admission-lease-evicted'', ''evictedAtMillis=1788498598670'', ''reason=owner-dead-or-reused'',
+    ''lastHeartbeatAtMillis=1788497733794''. For nonce=39193b80-5f90-4e70-a432-fc259b3d994c, the config_key_value
+    predicate has these rechecked objects: ''_tag=admission-admitted'', ''admittedAtMillis=1788917803122'',
+    ''_tag=admission-lease-evicted'', ''evictedAtMillis=1788920302809'', ''reason=owner-dead-or-reused''.
+    The matched blocks positively assert removal of a previously acquired holding. Under the null there
+    is no lease-removal occurrence to end that holding; keeping the holding past the reported eviction
+    would alter resource and origin accounting. The discriminator is the reported removal transition,
+    not an inference that the stated disjunctive cause has been proved.'
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

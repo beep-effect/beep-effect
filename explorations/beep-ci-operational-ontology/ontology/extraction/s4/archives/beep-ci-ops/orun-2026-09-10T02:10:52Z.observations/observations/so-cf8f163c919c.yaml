@@ -1,0 +1,88 @@
+{
+  "id": "so:sha256:cf8f163c919cdad854f3e9aabddf18a7c7589844a69389646492c47ac1f7d8e8",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 2443,
+    "end_line": 2470,
+    "content_sha256": "682fb9a4564cea3d1584d3a789f5f90178b8ad3e79a070c62bd14089b04667b9"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/admission/canonical/journal.properties:nonce=3234b861-792e-4cde-96b6-5ca188435021",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=fff01c8a-4d7f-4651-946e-a703cee128a1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=chore/astra-xhigh-agent-routing"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788927435322"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=3234b861-792e-4cde-96b6-5ca188435021"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=4dfdbfb18513"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1788927676757"
+    }
+  ],
+  "source_excerpt": "# record 221\nownerRef=4dfdbfb18513\nownerRefVariant=pid_pair\nattemptId=fff01c8a-4d7f-4651-946e-a703cee128a1\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927435322\nnonce=3234b861-792e-4cde-96b6-5ca188435021\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 222\nownerRef=4dfdbfb18513\nownerRefVariant=pid_pair\nattemptId=fff01c8a-4d7f-4651-946e-a703cee128a1\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927435322\nnonce=3234b861-792e-4cde-96b6-5ca188435021\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788927676757\n",
+  "epistemic_status": "parser_derived"
+}

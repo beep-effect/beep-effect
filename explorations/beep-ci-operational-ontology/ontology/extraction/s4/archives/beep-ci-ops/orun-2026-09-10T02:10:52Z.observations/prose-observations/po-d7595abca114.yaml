@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/test/fixtures/emission-v2.ttl"
+  },
+  "source_span": {
+    "start_line": 37,
+    "end_line": 37
+  },
+  "quote": "ciops-prov:specification-s7%2Demission%2Fv2-policy%2Ddigest-journal%2Dprefix%2Ddigest-admission rdf:type ciops-prov:AdmissionProjectionSpecification .",
+  "epistemic_status": "quoted_prose"
+}

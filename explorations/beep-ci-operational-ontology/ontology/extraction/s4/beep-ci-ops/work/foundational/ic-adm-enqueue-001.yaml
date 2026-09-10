@@ -1,0 +1,72 @@
+id: ic:adm-enqueue:001
+hypothesis_ref: dh:adm-enqueue:001
+identity:
+  supplies_identity: false
+  identity_criterion: Two descriptions concern the same enqueue occurrence only if they concern the very
+    same insertion of one solicitation into one admission queue, beginning that particular period of contention.
+    Sameness follows the one queue-entry transition and its participants, not equal work descriptions,
+    a timestamp, or a shared nonce. A fresh insertion after an ended participation is a different occurrence
+    even for the same requested work. This is a proposed criterion for the operational referent; the journal
+    witnesses assertions of it.
+  reidentification_key:
+  - Local journal nonce together with the matching event block and enqueuedAtMillis; evidence locator
+    only, neither globally unique nor sufficient for operational identity.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One initiation of queue participation unifies this occurrence. Its later admission or withdrawal
+    is a separate occurrence; the waiting interval between them is not a temporal part of the enqueue
+    boundary.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - An information object asserting queue entry; still viable because the cited observations establish
+    the assertion, not an independently observed insertion. A time-aligned ticket-store insertion trace
+    would distinguish these readings.
+  - The beginning of a request participation interval represented as a temporal boundary, without an independently
+    reified event. A trace or decision needing insertion-specific actors or effects would distinguish
+    this from the event model.
+  existential_dependencies:
+  - The particular solicitation entering contention, whose underlying bearer identity remains open.
+  - The admission queue and the transition that establishes eligibility for its selection. These must
+    obtain at entry; the occurrence does not require the ticket to remain present forever.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: A logger can retry the same enqueue assertion twice without inserting a second ticket,
+    or record an enqueuedAtMillis retrospectively in an admission entry. Counting the lines or the timestamp
+    as distinct operations would manufacture enqueue events. Conversely, removing and resubmitting identical
+    work is a new entry even if a local nonce is mistakenly reused.
+status: proposed
+grain: One particular operational transition, represented by a dated event assertion; not a classification
+  signature, a current binding snapshot, a governing specification, a journal block, or the whole nonce-linked
+  history.
+metaproperty_rationale: Under the operational reading, this particular transition is essentially the occurrence
+  it was, so its event classification is rigid. It carries occurrence identity and does not establish
+  a new independent continuant identity provider. Its relational dependence is on participants at the
+  transition, not their perpetual future existence. The information-object rival is kept separate, not
+  assigned these meta-properties.
+temporality_rationale: The journal supplies a single asserted boundary time, not independently measured
+  start/end times for the operation, so interval duration remains unresolved. At the selected boundary-event
+  grain it does not persist through mutable continuant states. The occurrence completes at queue entry;
+  admission, withdrawal, and ticket eviction terminate the resulting participation, not this already completed
+  entry.
+evidence_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+- CQ-007
+- CQ-021
+- CQ-023
+evidence_reading: The matched blocks for one cited history separately assert enqueue at 1788926595182
+  and admission at 1788926595216. The other separately asserts enqueue at 1788928587012 and withdrawal
+  at 1788928909789. These support an entry-boundary interpretation without making one nonce chain one
+  event. An enqueuedAtMillis value carried only by an admission entry would not be an independently recorded
+  enqueue occurrence.
+evidence_limits: All cited observations are parser-derived records of the current run3-fleet journal,
+  not synthetic observations. Operational reality is not established by the journal alone. Capture, owner-reference,
+  resanitization, corpus, generator, and record-position metadata are not identity criteria. No missing
+  entry is treated as closed-world evidence.

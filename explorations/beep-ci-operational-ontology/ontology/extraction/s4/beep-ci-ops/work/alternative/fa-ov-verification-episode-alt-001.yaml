@@ -1,0 +1,20 @@
+id: "fa:ov-verification-episode-alt:001"
+hypothesis_ref: "dh:ov-verification-episode:001"
+identity_card_ref: "ic:ov-verification-episode-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "Event: verification occurrence whose identity the caller supplies (preferred as category, identity open)"
+    still_viable: true
+  - label: "Information object: caller-chosen correlation context without occurrence commitment"
+    still_viable: true
+  - label: "Situation / application context wrapping one projection"
+    still_viable: true
+  - label: "Engine singleton episode for every projection"
+    still_viable: false
+strongest_counterexample: "A singleton-default reading is directly contradicted by the contract that the caller supplies occurrence identity and there is no singleton default; both emitter and fixture still type an episode subject (po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f; po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4; po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: domain occurrence versus correlation information object. Discriminators: temporal boundaries (episodeStartedAt or equivalent), attempt membership, reuse of one episodeId across two projections, or KPI-bearing interval facts (CQ-007; po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6)."

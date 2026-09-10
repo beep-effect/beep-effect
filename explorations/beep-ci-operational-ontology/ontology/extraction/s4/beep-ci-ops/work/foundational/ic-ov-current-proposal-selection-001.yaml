@@ -1,0 +1,48 @@
+id: ic:ov-current-proposal-selection:001
+hypothesis_ref: dh:ov-current-proposal-selection:001
+referent_grain: Recorded current-selection assertion in one represented episode context at a projection
+  instant; not the selected proposal itself or a timeless current relation.
+identity:
+  supplies_identity: false
+  identity_criterion: 'Proposed at assertion-content grain: sameness consists in expressing one proposition
+    that a particular represented proposal is selected for a particular represented episode at a particular
+    reference instant within a specified projection context. Copying or re-encoding that proposition preserves
+    its content. A different selection, episode denotation, or temporal frame yields a different assertion.
+    The proposition provides the informational criterion; technical carriers are recorded separately as
+    lookup evidence.'
+  reidentification_key:
+  - episode subject and hasCurrentProposal target within the particular projection representation, for
+    lookup only
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One contextual proposition answers which proposal this episode representation selects as current.
+    The information-content account carries identity; current status does not supply an identity criterion
+    for the selected proposal.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - time-indexed selection relation represented directly by a property
+  - situation in which a particular proposal is current for an episode
+  existential_dependencies:
+  - The represented episode, represented proposal, and projection reference context are constitutive semantic
+    participants.
+  - Historical assertion content does not require the proposal to remain current or the episode to remain
+    active.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: 'Hypothetical counterexample: one export selects proposal P for episode E at t1 and a later
+    export selects Q at t2. Unioning both exports as timeless current facts produces two answers; deleting
+    the old selection as though its information never existed loses history. The batch contains only one
+    illustrated selection and does not observe this replacement.'
+evidence_refs:
+- po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7
+- po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- CQ-020
+status: proposed

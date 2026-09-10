@@ -1,0 +1,28 @@
+id: "ic:ov-proposal-step-membership-alt:001"
+hypothesis_ref: "dh:ov-proposal-step-membership:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "Membership is the same recorded parthood when the same proposal subject hasStep the same step subject. It does not supply identity of either participant; a step's membership in another proposal would be a different association (po:sha256:8081b5c15707c6f49878d6d871f17862c72605489c31de3a31d56b12a59c5fc9; po:sha256:4b06f5efe076d7ed81dd9d5b200c268b1d9e42cbe4f8c78086928bdaf65bb41e; CQ-020)."
+  reidentification_key:
+    - "ciops-prov:hasStep edge from proposal to step"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: "The observed proposal has two distinct step members; membership is the collection relation, not a third whole."
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - relator
+    - information_object
+  existential_dependencies:
+    - "a ScheduleProposal as whole"
+    - "a prescribed ScheduleStep as member"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Serializer-adjacency without membership meaning would erase the proposal-specific step set CQ-020 and CQ-019 read, and would ignore the contract that only admitted actions get steps (po:sha256:a1e5e0d0916deb0cb33ee62f307e85aabb52833a88511c4c1fdc4885ec667857; po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a; po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864; CQ-019; CQ-020)."
+status: proposed

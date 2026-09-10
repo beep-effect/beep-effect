@@ -1,0 +1,57 @@
+id: "ic:adm-journal-entry-alt:001"
+hypothesis_ref: "dh:adm-journal-entry:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Same journal entry iff it is the claim content of one bounded event record:
+    one _tag together with that record's timestamp and asserted fields. A nonce
+    chain can witness several entry instances and several operational referents,
+    so the chain is neither one entry nor an extra referent kind. Identity is
+    not the journal collection, not the file-level extraction projection, and
+    not the request, grant, or occurrence the entry is about. Asserted
+    occurrence time is the event timestamp; no separate record-creation time is
+    inferred. ownerRef and capture members are never identity criteria.
+  reidentification_key:
+    - "source record span (one # record block)"
+    - "_tag of that block"
+    - "that block's event timestamp"
+    - "nonce (joins related entries; does not identify one entry)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One bounded event block's assertion; not a flattened key/value bag across
+    records, and not the operational bearer described.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - event
+  existential_dependencies:
+    - "the journal collection or file that carries the entry"
+    - "aboutness of one asserted admission event (enqueue, admit, withdraw, release, lease eviction, or ticket eviction)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "record may be copied or removed without being the asserted operational event"
+counterexamples:
+  - description: >-
+      Treating one nonce as one entry.
+      so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+      places admission-enqueued, admission-admitted, and admission-released for
+      nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088 in separate bounded records
+      (CQ-007, CQ-008).
+  - description: >-
+      Equating the entry with the operational occurrence it asserts, or taking
+      writing the log as controlling the queue.
+      so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+      is a ticket-eviction assertion (reason=queued-submitter-death) whose truth
+      as an occurrence and as a death is not established by the entry (CQ-021).
+  - description: >-
+      Taking mixed schemaVersion=yeet-admission-journal/v1 and v3 strings in
+      adjacent blocks as an operational protocol switch rather than
+      representation detail
+      (so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6).
+status: proposed

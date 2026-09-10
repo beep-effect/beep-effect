@@ -1,0 +1,55 @@
+id: fa:ov-schedule-proposal:001
+hypothesis_ref: dh:ov-schedule-proposal:001
+identity_card_ref: ic:ov-schedule-proposal:001
+referent_grain: Fixed prescription content for a particular represented projection problem and instant,
+  including its ordered admission choices and explicit deferred partition; distinct from an emission occurrence
+  and from actual admissions.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: Its admitted/deferred partition and ordered prescription provide semantic unity
+    beyond DTO packaging. The primary individual is fixed plan content, inheriting an informational identity
+    account rather than claiming the source identifier supplies one.
+  rigidity: A prescription remains a prescription if rejected, never enacted, or superseded. Being the
+    episode's current proposal is an anti-rigid contextual status of that informational bearer.
+  dependence_and_temporality: The content is about an explicit projection instant and can persist after
+    it. Supersession can change currentness without changing fixed content. No observed deletion, execution,
+    or terminal-state history is claimed.
+  spec_vs_execution: The proposal prescribes possible admissions. The quoted non-goals reserve real admission
+    writes to the deployed scheduler, separating this prescription and its emission from granted admissions.
+  world_vs_information: A schedule representation is not an execution trace. Even steps described as admitted
+    in the projected partition are prescribed choices; the fixture does not establish their live realization.
+  role_vs_bearer: The plan is the bearer of a current, proposed, or superseded status. It is not the scheduler
+    agent, the requesting actor, or an admission-holder role.
+  context_reification: Keep the represented episode, reference instant, and projection problem with the
+    plan. The input digests provide trace evidence, but neither those hashes nor capture metadata establishes
+    semantic sameness.
+  evidence_limit: Byte determinism constrains repeated representation. It does not settle durable issuance
+    identity, prove live grants, or make the example a complete operational history.
+rival_models:
+- label: Transient projection-result information object without independently persistent plan identity
+  still_viable: true
+- label: Issued plan record whose separate issuance episodes distinguish otherwise identical prescriptions
+  still_viable: true
+- label: Occurrence of actual scheduler admission
+  still_viable: false
+strongest_counterexample: 'Hypothetical counterexample: invoking the projector twice on the same explicit
+  input yields byte-equal output as the contract requires, but produces two computation occurrences. Counting
+  two distinct prescriptions solely from those invocations confuses content with its production. Conversely,
+  identical step lists for different represented episodes or input contexts need not constitute the same
+  contextual prescription.'
+verdict: analyzed
+needed_evidence: ''
+evidence_refs:
+- po:sha256:351a4375bf86d6f06e1e558697ef04f2a5e283645a772d4fe5b3e78ac0c722bd
+- po:sha256:3c9d7d9e1165dd56fe1846e5c84f330e75fb8b966dfbd2fcf0e5a4a113b504c5
+- po:sha256:40e7562cb1c7744f4472ab4db2e562024f5554997915678e4ec8c759f11f1852
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:5e660542834fa3d2e917207f5764b6905b0654cfb825a0f34b4ac27bfe96bb02
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- po:sha256:b18d0154d573355ca2ecfcd8a45787237eac6ba6a335c5a69c783c8d0a078f29
+- CQ-020

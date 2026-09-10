@@ -1,0 +1,60 @@
+id: "fa:bind-admission-request-alt:001"
+hypothesis_ref: "dh:bind-admission-request:001"
+identity_card_ref: "ic:bind-admission-request-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Kind: SeatRequest is a rigid sortal of dated demand individuals that come
+      into existence at enqueue and end at a terminal (admit-handoff, withdraw,
+      or ticket eviction). Preferred because the synthetic journal treats each
+      enqueue chain as its own record sequence, and CQ-021 queries requests as
+      individuals with kind, priority, charge, and enqueuedAt. po:sha256:2bd636283801ce0554f90ccad18d9af687c0492f9206e9428256c3232db5790d
+      emits rdf:type SeatRequest; po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+      shapes PendingRequest from nonce, kind, priority, weightTokens, originKey,
+      enqueuedAtMillis.
+    still_viable: true
+  - label: >-
+      Relator: the request is the mediation of a requester and contended
+      capacity prior to allocation. Observationally equivalent on current
+      evidence: no bearer is observed other than sanitization fields, and the
+      ticket/demand is not seen independently of the requesting relation.
+    still_viable: true
+  - label: >-
+      Information object: the synthetic enqueue/withdraw journal records (and
+      deployed ticket files) are the request. Observationally equivalent on
+      current evidence because the only carrier is the synthetic journal.
+    still_viable: true
+  - label: >-
+      Role of an Agent ('queued requester'). Not preferred: so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f
+      supplies no Agent identity (ownerRef is sanitization), and a role reading
+      needs a bearer that persists while entering and leaving the queue.
+      Still viable only if a later observation identifies that bearer.
+    still_viable: true
+  - label: >-
+      Queued phase of an already allocated grant. Rejected by the withdrawn
+      chain and by CQ-008's ticket/lease split.
+    still_viable: false
+strongest_counterexample: >-
+  Treating a queued demand as an active grant, or omitting the demand because
+  field names exist. The synthetic nonce d269a27c-6d0e-4613-8ad3-6adaa4353712
+  delimits a queued interval from enqueuedAtMillis=1788931586705 to
+  withdrawnAtMillis=1788931586715; erasing that demand would drop a CQ-021
+  row and would change any CQ-023 wait reconstruction that used that enqueue
+  as a start.
+verdict: analyzed
+needed_evidence: >-
+  Discriminate kind/relator from information object: a production queue whose
+  waiters remain after the ticket/journal file is rewritten, or conversely a
+  store in which the ticket file's existence is identical to being queued.
+  Discriminate kind from role: a persisting Agent (process-grain, not
+  ownerRef) that bears queued-requester while the ticket comes and goes.
+  Discriminate request from grant: a snapshot in which ticket and lease never
+  coexist (CQ-021 notes that as deployed store semantics) would further block
+  the grant-phase reading. A starvation bound, exception, and complete live
+  queue snapshot are still absent, so CQ-023 is not answered by this
+  synthetic fixture. Call the journal synthetic; it does not establish
+  production-fleet frequency or waiting-time guarantees.

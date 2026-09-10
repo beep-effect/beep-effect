@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:0472df5b1c1dc48e102dddb58a5421894799ca9d36e4c7ef57dcf5a1e8614f05",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3b-fleet/admission/canonical/protocol.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 3,
+    "content_sha256": "04e09cf05bbef0d9b20d76e9c2feec8260b0d041aeeb270ec064f6ea506a4a0a"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/protocol.properties",
+    "lexical_name": "version",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "evictionsEnabled=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "version=2"
+    }
+  ],
+  "source_excerpt": "# record 0\nversion=2\nevictionsEnabled=true\n",
+  "epistemic_status": "parser_derived"
+}

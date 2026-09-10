@@ -1,0 +1,47 @@
+id: fa:ov-current-proposal-selection:001
+hypothesis_ref: dh:ov-current-proposal-selection:001
+identity_card_ref: ic:ov-current-proposal-selection:001
+referent_grain: Recorded current-selection assertion in one represented episode context at a projection
+  instant; not the selected proposal itself or a timeless current relation.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: The emitted and illustrated edge has current-selection content. The candidate
+    is that contextual assertion, so its identity follows the represented proposition rather than the
+    lifetime or identifier of either endpoint. This is an information-object analysis, not a proposal
+    to mint a class for every triple.
+  rigidity: A fixed assertion remains a selection assertion when archived or superseded. Being currently
+    selected is instead an anti-rigid status of the proposal bearing that relation.
+  dependence_and_temporality: The assertion is indexed to a reference instant. Its stored content may
+    persist after the selection no longer holds; no duration, unique-current constraint, or complete selection
+    history is established by the example.
+  spec_vs_execution: Selecting a plan does not execute it or grant any scheduled request.
+  world_vs_information: The assertion records what this projection designates. It is not independent evidence
+    of an ongoing operational selection or the globally latest proposal.
+  role_vs_bearer: Current is the proposal's contextual role; the proposal is its bearer, and the assertion
+    records the role assignment.
+  context_reification: Preserve episode and temporal projection context when comparing selections. An
+    existing versioned representation may carry that context; a new relator individual is not required
+    merely by an RDF edge.
+  evidence_limit: CQ-020 requires current selection. The supplied example and emitter do not establish
+    update history, uniqueness enforcement, or absence-based conclusions about other proposals.
+rival_models:
+- label: A time-indexed property between episode and proposal without an independently reified assertion
+    node
+  still_viable: true
+- label: An operational current-plan situation distinct from the record describing it
+  still_viable: true
+strongest_counterexample: 'Hypothetical counterexample: one export selects proposal P for episode E at
+  t1 and a later export selects Q at t2. Unioning both exports as timeless current facts produces two
+  answers; deleting the old selection as though its information never existed loses history. The batch
+  contains only one illustrated selection and does not observe this replacement.'
+verdict: analyzed
+needed_evidence: ''
+evidence_refs:
+- po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7
+- po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- CQ-020

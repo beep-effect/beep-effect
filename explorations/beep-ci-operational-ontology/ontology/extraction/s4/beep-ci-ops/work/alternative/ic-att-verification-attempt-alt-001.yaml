@@ -1,0 +1,35 @@
+id: "ic:att-verification-attempt-alt:001"
+hypothesis_ref: "dh:att-verification-attempt:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two individuals are the same verification-attempt occurrence iff they are the same particular start-to-terminal invocation of repair, verify, publish, monitor, or closeout work. so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31 and so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c repeat one journal: the first dated pair is attemptId=d1e2faf7-31d5-4b94-b672-7a70c8f7d015, startedAt=2026-08-23T16:59:45.919Z, endedAt=2026-08-23T17:01:07.524Z, elapsedMs=81605, outcome=failure, failedStepId=prepare:05-docgen, failurePolicy=fail-fast, later feedback steps status=not-run. Two captures are one occurrence viewed twice, not two. attemptId is a reidentification key, not a universal identity criterion; the journal file, the run, the reusable command, and an individual lane execution are not this referent."
+  reidentification_key:
+    - attemptId
+    - startedAt
+    - endedAt
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One dated invocation from start to a terminal outcome. Per-step durationMs values (e.g. prepare:05-docgen durationMs=47356.549767) are parts of that occurrence's measured work, not additional attempt individuals, and are not identical with attempt elapsedMs=81605."
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - kind
+  existential_dependencies:
+    - "a start instant and a terminal outcome (startedAt/endedAt or an explicit terminated boundary)"
+    - "an enclosing run/branch context (runId, mode) that does not supply the occurrence's identity"
+    - "journaled evidence of the invocation (yeet-attempt-journal/v1), which remains a representation"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - failure
+    - success
+counterexamples:
+  - description: "Counting the two captures as two occurrences, or identifying the attempt with the journal file or with runId=chore_deps-update-08-23-26-cadf4f69e957."
+  - description: "Equating attempt elapsedMs=81605 with a single lane durationMs, or charging not-run feedback steps as executed work (CQ-007, CQ-025)."
+  - description: "Reading the late _tag=attempt-terminated reason=legacy-unowned-start recordedAt=2026-09-04T12:03:24.230Z as proof that work ran until that instant."
+status: proposed

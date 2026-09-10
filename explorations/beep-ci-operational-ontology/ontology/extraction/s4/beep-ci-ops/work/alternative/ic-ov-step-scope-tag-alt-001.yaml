@@ -1,0 +1,27 @@
+id: "ic:ov-step-scope-tag-alt:001"
+hypothesis_ref: "dh:ov-step-scope-tag:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "The tag is the same annotation when it is the same literal on the same step. The observed value admission names the admission act in v1; identical literals do not individuate a Scope, package set, or verification-scope individual (po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7; po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf; CQ-020; CQ-019)."
+  reidentification_key:
+    - "ciops-prov:hasScopeTag xsd:string on a ScheduleStep"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: "A single literal annotation per step; not a mereological affected-package set."
+  dependence: relational
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+    - information_object
+    - none
+  existential_dependencies:
+    - "a prescribed ScheduleStep that bears the tag"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Promoting the literal admission to a Scope individual, affected-package set, or step subclass would be enum-as-taxonomy / identifier-as-identity; this batch does not discharge CQ-019 scope-provenance obligations (po:sha256:004887d37eb13319a467b294764093c16a3cb02165cc88ceba6b7bfa4768f77c; po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05; po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f; CQ-019)."
+status: proposed

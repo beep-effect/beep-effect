@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:221c15de00ddaa99cefdedac1df4d97a783e5890ff9b9fc963f21627350fe488",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 8
+  },
+  "quote": "# S7 Projection Contract (binding)\n\nStage S7 of the pipeline: the **projection function** — the loop-closer.\n`(T-Box, A-Box, live instance data) → WorkUnit schedule`, deterministic and\nproperty-tested (uncontested amendment 1, DECISIONS.md 2026-08-27). This\ncontract binds the v1 admission engine with S7 emission v2. Rulings:\nDECISIONS.md §\"2026-08-30 — S7 sitting 1\" and\n§\"2026-09-03 — run-3 corpora design grill\", rulings 4, 13–16.",
+  "epistemic_status": "quoted_prose"
+}

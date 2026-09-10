@@ -1,0 +1,87 @@
+target: otp:ov-seat-request:001
+target_sha256: 89d4dd06719ff636cbe9106b162a830cdee4793a41f0b75bfb30a1bf12ec70f2
+chain_sha256: b32f0d0a09b2fe48afa757b4b4d3a4c7b7caa33a8d3cc328dd84c6db972109bf
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: An observation chain following one admission submission through two distinct queue/projection
+  observations and then admission or cancellation, with independently established requester/handling participants.
+  Include a second submission for the same work and an observation distinguishing it from continued handling
+  of the first, plus what remains after pending membership ends. Matching nonce, local request IRI, or
+  copied grant fields alone does not establish this continuity.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'SeatRequest asserts parents: []; no is-a edge is proposed. Participant, component, or governing-role
+    relations supply no additional subsumption assertion to test. The exact-reuse mapping retains the
+    same IRI and asserts no new subclass edge.'
+revision_requests:
+- Use the request continuity and repeated-submission observations to select the operational demand, submission
+  occurrence, or description model in a new synthesis. Keep request/grant and request/WorkUnitSpecification
+  distinctions intact. If only a description is supported, preserve SeatRequest's existing meaning rather
+  than silently turning its exact-reuse mapping into a record class.
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-request-dto
+  outcome: survived
+  evidence:
+  - po:sha256:0c5a0ac360560118bda477d323d7b7ae9977d379ec5a282b0184baf5195d43da
+  - po:sha256:3015f93b003a84d5a9e8ee82ac198ebe5bd86db390fd763e0aef039e2ed6c203
+  - po:sha256:83ac7ce996c2aacaf072f7c6977c423f511a3ec1d1d3b7f21a6fa64fb31ec86f
+  - po:sha256:2bd636283801ce0554f90ccad18d9af687c0492f9206e9428256c3232db5790d
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+  - po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+  counterexample: Replace request-0 with an arbitrary serialized work-specification name. The contract
+    instead reconstructs pending candidates at admission instants and compares a projected candidate with
+    an actual recorded admission; the implementation report expressly withholds WorkUnitSpecification
+    identity. Those uses and typed request assertions support an admission-request referent candidate
+    beyond that arbitrary DTO interpretation. They do not decide whether a particular subject denotes
+    an enduring demand, its submission, or its description, and no live existence is inferred for the
+    synthetic fixture.
+- surface: identity
+  rule: request-continuity-underdetermined
+  outcome: survived
+  evidence:
+  - po:sha256:f456cbb5c883ae06a4246878847ea9d98832618f2e923b54164a79cd2acfe000
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+  - po:sha256:0c5a0ac360560118bda477d323d7b7ae9977d379ec5a282b0184baf5195d43da
+  - po:sha256:3015f93b003a84d5a9e8ee82ac198ebe5bd86db390fd763e0aef039e2ed6c203
+  - CQ-021
+  counterexample: One request can appear at different local indexes in two projections, while a resubmission
+    for the same work can share descriptive values with the earlier demand. A grant can also copy values
+    while remaining distinct. Identity by local IRI would split the first; identity by matching values
+    would merge the latter cases. The card rejects all those criteria and explicitly leaves demand continuity
+    and the end of pending membership unresolved. The quoted pending inequality supplies no repeated-submission
+    or post-pending trace, so there is no accepted positive criterion to falsify and insufficient evidence
+    for an identity PASS.
+- surface: warrant
+  rule: listing-cq-warrant
+  outcome: survived
+  evidence:
+  - CQ-020
+  - CQ-021
+  - po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+  counterexample: Remove SeatRequest typing or replace a request subject with a reusable WorkUnitSpecification.
+    Both CQ-020's mandatory request type pattern and CQ-021's queue subject pattern lose the intended
+    request. Exact reuse of SeatRequest is query-required, not optional subclassing. CQ-021's queued-store
+    reading cannot by itself prove the proposed demand persists after admission, which remains the named
+    identity question rather than an additional warrant.
+rival_models_still_viable:
+- Operational demand or relator that persists through pending handling and has a distinct establishing
+  act
+- Projection-local information object describing a request without established cross-projection identity
+- Submission occurrence, with pending status belonging to a distinct resulting demand or record
+evidence:
+- CQ-020
+- CQ-021
+- po:sha256:0c5a0ac360560118bda477d323d7b7ae9977d379ec5a282b0184baf5195d43da
+- po:sha256:2bd636283801ce0554f90ccad18d9af687c0492f9206e9428256c3232db5790d
+- po:sha256:3015f93b003a84d5a9e8ee82ac198ebe5bd86db390fd763e0aef039e2ed6c203
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:83ac7ce996c2aacaf072f7c6977c423f511a3ec1d1d3b7f21a6fa64fb31ec86f
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+- po:sha256:f456cbb5c883ae06a4246878847ea9d98832618f2e923b54164a79cd2acfe000

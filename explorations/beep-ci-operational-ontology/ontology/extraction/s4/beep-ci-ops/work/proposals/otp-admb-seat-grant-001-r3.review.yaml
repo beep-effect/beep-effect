@@ -1,0 +1,104 @@
+target: otp:admb-seat-grant:001
+target_sha256: 2d30b3ec77796874ce706ed19df1153c8ead6718e4256d32f3a00c7671f92af5
+chain_sha256: 75feb32579b41baade424cfc104fec3b387127c010ae2c3cee16c2b572accc2f
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The current parents list is empty. Exact reuse of SeatGrant is a mapping, not a proposed
+    superclass edge. The operational relator and information-object alternatives are rival grains,
+    not an asserted hierarchy; no rigidity, identity-inheritance, dependence or unity comparison can
+    be applied as subsumption.
+revision_requests: []
+attacks:
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A replay-only DTO can contain the admitted and released rows for nonce
+      411b3ba7-f32a-4d07-8a0c-c764dc5b8088 without allocating capacity. This still defeats the old
+      operational discriminator, but the current proposal and repaired IC/FA select a fixed
+      contextual grant-description information object and expressly allow ineffective or false
+      reported holdings. The meaningful associated admission, charge and boundary assertions survive
+      that countermodel; effective authorization is conceded under Ruling 2. The revision_log names
+      the r1 failed digest 0097cf145e26c95ccfbc9dca5ffd5b6cea404a3475c581133dc92977ef8f9778 and
+      addresses this landed rule. I read r2 as history and tested the repaired closure afresh.
+    outcome: survived
+    evidence:
+      - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+      - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Two accounts both charge five tokens to origin 4cc31eeb4dec, but the admissions at
+      1788926595216 and 1788929720160 describe different founding contexts and holdings. Equal
+      charge, origin or work kind cannot merge them. Conversely, copying the first account into
+      another capture does not create a second information unit. The repaired card supplies identity
+      through fixed contextual assertions; the proposal preserves originating-account association
+      and explicitly leaves independently equal-content accounts as a steward choice. Nonces
+      correlate the observed histories, while changing ownerRef values and capture locations are
+      provenance, not identity criteria.
+    outcome: survived
+    evidence:
+      - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+      - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  - surface: identity
+    rule: information-object-versus-effective-grant
+    counterexample: >-
+      The admission-only histories could be replayed after an unobserved release, and an eviction
+      report could describe an allocation that never became effective. They therefore cannot
+      establish current ActiveGrant instances, capacity continuity or missing terminal events. The
+      current information-object account permits these cases and remains an information object when
+      its reported holding ends. A newly supplied or corrected boundary changes the content version
+      rather than silently extending an effective relator. The retained relator, event and mode
+      readings require effective-operation evidence; their survival as rivals does not create an
+      incompatible inherited identity criterion.
+    outcome: survived
+    evidence:
+      - so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+      - so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+      - so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+      - so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+  - surface: warrant
+    rule: exact-reuse-and-current-state-warrant
+    counterexample: >-
+      Replacing SeatGrant with an untyped journal envelope loses CQ-008's typed holder selection and
+      CQ-009's typed ActiveGrant origin-exclusion comparison; CQ-010 also requires the
+      grant-associated charge and pre-admission capacity comparison. This is exact reuse of the
+      ratified term, not an optional new subclass. A historical account alone supplies neither
+      present grant state nor a closed active population or capacityAtAdmissionTokens, and the
+      proposal does not manufacture them. The repaired definition.source is confined to its own
+      hypothesis observations and these CQs. The warrant survives without relying on a separate
+      journal-entry or grant-termination class.
+    outcome: survived
+    evidence:
+      - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+      - so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+      - CQ-008
+      - CQ-009
+      - CQ-010
+rival_models_still_viable:
+  - >-
+    An effective admission relator or capacity-holding situation, pending an observation of
+    effective authorization and its continuity independently of journal emission.
+  - >-
+    A founding admission event or bearer-dependent allocation mode, neither identified with the
+    selected fixed grant-description content.
+  - >-
+    Originating-account identity versus content-only equality for independently produced, fully
+    equivalent grant accounts remains a joint steward choice.
+evidence:
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  - so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+  - so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+  - so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+  - so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+  - CQ-008
+  - CQ-009
+  - CQ-010

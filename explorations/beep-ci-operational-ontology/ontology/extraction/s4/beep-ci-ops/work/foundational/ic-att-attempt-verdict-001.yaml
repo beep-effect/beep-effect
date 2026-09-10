@@ -1,0 +1,84 @@
+id: ic:att-attempt-verdict:001
+hypothesis_ref: dh:att-attempt-verdict:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    One recorded assessment unit originating in a particular assessment of one
+    attempt, with its asserted outcome, measurements, and applicability context.
+    Copies preserve the same unit when they preserve that originating assessment,
+    subject, and asserted content. A new assessment or a correction to asserted
+    outcome, scope, or measured values creates a different assessment unit even
+    when the attempted command is unchanged. The grain is an occurrence-bound
+    verdict information object, not the containing journal, an execution, a
+    timeless proposition that the tree is correct, or a currently-valid proof.
+  reidentification_key:
+    - attemptId with its own attempt-finished record boundary
+    - recordedAt and createdAt as evidence of the originating assessment
+    - resolvedHeadSha, diffFingerprint, proofTier, envProfile, and stage within that record
+    - the assessment's outcome and lane-result content
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    The assessment of one attempt unifies its verdict content. Lane measurements
+    remain attached to their own lanes inside that assessment. Flattened facts
+    from different journal entries do not constitute one verdict merely because
+    a projection collects them together.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - >-
+      event: the operational assessment occurrence that produced the verdict,
+      with the persisted verdict represented separately as its result.
+    - >-
+      information_object: an assertion-content value individuated only by its
+      subject, context, and propositions, merging identical assertions from
+      independent assessment acts rather than retaining issuance identity.
+  existential_dependencies:
+    - >-
+      Some information-bearing realization and an originating assessment
+      context; no particular file, encoding, or capture copy is essential.
+    - >-
+      The attempt and applicability context as the intended subjects of the
+      assessment. An assessment can be inaccurate and can persist after work
+      ends, so its existence does not require its readiness claims to be true.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The same projection contains a failed verify verdict for one attempt and
+      a later successful monitor verdict with requiredChecksGreen=true and
+      ready=true for another attempt and head. Combining the first visible head
+      or failed result with later readiness fields manufactures an assessment
+      that no journal entry made. One projection is not one verdict individual.
+  - description: >-
+      Countermodel: a recorded green verdict remains byte-for-byte available
+      after its applicability context changes. Its continued identity as a
+      verdict does not make it valid verification evidence in a new epoch or
+      authorize cancellation or reuse for another attempt.
+status: proposed
+evidence_refs:
+  - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+  - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+  - CQ-005
+  - CQ-022
+  - CQ-025
+analysis_notes:
+  rigidity: >-
+    Originating as this recorded assessment is essential to the selected
+    information-object grain. Currently accepted evidence is a contingent role:
+    the verdict remains a verdict when it becomes stale or is disputed.
+  temporality: >-
+    The information object can outlast the assessment and execution occurrences.
+    Storage and applicability status can change without altering its assertion;
+    a content revision is a different assessment version. Success and failure
+    are assessed execution outcomes, not terminal states of the information
+    object, and no destruction or retention boundary is observed.
+  provenance_exclusion: >-
+    The two captures have the same operational excerpt after owner aliases are
+    excluded. ownerRef, ownerRefVariant, capture/corpus metadata, generator
+    metadata, and resanitization fields do not individuate verdicts or owners.

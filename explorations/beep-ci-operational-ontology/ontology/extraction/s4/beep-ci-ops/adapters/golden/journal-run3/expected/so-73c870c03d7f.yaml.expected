@@ -1,0 +1,40 @@
+{
+  "id": "so:sha256:73c870c03d7fdd2c303cb5a8e57135c6d27c4cb88ce5e97c25ef5663b4c6694d",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-checkout-identity/bindings/e.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 4,
+    "content_sha256": "9ca7e9a42cdb15ccbcd5f9a0d81ecfc8f8eb386b50012ce30c34eddae8f17e57"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-checkout-identity/bindings/e.properties",
+    "lexical_name": "identity_key",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "identity_key=<fixture>/e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "scannedAt=2026-09-09T00:00:00Z"
+    }
+  ],
+  "source_excerpt": "# record 0\nidentity_key=<fixture>/e\nscannedAt=2026-09-09T00:00:00Z\nbranch=feat/e\n",
+  "epistemic_status": "parser_derived"
+}

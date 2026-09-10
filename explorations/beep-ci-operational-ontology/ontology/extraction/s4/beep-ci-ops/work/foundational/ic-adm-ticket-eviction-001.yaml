@@ -1,0 +1,69 @@
+id: ic:adm-ticket-eviction:001
+hypothesis_ref: dh:adm-ticket-eviction:001
+identity:
+  supplies_identity: false
+  identity_criterion: Two descriptions concern the same ticket eviction only if they concern the same
+    removal by eviction of one particular waiting solicitation from its admission queue. The criterion
+    is conditional on that operational transition and its target. A local nonce and an eviction time help
+    locate an assertion but do not independently identify the earlier solicitation or prove the removal.
+    A removal of an acquired lease is a different transition, even with similar timing.
+  reidentification_key:
+  - Local journal nonce together with the matching event block and evictedAtMillis; evidence locator only,
+    neither globally unique nor sufficient for operational identity.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One removal of one waiting ticket unifies the occurrence. It is a queue-exit boundary, not an
+    entire request history, a grant termination, or a submitter death.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - An information object asserting ticket eviction, especially plausible because both histories consist
+    only of that assertion. A before/after ticket-store trace linked to the reported removal would discriminate
+    actual eviction; death needs separate evidence.
+  - A queue participation's evicted terminal boundary without a separately reified act. Evidence making
+    removal-specific participants or effects independently decision-relevant would discriminate the event
+    reading.
+  existential_dependencies:
+  - The particular waiting solicitation and its queue participation immediately before the asserted removal;
+    both are only incompletely described here.
+  - The queue context and its eviction transition. Actual submitter death is not established merely by
+    the stated reason.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: An orphaned, duplicated, or delayed ticket-eviction report could assert queued-submitter-death
+    even when no live ticket was removed at its append time. The same report would still be an information
+    object; inferring a grant release, a known requester identity, a measured wait, or a death occurrence
+    would invent missing evidence.
+status: proposed
+grain: One particular operational transition, represented by a dated event assertion; not a classification
+  signature, a current binding snapshot, a governing specification, a journal block, or the whole nonce-linked
+  history.
+metaproperty_rationale: Under the operational reading, this particular transition is essentially the occurrence
+  it was, so its event classification is rigid. It carries occurrence identity and does not establish
+  a new independent continuant identity provider. Its relational dependence is on participants at the
+  transition, not their perpetual future existence. The information-object rival is kept separate, not
+  assigned these meta-properties.
+temporality_rationale: The journal supplies a single asserted boundary time, not independently measured
+  start/end times for the operation, so interval duration remains unresolved. At the selected boundary-event
+  grain it does not persist through mutable continuant states. The proposed occurrence completes at queue
+  removal. The absent entry history and any later solicitation do not extend this occurrence or establish
+  a continuing request state.
+evidence_refs:
+- so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+- so:sha256:65609cedeaf3e99b51031c38b99ab7bc16ea0ef59fa66bea1d446ef3f7bd3333
+- CQ-021
+- CQ-023
+evidence_reading: The two cited observations each contain a single matching admission-ticket-evicted block,
+  at 1788498598672 and 1788920302811 respectively, with reason=queued-submitter-death. They supply no
+  matching enqueue time, work kind, priority, charge, or preceding admission. This permits analysis of
+  the narrow asserted exit, not reconstruction of the missing history.
+evidence_limits: All cited observations are parser-derived records of the current run3-fleet journal,
+  not synthetic observations. Operational reality is not established by the journal alone. Capture, owner-reference,
+  resanitization, corpus, generator, and record-position metadata are not identity criteria. No missing
+  entry is treated as closed-world evidence.

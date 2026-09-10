@@ -1,0 +1,81 @@
+id: dh:adm-seat-grant:001
+observation_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:05a0dfbb8f434d75b8be6d1bd7d396925b594cb0e9ceb6b72bda31e76e9685d3
+- so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+- so:sha256:0dcfbaeaa65aeeec90c1e9590be8a33c1ffe9438f29ebbe7d8617d09a5e45b08
+- so:sha256:0e50d84bdb1fbc2d463bced37bfe314caf8e1b5a8cc58dd5359978650ab1f53c
+- so:sha256:0e797a3deeedd27cfa75082643ce788d6c73e073bf87a640fe50ce3896a43e2b
+- so:sha256:126709ea74fec8cb4b03c021d7cf121aac566b19bea91c4ac8a452f33d01a94e
+- so:sha256:155a7c875acf08bae8c3073be1e54bebd65f2b8d5192697d7687da967e781ae6
+- so:sha256:232151f9f2afc0f8662cbd2c75d368bae594686ce7f0bdbac3e9f7238d6fd062
+- so:sha256:27ba4f5468b662c17e401817a599ad4e45c2091d51423b279d8de9fbe97880b7
+- so:sha256:2e58e1311fcc9f696bc06624bab0b4e23b6597ee1919f68e1516882ab067b53a
+- so:sha256:4bb535144f06b1e9abc6a8c75f0dcc3fc7d030f9b64214adfd1bed92ca384b08
+- so:sha256:5130545f45659ac9d904152da47d3e52ab06961250b57d626f3d8afc4993fe42
+- so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67
+- so:sha256:6108f04e939048617511e050bbb2421593e88c3658829deaead9b406fcb811d9
+- so:sha256:636db00ceac88a2c4857664e7f2fb863833b68fe94f1e28a111e3451d3dfcbb1
+- so:sha256:675134527a157d157274937b2f8ad90b036d30b77340d61f1e202483d9ac828e
+- so:sha256:6abcdc65b395bfc82d08b2c5e49d3c9553e97a46bd942343457e68e8da0a85e7
+- so:sha256:7b8493be70e8285a866f898e5691df4cb02c5d51fd808635f508854d1ec5622c
+- so:sha256:7f98fb05e2fa6d6b3b08618e7f5af09ecdefc3ff88752bbf437aff900e73036a
+- so:sha256:94cda97bb49a7661b4b7bd7ed0cd0f5b8594223ad33ddbf9d9637e464ee5c902
+- so:sha256:997fca9994bcb3a70f034acd490a212d79ae083f17c0a18972bdbc8a924a5346
+- so:sha256:a4ff1bbe07b6d10ed237650df3bfbe94c9a94240167ba58443ebf37227476301
+- so:sha256:ad5ef0f6bca50e85da674990519818fb3d4a14a1650ccb135b89f2f10d875248
+- so:sha256:b0aa81e61691ffc2b4ef587508eae988e450f03407eefbfc524fb38a82c20cdc
+- so:sha256:cfb413d38b8e8e1903d6e83b8d2977c5fd102003636ca8403eaa958dc1791b6f
+- so:sha256:d90be1aaa963b3e017130d2add821e59f623ac0540f9563cd9dd1d607cae8ce9
+- so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+cq_warrants:
+- CQ-008
+- CQ-009
+- CQ-010
+proposed_referent:
+  label: seat grant
+  description: A temporary authorization to occupy admission capacity for requested work. An instance
+    begins at the admission-admitted boundary and its reported holding ends at admission-released or admission-lease-evicted.
+    It is distinct from the preceding request, the occurrence of granting, the terminating occurrence,
+    any execution it authorizes, and every journal representation. The 28 cited grant histories include
+    21 releases, five lease evictions, and two admissions with no supplied terminal report. Those two
+    open histories do not establish activity at capture or now. Token charge and a recorded nonempty origin
+    key qualify the authorization; neither gives the complete active-holder population or remaining capacity
+    immediately before admission. A release-time memory peak is a different quantity from token charge,
+    predicted duration, or a hard execution limit. Released and evicted are lifecycle descriptions, not
+    additional grant kinds. The paired nonce is a local evidential join, not an identity criterion for
+    request and grant.
+representation_status: domain_referent
+alternatives:
+- label: A journal account of charged admission with a reported or unknown end, leaving a separate authorization
+    bearer unestablished. Time-aligned lease-store evidence and admission decisions that count the allocation
+    would discriminate this information-only reading.
+  representation_status: information_artifact
+  plausibility: viable
+- label: Admission and termination occurrences sufficient for holder accounting without a persisting grant
+    bearer. Evidence that later resource decisions re-identify the intervening authorization as the same
+    holder would discriminate this event-centered model.
+  representation_status: domain_referent
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: Positive admissions with token charges and origins, followed in most histories by a positive
+    release or lease eviction, support a temporary authorization rather than a queue request or formatting
+    object. Both the information-object and occurrence-centered readings remain viable; the journal alone
+    does not settle the grant's foundational category or identity. The two histories lacking a terminal
+    report contribute evidence of acquisition only. These hypotheses license no current-holder, origin-exclusion,
+    or capacity-safety verdict without the additional decision context.
+  discriminator: 'For nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088, the config_key_value predicate has these
+    rechecked objects: ''_tag=admission-admitted'', ''admittedAtMillis=1788926595216'', ''weightTokens=5'',
+    ''originKey=4cc31eeb4dec'', ''_tag=admission-released'', ''releasedAtMillis=1788927008574''. For nonce=fe8a685d-5b73-4f88-ae2e-c776af84fbb2,
+    the config_key_value predicate has these rechecked objects: ''_tag=admission-admitted'', ''admittedAtMillis=1788926455356'',
+    ''kind=merged-preview'', ''priority=verify'', ''weightTokens=5'', ''_tag=admission-released'', ''releasedAtMillis=1788928685035''.
+    The matched admission and release blocks report acquisition and relinquishment of charged, origin-keyed
+    authorization. Under the no-grant null there is no acquired holding to relinquish; that would negate
+    the operational interpretation of these paired assertions. Their content supports the candidate authorization
+    while the journal-only interpretation remains viable.'
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

@@ -1,0 +1,81 @@
+id: otp:ov-step-position:001
+hypothesis_ref: dh:ov-step-position:001
+identity_card_ref: ic:ov-step-position:001
+foundational_status: analyzed
+term:
+  preferred_label: step index
+  local_name: stepIndex
+  proposed_iri: https://oip.law/ontology/ci-ops#stepIndex
+  owl_entity_kind: data_property
+definition:
+  text: An ordinal-value property that records a prescribed admission component's zero-based position
+    within its containing fixed schedule prescription as an integer.
+  source:
+  - CQ-020
+  - po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020
+  - po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263
+  - po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-020
+  semantic_support_for: []
+alternatives_rejected:
+- 'Incidental array offset with no domain interpretation: the contract fixes the zero-based convention
+  and protects the prescribed sequence from deferred-tail renumbering.'
+open_issues:
+- 'Warrant justification: CQ-020 returns and orders the prescribed request sequence by the materialized
+  step index. An unordered membership set cannot answer that ordering question; the integer expresses
+  prescribed position within the selected proposal.'
+- 'Identity criterion carried from ic:ov-step-position:001: Proposed at order-assignment grain: sameness
+  requires the same represented step within the same prescription content occupying the same prescribed
+  place in that order. The integer represents that place under the zero-based convention. Numeric equality
+  across different prescriptions or steps is equality of values, not identity of ordinal assignments.'
+- 'Steward choice required before ratification of otp:ov-step-position:001: The steward must choose the
+  contextual integer data property proposed here, a separately instantiated ordinal-assignment record,
+  or a precedence relation with ordinals derived for presentation. The precedence model remains viable
+  but must provide the same proposal-specific sequence before replacing the recorded-value design; the
+  present proposal does not ratify both models as equivalent. Still-viable models retained from fa:ov-step-position:001:
+  Precedence relation among prescribed components, with ordinals derived only for presentation; Integer
+  data property on a contextual step, without an independently instantiated position object.'
+- 'Cluster dependency: otp:ov-schedule-step:001, otp:ov-proposal-step-membership:001, otp:ov-schedule-proposal:001.
+  Coordinate ratification or parking where endpoint grain, component identity, or the stated warrant depends
+  on these proposals; no dependent choice is settled by emission spelling.'
+- 'Reuse search: The S5 inventory has no stepIndex property. P-Plan precedence in the scout report is
+  a viable alternative ordering pattern, not an exact match to a stored zero-based integer on a contextual
+  admission component.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Representation grain: the proposed property encodes contextual information content without requiring
+  a separate assertion individual. The OntoClean fields are inherited from the joined identity card for
+  that candidate content, not asserted as identity criteria for an RDF literal or for the OWL property
+  universal.'
+- The integer is recorded order information, not an intrinsic temporal quality, execution timestamp, duration,
+  or evidence of grant chronology. The same value in two prescriptions does not identify a single position
+  assignment.
+- The deferred tail never renumbers prescribed steps. Uniqueness and well-formedness for arbitrary inputs
+  remain validation obligations; two synthetic example ordinals do not prove them universally.
+- 'Strongest counterexample carried from fa:ov-step-position:001: Hypothetical counterexample: two unrelated
+  prescriptions each have stepIndex 0. Treating the number as the identity of a position collapses their
+  first steps. A scheduler could also execute a different order, leaving the recorded prescribed ordinals
+  unchanged; the fixture''s 0 and 1 therefore do not establish observed grant chronology.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

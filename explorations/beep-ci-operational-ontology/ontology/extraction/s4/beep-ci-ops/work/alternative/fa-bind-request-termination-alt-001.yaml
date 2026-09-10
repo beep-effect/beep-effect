@@ -1,0 +1,53 @@
+id: "fa:bind-request-termination-alt:001"
+hypothesis_ref: "dh:bind-request-termination:001"
+identity_card_ref: "ic:bind-request-termination-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Event (preferred): a perdurant ending a request's queue participation.
+      CQ-021/CQ-023 reconstructions of who is still queued and of observed
+      wait depend on not carrying a request forward after a positive terminal.
+      The synthetic journal reports those terminals.
+    still_viable: true
+  - label: >-
+      Two event kinds rather than one family: withdrawal versus ticket-eviction
+      are different observed mechanisms (correlated enqueue only on withdrawal;
+      eviction has reason=queued-submitter-death and no enqueue in this record).
+      Observationally favored as a split and still compatible with classifying
+      both as events. A single family sortal remains viable if later evidence
+      shows one identity criterion covering both.
+    still_viable: true
+  - label: >-
+      Information object: terminal journal assertions used to reconstruct
+      request state. Observationally equivalent on current evidence: only the
+      synthetic journal is observed.
+    still_viable: true
+  - label: >-
+      Phase change only (queued participation ends without a distinct event).
+      Weaker: the journal reifies dated terminals; CQ-021's ingested request
+      is the live ticket, so a terminal occurrence is what removes it from
+      the queued set. Still viable if 'queued' is a phase whose end is not
+      itself an individual.
+    still_viable: true
+strongest_counterexample: >-
+  Keeping nonce d269a27c-6d0e-4613-8ad3-6adaa4353712 in a queued
+  reconstruction after withdrawnAtMillis=1788931586715, or equating that
+  withdrawal with grant release or with ticket-eviction of
+  synthetic-dead-ticket. Either move changes CQ-021 membership and any
+  CQ-023 wait that used the recorded enqueue as a start.
+verdict: analyzed
+needed_evidence: >-
+  Discriminate event from information object: a production queue whose
+  waiters drop at the terminal instant even if the journal/ticket file is
+  rewritten, versus a store in which deleting the ticket is the termination.
+  Discriminate family versus split: an enqueue (and wait start) for
+  nonce=synthetic-dead-ticket, or a consumer that treats withdrawal and
+  ticket-eviction as interchangeable queue-exit signals versus distinct
+  causes. Do not treat reason=queued-submitter-death as independent proof of
+  process death. A complete queue snapshot, starvation bound, and modeled
+  exception remain absent, so these synthetic terminals do not settle CQ-023.
+  Call the journal synthetic.

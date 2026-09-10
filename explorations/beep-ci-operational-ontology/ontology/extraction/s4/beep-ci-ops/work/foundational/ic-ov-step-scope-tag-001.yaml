@@ -1,0 +1,46 @@
+id: ic:ov-step-scope-tag:001
+hypothesis_ref: dh:ov-step-scope-tag:001
+referent_grain: Recorded scope-annotation assignment on a prescribed step; the literal admission classifies
+  the intended act in this projection version, not a package set or an affected computation.
+identity:
+  supplies_identity: false
+  identity_criterion: 'Proposed at contextual annotation grain: sameness requires the same represented
+    step in the same prescription context and the same scope meaning under the applicable tagging convention.
+    Equal admission literals on two steps share an annotation value but do not identify one annotation
+    assignment or one operational scope entity. Literal equality across changed tagging conventions would
+    not by itself establish equal meaning.'
+  reidentification_key:
+  - step subject and hasScopeTag literal in the relevant emitted proposal, for lookup only
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One annotation states the scope meaning attributed to one prescribed instruction. The value is
+    shareable; the assignment remains contextual to its step.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a controlled scalar annotation represented directly as a literal data property
+  - an informative classification of the prescribed act without a separately instantiated tag object
+  existential_dependencies:
+  - The represented step and its prescription context are constitutive semantic participants.
+  - The tagging convention supplies admission-act meaning; a real affected-package set is not an existential
+    dependency of the illustrated annotation.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: The fixture assigns admission to both steps. Treating the common literal as identity collapses
+    separate annotations, while treating it as FullRepoScope or an affected package set fabricates semantics
+    absent from the act-level tag. Hypothetically, a later tagging convention could reuse the same spelling
+    with a narrower meaning; lexical equality would conceal the change.
+evidence_refs:
+- po:sha256:004887d37eb13319a467b294764093c16a3cb02165cc88ceba6b7bfa4768f77c
+- po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7
+- CQ-020
+- CQ-019
+status: proposed

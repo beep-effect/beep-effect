@@ -1,0 +1,93 @@
+id: "fa:ver-readiness-assessment:001"
+hypothesis_ref: "dh:ver-readiness-assessment:001"
+identity_card_ref: "ic:ver-readiness-assessment:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationales:
+  spec_vs_execution: >-
+    An assessment states results of applying or reporting criteria in an assessed
+    context. It is neither the activity of checking those criteria nor the
+    governing specification saying which criteria suffice. The positive and
+    negative reports do not establish a complete rule, an enforcement procedure,
+    or an equivalence between checksGreen and requiredChecksGreen. CQ-006 and
+    CQ-017 require separate obligation and tier relationships.
+  world_vs_information: >-
+    The primary referent is reported assessment content. The corresponding
+    eligibility situation of a change at an instant would be a different
+    referent. so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee
+    supports the statement that the report distinguishes green checks from an
+    outstanding closeout condition; it does not establish current PR eligibility
+    or validate every condition the assessment should have considered.
+  role_vs_bearer: >-
+    A PR or change can be the bearer of an eligibility condition; the assessment
+    reports on that bearer and is not a role of it. Separately, the report may
+    serve as evidence while applicable and retain its information identity after
+    that evidential use ends. Neither ready=true nor a Greptile score makes the
+    report itself ready, nor is the score confidence in this ontology analysis.
+  context_reification_needed: >-
+    Assessment results need a joint binding to assessed subject/state, reference
+    instant, and criterion interpretation. Retain that informational context in
+    an assessment node or equivalent qualified assertions. The observations are
+    not a same-subject temporal sequence and do not demonstrate all these
+    bindings. This requirement creates no accepted world relator or timeless
+    ready state, and a source head alone cannot supply the missing review/check
+    context.
+rival_models:
+  - label: "Persistent assessment document with mutable result fields"
+    still_viable: true
+    rationale: >-
+      A document might retain identity when re-evaluated or corrected, whereas
+      the primary information-content model treats the changed assertions as a
+      new snapshot. No repeated assessment lifecycle of one document is supplied.
+  - label: "Eligibility situation indexed to a change state and instant, with separate assessment information"
+    still_viable: true
+    rationale: >-
+      This model centers the operational condition and treats the observed
+      artifact as its potentially fallible description. It requires an explicit
+      condition specification and independent subject/state bindings; the current
+      observations neither establish nor rule out that larger model.
+  - label: "Qualified component and aggregate assertions within an existing report"
+    still_viable: true
+    rationale: >-
+      Informational assessment content can remain a part of the report rather
+      than a separately individuated object, if shared context and component
+      meaning are preserved. The current CQs do not choose between these forms.
+  - label: "Ready as a timeless intrinsic kind of PR, or checksGreen as the complete readiness definition"
+    still_viable: false
+    rationale: >-
+      The recorded outstanding closeout condition alongside green checks defeats
+      the proposed complete definition. No observation makes readiness essential
+      to the identity of a PR or identifies the observed flags with all tier
+      obligations in CQ-006 and CQ-017.
+strongest_counterexample: >-
+  so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee
+  contains checksGreen=true and failing=closeout-run. An account that equates
+  the checks flag with aggregate readiness loses the very outstanding condition
+  that the assessment records. The positive record
+  so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30
+  cannot repair that account by silently equating requiredChecksGreen with
+  checksGreen or by treating different assessed changes as successive states of one.
+verdict: analyzed
+needed_evidence: >-
+  To select among the remaining models, observe two assessments of the same
+  explicitly identified PR/head with their operational assessment instants and
+  review/check states preserved, changing a single component between them.
+  Include the observed consumer's criteria and its distinction between
+  checksGreen and requiredChecksGreen, the connection to the CQ-006/CQ-017
+  obligations, and whether it treats the second assessment as an update to one
+  document or a distinct snapshot. A retained copy after removal of the original
+  record would additionally discriminate the specific-bearer dependence claim.
+evidence_refs:
+  - "so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee"
+  - "so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1"
+  - "so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30"
+  - "CQ-006"
+  - "CQ-017"
+notes: >-
+  The analyzed information-content shape is defensible without asserting the
+  complete readiness rule. The remaining models and unresolved dependence must
+  remain visible in synthesis. No actual eligibility condition, criterion
+  equivalence, assurance-tier attainment, or current-state conclusion is admitted.

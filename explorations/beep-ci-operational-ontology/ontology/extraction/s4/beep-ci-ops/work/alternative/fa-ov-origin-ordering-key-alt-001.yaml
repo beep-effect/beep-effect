@@ -1,0 +1,20 @@
+id: "fa:ov-origin-ordering-key-alt:001"
+hypothesis_ref: "dh:ov-origin-ordering-key:001"
+identity_card_ref: "ic:ov-origin-ordering-key-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "Information value: recorded origin grouping used as a canonical-sort tie-break (preferred)"
+    still_viable: true
+  - label: "Quality of a request (origin-grouping trope) whose quale is the key string"
+    still_viable: true
+  - label: "Domain Origin/repository kind with its own sameness criterion, merely lexicalized here"
+    still_viable: true
+  - label: "Decorative label with no effect on projection order"
+    still_viable: false
+strongest_counterexample: "If originKey were decorative, it could not occupy the third slot of the quoted total order (priority rank, enqueuedAtMillis, originKey, nonce) (po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864; po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: sort-key information value versus domain origin identifier versus request quality. Discriminators: origin normalization to a repository, a nonempty-versus-empty (origin-exempt) pair with different exclusion behavior, or an active-grant pair sharing a key (CQ-009), none of which this projection-order batch supplies."

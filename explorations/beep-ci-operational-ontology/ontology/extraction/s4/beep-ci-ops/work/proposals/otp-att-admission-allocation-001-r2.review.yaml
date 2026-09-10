@@ -1,0 +1,87 @@
+target: otp:att-admission-allocation:001
+target_sha256: ee516320a6d2ad29fbce9ac7f9933aec38f0574fbd88771881a25f586d02de2e
+chain_sha256: cefb93aa2776ec19a5b48199d886f906a00335c6d41c68cd01ba1cf052ecfb38
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: parents is empty. The exact SeatGrant mapping has no subclass edge to a lease snapshot,
+    active attachment, requester or execution. No valid subsumption relation is proposed between
+    those distinct grains.
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  counterexample: Render the same lease body twice while a maintenance timer changes heartbeatAtMillis
+    from 1788941946764 to 1788942001857, without allocating capacity. This remains a counterexample
+    to the linked DH's operational null rejection. The revision expressly concedes that rejection
+    and selects the two subject-qualified lease reports as information under sitting-1 Ruling 2.
+    Their common admittedAtMillis=1788941816511, charge=5, origin and attachment assertions, with
+    different heartbeat assertions, are still distinguishable informational content in the null world.
+    No heartbeat or support=active is promoted into an effective renewal, live allocation or execution.
+    The revision_log names the failed r1 digest and the landed discriminator-true-of-dto rule.
+  outcome: survived
+  evidence:
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  - CQ-008
+  - CQ-010
+- surface: identity
+  rule: unresolved-allocation-continuity
+  counterexample: Compare ordinary renewal of one allocation with release followed by replay or fresh
+    admission of an equal lease body. Both fit the two observed reports. Also compare two immutable
+    report snapshots with successive states of one continuing lease-information object. The revised
+    proposal retains explicitly_deferred status and unresolved identity, names both informational
+    models, and carries forward the IC/FA lifecycle requirement plus copy/correction/replay handling.
+    It does not establish sameness from nonce, attemptId or heartbeat, does not count snapshots as
+    two established grants, and does not import the synthetic bind chain's release. This is a disclosed
+    foundational deferral, not a newly asserted continuity criterion; the r2 PASS leaves it flagged.
+  outcome: survived
+  evidence:
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+- surface: identity
+  rule: capture-provenance-is-not-identity
+  counterexample: Treat changed capture-local ownerRef renderings between the two reports as a new
+    beneficiary or a second allocation, or read the attached-process alias as independently observed
+    liveness. The source includes those renderings, but the revision's association uses the recorded
+    admission/enqueue context and keeps the aliases outside identity. Rigid information classification
+    and relational dependence are confined to the report context and intended subject; actual authorization
+    and a running operating-system execution are not prerequisites inferred from the attachment assertion.
+  outcome: survived
+  evidence:
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+- surface: warrant
+  rule: exact-reuse-decision-warrant
+  counterexample: Count each lease snapshot as a separate active five-token grant, or replace their
+    admitted subject with an unadmitted request. That changes CQ-008/CQ-009's grant population and
+    can duplicate the charge compared by CQ-010. The already ratified SeatGrant supplies the required
+    admission subject, and the revision retains only its recorded admission/charge/origin associations.
+    It explicitly supplies no complete active census, effective contendsFor relation, admittedBy
+    link or pre-admission remainder. Exact reuse is not an optional subclass, and the surviving warrant
+    does not discharge the independent continuity deferral.
+  outcome: survived
+  evidence:
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  - CQ-008
+  - CQ-009
+  - CQ-010
+rival_models_still_viable:
+- Distinct immutable lease-information snapshots versus one continuing lease-information object with
+  successive states; copy/correction/replay behavior is still missing.
+- Continuing allocation relator versus an instant-indexed admission situation remains conceded and
+  explicitly deferred until initial allocation, renewal, release/eviction, re-admission and the scheduler's
+  identity rule are observed.
+evidence:
+- so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+- so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+- CQ-008
+- CQ-010
+- CQ-009

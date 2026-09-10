@@ -1,0 +1,11 @@
+id: rat:54
+proposal_ref: otp:ov-current-proposal-selection:001
+proposal_sha256: bca2c93b66d813f36b2b0a5e3ba84335d0bf4d3fab1082c9da0ddde5899a6b7b
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-current-proposal-selection:001 as hasCurrentProposal in a versioned,
+  time-indexed projection context, with the episode identity flag retained and any operational selection-situation
+  identity deferred, only with joint ordering-cluster ratification.

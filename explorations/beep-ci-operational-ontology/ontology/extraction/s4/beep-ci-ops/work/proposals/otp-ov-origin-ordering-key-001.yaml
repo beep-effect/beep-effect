@@ -1,0 +1,93 @@
+id: otp:ov-origin-ordering-key:001
+hypothesis_ref: dh:ov-origin-ordering-key:001
+identity_card_ref: ic:ov-origin-ordering-key:001
+foundational_status: analyzed
+term:
+  preferred_label: has origin key
+  local_name: hasOriginKey
+  proposed_iri: https://oip.law/ontology/ci-ops#hasOriginKey
+  owl_entity_kind: data_property
+definition:
+  text: An origin-key value property that records the string assigned to a represented admission request
+    in a projection input for origin grouping and canonical-order comparison.
+  source:
+  - po:sha256:d4f2e09398646bf875ee3cbeeec6471c327a8a7b9d9d82425c754dbebd84c7f9
+  - po:sha256:d5a14f495e7b2778abacb3727637a629965dec0f85bbefec53d76cba5a7690e3
+  - po:sha256:fe4b4d49ef566d86584b1cea395485bf0f230233e91478c746d3a8d23208e05c
+  - po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#hasOriginKey
+    compatibility: The S5 inventory defines hasOriginKey as a string-valued property on SeatRequest or
+      SeatGrant. The emitter records that same property on request representations, and the contract uses
+      it as an ordering key. This proposes exact reuse of the request-side recorded value; it neither
+      redefines the grant-side use nor asserts an identity relation to a repository object.
+operational_warrant:
+  competency_questions: []
+  semantic_support_for:
+  - otp:ov-schedule-proposal:001
+  - otp:ov-projection-specification:001
+alternatives_rejected:
+- 'Decorative field with no ordering effect: the contract explicitly includes originKey in the canonical
+  comparison tuple.'
+open_issues:
+- 'Warrant justification: The named decision terms require the ordering convention to disambiguate the
+  prescription under its governing rules. For requests tied on priority and enqueue time, the contract
+  uses the origin key before the nonce; omitting its comparison meaning leaves the prescription''s deterministic
+  ordering semantics incomplete. CQ-020 reads the already materialized order and does not directly query
+  this key, so this is a support warrant.'
+- 'Identity criterion carried from ic:ov-origin-ordering-key:001: Proposed at contextual value-assignment
+  grain: sameness requires the same represented request in the same projection input with the same origin-key
+  comparison value under that input''s ordering convention. Equal literals on different requests are equal
+  comparison values, not the same request assignment or proof of the same repository. No repository-origin
+  identity criterion is supplied.'
+- 'Steward choice required before ratification of otp:ov-origin-ordering-key:001: The steward must choose
+  the contextual scalar property proposed here, an independently represented key-assignment information
+  object, or a reference to a domain repository origin after normalization and sameness have been established.
+  The repository-reference rival would require new evidence and a separate object-valued interpretation;
+  a shared string is not sufficient to adopt it or equate requests. Still-viable models retained from
+  fa:ov-origin-ordering-key:001: Direct scalar data property used by canonical sorting, with no independently
+  instantiated key object; Reference to a domain repository origin after an independently observed normalization
+  and sameness contract.'
+- 'Cluster dependency: otp:ov-schedule-proposal:001, otp:ov-projection-specification:001, otp:ov-seat-request:001.
+  Coordinate ratification or parking where endpoint grain, component identity, or the stated warrant depends
+  on these proposals; no dependent choice is settled by emission spelling.'
+- 'Reuse search: The local hasOriginKey property matches the observed recorded string assignment. DOAP
+  repository descriptions in the scout report denote repositories, not comparison strings, and provide
+  no exact replacement for this property.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Representation grain: the proposed property encodes contextual information content without requiring
+  a separate assertion individual. The OntoClean fields are inherited from the joined identity card for
+  that candidate content, not asserted as identity criteria for an RDF literal or for the OWL property
+  universal.'
+- The same synthetic origin-test value appears on three requests. That supports equality of comparison
+  values, not request identity, repository identity, active-grant status, or a violation of the origin-exclusion
+  constraint.
+- The identity card's fixed information-assignment reading and relational dependence concern contextual
+  assertions. The S5 property row's unresolved rigidity is not resolved as a property-universal claim
+  by this proposal.
+- No origin normalization, canonical repository sameness, or grant binding is observed in this chain.
+- 'Strongest counterexample carried from fa:ov-origin-ordering-key:001: The fixture repeats origin-test
+  on three distinct requests. Treating the common literal as request identity merges all three; treating
+  it as evidence of simultaneous active grants manufactures a grant-exclusion violation. Hypothetically,
+  two spellings for one repository could also sort differently unless normalization is independently specified.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

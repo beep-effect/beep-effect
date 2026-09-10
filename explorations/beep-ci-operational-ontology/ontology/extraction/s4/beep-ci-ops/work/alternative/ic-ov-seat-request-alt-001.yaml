@@ -1,0 +1,31 @@
+id: "ic:ov-seat-request-alt:001"
+hypothesis_ref: "dh:ov-seat-request:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "unresolved: domain-ticket sameness (same admission-seeking request, typically reidentified by store nonce) versus sameness of a projection-local description. This batch types request subjects and describes pending-set reconstruction, but supplies no individual journal chain; nonce and subject IRI are technical keys, never the criterion, and ownerRef-style capture fields are excluded (po:sha256:2bd636283801ce0554f90ccad18d9af687c0492f9206e9428256c3232db5790d; po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4; po:sha256:f456cbb5c883ae06a4246878847ea9d98832618f2e923b54164a79cd2acfe000; CQ-020; CQ-021)"
+  reidentification_key:
+    - "rdf:type ciops:SeatRequest subject in an emission"
+    - "request.nonce serialized as scheduledUnitRef"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: unresolved
+  unity: "One request individual per typed subject in the fixture (request-0/1/2); unity as a live ticket versus a projection-local description is unsettled."
+  dependence: relational
+ufo_analysis:
+  candidate_category: kind
+  alternatives:
+    - information_object
+    - relator
+  existential_dependencies:
+    - "a requesting agent (not observed in this batch's emission quotes)"
+    - "work kind, priority, and charge as request attributes in the broader CQ-021 shape"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "admitted (ticket/lease handoff; request representation is not the grant)"
+    - "withdrawn"
+counterexamples:
+  - description: "Collapsing SeatRequest with WorkUnitSpecification or with SeatGrant contradicts the quoted journal limitation (no work-unit-specification identity) and the ticket/lease split; fixture typing of request-0/1/2 does not prove live-scheduler existence (po:sha256:0c5a0ac360560118bda477d323d7b7ae9977d379ec5a282b0184baf5195d43da; po:sha256:3015f93b003a84d5a9e8ee82ac198ebe5bd86db390fd763e0aef039e2ed6c203; po:sha256:83ac7ce996c2aacaf072f7c6977c423f511a3ec1d1d3b7f21a6fa64fb31ec86f; po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4)."
+status: proposed

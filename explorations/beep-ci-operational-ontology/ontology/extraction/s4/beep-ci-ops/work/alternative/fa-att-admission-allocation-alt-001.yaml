@@ -1,0 +1,20 @@
+id: "fa:att-admission-allocation-alt:001"
+hypothesis_ref: "dh:att-admission-allocation:001"
+identity_card_ref: "ic:att-admission-allocation-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Relator: origin-scoped admission allocation (SeatGrant) mediating capacity and one attempt; lease record is its representation"
+    still_viable: true
+  - label: "Information object: the yeet-admission-lease/v1 snapshots themselves, with no further domain allocation"
+    still_viable: true
+  - label: "Event: the punctual act of admitting, with heartbeats as separate events"
+    still_viable: false
+  - label: "Queued SeatRequest that has not yet received admission"
+    still_viable: false
+strongest_counterexample: "Collapsing the allocation with the lease file, or minting a new grant per heartbeat: so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72 and so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d already show one admittedAt/nonce/origin/charge pair with later heartbeat evidence. The relator and information-object models remain observationally equivalent on current evidence because the allocation is known only through lease snapshots."
+verdict: analyzed
+needed_evidence: "A release, reap, or origin-exclusion observation for this same nonce that is not just another lease-file rewrite (would favor the relator over a mere document); or a rule treating two lease files with identical nonce+admittedAt as distinct allocations (would split them). Remaining-capacity-at-admission (CQ-010) and a second active grant on originKey=4cc31eeb4dec (CQ-009) are absent and must not be asserted. Fleet-wide grant inventory is not supplied by support=active."

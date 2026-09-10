@@ -1,0 +1,62 @@
+id: fa:admb-grant-release:001
+hypothesis_ref: dh:admb-grant-release:001
+identity_card_ref: ic:admb-grant-release:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: Information asserting release, even if operational removal is uncorroborated
+  still_viable: true
+  rationale: >-
+    An assertion can be copied or fail to correspond to an effective transition. The observations
+    establish reported content, not independent operational corroboration.
+- label: The grant's released condition or terminal boundary without a separately reified release
+    event
+  still_viable: true
+  rationale: >-
+    Time-qualified participant boundaries may serve the cited decisions without a separately addressable
+    event. Consumer behavior and operational transition evidence must decide that modeling choice.
+strongest_counterexample: >-
+  A release entry with memoryPeakBytes can follow work that failed or never completed successfully;
+  that measurement and the release tag do not establish a verdict. A repeated release emission could
+  likewise add a second assertion after the authorization already ended without another release transition.
+  Only a correlated effective authorization/charge removal distinguishes the occurrence from logging
+  or an ineffective cleanup attempt.
+verdict: analyzed
+needed_evidence: ''
+referent_grain: >-
+  One release transition terminating a particular authorization. It is neither the grant's holding
+  interval, its released-at-time condition, the execution's outcome nor the information asserting
+  release.
+test_rationale:
+  spec_vs_execution: >-
+    A release is a particular termination occurrence, not a reusable release procedure or the execution
+    being authorized. It can occur independently of how the intended work ended.
+  world_vs_information: >-
+    Twenty-one chains positively pair admission and release assertions. They bound the reported holding
+    endpoints without proving continuous intervening standing. Optional memoryPeakBytes is reported
+    measurement content, not a grant charge, wall duration, hard memory limit or proof of success.
+  role_vs_bearer: >-
+    Release is neither the holder nor a role acquired by it. The holder can survive losing the authorization;
+    the event, the ended relation and any retained historical record are distinct.
+  context_reification_needed: >-
+    The particular target, transition type and occurrence time must remain associated within their
+    admission context. A context-free binary relation or a nonce alone would collapse repeated transitions,
+    target conditions or reports. This contextual requirement does not by itself warrant a separate
+    event term.
+analysis_scope: >-
+  Foundational analysis only. The survivor rule admits this hypothesis for testing; it does not ratify
+  its discriminator, identity criterion, category or occurrence truth. CQ citations identify decision
+  context, not a claim that the supplied records satisfy the query or warrant every possible reification.
+evidence_refs:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- CQ-008
+- CQ-009
+open_evidence_questions:
+- >-
+  Observe effective lease/authorization relinquishment and active-charge removal correlated with the
+  release assertion, including duplicate/retry behavior. A separately linked execution verdict and
+  trigger observation would be needed for work outcome or voluntary-intent claims.

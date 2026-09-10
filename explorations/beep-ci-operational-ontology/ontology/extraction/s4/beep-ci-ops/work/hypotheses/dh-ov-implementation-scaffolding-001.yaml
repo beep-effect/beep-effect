@@ -1,0 +1,35 @@
+id: dh:ov-implementation-scaffolding:001
+observation_refs:
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:5767117862eb6d9a3c039a440a4f016fb59e66016cef58838a3b6577930f0d02
+- po:sha256:5e660542834fa3d2e917207f5764b6905b0654cfb825a0f34b4ac27bfe96bb02
+- po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+cq_warrants: []
+proposed_referent:
+  label: Projection service and schema scaffolding without additional domain referents
+  description: The implementation packaging described by the service heading, schema inventory, error-family
+    inventory, and stated non-goals. The meaningful request, proposal, and episode descriptions within
+    the same prose are assessed separately; this record assesses the remaining wrappers and planned implementation
+    seams.
+representation_status: implementation_artifact_only
+alternatives:
+- label: Description of a software architecture outside the operational decision vocabulary
+  representation_status: information_artifact
+  plausibility: viable
+- label: Evidence that the named service, errors, or planner seam are operational events or agents
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: A Context.Service heading, S.Class and LiteralKit prescriptions, DTO fields, and named typed
+    errors can all exist without additional operational entities. The quoted non-goals explicitly leave
+    the lane-DAG planner unimplemented and reserve real admissions to the deployed scheduler; a planned
+    seam is no execution occurrence. No supplied decision question requires CiOpsProjection, ProjectionInput,
+    or the listed error wrappers as independent terms. This null applies to implementation scaffolding,
+    without discarding the domain-bearing descriptions elsewhere in the same observations.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false

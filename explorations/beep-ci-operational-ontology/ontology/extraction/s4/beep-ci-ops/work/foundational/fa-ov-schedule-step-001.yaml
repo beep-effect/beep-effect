@@ -1,36 +1,50 @@
-id: "fa:ov-schedule-step:001"
-hypothesis_ref: "dh:ov-schedule-step:001"
-identity_card_ref: "ic:ov-schedule-step:001"
+id: fa:ov-schedule-step:001
+hypothesis_ref: dh:ov-schedule-step:001
+identity_card_ref: ic:ov-schedule-step:001
+referent_grain: Represented instruction component at a place in one fixed admission prescription; distinct
+  from the same request in other plans, a raw ordinal, and an actual admission event.
 tests:
   spec_vs_execution: separated
   world_vs_information: separated
-  role_vs_bearer: not_applicable
+  role_vs_bearer: separated
   context_reification_needed: true
+analysis:
+  identity_and_category: The admitted-only sequence restriction and the instruction's contextual structure
+    support a prescription-component reading. Information-object classification follows that content,
+    not the programming-language ScheduleStep name.
+  rigidity: Under the fixed-component model, the object remains a prescription component even if its plan
+    is obsolete or never enacted. Its ordinal is constitutive of this component; moving it belongs to
+    a different prescription version.
+  dependence_and_temporality: The component depends on its containing plan content and can persist as
+    archived information. There is no observed mutable-step lifecycle, execution onset, or completion
+    state.
+  spec_vs_execution: A prescribed admission instruction can be emitted without any actual grant. It is
+    not a work execution or a completed scheduler step.
+  world_vs_information: Fixture step nodes demonstrate represented components only. Realizations, if later
+    observed, would have separate occurrence identity.
+  role_vs_bearer: Being assigned to a step is a contextual role of a represented request; the instruction
+    component is not that request or its requester.
+  context_reification: The existing containing prescription and ordered position provide context. A sequence
+    representation can preserve it without an independently minted step individual.
+  evidence_limit: The contract keeps the deferred tail outside the admitted sequence. It does not establish
+    how step identity behaves under editing or supersession of mutable plans.
 rival_models:
-  - label: >-
-      ScheduleStep denotes the projected admission-act occurrence itself,
-      rather than information content that represents a possible admission.
-    still_viable: true
-  - label: >-
-      Each embedded step record token is individuated by its proposal carrier,
-      even when another carrier realizes byte-identical step content.
-    still_viable: true
-  - label: >-
-      Byte-identical step content is reusable across ScheduleProposal outputs,
-      so containing-proposal identity is provenance rather than identity.
-    still_viable: true
-  - label: >-
-      The S.Class instance or provisional RDF node supplies ScheduleStep
-      identity independently of the represented scheduling content.
-    still_viable: false
-strongest_counterexample: >-
-  The phrase that v1 schedules the admission act itself can support a
-  world-side occurrence reading, while differential replay permits a projected
-  step to disagree with the eventual grant order; the present observations do
-  not settle occurrence versus proposal-relative content, or content identity
-  across faithful copies.
-verdict: explicitly_deferred
-needed_evidence: >-
-  Projection provenance must distinguish reusable step content from
-  proposal-embedded carrier tokens and record copy, replacement, correction,
-  and re-projection behavior under one contract version.
+- label: Contextual sequence position or tuple without a separately reified component object
+  still_viable: true
+- label: Persistent editable instruction whose identity survives relocation between plan revisions
+  still_viable: true
+- label: Actual execution or completed admission event
+  still_viable: false
+strongest_counterexample: 'Hypothetical counterexample: the same request is first in one proposal and
+  second in a later proposal after priorities change. Identity by request alone merges two different contextual
+  instructions; identity by the raw number zero merges first steps from unrelated proposals. Neither a
+  type assertion nor a step-0 suffix establishes the same execution occurrence.'
+verdict: analyzed
+needed_evidence: ''
+evidence_refs:
+- po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e
+- po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6
+- CQ-020

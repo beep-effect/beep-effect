@@ -1,0 +1,92 @@
+id: "ic:ver-wall-time-evidence:001"
+hypothesis_ref: "dh:ver-wall-time-evidence:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Proposed at recorded measurement-assertion grain: one quantitative claim
+    about elapsed time for one specified occurrence scope and counted interval.
+    Two representations denote the same content only if they bind the same
+    execution occurrence and scope, the same interval and measurement meaning,
+    and the same claimed quantity with its unit and precision. A whole-attempt
+    claim and a nested lane claim are distinct even if their values coincide.
+    Repeating a lane creates another target occurrence; copying or converting
+    units without changing the assertion preserves its information content.
+    Changing the asserted quantity produces a different content snapshot, not a
+    different historical execution. A duration number or an unbound timestamp
+    pair is not an identity criterion. Where the flattened projection has lost
+    the target or interval association, sameness cannot be inferred from shared
+    values. Capture and generator provenance are excluded.
+  reidentification_key:
+    - "attemptId with attempt-scoped startedAt/endedAt: evidence for the whole-attempt target when present"
+    - "Nested occurrence binding and durationMs field location: required corroboration for lane scope, not recovered by Cartesian pairing of flattened facts"
+    - "elapsedMs or durationMs with an established unit and scope: asserted value, never a unique identifier"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One duration claim is unified by a single measured target, scope, and counted
+    interval. The report may contain several such claims, including overlapping
+    or containing intervals. Their co-location creates neither one measurement
+    nor an additive partition. Numeric disagreement does not erase a recorded
+    measurement claim; it affects its interpretation or accuracy.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "Elapsed duration as a quality of a bounded execution, with the recorded quantity kept as a separate measurement description"
+    - "A measurement-result token individuated by a measurement act, rather than by assertion content"
+    - "A scoped literal assertion within a result report, without a separate measurement information individual"
+  existential_dependencies:
+    - >-
+      The recorded assertion needs some information bearer. The observations do
+      not show dependence on a particular report file, clock process, or storage
+      medium. Generic bearer dependence does not alone determine the contracted
+      intrinsic or relational meta-property, which remains unresolved.
+    - >-
+      Interpreting the claim requires a represented occurrence and interval;
+      that aboutness is not existential dependence on a still-running execution
+      or on a true duration equal to the recorded number. A retained or inaccurate
+      claim can remain information after its target occurrence has ended.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: >-
+      so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc
+      records startedAt=2026-09-09T05:51:33.200Z,
+      endedAt=2026-09-09T05:51:39.398Z, and elapsedMs=6199. Subtracting those
+      recorded timestamps gives 6198 milliseconds. This is a reported-quantity
+      versus timestamp-derived-quantity difference, not evidence of its cause.
+      It defeats treating every elapsedMs as definitionally identical to the
+      exact endpoint subtraction or as infallible physical duration.
+  - description: >-
+      so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465
+      includes elapsedMs=4602023 alongside many durationMs values, lane identifiers,
+      and start/end values. The flattened fact set does not bind every duration
+      to every lane or prove that the intervals are disjoint. Treating the values
+      as one additive set would erase occurrence scope and risk counting parent
+      and contained work together.
+  - description: >-
+      so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+      reports elapsedMs=11 and status=not-run for its listed steps. An attempt
+      interval can be reported even when those steps did not run. Missing lane
+      durations are neither zero-duration claims nor completed lane executions.
+evidence_refs:
+  - "so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446"
+  - "so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c"
+  - "so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc"
+  - "so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465"
+  - "CQ-007"
+  - "CQ-025"
+notes: >-
+  The selected information persists after the measured interval; it does not
+  unfold over that interval as the execution does. Changes in accessibility,
+  evidential use, or judged accuracy can preserve the same fixed assertion;
+  replacing the asserted measurement changes the content snapshot. No terminal
+  artifact state or retention interval is established. The term's evidential use
+  is not a rigid role imposed on a duration quality. Identity, rigidity, and
+  category remain proposals for this grain; measurement convention and specific
+  dependence remain open.
+status: proposed

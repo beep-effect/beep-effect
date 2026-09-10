@@ -1,0 +1,89 @@
+target: otp:ov-projection-specification:001
+target_sha256: 312d1b614d932277c1624d538a30d6b6c339cebd3c54986d334111f3598d40e3
+chain_sha256: df5d6229c2a6acc675d19c09cda57f987e8661f37793e427e6270df954216958
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: A comparison that keeps ordering/admissibility rule content and rule version fixed while
+  changing the journal input, followed by a comparison that changes rule content with the input fixed.
+  Each must identify whether the emitted descriptive target is the same reusable rule object or a distinct
+  application-context record independently of policyDigest, journalPrefixDigest, or IRI spelling.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'AdmissionProjectionSpecification asserts parents: []; no is-a edge is proposed. Participant,
+    component, or governing-role relations supply no additional subsumption assertion to test.'
+revision_requests:
+- Use the paired rule/input observations to select repeatable rule content or an application-context description
+  in a new synthesis. If both are represented, separate their identity accounts and coordinate hasProjectionSpecification's
+  target semantics. Preserve the deferral until the observations distinguish them.
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  outcome: survived
+  evidence:
+  - po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+  - po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+  - CQ-020
+  counterexample: Replace the target by a mere engine-execution identifier. It cannot serve as the repeatable
+    description of canonical ordering and charge admissibility described in the contract. The typed fixture
+    target and those normative constraints support descriptive information beyond a run occurrence. They
+    do not, however, decide whether this particular target describes reusable rules or one rule/input
+    application; the null is defeated at the common information-description grain only.
+- surface: identity
+  rule: specification-versus-application-identity
+  outcome: survived
+  evidence:
+  - po:sha256:2cbe4a487c0ebb475da0d4b4e9833105b7c1d677e942f04484e74049b825ee53
+  - po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3
+  - po:sha256:9081cf3d4060a87388a3b4285f7ed6165aa24f39dc350fc3b3c3aeffec0e6b26
+  - po:sha256:e9df49623f67f2eac1d565f6ab8811c99128f33a8610358f0944f64ae390aa5e
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  counterexample: Apply unchanged ordering rules to journal prefixes J1 and J2. A reusable specification
+    remains one rule object; two application descriptions can be distinct. Conversely, changing the rules
+    while retaining J1 changes the governing description even if a journal carrier is unchanged. The observations
+    show a single target with policy and journal digest literals, so they do not distinguish these counts.
+    The proposal retains precisely this deferral rather than affirming digest-based sameness; a landed
+    identity contradiction cannot be claimed, and PASS on the chosen repeatable grain is not yet supported.
+- surface: identity
+  rule: capture-provenance-as-identity
+  outcome: survived
+  evidence:
+  - po:sha256:2cbe4a487c0ebb475da0d4b4e9833105b7c1d677e942f04484e74049b825ee53
+  - po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3
+  - po:sha256:9081cf3d4060a87388a3b4285f7ed6165aa24f39dc350fc3b3c3aeffec0e6b26
+  - po:sha256:e9df49623f67f2eac1d565f6ab8811c99128f33a8610358f0944f64ae390aa5e
+  counterexample: Recapture the same descriptive assertion in a different file or on another collection
+    occasion. The candidate does not count a new specification from that capture. Its two observed digest
+    fields are operational policy/input bindings, not observation capture metadata, and the card expressly
+    denies that their equality establishes identity. The unresolved question is whether input binding
+    is constitutive of an application description, not a demonstrated use of capture provenance as rule
+    identity.
+- surface: warrant
+  rule: listing-cq-warrant
+  outcome: survived
+  evidence:
+  - CQ-020
+  - po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+  counterexample: Retain P hasProjectionSpecification S but remove S's AdmissionProjectionSpecification
+    typing. CQ-020's mandatory ?spec a ciops:AdmissionProjectionSpecification pattern then has no matching
+    target. The class has a real decision warrant, although query necessity does not settle the identity
+    of its rule-description versus application-description instances.
+rival_models_still_viable:
+- A repeatable projection rule specification whose applications cite different input states
+- An application-context information record combining governing rules with a policy and journal-prefix
+  binding
+evidence:
+- CQ-020
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+- po:sha256:2cbe4a487c0ebb475da0d4b4e9833105b7c1d677e942f04484e74049b825ee53
+- po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3
+- po:sha256:9081cf3d4060a87388a3b4285f7ed6165aa24f39dc350fc3b3c3aeffec0e6b26
+- po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+- po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+- po:sha256:e9df49623f67f2eac1d565f6ab8811c99128f33a8610358f0944f64ae390aa5e

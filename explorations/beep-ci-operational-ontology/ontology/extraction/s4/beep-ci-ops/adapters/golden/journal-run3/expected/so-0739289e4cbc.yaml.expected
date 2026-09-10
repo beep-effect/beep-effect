@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:0739289e4cbc77db90a11effdbc5c2838f35809e9ac281c5fc4fd14ee8f05adb",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3b-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 28,
+    "end_line": 36,
+    "content_sha256": "ef6af42d0ee008313cd1d15f28e30e28ba11da4d2a0efaee0641640a3dd1813e"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/journal.properties:nonce=later-ticket",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-ticket-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=attempt-later-ticket"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fixture>/alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=330"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=later-ticket"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=fixture-owner"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 3\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-ticket-evicted\nnonce=later-ticket\nevictedAtMillis=330\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-later-ticket\nownerRef=fixture-owner\n",
+  "epistemic_status": "parser_derived"
+}

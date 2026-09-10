@@ -1,0 +1,76 @@
+target: otp:admb-seat-grant:001
+target_sha256: 0097cf145e26c95ccfbc9dca5ffd5b6cea404a3475c581133dc92977ef8f9778
+chain_sha256: a1dae6cd528749f4df51cd7c1d60e94a8274f07d724cbe7816174c1549f56f05
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: parents is empty. Exact reuse of ciops:SeatGrant is a mapping, not a subclass edge; the holder
+    role is not asserted as its parent.
+revision_requests:
+- For discriminator-true-of-dto, cite a run-scoped observed conferral/removal of charged capacity or a
+  consuming admission decision that changes with this grant's effective standing, independently of merely
+  emitting its journal fields. State the observed fact that would be false under the implementation-only
+  null. If only report denotation is supported, preserve that model explicitly rather than rejecting the
+  operational null by asserting that the report would be false.
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  counterexample: 'Null-world counterexample: a journal serializer or replay fixture emits the exact admitted/released
+    claims for nonce 411b3ba7, including weightTokens=5, originKey=4cc31eeb4dec and both timestamps, although
+    no capacity authorization was conferred. Every cited config_key_value fact in so:0cb159aa5cd4 remains
+    true as a fact about the record. The hypothesis instead argues that the asserted holding would be
+    false without a grant; that changes the truth of the assertion, not the observed fact that it was
+    recorded. The cited closure contains no effective allocation/removal or scheduler-consumption observation
+    distinguishing that null world. The proposal''s own report-only alternative acknowledges this gap.'
+  outcome: landed
+  evidence:
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  - CQ-008
+  - CQ-009
+- surface: identity
+  rule: identifier-is-identity
+  counterexample: 'Countermodel: confer two successive authorizations with the same holder, origin and
+    five-token charge, separated by release; copy the first admission entry during its holding interval.
+    The card identifies authorizations by founding conferment and continuity, so it separates the two
+    grants without multiplying the copied grant. It also leaves the admission-only histories in so:2d8248aa5f75
+    and so:c3e1661cf031 with unknown later standing. No ownerRef, source ordinal, current-holder role
+    or absent endpoint supplies identity. This is coherent conditional identity, although its operational
+    denotation has not survived the separate null attack.'
+  outcome: survived
+  evidence:
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+  - so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+- surface: warrant
+  rule: exact-reuse-decision-warrant
+  counterexample: 'Counterexample attempt: replace each grant with its queued demand or holder process.
+    CQ-008 and CQ-009 explicitly require rdf:type SeatGrant with ActiveGrant, and CQ-010 associates admitted
+    work with that grant''s charge and pre-admission capacity. The replacement fails those patterns or
+    conflates demand with allocation. SeatGrant is also an exact reuse in the permitted S5 inventory,
+    not an optional new subclass. The lack of a complete live census limits instance answers; it does
+    not erase this decision warrant.'
+  outcome: survived
+  evidence:
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - CQ-008
+  - CQ-009
+  - CQ-010
+rival_models_still_viable:
+- Information object asserting a charged holding and its boundaries.
+- Conferment/termination account without a persisting grant bearer.
+- Holder authorization mode or time-indexed holding situation.
+evidence:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- CQ-008
+- CQ-009
+- so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+- so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+- CQ-010

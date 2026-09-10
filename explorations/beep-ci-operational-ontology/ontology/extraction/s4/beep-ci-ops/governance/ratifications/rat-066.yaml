@@ -1,0 +1,11 @@
+id: rat:66
+proposal_ref: otp:admb-seat-grant:001
+proposal_sha256: 2d30b3ec77796874ce706ed19df1153c8ead6718e4256d32f3a00c7671f92af5
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:admb-seat-grant:001 as the SeatGrant recorded-account reuse under sitting-1
+  Ruling 2, preserving its nonce-chain associations, with account-copy identity and effective authorization
+  continuity deferred to run 4 as flagged.

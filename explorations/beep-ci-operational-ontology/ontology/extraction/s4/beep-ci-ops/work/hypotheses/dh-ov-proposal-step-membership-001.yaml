@@ -1,0 +1,38 @@
+id: dh:ov-proposal-step-membership:001
+observation_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:4b06f5efe076d7ed81dd9d5b200c268b1d9e42cbe4f8c78086928bdaf65bb41e
+- po:sha256:8081b5c15707c6f49878d6d871f17862c72605489c31de3a31d56b12a59c5fc9
+- po:sha256:a1e5e0d0916deb0cb33ee62f307e85aabb52833a88511c4c1fdc4885ec667857
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+cq_warrants:
+- CQ-020
+- CQ-019
+proposed_referent:
+  label: Recorded membership of a step in a proposal
+  description: The assertion that a particular represented step belongs to a particular schedule proposal.
+    It supplies the proposal-specific step set from which ordering and per-step scope can be read.
+representation_status: information_artifact
+alternatives:
+- label: Structural part relation between a prescription and its components
+  representation_status: domain_referent
+  plausibility: viable
+- label: Serializer adjacency with no proposal membership meaning
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The quoted fixture associates two different step subjects with the same proposal, and the
+    emitter explicitly serializes this association. The totality and admitted-step restrictions give membership
+    consequences for which requests form a prescribed sequence and which scopes belong to that proposal.
+    The information-artifact reading treats the assertion as represented schedule content; its relation-versus-record
+    interpretation remains open for foundation analysis.
+  discriminator: The emitter quote is "${proposalNode} ciops-prov:hasStep ${stepSubject} ."; two fixture
+    observations place step-0 and step-1 on that predicate from the same proposal. The contract says "Only
+    admitted actions get steps". Removing membership meaning would eliminate the observed proposal-specific
+    collection on which the ordered-step and derived-scope questions depend.
+epistemic_status: proposed
+confidence:
+  value: 0.87
+  use_for_acceptance: false

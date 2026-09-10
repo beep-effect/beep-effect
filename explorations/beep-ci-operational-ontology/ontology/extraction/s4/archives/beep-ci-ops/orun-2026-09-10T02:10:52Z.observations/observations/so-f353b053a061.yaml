@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:f353b053a061870ff15017fd51401ea9165d54f608052fa1ea8daea981cf5d73",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect/chore_deps-update-7-11-26-637556fb9690/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 50,
+    "content_sha256": "1013975bda89f64947eea6401a8a8cb376e8fc9bb71f300f7665d8cd67e58ff9"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect/chore_deps-update-7-11-26-637556fb9690/verdict.properties",
+    "lexical_name": "behindCount",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "behindCount=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mergeBase=f185a818407fbd0f9a211fbe14e78663235b5f53"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v1\nbase=origin/main\nbranch=chore/deps-update-7-11-26\ncommitted=true\ncreatedAt=2026-07-11T23:04:14.850Z\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\nexitCode=0\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\nexitCode=0\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=passed\nexitCode=0\nid=publish:01-git-push\nlabel=publish:git:push\nphase=publish\nstatus=passed\nexitCode=0\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=publish\nstatus=passed\nexitCode=0\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=passed\nexitCode=0\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=passed\nexitCode=0\nmessage=yeet publish succeeded.\nmode=publish\noutcome=success\npushed=true\nrunId=chore_deps-update-7-11-26-637556fb9690\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\nbehindCount=0\nmergeBase=f185a818407fbd0f9a211fbe14e78663235b5f53\n",
+  "epistemic_status": "parser_derived"
+}

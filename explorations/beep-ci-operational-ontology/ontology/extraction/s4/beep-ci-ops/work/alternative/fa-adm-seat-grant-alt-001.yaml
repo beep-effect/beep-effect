@@ -1,0 +1,40 @@
+id: "fa:adm-seat-grant-alt:001"
+hypothesis_ref: "dh:adm-seat-grant:001"
+identity_card_ref: "ic:adm-seat-grant-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      Journal reconstruction of a holding (information_object). Observationally
+      equivalent on current evidence: every cited fact is a journal properties
+      chain, not a lease-store snapshot.
+    still_viable: true
+  - label: >-
+      Event-centered account with no persisting grant (only admit plus a later
+      end occurrence).
+    still_viable: true
+  - label: kind of holder or of authorized work
+    still_viable: false
+  - label: role played by the submitter (ActiveGrant as the bearer)
+    still_viable: false
+  - label: currently-active snapshot entity (open admission = now held)
+    still_viable: false
+strongest_counterexample: >-
+  Equating the grant with its begin report, with the request, or with present
+  activity. so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+  reconstructs a holding from admit at 1788926595216 to release at
+  1788927008574 for nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088, with
+  ownerRef changing across that interval;
+  so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+  ends a different holding by lease eviction rather than release (CQ-008,
+  CQ-009).
+verdict: analyzed
+needed_evidence: >-
+  A contemporaneous lease-store snapshot at a query instant, including
+  remaining capacity and originKey occupancy, would discriminate a persisting
+  grant from a journal reconstruction and would answer CQ-008 and CQ-010.
+  capacityAtAdmissionTokens is not in these reports. Origin-exclusion (CQ-009)
+  needs origin-keyed occupancy, not checkout-keyed identity.

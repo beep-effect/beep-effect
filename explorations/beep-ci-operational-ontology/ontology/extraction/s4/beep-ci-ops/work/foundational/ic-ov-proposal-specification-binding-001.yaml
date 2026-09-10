@@ -1,0 +1,46 @@
+id: ic:ov-proposal-specification-binding:001
+hypothesis_ref: dh:ov-proposal-specification-binding:001
+referent_grain: Recorded proposal-to-description binding within one emitted projection; a contextual information
+  assertion, not the governing description or a compliance event.
+identity:
+  supplies_identity: false
+  identity_criterion: 'Proposed at assertion-content grain: the same binding asserts the same association
+    between the same represented proposal version and the same represented descriptive target within the
+    same projection context. A changed target or proposal version changes the binding content. This criterion
+    identifies the represented assertion only; it does not resolve whether the target denotes reusable
+    rules or an input-bound context.'
+  reidentification_key:
+  - proposal subject and hasProjectionSpecification target within the emitted representation, for lookup
+    only
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One contextual association supplying the descriptive target for a particular proposal. The assertion
+    carries information-content identity without supplying identity for either participant.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a direct governing relation between a plan and repeatable rules
+  - a provenance association with an input-bound application-context record
+  existential_dependencies:
+  - The represented proposal version and target description are constitutive participants in the assertion.
+  - A physical execution, actual compliance, or approval is not required for the assertion to exist.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: 'Hypothetical counterexample: a proposal points to a record containing only the policy
+    and input binding, while an independent document states the reusable rules. Reading the edge as proof
+    that its target is that rule specification silently merges two grains. Changing a target while keeping
+    the proposal identifier can also change the asserted binding without establishing any new execution.'
+evidence_refs:
+- po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+- po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853
+- po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+- CQ-020
+status: proposed

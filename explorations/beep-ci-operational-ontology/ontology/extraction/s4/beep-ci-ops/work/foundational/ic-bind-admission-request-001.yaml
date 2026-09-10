@@ -1,0 +1,85 @@
+id: "ic:bind-admission-request:001"
+hypothesis_ref: "dh:bind-admission-request:001"
+provenance: synthetic
+evidence_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+  - "CQ-021"
+  - "CQ-023"
+referent_grain: >-
+  One submitted demand as considered during a particular queue participation in
+  the synthetic scenario. This is not a work specification, execution, grant, or
+  submitting agent. Whether that participation constitutes the whole request or
+  a temporary role of an enduring demand is unresolved.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: the journal distinguishes two particular submissions and their
+    queue intervals, but does not show whether a demand survives withdrawal and
+    later re-entry as the same request. Under a queue-participation model, one
+    particular enqueue and its uninterrupted pending participation individuate a
+    request; a later submission is another. Under an enduring-demand model, the
+    same directed demand can acquire and lose queued membership. A lifecycle
+    observation connecting withdrawal to resubmission while independently tracking
+    the demand is needed to choose between these identity criteria.
+  reidentification_key:
+    - >-
+      Journal-local nonce and enqueue boundary correlate the supplied submissions
+      with their terminal reports; they do not settle cross-submission identity.
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    The candidate unit is a particular demand to admit intended work, with its
+    pending context, kind, priority, requested charge, and enqueue boundary.
+    Equal kind, priority, charge, or origin does not make two submissions one.
+    Whether the unity condition ends with queue participation remains open.
+  dependence: relational
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - "relator: a particular pending demand relating a submitter to admission handling"
+    - "role: queued membership of an independently enduring directed demand"
+    - "information_object: a submitted admission-ticket token expressing a demand"
+  existential_dependencies:
+    - >-
+      Queued participation depends on a particular submission and its admission
+      context. A relator interpretation additionally needs submitter and admission
+      participants; a role interpretation inherits the demand bearer's identity.
+      The observation does not independently identify these bearers from ownerRef.
+    - >-
+      No allocated grant is required: one observed demand is withdrawn after enqueue
+      without an observed admission. The candidate therefore cannot be a queued
+      state of an already allocated grant.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - >-
+      Queue participation ends on the observed admission at 1788931586674 for
+      the demand enqueued at 1788931586665.
+    - >-
+      Queue participation ends on the observed withdrawal at 1788931586715 for
+      the demand enqueued at 1788931586705.
+    - >-
+      These are boundaries of pending participation; cessation of an enduring
+      demand or information object is unresolved.
+rigidity_rationale: >-
+  A request identified with its entire pending-demand episode would be essentially
+  such a participant; queued membership of a demand that survives withdrawal would
+  be anti-rigid and relationally conditioned. Growing elapsed wait within either
+  observed interval does not individuate another submission. The evidence does not
+  decide persistence through a change out of queued membership.
+counterexamples:
+  - description: >-
+      Countermodel: a demand is withdrawn and later resubmitted unchanged, with
+      a replacement ticket. One model counts two queue-participation entities;
+      another counts one demand in two queued episodes. Both fit the supplied
+      enqueue-to-withdrawal prefix because its continuation is unobserved.
+  - description: >-
+      Both observed enqueue records have the same ownerRef rendering, work kind,
+      priority, charge, and origin but different enqueue chains and outcomes.
+      Collapsing them by that tuple would erase one demand. ownerRef*,
+      security_resanitization*, corpus_*, capture_*, and generator_* are excluded
+      from identity and do not identify a submitting agent.
+status: proposed

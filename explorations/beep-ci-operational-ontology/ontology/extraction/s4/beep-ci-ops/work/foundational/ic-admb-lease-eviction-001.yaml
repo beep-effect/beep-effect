@@ -1,0 +1,81 @@
+id: ic:admb-lease-eviction:001
+hypothesis_ref: dh:admb-lease-eviction:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    The same lease-eviction event is one causally continuous revocation/removal of the same particular
+    admitted authorization in the same admission context. A repeated report, heartbeat update or later
+    correction of the diagnostic reason does not create another completed revocation. Evicting another
+    lease is another event even with the same holder, origin, reason or millisecond boundary.
+  reidentification_key:
+  - nonce
+  - _tag=admission-lease-evicted
+  - evictedAtMillis (reported revocation boundary only)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    The unity is one admitted authorization's termination by eviction. It is founded on the target
+    grant, effective removal and occurrence context, not on an inferred owner-death instant or a heartbeat-gap
+    duration.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - Information asserting lease eviction and a diagnostic reason
+  - The grant's evicted condition or terminal authorization boundary without a distinct revocation
+    occurrence
+  existential_dependencies:
+  - >-
+    The particular admitted authorization and the admission context that revokes/removes its standing.
+    The diagnosis can mention an owner, but actual owner death versus identifier reuse is not established
+    as an existential or causal requirement.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: >-
+    The recorded reason owner-dead-or-reused is disjunctive. An owner may be alive with an identifier-reuse
+    diagnosis, and lastHeartbeatAtMillis is not a death time or expiry threshold. One of the five
+    chains has no heartbeat field at all. Defining eviction identity or cause by process death or
+    heartbeat timeout would misclassify these reported terminations and conflate the diagnosis with
+    what happened.
+status: proposed
+referent_grain: >-
+  One revocation/removal transition of an already admitted capacity authorization through lease eviction.
+  It is not a process-death occurrence, a heartbeat, a grant-state snapshot, a ticket eviction or
+  the journal's diagnostic assertion.
+analysis_notes:
+  rigidity: >-
+    Rigid on the proposed realized-occurrence interpretation: completing this transition does not
+    turn it into a later event, an ongoing participant or a state. Whether any particular assertion
+    corresponds to such an event remains an evidence question.
+  dependence: >-
+    Dependence is on the specified operational participants and admission relation or transition,
+    not on record storage or capture provenance. These dependencies are proposed model conditions,
+    not proof that every reported instance exists.
+  temporality: >-
+    Eviction unfolds as a terminal transition with evictedAtMillis as the reported boundary. The last
+    heartbeat, when supplied, is a different reported time. Entries can be appended out of event-time
+    order; source position is not an occurrence-time or expiry criterion. The interval flag remains
+    unresolved because the corpus supplies a timestamp, not start/end duration. The state-change flag
+    distinguishes unfolding from a continuant changing state; no event-state progression is inferred.
+  evidence_limits: >-
+    The first cited chain records admission, later eviction and a last heartbeat; the second records
+    admission and eviction without any heartbeat. These support the target/boundary distinction and
+    the limit on cause inference. CQ-008 and CQ-009 require grant standing at the relevant instant,
+    not just the diagnostic label.
+  provenance: >-
+    The cited observation records are from the current run's fleet admission journal. No synthetic
+    observation is used. Capture, corpus, generator, sanitization and ownerRef metadata are excluded
+    from identity criteria and reidentification keys.
+evidence_refs:
+- so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+- so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+- so:sha256:5abf1599e9268fb3190e199440ba2a0975670561acee0566c6805cd150491b12
+- so:sha256:a03b8e201a23a02a6b82aa0c120aa205b4725195d3985dc468b271c0e4813bca
+- so:sha256:fa16a716b56a1780f96785077dc9274f7a807f38a04770e008febb22d6cad15b
+- CQ-008
+- CQ-009

@@ -1,0 +1,64 @@
+id: fa:admb-request-enqueue:001
+hypothesis_ref: dh:admb-request-enqueue:001
+identity_card_ref: ic:admb-request-enqueue:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: The information assertion that an enqueue occurred
+  still_viable: true
+  rationale: >-
+    An assertion can be copied or fail to correspond to an effective transition. The observations
+    establish reported content, not independent operational corroboration.
+- label: The request's queued condition or opening boundary without a separately reified registration
+    event
+  still_viable: true
+  rationale: >-
+    Time-qualified participant boundaries may serve the cited decisions without a separately addressable
+    event. Consumer behavior and operational transition evidence must decide that modeling choice.
+strongest_counterexample: >-
+  An admitted record can retain an earlier enqueuedAtMillis without containing an explicit enqueue
+  entry, as in the cited lease-eviction chains. Counting that scalar as another observed enqueue occurrence
+  would inflate the evidence. A replay of an explicit enqueue entry could also produce another record
+  without another insertion. An independent registration trace is required to tell repeated reporting
+  from a second transition.
+verdict: analyzed
+needed_evidence: ''
+referent_grain: >-
+  One queue-registration occurrence for a particular submitted demand. Its resulting waiting condition,
+  the standing request, a timestamp retained elsewhere, and the journal assertion are separate grains.
+test_rationale:
+  spec_vs_execution: >-
+    Enqueue registers a particular demand; it neither defines a repeatable work specification nor
+    starts the work execution. A registration procedure may be repeatable, but every successful occurrence
+    has its own identity.
+  world_vs_information: >-
+    The 46 chains with an explicit admission-enqueued entry support reported registration occurrences.
+    Five other chains carry an enqueue timestamp only in an admission entry and are not counted as
+    separately observed enqueue entries. The asserted insertions are not independently corroborated
+    by the journal.
+  role_vs_bearer: >-
+    The event is not the submitter or its requester role, and is not the waiting request. A participant
+    can remain queued after the enqueue occurrence has ended.
+  context_reification_needed: >-
+    The particular target, transition type and occurrence time must remain associated within their
+    admission context. A context-free binary relation or a nonce alone would collapse repeated transitions,
+    target conditions or reports. This contextual requirement does not by itself warrant a separate
+    event term.
+analysis_scope: >-
+  Foundational analysis only. The survivor rule admits this hypothesis for testing; it does not ratify
+  its discriminator, identity criterion, category or occurrence truth. CQ citations identify decision
+  context, not a claim that the supplied records satisfy the query or warrant every possible reification.
+evidence_refs:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+- so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+- CQ-021
+open_evidence_questions:
+- >-
+  Observe a queue insertion and before/after membership for the same demand independently of its journal
+  emission, plus an entry replay without insertion. This distinguishes the operational occurrence
+  from its assertion and from the resulting queued condition.

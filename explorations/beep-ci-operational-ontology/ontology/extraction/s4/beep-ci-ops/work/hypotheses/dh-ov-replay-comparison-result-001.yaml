@@ -1,0 +1,38 @@
+id: dh:ov-replay-comparison-result:001
+observation_refs:
+- po:sha256:2cc77ae5391bd35d736242a9fff5ee6d2e64ee35cc18a420060b5a541f947ca6
+- po:sha256:a3b740b147b88dd94b092bee660c397cabadbbed2f35ddd14b6347c6ccb2f3fe
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- po:sha256:f41f8934b51e0e14a0344efa0b46898ea051035f811e3cee5e8de69c1bf43e2a
+cq_warrants: []
+proposed_referent:
+  label: Candidate differential replay result record
+  description: 'A reported comparison result for a finite frozen journal: all 41 admitted events are said
+    to match the projection first choice, within a report whose input census is 79 events. The presence
+    of this information is observed; the warrant for a separately queryable ontology referent remains
+    unresolved.'
+representation_status: unresolved
+alternatives:
+- label: Information artifact about a finite replay comparison
+  representation_status: information_artifact
+  plausibility: viable
+- label: Implementation verification report requiring no domain term
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The quote "PASS — all 41 admitted events matched the projection's first prescribed admission"
+    is a bounded report claim, not independent proof of live scheduler correctness. The contract makes
+    differential replay a gate, but no supplied competency question directly asks for replay reports or
+    their verdicts. The report also supplies neither tree-and-epoch evidence applicability nor an episode-specific
+    current sequence. Needed evidence is a concrete decision consuming this comparison record, or a demonstrated
+    dependency making it necessary to identify the governing specification under an existing question.
+    Until then an additional ontology referent is not warranted, and the null remains standing. The quoted
+    frozen-input digest and event census delimit this report only; they do not establish closure of admission
+    lifecycles.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.76
+  use_for_acceptance: false

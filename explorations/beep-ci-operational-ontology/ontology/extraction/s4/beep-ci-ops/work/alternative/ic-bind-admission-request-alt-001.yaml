@@ -1,0 +1,67 @@
+id: "ic:bind-admission-request-alt:001"
+hypothesis_ref: "dh:bind-admission-request:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two queued demands are the same individual iff they are the same admission
+    demand that entered a queue at a particular enqueue occurrence, with that
+    demand's work kind, priority class, and admission charge. The synthetic
+    journal
+    (corpus/run3b-synthetic/admission/synthetic/journal.properties;
+    so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f)
+    supplies two candidate instances: nonce 9e91a4e8-cf97-44b4-9b5c-da780e47720e
+    enqueued then admitted, and nonce d269a27c-6d0e-4613-8ad3-6adaa4353712
+    enqueued at enqueuedAtMillis=1788931586705 (_tag=admission-enqueued,
+    kind=full-proof, priority=verify, weightTokens=3) then withdrawn at
+    withdrawnAtMillis=1788931586715. Journal nonce correlates those particular
+    records; it is a reidentification key, not the criterion. ownerRef and
+    ownerRefVariant are capture sanitization and do not identify an Agent
+    (CQ-021's requestedBy remains ungrounded here).
+  reidentification_key:
+    - "journal nonce 9e91a4e8-cf97-44b4-9b5c-da780e47720e"
+    - "journal nonce d269a27c-6d0e-4613-8ad3-6adaa4353712"
+    - "enqueuedAtMillis on the matching enqueue record"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One demand individual per enqueue occurrence; the two synthetic nonce
+    chains are two unities with different subsequent outcomes (admitted vs
+    withdrawn), not states of one grant.
+  dependence: relational
+ufo_analysis:
+  candidate_category: kind
+  alternatives:
+    - relator
+    - information_object
+    - role
+  existential_dependencies:
+    - "a requester participant (Agent identity unresolved: ownerRef is sanitization, not requestedBy)"
+    - "an admission process / contended capacity being demanded"
+    - "enqueue time as the start of queue participation (enqueuedAtMillis)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "admitted (handoff off the request; observed on nonce 9e91a4e8-cf97-44b4-9b5c-da780e47720e)"
+    - "withdrawn (observed on nonce d269a27c-6d0e-4613-8ad3-6adaa4353712)"
+counterexamples:
+  - description: >-
+      Treat the request as a queued state of an already allocated grant. Both
+      synthetic chains record admission-enqueued before any terminal; the
+      withdrawn chain never records admission-admitted. CQ-008 forbids treating
+      queued waiters as a grant state (they are SeatRequests, CQ-021).
+  - description: >-
+      Collapse the two enqueue chains into one request because they share
+      kind=full-proof, priority=verify, weightTokens=3, and originKey. They have
+      different nonces, enqueue instants, attemptIds, and terminals.
+  - description: >-
+      Read this synthetic fixture as a starvation verdict or a complete live
+      queue census. CQ-023 needs observed wait versus a declared bound and a
+      modeled exception; this journal supplies neither a bound nor a full
+      snapshot.
+  - description: >-
+      Take ownerRef, schemaVersion, synthetic labels, or path placeholders as
+      Agent identity or additional domain vocabulary.
+status: proposed

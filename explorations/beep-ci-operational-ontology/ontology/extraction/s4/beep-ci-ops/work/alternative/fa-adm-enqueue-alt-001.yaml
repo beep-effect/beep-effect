@@ -1,0 +1,32 @@
+id: "fa:adm-enqueue-alt:001"
+hypothesis_ref: "dh:adm-enqueue:001"
+identity_card_ref: "ic:adm-enqueue-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      Enqueue assertion in an admission journal (information_object).
+      Observationally equivalent on current evidence until a queue-store or
+      scheduler enqueue operation is observed independently of the report.
+    still_viable: true
+  - label: >-
+      Dated start-boundary of request queue participation without a separately
+      reified occurrence.
+    still_viable: true
+  - label: implementation artifact only
+    still_viable: false
+strongest_counterexample: >-
+  Using a single nonce chain as if it were this event kind, or treating enqueue
+  as already having acquired a grant.
+  so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+  shows nonce=c334ff81-360e-4683-a084-8bf4bf0ed20f entering at
+  enqueuedAtMillis=1788928587012 and later withdrawn, never admitted (CQ-021).
+verdict: analyzed
+needed_evidence: >-
+  A contemporaneous observation of the ticket becoming eligible for queue
+  selection, aligned to enqueuedAtMillis and distinct from the journal append,
+  would discriminate the occurrence from the claim. Queue-wait decomposition
+  (CQ-007, CQ-023) still needs the matching endpoint and episode linkage.

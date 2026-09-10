@@ -1,0 +1,80 @@
+id: "ic:bind-admission-grant:001"
+hypothesis_ref: "dh:bind-admission-grant:001"
+provenance: synthetic
+evidence_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+  - "CQ-008"
+  - "CQ-009"
+  - "CQ-010"
+referent_grain: >-
+  One particular admission allocation during its holding interval in the synthetic
+  scenario. The allocation is distinguished from its admission event, lease record,
+  prior queued demand, holder, governing admission specification, and work execution.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Proposed criterion: the same allocation is the continuing allocation established
+    by one particular admission decision, relating the admitted demand and its
+    beneficiary to the admission resource being charged, until that allocation is
+    terminated. A later admission establishes another allocation even if work kind,
+    charge, origin, and beneficiary repeat. Copies or changed renderings of the lease
+    record do not create allocations. The observed admission at 1788931586674 and its
+    correlated release at 1788931586743 bound one candidate holding interval; this
+    does not establish a universal continuity rule for renewal or reassignment.
+  reidentification_key:
+    - >-
+      Journal-local nonce plus the particular admission boundary and correlated
+      terminal record; a chain locator, not a globally sufficient identity key.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One allocation ties together an admitted demand, its beneficiary, a resource
+    charge, and a holding interval. Its three-token charge and nonempty origin are
+    contextual properties, not identity providers. Release ends its active holding;
+    any retained description still describes that same historical allocation.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - "information_object: a lease assertion documenting an allocation"
+    - "situation: the temporally bounded fact that a demand holds an admission charge"
+  existential_dependencies:
+    - >-
+      During its existence the allocation requires an admitted demand or beneficiary
+      and an admission resource whose capacity it holds. These are proposed
+      participants of the allocation model, not independently identified agents or
+      resources recovered from the sanitization fields.
+    - >-
+      The particular admission decision historically grounds the allocation. No
+      proof execution, successful verification, or measured physical memory use is
+      required by the supplied evidence for the allocation to exist.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "Released: the correlated observed holding interval ends at 1788931586743."
+    - >-
+      Lease eviction is a candidate termination mechanism for a different reported
+      allocation; its admission boundary is absent from the supplied journal.
+rigidity_rationale: >-
+  Allocationhood is proposed as essential to this relational individual. The
+  beneficiary can cease to be a holder while persisting; that anti-rigid holder
+  classification belongs to the beneficiary, not to the allocation. Heartbeat or
+  liveness information may vary during holding without a new admission, although
+  renewal and reassignment continuity are not demonstrated here.
+counterexamples:
+  - description: >-
+      Countermodel: release an allocation and immediately admit another demand with
+      the same beneficiary, origin, kind, and three-token charge. An identity rule
+      based on those values would merge two holdings. The proposed criterion keeps
+      them distinct by the two admission decisions; the supplied single complete
+      chain does not itself demonstrate this repeat-admission case.
+  - description: >-
+      The correlated admission and release have different ownerRef renderings in
+      the observation. Treating that difference as a new owner or new allocation
+      would mistake sanitization metadata for a domain transition. ownerRef*,
+      security_resanitization*, corpus_*, capture_*, and generator_* provide no
+      identity criterion.
+status: proposed

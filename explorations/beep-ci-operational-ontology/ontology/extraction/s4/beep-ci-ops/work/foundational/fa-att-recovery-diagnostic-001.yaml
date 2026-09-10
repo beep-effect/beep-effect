@@ -1,0 +1,86 @@
+id: fa:att-recovery-diagnostic:001
+hypothesis_ref: dh:att-recovery-diagnostic:001
+identity_card_ref: ic:att-recovery-diagnostic:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      A detection-and-recovery process with standalone and lane-rerun components;
+      this changes the referent to the reported activity and requires independent
+      execution boundaries before deriving a complete duration.
+    still_viable: true
+  - label: >-
+      Separate diagnostic-detection and recovery-measurement information objects
+      linked by attribution, rather than a single compound diagnostic account.
+    still_viable: true
+  - label: >-
+      A reusable recovery policy or failure-signature kind identified solely by
+      the policy string, also implying a failed enclosing attempt.
+    still_viable: false
+strongest_counterexample: >-
+  The cited record reports policy=ts2589-no-location for @beep/box#build in
+  quality:build, detectedAt=2026-08-08T11:43:52.465Z, and the two separately
+  labeled durations 1902.713545 and 29802.864398 ms. Its own enclosing attempt
+  95843714-fd19-4195-b260-93f7410b95b4 has mode=publish and outcome=success.
+  Thus a diagnostic with recovery costs exists without a failed attempt
+  verdict. The policy label cannot stand in for either a failure occurrence or
+  an accepted failure-signature identity criterion.
+verdict: analyzed
+evidence_refs:
+  - so:sha256:37968f126c464470a069ac2051cb358a0a29720dd49df7256625cb4d17bfa2c6
+  - so:sha256:928e7ce7acb4292bbd03703746cd347b6fd0aeeb2c144ee33188512f3ff91939
+  - CQ-007
+  - CQ-013
+analysis:
+  identity: >-
+    One diagnostic account is individuated by its originating detection context
+    within an attempt and the recovery attribution it records. Identical copies
+    retain that unit; another detection or a changed attribution does not. The
+    label, task, and timestamp support correlation but do not constitute a
+    demonstrated globally unique key. A duplicate timestamp would not collapse
+    independently established detections.
+  rigidity: >-
+    Rigid for the occurrence-bound information object. Whether it currently
+    serves as reliable delay evidence or is later judged a false positive is
+    contingent. The record's policy label does not supply a rigid domain kind.
+  dependence: >-
+    Generic information dependence on a realization and relational dependence
+    on an originating account with an intended attempt/task/detection context.
+    These are content and attribution relations, not intrinsic qualities of a
+    package and not proof that the asserted diagnosis or its causal attribution
+    is correct. The information can outlive all measured executions.
+  temporality: >-
+    The detection has an instant; standalone and lane rerun have separately
+    measured durations. The recorded account persists rather than unfolding as
+    those recovery activities. The enclosing attempt elapsedMs is 1217861 and
+    does not turn either recovery duration into an additional disjoint interval.
+  category: >-
+    Information object at recorded-occurrence grain is supported. A generic
+    classification signature, a detection occurrence, and an execution/recovery
+    process are different grains. The separate-measurement-object alternative
+    remains viable because the evidence does not require a single composite
+    informational individual.
+  spec_vs_execution: >-
+    policy=ts2589-no-location is an observed label inside a dated account, not
+    evidence of the governing recovery algorithm or an obligation. The account
+    describes recovery activity; it is neither that activity nor the reusable
+    command specification that could be executed again.
+  world_vs_information: >-
+    The artifact records detection and measurements; it is not the detected
+    condition itself and does not establish causation or a committed failed
+    attempt. The successful enclosing verdict is preserved. Repeated captures
+    supply duplicate evidence of the same account, not more recovery work.
+  role_vs_bearer: >-
+    This information unit can be used as evidence for delay attribution. That
+    role differs from the artifact, the task receiving the diagnosis, and the
+    lane or process performing recovery. No identity of an owner or agent can
+    be obtained from capture aliases.
+  context_reification: >-
+    Retain the detection, attempt, task, lane, and each measurement target
+    together. CQ-007 cannot be answered by adding these durations to the whole
+    attempt or to each other without interval/overlap evidence. CQ-013 requires
+    an independently supported signature mapping, attributed delay, and lane
+    cost comparisons; this one label and two measurements do not settle them.

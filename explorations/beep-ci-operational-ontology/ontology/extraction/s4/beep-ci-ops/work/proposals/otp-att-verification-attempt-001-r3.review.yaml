@@ -1,0 +1,91 @@
+target: otp:att-verification-attempt:001
+target_sha256: ff3249177f28bf65a9b44da7bef71890273605b6dc20e2eb731a07b64267bc97
+chain_sha256: 3b06cff151b0c44d367d442288d5eee01e47a0d9368e2fbef999043560dfc5c9
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The current parents list is empty. No execution/process superclass is asserted for the recorded
+    attempt information object, and the process, occurrence and enduring-history alternatives are
+    not an accepted taxonomy. There is no inherited rigidity, identity, dependence or unity conflict
+    to test as subsumption.
+revision_requests: []
+attacks:
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A replayed attempt journal can contain starts, finished records, elapsed values and component
+      statuses without any causally continuous execution. The repaired proposal and IC/FA expressly
+      select an account of a putative invocation and allow incomplete, replayed or false content, so
+      the old operational counterexample no longer contradicts the selected denotation. What remains
+      is the association of distinct attempt accounts with their own assertions, not a claim that a
+      name or emitted ID proves occurrence. R1's failed digest
+      e2c44d60e977e3390ed5e88562e9ccef8025773e88547d45f75b53ab978310b5 and this landed rule are
+      covered by revision_log; the r2 PASS was not carried forward.
+    outcome: survived
+    evidence:
+      - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+      - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      The failed d1e2faf7-31d5-4b94-b672-7a70c8f7d015 account and successful
+      10a92517-8534-475c-8d74-925782da61a9 account share a broader run but have separate start/end
+      and result associations. A run key or common command would merge them incorrectly. Conversely,
+      the two cited observations carry the same source excerpt and cannot create two independent
+      invocations or corroborating executions. The repaired card supplies fixed contextual
+      attempt-history identity; faithful copies preserve an originating account, while an added
+      boundary or correction creates another content version. Technical IDs and capture locations
+      remain correlation evidence rather than identity criteria.
+    outcome: survived
+    evidence:
+      - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+      - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - surface: identity
+    rule: attempt-account-versus-execution-grain
+    counterexample: >-
+      The first account reports 81605 ms overall while its failed prepare:05-docgen component
+      reports 47356.549767 ms and later components are not-run. Equating the report with each
+      execution or its duration would fabricate work and merge different measurement scopes.
+      Likewise, a legacy-unowned-start notice long after the recorded start supplies no intervening
+      execution trace. The present definition keeps component assertions associated with the account
+      and does not infer a continuous process or a complete interval. Its rigid information-object
+      claim survives when execution never occurred or the report later becomes stale; an enduring
+      corrected history remains a stated alternative.
+    outcome: survived
+    evidence:
+      - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+      - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - surface: warrant
+    rule: attempt-scope-required-without-class-pattern
+    counterexample: >-
+      CQ-022 does not require an rdf:type pattern on the attempt variable, but it does require the
+      SAME inAttempt object for a CommittedFailure and a still-running cancellable
+      WorkUnitExecution. Replacing this scope with only the broader run would let the earlier
+      failure attach to a healthy retry. The selected attempt account is needed to preserve that
+      scope in the recorded projection, so the missing explicit class pattern does not make its
+      decision role optional. The observations do not by themselves establish CommittedFailure,
+      RunningExecution or cancellation state; the proposal does not manufacture those populations.
+      Its source and warrant remain bounded to the two observations and CQ-022.
+    outcome: survived
+    evidence:
+      - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+      - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+      - CQ-022
+rival_models_still_viable:
+  - >-
+    A causally continuous invocation process or bounded occurrence, pending an effective execution
+    trace tied to the represented invocation.
+  - >-
+    One enduring attempt-history object with corrections versus the selected fixed
+    originating-account content versions remains a steward choice.
+evidence:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - CQ-022

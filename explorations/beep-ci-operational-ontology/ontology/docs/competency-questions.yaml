@@ -514,7 +514,7 @@
     }
   expected_result: zero_rows
   required_classes: [AffectedComputation, FailOpenOutcome, VerificationEvidence, ScheduleProposal, Scope]
-  required_properties: [hasAffectedOutcome, scopedByComputation, hasScope]
+  required_properties: [hasAffectedOutcome, scopedByComputation, hasScope, hasStep, schedulesWorkUnit, schedulesSeatRequest, hasScopeTag]
   notes: "Added 2026-08-27 from R4-deep contrarian finding 3: turbo affected reasons are typed (__typename) and several are fail-open (select the whole graph). Round-1 repairs (seats A + D): (1) NL reshaped to the constraint clauses only — the fail-open INVENTORY is the diagnostic obtained by dropping the ?subject clause, not part of this test; (2) scopedByComputation DEFINED as 'trusts the affected set of' — an honest fail-open response (epoch-invalidating FullRepoScope re-verification) does NOT carry scopedByComputation and therefore stays green. APPLICATION PASS (final-grill Q2): hasScope + ScheduleProposal are ADMITTED, so seat G's CLOSED SCOPE-PROVENANCE is now EXECUTABLE — arm 1 catches any subject trusting a fail-open set; arm 2 catches a typed VerificationEvidence/ScheduleProposal whose scope is narrower than FullRepoScope with NO scopedByComputation edge (the laundering seat G proved the round-1 letter permitted). hasScope is DERIVED FROM THE SUBJECT'S WORKUNITS' SCOPES at ingestion, never from the trust edge; every AffectedComputation carries a typed outcome from the closed pair FailOpenOutcome/FailClosedOutcome (FailClosedOutcome is a semantic-support term). Arm 2's negation runs under the closed-world declaration for scopedByComputation (closed-world.yaml). The schedule half is no longer unenforced. BIND-in-UNION-arm is legal here (each BIND references only constants — the round-2 CQ-004 bug pattern needed the OUTER solution mapping; Oxigraph-verified by the suite run). ROUND-3 seat H repairs (all Oxigraph-proven): (H-01) arm 3 added — a ScheduleProposal whose STEPS schedule narrowed WorkUnits is caught even when the materialized proposal-level hasScope edge was omitted (the derived-edge laundering hole; fixture cq019-derived-scope-gap.ttl); (W-01) the NL's first clause is universal again — arm 1 deliberately catches ANY subject trusting fail-open, matching the round-2 no-type-guard disposition; (W-02) arm 4 added — a scopedByComputation edge whose target carries no typed outcome is itself a violation (dangling-provenance laundering; fixture cq019-dangling-target.ttl), running under closed hasAffectedOutcome (closed-world.yaml). 2026-09-03 step-shape correction: arm 5 additionally covers a ScheduleProposal whose hasStep-reached ScheduleStep schedules a SeatRequest and carries a literal hasScopeTag but lacks scopedByComputation (fixture cq019-step-scope-gap.ttl)."
 
 - id: CQ-020
@@ -526,7 +526,7 @@
     - proposal: "ciops:sp-2026-08-27-1443"
       spec: "ciops:aps-v1"
       step: "ciops:st-1"
-      idx: 1
+      idx: 0
       req: "ciops:req-lint-affected-from-main"
       scope: "admission"
   derivation_method: direct_lookup

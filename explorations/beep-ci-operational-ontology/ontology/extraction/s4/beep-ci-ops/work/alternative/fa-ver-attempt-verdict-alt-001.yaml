@@ -1,0 +1,45 @@
+id: "fa:ver-attempt-verdict-alt:001"
+hypothesis_ref: "dh:ver-attempt-verdict:001"
+identity_card_ref: "ic:ver-attempt-verdict-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      Dated operational attempt-event (the occurrence the snapshot describes;
+      CQ-022 VerificationAttempt). Observationally entangled with the report on
+      current evidence because every cited observation is a verdict document.
+    still_viable: true
+  - label: >-
+      Situation (the result state of affairs itself rather than the captured
+      description of it)
+    still_viable: true
+  - label: >-
+      VerificationEvidence discharging a lane obligation / held assurance tier
+      (CQ-006). Incompatible with outcome=failure alongside proofTier=full or
+      mode=publish.
+    still_viable: false
+  - label: >-
+      Serialization envelope with no operationally meaningful result content
+    still_viable: false
+strongest_counterexample: >-
+  so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+  (committed=true, pushed=true, outcome=failure, failedStepId=full:01-pre-push,
+  failureKind=step-exit) versus
+  so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda
+  (committed=true, pushed=false, outcome=failure, failedStepId=publish:01-git-push,
+  failureKind=step-exit). Both report a commit; they distinguish failed
+  verification after publication from failed publication. Under an envelope-only
+  null that distinction would not exist. Under attempt-event identity the same
+  pair still leaves the snapshot/occurrence merge unresolved.
+verdict: analyzed
+needed_evidence: >-
+  Discriminate report versus attempt-event: an attempt-occurrence record that is
+  not a verdict document (journal step events, process records) together with a
+  case where report content and occurrence facts diverge. Discriminate report
+  versus situation: an observed consumer that treats the verdict as
+  VerificationEvidence for CQ-006 discharge independently of CQ-022 attempt
+  identity. No later recovery or current fleet state is inferred from these
+  Stage A reports.

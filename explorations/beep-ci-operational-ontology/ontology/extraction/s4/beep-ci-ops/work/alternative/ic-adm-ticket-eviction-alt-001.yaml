@@ -1,0 +1,56 @@
+id: "ic:adm-ticket-eviction-alt:001"
+hypothesis_ref: "dh:adm-ticket-eviction:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Same ticket-eviction occurrence iff it is the same punctual involuntary end
+    of one queued participation, bounded by one admission-ticket-evicted block
+    at one evictedAtMillis. It is not a lease eviction, not a withdrawal, not
+    the request's waiting interval, not the reported reason string, and not the
+    journal entry. The two cited histories are sparse single-block reports with
+    no enqueue, kind, priority, or charge; those missing qualities are not
+    invented and do not prevent identifying the reported end occurrence. Nonce
+    is evidential join only. ownerRef and other capture members are never
+    identity criteria.
+  reidentification_key:
+    - "nonce (evidential join only)"
+    - "evictedAtMillis"
+    - "_tag=admission-ticket-evicted"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One dated involuntary-end transition of one queued participation; not a
+    mixed lease-eviction class and not a proved submitter-death occurrence.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+  existential_dependencies:
+    - "seat request whose reported queue participation this occurrence ends (begin may be unobserved)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - occurred
+counterexamples:
+  - description: >-
+      Identifying ticket eviction with lease eviction because both are evictions.
+      so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+      (nonce=acb0011d-82cf-4dfc-a812-72d10dbd566c) and
+      so:sha256:65609cedeaf3e99b51031c38b99ab7bc16ea0ef59fa66bea1d446ef3f7bd3333
+      (nonce=90006bc5-d7e0-41a4-9224-813ac343ca6c) are
+      _tag=admission-ticket-evicted with reason=queued-submitter-death and no
+      prior admission (CQ-021);
+      so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+      is _tag=admission-lease-evicted after admission (CQ-008).
+  - description: >-
+      Treating reason=queued-submitter-death as a proved death occurrence rather
+      than asserted content of a sparse report (CQ-023).
+  - description: >-
+      Identifying this occurrence with a voluntary withdrawal tagged
+      admission-withdrawn
+      (so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a).
+status: proposed

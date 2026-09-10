@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/test/fixtures/emission-v2.ttl"
+  },
+  "source_span": {
+    "start_line": 13,
+    "end_line": 13
+  },
+  "quote": "ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-2 ciops:admissionChargeTokens \"5\"^^xsd:integer .",
+  "epistemic_status": "quoted_prose"
+}

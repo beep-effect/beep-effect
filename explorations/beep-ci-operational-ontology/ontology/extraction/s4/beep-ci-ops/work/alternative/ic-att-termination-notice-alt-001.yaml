@@ -1,0 +1,33 @@
+id: "ic:att-termination-notice-alt:001"
+hypothesis_ref: "dh:att-termination-notice:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two individuals are the same termination notice iff they are the same synthetic journal assertion of a terminal boundary for one attempt at one recorded instant with one reason. so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98 is a synthetic dead-lease notice (attemptId=b4e72342-45a5-4a1b-95db-5ab4ef30a93f, reason=lease-eviction, recordedAt=2026-09-09T05:26:26.737Z). so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f is a synthetic dead-ticket notice (attemptId=a2fdba81-945f-4f44-8d93-6f71f706d5cd, reason=queued-submitter-death, recordedAt=2026-09-09T05:26:26.731Z). Different attemptId and reason values keep the notices distinct. Both records are provenance: synthetic and bound only the modeled synthetic scenarios; they are not production incidence."
+  reidentification_key:
+    - attemptId
+    - reason
+    - recordedAt
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One immutable notice document per synthetic attempt-terminated payload. Reason and recordedAt are content of that document, not additional notice individuals, and not an OS-kill or lease-release occurrence."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - event
+    - situation
+  existential_dependencies:
+    - "a modeled attempt the notice bounds (attemptId)"
+    - "the synthetic scenario that emitted the record (corpus/run3b-synthetic/; must remain synthetic)"
+    - "a recorded reason and instant (_tag=attempt-terminated, reason, recordedAt)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Counting queued-submitter-death as an admitted execution or as episode execution time (CQ-007, CQ-012)."
+  - description: "Reading lease-eviction as proof that a lease was released or that an operating-system process was killed at recordedAt."
+  - description: "Collapsing the two notices into one shared termination occurrence, or treating synthetic records as production incidence."
+status: proposed

@@ -1,0 +1,108 @@
+{
+  "id": "so:sha256:7e5702e0af48bd1ca7edc2d5c6350db34d8453874a5cd4344281607977584a90",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 3866,
+    "end_line": 3903,
+    "content_sha256": "f38cacefe83e5eba5bace8e8d3ef743237da131131baa129e41a4c4b0ae2cba0"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/journal.properties:nonce=50cf32d3-9ced-4f0e-a394-d5d850c221ea",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-released"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1788941118852"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=16e55a1c-86a9-4e3f-ae91-7d802da43418"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=claude/awesome-chaplygin-edaab9"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect5/.claude/worktrees/vigilant-khorana-0c8658"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788941118836"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=full-proof"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "memoryPeakBytes=5426147328"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=50cf32d3-9ced-4f0e-a394-d5d850c221ea"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=b2d92eecf2c7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=ee2922947aa0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=verify"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=1788941254795"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=3"
+    }
+  ],
+  "source_excerpt": "# record 338\nownerRef=ee2922947aa0\nownerRefVariant=pid_pair\nattemptId=16e55a1c-86a9-4e3f-ae91-7d802da43418\nkind=full-proof\npriority=verify\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect5/.claude/worktrees/vigilant-khorana-0c8658\nbranch=claude/awesome-chaplygin-edaab9\nenqueuedAtMillis=1788941118836\nnonce=50cf32d3-9ced-4f0e-a394-d5d850c221ea\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=3\n# record 339\nownerRef=ee2922947aa0\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=50cf32d3-9ced-4f0e-a394-d5d850c221ea\nkind=full-proof\nweightTokens=3\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788941118836\nadmittedAtMillis=1788941118852\nattemptId=16e55a1c-86a9-4e3f-ae91-7d802da43418\n# record 340\nownerRef=b2d92eecf2c7\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect5/.claude/worktrees/vigilant-khorana-0c8658\nbranch=claude/awesome-chaplygin-edaab9\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=50cf32d3-9ced-4f0e-a394-d5d850c221ea\nreleasedAtMillis=1788941254795\nmemoryPeakBytes=5426147328\nattemptId=16e55a1c-86a9-4e3f-ae91-7d802da43418\n",
+  "epistemic_status": "parser_derived"
+}
