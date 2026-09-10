@@ -193,7 +193,13 @@ const config: ViteUserConfig = {
     // only receive it as real argv. Granting it to forked test workers scopes
     // the flag to test execution; a job-wide node wrapper is off the table
     // because Next.js builds copy parent execArgv into worker NODE_OPTIONS.
-    execArgv: typeof globalThis.Float16Array === "undefined" ? ["--js-float16array"] : [],
+    // The predicate is version-based, not capability-based: vitest hands the
+    // pool an explicit execArgv (overriding fork inheritance), so a flagged
+    // main process with an unflagged worker list would strand the workers.
+    execArgv:
+      process.versions.bun === undefined && Number(process.versions.node.split(".")[0]) < 24
+        ? ["--js-float16array"]
+        : [],
     sequence: {
       concurrent: !vitestDoctestActive,
     },
