@@ -38,7 +38,7 @@ same projection. One verified pass covers both.
    `.../beep-ci-ops/work/review-audit/validity-report.md` becomes the archive path
    `.../s4/archives/beep-ci-ops/orun-2026-09-03T02:46:18Z.work/review-audit/validity-report.md`;
    in `ontology/extraction/s4/beep-ci-ops/runs/orun-2026-09-03T02:46:18Z.README.md` the bare
-   `docs/s6-abox-contract.md` becomes
+   `explorations/beep-ci-operational-ontology/ontology/docs/s6-abox-contract.md` becomes
    `explorations/beep-ci-operational-ontology/ontology/docs/s6-abox-contract.md`.
 4. Proofs, from the repo root (`bun` at `~/.local/share/mise/installs/bun/1.4.2/bin`, Python via
    `UV_CACHE_DIR=~/.cache/beep/uv-cache uv run --offline --python 3.12 --with pyyaml`): every

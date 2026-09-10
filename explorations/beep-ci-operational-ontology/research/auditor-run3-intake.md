@@ -678,7 +678,7 @@ not ratify the legacy spellings or rewrite a Must-CQ arm.
   rat-037 (dependsOnTransitive) and rat-039 (VerificationLane reuse) into the
   S5/S6 status surface: `extraction/s5/DISPOSITIONS.yaml` seq 12 and 22 and
   `extraction/s6/PREDICATES.yaml` `ciops:dependsOnTransitive` still read
-  `parked-run-2`, and `docs/s6-abox-contract.md` §5 still defers VerificationLane
+  `parked-run-2`, and `explorations/beep-ci-operational-ontology/ontology/docs/s6-abox-contract.md` §5 still defers VerificationLane
   placement. All 21 run-2 ratifications now sit byte-identically in the sibling
   shelter; their archived records remain the authority. The run-3 closeout
   sitting projects every run-2 and run-3 ratification into S5/S6 status in one
