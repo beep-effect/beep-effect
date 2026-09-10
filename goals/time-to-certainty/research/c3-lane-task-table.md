@@ -1,10 +1,10 @@
 # C3 lane-to-task table — design gate
 
-Status: REVISION 4, 2026-09-08, after one adversarial Codex review
+Status: REVISION 5, 2026-09-09 (D15 mechanism, see the revision 5 paragraph), after one adversarial Codex review
 (`research/c3-lane-task-table.review.md`, disposition appended there), two Greptile P1s and
-twelve Codex threads on PR #1018 (all folded; see the thread replies). Awaiting Benjamin. No
-implementation starts before this table is ratified. Owner: Fable orchestrator. Rulings in
-force: 5, 6, 10, 19–25 (`research/decisions.md`). Evidence: `research/c3-turbo-facts.md` (Grok,
+twelve Codex threads on PR #1018 (all folded; see the thread replies). Ratified by the merge of #1018 (ruling 26);
+revision 5 amends D15 only and is ratified by the merge of the C3.2 PR (ruling 29). Owner: Fable orchestrator. Rulings in
+force: 5, 6, 10, 19–29 (`research/decisions.md`). Evidence: `research/c3-turbo-facts.md` (Grok,
 15 Turbo 2.10 facts against the docs, plus the live-probe amendment), `research/c3-sublane-inputs.md`
 (Codex, per-lane input census with Q1/Q2), and the live probes in §0.2 (turbo 2.10.12,
 `futureFlags` on).
@@ -15,6 +15,13 @@ kinds follow the fleet census, coverage keeps its package-owned text (D3, D4, D1
 fleet-wide manifest touch with thin workers in PR 1 (D16); ordered invocations keep cheap precise
 gates first (D10); `knip:check` avoids the recursion (D9); inputs, consumers, test list, fixtures
 and accounting corrected (§2–§7); the out-of-scope list is reproduced in §8.
+
+Revision 5 changes (2026-09-09, after C3.1 landed as #1029): the policy-tool fingerprint is a root
+task's hash, never a committed digest (D15; ruling 29). `//#lint:policy-fingerprint` declares the
+computed closure as its `inputs`, `lint policy-fingerprint --write` materializes that list into
+`turbo.json`, every CLI-backed policy task depends on the root task, and `**/package.json` leaves
+the closure in favour of the closure members' manifests. The legend, §2.1, §2.2, §4, §7.2 and Q7
+follow. Ruling 28 (lane identity) supersedes the legend's lane-id sentence.
 
 Reading order: §0 findings, §1 decisions, §2 table, §3 schema, §4 `turbo.json`, §5 doctest
 branch, §6 tests, §7 acceptance and train, §8 scope and questions.
@@ -121,8 +128,8 @@ Consequences:
   directory once the worker is package-local (eslint both profiles, the syntax laws after D5,
   package-test-imports with its owner-manifest input, doctest). Root task otherwise (§2.2).
   Ecosystem-polarity is a root task (4 s, ecosystem members only). Package data inputs alone
-  never make a hash honest; every CLI-backed task also carries the policy-tool fingerprint
-  (D15).
+  never make a hash honest; every CLI-backed task also depends on the policy-tool fingerprint
+  root task (D15).
 - **D2 Non-file-state lanes are non-reusable.** Lanes whose result depends on git history,
   refs, the archived HEAD tree, the tracked set, the index, wall clock, network, or workflow
   event data become root tasks with `cache: false`, always run in an unfiltered invocation
@@ -244,23 +251,36 @@ Consequences:
   good, because its mandatory `no-js-extension-imports` rule tests the existence of imported
   `.js`/`.mjs`/`.cjs` targets on disk (`no-js-extension-imports.ts:79`), including generated
   targets outside any input set, so no file-input contract closes it. Generators that write tracked files: plain scripts or `cache: false`.
-- **D15 Policy-tool fingerprint (new).** The checker implementations are inputs of every
-  policy task. Instead of guessing each task's import closure, one generated file
-  `standards/policy-tools.fingerprint.json` is declared as a `$TURBO_ROOT$` input of every
-  package policy task and a plain input of every root policy task. Its scope is computed, not
-  hand-listed: the `src/**` trees of `@beep/repo-cli` and every workspace package in its
-  transitive `dependencies` closure (today that closure includes `@beep/repo-utils`,
-  `@beep/utils`, `@beep/schema`, `@beep/identity`, the policy-pack packages, and whatever the
-  manifests name next), plus the root tool configs the checkers read. The generator walks the
-  manifests, so a new CLI dependency joins the fingerprint without an edit. A cheap root gate
-  `//#lint:policy-fingerprint` fails when it is stale; its Turbo inputs are generated from
-  the same declared input list the generator hashes (the trees and the exact root configs),
-  plus the fingerprint file, so a config edit can never replay a cached "fresh" verdict;
-  `beep:preflight` regenerates it. A checker or checker-dependency edit therefore reruns
-  policy tasks exactly once, and build/check/test caches stay untouched; node_modules
-  dependencies are already in `hashOfExternalDependencies`. This matches ruling 4's epoch salt
-  ("policy-pack version") with a computed version instead of a hand bump. Until the
-  fingerprint gate lands (PR 1), no policy task claims reuse.
+- **D15 Policy-tool fingerprint (revision 5: a root task's hash, never a committed digest).**
+  The checker implementations are inputs of every policy task. Instead of guessing each task's
+  import closure, one root task `//#lint:policy-fingerprint` (`beep-cli lint policy-fingerprint
+  --check`, `cache: true`) declares the closure as its Turbo `inputs`, and every CLI-backed
+  policy task lists it in `dependsOn`, so the closure's content reaches each policy task's hash
+  through Turbo's dependency-hash edge at run time (`c3-turbo-facts.md`: a task hash includes
+  its dependency task hashes; a package task may depend on a `//#` task). The closure is
+  computed, not hand-listed: the `src/**` trees of `@beep/repo-cli` and every workspace package
+  in its transitive `dependencies` closure, the `package.json` of each closure member and of the
+  root (closure discovery), the root tool configs the checkers read, and the fingerprint file
+  itself. `standards/policy-tools.fingerprint.json` stays structure-only
+  (`policy-tools-fingerprint/v1`: the declared input list, no digest); it is the record the gate
+  compares and the source the writer materializes into `turbo.json`. `lint policy-fingerprint
+  --write` regenerates both the file and the root task's `inputs`; `--check` fails when either
+  drifts from the computed closure, so a config or dependency edit can never replay a stale
+  verdict; `beep:preflight` runs `--write`. A checker or checker-dependency edit therefore reruns
+  policy tasks exactly once, through the root task's hash; build/check/test caches stay
+  untouched; and a merge ref whose main moved the closure hashes the closure's real content
+  instead of failing on a committed digest (the PR #1029 failure in `OPPORTUNITIES.md`,
+  2026-09-09). `**/package.json` leaves the list: a manifest edit outside the closure no longer
+  reruns every policy task. node_modules dependencies are already in
+  `hashOfExternalDependencies`; the lockfile is in the global hash. Rejected: keying policy tasks
+  on the committed file's content (E4 removed the digest because it can never be current on a
+  merge ref); copying the closure globs into every policy task's `inputs` (N materialized copies
+  of one list, each needing `$TURBO_ROOT$`); broad static globs such as `packages/**/src/**`
+  (every source edit anywhere would rerun every policy task, which is no reuse at all). The gate
+  landed in PR 1 (#1029); policy tasks claim reuse from C3.2 on, once the dependency edge
+  exists. Fixtures: §7.1(1)–(2) plus a closure-edge fixture (a closure `src` edit changes a
+  dependent package task's hash, an edit outside the closure leaves it stable, and a drifted
+  `turbo.json` list fails `--check`).
 - **D16 One fleet-wide manifest touch.** Because every manifest rewrite busts every task's
   cache, the fleet is rewritten once, in PR 1, with all four new keys. PR 1 therefore also
   ships thin, runnable workers: `lint deprecated-apis --package` and `lint jsdoc --package`
@@ -279,17 +299,17 @@ gates and repo-quality routes in `Quality/internal/GithubChecks.ts` (`:300`, `:4
 `:521–581`), **W** wave seed (`Yeet/internal/WaveOrder.ts`), **L** lefthook (stays direct),
 **Y** Yeet planner reads its artifacts (`Yeet/internal/Planner.ts:348–361`). Shape: **pkg** =
 package task, **root** = `//#` task, **cli** = stays a CLI step. `WT` = whole-tree file inputs
-(a label; selected by any matching change; reuse by hash only). Every task row implicitly adds
-`$TURBO_ROOT$/standards/policy-tools.fingerprint.json` (D15). Lane ids consumed by
-`Yeet/internal/IssueClassification.ts` and WaveOrder keep their names; task ids are recorded
-beside them, not in place of them.
+(a label; selected by any matching change; reuse by hash only). Every CLI-backed task row
+implicitly adds `//#lint:policy-fingerprint` to its `dependsOn` (D15, revision 5). Lane ids name
+the command they run and equal the step label (ruling 28); task ids are recorded beside them,
+not in place of them.
 
 ### 2.1 Package tasks (four scripts, ruling 21)
 
 | Today's step | Task | Script (package) | `inputs` | `env` | `dependsOn` | cache | Consumers | Hosted p50 | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `lint:deprecated-apis` (`beep-cli lint deprecated-apis`, 29 shards ×4) | `lint:deprecated-apis` | `beep-cli lint deprecated-apis --package .` | `**/*.{ts,tsx,js,jsx,mjs,cjs}`, `package.json`, `tsconfig*.json`, `$TURBO_ROOT$/eslint.config.mjs`, `$TURBO_ROOT$/tsconfig*.json`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/**`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/**`, `$TURBO_ROOT$/packages/**/tsconfig*.json`, `$TURBO_ROOT$/apps/**/tsconfig*.json`, `$TURBO_ROOT$/infra/**/tsconfig*.json`, `$TURBO_ROOT$/packages/**/package.json`, `$TURBO_ROOT$/apps/**/package.json`, `$TURBO_ROOT$/infra/package.json`, `!node_modules/**`, `!.beep/**` | `NODE_OPTIONS` (`BEEP_ESLINT_PROFILE` is global) | `^transit` (dependency sources; declarations come through projectService, not builds) | `true` | P, F, C(lint-policy), W | 975 s pre-shard, 435 s sharded | Eslint cache retires. Own invocation (D10). Labs included as today. |
-| `lint:jsdoc` (`bunx eslint . --max-warnings=0`) | `lint:jsdoc` | `beep-cli lint jsdoc --package .` | `**/*.{ts,tsx,js,jsx,mjs,cjs}`, `package.json`, `$TURBO_ROOT$/eslint.config.mjs`, `$TURBO_ROOT$/tsdoc.json`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/**`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/**`, `!node_modules/**` | none | none (syntax) | `true` | P, F, C, W | 29 s | Root-owned files keep `//#lint:jsdoc:root` (D6). |
+| `lint:deprecated-apis` (`beep-cli lint deprecated-apis`, 29 shards ×4) | `lint:deprecated-apis` | `beep-cli lint deprecated-apis --package .` | `**/*.{ts,tsx,js,jsx,mjs,cjs}`, `package.json`, `tsconfig*.json`, `$TURBO_ROOT$/eslint.config.mjs`, `$TURBO_ROOT$/tsconfig*.json`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/**`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/**`, `$TURBO_ROOT$/packages/**/tsconfig*.json`, `$TURBO_ROOT$/apps/**/tsconfig*.json`, `$TURBO_ROOT$/infra/**/tsconfig*.json`, `$TURBO_ROOT$/packages/**/package.json`, `$TURBO_ROOT$/apps/**/package.json`, `$TURBO_ROOT$/infra/package.json`, `!node_modules/**`, `!.beep/**` | `NODE_OPTIONS` (`BEEP_ESLINT_PROFILE` is global) | `^transit` (dependency sources; declarations come through projectService, not builds), `//#lint:policy-fingerprint` (D15) | `true` | P, F, C(lint-policy), W | 975 s pre-shard, 435 s sharded | Eslint cache retires. Own invocation (D10). Labs included as today. |
+| `lint:jsdoc` (`bunx eslint . --max-warnings=0`) | `lint:jsdoc` | `beep-cli lint jsdoc --package .` | `**/*.{ts,tsx,js,jsx,mjs,cjs}`, `package.json`, `$TURBO_ROOT$/eslint.config.mjs`, `$TURBO_ROOT$/tsdoc.json`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/**`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/**`, `!node_modules/**` | none | `//#lint:policy-fingerprint` (D15) | `true` | P, F, C, W | 29 s | Root-owned files keep `//#lint:jsdoc:root` (D6). |
 | `lint:terse-effect`, `lint:native-runtime`, `lint:frozen-grant-set`, `lint:effect-fn`, `lint:package-test-imports` (five `scopedLawStep`/`scopedRepoCliStep`; effect-imports per A1) | `lint:laws` | `beep-cli lint laws --package .` | `**/*.{ts,tsx}`, `package.json`, `tsconfig*.json`, `$TURBO_ROOT$/tsconfig*.json`, `$TURBO_ROOT$/packages/**/package.json`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts`, `$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts`, `$TURBO_ROOT$/standards/effect-laws.allowlist.jsonc`, `!node_modules/**` | none | none (syntax) | `true` | P, F, C, W | 33+27+19+16+14 = 109 s | Task registered only after the package-local scanner (D5, C3.3). |
 | `ci:doctest` (`bunx vitest run --config vitest.docs.ts <files>`) | `doctest` | `bun run beep:doctest` → `BEEP_VITEST_DOCTEST=1 bunx --bun vitest run` | `src/**`, `test/**`, `package.json`, `tsconfig*.json`, `vitest*.config.ts`, `$TURBO_ROOT$/vitest.shared.ts`, `$TURBO_ROOT$/vitest.setup.ts`, `$TURBO_ROOT$/vitest.aliases.generated.json`, `$TURBO_ROOT$/packages/foundation/modeling/utils/src/**` (shared config import), `!node_modules/**` | `BEEP_VITEST_DOCTEST` | `^transit` | `true` | C(doctest), `heavy.yml` `doctest_mode` | 82 s (affected list) | 27 manifests (D7); `passWithNoTests: false`. |
 
@@ -301,7 +321,7 @@ false`, unfiltered, ledger `undeclared`.
 
 | Today's step (label) | Root script (★ new) | Script text | `inputs` | Flags | Consumers | Hosted p50 |
 | --- | --- | --- | --- | --- | --- | --- |
-| — (gate) | ★ `lint:policy-fingerprint` | `bun run beep lint policy-fingerprint --check` | the generator's declared input list verbatim (the `src/**` of `@beep/repo-cli` and its workspace dependency closure, plus the exact root tool configs it hashes), `standards/policy-tools.fingerprint.json`, `**/package.json` (closure discovery) | D15; inputs and digest share one source of truth | P, F, G | new |
+| — (gate) | ★ `lint:policy-fingerprint` | `bun run beep lint policy-fingerprint --check` | the generator's declared input list verbatim, materialized into `turbo.json` by `--write`: the `src/**` and `package.json` of `@beep/repo-cli` and its workspace dependency closure, the root `package.json`, the exact root tool configs it hashes, and `standards/policy-tools.fingerprint.json` | D15 revision 5; the root task's hash is the closure digest every policy task inherits through `dependsOn` | P, F, G | new |
 | — (gate) | ★ `lint:package-scripts` | `bun run beep lint package-scripts --check` | `package.json`, `**/package.json`, `packages/**/src/**/*.{ts,tsx}`, `apps/**/src/**/*.{ts,tsx}`, `**/vitest*.config.ts`, `!**/node_modules/**`, `!**/test/fixtures/**` | derivation evidence uses root workspace membership and the doctest selector (D7) | P, F, G | new |
 | `knowledge:semantic-delta` | ★ `knowledge:semantic-delta` | `bun run beep knowledge semantic-delta` | `AGENTS.md`, `CLAUDE.md`, `goals/**`, `explorations/**`, `docs/**`, `.claude/**`, `.agents/**`, `.codex/**`, `standards/**`, `.github/**`, `**/package.json`, `!docs/generated/**`, `!docs/_internal/**` (explanatory; not a reuse claim) | D2; `passThroughEnv: ["GITHUB_EVENT_PATH"]` | P, F, W(`quality:lint-policy`) | 78 s |
 | `knowledge:refs-check` | ★ `knowledge:refs-check` | `bun run beep knowledge refs --check` | same corpus | D2 | P, F | unmeasured |
@@ -573,10 +593,15 @@ negative drift; they do not derive expectations from the rule table they test.
 The canonical input lists are §2; this section shows the shape only. Two examples:
 
 ```jsonc
+"//#lint:policy-fingerprint": {
+  "cache": true,
+  "inputs": [/* materialized by `lint policy-fingerprint --write`: closure src trees, closure manifests, root configs, the fingerprint file */]
+},
 "lint:laws": {
   "cache": true,
+  "dependsOn": ["//#lint:policy-fingerprint"],
   "inputs": ["**/*.{ts,tsx}", "package.json", "tsconfig*.json", "$TURBO_ROOT$/tsconfig*.json",
-    "$TURBO_ROOT$/packages/**/package.json", "$TURBO_ROOT$/standards/policy-tools.fingerprint.json",
+    "$TURBO_ROOT$/packages/**/package.json",
     "$TURBO_ROOT$/standards/effect-laws.allowlist.jsonc",
     "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
     "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
@@ -585,10 +610,11 @@ The canonical input lists are §2; this section shows the shape only. Two exampl
 },
 "//#fallow:audit:check": {
   "cache": false,
+  "dependsOn": ["//#lint:policy-fingerprint"],
   "env": ["BEEP_PROOF_BASE"],
   "outputs": [".beep/fallow/audit.check.json", ".beep/fallow/raw/audit.check.*"],
   "inputs": [".fallowrc.jsonc", "**/package.json", "**/tsconfig*.json", "apps/**", "packages/**", "infra/**",
-    "scripts/**", ".claude/skills/**", ".fallow/plugins/**", "standards/policy-tools.fingerprint.json",
+    "scripts/**", ".claude/skills/**", ".fallow/plugins/**",
     "!**/node_modules/**"]
 }
 ```
@@ -707,7 +733,7 @@ governs in-file concurrency only; Turbo's process fan-out is measured, not assum
 | --- | --- | --- | --- |
 | 0 | rulings + this table | publish `ttc/c3-package-tasks-grill` with `c3-turbo-facts.md`, `c3-sublane-inputs.md`, this file and its review | 6 |
 | 1 | C3.1 | schema + service + `lint package-scripts` + `lint policy-fingerprint` + fingerprint file + three writers + thin workers (D16) + mode branch + fleet `--write` (docgen convergence, four new keys, codegen placeholders, `beep:policy` optional until C3.3) + `codegen` split + two root gates registered + `AGENTS.md` law line | ~190 (142 manifests) |
-| 2 | C3.2 | `lint:deprecated-apis` + `lint:jsdoc` tasks and `//#lint:jsdoc:root`; shard runner and eslint caches retire; the typed invocation; `turbo-config-proof` tasks; fixtures; before/after | ~25 |
+| 2 | C3.2 | D15 revision 5 first (`//#lint:policy-fingerprint` root task, materialized inputs, dependency edge); `lint:deprecated-apis` + `lint:jsdoc` tasks and `//#lint:jsdoc:root`; shard runner and eslint caches retire; the typed invocation; `turbo-config-proof` tasks; fixtures; before/after | ~25 |
 | 3 | C3.3 | package-local law scanner; `lint:laws` task; `//#lint:native-runtime:roots`; `scopedLawStep` retires; `beep:policy` retires from fleet (manifest touch: 2 files) and schema | ~30 |
 | 4 | C3.4 | `doctest` task, conditional package overrides (11 configs), `vitest.docs.ts` and resolver retire, `heavy.yml`, tests | ~40 |
 | 5 | C3.5 | `//#` root tasks, D9 root scripts, three-invocation plan in `lint policy` and `beep:preflight`, GithubChecks routes, knip/fallow/jsdoc-ratchet lanes on Turbo, `standards/turbo-remote-cache.md` | ~35 |
@@ -757,4 +783,5 @@ cache-key change without first-cold-lane measurement; a second scheduler or lock
 - **Q6 (A1)** Keep effect-imports code mode out of `lint:laws` until it has promoted families?
 - **Q7 (D15)** Resolved in revision 3: the fingerprint covers the CLI's computed workspace
   dependency closure. Veto if the wider rerun set (a `@beep/utils` edit reruns every policy
-  task once) is not acceptable.
+  task once) is not acceptable. Revision 5 keeps the closure and moves the mechanism to the
+  root task's hash (D15).
