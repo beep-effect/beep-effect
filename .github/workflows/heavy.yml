@@ -162,21 +162,17 @@ jobs:
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
-      - name: Enable coverage runtime features
+      - name: Verify coverage runtime features
         if: steps.lane-gate.outputs.should_run == 'true' && matrix.id == 'coverage'
         shell: bash
         run: |
           set -euo pipefail
-          # Node 22 needs this flag for the Float16Array contract exercised by coverage.
-          # V8 does not allow --js-float16array in NODE_OPTIONS, so wrap the selected binary.
-          coverage_node_binary="$(command -v node)"
-          coverage_node_dir="$RUNNER_TEMP/beep-coverage-node"
-          mkdir -p "$coverage_node_dir"
-          printf '#!/usr/bin/env bash\nexec %q --js-float16array "$@"\n' \
-            "$coverage_node_binary" > "$coverage_node_dir/node"
-          chmod +x "$coverage_node_dir/node"
-          "$coverage_node_dir/node" -p "'Node ' + process.versions.node + ', ' + Float16Array.name"
-          printf '%s\n' "$coverage_node_dir" >> "$GITHUB_PATH"
+          # Node 22 gates Float16Array behind --js-float16array. The flag must
+          # NOT be granted job-wide (a wrapped node leaks it into Next.js build
+          # workers via NODE_OPTIONS, which V8 rejects); vitest.shared.ts scopes
+          # it to forked test workers instead. This step only proves the pinned
+          # runtime supports the flag the workers will request.
+          node --js-float16array -p "'Node ' + process.versions.node + ', ' + Float16Array.name"
 
       # PRs may restore the post-main local fallback without saving it. Same-
       # repository PRs can also read the remote cache; forks remain tokenless.
