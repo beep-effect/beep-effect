@@ -30,7 +30,7 @@ import {
 } from "../../internal/package-scripts/PackageScriptsPolicy.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
-import { runRootDeprecatedApisTask, runRootLintPolicyTask } from "../Quality/index.ts";
+import { readLintPolicySweeps, runRootDeprecatedApisTask, runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
 import { lintJudgeRubricCommand } from "./JudgeRubric.ts";
@@ -807,7 +807,9 @@ const lintDeprecatedApisCommand = Command.make(
   Effect.fn("Lint.deprecatedApis")(function* ({ package: directory, full, base }) {
     if (O.isNone(directory)) {
       const ci = yield* Config.String("CI").pipe(Config.withDefault(""));
-      return yield* full || ci === "true" ? runDeprecatedApiLint() : runRootDeprecatedApisTask(base);
+      const sweeps = yield* readLintPolicySweeps(yield* findRepoRoot());
+      if (!full && ci !== "true") return yield* runRootDeprecatedApisTask(base);
+      return yield* sweeps.deprecatedApis === "shards" ? runDeprecatedApiLint() : runRootDeprecatedApisTask();
     }
     const root = yield* findRepoRoot();
     yield* runEslintWorker(root, "deprecated-apis", [yield* resolveLintPackage(root, directory.value)]);
@@ -870,6 +872,7 @@ const lintToolingSchemaFirstCommand = Command.make("tooling-schema-first", {}, r
 
 const fingerprintPath = "standards/policy-tools.fingerprint.json";
 const rootConfigs = [
+  "standards/lint-policy.sweeps.jsonc",
   "eslint.config.mjs",
   "tsdoc.json",
   ".oxlintrc.json",

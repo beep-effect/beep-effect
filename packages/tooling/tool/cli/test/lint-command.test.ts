@@ -102,6 +102,12 @@ const writeDeprecatedApiLintFixture = Effect.fn("writeDeprecatedApiLintFixture")
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  yield* fs.writeFileString("bun.lock", "");
+  yield* fs.makeDirectory("standards", { recursive: true });
+  yield* fs.writeFileString(
+    "standards/lint-policy.sweeps.jsonc",
+    '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"shards"}'
+  );
   const failingShard = options?.failingShard;
   const shards = A.filter(deprecatedApiLintShards, (shard) => shard !== options?.omitShard);
   yield* Effect.forEach(shards, (shard) => fs.makeDirectory(shard, { recursive: true }), {

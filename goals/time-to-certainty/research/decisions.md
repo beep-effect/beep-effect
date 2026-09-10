@@ -336,3 +336,18 @@ typed programs (reference-keeping check overlays plus `^build` declarations) wit
 budget. Rejected: raising the step budget to fit a ~40-minute sweep (breaks the Lint Policy budget
 for every closure-touching PR); switching the typed program in this PR (its own measurement).
 Amends D6 (table revision 6).
+
+## 2026-09-10 — C3.2b measurement, round 11 (one ruling, proposed by the orchestrator, ratified by merge of the C3.2b PR)
+
+Inputs: `research/c3-2b-implementation.md` Stage B (local package comparisons with JSON parity,
+the 252-task fleet run, the parser reference census) and the three receipts in
+`research/OPPORTUNITIES.md` dated 2026-09-10 for C3.2b Stage B.
+
+**Ruling 31 — per-package typed eslint over the check overlays is rejected; the shard program
+stays until a reference-aware program exists.** typescript-eslint's project mode creates its
+program without project references, so built declarations never replace upstream sources; the
+residual project-service pass required for coverage parity costs the root corpus per package;
+13 packages have no test overlay. Row 2b therefore lands only the versioned sweep switch and its
+record. A retry needs a different program factory (reference-aware, or one typed server shared
+across packages), `dist/**` excluded from lint inputs before any `^build` edge, and a fleet
+overlay census; it is not scheduled. Amends row 2b (table revision 7); D6 unchanged.

@@ -53,4 +53,4 @@ export * from "./Quality.schemas.ts";
  * @category use-cases
  * @since 0.0.0
  */
-export { runRootDeprecatedApisTask, runRootLintPolicyTask } from "./Tasks.ts";
+export { readLintPolicySweeps, runRootDeprecatedApisTask, runRootLintPolicyTask } from "./Tasks.ts";
