@@ -13,6 +13,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const $I = $RepoCliId.create("test/policy-fingerprint-turbo-inputs");
 
@@ -115,6 +116,9 @@ const decodeConfiguration = S.decodeEffect(S.fromJsonString(PolicyFingerprintTur
 const decodeContract = S.decodeEffect(S.fromJsonString(RootTaskContract));
 const decodeScripts = S.decodeEffect(S.fromJsonString(RootScripts));
 const decodeSummary = S.decodeEffect(S.fromJsonString(FingerprintRunSummary));
+const encodeSummary = S.encodeEffect(S.fromJsonString(FingerprintRunSummary));
+const summaryEquivalent = S.toEquivalence(FingerprintRunSummary);
+const FingerprintRunSummaryArbitrary = S.toArbitrary(FingerprintRunSummary)(fc);
 const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 const providePlatform = provideScopedLayer(platform);
 
@@ -191,6 +195,16 @@ const policyHashes = Effect.fn("PolicyFingerprintTurboTest.policyHashes")(functi
 });
 
 describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
+  it("round-trips schema-derived dry-run summaries through the JSON boundary", () =>
+    fc.assert(
+      fc.property(FingerprintRunSummaryArbitrary, (summary) => {
+        const encoded = Effect.runSync(encodeSummary(summary));
+        const decoded = Effect.runSync(decodeSummary(encoded));
+        expect(summaryEquivalent(decoded, summary)).toBe(true);
+        expect(Effect.runSync(encodeSummary(decoded))).toBe(encoded);
+      })
+    ));
+
   it.effect(
     "materializes exactly the computed repository closure and registers a nonrecursive cached root script",
     Effect.fnUntraced(function* () {

@@ -819,23 +819,18 @@ export class PolicyToolsFingerprint extends S.Class<PolicyToolsFingerprint>($I`P
  * @category configuration
  * @since 0.0.0
  */
-export const PolicyFingerprintTurboConfiguration = S.Struct({
-  tasks: S.Struct({
-    "//#lint:policy-fingerprint": S.Struct({ inputs: PolicyToolsFingerprint.fields.inputs }),
-  }),
-}).annotate(
+export class PolicyFingerprintTurboConfiguration extends S.Class<PolicyFingerprintTurboConfiguration>(
+  $I`PolicyFingerprintTurboConfiguration`
+)(
+  {
+    tasks: S.Struct({
+      "//#lint:policy-fingerprint": S.Struct({ inputs: PolicyToolsFingerprint.fields.inputs }),
+    }),
+  },
   $I.annote("PolicyFingerprintTurboConfiguration", {
     description: "Only the root fingerprint task inputs are decoded; unrelated Turbo configuration is preserved.",
   })
-);
-
-/**
- * Decoded Turbo fingerprint input boundary.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type PolicyFingerprintTurboConfiguration = typeof PolicyFingerprintTurboConfiguration.Type;
+) {}
 
 interface PolicyToolsFingerprintPolicyShape {
   readonly check: Effect.Effect<void, PackageScriptsPolicyError>;
