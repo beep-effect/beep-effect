@@ -1,10 +1,11 @@
 # C3 lane-to-task table — design gate
 
-Status: REVISION 5, 2026-09-09 (D15 mechanism, see the revision 5 paragraph), after one adversarial Codex review
+Status: REVISION 6, 2026-09-10 (D6 hosted sweep, see the revision 6 paragraph; revision 5 = D15 mechanism), after one adversarial Codex review
 (`research/c3-lane-task-table.review.md`, disposition appended there), two Greptile P1s and
 twelve Codex threads on PR #1018 (all folded; see the thread replies). Ratified by the merge of #1018 (ruling 26);
-revision 5 amends D15 only and is ratified by the merge of the C3.2 PR (ruling 29). Owner: Fable orchestrator. Rulings in
-force: 5, 6, 10, 19–29 (`research/decisions.md`). Evidence: `research/c3-turbo-facts.md` (Grok,
+revision 5 amends D15 and revision 6 amends D6; both are ratified by the merge of the C3.2 PR
+(rulings 29 and 30). Owner: Fable orchestrator. Rulings in
+force: 5, 6, 10, 19–30 (`research/decisions.md`). Evidence: `research/c3-turbo-facts.md` (Grok,
 15 Turbo 2.10 facts against the docs, plus the live-probe amendment), `research/c3-sublane-inputs.md`
 (Codex, per-lane input census with Q1/Q2), and the live probes in §0.2 (turbo 2.10.12,
 `futureFlags` on).
@@ -22,6 +23,14 @@ computed closure as its `inputs`, `lint policy-fingerprint --write` materializes
 `turbo.json`, every CLI-backed policy task depends on the root task, and `**/package.json` leaves
 the closure in favour of the closure members' manifests. The legend, §2.1, §2.2, §4, §7.2 and Q7
 follow. Ruling 28 (lane identity) supersedes the legend's lane-id sentence.
+
+Revision 6 changes (2026-09-10, after PR #1079's first hosted round): the hosted full-scope and
+`--full` sweeps keep their shard programs (D6; ruling 30). Per-package typed eslint costs about
+4× the 28 shards cold on the hosted runner because every workspace export resolves to `src` and
+each package rebuilds its transitive source closure, and cold recurs whenever the CLI closure
+changes. The package tasks, `//#lint:jsdoc:root` and the fingerprint edge stay for local
+`--affected` runs and reuse; the shard runner and the root `eslint .` invocation retire only once
+per-package typed programs are cheap (C3.2b, §7.2). §2.1, §7.1 and §7.2 follow.
 
 Reading order: §0 findings, §1 decisions, §2 table, §3 schema, §4 `turbo.json`, §5 doctest
 branch, §6 tests, §7 acceptance and train, §8 scope and questions.
@@ -171,17 +180,27 @@ Consequences:
   effect-imports code mode stays out of `lint:laws` while its promoted-family list is empty
   (it returns early today; its honest inputs are every foundation `src/**`); it is a root task
   and joins `lint:laws` when the per-module-imports flip gives it work (Q6).
-- **D6 `lint:deprecated-apis` package mode and concurrency.** `beep-cli lint deprecated-apis
-  --package .` runs eslint over the package directory with `--config <repoRoot>/eslint.config.mjs`,
-  the profile env, and a per-package heap cap (`NODE_OPTIONS` declared in `env`). The 4-way
-  shard runner and the per-shard eslint cache retire once the package task lands (orchestrator
-  default). The typed profile runs in its own bounded invocation (D10). Coverage equals today's
-  lanes: labs are a deprecated-apis shard today and stay covered there; the docs profile ignores
-  `apps/labs/**` (`DocsESLintConfig.ts:68–72`, ceremony-exempt), so `lint:jsdoc` is absent for
-  the lab kind. Every root-owned eligible file the root `eslint .` sees today (top-level files,
-  `scripts/**`, `goals/**`, `scratchpad/**`, `tools/**`, non-ignored `.claude/**`) keeps a root
-  residual `//#lint:jsdoc:root` whose worker selects exactly the eligible files outside package
-  workspaces, so no file loses coverage.
+- **D6 `lint:deprecated-apis` package mode, concurrency, and the hosted sweep (revision 6).**
+  `beep-cli lint deprecated-apis --package .` runs eslint over the package directory with
+  `--config <repoRoot>/eslint.config.mjs`, the profile env, and a per-package heap cap
+  (`NODE_OPTIONS` declared in `env`). The typed profile runs in its own bounded invocation (D10).
+  Which program a run uses is decided by scope, not by lane: a local non-full `beep lint policy`
+  (and `beep lint deprecated-apis` without `--full`) runs the package task through Turbo with
+  `--affected` and a child-local `TURBO_SCM_BASE`, so only touched packages and their dependents
+  pay, and unchanged ones replay; the hosted Lint Policy lane and `--full` run the 28-shard
+  program (`beep-cli lint deprecated-apis --full`) and, for the docs profile, the root
+  `eslint . --max-warnings=0`, because per-package typed programs cost about 4× the shards cold on
+  the hosted runner (PR #1079 round 1: 52 of 141 tasks in 15 minutes against 523.5 s for the
+  shards; jsdoc 728 s against 73.9 s). Every workspace export resolves to `src`, so the typed
+  project service rebuilds each package's transitive source closure, which the shard programs
+  amortize; cold recurs whenever the CLI closure changes. The shard runner and its per-shard
+  eslint cache therefore stay until per-package typed programs are cheap (C3.2b: lint against the
+  reference-keeping `tsconfig.check.json` overlays of #1058 with `^build` declarations, measured
+  hosted before the switch). Coverage equals today's lanes: labs are a deprecated-apis shard and
+  stay covered there, and the package worker tolerates an unmatched pattern only for the lab
+  kind; the docs profile ignores `apps/labs/**` (`DocsESLintConfig.ts:68–72`, ceremony-exempt),
+  so `lint:jsdoc` is absent for the lab kind. Every root-owned eligible file the root `eslint .`
+  sees today keeps the root residual `//#lint:jsdoc:root` for the local path.
   Config-base and source-routing parity with the root invocation is a C3.2 fixture.
 - **D7 Doctest presence by need.** `doctest` is present iff the package owns at least one
   `import.meta.vitest` source under the same selector the worker uses (`src/**/*.{ts,tsx}`,
@@ -733,7 +752,8 @@ governs in-file concurrency only; Turbo's process fan-out is measured, not assum
 | --- | --- | --- | --- |
 | 0 | rulings + this table | publish `ttc/c3-package-tasks-grill` with `c3-turbo-facts.md`, `c3-sublane-inputs.md`, this file and its review | 6 |
 | 1 | C3.1 | schema + service + `lint package-scripts` + `lint policy-fingerprint` + fingerprint file + three writers + thin workers (D16) + mode branch + fleet `--write` (docgen convergence, four new keys, codegen placeholders, `beep:policy` optional until C3.3) + `codegen` split + two root gates registered + `AGENTS.md` law line | ~190 (142 manifests) |
-| 2 | C3.2 | D15 revision 5 first (`//#lint:policy-fingerprint` root task, materialized inputs, dependency edge); `lint:deprecated-apis` + `lint:jsdoc` tasks and `//#lint:jsdoc:root`; shard runner and eslint caches retire; the typed invocation; `turbo-config-proof` tasks; fixtures; before/after | ~25 |
+| 2 | C3.2 | D15 revision 5 first (`//#lint:policy-fingerprint` root task, materialized inputs, dependency edge); `lint:deprecated-apis` + `lint:jsdoc` tasks and `//#lint:jsdoc:root`; the typed invocation for local `--affected` runs; hosted full scope keeps the shard program and the root `eslint .` (revision 6); `turbo-config-proof` tasks; fixtures; before/after | ~25 |
+| 2b | C3.2b | cheap per-package typed programs: lint against the reference-keeping check overlays with `^build` declarations, hosted cold measurement of one family first; then the shard runner, its eslint cache and the root `eslint .` retire | ~15 |
 | 3 | C3.3 | package-local law scanner; `lint:laws` task; `//#lint:native-runtime:roots`; `scopedLawStep` retires; `beep:policy` retires from fleet (manifest touch: 2 files) and schema | ~30 |
 | 4 | C3.4 | `doctest` task, conditional package overrides (11 configs), `vitest.docs.ts` and resolver retire, `heavy.yml`, tests | ~40 |
 | 5 | C3.5 | `//#` root tasks, D9 root scripts, three-invocation plan in `lint policy` and `beep:preflight`, GithubChecks routes, knip/fallow/jsdoc-ratchet lanes on Turbo, `standards/turbo-remote-cache.md` | ~35 |

@@ -174,3 +174,55 @@ runs, the Node coverage run for touched files, and `bun run beep lint policy` lo
   `package.json` scripts are hand-edited but the gate must stay green.
 - Keep `turbo.json` Biome-formatted; the materializing writer must be idempotent.
 - Stop at the end of the stage; do not start the next stage in the same launch.
+
+## Amendment 2026-09-10 — Stage E: ruling 30, hosted sweeps keep their shard programs
+
+Read first: `decisions.md` ruling 30 and the D6 revision 6 entry in `c3-lane-task-table.md`,
+then `research/c3-2-implementation.md` (Stage C, Stage D, and "Hosted round 1"). The finding:
+per-package typed eslint costs about 4× the 28 shards cold on the hosted runner, so the hosted
+Lint Policy lane and `--full` keep the shard program and the root `eslint .`, while local non-full
+runs keep the Turbo package tasks with `--affected`. Nothing about turbo.json, the fingerprint
+root task, `//#lint:jsdoc:root`, the package worker, or the lane ids changes.
+
+Deliver, in this order (schema → contract → implementation; no git writes; no graft commands;
+`git show 11b3889dd9^:<path>` is a read and is allowed):
+
+1. **`Lint.command.ts`.** Restore the shard program exactly as it was before commit 11b3889dd9
+   (`DEPRECATED_API_LINT_SHARDS`, `DEPRECATED_API_LINT_CONCURRENCY`, the cache directory and
+   `deprecatedApiLintCacheLocation`, `runDeprecatedApiLintShard`, `runDeprecatedApiLint`,
+   including the labs-shard unmatched-pattern tolerance and the shard-by-subtree comment). Keep
+   the package worker and its lab tolerance, and keep the `--full` and `--base` flags.
+   `beep lint deprecated-apis` without `--package`: `full || isCi()` runs the shard program;
+   otherwise it runs the affected Turbo step with the caller base. Root `package.json`
+   `lint:deprecated-apis` returns to `beep-cli lint deprecated-apis`.
+2. **`Tasks.ts`.** `rootRepoLintPolicySteps(repoRoot, files, base)`: with `base` undefined
+   (full scope, hosted) the two steps are the legacy invocations —
+   `repoCliStep("lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])` and
+   `bunxStep("lint:jsdoc", ["eslint", ".", "--max-warnings=0"])` — in their existing LPT
+   positions; with `base` defined they are the Turbo steps exactly as Stage C built them.
+   `runRootDeprecatedApisTask` takes only the base and runs the affected Turbo step (the command
+   decides full versus affected). Keep `policyLintTurboStep`, `PolicyLintConcurrency`, the
+   labels, the capture timeouts, and the full-state log line as Stage C left them.
+3. **Tests.** Restore the four shard tests removed from `lint-command.test.ts` in 11b3889dd9
+   (from `git show 11b3889dd9^:packages/tooling/tool/cli/test/lint-command.test.ts`), adapting
+   the command surface only where the flags changed. In `lint-workers.test.ts`: the standalone
+   command without `--full` runs the Turbo step (mocked spawner, `--affected`, child-local
+   `TURBO_SCM_BASE`), and with `--full` it runs the shard program (assert the first shard
+   invocation's command and `BEEP_ESLINT_PROFILE`); keep the lab-tolerance and live-worker tests.
+   In `quality-tasks.test.ts`: the full plan carries the legacy args, the scoped plan carries the
+   Turbo args, and CI forces the legacy args even with a base. Keep every function trivial
+   (Fallow judges test arrows by CRAP); reuse `policyTurboStep`/`policyTurboScmBase`.
+4. **Results file.** Append `## Stage E` to `c3-2-implementation.md` per the contract, including
+   a `### Stage E — files` list and the verification table.
+
+Verification in the sandbox (record exit codes): `bunx biome check <touched>`;
+`bunx oxlint --quiet --disable-nested-config <touched TS>`;
+`bunx --no-install vitest run --pool=forks --maxWorkers=1 test/lint-command.test.ts`;
+`bunx --no-install vitest run --pool=threads test/lint-workers.test.ts`;
+`bunx --bun vitest run --pool=threads test/quality-tasks.test.ts -t 'policy Turbo|plans repo-wide root lint|deprecated'`
+(the file has git fixtures; select by name); `bun run beep lint schema-first`;
+`bun run beep quality fallow audit --check --base origin/main --quiet` and
+`bun run beep quality fallow health --check --base origin/main --quiet` (read `.beep/fallow/*.check.json`
+`exitStatus`); `bun run beep lint policy-fingerprint --check`; `bun run beep lint package-scripts --check`;
+a source-resolving focused tsgo config over the touched tests as in Stage C. Fable runs
+package-verify, the Node coverage, and the hosted lane.
