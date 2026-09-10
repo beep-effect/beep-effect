@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "turborepo-quality-cache-adoption",
+    "title": "Turborepo quality cache adoption",
+    "status": "paused",
+    "created": "2026-09-08",
+    "updated": "2026-09-08",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/turborepo-quality-cache-adoption",
+  "lifecycle": "paused",
+  "mission": "Adopt every eligible quality computation in its proven profiles and optimize the full Turbo/CI/Yeet workflow with measured benefits and fresh hosted statuses.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/turborepo-quality-cache",
+    "graduated": "2026-09-08",
+    "note": "Approved BRIEF and MAP; conditional backend migration remains queued in the exploration."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Adopt every eligible quality computation in its proven profiles and optimize the full Turbo/CI/Yeet workflow with measured benefits and fresh hosted statuses. Complete only after SPEC acceptance, representative evidence, final same-PR reflection/lifecycle, and Yeet merge-ready: yes.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/turborepo-quality-cache-adoption/README.md",
+    "goals/turborepo-quality-cache-adoption/SPEC.md",
+    "goals/turborepo-quality-cache-adoption/PLAN.md",
+    "goals/turborepo-quality-cache-adoption/GOAL.md",
+    "goals/turborepo-quality-cache-adoption/research/SOURCES.md",
+    "explorations/turborepo-quality-cache/DECISIONS.md",
+    "explorations/turborepo-quality-cache/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/turborepo-quality-cache-adoption/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Population, feature and value audit",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Graph and pure boundaries",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Local and worktree adoption",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Hosted cohorts and warming",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Broader observation and final census",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "wc -m < goals/turborepo-quality-cache-adoption/GOAL.md",
+    "jq . goals/turborepo-quality-cache-adoption/ops/manifest.json",
+    "bun run beep goals doctor",
+    "bun run beep explore --check",
+    "git diff --check -- goals/turborepo-quality-cache-adoption",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Semantic divergence, failed invalidation, sensitive output, or unauthorized read/write/tenant crossing stops affected reuse.",
+    "Missing exact-version or milestone evidence prevents crossing that gate; continue independent work.",
+    "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
+    "Do not overwrite another owner's artifacts or weaken hosted proof."
+  ],
+  "statusNote": "Graduated 2026-09-08 after user approval; authored but not started. Launch GOAL.md to activate P0. SPEC/PLAN define milestone dependencies and measured deployment gates."
+}

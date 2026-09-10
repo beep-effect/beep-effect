@@ -63,6 +63,8 @@
   "exports": {
     "./package.json": "./package.json",
     ".": "./src/index.ts",
+    "./cache": "./src/cache/index.ts",
+    "./cache/*": null,
     "./next": "./src/next/index.ts",
     "./*": "./src/*.ts",
     "./internal/*": "./src/internal/*.ts"
@@ -91,6 +93,8 @@
     "exports": {
       "./package.json": "./package.json",
       ".": "./dist/index.ts",
+      "./cache": "./dist/cache/index.js",
+      "./cache/*": null,
       "./next": "./dist/next/index.js",
       "./*": "./dist/*.js",
       "./internal/*": "./dist/internal/*.js"

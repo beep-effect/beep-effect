@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "cache-activation-checkpoint/v1",
+  "authority": "Activation preview, policy checks and exact-stable native dry-census parity only; no task execution, signed replay, shadow or qualification credit.",
+  "sourceFiles": [
+    {
+      "path": "packages/foundation/modeling/identity/turbo.json",
+      "sha256": "20aa945348385b7947c2ee01f1a23d3ee4f73ebc517842861a55bcb750d8051e"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/package.json",
+      "sha256": "3212fa59ddc19a4534543ea235ca58dcec772a18ac1bb83a1ce2b16b99711cf5"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/src/cache/Cache.governance.policy.ts",
+      "sha256": "5c9ee83374b702876e9c7fc389f69c25a8f1c2ed3e910e6cb28b3bff48519a34"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/src/cache/Cache.policy.ts",
+      "sha256": "90125a10513b08bc37f37eb69370c949f2eb1b45e9ee660e4924c404ad4d8bfd"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/src/cache/index.ts",
+      "sha256": "4812da8e4153dfe974db1292a0f546c0e4a17b42b0e8dc2c13f0a8278bb2e0a5"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "sha256": "3b086a7b60114f34b373fd4e20bea93f65b5b1155b63f8daa7ae36982520eb15"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "sha256": "63a2fc7f476c45e995c9577f97ba1a269d770b3f04e8ea2faa64a1786d924523"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "cec641b982e92585924c961fccaf511a68a5d2b9ce98911fa0eb511a565524fe"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.schemas.ts",
+      "sha256": "379640290f61391bd821a31e9eb67598fa5e918f45f13409e43dc0eefed924e4"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "sha256": "83e39f07bbd5d750ac9a88d0ded632446979c08a5ae5e4da13e20332168a34c5"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "b0a83c007919d39b759c20d2f82626048ecc5248faaaf6893b40ce10a0c55e39"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "b9014a601afa8bda738fcd920bb7682b9e868ce3ec24a6fd80fff4ada22a2a75"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+      "sha256": "8f744eac48b458bfd09ddd68bc07a11f587b20258a4b161b1ad3a60f287df14c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "8f4366f94ad15cd798541d82ac5fd4ff2b91e44da18f77738a83dff09bb99693"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "2ba67ed409f33a59babb416afc74907f795b2b2f44252d54b9ce77626dea5f2f"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "sha256": "43b2e21dc1e3102fd75bccc5e59478f9ff12e13d3a9f204a85d69a710a193bd9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "sha256": "e5ecdcbe8fa0b81dc5c22178ab8840c62f50c161b545546d4ae822780545f985"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "82ca1801f2c201a84ccbd7290d1e9a95ef05b659df98aea99678034d8bd5064c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "sha256": "15183595aca03f34b9b99674110907144edb949b6bbd1e3ca55d4173f385c56d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-experiment.test.ts",
+      "sha256": "367e6afcd0530b7767cb3820cfb3a240f4f51359cadfb5e6d78fb7bc80a7a94b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
+      "sha256": "4cfb836f3a39466e371667dc0e4a36288d7752d1ba82720d388c239529df19be"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "sha256": "992c3981c6db5f2cf4d1bb8c94bd84cf92bfc073d399f623b8d988d6555a66a9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "sha256": "9d7a57c7ef2ce4559e9e4088f41442ff781da2a3e94a322e819fdb6311051852"
+    },
+    {
+      "path": "standards/cache-qualification-baseline.json",
+      "sha256": "0e3f15dd12a64dd36b0ca46a4557338bd8f72c8d2016f6dc1f86615e4f86853e"
+    },
+    {
+      "path": "standards/cache-qualification.json",
+      "sha256": "6c16ab7960e4118a3d509925fcf1f2c37d6e2d3377f3f59217eda23b3a136bf8"
+    }
+  ],
+  "proposalArtifacts": [
+    {
+      "path": "activation/identity-turbo.disabled.json",
+      "sha256": "20aa945348385b7947c2ee01f1a23d3ee4f73ebc517842861a55bcb750d8051e"
+    },
+    {
+      "path": "activation/identity-turbo.disabled.v2.json",
+      "sha256": "20aa945348385b7947c2ee01f1a23d3ee4f73ebc517842861a55bcb750d8051e"
+    },
+    {
+      "path": "activation/identity-turbo.enabled.json",
+      "sha256": "ec42ad07d3caec621914dd3dc10d2508c9a350e74ea47ec0dcb7bb88ebe8a272"
+    },
+    {
+      "path": "activation/identity-turbo.enabled.v2.json",
+      "sha256": "218501e001cdb90a811c9cfe43fdf6198d8be2740f18728cbead902226fb9ecf"
+    },
+    {
+      "path": "activation/preview-request.json",
+      "sha256": "32a78941189a05b132ad907f6b46d6e802cf9596820f0d3da484a1371f80de7b"
+    }
+  ],
+  "verification": {
+    "policyTestsPassed": 23,
+    "censusProjectionTestsPassed": 10,
+    "propertyRuns": 50,
+    "schemaFirst": "passed-zero-advisories",
+    "repoConfigsFullPackageVerify": {
+      "passed": true,
+      "auditSeconds": 9.6,
+      "docgenSeconds": 4.1
+    },
+    "repoCliFinalFullPackageVerify": {
+      "passed": true,
+      "auditSeconds": 382.7,
+      "docgenSeconds": 20.5,
+      "privateLog": ".beep/qualification-local-preflight/activation-cli-verify-final.log",
+      "logSha256": "b3ad042fbfbac794ae95c53a3e303ff4c7c910db7bcfa622b068f3de4b2e3c8b"
+    },
+    "nativeDryCensusComparison": "passed-exact-stable",
+    "goalsDoctor": {
+      "blocking": 0,
+      "inheritedAdvisories": 4
+    },
+    "exploreCheck": {
+      "findings": 0
+    },
+    "nativeFailedAttempt": {
+      "failure": "missing-FsUtilsLive",
+      "comparisonCredit": false,
+      "worktreeCleanAfterCleanup": true
+    },
+    "nativeReceipt": {
+      "path": "goals/turborepo-task-qualification/research/activation-native-stable.json",
+      "sha256": "cedb2fc286c6b203cbeeb7f604c0d6761f1523daa773623b577cd31da706ce94"
+    },
+    "repoConfigsEarlierInboxFailure": {
+      "recordedAt": "2026-09-09T02:31:06.252Z",
+      "attribution": "Earlier introduced formatting and missing property-coverage findings, already repaired before later passing package checks.",
+      "acknowledgedToCurrentTask": true,
+      "passingChecksAfterFailure": [
+        {
+          "log": ".beep/cache-qualification-repo-configs-verify.log",
+          "sha256": "d9bea613b8f57dce56913f9dca8a0e96438bb35e65c45a2b580c94638d893a64"
+        },
+        {
+          "log": ".beep/qualification-local-preflight/activation-configs-verify.log",
+          "sha256": "c7893840ff3f4e7d27455cea11f189f6df2869148e7b15e4e7da9a445664d95d"
+        }
+      ]
+    }
+  },
+  "qualification": {
+    "ledgerRevision": 1,
+    "qualified": 0,
+    "realPilotState": "excluded",
+    "cacheEnabled": false
+  },
+  "preview": {
+    "source": "b7255729d4a83e00e17a66405c32644432360f76851caf34a0aff03e2c415ea2",
+    "target": "e9242a98930cc7bfe1b088ca2fedd8fda27412b1c608807a3d20a186aef3537e"
+  }
+}

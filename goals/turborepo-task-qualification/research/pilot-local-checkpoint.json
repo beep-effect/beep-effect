@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "cache-native-pilot-checkpoint/v1",
+  "authority": "Local real-task observations and source bindings only; no signed-remote or qualification authority.",
+  "inputRevision": "4f96c4b1f87fb7fc6af9f737128b8083df287f48",
+  "observerImplementationSeparatelyBound": true,
+  "key": {
+    "computation": "@beep/identity#lint",
+    "layer": "turbo-task-result",
+    "profile": "local-linux-x64-bun1.4.2",
+    "epoch": "qualification-v2"
+  },
+  "configurationDigest": "486c215d583ab736150b53af1f2c51d8c7635eeea11d8f5a8a2fb177995b9400",
+  "toolchainDigest": "737b57fd796b2768072d8d01bdf9bbaef4669a1541b3caac9bee0faa53e4e682",
+  "activationInput": {
+    "path": "goals/turborepo-task-qualification/research/ignore-repair-activation-preview.json",
+    "sha256": "dceaa1d341a5f1416aaf320eb2785e59ae4a6c069feea16add0c9f43c48b27fc"
+  },
+  "receipts": [
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-local-stable.json",
+      "sha256": "7debdad703bbabc484d7598a0ffe0bb8f6f365a7fbbae52787776a7dea55038c"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-local-canary.json",
+      "sha256": "55669830bc77ff2124057851b81381c5e23441fec5584ea836357ae923edc039"
+    }
+  ],
+  "perClient": {
+    "observations": 43,
+    "expectedFreshFailures": 2,
+    "passingChecks": 28,
+    "localShadowDecisions": 10,
+    "successLogBytes": 53,
+    "failureLogBytes": 138,
+    "successfulObservations": 41,
+    "freshSuccessfulExecutions": 30,
+    "localHits": 11
+  },
+  "setupRefusals": {
+    "reference": {
+      "path": "goals/turborepo-task-qualification/research/pilot-pin-negatives.json",
+      "sha256": "634cbaea8280502488249e52e25df674da65c75b7252ee72a9e6989422ae073b"
+    },
+    "passed": 8,
+    "receiptsCreated": 0,
+    "wrapperTimeoutCounted": false
+  },
+  "sourceTreeImmutability": {
+    "packageSnapshotsUnchanged": true,
+    "registeredWorktreesCleanIncludingIgnoredFiles": true
+  },
+  "entrypoints": {
+    "attachment": {
+      "path": ".beep/qualification-local-preflight/census-pilot-attached.json",
+      "sha256": "432cd422720225e8d37bb57633b821fe2d34d1d1d932b1b93afa6d3292d99e2f"
+    },
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/pilot-entrypoint-request.json",
+      "sha256": "ad43903d055491c6d3fe08281d18414019a4b7345406874621e0b2ccf6604e47"
+    },
+    "verifiedSourceBindings": 285,
+    "completeDocuments": 6,
+    "unresolvedObligations": 6,
+    "plannerAndWorkflowDocumentsUnchanged": true,
+    "commandGroupingChangedFields": [
+      "censusSha256"
+    ]
+  },
+  "population": {
+    "workspaces": 142,
+    "graphNodes": 2840,
+    "executableNodes": 1480
+  },
+  "policyAudit": {
+    "reference": {
+      "path": ".beep/qualification-local-preflight/pilot-cache-audit.json",
+      "sha256": "5966fc5b6fdbd83e369a2ce5f71da3c292cd98aeef4f8d3078376342ef9acfb4"
+    },
+    "findings": 0,
+    "unassessedCachedComputations": 928
+  },
+  "observerSources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "7ea021d815cee52dd0a23f16dba7bc8f522898c454812855572726b9b295c917"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "db055dd5f5ce5f969b19c1e6905fb98ab2b8bb833ef1e2e36a83e111a696db7f"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "sha256": "db8931624e0e0b1ac6021b771335c343503a3a7f175d1d7953153b992865c4af"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.capture.ts",
+      "sha256": "3ccec8af3ac477dc0d982e054a3148a3dc8238251aeed043cc852092970f62cc"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "45f8ee3bb46d19afc1e96236ea20237e5ba7744b8f0ef0b3a185339ef73386d8"
+    }
+  ],
+  "verification": {
+    "package": {
+      "name": "@beep/repo-cli",
+      "auditPassed": true,
+      "auditSeconds": 431.7,
+      "docgenPassed": true,
+      "docgenSeconds": 18.5,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/pilot-cli-package-verify.log",
+        "sha256": "8bbd44f2dc98707421203917ac5a42af10bfa06da23ab6f2995475c39dead7c6"
+      }
+    },
+    "finalDocumentation": {
+      "passed": true,
+      "modules": 239,
+      "examples": 1561,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/pilot-docgen-final.log",
+        "sha256": "20c14bdaaa964cdda11f84d3c34f258512ad0e5ac08696b032f91b4060df04e5"
+      }
+    },
+    "schemaFirst": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/pilot-schema-first.log",
+        "sha256": "92cdfc88b77af58c49edb6143b3ba44e5a03a38ff30e124dd2d3811d646819b3"
+      }
+    },
+    "packet": {
+      "goalsDoctor": {
+        "passed": true,
+        "packets": 181,
+        "newBlocking": 0,
+        "inheritedBlocking": 0,
+        "existingAdvisories": 4,
+        "reference": {
+          "path": ".beep/qualification-local-preflight/pilot-goals-doctor.log",
+          "sha256": "83248b4d9820dbab6331d52fd946a2ab0945205cedc7c9f0ef6e9c18d8ee50a1"
+        }
+      },
+      "explore": {
+        "passed": true,
+        "reference": {
+          "path": ".beep/qualification-local-preflight/pilot-explore-check.log",
+          "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+        }
+      },
+      "reflectionArtifacts": {
+        "passed": true,
+        "blocking": 0,
+        "advisories": 0,
+        "reference": {
+          "path": ".beep/qualification-local-preflight/pilot-reflection-artifacts.log",
+          "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+        }
+      }
+    }
+  },
+  "report": {
+    "path": "goals/turborepo-task-qualification/research/pilot-local-verification.md",
+    "sha256": "e299db74150ef64498f28e6ab8614a1f00e25ef4132ddb85aca23e662b60dee0"
+  },
+  "remaining": [
+    "Remaining root/child configuration, lockfile/generated-alias and absent-script controls",
+    "Complete semantic read/write and capture-adversary evidence",
+    "Accepted signed conformance/trust sibling evidence and direct remote comparisons",
+    "Dynamic entrypoint interpretation and fresh external verdicts",
+    "Adoption handoff and final Yeet proof/reviews",
+    "Same-PR reflection and completed lifecycle only after full acceptance"
+  ]
+}

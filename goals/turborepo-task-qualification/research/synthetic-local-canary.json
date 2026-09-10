@@ -1,0 +1,206 @@
+{
+  "schema": "cache-synthetic-local/v1",
+  "channel": "canary",
+  "client": {
+    "version": "2.10.13-canary.1",
+    "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+    "namespace": "qualification-local-canary-v1"
+  },
+  "bun": {
+    "version": "1.4.1",
+    "sha256": "69293d3be4f0d6d624ca8581af4574435fa39209ab67e89eb03912866f3e14cb"
+  },
+  "fixtureSha256": "c6cfad557523bd3085404793b351d1cf58267f184bcb422accb51065304a691c",
+  "runs": [
+    {
+      "id": "fresh-a",
+      "root": "fresh-a",
+      "taskHash": "27043177408e14cd",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "f3b18729c14fe67c1c596b2cfe78b75f035ba6c96fcffd8f3ea338ae0289e6aa",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "fresh-b",
+      "root": "fresh-b",
+      "taskHash": "27043177408e14cd",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "f3b18729c14fe67c1c596b2cfe78b75f035ba6c96fcffd8f3ea338ae0289e6aa",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "local-producer",
+      "root": "fresh-a",
+      "taskHash": "27043177408e14cd",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "f3b18729c14fe67c1c596b2cfe78b75f035ba6c96fcffd8f3ea338ae0289e6aa",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "local-replay",
+      "root": "fresh-a",
+      "taskHash": "27043177408e14cd",
+      "origin": "local-hit",
+      "exitCode": 0,
+      "outputSha256": "f3b18729c14fe67c1c596b2cfe78b75f035ba6c96fcffd8f3ea338ae0289e6aa",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "orchestration",
+      "root": "fresh-a",
+      "taskHash": "27043177408e14cd",
+      "origin": "local-hit",
+      "exitCode": 0,
+      "outputSha256": "f3b18729c14fe67c1c596b2cfe78b75f035ba6c96fcffd8f3ea338ae0289e6aa",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "semantic-env",
+      "root": "fresh-a",
+      "taskHash": "b8f480a48481ad60",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "76dac1af64e8bccf07c9d9b4e6602113e54b248b6dbab07c2549e09128d2d8c4",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "semantic-file",
+      "root": "fresh-a",
+      "taskHash": "960da87772085483",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "7cd88c6c399f1663b7857f455a66e66697ca53d0710819ae6db01e0d8bcaf7ea",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "root-configuration",
+      "root": "fresh-a",
+      "taskHash": "3469a30fe6d2b774",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "7cd88c6c399f1663b7857f455a66e66697ca53d0710819ae6db01e0d8bcaf7ea",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "child-configuration",
+      "root": "fresh-a",
+      "taskHash": "228656f936129532",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "7cd88c6c399f1663b7857f455a66e66697ca53d0710819ae6db01e0d8bcaf7ea",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "concurrent-a",
+      "root": "concurrent-a",
+      "taskHash": "27043177408e14cd",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "f3b18729c14fe67c1c596b2cfe78b75f035ba6c96fcffd8f3ea338ae0289e6aa",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "concurrent-b",
+      "root": "concurrent-b",
+      "taskHash": "27043177408e14cd",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "f3b18729c14fe67c1c596b2cfe78b75f035ba6c96fcffd8f3ea338ae0289e6aa",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": []
+    },
+    {
+      "id": "unsafe-log",
+      "root": "negative",
+      "taskHash": "47ac09941f7ad460",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "8b4686ab01b295a72ccf65a8e62d51f77bbd16377a51b46017ca18eed2cb01fb",
+      "logSha256": "25bce22fa7a9af4b64b434244b57d227edc7134dd3b329eeb8279fec46a66fef",
+      "logBytes": 61,
+      "violations": ["synthetic-secret"]
+    },
+    {
+      "id": "absolute-path",
+      "root": "negative",
+      "taskHash": "cf1c5dde4ae23a34",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "4594c0eef74d3513273417352349bba9eaa330be5c0b7cd4695c0ed4f323a0d3",
+      "logSha256": "a10ddbcf0f6fd9dc22322c6aaaf126c476055f24baadaae623abb45da3f3b76d",
+      "logBytes": 48,
+      "violations": ["absolute-path"]
+    },
+    {
+      "id": "capture-overflow",
+      "root": "negative",
+      "taskHash": "dd06677724836ca6",
+      "origin": "fresh",
+      "exitCode": 0,
+      "outputSha256": "0d3850786fa2094c3669a124ba1e9578f782d773d08ee5a0103b3a9ef359d937",
+      "logSha256": "9e4ab574fe81b835f659deae6a7e9e3d6e2980383311ccfce1157e5da045106b",
+      "logBytes": 131095,
+      "violations": ["overflow"]
+    },
+    {
+      "id": "failed-task",
+      "root": "negative",
+      "taskHash": "1fa7d3840d83d9b0",
+      "origin": "fresh",
+      "exitCode": 7,
+      "outputSha256": "f3b18729c14fe67c1c596b2cfe78b75f035ba6c96fcffd8f3ea338ae0289e6aa",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": ["absolute-path"]
+    },
+    {
+      "id": "failed-task-repeat",
+      "root": "negative",
+      "taskHash": "1fa7d3840d83d9b0",
+      "origin": "fresh",
+      "exitCode": 7,
+      "outputSha256": "f3b18729c14fe67c1c596b2cfe78b75f035ba6c96fcffd8f3ea338ae0289e6aa",
+      "logSha256": "55c02610af15ea133fc8b24c850b0c842203401d14fdd85d3eb5e945aca26dbf",
+      "logBytes": 22,
+      "violations": ["absolute-path"]
+    }
+  ],
+  "checks": [
+    { "name": "isolated-fresh-fresh-and-cross-root", "passed": true },
+    { "name": "local-restoration", "passed": true },
+    { "name": "orchestration-invariance", "passed": true },
+    { "name": "semantic-env-invalidation", "passed": true },
+    { "name": "semantic-file-invalidation", "passed": true },
+    { "name": "root-configuration-invalidation", "passed": true },
+    { "name": "child-configuration-invalidation", "passed": true },
+    { "name": "concurrent-isolated-fresh", "passed": true },
+    { "name": "unsafe-log", "passed": true },
+    { "name": "absolute-path", "passed": true },
+    { "name": "capture-overflow", "passed": true },
+    { "name": "failed-task-is-not-reused", "passed": true }
+  ]
+}

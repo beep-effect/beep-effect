@@ -634,7 +634,12 @@ export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>(
   })
 ) {}
 
-/** Legacy release view, including the optional owner fields redacted by S6. */
+/**
+ * Released event view accepted from live or S6-redacted journal records.
+ *
+ * @internal
+ * @since 0.0.0
+ */
 class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>($I`AdmissionJournalReleased`)(
   {
     schemaVersion: S.Literal("yeet-admission-journal/v1"),
@@ -663,7 +668,12 @@ const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death"]).pip
   })
 );
 
-/** Legacy v2 lease eviction retained in the mixed-version replay union. */
+/**
+ * Lease-eviction event accepted from the v2 admission journal.
+ *
+ * @internal
+ * @since 0.0.0
+ */
 class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseEvicted>($I`AdmissionJournalLeaseEvicted`)(
   {
     schemaVersion: S.Literal("yeet-admission-journal/v2"),

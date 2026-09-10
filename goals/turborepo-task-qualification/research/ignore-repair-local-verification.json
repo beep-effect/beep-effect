@@ -1,0 +1,542 @@
+{
+  "schemaVersion": "cache-ignore-repair-local-verification/v1",
+  "authority": "Local observed failures, input invalidation controls and dependency exclusion. No complete pilot, signed-remote, exhaustive trace or hosted qualification.",
+  "originalFailures": {
+    "path": "goals/turborepo-task-qualification/research/ignore-invalidation-findings.json",
+    "sha256": "8e440c7db5dd77bb9ca63aa7c6d7a7cb897de89b876cda5324e763d440899296"
+  },
+  "mergedWrapperBeforeInputRepair": {
+    "originalReceipt": {
+      "path": ".beep/qualification-local-preflight/merged-wrapper-knk1wkkq/receipt.json",
+      "sha256": "5a67535a55eb1a67abf350356188e2e6004059bd0770411a423d284ae0bc9584"
+    },
+    "sourceConfiguration": "dca5e9b23ade5315207f75c3c435c2290484613d132170f0646d2eb4343a0db1",
+    "failedHypothesis": "Equal task hashes were not observed across changing the child cache flag. The child configuration file is itself a hash input.",
+    "attribution": [
+      {
+        "channel": "stable",
+        "taskHashes": [
+          "138f397da4238cac",
+          "a60d6c734624d49c",
+          "a60d6c734624d49c"
+        ],
+        "changedActivationInputs": {
+          "turbo.json": {
+            "before": "8ed1a03fd6eeac0d615999b96ac592e88ea91988",
+            "after": "99d753feacaf9fbf5d162c9fbf838397fa329c0b"
+          }
+        },
+        "globalInputsUnchanged": true,
+        "producerReplayInputsAndHashesEqual": true,
+        "disabledCaptureMatchesProducerAndReplay": true,
+        "captureBytes": 53,
+        "captureSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+        "nativeSummaries": [
+          {
+            "path": ".beep/qualification-local-preflight/merged-wrapper-knk1wkkq/stable-disabled-authority.summary.json",
+            "sha256": "81b2bbb4a3ba7c1570e5e31b341ecd1d784ae24fd53aef71b79d909113f1f160"
+          },
+          {
+            "path": ".beep/qualification-local-preflight/merged-wrapper-knk1wkkq/stable-enabled-producer.summary.json",
+            "sha256": "9769f150817ce4ed9ee7fe8cb22978a7640e1e4bea834100f7fac4ac5de4b382"
+          },
+          {
+            "path": ".beep/qualification-local-preflight/merged-wrapper-knk1wkkq/stable-enabled-replay.summary.json",
+            "sha256": "9880721b25eb1fd2f3d597ab6886372f88640be3d780cd5d5939439cf534cbe1"
+          }
+        ]
+      },
+      {
+        "channel": "canary",
+        "taskHashes": [
+          "138f397da4238cac",
+          "a60d6c734624d49c",
+          "a60d6c734624d49c"
+        ],
+        "changedActivationInputs": {
+          "turbo.json": {
+            "before": "8ed1a03fd6eeac0d615999b96ac592e88ea91988",
+            "after": "99d753feacaf9fbf5d162c9fbf838397fa329c0b"
+          }
+        },
+        "globalInputsUnchanged": true,
+        "producerReplayInputsAndHashesEqual": true,
+        "disabledCaptureMatchesProducerAndReplay": true,
+        "captureBytes": 53,
+        "captureSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+        "nativeSummaries": [
+          {
+            "path": ".beep/qualification-local-preflight/merged-wrapper-knk1wkkq/canary-disabled-authority.summary.json",
+            "sha256": "290b928dde82ecc1de4f523d65c7812dd1c60e24c2c84014e3d7fba8dc0bc8f6"
+          },
+          {
+            "path": ".beep/qualification-local-preflight/merged-wrapper-knk1wkkq/canary-enabled-producer.summary.json",
+            "sha256": "3a02eebde712b3b89f51534ce8d4d5fb4f83545eb59fa1cbc7edfbf7f60455e9"
+          },
+          {
+            "path": ".beep/qualification-local-preflight/merged-wrapper-knk1wkkq/canary-enabled-replay.summary.json",
+            "sha256": "9cdabf898bcf7d6513ee80ca2971fdb72cc3ef00d96bfd58f03d7e2291907fd8"
+          }
+        ]
+      }
+    ]
+  },
+  "combinedIdentityRepairAndTypesExclusion": {
+    "observations": 24,
+    "checks": 32,
+    "cases": [
+      {
+        "ignorePath": ".gitignore",
+        "receipt": {
+          "path": ".beep/qualification-local-preflight/combined-ignore-matrix-fi_860zp/receipt.json",
+          "sha256": "8dc42e830136bb34326dc38528cafa8009e50c9f3ffe8240b200ef25242faa01"
+        },
+        "observations": 6,
+        "checks": 8,
+        "allChecksPassed": true,
+        "worktreeRestored": true,
+        "rows": [
+          {
+            "channel": "stable",
+            "mode": "enabled-producer",
+            "graphExitCode": 0,
+            "selectedExitCode": 0,
+            "taskHash": "f3e9851adf2c901f",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-fi_860zp/stable-enabled-producer.summary.json",
+              "sha256": "b6c5aaceb55f5be55ae12475d1a364b7f7f4762ac8888480b4a49ff9dcf5b949"
+            },
+            "taskLog": {
+              "bytes": 53,
+              "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+            }
+          },
+          {
+            "channel": "stable",
+            "mode": "enabled-replay",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "6bc886d911c6684b",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-fi_860zp/stable-enabled-replay.summary.json",
+              "sha256": "827645996232ce5d480236f64f5a867a4ab1f2db2f0893f5a7045753ad7c6b60"
+            },
+            "taskLog": {
+              "bytes": 138,
+              "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+            }
+          },
+          {
+            "channel": "stable",
+            "mode": "fresh-negative",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "6bc886d911c6684b",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-fi_860zp/stable-fresh-negative.summary.json",
+              "sha256": "4020a2441b721b6f53ee8a47b757b112fa44b2b23eed1c35c2bd47603278f289"
+            },
+            "taskLog": null
+          },
+          {
+            "channel": "canary",
+            "mode": "enabled-producer",
+            "graphExitCode": 0,
+            "selectedExitCode": 0,
+            "taskHash": "f3e9851adf2c901f",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-fi_860zp/canary-enabled-producer.summary.json",
+              "sha256": "214e659de7b44d2a63bf5698892dc77b4feee01695816b2ab4670d66118a6382"
+            },
+            "taskLog": {
+              "bytes": 53,
+              "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+            }
+          },
+          {
+            "channel": "canary",
+            "mode": "enabled-replay",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "6bc886d911c6684b",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-fi_860zp/canary-enabled-replay.summary.json",
+              "sha256": "9065ee65c5da59e59ebfcb05662236b4b0c4a0c1b8c1553878a13c20e61d58cc"
+            },
+            "taskLog": {
+              "bytes": 138,
+              "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+            }
+          },
+          {
+            "channel": "canary",
+            "mode": "fresh-negative",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "6bc886d911c6684b",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-fi_860zp/canary-fresh-negative.summary.json",
+              "sha256": "2588fbaeec1d56930d71860c2718ae55e520c947a10a335c6916c0abe38ec31e"
+            },
+            "taskLog": null
+          }
+        ]
+      },
+      {
+        "ignorePath": "packages/.gitignore",
+        "receipt": {
+          "path": ".beep/qualification-local-preflight/combined-ignore-matrix-uo_rtdbr/receipt.json",
+          "sha256": "817214476740e594ca29ef7acfb623423a1a8cb4577fa2189bfbedcdc7893910"
+        },
+        "observations": 6,
+        "checks": 8,
+        "allChecksPassed": true,
+        "worktreeRestored": true,
+        "rows": [
+          {
+            "channel": "stable",
+            "mode": "enabled-producer",
+            "graphExitCode": 0,
+            "selectedExitCode": 0,
+            "taskHash": "3ad60edaebfa9568",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-uo_rtdbr/stable-enabled-producer.summary.json",
+              "sha256": "ee99ab8bd2b33288e303c23905a7bc75df6966371f986f167f8110bbca3eafe5"
+            },
+            "taskLog": {
+              "bytes": 53,
+              "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+            }
+          },
+          {
+            "channel": "stable",
+            "mode": "enabled-replay",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "0d0d48983a802fbf",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-uo_rtdbr/stable-enabled-replay.summary.json",
+              "sha256": "2ebd17e32861875f4cbf38a414c855eef3c5fb47d8bb6bbebef110ee3ff6bc0e"
+            },
+            "taskLog": {
+              "bytes": 138,
+              "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+            }
+          },
+          {
+            "channel": "stable",
+            "mode": "fresh-negative",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "0d0d48983a802fbf",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-uo_rtdbr/stable-fresh-negative.summary.json",
+              "sha256": "2d673aa9bcf469ad6b81a7b3c11fd119ed09ae4a664600e83b3d99392e16fea1"
+            },
+            "taskLog": null
+          },
+          {
+            "channel": "canary",
+            "mode": "enabled-producer",
+            "graphExitCode": 0,
+            "selectedExitCode": 0,
+            "taskHash": "3ad60edaebfa9568",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-uo_rtdbr/canary-enabled-producer.summary.json",
+              "sha256": "89b701377146624f6d9f040267ded54b2d3aa59cf7dd034c605a708ceb0d561c"
+            },
+            "taskLog": {
+              "bytes": 53,
+              "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+            }
+          },
+          {
+            "channel": "canary",
+            "mode": "enabled-replay",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "0d0d48983a802fbf",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-uo_rtdbr/canary-enabled-replay.summary.json",
+              "sha256": "6188cede88f3be5996604daf77aaf0417287a6c2778cc101ebe9c632bd8b90f5"
+            },
+            "taskLog": {
+              "bytes": 138,
+              "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+            }
+          },
+          {
+            "channel": "canary",
+            "mode": "fresh-negative",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "0d0d48983a802fbf",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-uo_rtdbr/canary-fresh-negative.summary.json",
+              "sha256": "f644a12bb28a57dc19dd329745689966807925bfc0f3263718c6e6a2fa7d03c8"
+            },
+            "taskLog": null
+          }
+        ]
+      },
+      {
+        "ignorePath": "packages/foundation/.gitignore",
+        "receipt": {
+          "path": ".beep/qualification-local-preflight/combined-ignore-matrix-kreqzrd1/receipt.json",
+          "sha256": "73bbfb7ae8e1c01c3c686856ac633219b369162907745875f4e3096479752c95"
+        },
+        "observations": 6,
+        "checks": 8,
+        "allChecksPassed": true,
+        "worktreeRestored": true,
+        "rows": [
+          {
+            "channel": "stable",
+            "mode": "enabled-producer",
+            "graphExitCode": 0,
+            "selectedExitCode": 0,
+            "taskHash": "7e9dc40c7d75a0c2",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-kreqzrd1/stable-enabled-producer.summary.json",
+              "sha256": "0f901d37ac417ad391bc60582c5b80ea59c56afab17c5c65371b8f1cc9998957"
+            },
+            "taskLog": {
+              "bytes": 53,
+              "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+            }
+          },
+          {
+            "channel": "stable",
+            "mode": "enabled-replay",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "25ce554f7cf0323f",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-kreqzrd1/stable-enabled-replay.summary.json",
+              "sha256": "9f97291470983142df0bf8076999610478ff33bbd2ce1fd91e7d5ab35ab6f418"
+            },
+            "taskLog": {
+              "bytes": 138,
+              "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+            }
+          },
+          {
+            "channel": "stable",
+            "mode": "fresh-negative",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "25ce554f7cf0323f",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-kreqzrd1/stable-fresh-negative.summary.json",
+              "sha256": "277fd43553aa6809458771810add888972eddeb1c9fa8e50ebc8ef3246ec203d"
+            },
+            "taskLog": null
+          },
+          {
+            "channel": "canary",
+            "mode": "enabled-producer",
+            "graphExitCode": 0,
+            "selectedExitCode": 0,
+            "taskHash": "7e9dc40c7d75a0c2",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-kreqzrd1/canary-enabled-producer.summary.json",
+              "sha256": "6298d7250ec62cfe527a4106beaea7fd0da1ff8bf11a17f370b4d99effa5710a"
+            },
+            "taskLog": {
+              "bytes": 53,
+              "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+            }
+          },
+          {
+            "channel": "canary",
+            "mode": "enabled-replay",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "25ce554f7cf0323f",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-kreqzrd1/canary-enabled-replay.summary.json",
+              "sha256": "27eb7801c52e711bd0d2d0a5acbf18cc1a8152ffbf46bcb79d9649bf6f714555"
+            },
+            "taskLog": {
+              "bytes": 138,
+              "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+            }
+          },
+          {
+            "channel": "canary",
+            "mode": "fresh-negative",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "25ce554f7cf0323f",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-kreqzrd1/canary-fresh-negative.summary.json",
+              "sha256": "b8096cc02962837566582af646eacca6bcf8e2f9a2530b584ad9c09870b1a73e"
+            },
+            "taskLog": null
+          }
+        ]
+      },
+      {
+        "ignorePath": "packages/foundation/modeling/.gitignore",
+        "receipt": {
+          "path": ".beep/qualification-local-preflight/combined-ignore-matrix-3kprypsl/receipt.json",
+          "sha256": "8e4bcf204b4310c1ac78d5fd6b9f16e58560414a3d1c2003d34c6457bb230249"
+        },
+        "observations": 6,
+        "checks": 8,
+        "allChecksPassed": true,
+        "worktreeRestored": true,
+        "rows": [
+          {
+            "channel": "stable",
+            "mode": "enabled-producer",
+            "graphExitCode": 0,
+            "selectedExitCode": 0,
+            "taskHash": "2f3ca889c131685f",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-3kprypsl/stable-enabled-producer.summary.json",
+              "sha256": "39ee134cd50b07ad8b9b6ccf3f641fe512e0e953fb66484c9d5e4dad8e06159c"
+            },
+            "taskLog": {
+              "bytes": 53,
+              "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+            }
+          },
+          {
+            "channel": "stable",
+            "mode": "enabled-replay",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "361523009b50a716",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-3kprypsl/stable-enabled-replay.summary.json",
+              "sha256": "eaf999e0355be463d2e6ecba1bc49ea6e7c9700d6bcc1d9b15ec22b537fe4b80"
+            },
+            "taskLog": {
+              "bytes": 138,
+              "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+            }
+          },
+          {
+            "channel": "stable",
+            "mode": "fresh-negative",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "361523009b50a716",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-3kprypsl/stable-fresh-negative.summary.json",
+              "sha256": "a08dee0dab3e4d42bc5b7a7806d41e0e4e95d72c05a6c6d89a9660f61843a839"
+            },
+            "taskLog": null
+          },
+          {
+            "channel": "canary",
+            "mode": "enabled-producer",
+            "graphExitCode": 0,
+            "selectedExitCode": 0,
+            "taskHash": "2f3ca889c131685f",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-3kprypsl/canary-enabled-producer.summary.json",
+              "sha256": "3dc5a787ba1d4e766c202f86e8deb0d66ea3a344add4cb037eedb221a1d24683"
+            },
+            "taskLog": {
+              "bytes": 53,
+              "sha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+            }
+          },
+          {
+            "channel": "canary",
+            "mode": "enabled-replay",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "361523009b50a716",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-3kprypsl/canary-enabled-replay.summary.json",
+              "sha256": "10bcac2d79e4efd26a42f84c6523a17f236a8a43e98f92c2450ccb8fbbc4f6e2"
+            },
+            "taskLog": {
+              "bytes": 138,
+              "sha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+            }
+          },
+          {
+            "channel": "canary",
+            "mode": "fresh-negative",
+            "graphExitCode": 1,
+            "selectedExitCode": 1,
+            "taskHash": "361523009b50a716",
+            "cacheStatus": "MISS",
+            "dependencyExecutedFresh": true,
+            "nativeSummary": {
+              "path": ".beep/qualification-local-preflight/combined-ignore-matrix-3kprypsl/canary-fresh-negative.summary.json",
+              "sha256": "09b71115766a02394ab421d7cff63a192261064a5d12a24437977456dfc21922"
+            },
+            "taskLog": null
+          }
+        ]
+      }
+    ]
+  },
+  "typesExclusionControl": {
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/types-quarantine-dd3l191o/receipt.json",
+      "sha256": "90960b75426567d0b9684aafaaca5db9266508cfaf5ed4b02fc9cbaf6ef875b9"
+    },
+    "observations": 6,
+    "checks": 8,
+    "allChecksPassed": true,
+    "freshFailurePreserved": true
+  },
+  "limitations": [
+    "The log-prefix extraction is an exploratory capture method, not a durable adversarially tested task-stream decoder.",
+    "Native summaries enumerate declared and expanded outputs; complete actual read/write interpretation remains required.",
+    "Trace bytes remain bounded and private; no exhaustive syscall interpretation or network verdict is claimed.",
+    "The full current-profile fresh/fresh and shadow matrix, signed remote integration and adoption handoff remain required."
+  ]
+}

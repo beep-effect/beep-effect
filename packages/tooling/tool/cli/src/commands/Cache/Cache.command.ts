@@ -4,9 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { CachePolicyAuditReport, CacheQualificationStore } from "@beep/repo-configs/cache";
 import { NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Clock, Console, DateTime, Effect, MutableHashMap, MutableHashSet, Order } from "effect";
+import { Clock, Console, DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -14,17 +16,37 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
+import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
+import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { collectCacheCensus } from "./Cache.census.ts";
+import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
+import { materializeCacheDependencies } from "./Cache.dependencies.ts";
+import { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
+import { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
+import { CacheSyntheticReceipt, CacheSyntheticRequest } from "./Cache.experiment.schemas.ts";
+import { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
+import { CachePilotReceipt, CachePilotRequest } from "./Cache.pilot.schemas.ts";
+import { runCachePilotExperiment } from "./Cache.pilot.ts";
 import {
+  CacheActivationPreview,
+  CacheActivationRequest,
+  CacheBaselineRequest,
+  CacheCensusReport,
   CacheCommandError,
   CacheDashboardReport,
   CacheDashboardReportJson,
   CacheLambdaSummary,
+  CacheLiveIdentity,
   CacheRunMode,
+  CacheTransitionRequest,
   CacheWallTime,
   CacheWarmLane,
   CacheWarmReceipt,
   CacheWarmReceiptJson,
 } from "./Cache.schemas.ts";
+import { CacheQualificationLive, CacheQualificationService } from "./Cache.service.ts";
+import type * as Layer from "effect/Layer";
 
 const TurboTaskCache = S.Struct({
   status: S.String,
@@ -99,7 +121,8 @@ type CacheWarmRunner = (command: ReadonlyArray<string>, cwd: string) => Effect.E
 const writeEncoded = Effect.fn("Cache.writeEncoded")(function* <A>(
   value: A,
   codec: { readonly encode: (value: A) => Effect.Effect<string, S.SchemaError> },
-  output: O.Option<string>
+  output: O.Option<string>,
+  print = true
 ) {
   const encoded = yield* codec.encode(value).pipe(CacheCommandError.mapError("Failed to encode cache report."));
   if (O.isSome(output)) {
@@ -108,7 +131,7 @@ const writeEncoded = Effect.fn("Cache.writeEncoded")(function* <A>(
       catch: (cause) => CacheCommandError.new(`Failed to write ${output.value}.`, cause),
     });
   }
-  yield* Console.log(encoded);
+  if (print) yield* Console.log(encoded);
 });
 
 const requiredWarmEnvironment = ["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"] as const;
@@ -527,6 +550,252 @@ const cacheDashboardCommand = Command.make(
     }).pipe(renderCacheFailure)
 ).pipe(Command.withDescription("Report first-touch remote hits, wall times, and changed-source tripwires"));
 
+const cacheCensusCommand = Command.make(
+  "census",
+  {
+    output: outputFlag,
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the complete census JSON")),
+    entrypointReview: Flag.Path("entrypoint-review", { pathType: "file" }).pipe(
+      Flag.optional,
+      Flag.withDescription("Contained source-review request; verify and attach complete entrypoint snapshots")
+    ),
+  },
+  ({ output, json, entrypointReview }) =>
+    collectCacheCensus(process.cwd()).pipe(
+      Effect.flatMap((census) =>
+        O.match(entrypointReview, {
+          onNone: () => Effect.succeed(census),
+          onSome: (request) =>
+            readCacheRequest(request, CacheEntrypointReviewRequest, NonNegativeInt.make(256 * 1024)).pipe(
+              Effect.flatMap((review) => attachCacheEntrypointReview(process.cwd(), census, review))
+            ),
+        })
+      ),
+      Effect.flatMap((report) =>
+        writeEncoded(report, JsonStringCodec(CacheCensusReport), output, json).pipe(
+          Effect.andThen(() =>
+            json
+              ? Effect.void
+              : Console.log(
+                  `Cache census: ${A.length(report.workspaces)} workspaces; ${A.length(report.nodes)} graph nodes; ${A.length(A.filter(report.nodes, (node) => O.isSome(node.command)))} executable; ${A.length(report.unresolved)} unresolved review obligations.`
+                )
+          )
+        )
+      ),
+      renderCacheFailure
+    )
+).pipe(Command.withDescription("Inventory executable scripts and effective Turbo configuration without running tasks"));
+
+/**
+ * Render the Cache-owned audit and fail on blocking findings for CLI and Quality consumers.
+ *
+ * **Example** (Build a read-only audit)
+ *
+ * ```ts
+ * import { runCachePolicyAudit } from "@beep/repo-cli/commands/Cache"
+ * import * as Effect from "effect/Effect"
+ * console.assert(Effect.isEffect(runCachePolicyAudit("/repo", false)))
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const runCachePolicyAudit = Effect.fn("Cache.runPolicyAudit")(function* (root: string, json: boolean) {
+  const cache = yield* CacheQualificationService;
+  const report = yield* cache.audit(root);
+  const blocking = A.filter(report.findings, (finding) => finding.blocking);
+  if (json) {
+    yield* Console.log(
+      yield* JsonStringCodec(CachePolicyAuditReport)
+        .encode(report)
+        .pipe(CacheCommandError.mapError("Cannot encode cache audit."))
+    );
+  } else {
+    yield* Console.log(
+      `Cache policy: ${A.length(blocking)} blocking findings; ${A.length(report.unassessed)} unassessed cached computations.`
+    );
+    yield* Effect.forEach(
+      report.findings,
+      (finding) => Console.log(`${finding.blocking ? "BLOCK" : "REVIEW"} ${finding.kind}: ${finding.subject}`),
+      { discard: true }
+    );
+  }
+  if (A.isReadonlyArrayNonEmpty(blocking))
+    return yield* CacheCommandError.new("Current cache reuse differs from reviewed policy.");
+}, renderCacheFailure);
+
+const cacheAuditCommand = Command.make(
+  "audit",
+  {
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false)),
+  },
+  ({ json }) => runCachePolicyAudit(process.cwd(), json)
+).pipe(Command.withDescription("Check effective cache settings against the reviewed baseline and tuple ledger"));
+
+const cacheInspectCommand = Command.make("inspect", {}, () =>
+  Effect.gen(function* () {
+    const cache = yield* CacheQualificationService;
+    const store = yield* cache.inspect(process.cwd());
+    yield* Console.log(
+      yield* JsonStringCodec(CacheQualificationStore)
+        .encode(store)
+        .pipe(CacheCommandError.mapError("Cannot encode qualification ledger."))
+    );
+  }).pipe(renderCacheFailure)
+).pipe(Command.withDescription("Read explicit qualification states; absent tuples are unassessed"));
+
+const requestFlag = Flag.Path("request", { pathType: "file" }).pipe(
+  Flag.withDescription("Schema-validated reviewed request JSON")
+);
+
+const cacheFingerprintCommand = Command.make(
+  "fingerprint",
+  { computation: Flag.String("computation"), output: outputFlag },
+  ({ computation, output }) =>
+    Effect.gen(function* () {
+      const cache = yield* CacheQualificationService;
+      const identity = yield* cache.fingerprint(process.cwd(), computation);
+      yield* writeEncoded(identity, JsonStringCodec(CacheLiveIdentity), output, O.isNone(output));
+      if (O.isSome(output))
+        yield* Console.log(
+          `Fingerprint recorded for ${identity.key.computation}; configuration ${identity.configurationDigest}; toolchain ${identity.toolchainDigest}.`
+        );
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Observe actual configuration and native binaries for a scoped qualification candidate")
+);
+
+const cacheBaselineCommand = Command.make("baseline", { request: requestFlag }, ({ request }) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const cache = yield* CacheQualificationService;
+    const input = yield* fs
+      .readFileString(request)
+      .pipe(
+        Effect.flatMap(JsonStringCodec(CacheBaselineRequest).decode),
+        CacheCommandError.mapError("Cannot decode baseline review request.")
+      );
+    const baseline = yield* cache.baseline(process.cwd(), input);
+    yield* Console.log(
+      `Reviewed baseline written for ${A.length(baseline.projection.nodes)} executable computations; scope ${A.join(baseline.scope, ", ")}.`
+    );
+  }).pipe(renderCacheFailure)
+).pipe(Command.withDescription("Record reviewed legacy settings without granting qualification"));
+
+const cacheTransitionCommand = Command.make("transition", { request: requestFlag }, ({ request }) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const cache = yield* CacheQualificationService;
+    const input = yield* fs
+      .readFileString(request)
+      .pipe(
+        Effect.flatMap(JsonStringCodec(CacheTransitionRequest).decode),
+        CacheCommandError.mapError("Cannot decode qualification transition request.")
+      );
+    const store = yield* cache.transition(process.cwd(), input);
+    yield* Console.log(
+      `Qualification revision ${store.revision}: ${input.entry.key.computation} is ${input.entry.status.state}.`
+    );
+  }).pipe(renderCacheFailure)
+).pipe(Command.withDescription("Apply a reviewed lifecycle transition with an expected ledger revision"));
+
+const readCacheRequest = Effect.fn("Cache.readRequest")(function* <Decoded, Encoded>(
+  request: string,
+  schema: S.Codec<Decoded, Encoded>,
+  maxBytes: NonNegativeInt = NonNegativeInt.make(64 * 1024)
+) {
+  const read = yield* readContainedFileBytesNoFollow(process.cwd(), request, maxBytes).pipe(
+    CacheCommandError.mapError("Cannot read the bounded local experiment request.")
+  );
+  const bytes = yield* read.contents.pipe(
+    Effect.fromOption(() => CacheCommandError.new("The contained experiment request must be a regular file."))
+  );
+  return yield* Effect.try({
+    try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+    catch: () => CacheCommandError.new("The experiment request is not valid UTF-8."),
+  }).pipe(
+    Effect.flatMap(JsonStringCodec(schema).decode),
+    CacheCommandError.mapError("Cannot decode the pinned local experiment request.")
+  );
+});
+
+const cacheActivationCommand = Command.make(
+  "activation",
+  { request: Flag.File("request"), output: outputFlag },
+  ({ request, output }) =>
+    Effect.gen(function* () {
+      const cache = yield* CacheQualificationService;
+      const input = yield* readCacheRequest(request, CacheActivationRequest);
+      const report = yield* cache.activation(process.cwd(), input);
+      yield* writeEncoded(report, JsonStringCodec(CacheActivationPreview), output);
+    }).pipe(renderCacheFailure)
+).pipe(Command.withDescription("Preview an exact reviewed single-task cache activation without enabling reuse"));
+
+const cacheSyntheticCommand = Command.make(
+  "synthetic",
+  { request: Flag.File("request"), output: outputFlag },
+  ({ request, output }) =>
+    Effect.gen(function* () {
+      const input = yield* readCacheRequest(request, CacheSyntheticRequest);
+      const report = yield* runCacheSyntheticExperiment(process.cwd(), input);
+      yield* writeEncoded(report, JsonStringCodec(CacheSyntheticReceipt), output);
+      if (A.some(report.checks, (check) => !check.passed))
+        return yield* CacheCommandError.new("The local synthetic experiment reported a failed assertion.");
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Run a bounded, network-isolated local fixture with an exactly pinned native client"),
+  Command.provide(MemoryStatsLive)
+);
+
+const cacheDependenciesCommand = Command.make("dependencies", { output: outputFlag }, ({ output }) =>
+  Effect.gen(function* () {
+    const report = yield* materializeCacheDependencies(process.cwd());
+    yield* writeEncoded(report, JsonStringCodec(CacheDependencyMaterialization), output, O.isNone(output));
+  }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Copy and verify the installed dependency tree; retain the machine-local receipt privately"),
+  Command.provide(MemoryStatsLive)
+);
+
+const cachePilotCommand = Command.make(
+  "pilot",
+  { request: Flag.File("request"), output: outputFlag },
+  ({ request, output }) =>
+    Effect.gen(function* () {
+      const input = yield* readCacheRequest(request, CachePilotRequest);
+      const report = yield* runCachePilotExperiment(process.cwd(), input);
+      yield* writeEncoded(report, JsonStringCodec(CachePilotReceipt), output);
+      if (A.some(report.checks, (check) => !check.passed))
+        return yield* CacheCommandError.new("The local real-pilot experiment reported a failed assertion.");
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Compare the real lint pilot in bounded, network-isolated read-only worktree overlays"),
+  Command.provide(MemoryStatsLive)
+);
+
+const cacheCommandDefinition = Command.make("cache", {}, () =>
+  Console.log(
+    "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, dependencies, pilot, warm, probe, dashboard"
+  )
+).pipe(
+  Command.withDescription("Turbo cache recovery and evidence operations"),
+  Command.withSubcommands([
+    cacheCensusCommand,
+    cacheAuditCommand,
+    cacheInspectCommand,
+    cacheBaselineCommand,
+    cacheFingerprintCommand,
+    cacheActivationCommand,
+    cacheTransitionCommand,
+    cacheSyntheticCommand,
+    cacheDependenciesCommand,
+    cachePilotCommand,
+    cacheWarmCommand,
+    cacheProbeCommand,
+    cacheDashboardCommand,
+  ])
+);
+
 /**
  * Turbo cache command group.
  *
@@ -541,7 +810,25 @@ const cacheDashboardCommand = Command.make(
  * @category commands
  * @since 0.0.0
  */
-export const cacheCommand = Command.make("cache", {}, () => Console.log("cache commands: warm, probe, dashboard")).pipe(
-  Command.withDescription("Turbo cache recovery and evidence operations"),
-  Command.withSubcommands([cacheWarmCommand, cacheProbeCommand, cacheDashboardCommand])
-);
+export const cacheCommand = cacheCommandDefinition.pipe(Command.provide(CacheQualificationLive));
+
+/**
+ * Build the real command tree with an explicit qualification authority for tests.
+ *
+ * **Example** (Provide qualification operations)
+ *
+ * ```ts
+ * import { makeCacheCommandForTesting } from "@beep/repo-cli/test/Cache"
+ * import { CacheQualificationLive } from "@beep/repo-cli/commands/Cache"
+ * const command = makeCacheCommandForTesting(CacheQualificationLive)
+ * console.assert(command.name === "cache")
+ * ```
+ *
+ * @internal
+ * @param qualificationLayer - Qualification authority used by the dispatched handlers.
+ * @returns The cache command tree with the supplied authority.
+ * @category testing
+ * @since 0.0.0
+ */
+export const makeCacheCommandForTesting = <E, R>(qualificationLayer: Layer.Layer<CacheQualificationService, E, R>) =>
+  cacheCommandDefinition.pipe(Command.provide(qualificationLayer));

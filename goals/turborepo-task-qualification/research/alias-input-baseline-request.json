@@ -1,0 +1,17 @@
+{
+  "previous": "1fb0e8a268828ee0b2cadc7bd244fb4b0f3c3e214198e259b25d72a3656bf07a",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Include root TypeScript configuration read by the identity lint wrappers and Biome; retain exclusion and cache-disabled state.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/alias-input-baseline-review.md",
+      "sha256": "1a225f4d80a04316bd8be8a463cf70972c101150720bebe006b546faa0bb7f26"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

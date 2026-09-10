@@ -1,0 +1,686 @@
+# Turborepo task qualification plan
+
+## Status
+
+Status: `active`
+Lifecycle: `active`
+
+Launched with `bun run beep goals set-status turborepo-task-qualification active`.
+P0 refresh is recorded in [census-refresh.json](./research/census-refresh.json).
+The user approved the program scope on 2026-09-08; no repeated shape approval
+is needed.
+
+## Phases
+
+| Phase | Status | Work | Exit criteria |
+| --- | --- | --- | --- |
+| P0 Refresh and contract | in-progress | Refresh checkout, tools, scripts and source ownership. Specify the versioned qualification tuple and evidence requirements. | Reconstructable census and reviewed contract; no phantom executable nodes. |
+| P1 Policy and discovery | in-progress | Implement pure policy/projection in repo-configs and discovery, transition checks and drift reporting in Cache. | Fixtures prove lifecycle legality, deterministic projection and pilot-only enforcement. |
+| P2 Local pilot and shadow | in-progress | Exercise one synthetic fixture and @beep/identity#lint in one named profile; record reads, writes, logs and semantic perturbations. | Fresh comparisons and shadow evidence are attributable; legacy settings remain visibly unassessed. |
+| P3 Signed replay integration | pending | Consume conformance/trust receipts and run the full isolated signed-replay protocol for the real pilot. | A real pilot qualifies with the required comparisons and shadow sample; unsupported profiles remain excluded. |
+| P4 Verify and hand off | pending | Run package gates, command/fixture tests and the qualification replay suite; hand the population and policy API to adoption. | Acceptance and negative cases pass with versioned receipts and no unexplained divergence. |
+| P5 Yeet: PR to mergeable | pending | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
+| P6 Close | pending | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
+
+## First action
+
+Refresh the executable census and define the qualification policy shared by the pilot, conformance runner and adoption audit.
+
+## Dependency gates
+
+P0/P1 can begin immediately when this goal is launched. Conformance and trust
+may consume the early qualification contract without waiting for this entire
+goal to close. P3 consumes a passing signed-fixture/lab boundary from those
+siblings. Do not declare that dependency satisfied from a source-only review.
+Continue local fixtures and discovery while remote proof is pending.
+
+[SPEC.md](./SPEC.md) governs authority and the [program map](../../explorations/turborepo-quality-cache/MAP.md)
+governs handoffs. A sibling's accepted milestone can unblock work before its
+whole goal closes.
+
+## Evidence to produce
+
+census and per-computation contracts; deterministic projection/diff reports;
+input perturbation matrix; fresh/shadow/signed-replay receipts; profile/epoch
+pins; package verification and final Yeet receipt.
+
+Store compact receipts in research/history and large raw evidence in bounded
+artifacts. Record source/tool/profile/epoch identity, command/case, result and
+retention. Register new reports in the manifest. Record friction immediately
+in [OPPORTUNITIES.md](./research/OPPORTUNITIES.md). Missing evidence is unfinished
+work, not an implied pass.
+
+## Verification and attribution
+
+Apply the SPEC matrix to actual changes. Package editors run package-verify
+before handoff. Attribute failures as introduced, inherited, unrelated or
+environment-only before repair. Preserve dirty work and use canonical
+admission/worktree workflows for heavy experiments.
+
+## P6 closeout checklist
+
+P6 preparation can occur during P5 so final reflection/lifecycle land with the
+final implementation. Acceptance still requires final Yeet proof. Do not defer
+closeout to an unrelated state-only PR.
+
+1. Confirm every SPEC criterion and applicable representative observation.
+2. Use the reflect skill and copied reflection template to record tooling
+   friction, implementation opportunities and prompt critique.
+3. Run `bun run beep lint reflection-artifacts`.
+4. Update phase evidence and use
+   `bun run beep goals set-status turborepo-task-qualification completed-retained` only once
+   completion conditions hold, in the final implementation PR.
+5. Regenerate/check the goal index and preserve exploration links. Completion
+   of this goal alone does not establish the whole cache program's completion.
+
+## Rollback and resume
+
+Use SPEC's rollback at the affected boundary. Record the failed gate, remaining
+work and safe resume action. Retain paused state with explicit conditions when
+external evidence/authority is missing; do not label that pause complete.
+
+## Implementation checkpoint: 2026-09-09
+
+- Branch: `codex/turborepo-task-qualification`; unrelated initial dirty paths
+  remain outside the implementation ownership list.
+- Owned workspaces: `@beep/repo-configs`, `@beep/repo-cli`.
+- [Qualification contract](./research/qualification-contract.md): initial
+  versioned handoff; sibling remote receipt formats remain sibling-owned.
+- [Executable census](./research/executable-census.json): 142 workspaces,
+  2,840 configured graph nodes, 1,503 executable configured scripts, 2,695
+  total workspace scripts, 106 entrypoint source files and 258 source digests.
+  Expanded raw plans/reports stay under ignored `.beep/` and can be recreated.
+- `beep cache census` uses the exact installed client with remote/local cache
+  operations disabled, joins manifest scripts, preserves graph-only nodes,
+  records effective settings and fingerprints expanded inputs deterministically.
+- Initial `@beep/repo-configs/cache` facade models keys, pins, contracts and
+  observations; pure promotion checks enforce independent matrices. Cache still
+  needs operational receipt verification and the durable lifecycle writer.
+- Tests: nine policy regressions, a schema-derived tuple serialization property,
+  and three census join tests pass. Package
+  verification for repo-configs passes audit and docgen. CLI package verification also passes audit and docgen;
+  [verification receipt](./research/verification-2026-09-09.md). No final Yeet
+  proof or pilot qualification exists.
+- Next: finish nested CI/Quality/Yeet semantic review; add lifecycle/receipt
+  operations and a scoped Quality drift gate; execute local fixtures and pilot
+  evidence. Signed replay stays gated on conformance/trust runtime receipts.
+
+## Governance checkpoint: 2026-09-09
+
+- Cache now owns the reviewed baseline, explicit tuple ledger, optimistic
+  state transitions, directory mutex and read-only policy audit. The zero-state
+  ledger grants no qualifications; missing state fails closed.
+- The real audit passes with zero findings and 928 unassessed cached
+  computations. Source-only root/child changes are attributable; semantic
+  config, nested script and dependency drift block reuse expansion.
+- Six operational tests cover persistence, revision conflicts, competing
+  writers, tampered/symlinked evidence and missing/malformed/duplicate state.
+  Nineteen policy tests and the existing census/Quality-plan regressions pass.
+- [Current static decomposition](./research/command-decomposition.md) includes
+  40 top-level command groups, 65 nested wrapper definitions, 70 root scripts,
+  69 CI variant plans and nine Quality mode plans. Dynamic and workflow-owned
+  branches remain explicitly unfinished.
+- [Governance verification](./research/governance-verification-2026-09-09.md)
+  records this source increment: repo-configs audit/docgen pass (8.9s/4.7s),
+  and repo-cli audit/docgen pass (359.5s/19.6s). No pilot is qualified and no final PR exists.
+- Next P1 work: hosted repository-sanity audit route; durable transition
+  history; live configuration/toolchain pin verification; then complete local
+  receipt interpretation and fixture/pilot execution. Signed replay remains
+  gated on accepted sibling runtime evidence, without source-only substitution.
+
+## Runtime and exclusion checkpoint: 2026-09-09
+
+- [Runtime verification](./research/runtime-boundary-verification-2026-09-09.md)
+  records passing full package checks for repo-configs, repo-cli and identity.
+  History integrity, bounded original-byte reads, native fingerprints and the
+  hosted repository-sanity plan are implemented. A consuming Yeet expectation
+  was repaired and the full CLI audit rerun successfully.
+- P2 exploratory work found a successful lint warning that exposed a synthetic
+  source canary. [The review](./research/unsafe-lint-review.md) excludes only
+  identity lint; its child Turbo configuration disables cache reuse while
+  preserving all inherited inputs and dependencies. Ledger revision is 1.
+- A network-isolated fresh run and bounded process/file trace completed.
+  The 16 MiB failed trace, main/linked-root input-map difference, and initial
+  repair probes remain explicitly outside promotion-matrix counts.
+- [The operator-requested sibling search](./research/sibling-evidence-search.md)
+  covered local Codex/Claude histories and 112 checkout/worktree roots. No
+  accepted signed-runtime receipt was found; the two sibling goals remain
+  authored but unstarted. Independent local work continues.
+- Next: implement the bounded, durable Cache fixture runner, finish the pilot
+  repair and negative matrix, and bind observed local/shadow receipts to the
+  transition mechanism. Keep P3 closed until accepted sibling runtime evidence
+  exists. No final PR, qualified computation or completion claim exists.
+
+## Local fixture checkpoint: 2026-09-09
+
+The Cache-owned `cache synthetic` command now runs a dependency-free fixture
+under existing admission and a network-isolated Linux sandbox. Separate exact
+stable and canary experiments exercised local restoration, independent input
+and configuration invalidation, fresh cross-root/concurrent comparisons, and
+unsafe-log/overflow/failed-execution rejection. See the
+[local verification report](./research/synthetic-local-verification-2026-09-09.md).
+The local runner and receipts confer no signed-remote or promotion authority.
+
+P2 remains in progress: the real identity lint capture repair, its full matrix
+and shadow observations, and remaining mandatory synthetic runtime cases are
+still outstanding. P3 remains gated on accepted sibling runtime receipts.
+
+## Activation contract checkpoint: 2026-09-09
+
+The read-only activation preview binds immutable disabled/enabled child
+configuration artifacts and the full disabled fingerprint. It accepts only
+the selected task's cache flag change. Candidate/shadow policy now requires
+ordinary reuse to remain disabled, including under a previously cache-enabled
+legacy baseline. Promotion requires per-client activation-invariance evidence.
+
+The [activation report](./research/activation-verification-2026-09-09.md)
+records passing focused and final package checks and passing exact-stable
+native Turbo configuration parity. The temporary workspace child configuration
+and tool aliases were removed; the main disabled file is unchanged. This contract does not
+activate the pilot or interpret remote receipts. The ledger remains revision 1
+with identity lint excluded. Both sibling goals remain unstarted; a proposed
+launch in isolated tasks awaits the operator's answer. Independent local work
+continues.
+
+## Dynamic census and capture-repair checkpoint: 2026-09-09
+
+The v2 [entrypoint review](./research/dynamic-entrypoints.md) repairs omitted
+step environments and records clean local/hosted-context plans. Each context
+includes 69 CI plans, nine Quality modes, 15 partition argument plans and four
+local dispatch shapes, plus documentation-selection examples. Dynamic CI
+source review now covers partitions, Docgen, Doctest, Fallow, local dispatch,
+the Heavy wrapper and both CI-native descriptors. Operational census
+integration and the remaining Quality/Yeet/workflow review are still required.
+
+The subsequent [Quality/Yeet review](./research/quality-yeet-entrypoints.md)
+adds 30 branch/mode plans per clean context, preserves complete operational
+schemas and records interpreter-only pre-push/review-fix dispatch. Lane-proof
+reuse, virtual-tree identity, skipped execution, publication ordering and
+live hosted authority remain distinct. All four CI/Quality/Yeet snapshots
+regenerate byte-identically. The remaining work is operational census
+integration, deeper nested interpreter coverage and workflow/action boundaries;
+these source snapshots grant no runtime or qualification credit.
+
+The [quiet lint preflight](./research/quiet-lint-preflight.md) uses a second
+owned isolated worktree. The first native and quiet probes failed before their
+intended comparisons because of missing service composition, proposal-file
+formatting and incompatible Turbo flags. Those setup defects are repaired;
+both reruns await admission. The main lint script, excluded ledger state and
+cache-disabled posture are unchanged. Apply a capture repair only after a
+successful baseline and the negative-case results support it.
+
+The native rerun has now passed. The quiet rerun passed all six direct exit
+and capture checks and five stable-client graph cases, then stopped because
+the invalid root config failed a dependency and omitted the selected task.
+The probe now records that attributed omission as not executed; its complete
+stable/canary rerun awaits admission. No complete-matrix or activation-invariance
+claim is made from the partial evidence.
+
+## Expanded synthetic and workflow checkpoint: 2026-09-09
+
+The [v2 synthetic runner](./research/synthetic-local-v2-verification.md) adds
+three independent fresh/fresh pairs in total, fresh orchestration invariance,
+explicit execution metadata checks and separate absent-script observations.
+Formatting and schema-first checks pass. The current CLI package gate passes
+audit in 381.7 seconds and docgen in 19.8 seconds. Exact stable/canary runtime
+experiments remain pending; earlier runtime receipts are historical for the
+three changed source files.
+
+The [workflow review](./research/workflow-boundaries.md) preserves all nine
+workflows and the composite setup action through the shared YAML decoder.
+The 28 job definitions and 171 step definitions regenerate byte-identically;
+they are not executions or expanded matrix counts. Provisioning, dependency
+archives, Turbo archives/artifacts, external security verdicts, measurements
+and publication remain distinct. Operational census integration and candidate
+runtime evidence still remain; the parsed source grants no qualification.
+
+The [SCM device preflight](./research/scm-device-preflight.md) attributes an
+environment defect in the original linked-worktree trace: its sandbox denied
+reads from `/dev/null`, preventing Git discovery. A controlled metadata check
+succeeds with a proper device mount. The admitted paired dry run also passes
+and attributes the three extra root-config inputs to that mount defect. The
+old trace grants no cross-root portability credit; current synthetic and
+quiet-lint probes already provide a device mount.
+
+## Local results and census integration: 2026-09-09
+
+Both exact clients pass the expanded synthetic suite: 21 runs, one separate
+absent-script observation and 16 checks each. The complete quiet-lint preflight
+passes six direct pairs and five selected-task executions per client, with
+invalid configuration attributed to a dependency failure before identity.
+The verified quiet script is applied. `@beep/identity` joins the owned
+workspaces and passes its full audit/docgen gate. Its tuple remains excluded
+at ledger revision one, and caching remains disabled.
+
+The baseline writer records the exact one-script repair and existing cache
+disablement. Eleven identity records inherit a new complete-script digest;
+the other commands/settings and the population are unchanged. The refreshed
+audit has zero findings and 927 unassessed cached computations.
+
+The source-reviewed census now attaches six complete documents, 274 verified
+source bindings and five authored reviews through `--entrypoint-review`.
+It preserves 142 workspaces, 2,840 graph nodes and 1,503 executable nodes.
+Missing/stale sources, duplicate references, malformed data and symlinks are
+rejected. The full parsed documents retain environments and owner fields;
+the attachment has source-only authority and keeps six explicit review/runtime
+obligations. The initial focused suite passes 24 tests; the expanded seven-test
+attachment suite also passes its schema-derived JSON preservation property.
+Schema-first passes with zero advisories. The introduced docgen example import
+and test-facade export ordering are repaired. The final full CLI package gate
+passes audit in 377.4 seconds and docgen in 18.1 seconds, bound to the current
+nine-file source checkpoint. Packet checks pass with no new blocking findings.
+
+The paired SCM dry probe also passes: mounting a working `/dev` restores Git
+metadata and exactly matches the historical main input maps/task hashes.
+This explains the initial sandbox mismatch, not portability of the repaired
+task. The full real-pilot matrix, remaining synthetic perturbations, signed
+sibling integration, shadow evidence, adoption handoff and final Yeet proof
+remain required.
+
+The repaired manifest's live source fingerprint and read-only activation
+preview are refreshed. An isolated exact-stable native parity rerun for that
+new source is queued through the existing admission route; it cannot supply
+task execution or activation-invariance credit by itself.
+
+## Main integration: 2026-09-09
+
+The operator requested committing the current work and merging current main.
+Implementation commit `f85bbe2760` preserves the pre-merge qualification
+checkpoint. The merge imports main `85cc86d1f3`, including Bun 1.4.2, dependency
+updates and the generated workspace-script contract. Existing qualification
+receipts remain historical for their recorded source/toolchain fingerprints;
+refresh the census, reviewed baseline and pilot contract before new acceptance.
+
+Identity keeps `cache: false` and its excluded ledger entry. Its generated
+`lint` wrapper now invokes the quiet `beep:lint` implementation. The original
+verbose Biome command remains available as `beep:lint:verbose`, and its package
+audit uses that verbose command. This preserves diagnostic access while
+complying with the imported task-wrapper policy. The canonical package-script
+check reports 142 manifests, zero drift and zero writes. This integration
+requires a fresh capture/exit matrix; earlier repair receipts do not establish
+equivalence for the new wrapper or Bun version.
+
+## Bun 1.4.2 baseline and synthetic runner: 2026-09-09
+
+The installed Mise Bun 1.4.2 runtime completes a frozen-lockfile installation.
+The refreshed census preserves 142 workspaces and 2,840 graph nodes; main's
+script convergence changes the executable population to 1,480. The
+[reviewed delta](./research/post-merge-baseline-review.md) attributes the
+changed scripts, three added and 26 removed executable nodes, and the sole
+uncached Storybook configuration change. The canonical writer now records
+`local-linux-x64-bun1.4.2` / `qualification-v2`. Ledger revision two keeps the
+original exclusion/history and separately excludes the new tuple. Cache
+activation remains disabled.
+
+Synthetic receipt version three binds explicit primary and alternate Bun
+binaries instead of discovering an ambient runtime. Both version and content
+pins are checked; the fixture includes the verified runtime digest as a
+semantic environment input and observes the actual Bun version in its output.
+Lockfile and package-manager bytes are explicit global fixture inputs. The
+runner adds independent perturbations and ten varied local shadow decisions,
+each with cache-disabled execution as authority, followed by a local producer
+and replay. These local observations grant no signed-remote or real-pilot
+qualification. Both exact clients now pass 60 observations and 30 checks.
+Each includes ten decisions under Bun 1.4.2 and one separately counted
+alternate-runtime decision. The first expansion supplied only nine primary
+decisions; an empty-environment case supplies the tenth in both final reruns.
+
+The live fingerprint now compares the observed Bun version to `.bun-version`
+and derives the named profile from that observed version. Both 1.4.1 and 1.4.2
+profiles remain readable, but profile/runtime relabeling is rejected. The
+merged runtime produces a current fingerprint; an old ambient Bun 1.4.1
+process fails before writing one. Twenty-five focused tests, typecheck,
+formatting and schema-first pass. The final full CLI package gate passes
+audit in 383.2 seconds and docgen in 17.3 seconds.
+
+The [current entrypoint attachment](./research/post-merge-entrypoint-review.md)
+binds 274 source files, six complete snapshots and one authored review. Its
+live census accepts every hash and preserves complete parsed documents,
+including all 28 workflow jobs and 164 step definitions. The six unresolved
+source/runtime obligations remain explicit. The
+[consolidated checkpoint](./research/post-merge-checkpoint.json) binds these
+results and the seven changed CLI source/test files.
+
+Next: implement the durable real-pilot matrix for the merged wrapper and
+runtime, including fresh comparisons, semantic perturbations, read/write and
+capture evidence, activation invariance and ten representative shadow
+decisions. Signed replay still requires accepted conformance/trust artifacts.
+Deeper interpreter coverage, adoption handoff and final Yeet proof remain
+required; no tuple is qualified or activated by this checkpoint.
+
+## Real-wrapper ignore-input repair: 2026-09-09
+
+The real merged wrapper passes selected-log comparisons on both clients:
+disabled execution, producer and replay retain the same 53 bytes. Native
+summaries attribute the activation hash change to the changed child Turbo
+file, which is an input. That exploratory capture method still needs a
+durable implementation and adversarial stream-boundary tests.
+
+The recorded trace exposed an unbound semantic input. Biome reads the root
+`.gitignore`, but the original task/global input maps omitted it. Both clients
+returned successful local hits after removing an ignore rule that revealed a
+tracked syntax error; fresh execution failed at the same hash. The independent
+types dependency control reproduced the same false success.
+
+Identity now retains inherited inputs and adds root and ancestor ignore files.
+Its cache remains disabled. Types lint gains a cache-disabled child config
+and an explicit excluded entry at revision three; earlier entries and history
+are preserved. `@beep/types` joins `@beep/identity`, `@beep/repo-configs` and
+`@beep/repo-cli` in this goal's owned workspace verification list.
+
+All four ignore-path cases pass against the combined repaired identity/fresh
+types graph: 24 observations and 32 checks across both exact clients. The
+separate types exclusion control passes six observations and eight checks.
+These failure controls do not count as successful shadow decisions. Full
+identity and types package audit/docgen pass. The canonical audit reports
+zero findings and 928 inherited cached computations as unassessed.
+
+The [verification report](./research/ignore-repair-verification.md) records the
+failure, repair, source review and remaining limits. The refreshed census
+attachment verifies 275 source bindings and six complete documents; all six
+review/runtime obligations remain explicit. The current fingerprint and
+read-only activation preview bind both changed task definitions.
+
+Continue with the durable real-pilot executor and complete comparison/shadow
+matrix using these repaired inputs and the fresh types dependency. Native
+trace interpretation must cover the remaining semantic reads and writes.
+Signed sibling integration, adoption handoff and final Yeet acceptance remain
+required. The goal stays active and both affected tasks remain excluded.
+
+The next commit also preserves the initial real-pilot executor, its request
+and receipt models, and strict selected-task log extraction. It is exported
+for further integration; CLI wiring and native execution validation remain
+pending. Earlier source-binding receipts predate these new source files and
+must be refreshed before they are used to qualify the current implementation.
+
+## Durable native local pilot: 2026-09-09
+
+`beep cache pilot` now executes the initial real-lint matrix and ten varied
+local shadow decisions in read-only overlays of two worktrees at `4f96c4b1f8`.
+Stable and exact canary each pass 43 observations and 28 checks. Each includes
+ten authoritative/producer/cross-worktree-replay triples, source and declared
+environment invalidation, orchestration/locale/timezone/root stability, and
+two fresh failing syntax-error controls. Successful selected logs remain
+53 bytes; expected failures retain 138-byte captures. Eight invocation guards
+reject wrong pins, runtime/channel mismatches, stale evidence and invalid
+worktree identities without writing receipts.
+
+The refreshed census attachment binds 285 current source files and six complete
+documents. Audit has zero findings and 928 unassessed cached computations.
+CLI typecheck, schema-first and full package audit/docgen pass; the final
+documentation correction also passes docgen. The
+[native verification report](./research/pilot-local-verification.md) and
+[checkpoint](./research/pilot-local-checkpoint.json) record exact references
+and limits for that observer version.
+
+Continue with root/child configuration, lockfile/generated-alias and
+absent-script controls, then complete semantic read/write and capture evidence.
+Runtime mismatch refusal is proven; local observations still do not provide
+signed remote transport authority. Sibling integration, deeper entrypoint
+review, adoption handoff and final Yeet acceptance remain required. The goal
+stays active and both pilot/dependency tuples remain excluded.
+
+## Authored control extension: 2026-09-09
+
+The next observer version adds seven configuration/manifest invalidation
+controls and four setup/absent-script controls. Requests can select the full
+matrix or controls alone, and new receipts identify their selection under
+`cache-pilot-local/v2`. These new native controls still require execution
+validation. The v1 receipts and source bindings above remain historical
+evidence for the earlier observer; they do not validate this extension.
+The operator requested a local commit of the current changes followed by a
+merge of the latest `main`. Continue native validation after that integration.
+
+The integration includes `main` at `bed30c6adf`. Its quality lanes now carry
+an explicit tier; the preserved cache gate uses `quality:cache-policy` in
+both the cheap-gates and pre-push tiers. Identity retains its quiet lint and
+verbose diagnostic scripts alongside the new test-typechecking script.
+Root lint no longer depends on dependency lint, and the lockfile and root
+configuration have changed. Refresh activation previews, executable census,
+entrypoint bindings and isolated worktree inputs before continuing native
+qualification; earlier receipts do not prove the integrated configuration.
+
+The integrated `beep quality cache-policy` gate fails closed with 700
+`configuration-drift` findings and one `turbo.json` source-review notice;
+922 inherited cached computations remain unassessed. Every blocking finding
+is attributed to configuration drift against the pre-merge reviewed baseline.
+The local commit/main integration does not waive that policy gate. Review the
+incoming graph changes and record a fresh baseline through the Cache command
+before claiming policy acceptance or resuming qualification experiments.
+
+Integration validation passes CLI typechecking, 371 focused planner/capture
+tests, schema-first, goal doctor and version synchronization. Full package
+verification passes for CLI (395.0-second audit, 17.6-second docgen) and
+identity (4.7-second audit, 2.4-second docgen). These package results do not
+replace the failing cache-policy gate or the remaining full Yeet proof.
+
+## Integrated graph and alias input review: 2026-09-09
+
+The main merge is committed as `ed12e4ede8`, after the user-requested local
+commit `22a0a0d124`. The reviewed baseline now has 142 workspaces, 2,840
+configured nodes and 1,474 executable computations. Six property wrappers
+were removed; no common cache flags or commands changed. The canonical
+baseline writer and Quality gate accept the reviewed graph with zero blocking
+findings and 922 unassessed cached computations. The qualification ledger is
+byte-identical. The pilot observer validates the actual identity closure,
+which no longer contains dependency lint, instead of requiring an obsolete
+two-task graph.
+
+The native v2 trials exposed two issues. The child-config fixture needed
+formatting through pinned Biome; that correction allows six invalidation
+controls to pass. The generated root-alias mutation preserved the task hash
+because root lint excluded `tsconfig*.json`. All four independent setup and
+absent-script controls pass with reuse disabled. The retained trial receipts
+are observations of those exact earlier inputs, not acceptance of the repair.
+
+The identity-only input correction removes the inherited tsconfig exclusion
+while preserving the current root lint inputs. The native input count grows
+from 43 to 46, with one copy of the root tsconfig input. Both live tasks remain
+cache-disabled and excluded. The v4 activation fragments are restricted to
+disposable native experiments.
+
+Three direct wrapper cases complete under the narrower file-open trace bound:
+baseline aliases, an added alias and 811 redirected aliases. All exit zero
+with the same 53-byte stderr capture. Each successfully opens root tsconfig
+through both Bun wrappers and a Biome worker, and opens 7,635 regular files
+outside identity. Matching outputs do not establish general irrelevance of
+those files. The earlier broad trace hit its 8 MiB bound and was rejected.
+The [file-open review](./research/alias-file-open-review.json) records these
+limits; semantic read/write classification remains required.
+
+Native controls on the corrected configuration and full stable/canary
+comparison runs are in progress. The new entrypoint attachment binds 286
+source files and six complete snapshots. No source review or local cache hit
+satisfies signed-remote integration or permits tuple promotion. Continue the
+read/write/capture boundary, sibling handoffs and final Yeet proof after these
+local checks; the goal remains active.
+
+Full package verification passes for the current edits: CLI audit/docgen
+431.3/25.0 seconds and identity audit/docgen 5.2/2.7 seconds. Schema-first,
+goal doctor, exploration checks and reflection-artifact checks pass. The
+[checkpoint](./research/alias-input-checkpoint.json) binds these results and
+explicitly records the stable corrected-control request as pending scheduler
+admission. Continue that owned run before launching the prepared full-client
+requests; do not restart it solely because an observation wait expired.
+
+## Dependency-sensitive lint repair: 2026-09-09
+
+The pending root-alias control run completed successfully: 21 observations
+and all 11 checks passed. A further direct probe then established semantic
+influence from a dependency source: deprecating an ordinary types-package
+export imported by the isolated identity fixture changes fresh lint from
+success to failure. Both native Turbo clients replayed the old success at
+the unchanged hash. The
+[counterexample and isolated repair](./research/dependency-cache-invalidation.json)
+retain all twelve native observations.
+
+Identity's child config now declares `^lint`. Types lint stays excluded and
+cache-disabled, so it executes fresh and its source-dependent task hash
+participates in identity's hash. The baseline writer accepts this one-edge
+delta without changing the ledger. The gate reports zero blocking findings
+and 922 unassessed cached computations. The durable dependency control fails
+fresh with the deprecated export, then requires a changed hash, fresh success
+and local replay after removing the annotation. All 24 control observations
+and 12 checks pass. The named missing-child control can remove this edge;
+its two missing dependency observations are not credited as executions.
+
+Full stable v2 validation passes 67 observations and 40 checks, including ten
+shadow decisions. It records 44 successful fresh selected executions, 19
+local hits, four expected fresh failures and 65 fresh dependency executions.
+Exact canary passes the same matrix and counts. Full package verification
+passes for CLI (447.9-second audit, 17.7-second docgen) and identity
+(4.5-second audit, 3.1-second docgen). The new
+entrypoint request binds 286 sources and six complete snapshots; all five
+planner/workflow documents remain byte-identical to their main-integration
+versions, while command groups bind the new census.
+
+The current fixtures omit installed node_modules. A fresh read-only installed
+view now proves this can hide a deprecation failure: the installed computation
+fails after the external export becomes deprecated, while the source fixture
+without that dependency tree passes. The
+[v2 report](./research/pilot-local-v2-verification.md) and
+[checkpoint](./research/pilot-local-v2-checkpoint.json) retain both the passing
+local matrices and this disqualifying normal-workspace equivalence gap.
+Next, materialize and integrity-bind installed dependencies and the executed
+launcher/binary chain, then rerun both exact-client matrices and the external
+deprecation adversary. Complete read/write
+and capture adversaries, signed siblings, dynamic entrypoints, adoption and
+final Yeet acceptance remain required. All live pilot reuse stays disabled.
+
+## Dependency snapshot primitives and branch synchronization: 2026-09-09
+
+The installed-tree snapshot schemas, materializer and verifier are implemented
+as library operations. Four focused tests cover schema serialization, digest
+stability across locations and timestamps, detection of changed content, modes
+and entries, declared workspace links, and rejection of escaping links or a
+symlinked tree root. The implementation now uses the installed Effect APIs and
+passes the schema-first policy check.
+
+This slice does not yet connect a materialized tree to the pilot or bind the
+executed dependency launcher chain. A full installed-tree snapshot and the
+normal-workspace client matrices remain pending. Existing v2 receipts describe
+the earlier source fixture and retain their original source hashes. Refresh
+the census, policy baseline and entrypoint attachments after merging main;
+new source or planner state does not inherit those historical proofs.
+
+The local slice was committed as `5ebfc19af3` before integrating main
+`d68f1a11dd`. Pre-merge CLI package verification passed its complete audit
+(486.0 seconds) and docgen (28.7 seconds). The merged tree passed the focused
+quality-task, Yeet, cache-dependency and cache-capture tests, followed by CLI
+package verification's lint/check subset. The canonical tsconfig writer
+restored the cache-policy package alias; config synchronization and a final
+CLI type check then passed. Full Yeet proof and refreshed qualification
+attachments remain pending for this integrated state.
+
+## Installed dependency and launcher boundary: 2026-09-09
+
+The dependency materializer is now exposed through `beep cache dependencies`.
+A native snapshot retains 226,802 regular files, 249,090 entries and
+5,382,236,500 bytes with 355 validated relative links. Source/copy/source
+identity checks pass. The pilot requires this receipt, mounts the copied tree
+read-only and verifies it again after execution. The runtime fingerprint now
+includes the installed-tree identity and the Node launcher pin.
+
+Eight fresh quiet/verbose commands reproduce the external-deprecation control
+with installed dependencies present: ordinary exports pass and the deprecated
+export fails. Successful execve records establish the installed Biome launcher,
+Node and native Biome chain. Omitting the installed tree still hides the
+failure. The [materialization review](./research/installed-dependency-materialization.json)
+and [execution observations](./research/installed-view-execution-observation.json)
+retain bounded hashes and distinguish copied-tree verification from a complete
+normal-host equivalence claim.
+
+Installed Turbo inference initially redirected the requested canary to stable.
+The version check rejected that run before any matrix observation. The pilot
+now supplies `--skip-infer` on every native Turbo invocation and records that
+selection contract in v4 receipts. Both corrected clients pass 67 observations,
+40 checks and ten shadow decisions. The later system-helper fingerprint adds
+the observed shells and `ldd`; both clients pass the same complete local
+matrix against this expanded runtime identity. Earlier receipts remain bound
+to their original toolchain identity. Full CLI package verification passes:
+419.6-second audit and 19.9-second docgen. Source/test type checks and all 20
+focused cache tests pass. The [verification report](./research/installed-launcher-verification.md)
+and [checkpoint](./research/installed-launcher-checkpoint.json) bind the final
+local receipts, observer sources and supporting checks.
+
+The merged baseline accepts 123 complete-script-map digest changes from main,
+with no new executable computation or task/configuration/edge change. The
+[entrypoint review](./research/installed-launcher-entrypoint-review.md) and
+[accepted request](./research/installed-launcher-entrypoint-request.json) bind
+294 source files and six complete snapshots. The population remains 1,474
+executables, with zero blocking policy findings and 922 unassessed cached
+computations. The ledger is unchanged; both live pilot tasks remain excluded
+and cache-disabled.
+
+Shared-library and ambient-input semantics, complete read/write/capture
+adversaries, signed sibling integration, dynamic entrypoint coverage, adoption
+and final Yeet acceptance remain required. These local results grant no tuple
+qualification or live activation.
+
+## Installed runtime invalidation and native task key: 2026-09-09
+
+Both exact clients reproduce stale success after an installed Effect export
+becomes deprecated, while forced fresh execution fails at the same native
+task hash. Separate read-only installed-tree and complete-toolchain digest
+experiments invalidate that hash and restore safe reuse when the original
+bytes return. All five repair assertions pass for each client. The bounded
+[native evidence](./research/runtime-keyed-invalidation-observation.json)
+does not yet implement ordinary entrypoint enforcement.
+
+The child lint configuration now declares `BEEP_CACHE_TOOLCHAIN_DIGEST` while
+keeping live caching disabled. The baseline writer accepts this single env
+declaration change; the ledger remains unchanged. The durable pilot derives
+the runtime value from observed installed bytes and tools, substitutes the
+requested native client pin and requires matching native environment metadata.
+It records the actual value and per-run metadata observation in v5 receipts.
+
+The first full matrices stop because the child-config perturbation replaces
+the complete env list. The corrected control appends its test variable;
+deliberate removal remains isolated to the missing-child negative. The failed
+attempts receive no complete-matrix credit. Both corrected native matrices
+now pass 67 observations, all 40 checks and ten shadow decisions. Each reports
+the native runtime key in 65 runs; exactly the named missing-child changed and
+replay controls omit it. Stable retains the reviewed runtime digest, and the
+canary digest includes its different requested client pin. Both derived values
+were independently reconstructed from the reviewed toolchain serialization.
+Final CLI package verification passes its audit in 411.4
+seconds and docgen in 26.9 seconds. The corrected source check, focused tests,
+schema-first and cache-policy checks pass. Identity's full package audit/docgen
+pass.
+
+The current [entrypoint attachment](./research/runtime-key-entrypoint-request.json)
+binds 294 sources and six snapshots. All five planner/workflow projections
+remain byte-identical. The population stays at 1,474 executable computations,
+with zero blocking policy findings and 922 unassessed cached computations.
+The [verification review](./research/runtime-key-verification.md) and
+[entrypoint seams](./research/runtime-key-entrypoint-seams.md) retain the
+remaining ordinary invocation, full runtime/semantic, signed sibling, dynamic
+entrypoint, adoption and final Yeet requirements. The goal remains active.
+
+The historical [queued checkpoint](./research/runtime-key-queued-checkpoint.json)
+retains the earlier admission state. The [final runtime-key checkpoint](./research/runtime-key-checkpoint.json)
+binds the completed stable/canary v5 receipts, actual per-client runtime keys,
+corrected observer sources and verification results. These remain local
+evidence, with no ordinary-entrypoint, signed-remote or promotion authority.
+
+A refreshed sibling lookup covers 122 registered roots and 18 identical
+copies of the two paused packets. None of their manifests registers new
+runtime evidence. The existing launch question remains pending. The admitted
+installed-lint [mapping probe](./research/installed-executable-mappings.md)
+also completes: nine successful exec events and eight executable system
+backing files in a 185,160-byte trace, with verified installed/runtime identity
+before and after. Two executable protection changes correlate with a prior
+Node anonymous reservation, and ten io_uring ring mappings establish presence
+only. The current snapshot does not hash the eight system backing files.
+Binding their actual targets and observing asynchronous I/O remain concrete
+next steps.
+
+## Operator pause: 2026-09-09
+
+The operator requested a draft PR to save the work and pause implementation.
+The packet is paused, with no completion claims or qualification granted.
+See [the pause checkpoint](./research/paused-pr-checkpoint.md) for the exact
+source/evidence boundary and resume order, and
+[checkpoint validation](./research/paused-pr-verification.json) for checks.
+The v5 native matrices predate startup-library fingerprinting and remain
+historical. Final Yeet and hosted acceptance are deferred until resumption.

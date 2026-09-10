@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "cache-dynamic-entrypoint-checkpoint/v1",
+  "authority": "Local source/planner evidence only. No nested command, hosted action, runtime partition proof or qualification execution.",
+  "sourceCoverage": "Directly reviewed or invoked plan-producing files; not a complete runtime read-set.",
+  "sources": [
+    {
+      "path": "goals/turborepo-task-qualification/research/refresh-entrypoint-plans.ts",
+      "sha256": "453a889726eec5408000f3e69ef2e91145abbcfc65397ca9e4befa729853a0ab"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "826df90eb9005af1b40a0fbda83ed2a99c3a1e796228df27dee8e279df9ec94d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
+      "sha256": "c17c972964622f04bb60eceea805942afaa9dea3b20f84cc8a9aadc1adfaa189"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "sha256": "43b2e21dc1e3102fd75bccc5e59478f9ff12e13d3a9f204a85d69a710a193bd9"
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "sha256": "dc82e98e8b70519c4f6933f9ce1a1277fdd55bd3e22a3155f4b12dcc6c4a3bf3"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "94945bd41a99e6ae458a237bf4fc3cac0de719f2da854d87265d8f091180016c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "sha256": "7dd9f508b927a881a05e4779f23e9f1725adcc6f2da721fa70eacd4f03028f62"
+    }
+  ],
+  "snapshots": [
+    {
+      "path": "goals/turborepo-task-qualification/research/entrypoint-plans.json",
+      "sha256": "b9bb49223f89728eb491a1a9e19dc4366e29c8f8865a4940f1d6db255ead4f0b"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/entrypoint-plans-hosted.json",
+      "sha256": "a57ef6ed3017ff2b5806ff6e7ae31ca6422d90fd941359bc2d09168c62298b14"
+    }
+  ],
+  "validation": {
+    "ciPlansPerContext": 69,
+    "qualityModesPerContext": 9,
+    "partitionArgumentPlansPerContext": 15,
+    "localDispatchShapesPerContext": 4,
+    "docgenBranchExamplesPerContext": 4,
+    "doctestDispatchExamplesPerContext": 3,
+    "propertySeedAndRunsRetained": true,
+    "localDefaultCheckConcurrency": 3,
+    "hostedContextDefaultCheckConcurrency": 2,
+    "byteIdenticalRegenerationBothContexts": true,
+    "qualityLaneRecordsPerContext": 78,
+    "qualityDependencyListsRetained": true,
+    "qualityOrderingEstimatesSupplied": 0
+  },
+  "remaining": [
+    "Operational census integration",
+    "Nested Quality/Yeet interpreter integration from quality-yeet-entrypoints.md",
+    "Remaining workflow and action boundaries",
+    "Actual candidate runtime read/write/capture evidence",
+    "Hosted resolved reusable-workflow provenance"
+  ]
+}

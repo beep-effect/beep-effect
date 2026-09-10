@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "cache-paused-pr-verification/v1",
+  "authority": "local-checkpoint",
+  "qualificationGranted": false,
+  "nativeMatrixForStartupLibraryIdentity": "not-run",
+  "fullYeetAndHostedAcceptance": "not-run",
+  "checks": [
+    {
+      "name": "source-typecheck",
+      "status": "passed",
+      "log": {
+        "path": ".beep/qualification-local-preflight/linker-source-check-final.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "focused-tests-26",
+      "status": "passed",
+      "log": {
+        "path": ".beep/qualification-local-preflight/linker-focused-tests.log",
+        "sha256": "08d17fa5e1413e91a29642e824dc8f0f1d2f1525851bc73f40b1bffd90ace636"
+      }
+    },
+    {
+      "name": "schema-first",
+      "status": "passed",
+      "log": {
+        "path": ".beep/qualification-local-preflight/paused-pr-schema-first.log",
+        "sha256": "92cdfc88b77af58c49edb6143b3ba44e5a03a38ff30e124dd2d3811d646819b3"
+      }
+    },
+    {
+      "name": "committed-history-secrets",
+      "status": "passed",
+      "log": {
+        "path": ".beep/qualification-local-preflight/paused-pr-history-secrets.log",
+        "sha256": "7ad9877d21c76cc3cac469ede47b04bd47f64312fe5c074656cfbe727275e824"
+      }
+    },
+    {
+      "name": "packet-secrets",
+      "status": "passed",
+      "log": {
+        "path": ".beep/qualification-local-preflight/paused-pr-packet-secrets-final.log",
+        "sha256": "0c0a4e38466b4d1e8ccc365b1da01c55e62f007cb2f47282a81fa58534cd8f61"
+      }
+    },
+    {
+      "name": "cli-package-verify",
+      "status": "passed",
+      "log": {
+        "path": ".beep/qualification-local-preflight/paused-pr-cli-package-verify.log",
+        "sha256": "aee2a047c0f729627f0f6fe212dc406dc17dddb20f2210f782f5f39916c7fe28"
+      }
+    },
+    {
+      "name": "goals-doctor",
+      "status": "passed",
+      "log": {
+        "path": ".beep/qualification-local-preflight/paused-pr-goals-doctor.log",
+        "sha256": "83248b4d9820dbab6331d52fd946a2ab0945205cedc7c9f0ef6e9c18d8ee50a1"
+      }
+    },
+    {
+      "name": "exploration-integrity",
+      "status": "passed",
+      "log": {
+        "path": ".beep/qualification-local-preflight/paused-pr-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      }
+    },
+    {
+      "name": "reflection-artifacts",
+      "status": "passed",
+      "log": {
+        "path": ".beep/qualification-local-preflight/paused-pr-reflection.log",
+        "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+      }
+    }
+  ],
+  "pendingChecks": [],
+  "resume": "goals/turborepo-task-qualification/research/paused-pr-checkpoint.md",
+  "cliPackageTimingSeconds": {
+    "audit": 425.0,
+    "docgen": 21.1
+  },
+  "attribution": {
+    "goalsDoctor": "Four inherited nonfatal fleet advisories; no new blocking findings.",
+    "initialTypechecks": "Introduced helper/inference errors fixed before final typecheck and package verification.",
+    "initialPacketSecretScan": "Twenty public SHA-256 digest field detections; exact path and field allowance added, final scan passes."
+  },
+  "stagedFileCount": 72,
+  "privatePathsStaged": 0,
+  "changedJsonFilesParsed": 42,
+  "changedMarkdownLinksMissing": 0
+}

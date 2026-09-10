@@ -1,0 +1,12 @@
+{
+  "computation": "@beep/identity#lint",
+  "path": "packages/foundation/modeling/identity/turbo.json",
+  "before": {
+    "path": "goals/turborepo-task-qualification/research/activation/identity-turbo.disabled.v4.json",
+    "sha256": "d55755fbaa753dc9db222956e465a7b0c3d561aa5de03e5eb6b229e605186f2d"
+  },
+  "after": {
+    "path": "goals/turborepo-task-qualification/research/activation/identity-turbo.enabled.v4.json",
+    "sha256": "45b704cc4cf21c818abcbd948ab5776643116ed6841440f6e410297d41b2d976"
+  }
+}

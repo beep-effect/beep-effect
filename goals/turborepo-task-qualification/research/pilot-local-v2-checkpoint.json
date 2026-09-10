@@ -1,0 +1,228 @@
+{
+  "schemaVersion": "cache-native-pilot-checkpoint/v2",
+  "authority": "Local source-fixture observations only. Installed dependency materialization is incomplete, and a fresh probe demonstrates a hidden deprecation failure. No normal-workspace qualification or signed-remote authority.",
+  "inputRevision": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+  "key": {
+    "computation": "@beep/identity#lint",
+    "layer": "turbo-task-result",
+    "profile": "local-linux-x64-bun1.4.2",
+    "epoch": "qualification-v2"
+  },
+  "sourceConfigurationDigest": "33b3c819ce394158e5ac5c1d4f29e73a208f3cc8524583cb4d2deb9157f2fae7",
+  "activationTargetDigest": "fc4e8a7f758514c5ab37be265d7a7ac1990604e4c0d3a69cd3c228b7a05ec1cd",
+  "toolchainDigest": "50d59edde15c279412d17a97e63e1110b6af2567a9a15e0cbce8756191292f4d",
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/dependency-edge-activation-preview.json",
+    "sha256": "d984de3e9eaae38d3550c6688c0b8cd7765ef44f2831fdfd78cfd0018addc87a"
+  },
+  "baseline": {
+    "path": "standards/cache-qualification-baseline.json",
+    "sha256": "ef44150e223006e89700a67d4d83811a4075ffb93320b0a0e78a48a0dbcb8dc6"
+  },
+  "ledger": {
+    "path": "standards/cache-qualification.json",
+    "sha256": "06a4ce7d4ca481d5dd93dacfdb4dff16108ca5683f67c4a68af173ff07fd05ac"
+  },
+  "ledgerUnchanged": true,
+  "perClient": [
+    {
+      "channel": "stable",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-pilot-local-stable-bun142-dependency-edge-v2"
+      },
+      "receipt": {
+        "path": "goals/turborepo-task-qualification/research/pilot-local-v2-stable.json",
+        "sha256": "32db82dd36ed691574a1e2c4e30c4bc289d699c8b041fc6a6b58de9e3b6d5205"
+      },
+      "observations": 67,
+      "checks": 40,
+      "allChecksPassed": true,
+      "freshSuccessfulSelected": 44,
+      "freshFailedSelected": 4,
+      "localHits": 19,
+      "freshDependencyExecutions": 65,
+      "mutations": 8,
+      "nonExecutions": 4,
+      "shadowDecisions": 10
+    },
+    {
+      "channel": "canary",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-pilot-local-canary-bun142-dependency-edge-v2"
+      },
+      "receipt": {
+        "path": "goals/turborepo-task-qualification/research/pilot-local-v2-canary.json",
+        "sha256": "e34619a0fcbc1bcbd05413008d88b698fbfdd12e859b9b704a21d838d6c63b8a"
+      },
+      "observations": 67,
+      "checks": 40,
+      "allChecksPassed": true,
+      "freshSuccessfulSelected": 44,
+      "freshFailedSelected": 4,
+      "localHits": 19,
+      "freshDependencyExecutions": 65,
+      "mutations": 8,
+      "nonExecutions": 4,
+      "shadowDecisions": 10
+    }
+  ],
+  "population": {
+    "workspaces": 142,
+    "configuredNodes": 2840,
+    "executableNodes": 1474
+  },
+  "policyAudit": {
+    "blockingFindings": 0,
+    "unassessedCachedComputations": 922,
+    "pilotState": "excluded",
+    "pilotCacheEnabled": false
+  },
+  "entrypoints": {
+    "attachment": {
+      "path": ".beep/qualification-local-preflight/census-dependency-edge-attached.json",
+      "sha256": "64a44a25ee33f19bf338aa3a7b4740a954ac43e97454c5555b36f7150069c308"
+    },
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/dependency-edge-entrypoint-request.json",
+      "sha256": "ea7e1c7fe65e171a2b9307a12fad00c1607ec6927fea55af8af29acdc306bf75"
+    },
+    "sourceBindings": 286,
+    "completeDocuments": 6,
+    "unresolved": [
+      "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+      "Classify nested workspace and root command semantics.",
+      "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+      "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+      "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts.",
+      "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes."
+    ]
+  },
+  "observerSources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "b103c3a30daa6374dc5ba198dc67d8968a6d0b1f546b253698992c8c141961b6"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "sha256": "46246a365622ae7043d9d97eb972ca67dcee128538c29ec02a042f8717344f27"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.capture.ts",
+      "sha256": "3ccec8af3ac477dc0d982e054a3148a3dc8238251aeed043cc852092970f62cc"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "7ea021d815cee52dd0a23f16dba7bc8f522898c454812855572726b9b295c917"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "sha256": "9f35c26507d279a8c0e97ff66156a1a0903e9bc4474e81ec106669c7951d6e61"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-controls-alias-repaired.json",
+      "sha256": "013165109f166ac645deaed2839c81a06da4eafaa4f37176e8f615a9b756746b"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/dependency-deprecation-observation.json",
+      "sha256": "db628381ad68df63f51113015789a8c6e18ef9ec3a0b288c5520e33e54899a48"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/dependency-cache-invalidation.json",
+      "sha256": "471d8e627effeecda7aaa7bb925a21f39de0525c634432db3e6db1d7b4b620ab"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/dependency-edge-baseline-review.md",
+      "sha256": "655fd6297246734ce82c3b97c1fca26ab6420e5e67bd397d521e3b8e3979fb38"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/dependency-edge-baseline-delta.json",
+      "sha256": "2a7878ed68494c92d1f4711485a3430d6062c1025d1b6d26b65986786eb4ec39"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/pilot-controls-dependency-repaired.json",
+      "sha256": "81732affd63e53764d162dcb8e821913478175e56c85aa407304d2365d75b9ff"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/installed-dependency-boundary.json",
+      "sha256": "c216fec1505ef02184853f4381412568dc86703d5ee216c207a23997357d37dc"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/installed-dependency-observation.json",
+      "sha256": "a15f5a212bab0194e3c99648d5a2e5c3ca85698b2c9abc4d18ef85500ef1c4c2"
+    }
+  ],
+  "verification": {
+    "cliPackage": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/dependency-edge-cli-package-verify.log",
+        "sha256": "85bc3ef25b5858608230a4429f43e2a9e39326817671bfde8d269fdcd526ffb6"
+      }
+    },
+    "identityPackage": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/dependency-edge-identity-package-verify.log",
+        "sha256": "6c348e9e9d36877f6d044026f2cff8cd1c73ea18bb34ee3fe5607219522bf511"
+      }
+    },
+    "typecheck": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/dependency-edge-cli-check-final.log",
+        "sha256": "42eae8ca35dc810a852e8a6c2db191e1c6d01f1204d2bb11b88ade4a66300cee"
+      }
+    },
+    "schemaFirst": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/dependency-edge-schema-first.log",
+        "sha256": "92cdfc88b77af58c49edb6143b3ba44e5a03a38ff30e124dd2d3811d646819b3"
+      }
+    },
+    "cachePolicy": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/dependency-edge-cache-policy.log",
+        "sha256": "72176981b8eae3f56b598318b7c1cb8d3e517482d639a5513184df5438a005ac"
+      }
+    },
+    "goalsDoctor": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/dependency-edge-goals-doctor.log",
+        "sha256": "83248b4d9820dbab6331d52fd946a2ab0945205cedc7c9f0ef6e9c18d8ee50a1"
+      }
+    },
+    "exploreCheck": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/dependency-edge-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      }
+    },
+    "reflectionArtifacts": {
+      "passed": true,
+      "reference": {
+        "path": ".beep/qualification-local-preflight/dependency-edge-reflection-artifacts.log",
+        "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+      }
+    }
+  },
+  "report": {
+    "path": "goals/turborepo-task-qualification/research/pilot-local-v2-verification.md",
+    "sha256": "7fd791510069ac44290e35ed316247182e5f96a56fce58ec0b84b7550406a37f"
+  },
+  "remaining": [
+    "Materialize and integrity-bind installed dependencies and the executed launcher/binary chain; rerun both exact-client matrices and external-deprecation adversaries.",
+    "Complete semantic read/write/capture boundaries and supported runtime perturbations.",
+    "Consume accepted signed conformance and trust runtime receipts; both sibling packets remain paused.",
+    "Complete dynamic entrypoint/external-verdict coverage, adoption handoff and final Yeet/reflect lifecycle."
+  ]
+}

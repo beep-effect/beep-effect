@@ -1,0 +1,317 @@
+{
+  "schemaVersion": "cache-installed-view-exec-review/v1",
+  "authority": "Eight fresh quiet/verbose commands in a read-only dependency view. Successful execve records require return code zero; failed PATH attempts are not counted. This is local diagnostic and launcher evidence, not cache replay or qualification.",
+  "rawReceipt": {
+    "path": ".beep/qualification-local-preflight/installed-view-adk30dbv/receipt.json",
+    "sha256": "952fa033799bb0a811df6c1a4f46bc5a28cb7be4f4f91d4627eb2558ae54bbea"
+  },
+  "sourceRevision": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/dependencies-main-activation-preview.json",
+    "sha256": "0250df039a09aeb3b5cb39a89af3a4d07bdfc6e5519e4501cc0cd7879b5e8ef5"
+  },
+  "toolchain": {
+    "bun": {
+      "version": "1.4.2",
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    },
+    "node": {
+      "version": "v24.20.0",
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7"
+    }
+  },
+  "tracerSha256": "ca7daa61ec8d0c765ded1d80bdd81820d2d6433272a1bffb2b6111f244a47361",
+  "dependencyTreeSha256": "1d6688b88253605123970d0b4a9051431996c7a7fa70957f10c4c077da6636e6",
+  "records": [
+    {
+      "id": "installed-unmodified",
+      "readOnlyInstalledTreePresent": true,
+      "selectedCanaryPresent": false,
+      "externalDeprecationPresent": false,
+      "selectedCanarySha256": null,
+      "effectIndexOverlays": [],
+      "runs": [
+        {
+          "traceSha256": "9ba29ef69dada0dac6a8ef3f6a3ecbc5b01648422dc8b64e5bf95ae80f9e83aa",
+          "traceBytes": 6550,
+          "command": "bun run lint",
+          "exitCode": 0,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 53,
+          "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+          "deprecatedImportDiagnosticObserved": false,
+          "trace": {
+            "path": ".beep/qualification-local-preflight/installed-view-adk30dbv/installed-unmodified/trace/quiet.strace",
+            "sha256": "9ba29ef69dada0dac6a8ef3f6a3ecbc5b01648422dc8b64e5bf95ae80f9e83aa"
+          },
+          "successfulExecvePathsInOrder": [
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/fixture/node_modules/.bin/biome",
+            "/tools/node",
+            "/bin/sh",
+            "/usr/bin/ldd",
+            "/fixture/node_modules/@biomejs/cli-linux-x64/biome"
+          ]
+        },
+        {
+          "traceSha256": "77125259d786aaad2242a8ac8ddce8eaabe3506f6fe1560eb07fc9105ce6bd16",
+          "traceBytes": 4679,
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 0,
+          "stdoutBytes": 42,
+          "stdoutSha256": "e9ed6985f7a38c86bf8903f52fa6146c983d50b847f5caf72e615eb0092b7cb7",
+          "stderrBytes": 16,
+          "stderrSha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d",
+          "deprecatedImportDiagnosticObserved": false,
+          "trace": {
+            "path": ".beep/qualification-local-preflight/installed-view-adk30dbv/installed-unmodified/trace/verbose.strace",
+            "sha256": "77125259d786aaad2242a8ac8ddce8eaabe3506f6fe1560eb07fc9105ce6bd16"
+          },
+          "successfulExecvePathsInOrder": [
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/fixture/node_modules/.bin/biome",
+            "/tools/node",
+            "/bin/sh",
+            "/usr/bin/ldd",
+            "/fixture/node_modules/@biomejs/cli-linux-x64/biome"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "without-install-canary",
+      "readOnlyInstalledTreePresent": false,
+      "selectedCanaryPresent": true,
+      "externalDeprecationPresent": false,
+      "selectedCanarySha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "effectIndexOverlays": [],
+      "runs": [
+        {
+          "traceSha256": "9bcef7b41020ff833ce5bc3840fb267fa50840557118829a830111d591a3f148",
+          "traceBytes": 2854,
+          "command": "bun run lint",
+          "exitCode": 0,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 53,
+          "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+          "deprecatedImportDiagnosticObserved": false,
+          "trace": {
+            "path": ".beep/qualification-local-preflight/installed-view-adk30dbv/without-install-canary/trace/quiet.strace",
+            "sha256": "9bcef7b41020ff833ce5bc3840fb267fa50840557118829a830111d591a3f148"
+          },
+          "successfulExecvePathsInOrder": [
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/tools/biome"
+          ]
+        },
+        {
+          "traceSha256": "d9badfa7d4428b281f091ad11c39b1dd8da334afcf15c33f9d8113c7d2bd0fbd",
+          "traceBytes": 2353,
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 0,
+          "stdoutBytes": 46,
+          "stdoutSha256": "849b3464f8aefaa57b0e23f4bcaa1184c93e663ae58e5db4506f112739a3d543",
+          "stderrBytes": 16,
+          "stderrSha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d",
+          "deprecatedImportDiagnosticObserved": false,
+          "trace": {
+            "path": ".beep/qualification-local-preflight/installed-view-adk30dbv/without-install-canary/trace/verbose.strace",
+            "sha256": "d9badfa7d4428b281f091ad11c39b1dd8da334afcf15c33f9d8113c7d2bd0fbd"
+          },
+          "successfulExecvePathsInOrder": [
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/tools/biome"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "installed-canary",
+      "readOnlyInstalledTreePresent": true,
+      "selectedCanaryPresent": true,
+      "externalDeprecationPresent": false,
+      "selectedCanarySha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "effectIndexOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "6a3169cb0d19e34ac3f13515cbee0db52da517f20388f701fd244cc4b06f45f4"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "1e21a4a366d76aea2e0fed80726a6c0e2cf669d37bb3732b0900436e3122b79c"
+        }
+      ],
+      "runs": [
+        {
+          "traceSha256": "5a352f5e90638f27ded3acee3d216871d572ae87f528a4cbf1e6d48ceb345ecb",
+          "traceBytes": 6552,
+          "command": "bun run lint",
+          "exitCode": 0,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 53,
+          "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+          "deprecatedImportDiagnosticObserved": false,
+          "trace": {
+            "path": ".beep/qualification-local-preflight/installed-view-adk30dbv/installed-canary/trace/quiet.strace",
+            "sha256": "5a352f5e90638f27ded3acee3d216871d572ae87f528a4cbf1e6d48ceb345ecb"
+          },
+          "successfulExecvePathsInOrder": [
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/fixture/node_modules/.bin/biome",
+            "/tools/node",
+            "/bin/sh",
+            "/usr/bin/ldd",
+            "/fixture/node_modules/@biomejs/cli-linux-x64/biome"
+          ]
+        },
+        {
+          "traceSha256": "09ed4c582932ba74045f0049622cd82c45e05b5881b5b4f3068ae8a8b3cf23d8",
+          "traceBytes": 4679,
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 0,
+          "stdoutBytes": 42,
+          "stdoutSha256": "355c38316f697850b99e0c9674f7758f04681e2806e0549929417dd0f10d50d6",
+          "stderrBytes": 16,
+          "stderrSha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d",
+          "deprecatedImportDiagnosticObserved": false,
+          "trace": {
+            "path": ".beep/qualification-local-preflight/installed-view-adk30dbv/installed-canary/trace/verbose.strace",
+            "sha256": "09ed4c582932ba74045f0049622cd82c45e05b5881b5b4f3068ae8a8b3cf23d8"
+          },
+          "successfulExecvePathsInOrder": [
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/fixture/node_modules/.bin/biome",
+            "/tools/node",
+            "/bin/sh",
+            "/usr/bin/ldd",
+            "/fixture/node_modules/@biomejs/cli-linux-x64/biome"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "installed-deprecated-canary",
+      "readOnlyInstalledTreePresent": true,
+      "selectedCanaryPresent": true,
+      "externalDeprecationPresent": true,
+      "selectedCanarySha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "effectIndexOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "runs": [
+        {
+          "traceSha256": "c349363346d408ae81e1d97d828acde24c55f8d0cbbcf001dac084baaf1f2191",
+          "traceBytes": 6552,
+          "command": "bun run lint",
+          "exitCode": 1,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 138,
+          "stderrSha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72",
+          "deprecatedImportDiagnosticObserved": false,
+          "trace": {
+            "path": ".beep/qualification-local-preflight/installed-view-adk30dbv/installed-deprecated-canary/trace/quiet.strace",
+            "sha256": "c349363346d408ae81e1d97d828acde24c55f8d0cbbcf001dac084baaf1f2191"
+          },
+          "successfulExecvePathsInOrder": [
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/fixture/node_modules/.bin/biome",
+            "/tools/node",
+            "/bin/sh",
+            "/usr/bin/ldd",
+            "/fixture/node_modules/@biomejs/cli-linux-x64/biome"
+          ]
+        },
+        {
+          "traceSha256": "7bab48cf0ecf08a921643b7dfca376e69af107e5001fba6dd75ad48eb81ebaa0",
+          "traceBytes": 4679,
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 1,
+          "stdoutBytes": 57,
+          "stdoutSha256": "03e6f070a04b0a6d4f40bef8251fa97311e52739976886c97d69a15a7604ebc3",
+          "stderrBytes": 979,
+          "stderrSha256": "723683d0213f0b7026ab2c6646effc13d0bf7cfc3ef0d838654e17fc82a206a9",
+          "deprecatedImportDiagnosticObserved": true,
+          "trace": {
+            "path": ".beep/qualification-local-preflight/installed-view-adk30dbv/installed-deprecated-canary/trace/verbose.strace",
+            "sha256": "7bab48cf0ecf08a921643b7dfca376e69af107e5001fba6dd75ad48eb81ebaa0"
+          },
+          "successfulExecvePathsInOrder": [
+            "/tools/bun",
+            "/usr/bin/bash",
+            "/fixture/node_modules/.bin/biome",
+            "/tools/node",
+            "/bin/sh",
+            "/usr/bin/ldd",
+            "/fixture/node_modules/@biomejs/cli-linux-x64/biome"
+          ]
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "normalInstalledLintPasses": true,
+    "missingInstalledTreeHidesDeprecatedExport": true
+  },
+  "registeredSourceUnchanged": true,
+  "retainedDependencyOverlayTargetsUnchanged": true,
+  "integrity": {
+    "retainedTreeVerifiedBeforeAndAfter": true,
+    "verificationLog": {
+      "path": ".beep/qualification-local-preflight/installed-view-runtime-v2.log",
+      "sha256": "3da93f09f0617c691d6d0095db6db777f50e31236b14aeb286dd1d05ee155813"
+    },
+    "wrapper": {
+      "path": ".beep/qualification-local-preflight/installed-view-v2/bin.ts",
+      "sha256": "48a4e9471fa40b2565ae4da5a6ffecb10d851c8a212d84ee247b2990e43ef51d"
+    },
+    "wrapperTypecheck": {
+      "path": ".beep/qualification-local-preflight/installed-view-wrapper-check-scoped.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "wholeHostInstallationVerifiedDuringProbe": false
+  },
+  "observer": {
+    "path": ".beep/qualification-local-preflight/probe-installed-view.py",
+    "sha256": "9ea7360b4708439c19a455eaadd24c7c5d96b763493abefc2606919c5b38195c"
+  },
+  "bounds": {
+    "commandTimeoutSeconds": 90,
+    "streamBytesEach": 65536,
+    "traceFileBytes": 1048576
+  },
+  "remaining": [
+    "The controlled installed view does not establish all normal-host ambient input equivalence.",
+    "Shared libraries, semantic read/write classes and sensitive capture adversaries still require review.",
+    "The external export probe does not exercise cache invalidation or signed remote replay."
+  ]
+}

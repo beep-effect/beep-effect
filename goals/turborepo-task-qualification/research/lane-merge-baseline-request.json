@@ -1,0 +1,17 @@
+{
+  "previous": "a6266cf219ab0175a5d672f19c4aa582d2f141b41b99f06121e79b910344139d",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Review inherited main task-graph and generated-script changes without granting qualification or activating reuse.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/lane-merge-baseline-review.md",
+      "sha256": "8e0dd3a5de6acd9c22dad1f35b890039f47c14495c71d85b3676aa417f45acf1"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

@@ -1,0 +1,17 @@
+{
+  "previous": "ee99d491df76285551045824d07920b4f96df4ed401dc83252fc46c000314341",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Repair the observed identity root-ignore hash omission and exclude the independently reproduced unsafe types lint dependency. No cache activation.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/ignore-repair-baseline-review.md",
+      "sha256": "f1dc3434710ee3116a576216e0ae2db8b576f3804b6dd04dccc997fe0cd5c210"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

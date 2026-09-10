@@ -1,0 +1,16 @@
+{
+  "previous": "baaca3fc48a3755256b42b9726d40b063f74df8c563bad4bdc5cc8707bbe33af",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Attribute operator-authorized main integration and exclude the pilot until Bun 1.4.2 and generated-wrapper evidence passes.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/post-merge-baseline-review.md",
+      "sha256": "7f19efb015534113a6d7ffe216fbb31bdcf2ef79060d9edb9c828bbe184132f9"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

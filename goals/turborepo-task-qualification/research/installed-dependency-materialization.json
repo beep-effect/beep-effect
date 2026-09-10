@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "cache-dependency-materialization-review/v1",
+  "authority": "Sanitized summary of a completed native materialization and retained-view verification. The private typed receipt retains its original directory. No registry provenance or qualification authority.",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/dependencies-merged-materialization.json",
+    "sha256": "a1c0bf3fbb83cd4ba9a6d201c20f4fc21c175599164d0d573fa99e44a673d33d"
+  },
+  "schema": "cache-dependency-materialization/v1",
+  "lockfileSha256": "769ec9946aeb49d5e581acac05677086d2627b03bab8b3a119a5210cc50e8f25",
+  "rootManifestSha256": "b011b9af1e58ed7586433a36a436ad156a4816c3113f169a16c35a5fc00de282",
+  "tree": {
+    "format": "canonical-gnu-tar/v1",
+    "sha256": "1d6688b88253605123970d0b4a9051431996c7a7fa70957f10c4c077da6636e6",
+    "regularFiles": 226802,
+    "entries": 249090,
+    "bytes": 5382236500
+  },
+  "links": {
+    "total": 355,
+    "internal": 213,
+    "workspace": 142
+  },
+  "tools": {
+    "bash": {
+      "version": "GNU bash, version 5.3.15(1)-release (x86_64-pc-linux-gnu)",
+      "sha256": "07a2331ac400749cc7740fac9999e36cf104c743b612c307ef155fc5dca7fe2e"
+    },
+    "cp": {
+      "version": "cp (GNU coreutils) 9.11",
+      "sha256": "6bbf3d572182690cdab29a5acd63bc752f0ced47b2f03fb97dbdbb87798b9160"
+    },
+    "find": {
+      "version": "find (GNU findutils) 4.11.0-modified",
+      "sha256": "dd7db3e8da1775fd4f196db8a9000d5d31c20bf82f105af567bea7c3db4303d6"
+    },
+    "tar": {
+      "version": "tar (GNU tar) 1.35",
+      "sha256": "326bb5548b0a17ea3922a928634f141d0ac75d714edf08c096f0659bd90449f7"
+    },
+    "sha256sum": {
+      "version": "sha256sum (GNU coreutils) 9.11",
+      "sha256": "57c07de75b2911bbad174ff73deed8be4065601b003750b2b8e9aed3bf580f84"
+    },
+    "awk": {
+      "version": "GNU Awk 5.4.1, API 4.1, PMA Avon 8-g1, (GNU MPFR 4.2.2, GNU MP 6.3.0)",
+      "sha256": "19deee5f93180e2ffd1ee02c13d29391a2513499661234545c279fd14b360dfe"
+    }
+  },
+  "verification": [
+    "Source identity before copy",
+    "Copied view equals source identity",
+    "Source identity after copy",
+    "Independent retained-view verification before and after traced commands"
+  ],
+  "boundaries": [
+    "Paths, regular-file bytes, modes and relative symlink targets participate in the canonical archive digest.",
+    "Ownership, timestamps and hard-link representation are normalized. ACLs, extended attributes and registry provenance are not attested.",
+    "Declared workspace links resolve through separately bound source/configuration and runtime perturbation evidence."
+  ],
+  "observerSources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "sha256": "db967f613d590745903d473c9466b5d5784d7fd178e63db141c4c63b2cf043e4"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts",
+      "sha256": "97d600ed0c4d9cc3cb97da7dc3011bcee24d27ce52eed074504cd1fae0d4fd36"
+    }
+  ]
+}

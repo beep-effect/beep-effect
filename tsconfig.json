@@ -2136,6 +2136,9 @@
       "@beep/test-utils/MemoryFileSystem": [
         "./packages/tooling/test-kit/test-utils/src/MemoryFileSystem/index.ts"
       ],
+      "@beep/repo-configs/cache": [
+        "./packages/tooling/policy-pack/repo-configs/src/cache/index.ts"
+      ],
       "@beep/repo-cli/commands/Graft": [
         "./packages/tooling/tool/cli/src/commands/Graft/index.ts"
       ],

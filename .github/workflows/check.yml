@@ -944,10 +944,12 @@ jobs:
             log_opts="${BEFORE_SHA}..HEAD"
           fi
 
+          # Global allowlists and targetRules require Gitleaks >= 8.25.0.
+          # Pin v8.30.1, matching the verified local scanner.
           docker run --rm \
             -v "$PWD:/repo" \
             -w /repo \
-            zricethezav/gitleaks@sha256:5d0147dc25c78f8cc2b9861ff8f5c9b4a41419ed60a9ce2217de5a215270b42b \
+            zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
             detect --source=/repo --config="/repo/${config_path}" --log-opts="$log_opts" --redact --no-banner
 
   security:

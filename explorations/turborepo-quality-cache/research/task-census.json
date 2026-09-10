@@ -1,0 +1,1364 @@
+{
+  "schemaVersion": "turbo-task-census/v1",
+  "capturedAt": "2026-09-04",
+  "repository": {
+    "head": "f56748290df89c5a07743fa7e2c8bc5da1fff51a",
+    "branch": "@slop/09-02-26",
+    "turboVersion": "2.10.12",
+    "packageManager": "bun",
+    "workspaceCount": 142,
+    "rootTaskDefinitionCount": 21,
+    "genericTaskFamilyCount": 20,
+    "configuredDryRunNodeCount": 2840,
+    "executableWorkspaceScriptCount": 1503
+  },
+  "method": {
+    "workspaceSource": "bunx turbo query ls --output json",
+    "executionSource": "presence of the matching script key in each of the 142 workspace package.json files",
+    "policySource": "root turbo.json at the captured repository head",
+    "populationEncoding": "Each task stores whichever set is shorter: executable package names or missing package names. Together with packages, the full executable surface is reconstructable.",
+    "cautions": [
+      "Turbo dry-run emits one configured node per package and requested task even when that package has no matching script. A configured node is not an executable computation.",
+      "The package-qualified @beep/api-docs#build entry overrides the ordinary build family and is not an additional script.",
+      "A package script may wrap several subprocesses or nested Turbo runs. This census is complete at the workspace-script boundary, not necessarily at the atomic-computation boundary.",
+      "cacheDeclaration records configuration posture only; it is not a cache-safety qualification."
+    ]
+  },
+  "rootGlobal": {
+    "schema": "https://v2-10-2.turborepo.dev/schema.json",
+    "ui": "tui",
+    "inputs": [
+      ".bun-version",
+      ".nvmrc",
+      "package.json",
+      "tsconfig.json",
+      "tsconfig.base.json",
+      "tsconfig.packages.json"
+    ],
+    "envNames": ["BEEP_ESLINT_PROFILE", "VITE_COSMOS_SPIKE"],
+    "passThroughEnvNames": [
+      "BEEP_AGENT_SESSION_ID",
+      "BEEP_NODE_BIN",
+      "BEEP_DOCGEN_CONCURRENCY",
+      "BEEP_QUALITY_CHECK_CONCURRENCY",
+      "BEEP_YEET_ADMISSION_LEASE_ID",
+      "BEEP_YEET_ADMISSION_WORKLOAD_PATH",
+      "BEEP_YEET_LANE_PROOF_MODE",
+      "BEEP_YEET_PROOF_BASE",
+      "BEEP_YEET_PUSH_REFSPEC",
+      "BEEP_YEET_STATE_ROOT",
+      "CLAUDE_CODE_CHILD_SESSION",
+      "CLAUDE_CODE_ENTRYPOINT",
+      "CLAUDE_CODE_HOST_SESSION_ID",
+      "CLAUDE_CODE_SESSION_ID",
+      "CLAUDE_PID",
+      "CLAUDE_SESSION_ID",
+      "CODEX_COMPANION_TRANSCRIPT_PATH",
+      "CODEX_SESSION_ID",
+      "CODEX_THREAD_ID",
+      "GITHUB_ACTIONS",
+      "REGEN_GOLDENS",
+      "TURBO_CACHE",
+      "TURBO_FORCE",
+      "TURBO_TOKEN",
+      "TURBO_TEAM",
+      "XDG_RUNTIME_DIR",
+      "NODE_TLS_REJECT_UNAUTHORIZED",
+      "CHAT_TRANSPORT",
+      "EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST",
+      "EPISTEMIC_POLICY_REVISION",
+      "ONTOLOGY_MCP_MUTATIONS_ENABLED",
+      "ONTOLOGY_WORKSPACE_ROOT",
+      "PORTLESS_*",
+      "AWS_*",
+      "SST_*"
+    ],
+    "cacheDir": "omitted-auto-worktree-sharing",
+    "futureFlags": {
+      "affectedUsingTaskInputs": true,
+      "filterUsingTasks": true,
+      "globalConfiguration": true
+    }
+  },
+  "packages": [
+    {
+      "name": "@beep/acp",
+      "path": "packages/drivers/acp"
+    },
+    {
+      "name": "@beep/agents-client",
+      "path": "packages/agents/client"
+    },
+    {
+      "name": "@beep/agents-domain",
+      "path": "packages/agents/domain"
+    },
+    {
+      "name": "@beep/agents-server",
+      "path": "packages/agents/server"
+    },
+    {
+      "name": "@beep/agents-tables",
+      "path": "packages/agents/tables"
+    },
+    {
+      "name": "@beep/agents-use-cases",
+      "path": "packages/agents/use-cases"
+    },
+    {
+      "name": "@beep/ai-provider-cli",
+      "path": "packages/drivers/ai-provider-cli"
+    },
+    {
+      "name": "@beep/ai-sync",
+      "path": "packages/tooling/library/ai-sync"
+    },
+    {
+      "name": "@beep/anthropic",
+      "path": "packages/drivers/anthropic"
+    },
+    {
+      "name": "@beep/api-docs",
+      "path": "apps/labs/api-docs"
+    },
+    {
+      "name": "@beep/api-transport",
+      "path": "packages/foundation/capability/api-transport"
+    },
+    {
+      "name": "@beep/architecture-lab-client",
+      "path": "packages/architecture-lab/client"
+    },
+    {
+      "name": "@beep/architecture-lab-config",
+      "path": "packages/architecture-lab/config"
+    },
+    {
+      "name": "@beep/architecture-lab-domain",
+      "path": "packages/architecture-lab/domain"
+    },
+    {
+      "name": "@beep/architecture-lab-proof",
+      "path": "apps/architecture-lab-proof"
+    },
+    {
+      "name": "@beep/architecture-lab-server",
+      "path": "packages/architecture-lab/server"
+    },
+    {
+      "name": "@beep/architecture-lab-tables",
+      "path": "packages/architecture-lab/tables"
+    },
+    {
+      "name": "@beep/architecture-lab-ui",
+      "path": "packages/architecture-lab/ui"
+    },
+    {
+      "name": "@beep/architecture-lab-use-cases",
+      "path": "packages/architecture-lab/use-cases"
+    },
+    {
+      "name": "@beep/box",
+      "path": "packages/drivers/box"
+    },
+    {
+      "name": "@beep/box-provisioning",
+      "path": "packages/drivers/box-provisioning"
+    },
+    {
+      "name": "@beep/brand",
+      "path": "packages/foundation/ui-system/brand"
+    },
+    {
+      "name": "@beep/chalk",
+      "path": "packages/foundation/capability/chalk"
+    },
+    {
+      "name": "@beep/ciops",
+      "path": "apps/labs/ciops"
+    },
+    {
+      "name": "@beep/codegen-kit",
+      "path": "packages/tooling/library/codegen-kit"
+    },
+    {
+      "name": "@beep/colors",
+      "path": "packages/foundation/capability/colors"
+    },
+    {
+      "name": "@beep/cosmos",
+      "path": "packages/drivers/cosmos"
+    },
+    {
+      "name": "@beep/data",
+      "path": "packages/foundation/primitive/data"
+    },
+    {
+      "name": "@beep/db-admin",
+      "path": "packages/_internal/db-admin"
+    },
+    {
+      "name": "@beep/discord",
+      "path": "packages/drivers/discord"
+    },
+    {
+      "name": "@beep/doc-text",
+      "path": "packages/drivers/doc-text"
+    },
+    {
+      "name": "@beep/dock",
+      "path": "packages/foundation/ui-system/dock"
+    },
+    {
+      "name": "@beep/dock-react",
+      "path": "packages/foundation/ui-system/dock-react"
+    },
+    {
+      "name": "@beep/documents-domain",
+      "path": "packages/documents/domain"
+    },
+    {
+      "name": "@beep/documents-server",
+      "path": "packages/documents/server"
+    },
+    {
+      "name": "@beep/documents-tables",
+      "path": "packages/documents/tables"
+    },
+    {
+      "name": "@beep/documents-use-cases",
+      "path": "packages/documents/use-cases"
+    },
+    {
+      "name": "@beep/drizzle",
+      "path": "packages/drivers/drizzle"
+    },
+    {
+      "name": "@beep/duckdb",
+      "path": "packages/drivers/duckdb"
+    },
+    {
+      "name": "@beep/ecfr",
+      "path": "packages/drivers/ecfr"
+    },
+    {
+      "name": "@beep/editor",
+      "path": "packages/foundation/ui-system/editor"
+    },
+    {
+      "name": "@beep/effect-drizzle",
+      "path": "packages/ecosystem/effect-drizzle"
+    },
+    {
+      "name": "@beep/epistemic-client",
+      "path": "packages/epistemic/client"
+    },
+    {
+      "name": "@beep/epistemic-config",
+      "path": "packages/epistemic/config"
+    },
+    {
+      "name": "@beep/epistemic-domain",
+      "path": "packages/epistemic/domain"
+    },
+    {
+      "name": "@beep/epistemic-server",
+      "path": "packages/epistemic/server"
+    },
+    {
+      "name": "@beep/epistemic-tables",
+      "path": "packages/epistemic/tables"
+    },
+    {
+      "name": "@beep/epistemic-ui",
+      "path": "packages/epistemic/ui"
+    },
+    {
+      "name": "@beep/epistemic-use-cases",
+      "path": "packages/epistemic/use-cases"
+    },
+    {
+      "name": "@beep/exiftool",
+      "path": "packages/drivers/exiftool"
+    },
+    {
+      "name": "@beep/face-detection",
+      "path": "packages/drivers/face-detection"
+    },
+    {
+      "name": "@beep/fc-runs",
+      "path": "packages/tooling/test-kit/fc-runs"
+    },
+    {
+      "name": "@beep/ffmpeg",
+      "path": "packages/drivers/ffmpeg"
+    },
+    {
+      "name": "@beep/file-processing",
+      "path": "packages/foundation/capability/file-processing"
+    },
+    {
+      "name": "@beep/firecrawl",
+      "path": "packages/drivers/firecrawl"
+    },
+    {
+      "name": "@beep/freshbooks",
+      "path": "packages/drivers/freshbooks"
+    },
+    {
+      "name": "@beep/gov-legal-mcp",
+      "path": "packages/drivers/gov-legal-mcp"
+    },
+    {
+      "name": "@beep/govinfo",
+      "path": "packages/drivers/govinfo"
+    },
+    {
+      "name": "@beep/graph-3d",
+      "path": "packages/drivers/graph-3d"
+    },
+    {
+      "name": "@beep/html",
+      "path": "packages/foundation/modeling/html"
+    },
+    {
+      "name": "@beep/hubspot",
+      "path": "packages/drivers/hubspot"
+    },
+    {
+      "name": "@beep/identity",
+      "path": "packages/foundation/modeling/identity"
+    },
+    {
+      "name": "@beep/infra",
+      "path": "infra"
+    },
+    {
+      "name": "@beep/langextract",
+      "path": "packages/foundation/capability/langextract"
+    },
+    {
+      "name": "@beep/law-practice-domain",
+      "path": "packages/law-practice/domain"
+    },
+    {
+      "name": "@beep/law-practice-server",
+      "path": "packages/law-practice/server"
+    },
+    {
+      "name": "@beep/law-practice-tables",
+      "path": "packages/law-practice/tables"
+    },
+    {
+      "name": "@beep/law-practice-use-cases",
+      "path": "packages/law-practice/use-cases"
+    },
+    {
+      "name": "@beep/lejeune-bolt-workbench",
+      "path": "apps/labs/lejeune-bolt-workbench"
+    },
+    {
+      "name": "@beep/lexical-schema",
+      "path": "packages/foundation/modeling/lexical"
+    },
+    {
+      "name": "@beep/libpff",
+      "path": "packages/drivers/libpff"
+    },
+    {
+      "name": "@beep/lint-rules",
+      "path": "packages/tooling/policy-pack/lint-rules"
+    },
+    {
+      "name": "@beep/m365",
+      "path": "packages/drivers/m365"
+    },
+    {
+      "name": "@beep/m365-mcp",
+      "path": "packages/drivers/m365-mcp"
+    },
+    {
+      "name": "@beep/mcp-kit",
+      "path": "packages/foundation/capability/mcp-kit"
+    },
+    {
+      "name": "@beep/md",
+      "path": "packages/foundation/modeling/md"
+    },
+    {
+      "name": "@beep/n3",
+      "path": "packages/drivers/n3"
+    },
+    {
+      "name": "@beep/nlp",
+      "path": "packages/foundation/modeling/nlp"
+    },
+    {
+      "name": "@beep/nlp-mcp",
+      "path": "packages/drivers/nlp-mcp"
+    },
+    {
+      "name": "@beep/nlp-processing",
+      "path": "packages/foundation/capability/nlp-processing"
+    },
+    {
+      "name": "@beep/obs",
+      "path": "packages/drivers/obs"
+    },
+    {
+      "name": "@beep/observability",
+      "path": "packages/foundation/capability/observability"
+    },
+    {
+      "name": "@beep/oip-web",
+      "path": "apps/oip-web"
+    },
+    {
+      "name": "@beep/onepassword-cli",
+      "path": "packages/drivers/onepassword-cli"
+    },
+    {
+      "name": "@beep/ontology",
+      "path": "packages/foundation/modeling/ontology"
+    },
+    {
+      "name": "@beep/ontology-client",
+      "path": "packages/ontology/client"
+    },
+    {
+      "name": "@beep/ontology-config",
+      "path": "packages/ontology/config"
+    },
+    {
+      "name": "@beep/ontology-domain",
+      "path": "packages/ontology/domain"
+    },
+    {
+      "name": "@beep/ontology-server",
+      "path": "packages/ontology/server"
+    },
+    {
+      "name": "@beep/ontology-ui",
+      "path": "packages/ontology/ui"
+    },
+    {
+      "name": "@beep/ontology-use-cases",
+      "path": "packages/ontology/use-cases"
+    },
+    {
+      "name": "@beep/openai",
+      "path": "packages/drivers/openai"
+    },
+    {
+      "name": "@beep/openai-compat",
+      "path": "packages/drivers/openai-compat"
+    },
+    {
+      "name": "@beep/openclaw",
+      "path": "packages/drivers/openclaw"
+    },
+    {
+      "name": "@beep/oxigraph",
+      "path": "packages/drivers/oxigraph"
+    },
+    {
+      "name": "@beep/pacer",
+      "path": "packages/drivers/pacer"
+    },
+    {
+      "name": "@beep/pandoc-ast",
+      "path": "packages/foundation/modeling/pandoc-ast"
+    },
+    {
+      "name": "@beep/pglite",
+      "path": "packages/drivers/pglite"
+    },
+    {
+      "name": "@beep/phoenix",
+      "path": "packages/drivers/phoenix"
+    },
+    {
+      "name": "@beep/postgres",
+      "path": "packages/drivers/postgres"
+    },
+    {
+      "name": "@beep/practice-kg-mcp",
+      "path": "apps/practice-kg-mcp"
+    },
+    {
+      "name": "@beep/pretext",
+      "path": "packages/drivers/pretext"
+    },
+    {
+      "name": "@beep/professional-desktop",
+      "path": "apps/professional-desktop"
+    },
+    {
+      "name": "@beep/provenance",
+      "path": "packages/foundation/modeling/provenance"
+    },
+    {
+      "name": "@beep/qa-capture",
+      "path": "packages/tooling/library/qa-capture"
+    },
+    {
+      "name": "@beep/rdf",
+      "path": "packages/foundation/modeling/rdf"
+    },
+    {
+      "name": "@beep/rdf-canonize",
+      "path": "packages/drivers/rdf-canonize"
+    },
+    {
+      "name": "@beep/repo-ai-metrics",
+      "path": "packages/tooling/library/ai-metrics"
+    },
+    {
+      "name": "@beep/repo-cli",
+      "path": "packages/tooling/tool/cli"
+    },
+    {
+      "name": "@beep/repo-configs",
+      "path": "packages/tooling/policy-pack/repo-configs"
+    },
+    {
+      "name": "@beep/repo-docgen",
+      "path": "packages/tooling/tool/docgen"
+    },
+    {
+      "name": "@beep/repo-utils",
+      "path": "packages/tooling/library/repo-utils"
+    },
+    {
+      "name": "@beep/runpod",
+      "path": "packages/drivers/runpod"
+    },
+    {
+      "name": "@beep/sanity",
+      "path": "packages/drivers/sanity"
+    },
+    {
+      "name": "@beep/schema",
+      "path": "packages/foundation/modeling/schema"
+    },
+    {
+      "name": "@beep/scratchpad",
+      "path": "scratchpad"
+    },
+    {
+      "name": "@beep/semantic-web",
+      "path": "packages/foundation/capability/semantic-web"
+    },
+    {
+      "name": "@beep/semantica",
+      "path": "apps/labs/semantica"
+    },
+    {
+      "name": "@beep/shacl",
+      "path": "packages/drivers/shacl"
+    },
+    {
+      "name": "@beep/shared-domain",
+      "path": "packages/shared/domain"
+    },
+    {
+      "name": "@beep/shared-tables",
+      "path": "packages/shared/tables"
+    },
+    {
+      "name": "@beep/shared-use-cases",
+      "path": "packages/shared/use-cases"
+    },
+    {
+      "name": "@beep/skill-contract",
+      "path": "packages/foundation/modeling/skill-contract"
+    },
+    {
+      "name": "@beep/storybook",
+      "path": "apps/storybook"
+    },
+    {
+      "name": "@beep/tailscale",
+      "path": "packages/drivers/tailscale"
+    },
+    {
+      "name": "@beep/test-utils",
+      "path": "packages/tooling/test-kit/test-utils"
+    },
+    {
+      "name": "@beep/tika",
+      "path": "packages/drivers/tika"
+    },
+    {
+      "name": "@beep/todox",
+      "path": "apps/todox"
+    },
+    {
+      "name": "@beep/trustgraph-workbench",
+      "path": "apps/labs/trustgraph-workbench"
+    },
+    {
+      "name": "@beep/tsgo-shim",
+      "path": "tools/tsgo-shim"
+    },
+    {
+      "name": "@beep/types",
+      "path": "packages/foundation/primitive/types"
+    },
+    {
+      "name": "@beep/ui",
+      "path": "packages/foundation/ui-system/ui"
+    },
+    {
+      "name": "@beep/uspto",
+      "path": "packages/drivers/uspto"
+    },
+    {
+      "name": "@beep/uspto-mcp",
+      "path": "packages/drivers/uspto-mcp"
+    },
+    {
+      "name": "@beep/utils",
+      "path": "packages/foundation/modeling/utils"
+    },
+    {
+      "name": "@beep/venice-ai",
+      "path": "packages/drivers/venice-ai"
+    },
+    {
+      "name": "@beep/wink",
+      "path": "packages/drivers/wink"
+    },
+    {
+      "name": "@beep/workspace-domain",
+      "path": "packages/workspace/domain"
+    },
+    {
+      "name": "@beep/workspace-server",
+      "path": "packages/workspace/server"
+    },
+    {
+      "name": "@beep/workspace-tables",
+      "path": "packages/workspace/tables"
+    },
+    {
+      "name": "@beep/workspace-use-cases",
+      "path": "packages/workspace/use-cases"
+    },
+    {
+      "name": "@beep/xai",
+      "path": "packages/drivers/xai"
+    }
+  ],
+  "taskFamilies": [
+    {
+      "task": "build",
+      "cacheDeclaration": true,
+      "persistent": false,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
+      "envNames": [
+        "APP_ADMINS_EMAILS",
+        "ALLOWED_EMAILS",
+        "DATABASE_URL",
+        "DATABASE_URL_UNPOOLED",
+        "EMAIL_*",
+        "AUTH_*",
+        "OPENAI_*",
+        "SECURITY_*",
+        "OAUTH_*",
+        "NEXT_PUBLIC_*",
+        "LIVEBLOCKS_*",
+        "RESEND_*"
+      ],
+      "passThroughEnvNames": [],
+      "outputs": [
+        "dist/**",
+        "build/**",
+        ".next/**",
+        "next-env.d.ts",
+        ".expo/**",
+        "_next/**",
+        ".output/**",
+        ".vercel/output/**",
+        "storybook-static/**",
+        "**/node_modules/.tmp/*.tsbuildinfo",
+        "!**/.turbo/**",
+        "!.next/cache/**"
+      ],
+      "executableCount": 140,
+      "population": {
+        "mode": "missing-packages",
+        "packages": ["@beep/scratchpad", "@beep/tsgo-shim"]
+      }
+    },
+    {
+      "task": "check",
+      "cacheDeclaration": "omitted-default-true",
+      "persistent": false,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 140,
+      "population": {
+        "mode": "missing-packages",
+        "packages": ["@beep/scratchpad", "@beep/tsgo-shim"]
+      }
+    },
+    {
+      "task": "lint",
+      "cacheDeclaration": true,
+      "persistent": false,
+      "dependsOn": ["^lint"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/biome.jsonc",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/rules/**",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**",
+        "!$TURBO_ROOT$/tsconfig*.json",
+        "!.beep/**"
+      ],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 140,
+      "population": {
+        "mode": "missing-packages",
+        "packages": ["@beep/scratchpad", "@beep/tsgo-shim"]
+      }
+    },
+    {
+      "task": "audit",
+      "cacheDeclaration": true,
+      "persistent": false,
+      "dependsOn": ["^audit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/biome.jsonc",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "!.beep/**"
+      ],
+      "envNames": [
+        "APP_ADMINS_EMAILS",
+        "ALLOWED_EMAILS",
+        "DATABASE_URL",
+        "DATABASE_URL_UNPOOLED",
+        "EMAIL_*",
+        "AUTH_*",
+        "OPENAI_*",
+        "SECURITY_*",
+        "OAUTH_*",
+        "NEXT_PUBLIC_*",
+        "LIVEBLOCKS_*",
+        "RESEND_*",
+        "BEEP_TEST_*",
+        "BEEP_TIKA_*",
+        "CI"
+      ],
+      "passThroughEnvNames": [],
+      "outputs": [
+        "dist/**",
+        "build/**",
+        ".next/**",
+        "next-env.d.ts",
+        ".expo/**",
+        "_next/**",
+        ".output/**",
+        ".vercel/output/**",
+        "docs/**",
+        "**/node_modules/.tmp/*.tsbuildinfo",
+        "!**/.turbo/**",
+        "!.next/cache/**"
+      ],
+      "executableCount": 139,
+      "population": {
+        "mode": "missing-packages",
+        "packages": ["@beep/md", "@beep/scratchpad", "@beep/tsgo-shim"]
+      }
+    },
+    {
+      "task": "docgen",
+      "cacheDeclaration": true,
+      "persistent": false,
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [
+        "docs/**",
+        ".beep/docgen/**",
+        ".jsdoc-loop/generated-docs/**"
+      ],
+      "executableCount": 132,
+      "population": {
+        "mode": "missing-packages",
+        "packages": [
+          "@beep/api-docs",
+          "@beep/ciops",
+          "@beep/lejeune-bolt-workbench",
+          "@beep/lint-rules",
+          "@beep/oip-web",
+          "@beep/semantica",
+          "@beep/storybook",
+          "@beep/todox",
+          "@beep/trustgraph-workbench",
+          "@beep/tsgo-shim"
+        ]
+      }
+    },
+    {
+      "task": "test",
+      "cacheDeclaration": "omitted-default-true",
+      "persistent": false,
+      "dependsOn": [],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
+        "!.beep/**"
+      ],
+      "envNames": [],
+      "passThroughEnvNames": [
+        "GITHUB_STEP_SUMMARY",
+        "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
+        "BEEP_NODE_BIN",
+        "BEEP_YEET_ADMISSION_LEASE_ID",
+        "BEEP_YEET_ADMISSION_WORKLOAD_PATH"
+      ],
+      "outputs": [],
+      "executableCount": 140,
+      "population": {
+        "mode": "missing-packages",
+        "packages": ["@beep/scratchpad", "@beep/tsgo-shim"]
+      }
+    },
+    {
+      "task": "test:property",
+      "cacheDeclaration": "omitted-default-true",
+      "persistent": false,
+      "dependsOn": [],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
+        "!.beep/**"
+      ],
+      "envNames": ["BEEP_FC_NUM_RUNS", "BEEP_FC_SEED"],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 96,
+      "population": {
+        "mode": "missing-packages",
+        "packages": [
+          "@beep/agents-tables",
+          "@beep/api-docs",
+          "@beep/architecture-lab-client",
+          "@beep/box-provisioning",
+          "@beep/brand",
+          "@beep/ciops",
+          "@beep/codegen-kit",
+          "@beep/data",
+          "@beep/dock",
+          "@beep/dock-react",
+          "@beep/documents-domain",
+          "@beep/documents-server",
+          "@beep/documents-use-cases",
+          "@beep/effect-drizzle",
+          "@beep/epistemic-client",
+          "@beep/epistemic-config",
+          "@beep/epistemic-server",
+          "@beep/epistemic-ui",
+          "@beep/exiftool",
+          "@beep/fc-runs",
+          "@beep/freshbooks",
+          "@beep/gov-legal-mcp",
+          "@beep/infra",
+          "@beep/law-practice-server",
+          "@beep/law-practice-tables",
+          "@beep/lejeune-bolt-workbench",
+          "@beep/obs",
+          "@beep/ontology-client",
+          "@beep/ontology-config",
+          "@beep/ontology-ui",
+          "@beep/openai",
+          "@beep/openclaw",
+          "@beep/practice-kg-mcp",
+          "@beep/pretext",
+          "@beep/qa-capture",
+          "@beep/scratchpad",
+          "@beep/semantica",
+          "@beep/shared-tables",
+          "@beep/shared-use-cases",
+          "@beep/skill-contract",
+          "@beep/storybook",
+          "@beep/tailscale",
+          "@beep/todox",
+          "@beep/trustgraph-workbench",
+          "@beep/tsgo-shim",
+          "@beep/types"
+        ]
+      }
+    },
+    {
+      "task": "transit",
+      "cacheDeclaration": "omitted-default-true",
+      "persistent": false,
+      "dependsOn": ["^transit"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 0,
+      "population": {
+        "mode": "executable-packages",
+        "packages": []
+      }
+    },
+    {
+      "task": "lint:fix",
+      "cacheDeclaration": false,
+      "persistent": false,
+      "dependsOn": ["^lint:fix"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/biome.jsonc",
+        "!$TURBO_ROOT$/tsconfig*.json",
+        "!.beep/**"
+      ],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 139,
+      "population": {
+        "mode": "missing-packages",
+        "packages": [
+          "@beep/effect-drizzle",
+          "@beep/scratchpad",
+          "@beep/tsgo-shim"
+        ]
+      }
+    },
+    {
+      "task": "package-test-typecheck",
+      "cacheDeclaration": false,
+      "persistent": false,
+      "dependsOn": ["^transit"],
+      "inputs": [
+        "package.json",
+        "scripts/**",
+        "server/**",
+        "src/**",
+        "src-tauri/**",
+        "test/**",
+        "tsconfig*.json",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts"
+      ],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [".turbo/package-test-typecheck-result.json"],
+      "executableCount": 140,
+      "population": {
+        "mode": "missing-packages",
+        "packages": ["@beep/scratchpad", "@beep/tsgo-shim"]
+      }
+    },
+    {
+      "task": "test:integration",
+      "cacheDeclaration": false,
+      "persistent": false,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
+        "!.beep/**"
+      ],
+      "envNames": [
+        "AI_VENICE_API_KEY",
+        "BEEP_TEST_*",
+        "BEEP_TIKA_*",
+        "CLOUD_BOX_TOKEN",
+        "FIRECRAWL_API_KEY"
+      ],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 90,
+      "population": {
+        "mode": "missing-packages",
+        "packages": [
+          "@beep/agents-domain",
+          "@beep/agents-use-cases",
+          "@beep/anthropic",
+          "@beep/api-docs",
+          "@beep/chalk",
+          "@beep/ciops",
+          "@beep/colors",
+          "@beep/cosmos",
+          "@beep/data",
+          "@beep/duckdb",
+          "@beep/epistemic-domain",
+          "@beep/epistemic-use-cases",
+          "@beep/graph-3d",
+          "@beep/identity",
+          "@beep/infra",
+          "@beep/langextract",
+          "@beep/law-practice-domain",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/lejeune-bolt-workbench",
+          "@beep/lint-rules",
+          "@beep/md",
+          "@beep/n3",
+          "@beep/nlp",
+          "@beep/nlp-processing",
+          "@beep/observability",
+          "@beep/oip-web",
+          "@beep/oxigraph",
+          "@beep/practice-kg-mcp",
+          "@beep/provenance",
+          "@beep/rdf",
+          "@beep/rdf-canonize",
+          "@beep/repo-ai-metrics",
+          "@beep/repo-cli",
+          "@beep/repo-configs",
+          "@beep/repo-docgen",
+          "@beep/repo-utils",
+          "@beep/schema",
+          "@beep/scratchpad",
+          "@beep/semantic-web",
+          "@beep/semantica",
+          "@beep/shacl",
+          "@beep/shared-domain",
+          "@beep/shared-tables",
+          "@beep/storybook",
+          "@beep/todox",
+          "@beep/trustgraph-workbench",
+          "@beep/tsgo-shim",
+          "@beep/types",
+          "@beep/ui",
+          "@beep/utils",
+          "@beep/workspace-domain"
+        ]
+      }
+    },
+    {
+      "task": "test:integration:parallel",
+      "cacheDeclaration": false,
+      "persistent": false,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
+        "!.beep/**"
+      ],
+      "envNames": [
+        "AI_VENICE_API_KEY",
+        "BEEP_TEST_*",
+        "BEEP_TIKA_*",
+        "CLOUD_BOX_TOKEN",
+        "FIRECRAWL_API_KEY"
+      ],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 24,
+      "population": {
+        "mode": "executable-packages",
+        "packages": [
+          "@beep/acp",
+          "@beep/architecture-lab-server",
+          "@beep/box",
+          "@beep/db-admin",
+          "@beep/documents-server",
+          "@beep/effect-drizzle",
+          "@beep/epistemic-server",
+          "@beep/exiftool",
+          "@beep/ffmpeg",
+          "@beep/firecrawl",
+          "@beep/libpff",
+          "@beep/m365",
+          "@beep/nlp-mcp",
+          "@beep/obs",
+          "@beep/openclaw",
+          "@beep/pandoc-ast",
+          "@beep/pglite",
+          "@beep/professional-desktop",
+          "@beep/qa-capture",
+          "@beep/runpod",
+          "@beep/shared-use-cases",
+          "@beep/tika",
+          "@beep/venice-ai",
+          "@beep/workspace-server"
+        ]
+      }
+    },
+    {
+      "task": "test:integration:serial",
+      "cacheDeclaration": false,
+      "persistent": false,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
+        "!.beep/**"
+      ],
+      "envNames": ["BEEP_TEST_*"],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 3,
+      "population": {
+        "mode": "executable-packages",
+        "packages": ["@beep/drizzle", "@beep/postgres", "@beep/test-utils"]
+      }
+    },
+    {
+      "task": "coverage",
+      "cacheDeclaration": false,
+      "persistent": false,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "package.json",
+        "server/**",
+        "src/**",
+        "src-tauri/**",
+        "test/**",
+        "tsconfig*.json",
+        "vitest.config.ts",
+        "vitest.coverage.config.ts",
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts"
+      ],
+      "envNames": [
+        "BEEP_FC_SEED",
+        "NODE_OPTIONS",
+        "VITEST_COVERAGE_REPORT_ONLY",
+        "VITEST_COVERAGE_RATCHET"
+      ],
+      "passThroughEnvNames": [],
+      "outputs": ["coverage/**"],
+      "executableCount": 134,
+      "population": {
+        "mode": "missing-packages",
+        "packages": [
+          "@beep/api-docs",
+          "@beep/ciops",
+          "@beep/lejeune-bolt-workbench",
+          "@beep/scratchpad",
+          "@beep/semantica",
+          "@beep/storybook",
+          "@beep/trustgraph-workbench",
+          "@beep/tsgo-shim"
+        ]
+      }
+    },
+    {
+      "task": "codegen",
+      "cacheDeclaration": false,
+      "persistent": false,
+      "dependsOn": ["^codegen"],
+      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 34,
+      "population": {
+        "mode": "executable-packages",
+        "packages": [
+          "@beep/acp",
+          "@beep/api-docs",
+          "@beep/box",
+          "@beep/chalk",
+          "@beep/ciops",
+          "@beep/colors",
+          "@beep/data",
+          "@beep/db-admin",
+          "@beep/ecfr",
+          "@beep/gov-legal-mcp",
+          "@beep/govinfo",
+          "@beep/identity",
+          "@beep/infra",
+          "@beep/lejeune-bolt-workbench",
+          "@beep/nlp",
+          "@beep/nlp-processing",
+          "@beep/observability",
+          "@beep/oip-web",
+          "@beep/professional-desktop",
+          "@beep/rdf-canonize",
+          "@beep/repo-ai-metrics",
+          "@beep/repo-cli",
+          "@beep/repo-configs",
+          "@beep/repo-docgen",
+          "@beep/repo-utils",
+          "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/semantica",
+          "@beep/storybook",
+          "@beep/test-utils",
+          "@beep/todox",
+          "@beep/trustgraph-workbench",
+          "@beep/types",
+          "@beep/utils"
+        ]
+      }
+    },
+    {
+      "task": "dev",
+      "cacheDeclaration": false,
+      "persistent": true,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 8,
+      "population": {
+        "mode": "executable-packages",
+        "packages": [
+          "@beep/api-docs",
+          "@beep/ciops",
+          "@beep/lejeune-bolt-workbench",
+          "@beep/oip-web",
+          "@beep/professional-desktop",
+          "@beep/semantica",
+          "@beep/todox",
+          "@beep/trustgraph-workbench"
+        ]
+      }
+    },
+    {
+      "task": "storybook",
+      "cacheDeclaration": false,
+      "persistent": true,
+      "dependsOn": [],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 1,
+      "population": {
+        "mode": "executable-packages",
+        "packages": ["@beep/storybook"]
+      }
+    },
+    {
+      "task": "storybook:build",
+      "cacheDeclaration": "omitted-default-true",
+      "persistent": false,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/apps/storybook/.storybook/**",
+        "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts",
+        "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/src/**",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/assets/**",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/styles/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/src/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
+      ],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": ["storybook-static/**"],
+      "executableCount": 1,
+      "population": {
+        "mode": "executable-packages",
+        "packages": ["@beep/storybook"]
+      }
+    },
+    {
+      "task": "storybook:start",
+      "cacheDeclaration": false,
+      "persistent": true,
+      "dependsOn": ["storybook:build"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 1,
+      "population": {
+        "mode": "executable-packages",
+        "packages": ["@beep/storybook"]
+      }
+    },
+    {
+      "task": "test:storybook",
+      "cacheDeclaration": false,
+      "persistent": false,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/apps/storybook/.storybook/**",
+        "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts",
+        "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/src/**",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/src/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
+      ],
+      "envNames": [],
+      "passThroughEnvNames": [],
+      "outputs": [],
+      "executableCount": 1,
+      "population": {
+        "mode": "executable-packages",
+        "packages": ["@beep/storybook"]
+      }
+    }
+  ],
+  "packageOverrides": [
+    {
+      "path": "apps/labs/api-docs/turbo.json",
+      "role": "production",
+      "changes": ["build.outputs=[]"]
+    },
+    {
+      "path": "apps/professional-desktop/turbo.json",
+      "role": "production",
+      "changes": ["check.inputs adds UI stories and db-admin drizzle"]
+    },
+    {
+      "path": "apps/storybook/turbo.json",
+      "role": "production",
+      "changes": ["check.dependsOn and check.inputs"]
+    },
+    {
+      "path": "infra/turbo.json",
+      "role": "production",
+      "changes": ["build.outputs=[]"]
+    },
+    {
+      "path": "packages/tooling/library/ai-sync/turbo.json",
+      "role": "production",
+      "changes": [
+        "check/audit inputs add .codex/config.toml and .claude/settings.json"
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/fixtures/proof-epoch/turbo.json",
+      "role": "test-fixture",
+      "changes": ["proof-epoch fixture only"]
+    }
+  ],
+  "totalsByDeclaration": {
+    "explicitTrue": {
+      "taskFamilies": 4,
+      "executableWorkspaceScripts": 551
+    },
+    "explicitFalse": {
+      "taskFamilies": 11,
+      "executableWorkspaceScripts": 575
+    },
+    "omittedDefaultTrue": {
+      "taskFamilies": 5,
+      "executableWorkspaceScripts": 377
+    },
+    "packageQualifiedOverrides": 1
+  }
+}

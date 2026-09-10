@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "cache-alias-open-presence/v1",
+  "authority": "Positive file-open observations from an incomplete bounded trace; no claim of complete reads, absence, semantic divergence or qualification.",
+  "sourceRevision": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+  "trace": {
+    "path": ".beep/qualification-local-preflight/alias-file-reads-ugf7418h/baseline.trace",
+    "sha256": "87231024b844eb9ea83db2413d55bba5eecfd1042e1dfec9a5fe5baaaa647542",
+    "bytes": 8388608,
+    "complete": false,
+    "rejection": "8 MiB capture limit reached; no completed-execution verdict credited"
+  },
+  "observations": [
+    {
+      "consumer": "Bun wrapper",
+      "path": "tsconfig.json",
+      "syscall": "openat",
+      "mode": "read-only",
+      "result": "success",
+      "line": 31
+    },
+    {
+      "consumer": "Bun wrapper",
+      "path": "tsconfig.json",
+      "syscall": "openat",
+      "mode": "read-only",
+      "result": "success",
+      "line": 121
+    },
+    {
+      "consumer": "Biome worker",
+      "path": "tsconfig.json",
+      "syscall": "openat",
+      "mode": "read-only",
+      "result": "success",
+      "line": 14288,
+      "resumedLine": 14292
+    }
+  ]
+}

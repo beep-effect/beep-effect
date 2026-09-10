@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "cache-installed-dependency-boundary/v1",
+  "authority": "Filesystem/package metadata and fresh-wrapper probe requirements only; no installed-dependency runtime equivalence or qualification.",
+  "sourceRevision": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+  "fixtureNodeModulesPresent": false,
+  "fixtureIdentityNodeModulesPresent": false,
+  "normalWorkspaceDependencies": [
+    {
+      "name": "effect",
+      "version": "4.0.0-rc.112",
+      "manifest": {
+        "path": "node_modules/effect/package.json",
+        "sha256": "0ad20c73dfbe482996f046a0c1170b1a08d6fea7effeb6767fd247cdad53a56d"
+      }
+    },
+    {
+      "name": "type-fest",
+      "version": "5.9.0",
+      "manifest": {
+        "path": "node_modules/type-fest/package.json",
+        "sha256": "a2e0db80f15c56f59cd3cf9ba21ffe0757bf9174c3568f2d2fccfd9f3effd821"
+      }
+    },
+    {
+      "name": "@types/node",
+      "version": "26.5.0",
+      "manifest": {
+        "path": "node_modules/@types/node/package.json",
+        "sha256": "4584b766e56e05662e14e71a7eb14fe5a5be032d77bde37d1121b7b73d073f6c"
+      }
+    },
+    {
+      "name": "@effect/vitest",
+      "version": "4.0.0-rc.112",
+      "manifest": {
+        "path": "node_modules/@effect/vitest/package.json",
+        "sha256": "830d2399893d1c3d983f2c756dbb3363b905b1238634115fd77622ef0a9b3e93"
+      }
+    }
+  ],
+  "remaining": [
+    "Compare the exact selected lint command in the existing fixture against a read-only installed dependency view.",
+    "Perturb a deprecated external export while preserving the selected source to test whether omitting installed packages hides a lint failure.",
+    "Bind every runtime dependency view to an integrity-checked lockfile/materialization receipt before claiming equivalence.",
+    "Preserve whole-package and graph-only identities; no installed dependency content is accepted merely because package versions match."
+  ]
+}

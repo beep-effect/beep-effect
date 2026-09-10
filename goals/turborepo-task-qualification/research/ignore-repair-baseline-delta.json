@@ -1,0 +1,130 @@
+{
+  "schemaVersion": "cache-ignore-repair-baseline-delta/v1",
+  "populationUnchanged": true,
+  "workspaces": 142,
+  "graphNodes": 2840,
+  "executableNodes": 1480,
+  "globalConfigurationUnchanged": true,
+  "changes": [
+    {
+      "id": "@beep/identity#lint",
+      "field": "configuration",
+      "before": {
+        "cache": false,
+        "inputs": [
+          "!../../../../tsconfig*.json",
+          "!.beep/**",
+          "../../../../.bun-version",
+          "../../../../.nvmrc",
+          "../../../../biome.jsonc",
+          "../../../../package.json",
+          "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+          "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+          "../../../../tsconfig.base.json",
+          "../../../../tsconfig.json",
+          "../../../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "^lint"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "after": {
+        "cache": false,
+        "inputs": [
+          "!../../../../tsconfig*.json",
+          "!.beep/**",
+          "../../../../.bun-version",
+          "../../../../.gitignore",
+          "../../../../.nvmrc",
+          "../../../../biome.jsonc",
+          "../../../../package.json",
+          "../../../../packages/.gitignore",
+          "../../../../packages/foundation/.gitignore",
+          "../../../../packages/foundation/modeling/.gitignore",
+          "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+          "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+          "../../../../tsconfig.base.json",
+          "../../../../tsconfig.json",
+          "../../../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "^lint"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "id": "@beep/types#lint",
+      "field": "configuration",
+      "before": {
+        "cache": true,
+        "inputs": [
+          "!../../../../tsconfig*.json",
+          "!.beep/**",
+          "../../../../.bun-version",
+          "../../../../.nvmrc",
+          "../../../../biome.jsonc",
+          "../../../../package.json",
+          "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+          "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+          "../../../../tsconfig.base.json",
+          "../../../../tsconfig.json",
+          "../../../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "^lint"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "after": {
+        "cache": false,
+        "inputs": [
+          "!../../../../tsconfig*.json",
+          "!.beep/**",
+          "../../../../.bun-version",
+          "../../../../.nvmrc",
+          "../../../../biome.jsonc",
+          "../../../../package.json",
+          "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+          "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+          "../../../../tsconfig.base.json",
+          "../../../../tsconfig.json",
+          "../../../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "^lint"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    }
+  ],
+  "census": {
+    "path": ".beep/qualification-local-preflight/census-ignore-repair.json",
+    "sha256": "5a6faf04b84d9d2050bfdaaed7d0d2998ab8326169af40467c4763692c4d9d1c"
+  }
+}

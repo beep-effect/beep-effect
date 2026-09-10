@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "cache-local-preflight-observations/v1",
+  "authority": "Exploratory observations only; no promotion matrix counts or remote proof.",
+  "observedAt": "2026-09-09T04:17:00.812774+00:00",
+  "worktree": "qualification-pilot-a1",
+  "checkoutRevision": "bf6014ae31531bf4dc18f7f6eedafa96a700d876",
+  "retentionDays": 7,
+  "clientPins": [
+    {
+      "version": "2.10.12",
+      "platformPackage": "@turbo/linux-64",
+      "metadataUrl": "https://registry.npmjs.org/@turbo%2Flinux-64/2.10.12",
+      "tarballUrl": "https://registry.npmjs.org/@turbo/linux-64/-/linux-64-2.10.12.tgz",
+      "integrity": "sha512-lr7KIotukvjZwEXiFSYAeOH3BWzjFVBbSzTbv0fuGFsNukYyH0+g1hB5ecqnJkgkYU+KHEMG1edOhnjiKON1wQ==",
+      "tarballSha256": "78dbe8743ccefed0bee9ccbcfe78086eddd83175ecae53537fbc601975134e31",
+      "binarySha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+      "observedAt": "2026-09-09T04:04:19.899494+00:00",
+      "bytes": 45055776
+    },
+    {
+      "version": "2.10.13-canary.1",
+      "platformPackage": "@turbo/linux-64",
+      "metadataUrl": "https://registry.npmjs.org/@turbo%2Flinux-64/2.10.13-canary.1",
+      "tarballUrl": "https://registry.npmjs.org/@turbo/linux-64/-/linux-64-2.10.13-canary.1.tgz",
+      "integrity": "sha512-kolrLDYjcbDCs3vJdpAnYHqz6B3vCVZ5x0KTd9LYosGU2Eb6QIPrwp2kZLV6dLbK53dtZ93bThW7ALuFsXmPsA==",
+      "tarballSha256": "9746bc2b2e4119c8cb64b8fd1d97c46d495a8ff504b9899d71403b5babbf2ae9",
+      "binarySha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "observedAt": "2026-09-09T04:04:20.858816+00:00",
+      "bytes": 45043488
+    }
+  ],
+  "profile": {
+    "profile": "local-linux-x64-bun1.4.1",
+    "kernel": "Linux 7.2.0-1-cachyos",
+    "libc": "glibc 2.44",
+    "bun": {
+      "version": "1.4.1",
+      "sha256": "69293d3be4f0d6d624ca8581af4574435fa39209ab67e89eb03912866f3e14cb"
+    },
+    "node": {
+      "version": "v24.20.0",
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7"
+    },
+    "turbo": {
+      "version": "2.10.12",
+      "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    },
+    "sources": [
+      {
+        "path": ".bun-version",
+        "sha256": "7d072b48526b023950e4c48db01e8c273554a6401119f5691e7589ba9bc65d9d"
+      },
+      {
+        "path": ".nvmrc",
+        "sha256": "68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53"
+      },
+      {
+        "path": "bun.lock",
+        "sha256": "c7ee991bf11105d0f959678eb80867354674476f0e36d2b46931fa05dafecc5b"
+      },
+      {
+        "path": "node_modules/turbo/bin/turbo",
+        "sha256": "dd000efaa64f567f0986a84d363bbe7cf95a831010f6f6dbfd21770c89a8523d"
+      },
+      {
+        "path": "node_modules/@biomejs/biome/bin/biome",
+        "sha256": "7ffb4d217e5ddefcc19ca6afe76bb982f5eb36c9a124448105195fbcfc84bd77"
+      }
+    ]
+  },
+  "tracingTool": {
+    "version": "strace -- version 7.0",
+    "packageSha256": "7535621edccda5a003e58cc40edb52bf677979b7596a29009910d4831aa4d3b6",
+    "binarySha256": "ca7daa61ec8d0c765ded1d80bdd81820d2d6433272a1bffb2b6111f244a47361",
+    "signature": "verified against installed Arch Linux public keyring"
+  },
+  "tracedFresh": {
+    "exitCode": 0,
+    "tasks": ["@beep/types#lint", "@beep/identity#lint"],
+    "cache": "disabled for reads and writes",
+    "network": "disabled by bwrap network namespace",
+    "trace": {
+      "path": ".beep/qualification/preflight-stable-native/trace.log",
+      "bytes": 61982438,
+      "sha256": "601c4d80c179dad9526b8dbd17c2598823c76ce179ce0cbc87733ff373472c1c",
+      "limitBytes": 67108864
+    },
+    "observedFileWriteOpenPaths": [".turbo/runs/<run-id>.json"],
+    "observedPrograms": ["turbo", "bun", "biome", "node", "sh", "ldd"],
+    "openObligations": [
+      "Per-process read attribution and before/after filesystem comparison are not complete.",
+      "Main checkout has 40 identity inputs; linked root has 43 despite matching source bytes. Difference is unaccepted pending attribution.",
+      "Initial 16 MiB trace failed with exit 153; it is excluded from evidence counts."
+    ]
+  },
+  "unsafeSuccessfulWarning": {
+    "authority": "exploratory negative observation; no qualification count",
+    "client": "2.10.12",
+    "exitCode": 0,
+    "canaryExposed": true,
+    "streams": {
+      "stdout": {
+        "bytes": 1755,
+        "sha256": "a00f985875db51ce93e309e2726f3d99f47135fca46ce33fdd76cf796c8d269e"
+      },
+      "stderr": {
+        "bytes": 32,
+        "sha256": "e5b1730b91d002df43cac54a7956a8e249d0bb9c3c57b19347754555046ecd55"
+      }
+    },
+    "network": "disabled by network namespace",
+    "cache": "no reads or writes"
+  },
+  "disposition": "Exclude identity lint and disable only its cache flag using an inheriting child Turbo configuration. Test repair before any candidate readmission.",
+  "matrixCounts": {
+    "freshPairs": 0,
+    "remotePairs": 0,
+    "shadowDecisions": 0
+  }
+}

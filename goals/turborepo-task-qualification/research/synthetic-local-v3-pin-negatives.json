@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "cache-runtime-pin-negatives/v1",
+  "authority": "Native request rejection checks; no execution, replay or qualification credit.",
+  "results": [
+    {
+      "case": "bun-digest",
+      "exitCode": 1,
+      "expectedFailure": "requested Bun binary does not match its exact pin",
+      "receiptAbsent": true,
+      "passed": true,
+      "captureSha256": "84afad0161674d6d37a87ab122506cc2a556f2f6b63c7ae424e2b697ecfb699c"
+    },
+    {
+      "case": "alternate-bun-version",
+      "exitCode": 1,
+      "expectedFailure": "observed sandbox Bun version differs from its exact pin",
+      "receiptAbsent": true,
+      "passed": true,
+      "captureSha256": "692e39494318664a6dce3ede8898a664dec30ef98d2edbd55299461282d68a8d"
+    },
+    {
+      "case": "identical-runtime",
+      "exitCode": 1,
+      "expectedFailure": "requires two distinct Bun versions and binaries",
+      "receiptAbsent": true,
+      "passed": true,
+      "captureSha256": "f256f2e7d94736c59d151879f2e2fc19aaee4b8f3404ec36953c0385ae9c0f98"
+    },
+    {
+      "case": "turbo-digest",
+      "exitCode": 1,
+      "expectedFailure": "requested Turbo binary does not match its exact pin",
+      "receiptAbsent": true,
+      "passed": true,
+      "captureSha256": "b63ad1163d6ce4741053947212d79e0d4202169b312d795a0a5abd5c81faa929"
+    }
+  ]
+}

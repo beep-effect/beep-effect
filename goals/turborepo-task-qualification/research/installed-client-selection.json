@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "cache-client-selection-observation/v1",
+  "authority": "Native version metadata only; no task execution or qualification.",
+  "observations": [
+    {
+      "requestedVersion": "2.10.12",
+      "requestedBinarySha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+      "location": "outside-project",
+      "skipInfer": false,
+      "exitCode": 0,
+      "reportedVersion": "2.10.12",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "requestedVersion": "2.10.12",
+      "requestedBinarySha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+      "location": "outside-project",
+      "skipInfer": true,
+      "exitCode": 0,
+      "reportedVersion": "2.10.12",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "requestedVersion": "2.10.12",
+      "requestedBinarySha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+      "location": "installed-project",
+      "skipInfer": false,
+      "exitCode": 0,
+      "reportedVersion": "2.10.12",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "requestedVersion": "2.10.12",
+      "requestedBinarySha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+      "location": "installed-project",
+      "skipInfer": true,
+      "exitCode": 0,
+      "reportedVersion": "2.10.12",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "requestedVersion": "2.10.13-canary.1",
+      "requestedBinarySha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "location": "outside-project",
+      "skipInfer": false,
+      "exitCode": 0,
+      "reportedVersion": "2.10.13-canary.1",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "requestedVersion": "2.10.13-canary.1",
+      "requestedBinarySha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "location": "outside-project",
+      "skipInfer": true,
+      "exitCode": 0,
+      "reportedVersion": "2.10.13-canary.1",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "requestedVersion": "2.10.13-canary.1",
+      "requestedBinarySha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "location": "installed-project",
+      "skipInfer": false,
+      "exitCode": 0,
+      "reportedVersion": "2.10.12",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "requestedVersion": "2.10.13-canary.1",
+      "requestedBinarySha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "location": "installed-project",
+      "skipInfer": true,
+      "exitCode": 0,
+      "reportedVersion": "2.10.13-canary.1",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

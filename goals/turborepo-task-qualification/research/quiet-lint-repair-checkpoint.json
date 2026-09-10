@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "cache-quiet-lint-repair-checkpoint/v1",
+  "authority": "Verified bounded lint-capture repair; excluded state and disabled cache retained. No qualified real pilot yet.",
+  "sources": [
+    {
+      "path": "packages/foundation/modeling/identity/package.json",
+      "sha256": "acd576bf40b73625e0a5f2eb1c5da44470ee0e6cafe426f99d6c70b2e84b6018"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/turbo.json",
+      "sha256": "20aa945348385b7947c2ee01f1a23d3ee4f73ebc517842861a55bcb750d8051e"
+    }
+  ],
+  "preflight": {
+    "path": "goals/turborepo-task-qualification/research/quiet-lint-complete.json",
+    "sha256": "92e9b31f31724ddb2c33d74e12ffd55f37fe469c52e719a47fc4fc522ccc40a8"
+  },
+  "baselineRequest": {
+    "path": "goals/turborepo-task-qualification/research/quiet-lint-baseline-request.json",
+    "sha256": "0ffe135a79daeaa919f1b858a5430d3f3d57a6409c570c25d47869563a948b74"
+  },
+  "baseline": {
+    "path": "standards/cache-qualification-baseline.json",
+    "sha256": "baaca3fc48a3755256b42b9726d40b063f74df8c563bad4bdc5cc8707bbe33af"
+  },
+  "ledger": {
+    "path": "standards/cache-qualification.json",
+    "sha256": "6c16ab7960e4118a3d509925fcf1f2c37d6e2d3377f3f59217eda23b3a136bf8"
+  },
+  "verification": {
+    "identityPackageVerify": {
+      "passed": true,
+      "auditSeconds": 4.5,
+      "docgenSeconds": 2.6,
+      "path": ".beep/qualification-local-preflight/quiet-lint-identity-package-verify.log",
+      "sha256": "55a59246c8fd8ecbce1a9a4f6bc8b1b732b6678a09bbf27ff1cfc601e3a3da1c"
+    },
+    "policyAudit": {
+      "passed": true,
+      "findings": 0,
+      "unassessedCachedComputations": 927,
+      "path": ".beep/qualification-local-preflight/quiet-lint-cache-audit-after.json",
+      "sha256": "da67153bff502c1aba68fc5921f14f8182e56188cd565841a1cf7c8e810ab70e"
+    },
+    "directPairs": 6,
+    "perClientSelectedExecutions": 5,
+    "perClientDependencyBlockedCases": 1,
+    "trackedBytesRestored": true,
+    "ownedWorktreeClean": true,
+    "ledgerRevision": 1,
+    "state": "excluded",
+    "cacheEnabled": false
+  },
+  "remaining": [
+    "Durable real-pilot runner and complete comparison/perturbation/shadow matrix",
+    "Accepted signed-remote boundary",
+    "Native parity for the repaired activation target and full task activation-invariance evidence"
+  ],
+  "activationPreview": {
+    "path": "goals/turborepo-task-qualification/research/quiet-lint-activation-preview.json",
+    "sha256": "6785fada5b9f66baa5a53ac8544b85b0bf89c4e316485ecd528e6228930a9351",
+    "sourceConfiguration": "0f03cde212ecf82dca77966eb451a7b9f5a81a1fbeb9ee4a715d38c84cffc559",
+    "targetConfiguration": "1d82a4a30379c01eebfacc87f8524df61c8ec4afb12291f6896be64ffbc726c2",
+    "toolchainDigest": "b0ab7f5f428f53d83a073f183e3dbb6715f8ccf45e2b36a5dd409d0afad4a437",
+    "readOnly": true,
+    "nativeParityAfterRepair": "pending"
+  }
+}

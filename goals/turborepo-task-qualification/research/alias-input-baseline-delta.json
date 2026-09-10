@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "cache-alias-input-delta/v1",
+  "authority": "Scoped input declaration review only; no cache activation or qualification.",
+  "sourceRevision": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+  "previousBaselineSha256": "1fb0e8a268828ee0b2cadc7bd244fb4b0f3c3e214198e259b25d72a3656bf07a",
+  "censusSha256": "272bac568d9a08ec4cbb220847b4b78ed5d872f53e1e0ed4aff3e5f1e1882851",
+  "globalConfigurationUnchanged": true,
+  "executableNodes": 1474,
+  "changed": [
+    {
+      "computation": "@beep/identity#lint",
+      "before": {
+        "computation": "@beep/identity#lint",
+        "command": "bun run beep:lint",
+        "commandDigest": "1835a59d5cff6254bd5d660b481053f05dab46521eb1c64eacb3cf937ff19700",
+        "dependencies": [],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!../../../../tsconfig*.json",
+            "!.beep/**",
+            "../../../../.bun-version",
+            "../../../../.gitignore",
+            "../../../../.nvmrc",
+            "../../../../biome.jsonc",
+            "../../../../package.json",
+            "../../../../packages/.gitignore",
+            "../../../../packages/foundation/.gitignore",
+            "../../../../packages/foundation/modeling/.gitignore",
+            "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+            "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+            "../../../../tsconfig.base.json",
+            "../../../../tsconfig.json",
+            "../../../../tsconfig.packages.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      "after": {
+        "computation": "@beep/identity#lint",
+        "command": "bun run beep:lint",
+        "commandDigest": "1835a59d5cff6254bd5d660b481053f05dab46521eb1c64eacb3cf937ff19700",
+        "dependencies": [],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!.beep/**",
+            "../../../../.bun-version",
+            "../../../../.gitignore",
+            "../../../../.nvmrc",
+            "../../../../biome.jsonc",
+            "../../../../package.json",
+            "../../../../packages/.gitignore",
+            "../../../../packages/foundation/.gitignore",
+            "../../../../packages/foundation/modeling/.gitignore",
+            "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
+            "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+            "../../../../tsconfig.base.json",
+            "../../../../tsconfig.json",
+            "../../../../tsconfig.packages.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      }
+    }
+  ]
+}

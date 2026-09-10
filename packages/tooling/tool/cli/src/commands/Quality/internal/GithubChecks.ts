@@ -533,6 +533,13 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
     "preflight",
     repoCliLane(repoRoot, "repo-sanity:bun-audit", ["bun-audit"])
   ),
+  githubCheckLane(
+    "quality:cache-policy",
+    "pre-push",
+    "repo-sanity",
+    "preflight",
+    repoCliLane(repoRoot, "quality:cache-policy", ["cache-policy"])
+  ),
 ];
 
 /**
@@ -676,6 +683,13 @@ export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCh
  * @since 0.0.0
  */
 export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
+  githubCheckLane(
+    "quality:cache-policy",
+    "cheap-gates",
+    "repo-quality",
+    "preflight",
+    repoCliLane(repoRoot, "quality:cache-policy", ["cache-policy"])
+  ),
   githubCheckLane(
     "goals:index-check",
     "cheap-gates",

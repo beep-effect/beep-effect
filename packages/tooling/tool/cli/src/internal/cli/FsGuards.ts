@@ -26,7 +26,7 @@ import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { Sha256Hex } from "@beep/schema";
+import type { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoCliId.create("internal/cli/FsGuards");
@@ -129,6 +129,28 @@ export class ContainedFileRead extends S.Class<ContainedFileRead>($I`ContainedFi
   },
   $I.annote("ContainedFileRead", {
     description: "Existence and optional text content from a contained no-follow file read.",
+  })
+) {}
+
+/**
+ * Original file bytes from a contained read with an explicit capture bound.
+ *
+ * **Example** (Represent a missing binary receipt)
+ *
+ * ```ts
+ * import { ContainedBytesRead } from "@beep/repo-cli/test/Cli"
+ * import * as O from "effect/Option"
+ * const result = ContainedBytesRead.make({ exists: false, contents: O.none() })
+ * console.assert(!result.exists)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ContainedBytesRead extends S.Class<ContainedBytesRead>($I`ContainedBytesRead`)(
+  { contents: S.Option(S.Uint8Array), exists: S.Boolean },
+  $I.annote("ContainedBytesRead", {
+    description: "Existence and bounded original bytes from a contained no-follow file read.",
   })
 ) {}
 
@@ -710,6 +732,81 @@ export const readContainedFileStringNoFollow = Effect.fn("RepoCli.FsGuards.readC
     ? yield* Effect.option(fs.readFileString(prepared.value.target))
     : O.none<string>();
   return ContainedFileRead.make({ contents, exists: true });
+});
+const isFsGuardError = S.is(FsGuardError);
+
+/**
+ * Read at most the allowed number of original bytes, rejecting symlinks and oversized files.
+ *
+ * **Details**
+ *
+ * Reads through one scoped file handle into a bounded buffer. A file that grows
+ * during capture cannot cause an unbounded allocation. The same contained-path
+ * and operating-system rename boundary as the string reader applies.
+ *
+ * **Example** (Bound a receipt to one MiB)
+ *
+ * ```ts
+ * import { readContainedFileBytesNoFollow } from "@beep/repo-cli/test/Cli"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { Effect } from "effect"
+ * const read = readContainedFileBytesNoFollow("/repo", "receipt.json", NonNegativeInt.make(1048576))
+ * console.assert(Effect.isEffect(read))
+ * ```
+ *
+ * @param expectedRoot - Root that owns the read authority.
+ * @param target - Absolute or root-relative file path.
+ * @param maxBytes - Maximum accepted file size, excluding the one-byte overflow probe.
+ * @returns Existence and optional original file bytes.
+ * @category filesystem
+ * @since 0.0.0
+ */
+export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readContainedFileBytesNoFollow")(function* (
+  expectedRoot: string,
+  target: string,
+  maxBytes: NonNegativeInt
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const prepared = yield* prepareContainedTarget(fs, path, expectedRoot, target, false);
+  if (O.isNone(prepared)) return ContainedBytesRead.make({ exists: false, contents: O.none() });
+  const { root, target: resolved } = prepared.value;
+  const kind = yield* inspectEntryNoFollow(fs, root, resolved, resolved);
+  if (O.isNone(kind)) return ContainedBytesRead.make({ exists: false, contents: O.none() });
+  if (kind.value === "SymbolicLink") return yield* failForSymlink(root, resolved, resolved);
+  if (kind.value !== "File") return ContainedBytesRead.make({ exists: true, contents: O.none() });
+  const contents = yield* Effect.scoped(
+    Effect.gen(function* () {
+      const file = yield* fs.open(resolved, { flag: "r" });
+      const buffer = yield* Effect.try({
+        try: () => new Uint8Array(maxBytes + 1),
+        catch: (cause) =>
+          fsGuardError(root, resolved, resolved, "filesystem-failure", "Cannot allocate bounded file capture.", cause),
+      });
+      let length = 0;
+      while (true) {
+        // The read is bounded by the remaining Uint8Array capacity, so conversion is exact.
+        const read = Number(yield* file.read(buffer.subarray(length)));
+        length += read;
+        if (length > maxBytes)
+          return yield* fsGuardError(
+            root,
+            resolved,
+            resolved,
+            "filesystem-failure",
+            "Contained file exceeds its maximum byte length."
+          );
+        if (read === 0) return buffer.slice(0, length);
+      }
+    })
+  ).pipe(
+    Effect.mapError((cause) =>
+      isFsGuardError(cause)
+        ? cause
+        : fsGuardError(root, resolved, resolved, "filesystem-failure", "Cannot read bounded file bytes.", cause)
+    )
+  );
+  return ContainedBytesRead.make({ exists: true, contents: O.some(contents) });
 });
 
 const isSafePathSegment = (value: string): boolean =>

@@ -1,0 +1,14 @@
+{
+  "previous": "0e3f15dd12a64dd36b0ca46a4557338bd8f72c8d2016f6dc1f86615e4f86853e",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Attribute the verified identity lint capture repair and existing cache exclusion without expanding reuse",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/quiet-lint-baseline-review.md",
+      "sha256": "58cd6339c0eda52e65d5ac9f1a9cebf6b5c492582d0881b0f8f348e92f3e9b8e"
+    }
+  },
+  "scope": ["@beep/identity#lint"],
+  "profile": "local-linux-x64-bun1.4.1",
+  "epoch": "qualification-v1"
+}

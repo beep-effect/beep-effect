@@ -1,0 +1,16 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "lint": {
+      "cache": false,
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/.gitignore",
+        "$TURBO_ROOT$/packages/.gitignore",
+        "$TURBO_ROOT$/packages/foundation/.gitignore",
+        "$TURBO_ROOT$/packages/foundation/modeling/.gitignore"
+      ]
+    }
+  }
+}

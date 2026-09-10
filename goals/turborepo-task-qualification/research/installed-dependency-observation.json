@@ -1,0 +1,171 @@
+{
+  "schemaVersion": "cache-installed-dependency-observation/v1",
+  "authority": "Fresh selected-command and verbose attribution observations only. The host node_modules view is read-only but not a complete integrity attestation. No replay or qualification authority.",
+  "sourceRevision": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/dependency-edge-activation-preview.json",
+    "sha256": "d984de3e9eaae38d3550c6688c0b8cd7765ef44f2831fdfd78cfd0018addc87a"
+  },
+  "toolchain": {
+    "bun": {
+      "version": "1.4.2",
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    }
+  },
+  "lockfileSha256": "769ec9946aeb49d5e581acac05677086d2627b03bab8b3a119a5210cc50e8f25",
+  "observer": {
+    "path": ".beep/qualification-local-preflight/probe-installed-dependencies.py",
+    "sha256": "9269e9d301f8540018d97449032a073db7b7389bc33bc0842165234ce739c4ae"
+  },
+  "records": [
+    {
+      "id": "installed-unmodified",
+      "readOnlyInstalledTreePresent": true,
+      "selectedCanaryPresent": false,
+      "externalDeprecationPresent": false,
+      "selectedCanarySha256": null,
+      "effectIndexOverlays": [],
+      "runs": [
+        {
+          "command": "bun run lint",
+          "exitCode": 0,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 53,
+          "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/installed-dependencies-i8o2b666/installed-unmodified/quiet"
+        },
+        {
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 0,
+          "stdoutBytes": 46,
+          "stdoutSha256": "3914601c183b3ab156e16774c1f8fe4e46f173846ac0c31dbe5d32b073ed42bb",
+          "stderrBytes": 16,
+          "stderrSha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/installed-dependencies-i8o2b666/installed-unmodified/verbose"
+        }
+      ]
+    },
+    {
+      "id": "without-install-canary",
+      "readOnlyInstalledTreePresent": false,
+      "selectedCanaryPresent": true,
+      "externalDeprecationPresent": false,
+      "selectedCanarySha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "effectIndexOverlays": [],
+      "runs": [
+        {
+          "command": "bun run lint",
+          "exitCode": 0,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 53,
+          "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/installed-dependencies-i8o2b666/without-install-canary/quiet"
+        },
+        {
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 0,
+          "stdoutBytes": 45,
+          "stdoutSha256": "2bfaa675f955ae539cd1ec0619e3f0763f73f444f06d054089a9701cc1acede7",
+          "stderrBytes": 16,
+          "stderrSha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/installed-dependencies-i8o2b666/without-install-canary/verbose"
+        }
+      ]
+    },
+    {
+      "id": "installed-canary",
+      "readOnlyInstalledTreePresent": true,
+      "selectedCanaryPresent": true,
+      "externalDeprecationPresent": false,
+      "selectedCanarySha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "effectIndexOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "6a3169cb0d19e34ac3f13515cbee0db52da517f20388f701fd244cc4b06f45f4"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "1e21a4a366d76aea2e0fed80726a6c0e2cf669d37bb3732b0900436e3122b79c"
+        }
+      ],
+      "runs": [
+        {
+          "command": "bun run lint",
+          "exitCode": 0,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 53,
+          "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/installed-dependencies-i8o2b666/installed-canary/quiet"
+        },
+        {
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 0,
+          "stdoutBytes": 45,
+          "stdoutSha256": "0439b46f858e4ce211aed0333679af27773183e794c7e0968c08a398c7c394ae",
+          "stderrBytes": 16,
+          "stderrSha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/installed-dependencies-i8o2b666/installed-canary/verbose"
+        }
+      ]
+    },
+    {
+      "id": "installed-deprecated-canary",
+      "readOnlyInstalledTreePresent": true,
+      "selectedCanaryPresent": true,
+      "externalDeprecationPresent": true,
+      "selectedCanarySha256": "9d8dc09b77ec6d48bafb0822e6eadd6b1c685d4c1d7f3381699a0084cebf2b6e",
+      "effectIndexOverlays": [
+        {
+          "file": "index.js",
+          "sha256": "81d4c09add710743b6209e4be7ce021a5f7028e7f455e8a1b05cd6040b77c5f3"
+        },
+        {
+          "file": "index.d.ts",
+          "sha256": "747e964e295bd618f231e8a60089c94e5c711b2b248b5eb5597e304ffcde3f0b"
+        }
+      ],
+      "runs": [
+        {
+          "command": "bun run lint",
+          "exitCode": 1,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 138,
+          "stderrSha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/installed-dependencies-i8o2b666/installed-deprecated-canary/quiet"
+        },
+        {
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 1,
+          "stdoutBytes": 61,
+          "stdoutSha256": "5fef5c9b7d7d89482fc1115d7bf3a6c31ed77181e3e1a3b9795ecf09e89d0383",
+          "stderrBytes": 979,
+          "stderrSha256": "723683d0213f0b7026ab2c6646effc13d0bf7cfc3ef0d838654e17fc82a206a9",
+          "deprecatedImportDiagnosticObserved": true,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/installed-dependencies-i8o2b666/installed-deprecated-canary/verbose"
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "normalInstalledLintPasses": true,
+    "missingInstalledTreeHidesDeprecatedExport": true
+  },
+  "registeredSourceUnchanged": true,
+  "hostDependencyOverlayTargetsUnchanged": true,
+  "completeHostDependencyTreeIntegrityVerified": false
+}

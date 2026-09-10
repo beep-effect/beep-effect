@@ -1,0 +1,13 @@
+{
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Review inherited cache posture under the approved identity pilot scope; no qualification granted",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/baseline-review.md",
+      "sha256": "d81240336b93005bbe264cc6c3af6e88e6e16d425a1cc6d1a18034bb31442f5b"
+    }
+  },
+  "scope": ["@beep/identity#lint"],
+  "profile": "local-linux-x64-bun1.4.1",
+  "epoch": "qualification-v1"
+}

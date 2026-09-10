@@ -1,0 +1,378 @@
+{
+  "schemaVersion": "cache-installed-executable-mappings-review/v1",
+  "authority": "Successful traced execve and mmap(PROT_EXEC) observations for one fresh installed lint command. Post-run file hashes identify current backing files only. Executable mprotect ranges are correlated with prior same-thread anonymous reservations, without a complete memory-transition history. Ring mappings establish io_uring presence only. Kernel-created executable/interpreter mappings and semantic relevance remain separate obligations.",
+  "rawReceipt": {
+    "path": ".beep/qualification-local-preflight/installed-mappings-rnk97rrq/receipt.json",
+    "sha256": "fdcea4cc0be81ebc43d590ed96480081142bb44e148b8a6c3c4d68a6b32ee967"
+  },
+  "trace": {
+    "path": ".beep/qualification-local-preflight/installed-mappings-rnk97rrq/installed-unmodified/trace/quiet.strace",
+    "sha256": "c8db265f6954d6d7a59bfc2febd3c100bcd435119cbd4055b3173ef5eba7bf17"
+  },
+  "observer": {
+    "path": ".beep/qualification-local-preflight/review-installed-mappings.py",
+    "sha256": "c76a08e6be000ec6e4042929454279e524f466c77083cbc9e40946619ec6777f"
+  },
+  "wrapper": {
+    "path": ".beep/qualification-local-preflight/installed-mappings-v1/bin.ts",
+    "sha256": "47cbf58ac1f2520d08a39f83f2ad23bc083446b92d33f18f2acf9ad67d1f7a0d"
+  },
+  "wrapperTypecheck": {
+    "path": ".beep/qualification-local-preflight/installed-mappings-wrapper-check.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "verificationLog": {
+    "path": ".beep/qualification-local-preflight/installed-mappings-runtime.log",
+    "sha256": "35786f1169e97a589ea2648bcdb6156b4e3a6d5c9e26a6fd2f0dfb18fc67fd92"
+  },
+  "sourceRevision": "26ae03d18214f1d9a13cc3c4e7337bee4a93a52f",
+  "activation": {
+    "path": "goals/turborepo-task-qualification/research/runtime-key-activation-preview.json",
+    "sha256": "d847d365cd68fa59f58c30c3aba09f591be4149b43b8ea55722b80c97f92aa0f"
+  },
+  "toolchain": {
+    "bun": {
+      "version": "1.4.2",
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    },
+    "node": {
+      "version": "v24.20.0",
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7"
+    }
+  },
+  "dependencyTreeSha256": "1d6688b88253605123970d0b4a9051431996c7a7fa70957f10c4c077da6636e6",
+  "command": "bun run lint",
+  "exitCode": 0,
+  "stdoutBytes": 0,
+  "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderrBytes": 53,
+  "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "successfulExecutables": [
+    {
+      "path": "/tools/bun",
+      "line": 1,
+      "endLine": 1
+    },
+    {
+      "path": "/usr/bin/bash",
+      "line": 34,
+      "endLine": 34
+    },
+    {
+      "path": "/tools/bun",
+      "line": 56,
+      "endLine": 56
+    },
+    {
+      "path": "/usr/bin/bash",
+      "line": 89,
+      "endLine": 89
+    },
+    {
+      "path": "/fixture/node_modules/.bin/biome",
+      "line": 111,
+      "endLine": 111
+    },
+    {
+      "path": "/tools/node",
+      "line": 136,
+      "endLine": 136
+    },
+    {
+      "path": "/bin/sh",
+      "line": 241,
+      "endLine": 241
+    },
+    {
+      "path": "/usr/bin/ldd",
+      "line": 263,
+      "endLine": 263
+    },
+    {
+      "path": "/fixture/node_modules/@biomejs/cli-linux-x64/biome",
+      "line": 289,
+      "endLine": 289
+    }
+  ],
+  "executableMappedFiles": [
+    {
+      "guestPath": "/usr/lib/libc.so.6",
+      "boundary": "read-only-system-mount",
+      "mappingEvents": [
+        {
+          "line": 4,
+          "endLine": 4
+        },
+        {
+          "line": 42,
+          "endLine": 42
+        },
+        {
+          "line": 59,
+          "endLine": 59
+        },
+        {
+          "line": 97,
+          "endLine": 97
+        },
+        {
+          "line": 114,
+          "endLine": 114
+        },
+        {
+          "line": 161,
+          "endLine": 161
+        },
+        {
+          "line": 249,
+          "endLine": 249
+        },
+        {
+          "line": 271,
+          "endLine": 271
+        },
+        {
+          "line": 308,
+          "endLine": 308
+        }
+      ],
+      "postRunBytes": 2366880,
+      "postRunFileSha256": "4c8eb6d2e4c3459f5100e44330067db455b7cb873742d8d8f820ee5d6a142080"
+    },
+    {
+      "guestPath": "/usr/lib/libdl.so.2",
+      "boundary": "read-only-system-mount",
+      "mappingEvents": [
+        {
+          "line": 13,
+          "endLine": 13
+        },
+        {
+          "line": 68,
+          "endLine": 68
+        },
+        {
+          "line": 139,
+          "endLine": 139
+        },
+        {
+          "line": 304,
+          "endLine": 304
+        }
+      ],
+      "postRunBytes": 14352,
+      "postRunFileSha256": "cf65c453e73cfd35cf921e711dddce154337a0489910b9c1ce7af5e8848fd9f9"
+    },
+    {
+      "guestPath": "/usr/lib/libgcc_s.so.1",
+      "boundary": "read-only-system-mount",
+      "mappingEvents": [
+        {
+          "line": 152,
+          "endLine": 152
+        },
+        {
+          "line": 292,
+          "endLine": 292
+        }
+      ],
+      "postRunBytes": 215280,
+      "postRunFileSha256": "3a19e3a7541ddc0277af34957c00d3ad114e2379a6fb8d812364e94046bfae64"
+    },
+    {
+      "guestPath": "/usr/lib/libm.so.6",
+      "boundary": "read-only-system-mount",
+      "mappingEvents": [
+        {
+          "line": 17,
+          "endLine": 17
+        },
+        {
+          "line": 72,
+          "endLine": 72
+        },
+        {
+          "line": 148,
+          "endLine": 148
+        },
+        {
+          "line": 300,
+          "endLine": 300
+        }
+      ],
+      "postRunBytes": 1083808,
+      "postRunFileSha256": "6262820f17cd34cd327e5dbb2eefa8a740875c47c6a6f8a02fa6f1ae79152797"
+    },
+    {
+      "guestPath": "/usr/lib/libncursesw.so.6.6",
+      "boundary": "read-only-system-mount",
+      "mappingEvents": [
+        {
+          "line": 47,
+          "endLine": 47
+        },
+        {
+          "line": 102,
+          "endLine": 102
+        },
+        {
+          "line": 254,
+          "endLine": 254
+        },
+        {
+          "line": 276,
+          "endLine": 276
+        }
+      ],
+      "postRunBytes": 543952,
+      "postRunFileSha256": "0818af964c5e86421417a877e3b73266eb2dc5e0ce260f44962694c6f639fdc4"
+    },
+    {
+      "guestPath": "/usr/lib/libpthread.so.0",
+      "boundary": "read-only-system-mount",
+      "mappingEvents": [
+        {
+          "line": 9,
+          "endLine": 9
+        },
+        {
+          "line": 64,
+          "endLine": 64
+        },
+        {
+          "line": 156,
+          "endLine": 156
+        },
+        {
+          "line": 296,
+          "endLine": 296
+        }
+      ],
+      "postRunBytes": 14360,
+      "postRunFileSha256": "5ca53e25eb4f671bf0e13fe696a05c83cab7c0b3395d520e1d1388f54b023129"
+    },
+    {
+      "guestPath": "/usr/lib/libreadline.so.8.3",
+      "boundary": "read-only-system-mount",
+      "mappingEvents": [
+        {
+          "line": 37,
+          "endLine": 37
+        },
+        {
+          "line": 92,
+          "endLine": 92
+        },
+        {
+          "line": 244,
+          "endLine": 244
+        },
+        {
+          "line": 266,
+          "endLine": 266
+        }
+      ],
+      "postRunBytes": 396312,
+      "postRunFileSha256": "6e0b1326ca4942457f5f65c03da9f53efcead143898d6f3ed5f217ecc7612c0e"
+    },
+    {
+      "guestPath": "/usr/lib/libstdc++.so.6.0.36",
+      "boundary": "read-only-system-mount",
+      "mappingEvents": [
+        {
+          "line": 143,
+          "endLine": 143
+        }
+      ],
+      "postRunBytes": 3296312,
+      "postRunFileSha256": "7913c46122fd82b6de363b3ab5c01c727730604e9685ad9103323a2b3d43c12d"
+    }
+  ],
+  "anonymousExecutableMmapLines": [],
+  "executableMprotectLines": [
+    197,
+    199
+  ],
+  "executableProtectionCorrelations": [
+    {
+      "line": 197,
+      "endLine": 197,
+      "bytes": 536608768,
+      "lastObservedExecutable": "/tools/node",
+      "priorSameThreadAnonymousMmapLine": 196,
+      "completeMemoryTransitionHistory": false
+    },
+    {
+      "line": 199,
+      "endLine": 199,
+      "bytes": 2117632,
+      "lastObservedExecutable": "/tools/node",
+      "priorSameThreadAnonymousMmapLine": 196,
+      "completeMemoryTransitionHistory": false
+    }
+  ],
+  "ioUringRingMappings": [
+    {
+      "line": 178,
+      "endLine": 178,
+      "lastObservedExecutable": "/tools/node"
+    },
+    {
+      "line": 179,
+      "endLine": 179,
+      "lastObservedExecutable": "/tools/node"
+    },
+    {
+      "line": 183,
+      "endLine": 183,
+      "lastObservedExecutable": null
+    },
+    {
+      "line": 184,
+      "endLine": 184,
+      "lastObservedExecutable": null
+    },
+    {
+      "line": 194,
+      "endLine": 194,
+      "lastObservedExecutable": "/tools/node"
+    },
+    {
+      "line": 195,
+      "endLine": 195,
+      "lastObservedExecutable": "/tools/node"
+    },
+    {
+      "line": 239,
+      "endLine": 239,
+      "lastObservedExecutable": "/tools/node"
+    },
+    {
+      "line": 240,
+      "endLine": 240,
+      "lastObservedExecutable": "/tools/node"
+    },
+    {
+      "line": 287,
+      "endLine": 287,
+      "lastObservedExecutable": "/tools/node"
+    },
+    {
+      "line": 288,
+      "endLine": 288,
+      "lastObservedExecutable": "/tools/node"
+    }
+  ],
+  "unfinishedTraceCalls": 0,
+  "remaining": [
+    "Bind system backing-file bytes before execution and verify them afterward.",
+    "Account for kernel-created executable/interpreter mappings and complete executable-memory transitions.",
+    "Observe actual io_uring submissions when completing native read/write analysis; mapped rings alone establish no I/O outcome.",
+    "Establish the relevant library/ambient input boundary before ordinary cache activation.",
+    "Complete native runtime mutation, read/write/capture and signed-remote qualification evidence."
+  ]
+}

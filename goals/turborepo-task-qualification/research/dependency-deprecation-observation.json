@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "cache-dependency-deprecation-observation/v1",
+  "authority": "Fresh direct wrapper observations of existing and added dependency imports only. No Turbo replay, semantic irrelevance conclusion or qualification authority.",
+  "sourceRevision": "ed12e4ede811c642d866e591d65b860dc2b23d7f",
+  "activationSource": {
+    "path": "goals/turborepo-task-qualification/research/alias-input-activation-preview.json",
+    "sha256": "5b395f5d5b339d12d214fe272fa0c640b2568f60d914e3a5e835a15596f69d2b"
+  },
+  "tools": {
+    "bun": {
+      "version": "1.4.2",
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    }
+  },
+  "observer": {
+    "path": ".beep/qualification-local-preflight/probe-dependency-deprecation.py",
+    "sha256": "2ffe824d197e3ad55c748d9146c4acc786a9cb431bfd160d959638cd24574854"
+  },
+  "records": [
+    {
+      "id": "existing-baseline",
+      "dependencyFileSha256": "63b67a4e828e2084c41886769b677fb392e6017fdb4b29400409a1058a0dac99",
+      "identitySourceSnapshotSha256": "7c8b42a6c480a1b5b45342af89d4dd56152059276ec76d511b66fcc6087b29d8",
+      "sourceTreesUnchanged": true,
+      "runs": [
+        {
+          "command": "bun run lint",
+          "exitCode": 0,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 53,
+          "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-deprecation-_u0ehy2v/existing-baseline/quiet"
+        },
+        {
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 0,
+          "stdoutBytes": 45,
+          "stdoutSha256": "6f8dbc94ced9d98098d74666ab01f93dd5546249c8032bf0c2462a3a85fd69c2",
+          "stderrBytes": 16,
+          "stderrSha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-deprecation-_u0ehy2v/existing-baseline/verbose"
+        }
+      ]
+    },
+    {
+      "id": "existing-deprecated-namespace",
+      "dependencyFileSha256": "9104181f11f150f94cdbf3c1c4e8df49db4212786cfa9b137d928b1e85063def",
+      "identitySourceSnapshotSha256": "7c8b42a6c480a1b5b45342af89d4dd56152059276ec76d511b66fcc6087b29d8",
+      "sourceTreesUnchanged": true,
+      "runs": [
+        {
+          "command": "bun run lint",
+          "exitCode": 0,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 53,
+          "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-deprecation-_u0ehy2v/existing-deprecated-namespace/quiet"
+        },
+        {
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 0,
+          "stdoutBytes": 45,
+          "stdoutSha256": "0b3ba48952e727268312c7e5d733399a10707c61f791171a9c5248c35e86790a",
+          "stderrBytes": 16,
+          "stderrSha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-deprecation-_u0ehy2v/existing-deprecated-namespace/verbose"
+        }
+      ]
+    },
+    {
+      "id": "relative-baseline",
+      "dependencyFileSha256": "5e92d72f6eba48189317084c77410d641d06f52aea2f0f6fa5dca4c62ad5d78b",
+      "identitySourceSnapshotSha256": "f89f4f7cc8e5a709531ea4b22eca6909b2629ef90359a42e0bb7d2b3b1175526",
+      "sourceTreesUnchanged": true,
+      "runs": [
+        {
+          "command": "bun run lint",
+          "exitCode": 0,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 53,
+          "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-deprecation-_u0ehy2v/relative-baseline/quiet"
+        },
+        {
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 0,
+          "stdoutBytes": 45,
+          "stdoutSha256": "56768a60d48004068eb19556cb20ffbc8f9bd4709b0a51c59af3a5bfedf69937",
+          "stderrBytes": 16,
+          "stderrSha256": "bc2f32db81a9c840e767407aa31deff3b6d3df5e5388f721e9489867b535d47d",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-deprecation-_u0ehy2v/relative-baseline/verbose"
+        }
+      ]
+    },
+    {
+      "id": "relative-deprecated",
+      "dependencyFileSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "identitySourceSnapshotSha256": "f89f4f7cc8e5a709531ea4b22eca6909b2629ef90359a42e0bb7d2b3b1175526",
+      "sourceTreesUnchanged": true,
+      "runs": [
+        {
+          "command": "bun run lint",
+          "exitCode": 1,
+          "stdoutBytes": 0,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrBytes": 138,
+          "stderrSha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72",
+          "deprecatedImportDiagnosticObserved": false,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-deprecation-_u0ehy2v/relative-deprecated/quiet"
+        },
+        {
+          "command": "bun run beep:lint:verbose",
+          "exitCode": 1,
+          "stdoutBytes": 60,
+          "stdoutSha256": "c5fb5274de29afb020cb5d8ec77aed18211dbe233b6adf7b464afb6edcefd285",
+          "stderrBytes": 1014,
+          "stderrSha256": "a079a6718465fe188bc0854140c246f8e02ca5ea064d1448a82a87381d75a470",
+          "deprecatedImportDiagnosticObserved": true,
+          "privateOutputPrefix": ".beep/qualification-local-preflight/dependency-deprecation-_u0ehy2v/relative-deprecated/verbose"
+        }
+      ]
+    }
+  ],
+  "registeredSourceUnchanged": true
+}

@@ -241,6 +241,16 @@
   },
   "overrides": [
     {
+      // Qualification evidence references exact file bytes. Format changes would
+      // invalidate accepted historical receipts without changing their meaning.
+      "includes": [
+        "goals/turborepo-task-qualification/research/**/*.json",
+        "standards/cache-qualification.json",
+        "standards/cache-qualification-baseline.json"
+      ],
+      "formatter": { "enabled": false }
+    },
+    {
       "includes": [
         "goals/lexical-playground-capability-atlas/research/capability-atlas.json"
       ],

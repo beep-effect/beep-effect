@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "cache-scm-device-preflight/v1",
+  "authority": "Controlled dry-run probe only; no task execution, replay or qualification credit.",
+  "clientSha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+  "records": [
+    {
+      "case": "original-device-mount",
+      "processExitCode": 0,
+      "streams": {
+        "stdout": {
+          "bytes": 11742,
+          "sha256": "26ddf46d33361c807615a12b2d0e16a0b194049d3af5600b5e2f23c41b3502b7"
+        },
+        "stderr": {
+          "bytes": 32,
+          "sha256": "e5b1730b91d002df43cac54a7956a8e249d0bb9c3c57b19347754555046ecd55"
+        }
+      },
+      "scm": {
+        "type": "git",
+        "sha": null,
+        "branch": null
+      },
+      "tasks": [
+        {
+          "taskId": "@beep/identity#lint",
+          "hash": "5223968f12d91ef8",
+          "inputCount": 43
+        },
+        {
+          "taskId": "@beep/types#lint",
+          "hash": "79e0089abe0f7171",
+          "inputCount": 29
+        }
+      ]
+    },
+    {
+      "case": "fresh-device-mount",
+      "processExitCode": 0,
+      "streams": {
+        "stdout": {
+          "bytes": 11292,
+          "sha256": "d91c0af4ad2b6d4123d422c008c520297e209738427ff32ced3d8ac00076d05b"
+        },
+        "stderr": {
+          "bytes": 32,
+          "sha256": "e5b1730b91d002df43cac54a7956a8e249d0bb9c3c57b19347754555046ecd55"
+        }
+      },
+      "scm": {
+        "type": "git",
+        "sha": "bf6014ae31531bf4dc18f7f6eedafa96a700d876",
+        "branch": "codex/qualification-pilot-a1"
+      },
+      "tasks": [
+        {
+          "taskId": "@beep/identity#lint",
+          "hash": "3e7b55ca5e8ccbc1",
+          "inputCount": 40
+        },
+        {
+          "taskId": "@beep/types#lint",
+          "hash": "992489ad15f803d1",
+          "inputCount": 26
+        }
+      ]
+    }
+  ],
+  "inputDiffs": [
+    {
+      "taskId": "@beep/identity#lint",
+      "onlyOriginal": [
+        "../../../../tsconfig.base.json",
+        "../../../../tsconfig.json",
+        "../../../../tsconfig.packages.json"
+      ],
+      "onlyFreshDevice": [],
+      "commonInputHashesEqual": true,
+      "sameResolvedTaskDefinition": true,
+      "sameExternalDependencies": true,
+      "sameEnvironmentVariables": true,
+      "sameInputsAsHistoricalMain": true,
+      "sameTaskHashAsHistoricalMain": true
+    },
+    {
+      "taskId": "@beep/types#lint",
+      "onlyOriginal": [
+        "../../../../tsconfig.base.json",
+        "../../../../tsconfig.json",
+        "../../../../tsconfig.packages.json"
+      ],
+      "onlyFreshDevice": [],
+      "commonInputHashesEqual": true,
+      "sameResolvedTaskDefinition": true,
+      "sameExternalDependencies": true,
+      "sameEnvironmentVariables": true,
+      "sameInputsAsHistoricalMain": true,
+      "sameTaskHashAsHistoricalMain": true
+    }
+  ],
+  "sameGlobalCacheInputs": true
+}

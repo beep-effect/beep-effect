@@ -1,0 +1,17 @@
+{
+  "previous": "cc1fbe92c0137c099b3ab242a7107e41848f38cd4827b349161cf266670bac19",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Restore an identity-only fresh dependency edge after both pinned clients replay stale success across a dependency deprecation change.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/dependency-edge-baseline-review.md",
+      "sha256": "655fd6297246734ce82c3b97c1fca26ab6420e5e67bd397d521e3b8e3979fb38"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

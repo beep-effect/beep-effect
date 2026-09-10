@@ -1,0 +1,17 @@
+{
+  "previous": "ef44150e223006e89700a67d4d83811a4075ffb93320b0a0e78a48a0dbcb8dc6",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Accept inherited command-map digests from the merged quality-lane change without broadening cache qualification.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/dependencies-main-baseline-review.md",
+      "sha256": "3724974ddd928ac6a6bb90c58d7e94591e8ce715c0f93c8f56514046144bcbbc"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

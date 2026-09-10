@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "cache-pilot-guard-negatives/v1",
+  "authority": "Local refusal evidence only; no successful execution or remote authority.",
+  "entrypoint": "Pinned Bun --no-env-file packages/tooling/tool/cli/src/bin.ts cache pilot; PATH starts with the same Bun installation.",
+  "cases": [
+    {
+      "case": "wrong-turbo-pin",
+      "exitCode": 1,
+      "expectedMessage": "A pilot executable differs from its exact content pin.",
+      "messageMatched": true,
+      "receiptAbsent": true,
+      "log": {
+        "path": ".beep/qualification-local-preflight/pilot-negative-wrong-turbo-pin.log",
+        "sha256": "b4d4b6a7d79d0281ebf748d3aa50a913d17a2644dbc2d58d847baefc05ee6438"
+      }
+    },
+    {
+      "case": "wrong-biome-binary",
+      "exitCode": 1,
+      "expectedMessage": "A pilot executable differs from its exact content pin.",
+      "messageMatched": true,
+      "receiptAbsent": true,
+      "log": {
+        "path": ".beep/qualification-local-preflight/pilot-negative-wrong-biome-binary.log",
+        "sha256": "484852211d05cd2e81c33dabb585b4dca70f0956495684216de162c69738450c"
+      }
+    },
+    {
+      "case": "wrong-bun-runtime",
+      "exitCode": 1,
+      "expectedMessage": "The observed Bun runtime differs from the repository .bun-version pin.",
+      "messageMatched": true,
+      "receiptAbsent": true,
+      "log": {
+        "path": ".beep/qualification-local-preflight/pilot-negative-wrong-bun-runtime.log",
+        "sha256": "f8574709ebb19db71d1d77b12d7b5d5fbce0b8fcc8defce907de5d3e325f30a0"
+      }
+    },
+    {
+      "case": "wrong-client-channel",
+      "exitCode": 1,
+      "expectedMessage": "Pilot client version and channel disagree.",
+      "messageMatched": true,
+      "receiptAbsent": true,
+      "log": {
+        "path": ".beep/qualification-local-preflight/pilot-negative-wrong-client-channel.log",
+        "sha256": "aa14d12dbccfa019ac595423e85fffddfa98a743452f3d73ae851029a9be4a63"
+      }
+    },
+    {
+      "case": "same-worktree",
+      "exitCode": 1,
+      "expectedMessage": "Cross-root pilot observations require two distinct registered worktrees.",
+      "messageMatched": true,
+      "receiptAbsent": true,
+      "log": {
+        "path": ".beep/qualification-local-preflight/pilot-negative-same-worktree.log",
+        "sha256": "8fa4635ee71f63298421e37c216dbad4a1d00a17a966dc75ea1f5126d4462edd"
+      }
+    },
+    {
+      "case": "caller-as-worktree",
+      "exitCode": 1,
+      "expectedMessage": "A pilot source is not a distinct registered worktree at the current revision.",
+      "messageMatched": true,
+      "receiptAbsent": true,
+      "log": {
+        "path": ".beep/qualification-local-preflight/pilot-negative-caller-as-worktree.log",
+        "sha256": "1cbd10a2d5328b94927c356f51ea0ff1eeb44d61ad3bcf7517d62db70d3cfc10"
+      }
+    },
+    {
+      "case": "stale-activation",
+      "exitCode": 1,
+      "expectedMessage": "Qualification evidence digest mismatch.",
+      "messageMatched": true,
+      "receiptAbsent": true,
+      "log": {
+        "path": ".beep/qualification-local-preflight/pilot-negative-stale-activation.log",
+        "sha256": "1c91244f7257f9ff0e4d67f977977f6019058a8046170a3f32ba8a69167e8795"
+      }
+    },
+    {
+      "case": "wrong-worktree-revision",
+      "exitCode": 1,
+      "expectedMessage": "A pilot source is not a distinct registered worktree at the current revision.",
+      "messageMatched": true,
+      "receiptAbsent": true,
+      "log": {
+        "path": ".beep/qualification-local-preflight/pilot-negative-wrong-worktree-revision.log",
+        "sha256": "82499eb3aeb36187b6bf9cac4fa0ddaade3654e8a992f110af4c6c1cc374f981"
+      }
+    }
+  ]
+}

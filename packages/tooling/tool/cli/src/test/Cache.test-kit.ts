@@ -5,4 +5,34 @@
  * @since 0.0.0
  */
 
-export { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "../commands/Cache/Cache.command.ts";
+export { joinCacheCensusPlan } from "../commands/Cache/Cache.census.ts";
+export {
+  makeCacheCommandForTesting,
+  runCacheWarmForTesting,
+  runCacheWarmLaneForTesting,
+} from "../commands/Cache/Cache.command.ts";
+export { inspectCacheDependencyTree } from "../commands/Cache/Cache.dependencies.ts";
+export {
+  decodeCacheExperimentText,
+  hashCacheExperimentExecutable,
+  readCacheEvidenceBytes,
+  readCacheExperimentBytes,
+} from "../commands/Cache/Cache.evidence.ts";
+export {
+  equivalentCacheFixtureRuns,
+  inspectCacheFixtureCapture,
+  runCacheSyntheticForTesting,
+} from "../commands/Cache/Cache.experiment.ts";
+export {
+  collectCacheToolchain,
+  fingerprintCacheComputation,
+  projectCacheActivation,
+} from "../commands/Cache/Cache.fingerprint.ts";
+export {
+  collectCacheRuntimeLinker,
+  inspectCacheLinkedFile,
+  inspectCacheLinkerResolution,
+  parseCacheLinkerOutput,
+} from "../commands/Cache/Cache.linker.ts";
+export { extractCachePilotLog } from "../commands/Cache/Cache.pilot.capture.ts";
+export { runCachePilotForTesting } from "../commands/Cache/Cache.pilot.ts";

@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "turborepo-evidence-versions/v1",
+  "observedAt": "2026-09-04",
+  "beep": {
+    "repositoryHead": "f56748290df89c5a07743fa7e2c8bc5da1fff51a",
+    "branch": "@slop/09-02-26",
+    "turboVersion": "2.10.12",
+    "turboLockfileVersion": "2.10.12",
+    "platform": "linux-x64",
+    "installedExecutableSha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+    "incumbentShimPackage": "turborepo-remote-cache@2.12.0",
+    "incumbentShimTagCommit": "1767fb37291a082e0beed3b21966ae86a4bbaa12"
+  },
+  "publishedTurbo": {
+    "latest": {
+      "version": "2.10.12",
+      "publishedAt": "2026-08-25T18:38:19Z",
+      "tagCommit": "53752d452049bdda47698354b16a83d7ce92ced0",
+      "wrapperIntegrity": "sha512-AswgMPnpOoaVZHrrSBejETzEbuIA69OVGwfkHwfrY0A23VjWXBANzgq9+OymWOHAIArB7D1+1z498WY8fGg1Jw==",
+      "wrapperShasum": "22f552bd88182d58365960a02e5f45e628fb965b",
+      "linuxX64Integrity": "sha512-lr7KIotukvjZwEXiFSYAeOH3BWzjFVBbSzTbv0fuGFsNukYyH0+g1hB5ecqnJkgkYU+KHEMG1edOhnjiKON1wQ==",
+      "linuxX64Shasum": "264a0ec88a1f69f93cf57dab20be1b4c50bf226c",
+      "linuxX64ExecutableSha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde"
+    },
+    "canary": {
+      "version": "2.10.13-canary.1",
+      "publishedAt": "2026-08-26T22:40:11Z",
+      "tagCommit": "4508113cbcdc53a4afcbc34a20ba028546b98711",
+      "wrapperIntegrity": "sha512-mDQuAWMQeeSj/muAEEkT26qslRY8carRkWdKqZytBGYAKNtsnxibKXjCGQHgG3+aIKmz4jiG+uoEPHFgBiqDhw==",
+      "wrapperShasum": "05bf5ba15d881077d94ba24173d3c61ba9433958",
+      "linuxX64Integrity": "sha512-kolrLDYjcbDCs3vJdpAnYHqz6B3vCVZ5x0KTd9LYosGU2Eb6QIPrwp2kZLV6dLbK53dtZ93bThW7ALuFsXmPsA==",
+      "linuxX64Shasum": "a42b3ee03ba43a767b0fdb1595c070db8ae03007",
+      "linuxX64ExecutableSha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "executedDuringResearch": false
+    }
+  },
+  "officialSource": {
+    "license": "MIT",
+    "localCloneHead": "3125eb1a49f0c1b98f460eb3616036ce03837387",
+    "localCloneClean": true,
+    "liveRemoteMain": "fd8dc599507a0a1b6cf47a63868aca650c1da9ec",
+    "liveRemoteMainObservedAt": "2026-09-04T15:05:14Z",
+    "mainPolicy": "research-appendix-non-scoring",
+    "historyNote": "The live main and published canary histories diverge: live main has 74 commits not reachable from the canary tag, while the tag has one publish-only commit not on main."
+  },
+  "remoteCacheOpenApi": {
+    "openapi": "3.0.3",
+    "infoVersion": "1.0.0",
+    "license": "MIT",
+    "gitBlob": "4938812fcc199b66bbbe15c2e9c29fc9c84f5dbe",
+    "sha256": "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8",
+    "identicalAt": [
+      "v2.10.12",
+      "v2.10.13-canary.1",
+      "3125eb1a49f0c1b98f460eb3616036ce03837387",
+      "fd8dc599507a0a1b6cf47a63868aca650c1da9ec"
+    ]
+  },
+  "turborepoSkill": {
+    "installedPath": ".claude/skills/turborepo",
+    "lockSource": "vercel/turborepo",
+    "lockRef": "main",
+    "lockComputedHash": "26e07017d0a7cccd2287abe0cbae20f29d92a97afb969ec284d2ff888278930a",
+    "normalizedTreeSha256": "e489455debbc9ab3eaeaea80a4f08a862d9910beec27057ebe9ccca7bf1c16ee",
+    "officialLocalTreeSha256": "e489455debbc9ab3eaeaea80a4f08a862d9910beec27057ebe9ccca7bf1c16ee",
+    "matchesOfficialSourceTree": true,
+    "liveMainDeltaTouchesSkill": false,
+    "metadataVersion": "2.10.13-canary.1"
+  },
+  "backendReferences": {
+    "bruno": {
+      "repository": "brunojppb/turbo-cache-server",
+      "localCloneHead": "dc067804063dbedd38be8a6919a6c0c359989de9",
+      "localCloneClean": true,
+      "release": "4.0.17",
+      "releaseCommit": "6cf8bdd71e8dfa40cfef03e44e97230478c1d7af",
+      "license": "MIT"
+    },
+    "ducktors": {
+      "repository": "ducktors/turborepo-remote-cache",
+      "localCloneHead": "29bb1ed4066e22f9e17c9fe97b9567a47a50a8ba",
+      "localCloneClean": true,
+      "release": "2.12.3",
+      "releaseCommit": "7a8f5c03306767322acf59f3fa75378a2aca2e76",
+      "npmIntegrity": "sha512-IldrboNCwOzcwqXBcdjqAAe0XBAv4LCkbWXoKuZmA8BalZOFjiUXIHaP4W7YAuNbfhPdh2XCnnks+z/RTvC6VA==",
+      "npmShasum": "cc7978c0a9de4d6889c4969426976a6e4474934a",
+      "license": "MIT"
+    },
+    "vercelRemoteCacheSdk": {
+      "repository": "vercel/remote-cache",
+      "localCloneHead": "579b2e112d1dcde526acd9e4bcaf5b7295d2662b",
+      "localCloneClean": true,
+      "role": "client-sdk-reference-not-self-hosted-server",
+      "license": "MPL-2.0"
+    }
+  },
+  "freshnessPolicy": {
+    "productionAuthority": "exact-published-stable",
+    "canaryAuthority": "exact-published-canary-in-isolation",
+    "mainAuthority": "non-scoring-research-appendix",
+    "upgradeRule": "Re-pin registry metadata, platform executable hashes, tags, OpenAPI blob and candidate releases before every qualification run."
+  }
+}
