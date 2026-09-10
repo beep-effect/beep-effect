@@ -1,5 +1,6 @@
 /**
  * Reviewed qualification state and configuration audit policy.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -71,7 +72,9 @@ export const CacheQualificationStatus = CacheQualificationState.toTaggedUnion("s
     description: "State-specific qualification evidence and review obligations.",
   })
 );
-/** Decoded lifecycle state and its required payload.
+/**
+ * Decoded lifecycle state and its required payload.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -295,7 +298,9 @@ export const CachePolicyFindingKind = LiteralKit([
 ]).pipe(
   $I.annoteSchema("CachePolicyFindingKind", { description: "Configuration drift and unreviewed reuse findings." })
 );
-/** Decoded cache policy finding reason.
+/**
+ * Decoded cache policy finding reason.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -363,6 +368,8 @@ const sameEntries = S.toEquivalence(S.Array(CacheQualificationEntry));
  * console.assert(cacheLedgerFailures(store).length === 0)
  * ```
  *
+ * @param store - Ledger whose revisions and transitions must agree.
+ * @returns Violations found while reconstructing the ledger.
  * @category policies
  * @since 0.0.0
  */
@@ -492,6 +499,8 @@ const auditSourceDrift = (baseline: CachePolicyProjection, current: CachePolicyP
  * console.assert(report.unassessed.length === 0 && report.findings.length === 0)
  * ```
  *
+ * @param request - Reviewed baseline, current configuration and qualification ledger.
+ * @returns Findings and unassessed computations for the supplied policy state.
  * @category policies
  * @since 0.0.0
  */

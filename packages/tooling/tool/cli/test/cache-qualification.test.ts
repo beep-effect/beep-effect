@@ -25,7 +25,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const platform = Layer.mergeAll(
   NodeServices.layer,
@@ -39,6 +39,11 @@ const key = CacheQualificationKey.make({
   profile: "fixture-profile",
   epoch: "v1",
 });
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
+
+const encodeCachePolicyBaselineJson = S.encodeEffect(S.fromJsonString(CachePolicyBaseline));
+
+const encodeCacheQualificationStoreJson = S.encodeEffect(S.fromJsonString(CacheQualificationStore));
 
 const fixture = Effect.fn("CacheQualificationTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -47,7 +52,7 @@ const fixture = Effect.fn("CacheQualificationTest.fixture")(function* () {
   yield* fs.makeDirectory(path.join(root, "standards"));
   const basis = "Reviewed synthetic qualification boundary.\n";
   yield* fs.writeFileString(path.join(root, "review.md"), basis);
-  const sha256 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(basis));
+  const sha256 = yield* hashBytes(new TextEncoder().encode(basis));
   const review = CacheReviewDecision.make({
     reviewer: "fixture",
     reason: "exclude unqualified computation",
@@ -60,11 +65,11 @@ const fixture = Effect.fn("CacheQualificationTest.fixture")(function* () {
     epoch: key.epoch,
     projection: CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
   });
-  const text = yield* S.encodeEffect(S.fromJsonString(CachePolicyBaseline))(baseline);
+  const text = yield* encodeCachePolicyBaselineJson(baseline);
   yield* fs.writeFileString(path.join(root, "standards/cache-qualification-baseline.json"), text);
   yield* fs.writeFileString(
     path.join(root, "standards/cache-qualification.json"),
-    yield* S.encodeEffect(S.fromJsonString(CacheQualificationStore))(
+    yield* encodeCacheQualificationStoreJson(
       CacheQualificationStore.make({ revision: NonNegativeInt.make(0), entries: [], history: [] })
     )
   );
@@ -72,18 +77,27 @@ const fixture = Effect.fn("CacheQualificationTest.fixture")(function* () {
   const request = CacheTransitionRequest.make({ expectedRevision: NonNegativeInt.make(0), entry });
   return { root, fs, path, request, entry };
 });
+const encodeCacheQualificationStoreJsonResult = S.encodeResult(S.fromJsonString(CacheQualificationStore));
+
+const decodeCacheQualificationStoreJsonResult = S.decodeResult(S.fromJsonString(CacheQualificationStore));
 
 describe("Cache qualification writer", () => {
   it("preserves ledger revisions and tuples through schema serialization", () => {
     const equivalent = S.toEquivalence(CacheQualificationStore);
-    fc.assert(
-      fc.property(S.toArbitrary(CacheQualificationStore)(fc), (value) => {
-        const encoded = R.getOrThrow(S.encodeResult(S.fromJsonString(CacheQualificationStore))(value));
-        const decoded = R.getOrThrow(S.decodeResult(S.fromJsonString(CacheQualificationStore))(encoded));
-        expect(equivalent(value, decoded)).toBe(true);
-      }),
-      fcRuns(20)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(CacheQualificationStore),
+          (value) => {
+            const encoded = R.getOrThrow(encodeCacheQualificationStoreJsonResult(value));
+            const decoded = R.getOrThrow(decodeCacheQualificationStoreJsonResult(encoded));
+            expect(equivalent(value, decoded)).toBe(true);
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
   it.effect(
     "persists a reviewed exclusion and rejects stale revisions without changing the ledger",
@@ -176,7 +190,7 @@ describe("Cache qualification writer", () => {
         entries: [entry, entry],
         history: [],
       });
-      yield* fs.writeFileString(target, yield* S.encodeEffect(S.fromJsonString(CacheQualificationStore))(duplicate));
+      yield* fs.writeFileString(target, yield* encodeCacheQualificationStoreJson(duplicate));
       expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
     }, provideScopedLayer(testLayer))
   );

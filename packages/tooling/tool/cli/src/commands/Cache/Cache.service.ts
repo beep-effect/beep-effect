@@ -1,5 +1,6 @@
 /**
  * Single-writer qualification state and read-only cache policy audit operations.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -51,7 +52,9 @@ const StoreJson = JsonStringCodec(CacheQualificationStore);
 const sameKey = S.toEquivalence(CacheQualificationKey);
 const sameContract = S.toEquivalence(CacheTaskContract);
 const sameOptionalDigest = S.toEquivalence(S.Option(CacheEvidenceReference.fields.sha256));
-const hashText = (text: string) => S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text));
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
+
+const hashText = (text: string) => hashBytes(new TextEncoder().encode(text));
 
 const decodeUtf8 = (bytes: Uint8Array) =>
   Effect.try({
@@ -451,6 +454,7 @@ const transition = Effect.fn("CacheQualification.transition")(function* (
 
 /**
  * Cache-owned operations; consumers cannot write the qualification ledger directly.
+ *
  * @category services
  * @since 0.0.0
  */

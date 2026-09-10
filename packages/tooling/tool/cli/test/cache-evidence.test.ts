@@ -4,6 +4,7 @@ import {
   readCacheExperimentBytes,
 } from "@beep/repo-cli/test/Cache";
 import { Sha256HexFromBytes } from "@beep/schema";
+import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -11,6 +12,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 describe("shared bounded experiment artifacts", () => {
   it.effect("preserves valid UTF-8 and rejects malformed bytes", () =>
@@ -36,7 +38,7 @@ describe("shared bounded experiment artifacts", () => {
       expect(Result.isFailure(yield* readCacheExperimentBytes(root, "absent", 4).pipe(Effect.result))).toBe(true);
       yield* fs.symlink(path.join(root, "artifact"), path.join(root, "link"));
       expect(Result.isFailure(yield* readCacheExperimentBytes(root, "link", 4).pipe(Effect.result))).toBe(true);
-    }).pipe(Effect.scoped, Effect.provide(testLayer))
+    }).pipe(provideScopedLayer(testLayer))
   );
 
   it.effect("binds executable identity to exact bytes without following a symlink", () =>
@@ -47,11 +49,11 @@ describe("shared bounded experiment artifacts", () => {
       const executable = path.join(root, "tool");
       const bytes = new TextEncoder().encode("fixture executable");
       yield* fs.writeFile(executable, bytes);
-      expect(yield* hashCacheExperimentExecutable(executable)).toBe(yield* S.decodeEffect(Sha256HexFromBytes)(bytes));
+      expect(yield* hashCacheExperimentExecutable(executable)).toBe(yield* hashBytes(bytes));
       yield* fs.symlink(executable, path.join(root, "link"));
       expect(Result.isFailure(yield* hashCacheExperimentExecutable(path.join(root, "link")).pipe(Effect.result))).toBe(
         true
       );
-    }).pipe(Effect.scoped, Effect.provide(testLayer))
+    }).pipe(provideScopedLayer(testLayer))
   );
 });

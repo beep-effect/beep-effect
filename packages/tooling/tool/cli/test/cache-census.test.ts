@@ -17,8 +17,8 @@ import {
   CacheQualificationKey,
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
-import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { fcRuns } from "@beep/test-utils";
+import { NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -27,7 +27,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const workspace = CacheCensusWorkspace.make({
   name: "@beep/fixture",
@@ -55,7 +55,7 @@ const node = (task: string, command: string) => ({
   dependencies: [],
   resolvedTaskDefinition: { ...configuration, passThroughEnv: O.none<ReadonlyArray<string>>() },
 });
-const provideCrypto = Effect.provide(NodeCrypto.layer);
+const provideCrypto = provideScopedLayer(NodeCrypto.layer);
 const digest = Sha256Hex.make(Str.padStart(64, "0")("1"));
 const changedDigest = Sha256Hex.make(Str.padStart(64, "0")("2"));
 const key = CacheQualificationKey.make({
@@ -95,12 +95,13 @@ const fingerprintFixture = Effect.fn("CacheCensusTest.fingerprintFixture")(funct
     unresolved: [],
   });
 });
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 const activationFixture = Effect.fn("CacheCensusTest.activationFixture")(function* () {
   const before = '{"extends":["//"],"tasks":{"lint":{"cache":false,"outputs":[]}}}';
   const after = '{"extends":["//"],"tasks":{"lint":{"cache":true,"outputs":[]}}}';
-  const beforeDigest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(before));
-  const afterDigest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(after));
+  const beforeDigest = yield* hashBytes(new TextEncoder().encode(before));
+  const afterDigest = yield* hashBytes(new TextEncoder().encode(after));
   const original = yield* fingerprintFixture();
   const census = CacheCensusReport.make({
     ...original,
@@ -125,35 +126,35 @@ const activationFixture = Effect.fn("CacheCensusTest.activationFixture")(functio
   });
   return { before, after, census, source, activation };
 });
+const encodeJsonObjectJson = S.encodeEffect(S.fromJsonString(S.JsonObject));
 
 describe("reviewed cache activation projection", () => {
-  it("rejects arbitrary replacement task semantics despite a correctly rebound artifact digest", async () => {
-    await fc.assert(
-      fc.asyncProperty(S.toArbitrary(CacheTaskConfiguration)(fc), async (configuration) => {
-        await Effect.runPromise(
-          Effect.gen(function* () {
-            const f = yield* activationFixture();
-            const after = yield* S.encodeEffect(S.fromJsonString(S.JsonObject))({
-              extends: ["//"],
-              tasks: { lint: { ...configuration, cache: true } },
-            });
-            const sha256 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(after));
-            const activation = CacheActivationProjection.make({
-              ...f.activation,
-              after: CacheEvidenceReference.make({ ...f.activation.after, sha256 }),
-            });
-            const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
-              Effect.result
-            );
-            expect(Result.isFailure(result)).toBe(true);
-            if (Result.isFailure(result))
-              expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
-          }).pipe(provideCrypto)
-        );
-      }),
-      { numRuns: fcRuns(50) }
-    );
-  });
+  it.effect("rejects arbitrary replacement task semantics despite a correctly rebound artifact digest", () =>
+    Arbitrary.checkEffect(
+      Arbitrary.schema(CacheTaskConfiguration),
+      (configuration) =>
+        Effect.gen(function* () {
+          const f = yield* activationFixture();
+          const after = yield* encodeJsonObjectJson({
+            extends: ["//"],
+            tasks: { lint: { ...configuration, cache: true } },
+          });
+          const sha256 = yield* hashBytes(new TextEncoder().encode(after));
+          const activation = CacheActivationProjection.make({
+            ...f.activation,
+            after: CacheEvidenceReference.make({ ...f.activation.after, sha256 }),
+          });
+          const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
+            Effect.result
+          );
+          expect(Result.isFailure(result)).toBe(true);
+          if (Result.isFailure(result))
+            expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
+          return true;
+        }).pipe(provideCrypto),
+      fcRuns(50)
+    ).pipe(Effect.map((result) => expect(result._tag).toBe("Passed")))
+  );
 
   it.effect(
     "keeps the observed root disabled while binding only the exact enabled projection",
@@ -187,7 +188,7 @@ describe("reviewed cache activation projection", () => {
         Str.replace('"cache":true', '"cache":true,"env":["UNREVIEWED"]')(f.after),
         Str.replace('"extends":["//"]', '"extends":["//","other"]')(f.after),
       ]) {
-        const sha256 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(after));
+        const sha256 = yield* hashBytes(new TextEncoder().encode(after));
         const activation = CacheActivationProjection.make({
           ...f.activation,
           after: CacheEvidenceReference.make({ ...f.activation.after, sha256 }),
@@ -349,9 +350,9 @@ describe("computation configuration fingerprint", () => {
       const tree = CacheDependencyTree.make({
         format: "canonical-gnu-tar/v1",
         sha256: digest,
-        regularFiles: 1,
-        entries: 2,
-        bytes: 1,
+        regularFiles: NonNegativeInt.make(1),
+        entries: NonNegativeInt.make(2),
+        bytes: NonNegativeInt.make(1),
         links: [],
       });
       const first = yield* fingerprintCacheComputation(

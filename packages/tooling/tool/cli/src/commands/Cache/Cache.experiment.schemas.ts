@@ -1,5 +1,6 @@
 /**
  * Bounded local fixture evidence. These receipts confer no remote-cache authority.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -73,6 +74,7 @@ export const CacheLocalOrigin = LiteralKit(["fresh", "local-hit"]).pipe(
 );
 /**
  * Observed local execution or artifact-replay origin.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -96,6 +98,7 @@ export const CacheCaptureViolation = LiteralKit(["overflow", "synthetic-secret",
 );
 /**
  * Reason a captured local run cannot pass comparison.
+ *
  * @category models
  * @since 0.0.0
  */

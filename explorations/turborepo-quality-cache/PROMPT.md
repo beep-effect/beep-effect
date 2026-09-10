@@ -46,9 +46,9 @@ ask-user-question tool for new architecture or measured deployment
 choices. Prepare a concrete reviewable proposal before asking.
 
 Refresh exact checkout/client/backend/config/profile pins. The September 4 and
-September 8 research snapshots are dated evidence. The reference clones are
-~/YeeBois/dev/turborepo, ~/YeeBois/dev/remote-cache,
-~/YeeBois/dev/turbo-cache-server and ~/YeeBois/dev/turborepo-remote-cache.
+September 8 research snapshots are dated evidence. Use local clones of these upstream repositories when available:
+https://github.com/vercel/turborepo, https://github.com/vercel/remote-cache,
+https://github.com/brunojppb/turbo-cache-server and https://github.com/ducktors/turborepo-remote-cache.
 Use the inherited source ledger for official API/signature docs and licenses.
 Source inspection is not deployed parity, a cache hit is not hosted proof, and
 the Vercel remote-cache SDK is not a server candidate.

@@ -1,5 +1,6 @@
 /**
  * Bounded glibc startup linkage discovery for qualification runtime identity.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -26,6 +27,7 @@ const vdsoLine = S.String.check(S.isPattern(/^linux-vdso\.so\.1 \(0x[0-9a-f]+\)$
 const libraryLine = /^(?:[^\s]+ => )?(\/[^\0\r\n]+) \(0x[0-9a-f]+\)$/;
 const hash = (file: string) =>
   hashFileSha256(file, (cause) => CacheCommandError.new("Cannot hash runtime linkage evidence.", cause));
+const decodeLinkedFileParts = S.decodeUnknownEffect(S.Tuple([S.String, CacheLinkedFile.fields.path]));
 
 /**
  * Parse a successful bounded glibc ldd listing, rejecting unresolved or unknown lines.
@@ -58,7 +60,7 @@ export const parseCacheLinkerOutput = Effect.fn("CacheLinker.parse")(function* (
       const match = yield* Str.match(libraryLine)(normalized).pipe(
         Effect.fromOption(() => CacheCommandError.new("Unsupported or unresolved glibc library listing."))
       );
-      const [, file] = yield* S.decodeUnknownEffect(S.Tuple([S.String, CacheLinkedFile.fields.path]))(match);
+      const [, file] = yield* decodeLinkedFileParts(match);
       return O.some(file);
     })
   ).pipe(Effect.map(A.getSomes));
@@ -131,6 +133,7 @@ export const inspectCacheLinkerResolution = Effect.fn("CacheLinker.inspect")(fun
     onNonEmpty: (files) => CacheLinkerResolution.cases.Dynamic.make({ files }),
   });
 }, CacheCommandError.mapError("Cannot discover executable startup libraries."));
+const decodeLinkerExecutables = S.decodeUnknownEffect(CacheRuntimeLinkerSnapshot.fields.executables);
 
 /**
  * Collect all supported executable linkages with stable detector and loader pins.
@@ -174,6 +177,6 @@ export const collectCacheRuntimeLinker = Effect.fn("CacheLinker.collect")(functi
     format: "glibc-ldd/v1",
     detector: detectorBefore,
     loader: loaderBefore,
-    executables: yield* S.decodeUnknownEffect(CacheRuntimeLinkerSnapshot.fields.executables)(resolutions),
+    executables: yield* decodeLinkerExecutables(resolutions),
   });
 }, CacheCommandError.mapError("Cannot fingerprint runtime startup linkage."));

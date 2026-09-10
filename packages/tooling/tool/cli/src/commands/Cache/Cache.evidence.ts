@@ -1,5 +1,6 @@
 /**
  * Bounded immutable file verification shared by Cache evidence consumers.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -48,6 +49,8 @@ export const readCacheExperimentBytes = Effect.fn("CacheEvidence.readExperimentB
  * ```
  *
  * @internal
+ * @param bytes - Original artifact bytes to decode with strict UTF-8 validation.
+ * @returns Decoded text or a typed failure for malformed UTF-8.
  * @category queries
  * @since 0.0.0
  */
@@ -56,6 +59,7 @@ export const decodeCacheExperimentText = (bytes: Uint8Array) =>
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
     catch: () => CacheCommandError.new("Experiment artifact contains invalid UTF-8."),
   });
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 /**
  * Hash an exact executable with the shared no-follow, 128 MiB read bound.
@@ -77,7 +81,7 @@ export const hashCacheExperimentExecutable = Effect.fn("CacheEvidence.hashExperi
 ) {
   const path = yield* Path.Path;
   return yield* readCacheExperimentBytes(path.dirname(executable), executable, 128 * 1024 * 1024).pipe(
-    Effect.flatMap(S.decodeEffect(Sha256HexFromBytes))
+    Effect.flatMap(hashBytes)
   );
 });
 
@@ -109,7 +113,7 @@ export const readCacheEvidenceBytes = Effect.fn("CacheEvidence.readBytes")(funct
   const bytes = yield* read.contents.pipe(
     Effect.fromOption(() => CacheCommandError.new("Required qualification evidence is missing."))
   );
-  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
+  const digest = yield* hashBytes(bytes);
   if (digest !== reference.sha256) return yield* CacheCommandError.new("Qualification evidence digest mismatch.");
   return bytes;
 }, CacheCommandError.mapError("Cannot verify qualification evidence bytes."));

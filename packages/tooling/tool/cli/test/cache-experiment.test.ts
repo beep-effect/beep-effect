@@ -1,11 +1,12 @@
 import { CacheSyntheticRun } from "@beep/repo-cli/commands/Cache";
 import { equivalentCacheFixtureRuns, inspectCacheFixtureCapture } from "@beep/repo-cli/test/Cache";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as S from "effect/Schema";
+import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const digest = Sha256Hex.make(Str.repeat(64)("a"));
 const different = Sha256Hex.make(Str.repeat(64)("b"));
@@ -54,14 +55,20 @@ describe("local fixture comparisons", () => {
   });
 
   it("never credits equivalent bytes to a different schema-generated runtime identity", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(CacheSyntheticRun)(fc), S.toArbitrary(Sha256Hex)(fc), (run, otherRuntime) => {
-        const fresh = CacheSyntheticRun.make({ ...run, exitCode: 0, violations: [], origin: "fresh" });
-        const replay = CacheSyntheticRun.make({ ...fresh, origin: "local-hit", bunSha256: otherRuntime });
-        expect(equivalentCacheFixtureRuns(fresh, replay)).toBe(fresh.bunSha256 === otherRuntime);
-      }),
-      { numRuns: 100 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(CacheSyntheticRun), Arbitrary.schema(Sha256Hex)]),
+          ([run, otherRuntime]) => {
+            const fresh = CacheSyntheticRun.make({ ...run, exitCode: 0, violations: [], origin: "fresh" });
+            const replay = CacheSyntheticRun.make({ ...fresh, origin: "local-hit", bunSha256: otherRuntime });
+            expect(equivalentCacheFixtureRuns(fresh, replay)).toBe(fresh.bunSha256 === otherRuntime);
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });
 

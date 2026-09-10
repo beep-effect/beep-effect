@@ -1,5 +1,6 @@
 /**
  * Integrity-bound installed dependency views for local cache experiments.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */

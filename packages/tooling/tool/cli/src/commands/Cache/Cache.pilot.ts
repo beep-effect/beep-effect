@@ -1,5 +1,6 @@
 /**
  * Admitted local execution of the real identity lint computation.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -220,6 +221,15 @@ const matchesNonExecutionDiagnostic = (reason: CachePilotNonExecution["reason"],
   Str.includes(reason === "missing-root-config" ? "could not find turbo.json" : "failed to parse turbo.json")(
     Str.toLowerCase(stderr)
   );
+const decodeGitObjectId = S.decodeUnknownEffect(GitObjectId);
+
+const decodeJsonObject = S.decodeUnknownEffect(S.JsonObject);
+
+const decodeArrayString = S.decodeUnknownEffect(S.Array(S.String));
+
+const decodeNonEmptyArrayJson = S.decodeUnknownEffect(S.NonEmptyArray(S.Json));
+
+const decodeNonEmptyString = S.decodeUnknownEffect(S.NonEmptyString);
 
 const runPilot = Effect.fn("CachePilot.run")(
   function* (root: string, request: CachePilotRequest) {
@@ -252,9 +262,7 @@ const runPilot = Effect.fn("CachePilot.run")(
     );
     const census = yield* collectCacheCensus(root);
     const context = yield* resolveWorktreeContext(root);
-    const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(
-      Effect.flatMap(S.decodeUnknownEffect(GitObjectId))
-    );
+    const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
     const sourceRoots = yield* Effect.forEach(request.worktrees, (source) => fs.realPath(source), { concurrency: 1 });
     if (sourceRoots[0] === sourceRoots[1])
@@ -1037,9 +1045,9 @@ const runPilot = Effect.fn("CachePilot.run")(
           else {
             const change = Effect.fn("CachePilot.changeChild")(function* (text: string) {
               const config = yield* decodeJsoncTextAs(S.JsonObject)(text);
-              const tasks = yield* S.decodeUnknownEffect(S.JsonObject)(config.tasks);
-              const lint = yield* S.decodeUnknownEffect(S.JsonObject)(tasks.lint);
-              const declared = yield* S.decodeUnknownEffect(S.Array(S.String))(lint.env);
+              const tasks = yield* decodeJsonObject(config.tasks);
+              const lint = yield* decodeJsonObject(tasks.lint);
+              const declared = yield* decodeArrayString(lint.env);
               const encoded = yield* JsonStringCodec(S.JsonObject).encode(
                 R.set(
                   config,
@@ -1075,15 +1083,15 @@ const runPilot = Effect.fn("CachePilot.run")(
           original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
           const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
           if (id === "root-lint-config") {
-            const files = yield* S.decodeUnknownEffect(S.JsonObject)(config.files);
-            const includes = yield* S.decodeUnknownEffect(S.Array(S.String))(files.includes);
+            const files = yield* decodeJsonObject(config.files);
+            const includes = yield* decodeArrayString(files.includes);
             changedText = yield* JsonStringCodec(S.JsonObject).encode(
               R.set(config, "files", R.set(files, "includes", A.append(includes, "!**/src/index.ts")))
             );
           } else if (id === "lockfile") {
-            const packages = yield* S.decodeUnknownEffect(S.JsonObject)(config.packages);
-            const dependency = yield* S.decodeUnknownEffect(S.NonEmptyArray(S.Json))(packages.effect);
-            const descriptor = yield* S.decodeUnknownEffect(S.NonEmptyString)(dependency[0]);
+            const packages = yield* decodeJsonObject(config.packages);
+            const dependency = yield* decodeNonEmptyArrayJson(packages.effect);
+            const descriptor = yield* decodeNonEmptyString(dependency[0]);
             changedText = yield* JsonStringCodec(S.JsonObject).encode(
               R.set(
                 config,
@@ -1094,8 +1102,8 @@ const runPilot = Effect.fn("CachePilot.run")(
           } else if (id === "package-manager") {
             changedText = yield* JsonStringCodec(S.JsonObject).encode(R.set(config, "packageManager", "bun@1.4.1"));
           } else {
-            const options = yield* S.decodeUnknownEffect(S.JsonObject)(config.compilerOptions);
-            const aliases = yield* S.decodeUnknownEffect(S.JsonObject)(options.paths);
+            const options = yield* decodeJsonObject(config.compilerOptions);
+            const aliases = yield* decodeJsonObject(options.paths);
             changedText = yield* JsonStringCodec(S.JsonObject).encode(
               R.set(
                 config,
@@ -1112,8 +1120,8 @@ const runPilot = Effect.fn("CachePilot.run")(
         const applyMutation = Effect.fn("CachePilot.applyMutation")(function* () {
           if (id === "root-task-config") {
             const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
-            const global = yield* S.decodeUnknownEffect(S.JsonObject)(config.global);
-            const declared = yield* S.decodeUnknownEffect(S.Array(S.String))(global.env);
+            const global = yield* decodeJsonObject(config.global);
+            const declared = yield* decodeArrayString(global.env);
             changedText = yield* JsonStringCodec(S.JsonObject).encode(
               R.set(config, "global", R.set(global, "env", A.append(declared, "QUALIFICATION_CONFIG_INPUT")))
             );
@@ -1174,7 +1182,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           Effect.flatMap(decodeText),
           Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
         );
-        const scripts = yield* S.decodeUnknownEffect(S.JsonObject)(manifest.scripts);
+        const scripts = yield* decodeJsonObject(manifest.scripts);
         yield* writeContainedFileString(
           fixture.identity,
           "package.json",

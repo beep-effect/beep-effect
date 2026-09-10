@@ -34,7 +34,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const digest = (n: number) => Sha256Hex.make(Str.padStart(64, "0")(`${n}`));
 const key = CacheQualificationKey.make({
@@ -108,30 +108,45 @@ const completeObservations = () => {
     ),
   ]);
 };
+const decodeCacheQualificationKey = S.decodeEffect(CacheQualificationKey);
+
+const encodeResultCacheQualificationKey = S.encodeResult(CacheQualificationKey);
+
+const decodeResultCacheQualificationKey = S.decodeResult(CacheQualificationKey);
+
+const decodeCacheQualificationObservation = S.decodeUnknownEffect(CacheQualificationObservation);
+
+const decodeCacheEvidenceReference = S.decodeEffect(CacheEvidenceReference);
 
 describe("cache qualification policy", () => {
   it.effect(
     "accepts package names containing s and rejects whitespace independently",
     Effect.fnUntraced(function* () {
       for (const computation of ["@beep/schema#check", "@beep/types#lint"]) {
-        expect(yield* S.decodeEffect(CacheQualificationKey)({ ...key, computation }).pipe(Effect.isSuccess)).toBe(true);
+        expect(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isSuccess)).toBe(true);
       }
       for (const computation of ["pkg #lint", "pkg#li nt", "pkg\t#lint"]) {
-        expect(yield* S.decodeEffect(CacheQualificationKey)({ ...key, computation }).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure)).toBe(true);
       }
     })
   );
 
   it("preserves the complete qualification tuple through schema serialization", () => {
     const equivalent = S.toEquivalence(CacheQualificationKey);
-    fc.assert(
-      fc.property(S.toArbitrary(CacheQualificationKey)(fc), (value) => {
-        const encoded = Result.getOrThrow(S.encodeResult(CacheQualificationKey)(value));
-        const decoded = Result.getOrThrow(S.decodeResult(CacheQualificationKey)(encoded));
-        expect(equivalent(value, decoded)).toBe(true);
-      }),
-      fcRuns(40)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(CacheQualificationKey),
+          (value) => {
+            const encoded = Result.getOrThrow(encodeResultCacheQualificationKey(value));
+            const decoded = Result.getOrThrow(decodeResultCacheQualificationKey(encoded));
+            expect(equivalent(value, decoded)).toBe(true);
+            return true;
+          },
+          fcRuns(40)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("requires the documented lifecycle edges including requalification", () => {
@@ -285,15 +300,11 @@ describe("cache qualification policy", () => {
     "rejects invalid identities, unbound evidence and unsafe receipt paths at decode",
     Effect.fnUntraced(function* () {
       for (const computation of ["lint", "workspace#", "workspace#lint#extra", "workspace #lint"]) {
-        expect(yield* S.decodeEffect(CacheQualificationKey)({ ...key, computation }).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure)).toBe(true);
       }
-      expect(yield* S.decodeUnknownEffect(CacheQualificationObservation)({ passed: true }).pipe(Effect.isFailure)).toBe(
-        true
-      );
+      expect(yield* decodeCacheQualificationObservation({ passed: true }).pipe(Effect.isFailure)).toBe(true);
       for (const path of ["/private/log", "../receipt.json", "safe/../../escape", "windows\\\\receipt"]) {
-        expect(yield* S.decodeEffect(CacheEvidenceReference)({ path, sha256: digest(1) }).pipe(Effect.isFailure)).toBe(
-          true
-        );
+        expect(yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure)).toBe(true);
       }
     })
   );

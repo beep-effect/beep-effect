@@ -34,7 +34,9 @@ export const CacheQualificationState = LiteralKit([
   "qualified",
   "suspended",
 ]).pipe($I.annoteSchema("CacheQualificationState", { description: "States of one evidence-bound reuse claim." }));
-/** Decoded CacheQualificationState value.
+/**
+ * Decoded CacheQualificationState value.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -64,7 +66,9 @@ export const CacheReuseLayer = LiteralKit([
     description: "Distinct reuse authorities; only task results can be qualified here.",
   })
 );
-/** Decoded CacheReuseLayer value.
+/**
+ * Decoded CacheReuseLayer value.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -100,7 +104,9 @@ export const CacheEvidenceKind = LiteralKit([
     description: "Independent experiment obligations required by task qualification.",
   })
 );
-/** Decoded CacheEvidenceKind value.
+/**
+ * Decoded CacheEvidenceKind value.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -122,7 +128,9 @@ export type CacheEvidenceKind = typeof CacheEvidenceKind.Type;
 export const CacheClientChannel = LiteralKit(["stable", "canary"]).pipe(
   $I.annoteSchema("CacheClientChannel", { description: "Exact stable and isolated canary results remain separate." })
 );
-/** Decoded CacheClientChannel value.
+/**
+ * Decoded CacheClientChannel value.
+ *
  * @category models
  * @since 0.0.0
  */

@@ -1,5 +1,6 @@
 /**
  * Bounded installed dependency snapshots and independent integrity checks.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -26,6 +27,7 @@ import type { CacheCensusWorkspace } from "./Cache.schemas.ts";
 
 const tools = ["bash", "cp", "find", "tar", "sha256sum", "awk"];
 const countFields = S.Tuple([NonNegativeInt, NonNegativeInt, NonNegativeInt, NonNegativeInt, NonNegativeInt]);
+const decodeCountFields = S.decodeUnknownEffect(countFields);
 const bound = OutputBound.make({ maxChars: 512 * 1024, truncatedNotice: "[dependency inspection overflow]" });
 const digestScript =
   'set -euo pipefail; /usr/bin/tar --sort=name --format=posix --mtime=@0 --owner=0 --group=0 --numeric-owner --hard-dereference --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime -C "$1" -cf - -- node_modules | /usr/bin/sha256sum';
@@ -103,6 +105,11 @@ const inspectDependencyLink = Effect.fn("CacheDependencies.inspectLink")(functio
     return yield* CacheCommandError.new("Dependency symlink does not target its declared workspace.");
   return CacheDependencyLink.cases.Workspace.make({ path: relative, target, workspace: workspace.value.directory });
 });
+const decodeDependencyCounts = S.decodeUnknownEffect(S.Array(S.FiniteFromString));
+
+const decodeDependencyLinkPairs = S.decodeUnknownEffect(S.Array(S.Tuple([S.NonEmptyString, S.NonEmptyString])));
+
+const decodeDependencyDigest = S.decodeUnknownEffect(CacheDependencyTree.fields.sha256);
 
 /**
  * Inspect a complete dependency view without following its symlinks.
@@ -127,8 +134,8 @@ export const inspectCacheDependencyTree = Effect.fn("CacheDependencies.inspect")
   const counts = yield* capture(root, "/usr/bin/bash", ["-c", countsScript]).pipe(
     Effect.map(Str.trim),
     Effect.map(Str.split(" ")),
-    Effect.flatMap(S.decodeUnknownEffect(S.Array(S.FiniteFromString))),
-    Effect.flatMap(S.decodeUnknownEffect(countFields))
+    Effect.flatMap(decodeDependencyCounts),
+    Effect.flatMap(decodeCountFields)
   );
   const [bytes, regularFiles, linkCount, entries, special] = counts;
   if (bytes > 16 * 1024 * 1024 * 1024 || regularFiles > 400000 || entries > 600000 || linkCount > 4096 || special !== 0)
@@ -137,7 +144,7 @@ export const inspectCacheDependencyTree = Effect.fn("CacheDependencies.inspect")
     );
   const encoded = yield* capture(root, "/usr/bin/find", ["node_modules", "-type", "l", "-printf", "%P\\0%l\\0"]);
   const rows = encoded === "" ? [] : A.chunksOf(A.dropRight(Str.split("\0")(encoded), 1), 2);
-  const pairs = yield* S.decodeUnknownEffect(S.Array(S.Tuple([S.NonEmptyString, S.NonEmptyString])))(rows);
+  const pairs = yield* decodeDependencyLinkPairs(rows);
   if (pairs.length !== linkCount || Str.includes("\ufffd")(encoded))
     return yield* CacheCommandError.new("Dependency link inventory is incomplete or not valid text.");
   const links = yield* Effect.forEach(
@@ -156,7 +163,7 @@ export const inspectCacheDependencyTree = Effect.fn("CacheDependencies.inspect")
     Effect.flatMap((parts) =>
       Effect.fromOption(() => CacheCommandError.new("Missing dependency digest."))(A.head(parts))
     ),
-    Effect.flatMap(S.decodeUnknownEffect(CacheDependencyTree.fields.sha256))
+    Effect.flatMap(decodeDependencyDigest)
   );
   return CacheDependencyTree.make({
     format: "canonical-gnu-tar/v1",
@@ -198,6 +205,7 @@ export const verifyCacheDependencies = Effect.fn("CacheDependencies.verify")(fun
   if (!S.toEquivalence(CacheDependencyTree)(observed, receipt.tree))
     return yield* CacheCommandError.new("Retained dependency materialization changed or is incomplete.");
 }, CacheCommandError.mapError("Cannot verify dependency materialization."));
+const decodeNonEmptyString = S.decodeUnknownEffect(S.NonEmptyString);
 
 /**
  * Copy the full installed tree into a retained private cache directory and verify parity.
@@ -222,7 +230,7 @@ export const materializeCacheDependencies = Effect.fn("CacheDependencies.materia
   const program = Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const home = yield* Config.string("HOME").pipe(Effect.flatMap(S.decodeUnknownEffect(S.NonEmptyString)));
+    const home = yield* Config.String("HOME").pipe(Effect.flatMap(decodeNonEmptyString));
     const parent = path.join(path.resolve(home), ".cache", "beep", "turbo-qualification", "dependencies");
     yield* fs.makeDirectory(parent, { recursive: true });
     const census = yield* collectCacheCensus(root);

@@ -733,6 +733,7 @@ export const readContainedFileStringNoFollow = Effect.fn("RepoCli.FsGuards.readC
     : O.none<string>();
   return ContainedFileRead.make({ contents, exists: true });
 });
+const isFsGuardError = S.is(FsGuardError);
 
 /**
  * Read at most the allowed number of original bytes, rejecting symlinks and oversized files.
@@ -800,7 +801,7 @@ export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readCo
     })
   ).pipe(
     Effect.mapError((cause) =>
-      S.is(FsGuardError)(cause)
+      isFsGuardError(cause)
         ? cause
         : fsGuardError(root, resolved, resolved, "filesystem-failure", "Cannot read bounded file bytes.", cause)
     )

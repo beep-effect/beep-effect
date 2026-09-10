@@ -1,5 +1,6 @@
 /**
  * Disposable local Turbo experiments with bounded captures and no remote credentials.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -194,6 +195,9 @@ const isAbsentScriptObservation = (nonExecution: CacheSyntheticNonExecution) =>
   !nonExecution.outputPresent &&
   !nonExecution.replayLogPresent &&
   A.isReadonlyArrayEmpty(nonExecution.violations);
+const decodeNonEmptyArrayCacheSyntheticRun = S.decodeUnknownEffect(S.NonEmptyArray(CacheSyntheticRun));
+
+const decodeNonEmptyArrayCacheSyntheticCheck = S.decodeUnknownEffect(S.NonEmptyArray(CacheSyntheticCheck));
 
 const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
   function* (root: string, request: CacheSyntheticRequest) {
@@ -755,9 +759,9 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
       bun: bun.pin,
       alternateBun: alternateBun.pin,
       fixtureSha256: yield* hashText(fixtureText),
-      runs: yield* S.decodeUnknownEffect(S.NonEmptyArray(CacheSyntheticRun))(runs),
+      runs: yield* decodeNonEmptyArrayCacheSyntheticRun(runs),
       nonExecutions: [nonExecution],
-      checks: yield* S.decodeUnknownEffect(S.NonEmptyArray(CacheSyntheticCheck))(checks),
+      checks: yield* decodeNonEmptyArrayCacheSyntheticCheck(checks),
     });
   },
   Effect.scoped,

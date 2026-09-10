@@ -196,7 +196,7 @@ export class CacheWarmReceipt extends S.Class<CacheWarmReceipt>($I`CacheWarmRece
  */
 export class CacheCommandError extends S.TaggedError<CacheCommandError>($I`CacheCommandError`)(
   "CacheCommandError",
-  { message: S.String, cause: S.optionalKey(S.Defect()) },
+  { message: S.String, cause: S.optionalKey(S.Defect({ includeStack: true })) },
   $I.annoteError<CacheCommandError>("CacheCommandError", {
     description: "A cache command precondition or subprocess failure.",
   })
@@ -221,9 +221,10 @@ export class CacheCommandError extends S.TaggedError<CacheCommandError>($I`Cache
     (message: string) =>
     <A, E, R>(effect: Effect.Effect<A, E, R>) =>
       effect.pipe(
-        Effect.mapError((cause) => (S.is(CacheCommandError)(cause) ? cause : CacheCommandError.new(message, cause)))
+        Effect.mapError((cause) => (isCacheCommandError(cause) ? cause : CacheCommandError.new(message, cause)))
       );
 }
+const isCacheCommandError = S.is(CacheCommandError);
 
 /**
  * JSON codec for dashboard reports.
@@ -471,6 +472,7 @@ export const CacheDependencyLink = S.TaggedUnion({
 );
 /**
  * An installed-tree or declared-workspace link.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -561,6 +563,7 @@ export const CacheLinkerResolution = S.TaggedUnion({
 );
 /**
  * A successfully inspected executable's startup linkage.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -586,6 +589,7 @@ export const CacheRuntimeExecutable = LiteralKit(["bun", "node", "turbo", "biome
 );
 /**
  * An executable role requiring startup linkage evidence.
+ *
  * @category models
  * @since 0.0.0
  */

@@ -722,3 +722,24 @@ controls disable reuse and may still run after this comparison stops reuse.
   outcomes distinct in the evidence.
 - Prevention: establish the installed process and runtime boundary before
   treating a restricted syscall trace as complete read/write coverage.
+
+### Recheck branch-only API consumers after a dependency migration
+
+- Activity: merge the Effect upgrade from PR #1060 into the qualification branch.
+- Evidence: the merge succeeds, but the CLI stops at `Flag.boolean is not a function`
+  before it can run quality checks. Six cache properties also still use the removed
+  schema-to-FastCheck bridge.
+- Correction: migrate branch-only constructors and properties to the installed
+  Effect APIs, preserving scoped fixtures and property run counts.
+- Prevention: include a CLI bootstrap and branch-only property test pass immediately
+  after a breaking dependency merge; earlier proof cannot cover the new runtime.
+
+### Portable references also apply to captured prompts
+
+- Activity: attribute the hosted knowledge-reference gate after the base merge.
+- Evidence: the branch census finds eight live external-mirror paths in the
+  exploration capture and continuation prompt; the base tree has none.
+- Correction: use canonical upstream URLs in both documents and explicitly mark
+  the captured request as having normalized clone locations.
+- Prevention: normalize workstation clone paths when publishing research captures,
+  while preserving which upstream source each clone represented.

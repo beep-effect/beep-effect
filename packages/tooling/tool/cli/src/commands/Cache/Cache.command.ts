@@ -553,8 +553,8 @@ const cacheCensusCommand = Command.make(
   "census",
   {
     output: outputFlag,
-    json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the complete census JSON")),
-    entrypointReview: Flag.path("entrypoint-review", { pathType: "file" }).pipe(
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the complete census JSON")),
+    entrypointReview: Flag.Path("entrypoint-review", { pathType: "file" }).pipe(
       Flag.optional,
       Flag.withDescription("Contained source-review request; verify and attach complete entrypoint snapshots")
     ),
@@ -626,7 +626,7 @@ export const runCachePolicyAudit = Effect.fn("Cache.runPolicyAudit")(function* (
 const cacheAuditCommand = Command.make(
   "audit",
   {
-    json: Flag.boolean("json").pipe(Flag.withDefault(false)),
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false)),
   },
   ({ json }) => runCachePolicyAudit(process.cwd(), json)
 ).pipe(
@@ -649,13 +649,13 @@ const cacheInspectCommand = Command.make("inspect", {}, () =>
   Command.provide(CacheQualificationLive)
 );
 
-const requestFlag = Flag.path("request", { pathType: "file" }).pipe(
+const requestFlag = Flag.Path("request", { pathType: "file" }).pipe(
   Flag.withDescription("Schema-validated reviewed request JSON")
 );
 
 const cacheFingerprintCommand = Command.make(
   "fingerprint",
-  { computation: Flag.string("computation"), output: outputFlag },
+  { computation: Flag.String("computation"), output: outputFlag },
   ({ computation, output }) =>
     Effect.gen(function* () {
       const cache = yield* CacheQualificationService;
@@ -733,7 +733,7 @@ const readCacheRequest = Effect.fn("Cache.readRequest")(function* <Decoded, Enco
 
 const cacheActivationCommand = Command.make(
   "activation",
-  { request: Flag.file("request"), output: outputFlag },
+  { request: Flag.File("request"), output: outputFlag },
   ({ request, output }) =>
     Effect.gen(function* () {
       const cache = yield* CacheQualificationService;
@@ -748,7 +748,7 @@ const cacheActivationCommand = Command.make(
 
 const cacheSyntheticCommand = Command.make(
   "synthetic",
-  { request: Flag.file("request"), output: outputFlag },
+  { request: Flag.File("request"), output: outputFlag },
   ({ request, output }) =>
     Effect.gen(function* () {
       const input = yield* readCacheRequest(request, CacheSyntheticRequest);
@@ -774,7 +774,7 @@ const cacheDependenciesCommand = Command.make("dependencies", { output: outputFl
 
 const cachePilotCommand = Command.make(
   "pilot",
-  { request: Flag.file("request"), output: outputFlag },
+  { request: Flag.File("request"), output: outputFlag },
   ({ request, output }) =>
     Effect.gen(function* () {
       const input = yield* readCacheRequest(request, CachePilotRequest);

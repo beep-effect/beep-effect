@@ -1,5 +1,6 @@
 /**
  * Exact-client discovery of executable workspace quality computations.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -111,6 +112,7 @@ const capture = Effect.fn("CacheCensus.capture")(function* (
   }
   return result.output;
 });
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 /**
  * Join a decoded exact-client graph to script presence, rejecting command and workspace mismatches.
@@ -153,14 +155,14 @@ export const joinCacheCensusPlan = Effect.fn("CacheCensus.joinPlan")(function* (
         Order.mapInput(Order.String, (entry: readonly [string, string]) => entry[0])
       );
       const inputJson = yield* encodeInputEntries(sortedInputs);
-      const inputsDigest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(inputJson));
+      const inputsDigest = yield* hashBytes(new TextEncoder().encode(inputJson));
       const scriptJson = yield* encodeInputEntries(
         A.sort(
           R.toEntries(workspace.scripts),
           Order.mapInput(Order.String, (entry: readonly [string, string]) => entry[0])
         )
       );
-      const commandDigest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(scriptJson));
+      const commandDigest = yield* hashBytes(new TextEncoder().encode(scriptJson));
       return CacheCensusNode.make({
         id: node.taskId,
         workspace: node.package,
@@ -179,6 +181,11 @@ export const joinCacheCensusPlan = Effect.fn("CacheCensus.joinPlan")(function* (
     { concurrency: 1 }
   );
 }, CacheCommandError.mapError("Cannot join census graph and manifest scripts."));
+const decodeTurboWorkspaceListJson = S.decodeUnknownEffect(S.fromJsonString(TurboWorkspaceList));
+
+const decodeTurboConfiguration = S.decodeUnknownEffect(TurboConfiguration);
+
+const decodeTurboPlanJson = S.decodeUnknownEffect(S.fromJsonString(TurboPlan));
 
 /**
  * Collect exact Turbo definitions and join them to declared workspace scripts without running tasks.
@@ -212,7 +219,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
     CacheCommandError.mapError("Cannot discover workspace manifests.")
   );
   const query = yield* capture(root, turbo, ["query", "ls", "--output", "json"]).pipe(
-    Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(TurboWorkspaceList))),
+    Effect.flatMap(decodeTurboWorkspaceListJson),
     CacheCommandError.mapError("Turbo workspace query did not match the census wire contract.")
   );
   const queryNames = pipe(
@@ -241,7 +248,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
       Effect.flatMap(decodeJsoncTextAs(S.JsonObject)),
       CacheCommandError.mapError("Invalid root Turbo configuration.")
     );
-  const rootConfig = yield* S.decodeUnknownEffect(TurboConfiguration)(rootJson).pipe(
+  const rootConfig = yield* decodeTurboConfiguration(rootJson).pipe(
     CacheCommandError.mapError("Root Turbo tasks are invalid.")
   );
   let tasks = R.keys(rootConfig.tasks);
@@ -285,7 +292,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
     "--cache=local:",
     "--env-mode=strict",
   ]).pipe(
-    Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(TurboPlan))),
+    Effect.flatMap(decodeTurboPlanJson),
     CacheCommandError.mapError("Turbo dry plan did not match the census wire contract.")
   );
   const nodes = yield* joinCacheCensusPlan(workspaceRows, dry);

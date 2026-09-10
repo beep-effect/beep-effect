@@ -1,5 +1,6 @@
 /**
  * Immutable source-review integration for the executable census.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -18,6 +19,9 @@ import { CacheCensusReport, CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
 
 const Envelope = S.Struct({ schemaVersion: CacheEntrypointArtifactFormat });
+const decodeJsonObjectJson = S.decodeEffect(S.fromJsonString(S.JsonObject));
+
+const decodeEnvelope = S.decodeUnknownEffect(Envelope);
 
 /**
  * Attach complete source documents after verifying the census population and referenced bytes.
@@ -83,8 +87,8 @@ export const attachCacheEntrypointReview = Effect.fn("CacheEntrypoints.attachRev
         try: () => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes),
         catch: (cause) => CacheCommandError.new("Entrypoint artifact is not valid UTF-8.", cause),
       });
-      const document = yield* S.decodeEffect(S.fromJsonString(S.JsonObject))(text);
-      const envelope = yield* S.decodeUnknownEffect(Envelope)(document);
+      const document = yield* decodeJsonObjectJson(text);
+      const envelope = yield* decodeEnvelope(document);
       if (envelope.schemaVersion !== artifact.format)
         return yield* CacheCommandError.new("Entrypoint artifact format differs from its reviewed reference.");
       return CacheEntrypointArtifact.make({ ...artifact, document });

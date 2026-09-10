@@ -1,5 +1,6 @@
 /**
  * Observed native toolchain and computation configuration identities.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -32,6 +33,8 @@ import {
 } from "./Cache.schemas.ts";
 import type { CacheActivationProjection, CacheQualificationKey } from "@beep/repo-configs/cache";
 
+const decodeNonEmptyString = S.decodeEffect(S.NonEmptyString);
+
 const captureVersion = Effect.fn("CacheFingerprint.captureVersion")(function* (
   root: string,
   command: string,
@@ -52,7 +55,7 @@ const captureVersion = Effect.fn("CacheFingerprint.captureVersion")(function* (
   });
   if (result.exitCode !== 0 || result.truncated)
     return yield* CacheCommandError.new("Tool fingerprint subprocess failed or exceeded its capture bound.");
-  return yield* S.decodeEffect(S.NonEmptyString)(Str.trim(result.output));
+  return yield* decodeNonEmptyString(Str.trim(result.output));
 }, CacheCommandError.mapError("Cannot observe tool version."));
 
 const fingerprintExecutable = Effect.fn("CacheFingerprint.executable")(function* (root: string, executable: string) {
@@ -71,6 +74,9 @@ const toDefinition = (node: CacheCensusNode): CacheCensusDefinition =>
     dependencies: A.sort(node.dependencies, Order.String),
     configuration: node.configuration,
   });
+const decodeToolchainProfile = S.decodeUnknownEffect(CacheToolchainSnapshot.fields.profile);
+
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 /**
  * Observe an explicitly supported runtime matching the repository's bounded Bun pin.
@@ -105,9 +111,7 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
   );
   if (bun.version !== Str.trim(new TextDecoder().decode(declaration)))
     return yield* CacheCommandError.new("The observed Bun runtime differs from the repository .bun-version pin.");
-  const profile = yield* S.decodeUnknownEffect(CacheToolchainSnapshot.fields.profile)(
-    `local-linux-x64-bun${bun.version}`
-  );
+  const profile = yield* decodeToolchainProfile(`local-linux-x64-bun${bun.version}`);
   const sources = yield* Effect.forEach(
     [
       ".nvmrc",
@@ -148,12 +152,12 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
     installedDependencies: O.some(
       yield* inspectCacheDependencyTree(root, (yield* collectCacheCensus(root)).workspaces)
     ),
-    sources: [
-      CacheCensusSource.make({ path: ".bun-version", sha256: yield* S.decodeEffect(Sha256HexFromBytes)(declaration) }),
-      ...sources,
-    ],
+    sources: [CacheCensusSource.make({ path: ".bun-version", sha256: yield* hashBytes(declaration) }), ...sources],
   });
 }, CacheCommandError.mapError("Cannot fingerprint the qualification runtime."));
+const encodeCacheComputationConfigurationJson = S.encodeEffect(S.fromJsonString(CacheComputationConfiguration));
+
+const encodeCacheToolchainSnapshotJson = S.encodeEffect(S.fromJsonString(CacheToolchainSnapshot));
 
 /**
  * Bind an executable computation to all of its configured dependencies, including graph-only nodes.
@@ -216,10 +220,10 @@ export const fingerprintCacheComputation = Effect.fn("CacheFingerprint.computati
       Order.mapInput(Order.String, (source: CacheCensusSource) => source.path)
     ),
   });
-  const configurationText = yield* S.encodeEffect(S.fromJsonString(CacheComputationConfiguration))(configuration);
-  const toolchainText = yield* S.encodeEffect(S.fromJsonString(CacheToolchainSnapshot))(toolchain);
-  const configurationDigest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(configurationText));
-  const toolchainDigest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(toolchainText));
+  const configurationText = yield* encodeCacheComputationConfigurationJson(configuration);
+  const toolchainText = yield* encodeCacheToolchainSnapshotJson(toolchain);
+  const configurationDigest = yield* hashBytes(new TextEncoder().encode(configurationText));
+  const toolchainDigest = yield* hashBytes(new TextEncoder().encode(toolchainText));
   return CacheLiveIdentity.make({ key, configuration, configurationDigest, toolchain, toolchainDigest });
 }, CacheCommandError.mapError("Cannot fingerprint the computation configuration."));
 
@@ -239,10 +243,15 @@ const validateActivationArtifacts = Effect.fn("CacheFingerprint.validateActivati
   if (A.length(sources) !== 1 || !A.every(sources, (entry) => entry.sha256 === activation.before.sha256))
     return yield* CacheCommandError.new("The observed activation source file differs from its reviewed bytes.");
   for (const [text, expected] of A.zip([before, after], [activation.before.sha256, activation.after.sha256])) {
-    if ((yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text))) !== expected)
+    if ((yield* hashBytes(new TextEncoder().encode(text))) !== expected)
       return yield* CacheCommandError.new("Activation artifact bytes differ from their digests.");
   }
 });
+const decodeComputationParts = S.decodeUnknownEffect(S.Tuple([S.NonEmptyString, S.NonEmptyString]));
+
+const decodeRootInheritance = S.decodeUnknownEffect(S.Tuple([S.Literal("//")]));
+
+const decodeJsonObject = S.decodeUnknownEffect(S.JsonObject);
 
 /**
  * Validate and fingerprint an exact single-task cache activation projection.
@@ -274,9 +283,7 @@ export const projectCacheActivation = Effect.fn("CacheFingerprint.projectActivat
   const source = yield* fingerprintCacheComputation(key, census, toolchain);
   if (source.configurationDigest !== activation.sourceConfiguration)
     return yield* CacheCommandError.new("The disabled computation configuration has drifted.");
-  const [workspaceName, taskName] = yield* S.decodeUnknownEffect(S.Tuple([S.NonEmptyString, S.NonEmptyString]))(
-    Str.split("#")(key.computation)
-  );
+  const [workspaceName, taskName] = yield* decodeComputationParts(Str.split("#")(key.computation));
   const workspace = yield* A.findFirst(census.workspaces, (entry) => entry.name === workspaceName).pipe(
     Effect.fromOption(() => CacheCommandError.new("The activation workspace is missing."))
   );
@@ -287,9 +294,9 @@ export const projectCacheActivation = Effect.fn("CacheFingerprint.projectActivat
   yield* validateActivationArtifacts(census, activation, before, after);
   const disabled = yield* decodeJsoncTextAs(S.JsonObject)(before);
   const enabled = yield* decodeJsoncTextAs(S.JsonObject)(after);
-  yield* S.decodeUnknownEffect(S.Tuple([S.Literal("//")]))(disabled.extends);
-  const tasks = yield* S.decodeUnknownEffect(S.JsonObject)(disabled.tasks);
-  const definition = yield* S.decodeUnknownEffect(S.JsonObject)(tasks[taskName]);
+  yield* decodeRootInheritance(disabled.extends);
+  const tasks = yield* decodeJsonObject(disabled.tasks);
+  const definition = yield* decodeJsonObject(tasks[taskName]);
   if (definition.cache !== false)
     return yield* CacheCommandError.new("Activation requires an explicitly disabled source task.");
   const expected = R.set(disabled, "tasks", R.set(tasks, taskName, R.set(definition, "cache", true)));

@@ -9,6 +9,8 @@ dated heading at the bottom.
 
 ## 2026-09-04 — initial request
 
+Machine-local clone paths in the captured request are normalized to upstream URLs.
+
 > Can you make sure the the $turborepo skill is up to date with
 > https://turborepo.dev/docs/guides/ai
 
@@ -31,8 +33,8 @@ dated heading at the bottom.
 >
 > I've cloned both locally for reference:
 >
-> - brunojppb/turbo-cache-server at ~/YeeBois/dev/turbo-cache-server
-> - ducktors/turborepo-remote-cache at ~/YeeBois/dev/turborepo-remote-cache
+> - brunojppb/turbo-cache-server at https://github.com/brunojppb/turbo-cache-server
+> - ducktors/turborepo-remote-cache at https://github.com/ducktors/turborepo-remote-cache
 >
 > I want to pursue this.
 >
@@ -40,8 +42,8 @@ dated heading at the bottom.
 > vercel/remote-cache sdk for reference often times you'll find docs,
 > capabilities & other goodies there that aren't in the docs. Worth a look
 >
-> - vercel/remote-cache at ~/YeeBois/dev/remote-cache
-> - turborepo at ~/YeeBois/dev/turborepo
+> - vercel/remote-cache at https://github.com/vercel/remote-cache
+> - turborepo at https://github.com/vercel/turborepo
 >
 > first you get your bearings & do some initial exploration of my repo & turbo
 > repo resources & clones to prepare a research plan using

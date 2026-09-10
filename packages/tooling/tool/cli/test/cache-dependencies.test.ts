@@ -1,12 +1,12 @@
 import { CacheCensusWorkspace, CacheDependencyMaterialization } from "@beep/repo-cli/commands/Cache";
 import { inspectCacheDependencyTree } from "@beep/repo-cli/test/Cache";
-import { fcRuns } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const fixture = Effect.fn("CacheDependenciesTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -21,15 +21,21 @@ const fixture = Effect.fn("CacheDependenciesTest.fixture")(function* () {
 
 describe("installed cache dependency integrity", () => {
   it("roundtrips materialization evidence through its schema", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(CacheDependencyMaterialization)(fc), (value) => {
-        const codec = S.fromJsonString(CacheDependencyMaterialization);
-        const encoded = Result.getOrThrow(S.encodeResult(codec)(value));
-        const decoded = Result.getOrThrow(S.decodeResult(codec)(encoded));
-        expect(S.toEquivalence(CacheDependencyMaterialization)(value, decoded)).toBe(true);
-      }),
-      fcRuns(20)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(CacheDependencyMaterialization),
+          (value) => {
+            const codec = S.fromJsonString(CacheDependencyMaterialization);
+            const encoded = Result.getOrThrow(S.encodeResult(codec)(value));
+            const decoded = Result.getOrThrow(S.decodeResult(codec)(encoded));
+            expect(S.toEquivalence(CacheDependencyMaterialization)(value, decoded)).toBe(true);
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect("normalizes location and timestamps while detecting bytes, modes and entries", () =>
@@ -49,7 +55,7 @@ describe("installed cache dependency integrity", () => {
       const removed = yield* inspectCacheDependencyTree(first.root, []);
       expect(removed.regularFiles).toBe(0);
       expect(removed.sha256).not.toBe(before.sha256);
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    }).pipe(provideScopedLayer(NodeServices.layer))
   );
 
   it.effect("records internal and declared workspace links without following them", () =>
@@ -70,7 +76,7 @@ describe("installed cache dependency integrity", () => {
         { _tag: "Internal", path: "entry", target: "example/index.js" },
       ]);
       expect(Result.isFailure(yield* inspectCacheDependencyTree(root, []).pipe(Effect.result))).toBe(true);
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    }).pipe(provideScopedLayer(NodeServices.layer))
   );
 
   it.effect("refuses absolute and escaping links and a symlinked tree root", () =>
@@ -85,6 +91,6 @@ describe("installed cache dependency integrity", () => {
       const alternate = yield* fs.makeTempDirectoryScoped({ prefix: "cache-dependency-link-test-" });
       yield* fs.symlink(modules, path.join(alternate, "node_modules"));
       expect(Result.isFailure(yield* inspectCacheDependencyTree(alternate, []).pipe(Effect.result))).toBe(true);
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    }).pipe(provideScopedLayer(NodeServices.layer))
   );
 });
