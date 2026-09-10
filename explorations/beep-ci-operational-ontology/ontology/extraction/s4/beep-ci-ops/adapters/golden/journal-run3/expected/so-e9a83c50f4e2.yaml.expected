@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:e9a83c50f4e2f32a3055d9d6545da39fc683ad7dfc6b0e1cd0b410d4105d8f1e",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3b-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 37,
+    "end_line": 45,
+    "content_sha256": "17f0fd3ed1aabf1d0e5d8027db75f94bdf160eb42ed959c2594f2ee85a3a2161"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/journal.properties:record=4",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-released"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=attempt-later-release"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fixture>/alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=later-release"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=fixture-owner"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=340"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 4\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=later-release\nreleasedAtMillis=340\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-later-release\nownerRef=fixture-owner\n",
+  "epistemic_status": "parser_derived"
+}

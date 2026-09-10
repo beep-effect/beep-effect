@@ -1079,3 +1079,33 @@ history, custody references, every unaffected byte, and the ratification chain
 untouched. It lands as its own PR after #1040. Rejected: folding it into #1040
 (mixes a ratified repair with un-ratified refreshes in an already large PR) and
 accepting the class as ratified residue (contradicts the public-repo law).
+
+## 2026-09-09 — auditor run-3 launch (two rulings, steward: Benjamin)
+
+Launched after the Stage B closeout (#1033, #1034, #1040, #1041 merged; main
+`85cc86d1f3`, all five corpus pins verifying). The run-2 launch grill's nine
+rulings carry as precedent except where the run-3 corpora grill, the Stage B
+grill, or a ruling below amends them. Both rulings resolved to the recommended
+arm in one round.
+
+**Ruling 1 — one end-of-run PR, run-2 choreography.** Pin commit (adapter-journal
+v1.1.0 over the four run-3 pins plus its golden, the run-3 prose transcriber, the
+intake docket, the Ruling-14/16 docket-consistency edits, and the run-2 rotation
+shelter) on `ontology-run3` off main `85cc86d1f3`; frozen HEAD through the run
+with `work/` untracked; final commit of run artifacts plus ratifications; single
+PR babysat to merge-ready; steward merges. The pin commit is tagged
+`evidence/beep-ci-ops/<run_id>-pin` and the tag pushed so a squash merge cannot
+orphan it (run-1 precedent). The run-2 pin `341cfef8b6e8` was never tagged and
+is orphaned in the primary clone; it is retro-tagged at this launch. Rejected: a
+separate pin PR merged to main before the run (the arm run-2 Ruling 8 already
+rejected).
+
+**Ruling 2 — blinded seat via the `claudeg` proxy session.** The grok-4.6
+blinded-alternative seat runs as a headless Claude Code session on the local
+proxy (`--model grok-4.6`, native x-search injected, `-alt`-namespaced ids per
+the pinned prompt) instead of the native grok CLI of run 2. This amends run-2
+Ruling 4's rejected proxy arm for run 3 only; the seat stays blinded and in an
+independent context. Codex seats keep the packet's delegated-lane effort
+directive (2026-08-27): gpt-6-astra at `max`, the adversary in an independent
+context. Rejected: the native grok CLI (no longer the steward's routed session
+type) and dropping the blinded seat.

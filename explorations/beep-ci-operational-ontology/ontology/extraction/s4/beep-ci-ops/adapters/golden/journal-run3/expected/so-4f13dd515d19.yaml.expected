@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:4f13dd515d19e1387abe527cf5167cd82201f302e072f950b709b1994fb11cdc",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-checkout-identity/bindings/d.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 9,
+    "content_sha256": "7819898f106d03b89dda256677f81687f9692f9baa310165da6b6baf118efbdc"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-checkout-identity/bindings/d.properties",
+    "lexical_name": "identity_key",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "git_common_dir=<fixture>/parent/.git"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "git_dir=<fixture>/d/.git"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "identity_key=<fixture>/d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=canonical-runtime"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "scannedAt=2026-09-09T00:00:00Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_present=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_remote_cache_configured=true"
+    }
+  ],
+  "source_excerpt": "# record 0\nidentity_key=<fixture>/d\nscannedAt=2026-09-09T00:00:00Z\nbranch=feat/d\nkind=canonical-runtime\ngit_dir=<fixture>/d/.git\ngit_common_dir=<fixture>/parent/.git\nturbo_local_cache_present=true\nturbo_remote_cache_configured=true\n",
+  "epistemic_status": "parser_derived"
+}

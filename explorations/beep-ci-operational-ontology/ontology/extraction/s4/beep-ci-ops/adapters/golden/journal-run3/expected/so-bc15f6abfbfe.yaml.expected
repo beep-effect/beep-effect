@@ -1,0 +1,64 @@
+{
+  "id": "so:sha256:bc15f6abfbfeb28fe350d531ea28ccdae67fcc2973a8866b8a29d3697216546f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-fleet/verdicts/a/d/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 10,
+    "content_sha256": "93c024feb37a5b17003ab52f6563c541f40fa6b0ea370c598497ef75b17b9c27"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/a/d/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "cachePlanTag=caller-controlled"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=handler-error"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=passed-before-failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=fixture-d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v1\nrunId=fixture-d\nfailureKind=handler-error\nfailedStepId=lint\nid=passed-before-failure\nstatus=passed\nid=lint\nstatus=failed\ncachePlanTag=caller-controlled\n",
+  "epistemic_status": "parser_derived"
+}

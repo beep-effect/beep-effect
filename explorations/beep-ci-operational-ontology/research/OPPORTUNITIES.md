@@ -4,7 +4,7 @@
 
 - **Work:** completing PR #1041 Additional findings X2–X4 after the G1/G2 commit.
 - **Evidence:** the run-2 regressions now scan complete serialized records; preserved
-  `uid-123` fixture keys fail with `residue scan failed: numeric UID token`, including
+  `uid-<n>` fixture keys fail with `residue scan failed: numeric UID token`, including
   during staged replay. CSF replay also selects `repair=True` unconditionally, while
   its receipt omits the Ruling 23 authority. The first report command lacks `--finding`.
 - **Prevention:** exercise the complete staged verifier for preserved keys and test
@@ -556,3 +556,77 @@
 - **Prevention:** give test fixtures an explicit scratch-directory override.
   The reconciliation runner redirects only those temporary-directory allocations
   into `.beep/run2-residue-repair`; test files and generator behavior stay intact.
+
+## 2026-09-09: run-3 pin preflight found unprojected authority and missing evidence
+
+- **Work:** preparing the run-3 engine and rotation shelter under the pin-engine brief.
+- **Evidence:** `s5/DISPOSITIONS.yaml` still parks FailureSignature and
+  VerificationAttempt; `s6/PREDICATES.yaml` still parks dependsOnTransitive;
+  `ontology/docs/s6-abox-contract.md` still defers VerificationLane placement.
+  These do not project the accepted authority of rat-032, rat-033, rat-037,
+  and rat-039. The brief requires retaining any unprojected ratification.
+- **Evidence:** the Stage A manifest's `cache_plan_execution` states that the
+  verdict schema has no cache-plan field. The two archived S7 contract quotes
+  in po-736ad92a1de7 and po-35a69c5bcbf7 were changed by emission v2 and cannot
+  be located verbatim at the current pin. Coordinate recovery cannot repair wording.
+- **Prevention:** project accepted run outcomes into S5/S6 status before rotation;
+  check required archived quotes and rider fields against the intended pin before
+  briefing a new observe pass. Preserve missing evidence as a reported gap.
+
+
+## 2026-09-09: run-3 intake needs row-level evidence accounting
+
+- **Work:** reconciling the run-3 pin docket against the 68 unresolved run-2
+  index rows and the committed Stage A manifest.
+- **Evidence:** the design brief's approximate 13-family scope-surprise count
+  includes both promoted riders, and some rows carry multiple evidence duties.
+  `run3-fleet/MANIFEST.yaml` records 1,902 structured failure-signature
+  occurrences but `pa-cache-plan-resolution` has `rider_evidence: absent` and
+  zero structured occurrences. Promotion into the docket does not establish
+  an execution join.
+- **Handling:** enumerate every unresolved ID once; retain secondary duties on
+  mixed rows; keep the cache-plan rider queued with its missing resolver-result
+  and execution evidence visible. Do not change corpus bytes or expand the CQ
+  suite to manufacture discharge.
+- **Prevention:** carry exact row membership and observed evidence status into
+  lane briefs alongside approximate family counts.
+
+## 2026-09-09: v14 pre-observe scan demands predecessor disposition rows
+
+- **Work:** the required provisional run-3 rotation scan without `--gate`.
+- **Evidence:** v14 returns 74 violations: dirty pin, zero observations, four
+  retained ratification references, and 68 `prior unresolved observation ...
+  has NO row in this run's index` errors. This predecessor-index check runs
+  before observe and without proposals. It names run-2 ids even when every
+  run-2 seat tree is outside the live root.
+- **Prevention:** distinguish predecessor carry obligations from archive poisoning
+  in the pre-observe acceptance rule, or defer that index requirement to the
+  dispositions stage. Do not manufacture retirement decisions to clear a scan.
+
+## 2026-09-09: run-3 residue verification rejects an older numeric fixture example
+
+- **Work:** reusing the Stage B byte scanner on every new or edited engine file.
+- **Evidence:** 61 files pass; the existing OPPORTUNITIES receipt's numeric
+  UID fixture example triggers `user identity in runtime or unit name`.
+- **Repair:** replace only that example with `uid-<n>`, preserving the receipt's
+  meaning and error class. A report about redaction must itself pass the scan.
+
+## 2026-09-09: generic credential pattern matches archived task filenames
+
+- **Work:** extending the required Stage B byte scan to the unchanged relocation
+  payloads as an extra check.
+- **Evidence:** 378 of 382 moved files pass. Four filenames match the provider
+  credential pattern because its unanchored prefix begins inside the word
+  `task`; the matching bytes occur in paths only. All four bodies pass.
+- **Prevention:** add token boundaries to the credential pattern with regression
+  cases for ordinary task filenames. Keep the pinned generator unchanged in
+  this lane, and report these false positives separately from actual residue.
+
+## 2026-09-09: typos treats a frozen observation digest as a word
+
+- **Work:** running the repository's typos checker on all 445 authored and moved files.
+- **Evidence:** one diagnostic in the unchanged `denotation-batches/batch-prose-c.txt:47`
+  treats the beginning of a canonical observation digest as a misspelled word.
+  The full check exits 2; no authored source or report wording is implicated.
+- **Prevention:** exclude canonical observation-id tokens from spelling checks.
+  Keep the archived digest bytes unchanged and report the false positive.

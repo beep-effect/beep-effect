@@ -3,5 +3,5 @@
 # provenance edge, laundered through arm 2 — arm 3 derives the scope through the steps.
 @prefix ciops: <https://oip.law/ontology/ci-ops#> .
 ciops:sp-derived a ciops:ScheduleProposal ; ciops:hasStep ciops:st-x .
-ciops:st-x ciops:stepIndex 1 ; ciops:schedulesWorkUnit ciops:wu-x .
+ciops:st-x ciops:stepIndex 0 ; ciops:schedulesWorkUnit ciops:wu-x .
 ciops:wu-x a ciops:WorkUnit ; ciops:hasScope ciops:AffectedScope .
