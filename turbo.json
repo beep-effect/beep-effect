@@ -459,6 +459,36 @@
         "$TURBO_ROOT$/packages/drivers/graph-3d/src/**",
         "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
       ]
+    },
+    "lint:laws": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "**/*.{ts,tsx}",
+        "package.json",
+        "tsconfig*.json",
+        "$TURBO_ROOT$/tsconfig*.json",
+        "$TURBO_ROOT$/packages/**/package.json",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
+        "$TURBO_ROOT$/standards/effect-laws.allowlist.jsonc",
+        "!node_modules/**"
+      ]
+    },
+    "//#lint:native-runtime:roots": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "scratchpad/**/*.{ts,tsx}",
+        "packages/_internal/db-admin/effect-ontology/**/*.{ts,tsx}",
+        "packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
+        "packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
+        "packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
+        "standards/effect-laws.allowlist.jsonc"
+      ]
     }
   }
 }

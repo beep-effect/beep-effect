@@ -162,3 +162,165 @@ on both runtimes.
 No git write command, protected-path edit, manifest rewrite, package-task registration,
 policy-plan change, or Stage B work was performed. The named files and this results section
 are the handoff. Stop after Stage A.
+
+## Stage B
+
+Implemented Stage B only on `ttc/c3-3-laws-task`, starting from the clean committed Stage A
+worktree. Read the full brief and its Amendment 1: the package-config fallback is now ratified,
+so Stage A's earlier overlay-contract blocker is resolved. No git writes or graft commands ran.
+The task declarations, hash fixtures, and package fleet proof are complete. The prescribed root
+residual has a verified command-contract blocker; Stage B is not a fully green activation proof.
+
+### Decisions and rejected alternatives
+
+1. Registered `lint:laws` with all ten §2.1 inputs verbatim and in table order, `cache: true`,
+   `outputs: []`, and only `//#lint:policy-fingerprint` in `dependsOn`. A direct table-to-JSON
+   comparison confirms the exact ordered list. Rejected build/transit edges for a syntax task,
+   a copied checker closure, broader source globs, and changes to Turbo global inputs.
+2. Registered `//#lint:native-runtime:roots` with the two prescribed root TS/TSX globs and four
+   allowlist sources (the allowlist JSONC, both named eslint files, and generated snapshot),
+   `cache: true`, empty outputs, and the fingerprint dependency. Added the root script exactly
+   as prescribed: `beep-cli laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology`.
+   The root manifest is outside the workspace scripts writer's domain, matching C3.2's root
+   residual precedent; no generated workspace scripts were hand-edited or rewritten.
+3. **Verified brief conflict:** native-runtime accepts `--include`, not `--include-prefix`.
+   C3.1 amendment 6 already documents that distinction. The exact direct command and the real
+   registered Turbo task both exit 1 with `Unrecognized flag: --include-prefix`. Preserved the
+   explicitly required script and recorded the blocker immediately in `OPPORTUNITIES.md`.
+   Rejected silently substituting `--include` with directory arguments (it expects source-file
+   paths), running a wider root sweep, or extending the root law command outside this Stage B
+   registration/fixture scope. Fable must ratify a working residual invocation or a scoped
+   prefix-expansion implementation before activation.
+4. Added the requested separate `laws-turbo-inputs.test.ts`. Schema classes describe task
+   declarations and real Turbo summaries before the fixture helpers; compiled JSON codecs,
+   schema-derived equivalence/arbitraries, NodeServices, FsUtilsLive, and StepExec follow the
+   existing fingerprint fixture idiom. The fixture loads the production declarations rather
+   than testing only a copy of the desired configuration. No production source module,
+   service, test-only source export, or coverage-baseline row was added.
+5. Seventeen isolated mutations each restore the exact baseline before the next edge is
+   tested. Consumer source/test/manifest/overlay, the extra root tsconfig, and upstream and
+   unrelated package manifests invalidate only the package task. Both residual roots invalidate
+   only the root task. The allowlist JSONC, two rule files, and generated snapshot invalidate
+   both tasks while leaving the fingerprint hash stable: the synthetic repo-configs package
+   deliberately lies outside the fixture CLI closure, so that closure cannot mask a missing
+   direct input. A helper source inside the CLI closure separately invalidates the fingerprint
+   and both dependents. Upstream source, unrelated package source, and unrelated root source
+   change none of the three hashes. Rejected cumulative mutations and mock hashes. Fixtures
+   create no git repository and use no git-writing subprocesses or Bun runtime globals.
+6. Used the exact requested fleet command. Its first run passed but emitted read-only
+   default-cache warnings and overlapped verification. Recorded that friction and retained it
+   as a smoke measurement. The isolated measured pair uses a fresh writable cache selected by
+   `TURBO_CACHE_DIR="$PWD/.beep/c3-3-stage-b-cache"`; all task/concurrency/cache-policy flags stay
+   exactly as requested. No cache was deleted, no remote cache was used, and no other verification
+   ran alongside the measured pair. Both measured runs have identical task hashes and no cache
+   write warning. The initial smoke warms filesystem/module caches; “cold” here means an empty
+   Turbo task cache, not a cold machine.
+7. Kept `Quality/Tasks.ts`, deprecated-API code, eslint configs, every workspace manifest,
+   fingerprint declaration, Stage A production source, and packet lifecycle unchanged. No
+   policy-plan switch or `beep:policy` retirement was attempted.
+
+### Stage B — files
+
+- goals/time-to-certainty/research/c3-3-implementation.md
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- package.json
+- turbo.json
+- packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts
+
+### Verification commands and exit codes
+
+Vitest ran from `packages/tooling/tool/cli`; other commands ran from the worktree root.
+`<touched>` is `package.json`, `turbo.json`, and the new fixture; `<touched TS>` is that fixture.
+Logs are ephemeral `/tmp/c3-3-b-*.log`; the results and summary identities below retain the proof.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `bunx biome check --write <touched>` | 0 | Formatted Turbo and the new fixture. |
+| `bunx biome check <touched>` | 0 | Final three-file check, 942 ms, no fixes. |
+| `bunx oxlint --quiet --disable-nested-config <touched TS>` | 0 | No diagnostics. |
+| `bunx --no-install vitest run --pool=threads test/laws-turbo-inputs.test.ts` | 0 | Node: 3/3 tests, 7.15 s. |
+| `bunx --bun vitest run --pool=threads test/laws-turbo-inputs.test.ts` | 0 | Bun: 3/3 tests, 5.07 s. |
+| `bunx --bun --no-install tsgo -p /tmp/c3-3-b-focused.json --pretty false` | 0 | Source-resolving focused test check, no diagnostics. |
+| `bun run beep lint schema-first` | 0 | No new inventory drift, candidates, or advisories. |
+| `bun run beep quality fallow audit --check --base origin/main --quiet` | 0 | Saved `.beep/fallow/audit.check.json` has `exitStatus: 0`; nine inherited-adjacent nonblocking findings, zero introduced. |
+| `bun run beep quality fallow health --check --base origin/main --quiet` | 0 | Saved `.beep/fallow/health.check.json` has `exitStatus: 0`, zero findings. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Current; no CLI source edits required regeneration. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, zero drifting, zero written. |
+| Exact ordered comparison of §2.1 row against `lint:laws.inputs` | 0 | Ten entries, identical. |
+| `bunx turbo run //#lint:native-runtime:roots --dry-run=json --cache=local:rw` | 0 | Resolves the exact prescribed script and fingerprint dependency. |
+| `bun run beep laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology` | 1 | Brief/CLI contract conflict: unsupported `--include-prefix`. |
+| `bunx turbo run //#lint:native-runtime:roots --summarize --cache=local:rw` with writable cache env | 1 | Same unsupported flag through the registered task; fingerprint hits, residual fails. |
+| Requested fleet command, default cache smoke | 0 | 141/141 successful, no hits; read-only cache warnings. |
+| Requested fleet command, isolated writable-cache cold | 0 | 141/141 successful, 0 cached. |
+| Same command and tree, writable-cache warm | 0 | 141/141 cache hits. All 141 task hashes match the cold run. |
+| `git --no-optional-locks diff --check` | 0 | Read-only whitespace verification. |
+
+The focused tsgo config extends the actual CLI config, includes only the new test and its
+source imports, removes project references, sets no-emit/non-composite/non-incremental,
+uses the repository rootDir, and resolves the local Node/Bun type roots. It is supporting
+proof, not package verification. Node and Bun tests ran concurrently with the smoke fleet;
+their durations are functional verification evidence, not isolated benchmarks. Tests do not
+change cwd or mutate CI environment state, avoiding the earlier sticky-runtime failure mode.
+
+### Measurements
+
+Exact fleet command for all three runs:
+
+```sh
+bunx turbo run lint:laws --concurrency=4 --continue=dependencies-successful --summarize --cache=local:rw
+```
+
+The measured cold and warm invocations prefix that command with
+`TURBO_CACHE_DIR="$PWD/.beep/c3-3-stage-b-cache"`. Turbo 2.10.12 confirms remote caching is disabled.
+142 packages are in scope; 140 own executable law tasks, plus the fingerprint task.
+`@beep/scratchpad` and `@beep/tsgo-shim` have no package `lint:laws` task. The separate root
+residual is not included by the fleet command and is not counted as a success here.
+
+| Run | Tasks successful or replayed | Cached | Turbo wall | Package-task p50 | Package-task max | Package task-seconds | Total task-seconds |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Default-cache smoke, verification overlap | 141/141 | 0/141 | 88.088 s | 2.131 s | 8.900 s | 340.593 s | 342.386 s |
+| Isolated task-cache cold | 141/141 | 0/141 | 86.228 s | 2.120 s | 9.318 s | 333.067 s | 334.817 s |
+| Same-tree warm | 141/141 | 141/141 | 0.405 s | 0.000 s | 0.001 s | 0.004 s | 0.004 s |
+
+Both cold maxima are `@beep/repo-cli#lint:laws`. The isolated fingerprint takes 1.750 s;
+all-task p50 is 2.119 s and max is 9.318 s. Durations are each task's execution end minus start
+from that invocation's summary; task-seconds sum those durations. Warm per-task durations
+measure cache replay bookkeeping, not scanner execution. The warm summary records zero newly
+executed successes and 141 cached tasks; every task has `cache.status: HIT`, and Turbo prints
+141 successful including replay. Every cold task has execution exit code zero.
+
+| Invocation | Summary relative to this checkout |
+| --- | --- |
+| Default-cache smoke | `.turbo/runs/3J84B9aIfT2k1cndzahdUI1a6iX.json` |
+| Isolated cold | `.turbo/runs/3J84NiR7vmhwpTFdzW7gpvRj3Cr.json` |
+| Warm | `.turbo/runs/3J84OFjebHQiWREs2H3SKSJIeMe.json` |
+| Root residual execution, failed | `.turbo/runs/3J84QJctJ6UwO6YcZaD0pCcmRBW.json` |
+
+The table's five hosted steps total **109 s = 33 + 27 + 19 + 16 + 14**. The local isolated
+package fleet wall is 22.772 s (20.9%) below that reference, and unchanged task-cache replay is
+0.405 s. This is not a same-machine speedup or full-sweep parity claim: the hosted baseline
+uses another machine and includes root coverage missing from the prescribed package-only
+measurement. Local cold aggregate work is 334.817 task-seconds at concurrency four. No fresh
+hosted measurement, remote-cache hit ratio, whole-proof improvement, or residual success is
+claimed. Resolving the residual blocker and measuring the combined hosted invocation remain
+necessary before activation.
+
+### Precise follow-up, blockers, and verification split
+
+After C3.3 and C3.2b land, **`rootRepoLintPolicySteps` replaces the five `scopedLawStep`s with
+`turbo run lint:laws //#lint:native-runtime:roots` (affected locally, full hosted), behind the
+sweep switch C3.2b introduces (`standards/lint-policy.sweeps.jsonc`, key `laws`), and
+`beep:policy` retires from the two manifests and the scripts schema.** This lane does not make
+that switch. The unsupported residual flag must be resolved by a ratified command amendment
+or prefix-expansion implementation before the switch can be enabled.
+
+The root residual command is the sole verified activation blocker. Hash fixtures, the package
+fleet, and all requested static/sandbox checks pass; the failing root execution is not waived
+or described as an environment-only failure. The default-cache restriction was resolved for
+measurements with the lane-local cache. Both friction receipts are in `OPPORTUNITIES.md`.
+
+Fable owns `bun run beep quality package-verify @beep/repo-cli`, Node coverage/ratchet, and the
+hosted lane. Repo-utils is untouched in Stage B; its Stage A acceptance remains Fable-owned.
+No new source module or coverage baseline was created. No Git writes, protected-path edits,
+workspace script rewrite, policy-plan edits, packet-state changes, or later-stage work occurred.
+Stop after Stage B.

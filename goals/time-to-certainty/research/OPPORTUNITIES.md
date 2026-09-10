@@ -768,3 +768,15 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** a fleet census of overlay presence in the brief before naming the
   overlay, and an acceptance budget that names wall and RSS separately so fleet concurrency is
   chosen against both.
+
+## 2026-09-10 — C3.3 Stage B: the table's root residual names a flag the law does not have
+
+- **Doing:** registering `//#lint:native-runtime:roots` with the command the C3 table prescribes,
+  `beep-cli laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology`.
+- **Evidence:** the command exits 1 with `Unrecognized flag: --include-prefix`; `laws native-runtime`
+  accepts only `--include` (source-file paths), and C3.1 amendment 6 had already recorded that
+  distinction for the package worker. The registered task therefore fails on execution while its
+  dry run resolves. The lane kept the prescribed script and reported the blocker instead of
+  substituting a wider sweep.
+- **Would have prevented it:** executing a prescribed residual command once while drafting the
+  table row, and a table convention that every root-task command is copied from a green run.
