@@ -18,6 +18,8 @@ import {
   Schema,
   Scope,
 } from "effect";
+import * as O from "effect/Option";
+import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { TestContext } from "@effect/vitest";
@@ -34,12 +36,41 @@ const encodeCleanup = Schema.encodeEffect(Schema.fromJsonString(Schema.String));
 const encodeReason = Schema.encodeEffect(Schema.Defect({ includeStack: true }));
 const encodePhase = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
 
+let traceCleanup = "";
 const recordCleanup = (text: string): void => {
+  traceCleanup = Str.concat(traceCleanup, text);
   encodeCleanup(text).pipe(
     Effect.flatMap((line) => Console.log(`BEEP_VITEST_CLEANUP ${line}`)),
     Effect.runSync
   );
 };
+
+const traceCase = Effect.runSync(Config.option(Config.String("BEEP_TRACE_CASE")));
+const encodeTraceObservation = Schema.encodeEffect(
+  Schema.fromJsonString(
+    Schema.Struct({
+      case: Schema.String,
+      ci: Schema.Boolean,
+      trace: Schema.String,
+      cleanup: Schema.String,
+    })
+  )
+);
+if (O.isSome(traceCase)) {
+  afterAll(() =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const line = yield* encodeTraceObservation({
+          case: traceCase.value,
+          ci: yield* Config.Boolean("CI"),
+          trace: yield* Config.String("BEEP_TEST_TRACE"),
+          cleanup: traceCleanup,
+        });
+        yield* Console.log(`BEEP_TRACE_OBSERVATION ${line}`);
+      })
+    )
+  );
+}
 
 const diagnosticClock = Effect.runSync(Clock.Clock);
 const recordPhase = Effect.fnUntraced(function* (context: TestContext, phase: string) {
@@ -98,24 +129,9 @@ if (mode === "public-abort") {
   );
 }
 
-if (mode === "tiny-timeout") {
-  it.effect("tiny positive timeout", () => Effect.never, { timeout: 25 });
-}
-
 if (mode === "disabled-timeouts") {
   it.effect("zero disables timeout", () => Effect.void, { timeout: 0 });
   it.effect("infinity disables timeout", () => Effect.void, { timeout: Number.POSITIVE_INFINITY });
-}
-
-if (mode === "concurrent-each") {
-  describe.concurrent("isolated concurrent cases", () => {
-    it.effect.each(["alpha"])("case %s", (value) => Effect.log(`last-${value}`).pipe(Effect.andThen(Effect.never)), {
-      timeout: 180,
-    });
-    it.effect.each(["beta"])("case %s", (value) => Effect.log(`last-${value}`).pipe(Effect.andThen(Effect.never)), {
-      timeout: 240,
-    });
-  });
 }
 
 if (mode === "trace-success") {
@@ -169,7 +185,13 @@ if (mode === "property") {
   );
 }
 
-if (mode === "property-deadline" || mode === "property-setup-budget" || mode === "property-late-success") {
+if (
+  mode === "tiny-timeout" ||
+  mode === "concurrent-each" ||
+  mode === "property-deadline" ||
+  mode === "property-setup-budget" ||
+  mode === "property-late-success"
+) {
   const { makeIt } = await import("@beep/test-utils/test/Vitest");
   // The independent TestClock drives only watchdog timers and deliberate trial
   // delays. A monotonic offset models synchronous setup or a late callback while
@@ -192,6 +214,7 @@ if (mode === "property-deadline" || mode === "property-setup-budget" || mode ===
     };
     return {
       clock,
+      advance: timers.adjust,
       beginTrial: () => {
         armed = Deferred.makeUnsafe<void>();
       },
@@ -207,6 +230,65 @@ if (mode === "property-deadline" || mode === "property-setup-budget" || mode ===
       }),
     };
   };
+
+  if (mode === "tiny-timeout") {
+    const controlled = makeControlledWatchdog();
+    const controlledIt = makeIt(controlled.clock);
+    controlledIt.effect(
+      "tiny positive timeout",
+      () =>
+        Effect.gen(function* () {
+          yield* controlled.awaitArmed;
+          yield* controlled.advance("12.5 millis");
+          return yield* Effect.never;
+        }).pipe(Effect.ensuring(Effect.sync(() => recordCleanup("tiny body released\n")))),
+      { timeout: 25 }
+    );
+  }
+
+  if (mode === "concurrent-each") {
+    const alpha = makeControlledWatchdog();
+    const beta = makeControlledWatchdog();
+    const alphaIt = makeIt(alpha.clock);
+    const betaIt = makeIt(beta.clock);
+    const alphaLogged = Deferred.makeUnsafe<void>();
+    const betaLogged = Deferred.makeUnsafe<void>();
+    const alphaReleased = Deferred.makeUnsafe<void>();
+    const betaReleased = Deferred.makeUnsafe<void>();
+    describe.concurrent("isolated concurrent cases", () => {
+      alphaIt.effect.each(["alpha"])(
+        "case %s",
+        (value) =>
+          Effect.log(`last-${value}`).pipe(
+            Effect.andThen(Deferred.succeed(alphaLogged, undefined)),
+            Effect.andThen(Effect.never),
+            Effect.ensuring(Deferred.succeed(alphaReleased, undefined))
+          ),
+        { timeout: 180 }
+      );
+      betaIt.effect.each(["beta"])(
+        "case %s",
+        (value) =>
+          Effect.gen(function* () {
+            yield* Effect.log(`last-${value}`);
+            yield* Deferred.succeed(betaLogged, undefined);
+            yield* Effect.all([
+              alpha.awaitArmed,
+              beta.awaitArmed,
+              Deferred.await(alphaLogged),
+              Deferred.await(betaLogged),
+            ]);
+            yield* alpha.advance("155 millis");
+            yield* Deferred.await(alphaReleased);
+            expect(yield* Deferred.isDone(betaReleased)).toBe(false);
+            recordCleanup("alpha expired while beta remained active\n");
+            yield* beta.advance("215 millis");
+            return yield* Effect.never;
+          }).pipe(Effect.ensuring(Deferred.succeed(betaReleased, undefined))),
+        { timeout: 240 }
+      );
+    });
+  }
 
   if (mode === "property-deadline") {
     const controlled = makeControlledWatchdog();

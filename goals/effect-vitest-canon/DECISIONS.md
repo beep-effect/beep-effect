@@ -492,3 +492,30 @@ configuration, feature flag, timeouts, assertions, fixtures and production
 runner unchanged. Require the existing real fixture to demonstrate failure
 before the correction and successful execution after it; prove the full runner
 on Node 22, Node 24 and Bun, then scoped coverage on the hosted Node version.
+
+## 2026-09-10 — round two narrowed proposals
+
+Root accepts the confirmed defects for repair and waives only these broader
+proposals after source-derived review:
+
+- **R2-002 getter expansion:** D5 permits plain-value assertions. An Option getter
+  followed by label/path projection or a fallback string does not establish an
+  equivalent full Option assertion. Blanket getter detection is waived; exact
+  repository Option-wrapper provenance for predicates and constructors is repaired.
+- **R2-005 single-test exemption and unconditional reset:** one nested test can share
+  the parent's clock and memoized environment. Reset changes shared time and can
+  wake sleepers; it is not isolation. The proposed exemption and unconditional
+  beforeEach rewrite are waived. Shared-clock judgment stays visible with guidance
+  conditioned on serial ownership or isolated test services.
+- **R2-007 unknown-module deletion:** a module string does not prove a service key,
+  but removing every unresolved module would discard legitimate review residue.
+  Blanket deletion is waived. The candidate must explicitly state that service
+  identity is unproven and that Layer.mock applies only to real service dependencies.
+
+R2-001's broad callback-wide clock suppression remains rejected for the reason
+already recorded in round one; only deferred execution attribution is refined.
+R2-006 routing never invents expected payloads, errors or Causes and never silently
+rewrites an unsupported matcher. The existing Vitest peer-range decision remains
+bounded by actual runtime binding and Node/Bun evidence; R2-008 adds that evidence,
+not a broader upgrade or compatibility waiver. The round-two closure ledger records
+individual status and remaining integration proof.

@@ -253,6 +253,8 @@ const collectSyntaxRoles = (sourceFile: SourceFile) => {
   const forLoops = A.empty<MorphNode>();
   const whileLoops = A.empty<MorphNode>();
   const doLoops = A.empty<MorphNode>();
+  const forOfLoops = A.empty<MorphNode>();
+  const forInLoops = A.empty<MorphNode>();
   const collectRole = (node: MorphNode): void => {
     if (Node.isCallExpression(node)) calls.push(node);
     else if (functionNode(node)) functions.push(node);
@@ -260,6 +262,8 @@ const collectSyntaxRoles = (sourceFile: SourceFile) => {
     else if (Node.isForStatement(node)) forLoops.push(node);
     else if (Node.isWhileStatement(node)) whileLoops.push(node);
     else if (Node.isDoStatement(node)) doLoops.push(node);
+    else if (Node.isForOfStatement(node)) forOfLoops.push(node);
+    else if (Node.isForInStatement(node)) forInLoops.push(node);
   };
   const pending = A.reverse(sourceFile.forEachChildAsArray());
   while (pending.length > 0) {
@@ -273,7 +277,7 @@ const collectSyntaxRoles = (sourceFile: SourceFile) => {
     }
   }
 
-  return { calls, functions, variables, loops: [...forLoops, ...whileLoops, ...doLoops] };
+  return { calls, functions, variables, loops: [...forLoops, ...whileLoops, ...doLoops, ...forOfLoops, ...forInLoops] };
 };
 
 /**
@@ -615,6 +619,7 @@ export type EffectVitestHarnessIndex = {
   readonly reachableHelper: (node: MorphNode) => O.Option<{
     readonly callback: EffectVitestFunctionNode;
     readonly effect: boolean;
+    readonly testClock: boolean;
     readonly plain: boolean;
     readonly shared: boolean;
   }>;
@@ -829,13 +834,16 @@ type FunctionReachability = {
   readonly callees: Array<FunctionReachability>;
   plain: boolean;
   effect: boolean;
+  testClock: boolean;
   outside: boolean;
   uncertain: boolean;
 };
 
 const addsReachability = (from: FunctionReachability, to: FunctionReachability): boolean =>
   (from.plain && !to.plain) ||
-  (from.effect && !to.effect) ||
+  // A test-clock vertex is always an Effect vertex; propagating that stronger
+  // mode covers both bits without allocating a flag list on the hot path.
+  (from.testClock ? !to.testClock : from.effect && !to.effect) ||
   (from.outside && !to.outside) ||
   (from.uncertain && !to.uncertain);
 
@@ -856,6 +864,7 @@ const helperReachability = (
     callees: [],
     plain: false,
     effect: false,
+    testClock: false,
     outside: false,
     uncertain: false,
   });
@@ -871,6 +880,7 @@ const helperReachability = (
     const mode = MutableHashMap.get(modes, node.getStart());
     value.plain = O.contains(mode, "plain");
     value.effect = O.exists(mode, (mode) => mode === "effect" || mode === "live");
+    value.testClock = O.contains(mode, "effect");
     value.outside = O.contains(mode, "layer");
     MutableHashMap.set(vertices, node.getStart(), value);
   };
@@ -964,6 +974,7 @@ const helperReachability = (
     if (O.isSome(registration) && registration.value !== "layer" && parent.getArguments()[0] !== reference) {
       target.plain ||= registration.value === "plain";
       target.effect ||= registration.value === "effect" || registration.value === "live";
+      target.testClock ||= registration.value === "effect";
     } else {
       target.uncertain = true;
       owner(reference).callees.push(target);
@@ -1005,6 +1016,7 @@ const helperReachability = (
     if (addsReachability(from, to)) {
       to.plain ||= from.plain;
       to.effect ||= from.effect;
+      to.testClock ||= from.testClock;
       to.outside ||= from.outside;
       to.uncertain ||= from.uncertain;
       queue.push(to);
@@ -1022,7 +1034,13 @@ const helperReachability = (
     const value = owner(node);
     return O.flatMap(value.node, (callback) =>
       value.plain || value.effect
-        ? O.some({ callback, effect: value.effect, plain: value.plain, shared: value.outside || value.uncertain })
+        ? O.some({
+            callback,
+            effect: value.effect,
+            testClock: value.testClock,
+            plain: value.plain,
+            shared: value.outside || value.uncertain,
+          })
         : O.none()
     );
   };

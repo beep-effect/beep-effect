@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import {
+  applyEffectVitestPrimitiveGraph,
   countEffectVitestSourceLines,
   decodeEffectVitestFindingJson,
   detectEffectVitestFindings,
@@ -10,6 +11,8 @@ import {
   EffectVitestInventoryPath,
   EffectVitestLintOptions,
   EffectVitestPackageTiming,
+  EffectVitestPrimitive,
+  EffectVitestPrimitiveGraphDocument,
   EffectVitestReplacement,
   makeEffectVitestFindingKey,
   preserveEffectVitestExceptions,
@@ -607,4 +610,73 @@ it("keeps indexed legacy membership separate from anchored exception eligibility
     deepStrictEqual(diffEffectVitestFindings(merged, rows).introduced, []);
     assertTrue(A.every(merged, (row) => row.status === "open" && O.isNone(row.reason)));
   }
+});
+
+it.layer(NodeServices.layer)("round 2 contextual graph routing", (it) => {
+  it.effect(
+    "retains primary assertion polarity and uncertainty after graph hydration",
+    Effect.fnUntraced(function* () {
+      const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
+      const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
+      const source = project.createSourceFile(
+        "routing.test.ts",
+        `
+      import { it, expect, vi } from "@effect/vitest";
+      import { Option, Result } from "effect";
+      it("none", () => expect(Option.isNone(value)).toBe(true));
+      it("branch", () => expect(Result.isFailure(value)).toBe(true));
+      it("compound", () => expect(Option.isNone(a) && Result.isFailure(b)).toBe(true));
+      vi.mock("@beep/codec", () => ({ decode: fake }));
+    `
+      );
+      const detected = detectEffectVitestFindings(source, "routing.test.ts", "@beep/example");
+      const hydrated = yield* applyEffectVitestPrimitiveGraph(detected, graph);
+      deepStrictEqual(
+        A.map(hydrated, (row) => [row.id, row.class, row.mechanization, row.replacement.primitive]),
+        A.map(detected, (row) => [row.id, row.class, row.mechanization, row.replacement.primitive])
+      );
+      deepStrictEqual(
+        A.map(
+          A.filter(hydrated, (row) => row.ruleId === "EV006"),
+          (row) => row.replacement.primitive
+        ),
+        ["utils.assertNone", "utils.assertTrue", "utils.deepStrictEqual"]
+      );
+      assertTrue(
+        A.every(
+          A.filter(hydrated, (row) => row.ruleId === "EV012"),
+          (row) => Str.includes("real service key")(row.replacement.sketch)
+        )
+      );
+    })
+  );
+
+  it.effect(
+    "rejects an assertion route whose selected graph edge is absent",
+    Effect.fnUntraced(function* () {
+      const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
+      const changed = EffectVitestPrimitiveGraphDocument.make({
+        ...graph,
+        entries: A.map(graph.entries, (entry) =>
+          entry.id === "utils.assertTrue"
+            ? EffectVitestPrimitive.make({
+                ...entry,
+                whenToUse: "No detector replacement: synthetic absent-edge contract fixture.",
+                replaces: A.filter(entry.replaces, (rule) => rule !== "EV006"),
+              })
+            : entry
+        ),
+      });
+      const selected = EffectVitestFinding.make({
+        ...finding(1, "expect(Result.isFailure(value)).toBe(true)"),
+        ruleId: "EV006",
+        replacement: EffectVitestReplacement.make({
+          primitive: "utils.assertTrue",
+          sketch: "Keep the Boolean predicate; no error payload was supplied.",
+        }),
+      });
+      const error = yield* applyEffectVitestPrimitiveGraph([selected], changed).pipe(Effect.flip);
+      assertTrue(Str.includes("without a EV006 graph edge")(error.message));
+    })
+  );
 });

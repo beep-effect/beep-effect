@@ -74,8 +74,8 @@ const entries: ReadonlyArray<readonly [EffectVitestRuleId, RulePolicy]> = [
     "EV006",
     {
       className: "hand-rolled-data-assertion",
-      primitive: "utils.assertSome",
-      sketch: "Use the matching Option, Result, or Exit helper from @effect/vitest/utils.",
+      primitive: "utils.deepStrictEqual",
+      sketch: "Review the complete assertion and preserve its polarity; branch checks do not supply expected payloads.",
       severity: "minor",
     },
   ],
@@ -129,7 +129,8 @@ const entries: ReadonlyArray<readonly [EffectVitestRuleId, RulePolicy]> = [
     {
       className: "effect-service-mock-candidate",
       primitive: "Layer.mock",
-      sketch: "Judge whether Layer.mock or Layer.succeed can replace the vi mock/spy.",
+      sketch:
+        "Review mock provenance: Layer.mock requires a real service key; unknown module/codec subject mocks are not mechanically service-replaceable.",
       severity: "info",
     },
   ],
@@ -155,8 +156,9 @@ const entries: ReadonlyArray<readonly [EffectVitestRuleId, RulePolicy]> = [
     "EV015",
     {
       className: "shared-test-clock-adjustment",
-      primitive: "it.layer.option.excludeTestServices",
-      sketch: "Reset time per test or isolate test services; nested it.layer blocks reuse the parent TestClock.",
+      primitive: "TestClock.adjust",
+      sketch:
+        "Review shared deterministic clock isolation or proven serial ownership, including nested single-test layers. setTime/reset is not concurrency isolation; excludeTestServices is only for intentional live Clock/Console.",
       severity: "info",
     },
   ],
@@ -259,13 +261,28 @@ export const applyEffectVitestPrimitiveGraph: {
           ),
         onSome: (policy) => {
           const candidates = A.filter(graph.entries, (primitive) => A.contains(primitive.replaces, finding.ruleId));
+          const preferred = finding.ruleId === "EV006" ? finding.replacement.primitive : policy.primitive;
+          if (!A.some(candidates, (candidate) => candidate.id === preferred))
+            return Effect.fail(
+              EffectVitestPrimitiveGraphError.new(
+                `Finding ${finding.id} selects primitive ${preferred} without a ${finding.ruleId} graph edge.`
+              )
+            );
+          const contextual =
+            finding.ruleId === "EV006" ||
+            finding.ruleId === "EV012" ||
+            finding.class === "deferred-clock-wait-review" ||
+            finding.class === "platform-resource-provenance-review";
           return Effect.succeed(
             EffectVitestFinding.make({
               ...finding,
               replacement: EffectVitestReplacement.make({
-                primitive: policy.primitive,
+                primitive: preferred,
                 sketch: A.join(
-                  A.map(candidates, (candidate) => `${candidate.id}: ${candidate.whenToUse}`),
+                  [
+                    ...(contextual ? [finding.replacement.sketch] : []),
+                    ...A.map(candidates, (candidate) => `${candidate.id}: ${candidate.whenToUse}`),
+                  ],
                   " "
                 ),
               }),

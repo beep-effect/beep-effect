@@ -32,13 +32,14 @@ import type {
   ImportDeclaration,
   Node as MorphNode,
   SourceFile,
+  VariableDeclaration,
 } from "ts-morph";
 import type { EffectVitestRuleId, EffectVitestSeverity } from "../Lint.schemas.ts";
 import type { EffectVitestFunctionNode, EffectVitestHarnessIndex, EffectVitestImports } from "./EffectVitestSyntax.ts";
 
 const EFFECT_MODULES = ["effect", "effect/Effect"];
 const LAYER_MODULES = ["effect", "effect/Layer"];
-const OPTION_MODULES = ["effect", "effect/Option"];
+const OPTION_MODULES = ["effect", "effect/Option", "@beep/utils/Option"];
 const RESULT_MODULES = ["effect", "effect/Result"];
 const EXIT_MODULES = ["effect", "effect/Exit"];
 const CONTEXT_MODULES = ["effect", "effect/Context"];
@@ -94,6 +95,7 @@ type FindingInput = {
   readonly symbol: string;
   readonly judgment?: boolean;
   readonly className?: string;
+  readonly replacement?: EffectVitestReplacement;
 };
 
 const initialFinding = (input: FindingInput): EffectVitestFinding => {
@@ -117,7 +119,8 @@ const initialFinding = (input: FindingInput): EffectVitestFinding => {
     testName: O.none(),
     class: input.className ?? policy.className,
     evidence: compactEvidence(input.node),
-    replacement: EffectVitestReplacement.make({ primitive: policy.primitive, sketch: policy.sketch }),
+    replacement:
+      input.replacement ?? EffectVitestReplacement.make({ primitive: policy.primitive, sketch: policy.sketch }),
     severity: policy.severity,
     confidence: input.judgment === true ? 0.55 : 0.95,
     mechanization: input.judgment === true ? "judgment" : "detector",
@@ -272,9 +275,130 @@ const dataShapeCall = (call: CallExpression, imports: EffectVitestImports): bool
   isProvenanceCall(call, imports, OPTION_MODULES, "Option", ["isSome", "isNone", "some", "none"]) ||
   isProvenanceCall(call, imports, RESULT_MODULES, "Result", ["isSuccess", "isFailure", "succeed", "fail"]) ||
   isProvenanceCall(call, imports, EXIT_MODULES, "Exit", ["isSuccess", "isFailure", "succeed", "fail"]);
-const containsDataShape = (node: MorphNode, imports: EffectVitestImports): boolean =>
-  (Node.isCallExpression(node) && dataShapeCall(node, imports)) ||
-  A.some(node.getDescendantsOfKind(SyntaxKind.CallExpression), (call) => dataShapeCall(call, imports));
+const dataShapeReference = (node: MorphNode, imports: EffectVitestImports): boolean =>
+  Node.isExpression(node) &&
+  (isProvenanceExpression(node, imports, OPTION_MODULES, "Option", ["isSome", "isNone"]) ||
+    isProvenanceExpression(node, imports, RESULT_MODULES, "Result", ["isSuccess", "isFailure"]) ||
+    isProvenanceExpression(node, imports, EXIT_MODULES, "Exit", ["isSuccess", "isFailure"]));
+// Only these rc.113 public operations have a fixed tagged/Boolean result after full application.
+const taggedValueOperations = [
+  { modules: OPTION_MODULES, namespace: "Option", members: ["all", "flatten"], arity: 1 },
+  { modules: OPTION_MODULES, namespace: "Option", members: ["map", "flatMap", "filter", "contains"], arity: 2 },
+  { modules: RESULT_MODULES, namespace: "Result", members: ["all", "flip"], arity: 1 },
+  { modules: RESULT_MODULES, namespace: "Result", members: ["map", "mapError", "flatMap"], arity: 2 },
+  { modules: EXIT_MODULES, namespace: "Exit", members: ["map", "mapError", "mapBoth"], arity: 2 },
+];
+
+const taggedValueApplication = (expression: MorphNode, supplied: number, imports: EffectVitestImports): boolean => {
+  if (Node.isCallExpression(expression)) {
+    const args = expression.getArguments();
+    return (
+      args.length > 0 &&
+      !A.some(args, Node.isSpreadElement) &&
+      taggedValueApplication(expression.getExpression(), supplied + args.length, imports)
+    );
+  }
+  return (
+    Node.isExpression(expression) &&
+    A.some(
+      taggedValueOperations,
+      ({ modules, namespace, members, arity }) =>
+        supplied === arity && isProvenanceExpression(expression, imports, modules, namespace, members)
+    )
+  );
+};
+
+const terminalPipeStage = (call: CallExpression, imports: EffectVitestImports): O.Option<MorphNode> => {
+  const expression = call.getExpression();
+  const method = Node.isPropertyAccessExpression(expression) && expression.getName() === "pipe";
+  const functional = isProvenanceCall(call, imports, ["effect", "effect/Function"], "Function", ["pipe"]);
+  return method || (functional && call.getArguments().length > 1) ? A.last(call.getArguments()) : O.none();
+};
+
+const arrayPredicateCall = (call: CallExpression, imports: EffectVitestImports): boolean => {
+  const expression = call.getExpression();
+  const facade =
+    Node.isPropertyAccessExpression(expression) &&
+    A.contains(["every", "some"], expression.getName()) &&
+    isProvenanceExpression(expression.getExpression(), imports, ["@beep/utils"], "utils", ["A"]);
+  return (
+    facade ||
+    isProvenanceCall(call, imports, ["effect", "effect/Array", "@beep/utils/Array"], "Array", ["every", "some"])
+  );
+};
+
+const returnedPredicateDataShape = (predicate: MorphNode, imports: EffectVitestImports): boolean => {
+  if (!Node.isArrowFunction(predicate) && !Node.isFunctionExpression(predicate))
+    return dataShapeReference(predicate, imports);
+  if (predicate.isAsync()) return false;
+  if (Node.isFunctionExpression(predicate) && predicate.getAsteriskToken() !== undefined) return false;
+  const body = predicate.getBody();
+  if (!Node.isBlock(body)) return containsDataShape(body, imports);
+  const statements = body.getStatements();
+  const statement = statements[0];
+  return (
+    statements.length === 1 &&
+    Node.isReturnStatement(statement) &&
+    O.exists(O.fromUndefinedOr(statement.getExpression()), (value) => containsDataShape(value, imports))
+  );
+};
+
+const arrayPredicateDataShape = (call: CallExpression, imports: EffectVitestImports, applied = false): boolean => {
+  const expression = call.getExpression();
+  if (!applied && Node.isCallExpression(expression) && call.getArguments().length === 1)
+    return arrayPredicateDataShape(expression, imports, true);
+  if (!arrayPredicateCall(call, imports) || call.getArguments().length !== (applied ? 1 : 2)) return false;
+  return O.exists(A.last(call.getArguments()), (predicate) => returnedPredicateDataShape(predicate, imports));
+};
+
+const yieldedTaggedDataShape = (node: MorphNode | undefined, imports: EffectVitestImports): boolean => {
+  if (!Node.isCallExpression(node)) return false;
+  if (isProvenanceCall(node, imports, EFFECT_MODULES, "Effect", ["exit", "result"]))
+    return node.getArguments().length === 1;
+  return O.exists(
+    terminalPipeStage(node, imports),
+    (stage) =>
+      Node.isExpression(stage) && isProvenanceExpression(stage, imports, EFFECT_MODULES, "Effect", ["exit", "result"])
+  );
+};
+
+const assertedCallDataShape = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  dataShapeCall(call, imports) ||
+  (!A.some(call.getArguments(), Node.isSpreadElement) &&
+    taggedValueApplication(call.getExpression(), call.getArguments().length, imports)) ||
+  arrayPredicateDataShape(call, imports) ||
+  O.exists(
+    terminalPipeStage(call, imports),
+    (stage) =>
+      dataShapeReference(stage, imports) ||
+      taggedValueApplication(stage, 1, imports) ||
+      (Node.isCallExpression(stage) && arrayPredicateDataShape(stage, imports, true))
+  );
+
+const containsDataShape = (node: MorphNode, imports: EffectVitestImports): boolean => {
+  if (Node.isYieldExpression(node))
+    return node.getAsteriskToken() !== undefined && yieldedTaggedDataShape(node.getExpression(), imports);
+  if (Node.isCallExpression(node)) return assertedCallDataShape(node, imports);
+  if (
+    A.contains(
+      [
+        SyntaxKind.PropertyAccessExpression,
+        SyntaxKind.ElementAccessExpression,
+        SyntaxKind.ArrowFunction,
+        SyntaxKind.FunctionExpression,
+        SyntaxKind.MethodDeclaration,
+        SyntaxKind.GetAccessor,
+        SyntaxKind.SetAccessor,
+      ],
+      node.getKind()
+    )
+  )
+    return dataShapeReference(node, imports);
+  return (
+    dataShapeReference(node, imports) ||
+    node.forEachChild((child) => (containsDataShape(child, imports) ? true : undefined)) === true
+  );
+};
 const pipedWaitUses = (
   ancestor: CallExpression,
   wait: CallExpression,
@@ -339,32 +463,89 @@ const liveServiceCall = (callback: EffectVitestFunctionNode, imports: EffectVite
       isProvenanceCall(call, imports, ["effect", "effect/Console"], "Console", ["log", "error", "warn", "info"]) ||
       isProvenanceCall(call, imports, TEST_CLOCK_MODULES, "TestClock", ["withLive"])
   );
-const platformFileSystemImport = (moduleName: string, declaration: MorphNode): boolean =>
+const platformRoots = ["@effect/platform-bun", "@effect/platform-node", "@effect/platform-node-shared"];
+const platformServicesModules = ["@effect/platform-node/NodeServices", "@effect/platform-bun/BunServices"];
+const platformMemberModules = [...platformRoots, ...platformServicesModules];
+const platformFileSystemImport = (moduleName: string): boolean =>
   A.contains(["node:fs", "node:fs/promises", "fs", "fs/promises"], moduleName) ||
-  (A.contains(["node:os", "os"], moduleName) && Str.includes("tmpdir")(declaration.getText())) ||
-  A.some(
-    ["@effect/platform-bun", "@effect/platform-node", "@effect/platform-node-shared"],
-    (root) => moduleName === root || Str.startsWith(`${root}/`)(moduleName)
+  A.contains(
+    [
+      "@effect/platform-bun/BunFileSystem",
+      "@effect/platform-node/NodeFileSystem",
+      "@effect/platform-node-shared/NodeFileSystem",
+    ],
+    moduleName
   );
 
-const serviceMockTarget = (call: CallExpression): boolean => {
+const platformReferenceMember = (reference: MorphNode): O.Option<string> => {
+  const parent = reference.getParent();
+  if (Node.isPropertyAccessExpression(parent) && parent.getExpression() === reference) return O.some(parent.getName());
+  if (Node.isElementAccessExpression(parent) && parent.getExpression() === reference)
+    return O.fromUndefinedOr(parent.getArgumentExpression()).pipe(
+      O.filter(Node.isStringLiteral),
+      O.map((argument) => argument.getLiteralValue())
+    );
+  return Node.isCallExpression(parent) && A.contains(parent.getArguments(), reference) ? O.some("opaque") : O.none();
+};
+
+const platformNamespaceMembers = (
+  binding: ImportDeclaration | VariableDeclaration,
+  imports: EffectVitestImports
+): ReadonlyArray<string> => {
+  const name = Node.isImportDeclaration(binding)
+    ? (binding.getNamespaceImport() ?? binding.getDefaultImport())
+    : binding.getNameNode();
+  if (!Node.isIdentifier(name)) return [];
+  const local = name.getText();
+  const references = A.filter(
+    binding.getSourceFile().getDescendantsOfKind(SyntaxKind.Identifier),
+    (reference) =>
+      reference.getText() === local && O.exists(imports.resolveBinding(reference), (resolved) => resolved === binding)
+  );
+  return A.getSomes(A.map(references, platformReferenceMember));
+};
+
+const platformImportedMembers = (
+  declaration: ImportDeclaration,
+  imports: EffectVitestImports
+): ReadonlyArray<string> => {
+  const named = A.map(
+    A.filter(declaration.getNamedImports(), (binding) => !binding.isTypeOnly()),
+    (binding) => binding.getName()
+  );
+  return [...named, ...platformNamespaceMembers(declaration, imports)];
+};
+
+const platformRequiredMembers = (call: CallExpression, imports: EffectVitestImports): ReadonlyArray<string> => {
+  const parent = call.getParent();
+  if (!Node.isVariableDeclaration(parent)) return A.fromOption(platformReferenceMember(call));
+  const name = parent.getNameNode();
+  if (Node.isObjectBindingPattern(name))
+    return A.map(name.getElements(), (element) => (element.getPropertyNameNode() ?? element.getNameNode()).getText());
+  return platformNamespaceMembers(parent, imports);
+};
+
+const platformResourceReview = (moduleName: string, members: ReadonlyArray<string>): boolean =>
+  A.some(members, (member) => A.contains(["NodeServices", "BunServices", "Services", "opaque"], member)) ||
+  (A.contains(platformServicesModules, moduleName) && A.contains(members, "layer"));
+
+const serviceMockTarget = (call: CallExpression, imports: EffectVitestImports): O.Option<string> => {
   const target = call.getArguments()[0];
   if (Node.isStringLiteral(target)) {
     const value = target.getLiteralValue();
-    return value === "effect" || Str.startsWith("effect/")(value) || Str.startsWith("@beep/")(value);
+    return value === "effect" || Str.startsWith("effect/")(value) || Str.startsWith("@beep/")(value)
+      ? O.some("unproven-module-mock-review")
+      : O.none();
   }
-  if (!Node.isIdentifier(target)) return false;
-  const declaration = A.findLast(
-    target.getSourceFile().getClasses(),
-    (candidate) => candidate.getName() === target.getText() && candidate.getStart() < target.getStart()
+  if (!Node.isIdentifier(target)) return O.none();
+  return imports.resolveBinding(target).pipe(
+    O.filter(Node.isClassDeclaration),
+    O.flatMap((declaration) => O.fromUndefinedOr(declaration.getExtends())),
+    O.filter((heritage) =>
+      isProvenanceExpression(heritage.getExpression(), imports, CONTEXT_MODULES, "Context", ["Service"])
+    ),
+    O.map(() => "effect-service-mock-candidate")
   );
-  return O.exists(declaration, (candidate) => {
-    const heritage = candidate.getExtends();
-    return (
-      heritage !== undefined &&
-      (Str.includes("Context.Service")(heritage.getText()) || Str.includes("Effect.Service")(heritage.getText()))
-    );
-  });
 };
 
 const loopIsRetryCandidate = (node: MorphNode, imports: EffectVitestImports): boolean => {
@@ -378,34 +559,6 @@ const loopIsRetryCandidate = (node: MorphNode, imports: EffectVitestImports): bo
 const layerHasTimeout = (call: CallExpression): boolean => {
   const options = call.getArguments()[1];
   return Node.isObjectLiteralExpression(options) && options.getProperty("timeout") !== undefined;
-};
-
-const resetInTestOrHook = (
-  call: CallExpression,
-  layer: EffectVitestFunctionNode,
-  imports: EffectVitestImports
-): boolean => {
-  if (
-    O.exists(nearestTestCallback(call, imports), (callback) =>
-      A.some(callbackCalls(callback), (candidate) =>
-        isProvenanceCall(candidate, imports, TEST_CLOCK_MODULES, "TestClock", ["setTime"])
-      )
-    )
-  )
-    return true;
-  return A.some(callbackCalls(layer), (candidate) => {
-    if (!isProvenanceCall(candidate, imports, VITEST_MODULES, "beforeEach", ["beforeEach"])) return false;
-    const hook = A.findFirst(
-      candidate.getArguments(),
-      (argument): argument is EffectVitestFunctionNode =>
-        Node.isArrowFunction(argument) || Node.isFunctionExpression(argument)
-    );
-    return O.exists(hook, (callback) =>
-      A.some(callbackCalls(callback), (nested) =>
-        isProvenanceCall(nested, imports, TEST_CLOCK_MODULES, "TestClock", ["setTime"])
-      )
-    );
-  });
 };
 
 const effectRegistrationBody = (call: CallExpression, effectTest: boolean, imports: EffectVitestImports): boolean =>
@@ -680,27 +833,160 @@ const detectResultAssertion = (
   }
 };
 
+const dataShapeDescription = (node: MorphNode | undefined, imports: EffectVitestImports) => {
+  if (!Node.isCallExpression(node)) return O.none<{ readonly family: string; readonly member: string }>();
+  return A.head(
+    A.getSomes(
+      A.map(
+        [
+          { family: "Option", modules: OPTION_MODULES, members: ["isSome", "isNone", "some", "none"] },
+          { family: "Result", modules: RESULT_MODULES, members: ["isSuccess", "isFailure", "succeed", "fail"] },
+          { family: "Exit", modules: EXIT_MODULES, members: ["isSuccess", "isFailure", "succeed", "fail"] },
+        ],
+        ({ family, modules, members }) =>
+          A.findFirst(members, (member) => isProvenanceCall(node, imports, modules, family, [member])).pipe(
+            O.map((member) => ({ family, member }))
+          )
+      )
+    )
+  );
+};
+
+const booleanLiteral = (node: MorphNode | undefined): O.Option<boolean> => {
+  if (node?.getKind() === SyntaxKind.TrueKeyword) return O.some(true);
+  return node?.getKind() === SyntaxKind.FalseKeyword ? O.some(false) : O.none();
+};
+
+const ambiguousDataAssertion = EffectVitestReplacement.make({
+  primitive: "utils.deepStrictEqual",
+  sketch:
+    "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations.",
+});
+const constructorAssertionPrimitives = HashMap.fromIterable([
+  ["Option:none", "utils.assertNone"],
+  ["Option:some", "utils.assertSome"],
+  ["Result:fail", "utils.assertFailure"],
+  ["Result:succeed", "utils.assertSuccess"],
+  ["Exit:succeed", "utils.assertExitSuccess"],
+]);
+
+const predicateAssertionReplacement = (family: string, member: string, truth: boolean): EffectVitestReplacement => {
+  const none = family === "Option" && (member === "isNone") === truth;
+  const booleanPrimitive = truth ? "utils.assertTrue" : "utils.assertFalse";
+  const polarity = truth ? "true" : "false";
+  return EffectVitestReplacement.make({
+    primitive: none ? "utils.assertNone" : booleanPrimitive,
+    sketch: none
+      ? "Assert the original Option is None; preserve the existing predicate polarity."
+      : `Preserve this ${family}.${member} Boolean branch check and its ${polarity} polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one.`,
+  });
+};
+
+const constructorAssertionReplacement = (
+  expected: MorphNode | undefined,
+  imports: EffectVitestImports
+): EffectVitestReplacement => {
+  const constructor = dataShapeDescription(expected, imports).pipe(
+    O.filter(({ member }) => !Str.startsWith("is")(member))
+  );
+  if (O.isNone(constructor) || !Node.isCallExpression(expected)) return ambiguousDataAssertion;
+  const { family, member } = constructor.value;
+  if (member !== "none" && expected.getArguments().length !== 1) return ambiguousDataAssertion;
+  return EffectVitestReplacement.make({
+    primitive: O.getOrElse(
+      HashMap.get(constructorAssertionPrimitives, `${family}:${member}`),
+      () => "utils.deepStrictEqual"
+    ),
+    sketch: `Review structural equality against the supplied ${family}.${member} constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure.`,
+  });
+};
+
+const dataAssertionRoute = (
+  actual: MorphNode | undefined,
+  expected: MorphNode | undefined,
+  truth: O.Option<boolean>,
+  equality: boolean,
+  imports: EffectVitestImports
+) => {
+  const predicate = O.all({
+    shape: dataShapeDescription(actual, imports).pipe(O.filter(({ member }) => Str.startsWith("is")(member))),
+    truth,
+  });
+  if (O.isSome(predicate)) {
+    const replacement = predicateAssertionReplacement(
+      predicate.value.shape.family,
+      predicate.value.shape.member,
+      predicate.value.truth
+    );
+    return { judgment: replacement.primitive !== "utils.assertNone", replacement };
+  }
+  return {
+    judgment: true,
+    replacement: equality ? constructorAssertionReplacement(expected, imports) : ambiguousDataAssertion,
+  };
+};
+
+const expectMatcher = (call: CallExpression) => {
+  let parent = call.getParent();
+  const members = A.empty<string>();
+  while (Node.isPropertyAccessExpression(parent)) {
+    members.push(parent.getName());
+    parent = parent.getParent();
+  }
+  return { call: Node.isCallExpression(parent) ? parent : call, members };
+};
+
+const matcherTruth = (member: string, expected: MorphNode | undefined): O.Option<boolean> => {
+  if (member === "toBeTruthy") return O.some(true);
+  if (member === "toBeFalsy") return O.some(false);
+  return A.contains(["toBe", "toEqual", "toStrictEqual"], member) ? booleanLiteral(expected) : O.none();
+};
+
 const detectExpectDataShape = (
   { call, canonicalMember, inTest }: ReturnType<typeof inspectContext>,
   state: DetectorState
 ): void => {
   const { imports, makeFinding, findings, file, owner } = state;
+  if (!inTest || canonicalMember !== "expect" || !isExpectCall(call, imports)) return;
+  const matcher = expectMatcher(call);
+  if (
+    !A.some([...call.getArguments(), ...matcher.call.getArguments()], (argument) =>
+      containsDataShape(argument, imports)
+    )
+  )
+    return;
+  const member = O.getOrElse(A.last(matcher.members), () => "");
+  const modifiers = A.dropRight(matcher.members, 1);
+  const supported = A.every(modifiers, (modifier) => modifier === "not") && modifiers.length <= 1;
+  const negated = A.contains(modifiers, "not");
+  const expected = matcher.call.getArguments()[0];
+  const truth = supported
+    ? matcherTruth(member, expected).pipe(O.map((value) => (negated ? !value : value)))
+    : O.none();
+  const route = dataAssertionRoute(
+    call.getArguments()[0],
+    expected,
+    truth,
+    supported && !negated && A.contains(["toEqual", "toStrictEqual"], member),
+    imports
+  );
+  findings.push(makeFinding({ ruleId: "EV006", node: matcher.call, file, owner, symbol: "expect", ...route }));
+};
 
-  if (inTest && canonicalMember === "expect" && isExpectCall(call, imports)) {
-    const property = call.getParent();
-    const parentCall = property?.getParent();
-    const matcher: O.Option<CallExpression> =
-      Node.isPropertyAccessExpression(property) && Node.isCallExpression(parentCall) ? O.some(parentCall) : O.none();
-    const matcherArguments: ReadonlyArray<MorphNode> = O.match(matcher, {
-      onNone: A.empty<MorphNode>,
-      onSome: (value) => value.getArguments(),
-    });
-    if (A.some([...call.getArguments(), ...matcherArguments], (candidate) => containsDataShape(candidate, imports))) {
-      findings.push(
-        makeFinding({ ruleId: "EV006", node: O.getOrElse(matcher, () => call), file, owner, symbol: "expect" })
-      );
-    }
-  }
+const booleanAssertionTruth = (call: CallExpression, imports: EffectVitestImports): O.Option<boolean> => {
+  if (
+    isProvenanceCall(call, imports, ["@effect/vitest/utils"], "utils", ["assertFalse"]) ||
+    isProvenanceCall(call, imports, VITEST_MODULES, "assert", ["isFalse"])
+  )
+    return O.some(false);
+  if (
+    isProvenanceCall(call, imports, ["node:assert", "node:assert/strict", "assert", "assert/strict"], "assert", [
+      "equal",
+      "strictEqual",
+    ])
+  )
+    return booleanLiteral(call.getArguments()[1]);
+  return O.some(true);
 };
 
 const detectBooleanDataShape = (
@@ -708,14 +994,20 @@ const detectBooleanDataShape = (
   state: DetectorState
 ): void => {
   const { imports, makeFinding, findings, file, owner } = state;
-
   if (
-    inTest &&
-    isBooleanAssertion(call, imports) &&
-    A.some(call.getArguments(), (argument) => containsDataShape(argument, imports))
-  ) {
-    findings.push(makeFinding({ ruleId: "EV006", node: call, file, owner, symbol: member }));
-  }
+    !inTest ||
+    !isBooleanAssertion(call, imports) ||
+    !A.some(call.getArguments(), (argument) => containsDataShape(argument, imports))
+  )
+    return;
+  const route = dataAssertionRoute(
+    call.getArguments()[0],
+    undefined,
+    booleanAssertionTruth(call, imports),
+    false,
+    imports
+  );
+  findings.push(makeFinding({ ruleId: "EV006", node: call, file, owner, symbol: member, ...route }));
 };
 
 const isLegacyPropertyAssertion = (
@@ -755,33 +1047,124 @@ const detectPropertyAssertion = (context: ReturnType<typeof inspectContext>, sta
   );
 };
 
+const waitFunctionOwner = (node: MorphNode): O.Option<MorphNode> =>
+  O.fromUndefinedOr(
+    node.getFirstAncestor(
+      (ancestor) =>
+        Node.isArrowFunction(ancestor) ||
+        Node.isFunctionExpression(ancestor) ||
+        Node.isFunctionDeclaration(ancestor) ||
+        Node.isMethodDeclaration(ancestor)
+    )
+  );
+
+const yieldedInvocation = (call: CallExpression): boolean => {
+  const parent = call.getParent();
+  return (
+    Node.isYieldExpression(parent) ||
+    Node.isReturnStatement(parent) ||
+    (Node.isArrowFunction(parent) && parent.getBody() === call)
+  );
+};
+
+const immediateFunctionInvocation = (owner: MorphNode): O.Option<CallExpression> => {
+  let expression = owner;
+  let parent = expression.getParent();
+  while (Node.isParenthesizedExpression(parent)) {
+    expression = parent;
+    parent = expression.getParent();
+  }
+  return Node.isCallExpression(parent) && parent.getExpression() === expression && yieldedInvocation(parent)
+    ? O.some(parent)
+    : O.none();
+};
+
+const localWaitInvocations = (owner: MorphNode, state: DetectorState): ReadonlyArray<CallExpression> => {
+  const binding: O.Option<MorphNode> = Node.isFunctionDeclaration(owner)
+    ? O.some(owner)
+    : O.fromUndefinedOr(owner.getFirstAncestorByKind(SyntaxKind.VariableDeclaration));
+  return O.match(binding, {
+    onNone: A.empty<CallExpression>,
+    onSome: (value) =>
+      A.filter(state.calls, (call) => {
+        const expression = call.getExpression();
+        return (
+          Node.isIdentifier(expression) &&
+          O.exists(state.imports.resolveBinding(expression), (resolved) => resolved === value)
+        );
+      }),
+  });
+};
+
+const directWaitFunction = (owner: MorphNode, state: DetectorState, seen: ReadonlyArray<MorphNode>): boolean => {
+  const parent = owner.getParent();
+  if (Node.isCallExpression(parent) && isProvenanceCall(parent, state.imports, EFFECT_MODULES, "Effect", ["gen"]))
+    return directWaitExecution(parent, state, seen);
+  const immediate = immediateFunctionInvocation(owner);
+  if (O.isSome(immediate)) return directWaitExecution(immediate.value, state, seen);
+  if (
+    O.exists(
+      state.harness.reachableHelper(O.getOrElse(A.head(owner.forEachChildAsArray()), () => owner)),
+      ({ shared }) => shared
+    )
+  )
+    return false;
+  const invocations = localWaitInvocations(owner, state);
+  return (
+    invocations.length > 0 &&
+    A.every(invocations, (call) => yieldedInvocation(call) && directWaitExecution(call, state, seen))
+  );
+};
+
+const directWaitExecution = (node: MorphNode, state: DetectorState, seen: ReadonlyArray<MorphNode> = []): boolean => {
+  const owner = waitFunctionOwner(node);
+  if (O.isNone(owner) || A.contains(seen, owner.value)) return false;
+  if (
+    O.exists(state.harness.enclosingTest(node), ({ callback, mode }) => callback === owner.value && mode === "effect")
+  )
+    return true;
+  return directWaitFunction(owner.value, state, [...seen, owner.value]);
+};
+
+const clockWaitCall = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["sleep"]) ||
+  isProvenanceCall(call, imports, SCHEDULE_MODULES, "Schedule", ["spaced", "fixed", "exponential"]);
+
+const clockWaitClassification = (call: CallExpression, state: DetectorState) => {
+  const controlled = O.exists(state.harness.enclosingTest(call), ({ callback }) =>
+    controlledWait(call, callback, state.imports)
+  );
+  if (controlled) return { judgment: true, className: "controlled-clock-wait-review" };
+  if (directWaitExecution(call, state)) return { judgment: false };
+  return {
+    judgment: true,
+    className: "deferred-clock-wait-review",
+    replacement: EffectVitestReplacement.make({
+      primitive: "readme.testclock",
+      sketch:
+        "Review deferred or uncertain helper/service execution and its clock owner; this wait is not proven to stall direct registration execution.",
+    }),
+  };
+};
+
 const detectClockWait = (
-  { call, canonicalMember, test, testClockMode }: ReturnType<typeof inspectContext>,
+  { call, test, testClockMode }: ReturnType<typeof inspectContext>,
   state: DetectorState
 ): void => {
-  const { imports, makeFinding, findings, file, owner } = state;
-
-  if (
-    testClockMode &&
-    O.isSome(test) &&
-    ((canonicalMember === "sleep" && isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["sleep"])) ||
-      (A.contains(["spaced", "fixed", "exponential"], canonicalMember) &&
-        isProvenanceCall(call, imports, SCHEDULE_MODULES, "Schedule", [canonicalMember]))) &&
-    !liveClockFor(call, imports)
-  ) {
-    const controlled = controlledWait(call, test.value.callback, imports);
-    findings.push(
-      makeFinding({
-        ruleId: "EV008",
-        node: call,
-        file,
-        owner,
-        symbol: callMember(call),
-        judgment: controlled,
-        ...(controlled ? { className: "controlled-clock-wait-review" } : {}),
-      })
-    );
-  }
+  const { imports, harness, makeFinding, findings, file, owner } = state;
+  if (!clockWaitCall(call, imports) || liveClockFor(call, imports)) return;
+  const helper = O.isNone(test) && O.exists(harness.reachableHelper(call), ({ testClock }) => testClock);
+  if (!testClockMode && !helper) return;
+  findings.push(
+    makeFinding({
+      ruleId: "EV008",
+      node: call,
+      file,
+      owner,
+      symbol: callMember(call),
+      ...clockWaitClassification(call, state),
+    })
+  );
 };
 
 const detectLiveMode = ({ call }: ReturnType<typeof inspectContext>, state: DetectorState): void => {
@@ -800,9 +1183,19 @@ const detectServiceMock = ({ call, member }: ReturnType<typeof inspectContext>, 
   if (
     A.contains(["mock", "spyOn"], member) &&
     isProvenanceCall(call, imports, VITEST_MODULES, "vi", ["mock", "spyOn", "vi.mock", "vi.spyOn"]) &&
-    serviceMockTarget(call)
+    O.isSome(serviceMockTarget(call, imports))
   ) {
-    findings.push(makeFinding({ ruleId: "EV012", node: call, file, owner, symbol: callLabel(call), judgment: true }));
+    findings.push(
+      makeFinding({
+        ruleId: "EV012",
+        node: call,
+        file,
+        owner,
+        symbol: callLabel(call),
+        judgment: true,
+        className: O.getOrElse(serviceMockTarget(call, imports), () => "unproven-module-mock-review"),
+      })
+    );
   }
 };
 
@@ -822,7 +1215,7 @@ const detectLayerClockReset = ({ call, member }: ReturnType<typeof inspectContex
 
   if (member === "adjust" && isProvenanceCall(call, imports, TEST_CLOCK_MODULES, "TestClock", ["adjust"])) {
     const layer = harness.enclosingLayerBlock(call);
-    if (O.isSome(layer) && !resetInTestOrHook(call, layer.value, imports)) {
+    if (O.isSome(layer)) {
       findings.push(
         makeFinding({ ruleId: "EV015", node: call, file, owner, symbol: "TestClock.adjust", judgment: true })
       );
@@ -866,48 +1259,88 @@ const inspectCall = (call: CallExpression, state: DetectorState): void => {
   detectLayerClockReset(context, state);
 };
 
-const detectPlatformImport = (declaration: ImportDeclaration, state: DetectorState): void => {
-  const { imports, makeFinding, findings, calls, file, owner } = state;
+const emitPlatformFinding = (
+  node: MorphNode,
+  moduleName: string,
+  members: ReadonlyArray<string>,
+  osTemp: boolean,
+  state: DetectorState
+): void => {
+  const { makeFinding, findings, file, owner } = state;
+  const filesystemMember = moduleName === "@effect/platform-bun" ? "BunFileSystem" : "NodeFileSystem";
+  const filesystem = platformFileSystemImport(moduleName) || osTemp || A.contains(members, filesystemMember);
+  if (!filesystem && !platformResourceReview(moduleName, members)) return;
+  const review = filesystem
+    ? {}
+    : {
+        className: "platform-resource-provenance-review",
+        replacement: EffectVitestReplacement.make({
+          primitive: "it.layer",
+          sketch:
+            "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer.",
+        }),
+      };
+  findings.push(makeFinding({ ruleId: "EV010", node, file, owner, symbol: moduleName, judgment: true, ...review }));
+};
 
-  const specifier = declaration.getModuleSpecifier();
-  if (!Node.isStringLiteral(specifier)) return;
-  const moduleName = specifier.getLiteralValue();
+const detectPlatformImport = (declaration: ImportDeclaration, state: DetectorState): void => {
+  const { imports, calls } = state;
+  if (declaration.isTypeOnly()) return;
+  const moduleName = declaration.getModuleSpecifierValue();
   const osTemp =
     A.contains(["node:os", "os"], moduleName) &&
     A.some(calls, (call) => isProvenanceCall(call, imports, ["node:os", "os"], "os", ["tmpdir"]));
-  if (platformFileSystemImport(moduleName, declaration) || osTemp) {
-    findings.push(makeFinding({ ruleId: "EV010", node: declaration, file, owner, symbol: moduleName, judgment: true }));
-  }
+  const members = A.contains(platformMemberModules, moduleName) ? platformImportedMembers(declaration, imports) : [];
+  emitPlatformFinding(declaration, moduleName, members, osTemp, state);
+};
+
+const requiredTmpdirNames = (declaration: MorphNode): ReadonlyArray<string> => {
+  if (!Node.isVariableDeclaration(declaration)) return [];
+  const name = declaration.getNameNode();
+  if (!Node.isObjectBindingPattern(name)) return [];
+  return A.map(
+    A.filter(
+      name.getElements(),
+      (element) => (element.getPropertyNameNode() ?? element.getNameNode()).getText() === "tmpdir"
+    ),
+    (element) => element.getName()
+  );
+};
+
+const requiredOsTemp = (call: CallExpression, declaration: MorphNode, state: DetectorState): boolean => {
+  const names = requiredTmpdirNames(declaration);
+  return A.some(state.calls, (candidate) => {
+    const access = candidate.getExpression();
+    if (Node.isIdentifier(access))
+      return (
+        A.contains(names, access.getText()) &&
+        O.exists(state.imports.resolveBinding(access), (binding) => binding === declaration)
+      );
+    if (!Node.isPropertyAccessExpression(access) || access.getName() !== "tmpdir") return false;
+    const receiver = access.getExpression();
+    return (
+      receiver === call ||
+      (Node.isIdentifier(receiver) &&
+        O.exists(state.imports.resolveBinding(receiver), (binding) => binding === declaration))
+    );
+  });
 };
 
 const detectPlatformRequire = (call: CallExpression, state: DetectorState): void => {
-  const { imports, makeFinding, findings, calls, file, owner } = state;
-
   const callee = call.getExpression();
   const argument = call.getArguments()[0];
   if (
     !Node.isIdentifier(callee) ||
     callee.getText() !== "require" ||
-    O.isSome(imports.resolveBinding(callee)) ||
+    O.isSome(state.imports.resolveBinding(callee)) ||
     !Node.isStringLiteral(argument)
   )
     return;
   const declaration = call.getFirstAncestorByKind(SyntaxKind.VariableDeclaration) ?? call;
   const moduleName = argument.getLiteralValue();
-  const osTemp =
-    A.contains(["node:os", "os"], moduleName) &&
-    A.some(calls, (candidate) => {
-      const access = candidate.getExpression();
-      if (!Node.isPropertyAccessExpression(access) || access.getName() !== "tmpdir") return false;
-      const receiver = access.getExpression();
-      return (
-        receiver === call ||
-        (Node.isIdentifier(receiver) &&
-          O.exists(imports.resolveBinding(receiver), (binding) => binding === declaration))
-      );
-    });
-  if (platformFileSystemImport(moduleName, declaration) || osTemp)
-    findings.push(makeFinding({ ruleId: "EV010", node: declaration, file, owner, symbol: moduleName, judgment: true }));
+  const osTemp = A.contains(["node:os", "os"], moduleName) && requiredOsTemp(call, declaration, state);
+  const members = A.contains(platformMemberModules, moduleName) ? platformRequiredMembers(call, state.imports) : [];
+  emitPlatformFinding(declaration, moduleName, members, osTemp, state);
 };
 
 const detectResourceDefinition = (

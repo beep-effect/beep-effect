@@ -5537,11 +5537,18 @@
     "lines": 490
   },
   {
+    "file": "packages/tooling/library/repo-utils/test/TSMorph.package-syntax.test.ts",
+    "package": "@beep/repo-utils",
+    "kind": "test",
+    "bytes": 1627,
+    "lines": 40
+  },
+  {
     "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 22399,
-    "lines": 611
+    "bytes": 24405,
+    "lines": 660
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TSMorph.shared.test.ts",
@@ -5953,8 +5960,8 @@
     "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
     "package": "@beep/test-utils",
     "kind": "test",
-    "bytes": 21726,
-    "lines": 471
+    "bytes": 28048,
+    "lines": 633
   },
   {
     "file": "packages/tooling/test-kit/test-utils/test/Vitest.test.ts",
@@ -6072,8 +6079,8 @@
     "file": "packages/tooling/tool/cli/dist/test/Laws.test-kit.d.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
-    "bytes": 608,
-    "lines": 15
+    "bytes": 662,
+    "lines": 16
   },
   {
     "file": "packages/tooling/tool/cli/dist/test/Lint.test-kit.d.ts",
@@ -6247,8 +6254,8 @@
     "file": "packages/tooling/tool/cli/src/test/Laws.test-kit.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
-    "bytes": 566,
-    "lines": 15
+    "bytes": 620,
+    "lines": 16
   },
   {
     "file": "packages/tooling/tool/cli/src/test/Lint.test-kit.ts",
@@ -6625,15 +6632,15 @@
     "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 27568,
-    "lines": 610
+    "bytes": 30585,
+    "lines": 682
   },
   {
     "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 41989,
-    "lines": 946
+    "bytes": 68141,
+    "lines": 1546
   },
   {
     "file": "packages/tooling/tool/cli/test/effect-vitest-primitives.test.ts",
@@ -6881,6 +6888,20 @@
     "lines": 154
   },
   {
+    "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 9386,
+    "lines": 204
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 11743,
+    "lines": 249
+  },
+  {
     "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
@@ -6926,8 +6947,8 @@
     "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 24434,
-    "lines": 529
+    "bytes": 21098,
+    "lines": 425
   },
   {
     "file": "packages/tooling/tool/cli/test/match-person-model-store.test.ts",
@@ -6935,6 +6956,13 @@
     "kind": "test",
     "bytes": 12985,
     "lines": 348
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/native-runtime-prefix.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 5856,
+    "lines": 131
   },
   {
     "file": "packages/tooling/tool/cli/test/native-runtime.test.ts",

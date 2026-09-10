@@ -2306,7 +2306,7 @@ const closedSourceLiteral = (node: ts.Node, source: ts.SourceFile): node is ts.S
     invalid = true;
   });
   scanner.scan();
-  return !invalid && !scanner.isUnterminated() && scanner.getTextPos() === raw.length;
+  return !invalid && !scanner.isUnterminated() && scanner.getTokenEnd() === raw.length;
 };
 
 const indexGeneratedEvidenceSource = (file: string, text: string): GeneratedEvidenceSource => {

@@ -141,8 +141,7 @@ const cases: ReadonlyArray<{
     ruleId: "EV015",
     positive:
       'it.layer(L.succeed(Service, value))("outer", (it) => { it.layer(L.succeed(Child, value))("inner", (it) => { it.effect("x", () => TC.adjust("1 second")); }); });',
-    negative:
-      'it.layer(L.succeed(Service, value))("clock", (it) => { beforeEach(() => TC.setTime(0)); it.effect("x", () => TC.adjust("1 second")); });',
+    negative: 'it.effect("unshared", () => TC.adjust("1 second"));',
   },
 ];
 
@@ -825,21 +824,33 @@ it("preserves role spans and order through nested callbacks, shadows, JSX and pa
     const forLoops = A.empty<MorphNode>();
     const whileLoops = A.empty<MorphNode>();
     const doLoops = A.empty<MorphNode>();
+    const forOfLoops = A.empty<MorphNode>();
+    const forInLoops = A.empty<MorphNode>();
     // An independent visitor is the parse-order oracle, not another kind query.
     source.forEachDescendant((node) => {
       if (Node.isCallExpression(node)) calls.push(node);
-      if (Node.isArrowFunction(node) || Node.isFunctionExpression(node) || Node.isFunctionDeclaration(node))
+      if (
+        A.contains(
+          [SyntaxKind.ArrowFunction, SyntaxKind.FunctionExpression, SyntaxKind.FunctionDeclaration],
+          node.getKind()
+        )
+      )
         functions.push(node);
       if (Node.isVariableDeclaration(node)) variables.push(node);
       if (Node.isForStatement(node)) forLoops.push(node);
       if (Node.isWhileStatement(node)) whileLoops.push(node);
       if (Node.isDoStatement(node)) doLoops.push(node);
+      if (Node.isForOfStatement(node)) forOfLoops.push(node);
+      if (Node.isForInStatement(node)) forInLoops.push(node);
     });
     const indexed = collectEffectVitestImports(source);
     deepStrictEqual(spans(indexed.calls), spans(calls));
     deepStrictEqual(spans(indexed.functions), spans(functions));
     deepStrictEqual(spans(indexed.variables), spans(variables));
-    deepStrictEqual(spans(indexed.loops), spans([...forLoops, ...whileLoops, ...doLoops]));
+    deepStrictEqual(
+      spans(indexed.loops),
+      spans([...forLoops, ...whileLoops, ...doLoops, ...forOfLoops, ...forInLoops])
+    );
   }
 });
 
@@ -943,4 +954,593 @@ it("retains native property helper reachability, shared judgment and callback ex
   const callback = findings(`${prefix}
     it.effect("callback", () => Ar.checkEffect(arb, () => Fx.runSync(program)));`);
   assertTrue(A.some(callback, (row) => row.ruleId === "EV001" && row.mechanization === "detector"));
+});
+
+it("distinguishes deferred service waits from directly executed and uncertain helper waits", () => {
+  const examples = [
+    {
+      body: `it.effect("provided", function* () {
+      const fs = { readDirectory: () => Fx.gen(function* () { yield* Fx.sleep("1 second"); return []; }) };
+      yield* Fx.provideService(Fx.forkChild(consumer), FileSystem.FileSystem, fs);
+      yield* TC.adjust("1 second");
+    });`,
+      mode: "judgment",
+      className: "deferred-clock-wait-review",
+    },
+    {
+      body: `it.effect("unrelated", function* () { yield* Fx.sleep("1 second"); yield* Fx.forkChild(other); yield* TC.adjust("1 second"); });`,
+      mode: "detector",
+      className: "test-clock-stall-risk",
+    },
+    {
+      body: `it.effect("sequential", function* () { yield* Fx.sleep("1 second"); yield* TC.adjust("1 second"); });`,
+      mode: "detector",
+      className: "test-clock-stall-risk",
+    },
+    {
+      body: `it.effect("direct helper", function* () { const wait = Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }); yield* wait(); });`,
+      mode: "detector",
+      className: "test-clock-stall-risk",
+    },
+    {
+      body: `it.effect("immediate", function* () { yield* (function* () { yield* Fx.sleep("1 second"); })(); });`,
+      mode: "detector",
+      className: "test-clock-stall-risk",
+    },
+    {
+      body: `const wait = Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }); it.effect("external direct", function* () { yield* wait(); });`,
+      mode: "detector",
+      className: "test-clock-stall-risk",
+    },
+    {
+      body: `it.effect("uncertain", function* () { const wait = () => Fx.sleep("1 second"); yield* consume(wait); });`,
+      mode: "judgment",
+      className: "deferred-clock-wait-review",
+    },
+  ];
+  for (const example of examples) {
+    const rows = A.filter(findings(example.body), (row) => row.ruleId === "EV008");
+    deepStrictEqual(
+      A.map(rows, (row) => [row.mechanization, row.class]),
+      [[example.mode, example.className]]
+    );
+  }
+});
+
+it("retains live-only helper semantics and visible mixed clock ownership", () => {
+  assertFalse(
+    hasRule(
+      `const wait = Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }); it.live("live", function* () { yield* wait(); });`,
+      "EV008"
+    )
+  );
+  const registrations = [
+    'it.live("live", function* () { yield* wait(); });',
+    'it.effect("virtual", function* () { yield* wait(); });',
+  ];
+  for (const ordered of [registrations, A.reverse(registrations)]) {
+    const rows = A.filter(
+      findings(`const wait = Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }); ${A.join(ordered, "\n")}`),
+      (row) => row.ruleId === "EV008"
+    );
+    deepStrictEqual(
+      A.map(rows, (row) => row.mechanization),
+      ["judgment"]
+    );
+  }
+});
+
+it("uses exact utils Option wrapper provenance without classifying projected plain payloads", () => {
+  for (const body of [
+    `import * as Wrapped from "@beep/utils/Option"; it("x", () => expect(Wrapped.isNone(value)).toBe(true));`,
+    `import { isSome as present } from "@beep/utils/Option"; it("x", () => expect(present(value)).toBe(true));`,
+    `import { none as absent, some as present } from "@beep/utils/Option"; it("x", () => { expect(value).toEqual(absent()); expect(value).toEqual(present(1)); });`,
+  ])
+    assertTrue(hasRule(body, "EV006"));
+  for (const body of [
+    `import * as Wrapped from "@beep/utils/Option"; it("x", (Wrapped) => expect(Wrapped.isNone(value)).toBe(true));`,
+    `import { isSome as present } from "@beep/utils/Option"; it("x", () => { const present = fake; expect(present(value)).toBe(true); });`,
+    `import * as Wrapped from "@beep/utils/OptionOther"; it("x", () => expect(Wrapped.isNone(value)).toBe(true));`,
+    `import * as Wrapped from "@beep/utils/Option"; it("x", () => expect(Wrapped.getOrElse(value, () => "fallback")).toEqual("label"));`,
+    `it("x", () => { expect(O.getOrThrow(value).path).toEqual("label"); expect(R.getOrThrow(result)).toBe(1); });`,
+  ])
+    assertFalse(hasRule(body, "EV006"));
+});
+
+it("narrows root platform and CommonJS imports to filesystem provenance and explicit opaque residue", () => {
+  for (const body of [
+    `import { NodeFileSystem as FS, NodePath } from "@effect/platform-node"; use(FS.layer);`,
+    `import * as Platform from "@effect/platform-bun"; use(Platform.BunFileSystem.layer);`,
+    `const { NodeFileSystem: FS, NodePath } = require("@effect/platform-node"); use(FS.layer);`,
+    `const Platform = require("@effect/platform-bun"); use(Platform.BunFileSystem.layer);`,
+    `use(require("@effect/platform-node").NodeFileSystem.layer);`,
+    `import * as Platform from "@effect/platform-node"; use(Platform["NodeFileSystem"].layer);`,
+    `use(require("@effect/platform-bun")["BunFileSystem"].layer);`,
+  ])
+    deepStrictEqual(
+      A.map(
+        A.filter(findings(body), (row) => row.ruleId === "EV010"),
+        (row) => row.class
+      ),
+      ["platform-filesystem-candidate"]
+    );
+  for (const body of [
+    `import * as Path from "@effect/platform-node/NodePath"; use(Path.layer);`,
+    `import { NodePath, NodeChildProcessSpawner } from "@effect/platform-node"; use(NodePath.layer);`,
+    `import * as Platform from "@effect/platform-node"; it("x", (Platform) => use(Platform.NodeFileSystem.layer));`,
+    `import type { NodeFileSystem } from "@effect/platform-node";`,
+    `const { NodePath } = require("@effect/platform-node"); use(NodePath.layer);`,
+    `function f(require) { use(require("@effect/platform-node").NodeFileSystem.layer); }`,
+    `const Platform = require("@effect/platform-node"); function f(Platform) { use(Platform.NodeFileSystem.layer); }`,
+    `const FS = require("@effect/platform-node-lookalike/NodeFileSystem");`,
+  ])
+    assertFalse(hasRule(body, "EV010"));
+  const residue = A.filter(
+    findings(`import { NodeServices } from "@effect/platform-node"; use(NodeServices.layer);`),
+    (row) => row.ruleId === "EV010"
+  );
+  deepStrictEqual(
+    A.map(residue, (row) => [row.class, row.mechanization]),
+    [["platform-resource-provenance-review", "judgment"]]
+  );
+  assertTrue(A.every(residue, (row) => row.replacement.sketch.includes("unproven")));
+});
+
+it("indexes for-of and for-in retry candidates with explicit loop presence and ordinary loop negatives", () => {
+  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
+  const source = project.createSourceFile(
+    "loops.test.ts",
+    `${imports}
+    for (const outer of values) retry(outer);
+    it.effect("loops", function* () {
+      for (const attempt of attempts) yield* Fx.sleep("1 second");
+      for (const retry in retries) consume(retry);
+      for (const value of values) consume(value);
+    });`
+  );
+  const indexed = collectEffectVitestImports(source);
+  deepStrictEqual(
+    A.map(indexed.loops, (node) => node.getKind()),
+    [SyntaxKind.ForOfStatement, SyntaxKind.ForOfStatement, SyntaxKind.ForOfStatement, SyntaxKind.ForInStatement]
+  );
+  const rows = A.filter(
+    detectEffectVitestFindings(source, "loops.test.ts", "@beep/example"),
+    (row) => row.ruleId === "EV013"
+  );
+  deepStrictEqual(
+    A.map(rows, (row) => row.mechanization),
+    ["judgment", "judgment"]
+  );
+  assertTrue(rows[0]?.evidence.includes("attempt"));
+  assertTrue(rows[1]?.evidence.includes("retry"));
+  assertFalse(
+    hasRule(
+      `for (const retry in retries) consume(retry); it("x", () => { for (const value of values) consume(value); });`,
+      "EV013"
+    )
+  );
+});
+
+it("retains shared deterministic clock review for nested single-test and reset/concurrent layers", () => {
+  for (const body of [
+    `it.layer(resource)("parent", (it) => { it.layer(child)("single", (it) => { it.effect("timeout", function* () { const fiber = yield* Fx.forkChild(Fx.timeoutOption(work, "1 second")); yield* TC.adjust("1 second"); yield* Fiber.join(fiber); }); }); });`,
+    `it.layer(resource)("shared", (it) => { beforeEach(() => TC.setTime(0)); it.effect.concurrent("a", () => TC.adjust("1 second")); it.effect.concurrent("b", () => TC.adjust("2 seconds")); });`,
+  ]) {
+    const rows = A.filter(findings(body), (row) => row.ruleId === "EV015");
+    assertTrue(rows.length > 0);
+    assertTrue(
+      A.every(rows, (row) => row.mechanization === "judgment" && row.replacement.primitive === "TestClock.adjust")
+    );
+    assertTrue(
+      A.every(
+        rows,
+        (row) =>
+          row.replacement.sketch.includes("not concurrency isolation") &&
+          row.replacement.sketch.includes("intentional live")
+      )
+    );
+  }
+});
+
+it("routes data assertions by family, polarity and supplied operands without inventing payloads", () => {
+  const examples = [
+    ["expect(O.isNone(value)).toBe(true)", "utils.assertNone", "detector"],
+    ["expect(O.isNone(value)).toBe(false)", "utils.assertFalse", "judgment"],
+    ["expect(O.isSome(value)).not.toBe(true)", "utils.assertNone", "detector"],
+    ["expect(O.isNone(value)).not.toBe(false)", "utils.assertNone", "detector"],
+    ["expect(R.isFailure(value)).toBe(true)", "utils.assertTrue", "judgment"],
+    ["expect(X.isSuccess(value)).not.toBe(true)", "utils.assertFalse", "judgment"],
+    ["expect(X.isFailure(value)).toBe(false)", "utils.assertFalse", "judgment"],
+    ["expect(value).toEqual(O.some(1))", "utils.assertSome", "judgment"],
+    ["expect(value).toEqual(R.fail(error))", "utils.assertFailure", "judgment"],
+    ["expect(value).toEqual(R.succeed(1))", "utils.assertSuccess", "judgment"],
+    ["expect(value).toEqual(X.succeed(1))", "utils.assertExitSuccess", "judgment"],
+    ["expect(value).toEqual(X.fail(error))", "utils.deepStrictEqual", "judgment"],
+    ["expect(value).not.toEqual(O.none())", "utils.deepStrictEqual", "judgment"],
+    ["expect(O.isNone(a) && R.isFailure(b)).toBe(true)", "utils.deepStrictEqual", "judgment"],
+    ["expect(A.every(values, O.isNone)).toBe(true)", "utils.deepStrictEqual", "judgment"],
+  ];
+  for (const [assertion, primitive, mode] of examples) {
+    const rows = A.filter(
+      findings(`import * as A from "effect/Array"; it("route", () => ${assertion});`),
+      (row) => row.ruleId === "EV006"
+    );
+    deepStrictEqual(
+      A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
+      [[primitive, mode]]
+    );
+  }
+  assertFalse(hasRule(`it("plain", () => expect(R.getOrThrow(value).path).toBe("label"));`, "EV006"));
+});
+
+it("distinguishes unknown codec module mocks from binding-proven local service candidates", () => {
+  const rows = findings(
+    `vi.mock("@beep/codec", () => ({ decode: () => Fx.fail(error) })); class Service extends Context.Service<Service>()("Service", {}) {} vi.spyOn(Service, "method");`
+  );
+  deepStrictEqual(
+    A.map(
+      A.filter(rows, (row) => row.ruleId === "EV012"),
+      (row) => [row.class, row.mechanization]
+    ),
+    [
+      ["unproven-module-mock-review", "judgment"],
+      ["effect-service-mock-candidate", "judgment"],
+    ]
+  );
+  assertTrue(
+    A.every(
+      A.filter(rows, (row) => row.ruleId === "EV012"),
+      (row) => row.replacement.sketch.includes("real service key")
+    )
+  );
+  assertFalse(hasRule(`vi.spyOn(Math, "random");`, "EV012"));
+  assertFalse(
+    hasRule(`function test(Context) { class Fake extends Context.Service() {} vi.spyOn(Fake, "method"); }`, "EV012")
+  );
+});
+
+it("retains CommonJS tmpdir aliases without matching declaration text or shadows", () => {
+  assertTrue(hasRule(`const { tmpdir: temporary } = require("node:os"); it("x", () => temporary());`, "EV010"));
+  assertFalse(
+    hasRule(`const { tmpdir: temporary } = require("node:os"); it("x", (temporary) => temporary());`, "EV010")
+  );
+  assertFalse(hasRule(`import * as os from "node:os"; const text = "tmpdir";`, "EV010"));
+});
+
+it.each([
+  {
+    predicate: "O.isSome",
+    truth: true,
+    primitive: "utils.assertTrue",
+    mode: "judgment",
+    polarity: "true polarity",
+    requirement: "do not invent",
+  },
+  {
+    predicate: "O.isSome",
+    truth: false,
+    primitive: "utils.assertNone",
+    mode: "detector",
+    polarity: "predicate polarity",
+    requirement: "original Option is None",
+  },
+  {
+    predicate: "O.isNone",
+    truth: true,
+    primitive: "utils.assertNone",
+    mode: "detector",
+    polarity: "predicate polarity",
+    requirement: "original Option is None",
+  },
+  {
+    predicate: "O.isNone",
+    truth: false,
+    primitive: "utils.assertFalse",
+    mode: "judgment",
+    polarity: "false polarity",
+    requirement: "do not invent",
+  },
+  {
+    predicate: "R.isSuccess",
+    truth: true,
+    primitive: "utils.assertTrue",
+    mode: "judgment",
+    polarity: "true polarity",
+    requirement: "do not invent",
+  },
+  {
+    predicate: "R.isSuccess",
+    truth: false,
+    primitive: "utils.assertFalse",
+    mode: "judgment",
+    polarity: "false polarity",
+    requirement: "do not invent",
+  },
+  {
+    predicate: "R.isFailure",
+    truth: true,
+    primitive: "utils.assertTrue",
+    mode: "judgment",
+    polarity: "true polarity",
+    requirement: "do not invent",
+  },
+  {
+    predicate: "R.isFailure",
+    truth: false,
+    primitive: "utils.assertFalse",
+    mode: "judgment",
+    polarity: "false polarity",
+    requirement: "do not invent",
+  },
+  {
+    predicate: "X.isSuccess",
+    truth: true,
+    primitive: "utils.assertTrue",
+    mode: "judgment",
+    polarity: "true polarity",
+    requirement: "do not invent",
+  },
+  {
+    predicate: "X.isSuccess",
+    truth: false,
+    primitive: "utils.assertFalse",
+    mode: "judgment",
+    polarity: "false polarity",
+    requirement: "do not invent",
+  },
+  {
+    predicate: "X.isFailure",
+    truth: true,
+    primitive: "utils.assertTrue",
+    mode: "judgment",
+    polarity: "true polarity",
+    requirement: "do not invent",
+  },
+  {
+    predicate: "X.isFailure",
+    truth: false,
+    primitive: "utils.assertFalse",
+    mode: "judgment",
+    polarity: "false polarity",
+    requirement: "do not invent",
+  },
+])(
+  "keeps $predicate at $truth under the correct review route",
+  ({ predicate, truth, primitive, mode, polarity, requirement }) => {
+    const expression = `${predicate}(value)`;
+    for (const assertion of [
+      `expect(${expression}).toBe(${truth})`,
+      `${truth ? "assertTrue" : "assertFalse"}(${expression})`,
+    ]) {
+      const rows = A.filter(
+        findings(`import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("residue", () => ${assertion});`),
+        (row) => row.ruleId === "EV006"
+      );
+      deepStrictEqual(
+        A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
+        [[primitive, mode]]
+      );
+      assertTrue(A.every(rows, (row) => row.evidence.includes(expression)));
+      assertTrue(A.every(rows, (row) => row.replacement.sketch.includes(polarity)));
+      assertTrue(A.every(rows, (row) => row.replacement.sketch.includes(requirement)));
+    }
+  }
+);
+
+it.each([
+  { root: "@effect/platform-node", services: "NodeServices", path: "NodePath", spawner: "NodeChildProcessSpawner" },
+  { root: "@effect/platform-bun", services: "BunServices", path: "BunPath", spawner: "BunChildProcessSpawner" },
+])("retains exact $services root/subpath resource review parity", ({ root, services }) => {
+  const expected = A.map(
+    A.filter(
+      findings(`import { ${services} as Services } from "${root}"; use(Services.layer);`),
+      (row) => row.ruleId === "EV010"
+    ),
+    (row) => [row.class, row.mechanization, row.replacement]
+  );
+  deepStrictEqual(
+    A.map(expected, (row) => A.take(row, 2)),
+    [["platform-resource-provenance-review", "judgment"]]
+  );
+  for (const body of [
+    `import * as Platform from "${root}"; use(Platform.${services}.layer);`,
+    `import * as Services from "${root}/${services}"; use(Services.layer);`,
+    `import { layer as servicesLayer } from "${root}/${services}"; use(servicesLayer);`,
+    `import { type ${services}, layer as servicesLayer } from "${root}/${services}"; use(servicesLayer);`,
+    `const { ${services}: Services } = require("${root}"); use(Services.layer);`,
+    `const Services = require("${root}/${services}"); use(Services.layer);`,
+    `const { layer: servicesLayer } = require("${root}/${services}"); use(servicesLayer);`,
+    `use(require("${root}/${services}").layer);`,
+  ]) {
+    const rows = A.filter(findings(body), (row) => row.ruleId === "EV010");
+    deepStrictEqual(
+      A.map(rows, (row) => [row.class, row.mechanization, row.replacement]),
+      expected
+    );
+    assertTrue(A.every(rows, (row) => row.replacement.sketch.includes("filesystem use is unproven")));
+  }
+});
+
+it.each([
+  { root: "@effect/platform-node", services: "NodeServices", path: "NodePath", spawner: "NodeChildProcessSpawner" },
+  { root: "@effect/platform-bun", services: "BunServices", path: "BunPath", spawner: "BunChildProcessSpawner" },
+])("excludes type-only, shadowed and unrelated $services imports", ({ root, services, path, spawner }) => {
+  for (const body of [
+    `import type * as Services from "${root}/${services}";`,
+    `import { type ${services} } from "${root}/${services}";`,
+    `import * as Services from "${root}/${services}"; function f(Services) { use(Services.layer); }`,
+    `function f(require) { use(require("${root}/${services}").layer); }`,
+    `const Services = require("${root}/${services}"); function f(Services) { use(Services.layer); }`,
+    `import * as Services from "${root}/${services}Other"; use(Services.layer);`,
+    `const Services = require("${root}-other/${services}"); use(Services.layer);`,
+    `import { layer } from "${root}/${path}"; use(layer);`,
+    `const { layer } = require("${root}/${spawner}"); use(layer);`,
+    `import { layer } from "@effect/platform-node-shared/${services}"; use(layer);`,
+  ])
+    assertFalse(hasRule(body, "EV010"));
+});
+
+it.each([
+  `expect(decode(CapturedSanityRequestBodyJson, O.getOrThrow(bodyText ?? O.none()))).toEqual({ params: {}, query: "query" });`,
+  `expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(raw.session_id, O.none()));`,
+  `expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(base.session_id, O.none()));`,
+  `expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(legacy.sessionId, O.none()));`,
+  `expect(Fx.runSync(Arbitrary.checkEffect(Arbitrary.all([Arbitrary.filter(PackageJsonDependenciesArbitrary, O.isSome)]), ([value]) => { expect(decode(encode(value))).toEqual(value); return true; }, fcRuns(20)))._tag).toBe("Passed");`,
+  `expect(Fx.runSync(Arbitrary.checkEffect(Arbitrary.all([Arbitrary.filter(NpmPackageJsonPeerDependenciesMetaArbitrary, O.isSome)]), ([value]) => { expect(decode(encode(value))).toEqual(value); return true; }, fcRuns(20)))._tag).toBe("Passed");`,
+  `expect(Fx.runSync(Arbitrary.checkEffect(arbitrary, (value) => { const record = makeRecord({ harness: O.some(value) }); expect(render(record)).toEqual(expected); return true; }, fcRuns(20)))._tag).toBe("Passed");`,
+])("does not infer asserted tagged data from incidental inputs: %s", (body) => {
+  assertFalse(hasRule(`it.effect("plain", function* () { ${body} });`, "EV006"));
+});
+
+it("keeps direct and compound tagged assertions visible without entering unrelated callbacks", () => {
+  for (const expression of [
+    "O.isNone(a) && R.isFailure(b)",
+    "!X.isSuccess(a)",
+    "A.every(values, O.isNone)",
+    "A.some(values, R.isFailure)",
+  ]) {
+    assertTrue(
+      hasRule(`import * as A from "effect/Array"; it("compound", () => expect(${expression}).toBe(true));`, "EV006")
+    );
+  }
+  for (const expression of [
+    "() => O.isSome(value)",
+    "transform(value, () => O.none())",
+    "O.some(value).value",
+    "Arbitrary.filter(values, O.isSome)",
+  ]) {
+    assertFalse(hasRule(`it("plain", () => expect(${expression}).toEqual(expected));`, "EV006"));
+  }
+});
+
+it.each([
+  "O.map(relation, (claim) => O.some(claim.id))",
+  "O.all([O.map(subject, (claim) => claim.id), O.map(object, (claim) => claim.id)]).pipe(O.map(O.some))",
+  "O.map((value) => value.id)(relation)",
+  "pipe(relation, O.map((value) => value.id))",
+  "O.flatMap(relation, (value) => O.some(value.id))",
+  "O.filter(relation, (value) => value.id > 0)",
+  "O.flatten(nested)",
+  "R.map(result, (value) => value.id)",
+  "R.mapError((error) => error.message)(result)",
+  "R.flatMap(result, (value) => R.succeed(value.id))",
+  "R.all(results)",
+  "R.flip(result)",
+  "X.map(exit, (value) => value.id)",
+  "X.mapError((error) => error.message)(exit)",
+  "X.mapBoth(exit, { onSuccess: identity, onFailure: identity })",
+])("retains a completed public tagged transformation as judgment: %s", (expression) => {
+  const rows = A.filter(
+    findings(`import { pipe } from "effect"; it("tagged", () => expect(${expression}).toEqual(expected));`),
+    (row) => row.ruleId === "EV006"
+  );
+  deepStrictEqual(
+    A.map(rows, (row) => [row.mechanization, row.replacement.primitive]),
+    [["judgment", "utils.deepStrictEqual"]]
+  );
+  assertTrue(A.every(rows, (row) => row.evidence.includes("expect(")));
+});
+
+it.each([
+  "inserted.nickname.pipe(isNone)",
+  "missing.pipe(isNone)",
+  "pipe(missing, O.isSome)",
+  "O.contains(option, value)",
+  "O.contains(value)(option)",
+  "option.pipe(O.contains(value))",
+  "A.every(values, (value) => O.isNone(decode(value)))",
+  "A.every(values, (value) => R.isFailure(decode(value)) && R.isFailure(other(value)))",
+  "A.some(values, (value) => O.isSome(value.field))",
+  "A.every(values, (value) => { return O.isNone(value); })",
+  "A.every(O.isNone)(values)",
+  "pipe(values, A.some(O.isSome))",
+  "values.pipe(A.every((value) => value.status === 'open' && O.isNone(value.reason)))",
+  "Utils.A.every(values, X.isFailure)",
+  "Wrapped.every(values, (value) => O.isSome(value.field))",
+])("retains composed tagged predicates without claiming a payload: %s", (expression) => {
+  for (const truth of [true, false]) {
+    const rows = A.filter(
+      findings(
+        `import { pipe } from "effect"; import { isNone } from "effect/Option"; import * as A from "effect/Array"; import * as Utils from "@beep/utils"; import { A as Wrapped } from "@beep/utils"; it("predicate", () => expect(${expression}).toBe(${truth}));`
+      ),
+      (row) => row.ruleId === "EV006"
+    );
+    deepStrictEqual(
+      A.map(rows, (row) => row.mechanization),
+      ["judgment"]
+    );
+    assertTrue(A.every(rows, (row) => row.evidence.includes(`toBe(${truth})`)));
+  }
+});
+
+it.each([
+  "yield* Fx.exit(program)",
+  "yield* Fx.result(program)",
+  "yield* validate({ expectedInfo: O.none() }).pipe(Fx.exit)",
+  "yield* validate({ expectedInfo: O.some(info) }).pipe(Fx.result)",
+  "yield* pipe(program, Fx.exit)",
+])("recognizes executed tagged outcomes rather than their unevaluated Effects: %s", (expression) => {
+  const rows = A.filter(
+    findings(
+      `import { pipe } from "effect"; it.effect("outcome", function* () { expect(${expression}).toMatchObject({ _tag: "Failure" }); });`
+    ),
+    (row) => row.ruleId === "EV006"
+  );
+  deepStrictEqual(
+    A.map(rows, (row) => [row.mechanization, row.replacement.primitive]),
+    [["judgment", "utils.deepStrictEqual"]]
+  );
+});
+
+it.each([
+  "O.map((value) => O.some(value))",
+  "O.map()",
+  "O.map(...args)",
+  "O.map(value, transform, extra)",
+  "O.map(transform)(value)(extra)",
+  "O.match(option, { onNone: () => '', onSome: (value) => value.name })",
+  "O.getOrElse(O.some(value), () => fallback)",
+  "R.getOrThrow(R.succeed(value))",
+  "X.match(exit, { onSuccess: identity, onFailure: identity })",
+  "O.map(option, transform).pipe(O.getOrElse(() => plain))",
+  "pipe(O.some(value), unknown)",
+  "O.some(value).pipe(unknown)",
+  "Fx.exit(program)",
+  "program.pipe(Fx.result)",
+  "yield* Fx.exit(program).pipe(Fx.map(() => plain))",
+  "yield Fx.exit(program)",
+  "A.filter(values, O.isSome).length",
+  "A.every(values, (value) => unknown(O.some(value)))",
+  "A.every(values, (value) => { const incidental = O.some(value); return true; })",
+  "A.every(values, async (value) => O.isSome(value))",
+  "A.every(values, function* (value) { return O.isSome(value); })",
+  "A.every(O.isNone)",
+  "A.every(O.isNone)(values)(extra)",
+])("does not infer tagged return values across a plain or incomplete boundary: %s", (expression) => {
+  assertFalse(
+    hasRule(
+      `import { pipe } from "effect"; import * as A from "effect/Array"; it.effect("plain", function* () { expect(${expression}).toBeDefined(); });`,
+      "EV006"
+    )
+  );
+});
+
+it("requires exact provenance for computed transforms, pipe predicates and Array facades", () => {
+  for (const body of [
+    `import { map as mapped } from "effect/Option"; it("alias", () => expect(mapped(option, transform)).toEqual(expected));`,
+    `import * as Wrapped from "@beep/utils/Option"; it("alias", () => expect(Wrapped.map(option, transform)).toEqual(expected));`,
+    `import * as Wrapped from "@beep/utils/Array"; it("alias", () => expect(Wrapped.some(values, O.isSome)).toBe(true));`,
+  ])
+    assertTrue(hasRule(body, "EV006"));
+  for (const body of [
+    `import * as Wrapped from "effect/OptionOther"; it("fake", () => expect(Wrapped.map(option, transform)).toEqual(expected));`,
+    `import { map as mapped } from "effect/Option"; it("shadow", (mapped) => expect(mapped(option, transform)).toEqual(expected));`,
+    `import { isNone } from "effect/Option"; it("shadow", (isNone) => expect(option.pipe(isNone)).toBe(true));`,
+    `import * as A from "effect/Array"; it("shadow", (A) => expect(A.every(values, O.isNone)).toBe(true));`,
+    `import { A } from "@beep/utils-other"; it("fake", () => expect(A.every(values, O.isNone)).toBe(true));`,
+    `import * as Utils from "@beep/utils"; it("fake", () => expect(Utils.every(values, O.isNone)).toBe(true));`,
+    `import { A as Wrapped } from "@beep/utils"; it("shadow", (Wrapped) => expect(Wrapped.every(values, O.isNone)).toBe(true));`,
+    `it("unknown", () => expect(opaque(O.map(option, transform))).toEqual(expected));`,
+  ])
+    assertFalse(hasRule(body, "EV006"));
 });

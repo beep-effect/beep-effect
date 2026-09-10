@@ -29,14 +29,25 @@ and timing behavior, and enforce the result through a syntax-only lint ratchet.
 
 ## Latest evidence
 
-The current proposal contains all 15 detector rules, the 100-entry rc113 API
-graph, four lens charters, and the instrumented runner with Node/Bun proof.
-The adopted census contains 996 test files and 110 support modules; its 8,026
-open findings are the starting candidates for later inventory and migration.
-Three normal adopted-baseline commands pass below ten seconds with recorded
-workstation resource context. Round one is closed and round two is active.
-The final CLI coverage and remaining adversarial, aggregate, hosted and review
-gates are still open. Continue from the September 10 integration record.
+The proposal contains all 15 detector rules, the 100-entry rc113 API graph, four
+lens charters and the instrumented runner. Main through 8cb18e6, including #1060
+and #1082, is merged locally at 3630388. The remote checkpoint remains b86269212e;
+its Greptile 5/5 and closed threads do not prove the unpublished repairs.
+
+The adopted inventory contains 7,775 open candidates across 1,000 tests and 110
+support modules. Complete reconciliation preserves the census, all 29 generated
+declarations and every finding disposition, with no unexplained loss or exception
+transfer. The canonical writer and all three normal lint commands pass; timings
+are 9.943s, 9.503s and 9.588s with complete resource context retained. Earlier
+failed cohorts remain historical evidence.
+
+The repaired runner passes all 52 registrations on Node 22, Node 24 and Bun plus
+normal scoped Node 22 coverage. The detector passes 207 focused cases and final
+repo-cli audit/docgen in 423.690 seconds. Round one and round two are closed;
+round three is the remaining adversarial review. Final CLI coverage, full
+aggregate proof and exact-head hosted/review closure remain. The publishing commit
+must include the repo-configs changeset. Continue from the September 10 integration
+record; these local proofs do not yet make the remote PR merge-ready.
 
 [PR #1047](https://github.com/beep-effect/beep-effect/pull/1047) promoted the
 conformant MemoryFileSystem and was merged by Benjamin on 2026-09-09 after all

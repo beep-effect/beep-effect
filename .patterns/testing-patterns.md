@@ -292,7 +292,11 @@ describe("resource management", () => {
 
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
-import { Duration, Effect, Fiber, TestClock } from "effect"
+import { Effect } from "effect"
+import * as Duration from "effect/Duration"
+import * as Fiber from "effect/Fiber"
+import * as Ref from "effect/Ref"
+import * as TestClock from "effect/testing/TestClock"
 import * as ConcurrentModule from "../src/ConcurrentModule.js"
 
 describe("concurrent operations", () => {
@@ -323,17 +327,17 @@ describe("concurrent operations", () => {
 
       const operations = ["A", "B", "C", "D"].map(timedOperation)
 
-      const fiber = yield* Effect.fork(
+      const fiber = yield* Effect.forkChild(
         Effect.all(operations, { concurrency: 2 })
       )
 
-      // Advance time and check concurrent execution
-      yield* TestClock.advance(Duration.millis(500))
+      // Each wave takes one second; inspect after 500ms, then drive the remaining 1500ms.
+      yield* TestClock.adjust(Duration.millis(500))
       const midResults = yield* Ref.get(startTimes)
       assert.strictEqual(midResults.length, 2) // Only 2 should start
 
-      yield* TestClock.advance(Duration.seconds(1))
-      const finalResults = yield* Effect.join(fiber)
+      yield* TestClock.adjust(Duration.millis(1500))
+      const finalResults = yield* Fiber.join(fiber)
       assert.strictEqual(finalResults.length, 4)
     }))
 })

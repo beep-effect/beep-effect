@@ -6,6 +6,7 @@ import { assertExitFailure } from "@effect/vitest/utils";
 import {
   Array as Arr,
   Cause,
+  Clock,
   Config,
   Deferred,
   Effect,
@@ -30,6 +31,7 @@ const reporterSource = NodeURL.fileURLToPath(
 const fixtureDirectory = NodeURL.fileURLToPath(new URL("./fixtures/vitest-instrumentation", import.meta.url));
 const vitestBin = NodeURL.fileURLToPath(new URL("../../../../../node_modules/vitest/vitest.mjs", import.meta.url));
 const runtimePoolArgs = process.versions.bun === undefined ? [] : ["--pool=threads"];
+const processClock = Effect.runSync(Clock.Clock);
 const emptyString = (): string => "";
 const rawErrorPrefix = "BEEP_VITEST_RAW_ERROR ";
 const rawErrorLines = (output: string): string =>
@@ -44,6 +46,7 @@ interface FixtureResult {
   readonly exitCode: ChildProcessSpawner.ExitCode;
   readonly output: string;
   readonly phases: string;
+  readonly report: string;
 }
 
 const encodeScopeExit = Schema.encodeEffect(Schema.fromJsonString(Schema.Struct({ interrupted: Schema.Boolean })));
@@ -101,6 +104,66 @@ const retainFixtureEvidence = Effect.fnUntraced(function* (
   }
 });
 
+const encodeProcessPhase = Schema.encodeEffect(
+  Schema.fromJsonString(
+    Schema.Struct({
+      mode: Schema.String,
+      trace: Schema.Boolean,
+      ci: Schema.Boolean,
+      phase: Schema.String,
+      monotonicNanos: Schema.BigIntFromString,
+      interrupted: Schema.Boolean,
+    })
+  )
+);
+
+const traceCases = [
+  { name: "trace-off", mode: "trace-success", ci: "false", trace: "0" },
+  { name: "trace-on", mode: "trace-success", ci: "false", trace: "1" },
+  { name: "trace-ci", mode: "trace-success", ci: "true", trace: "0" },
+  { name: "trace-failure", mode: "trace-failure", ci: "false", trace: "1" },
+];
+const encodeConfig = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
+const prepareRuntimeFixtures = Effect.fnUntraced(function* (directory: string, mode: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const source = yield* fs.readFileString(fixtureSource);
+  yield* fs.writeFileString(path.join(directory, "runtime.test.ts"), source);
+  if (mode !== "trace-matrix") return [];
+  const projects = yield* Effect.forEach(traceCases, (entry) =>
+    Effect.gen(function* () {
+      const projectDirectory = path.join(directory, entry.name);
+      yield* fs.makeDirectory(projectDirectory);
+      const fixture = path.join(projectDirectory, "runtime.test.ts");
+      yield* fs.writeFileString(fixture, source);
+      return {
+        extends: true,
+        test: {
+          name: entry.name,
+          root: projectDirectory,
+          include: [fixture],
+          isolate: true,
+          maxWorkers: 1,
+          env: {
+            BEEP_INSTRUMENTED_IT_FIXTURE: entry.mode,
+            CI: entry.ci,
+            BEEP_TEST_TRACE: entry.trace,
+            BEEP_TRACE_CASE: entry.name,
+          },
+        },
+      };
+    })
+  );
+  const config = yield* encodeConfig({ test: { maxWorkers: 1, projects } });
+  const base = yield* encodeConfig(path.join(packageRoot, "vitest.config.ts"));
+  const configPath = path.join(directory, "trace.config.ts");
+  yield* fs.writeFileString(
+    configPath,
+    `import { defineConfig, mergeConfig } from "vitest/config";\nimport base from ${base};\nexport default mergeConfig(base, defineConfig(${config}));\n`
+  );
+  return ["--config", configPath];
+});
+
 const runFixture = (
   mode: string,
   options?: {
@@ -128,16 +191,34 @@ const runFixture = (
       const reporterPath = path.join(directory, "diagnostic-reporter.ts");
       let output = emptyString();
       yield* retainFixtureEvidence(directory, runtimeTest, () => output, options?.evidenceDirectory);
+      let processPhases = emptyString();
+      const recordProcessPhase = Effect.fnUntraced(function* (phase: string, interrupted = false) {
+        const line = yield* encodeProcessPhase({
+          mode,
+          trace: options?.trace === true,
+          ci: options?.ci === true,
+          phase,
+          monotonicNanos: yield* processClock.monotonicTimeNanos,
+          interrupted,
+        });
+        processPhases = Str.concat(processPhases, `${line}\n`);
+        yield* fs.writeFileString(path.join(directory, "process-phases.jsonl"), processPhases);
+      });
+      yield* Effect.addFinalizer((exit) =>
+        recordProcessPhase("scope-close", Exit.hasInterrupts(exit)).pipe(Effect.orDie)
+      );
+      yield* recordProcessPhase("prepared");
       yield* fs
         .readFileString(reporterSource)
         .pipe(Effect.flatMap((source) => fs.writeFileString(reporterPath, source)));
-      yield* fs.readFileString(fixtureSource).pipe(Effect.flatMap((source) => fs.writeFileString(runtimeTest, source)));
+      const projectArgs = yield* prepareRuntimeFixtures(directory, mode);
 
       const args = [
         vitestBin,
         "run",
-        runtimeTest,
+        directory,
         ...runtimePoolArgs,
+        ...projectArgs,
         "--root",
         packageRoot,
         "--reporter=json",
@@ -145,6 +226,7 @@ const runFixture = (
         `--outputFile=${resultPath}`,
         ...(mode === "only" ? ["--allowOnly"] : []),
       ];
+      yield* recordProcessPhase("spawn");
       const child = yield* ChildProcess.make(process.execPath, args, {
         cwd: packageRoot,
         extendEnv: true,
@@ -155,15 +237,22 @@ const runFixture = (
         },
         stdin: "ignore",
       });
+      let receivedOutput = false;
       yield* child.all.pipe(
         Stream.decodeText(),
-        Stream.runForEach((chunk) =>
-          Effect.sync(() => {
+        Stream.runForEach(
+          Effect.fnUntraced(function* (chunk) {
             output = Str.concat(output, chunk);
+            if (!receivedOutput) {
+              receivedOutput = true;
+              yield* recordProcessPhase("first-output");
+            }
           })
         )
       );
+      yield* recordProcessPhase("drain");
       const exitCode = yield* child.exitCode;
+      yield* recordProcessPhase("exit");
       const cleanup = yield* Effect.forEach(
         Arr.filter(Str.split("\n")(output), Str.startsWith("BEEP_VITEST_CLEANUP ")),
         (line) => decodeCleanup(Str.slice(20)(line))
@@ -185,9 +274,72 @@ const runFixture = (
         phases,
         exitCode,
         output: Str.concat(output, resultOutput),
+        report: resultOutput,
       };
     })
   );
+
+const decodeTraceObservation = Schema.decodeEffect(
+  Schema.fromJsonString(
+    Schema.Struct({
+      case: Schema.String,
+      ci: Schema.Boolean,
+      trace: Schema.String,
+      cleanup: Schema.String,
+    })
+  )
+);
+const decodeTraceReport = Schema.decodeEffect(
+  Schema.fromJsonString(
+    Schema.Struct({
+      numTotalTests: Schema.Finite,
+      testResults: Schema.Array(
+        Schema.Struct({
+          name: Schema.String,
+          assertionResults: Schema.Array(
+            Schema.Struct({
+              status: Schema.String,
+              failureMessages: Schema.Array(Schema.String),
+            })
+          ),
+        })
+      ),
+    })
+  )
+);
+const runTraceMatrix = Effect.fnUntraced(function* () {
+  const result = yield* runFixture("trace-matrix");
+  const observations = yield* Effect.forEach(
+    Arr.filter(Str.split("\n")(result.output), Str.startsWith("BEEP_TRACE_OBSERVATION ")),
+    (line) => decodeTraceObservation(Str.slice(23)(line))
+  );
+  const report = yield* decodeTraceReport(result.report);
+  expect(report.numTotalTests).toBe(4);
+  expect(observations).toHaveLength(4);
+  const observationFor = Effect.fnUntraced(function* (name: string) {
+    const observation = yield* Effect.fromOption(Arr.findFirst(observations, (value) => value.case === name));
+    const configuration = yield* Effect.fromOption(Arr.findFirst(traceCases, (value) => value.name === name));
+    const project = yield* Effect.fromOption(
+      Arr.findFirst(report.testResults, (value) => Str.includes(`/${name}/`)(value.name))
+    );
+    expect(project.assertionResults).toHaveLength(1);
+    expect(observation.ci).toBe(configuration.ci === "true");
+    expect(observation.trace).toBe(configuration.trace);
+    const assertion = yield* Effect.fromOption(Arr.head(project.assertionResults));
+    expect(assertion.status).toBe(name === "trace-failure" ? "failed" : "passed");
+    return {
+      cleanup: observation.cleanup,
+      output: Arr.join(assertion.failureMessages, "\n"),
+      exitCode: ChildProcessSpawner.ExitCode(assertion.status === "passed" ? 0 : 1),
+    };
+  });
+  return yield* Effect.all({
+    traceOff: observationFor("trace-off"),
+    traceOn: observationFor("trace-on"),
+    ciOn: observationFor("trace-ci"),
+    failure: observationFor("trace-failure"),
+  });
+});
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest runtime", (layerIt) => {
   layerIt.effect("uses the body log and concrete name when the live watchdog interrupts a frozen TestClock", () =>
@@ -236,6 +388,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       expect(phases).toContain("Test timed out in 25ms");
       expect(phases).toContain('"phase":"finished"');
       expect(scopeExit).toBe('{"interrupted":true}');
+      const processPhases = yield* fs.readFileString(path.join(retained, "process-phases.jsonl"));
+      for (const phase of ["prepared", "spawn", "first-output", "drain", "exit", "scope-close"]) {
+        expect(processPhases).toContain(`"phase":"${phase}"`);
+      }
+      expect(processPhases).toContain('"interrupted":true');
       const phaseRecords = yield* decodePhases(Str.split("\n")(phases));
       expect(Arr.map(phaseRecords, ({ phase }) => phase)).toEqual(["beforeEach", "abort", "finished", "failed"]);
       expect(Arr.map(phaseRecords, ({ aborted }) => aborted)).toEqual([false, true, true, true]);
@@ -257,6 +414,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       expect(tiny.exitCode).not.toBe(ChildProcessSpawner.ExitCode(0));
       expect(tiny.output).toContain("TestHang");
       expect(tiny.output).toContain("12.5ms watchdog");
+      expect(tiny.cleanup).toContain("tiny body released\n");
 
       const disabled = yield* runFixture("disabled-timeouts");
       expect(disabled.exitCode).toBe(ChildProcessSpawner.ExitCode(0));
@@ -271,29 +429,33 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       for (const evidence of ["case alpha", "case beta", "last-alpha", "last-beta", "155", "215"]) {
         expect(result.output).toContain(evidence);
       }
+      expect(result.cleanup).toContain("alpha expired while beta remained active");
+      expect(result.output).toContain(
+        'Instrumented test "isolated concurrent cases > case alpha" exceeded its 155ms watchdog. Last log: last-alpha'
+      );
+      expect(result.output).toContain(
+        'Instrumented test "isolated concurrent cases > case beta" exceeded its 215ms watchdog. Last log: last-beta'
+      );
     })
   );
 
   layerIt.effect("gates lifecycle output while preserving trace success and failure outcomes", () =>
     Effect.gen(function* () {
-      const traceOff = yield* runFixture("trace-success");
+      const { traceOff, traceOn, ciOn, failure } = yield* runTraceMatrix();
       expect(traceOff.exitCode).toBe(ChildProcessSpawner.ExitCode(0));
       expect(traceOff.cleanup).toContain("trace-body-success");
       expect(traceOff.cleanup).not.toContain("effect-vitest test start");
       expect(traceOff.cleanup).not.toContain("effect-vitest test end");
 
-      const traceOn = yield* runFixture("trace-success", { trace: true });
       expect(traceOn.exitCode).toBe(ChildProcessSpawner.ExitCode(0));
       expect(traceOn.cleanup).toContain("effect-vitest test start");
       expect(traceOn.cleanup).toContain("effect-vitest test end");
       expect(traceOn.cleanup).toContain("outcome=success");
       expect(traceOn.cleanup).toContain("durationMillis=");
 
-      const ciOn = yield* runFixture("trace-success", { ci: true });
       expect(ciOn.exitCode).toBe(ChildProcessSpawner.ExitCode(0));
       expect(ciOn.cleanup).toContain("effect-vitest test start");
 
-      const failure = yield* runFixture("trace-failure", { trace: true });
       expect(failure.exitCode).not.toBe(ChildProcessSpawner.ExitCode(0));
       expect(failure.output).toContain("preserved-failure");
       expect(failure.cleanup).toContain("effect-vitest test start");

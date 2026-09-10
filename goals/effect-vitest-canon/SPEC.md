@@ -232,10 +232,13 @@ env pinning, dependents scope and scoped remediation. **Idiom migration is a cor
 hang-prevention and idiom win with targeted speed wins where layers are expensive. It is not
 promised as the lane fix.** Timings are evidence, measured per package (D1).
 
-### 1.7 Doctrine drift you must resolve
+### 1.7 D5 doctrine correction applied
 
-`.patterns/testing-patterns.md:62` says "Never use expect with it.effect" while
-`standards/architecture/08-testing.md:70` uses `expect` inside `it.effect`. D5 settles it.
+The testing patterns, architecture testing guide and Effect-first skill now agree: use
+`@effect/vitest/utils` helpers for Option, Result and Exit values; `expect` and ordinary
+assertions remain legal for plain values inside `it.effect`. The former blanket prohibition
+was removed by the D5 correction. Its scope and proof are recorded in
+`history/lanes/d5-doctrine-corrections.md`.
 
 ### 1.8 MemoryFileSystem state
 

@@ -1,6 +1,38 @@
 # rc.113 final scanner timing
 
-## Final Fallow candidate
+## Accepted tagged-value candidate
+
+Root accepts three consecutive ordinary `bun run beep lint effect-vitest` runs
+on the final 7,775-row, 1,110-path canonical baseline. All exit zero; the complete
+source and canonical artifact hashes are unchanged. All source/package writers
+had finished, and no owned coverage command was active.
+
+| Run | Full command seconds | Child CPU seconds | Host load1 before | Available GiB before | Host swap pages in / out |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 9.943252 | 16.076 | 2.43 | 66.63 | 15109 / 316 |
+| 2 | 9.503443 | 15.771 | 2.67 | 66.28 | 336 / 0 |
+| 3 | 9.587565 | 15.760 | 2.57 | 66.29 | 4 / 0 |
+
+The host exposes 64 logical CPUs. Ten-second CPU, memory and IO pressure averages
+were zero at the captured boundaries. The raw receipts also retain affinity,
+inherited niceness, cgroup limits and counters. Swap/page and cgroup counters are
+shared host context, not scanner-only attribution. Existing swap use is distinct
+from activity during a sample. No numeric load adjustment or scheduler changes
+were made.
+
+The slowest observation leaves 0.057 seconds under D4. These observations satisfy
+the final current-cohort gate; they do not guarantee the bound under other loads.
+All earlier failed and passing cohorts below remain historical, source-bound
+evidence. The preceding post-spelling cohort of 10.725s, 9.369s and 9.498s remains
+a failure and was not dropped or relabeled.
+
+Runtime: Bun 1.4.2, Node 24.20.0, Effect and adapter rc.113, Vitest 4.1.11.
+Payload SHA256: `7ff770991382f4efe628ba23d81b897556e5743cc6ab6c056d9bdc394bfbab22`.
+Private raw captures are retained in post-round2-tagged-timing under
+`~/.cache/beep/effect-vitest-canon/pr1067-resume/`; Root acceptance is recorded
+in post-round2-tagged-timing-root-acceptance.json.
+
+## Historical Fallow candidate
 
 After the behavior-preserving Fallow repairs, Root repeated the normal command
 on the final 8,026-row baseline: **9.404512s, 9.606115s and 9.547228s**, all exit

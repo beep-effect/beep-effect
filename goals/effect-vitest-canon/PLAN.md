@@ -23,18 +23,28 @@ contract. Every subsequent phase waits for its predecessor's gate.
 
 ## Current integration, 2026-09-10
 
-Main, including #1060, is integrated through `6c15c7f` by merge `3052f89`.
+Main, including #1060 and #1082, is integrated through `8cb18e6` by merge `3630388`.
 The current source contract is rc113 at d3b837aee836f35d625d55205f7d6e61305fc198.
-The 100-entry graph is pin-verified. Both package audits/docgen pass, including
-CLI verification on the latest merged tree. Complete runner suites pass on
-Node 22, Node 24 and Bun; hosted-mode Node 22 scoped coverage passes unchanged.
-The adopted baseline has 8,026 findings across 1,106 paths, with complete
-attribution and three normal command runs below ten seconds. Round one is
-closed; round two is active. Fresh CLI coverage and all remaining adversarial,
-aggregate and exact-head PR checks still gate readiness. Main's Vitest 4.1.11
-remains outside the adapter's declared peer range; exercised behavior and that
-limitation are recorded separately. P0f/P0g remain open. See the current
-integration record in history/2026-09-10-pr1067-rc113-integration.md.
+The 100-entry graph preserves its API names, signatures and coordinates, with
+conditional assertion and shared-clock guidance added during round two. The
+remote checkpoint remains b86269212e; its Greptile 5/5 and closed threads are
+historical evidence for that head.
+
+Final local runner repairs pass all 52 registrations on Node 22, Node 24 and Bun
+plus normal scoped Node 22 coverage. Detector repairs pass 207 focused cases,
+compiler/lint/Fallow checks and full repo-cli audit/docgen in 423.690 seconds.
+The accepted canonical inventory contains 7,775 open candidates across 1,000
+tests and 110 support modules. Its complete correspondence, graph guidance and
+all 29 generated declarations are verified without unexplained deltas or exception
+transfer. Three normal lint commands pass in 9.943s, 9.503s and 9.588s with stable
+source/artifacts and complete host context; earlier failed cohorts remain recorded.
+
+Round one and round two are closed. Round three, final CLI coverage, full
+aggregate proof and exact-head hosted/review checks still gate readiness. Main's
+Vitest 4.1.11 remains outside the adapter's declared peer range; actual runtime
+binding and exercised behavior are recorded separately. The publishing commit
+must include the repo-configs release note. P0f/P0g remain open; P1/P2 are not
+authorized. See history/2026-09-10-pr1067-rc113-integration.md.
 
 ## Historical evidence through rc.112
 

@@ -1420,3 +1420,105 @@ have caught both tripwires earlier. No scanner rule, dictionary or policy thresh
 The three post-spelling normal scan commands took 10.725s, 9.369s and 9.498s. The first
 exceeds the 10s gate; all observations and workstation load context remain recorded. The
 earlier passing series is retained as historical evidence and the final timing gate is open.
+
+### 2026-09-10 — hosted release metadata follow-through
+
+PR1067 at `b86269212e` passed Repo Sanity's eight preflight checks but failed
+changeset-status: the generated repo-configs allowlist snapshot was a product change
+without a new in-branch changeset. Added a patch release note for that package. Existing
+changesets already on main do not satisfy this gate. Including release metadata in the
+reviewed package handoff would have prevented the extra hosted failure. Final candidate
+changeset-status remains part of the publication proof.
+
+### 2026-09-10 — final hosted policy and runtime evidence
+
+Lint Policy at `b86269212e` rejected one deprecated compiler scanner method and
+a stale schema inventory coordinate. The compiler's getTextPos/getTokenEnd APIs
+return the same position; the supported name now passes focused knowledge tests
+and the actual deprecated-API lint profile. The existing runtime-fixture schema
+exception moved from line 48 to line 49 after a helper extraction. Its four codec
+assertions and documented lifecycle-regression purpose are unchanged; the final
+canonical writer must reconcile that coordinate while preserving the reason.
+Running all policy gates after the last source extraction would have caught both.
+
+Test Unit's runner fixtures also failed on hosted Bun: one concurrent case reported
+Vitest's timeout error instead of TestHang, and another parent fixture reached its
+30-second limit. The accepted local runtime and Node 22 coverage receipts remain
+historical evidence. A separate read-only runtime attribution is active; no timeout
+or assertion change is accepted from these symptoms alone.
+
+### September 10: tiny timeout fixture in hosted coverage
+
+PR #1067 at b86269212e failed Coverage Regression because the runtime parent
+expected a watchdog diagnostic from a 25 ms child. Node 22 reported Vitest's
+native timeout instead; the parent suite had one failure among 285 registrations.
+This is a test failure, not evidence of a coverage-floor regression. The exact
+host scheduling trigger remains unproven. A controlled-clock boundary assertion
+can prove the budget calculation without depending on short live
+timer ordering; the separate live-watchdog integration remains necessary.
+
+Another main merge, PR #1082, arrived during the final runtime matrix. Its only
+merge conflict is the import block in lint-workers.test.ts. Preserve both the
+new in-process law checks and the existing ambient-secret probe isolation.
+Freeze active writers and retain hash-verified dirty backups before integration.
+
+### September 10: schema inventory relocation and package cwd
+
+The schema-first baseline keys advisories by source line. The runtime driver's
+existing regression-codec exception moved from line 48 to 52, producing one
+missing and one stale entry among 93. After reviewing the identical file, symbol,
+rule, owner and reason, Root preserved the exception at its new coordinate and
+ran the canonical writer and normal verifier. Both pass; all other entries are
+unchanged. A semantic relocation check could avoid repeating this manual identity
+review whenever imports move the first codec.
+
+The post-main integration test harness launched package-relative lint-worker
+cases from the repository root. Two expected package paths became a dot. The
+same source passes all 19 cases from the package directory; the complete seven-file
+integration run passes 167 cases there. Preserve cwd in command receipts and use
+the package's normal working directory for dispatch tests. No source fix or
+assertion change was needed.
+
+### September 10: service subpaths lost during candidate reconciliation
+
+The full 8,026-to-7,998 row review found 23 unpaired removed EV010 findings whose
+NodeServices or BunServices subpath imports have actual layer references. The
+new rule retained equivalent package-root imports as resource judgments but
+collected members only for exact package roots. Root confirmed the asymmetry and
+requires exact subpath parity with type-only, shadow and lookalike controls.
+The candidate is not adopted; the published inventory remains intact. Checking
+all removed rows caught this gap after focused and package tests had passed.
+
+Root interrupted the owned CLI coverage run once the source repair became
+necessary. The command returned 137; the interruption receipt and all outputs
+remain, with unchanged source/baseline and no surviving owned processes. That
+run is not accepted coverage evidence. A final normal run must follow the repair.
+
+The same full-row review found seven EV006 additions where the outer assertion
+checks a plain decoded object, identifier string or property-check result. An
+Option helper occurred only inside another function's arguments or a nested
+callback. Unrestricted descendant scanning treated those incidental expressions
+as the asserted value. Root requires traversal to respect expression boundaries
+and retain proven tagged-data predicates and Boolean compositions. A focused
+negative matrix should include real plain-value assertions with nested tagged
+inputs, alongside the direct tagged-value positive matrix.
+
+The expression-boundary repair passed all 148 focused cases and package audit,
+but its fresh preview removed 337 EV006 rows while restoring all 23 Services
+rows. At least one removal is a real Option assertion: Extractor.test.ts directly
+compares Option.map with an Option-producing pipeline. Stopping at every other
+call loses computed tagged values as well as incidental plain-value inputs.
+The candidate remains unadopted. Validate known return-family provenance against
+the pinned API and include computed tagged-value positives before freezing the
+next repair; neither a module-wide return assumption nor unrestricted descendant
+scanning is sufficient. Full delta accounting is catching cases beyond the unit
+fixture matrix before they enter the baseline.
+
+The complete removal review isolated 20 concrete positive losses: one composed
+Option comparison, four piped predicates, nine Array predicate compositions, one
+Option.contains assertion and five yielded Effect.exit assertions. The last six
+were identified during Root review of the broader boundary groups; no EV005 row
+covered those five piped Exit assertions. The correction must track the asserted
+result and final pipeline stage. Focused checks and a fresh repository preview
+now precede the next full package audit, avoiding a repeated expensive proof when
+the complete finding delta already shows a missed case.
