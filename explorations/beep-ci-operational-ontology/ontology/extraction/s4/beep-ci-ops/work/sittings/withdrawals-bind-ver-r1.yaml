@@ -216,7 +216,7 @@ protected_pass:
 validation:
   self_test: PASS; 157 rule families
   command: >-
-    UV_CACHE_DIR=~/.cache/beep/uv-cache uv run --offline --python 3.12 --with pyyaml
+    uv run --offline --python 3.12 --with pyyaml
     python .claude/skills/ontology-foundational-auditor/scripts/validate_artifacts.py
     explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops
   bind_ver_proposal_violations: 0
