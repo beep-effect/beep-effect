@@ -43,7 +43,7 @@ import type { PosInt } from "@beep/schema";
  * @since 0.0.0
  */
 export const OpenAiLive: Layer.Layer<OpenAiClient.OpenAiClient, Config.ConfigError, never> = OpenAiClient.layerConfig({
-  apiKey: Config.redacted(OPENAI_API_KEY_ENV),
+  apiKey: Config.Redacted(OPENAI_API_KEY_ENV),
 }).pipe(Layer.provide(FetchHttpClient.layer));
 
 /**
@@ -131,7 +131,7 @@ export const makeOpenAiEmbeddingModelLayer = (options: OpenAiEmbeddingModelOptio
  * @since 0.0.0
  */
 export const OpenAiLanguageModelLive = Layer.unwrap(
-  Config.nonEmptyString(OPENAI_MODEL_ENV).pipe(
+  Config.NonEmptyString(OPENAI_MODEL_ENV).pipe(
     Config.withDefault(OPENAI_DEFAULT_MODEL),
     Effect.map((model) =>
       makeOpenAiLanguageModelLayer(OpenAiLanguageModelOptions.make({ model })).pipe(Layer.provide(OpenAiLive))
@@ -172,7 +172,7 @@ export const OpenAiLanguageModelLive = Layer.unwrap(
  */
 export const makeOpenAiEmbeddingModelLive = (dimensions: PosInt) =>
   Layer.unwrap(
-    Config.nonEmptyString(OPENAI_EMBEDDING_MODEL_ENV).pipe(
+    Config.NonEmptyString(OPENAI_EMBEDDING_MODEL_ENV).pipe(
       Config.withDefault(OPENAI_DEFAULT_EMBEDDING_MODEL),
       Effect.map((model) =>
         makeOpenAiEmbeddingModelLayer(OpenAiEmbeddingModelOptions.make({ dimensions, model })).pipe(

@@ -18,10 +18,13 @@ import { VERSION } from "@beep/m365"
 
 The live auth layer uses the in-memory MSAL token cache by default. Supplying
 `tokenCachePath` opts into encrypted persistence through
-`@azure/msal-node-extensions`, which is an optional dependency because it pulls
-native keychain support (`keytar` / libsecret on Linux). Headless CI and
-non-desktop hosts should omit `tokenCachePath` or inject an externally minted
-token with `M365Auth.layerStatic`.
+`@azure/msal-node-extensions` (DPAPI / Keychain / libsecret). That package is an
+optional peer dependency this workspace does not install: it hard-depends on the
+native `keytar` addon, whose prebuild download fails hosted installs. A host that
+sets `tokenCachePath` adds `@azure/msal-node-extensions` to its own dependencies;
+the driver imports it lazily and fails with a `config` `M365Error` when it is
+missing. Headless CI and non-desktop hosts should omit `tokenCachePath` or inject
+an externally minted token with `M365Auth.layerStatic`.
 
 ## Development
 

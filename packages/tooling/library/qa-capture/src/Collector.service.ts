@@ -244,7 +244,7 @@ export interface CollectorShape {
 
 const portOfServer = (server: HttpServer.HttpServer["Service"], fallback: number): number =>
   Match.value(server.address).pipe(
-    Match.tag("TcpAddress", (address) => address.port),
+    Match.tag("InetAddressV4", "InetAddressV6", (address) => address.port),
     Match.orElse(() => fallback)
   );
 

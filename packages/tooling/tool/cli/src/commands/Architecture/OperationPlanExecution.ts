@@ -221,28 +221,29 @@ export const checkCanonicalSliceOperationPlan: {
 
       yield* Match.value(operation).pipe(
         Match.withReturnType<Effect.Effect<void, DomainError>>(),
-        Match.discriminatorsExhaustive("kind")({
-          "ensure-file": (ensureFileOperation) =>
-            Effect.sync(() => {
-              if (!exists) {
-                A.appendInPlace(missingPaths, ensureFileOperation.path);
-                A.appendInPlace(operationStatuses, checkStatusFor(ensureFileOperation, "missing"));
-              } else {
-                A.appendInPlace(operationStatuses, checkStatusFor(ensureFileOperation, "matching"));
-              }
-            }),
-          "ensure-absent-path": (ensureAbsentPathOperation) =>
-            Effect.sync(() => {
-              if (exists) {
-                A.appendInPlace(unexpectedPaths, ensureAbsentPathOperation.path);
-                A.appendInPlace(operationStatuses, checkStatusFor(ensureAbsentPathOperation, "unexpected"));
-              } else {
-                A.appendInPlace(operationStatuses, checkStatusFor(ensureAbsentPathOperation, "absent"));
-              }
-            }),
-          "write-file": checkWritableOperation,
-          "write-package-json": checkWritableOperation,
-        })
+        Match.discriminator("kind")("ensure-file", (ensureFileOperation) =>
+          Effect.sync(() => {
+            if (!exists) {
+              A.appendInPlace(missingPaths, ensureFileOperation.path);
+              A.appendInPlace(operationStatuses, checkStatusFor(ensureFileOperation, "missing"));
+            } else {
+              A.appendInPlace(operationStatuses, checkStatusFor(ensureFileOperation, "matching"));
+            }
+          })
+        ),
+        Match.discriminator("kind")("ensure-absent-path", (ensureAbsentPathOperation) =>
+          Effect.sync(() => {
+            if (exists) {
+              A.appendInPlace(unexpectedPaths, ensureAbsentPathOperation.path);
+              A.appendInPlace(operationStatuses, checkStatusFor(ensureAbsentPathOperation, "unexpected"));
+            } else {
+              A.appendInPlace(operationStatuses, checkStatusFor(ensureAbsentPathOperation, "absent"));
+            }
+          })
+        ),
+        Match.discriminator("kind")("write-file", checkWritableOperation),
+        Match.discriminator("kind")("write-package-json", checkWritableOperation),
+        Match.exhaustive
       );
     }
 
@@ -299,22 +300,26 @@ export const applyCanonicalSliceOperationPlan: {
       const exists = yield* pathExists(operationPath);
       yield* Match.value(operation).pipe(
         Match.withReturnType<Effect.Effect<void, DomainError>>(),
-        Match.discriminatorsExhaustive("kind")({
-          "ensure-file": (ensureFileOperation) => applyEnsureFileOperation(exists, skippedPaths, ensureFileOperation),
-          "ensure-absent-path": (ensureAbsentPathOperation) =>
-            applyEnsureAbsentPathOperation(
-              fs,
-              operationPath,
-              exists,
-              removedPaths,
-              skippedPaths,
-              ensureAbsentPathOperation
-            ),
-          "write-file": (writableOperation) =>
-            applyWritableOperation(fs, path, operationPath, exists, writtenPaths, skippedPaths, writableOperation),
-          "write-package-json": (writableOperation) =>
-            applyWritableOperation(fs, path, operationPath, exists, writtenPaths, skippedPaths, writableOperation),
-        })
+        Match.discriminator("kind")("ensure-file", (ensureFileOperation) =>
+          applyEnsureFileOperation(exists, skippedPaths, ensureFileOperation)
+        ),
+        Match.discriminator("kind")("ensure-absent-path", (ensureAbsentPathOperation) =>
+          applyEnsureAbsentPathOperation(
+            fs,
+            operationPath,
+            exists,
+            removedPaths,
+            skippedPaths,
+            ensureAbsentPathOperation
+          )
+        ),
+        Match.discriminator("kind")("write-file", (writableOperation) =>
+          applyWritableOperation(fs, path, operationPath, exists, writtenPaths, skippedPaths, writableOperation)
+        ),
+        Match.discriminator("kind")("write-package-json", (writableOperation) =>
+          applyWritableOperation(fs, path, operationPath, exists, writtenPaths, skippedPaths, writableOperation)
+        ),
+        Match.exhaustive
       );
     }
 

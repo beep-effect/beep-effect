@@ -14,12 +14,12 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { expectTypeOf } from "vitest";
 
 const Count = S.FiniteFromString;
 const decodeUnknownCountSync = S.decodeUnknownSync(Count);
-const finiteArbitrary = S.toArbitrary(S.Finite)(fc);
+const finiteArbitrary = Arbitrary.schema(S.Finite);
 const isCodecStaticKey = S.is(CodecStaticKey);
 const isCount = S.is(Count);
 
@@ -73,20 +73,27 @@ describe("withCodecStatics", () => {
     const Selected = Count.pipe(withCodecStatics(["asserts", "decodeUnknownSync", "encodeSync", "equivalence", "is"]));
     const assertsCount: (input: unknown) => asserts input is number = Selected.asserts;
 
-    fc.assert(
-      fc.property(finiteArbitrary, (sampled) => {
-        const encoded = Selected.encodeSync(sampled);
-        const decoded = Selected.decodeUnknownSync(encoded);
-        const asserted: unknown = decoded;
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([finiteArbitrary]),
+          ([sampled]) => {
+            const encoded = Selected.encodeSync(sampled);
+            const decoded = Selected.decodeUnknownSync(encoded);
+            const asserted: unknown = decoded;
 
-        assertsCount(asserted);
-        expect(asserted).toBe(decoded);
-        expect(Selected.is(sampled)).toBe(true);
-        expect(Selected.equivalence(decoded, sampled)).toBe(true);
-        expect(Selected.encodeSync(decoded)).toBe(encoded);
-      }),
-      fcRuns(50)
-    );
+            assertsCount(asserted);
+            expect(asserted).toBe(decoded);
+            expect(Selected.is(sampled)).toBe(true);
+            expect(Selected.equivalence(decoded, sampled)).toBe(true);
+            expect(Selected.encodeSync(decoded)).toBe(encoded);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("preserves the selection through schema rebuilds", () => {

@@ -325,7 +325,7 @@ const isPermissionsPolicyDirectiveKey = S.is(PermissionsPolicyDirectiveKey);
 export const PermissionsPolicyDirectives = PermissionsPolicyDirectivesInput.pipe(
   S.decodeTo(
     PermissionsPolicyDirectivesValue,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input, options) =>
         A.every(R.keys(input), isPermissionsPolicyDirectiveKey)
           ? decodePermissionsPolicyDirectivesValue(input).pipe(Effect.mapError((error) => error.issue))
@@ -499,7 +499,7 @@ const buildHeaderValue = (directives: PermissionsPolicyDirectives): O.Option<str
 export const PermissionsPolicyHeader = S.Union([PermissionsPolicyOption, S.Undefined]).pipe(
   S.decodeTo(
     PermissionsPolicyResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input): Effect.Effect<PermissionsPolicyResponseHeaderEncoded> =>
         Effect.succeed({
           name: headerName,

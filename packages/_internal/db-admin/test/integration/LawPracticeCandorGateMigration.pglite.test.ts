@@ -20,7 +20,7 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import * as SqlError from "effect/unstable/sql/SqlError";
 
@@ -145,7 +145,10 @@ const submissionFactInput = {
 
 describe("law-practice candor migration schema laws", () => {
   it("generates valid patent citation events", () => {
-    fc.assert(fc.property(S.toArbitrary(PatentCitationEvent)(fc), isPatentCitationEvent), fcRuns(25));
+    expect(
+      Effect.runSync(Arbitrary.checkEffect(Arbitrary.schema(PatentCitationEvent), isPatentCitationEvent, fcRuns(25)))
+        ._tag
+    ).toBe("Passed");
   });
 });
 

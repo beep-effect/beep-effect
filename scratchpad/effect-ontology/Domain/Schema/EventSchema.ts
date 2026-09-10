@@ -33,9 +33,7 @@ const ClaimCorrectedPayloadDefinition = S.Struct({
   curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   timestamp: S.DateTimeUtcFromString,
 });
-const ClaimCorrectedPayload = ClaimCorrectedPayloadDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(ClaimCorrectedPayloadDefinition),
-}).pipe(
+const ClaimCorrectedPayload = ClaimCorrectedPayloadDefinition.pipe(
   $I.annoteSchema("ClaimCorrectedPayload", {
     description: "Journal payload linking an original claim to its curated replacement.",
   })
@@ -49,9 +47,7 @@ const ClaimDeprecatedPayloadDefinition = S.Struct({
   curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   timestamp: S.DateTimeUtcFromString,
 });
-const ClaimDeprecatedPayload = ClaimDeprecatedPayloadDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(ClaimDeprecatedPayloadDefinition),
-}).pipe(
+const ClaimDeprecatedPayload = ClaimDeprecatedPayloadDefinition.pipe(
   $I.annoteSchema("ClaimDeprecatedPayload", {
     description: "Journal payload recording claim deprecation and an optional negative-example artifact.",
   })
@@ -65,9 +61,7 @@ const AliasAddedPayloadDefinition = S.Struct({
   curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   timestamp: S.DateTimeUtcFromString,
 });
-const AliasAddedPayload = AliasAddedPayloadDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(AliasAddedPayloadDefinition),
-}).pipe(
+const AliasAddedPayload = AliasAddedPayloadDefinition.pipe(
   $I.annoteSchema("AliasAddedPayload", {
     description: "Journal payload recording a new surface-form alias for a canonical RDF entity.",
   })
@@ -79,9 +73,7 @@ const ClaimPromotedPayloadDefinition = S.Struct({
   curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   timestamp: S.DateTimeUtcFromString,
 });
-const ClaimPromotedPayload = ClaimPromotedPayloadDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(ClaimPromotedPayloadDefinition),
-}).pipe(
+const ClaimPromotedPayload = ClaimPromotedPayloadDefinition.pipe(
   $I.annoteSchema("ClaimPromotedPayload", {
     description: "Journal payload recording promotion of one claim to preferred rank.",
   })
@@ -95,9 +87,7 @@ const EntityLinkedPayloadDefinition = S.Struct({
   curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   timestamp: S.DateTimeUtcFromString,
 });
-const EntityLinkedPayload = EntityLinkedPayloadDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(EntityLinkedPayloadDefinition),
-}).pipe(
+const EntityLinkedPayload = EntityLinkedPayloadDefinition.pipe(
   $I.annoteSchema("EntityLinkedPayload", {
     description: "Journal payload recording a confirmed link from a canonical entity to Wikidata.",
   })
@@ -156,11 +146,7 @@ export const CurationEventGroup = EventGroup.empty
  */
 export type CurationEvent = EventGroup.Events<typeof CurationEventGroup>;
 
-const ExtractionOutcome = LiteralKit(["success", "partial", "failed"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("success", "partial", "failed"),
-  })
-  .annotate(
+const ExtractionOutcome = LiteralKit(["success", "partial", "failed"]).annotate(
     $I.annote("ExtractionOutcome", {
       description: "Terminal extraction outcome stored in an EventLog payload.",
     })
@@ -176,9 +162,7 @@ const ExtractionCompletedPayloadDefinition = S.Struct({
   status: ExtractionOutcome,
   timestamp: S.DateTimeUtcFromString,
 });
-const ExtractionCompletedPayload = ExtractionCompletedPayloadDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(ExtractionCompletedPayloadDefinition),
-}).pipe(
+const ExtractionCompletedPayload = ExtractionCompletedPayloadDefinition.pipe(
   $I.annoteSchema("ExtractionCompletedPayload", {
     description: "Journal payload summarizing a terminal extraction outcome and its optional output artifact.",
   })
@@ -193,9 +177,7 @@ const ValidationFailedPayloadDefinition = S.Struct({
   reportUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
   timestamp: S.DateTimeUtcFromString,
 });
-const ValidationFailedPayload = ValidationFailedPayloadDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(ValidationFailedPayloadDefinition),
-}).pipe(
+const ValidationFailedPayload = ValidationFailedPayloadDefinition.pipe(
   $I.annoteSchema("ValidationFailedPayload", {
     description: "Journal payload summarizing failed validation and its optional report artifact.",
   })
@@ -214,10 +196,7 @@ const BatchStateChangedPayloadDefinition: S.Struct<BatchStateChangedPayloadField
   state: BatchState,
   timestamp: S.DateTimeUtcFromString,
 });
-const BatchStateChangedPayload: typeof BatchStateChangedPayloadDefinition =
-  BatchStateChangedPayloadDefinition.annotate({
-    toArbitrary: () => S.toArbitrary(BatchStateChangedPayloadDefinition),
-  }).pipe(
+const BatchStateChangedPayload: typeof BatchStateChangedPayloadDefinition = BatchStateChangedPayloadDefinition.pipe(
     $I.annoteSchema("BatchStateChangedPayload", {
       description: "Journal payload carrying the complete schema-validated batch workflow state.",
     })
@@ -333,7 +312,6 @@ export const OntologyEventEntry = OntologyEventEntryDefinition.pipe(
   SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
   $I.annoteSchema("OntologyEventEntry", {
     description: "Schema-validated journal entry whose event tag determines its canonical payload.",
-    toArbitrary: () => S.toArbitrary(OntologyEventEntryDefinition),
   })
 );
 

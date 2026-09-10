@@ -1,3 +1,7 @@
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Property test: the incremental block extractor must produce exactly the
  * envelope's elements regardless of how the structured-output text is chunked,
@@ -6,7 +10,6 @@
 
 import { initialScanState, scanChunk } from "@beep/agents-server/AssistantTurn";
 import { fcRuns } from "@beep/test-utils";
-import { FastCheck as fc } from "effect/testing";
 import { describe, expect, test } from "vitest";
 import type { ScanState } from "@beep/agents-server/AssistantTurn";
 
@@ -24,30 +27,45 @@ const scanAll = (text: string, cuts: ReadonlyArray<number>): Array<string> => {
   return out;
 };
 
-const nastyString = fc.string({
-  unit: fc.constantFrom("a", "{", "}", "[", "]", '"', "\\", "\n", "🙂", ":"),
-});
-
-const block = fc.record({
-  type: fc.constantFrom("paragraph", "code", "mermaid", "table", "youtube"),
+const nastyString = S.Literals(["a", "{", "}", "[", "]", '"', "\\", "\n", "🙂", ":"]).pipe(
+  S.Array,
+  Arbitrary.schema,
+  Arbitrary.map(A.join(""))
+);
+const block = Arbitrary.all({
+  type: Arbitrary.schema(S.Literals(["paragraph", "code", "mermaid", "table", "youtube"])),
   text: nastyString,
-  nested: fc.array(fc.record({ text: nastyString }), { maxLength: 2 }),
+  nested: Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 2 }))).pipe(
+    Arbitrary.flatMap((count) => Arbitrary.all(A.replicate(Arbitrary.all({ text: nastyString }), count)))
+  ),
 });
 
 describe("scanChunk", () => {
   test("any envelope x any chunking yields exactly the elements", () => {
-    fc.assert(
-      fc.property(fc.array(block, { maxLength: 5 }), fc.array(fc.nat(2000), { maxLength: 30 }), (blocks, rawCuts) => {
-        const envelope = JSON.stringify({ blocks });
-        const cuts = [...rawCuts].sort((a, b) => a - b);
-        const slices = scanAll(envelope, cuts);
-        expect(slices.length).toBe(blocks.length);
-        slices.forEach((slice, index) => {
-          expect(JSON.parse(slice)).toEqual(blocks[index]);
-        });
-      }),
-      fcRuns(200)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 5 }))).pipe(
+              Arbitrary.flatMap((count) => Arbitrary.all(A.replicate(block, count)))
+            ),
+            Arbitrary.schema(S.Array(S.Int.check(S.isBetween({ minimum: 0, maximum: 2000 }))).check(S.isMaxLength(30))),
+          ]),
+          ([blocks, rawCuts]) => {
+            const envelope = JSON.stringify({ blocks });
+            const cuts = [...rawCuts].sort((a, b) => a - b);
+            const slices = scanAll(envelope, cuts);
+            expect(slices.length).toBe(blocks.length);
+            slices.forEach((slice, index) => {
+              expect(JSON.parse(slice)).toEqual(blocks[index]);
+            });
+
+            return true;
+          },
+          fcRuns(200)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   test("single-character chunking", () => {

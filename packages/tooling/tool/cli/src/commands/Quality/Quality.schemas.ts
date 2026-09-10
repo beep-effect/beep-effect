@@ -24,6 +24,31 @@ import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo
 const $I = $RepoCliId.create("commands/Quality/Quality.schemas");
 
 /**
+ * Concurrency values supported by the hosted Check lane.
+ *
+ * **Example** (Inspect supported worker counts)
+ *
+ * ```ts
+ * import { QualityCheckConcurrency } from "@beep/repo-cli/commands/Quality"
+ * console.log(QualityCheckConcurrency.Options) // ["2", "3"]
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const QualityCheckConcurrency = LiteralKit(["2", "3"]).pipe(
+  $I.annoteSchema("QualityCheckConcurrency", { description: "Bounded hosted Check worker counts." })
+);
+
+/**
+ * Decoded hosted Check worker count.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type QualityCheckConcurrency = typeof QualityCheckConcurrency.Type;
+
+/**
  * Output-line prefix carrying the schema-backed GitHub-check run report.
  *
  * **Example** (Recognize a report line)

@@ -32,7 +32,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const expectDeclaredEquivalence = <Schema extends S.Top>(
   schema: Schema,
@@ -269,9 +269,10 @@ describe("@beep/schema tagged-error declared equivalence", () => {
       vi.resetModules();
 
       const { Float16Arr } = yield* Effect.promise(() => import("@beep/schema/Float16Array"));
-      const arbitrary = S.toArbitrary(Float16Arr)(fc);
-      const first = capture(() => fc.sample(arbitrary, 1));
-      const second = capture(() => fc.sample(arbitrary, 1));
+      const arbitrary = Arbitrary.schema(Float16Arr);
+      const runSync = Effect.runSyncWith(yield* Effect.context<never>());
+      const first = capture(() => runSync(Arbitrary.sampleEffect(arbitrary, { count: 1 })));
+      const second = capture(() => runSync(Arbitrary.sampleEffect(arbitrary, { count: 1 })));
       const schema = P.isObject(first) ? Reflect.get(first, "constructor") : first;
 
       expect(S.isSchema(schema)).toBe(true);

@@ -1,10 +1,3 @@
-/**
- * Fixture proof: a `soft`-gated (key-optional) fixture tool stays registered
- * and returns the `api_key_required` envelope — `isError: false`, JSON
- * mirrored into `content[].text` — when its credential is absent.
- *
- * @since 0.0.0
- */
 import {
   ApiKeyRequiredFailure,
   apiKeyRequiredFailure,
@@ -13,13 +6,13 @@ import {
   sanitizedToolkit,
 } from "@beep/mcp-kit";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe, expect, it, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import * as McpServer from "effect/unstable/ai/McpServer";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const softRegistration = SourceAuthRegistration.make({
@@ -69,17 +62,24 @@ const StringFromJson = S.fromJsonString(S.String);
 const decodeStringFromJson = S.decodeEffect(StringFromJson);
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      assert.isTrue(equals(decode(encode(value)), value));
-    }),
-    fcRuns(50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          assert.isTrue(equals(decode(encode(value)), value));
+
+          return true;
+        },
+        fcRuns(50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("api_key_required envelope", () => {

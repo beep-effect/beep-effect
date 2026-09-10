@@ -10,7 +10,7 @@ import { fcRuns } from "@beep/test-utils";
 import { Effect, Equal, Metric } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeUnknownTrackDurationOptionsOption = S.decodeUnknownOption(TrackDurationOptions);
@@ -34,13 +34,23 @@ describe("Metric", () => {
     ));
 
   it("round-trips schema-derived track duration options", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(TrackDurationOptions)(fc), (options) => {
-        const decoded = O.flatMap(encodeTrackDurationOptionsOption(options), decodeUnknownTrackDurationOptionsOption);
-        expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(TrackDurationOptions)]),
+          ([options]) => {
+            const decoded = O.flatMap(
+              encodeTrackDurationOptionsOption(options),
+              decodeUnknownTrackDurationOptionsOption
+            );
+            expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("tracks workflow counters on success", () =>

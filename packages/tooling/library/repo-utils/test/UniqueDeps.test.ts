@@ -22,9 +22,11 @@ layer(TestLayer)("UniqueDeps", (it) => {
         // Root: dependencies = { typescript }
         // pkg-a: dependencies = { effect }
         // pkg-b: dependencies = { effect }
-        // pkg-c: dependencies = { zod }, peerDependencies = { effect }
-        // Unique: effect, typescript, zod (sorted)
+        // pkg-c: dependencies = { zod }, peerDependencies = { effect },
+        //        optionalDependencies = { fsevents }
+        // Unique: effect, fsevents, typescript, zod (sorted)
         expect(result.dependencies).toContain("effect");
+        expect(result.dependencies).toContain("fsevents");
         expect(result.dependencies).toContain("typescript");
         expect(result.dependencies).toContain("zod");
       })
@@ -89,6 +91,17 @@ layer(TestLayer)("UniqueDeps", (it) => {
         const result = yield* collectUniqueNpmDependencies(MOCK_ROOT);
         // pkg-c has effect as peerDependency, should appear in runtime deps
         expect(result.dependencies).toContain("effect");
+      })
+    );
+
+    it.effect(
+      "should include optional dependencies as runtime dependencies",
+      Effect.fn(function* () {
+        const result = yield* collectUniqueNpmDependencies(MOCK_ROOT);
+        // pkg-c has fsevents as optionalDependency, should appear in runtime deps
+        // and never in devDependencies
+        expect(result.dependencies).toContain("fsevents");
+        expect(result.devDependencies).not.toContain("fsevents");
       })
     );
   });

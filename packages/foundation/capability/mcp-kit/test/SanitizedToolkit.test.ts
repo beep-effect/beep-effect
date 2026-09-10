@@ -56,7 +56,14 @@ const EmptyParamsTool = Tool.make("empty_params_tool", {
 
 const CallerTool = Tool.make("caller_tool", { success: S.String });
 
-const FixtureToolkit = Toolkit.make(FixtureTool, ExpectedFailureTool, CallerTool);
+// Carries the optional wire fields so registration exercises the described
+// and _meta-bearing arms alongside the bare fixtures above.
+const AnnotatedTool = Tool.make("annotated_tool", {
+  description: "Annotated fixture tool",
+  success: S.String,
+}).annotate(Tool.Meta, { fixture: true });
+
+const FixtureToolkit = Toolkit.make(FixtureTool, ExpectedFailureTool, CallerTool, AnnotatedTool);
 
 const RefToolkit = Toolkit.make(RefTool, EmptyParamsTool);
 
@@ -71,6 +78,7 @@ const FixtureHandlersLive = FixtureToolkit.toLayer({
     });
   }),
   expected_failure_tool: () => Effect.fail(ExpectedFixtureFailure.make({ message: "expected refusal" })),
+  annotated_tool: () => Effect.succeed("annotated"),
   fixture_tool: (params: { readonly secret: string }) => Effect.succeed(`ok:${params.secret}`),
 });
 
@@ -148,6 +156,20 @@ describe("sanitizedToolkit", () => {
 
         const toolAttribute = captured.find((entry) => entry.key === "tool");
         assert.strictEqual(toolAttribute?.value, "fixture_tool");
+      })
+    );
+
+    it.effect(
+      "registers described tools with their wire description and _meta",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const entry = server.tools.find((candidate) => candidate.tool.name === "annotated_tool");
+
+        assert.strictEqual(entry?.tool.description, "Annotated fixture tool");
+        assert.deepStrictEqual(entry?.tool._meta, { fixture: true });
+
+        const result = yield* server.callTool({ name: "annotated_tool", arguments: {} });
+        assert.isFalse(result.isError);
       })
     );
 

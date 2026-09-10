@@ -30,22 +30,24 @@ const SPEC_DOCS_SECURITY_HEADERS = {
 
 const rawSpecPath = (entry: CatalogEntry): HttpRouter.PathInput =>
   Match.value(entry.source).pipe(
-    Match.tagsExhaustive({
-      ContractSource: (): HttpRouter.PathInput => `${apiBasePath(entry.meta.slug)}/openapi.json`,
-      SpecSource: (source): HttpRouter.PathInput => `${apiBasePath(entry.meta.slug)}/openapi.${source.format}`,
-    })
+    Match.tag("ContractSource", (): HttpRouter.PathInput => `${apiBasePath(entry.meta.slug)}/openapi.json`),
+    Match.tag(
+      "SpecSource",
+      (source): HttpRouter.PathInput => `${apiBasePath(entry.meta.slug)}/openapi.${source.format}`
+    ),
+    Match.exhaustive
   );
 
 const docsLink = (entry: CatalogEntry): string =>
   Match.value(entry.source).pipe(
-    Match.tagsExhaustive({
-      ContractSource: () => `<a href="${docsPath(entry.meta.slug)}">docs UI</a>`,
-      SpecSource: (source) =>
-        Match.value(source.dialect).pipe(
-          Match.when("json-schema-2020-12", () => ""),
-          Match.orElse(() => `<a href="${docsPath(entry.meta.slug)}">docs UI</a>`)
-        ),
-    })
+    Match.tag("ContractSource", () => `<a href="${docsPath(entry.meta.slug)}">docs UI</a>`),
+    Match.tag("SpecSource", (source) =>
+      Match.value(source.dialect).pipe(
+        Match.when("json-schema-2020-12", () => ""),
+        Match.orElse(() => `<a href="${docsPath(entry.meta.slug)}">docs UI</a>`)
+      )
+    ),
+    Match.exhaustive
   );
 
 const renderEntry = (entry: CatalogEntry): string => `<article>
@@ -172,10 +174,9 @@ const specLayer = (entry: CatalogEntry, source: Extract<CatalogSource, { readonl
 
 const entryLayer = (entry: CatalogEntry) =>
   Match.value(entry.source).pipe(
-    Match.tagsExhaustive({
-      ContractSource: (source) => contractLayer(entry, source),
-      SpecSource: (source) => specLayer(entry, source),
-    })
+    Match.tag("ContractSource", (source) => contractLayer(entry, source)),
+    Match.tag("SpecSource", (source) => specLayer(entry, source)),
+    Match.exhaustive
   );
 
 const IndexRoute = HttpRouter.add("GET", "/", HttpServerResponse.html(indexHtml()));

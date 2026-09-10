@@ -35,7 +35,6 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Shacl");
 export const ValidationPolicySeverity = S.Literals(ShaclSeverity.pickOptions(["violation", "warning"])).pipe(
   $I.annoteSchema("ValidationPolicySeverity", {
     description: "Severity threshold that caused SHACL validation policy rejection.",
-    toArbitrary: () => (fc) => fc.constantFrom("violation", "warning"),
   })
 );
 
@@ -198,7 +197,6 @@ const ShaclErrorDefinition = S.Union([
 export const ShaclError = ShaclErrorDefinition.pipe(
   $I.annoteSchema("ShaclError", {
     description: "Exhaustive tagged union of SHACL validation lifecycle failures.",
-    toArbitrary: () => S.toArbitrary(ShaclErrorDefinition),
   })
 );
 

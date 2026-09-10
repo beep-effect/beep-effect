@@ -393,7 +393,7 @@ describe("effect import laws", () => {
               " */",
               'import { Config, Effect, Layer } from "effect";',
               "",
-              "export const program = Effect.succeed([Config.string, Layer.empty]);",
+              "export const program = Effect.succeed([Config.String, Layer.empty]);",
               "",
             ],
             "\n"

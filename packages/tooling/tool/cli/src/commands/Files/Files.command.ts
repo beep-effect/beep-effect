@@ -55,76 +55,76 @@ const runFilesProgram = <A>(
   effect: Effect.Effect<A, FilesCommandError, FilesCommandService>
 ): Effect.Effect<void, FilesCommandError, FilesCommandService> => effect.pipe(Effect.asVoid);
 
-const sortDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const sortDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct regular files should be sorted and renamed")
 );
-const flattenMediaDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const flattenMediaDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory recursively searched for image and video files to move")
 );
-const stripDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const stripDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image and video files should have metadata stripped")
 );
-const normalizeDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const normalizeDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image files should be normalized")
 );
-const createCaptionsDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const createCaptionsDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image files should receive same-stem caption sidecars")
 );
-const detectBordersDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const detectBordersDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image files should be scanned for solid borders")
 );
-const detectFacesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const detectFacesDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image files should be scanned for human faces")
 );
-const detectFacesModelFlag = Flag.file("model", { mustExist: true }).pipe(
+const detectFacesModelFlag = Flag.File("model", { mustExist: true }).pipe(
   Flag.withDescription("YuNet-compatible ONNX face detection model file")
 );
-const cropBordersDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const cropBordersDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image files should be cropped when solid borders are detected")
 );
-const archiveCandidatesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const archiveCandidatesDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image files should be assessed for poor-candidate archival")
 );
-const auditImagesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const auditImagesDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image files should be audited without mutation")
 );
-const auditImagesModelFlag = Flag.file("model", { mustExist: true }).pipe(
+const auditImagesModelFlag = Flag.File("model", { mustExist: true }).pipe(
   Flag.withDescription("Pinned YuNet-compatible ONNX face detection model")
 );
-const auditImagesManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+const auditImagesManifestFlag = Flag.Path("manifest", { pathType: "file" }).pipe(
   Flag.withDescription("Path to the image audit manifest")
 );
-const curateImagesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const curateImagesDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Immutable source directory containing direct image files")
 );
-const curateImagesDecisionsFlag = Flag.file("decisions", { mustExist: true }).pipe(
+const curateImagesDecisionsFlag = Flag.File("decisions", { mustExist: true }).pipe(
   Flag.withDescription("Complete hash-pinned image curation decision ledger")
 );
-const curateImagesOutDirFlag = Flag.directory("out-dir").pipe(
+const curateImagesOutDirFlag = Flag.Directory("out-dir").pipe(
   Flag.withDescription("Output root for canonical, holdout, reserve, archive, and manifest derivatives")
 );
-const curateImagesManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+const curateImagesManifestFlag = Flag.Path("manifest", { pathType: "file" }).pipe(
   Flag.withDescription("Curation manifest output path; defaults to --out-dir/manifests/image-curation-manifest.json"),
   Flag.optional
 );
-const matchPersonDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const matchPersonDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Candidate photo directory to scan for the target person")
 );
-const matchPersonReferencesFlag = Flag.directory("references", { mustExist: true }).pipe(
+const matchPersonReferencesFlag = Flag.Directory("references", { mustExist: true }).pipe(
   Flag.withDescription("Trusted reference directory whose images contain only the target person")
 );
-const matchPersonManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+const matchPersonManifestFlag = Flag.Path("manifest", { pathType: "file" }).pipe(
   Flag.withDescription("Required schema-versioned person-match manifest output path")
 );
-const matchPersonOutDirFlag = Flag.directory("out-dir").pipe(
+const matchPersonOutDirFlag = Flag.Directory("out-dir").pipe(
   Flag.withDescription("Optional directory receiving non-destructive accepted and review copies"),
   Flag.optional
 );
-const matchPersonCacheDirFlag = Flag.directory("cache-dir").pipe(
+const matchPersonCacheDirFlag = Flag.Directory("cache-dir").pipe(
   Flag.withDescription("Optional cache root for isolated Python environments and pinned face-recognition models"),
   Flag.optional
 );
-const matchPersonBackendFlag = Flag.choiceWithValue("backend", [
+const matchPersonBackendFlag = Flag.ChoiceWithValue("backend", [
   ["buffalo-l", "buffalo-l"],
   ["adaface-kprpe", "adaface-kprpe"],
 ]).pipe(
@@ -133,7 +133,7 @@ const matchPersonBackendFlag = Flag.choiceWithValue("backend", [
   ),
   Flag.optional
 );
-const matchPersonComputeFlag = Flag.choiceWithValue("compute", [
+const matchPersonComputeFlag = Flag.ChoiceWithValue("compute", [
   ["auto", "auto"],
   ["cpu", "cpu"],
   ["rocm", "rocm"],
@@ -141,247 +141,247 @@ const matchPersonComputeFlag = Flag.choiceWithValue("compute", [
   Flag.withDefault("auto"),
   Flag.withDescription("Compute policy: prefer ROCm when available, require CPU, or require ROCm")
 );
-const matchPersonDevicesFlag = Flag.string("devices").pipe(
+const matchPersonDevicesFlag = Flag.String("devices").pipe(
   Flag.withDescription("Optional single ROCm device index, for example 0"),
   Flag.optional
 );
-const matchPersonBatchSizeFlag = Flag.integer("batch-size").pipe(
+const matchPersonBatchSizeFlag = Flag.Int("batch-size").pipe(
   Flag.withDefault(32),
   Flag.withDescription("Positive face-embedding inference batch size")
 );
-const archiveDirFlag = Flag.directory("archive-dir").pipe(
+const archiveDirFlag = Flag.Directory("archive-dir").pipe(
   Flag.withDescription("Directory that receives archived poor image candidates")
 );
-const normalizeOutDirFlag = Flag.directory("out-dir").pipe(
+const normalizeOutDirFlag = Flag.Directory("out-dir").pipe(
   Flag.withDescription("Output directory for normalized image files")
 );
-const flattenMediaOutDirFlag = Flag.directory("out-dir").pipe(
+const flattenMediaOutDirFlag = Flag.Directory("out-dir").pipe(
   Flag.withDescription("Flat output directory for moved image and video files")
 );
-const processInputFlag = Flag.path("input", { mustExist: true, pathType: "either" }).pipe(
+const processInputFlag = Flag.Path("input", { mustExist: true, pathType: "either" }).pipe(
   Flag.withDescription("File or directory to process into a V1 proof manifest")
 );
-const processOutDirFlag = Flag.directory("out-dir").pipe(
+const processOutDirFlag = Flag.Directory("out-dir").pipe(
   Flag.withDescription("Output directory for the V1 file-processing proof manifest")
 );
-const normalizeFormatFlag = Flag.choiceWithValue("format", [
+const normalizeFormatFlag = Flag.ChoiceWithValue("format", [
   ["png", "png"],
   ["jpg", "jpg"],
   ["jpeg", "jpg"],
   ["webp", "webp"],
 ]).pipe(Flag.withDefault("png"), Flag.withDescription("Output image format: png, jpg/jpeg, or webp"));
-const processEngineFlag = Flag.choiceWithValue("engine", [
+const processEngineFlag = Flag.ChoiceWithValue("engine", [
   ["auto", "auto"],
   ["tika", "tika"],
   ["libpff", "libpff"],
   ["test", "test"],
 ]).pipe(Flag.withDefault("auto"), Flag.withDescription("File-processing engine: auto, tika, libpff, or test"));
-const processFailurePolicyFlag = Flag.choiceWithValue("failure-policy", [
+const processFailurePolicyFlag = Flag.ChoiceWithValue("failure-policy", [
   ["fail-on-error", "fail-on-error"],
   ["continue", "continue"],
 ]).pipe(Flag.withDefault("fail-on-error"), Flag.withDescription("Exit policy for failed source rows"));
-const maxMaterializedBytesFlag = Flag.integer("max-materialized-bytes").pipe(
+const maxMaterializedBytesFlag = Flag.Int("max-materialized-bytes").pipe(
   Flag.withDescription("Maximum materialized text bytes per source"),
   Flag.optional
 );
-const maxLongEdgeFlag = Flag.integer("max-long-edge").pipe(
+const maxLongEdgeFlag = Flag.Int("max-long-edge").pipe(
   Flag.withDescription("Resize long edge down to this pixel count without upscaling"),
   Flag.optional
 );
-const manifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+const manifestFlag = Flag.Path("manifest", { pathType: "file" }).pipe(
   Flag.withDescription("Manifest output path; defaults to --out-dir/normalize-manifest.json"),
   Flag.optional
 );
-const archiveManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+const archiveManifestFlag = Flag.Path("manifest", { pathType: "file" }).pipe(
   Flag.withDescription("Manifest output path; defaults to --archive-dir/archive-poor-candidates-manifest.json"),
   Flag.optional
 );
-const detectFacesManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+const detectFacesManifestFlag = Flag.Path("manifest", { pathType: "file" }).pipe(
   Flag.withDescription("Manifest output path; defaults to --dir/detect-faces-manifest.json"),
   Flag.optional
 );
-const detectFacesMoveNoFaceToFlag = Flag.directory("move-no-face-to").pipe(
+const detectFacesMoveNoFaceToFlag = Flag.Directory("move-no-face-to").pipe(
   Flag.withDescription("Move images with no detected faces to this directory"),
   Flag.optional
 );
-const prefixFlag = Flag.string("prefix").pipe(
+const prefixFlag = Flag.String("prefix").pipe(
   Flag.withDescription("Generated filename prefix without dots, path separators, or embedded NUL bytes")
 );
-const sortDryRunFlag = Flag.boolean("dry-run").pipe(
+const sortDryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the planned renames without touching files")
 );
-const flattenMediaDryRunFlag = Flag.boolean("dry-run").pipe(
+const flattenMediaDryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the planned moves without touching files")
 );
-const stripDryRunFlag = Flag.boolean("dry-run").pipe(
+const stripDryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the planned metadata rewrites without touching files")
 );
-const normalizeDryRunFlag = Flag.boolean("dry-run").pipe(
+const normalizeDryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the planned normalizations without writing files")
 );
-const createCaptionsDryRunFlag = Flag.boolean("dry-run").pipe(
+const createCaptionsDryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the planned caption sidecars without writing files")
 );
-const archiveDryRunFlag = Flag.boolean("dry-run").pipe(
+const archiveDryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the planned poor-candidate archival without moving files")
 );
-const curateImagesDryRunFlag = Flag.boolean("dry-run").pipe(
+const curateImagesDryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Validate and print every disposition without writing derivatives")
 );
-const auditImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
+const auditImagesOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Overwrite an existing regular-file image audit manifest")
 );
-const curateImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
+const curateImagesOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Overwrite existing regular-file curation outputs and manifest")
 );
-const matchPersonOverwriteFlag = Flag.boolean("overwrite").pipe(
+const matchPersonOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Overwrite an existing regular-file manifest and matching output files")
 );
-const matchPersonRecursiveFlag = Flag.boolean("recursive").pipe(
+const matchPersonRecursiveFlag = Flag.Boolean("recursive").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Recursively scan nested candidate and reference directories")
 );
-const matchPersonAcceptModelLicenseFlag = Flag.boolean("accept-model-license").pipe(
+const matchPersonAcceptModelLicenseFlag = Flag.Boolean("accept-model-license").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Accept the selected model and training-dataset license notices")
 );
-const captionTextFlag = Flag.string("caption").pipe(
+const captionTextFlag = Flag.String("caption").pipe(
   Flag.withDefault(""),
   Flag.withDescription("Caption text to write to newly created sidecar files")
 );
-const normalizeDedupeFlag = Flag.boolean("dedupe").pipe(
+const normalizeDedupeFlag = Flag.Boolean("dedupe").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
     "Skip later files whose normalized bytes exactly duplicate an earlier normalized output; implied by --move-duplicates-to"
   )
 );
-const processExportChildrenFlag = Flag.boolean("export-children").pipe(
+const processExportChildrenFlag = Flag.Boolean("export-children").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Export child artifacts from archive-like sources such as PST")
 );
-const normalizeMoveDuplicatesToFlag = Flag.directory("move-duplicates-to").pipe(
+const normalizeMoveDuplicatesToFlag = Flag.Directory("move-duplicates-to").pipe(
   Flag.withDescription("Move later duplicate source files to this directory after exact normalized-byte dedupe"),
   Flag.optional
 );
-const cropBordersDryRunFlag = Flag.boolean("dry-run").pipe(
+const cropBordersDryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print detected border crops without rewriting files")
 );
-const overwriteFlag = Flag.boolean("overwrite").pipe(
+const overwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Overwrite existing normalized outputs, duplicate move targets, and manifest")
 );
-const archiveOverwriteFlag = Flag.boolean("overwrite").pipe(
+const archiveOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Overwrite existing archived files, sidecars, and manifest")
 );
-const processOverwriteFlag = Flag.boolean("overwrite").pipe(
+const processOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Overwrite an existing files process output directory")
 );
-const processTikaJarFlag = Flag.file("tika-jar", { mustExist: true }).pipe(
+const processTikaJarFlag = Flag.File("tika-jar", { mustExist: true }).pipe(
   Flag.withDescription("Apache tika-app jar; selects the Tika App engine for non-PST extraction"),
   Flag.optional
 );
-const processJavaFlag = Flag.string("java").pipe(
+const processJavaFlag = Flag.String("java").pipe(
   Flag.withDescription("java binary used to run the tika-app jar"),
   Flag.optional
 );
-const processTikaUrlFlag = Flag.string("tika-url").pipe(
+const processTikaUrlFlag = Flag.String("tika-url").pipe(
   Flag.withDescription("Tika Server base URL; defaults to the BEEP_TIKA_* environment configuration"),
   Flag.optional
 );
-const processPffexportFlag = Flag.string("pffexport").pipe(
+const processPffexportFlag = Flag.String("pffexport").pipe(
   Flag.withDescription("pffexport binary used for PST archive export"),
   Flag.optional
 );
-const createCaptionsOverwriteFlag = Flag.boolean("overwrite").pipe(
+const createCaptionsOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Overwrite existing caption sidecar files")
 );
-const withDimensionsFlag = Flag.boolean("with-dimensions").pipe(
+const withDimensionsFlag = Flag.Boolean("with-dimensions").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Include probed image or video dimensions in generated media filenames")
 );
-const candidateProfileFlag = Flag.choiceWithValue("profile", [["character-lora", "character-lora"]]).pipe(
+const candidateProfileFlag = Flag.ChoiceWithValue("profile", [["character-lora", "character-lora"]]).pipe(
   Flag.withDefault("character-lora"),
   Flag.withDescription("Candidate assessment profile")
 );
-const targetResolutionFlag = Flag.integer("target-resolution").pipe(
+const targetResolutionFlag = Flag.Int("target-resolution").pipe(
   Flag.withDefault(1024),
   Flag.withDescription("Square training target resolution used to estimate required upscaling")
 );
-const minShortEdgeFlag = Flag.integer("min-short-edge").pipe(
+const minShortEdgeFlag = Flag.Int("min-short-edge").pipe(
   Flag.withDefault(512),
   Flag.withDescription("Archive images whose shorter edge is below this pixel count")
 );
-const maxAspectFlag = Flag.float("max-aspect").pipe(
+const maxAspectFlag = Flag.Finite("max-aspect").pipe(
   Flag.withDefault(3),
   Flag.withDescription("Archive images whose long-edge to short-edge ratio exceeds this value")
 );
-const maxUpscaleFlag = Flag.float("max-upscale").pipe(
+const maxUpscaleFlag = Flag.Finite("max-upscale").pipe(
   Flag.withDefault(1.5),
   Flag.withDescription("Archive images that would need more than this scale factor to reach the target area")
 );
-const sidecarsFlag = Flag.string("sidecars").pipe(
+const sidecarsFlag = Flag.String("sidecars").pipe(
   Flag.withDefault("txt"),
   Flag.withDescription("Same-stem sidecars to move with archived images: none or a comma-separated extension list")
 );
-const jsonFlag = Flag.boolean("json").pipe(
+const jsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Emit a machine-readable JSON report")
 );
-const borderToleranceFlag = Flag.float("tolerance").pipe(
+const borderToleranceFlag = Flag.Finite("tolerance").pipe(
   Flag.withDefault(12),
   Flag.withDescription("Maximum RGB channel distance for near-solid border pixels")
 );
-const minSolidPctFlag = Flag.float("min-solid-pct").pipe(
+const minSolidPctFlag = Flag.Finite("min-solid-pct").pipe(
   Flag.withDefault(98.5),
   Flag.withDescription("Minimum percent of pixels in a border row or column that must match the edge color")
 );
-const minWidthPctFlag = Flag.float("min-width-pct").pipe(
+const minWidthPctFlag = Flag.Finite("min-width-pct").pipe(
   Flag.withDefault(1),
   Flag.withDescription("Minimum border width as a percent of the scanned image dimension")
 );
-const maxScanPctFlag = Flag.float("max-scan-pct").pipe(
+const maxScanPctFlag = Flag.Finite("max-scan-pct").pipe(
   Flag.withDefault(45),
   Flag.withDescription("Maximum percent of each image dimension to scan inward from an edge")
 );
-const minFaceConfidenceFlag = Flag.float("min-confidence").pipe(
+const minFaceConfidenceFlag = Flag.Finite("min-confidence").pipe(
   Flag.withDefault(0.75),
   Flag.withDescription("Minimum face detection confidence between 0 and 1")
 );
-const minFaceAreaPctFlag = Flag.float("min-face-area-pct").pipe(
+const minFaceAreaPctFlag = Flag.Finite("min-face-area-pct").pipe(
   Flag.withDefault(1),
   Flag.withDescription("Flag detected faces whose primary face box area is below this image percentage")
 );
-const matchPersonDetectionThresholdFlag = Flag.float("detection-threshold").pipe(
+const matchPersonDetectionThresholdFlag = Flag.Finite("detection-threshold").pipe(
   Flag.withDescription("Override the backend profile's minimum face-detection confidence between 0 and 1"),
   Flag.optional
 );
-const matchPersonMatchThresholdFlag = Flag.float("match-threshold").pipe(
+const matchPersonMatchThresholdFlag = Flag.Finite("match-threshold").pipe(
   Flag.withDescription("Override the backend profile's minimum target-person cosine similarity between 0 and 1"),
   Flag.optional
 );
-const matchPersonReviewThresholdFlag = Flag.float("review-threshold").pipe(
+const matchPersonReviewThresholdFlag = Flag.Finite("review-threshold").pipe(
   Flag.withDescription("Override the backend profile's lower cosine-similarity boundary for identity review"),
   Flag.optional
 );
-const matchPersonMinFaceAreaPctFlag = Flag.float("min-face-area-pct").pipe(
+const matchPersonMinFaceAreaPctFlag = Flag.Finite("min-face-area-pct").pipe(
   Flag.withDescription("Override the backend profile's minimum matched-face percentage of the full image area"),
   Flag.optional
 );
-const faceEdgeMarginPctFlag = Flag.float("edge-margin-pct").pipe(
+const faceEdgeMarginPctFlag = Flag.Finite("edge-margin-pct").pipe(
   Flag.withDefault(2),
   Flag.withDescription("Flag detected faces whose primary face box is within this percent of an image edge")
 );

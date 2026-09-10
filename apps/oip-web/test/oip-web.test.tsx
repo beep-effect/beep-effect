@@ -2,13 +2,14 @@ import { EmailString, NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { Button } from "@beep/ui/components/ui/button";
 import { A } from "@beep/utils";
+import { it } from "@effect/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Clock, ConfigProvider, Effect, Exit, Layer } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, vi } from "vitest";
 import { makeOipContactHttpApiWebHandlerWithSubmit } from "@/app/api/contact/ContactHttpApiRoute";
 import { contactRequestResponseWithSubmit } from "@/app/api/contact/ContactRouteResponse";
 import { POST } from "@/app/api/contact/route";
@@ -169,13 +170,13 @@ const setWindowScrollY = (scrollY: number) =>
     value: scrollY,
   });
 
-const OipSiteContentArbitrary = S.toArbitrary(OipSiteContent)(fc);
+const OipSiteContentArbitrary = Arbitrary.schema(OipSiteContent);
 const OipSiteContentEquivalence = S.toEquivalence(OipSiteContent);
-const ContactSubmissionArbitrary = S.toArbitrary(ContactSubmission)(fc);
+const ContactSubmissionArbitrary = Arbitrary.schema(ContactSubmission);
 const ContactSubmissionEquivalence = S.toEquivalence(ContactSubmission);
-const ContactSubmissionFormPayloadArbitrary = S.toArbitrary(ContactSubmissionFormPayload)(fc);
+const ContactSubmissionFormPayloadArbitrary = Arbitrary.schema(ContactSubmissionFormPayload);
 const ContactSubmissionFormPayloadEquivalence = S.toEquivalence(ContactSubmissionFormPayload);
-const ContactSubmissionResponseArbitrary = S.toArbitrary(ContactSubmissionResponse)(fc);
+const ContactSubmissionResponseArbitrary = Arbitrary.schema(ContactSubmissionResponse);
 const ContactSubmissionResponseEquivalence = S.toEquivalence(ContactSubmissionResponse);
 const encodeOipSiteContent = S.encodeSync(OipSiteContent);
 const decodeOipSiteContent = S.decodeUnknownSync(OipSiteContent);
@@ -217,32 +218,53 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     expect(Result.isSuccess(result)).toBe(true);
   });
 
-  it("derives valid OIP content and contact form values from production schemas", { timeout: 120_000 }, () => {
-    fc.assert(
-      fc.property(
-        OipSiteContentArbitrary,
-        ContactSubmissionArbitrary,
-        ContactSubmissionFormPayloadArbitrary,
-        ContactSubmissionResponseArbitrary,
-        (content, submission, payload, response) => {
-          const encodedContent = encodeOipSiteContent(content);
-          const encodedSubmission = encodeContactSubmission(submission);
-          const encodedPayload = encodeContactSubmissionFormPayload(payload);
-          const encodedResponse = encodeContactSubmissionResponse(response);
+  it.prop(
+    "round-trips generated OIP site content",
+    [OipSiteContentArbitrary],
+    ([content]) => {
+      expect(OipSiteContentEquivalence(decodeOipSiteContent(encodeOipSiteContent(content)), content)).toBe(true);
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-          expect(OipSiteContentEquivalence(decodeOipSiteContent(encodedContent), content)).toBe(true);
-          expect(ContactSubmissionEquivalence(decodeContactSubmissionSync(encodedSubmission), submission)).toBe(true);
-          expect(
-            ContactSubmissionFormPayloadEquivalence(decodeContactSubmissionFormPayload(encodedPayload), payload)
-          ).toBe(true);
-          expect(ContactSubmissionResponseEquivalence(decodeContactSubmissionResponse(encodedResponse), response)).toBe(
-            true
-          );
-        }
-      ),
-      fcRuns(100)
-    );
-  });
+  it.prop(
+    "round-trips generated contact submissions",
+    [ContactSubmissionArbitrary],
+    ([submission]) => {
+      expect(
+        ContactSubmissionEquivalence(decodeContactSubmissionSync(encodeContactSubmission(submission)), submission)
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(100) }
+  );
+
+  it.prop(
+    "round-trips generated contact payloads",
+    [ContactSubmissionFormPayloadArbitrary],
+    ([payload]) => {
+      expect(
+        ContactSubmissionFormPayloadEquivalence(
+          decodeContactSubmissionFormPayload(encodeContactSubmissionFormPayload(payload)),
+          payload
+        )
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(100) }
+  );
+
+  it.prop(
+    "round-trips generated contact responses",
+    [ContactSubmissionResponseArbitrary],
+    ([response]) => {
+      expect(
+        ContactSubmissionResponseEquivalence(
+          decodeContactSubmissionResponse(encodeContactSubmissionResponse(response)),
+          response
+        )
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("preserves encoded contact wire shape while decoding optional fields to Option", () => {
     const submittedAt = NonNegativeInt.make(5_000);

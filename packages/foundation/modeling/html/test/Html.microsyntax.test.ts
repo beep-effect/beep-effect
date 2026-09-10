@@ -18,10 +18,10 @@ import { tokenizeHtmlSpaceSeparated } from "@beep/html/Html.attributes";
 import { A as Anchor, Area, Audio, Button, HtmlNode, Li, Link, Meta, Ol } from "@beep/html/Html.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeGlobalAttributesStructResult = S.decodeResult(GlobalAttributesStruct);
 const decodeOlResult = S.decodeResult(Ol);
@@ -57,28 +57,30 @@ const decodeEnumeratedResult = S.decodeResult(Enumerated);
 const encodeEnumeratedResult = S.encodeResult(Enumerated);
 const AsciiK = makeAsciiCaseInsensitiveEnumerated(["k"]);
 const decodeAsciiKResult = S.decodeResult(AsciiK);
-const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute)(fc);
-const HtmlNonNegativeIntegerArbitrary = S.toArbitrary(HtmlNonNegativeInteger)(fc);
-const HtmlPositiveIntegerArbitrary = S.toArbitrary(HtmlPositiveInteger)(fc);
-const HtmlFiniteNumberArbitrary = S.toArbitrary(HtmlFiniteNumber)(fc);
-const HtmlNonNegativeNumberArbitrary = S.toArbitrary(HtmlNonNegativeNumber)(fc);
-const HtmlPositiveNumberArbitrary = S.toArbitrary(HtmlPositiveNumber)(fc);
+const BooleanAttributeArbitrary = Arbitrary.schema(BooleanAttribute);
+const HtmlNonNegativeIntegerArbitrary = Arbitrary.schema(HtmlNonNegativeInteger);
+const HtmlPositiveIntegerArbitrary = Arbitrary.schema(HtmlPositiveInteger);
+const HtmlFiniteNumberArbitrary = Arbitrary.schema(HtmlFiniteNumber);
+const HtmlNonNegativeNumberArbitrary = Arbitrary.schema(HtmlNonNegativeNumber);
+const HtmlPositiveNumberArbitrary = Arbitrary.schema(HtmlPositiveNumber);
 
 describe("@beep/html attribute microsyntaxes", () => {
   it("derives valid presence and integer values from the production schemas", () =>
-    fc.assert(
-      fc.property(
-        BooleanAttributeArbitrary,
-        HtmlNonNegativeIntegerArbitrary,
-        HtmlPositiveIntegerArbitrary,
-        (presence, nonNegative, positive) => {
-          expect(isBooleanAttribute(presence)).toBe(true);
-          expect(isHtmlNonNegativeInteger(nonNegative)).toBe(true);
-          expect(isHtmlPositiveInteger(positive)).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([BooleanAttributeArbitrary, HtmlNonNegativeIntegerArbitrary, HtmlPositiveIntegerArbitrary]),
+          ([presence, nonNegative, positive]) => {
+            expect(isBooleanAttribute(presence)).toBe(true);
+            expect(isHtmlNonNegativeInteger(nonNegative)).toBe(true);
+            expect(isHtmlPositiveInteger(positive)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("models boolean presence without a false value", () => {
     expect(isBooleanAttribute(true)).toBe(true);
@@ -130,19 +132,21 @@ describe("@beep/html attribute microsyntaxes", () => {
   });
 
   it("derives only valid floating-point values from the production schemas", () =>
-    fc.assert(
-      fc.property(
-        HtmlFiniteNumberArbitrary,
-        HtmlNonNegativeNumberArbitrary,
-        HtmlPositiveNumberArbitrary,
-        (finite, nonNegative, positive) => {
-          expect(isHtmlFiniteNumber(finite)).toBe(true);
-          expect(isHtmlNonNegativeNumber(nonNegative)).toBe(true);
-          expect(isHtmlPositiveNumber(positive)).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([HtmlFiniteNumberArbitrary, HtmlNonNegativeNumberArbitrary, HtmlPositiveNumberArbitrary]),
+          ([finite, nonNegative, positive]) => {
+            expect(isHtmlFiniteNumber(finite)).toBe(true);
+            expect(isHtmlNonNegativeNumber(nonNegative)).toBe(true);
+            expect(isHtmlPositiveNumber(positive)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("normalizes token lists to lowercase registry order and one space", () => {
     expect(decodeRelSync("  NOREFERRER   noopener ")).toBe("noopener noreferrer");
@@ -217,22 +221,29 @@ describe("@beep/html attribute microsyntaxes", () => {
   });
 
   it("obeys the enumerated-attribute ASCII-case fixed-point law", () => {
-    fc.assert(
-      fc.property(fc.array(fc.boolean(), { minLength: 5, maxLength: 5 }), (uppercase) => {
-        const encoded = [..."image"]
-          .map((character, index) => (uppercase[index] === true ? character.toUpperCase() : character))
-          .join("");
-        const canonical = Result.getOrThrow(decodeEnumeratedResult(encoded));
-        expect(canonical).toBe("image");
-        const reencoded = Result.getOrThrow(encodeEnumeratedResult(canonical));
-        expect(reencoded).toBe("image");
-        expect(Result.getOrThrow(decodeEnumeratedResult(reencoded))).toBe(canonical);
-        if (encoded !== canonical) {
-          expect(() => Reflect.apply(Enumerated.make, Enumerated, [encoded])).toThrow();
-        }
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.Array(S.Boolean).check(S.isMinLength(5), S.isMaxLength(5)))]),
+          ([uppercase]) => {
+            const encoded = [..."image"]
+              .map((character, index) => (uppercase[index] === true ? character.toUpperCase() : character))
+              .join("");
+            const canonical = Result.getOrThrow(decodeEnumeratedResult(encoded));
+            expect(canonical).toBe("image");
+            const reencoded = Result.getOrThrow(encodeEnumeratedResult(canonical));
+            expect(reencoded).toBe("image");
+            expect(Result.getOrThrow(decodeEnumeratedResult(reencoded))).toBe(canonical);
+            if (encoded !== canonical) {
+              expect(() => Reflect.apply(Enumerated.make, Enumerated, [encoded])).toThrow();
+            }
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
     for (const invalid of [" image", "image ", "ımage"]) {
       expect(Result.isFailure(decodeEnumeratedResult(invalid))).toBe(true);
     }
@@ -273,22 +284,30 @@ describe("@beep/html attribute microsyntaxes", () => {
   });
 
   it("keeps token normalization decode/encode idempotent", () =>
-    fc.assert(
-      fc.property(
-        fc.constantFrom(
-          "noopener",
-          "noreferrer",
-          "noopener noreferrer",
-          "noreferrer noopener",
-          "  NOOPENER   noreferrer "
-        ),
-        (input) => {
-          const canonical = decodeRelSync(input);
-          expect(decodeRelSync(encodeRelSync(canonical))).toBe(canonical);
-        }
-      ),
-      fcRuns(50)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(
+              S.Literals([
+                "noopener",
+                "noreferrer",
+                "noopener noreferrer",
+                "noreferrer noopener",
+                "  NOOPENER   noreferrer ",
+              ])
+            ),
+          ]),
+          ([input]) => {
+            const canonical = decodeRelSync(input);
+            expect(decodeRelSync(encodeRelSync(canonical))).toBe(canonical);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("validates autocomplete and dataset-key grammars", () => {
     expect(isAutocompleteAttribute("section-checkout shipping email")).toBe(true);

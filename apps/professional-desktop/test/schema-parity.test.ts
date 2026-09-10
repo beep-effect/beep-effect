@@ -15,7 +15,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { DerivedThreadTitle } from "@/chat/DerivedThreadTitle";
 import { DroppedDocumentInput, intakeDroppedFilePayload } from "@/intake/Intake.atoms";
 import { ProfessionalDesktopMigrationOptions } from "@/runtime/Migrations";
@@ -48,22 +48,27 @@ const decodeDerivedThreadTitle = S.decodeUnknownOption(DerivedThreadTitle);
 const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: {
-    readonly numRuns?: number;
+    readonly runs?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      const encoded = Result.getOrThrow(encode(value));
-      const decoded = Result.getOrThrow(decode(encoded));
-      return equivalent(decoded, value);
-    }),
-    fcRuns(options?.numRuns ?? 50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        arbitrary,
+        (value) => {
+          const encoded = Result.getOrThrow(encode(value));
+          const decoded = Result.getOrThrow(decode(encoded));
+          return equivalent(decoded, value);
+        },
+        fcRuns(options?.runs ?? 50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("@beep/professional-desktop schema parity", () => {
@@ -236,15 +241,15 @@ describe("@beep/professional-desktop schema parity", () => {
   });
 
   it("round-trips schema-derived arbitraries through the absorbed invariants", () => {
-    assertSchemaEncodeDecodeRoundTrip(SidecarTransport, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(InboundFrame, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(InboundEvent, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(SidecarClosedPayload, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(ProfessionalDesktopMigrationOptions, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(DerivedThreadTitle, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(VaultSyncWorkspacePayload, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(GetVaultSyncStatusPayload, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(MarkVaultSyncConflictReviewedPayload, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(VaultSyncStatus, { numRuns: 25 });
+    assertSchemaEncodeDecodeRoundTrip(SidecarTransport, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(InboundFrame, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(InboundEvent, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(SidecarClosedPayload, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(ProfessionalDesktopMigrationOptions, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(DerivedThreadTitle, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(VaultSyncWorkspacePayload, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(GetVaultSyncStatusPayload, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(MarkVaultSyncConflictReviewedPayload, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(VaultSyncStatus, { runs: 25 });
   });
 });

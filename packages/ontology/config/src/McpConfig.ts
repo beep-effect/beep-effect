@@ -44,7 +44,7 @@ const $I = $OntologyConfigId.create("McpConfig");
  * @category configuration
  * @since 0.0.0
  */
-export const OntologyMcpMutationsEnabledConfig = Config.boolean("ONTOLOGY_MCP_MUTATIONS_ENABLED").pipe(
+export const OntologyMcpMutationsEnabledConfig = Config.Boolean("ONTOLOGY_MCP_MUTATIONS_ENABLED").pipe(
   Config.withDefault(false)
 );
 

@@ -7,7 +7,9 @@ import {
   ContradictionReviewDecision,
   ContradictionRpcs,
   EvidenceSourceHighlight,
+  EvidenceSourceHighlightArbitrary,
   EvidenceSourcePage,
+  EvidenceSourcePageArbitrary,
   EvidenceSourcePagePayload,
   EvidenceSourcePageSelector,
   GetContradictionCandidate,
@@ -22,12 +24,13 @@ import { SourceTextPage } from "@beep/file-processing/SourceText";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as N from "effect/Number";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEvidenceSourceHighlightResult = S.decodeResult(EvidenceSourceHighlight);
 const decodeEvidenceSourcePageResult = S.decodeResult(EvidenceSourcePage);
@@ -150,88 +153,116 @@ describe("ContradictionTriage RPC contract", () => {
   });
 
   it("constructs only non-empty forward source highlights and rejects malformed ranges", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(EvidenceSourceHighlight)(fc), (highlight) => {
-        expect(highlight.startChar).toBeLessThan(highlight.endChar);
-        expect(
-          Result.isFailure(
-            decodeEvidenceSourceHighlightResult({
-              ...highlight,
-              endChar: highlight.startChar,
-            })
-          )
-        ).toBe(true);
-        expect(
-          Result.isFailure(
-            decodeEvidenceSourceHighlightResult({
-              ...highlight,
-              endChar: highlight.startChar,
-              startChar: highlight.endChar,
-            })
-          )
-        ).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([EvidenceSourceHighlightArbitrary]),
+          ([highlight]) => {
+            expect(highlight.startChar).toBeLessThan(highlight.endChar);
+            expect(
+              Result.isFailure(
+                decodeEvidenceSourceHighlightResult({
+                  ...highlight,
+                  endChar: highlight.startChar,
+                })
+              )
+            ).toBe(true);
+            expect(
+              Result.isFailure(
+                decodeEvidenceSourceHighlightResult({
+                  ...highlight,
+                  endChar: highlight.startChar,
+                  startChar: highlight.endChar,
+                })
+              )
+            ).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("rejects a page whose source identity differs from its verified highlight", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(EvidenceSourcePage)(fc), (sourcePage) => {
-        const otherSource = SourceTextIdentity.make({
-          ...sourcePage.highlight.source,
-          sourceRef: `${sourcePage.highlight.source.sourceRef}:other`,
-        });
-        const otherPage = SourceTextPage.make({
-          ...sourcePage.page,
-          identity: otherSource,
-        });
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([EvidenceSourcePageArbitrary]),
+          ([sourcePage]) => {
+            const otherSource = SourceTextIdentity.make({
+              ...sourcePage.highlight.source,
+              sourceRef: `${sourcePage.highlight.source.sourceRef}:other`,
+            });
+            const otherPage = SourceTextPage.make({
+              ...sourcePage.page,
+              identity: otherSource,
+            });
 
-        expect(
-          Result.isFailure(
-            decodeEvidenceSourcePageResult({
-              ...sourcePage,
-              page: otherPage,
-            })
-          )
-        ).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(
+              Result.isFailure(
+                decodeEvidenceSourcePageResult({
+                  ...sourcePage,
+                  page: otherPage,
+                })
+              )
+            ).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("constructs source pages that cover their highlight and rejects out-of-bounds offsets", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(EvidenceSourcePage)(fc), (sourcePage) => {
-        expect(sourcePage.highlight.endChar).toBeLessThanOrEqual(sourcePage.page.totalCodeUnits);
-        expect(
-          Result.isFailure(
-            decodeEvidenceSourcePageResult({
-              ...sourcePage,
-              highlight: {
-                ...sourcePage.highlight,
-                endChar: N.increment(sourcePage.page.totalCodeUnits),
-                startChar: sourcePage.page.totalCodeUnits,
-              },
-            })
-          )
-        ).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([EvidenceSourcePageArbitrary]),
+          ([sourcePage]) => {
+            expect(sourcePage.highlight.endChar).toBeLessThanOrEqual(sourcePage.page.totalCodeUnits);
+            expect(
+              Result.isFailure(
+                decodeEvidenceSourcePageResult({
+                  ...sourcePage,
+                  highlight: {
+                    ...sourcePage.highlight,
+                    endChar: N.increment(sourcePage.page.totalCodeUnits),
+                    startChar: sourcePage.page.totalCodeUnits,
+                  },
+                })
+              )
+            ).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("round-trips only source-aligned EvidenceSourcePage values", () => {
     const equivalent = S.toEquivalence(EvidenceSourcePage);
 
-    fc.assert(
-      fc.property(S.toArbitrary(EvidenceSourcePage)(fc), (sourcePage) => {
-        const encoded = encodeEvidenceSourcePageResult(sourcePage).pipe(Result.getOrThrow);
-        const decoded = decodeUnknownEvidenceSourcePageResult(encoded).pipe(Result.getOrThrow);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([EvidenceSourcePageArbitrary]),
+          ([sourcePage]) => {
+            const encoded = encodeEvidenceSourcePageResult(sourcePage).pipe(Result.getOrThrow);
+            const decoded = decodeUnknownEvidenceSourcePageResult(encoded).pipe(Result.getOrThrow);
 
-        expect(equivalent(decoded, sourcePage)).toBe(true);
-        expect(R.keys(encoded.highlight)).toStrictEqual(["endChar", "source", "startChar"]);
-        expect(S.toEquivalence(SourceTextIdentity)(decoded.page.identity, decoded.highlight.source)).toBe(true);
-      }),
-      fcRuns(25)
-    );
+            expect(equivalent(decoded, sourcePage)).toBe(true);
+            expect(R.keys(encoded.highlight)).toStrictEqual(["endChar", "source", "startChar"]);
+            expect(S.toEquivalence(SourceTextIdentity)(decoded.page.identity, decoded.highlight.source)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("carries only a closed, client-safe failure reason", () => {

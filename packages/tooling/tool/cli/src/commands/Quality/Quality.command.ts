@@ -3074,20 +3074,22 @@ const variadicStrings: (values: ReadonlyArray<unknown>) => ReadonlyArray<string>
 const githubChecksCommand = Command.make(
   "github-checks",
   {
-    base: Flag.string("base").pipe(
+    base: Flag.String("base").pipe(
       Flag.withDefault("origin/main"),
       Flag.withDescription("Base git ref for affected review-fix checks")
     ),
-    head: Flag.string("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for affected checks")),
-    collectAll: Flag.boolean("collect-all").pipe(
+    head: Flag.String("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for affected checks")),
+    collectAll: Flag.Boolean("collect-all").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Run every local GitHub-check wave after failures instead of stopping before later waves")
     ),
-    noFailFast: Flag.boolean("no-fail-fast").pipe(
+    noFailFast: Flag.Boolean("no-fail-fast").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Keep launching local gates after a precise red to collect the full diagnostic picture")
     ),
-    mode: Argument.choice("mode", GITHUB_CHECK_MODE_VALUES).pipe(Argument.withDescription("GitHub check mode to run")),
+    mode: Argument.Literals("mode", GITHUB_CHECK_MODE_VALUES).pipe(
+      Argument.withDescription("GitHub check mode to run")
+    ),
   },
   ({ base, collectAll, head, mode, noFailFast }) =>
     runQualityProgram(
@@ -3102,15 +3104,15 @@ const githubChecksCommand = Command.make(
 const githubChecksPlanContractCheckCommand = Command.make(
   "plan-contract-check",
   {
-    expectPromotedFallowLanes: Flag.boolean("expect-promoted-fallow-lanes").pipe(
+    expectPromotedFallowLanes: Flag.Boolean("expect-promoted-fallow-lanes").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Assert that every matrix-promoted Fallow lane is wired into the selected GitHub check mode")
     ),
-    featureMatrix: Flag.string("feature-matrix").pipe(
+    featureMatrix: Flag.String("feature-matrix").pipe(
       Flag.withDefault("goals/fallow-quality-enforcement/research/feature-matrix.jsonc"),
       Flag.withDescription("Fallow feature matrix JSONC path")
     ),
-    mode: Flag.choiceWithValue("mode", githubCheckModeFlagChoices).pipe(
+    mode: Flag.ChoiceWithValue("mode", githubCheckModeFlagChoices).pipe(
       Flag.withDefault("pre-push"),
       Flag.withDescription("GitHub check mode whose static lane plan should be inspected")
     ),
@@ -3126,15 +3128,15 @@ const githubChecksCommandWithSubcommands = githubChecksCommand.pipe(
 const devQualityCommand = Command.make(
   "dev",
   {
-    base: Flag.string("base").pipe(
+    base: Flag.String("base").pipe(
       Flag.withDefault("origin/main"),
       Flag.withDescription("Base git ref for the local development quality range")
     ),
-    head: Flag.string("head").pipe(
+    head: Flag.String("head").pipe(
       Flag.withDefault("HEAD"),
       Flag.withDescription("Head git ref for the local development quality range")
     ),
-    surface: Flag.boolean("surface").pipe(
+    surface: Flag.Boolean("surface").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Also run affected docgen and repo-export checks for public surface edits")
     ),
@@ -3160,7 +3162,7 @@ const bunAuditCommand = Command.make("bun-audit", {}, () =>
 const testTsgoCommand = Command.make(
   "test-tsgo",
   {
-    args: Argument.string("args").pipe(Argument.variadic),
+    args: Argument.String("args").pipe(Argument.variadic),
   },
   ({ args }) => runQualityProgram(runTestTsgoChecks(args as ReadonlyArray<string>))
 ).pipe(Command.withDescription("Run Effect tsgo diagnostics for test files"));
@@ -3168,7 +3170,7 @@ const testTsgoCommand = Command.make(
 const testTsgoPackageCommand = Command.make(
   "test-tsgo-package",
   {
-    args: Argument.string("args").pipe(Argument.variadic),
+    args: Argument.String("args").pipe(Argument.variadic),
   },
   ({ args }) => runQualityProgram(runTestTsgoPackageTask(args as ReadonlyArray<string>))
 ).pipe(Command.withDescription("Run one package-owned tsgo test task for the aggregate lane"));
@@ -3188,19 +3190,19 @@ const jsdocModuleTagsCommand = Command.make("jsdoc-module-tags", {}, () =>
 const jsdocInventoryCommand = Command.make(
   "jsdoc-inventory",
   {
-    outputJson: Flag.string("output-json").pipe(
+    outputJson: Flag.String("output-json").pipe(
       Flag.withDescription("JSONC inventory output path; defaults to the tracked standards artifact"),
       Flag.optional
     ),
-    outputMarkdown: Flag.string("output-markdown").pipe(
+    outputMarkdown: Flag.String("output-markdown").pipe(
       Flag.withDescription("Markdown inventory output path; defaults to the tracked standards artifact"),
       Flag.optional
     ),
-    ciOutputJson: Flag.string("ci-output-json").pipe(
+    ciOutputJson: Flag.String("ci-output-json").pipe(
       Flag.withDescription("Extra JSONC path written from the same scan (the .beep/ci/ copy the ratchet lane reads)"),
       Flag.optional
     ),
-    ciOutputMarkdown: Flag.string("ci-output-markdown").pipe(
+    ciOutputMarkdown: Flag.String("ci-output-markdown").pipe(
       Flag.withDescription("Extra Markdown path written from the same scan"),
       Flag.optional
     ),
@@ -3227,15 +3229,15 @@ const jsdocQualityCommand = Command.make("jsdoc-quality", {}, () => runQualityPr
 const jsdocRatchetCommand = Command.make(
   "jsdoc-ratchet",
   {
-    baseline: Flag.string("baseline").pipe(
+    baseline: Flag.String("baseline").pipe(
       Flag.withDefault(defaultJSDocTotalsBaselinePath),
       Flag.withDescription("Committed JSDoc totals regression baseline JSONC path")
     ),
-    inventory: Flag.string("inventory").pipe(
+    inventory: Flag.String("inventory").pipe(
       Flag.withDefault(defaultJSDocInventoryPath),
       Flag.withDescription("Generated JSDoc documentation inventory JSONC path")
     ),
-    writeBaseline: Flag.boolean("write-baseline").pipe(
+    writeBaseline: Flag.Boolean("write-baseline").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Rewrite the JSDoc totals regression baseline from the generated inventory")
     ),
@@ -3253,7 +3255,7 @@ const jsdocRatchetCommand = Command.make(
 const jsdocMigrateExtractCommand = Command.make(
   "extract",
   {
-    output: Flag.string("output").pipe(
+    output: Flag.String("output").pipe(
       Flag.withDescription("extract.jsonl output path; defaults to the goal packet data directory"),
       Flag.optional
     ),
@@ -3267,18 +3269,18 @@ const jsdocMigrateExtractCommand = Command.make(
 const jsdocMigrateTitlesCommand = Command.make(
   "titles",
   {
-    extract: Flag.string("extract").pipe(Flag.withDescription("extract.jsonl input path"), Flag.optional),
-    titles: Flag.string("titles").pipe(Flag.withDescription("titles.jsonl append path"), Flag.optional),
-    proxyUrl: Flag.string("proxy-url").pipe(
+    extract: Flag.String("extract").pipe(Flag.withDescription("extract.jsonl input path"), Flag.optional),
+    titles: Flag.String("titles").pipe(Flag.withDescription("titles.jsonl append path"), Flag.optional),
+    proxyUrl: Flag.String("proxy-url").pipe(
       Flag.withDescription("Local CLIProxyAPI base URL; never the xAI API"),
       Flag.optional
     ),
-    model: Flag.string("model").pipe(Flag.withDescription("Proxy model id"), Flag.optional),
-    limitFiles: Flag.integer("limit-files").pipe(
+    model: Flag.String("model").pipe(Flag.withDescription("Proxy model id"), Flag.optional),
+    limitFiles: Flag.Int("limit-files").pipe(
       Flag.withDescription("Process at most this many pending files this run"),
       Flag.optional
     ),
-    concurrency: Flag.integer("concurrency").pipe(
+    concurrency: Flag.Int("concurrency").pipe(
       Flag.withDescription("Concurrent proxy requests (one per file); default 12"),
       Flag.optional
     ),
@@ -3304,14 +3306,14 @@ const jsdocMigrateTitlesCommand = Command.make(
 const jsdocMigrateApplyCommand = Command.make(
   "apply",
   {
-    titles: Flag.string("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
-    overrides: Flag.string("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
-    manifest: Flag.string("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
-    dryRun: Flag.boolean("dry-run").pipe(
+    titles: Flag.String("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
+    overrides: Flag.String("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
+    manifest: Flag.String("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
+    dryRun: Flag.Boolean("dry-run").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Report outcomes without writing any file")
     ),
-    syntheticTitles: Flag.boolean("synthetic-titles").pipe(
+    syntheticTitles: Flag.Boolean("synthetic-titles").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Generate in-memory placeholder titles for the residue measurement")
     ),
@@ -3331,10 +3333,10 @@ const jsdocMigrateApplyCommand = Command.make(
 const jsdocMigrateVerifyCommand = Command.make(
   "verify",
   {
-    extract: Flag.string("extract").pipe(Flag.withDescription("Frozen extract.jsonl input path"), Flag.optional),
-    titles: Flag.string("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
-    overrides: Flag.string("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
-    manifest: Flag.string("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
+    extract: Flag.String("extract").pipe(Flag.withDescription("Frozen extract.jsonl input path"), Flag.optional),
+    titles: Flag.String("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
+    overrides: Flag.String("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
+    manifest: Flag.String("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
   },
   ({ extract, manifest, overrides, titles }) =>
     runQualityProgram(
@@ -3366,11 +3368,11 @@ const jsdocMigrateCommand = Command.make("jsdoc-migrate", {}, () =>
 const knipCommand = Command.make(
   "knip",
   {
-    baseline: Flag.string("baseline").pipe(
+    baseline: Flag.String("baseline").pipe(
       Flag.withDefault(defaultKnipBaselinePath),
       Flag.withDescription("Committed Knip regression baseline JSONC path")
     ),
-    writeBaseline: Flag.boolean("write-baseline").pipe(
+    writeBaseline: Flag.Boolean("write-baseline").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Rewrite the Knip regression baseline from the current normalized finding set")
     ),
@@ -3394,20 +3396,20 @@ const cachePolicyCommand = Command.make("cache-policy", {}, () =>
 const turboConfigProofCommand = Command.make(
   "turbo-config-proof",
   {
-    base: Flag.string("base").pipe(
+    base: Flag.String("base").pipe(
       Flag.withDefault("origin/main"),
       Flag.withDescription("Base git ref for Turbo affected query proof")
     ),
-    head: Flag.string("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for proof")),
-    selector: Flag.choiceWithValue("selector", [
+    head: Flag.String("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for proof")),
+    selector: Flag.ChoiceWithValue("selector", [
       ["affected", "affected"],
       ["filter-range", "filter-range"],
     ]).pipe(
       Flag.withDefault("affected"),
       Flag.withDescription("Dry-run selector: affected for CI shape, filter-range for deterministic base/head probes")
     ),
-    json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the proof report as JSON")),
-    taskArgs: Argument.string("task").pipe(
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the proof report as JSON")),
+    taskArgs: Argument.String("task").pipe(
       Argument.variadic,
       Argument.withDescription("Optional Turbo tasks to prove; defaults to lint check test docgen")
     ),
@@ -3469,11 +3471,11 @@ const turboConfigProofCommand = Command.make(
 const packageVerifyCommand = Command.make(
   "package-verify",
   {
-    packageArgs: Argument.string("package").pipe(
+    packageArgs: Argument.String("package").pipe(
       Argument.variadic,
       Argument.withDescription("Optional workspace package name to verify")
     ),
-    quick: Flag.boolean("quick").pipe(Flag.withDefault(false), Flag.withDescription("Run lint and check only")),
+    quick: Flag.Boolean("quick").pipe(Flag.withDefault(false), Flag.withDescription("Run lint and check only")),
   },
   ({ packageArgs, quick }) =>
     runQualityProgram(runPackageVerifyCli({ packageArgs: variadicStrings(packageArgs), quick }))
@@ -3500,7 +3502,7 @@ const changesetGraphCommand = Command.make("changeset-graph", {}, () =>
 const qualityProfileDetectCommand = Command.make(
   "detect",
   {
-    json: Flag.boolean("json").pipe(
+    json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Print the detected profile as JSON")
     ),
@@ -3511,8 +3513,8 @@ const qualityProfileDetectCommand = Command.make(
 const qualityProfileConfigCommand = Command.make(
   "config",
   {
-    json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the profile config as JSON")),
-    profile: Argument.choice("profile", QualityHardwareProfile.Options).pipe(
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the profile config as JSON")),
+    profile: Argument.Literals("profile", QualityHardwareProfile.Options).pipe(
       Argument.withDescription("Quality hardware profile to inspect")
     ),
   },
@@ -3592,7 +3594,7 @@ export const renderAdmissionSnapshotLinesForTesting: {
 const schedulerStatusCommand = Command.make(
   "status",
   {
-    json: Flag.boolean("json").pipe(Flag.withDescription("Emit the admission snapshot as JSON")),
+    json: Flag.Boolean("json").pipe(Flag.withDescription("Emit the admission snapshot as JSON")),
   },
   Effect.fn(function* ({ json }) {
     const snapshot = yield* admissionStatus();
@@ -3614,7 +3616,7 @@ const reconcileCurrentCheckoutAttemptJournals = Effect.fn("Quality.reconcileCurr
 const schedulerReapCommand = Command.make(
   "reap",
   {
-    apply: Flag.boolean("apply").pipe(
+    apply: Flag.Boolean("apply").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Actually remove dead admission state (default: dry-run report)")
     ),
@@ -3638,11 +3640,11 @@ const schedulerReapCommand = Command.make(
 const schedulerProtocolCommand = Command.make(
   "protocol",
   {
-    enableEvictions: Flag.boolean("enable-evictions").pipe(
+    enableEvictions: Flag.Boolean("enable-evictions").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Enable v2 eviction rows after every live checkout runs the preservation release")
     ),
-    disableEvictions: Flag.boolean("disable-evictions").pipe(
+    disableEvictions: Flag.Boolean("disable-evictions").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Disable v2 eviction rows while mixed fleet revisions may still rewrite the journal")
     ),
@@ -3756,11 +3758,11 @@ export const renderTmpfsReportLinesForTesting: {
 const tmpfsReapCommand = Command.make(
   "tmpfs-reap",
   {
-    apply: Flag.boolean("apply").pipe(
+    apply: Flag.Boolean("apply").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Apply eligible removals (default: loud dry-run only)")
     ),
-    json: Flag.boolean("json").pipe(
+    json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Emit the encoded tmpfs-reap/v1 report as JSON")
     ),
@@ -3851,23 +3853,23 @@ export const renderResidueReportLinesForTesting: (report: ResidueReapReport) => 
 const residueReapCommand = Command.make(
   "residue-reap",
   {
-    apply: Flag.boolean("apply").pipe(
+    apply: Flag.Boolean("apply").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Apply eligible removals (default: dry run)")
     ),
-    json: Flag.boolean("json").pipe(
+    json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Emit the encoded residue-reap/v1 report as JSON")
     ),
-    classes: Flag.choice("classes", ResidueReapClass.Options).pipe(
+    classes: Flag.Literals("classes", ResidueReapClass.Options).pipe(
       Flag.between(0, A.length(ResidueReapClass.Options)),
       Flag.withDescription("Restrict cleanup to repeatable residue classes (default: all classes)")
     ),
-    maxAgeDays: Flag.float("max-age-days").pipe(
+    maxAgeDays: Flag.Finite("max-age-days").pipe(
       Flag.withDefault(30),
       Flag.withDescription("Minimum age or idleness in days for Codex and beep-cache entries")
     ),
-    turboMaxAgeDays: Flag.float("turbo-max-age-days").pipe(
+    turboMaxAgeDays: Flag.Finite("turbo-max-age-days").pipe(
       Flag.withDefault(14),
       Flag.withDescription("Minimum age in days for entries in this checkout's .turbo/cache")
     ),

@@ -5,9 +5,11 @@
  *
  * @since 0.0.0
  */
-import { withSanitizedToolSpan } from "@beep/mcp-kit";
-import { assert, describe, it, layer } from "@effect/vitest";
+import { sanitizeTracerAttributes, withSanitizedToolSpan } from "@beep/mcp-kit";
+import { withTopLevelObjectInputSchemaForTesting } from "@beep/mcp-kit/SanitizedSpan";
+import { assert, describe, expect, it, layer } from "@effect/vitest";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Tracer from "effect/Tracer";
@@ -82,4 +84,62 @@ describe("withSanitizedToolSpan", () => {
       assert.strictEqual(outcomeAttribute?.value, "ok");
     })
   );
+});
+
+it.effect(
+  "delegates span identity, relationships, and live attributes",
+  Effect.fnUntraced(function* () {
+    const parent = Tracer.externalSpan({ spanId: "parent-id", traceId: "trace-id" });
+    const linked = Tracer.externalSpan({ spanId: "linked-id", traceId: "linked-trace" });
+    const tracer = sanitizeTracerAttributes([])(Tracer.make({ span: (options) => new Tracer.NativeSpan(options) }));
+    const span = yield* Effect.makeSpan("delegated", { parent, kind: "client" }).pipe(Effect.withTracer(tracer));
+    expect(span.spanId).toMatch(/^[0-9a-f]{16}$/);
+    expect(span.traceId).toBe("trace-id");
+    expect(span.parent).toEqual(O.some(parent));
+    expect(span.kind).toBe("client");
+    expect(span.links).toEqual([]);
+    span.addLinks([{ span: linked, attributes: { relation: "caused-by" } }]);
+    expect(span.links).toEqual([{ span: linked, attributes: { relation: "caused-by" } }]);
+    span.attribute("parameters", "retained with empty deny list");
+    expect(span.attributes.get("parameters")).toBe("retained with empty deny list");
+  })
+);
+
+describe("withTopLevelObjectInputSchema guard arms", () => {
+  it("patches a local wildcard target with a top-level object type", () => {
+    const patched = withTopLevelObjectInputSchemaForTesting({
+      $ref: "#/$defs/Params",
+      $defs: { Params: { not: { type: "null" } } },
+    });
+    expect(patched.type).toBe("object");
+  });
+
+  it("leaves an external ref untouched", () => {
+    const schema = { $ref: "https://example.org/schema.json#/$defs/Params" };
+    expect(withTopLevelObjectInputSchemaForTesting(schema)).toBe(schema);
+  });
+
+  it("leaves a local ref without matching defs untouched", () => {
+    const schema = { $ref: "#/$defs/Params", $defs: { Other: { type: "object" } } };
+    expect(withTopLevelObjectInputSchemaForTesting(schema)).toBe(schema);
+  });
+
+  it("leaves a non-ref schema without a defs table untouched", () => {
+    const schema = { anyOf: [{ type: "string" }] };
+    expect(withTopLevelObjectInputSchemaForTesting(schema)).toBe(schema);
+  });
+
+  it("patches an anyOf object target and skips a non-object wildcard-shaped miss", () => {
+    const anyOfTarget = {
+      $ref: "#/$defs/Params",
+      $defs: { Params: { anyOf: [{ type: "object" }, { type: "array" }] } },
+    };
+    expect(withTopLevelObjectInputSchemaForTesting(anyOfTarget).type).toBe("object");
+
+    const nonWildcard = {
+      $ref: "#/$defs/Params",
+      $defs: { Params: { not: { type: "string" } } },
+    };
+    expect(withTopLevelObjectInputSchemaForTesting(nonWildcard)).toBe(nonWildcard);
+  });
 });

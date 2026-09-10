@@ -1,3 +1,5 @@
+import * as A from "effect/Array";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Property-based tests ("proofs") for NLP-specific monoid laws.
  *
@@ -7,7 +9,7 @@
  * for it, exactly as in the legacy property suite.
  *
  * Property-based coverage for Effect v4's
- * `effect/testing/FastCheck`.
+ * `effect/unstable/arbitrary/Arbitrary`.
  */
 
 import * as NLP from "@beep/nlp/Algebra/NLPMonoid";
@@ -18,7 +20,6 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import type { BagOfWords } from "@beep/nlp/Algebra/NLPMonoid";
 
 const decodeNLPDependencyEdge = S.decodeEffect(NLP.DependencyEdge);
@@ -53,41 +54,55 @@ const hashSetEquals = <A>(a: HashSet.HashSet<A>, b: HashSet.HashSet<A>): boolean
 const testMonoidLaws = <A>(
   name: string,
   monoid: { empty: A; combine: (x: A, y: A) => A },
-  arbitrary: fc.Arbitrary<A>,
+  arbitrary: Arbitrary.Arbitrary<A>,
   equals: (a: A, b: A) => boolean = (a, b) => a === b
 ) => {
   describe(`${name} Monoid Laws`, () => {
     it("satisfies left identity", () => {
-      fc.assert(fc.property(arbitrary, (x) => equals(monoid.combine(monoid.empty, x), x)));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([arbitrary]), ([x]) => equals(monoid.combine(monoid.empty, x), x))
+        )._tag
+      ).toBe("Passed");
     });
     it("satisfies right identity", () => {
-      fc.assert(fc.property(arbitrary, (x) => equals(monoid.combine(x, monoid.empty), x)));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([arbitrary]), ([x]) => equals(monoid.combine(x, monoid.empty), x))
+        )._tag
+      ).toBe("Passed");
     });
     it("satisfies associativity", () => {
-      fc.assert(
-        fc.property(arbitrary, arbitrary, arbitrary, (x, y, z) => {
-          const left = monoid.combine(monoid.combine(x, y), z);
-          const right = monoid.combine(x, monoid.combine(y, z));
-          return equals(left, right);
-        })
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([arbitrary, arbitrary, arbitrary]), ([x, y, z]) => {
+            const left = monoid.combine(monoid.combine(x, y), z);
+            const right = monoid.combine(x, monoid.combine(y, z));
+            return equals(left, right);
+          })
+        )._tag
+      ).toBe("Passed");
     });
   });
 };
 
 // Token monoids
 describe("Token Monoids", () => {
-  testMonoidLaws("TokenConcat", NLP.TokenConcat, fc.string());
+  testMonoidLaws("TokenConcat", NLP.TokenConcat, Arbitrary.schema(S.String));
 
   describe("TokenBagOfWords", () => {
-    const bowArbitrary: fc.Arbitrary<BagOfWords> = fc
-      .dictionary(fc.string(), fc.integer({ min: 1, max: 100 }))
-      .map((dict) => MutableHashMap.fromIterable(R.toEntries(dict)));
+    const bowArbitrary: Arbitrary.Arbitrary<BagOfWords> = Arbitrary.all([
+      Arbitrary.schema(S.String),
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(100))),
+    ]).pipe(
+      Arbitrary.map(([key, value]) => ({ [key]: value })),
+      Arbitrary.map((dict) => MutableHashMap.fromIterable(R.toEntries(dict)))
+    );
     testMonoidLaws("TokenBagOfWords", NLP.TokenBagOfWords, bowArbitrary, mutableHashMapEquals);
   });
 
   describe("TokenSetUnion", () => {
-    const setArbitrary: fc.Arbitrary<HashSet.HashSet<string>> = fc.array(fc.string()).map(HashSet.fromIterable);
+    const setArbitrary = S.String.pipe(S.HashSet, Arbitrary.schema);
     testMonoidLaws("TokenSetUnion", NLP.TokenSetUnion, setArbitrary, hashSetEquals);
   });
 });
@@ -96,43 +111,61 @@ describe("Token Monoids", () => {
 describe("Sentence Monoids", () => {
   describe("SentenceConcat (near-monoid: identity only)", () => {
     it("satisfies left identity", () => {
-      fc.assert(fc.property(fc.string(), (x) => NLP.SentenceConcat.combine(NLP.SentenceConcat.empty, x) === x));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(S.String)]),
+            ([x]) => NLP.SentenceConcat.combine(NLP.SentenceConcat.empty, x) === x
+          )
+        )._tag
+      ).toBe("Passed");
     });
     it("satisfies right identity", () => {
-      fc.assert(fc.property(fc.string(), (x) => NLP.SentenceConcat.combine(x, NLP.SentenceConcat.empty) === x));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(S.String)]),
+            ([x]) => NLP.SentenceConcat.combine(x, NLP.SentenceConcat.empty) === x
+          )
+        )._tag
+      ).toBe("Passed");
     });
   });
 
   testMonoidLaws(
     "SentenceArray",
     NLP.SentenceArray,
-    fc.array(fc.string()),
+    Arbitrary.schema(S.Array(S.String).check(S.isMinLength(0), S.isMaxLength(10))),
     (a, b) => a.length === b.length && a.every((x, i) => x === b[i])
   );
 });
 
 // Document monoids
 describe("Document Monoids", () => {
-  testMonoidLaws("DocumentText", NLP.DocumentText, fc.string());
+  testMonoidLaws("DocumentText", NLP.DocumentText, Arbitrary.schema(S.String));
 
   describe("DocumentStats", () => {
-    const statsArbitrary = fc.record({
-      wordCount: fc.integer({ min: 0, max: 1000 }),
-      sentenceCount: fc.integer({ min: 0, max: 100 }),
-      charCount: fc.integer({ min: 0, max: 10000 }),
+    const statsArbitrary = Arbitrary.all({
+      wordCount: Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
+      sentenceCount: Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(100))),
+      charCount: Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(10000))),
     });
     const statsEquals = S.toEquivalence(NLP.DocumentStatistics);
     testMonoidLaws("DocumentStats", NLP.DocumentStats, statsArbitrary, statsEquals);
 
     it("round-trips schema-derived document statistics values", () => {
-      fc.assert(
-        fc.property(S.toArbitrary(NLP.DocumentStatistics)(fc), (stats) => {
-          const encoded = Effect.runSync(encodeNLPDocumentStatistics(stats));
-          const decoded = Effect.runSync(decodeNLPDocumentStatistics(encoded));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(NLP.DocumentStatistics)]), ([stats]) => {
+            const encoded = Effect.runSync(encodeNLPDocumentStatistics(stats));
+            const decoded = Effect.runSync(decodeNLPDocumentStatistics(encoded));
 
-          expect(statsEquals(decoded, stats)).toBe(true);
-        })
-      );
+            expect(statsEquals(decoded, stats)).toBe(true);
+
+            return true;
+          })
+        )._tag
+      ).toBe("Passed");
     });
   });
 });
@@ -142,20 +175,29 @@ describe("Linguistic Monoids", () => {
   it("round-trips schema-derived dependency edges", () => {
     const edgeEquals = S.toEquivalence(NLP.DependencyEdge);
 
-    fc.assert(
-      fc.property(S.toArbitrary(NLP.DependencyEdge)(fc), (edge) => {
-        const encoded = Effect.runSync(encodeNLPDependencyEdge(edge));
-        const decoded = Effect.runSync(decodeNLPDependencyEdge(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(NLP.DependencyEdge)]), ([edge]) => {
+          const encoded = Effect.runSync(encodeNLPDependencyEdge(edge));
+          const decoded = Effect.runSync(decodeNLPDependencyEdge(encoded));
 
-        expect(edgeEquals(decoded, edge)).toBe(true);
-      })
-    );
+          expect(edgeEquals(decoded, edge)).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   describe("AnnotationMap", () => {
-    const annotationArbitrary: fc.Arbitrary<MutableHashMap.MutableHashMap<number, string>> = fc
-      .array(fc.tuple(fc.integer(), fc.string()))
-      .map(MutableHashMap.fromIterable);
+    const annotationArbitrary: Arbitrary.Arbitrary<MutableHashMap.MutableHashMap<number, string>> = Arbitrary.schema(
+      S.Int.check(S.isBetween({ minimum: 0, maximum: 10 }))
+    ).pipe(
+      Arbitrary.flatMap((count) =>
+        Arbitrary.all(A.replicate(Arbitrary.all([Arbitrary.schema(S.Int), Arbitrary.schema(S.String)]), count))
+      ),
+      Arbitrary.map(MutableHashMap.fromIterable)
+    );
     testMonoidLaws("AnnotationMap", NLP.AnnotationMap<number, string>(), annotationArbitrary, mutableHashMapEquals);
   });
 });
@@ -164,14 +206,18 @@ describe("TextAnalysis", () => {
   it("round-trips schema-derived text analysis values", () => {
     const analysisEquals = S.toEquivalence(NLP.TextAnalysis);
 
-    fc.assert(
-      fc.property(S.toArbitrary(NLP.TextAnalysis)(fc), (analysis) => {
-        const encoded = Effect.runSync(encodeNLPTextAnalysis(analysis));
-        const decoded = Effect.runSync(decodeNLPTextAnalysis(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(NLP.TextAnalysis)]), ([analysis]) => {
+          const encoded = Effect.runSync(encodeNLPTextAnalysis(analysis));
+          const decoded = Effect.runSync(decodeNLPTextAnalysis(encoded));
 
-        expect(analysisEquals(decoded, analysis)).toBe(true);
-      })
-    );
+          expect(analysisEquals(decoded, analysis)).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 });
 

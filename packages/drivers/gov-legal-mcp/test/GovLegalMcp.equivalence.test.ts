@@ -7,8 +7,9 @@ import { GovinfoSearchFailure } from "@beep/gov-legal-mcp/Tools";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { flow } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeGovinfoSearchFailureSync = S.decodeSync(GovinfoSearchFailure);
 const decodeToolNameNormalizationErrorSync = S.decodeSync(ToolNameNormalizationError);
@@ -88,17 +89,31 @@ describe("gov-legal-mcp declared-field equivalence", () => {
       decodeToolNameNormalizationErrorSync
     );
 
-    fc.assert(
-      fc.property(S.toArbitrary(GovinfoSearchFailure)(fc), (value) => {
-        expect(sameGovinfoSearchFailure(roundTripSearchFailure(value), value)).toBe(true);
-      }),
-      fcRuns(25)
-    );
-    fc.assert(
-      fc.property(S.toArbitrary(ToolNameNormalizationError)(fc), (value) => {
-        expect(sameNormalizationError(roundTripNormalizationError(value), value)).toBe(true);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(GovinfoSearchFailure)]),
+          ([value]) => {
+            expect(sameGovinfoSearchFailure(roundTripSearchFailure(value), value)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(ToolNameNormalizationError)]),
+          ([value]) => {
+            expect(sameNormalizationError(roundTripNormalizationError(value), value)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

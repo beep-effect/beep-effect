@@ -23,6 +23,7 @@ import { identity } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const $I = $EpistemicDomainId.create("values/EvidenceSpan/EvidenceSpan.model");
 const textAnchorEquivalent = S.toEquivalence(TextAnchor);
@@ -47,7 +48,6 @@ const textAnchorEquivalent = S.toEquivalence(TextAnchor);
 export const Confidence = UnitInterval.pipe(
   $I.annoteSchema("Confidence", {
     description: "Extraction confidence in the unit interval [0, 1].",
-    toArbitrary: () => S.toArbitrary(UnitInterval),
   })
 );
 
@@ -113,25 +113,7 @@ class EvidenceSpanStruct extends S.Class<EvidenceSpanStruct>($I`EvidenceSpanStru
   })
 ) {}
 
-const EvidenceSpanSchema = EvidenceSpanStruct.mapFields(identity)
-  .check(TextAnchorWidthCheck)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(
-          fc.nat(10_000),
-          fc.string({ minLength: 1, maxLength: EVIDENCE_SPAN_QUOTE_MAX_LENGTH }),
-          fc.integer({ min: 0, max: 1_000 })
-        )
-        .map(([startChar, quote, confidence]) =>
-          EvidenceSpanStruct.make({
-            startChar: NonNegativeInt.make(startChar),
-            endChar: NonNegativeInt.make(startChar + Str.length(quote)),
-            quote,
-            confidence: Confidence.make(confidence / 1_000),
-          })
-        ),
-  });
+const EvidenceSpanSchema = EvidenceSpanStruct.mapFields(identity).check(TextAnchorWidthCheck);
 
 /**
  * Char-offset evidence span: the exact quoted source text and its start/end
@@ -220,3 +202,35 @@ export class EvidenceSpan extends S.Class<EvidenceSpan>($I`EvidenceSpan`)(
  * @since 0.0.0
  */
 export const isEvidenceSpanInternallyConsistent = EvidenceSpan.isInternallyConsistent;
+
+/**
+ * Native generator preserving the cross-field invariants of EvidenceSpan.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { EvidenceSpanArbitrary } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(EvidenceSpanArbitrary, { count: 1 })
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const EvidenceSpanArbitrary = Arbitrary.schema(
+  S.Struct({
+    startChar: S.Int.check(S.isBetween({ minimum: 0, maximum: 10_000 })),
+    quote: EvidenceSpanQuote,
+    confidence: Confidence,
+  })
+).pipe(
+  Arbitrary.map(({ startChar, quote, confidence }) =>
+    EvidenceSpan.make({
+      startChar: NonNegativeInt.make(startChar),
+      endChar: NonNegativeInt.make(startChar + Str.length(quote)),
+      quote,
+      confidence,
+    })
+  )
+);

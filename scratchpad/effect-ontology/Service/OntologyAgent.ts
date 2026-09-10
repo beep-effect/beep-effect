@@ -200,23 +200,26 @@ const makeOntologyAgent = Effect.gen(function* () {
     const storage = yield* StorageService;
 
     const sparqlResultTriples = Match.type<SparqlQueryResult>().pipe(
-      Match.discriminatorsExhaustive("profile")({
-        select: ({ rows }) =>
+    Match.discriminator("profile")("select", ({ rows }) =>
           A.flatMap(rows, (row) =>
             A.map(R.toEntries(row), ([variable, value]) => ({
               subject: "result",
               predicate: variable,
               object: value.termType === "Literal" ? value.value : extractLocalNameFromIri(value.value),
             }))
+      )
           ),
-        construct: ({ dataset }) =>
+    Match.discriminator("profile")("construct", ({ dataset }) =>
           A.map(dataset.quads, (quad) => ({
             subject: extractLocalNameFromIri(quad.subject.value),
             predicate: extractLocalNameFromIri(quad.predicate.value),
             object: quad.object.termType === "Literal" ? quad.object.value : extractLocalNameFromIri(quad.object.value),
-          })),
-        ask: ({ value }) => [{ subject: "query", predicate: "result", object: value ? "true" : "false" }],
-      })
+      }))
+    ),
+    Match.discriminator("profile")("ask", ({ value }) => [
+      { subject: "query", predicate: "result", object: value ? "true" : "false" },
+    ]),
+    Match.exhaustive
     );
 
     // Cache the parsed ontology RDF store for SHACL shape generation

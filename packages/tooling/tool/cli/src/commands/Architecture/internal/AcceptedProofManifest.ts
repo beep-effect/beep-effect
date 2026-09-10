@@ -796,6 +796,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/test/migrate-on-boot.pglite.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/test/index.test.ts",
     writer: "template",
   }),

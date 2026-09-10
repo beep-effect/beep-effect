@@ -10,8 +10,9 @@ import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeAiMetricsSection = S.encodeUnknownResult(AgentEffectivenessAiMetricsSection);
 const decodeAiMetricsSection = S.decodeUnknownResult(AgentEffectivenessAiMetricsSection);
@@ -24,10 +25,15 @@ const isFindingCode = S.is(AgentEffectivenessAnnotationCheckFindingCode);
 
 describe("agent-effectiveness schema laws", () => {
   it("generates only members of the annotation optimization domain", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(AgentEffectivenessAnnotationOptimization)(fc), (value) => isOptimization(value)),
-      fcRuns(25)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(AgentEffectivenessAnnotationOptimization)]),
+          ([value]) => isOptimization(value),
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("keeps required null wire fields while decoding absence to Option", () => {
     const section = AgentEffectivenessAiMetricsSection.make({

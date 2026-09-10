@@ -29,7 +29,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { PlatformError } from "effect";
 
 const decodeAgentModeSync = S.decodeSync(AgentMode);
@@ -49,7 +49,7 @@ const encodeAgentModeSync = S.encodeSync(AgentMode);
 const TaggedAgent = Agent.toTagged();
 const decodeUnknownTaggedAgentResult = S.decodeUnknownResult(TaggedAgent);
 
-const AgentModeArbitrary = S.toArbitrary(AgentMode)(fc);
+const AgentModeArbitrary = Arbitrary.schema(AgentMode);
 
 const repoRoot = fileURLToPath(new URL("../../../..", import.meta.url));
 const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
@@ -174,16 +174,23 @@ describe("@beep/agents-domain", () => {
   });
 
   it("round-trips schema-derived agent modes", () =>
-    fc.assert(
-      fc.property(AgentModeArbitrary, (mode) => {
-        const decoded = decodeAgentModeSync(mode);
-        const encoded = encodeAgentModeSync(decoded);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([AgentModeArbitrary]),
+          ([mode]) => {
+            const decoded = decodeAgentModeSync(mode);
+            const encoded = encodeAgentModeSync(decoded);
 
-        expect(encoded).toBe(mode);
-        expect(AgentMode.is.deterministic_fixture(decoded)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(encoded).toBe(mode);
+            expect(AgentMode.is.deterministic_fixture(decoded)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("preserves assistant content exports from the canonical value-object path", () => {
     const assistantContentDocument = S.toJsonSchemaDocument(AssistantContent);
@@ -254,10 +261,18 @@ describe("@beep/agents-domain", () => {
     const schemas: ReadonlyArray<S.Codec<unknown>> = [Agent, Skill, AssistantContent, AssistantBlock, InlineNode];
 
     for (const schema of schemas) {
-      fc.assert(
-        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
-        fcRuns(10)
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(schema)]),
+            ([value]) => {
+              roundTrip(schema, value);
+              return true;
+            },
+            fcRuns(10)
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 

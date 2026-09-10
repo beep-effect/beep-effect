@@ -372,7 +372,7 @@ const makeOntologyToolService = Effect.gen(function* () {
   const reasoner = yield* OntologyReasoner;
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const workspaceRoot = yield* Config.nonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
+  const workspaceRoot = yield* Config.NonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
   const canonicalWorkspaceRoot = yield* fileSystem.realPath(workspaceRoot);
   // The desktop sidecar is the sole v1 write authority for files exposed via
   // /mcp. This semaphore closes compare/apply/write TOCTOU inside that process;

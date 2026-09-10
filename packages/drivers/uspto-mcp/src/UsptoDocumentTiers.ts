@@ -103,23 +103,6 @@ const DocumentsProjectionOutputBase = LiteralKit(["Inline", "Fetchable"]).toTagg
   Fetchable: { handle: FetchableHandle },
 });
 
-const DocumentsProjectionOutputArbitraryValues = [
-  DocumentsProjectionOutputBase.make({
-    _tag: "Inline",
-    tier: "minimal",
-    envelope: ColumnarEnvelope.make({ columns: ["documentIdentifier"], rows: [["doc-1"]] }),
-  }),
-  DocumentsProjectionOutputBase.make({
-    _tag: "Fetchable",
-    handle: FetchableHandle.make({
-      expiresAt: "2026-07-01T01:00:00.000Z",
-      handleId: "uspto-documents-demo-handle",
-      sizeBytes: NonNegativeInt.make(1),
-      tier: "minimal",
-    }),
-  }),
-] as const;
-
 /**
  * Tagged outcome of {@link projectDocumentsWithinBudget}: `Inline` names the
  * field tier that fit within budget, carrying the tier-projected columnar
@@ -147,17 +130,13 @@ const DocumentsProjectionOutputArbitraryValues = [
  */
 export const DocumentsProjectionOutput = S.make<(typeof DocumentsProjectionOutputBase)["Rebuild"]>(
   DocumentsProjectionOutputBase.ast
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...DocumentsProjectionOutputArbitraryValues),
-  })
-  .pipe(
-    $I.annoteSchema("DocumentsProjectionOutput", {
-      description:
-        "Outcome of projecting a documentBag-shaped document array within a size budget: inline tier-projected columnar envelope, or a fetchable handle when even the minimal tier is oversized.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
-  );
+).pipe(
+  $I.annoteSchema("DocumentsProjectionOutput", {
+    description:
+      "Outcome of projecting a documentBag-shaped document array within a size budget: inline tier-projected columnar envelope, or a fetchable handle when even the minimal tier is oversized.",
+  }),
+  SchemaUtils.withCodecStatics(["is"])
+);
 
 /**
  * Type for {@link DocumentsProjectionOutput}.

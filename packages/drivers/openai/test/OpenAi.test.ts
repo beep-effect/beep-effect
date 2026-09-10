@@ -10,10 +10,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const EmbeddingModelOptionsArbitrary = S.toArbitrary(OpenAiEmbeddingModelOptions)(fc);
-const LanguageModelOptionsArbitrary = S.toArbitrary(OpenAiLanguageModelOptions)(fc);
+const EmbeddingModelOptionsArbitrary = Arbitrary.schema(OpenAiEmbeddingModelOptions);
+const LanguageModelOptionsArbitrary = Arbitrary.schema(OpenAiLanguageModelOptions);
 
 const encodeEmbeddingModelOptions = S.encodeResult(OpenAiEmbeddingModelOptions);
 const decodeEmbeddingModelOptions = S.decodeUnknownResult(OpenAiEmbeddingModelOptions);
@@ -59,23 +59,20 @@ describe("@beep/openai", () => {
     expect(Result.isFailure(decodeEmbeddingModelOptions({}))).toBe(true);
   });
 
-  it("round-trips schema-derived OpenAI options through encoded form", () =>
-    fc.assert(
-      fc.property(
-        EmbeddingModelOptionsArbitrary,
-        LanguageModelOptionsArbitrary,
-        (embeddingOptions, languageOptions) => {
-          const decodedEmbeddingOptions = Result.getOrThrow(
-            decodeEmbeddingModelOptions(Result.getOrThrow(encodeEmbeddingModelOptions(embeddingOptions)))
-          );
-          const decodedLanguageOptions = Result.getOrThrow(
-            decodeLanguageModelOptions(Result.getOrThrow(encodeLanguageModelOptions(languageOptions)))
-          );
+  it.prop(
+    "round-trips schema-derived OpenAI options through encoded form",
+    [EmbeddingModelOptionsArbitrary, LanguageModelOptionsArbitrary],
+    ([embeddingOptions, languageOptions]) => {
+      const decodedEmbeddingOptions = Result.getOrThrow(
+        decodeEmbeddingModelOptions(Result.getOrThrow(encodeEmbeddingModelOptions(embeddingOptions)))
+      );
+      const decodedLanguageOptions = Result.getOrThrow(
+        decodeLanguageModelOptions(Result.getOrThrow(encodeLanguageModelOptions(languageOptions)))
+      );
 
-          expect(Eq.equals(decodedEmbeddingOptions, embeddingOptions)).toBe(true);
-          expect(Eq.equals(decodedLanguageOptions, languageOptions)).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+      expect(Eq.equals(decodedEmbeddingOptions, embeddingOptions)).toBe(true);
+      expect(Eq.equals(decodedLanguageOptions, languageOptions)).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

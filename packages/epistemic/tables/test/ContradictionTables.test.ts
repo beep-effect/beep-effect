@@ -8,6 +8,7 @@ import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import {
   BeliefVersionRef,
   CanonicalContradictionBeliefPair,
+  CanonicalContradictionBeliefPairArbitrary,
   ContradictionAssessment,
   ContradictionCandidateContent,
   ContradictionCandidateDigest,
@@ -41,12 +42,13 @@ import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownCanonicalContradictionBeliefPairResult = S.decodeUnknownResult(CanonicalContradictionBeliefPair);
 const encodeCanonicalContradictionBeliefPairResult = S.encodeResult(CanonicalContradictionBeliefPair);
@@ -260,17 +262,24 @@ describe("Contradiction candidate row converters", () => {
   it("round-trips schema-derived canonical belief pairs used by candidate JSONB rows", () => {
     const equivalent = S.toEquivalence(CanonicalContradictionBeliefPair);
 
-    fc.assert(
-      fc.property(S.toArbitrary(CanonicalContradictionBeliefPair)(fc), (arbitraryPair) => {
-        const decoded = encodeCanonicalContradictionBeliefPairResult(arbitraryPair).pipe(
-          Result.getOrThrow,
-          decodeUnknownCanonicalContradictionBeliefPairResult,
-          Result.getOrThrow
-        );
-        expect(equivalent(decoded, arbitraryPair)).toBe(true);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([CanonicalContradictionBeliefPairArbitrary]),
+          ([arbitraryPair]) => {
+            const decoded = encodeCanonicalContradictionBeliefPairResult(arbitraryPair).pipe(
+              Result.getOrThrow,
+              decodeUnknownCanonicalContradictionBeliefPairResult,
+              Result.getOrThrow
+            );
+            expect(equivalent(decoded, arbitraryPair)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips a candidate only when every persisted seal is valid", () => {

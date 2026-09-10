@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Link-ingestion request, result, listing, and detail contracts.
  *
@@ -34,7 +35,6 @@ export { HttpUrl };
  */
 export const LinkStatus = LiteralKit(["pending", "enriched", "processing", "processed", "failed", "skipped"]).pipe(
   $I.annoteSchema("LinkStatus", {
-    toArbitrary: () => (fc) => fc.constantFrom("pending", "enriched", "processing", "processed", "failed", "skipped"),
     description: "Lifecycle statuses used when listing ingested links.",
   })
 );
@@ -295,7 +295,6 @@ const BatchIngestResultDefinition = S.TaggedUnion({
 export const BatchIngestResult = BatchIngestResultDefinition.pipe(
   $I.annoteSchema("BatchIngestResult", {
     description: "Tagged per-link ingestion result with status-specific nested success data or a required error.",
-    toArbitrary: () => S.toArbitrary(BatchIngestResultDefinition),
   })
 );
 
@@ -362,15 +361,6 @@ const BatchIngestResponseDefinition = S.Struct({
       title: "Batch Ingest Summary Consistency",
       description: "A response whose total and per-status counts exactly summarize its results.",
       message: "Batch ingest summary must exactly match the result collection.",
-      arbitrary: {
-        candidate: {
-          make: (fc) =>
-            fc.array(S.toArbitrary(BatchIngestResult)(fc), { maxLength: 32 }).map((results) => ({
-              results,
-              summary: summarizeBatchResults(results),
-            })),
-        },
-      },
     }
   )
 );
@@ -410,13 +400,7 @@ const matchBatchSummaryConsistency = Match.type<typeof BatchSummaryComparison.Ty
  * @category dtos
  * @since 0.0.0
  */
-export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
-  toArbitrary: () => (fc) =>
-    fc.array(S.toArbitrary(BatchIngestResult)(fc), { maxLength: 32 }).map((results) => ({
-      results,
-      summary: summarizeBatchResults(results),
-    })),
-}).pipe(
+export const BatchIngestResponse = BatchIngestResponseDefinition.pipe(
   $I.annoteSchema("BatchIngestResponse", {
     description: "Batch-ingestion response whose non-negative summary is consistent with its tagged results.",
   }),
@@ -648,3 +632,22 @@ export class LinkDetail extends S.Class<LinkDetail>($I`LinkDetail`)(
 ) {
   static readonly is = S.is(LinkDetail);
 }
+
+/**
+ * Generates values satisfying the schema's cross-field invariant.
+ *
+ * **Example** (Sample consistent values)
+ * ```ts
+ * import { BatchIngestResponseArbitrary } from "@effect-ontology/Schema/LinkIngestion"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * const samples = Arbitrary.sampleEffect(BatchIngestResponseArbitrary)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const BatchIngestResponseArbitrary = BatchIngestResult.pipe(
+  S.Array,
+  Arbitrary.schema,
+  Arbitrary.map((results) => ({ results, summary: summarizeBatchResults(results) }))
+);

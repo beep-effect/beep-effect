@@ -21,7 +21,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { GateEvaluator } from "@beep/skill-contract";
 
 const decodeGateDeclaration = S.decodeEffect(GateDeclaration);
@@ -153,15 +153,22 @@ describe("@beep/skill-contract Gate", () => {
   );
 
   it("round-trips schema-derived arbitrary gate declarations", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(GateDeclaration)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(encodeUnknownGateDeclarationResult(candidate));
-        const decoded = Result.getOrThrow(decodeGateDeclarationResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(GateDeclaration)]),
+          ([candidate]) => {
+            const encoded = Result.getOrThrow(encodeUnknownGateDeclarationResult(candidate));
+            const decoded = Result.getOrThrow(decodeGateDeclarationResult(encoded));
 
-        expect(S.toEquivalence(GateDeclaration)(decoded, candidate)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(GateDeclaration)(decoded, candidate)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("supports curried distinctly identified audit and verdict schema factories", () => {
     const Detail = S.Struct({ paths: S.Array(S.String) });

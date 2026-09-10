@@ -13,7 +13,7 @@ import { equals } from "effect/Equal";
 import { dual } from "effect/Function";
 import {
   orElse as matchOrElse,
-  tags as matchTags,
+  tag as matchTag,
   type as matchType,
   when as matchWhen,
   withReturnType,
@@ -431,18 +431,16 @@ const fromSchemaAST = (node: AST, visited: ReadonlyArray<AST> = empty()): Option
   const nextVisited = append(visited, node);
   return matchType<AST>().pipe(
     withReturnType<Option<Spec>>(),
-    matchTags({
-      String: () => some(Text.make({ mode: "text" })),
-      TemplateLiteral: () => some(Text.make({ mode: "text" })),
-      Boolean: () => some(Integer.make({ mode: "boolean", ident: "integer" })),
-      BigInt: () => some(Blob.make({ mode: "bigint" })),
-      Number: () => some(Real.make({})),
-      Literal: fromLiteralAST,
-      Enum: () => some(Text.make({ mode: "text" })),
-      Objects: () => some(Text.make({ mode: "json" })),
-      Arrays: () => some(Text.make({ mode: "json" })),
-      Suspend: ({ thunk }) => fromSchemaAST(thunk(), nextVisited),
-    }),
+    matchTag("String", () => some(Text.make({ mode: "text" }))),
+    matchTag("TemplateLiteral", () => some(Text.make({ mode: "text" }))),
+    matchTag("Boolean", () => some(Integer.make({ mode: "boolean", ident: "integer" }))),
+    matchTag("BigInt", () => some(Blob.make({ mode: "bigint" }))),
+    matchTag("Number", () => some(Real.make({}))),
+    matchTag("Literal", fromLiteralAST),
+    matchTag("Enum", () => some(Text.make({ mode: "text" }))),
+    matchTag("Objects", () => some(Text.make({ mode: "json" }))),
+    matchTag("Arrays", () => some(Text.make({ mode: "json" }))),
+    matchTag("Suspend", ({ thunk }) => fromSchemaAST(thunk(), nextVisited)),
     matchOrElse(() => none())
   )(node);
 };

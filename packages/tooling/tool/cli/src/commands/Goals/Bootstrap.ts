@@ -772,36 +772,36 @@ export const renderMaterializationPlanHuman = (plan: MaterializationPlan): strin
   );
 };
 
-const slugFlag = Flag.string("slug").pipe(Flag.withDescription("New packet slug under goals/ (lowercase, hyphenated)"));
-const titleFlag = Flag.string("title").pipe(Flag.withDescription("Human title for the packet"));
-const missionFlag = Flag.string("mission").pipe(
+const slugFlag = Flag.String("slug").pipe(Flag.withDescription("New packet slug under goals/ (lowercase, hyphenated)"));
+const titleFlag = Flag.String("title").pipe(Flag.withDescription("Human title for the packet"));
+const missionFlag = Flag.String("mission").pipe(
   Flag.withDescription("One-line mission shown in the generated goals/INDEX.md")
 );
-const archetypeFlag = Flag.choice("archetype", PhaseArchetype.Options).pipe(
+const archetypeFlag = Flag.Literals("archetype", PhaseArchetype.Options).pipe(
   Flag.withDefault(PhaseArchetype.Enum["standard-delivery"]),
   Flag.withDescription("Ordered phase shape: standard-delivery (template phases) or report-first")
 );
-const providesFlag = Flag.string("provides").pipe(
+const providesFlag = Flag.String("provides").pipe(
   Flag.optional,
   Flag.withDescription("Comma-separated capability slugs this packet provides (namespace/name)")
 );
-const requiresFlag = Flag.string("requires").pipe(
+const requiresFlag = Flag.String("requires").pipe(
   Flag.optional,
   Flag.withDescription("Comma-separated capability slugs this packet requires (namespace/name)")
 );
-const fromExplorationFlag = Flag.string("from-exploration").pipe(
+const fromExplorationFlag = Flag.String("from-exploration").pipe(
   Flag.optional,
   Flag.withDescription("Source exploration slug recorded as provenance")
 );
-const todayFlag = Flag.string("today").pipe(
+const todayFlag = Flag.String("today").pipe(
   Flag.optional,
   Flag.withDescription("Explicit ISO date (YYYY-MM-DD) for deterministic plans; defaults to the current date")
 );
-const planFlag = Flag.boolean("plan").pipe(
+const planFlag = Flag.Boolean("plan").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Compile and print the materialization plan (the only mode this slice ships)")
 );
-const jsonFlag = Flag.boolean("json").pipe(
+const jsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the plan as canonical JSON")
 );

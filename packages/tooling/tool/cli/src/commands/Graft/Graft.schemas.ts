@@ -16,18 +16,19 @@ const $I = $RepoCliId.create("commands/Graft/Graft.schemas");
  * **Details**
  *
  * Concepts include only Markdown files at the Graft root, including INDEX.md.
+ * The manifest is graft/manifest.json, the deep-layer index used by Graft queries.
  *
  * **Example** (Inspect copy order)
  *
  * ```ts import.meta.vitest name="Inspect copy order"
  * import { GraftCacheArtifact } from "@beep/repo-cli/commands/Graft"
- * GraftCacheArtifact.Options // => ["summaries", "concepts", "wiring"]
+ * console.log(GraftCacheArtifact.Options) // ["summaries", "concepts", "wiring", "manifest"]
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const GraftCacheArtifact = LiteralKit(["summaries", "concepts", "wiring"]).pipe(
+export const GraftCacheArtifact = LiteralKit(["summaries", "concepts", "wiring", "manifest"]).pipe(
   $I.annoteSchema("GraftCacheArtifact", { description: "Ordered families of reusable Graft meaning-tier artifacts." })
 );
 

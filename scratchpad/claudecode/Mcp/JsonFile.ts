@@ -266,8 +266,8 @@ const defaultManagedMcpRoots = [
 ] as const;
 
 /** @internal */
-const homeDirectory = Config.string("HOME").pipe(
-  Config.orElse(() => Config.string("USERPROFILE")),
+const homeDirectory = Config.String("HOME").pipe(
+  Config.orElse(() => Config.String("USERPROFILE")),
   Config.withDefault("/")
 );
 

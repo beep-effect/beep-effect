@@ -92,10 +92,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Playwright downloads its own Chromium. The hosted image's unused
-          # Chrome feed can break apt update with inconsistent package hashes.
-          sudo rm -f /etc/apt/sources.list.d/google-chrome*.list \
-            /etc/apt/sources.list.d/google-chrome*.sources
+          # --with-deps runs apt-get update, which the image's third-party apt sources
+          # (Google Chrome, Microsoft) fail with "Hash Sum mismatch" / "403 Forbidden" for
+          # minutes at a time; Playwright ships its own Chromium and its OS dependencies
+          # come from the Ubuntu archive, so keep only that source first.
+          scripts/ci-prune-apt-sources.sh
           bunx playwright install --with-deps chromium
 
       - name: Save Playwright Chromium cache

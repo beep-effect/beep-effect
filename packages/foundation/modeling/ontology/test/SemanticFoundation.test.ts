@@ -30,7 +30,7 @@ import { Effect, FileSystem, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeLibrarianInputResult = S.decodeResult(LibrarianInput);
 const decodeUnknownFilingSegmentOption = S.decodeUnknownOption(FilingSegment);
@@ -587,13 +587,17 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
 
   it.effect("round-trips generated filing segments and never admits separators", () =>
     Effect.sync(() =>
-      fc.assert(
-        fc.property(S.toArbitrary(FilingSegment)(fc), (segment) => {
-          const decoded = O.flatMap(encodeFilingSegmentOption(segment), decodeUnknownFilingSegmentOption);
-          expect(O.exists(decoded, (value) => value === segment)).toBe(true);
-          expect(isFilingSegment(segment)).toBe(true);
-        })
-      )
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(FilingSegment)]), ([segment]) => {
+            const decoded = O.flatMap(encodeFilingSegmentOption(segment), decodeUnknownFilingSegmentOption);
+            expect(O.exists(decoded, (value) => value === segment)).toBe(true);
+            expect(isFilingSegment(segment)).toBe(true);
+
+            return true;
+          })
+        )._tag
+      ).toBe("Passed")
     )
   );
 

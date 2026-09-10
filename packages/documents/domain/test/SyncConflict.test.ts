@@ -3,9 +3,10 @@ import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSyncConflictSyncConflictSync = S.decodeUnknownSync(SyncConflict.SyncConflict);
 const decodeUnknownSyncConflictSyncConflictKindSync = S.decodeUnknownSync(SyncConflict.SyncConflictKind);
@@ -13,20 +14,24 @@ const decodeUnknownSyncConflictSyncConflictResolutionSync = S.decodeUnknownSync(
 const encodeSyncConflictSyncConflictSync = S.encodeSync(SyncConflict.SyncConflict);
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      const encoded = Result.getOrThrow(encode(value));
-      const decoded = Result.getOrThrow(decode(encoded));
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.schema(schema),
+        (value) => {
+          const encoded = Result.getOrThrow(encode(value));
+          const decoded = Result.getOrThrow(decode(encoded));
 
-      return equivalent(decoded, value);
-    }),
-    fcRuns(10)
-  );
+          return equivalent(decoded, value);
+        },
+        fcRuns(10)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const mappedDriftRow = {

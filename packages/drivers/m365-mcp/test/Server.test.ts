@@ -44,7 +44,7 @@ import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeM365McpServerConfigResult = S.decodeResult(M365McpServerConfig);
 const decodeM365ToolErrorResult = S.decodeResult(M365ToolError);
@@ -68,8 +68,8 @@ const message = GraphMessage.make({ id: MessageId, subject: O.some("Review") });
 const event = GraphEvent.make({ id: EventId, subject: O.some("Planning") });
 const listItem = GraphListItem.make({ id: "list-item-id", fields: O.none() });
 
-const M365ToolErrorArbitrary = S.toArbitrary(M365ToolError)(fc);
-const M365McpServerConfigArbitrary = S.toArbitrary(M365McpServerConfig)(fc);
+const M365ToolErrorArbitrary = Arbitrary.schema(M365ToolError);
+const M365McpServerConfigArbitrary = Arbitrary.schema(M365McpServerConfig);
 const sameM365ToolError = S.toEquivalence(M365ToolError);
 const sameM365McpServerConfig = S.toEquivalence(M365McpServerConfig);
 
@@ -209,26 +209,27 @@ describe("M365 MCP server", () => {
     });
   });
 
-  it("round-trips schema-derived MCP schemas through their encoded shape", () =>
-    fc.assert(
-      fc.property(M365ToolErrorArbitrary, M365McpServerConfigArbitrary, (failure, config) => {
-        assert.isTrue(
-          sameM365ToolError(
-            Result.getOrThrow(decodeM365ToolErrorResult(Result.getOrThrow(encodeM365ToolErrorResult(failure)))),
-            failure
-          )
-        );
-        assert.isTrue(
-          sameM365McpServerConfig(
-            Result.getOrThrow(
-              decodeM365McpServerConfigResult(Result.getOrThrow(encodeM365McpServerConfigResult(config)))
-            ),
-            config
-          )
-        );
-      }),
-      fcRuns(50)
-    ));
+  it.prop(
+    "round-trips schema-derived MCP schemas through their encoded shape",
+    [M365ToolErrorArbitrary, M365McpServerConfigArbitrary],
+    ([failure, config]) => {
+      assert.isTrue(
+        sameM365ToolError(
+          Result.getOrThrow(decodeM365ToolErrorResult(Result.getOrThrow(encodeM365ToolErrorResult(failure)))),
+          failure
+        )
+      );
+      assert.isTrue(
+        sameM365McpServerConfig(
+          Result.getOrThrow(
+            decodeM365McpServerConfigResult(Result.getOrThrow(encodeM365McpServerConfigResult(config)))
+          ),
+          config
+        )
+      );
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("exposes the supported read-only Microsoft 365 tools", () => {
     const toolNames = pipe(Object.keys(M365Toolkit.tools), A.sort(Order.String));

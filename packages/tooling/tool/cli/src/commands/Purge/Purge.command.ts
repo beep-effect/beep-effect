@@ -265,7 +265,7 @@ export const purgeAtRoot: {
 export const purgeCommand = Command.make(
   "purge",
   {
-    lock: Flag.boolean("lock").pipe(
+    lock: Flag.Boolean("lock").pipe(
       Flag.withDefault(false),
       Flag.withAlias("l"),
       Flag.withDescription("Also remove root bun.lock")

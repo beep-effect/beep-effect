@@ -47,7 +47,24 @@ const normalizeIsoString = (input: string | number): string =>
  * @category constructors
  * @since 0.0.0
  */
-export const ISOStr = NonEmptyTrimmedStr.check(S.makeFilter((i) => O.isSome(DateTime.make(i)))).pipe(
+export const ISOStr = NonEmptyTrimmedStr.check(
+  S.makeFilter((i) => O.isSome(DateTime.make(i)), {
+    identifier: $I`IsoDateTimeStringCheck`,
+    title: "ISO DateTime String",
+    description: "Accepts any string DateTime.make parses; generation stays inside a constructive ISO 8601 UTC shape.",
+    // The predicate is parse-based, so native generation would rejection-sample
+    // arbitrary strings; the constrained day range (01-28) keeps every generated
+    // candidate a valid calendar datetime.
+    arbitraryConstraint: {
+      patterns: [
+        {
+          source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
+          flags: "",
+        },
+      ],
+    },
+  })
+).pipe(
   S.brand("ISOStr"),
   $I.annoteSchema("ISOStr", {
     description: "ISO 8601 datetime string",

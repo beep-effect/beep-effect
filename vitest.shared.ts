@@ -41,7 +41,7 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
 
 const configStringEqualsSync = (name: string, expected: string): boolean =>
   pipe(
-    Effect.runSync(Config.option(Config.string(name))),
+    Effect.runSync(Config.option(Config.String(name))),
     O.exists((value) => value === expected)
   );
 const vitestDoctestActive = configStringEqualsSync("BEEP_VITEST_DOCTEST", "1");
@@ -60,7 +60,7 @@ export const vitestCoverageRunActive =
 // like the coverage flags above (boot-snapshot semantics are exactly
 // what the lane wants — CI exports the floor before vitest starts).
 const parsedFcNumRuns = pipe(
-  Effect.runSync(Config.option(Config.string("BEEP_FC_NUM_RUNS"))),
+  Effect.runSync(Config.option(Config.String("BEEP_FC_NUM_RUNS"))),
   O.map(Number),
   O.getOrElse(() => 0)
 );
@@ -73,11 +73,15 @@ export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNu
 // already ran in the unit lane at the default run count; replaying it at
 // 400-1000 runs with rotating seeds cannot change its outcome. The scan is a
 // cheap synchronous walk of `test/` under the vitest root (the package cwd).
-// `effect/testing` re-exports fast-check as `FastCheck` (358 test files import it that way;
-// only 6 import `fast-check` directly), so the marker matches the namespace, the bare package,
-// `it.prop`, and the `fc.<combinator>` call shapes rather than the import specifier alone.
+// The snapshot's native Arbitrary model replaced the fast-check bridge: property
+// files now import `effect/unstable/arbitrary/Arbitrary` and call `it.prop`,
+// `it.effect.prop`, `Arbitrary.checkEffect`, or `Arbitrary.sampleEffect`.
+// The shared assertion helper also runs native properties without a direct Arbitrary
+// import at the call site, so helper-only files must remain in the deep sweep.
+// The legacy FastCheck/fc shapes stay matched so an unmigrated straggler is still
+// swept rather than silently dropped from the deep lane.
 const propertyTestMarker =
-  /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
+  /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bit\.effect\.prop\b|\bassertSchemaArbitraryDecodesToSelf\b|\bArbitrary\.(?:checkEffect|sampleEffect|schema)\b|\bunstable\/arbitrary\/Arbitrary\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
 const testFilePattern = /\.test\.tsx?$/;
 const scanSkippedDirectories: ReadonlyArray<string> = ["node_modules", ".context", "fixtures"];
 const listTestFiles = (directory: string): ReadonlyArray<string> => {
@@ -188,6 +192,18 @@ const config: ViteUserConfig = {
       ...(vitestDoctestActive ? ["**/test/fixtures/**", "**/*.d.ts"] : []),
     ],
     setupFiles: [new URL("./vitest.setup.ts", import.meta.url).pathname],
+    // V8 gates Float16Array behind --js-float16array below Node 24 and rejects
+    // that flag inside NODE_OPTIONS, so the coverage lane's Node 22 runtime can
+    // only receive it as real argv. Granting it to forked test workers scopes
+    // the flag to test execution; a job-wide node wrapper is off the table
+    // because Next.js builds copy parent execArgv into worker NODE_OPTIONS.
+    // The predicate is version-based, not capability-based: vitest hands the
+    // pool an explicit execArgv (overriding fork inheritance), so a flagged
+    // main process with an unflagged worker list would strand the workers.
+    execArgv:
+      process.versions.bun === undefined && Number(process.versions.node.split(".")[0]) < 24
+        ? ["--js-float16array"]
+        : [],
     sequence: {
       concurrent: !vitestDoctestActive,
     },

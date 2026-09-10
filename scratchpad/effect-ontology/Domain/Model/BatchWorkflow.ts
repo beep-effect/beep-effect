@@ -82,7 +82,6 @@ const DocumentStatusDefinition = S.Union([
 export const DocumentStatus = DocumentStatusDefinition.pipe(
   $I.annoteSchema("DocumentStatus", {
     description: "Canonical discriminated lifecycle state for one document in a batch.",
-    toArbitrary: () => S.toArbitrary(DocumentStatusDefinition),
   })
 );
 
@@ -197,21 +196,7 @@ export const BatchStage = LiteralKit([
   "Ingesting",
   "Complete",
   "Failed",
-])
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.constantFrom(
-        "Pending",
-        "Preprocessing",
-        "Extracting",
-        "Resolving",
-        "Validating",
-        "Ingesting",
-        "Complete",
-        "Failed"
-      ),
-  })
-  .annotate(
+]).annotate(
     $I.annote("BatchStage", {
       description: "Closed ordered lifecycle stages for batch ingestion.",
     })
@@ -389,7 +374,6 @@ const validateTransition = (from: BatchStage, to: BatchStage): O.Option<string> 
 export const BatchState = BatchStateDefinition.pipe(
   $I.annoteSchema("BatchState", {
     description: "Discriminated batch-ingestion lifecycle with legal stage-specific payloads.",
-    toArbitrary: () => S.toArbitrary(BatchStateDefinition),
   }),
   SchemaUtils.withStatics(() => ({
     stageDisplayName,

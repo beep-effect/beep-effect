@@ -433,7 +433,7 @@ const validateMatchPersonPathIsolation = Effect.fn("Files.validateMatchPersonPat
 });
 
 const readOptionalConfig = (name: string): Effect.Effect<O.Option<string>> =>
-  Config.option(Config.string(name)).pipe(
+  Config.option(Config.String(name)).pipe(
     Effect.orElseSucceed(O.none<string>),
     Effect.map(flow(O.map(Str.trim), O.filter(Str.isNonEmpty)))
   );

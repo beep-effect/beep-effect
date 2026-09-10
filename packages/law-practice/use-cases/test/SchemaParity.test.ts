@@ -25,7 +25,7 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEntityInputSync = S.decodeSync(EntityInput);
 const decodeUnknownIrToLawShapeResult = S.decodeUnknownResult(IrToLawShape);
@@ -36,33 +36,37 @@ const encodeOfficeActionReviewErrorSync = S.encodeSync(OfficeActionReviewError);
 const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: {
-    readonly numRuns?: number;
+    readonly runs?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => equivalent(decode(encode(value)), value)),
-    fcRuns(options?.numRuns ?? 50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.schema(schema),
+        (value) => equivalent(decode(encode(value)), value),
+        fcRuns(options?.runs ?? 50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("@beep/law-practice-use-cases schema parity", () => {
   it("round-trips schema-derived values through their source schemas", () => {
-    assertSchemaArbitraryDecodesToSelf(OfficeActionExtractionLabel, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(IrToLawExtractionErrorReason, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(OfficeActionReviewInput, { numRuns: 10 });
-    assertSchemaArbitraryDecodesToSelf(EntityInput, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(PracticeKgCandidateClaimToolRow, { numRuns: 10 });
-    assertSchemaArbitraryDecodesToSelf(PracticeKgDocumentToolRow, { numRuns: 10 });
-    assertSchemaArbitraryDecodesToSelf(PracticeKgEmailToolRow, { numRuns: 10 });
-    assertSchemaArbitraryDecodesToSelf(PracticeKgFamilyToolRow, { numRuns: 10 });
-    assertSchemaArbitraryDecodesToSelf(PracticeKgGraphToolRow, { numRuns: 10 });
-    assertSchemaEncodeDecodeRoundTrip(IrToLawExtractionError, { numRuns: 25 });
-    assertSchemaEncodeDecodeRoundTrip(OfficeActionReviewError, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(OfficeActionExtractionLabel, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(IrToLawExtractionErrorReason, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(OfficeActionReviewInput, { runs: 10 });
+    assertSchemaArbitraryDecodesToSelf(EntityInput, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgCandidateClaimToolRow, { runs: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgDocumentToolRow, { runs: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgEmailToolRow, { runs: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgFamilyToolRow, { runs: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgGraphToolRow, { runs: 10 });
+    assertSchemaEncodeDecodeRoundTrip(IrToLawExtractionError, { runs: 25 });
+    assertSchemaEncodeDecodeRoundTrip(OfficeActionReviewError, { runs: 10 });
   });
 
   it("composes the nine-tool practice KG surface with a typed claims not-loaded branch", () => {

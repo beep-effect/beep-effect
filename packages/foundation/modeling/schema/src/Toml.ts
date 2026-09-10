@@ -83,8 +83,8 @@ const decodeTomlUnknown = (content: string) => {
  */
 export const TomlTextToUnknown = S.String.pipe(
   S.decodeTo(UnknownRecord, {
-    decode: SchemaGetter.transformOrFail(decodeTomlUnknown),
-    encode: SchemaGetter.transformOrFail(encodeUnsupported),
+    decode: SchemaGetter.transformEffect(decodeTomlUnknown),
+    encode: SchemaGetter.transformEffect(encodeUnsupported),
   }),
   $I.annoteSchema("TomlTextToUnknown", {
     description: "Schema transformation that parses TOML text into unknown values.",

@@ -28,7 +28,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   goldenDeploymentIntent,
   goldenIntentCanonicalJson,
@@ -38,7 +38,7 @@ import {
 const encodeOpenclawSchemaPlaceholderFindingResult = S.encodeResult(OpenclawSchemaPlaceholderFinding);
 const isRenderedOpenclawConfig = S.is(RenderedOpenclawConfig);
 
-const IntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent)(fc);
+const IntentArbitrary = Arbitrary.schema(OpenclawDeploymentIntent);
 
 const decodeJsonDocument = (json: string): unknown => Result.getOrThrow(UnknownFromJsonString.decodeResult(json));
 
@@ -340,16 +340,17 @@ describe("@beep/openclaw render adapter", () => {
     );
   });
 
-  it("renders deterministically for arbitrary intents", () =>
-    fc.assert(
-      fc.property(IntentArbitrary, (intent) => {
-        const first = renderOpenclawConfig(intent);
-        const second = renderOpenclawConfig(intent);
+  it.prop(
+    "renders deterministically for arbitrary intents",
+    [IntentArbitrary],
+    ([intent]) => {
+      const first = renderOpenclawConfig(intent);
+      const second = renderOpenclawConfig(intent);
 
-        expect(second.canonicalJson).toBe(first.canonicalJson);
-        expect(second.contentHash).toBe(first.contentHash);
-        expect(Result.isSuccess(UnknownFromJsonString.decodeResult(first.canonicalJson))).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+      expect(second.canonicalJson).toBe(first.canonicalJson);
+      expect(second.contentHash).toBe(first.contentHash);
+      expect(Result.isSuccess(UnknownFromJsonString.decodeResult(first.canonicalJson))).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });

@@ -60,7 +60,7 @@ const resolveTrustedMediaToolPath = Effect.fn("Files.resolveTrustedMediaToolPath
 ): Effect.fn.Return<string, FilesCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const configuredPath = yield* Config.option(Config.string(envVarName)).pipe(
+  const configuredPath = yield* Config.option(Config.String(envVarName)).pipe(
     Effect.orElseSucceed(O.none<string>),
     Effect.map(flow(O.map(Str.trim), O.filter(Str.isNonEmpty)))
   );

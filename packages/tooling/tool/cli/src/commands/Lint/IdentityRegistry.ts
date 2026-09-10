@@ -425,7 +425,7 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
 export const lintIdentityRegistryCommand = Command.make(
   "identity-registry",
   {
-    fix: Flag.boolean("fix").pipe(
+    fix: Flag.Boolean("fix").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Register missing workspace packages in the identity composer registry")
     ),

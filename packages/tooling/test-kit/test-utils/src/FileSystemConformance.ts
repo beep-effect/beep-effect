@@ -132,7 +132,7 @@ const openTemporaryFile = Effect.fnUntraced(function* (flag: Fs.OpenFlag) {
 
 // Preserve readAlloc's missing-chunk failure and File.write's single-write
 // behavior; neither operation adds retries or changes cursor handling.
-const readText = Effect.fnUntraced(function* (file: Fs.File, size: Fs.Size) {
+const readText = Effect.fnUntraced(function* (file: Fs.File, size: number) {
   return yield* file.readAlloc(size).pipe(
     Effect.flatMap(Effect.fromOption),
     Effect.map((_) => new TextDecoder().decode(_))
@@ -408,22 +408,22 @@ export const testLayer: {
           const path = yield* textFixture;
           const file = yield* fs.open(path);
 
-          text = yield* readText(file, Fs.Size(5));
+          text = yield* readText(file, 5);
           expect(text).toBe("lorem");
 
-          yield* file.seek(Fs.Size(7), "current");
-          text = yield* readText(file, Fs.Size(5));
+          yield* file.seek(BigInt(7), "current");
+          text = yield* readText(file, 5);
           expect(text).toBe("dolar");
 
-          yield* file.seek(Fs.Size(1), "current");
-          text = yield* readText(file, Fs.Size(8));
+          yield* file.seek(BigInt(1), "current");
+          text = yield* readText(file, 8);
           expect(text).toBe("sit amet");
 
-          yield* file.seek(Fs.Size(0), "start");
-          text = yield* readText(file, Fs.Size(11));
+          yield* file.seek(BigInt(0), "start");
+          text = yield* readText(file, 11);
           expect(text).toBe("lorem ipsum");
 
-          text = yield* fs.stream(path, { offset: Fs.Size(6), bytesToRead: Fs.Size(5) }).pipe(
+          text = yield* fs.stream(path, { offset: BigInt(6), bytesToRead: BigInt(5) }).pipe(
             Stream.map((_) => new TextDecoder().decode(_)),
             Stream.runCollect,
             Effect.map(A.join(""))
@@ -437,11 +437,11 @@ export const testLayer: {
       Effect.gen(function* () {
         const file = yield* openTextFixture;
 
-        const first = yield* readText(file, Fs.Size(5));
+        const first = yield* readText(file, 5);
         expect(first).toBe("lorem");
 
-        yield* file.seek(Fs.Size(-3), "current");
-        const second = yield* readText(file, Fs.Size(3));
+        yield* file.seek(BigInt(-3), "current");
+        const second = yield* readText(file, 3);
         expect(second).toBe("rem");
       }).pipe(Effect.scoped, Effect.provide(layer))
     );
@@ -450,10 +450,10 @@ export const testLayer: {
       Effect.gen(function* () {
         const file = yield* openTextFixture;
 
-        const first = yield* readText(file, Fs.Size(5));
+        const first = yield* readText(file, 5);
         expect(first).toBe("lorem");
 
-        const second = yield* readText(file, Fs.Size(6));
+        const second = yield* readText(file, 6);
         expect(second).toBe(" ipsum");
       }).pipe(Effect.scoped, Effect.provide(layer))
     );
@@ -472,12 +472,12 @@ export const testLayer: {
           text = yield* fs.readFileString(path);
           expect(text).toBe("lorem ipsum dolor sit amet");
 
-          yield* file.seek(Fs.Size(-4), "current");
+          yield* file.seek(BigInt(-4), "current");
           yield* writeText(file, "hello world");
           text = yield* fs.readFileString(path);
           expect(text).toBe("lorem ipsum dolor sit hello world");
 
-          yield* file.seek(Fs.Size(6), "start");
+          yield* file.seek(BigInt(6), "start");
           yield* writeText(file, "blabl");
           text = yield* fs.readFileString(path);
           expect(text).toBe("lorem blabl dolor sit hello world");
@@ -494,20 +494,20 @@ export const testLayer: {
           const { path, file } = yield* openTemporaryFile("a+");
 
           yield* writeText(file, "foo");
-          yield* file.seek(Fs.Size(0), "start");
+          yield* file.seek(BigInt(0), "start");
 
           yield* writeText(file, "bar");
           text = yield* fs.readFileString(path);
           expect(text).toBe("foobar");
 
-          text = yield* readText(file, Fs.Size(3));
+          text = yield* readText(file, 3);
           expect(text).toBe("foo");
 
           yield* writeText(file, "baz");
           text = yield* fs.readFileString(path);
           expect(text).toBe("foobarbaz");
 
-          text = yield* readText(file, Fs.Size(6));
+          text = yield* readText(file, 6);
           expect(text).toBe("barbaz");
         }).pipe(Effect.scoped);
       }).pipe(Effect.provide(layer))
@@ -518,13 +518,13 @@ export const testLayer: {
         const { file } = yield* openTemporaryFile("a+");
 
         yield* writeText(file, "foo");
-        yield* file.seek(Fs.Size(0), "start");
+        yield* file.seek(BigInt(0), "start");
 
-        const first = yield* readText(file, Fs.Size(1));
+        const first = yield* readText(file, 1);
         expect(first).toBe("f");
 
         yield* writeText(file, "bar");
-        const second = yield* readText(file, Fs.Size(2));
+        const second = yield* readText(file, 2);
         expect(second).toBe("oo");
       }).pipe(Effect.scoped, Effect.provide(layer))
     );
@@ -534,11 +534,11 @@ export const testLayer: {
         const { file } = yield* openTemporaryFile("w+");
 
         yield* writeText(file, "lorem ipsum dolor sit amet");
-        yield* file.seek(Fs.Size(6), "start");
-        yield* file.truncate(Fs.Size(11));
+        yield* file.seek(BigInt(6), "start");
+        yield* file.truncate(11);
 
-        const cursor = yield* file.seek(Fs.Size(0), "current");
-        expect(cursor).toBe(Fs.Size(6));
+        const cursor = yield* file.seek(BigInt(0), "current");
+        expect(cursor).toBe(BigInt(6));
       }).pipe(Effect.scoped, Effect.provide(layer))
     );
 
@@ -547,10 +547,10 @@ export const testLayer: {
         const { file } = yield* openTemporaryFile("w+");
 
         yield* writeText(file, "lorem ipsum dolor sit amet");
-        yield* file.truncate(Fs.Size(11));
+        yield* file.truncate(11);
 
-        const cursor = yield* file.seek(Fs.Size(0), "current");
-        expect(cursor).toBe(Fs.Size(11));
+        const cursor = yield* file.seek(BigInt(0), "current");
+        expect(cursor).toBe(BigInt(11));
       }).pipe(Effect.scoped, Effect.provide(layer))
     );
 
@@ -562,10 +562,10 @@ export const testLayer: {
           const { path, file } = yield* openTemporaryFile("w+");
 
           yield* writeText(file, "abcdefghij");
-          yield* file.truncate(Fs.Size(5));
+          yield* file.truncate(5);
           yield* fs.writeFile(path, new TextEncoder().encode("xyz"), { flag: "a" });
 
-          const text = yield* readText(file, Fs.Size(3));
+          const text = yield* readText(file, 3);
           expect(text).toBe("xyz");
         }).pipe(Effect.scoped);
       }).pipe(Effect.provide(layer))

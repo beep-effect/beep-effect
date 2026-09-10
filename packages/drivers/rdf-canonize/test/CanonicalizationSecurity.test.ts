@@ -10,7 +10,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { afterEach, vi } from "vitest";
 
 const decodeCanonicalizeDatasetRequestSync = S.decodeSync(CanonicalizeDatasetRequest);
@@ -174,19 +174,28 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
   it("round-trips schema-derived canonical dataset results through encoded form", {
     timeout: 30000,
   }, () => {
-    const arbitrary = S.toArbitrary(CanonicalDatasetResult)(fc).map((result) =>
-      CanonicalDatasetResult.make({
-        ...result,
-        dataset: makeDataset(result.dataset.quads.slice(0, 3)),
-      })
+    const arbitrary = Arbitrary.schema(CanonicalDatasetResult).pipe(
+      Arbitrary.map((result) =>
+        CanonicalDatasetResult.make({
+          ...result,
+          dataset: makeDataset(result.dataset.quads.slice(0, 3)),
+        })
+      )
     );
 
-    fc.assert(
-      fc.property(arbitrary, (result) => {
-        expectEncodedRoundTrip(CanonicalDatasetResult, result);
-      }),
-      fcRuns(5)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([result]) => {
+            expectEncodedRoundTrip(CanonicalDatasetResult, result);
+
+            return true;
+          },
+          fcRuns(5)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("derives canonicalization requests from the source schema and proves an encode/decode round-trip", {
@@ -194,20 +203,31 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
   }, () => {
     // Bound the generated RDF dataset to a small collection so deriving + encoding/decoding
     // stays fast and reliable. The round-trip law holds regardless of dataset size.
-    const arbitrary = S.toArbitrary(CanonicalizeDatasetRequest)(fc).map((request) =>
-      CanonicalizeDatasetRequest.make({
-        ...request,
-        dataset: makeDataset(request.dataset.quads.slice(0, 3)),
-      })
+    const arbitrary = Arbitrary.schema(CanonicalizeDatasetRequest).pipe(
+      Arbitrary.map((request) =>
+        CanonicalizeDatasetRequest.make({
+          ...request,
+          dataset: makeDataset(request.dataset.quads.slice(0, 3)),
+        })
+      )
     );
 
-    fc.assert(
-      fc.property(arbitrary, (request) => {
-        const encoded = encodeCanonicalizeDatasetRequestSync(request);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([request]) => {
+            const encoded = encodeCanonicalizeDatasetRequestSync(request);
 
-        expect(encodeCanonicalizeDatasetRequestSync(decodeCanonicalizeDatasetRequestSync(encoded))).toEqual(encoded);
-      }),
-      fcRuns(5)
-    );
+            expect(encodeCanonicalizeDatasetRequestSync(decodeCanonicalizeDatasetRequestSync(encoded))).toEqual(
+              encoded
+            );
+
+            return true;
+          },
+          fcRuns(5)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

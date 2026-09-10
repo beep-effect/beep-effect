@@ -68,23 +68,23 @@ export class CanaryOptions extends S.Class<CanaryOptions>($I`CanaryOptions`)(
   })
 ) {}
 
-const stageManifest = Flag.path("manifest").pipe(
+const stageManifest = Flag.Path("manifest").pipe(
   Flag.withDefault("fixtures/w1.manifest.json"),
   Flag.withDescription("Committed W1 corpus manifest (id, sha256, bytes per paper); never a directory.")
 );
-const offline = Flag.boolean("offline").pipe(
+const offline = Flag.Boolean("offline").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Replay from the content-addressed provider cache with the network off.")
 );
-const paper = Flag.string("paper").pipe(
+const paper = Flag.String("paper").pipe(
   Flag.optional,
   Flag.withDescription("Restrict the stage to one W1 paper id from the manifest.")
 );
-const outputDirectory = Flag.path("out").pipe(
+const outputDirectory = Flag.Path("out").pipe(
   Flag.optional,
   Flag.withDescription("Output directory for eval-report.json and eval-telemetry.json.")
 );
-const selection = Flag.choice("selection", EvalSelectionMode.Options).pipe(
+const selection = Flag.Literals("selection", EvalSelectionMode.Options).pipe(
   Flag.withDefault(EvalSelectionMode.Enum["f1+w1"]),
   Flag.withDescription("Select committed F1 fixtures only, or F1 plus verified W1 papers.")
 );
@@ -139,11 +139,11 @@ const ManifestJson = S.fromJsonString(CorpusManifest, { space: 2 }).pipe(
   SchemaUtils.withCodecStatics(["encodeEffect"])
 );
 
-const manifestOutput = Flag.path("out").pipe(
+const manifestOutput = Flag.Path("out").pipe(
   Flag.withDescription("Output path for the generated, pretty-printed W1 manifest.")
 );
 
-const manifestInput = Flag.path("manifest").pipe(
+const manifestInput = Flag.Path("manifest").pipe(
   Flag.withDefault("fixtures/w1.manifest.json"),
   Flag.withDescription("Committed W1 manifest to decode and verify against SEMANTICA_CORPUS_ROOT.")
 );
@@ -195,7 +195,7 @@ const ManifestCommand = Command.make("manifest").pipe(
   ])
 );
 
-const goldSubset = Flag.choice("subset", GOLD_SUBSETS).pipe(
+const goldSubset = Flag.Literals("subset", GOLD_SUBSETS).pipe(
   Flag.optional,
   Flag.withDescription("Propose every frozen paper in one gold subset.")
 );
@@ -247,7 +247,7 @@ const GoldCommand = Command.make("gold").pipe(
   ])
 );
 
-const previewCases = Flag.path("cases").pipe(
+const previewCases = Flag.Path("cases").pipe(
   Flag.withDefault("fixtures/relation-preview.json"),
   Flag.withDescription("Committed E5 manifest of historical provider-cache keys and W1 paper ids.")
 );

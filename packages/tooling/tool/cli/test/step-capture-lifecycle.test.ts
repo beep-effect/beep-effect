@@ -1,8 +1,10 @@
 import {
+  BoundedOutput,
   CaptureCommandTimedOutError,
   collectText,
   ensureZeroExit,
   runCaptured,
+  settleCapturedStepForTesting,
   withAdmissionWorkloadBinding,
 } from "@beep/repo-cli/test/Process";
 import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
@@ -12,7 +14,7 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Deferred, Effect, Exit, Fiber, FileSystem, Layer, Ref, Sink, Stream } from "effect";
+import { Cause, Deferred, Duration, Effect, Exit, Fiber, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
@@ -124,6 +126,75 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolea
 });
 
 describe("StepExec capture pipe lifecycle", () => {
+  it.effect("classifies a capture that only ended after its deadline as timed out", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        settleCapturedStepForTesting({
+          captured: BoundedOutput.make({ text: "late output", truncated: false }),
+          commandLine: "echo late",
+          elapsed: Duration.millis(500),
+          exitCode: 0,
+          timeout: "400 millis",
+          trim: undefined,
+        })
+      );
+      expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
+      expect(error.message).toContain("only after the 400ms deadline");
+    })
+  );
+
+  it.effect("settles an under-deadline capture with the trimmed output contract", () =>
+    Effect.gen(function* () {
+      const settled = yield* settleCapturedStepForTesting({
+        captured: BoundedOutput.make({ text: "  ok  ", truncated: false }),
+        commandLine: "echo ok",
+        elapsed: Duration.millis(10),
+        exitCode: 0,
+        timeout: "1 second",
+        trim: true,
+      });
+      expect(settled.output).toBe("ok");
+
+      const unbounded = yield* settleCapturedStepForTesting({
+        captured: BoundedOutput.make({ text: "raw", truncated: false }),
+        commandLine: "echo raw",
+        elapsed: Duration.millis(10),
+        exitCode: 0,
+        timeout: undefined,
+        trim: undefined,
+      });
+      expect(unbounded.output).toBe("raw");
+    })
+  );
+
+  it.live("tees captured chunks to the parent stdout while still capturing them", () =>
+    Effect.gen(function* () {
+      const captured = yield* runCaptured({
+        command: "echo",
+        args: ["teed-line"],
+        tee: true,
+      });
+      expect(captured.output).toContain("teed-line");
+    }).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.live("fails a deadline-hit capture even when the child traps the signal, flushes, and exits zero", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        runCaptured({
+          command: "sh",
+          args: ["-c", 'trap "echo summary; exit 0" TERM INT; while :; do sleep 0.05; done'],
+          timeout: "400 millis",
+          forceKillAfter: "2 seconds",
+        })
+      );
+      expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
+      if (isCaptureCommandTimedOutError(error)) {
+        expect(error.commandLine).toContain("trap");
+      }
+    }).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("collects decoded text and distinguishes zero from nonzero exits", () =>
     Effect.gen(function* () {
       expect(yield* collectText(Stream.make(encoder.encode("a"), encoder.encode("b")))).toBe("ab");

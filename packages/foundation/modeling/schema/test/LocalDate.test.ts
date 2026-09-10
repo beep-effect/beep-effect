@@ -27,7 +27,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, Equal, Exit } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeLocalDate = S.decodeEffect(LocalDate);
 const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);
@@ -37,7 +38,7 @@ const encodeLocalDate = S.encodeEffect(LocalDate);
 const encodeLocalDateFromString = S.encodeEffect(LocalDateFromString);
 const encodeLocalDateSync = S.encodeSync(LocalDate);
 
-const LocalDateArbitrary = S.toArbitrary(LocalDate)(fc);
+const LocalDateArbitrary = Arbitrary.schema(LocalDate);
 const TestParams = S.Struct({
   startDate: LocalDateFromString,
   endDate: LocalDateFromString,
@@ -568,16 +569,23 @@ describe("LocalDate", () => {
 
   describe("encoding", () => {
     it("round-trips schema-derived LocalDate values through the schema codec", () =>
-      fc.assert(
-        fc.property(LocalDateArbitrary, (date) => {
-          const encoded = encodeLocalDateSync(date);
-          const decoded = decodeLocalDateSync(encoded);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([LocalDateArbitrary]),
+            ([date]) => {
+              const encoded = encodeLocalDateSync(date);
+              const decoded = decodeLocalDateSync(encoded);
 
-          expect(decoded).toBeInstanceOf(LocalDate);
-          expect(equals(decoded, date)).toBe(true);
-        }),
-        fcRuns(50)
-      ));
+              expect(decoded).toBeInstanceOf(LocalDate);
+              expect(equals(decoded, date)).toBe(true);
+
+              return true;
+            },
+            fcRuns(50)
+          )
+        )
+      ).toMatchObject({ _tag: "Passed" }));
 
     it.effect(
       "encodes and decodes LocalDate",

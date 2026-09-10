@@ -10,7 +10,9 @@ import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { identity } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $FileProcessingId.create("SourceText");
 
@@ -187,38 +189,7 @@ const SourceTextPageChecks = S.makeFilterGroup([
   ),
 ]);
 
-const sourceTextIdentityArbitrary = S.toArbitrary(SourceTextIdentity);
-
-const SourceTextPageSchema = SourceTextPageStruct.mapFields(identity)
-  .check(SourceTextPageChecks)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(
-          sourceTextIdentityArbitrary(fc),
-          fc.integer({ min: 1, max: 32 }),
-          fc.nat(10_000),
-          fc.nat(10_000),
-          fc.string({ maxLength: 256 }),
-          fc.nat(10_000)
-        )
-        .map(([identity, pageCount, pageIndexSeed, startOffset, text, trailingCodeUnits]) => {
-          const pageIndex = pageIndexSeed % pageCount;
-          const endOffset = startOffset + Str.length(text);
-          return SourceTextPageStruct.make({
-            endOffset: NonNegativeInt.make(endOffset),
-            hasNextPage: pageIndex + 1 < pageCount,
-            hasPreviousPage: pageIndex > 0,
-            identity,
-            pageCount: PosInt.make(pageCount),
-            pageIndex: NonNegativeInt.make(pageIndex),
-            pageSizeCodeUnits: SOURCE_TEXT_PAGE_CODE_UNITS,
-            startOffset: NonNegativeInt.make(startOffset),
-            text,
-            totalCodeUnits: NonNegativeInt.make(endOffset + trailingCodeUnits),
-          });
-        }),
-  });
+const SourceTextPageSchema = SourceTextPageStruct.mapFields(identity).check(SourceTextPageChecks);
 
 /**
  * Bounded, surrogate-safe page from a complete canonical source.
@@ -243,6 +214,33 @@ const SourceTextPageSchema = SourceTextPageStruct.mapFields(identity)
 export class SourceTextPage extends S.Class<SourceTextPage>($I`SourceTextPage`)(
   SourceTextPageSchema,
   $I.annote("SourceTextPage", {
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<SourceTextPage>()(
+        S.Struct({
+          identity: SourceTextIdentity,
+          pageCount: S.Int.check(S.isBetween({ minimum: 1, maximum: 32 })),
+          pageIndex: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
+          startOffset: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
+          text: S.String.check(S.isMaxLength(256)),
+        }),
+        SchemaTransformation.transform({
+          decode: (value) => {
+            const pageIndex = value.pageIndex % value.pageCount;
+            const endOffset = value.startOffset + Str.length(value.text);
+            return SourceTextPage.make({
+              ...value,
+              pageCount: PosInt.make(value.pageCount),
+              pageIndex: NonNegativeInt.make(pageIndex),
+              endOffset: NonNegativeInt.make(endOffset),
+              totalCodeUnits: NonNegativeInt.make(endOffset),
+              pageSizeCodeUnits: SOURCE_TEXT_PAGE_CODE_UNITS,
+              hasNextPage: pageIndex + 1 < value.pageCount,
+              hasPreviousPage: pageIndex > 0,
+            });
+          },
+          encode: (value) => value,
+        })
+      ),
     description: "Bounded canonical source-text page with absolute surrogate-safe UTF-16 offsets.",
   })
 ) {}

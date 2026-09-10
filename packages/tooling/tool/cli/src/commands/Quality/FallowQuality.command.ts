@@ -2312,20 +2312,20 @@ const makeFallowFeatureCommand = (feature: FallowFeature) =>
   Command.make(
     feature,
     {
-      advisory: Flag.boolean("advisory").pipe(
+      advisory: Flag.Boolean("advisory").pipe(
         Flag.withDefault(false),
         Flag.withDescription("Exit zero while preserving Fallow exit status")
       ),
-      base: Flag.string("base").pipe(
+      base: Flag.String("base").pipe(
         Flag.withDefault(defaultBaseRef),
         Flag.withDescription("Git base ref used by diff-aware Fallow commands")
       ),
-      check: Flag.boolean("check").pipe(
+      check: Flag.Boolean("check").pipe(
         Flag.withDefault(false),
         Flag.withDescription("Fail only for promoted blocking lanes; advisory P1 lanes do not promote findings")
       ),
-      out: Flag.string("out").pipe(Flag.withDefault(""), Flag.withDescription("Envelope output path")),
-      quiet: Flag.boolean("quiet").pipe(
+      out: Flag.String("out").pipe(Flag.withDefault(""), Flag.withDescription("Envelope output path")),
+      quiet: Flag.Boolean("quiet").pipe(
         Flag.withDefault(false),
         Flag.withDescription("Suppress Fallow tool chatter in raw output where supported")
       ),
@@ -2343,20 +2343,20 @@ const makeFallowFeatureCommand = (feature: FallowFeature) =>
 const envelopeCheckCommand = Command.make(
   "envelope-check",
   {
-    path: Argument.string("path").pipe(Argument.withDescription("Envelope JSON path to validate")),
-    require: Flag.string("require").pipe(
+    path: Argument.String("path").pipe(Argument.withDescription("Envelope JSON path to validate")),
+    require: Flag.String("require").pipe(
       Flag.withDefault(""),
       Flag.withDescription("Comma-separated top-level metadata keys that must be present")
     ),
-    expectSubcommand: Flag.string("expect-subcommand").pipe(
+    expectSubcommand: Flag.String("expect-subcommand").pipe(
       Flag.withDefault(""),
       Flag.withDescription("Expected Fallow subcommand recorded in the envelope")
     ),
-    expectReportPath: Flag.string("expect-report-path").pipe(
+    expectReportPath: Flag.String("expect-report-path").pipe(
       Flag.withDefault(""),
       Flag.withDescription("Expected reportPath recorded in the envelope")
     ),
-    requireRawOutput: Flag.boolean("require-raw-output").pipe(
+    requireRawOutput: Flag.Boolean("require-raw-output").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Require the envelope rawOutputRef artifact to exist")
     ),
@@ -2368,15 +2368,15 @@ const envelopeCheckCommand = Command.make(
 const commandContractCheckCommand = Command.make(
   "command-contract-check",
   {
-    assert: Flag.string("assert").pipe(
+    assert: Flag.String("assert").pipe(
       Flag.withDefault(A.join(fallowFeatureValues, ",")),
       Flag.withDescription("Comma-separated Fallow feature commands expected in the quality surface")
     ),
-    requireEnvelope: Flag.boolean("require-envelope").pipe(
+    requireEnvelope: Flag.Boolean("require-envelope").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Run each advisory command and validate the emitted envelope")
     ),
-    outDir: Flag.string("out-dir").pipe(
+    outDir: Flag.String("out-dir").pipe(
       Flag.withDefault(defaultOutDir),
       Flag.withDescription("Directory used for command-contract envelope probes")
     ),
@@ -2387,7 +2387,7 @@ const commandContractCheckCommand = Command.make(
 const boundariesConfigCheckCommand = Command.make(
   "config-check",
   {
-    check: Flag.boolean("check").pipe(
+    check: Flag.Boolean("check").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Fail when generated Fallow boundary config is stale")
     ),
@@ -2398,28 +2398,28 @@ const boundariesConfigCheckCommand = Command.make(
 const ciContractCheckCommand = Command.make(
   "ci-contract-check",
   {
-    workflow: Argument.string("workflow").pipe(Argument.withDescription("Workflow file to inspect")),
-    expectLanes: Flag.string("expect-lanes").pipe(
+    workflow: Argument.String("workflow").pipe(Argument.withDescription("Workflow file to inspect")),
+    expectLanes: Flag.String("expect-lanes").pipe(
       Flag.withDefault(A.join(fallowFeatureValues, ",")),
       Flag.withDescription("Comma-separated Fallow lanes expected in CI")
     ),
-    expectBlockingLanes: Flag.string("expect-blocking-lanes").pipe(
+    expectBlockingLanes: Flag.String("expect-blocking-lanes").pipe(
       Flag.withDefault(""),
       Flag.withDescription("Comma-separated promoted Fallow lanes expected to run with --check in CI")
     ),
-    expectOutDir: Flag.string("expect-out-dir").pipe(
+    expectOutDir: Flag.String("expect-out-dir").pipe(
       Flag.withDefault(defaultOutDir),
       Flag.withDescription("Expected envelope artifact output directory")
     ),
-    requireUpload: Flag.boolean("require-upload").pipe(
+    requireUpload: Flag.Boolean("require-upload").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Require artifact upload wiring")
     ),
-    ifNoFilesFound: Flag.string("if-no-files-found").pipe(
+    ifNoFilesFound: Flag.String("if-no-files-found").pipe(
       Flag.withDefault("error"),
       Flag.withDescription("Expected upload-artifact missing-file behavior")
     ),
-    advisory: Flag.boolean("advisory").pipe(
+    advisory: Flag.Boolean("advisory").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Require advisory Fallow invocations")
     ),

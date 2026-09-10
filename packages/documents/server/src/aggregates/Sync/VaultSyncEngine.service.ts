@@ -75,6 +75,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result, Semaphore } from "effect";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
 import * as Eq from "effect/Equal";
 import * as F from "effect/Function";
 import * as O from "effect/Option";
@@ -491,8 +492,14 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
           return yield* scanFailed(`vault sync refused symbolic link ${displayPath}`);
         }
 
+        const size = yield* ByteSize.toNumber(info.size).pipe(
+          O.match({
+            onNone: () => scanFailed(`vault sync could not safely allocate local file ${displayPath}`),
+            onSome: Effect.succeed,
+          })
+        );
         const bytes = yield* file
-          .readAlloc(info.size)
+          .readAlloc(size)
           .pipe(Effect.mapError(() => scanFailed(`vault sync could not read local file ${displayPath}`)));
         return O.getOrElse(bytes, () => new Uint8Array());
       })

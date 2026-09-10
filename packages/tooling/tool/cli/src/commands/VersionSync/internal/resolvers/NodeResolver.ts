@@ -207,6 +207,11 @@ const findNodeVersionLocations: (
       }
 
       const nodeVersion = nodeVersionString(withBlock["node-version"]);
+      // A templated value (for example a matrix-driven per-lane override that
+      // falls back to .nvmrc when empty) cannot be asserted at lint time.
+      if (Str.includes("${{")(nodeVersion)) {
+        continue;
+      }
       locations = A.append(
         locations,
         NodeVersionLocation.make({

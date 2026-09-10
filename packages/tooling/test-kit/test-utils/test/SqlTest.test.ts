@@ -23,7 +23,7 @@ import { Cause, Config, ConfigProvider, Context, Effect, Exit, Layer, pipe, Scop
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { vi } from "vitest";
 import type { SqlTestHooks } from "@beep/test-utils";
@@ -138,7 +138,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const isBunRuntime = process.versions.bun !== undefined;
-const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.string("VITEST_COVERAGE_RATCHET"))), "1");
+const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.String("VITEST_COVERAGE_RATCHET"))), "1");
 const localSqliteIt = it.effect.skipIf(isCoverageRatchetRun && !isBunRuntime);
 const nodeRuntimeIt = it.skipIf(isBunRuntime);
 const nodeRuntimeEffectIt = it.effect.skipIf(isBunRuntime);
@@ -147,23 +147,27 @@ const expectedDriver = isBunRuntime ? "bun-sqlite" : "node-sqlite";
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: {
-    readonly numRuns?: number;
+    readonly runs?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownEffect(schema);
   const encode = S.encodeUnknownEffect(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      const encoded = Effect.runSync(encode(value));
-      const decoded = Effect.runSync(decode(encoded));
+  const result = Effect.runSync(
+    Arbitrary.checkEffect(
+      arbitrary,
+      (value) => {
+        const encoded = Effect.runSync(encode(value));
+        const decoded = Effect.runSync(decode(encoded));
 
-      return equivalent(decoded, value);
-    }),
-    { numRuns: options?.numRuns ?? 20 }
+        return equivalent(decoded, value);
+      },
+      fcRuns(options?.runs ?? 20)
+    )
   );
+  expect(result._tag).toBe("Passed");
 };
 
 const makeLayer = <MigrateError = never, SeedError = never>(hooks?: SqlTestHooks<MigrateError, SeedError>) =>
@@ -611,19 +615,19 @@ describe("SqlTest", () => {
   );
 
   it("derives SQL schema arbitrary values accepted by their schemas", () => {
-    assertSchemaArbitraryDecodesToSelf(PgExternalConnectionUri, { numRuns: 10 });
-    assertSchemaArbitraryDecodesToSelf(PgliteSqlTestLayerMode, { numRuns: 10 });
-    assertSchemaArbitraryDecodesToSelf(TestDatabaseInfoShape, { numRuns: 10 });
-    assertSchemaArbitraryDecodesToSelf(PgliteTestcontainersTestDriverConfig, { numRuns: 10 });
-    assertSchemaArbitraryDecodesToSelf(PgExternalTestDriverConfig, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(PgExternalConnectionUri, { runs: 10 });
+    assertSchemaArbitraryDecodesToSelf(PgliteSqlTestLayerMode, { runs: 10 });
+    assertSchemaArbitraryDecodesToSelf(TestDatabaseInfoShape, { runs: 10 });
+    assertSchemaArbitraryDecodesToSelf(PgliteTestcontainersTestDriverConfig, { runs: 10 });
+    assertSchemaArbitraryDecodesToSelf(PgExternalTestDriverConfig, { runs: 10 });
   });
 
   it("round-trips SQL schema arbitraries through their encoded shape", () => {
-    assertSchemaArbitraryRoundTrips(PgExternalConnectionUri, { numRuns: 10 });
-    assertSchemaArbitraryRoundTrips(PgliteSqlTestLayerMode, { numRuns: 10 });
-    assertSchemaArbitraryRoundTrips(TestDatabaseInfoShape, { numRuns: 10 });
-    assertSchemaArbitraryRoundTrips(PgliteTestcontainersTestDriverConfig, { numRuns: 10 });
-    assertSchemaArbitraryRoundTrips(PgExternalTestDriverConfig, { numRuns: 10 });
+    assertSchemaArbitraryRoundTrips(PgExternalConnectionUri, { runs: 10 });
+    assertSchemaArbitraryRoundTrips(PgliteSqlTestLayerMode, { runs: 10 });
+    assertSchemaArbitraryRoundTrips(TestDatabaseInfoShape, { runs: 10 });
+    assertSchemaArbitraryRoundTrips(PgliteTestcontainersTestDriverConfig, { runs: 10 });
+    assertSchemaArbitraryRoundTrips(PgExternalTestDriverConfig, { runs: 10 });
   });
 
   it("preserves SQL schema encoded snapshots", () => {
@@ -708,15 +712,20 @@ describe("SqlTest", () => {
       message: S.String,
       phase: S.Literals(["provision", "migrate", "seed", "teardown"]),
     });
-    fc.assert(
-      fc.property(S.toArbitrary(SqlTestHarnessErrorEncoded)(fc), (encoded) => {
-        const decoded = Effect.runSync(decodeUnknownSqlTestHarnessError(encoded));
+    const result = Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.schema(SqlTestHarnessErrorEncoded),
+        (encoded) => {
+          const decoded = Effect.runSync(decodeUnknownSqlTestHarnessError(encoded));
 
-        expect(SqlTestHarnessError.is(decoded)).toBe(true);
-        expect(Effect.runSync(encodeUnknownSqlTestHarnessError(decoded))).toEqual(encoded);
-      }),
-      fcRuns(10)
+          expect(SqlTestHarnessError.is(decoded)).toBe(true);
+          expect(Effect.runSync(encodeUnknownSqlTestHarnessError(decoded))).toEqual(encoded);
+          return true;
+        },
+        fcRuns(10)
+      )
     );
+    expect(result._tag).toBe("Passed");
   });
 
   nodeRuntimeIt("selects PGLite integration gate branches from environment", () => {

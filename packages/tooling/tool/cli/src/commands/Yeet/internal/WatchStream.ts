@@ -521,32 +521,32 @@ export const yeetWatchCommentEvent: {
   3,
   (comment: YeetMonitorComment, at: string, headSha: string): YeetCommentPosted =>
     Match.value(comment).pipe(
-      Match.tags({
-        review: (review) =>
-          YeetCommentPosted.make({
-            at,
-            author: review.author,
-            body: yeetCommentExcerpt(review.body, WATCH_COMMENT_EXCERPT_LENGTH),
-            commentId: review.id,
-            createdAt: review.createdAt,
-            headSha,
-            line: O.getOrNull(review.line),
-            path: review.path,
-            source: "review",
-            url: review.url,
-          }),
-        issue: (issue) =>
-          YeetCommentPosted.make({
-            at,
-            author: issue.author,
-            body: yeetCommentExcerpt(issue.body, WATCH_COMMENT_EXCERPT_LENGTH),
-            commentId: issue.id,
-            createdAt: issue.createdAt,
-            headSha,
-            source: "issue",
-            url: issue.url,
-          }),
-      }),
+      Match.tag("review", (review) =>
+        YeetCommentPosted.make({
+          at,
+          author: review.author,
+          body: yeetCommentExcerpt(review.body, WATCH_COMMENT_EXCERPT_LENGTH),
+          commentId: review.id,
+          createdAt: review.createdAt,
+          headSha,
+          line: O.getOrNull(review.line),
+          path: review.path,
+          source: "review",
+          url: review.url,
+        })
+      ),
+      Match.tag("issue", (issue) =>
+        YeetCommentPosted.make({
+          at,
+          author: issue.author,
+          body: yeetCommentExcerpt(issue.body, WATCH_COMMENT_EXCERPT_LENGTH),
+          commentId: issue.id,
+          createdAt: issue.createdAt,
+          headSha,
+          source: "issue",
+          url: issue.url,
+        })
+      ),
       Match.exhaustive
     )
 );

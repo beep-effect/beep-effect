@@ -153,7 +153,7 @@ type NoSniffResponseHeaderEncoded = typeof NoSniffResponseHeader.Encoded;
 export const NoSniffHeader = S.Union([NoSniffOption, S.Undefined]).pipe(
   S.decodeTo(
     NoSniffResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input): Effect.Effect<NoSniffResponseHeaderEncoded> =>
         Effect.succeed({
           name: headerName,

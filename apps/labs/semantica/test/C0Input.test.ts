@@ -6,8 +6,9 @@ import { NonNegativeInt } from "@beep/schema";
 import { ConfigProvider, Effect, Layer, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 import { F1Catalog } from "@/fixtures/F1";
 import { GOLD_PROMPT_ARTIFACT_HASH } from "@/gold/Prompts";
@@ -272,13 +273,15 @@ describe("C0 F1 input services", () => {
           const context = yield* Effect.context<Canonicalizer | Chunker | Crypto.Crypto>();
           const fixture = A.headNonEmpty((yield* catalog.load).fixtures);
           const document = fixtureDocument(fixture);
-          const textArbitrary = fc
-            .array(fc.constantFrom("word", " ", ". ", "\r\n", "\n\n", "🧑🏽‍🔬", "Cafe\u0301", "# Heading\r\n\r\n"), {
-              minLength: 1,
-              maxLength: 20,
-            })
-            .map((parts) => A.join(parts, ""))
-            .filter((text) => Str.isNonEmpty(Str.trim(text)));
+          const textArbitrary = Arbitrary.schema(
+            S.Array(S.Literals(["word", " ", ". ", "\r\n", "\n\n", "🧑🏽‍🔬", "Cafe\u0301", "# Heading\r\n\r\n"])).check(
+              S.isMinLength(1),
+              S.isMaxLength(20)
+            )
+          ).pipe(
+            Arbitrary.map((parts) => A.join(parts, "")),
+            Arbitrary.filter((text) => Str.isNonEmpty(Str.trim(text)))
+          );
 
           const headingText = "# Heading\r\nBody sentence.";
           const headingParsed = ParseOutcome.cases.Parsed.make({
@@ -341,26 +344,32 @@ describe("C0 F1 input services", () => {
           }
 
           yield* Effect.sync(() =>
-            fc.assert(
-              fc.property(textArbitrary, (text) => {
-                const parsed = ParseOutcome.cases.Parsed.make({
-                  document: document.id,
-                  extractor: SourceTextExtractor.make({ name: "chunker-property", version: "0.0.0" }),
-                  outcome: "Parsed",
-                  text,
-                });
-                const canonical = Effect.runSyncWith(context)(canonicalizer.identify(document, parsed));
-                const chunks = Effect.runSyncWith(context)(chunker.chunk(canonical));
-                return A.every(
-                  chunks,
-                  (chunk) =>
-                    Str.slice(chunk.anchor.startChar, chunk.anchor.endChar)(canonical.text) === chunk.anchor.quote &&
-                    isUtf16Boundary(canonical.text, chunk.anchor.startChar) &&
-                    isUtf16Boundary(canonical.text, chunk.anchor.endChar)
-                );
-              }),
-              { numRuns: 30 }
-            )
+            expect(
+              Effect.runSyncWith(context)(
+                Arbitrary.checkEffect(
+                  textArbitrary,
+                  (text) => {
+                    const parsed = ParseOutcome.cases.Parsed.make({
+                      document: document.id,
+                      extractor: SourceTextExtractor.make({ name: "chunker-property", version: "0.0.0" }),
+                      outcome: "Parsed",
+                      text,
+                    });
+                    const canonical = Effect.runSyncWith(context)(canonicalizer.identify(document, parsed));
+                    const chunks = Effect.runSyncWith(context)(chunker.chunk(canonical));
+                    return A.every(
+                      chunks,
+                      (chunk) =>
+                        Str.slice(chunk.anchor.startChar, chunk.anchor.endChar)(canonical.text) ===
+                          chunk.anchor.quote &&
+                        isUtf16Boundary(canonical.text, chunk.anchor.startChar) &&
+                        isUtf16Boundary(canonical.text, chunk.anchor.endChar)
+                    );
+                  },
+                  { runs: 30 }
+                )
+              )._tag
+            ).toBe("Passed")
           );
         })
       )

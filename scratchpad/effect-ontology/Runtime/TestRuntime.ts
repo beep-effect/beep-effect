@@ -100,7 +100,7 @@ const LlmControlTestLayers = Layer.mergeAll(
  * import { TestConfigProvider } from "@effect-ontology/Runtime/TestRuntime"
  *
  * const model = Effect.runSync(
- *   Effect.provide(Config.string("LLM_MODEL"), ConfigProvider.layer(TestConfigProvider))
+ *   Effect.provide(Config.String("LLM_MODEL"), ConfigProvider.layer(TestConfigProvider))
  * )
  * console.log(model) // "claude-haiku-4-5"
  * ```
