@@ -41,9 +41,7 @@ describe("viewer decorator node contracts", () => {
 
   it("rejects a malformed serialized mermaid payload", () => {
     withNodeContext(() => {
-      expect(() =>
-        MermaidNode.importJSON({ type: "mermaid", version: 1, format: "", source: 42 } as never)
-      ).toThrowError();
+      expect(() => MermaidNode.importJSON({ type: "mermaid", version: 1, format: "", source: 42 } as never)).toThrow();
     });
   });
 
@@ -77,7 +75,7 @@ describe("viewer decorator node contracts", () => {
     withNodeContext(() => {
       expect(() =>
         CodeBlockNode.importJSON({ type: "codeblock", version: 1, format: "", code: "x" } as never)
-      ).toThrowError();
+      ).toThrow();
     });
   });
 });
