@@ -337,11 +337,10 @@ const incrementInterruptCounts: (counts: ReasonCounts) => ReasonCounts = flow(
 const summarizeReason = (counts: ReasonCounts, reason: CauseReason): ReasonCounts =>
   Match.value(reason).pipe(
     Match.withReturnType<ReasonCounts>(),
-    Match.tagsExhaustive({
-      Die: () => incrementDefectCounts(counts),
-      Fail: () => incrementFailCounts(counts),
-      Interrupt: () => incrementInterruptCounts(counts),
-    })
+    Match.tag("Die", () => incrementDefectCounts(counts)),
+    Match.tag("Fail", () => incrementFailCounts(counts)),
+    Match.tag("Interrupt", () => incrementInterruptCounts(counts)),
+    Match.exhaustive
   );
 
 const summarizeReasonCounts = flow(

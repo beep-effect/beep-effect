@@ -9,6 +9,7 @@ import { $OipWebId } from "@beep/identity/packages";
 import { EmailString, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import type * as Result from "effect/Result";
 import type * as AST from "effect/SchemaAST";
@@ -18,42 +19,40 @@ const $I = $OipWebId.create("content/OipContent.model");
 const HttpsUrl = S.NonEmptyString.check(S.isPattern(/^https:\/\/\S+$/)).pipe(
   $I.annoteSchema("HttpsUrl", {
     description: "Absolute HTTPS URL used by public OIP website content.",
-    toArbitrary: () => (fc) => fc.constant("https://example.com"),
   })
 );
 
 const PublicAssetPath = S.NonEmptyString.check(S.isPattern(/^\/\S+$/)).pipe(
   $I.annoteSchema("PublicAssetPath", {
     description: "Root-relative public asset path served by the OIP website.",
-    toArbitrary: () => (fc) => fc.constant("/oip/asset.png"),
   })
 );
 
 const HashAnchor = S.NonEmptyString.check(S.isPattern(/^#[A-Za-z][A-Za-z0-9_-]*$/)).pipe(
   $I.annoteSchema("HashAnchor", {
     description: "Hash anchor used for in-page OIP navigation links.",
-    toArbitrary: () => (fc) => fc.constant("#contact"),
   })
 );
 
-const ImagePixelDimension = S.Int.check(S.isGreaterThanOrEqualTo(1)).pipe(
+const ImagePixelDimension = S.Int.check(
+  S.isGreaterThanOrEqualTo(1, {
+    arbitraryConstraint: { order: Order.Number, minimum: 1, maximum: 4_000, number: "integer" },
+  })
+).pipe(
   $I.annoteSchema("ImagePixelDimension", {
     description: "Positive integer pixel dimension for public OIP image metadata.",
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 4_000 }),
   })
 );
 
 const CssAspectRatio = S.NonEmptyString.check(S.isPattern(/^[1-9]\d*\/[1-9]\d*$/)).pipe(
   $I.annoteSchema("CssAspectRatio", {
     description: "CSS aspect-ratio text using positive integer numerator and denominator.",
-    toArbitrary: () => (fc) => fc.constant("4/1"),
   })
 );
 
 const PressDate = S.NonEmptyString.check(S.isPattern(/^\d{4}-\d{2}-\d{2}$/)).pipe(
   $I.annoteSchema("PressDate", {
     description: "ISO calendar date text for public press metadata.",
-    toArbitrary: () => (fc) => fc.constant("2026-05-14"),
   })
 );
 
@@ -613,7 +612,11 @@ export class PressItem extends S.Class<PressItem>($I`PressItem`)(
  */
 export class ContactContent extends S.Class<ContactContent>($I`ContactContent`)(
   {
-    email: EmailString,
+    email: EmailString.check(
+      S.isLowercased({
+        arbitraryConstraint: { patterns: [{ source: "^[a-z][a-z0-9]{0,15}@example\\.com$", flags: "" }] },
+      })
+    ),
     lede: S.String,
     notice: S.Array(S.String),
     officePhone: S.NonEmptyString,

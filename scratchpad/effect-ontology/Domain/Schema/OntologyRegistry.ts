@@ -211,7 +211,6 @@ const OntologyRegistryJsonDefinition = S.fromJsonString(OntologyRegistry);
  */
 export const OntologyRegistryJson = OntologyRegistryJsonDefinition.pipe(
   $I.annoteSchema("OntologyRegistryJson", {
-    toArbitrary: () => S.toArbitrary(OntologyRegistry),
     description: "JSON-string codec for a complete validated ontology registry manifest.",
   }),
   SchemaUtils.withCodecStatics(["decodeEffect"])
@@ -234,9 +233,7 @@ const OntologyEntryJsonDefinition = S.fromJsonString(OntologyEntry);
  * @category codecs
  * @since 0.0.0
  */
-export const OntologyEntryJson = OntologyEntryJsonDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(OntologyEntry),
-}).pipe(
+export const OntologyEntryJson = OntologyEntryJsonDefinition.pipe(
   $I.annoteSchema("OntologyEntryJson", {
     description: "JSON-string codec for one validated ontology registry entry.",
   })

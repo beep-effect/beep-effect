@@ -501,7 +501,7 @@ const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
 });
 
 const makeFromEnvironment = Effect.fnUntraced(function* () {
-  const apiUrl = yield* Config.string("ECFR_API_URL").pipe(Config.withDefault(ECFR_API_URL));
+  const apiUrl = yield* Config.String("ECFR_API_URL").pipe(Config.withDefault(ECFR_API_URL));
   return yield* makeFromResolved({ apiUrl: URLStr.make(apiUrl) });
 });
 

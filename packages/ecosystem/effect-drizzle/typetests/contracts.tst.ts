@@ -17,7 +17,7 @@ import {
   String,
   Struct,
 } from "effect/Schema";
-import { transformOrFail } from "effect/SchemaGetter";
+import { transformEffect } from "effect/SchemaGetter";
 import { Model as EffectModel } from "effect/unstable/schema";
 import { expect, it } from "tstyche";
 import type { DefaultSqlExpr, DefaultValue, Dialect, References } from "@beep/effect-drizzle";
@@ -212,8 +212,8 @@ it("preserves migrated PostgreSQL fixture compile contracts", () => {
   ) {}
   const ServiceString = String.pipe(
     decodeTo(String, {
-      decode: transformOrFail((value) => CodecService.use((service) => succeed(service.normalize(value)))),
-      encode: transformOrFail((value) => CodecService.use((service) => succeed(service.normalize(value)))),
+      decode: transformEffect((value) => CodecService.use((service) => succeed(service.normalize(value)))),
+      encode: transformEffect((value) => CodecService.use((service) => succeed(service.normalize(value)))),
     })
   );
   class ServiceRecord extends Model<ServiceRecord>("ServiceRecord")({

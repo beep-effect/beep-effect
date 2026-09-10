@@ -15,7 +15,7 @@ import { Context, Effect, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -60,12 +60,12 @@ class DiscordTestHttp extends Context.Service<DiscordTestHttp, DiscordTestHttpSh
 ) {}
 
 const decodeMessageBody = S.decodeUnknownEffect(CapturedDiscordMessageBody);
-const ConfigInputArbitrary = S.toArbitrary(DiscordConfigInput)(fc);
-const ChannelRequestArbitrary = S.toArbitrary(DiscordChannelRequest)(fc);
-const CreateMessageRequestArbitrary = S.toArbitrary(DiscordCreateMessageRequest)(fc);
-const ChannelProofArbitrary = S.toArbitrary(DiscordChannelProof)(fc);
-const MessageProofArbitrary = S.toArbitrary(DiscordMessageProof)(fc);
-const ErrorReasonArbitrary = S.toArbitrary(DiscordErrorReason)(fc);
+const ConfigInputArbitrary = Arbitrary.schema(DiscordConfigInput);
+const ChannelRequestArbitrary = Arbitrary.schema(DiscordChannelRequest);
+const CreateMessageRequestArbitrary = Arbitrary.schema(DiscordCreateMessageRequest);
+const ChannelProofArbitrary = Arbitrary.schema(DiscordChannelProof);
+const MessageProofArbitrary = Arbitrary.schema(DiscordMessageProof);
+const ErrorReasonArbitrary = Arbitrary.schema(DiscordErrorReason);
 
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
@@ -231,30 +231,30 @@ describe("@beep/discord", () => {
     });
   });
 
-  it("round-trips schema-derived Discord payloads through encoded form", () =>
-    fc.assert(
-      fc.property(
-        ConfigInputArbitrary,
-        ChannelRequestArbitrary,
-        CreateMessageRequestArbitrary,
-        ChannelProofArbitrary,
-        MessageProofArbitrary,
-        ErrorReasonArbitrary,
-        (config, channelRequest, createMessageRequest, channelProof, messageProof, errorReason) => {
-          const normalizedConfig = Result.getOrThrow(
-            decodeDiscordConfigInputResult(Result.getOrThrow(encodeDiscordConfigInputResult(config)))
-          );
+  it.prop(
+    "round-trips schema-derived Discord payloads through encoded form",
+    [
+      ConfigInputArbitrary,
+      ChannelRequestArbitrary,
+      CreateMessageRequestArbitrary,
+      ChannelProofArbitrary,
+      MessageProofArbitrary,
+      ErrorReasonArbitrary,
+    ],
+    ([config, channelRequest, createMessageRequest, channelProof, messageProof, errorReason]) => {
+      const normalizedConfig = Result.getOrThrow(
+        decodeDiscordConfigInputResult(Result.getOrThrow(encodeDiscordConfigInputResult(config)))
+      );
 
-          expectEncodedRoundTrip(DiscordConfigInput, normalizedConfig);
-          expectEncodedRoundTrip(DiscordChannelRequest, channelRequest);
-          expectEncodedRoundTrip(DiscordCreateMessageRequest, createMessageRequest);
-          expectEncodedRoundTrip(DiscordChannelProof, channelProof);
-          expectEncodedRoundTrip(DiscordMessageProof, messageProof);
-          expectDecodedSelf(DiscordErrorReason, errorReason);
-        }
-      ),
-      fcRuns(50)
-    ));
+      expectEncodedRoundTrip(DiscordConfigInput, normalizedConfig);
+      expectEncodedRoundTrip(DiscordChannelRequest, channelRequest);
+      expectEncodedRoundTrip(DiscordCreateMessageRequest, createMessageRequest);
+      expectEncodedRoundTrip(DiscordChannelProof, channelProof);
+      expectEncodedRoundTrip(DiscordMessageProof, messageProof);
+      expectDecodedSelf(DiscordErrorReason, errorReason);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   layer(makeLayer())((it) => {
     it.effect(

@@ -6,8 +6,9 @@ import {
 import { TagName, TagValue } from "@beep/repo-utils/JSDoc/models/tag-values";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeCategorySignalSync = S.decodeSync(CategorySignal);
 const decodeScoredCategoryCandidateSync = S.decodeSync(ScoredCategoryCandidate);
@@ -20,69 +21,104 @@ const encodeTSCategoryDefinitionSync = S.encodeSync(TSCategoryDefinition);
 const encodeTagNameSync = S.encodeSync(TagName);
 const encodeTagValueSync = S.encodeSync(TagValue);
 
-const TagNameArbitrary = S.toArbitrary(TagName)(fc);
-const TagValueArbitrary = S.toArbitrary(TagValue)(fc);
-const TSCategoryDefinitionArbitrary = S.toArbitrary(TSCategoryDefinition)(fc);
-const CategorySignalArbitrary = S.toArbitrary(CategorySignal)(fc);
-const ScoredCategoryCandidateArbitrary = S.toArbitrary(ScoredCategoryCandidate)(fc);
+const TagNameArbitrary = Arbitrary.schema(TagName);
+const TagValueArbitrary = Arbitrary.schema(TagValue);
+const TSCategoryDefinitionArbitrary = Arbitrary.schema(TSCategoryDefinition);
+const CategorySignalArbitrary = Arbitrary.schema(CategorySignal);
+const ScoredCategoryCandidateArbitrary = Arbitrary.schema(ScoredCategoryCandidate);
 
 describe("JSDoc schema models", () => {
   it("round-trips schema-derived tag names through the encoded wire shape", () => {
-    fc.assert(
-      fc.property(TagNameArbitrary, (value) => {
-        const encoded = encodeTagNameSync(value);
-        const decoded = decodeTagNameSync(encoded);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([TagNameArbitrary]),
+          ([value]) => {
+            const encoded = encodeTagNameSync(value);
+            const decoded = decodeTagNameSync(encoded);
 
-        expect(decoded).toEqual(value);
-      }),
-      fcRuns(20)
-    );
+            expect(decoded).toEqual(value);
+
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips schema-derived tag values through the encoded wire shape", () => {
-    fc.assert(
-      fc.property(TagValueArbitrary, (value) => {
-        const encoded = encodeTagValueSync(value);
-        const decoded = decodeTagValueSync(encoded);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([TagValueArbitrary]),
+          ([value]) => {
+            const encoded = encodeTagValueSync(value);
+            const decoded = decodeTagValueSync(encoded);
 
-        expect(decoded).toEqual(value);
-      }),
-      fcRuns(20)
-    );
+            expect(decoded).toEqual(value);
+
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips schema-derived category definitions and preserves priority bounds", () => {
-    fc.assert(
-      fc.property(TSCategoryDefinitionArbitrary, (value) => {
-        const encoded = encodeTSCategoryDefinitionSync(value);
-        const decoded = decodeTSCategoryDefinitionSync(encoded);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([TSCategoryDefinitionArbitrary]),
+          ([value]) => {
+            const encoded = encodeTSCategoryDefinitionSync(value);
+            const decoded = decodeTSCategoryDefinitionSync(encoded);
 
-        expect(decoded).toEqual(value);
-        expect(value.documentationPriority).toBeGreaterThanOrEqual(1);
-        expect(value.documentationPriority).toBeLessThanOrEqual(99);
-      }),
-      fcRuns(20)
-    );
+            expect(decoded).toEqual(value);
+            expect(value.documentationPriority).toBeGreaterThanOrEqual(1);
+            expect(value.documentationPriority).toBeLessThanOrEqual(99);
+
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips schema-derived category signal and candidate values", () => {
-    fc.assert(
-      fc.property(CategorySignalArbitrary, (value) => {
-        const encoded = encodeCategorySignalSync(value);
-        const decoded = decodeCategorySignalSync(encoded);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([CategorySignalArbitrary]),
+          ([value]) => {
+            const encoded = encodeCategorySignalSync(value);
+            const decoded = decodeCategorySignalSync(encoded);
 
-        expect(decoded).toEqual(value);
-      }),
-      fcRuns(20)
-    );
-    fc.assert(
-      fc.property(ScoredCategoryCandidateArbitrary, (value) => {
-        const encoded = encodeScoredCategoryCandidateSync(value);
-        const decoded = decodeScoredCategoryCandidateSync(encoded);
+            expect(decoded).toEqual(value);
 
-        expect(decoded).toEqual(value);
-      }),
-      fcRuns(20)
-    );
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ScoredCategoryCandidateArbitrary]),
+          ([value]) => {
+            const encoded = encodeScoredCategoryCandidateSync(value);
+            const decoded = decodeScoredCategoryCandidateSync(encoded);
+
+            expect(decoded).toEqual(value);
+
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

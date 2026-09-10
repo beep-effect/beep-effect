@@ -11,6 +11,7 @@ import {
   HookPulseNotificationType,
   HookPulseSchemaVersion,
   HookPulseV1,
+  HookPulseV1Arbitrary,
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
   hashPrivateIdentifier,
@@ -27,7 +28,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess } from "effect/unstable/process";
 
 // The writer is shell, so the only honest conformance test spawns the real
@@ -606,15 +607,22 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     // the leak allowlist just because no fixture happens to populate it. The
     // round-trip half proves the NDJSON line the ledger stores is lossless for
     // every such row, which is what P4 replay actually depends on.
-    fc.assert(
-      fc.property(S.toArbitrary(HookPulseV1)(fc), (value) => {
-        const line = encodeHookPulseRow(value);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([HookPulseV1Arbitrary]),
+          ([value]) => {
+            const line = encodeHookPulseRow(value);
 
-        expect(A.difference(R.keys(decodeRowKeys(line)), canonicalRowKeys)).toEqual([]);
-        expect(hookPulseEquivalent(decodeHookPulseRowSync(line), value)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+            expect(A.difference(R.keys(decodeRowKeys(line)), canonicalRowKeys)).toEqual([]);
+            expect(hookPulseEquivalent(decodeHookPulseRowSync(line), value)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect("keeps the jq allowlists set-equal to the schema literal domains", () =>

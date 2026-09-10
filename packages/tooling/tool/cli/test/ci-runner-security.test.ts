@@ -263,7 +263,7 @@ describe("CI runner security", () => {
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const ambientPath = yield* Config.string("PATH");
+      const ambientPath = yield* Config.String("PATH");
       const repoRoot = yield* findRepoRoot();
       const tempRoot = yield* fs.makeTempDirectoryScoped();
       const workflow = parsedDocument(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml")));

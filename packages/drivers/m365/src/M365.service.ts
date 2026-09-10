@@ -1036,14 +1036,14 @@ const mailboxPath = (userId: O.Option<string>, suffix: string): string =>
   );
 
 const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
-  const tenantId = yield* Config.string("M365_TENANT_ID");
-  const clientId = yield* Config.string("M365_CLIENT_ID");
-  const authority = yield* Config.string("M365_AUTHORITY").pipe(Config.option);
-  const graphBaseUrl = yield* Config.string("M365_GRAPH_BASE_URL").pipe(Config.option);
-  const maxRetries = yield* Config.int("M365_MAX_RETRIES").pipe(Config.option);
-  const redirectUri = yield* Config.string("M365_REDIRECT_URI").pipe(Config.option);
-  const scopesText = yield* Config.string("M365_SCOPES").pipe(Config.option);
-  const tokenCachePath = yield* Config.string("M365_TOKEN_CACHE_PATH").pipe(Config.option);
+  const tenantId = yield* Config.String("M365_TENANT_ID");
+  const clientId = yield* Config.String("M365_CLIENT_ID");
+  const authority = yield* Config.String("M365_AUTHORITY").pipe(Config.option);
+  const graphBaseUrl = yield* Config.String("M365_GRAPH_BASE_URL").pipe(Config.option);
+  const maxRetries = yield* Config.Int("M365_MAX_RETRIES").pipe(Config.option);
+  const redirectUri = yield* Config.String("M365_REDIRECT_URI").pipe(Config.option);
+  const scopesText = yield* Config.String("M365_SCOPES").pipe(Config.option);
+  const tokenCachePath = yield* Config.String("M365_TOKEN_CACHE_PATH").pipe(Config.option);
   const scopes = yield* pipe(
     scopesText,
     O.match({

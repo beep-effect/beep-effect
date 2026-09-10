@@ -105,7 +105,6 @@ export interface CodecStaticRegistry<Sch extends CodecSchema> {
     : never;
   readonly equivalence: DualEquivalence<Sch["Type"]>;
   readonly is: ReturnType<typeof S.is<Sch>>;
-  readonly toArbitrary: ReturnType<typeof S.toArbitrary<Sch>>;
 }
 
 const codecStaticKeys = [
@@ -136,7 +135,6 @@ const codecStaticKeys = [
   "encodeUnknownSync",
   "equivalence",
   "is",
-  "toArbitrary",
 ] satisfies ReadonlyArray<keyof CodecStaticRegistry<CodecSchema>>;
 
 /**
@@ -292,7 +290,6 @@ const codecStaticFactories = {
   encodeUnknownSync: nativeCodecStatic("encodeUnknownSync"),
   equivalence: (schema) => toEquivalence(schema),
   is: nativeCodecStatic("is"),
-  toArbitrary: nativeCodecStatic("toArbitrary"),
 } satisfies Record<CodecStaticKey, CodecStaticFactory>;
 
 const validateKeys = (keys: ReadonlyArray<CodecStaticKey>): void => {

@@ -1,0 +1,22 @@
+{
+  "lane": "r28-foundation-modeling-rest",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 90,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:27:03.088021+00:00",
+  "finished": "2026-09-09T04:39:00.071986+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 2,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-modeling-rest.jsonl`\n\nConfirmed: 2. Disqualified: 1. Validator: inventory OK (3 records). Every assigned root was covered.\n\nSeed drift / withdrawals (unchanged records not re-emitted):\n- `AllowListUrlPolicySpec` first boolean is now L125 (seed L191); D1 still holds.\n- Several `Html.conformance.ts` seed lines moved (img presence 1065\u2192987, link presence 1111\u21921033, picture source 1060\u21921082, attribute-requirement 1319\u21921341, foreign-entry 2015\u21922023, media 1843\u21921851); classifications unchanged except datalist.\n- `parseSum.spacing` withdrawn: `hasSumOperator` is a callable predicate; `hasLeadingSpace` is a `parseSpacedProduct` parameter.\n- `scanDirectory.entry` withdrawn as a joint cluster: `isDirectory` is declared only after the `isHiddenPath` early return.\n- `Iri.ts` is the only lane file in this SHA delta; `parseIpv6Side` `[isLast, hasDot]` still at L355, D1 unchanged.",
+  "transcriptSha256": "a09c84d7fde47a37420fb9478275dd3ceb3aef795b09834497a5b623f0d9060f",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 3 records, 3 unique ids\n"
+}

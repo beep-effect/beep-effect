@@ -18,7 +18,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as fc from "effect/testing/FastCheck";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 const codecs = R.fromEntries(
@@ -28,7 +28,7 @@ const codecs = R.fromEntries(
   })
 );
 const decodeManifest = S.decodeEffect(S.fromJsonString(S.Struct({ scripts: S.Record(S.String, S.String) })));
-const scriptsArbitrary = S.toArbitrary(ScriptsRecord)(fc);
+const scriptsArbitrary = Arbitrary.schema(ScriptsRecord);
 const decodeAppResult = S.decodeResult(scriptsBlockFromRecord("app"));
 const noEvidence = DerivationEvidence.make({
   doctestOwners: HashSet.empty(),
@@ -60,16 +60,21 @@ describe("package scripts policy", () => {
     run(
       Effect.gen(function* () {
         const policy = yield* PackageScriptsPolicy.make("/repo");
-        fc.assert(
-          fc.property(scriptsArbitrary, (scripts) => {
-            const actual = Result.getOrThrow(decodeAppResult(scripts));
-            const expected = policy.expected("app", actual, noEvidence);
-            expect(expected.extras).toEqual(actual.extras);
-            for (const [key, value] of actual.impls) expect(HashMap.get(expected.impls, key)).toEqual(O.some(value));
-            expect(policy.diff(expected, policy.expected("app", expected, noEvidence))).toEqual([]);
-          }),
-          { numRuns: 100 }
-        );
+        expect(
+          (yield* Arbitrary.checkEffect(
+            Arbitrary.all([scriptsArbitrary]),
+            ([scripts]) => {
+              const actual = Result.getOrThrow(decodeAppResult(scripts));
+              const expected = policy.expected("app", actual, noEvidence);
+              expect(expected.extras).toEqual(actual.extras);
+              for (const [key, value] of actual.impls) expect(HashMap.get(expected.impls, key)).toEqual(O.some(value));
+              expect(policy.diff(expected, policy.expected("app", expected, noEvidence))).toEqual([]);
+
+              return true;
+            },
+            { runs: 100 }
+          ))._tag
+        ).toBe("Passed");
       })
     )
   );

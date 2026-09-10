@@ -52,7 +52,6 @@ const ShaclSeverityDefinition = LiteralKit(["info", "warning", "violation"]);
 export const ShaclSeverity = ShaclSeverityDefinition.pipe(
   $I.annoteSchema("ShaclSeverity", {
     description: "SHACL report severity.",
-    toArbitrary: () => S.toArbitrary(ShaclSeverityDefinition),
   })
 );
 

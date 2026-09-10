@@ -457,7 +457,7 @@ const runEcosystemPolarityLint = Effect.fn("EcosystemPolarity.runEcosystemPolari
 export const lintEcosystemPolarityCommand = Command.make(
   "ecosystem-polarity",
   {
-    include: Flag.string("include").pipe(
+    include: Flag.String("include").pipe(
       Flag.withDescription(
         "Comma-separated changed files; a member manifest or src change expands to that member's full check"
       ),

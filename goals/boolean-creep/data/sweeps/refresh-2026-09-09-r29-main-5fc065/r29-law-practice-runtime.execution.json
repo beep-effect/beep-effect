@@ -1,0 +1,22 @@
+{
+  "lane": "r29-law-practice-runtime",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:43:37.409946+00:00",
+  "finished": "2026-09-09T10:51:38.224309+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-law-practice-runtime.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`packages/law-practice/server/src`, `tables/src`, `use-cases/src`). All six seeds still exist at the claimed owners/members/lines; classification still holds (five D1, one D2). No seed drift, no corrections, no unresolved source question.\n\nOut-of-net (not recorded): FileInfo/lifecycle schema guards; standalone predicates (`overlapsOnEveryAxis`, `isPrimaFacieOpposed`); function flag parameters; single-boolean fields (`corpusRootExpected`, summary `includeRefresh`, `{ extracted, filename }`, `available: false`); SQL `document_text.truncated` without a second Boolean sibling.\n\n\ud83c\udf31 graft saved ~158,966 tokens this turn (13 calls)",
+  "transcriptSha256": "518b77fca9621d0878be3d3038156774b658fe495460f613c2c74a3c9785847f",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

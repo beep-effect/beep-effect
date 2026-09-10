@@ -617,7 +617,7 @@ export const runChangesetStatus = Effect.fn("ChangesetStatus.runChangesetStatus"
 export const changesetStatusCommand = Command.make(
   "changeset-status",
   {
-    since: Flag.string("since").pipe(
+    since: Flag.String("since").pipe(
       Flag.withDescription("Base ref for the merge-base changed-file partition (defaults to origin/main)"),
       Flag.optional
     ),

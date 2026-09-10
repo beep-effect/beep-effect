@@ -8,7 +8,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const expectRoundTrip = <Schema extends S.Top & S.ConstraintEncoder<unknown> & S.ConstraintDecoder<unknown>>(
   schema: Schema,
@@ -44,17 +44,29 @@ describe("Effect laws allowlist schemas", () => {
   );
 
   it("round-trips allowlist document and snapshot schemas", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(EffectLawsAllowlistDocument)(fc), (value) =>
-        expectRoundTrip(EffectLawsAllowlistDocument, value)
-      ),
-      fcRuns(25)
-    );
-    fc.assert(
-      fc.property(S.toArbitrary(EffectLawsAllowlistSnapshot)(fc), (value) =>
-        expectRoundTrip(EffectLawsAllowlistSnapshot, value)
-      ),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(EffectLawsAllowlistDocument)]),
+          ([value]) => {
+            expectRoundTrip(EffectLawsAllowlistDocument, value);
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(EffectLawsAllowlistSnapshot)]),
+          ([value]) => {
+            expectRoundTrip(EffectLawsAllowlistSnapshot, value);
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

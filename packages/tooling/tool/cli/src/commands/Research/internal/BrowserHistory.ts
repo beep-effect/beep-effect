@@ -87,7 +87,7 @@ export const discoverProfiles = Effect.fn("BrowserHistory.discoverProfiles")(fun
 ): Effect.fn.Return<ReadonlyArray<BrowserProfile>, ResearchCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const home = (yield* Effect.orDie(Config.string("HOME").pipe(Config.option))).pipe(O.filter(Str.isNonEmpty));
+  const home = (yield* Effect.orDie(Config.String("HOME").pipe(Config.option))).pipe(O.filter(Str.isNonEmpty));
   if (O.isNone(home)) {
     return yield* ResearchCommandError.make({ message: "HOME is not set; cannot locate browser profiles." });
   }

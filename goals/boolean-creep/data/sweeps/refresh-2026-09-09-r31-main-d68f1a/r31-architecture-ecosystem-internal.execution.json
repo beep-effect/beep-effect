@@ -1,0 +1,22 @@
+{
+  "lane": "r31-architecture-ecosystem-internal",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T14:57:07.437610+00:00",
+  "finished": "2026-09-09T15:05:06.019729+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-architecture-ecosystem-internal.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`architecture-lab` client/config/domain/server/tables/ui/use-cases, `effect-drizzle`, `_internal/db-admin`). No new eligible clusters; no seed drift.\n\nSeeds rechecked and left unreported (unchanged):\n- `WorkItemPublicConfig` `[assignmentEnabled, reopenCompletedEnabled]` \u2014 still D1 (independent flags; mixed pairs in docs; UI filters assign vs reopen separately)\n- `readWorkItemConfig.envFlags` \u2014 still D1 (same two env-backed flags)\n- `Meta` `[hasDefault, primaryKey, unique, version]` \u2014 still D1 (combinators patch independently; PK-without-default remains legal)\n- `SpecDefinition.timestamp` `[ident, withTimezone]` \u2014 still the designed E1/E2/E3 pair\n\nOut of net (not recorded): function flag parameters; callable predicates/guards; type-level `true`/`false`; `SQL<boolean>` expressions; single-boolean carriers (`Edge.optional`, `Classified.nullable`, `IndexIntent.unique`); drizzle option objects with one boolean (`{ withTimezone: true }`, `{ autoIncrement: true }`); `generated`/`indexed` false-or-object sentinels.",
+  "transcriptSha256": "9401d6445a43e45c2873d5ce1370ee8f64c007657b7fd1cb94bb077e644e9edd",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

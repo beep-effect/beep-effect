@@ -28,7 +28,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { PhoenixSdkShape } from "@beep/phoenix";
 
 const decodeUnknownPhoenixConfigInputResult = S.decodeUnknownResult(PhoenixConfigInput);
@@ -174,12 +174,19 @@ describe("@beep/phoenix", () => {
 
   it("round-trips schema-derived Phoenix values through their encoded shapes", () => {
     for (const [, schema] of publicSchemaRoundTripCases) {
-      fc.assert(
-        fc.property(S.toArbitrary(schema)(fc), (value) => {
-          expectEncodedRoundTrip(schema, value);
-        }),
-        fcRuns(5)
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(schema)]),
+            ([value]) => {
+              expectEncodedRoundTrip(schema, value);
+
+              return true;
+            },
+            fcRuns(5)
+          )
+        )
+      ).toMatchObject({ _tag: "Passed" });
     }
   });
 

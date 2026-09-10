@@ -190,7 +190,6 @@ const AnyLlmErrorDefinition = S.Union([LlmError, LlmTimeout, LlmRateLimit, LlmIn
 export const AnyLlmError = AnyLlmErrorDefinition.pipe(
   $I.annoteSchema("AnyLlmError", {
     description: "Exhaustive tagged union of LLM operation failures.",
-    toArbitrary: () => S.toArbitrary(AnyLlmErrorDefinition),
   })
 );
 

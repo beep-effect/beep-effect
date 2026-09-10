@@ -9,10 +9,12 @@ import {
   $SchemaId,
   $WorkspaceDomainId,
 } from "@beep/identity/packages";
+import { Effect } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeBaseIdentityInputOption = S.decodeOption(BaseIdentityInput);
@@ -53,13 +55,17 @@ describe("@beep/identity", () => {
   });
 
   it("round-trips generated base constructor input values", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(BaseIdentityInput)(fc), (base) => {
-        const decoded = O.flatMap(encodeBaseIdentityInputOption(base), decodeUnknownBaseIdentityInputOption);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(BaseIdentityInput)]), ([base]) => {
+          const decoded = O.flatMap(encodeBaseIdentityInputOption(base), decodeUnknownBaseIdentityInputOption);
 
-        expect(O.exists(decoded, (value) => Equal.equals(value, base))).toBe(true);
-      })
-    );
+          expect(O.exists(decoded, (value) => Equal.equals(value, base))).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("chains create for single-segment composition", () => {
@@ -132,12 +138,13 @@ describe("@beep/identity", () => {
   });
 
   it("applies schema annotations via annoteSchema", () => {
-    const toArbitrary: S.Annotations.ToArbitrary.Declaration<string, readonly []> = () => (fc) => fc.constant("tenant");
+    const toCodecArbitrary: S.Annotations.ToArbitrary.Declaration<string, readonly []> = () =>
+      S.link<string>()(S.String, SchemaTransformation.transform({ decode: () => "tenant", encode: (value) => value }));
     const schema = S.String.pipe(
       $SchemaId.annoteSchema("tenant_profile-name", {
         default: "tenant",
         description: "Tenant schema",
-        toArbitrary,
+        toCodecArbitrary,
         version: 1 as const,
       })
     );
@@ -148,7 +155,7 @@ describe("@beep/identity", () => {
     expect(annotations?.title).toBe("Tenant Profile Name");
     expect(annotations?.default).toBe("tenant");
     expect(annotations?.description).toBe("Tenant schema");
-    expect(annotations?.toArbitrary).toBe(toArbitrary);
+    expect(annotations?.toCodecArbitrary).toBe(toCodecArbitrary);
     expect(annotations?.version).toBe(1);
   });
 

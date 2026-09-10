@@ -56,7 +56,6 @@ export const ProviderTokenUsage = (() => {
   return schema.pipe(
     $I.annoteSchema("ProviderTokenUsage", {
       description: "Complete, partial, or unavailable provider-reported token usage across all attempts.",
-      toArbitrary: () => (fc) => S.toArbitrary(definition)(fc).filter(S.is(schema)),
     })
   );
 })();

@@ -1,16 +1,18 @@
 # Instance
 
 - id: `venice-sse-done-payload`
-- file:line: `packages/drivers/venice-ai/src/VeniceAI.service.ts:657`
+- exact source SHA: `3330f9881a50c96d3f2ec0fcad76f0f7a09027e4`
+- corpus source SHA: `52fcc8d1353db9481ef9edb6cc9619500f95568d`
+- file:line: `packages/drivers/venice-ai/src/VeniceAI.service.ts:649`
 - symbol: `VeniceAIServerSentEvent`
 - members: `done`, `data`
 - evidence classes:
-  - E3 at `packages/drivers/venice-ai/src/VeniceAI.service.ts:1901` — `[DONE]` writes `done=true` with no data; JSON writes `data=some` plus `done=false`. `done` restates payload absence.
+  - E3 at `packages/drivers/venice-ai/src/VeniceAI.service.ts:1900` — `[DONE]` writes `done=true` with no data; JSON writes `data=some` plus `done=false`. `done` restates payload absence.
   - E2 at `packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts:215` — reader treats done as terminal empty stream and otherwise parses event data; no done+data arm.
 
 # Current shape
 
-Live declaration at `packages/drivers/venice-ai/src/VeniceAI.service.ts:651`:
+Live declaration at `packages/drivers/venice-ai/src/VeniceAI.service.ts:649`:
 
 ```ts
 export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I`VeniceAIServerSentEvent`)(
@@ -83,10 +85,10 @@ The data member carries the payload directly, not `Option`; the discriminator al
 # Migration inventory
 
 - `packages/drivers/venice-ai/src/VeniceAI.service.ts:15` — add `Tuple` to the existing Effect imports.
-- `packages/drivers/venice-ai/src/VeniceAI.service.ts:629-663` — update the example and replace the class bag with the kind kit, data/done classes, union schema, and derived type.
-- `packages/drivers/venice-ai/src/VeniceAI.service.ts:1473` — the stream method signature keeps the same exported type name but now returns the tagged union.
-- `packages/drivers/venice-ai/src/VeniceAI.service.ts:1896-1909` — map `[DONE]` to `.cases.done` and decoded JSON directly to `.cases.data`; remove `O.some` and both boolean writes.
-- `packages/drivers/venice-ai/src/VeniceAI.service.ts:1911-1926` — stream plumbing retains the union output with no encoded boundary change.
+- `packages/drivers/venice-ai/src/VeniceAI.service.ts:626-661` — update the example and replace the class bag with the kind kit, data/done classes, union schema, and derived type.
+- `packages/drivers/venice-ai/src/VeniceAI.service.ts:1469-1471` — the stream method signature keeps the same exported type name but now returns the tagged union.
+- `packages/drivers/venice-ai/src/VeniceAI.service.ts:1894-1907` — map `[DONE]` to `.cases.done` and decoded JSON directly to `.cases.data`; remove `O.some` and both boolean writes.
+- `packages/drivers/venice-ai/src/VeniceAI.service.ts:1909-1925` — stream plumbing retains the union output with no encoded boundary change.
 - `packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts:26,192-207` — type import remains; change `parseStreamEvent` to accept the data payload (or inline decode in the data arm) and remove the defensive `Option` match.
 - `packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts:209-215` — replace `event.done` branching with `VeniceAIServerSentEvent.match`, dropping done and decoding data.
 - `packages/drivers/venice-ai/test/VeniceAI.service.test.ts:20,137-138` — imports, encoder, and schema-derived arbitrary target the union.
@@ -99,14 +101,14 @@ Repository-wide search finds no other source or test reader/writer of this event
 
 # Guard-deletion accounting
 
-- `packages/drivers/venice-ai/src/VeniceAI.service.ts:1901-1907` — delete paired `done`/`Option` writes whose coherence is manually maintained; case constructors make the illegal combinations unrepresentable.
+- `packages/drivers/venice-ai/src/VeniceAI.service.ts:1900-1906` — delete paired `done`/`Option` writes whose coherence is manually maintained; case constructors make the illegal combinations unrepresentable.
 - `packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts:195-207` — delete the defensive `O.match` and `InvalidOutputError` for a non-done event with no payload. The data case requires payload and the done case never reaches parsing.
 - `packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts:215` — delete the truthiness branch over `event.done`; the schema-derived match is exhaustive.
-- `packages/drivers/venice-ai/src/VeniceAI.service.ts:651-663` — delete the comment-only invariant connecting `done` and the optional payload.
+- `packages/drivers/venice-ai/src/VeniceAI.service.ts:649-661` — delete the comment-only invariant connecting `done` and the optional payload.
 
 # Encoded-side impact
 
-none (internal)
+The schema encoding changes from `{ done, data?, index }` to `{ kind, data?, index }`, with `data` required only in the data member. This is an internal parsed-event codec, not the Venice SSE wire: `parseSseData` consumes the provider's `data:` text and the driver never serializes this model back to Venice. `@beep/venice-ai` is private and repository search finds only the in-package stream consumer and codec fixtures named above, so the decoded TypeScript and internal encoded shape migrate atomically. No compatibility codec is needed for persisted or external data.
 
 # Test impact
 
@@ -116,4 +118,4 @@ none (internal)
 
 # Risk & sequencing
 
-This exported model is Tier 1 because it represents parsed internal stream events, not Venice's SSE bytes. Land the schema, parser, language-model adapter, JSDoc, and tests atomically. Keep its `kind: "data" | "done"` surface aligned with the XAI twin design; only payload schemas and provider names should differ. Removing the defensive missing-data error is safe only in the same change that makes missing data unrepresentable.
+This exported model is Tier 1 because it represents parsed internal stream events, not Venice's SSE bytes, and its package is private. Land the schema, parser, language-model adapter, JSDoc, and tests atomically. Keep its `kind: "data" | "done"` surface aligned with the XAI twin design; only payload schemas and provider names should differ. Removing the defensive missing-data error is safe only in the same change that makes missing data unrepresentable.

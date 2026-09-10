@@ -22,7 +22,7 @@ import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const userItem = (text: string) => UserTurnHistoryItem.make({ text });
 const assistantItem = (text: string) => AssistantTurnHistoryItem.make({ text });
@@ -83,10 +83,18 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
     ];
 
     for (const schema of schemas) {
-      fc.assert(
-        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
-        fcRuns(10)
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(schema)]),
+            ([value]) => {
+              roundTrip(schema, value);
+              return true;
+            },
+            fcRuns(10)
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 

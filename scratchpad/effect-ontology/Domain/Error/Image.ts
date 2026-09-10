@@ -70,26 +70,6 @@ const ImageTimeoutErrorFields = {
   }),
 } satisfies S.Struct.Fields;
 
-const makeImageTimeoutError = (
-  input: S.Schema.Type<S.TaggedStruct<"ImageTimeoutError", typeof ImageTimeoutErrorFields>>
-): ImageTimeoutError => ImageTimeoutError.make(input);
-
-const ImageTimeoutErrorBase = S.TaggedError<ImageTimeoutError>($I`ImageTimeoutError`)(
-  "ImageTimeoutError",
-  ImageTimeoutErrorFields,
-  {
-    ...$I.annote("ImageTimeoutError", {
-      description: "Image download that exceeded its configured deadline.",
-    }),
-    toArbitrary:
-      ([from]) =>
-      () => ({
-        arbitrary: from.arbitrary.map(makeImageTimeoutError),
-        terminal: from.terminal?.map(makeImageTimeoutError),
-      }),
-  }
-);
-
 /**
  * Image download that exceeded its configured deadline.
  *
@@ -112,7 +92,15 @@ const ImageTimeoutErrorBase = S.TaggedError<ImageTimeoutError>($I`ImageTimeoutEr
  * @category errors
  * @since 0.0.0
  */
-export class ImageTimeoutError extends ImageTimeoutErrorBase {
+export class ImageTimeoutError extends S.TaggedError<ImageTimeoutError>($I`ImageTimeoutError`)(
+  "ImageTimeoutError",
+  ImageTimeoutErrorFields,
+  {
+    ...$I.annote("ImageTimeoutError", {
+      description: "Image download that exceeded its configured deadline.",
+    }),
+  }
+) {
   /**
    * Configured deadline represented as an Effect `Duration`.
    *
@@ -260,7 +248,6 @@ const ImageErrorDefinition = S.Union([
 export const ImageError = ImageErrorDefinition.pipe(
   $I.annoteSchema("ImageError", {
     description: "Exhaustive tagged union of image-operation failures.",
-    toArbitrary: () => S.toArbitrary(ImageErrorDefinition),
   })
 );
 

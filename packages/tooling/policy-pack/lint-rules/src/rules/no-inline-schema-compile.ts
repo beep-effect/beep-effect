@@ -150,32 +150,36 @@ export default defineRule({
       if (O.isNone(expression)) return false;
 
       return Match.value(expression.value).pipe(
-        Match.discriminators("type")({
-          Identifier: isStaticSchemaReference,
-          MemberExpression: isStaticSchemaReference,
-          Literal: () => true,
-          ArrayExpression: ({ elements }) =>
-            A.every(
-              elements,
-              (element) =>
-                element === null ||
-                isStaticSchemaExpression(element.type === "SpreadElement" ? element.argument : element)
-            ),
-          ObjectExpression: ({ properties }) =>
-            A.every(properties, (property) => {
-              if (property.type === "SpreadElement") return isStaticSchemaExpression(property.argument);
-              if (property.computed && !isStaticSchemaExpression(property.key)) return false;
-              return property.kind === "init" && !property.method && isStaticSchemaExpression(property.value);
-            }),
-          TemplateLiteral: ({ expressions }) => A.isReadonlyArrayEmpty(expressions),
-          UnaryExpression: ({ argument, operator }) =>
-            (Str.Equivalence(operator, "-") || Str.Equivalence(operator, "+")) && isStaticSchemaExpression(argument),
-          CallExpression: (call) =>
-            O.match(asSchemaMethodCall(call), {
-              onNone: thunkFalse,
-              onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
-            }),
-        }),
+        Match.discriminator("type")("Identifier", isStaticSchemaReference),
+        Match.discriminator("type")("MemberExpression", isStaticSchemaReference),
+        Match.discriminator("type")("Literal", () => true),
+        Match.discriminator("type")("ArrayExpression", ({ elements }) =>
+          A.every(
+            elements,
+            (element) =>
+              element === null ||
+              isStaticSchemaExpression(element.type === "SpreadElement" ? element.argument : element)
+          )
+        ),
+        Match.discriminator("type")("ObjectExpression", ({ properties }) =>
+          A.every(properties, (property) => {
+            if (property.type === "SpreadElement") return isStaticSchemaExpression(property.argument);
+            if (property.computed && !isStaticSchemaExpression(property.key)) return false;
+            return property.kind === "init" && !property.method && isStaticSchemaExpression(property.value);
+          })
+        ),
+        Match.discriminator("type")("TemplateLiteral", ({ expressions }) => A.isReadonlyArrayEmpty(expressions)),
+        Match.discriminator("type")(
+          "UnaryExpression",
+          ({ argument, operator }) =>
+            (Str.Equivalence(operator, "-") || Str.Equivalence(operator, "+")) && isStaticSchemaExpression(argument)
+        ),
+        Match.discriminator("type")("CallExpression", (call) =>
+          O.match(asSchemaMethodCall(call), {
+            onNone: thunkFalse,
+            onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
+          })
+        ),
         Match.orElse(thunkFalse)
       );
     };

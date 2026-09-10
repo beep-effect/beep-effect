@@ -6,7 +6,7 @@ import { Effect, Exit } from "effect";
 import { cast } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { hasFunctionStatic, invokeStatic } from "./StaticProbes.ts";
 import type * as EntityId from "@beep/shared-domain/entity/EntityId";
 
@@ -434,16 +434,23 @@ describe("P3 identity namespaces", () => {
 
   it("round-trips schema-derived ids for every identity namespace", () => {
     for (const spec of specs) {
-      fc.assert(
-        fc.property(S.toArbitrary(spec.schema)(fc), (id) => {
-          const decoded = S.decodeSync(spec.schema)(id);
-          const encoded = S.encodeSync(spec.schema)(decoded);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.schema(spec.schema),
+            (id) => {
+              const decoded = S.decodeSync(spec.schema)(id);
+              const encoded = S.encodeSync(spec.schema)(decoded);
 
-          expect(encoded, spec.label).toBe(id);
-          expect(spec.schema.equivalence(cast(decoded), cast(id)), spec.label).toBe(true);
-        }),
-        fcRuns(10)
-      );
+              expect(encoded, spec.label).toBe(id);
+              expect(spec.schema.equivalence(cast(decoded), cast(id)), spec.label).toBe(true);
+
+              return true;
+            },
+            fcRuns(10)
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 

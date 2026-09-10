@@ -7,7 +7,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { DirectedGraph, NodeIndex, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Graph } from "effect";
+
 import * as S from "effect/Schema";
 import { Entity } from "./Entity.ts";
 import { EREdge, ERNode, ResolutionMethod } from "./EntityResolution.ts";
@@ -221,28 +221,6 @@ export class EntityResolutionStats extends S.Class<EntityResolutionStats>($I`Ent
 const ResolutionGraph = DirectedGraph({ node: ERNode, edge: EREdge }).pipe(
   $I.annoteSchema("ResolutionGraph", {
     description: "Immutable directed graph of entity-resolution nodes and edges.",
-    toArbitrary: () => (fc) => {
-      const node = S.toArbitrary(ERNode)(fc);
-      const edge = S.toArbitrary(EREdge)(fc);
-
-      return fc.oneof(
-        fc.constant(Graph.directed<ERNode, EREdge>()),
-        node.map((value) =>
-          Graph.directed<ERNode, EREdge>((graph) => {
-            Graph.addNode(graph, value);
-            return undefined;
-          })
-        ),
-        fc.tuple(node, node, edge).map(([source, target, value]) =>
-          Graph.directed<ERNode, EREdge>((graph) => {
-            const sourceIndex = Graph.addNode(graph, source);
-            const targetIndex = Graph.addNode(graph, target);
-            Graph.addEdge(graph, sourceIndex, targetIndex, value);
-            return undefined;
-          })
-        )
-      );
-    },
   })
 );
 

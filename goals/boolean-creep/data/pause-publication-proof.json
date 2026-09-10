@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "boolean-creep-pause-publication-proof/v1",
+  "date": "2026-09-09",
+  "command": "bun run beep yeet publish --message \"chore(boolean-creep): preserve paused campaign handoff\"",
+  "proofHead": "8d4580ae820726732784562c1b6c1c913e5bba00",
+  "base": "0c975f970b4ac4b101d7c1b11957a799d481af35",
+  "outcome": "failed-before-push",
+  "firstRed": "quality:jsdoc-ratchet",
+  "laterLanesNotRun": 9,
+  "passed": {
+    "headFrozenInstall": true,
+    "cheapGateCount": 13,
+    "prePushLaneCountBeforeFailure": 21,
+    "affectedBuildTasks": 32,
+    "desktopIpcTests": 1,
+    "secretScanFindings": 0,
+    "sastFindings": 0
+  },
+  "regressions": {
+    "leading-blank": 37,
+    "missingExportCategories": 45,
+    "missingExportExamples": 34,
+    "missingExportSince": 45,
+    "multiple-description-paragraphs": 6,
+    "trailing-blank": 37
+  },
+  "attribution": {
+    "kind": "pre-existing-branch-work-outside-campaign",
+    "paths": [
+      "scratchpad/yeet-effect/HookKernel.ts",
+      "scratchpad/yeet-effect/InboxState.ts",
+      "scratchpad/yeet-effect/Processes.ts",
+      "scratchpad/yeet-effect/WatcherKernel.ts"
+    ],
+    "packageAndAppDiffAgainstMain": [],
+    "note": "The fresh scratchpad inventory accounts for all six reported regression increases. The four files predate the campaign pause and remain preserved without edits."
+  },
+  "artifacts": {
+    "verdictSha256": "9c8e96e8a707017b20942f8e1168ca742f072cd6c8465008caa9d56314b9519c",
+    "generatedInventorySha256": "2f6e4931719f90e45b89d459ee665220fc900ded9de1b99b8378cba17cdbe8da"
+  },
+  "disposition": "Save the user-requested draft with failure disclosed. The local inbox was acknowledged as wontfix for the pause; the failure remains unresolved. Do not claim a green full proof or merge readiness.",
+  "subsequentDocumentationOnlyCommit": "This receipt and its pause/ledger links follow the failed proof head. No full proof was run on that later documentation commit."
+}

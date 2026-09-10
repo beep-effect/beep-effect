@@ -52,7 +52,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeAnchorSync = S.decodeSync(Anchor);
 const decodeForeignElementSync = S.decodeSync(ForeignElement);
@@ -67,8 +67,8 @@ const isSafeHtmlAst = S.is(SafeHtmlAst);
 const isSafeImageUrlAttribute = S.is(SafeImageUrlAttribute);
 const isSafeUrlAttribute = S.is(SafeUrlAttribute);
 
-const SafeImageUrlAttributeArbitrary = S.toArbitrary(SafeImageUrlAttribute)(fc);
-const SafeUrlAttributeArbitrary = S.toArbitrary(SafeUrlAttribute)(fc);
+const SafeImageUrlAttributeArbitrary = Arbitrary.schema(SafeImageUrlAttribute);
+const SafeUrlAttributeArbitrary = Arbitrary.schema(SafeUrlAttribute);
 const text = (value: string): Text => Text.make({ value });
 const fragment = (...children: HtmlFragment["children"]): HtmlFragment => HtmlFragment.make({ children });
 
@@ -173,13 +173,20 @@ describe("@beep/html conformance", () => {
 
 describe("@beep/html safe policy", () => {
   it("keeps schema-derived safe URL attributes at their codec fixed points", () =>
-    fc.assert(
-      fc.property(SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary, (href, src) => {
-        expect(decodeSafeUrlAttributeSync(encodeSafeUrlAttributeSync(href))).toBe(href);
-        expect(decodeSafeImageUrlAttributeSync(encodeSafeImageUrlAttributeSync(src))).toBe(src);
-      }),
-      fcRuns(100)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary]),
+          ([href, src]) => {
+            expect(decodeSafeUrlAttributeSync(encodeSafeUrlAttributeSync(href))).toBe(href);
+            expect(decodeSafeImageUrlAttributeSync(encodeSafeImageUrlAttributeSync(src))).toBe(src);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("applies element-aware URL policies", () => {
     for (const href of ["/docs", "#section", "https://example.com", "mailto:user@example.com", "tel:+15551212"]) {

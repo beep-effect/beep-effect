@@ -112,8 +112,8 @@ const defaultManagedSettingsRoots = [
   "C:\\Program Files\\ClaudeCode",
 ] as const;
 
-const homeDirectory = Config.string("HOME").pipe(
-  Config.orElse(() => Config.string("USERPROFILE")),
+const homeDirectory = Config.String("HOME").pipe(
+  Config.orElse(() => Config.String("USERPROFILE")),
   Config.withDefault("/")
 );
 

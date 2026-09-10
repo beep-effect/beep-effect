@@ -7,11 +7,11 @@ import { getColumns, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
 const decodeOrganizationId = S.decodeUnknownEffect(DomainWorker.WorkerOrganizationId);
-const WorkerArbitrary = S.toArbitrary(DomainWorker.Worker)(fc);
+const WorkerArbitrary = Arbitrary.schema(DomainWorker.Worker);
 const WorkerEquivalence = S.toEquivalence(DomainWorker.Worker);
 
 describe("Worker table", () => {
@@ -54,13 +54,20 @@ describe("Worker table", () => {
   );
 
   it("round-trips schema-derived Workers through the row converters", () =>
-    fc.assert(
-      fc.property(WorkerArbitrary, (worker) => {
-        const insert = toWorkerInsert(worker);
-        const decoded = fromWorkerRow({ ...insert, id: worker.id });
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([WorkerArbitrary]),
+          ([worker]) => {
+            const insert = toWorkerInsert(worker);
+            const decoded = fromWorkerRow({ ...insert, id: worker.id });
 
-        expect(WorkerEquivalence(decoded, worker)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(WorkerEquivalence(decoded, worker)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

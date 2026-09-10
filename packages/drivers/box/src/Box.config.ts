@@ -144,7 +144,7 @@ export class BoxConfig extends Context.Service<BoxConfig, BoxDeveloperTokenConfi
 export const BoxConfigLayer = Layer.effect(
   BoxConfig,
   Effect.gen(function* () {
-    const token = yield* Config.redacted("CLOUD_BOX_TOKEN").pipe(
+    const token = yield* Config.Redacted("CLOUD_BOX_TOKEN").pipe(
       Effect.mapError((cause) =>
         BoxError.fromReason("config", {
           cause,

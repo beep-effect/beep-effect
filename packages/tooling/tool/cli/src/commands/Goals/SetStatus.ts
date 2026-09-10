@@ -439,23 +439,23 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
   );
 });
 
-const slugArgument = Argument.string("slug").pipe(
+const slugArgument = Argument.String("slug").pipe(
   Argument.withDescription("Goal packet slug under goals/"),
   Argument.optional
 );
-const statusArgument = Argument.string("status").pipe(
+const statusArgument = Argument.String("status").pipe(
   Argument.withDescription(`Canonical status: ${STATUS_DOMAIN}`),
   Argument.optional
 );
-const migrateFlag = Flag.boolean("migrate").pipe(
+const migrateFlag = Flag.Boolean("migrate").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Run the mechanical census-locked status migration over every packet")
 );
-const migrateWriteFlag = Flag.boolean("write").pipe(
+const migrateWriteFlag = Flag.Boolean("write").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Apply --migrate edits (default is a dry-run report)")
 );
-const previewFlag = Flag.boolean("preview").pipe(
+const previewFlag = Flag.Boolean("preview").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the guarded transition plan (fold, events to append, derived state) without writing")
 );

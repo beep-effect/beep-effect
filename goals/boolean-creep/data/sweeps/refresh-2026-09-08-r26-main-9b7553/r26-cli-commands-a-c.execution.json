@@ -1,0 +1,17 @@
+{
+  "lane": "r26-cli-commands-a-c",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-09T00:40:00.982908+00:00",
+  "finished": "2026-09-09T00:52:27.565129+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 7,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r26-main-9b7553/r26-cli-commands-a-c.jsonl` \u2014 confirmed 1, disqualified 6. All nine assigned command dirs covered. Seeds still present; line drift vs inventory on `TemplateContext` (728\u2192741 / 719\u2192750), `ScaffoldShape` (473\u2192476), `CiLaneRunOptions` (619\u2192621), `CiLocalOptions` (2324\u21922325), `CiLocalStepPlan` (2389\u21922391), `CodexFindingsIngestCommandOptions` (102\u2192108), `MakePhoenixSyncProgramOptions` (320\u2192412), `MakeForwarderTimerProgramOptions` (1818\u21921835), `MakeBenchmarkRunProgramOptions` (2029\u21922046), `MakeLabelAddProgramOptions` (2190\u21922214), `organizeCategoryFor` (2246\u21922260), `LegacyWordTerminal` (3277\u21923280).",
+  "transcriptSha256": "8607533d5fac6f1c8d49e62dbd66887129f34ace16ecbc1ded7ab22a8f6dd8f7",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "9635e7ef6ae5c35bedf49420e61ee6a4893e384797dd5f26d67a1602d3c8dc1c"
+}

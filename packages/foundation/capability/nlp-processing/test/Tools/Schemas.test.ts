@@ -1,13 +1,3 @@
-/**
- * Schema parity proofs for AI-facing NLP tool contracts.
- *
- * The tests intentionally use schema-derived arbitrary values so numeric domain
- * invariants and encoded wire shapes stay tied to the schemas rather than
- * bespoke fixtures.
- *
- * @since 0.0.0
- */
-
 import {
   AiAnalysis,
   AiCorpusMatrixShape,
@@ -38,21 +28,29 @@ import { Tokenize } from "@beep/nlp-processing/Tools/Tokenize";
 import { WordCount } from "@beep/nlp-processing/Tools/WordCount";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expect(equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expect(equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("AI tool shared schemas", () => {

@@ -14,6 +14,7 @@ import * as DevToolsServer from "effect/unstable/devtools/DevToolsServer";
 import * as SocketServer from "effect/unstable/socket/SocketServer";
 import { decodeNonNegativeInt } from "../../internal/decode.ts";
 import type * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema";
+import type * as NetAddress from "effect/unstable/net/NetAddress";
 
 const $I = $ObservabilityId.create("experimental/server/DevToolsRelay");
 const maxSpanEvents = 200;
@@ -81,7 +82,7 @@ export class DevToolsRelayService extends Context.Service<
     readonly latestSpans: Effect.Effect<ReadonlyArray<DevToolsSchema.Span>>;
     readonly latestMetrics: Effect.Effect<O.Option<DevToolsSchema.MetricsSnapshot>>;
     readonly clear: Effect.Effect<void>;
-    readonly address: Effect.Effect<SocketServer.Address>;
+    readonly address: Effect.Effect<NetAddress.SocketAddress>;
   }
 >()("@beep/observability/experimental/server/DevToolsRelay/DevToolsRelayService") {}
 
@@ -136,18 +137,16 @@ export const makeDevToolsRelayService: Effect.Effect<
           return yield* Effect.sync(() => {
             const current = MutableRef.get(state);
             const next: RelayState = Match.value(request).pipe(
-              Match.tags({
-                Span: (span) => ({
-                  ...current,
-                  spans: HashMap.set(current.spans, toSpanKey(span), span),
-                  lastUpdatedAtMs,
-                }),
-                SpanEvent: (spanEvent) => ({
-                  ...current,
-                  spanEvents: pipeAppendLimited(current.spanEvents, spanEvent),
-                  lastUpdatedAtMs,
-                }),
-              }),
+              Match.tag("Span", (span) => ({
+                ...current,
+                spans: HashMap.set(current.spans, toSpanKey(span), span),
+                lastUpdatedAtMs,
+              })),
+              Match.tag("SpanEvent", (spanEvent) => ({
+                ...current,
+                spanEvents: pipeAppendLimited(current.spanEvents, spanEvent),
+                lastUpdatedAtMs,
+              })),
               Match.orElse((metrics) => ({
                 ...current,
                 metrics: O.some(metrics),

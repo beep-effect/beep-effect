@@ -9,7 +9,6 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import golden from "./__golden__/jsdoc-tag-fingerprints.json" with { type: "json" };
 import type { TagName } from "@beep/repo-utils/JSDoc/models/tag-values";
 
@@ -37,11 +36,8 @@ type MakeMember = <const Tag extends TagName, const Def extends typeof JSDocTagD
 ) => MemberSchema;
 type JSDocTagSchema = typeof JSDocTag;
 
-const sampleMember = <Tag extends TagName>(tag: Tag, seed: number) => {
-  const value = pipe(fc.sample(S.toArbitrary(TagValue.cases[tag])(fc), { numRuns: 1, seed }), A.head, O.getOrThrow);
-
-  return { _tag: tag, value };
-};
+// Reuse captured wire values: native Arbitrary seeds do not reproduce fast-check samples.
+const sampleMember = (tag: TagName) => golden[tag].roundTrip;
 
 const fingerprint = (schema: MemberSchema, sample: unknown) => {
   const metadata = pipe(getJSDocTagMetadata(schema), O.getOrThrow);
@@ -58,12 +54,12 @@ const fingerprint = (schema: MemberSchema, sample: unknown) => {
 
 const fingerprints = (implementation: MakeMember, jsDocTag: JSDocTagSchema) =>
   R.fromEntries(
-    A.map(jsDocTag.discriminants, (tag, index) => {
+    A.map(jsDocTag.discriminants, (tag) => {
       const definition = pipe(getJSDocTagMetadata(jsDocTag.cases[tag]), O.getOrThrow);
       const { _tag: _, ...meta } = encodeJSDocTagDefinitionSync(definition);
       const schema = implementation(tag, meta);
 
-      return [tag, fingerprint(schema, sampleMember(tag, index + 1))] as const;
+      return [tag, fingerprint(schema, sampleMember(tag))] as const;
     })
   );
 

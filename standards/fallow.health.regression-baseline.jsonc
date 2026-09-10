@@ -110,6 +110,11 @@
         "count": 1
       }
     },
+    "packages/ecosystem/effect-drizzle/src/pg/derive.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
     "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts": {
       "complexity_moderate": {
         "count": 1
@@ -174,11 +179,6 @@
       }
     },
     "packages/foundation/modeling/schema/src/LocalDate/LocalDate.schema.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/foundation/modeling/schema/src/MutableHashMap.ts": {
       "complexity_moderate": {
         "count": 1
       }
@@ -589,7 +589,7 @@
     },
     "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
       "complexity_moderate": {
-        "count": 2
+        "count": 1
       }
     },
     "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts": {

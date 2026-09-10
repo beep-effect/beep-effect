@@ -37,12 +37,7 @@ export const ErrorCode = LiteralKit([
   "rate_limited",
   "cancelled",
   "unknown",
-])
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.constantFrom("validation", "llm_error", "storage", "timeout", "rate_limited", "cancelled", "unknown"),
-  })
-  .annotate(
+]).annotate(
     $I.annote("ErrorCode", {
       description: "Closed set of terminal extraction-run failure categories.",
     })
@@ -77,11 +72,7 @@ export type ErrorCode = typeof ErrorCode.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AuditEventType = LiteralKit(["started", "completed", "failed", "info", "warning"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("started", "completed", "failed", "info", "warning"),
-  })
-  .annotate(
+export const AuditEventType = LiteralKit(["started", "completed", "failed", "info", "warning"]).annotate(
     $I.annote("AuditEventType", {
       description: "Closed set of categories for extraction-run audit events.",
     })
@@ -239,15 +230,6 @@ export const RunStatus = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("RunStatus", {
     description: "Discriminated extraction-run lifecycle with variant-specific timing and failure data.",
-    toArbitrary: () => (fc) =>
-      S.toArbitrary(
-        S.TaggedUnion({
-          Pending: {},
-          Running: { startedAt: S.DateTimeUtcFromString },
-          Complete: { completedAt: S.DateTimeUtcFromString },
-          Failed: { failedAt: S.DateTimeUtcFromString, error: AuditError },
-        })
-      )(fc),
   })
 );
 
@@ -277,17 +259,7 @@ const ChunkSize = PosInt.check(
       message: "Chunk size must be an integer between 100 and 10000.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .integer({
-          min: 100,
-          max: 10_000,
-        })
-        .map(PosInt.make),
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("ChunkSize", {
       description: "Maximum extraction chunk size measured in UTF-16 characters.",
     })
@@ -303,17 +275,7 @@ const SentenceOverlap = NonNegativeInt.check(
       message: "Sentence overlap must be an integer between 0 and 20.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .integer({
-          min: 0,
-          max: 20,
-        })
-        .map(NonNegativeInt.make),
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("SentenceOverlap", {
       description: "Number of complete sentences repeated between adjacent extraction chunks.",
     })
@@ -372,17 +334,7 @@ const Temperature = S.Finite.check(
       message: "Model temperature must be between 0 and 2.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.double({
-        min: 0,
-        max: 2,
-        noNaN: true,
-        noDefaultInfinity: true,
-      }),
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("Temperature", {
       description: "Finite model sampling temperature in the closed interval [0, 2].",
     })
@@ -398,17 +350,7 @@ const LlmTimeout = PosInt.check(
       message: "LLM timeout must be between 1000 and 300000 milliseconds.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .integer({
-          min: 1_000,
-          max: 300_000,
-        })
-        .map(PosInt.make),
-  })
-  .pipe(
+).pipe(
     S.decodeTo(S.DurationFromMillis),
     $I.annoteSchema("LlmTimeout", {
       description: "Bounded model-call timeout encoded in milliseconds and decoded as Duration.",
@@ -458,11 +400,7 @@ const Concurrency = PosInt.check(
       message: "Run concurrency must be an integer between 1 and 32.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 32 }).map(PosInt.make),
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("Concurrency", {
       description: "Bounded extraction-run concurrency.",
     })
@@ -518,7 +456,6 @@ export const GroundingPolicy = GroundingMode.mapMembers(
 ).pipe(
   $I.annoteSchema("GroundingPolicy", {
     description: "Disabled or enabled extraction grounding with explicit operational policy.",
-    toArbitrary: () => (fc) => fc.oneof(S.toArbitrary(GroundingDisabled)(fc), S.toArbitrary(GroundingEnabled)(fc)),
   }),
   S.toTaggedUnion("mode")
 );

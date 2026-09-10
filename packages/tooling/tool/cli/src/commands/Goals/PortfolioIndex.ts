@@ -250,11 +250,11 @@ export const writePortfolioIndex = Effect.fn("Goals.writePortfolioIndex")(functi
   return content;
 });
 
-const writeFlag = Flag.boolean("write").pipe(
+const writeFlag = Flag.Boolean("write").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Write goals/INDEX.md from the current manifests")
 );
-const checkFlag = Flag.boolean("check").pipe(
+const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Prove generation and fail when a local goals/INDEX.md copy drifts")
 );

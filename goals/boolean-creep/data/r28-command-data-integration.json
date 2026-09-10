@@ -1,0 +1,56 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 730,
+  "afterCount": 729,
+  "beforeInventorySha256": "f621efa041507f69e532079b94b5a976e6811238b65bff8406c64d0494ef8b27",
+  "afterInventorySha256": "eed45c01028b95d547287b96dd2da968c1a329537d5238a1ba2685d6b9d1941d",
+  "correctedIds": [
+    "r25-tool-docgen-cli-config-toggles",
+    "r28-cli-internal-root-tmpfs-gitfile-remove-options",
+    "r28-cli-internal-root-tmpfs-directory-remove-options",
+    "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+    "r28-cli-internal-root-admission-journal-sidecar-remove-options"
+  ],
+  "withdrawnIds": ["create-package-command-flags"],
+  "rowArchive": "history/inventory/2026-09-09-r28-command-data-before.jsonl",
+  "rowArchiveSha256": "c5ccab315b1239153f3f4c5bd171f354d6d7e9b2c09f4c690bdb9acd37145181",
+  "inputSha256": {
+    "data/design-refresh-2026-09-09-r28-command-data-owners.md": "9147d713575e238148d7da23cad95a62affc79f4bc5b74e3223b9ca7aa1169ad",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-internal-contract-correction1.jsonl": "b20deb9984bd19e9b424c40e3b052d9ef46c74cf314b33fefdd5bfcffa7db75d"
+  },
+  "sourceSha256": {
+    "packages/tooling/tool/docgen/src/CLI.ts": "bdbee0f4068afecb084396dd491f665a8264c0de1f2cda06e1d786c02a89507a",
+    "packages/tooling/tool/docgen/src/Configuration.ts": "ac1a676711a1eb1d4837403d642469e2ecb72e8af984892959605293b450e1fd",
+    "packages/tooling/tool/docgen/src/Checker.ts": "b180f70055ff7ca72984fd83ff145f1bcf1400f7d94afcb36437c972c7e9cbc0",
+    "packages/tooling/tool/docgen/src/Core.ts": "d6ba58abb574a4f37b789772d4bbbe253eb36628d7a9a8470b0b22628a9becca",
+    "packages/tooling/tool/docgen/test/Configuration.test.ts": "d530559efd2f91067c98c08b4ddcb3d19ff1d5fc7414b74d1ae814af1f0a150e",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts": "8b3108c7db97b1817f9f1504fc1e8d34ce3c72219b18c456e609920bb4203b75",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/index.ts": "4097f8871b5b25b21611d31fa04d59fa434fbb456f25ebb2c59e13f45bc43482",
+    "packages/tooling/tool/cli/src/index.ts": "19c10f83b6e17ae87269aa30da8f95fb06108e01ef1330f693281b237cd7c6b8",
+    "packages/tooling/tool/cli/src/commands/Root.ts": "fe224f04bbf3099678acd77912c67f14c9834dba085cf14994e4412b72f05a64",
+    "packages/tooling/tool/cli/test/create-package.test.ts": "b20130164ddfd6e4a8e33e4b69553e7b8843bb483c454a5665fe6dc5bf8f296a",
+    "packages/tooling/tool/cli/test/create-package-lab.test.ts": "d6fa0d3a5a9dc21ad0c65ecb375662e687721a654738d4b7600528a4053818d9"
+  },
+  "formalIndependentReview": false,
+  "independentCorrectionClaimed": false,
+  "currentDryCredit": 0,
+  "introducedValidationFailure": {
+    "command": "bun goals/boolean-creep/ops/validate-inventory.ts",
+    "error": "duplicate file/symbol/member cluster",
+    "attribution": "parent-introduced metadata normalization",
+    "cause": "The first-owner integration collapsed distinct fs.remove(candidate.path) and fs.remove(extra) locators to one enclosing symbol, erasing the canonical key discriminator.",
+    "repair": "Restore the four original source-qualified enclosing-call locators from the successful bounded correction. They describe actual calls, not fictitious property owners.",
+    "restoredIds": [
+      "r28-cli-internal-root-tmpfs-gitfile-remove-options",
+      "r28-cli-internal-root-tmpfs-directory-remove-options",
+      "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+      "r28-cli-internal-root-admission-journal-sidecar-remove-options"
+    ]
+  },
+  "notes": [
+    "Docgen metadata now identifies the actual parsed-value Configuration.load argument with four Option<boolean> fields and81 legal input tuples.",
+    "Create-package broad flags are descriptors/anonymous handler parameter aliases; its exact row is archived. The actual ScaffoldShape owner remains under separate source audit.",
+    "Native source adjudication only for command metadata. No additional independent correction, current dry credit or P3 approval is claimed."
+  ]
+}

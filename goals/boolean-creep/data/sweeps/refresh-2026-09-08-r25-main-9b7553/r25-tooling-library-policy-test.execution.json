@@ -1,0 +1,17 @@
+{
+  "lane": "r25-tooling-library-policy-test",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:18:14.658754+00:00",
+  "finished": "2026-09-08T22:31:19.383625+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 23,
+  "qualifiedCandidates": 5,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-tooling-library-policy-test.jsonl` \u2014 confirmed 5, disqualified 18. All nine assigned areas covered. Seeds still present; line drift: OutcomeLabel 640\u2192899, OutcomeLabelAnnotationRow 1888\u21922058, AiMetricsInstallInput 194\u2192186, AiMetricsInstallSpec 379\u2192357, AiMetricsInstallPlanStep 484\u2192468, AiMetricsInstallPlan 543\u2192527, AiMetricsRetentionMutationResult 448\u2192533, AiMetricsRetentionRestoreDrillResult 636\u2192736, NpmPackageJson 1115\u21921107, TSConfigCompilerOptionsShape 612\u2192645, TSConfigBuildOptions 1354\u21921387, TSNodeConfig 1439\u21921472, ImageConfigComplete 286\u2192274, AiMetricsOutcomeLabelInput 207\u2192200. Sibling-state seeds still split as before (`BeaconEvent.toWhite` in ClockCorrelator; `isInterrupt` / `thread_spawn` / `insufficientStorage` on decode-layer siblings).",
+  "transcriptSha256": "6dce2b52eb66c233e68518b2c0d3e8c95e435cc8d3e33c4b334068c27237da7e",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

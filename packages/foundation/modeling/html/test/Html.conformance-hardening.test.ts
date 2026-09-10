@@ -88,7 +88,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { isValidURLString, parseURL } from "whatwg-url";
 
 const decodeButtonResult = S.decodeResult(Button);
@@ -110,7 +110,7 @@ const isHtmlElementMeta = S.is(HtmlElementMeta);
 const AsciiK = makeAsciiCaseInsensitiveEnumerated(["k"]);
 const decodeAsciiKResult = S.decodeResult(AsciiK);
 
-const LinkRelationListArbitrary = S.toArbitrary(LinkRelationList)(fc);
+const LinkRelationListArbitrary = Arbitrary.schema(LinkRelationList);
 const htmlUrlValidationBase = pipe(parseURL("https://html.invalid/"), O.fromNullOr);
 const text = (value: string): Text => Text.make({ value });
 const hasRule = (root: Parameters<typeof inspectConformance>[0], rule: string): boolean =>
@@ -287,24 +287,36 @@ describe("@beep/html numeric and id conformance", () => {
   });
 
   it("keeps generated numeric relationships equivalent to their ordering laws", () =>
-    fc.assert(
-      fc.property(
-        fc.integer({ max: 1000, min: -1000 }).map((value) => value / 10),
-        fc.integer({ max: 1000, min: -1000 }).map((value) => value / 10),
-        fc.integer({ max: 1000, min: -1000 }).map((value) => value / 10),
-        (minimum, maximum, value) => {
-          const root = Meter.make({
-            children: [],
-            max: O.some(maximum),
-            min: O.some(minimum),
-            value: O.some(value),
-          });
-          const expected = minimum <= maximum && minimum <= value && value <= maximum;
-          expect(hasRule(root, "attributeRelationship")).toBe(!expected);
-        }
-      ),
-      fcRuns(100)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(-1000), S.isLessThanOrEqualTo(1000))).pipe(
+              Arbitrary.map((value) => value / 10)
+            ),
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(-1000), S.isLessThanOrEqualTo(1000))).pipe(
+              Arbitrary.map((value) => value / 10)
+            ),
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(-1000), S.isLessThanOrEqualTo(1000))).pipe(
+              Arbitrary.map((value) => value / 10)
+            ),
+          ]),
+          ([minimum, maximum, value]) => {
+            const root = Meter.make({
+              children: [],
+              max: O.some(maximum),
+              min: O.some(minimum),
+              value: O.some(value),
+            });
+            const expected = minimum <= maximum && minimum <= value && value <= maximum;
+            expect(hasRule(root, "attributeRelationship")).toBe(!expected);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("reports every duplicate id occurrence at its root-relative attribute path", () => {
     const element = Div.make({
@@ -465,22 +477,27 @@ describe("@beep/html track language conformance", () => {
   });
 
   it("accepts generated registered language/script/region combinations and rejects separator corruption", () => {
-    const registeredTag = fc
-      .tuple(
-        fc.constantFrom("en", "fr", "zh", "qaa", "qtz", "iw"),
-        fc.constantFrom("Latn", "Cyrl", "Hant", "Qaaa", "Qabx"),
-        fc.constantFrom("US", "FR", "TW", "QM", "XZ")
-      )
-      .map(([language, script, region]) => `${language}-${script}-${region}`);
-    fc.assert(
-      fc.property(registeredTag, (language) => {
-        expect(languageIssues(language, O.some("captions"))).toStrictEqual([]);
-        expect(languageIssues(language.replaceAll("-", "_"), O.some("captions"))).toContainEqual(
-          expect.objectContaining({ rule: "attributeRelationship" })
-        );
-      }),
-      fcRuns(100)
-    );
+    const registeredTag = Arbitrary.all([
+      Arbitrary.schema(S.Literals(["en", "fr", "zh", "qaa", "qtz", "iw"])),
+      Arbitrary.schema(S.Literals(["Latn", "Cyrl", "Hant", "Qaaa", "Qabx"])),
+      Arbitrary.schema(S.Literals(["US", "FR", "TW", "QM", "XZ"])),
+    ]).pipe(Arbitrary.map(([language, script, region]) => `${language}-${script}-${region}`));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([registeredTag]),
+          ([language]) => {
+            expect(languageIssues(language, O.some("captions"))).toStrictEqual([]);
+            expect(languageIssues(language.replaceAll("-", "_"), O.some("captions"))).toContainEqual(
+              expect.objectContaining({ rule: "attributeRelationship" })
+            );
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });
 
@@ -995,22 +1012,30 @@ describe("@beep/html generated special-child grammars", () => {
       expect(isConformantLinkUrl(value), value).toBe(isOracleValidHtmlUrl(value));
     }
 
-    const candidate = fc.oneof(
-      fc.string({ unit: "binary", maxLength: 96 }),
-      fc
-        .tuple(
-          fc.constantFrom("/", "./", "../", "//", "#", "?", "https://", "mailto:", "data:"),
-          fc.string({ unit: "binary", maxLength: 64 })
-        )
-        .map(([prefix, suffix]) => `${prefix}${suffix}`)
+    const candidate = Arbitrary.schema(S.Boolean).pipe(
+      Arbitrary.flatMap((choose) =>
+        choose
+          ? Arbitrary.schema(S.String.check(S.isMaxLength(96)))
+          : Arbitrary.all([
+              Arbitrary.schema(S.Literals(["/", "./", "../", "//", "#", "?", "https://", "mailto:", "data:"])),
+              Arbitrary.schema(S.String.check(S.isMaxLength(64))),
+            ]).pipe(Arbitrary.map(([prefix, suffix]) => `${prefix}${suffix}`))
+      )
     );
 
-    fc.assert(
-      fc.property(candidate, (value) => {
-        expect(isConformantLinkUrl(value), value).toBe(isOracleValidHtmlUrl(value));
-      }),
-      fcRuns(500)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([candidate]),
+          ([value]) => {
+            expect(isConformantLinkUrl(value), value).toBe(isOracleValidHtmlUrl(value));
+
+            return true;
+          },
+          fcRuns(500)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("enforces every generated descendant exclusion through nested fallback content", () => {
@@ -1209,40 +1234,41 @@ describe("@beep/html generated special-child grammars", () => {
     expect(Exit.isFailure(Effect.runSyncExit(conform(invalid)))).toBe(true);
   });
 
-  it("keeps schema-generated valid grammar fixtures free of grammar issues", () =>
-    fc.assert(
-      fc.property(
-        fc.constantFrom(
-          Head.make({ children: [Title.make({ content: "title" })] }),
-          Dl.make({ children: [] }),
-          Details.make({ children: [Summary.make({ children: [] })] }),
-          Fieldset.make({ children: [] }),
-          Figure.make({ children: [] }),
-          Colgroup.make({ children: [] }),
-          Audio.make({ children: [] }),
-          Datalist.make({ children: [] }),
-          Select.make({ children: [] }),
-          Optgroup.make({ children: [] }),
-          Hgroup.make({ children: [H1.make({ children: [] })] }),
-          Table.make({ children: [] })
-        ),
-        (root) => {
-          expect(hasRule(root, "elementOrder")).toBe(false);
-        }
-      ),
-      fcRuns(50)
-    ));
+  it("keeps schema-generated valid grammar fixtures free of grammar issues", () => {
+    const roots = [
+      Head.make({ children: [Title.make({ content: "title" })] }),
+      Dl.make({ children: [] }),
+      Details.make({ children: [Summary.make({ children: [] })] }),
+      Fieldset.make({ children: [] }),
+      Figure.make({ children: [] }),
+      Colgroup.make({ children: [] }),
+      Audio.make({ children: [] }),
+      Datalist.make({ children: [] }),
+      Select.make({ children: [] }),
+      Optgroup.make({ children: [] }),
+      Hgroup.make({ children: [H1.make({ children: [] })] }),
+      Table.make({ children: [] }),
+    ];
+    for (const root of roots) expect(hasRule(root, "elementOrder")).toBe(false);
+  });
 });
 
 describe("@beep/html exact attribute domains", () => {
   it("keeps schema-derived open relation lists at their canonical fixed point", () =>
-    fc.assert(
-      fc.property(LinkRelationListArbitrary, (relation) => {
-        expect(encodeLinkRelationListSync(relation)).toBe(relation);
-        expect(decodeLinkRelationListSync(relation)).toBe(relation);
-      }),
-      fcRuns(100)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([LinkRelationListArbitrary]),
+          ([relation]) => {
+            expect(encodeLinkRelationListSync(relation)).toBe(relation);
+            expect(decodeLinkRelationListSync(relation)).toBe(relation);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("rejects ambiguous factories and uses HTML ASCII case folding", () => {
     expect(() => makeAsciiCaseInsensitiveEnumerated(["foo", "FOO"])).toThrow();

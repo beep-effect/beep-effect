@@ -1,0 +1,1121 @@
+{
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "rawOccurrences": [
+    {
+      "id": "jsonl-chunk-parse-result-done",
+      "rawLane": "r30-foundation-schema-a-m",
+      "rawReportSha256": "e3934056139347a985749445959b70c8f3d8bf240b949d2ab9dabf31d916cfc5",
+      "disposition": "reject-new-out-of-net-single-Boolean-with-payload",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/foundation/modeling/schema/src/Jsonl.ts",
+          "line": 25,
+          "sha256": "adf37931fdd0ccf18be611fdc413a3f861141442c91d250d64c3d3ad5d39f126",
+          "note": "Actual schema owns done:Boolean plus nullable error payload; decoder consumes Bun.JSONL.parseChunk result at60-69 and preserves error/done handling at71-80."
+        },
+        {
+          "file": "node_modules/bun-types/bun.d.ts",
+          "line": 1389,
+          "sha256": "2089ccdcdfb5b2ffe365a797387a024cd69146c4ea271fa6d2b6e2079ca5c8e9",
+          "note": "Bun.JSONL.ParseChunkResult declares done:Boolean and error:SyntaxError|null at1395-1397. This is the external runtime result contract."
+        }
+      ],
+      "overlapCheck": "No canonical JsonlChunkParseResult owner exists in the frozen698-row seed.",
+      "guardDeletionCredit": false,
+      "qualificationNetSatisfied": false,
+      "parentCorrection": "Supersedes the preliminary D2 acceptance before any canonical write: JsonlChunkParseResult has only done:Boolean; error is a nullable payload, read a number, and values unknown. An external contract mirror does not waive the >=2 actual Boolean net. Preserve its original raw D2 report and prior private adjudication."
+    },
+    {
+      "id": "r30-apps-vault-choose-row-disabled-status",
+      "rawLane": "r30-apps",
+      "rawReportSha256": "a687fa3263fc1b2cb646603dc781458e6b6f100a56b8c0e7d7971d49190f2564",
+      "executionReceiptSha256": "29024ad6994b884e959e84c047c1ea69eaeec72bc3cd987156d51dc9ed80e2ca",
+      "disposition": "reject-new-out-of-net-single-Boolean-with-payload",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx",
+          "line": 127,
+          "sha256": "ab550e15ea45fcb88d4d294ef72474cdf5b5fab74ca92e4e9a210e49df7e7cfd",
+          "note": "Props own disabled:Boolean and status:Option<string>; no second co-carried Boolean. Writers157-189 select three Boolean/presence tuples, but status is a payload, and failed retains status while enabled. E4/count alone cannot enlarge the net."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r30-apps-intake-error-include-stack",
+      "rawLane": "r30-apps",
+      "rawReportSha256": "a687fa3263fc1b2cb646603dc781458e6b6f100a56b8c0e7d7971d49190f2564",
+      "executionReceiptSha256": "29024ad6994b884e959e84c047c1ea69eaeec72bc3cd987156d51dc9ed80e2ca",
+      "disposition": "reject-new-out-of-net-separated-single-flag-bags",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+          "line": 550,
+          "sha256": "06933cdb206075584c6b9d182dffdb0841e7a0b3b60be129c855b81f334740be",
+          "note": "Two separate Defect({includeStack:true}) calls at550/575 each own one option flag; they are not sibling Boolean state or a shared value carrier."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r30-apps-intake-fn-concurrent",
+      "rawLane": "r30-apps",
+      "rawReportSha256": "a687fa3263fc1b2cb646603dc781458e6b6f100a56b8c0e7d7971d49190f2564",
+      "executionReceiptSha256": "29024ad6994b884e959e84c047c1ea69eaeec72bc3cd987156d51dc9ed80e2ca",
+      "disposition": "reject-new-out-of-net-separated-single-flag-bags",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+          "line": 734,
+          "sha256": "06933cdb206075584c6b9d182dffdb0841e7a0b3b60be129c855b81f334740be",
+          "note": "Five independent Atom.fn option bags at734/829/964/1018/1022 each have one concurrent flag. Grouping method configuration calls across the module does not create a shared Boolean carrier."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r2-apps-ipc-spike-mount-gates",
+      "rawLane": "r30-apps",
+      "rawReportSha256": "a687fa3263fc1b2cb646603dc781458e6b6f100a56b8c0e7d7971d49190f2564",
+      "executionReceiptSha256": "29024ad6994b884e959e84c047c1ea69eaeec72bc3cd987156d51dc9ed80e2ca",
+      "disposition": "retain-existing-D1-with-locator-correction",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "apps/professional-desktop/src/App.tsx",
+          "line": 852,
+          "sha256": "d29376441f5566e197291c37478ca21bac2dc8f2d0bf2c253525ba6b2de5ec17",
+          "note": "Mount expression transport.ipc && hasIpcSpikeFlag() appears at852. Existing classification/member set unchanged; retain the stable id and update the source anchor."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r30-tooling-library-observability-forwarder-jsonl-scan",
+      "rawLane": "r30-tooling-library-observability",
+      "rawReportSha256": "e1a9304bf371135b52bee76b79a3cf3b2259e2af595a4250274802cdac37be3d",
+      "executionReceiptSha256": "3d984c08f0dc03018afaa3b22aae8d2ce763d2724f31026e62169e4ede4e570e",
+      "disposition": "reject-new-out-of-net-single-Boolean-with-payload",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "line": 790,
+          "sha256": "4ad6495f60c09c0927e2e4dfd3e1e7f098415a496218808df6df61daab68c32e",
+          "note": "All three scan rows790/794/798-807 own only excludedByMaxFileBytes:Boolean plus file:Option<ForwarderSourceFile>. Absent files occur with both false and true, so this is not a duplicate presence flag. Optional payload presence is not a second Boolean for the entry net."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r30-tooling-library-observability-discover-jsonl-scan",
+      "rawLane": "r30-tooling-library-observability",
+      "rawReportSha256": "e1a9304bf371135b52bee76b79a3cf3b2259e2af595a4250274802cdac37be3d",
+      "executionReceiptSha256": "3d984c08f0dc03018afaa3b22aae8d2ce763d2724f31026e62169e4ede4e570e",
+      "disposition": "reject-new-out-of-net-single-Boolean-with-payload",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/tooling/library/ai-metrics/src/source-discovery.ts",
+          "line": 450,
+          "sha256": "9287dc3f18528df35ae8b42510908c748cc1b7d68fb7c12491a998e126cdfefd",
+          "note": "Scan rows450/454/457-459 own only excludedByMaxFileBytes:Boolean plus candidate:Option<SourceCandidateFile>. Both Boolean values occur with None; the three reachable tuples alone do not satisfy the actual-Boolean net."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r30-tooling-library-observability-phoenix-sync-result",
+      "rawLane": "r30-tooling-library-observability",
+      "rawReportSha256": "e1a9304bf371135b52bee76b79a3cf3b2259e2af595a4250274802cdac37be3d",
+      "executionReceiptSha256": "3d984c08f0dc03018afaa3b22aae8d2ce763d2724f31026e62169e4ede4e570e",
+      "disposition": "reject-new-out-of-net-single-Boolean-with-literal",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+          "line": 2018,
+          "sha256": "693da6ec2a00c1343fa0f800ac29d2fff7d287b829a920ae76275015eae2af3c",
+          "note": "AgentEffectivenessPhoenixSyncResult has one Boolean dryRun; mutationPolicy and status are required literal domains. Producers3847-3855/3924-4028 couple dryRun with policies, but never create a second co-carried Boolean. Preserve the schema and encoded contract; no Tier2 qualification."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r30-tooling-library-observability-collector-serve-options",
+      "rawLane": "r30-tooling-library-observability",
+      "rawReportSha256": "e1a9304bf371135b52bee76b79a3cf3b2259e2af595a4250274802cdac37be3d",
+      "executionReceiptSha256": "3d984c08f0dc03018afaa3b22aae8d2ce763d2724f31026e62169e4ede4e570e",
+      "disposition": "admit-new-D2-census-record",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/tooling/library/qa-capture/src/Collector.service.ts",
+          "line": 432,
+          "sha256": "97114c735d1749925b6876427ce0c5b01ad5af176582145061faef7b5a71559f",
+          "note": "Actual instantiated HttpRouter.serve options own both disableListenLog and disableLogger. Effect reference HttpRouter.ts1236-1237 declares both independently; reader1265 controls request logger, reader1279 controls address logging."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/unstable/http/HttpRouter.ts",
+          "line": 1236,
+          "sha256": "64b0a93f6672ee0879a71d1ec3b174ecf86e8f65ca3b963885d0439998664ec9",
+          "note": "Independent logger and address-log options; current Effect reference source inspected."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r30-tooling-library-support-test-layer-settings",
+      "rawLane": "r30-tooling-library-support",
+      "rawReportSha256": "7c0a10472e46d258c4715b1200376896be755b83d06b5fe1b12a9fc2b695d845",
+      "executionReceiptSha256": "160a244f732f3a2045fde940d98952a7f170509cdd18596223b9260f707eed61",
+      "disposition": "admit-new-D1-census-record",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
+          "line": 60,
+          "sha256": "0df3ac8a6266de7ef5da9bb71265cc833e840dd63baaa9aa39adb44e44fac2fc",
+          "note": "Two Boolean capability fields have independent true defaults at60-71. Documentation84-86 and readers254/289 independently control different conformance assertions; all four settings are meaningful."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r30-tooling-library-support-open-mode",
+      "rawLane": "r30-tooling-library-support",
+      "rawReportSha256": "7c0a10472e46d258c4715b1200376896be755b83d06b5fe1b12a9fc2b695d845",
+      "executionReceiptSha256": "160a244f732f3a2045fde940d98952a7f170509cdd18596223b9260f707eed61",
+      "disposition": "admit-new-qualified-as-designed",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+          "line": 717,
+          "sha256": "4993bd3b1d5cd8d0a0765c80f2ad2e81a6ecc80ecb19d396a7f0ecaad6e45566",
+          "note": "Actual OpenMode owns six Boolean fields. Sole producer741-749 maps all ten OpenFlag literals735-739 to ten distinct six-bit tuples, including create=>writable and truncate=>create. Internal derived state,64/10; private design assigned, no canonical write."
+        }
+      ],
+      "guardDeletionCredit": false,
+      "privateP2Bundle": "~/.cache/beep/boolean-creep/r30-memory-filesystem-designs",
+      "privateP2ManifestSha256": "7fae3475de0f3035d5936308b3d8e1376f82568ea7e3e0c09d5783d70de63143",
+      "parentDesignRead": true
+    },
+    {
+      "id": "r30-tooling-library-support-open-file-descriptor",
+      "rawLane": "r30-tooling-library-support",
+      "rawReportSha256": "7c0a10472e46d258c4715b1200376896be755b83d06b5fe1b12a9fc2b695d845",
+      "executionReceiptSha256": "160a244f732f3a2045fde940d98952a7f170509cdd18596223b9260f707eed61",
+      "disposition": "admit-new-qualified-as-designed",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+          "line": 268,
+          "sha256": "4993bd3b1d5cd8d0a0765c80f2ad2e81a6ecc80ecb19d396a7f0ecaad6e45566",
+          "note": "Actual descriptor stores readable/writable/append. Sole allocator1759-1778 copies reachable OpenMode access bits; five distinct triples of eight. Consumers getOpenFile762-780,read1875,write1923/1927,truncate2070 preserve access/append semantics. Distinct stored carrier from OpenMode; private design assigned."
+        }
+      ],
+      "guardDeletionCredit": false,
+      "privateP2Bundle": "~/.cache/beep/boolean-creep/r30-memory-filesystem-designs",
+      "privateP2ManifestSha256": "7fae3475de0f3035d5936308b3d8e1376f82568ea7e3e0c09d5783d70de63143",
+      "parentDesignRead": true
+    },
+    {
+      "id": "r30-tooling-library-support-watch-subscription",
+      "rawLane": "r30-tooling-library-support",
+      "rawReportSha256": "7c0a10472e46d258c4715b1200376896be755b83d06b5fe1b12a9fc2b695d845",
+      "executionReceiptSha256": "160a244f732f3a2045fde940d98952a7f170509cdd18596223b9260f707eed61",
+      "disposition": "admit-new-D1-census-record",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+          "line": 229,
+          "sha256": "4993bd3b1d5cd8d0a0765c80f2ad2e81a6ecc80ecb19d396a7f0ecaad6e45566",
+          "note": "WatchSubscription co-carries directory and recursive. Writer3043-3048 records independent inode kind and caller recursive option; includesWatchPath452-455 only consults recursive for directories, leaving file+recursive a valid stored observation."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r30-tooling-library-support-temp-directory-scoped-remove-options",
+      "rawLane": "r30-tooling-library-support",
+      "rawReportSha256": "7c0a10472e46d258c4715b1200376896be755b83d06b5fe1b12a9fc2b695d845",
+      "executionReceiptSha256": "160a244f732f3a2045fde940d98952a7f170509cdd18596223b9260f707eed61",
+      "disposition": "admit-new-D2-census-record",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "evidence": [
+        {
+          "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+          "line": 2437,
+          "sha256": "4993bd3b1d5cd8d0a0765c80f2ad2e81a6ecc80ecb19d396a7f0ecaad6e45566",
+          "note": "The remove call instantiates recursive:true and force:true. Effect FileSystem.ts277/281 separately defines recursive descent and ignore-missing behavior; the same complete tuple is reused at2499. This is the external FileSystem options boundary."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "Separate recursive and force flag semantics on the external FileSystem.remove method."
+        }
+      ],
+      "guardDeletionCredit": false
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "rawLane": "r30-cli-internal-root",
+      "rawReportSha256": "e652c77a61b7ab5b547cfaa1a68563a86c2d360356d2315d3f21ade7938cebd2",
+      "executionReceiptSha256": "f35f8d2999d77ec16b0e215d3bc83f3c53e16c1d0ddc3ce29d1b8279176738bc",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "retain-existing-qualified-status-and-design-with-locator-correction",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+          "line": 66,
+          "sha256": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
+          "note": "DiscoveredCandidate type61-69 puts classified at66, with idleSinceMillis at65. This is an existing designed312/13 qualification, not a new confirmed row; preserve current evidence, status and full-owner cardinality. The existing E4 citation373 is the discoverDanglingWorktreeStub function header; the returned constructor begins388. Source bytes equal the original P2 source f03850b762e41217b5a0c26f26041daee490a070."
+        }
+      ],
+      "change": {
+        "line": 66,
+        "designOwnerAnchor": "TmpfsReap.ts:65 -> TmpfsReap.ts:66"
+      }
+    },
+    {
+      "id": "r30-tooling-policy-bundle-analyzer-plugin-options",
+      "rawLane": "r30-tooling-policy",
+      "rawReportSha256": "73c2c94e7ca2fb2f9fac4080244183ba19336ceb26bc477d2e49615d6d8dc51d",
+      "executionReceiptSha256": "6e0579159439baf06bb6d43d7f11331faa8ecc5ab6cd245f667be453ecd43624",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+          "line": 410,
+          "sha256": "523a6a06bffaac0320189d423faa8f37b58a012a1d6d2d4081af489c316d1664",
+          "note": "Actual instantiated plugin options owner is distinct from its existing input-config schema. Complete own Boolean fields are preserved from the raw record; optional forwarded fields retain SDK absence/default semantics."
+        },
+        {
+          "file": "node_modules/@next/bundle-analyzer/index.d.ts",
+          "line": 4,
+          "sha256": "584cdff8cfea038482a2960e07524ea17bf8bc8163c54fb7a260c9e5160ddbb9",
+          "note": "Installed SDK declaration confirms enabled/openAnalyzer at4-5, or cacheOnNavigation/disable/register/reloadOnOnline at13/18/66/71; not repository-owned phase state."
+        }
+      ]
+    },
+    {
+      "id": "r30-tooling-policy-serwist-init-options",
+      "rawLane": "r30-tooling-policy",
+      "rawReportSha256": "73c2c94e7ca2fb2f9fac4080244183ba19336ceb26bc477d2e49615d6d8dc51d",
+      "executionReceiptSha256": "6e0579159439baf06bb6d43d7f11331faa8ecc5ab6cd245f667be453ecd43624",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+          "line": 438,
+          "sha256": "523a6a06bffaac0320189d423faa8f37b58a012a1d6d2d4081af489c316d1664",
+          "note": "Actual instantiated plugin options owner is distinct from its existing input-config schema. Complete own Boolean fields are preserved from the raw record; optional forwarded fields retain SDK absence/default semantics."
+        },
+        {
+          "file": "node_modules/@serwist/next/dist/index.d.mts",
+          "line": 13,
+          "sha256": "9c53f1cf44693c9b8cc46bfe1553b1ec6b800a55f754b47ec07dcf6a5dbd782e",
+          "note": "Installed SDK declaration confirms enabled/openAnalyzer at4-5, or cacheOnNavigation/disable/register/reloadOnOnline at13/18/66/71; not repository-owned phase state."
+        }
+      ]
+    },
+    {
+      "id": "r30-cli-commands-a-c-preservation-dest-partial-exists",
+      "rawLane": "r30-cli-commands-a-c",
+      "rawReportSha256": "4e67231e74acff406524d52a654b62058d8cadfa2277dc3e0184dc65cde7518f",
+      "executionReceiptSha256": "cd144d7c9b7e405d5c512a2c53fb96e462ea05d4b981f1e67f761e874f623676",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D1-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.ts",
+          "line": 508,
+          "sha256": "8c78543665cd84df4e87fcb809a68766e19b020c40a48180541f042e2202c553",
+          "note": "Independently observed complete-destination vs staging-partial filesystem facts. Reader 510 skips unless destExists && !partialExists; dest-missing, partial-present, and both-true remain legal skip states rather than a masked union."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-a-c-legacy-word-dest-partial-exists",
+      "rawLane": "r30-cli-commands-a-c",
+      "rawReportSha256": "4e67231e74acff406524d52a654b62058d8cadfa2277dc3e0184dc65cde7518f",
+      "executionReceiptSha256": "cd144d7c9b7e405d5c512a2c53fb96e462ea05d4b981f1e67f761e874f623676",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D1-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+          "line": 3772,
+          "sha256": "2208bfdf8a6f78cb91b99bbde4ba6cabc9419d4de8220dec639e6459c411457f",
+          "note": "Independently observed published vs staging paths for one conversion output. Both locals coexist before the OR refusal at 3778; dest-only, partial-only, and both-true share the exclusive-create error, and both-false continues."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+      "rawLane": "r30-cli-commands-l-q",
+      "rawReportSha256": "3f2560ece398dc0b041e3cb68fced18a25eec59f6085005c00982b395c537650",
+      "executionReceiptSha256": "4e2aa7a60865f24a194ad0a1c5eb85c534d1548024ef33c6914789783d2d0e0c",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "line": 2370,
+          "sha256": "1e35023d2db8e3c4830f4b793e955cd90a45058e7a9431b2c11f4fb086965311",
+          "note": "Inline jsonc-parser parse() options at Quality.command.ts:2370 inside collectWorkspaceTsconfigProfileDiagnostics. allowTrailingComma and disallowComments mirror the external ParseOptions contract; distinct from the runTsgoRulesCheck tsconfig and alias bags."
+        },
+        {
+          "file": "node_modules/jsonc-parser/lib/umd/main.d.ts",
+          "line": 179,
+          "sha256": "f1d603af05e59e26aae3d9fa7bb0138e744bfbfc9f4793ddeaabe5c85da1d30f",
+          "note": "ParseOptions179-181 independently declares disallowComments and allowTrailingComma; this call is distinct from four seeded parse-option owners in Quality.command.ts."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-l-q-purge-remove-options",
+      "rawLane": "r30-cli-commands-l-q",
+      "rawReportSha256": "3f2560ece398dc0b041e3cb68fced18a25eec59f6085005c00982b395c537650",
+      "executionReceiptSha256": "4e2aa7a60865f24a194ad0a1c5eb85c534d1548024ef33c6914789783d2d0e0c",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Purge/Purge.command.ts",
+          "line": 234,
+          "sha256": "dddb8104beaa0e20c48d51b7c64c32ace5effbf56987bee2bd11dda2381bf0fc",
+          "note": "Instantiated Effect FileSystem.remove options at Purge.command.ts:234. recursive and force are the external filesystem API controls; this purge always passes both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-l-q-fallow-audit-diff-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-l-q",
+      "rawReportSha256": "3f2560ece398dc0b041e3cb68fced18a25eec59f6085005c00982b395c537650",
+      "executionReceiptSha256": "4e2aa7a60865f24a194ad0a1c5eb85c534d1548024ef33c6914789783d2d0e0c",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+          "line": 1315,
+          "sha256": "8155432992426283cd9a5741298a06a97d96bce82793a2b1003b5091c7423305",
+          "note": "Instantiated FileSystem.remove options at FallowQuality.command.ts:1315 in collectAuditDiffFallbackOutput's acquireUseRelease cleanup. External filesystem controls, not a locally owned exclusive phase."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-l-q-coverage-regression-clean-remove-options",
+      "rawLane": "r30-cli-commands-l-q",
+      "rawReportSha256": "3f2560ece398dc0b041e3cb68fced18a25eec59f6085005c00982b395c537650",
+      "executionReceiptSha256": "4e2aa7a60865f24a194ad0a1c5eb85c534d1548024ef33c6914789783d2d0e0c",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+          "line": 1038,
+          "sha256": "d2332d334480350f38cfa2773449453da5dc16254c0cbc6da7cb5b5f5ec4e9a7",
+          "note": "Instantiated FileSystem.remove options at CoverageRegression.ts:1038. force and recursive are the external filesystem API; the cleaner always passes both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-l-q-check-census-overlay-compiler-options",
+      "rawLane": "r30-cli-commands-l-q",
+      "rawReportSha256": "3f2560ece398dc0b041e3cb68fced18a25eec59f6085005c00982b395c537650",
+      "executionReceiptSha256": "4e2aa7a60865f24a194ad0a1c5eb85c534d1548024ef33c6914789783d2d0e0c",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+          "line": 411,
+          "sha256": "39d80c276b54c7123b854d876d4ea09c3bb62112f4b099575348eb2cf5379956",
+          "note": "Instantiated compilerOptions JSON object at CheckCensus.ts:410-417 for a TypeScript overlay tsconfig. composite, incremental, declaration, declarationMap and noEmit retain the external tsc configuration contract; rootDir is a path string, not a Boolean axis."
+        },
+        {
+          "file": "node_modules/typescript/lib/typescript.d.ts",
+          "line": 7014,
+          "sha256": "c967e03c8dbb4770f7e2f0b71b5d13593de679a41cc2b60266c4b69f1342a263",
+          "note": "CompilerOptions owns declaration7029, declarationMap7030, noEmit7065, composite7100 and incremental7101; external configuration is preserved."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-delete-package-tree-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+          "line": 758,
+          "sha256": "12ea0b216e5622c3989fc27ebfa3e04944804c30a514900a9c9412b792971b80",
+          "note": "Instantiated Effect FileSystem.remove options at 758 after identity/changeset rewrites; recursive and force are independent platform-fs SDK knobs, and this call sets both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-apply-create-captions-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/Apply.ts",
+          "line": 312,
+          "sha256": "5cc9c9eeef54b7f11805c3d4ad1a9c45ce3b277aca54002fe7efb3f49b880df4",
+          "note": "Inline Effect FileSystem.remove options in the applyCreateCaptionFilesPlan release path at 310-314; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-apply-normalize-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/Apply.ts",
+          "line": 646,
+          "sha256": "5cc9c9eeef54b7f11805c3d4ad1a9c45ce3b277aca54002fe7efb3f49b880df4",
+          "note": "Inline Effect FileSystem.remove options in the applyNormalizePlan release path at 644-648; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-apply-archive-poor-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/Apply.ts",
+          "line": 748,
+          "sha256": "5cc9c9eeef54b7f11805c3d4ad1a9c45ce3b277aca54002fe7efb3f49b880df4",
+          "note": "Inline Effect FileSystem.remove options in the applyArchivePoorCandidatesPlan release path at 746-750; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-apply-strip-metadata-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/Apply.ts",
+          "line": 962,
+          "sha256": "5cc9c9eeef54b7f11805c3d4ad1a9c45ce3b277aca54002fe7efb3f49b880df4",
+          "note": "Inline Effect FileSystem.remove options in the applyStripMetadataPlan release path at 960-964; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-apply-crop-borders-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/Apply.ts",
+          "line": 1015,
+          "sha256": "5cc9c9eeef54b7f11805c3d4ad1a9c45ce3b277aca54002fe7efb3f49b880df4",
+          "note": "Inline Effect FileSystem.remove options in the applyCropBordersPlan release path at 1013-1017; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-docgen-aggregate-destination-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Aggregate.ts",
+          "line": 227,
+          "sha256": "b79f4432b8fe51526654a27a4044ea6d0f03e506977e509081e7c74a659f1ca7",
+          "note": "Inline Effect FileSystem.remove options when resetting a package docs destination at 225-229; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-match-person-model-store-staging-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.model-store.ts",
+          "line": 573,
+          "sha256": "c34bed23f851cce7de32e7dfda16e203dd5d5c734a0590e9124955bafc4b20f9",
+          "note": "Inline Effect FileSystem.remove options in downloadArtifact's ensuring cleanup at 573; force and recursive are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-match-person-stage-copy-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts",
+          "line": 1803,
+          "sha256": "f75ed5f362a6049b7ba6cfc492d9b966dd00d4b6004419e611ae6d3781f28da7",
+          "note": "Inline Effect FileSystem.remove options on the stageCopy error path at 1803; force and recursive are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-match-person-stage-manifest-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts",
+          "line": 1845,
+          "sha256": "f75ed5f362a6049b7ba6cfc492d9b966dd00d4b6004419e611ae6d3781f28da7",
+          "note": "Inline Effect FileSystem.remove options on the stageManifest error path at 1845; force and recursive are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-match-person-cleanup-staging-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts",
+          "line": 1953,
+          "sha256": "f75ed5f362a6049b7ba6cfc492d9b966dd00d4b6004419e611ae6d3781f28da7",
+          "note": "Inline Effect FileSystem.remove options in cleanupCommitStaging at 1953; force and recursive are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-image-curation-json-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+          "line": 783,
+          "sha256": "6f4fbb4b7bbe9af427920197ae16b17f54605e3f30fc6d4bf9caebfd3cf64cad",
+          "note": "Inline Effect FileSystem.remove options in writeJsonAtomically's release path at 783; force and recursive are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-curate-images-manifest-temp-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+          "line": 1595,
+          "sha256": "6f4fbb4b7bbe9af427920197ae16b17f54605e3f30fc6d4bf9caebfd3cf64cad",
+          "note": "Inline Effect FileSystem.remove options for the nested manifest staging directory at 1595; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-curate-images-tempdir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+          "line": 1598,
+          "sha256": "6f4fbb4b7bbe9af427920197ae16b17f54605e3f30fc6d4bf9caebfd3cf64cad",
+          "note": "Inline Effect FileSystem.remove options for the outer curation temp directory at 1598; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-worker-eval-isolated-dir-create-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+          "line": 940,
+          "sha256": "4614d9f3603d0e3e0575c63f33f9a2688525acbdaf74593e22b923c41f954b06",
+          "note": "Inline Effect FileSystem.remove options on makeIsolatedWorkerEvalDirectory write failure at 940; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-worker-eval-isolated-dir-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+          "line": 949,
+          "sha256": "4614d9f3603d0e3e0575c63f33f9a2688525acbdaf74593e22b923c41f954b06",
+          "note": "Inline Effect FileSystem.remove options in removeIsolatedWorkerEvalDirectory at 949; recursive and force are independent platform-fs SDK knobs, both true."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-packet-mutation-empty-repair-root-remove-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+          "line": 298,
+          "sha256": "ad58839cb14bb25ddb36b68a0785c7109e2a434b87e7cdd6ac533d5f94a4ed88",
+          "note": "Inline Effect FileSystem.remove options after both residue directories are gone at 298; recursive and force are independent platform-fs SDK knobs, both true. Distinct from the seeded backupRemaining/failedRemaining sibling locals."
+        },
+        {
+          "file": ".repos/effect/packages/effect/src/FileSystem.ts",
+          "line": 277,
+          "sha256": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+          "note": "FileSystem.remove recursive at277 controls traversal and force at281 controls missing paths. This is an instantiated external options owner."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-match-person-glob-scan-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts",
+          "line": 732,
+          "sha256": "f75ed5f362a6049b7ba6cfc492d9b966dd00d4b6004419e611ae6d3781f28da7",
+          "note": "Instantiated Bun.Glob.scanSync options at 730-736; dot, followSymlinks, onlyFiles, and throwErrorOnBrokenSymlink are independent Bun glob SDK knobs. This call sets dot true and the other three false."
+        },
+        {
+          "file": "node_modules/bun-types/bun.d.ts",
+          "line": 8808,
+          "sha256": "2089ccdcdfb5b2ffe365a797387a024cd69146c4ea271fa6d2b6e2079ca5c8e9",
+          "note": "GlobScanOptions owns dot8819, followSymlinks8833, throwErrorOnBrokenSymlink8840, onlyFiles8847. Complete instantiated own Boolean set retained; no SDK-wide expansion."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-materialize-canonical-png-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D2-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+          "line": 1314,
+          "sha256": "6f4fbb4b7bbe9af427920197ae16b17f54605e3f30fc6d4bf9caebfd3cf64cad",
+          "note": "Instantiated sharp .png() encoder options at 1313-1318; adaptiveFiltering, force, and palette are independent sharp SDK knobs. This call sets adaptiveFiltering and force true and palette false."
+        },
+        {
+          "file": "node_modules/sharp/lib/index.d.ts",
+          "line": 1527,
+          "sha256": "2876b0808194e7e14eb78d59f28aa835d9146bbafd4b7ae150b3fbf1da54b8e6",
+          "note": "PngOptions1527 extends OutputOptions; force1359, adaptiveFiltering1533 and palette1539 retain encoder semantics."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-match-person-validate-lock-capture-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D1-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts",
+          "line": 806,
+          "sha256": "856690578d3906c5709c5447b83d1a7cc64d76aed6a903faa70742af6fa9e91d",
+          "note": "Actual constructed repo StepExec runCapturedStreams request at 802-815. extendEnv inherits process env; trim trims captured text. Both-true is written here; the contract accepts either control independently including absence. Preserve command/args/cwd/env/bound payloads."
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+          "line": 1059,
+          "sha256": "cd587a632e7e21fd1e913caaf78619ab8cca8be2ef9a86a514d252354dc1ffad",
+          "note": "RunCapturedStreamsOptions1059-1066 composes SpawnFields436-443; spawnFields709 handles env inheritance independently from stdout/stderr trimming1131-1132. All four Boolean combinations are supported."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-match-person-materialize-env-capture-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D1-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts",
+          "line": 856,
+          "sha256": "856690578d3906c5709c5447b83d1a7cc64d76aed6a903faa70742af6fa9e91d",
+          "note": "Actual constructed repo StepExec runCapturedStreams request at 852-860. extendEnv and trim are independent capture knobs; both-true is one supported combo, not a masked union. Preserve command/args/cwd/env/bound payloads."
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+          "line": 1059,
+          "sha256": "cd587a632e7e21fd1e913caaf78619ab8cca8be2ef9a86a514d252354dc1ffad",
+          "note": "RunCapturedStreamsOptions1059-1066 composes SpawnFields436-443; spawnFields709 handles env inheritance independently from stdout/stderr trimming1131-1132. All four Boolean combinations are supported."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-d-k-match-person-execute-worker-capture-options",
+      "rawLane": "r30-cli-commands-d-k",
+      "rawReportSha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5",
+      "executionReceiptSha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-D1-census-record",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts",
+          "line": 890,
+          "sha256": "856690578d3906c5709c5447b83d1a7cc64d76aed6a903faa70742af6fa9e91d",
+          "note": "Actual constructed repo StepExec runCapturedStreams request at 886-895. extendEnv and trim are independent capture knobs; both-true is one supported combo, not a masked union. Preserve command/args/cwd/env/stdoutBound/stderrBound payloads."
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+          "line": 1059,
+          "sha256": "cd587a632e7e21fd1e913caaf78619ab8cca8be2ef9a86a514d252354dc1ffad",
+          "note": "RunCapturedStreamsOptions1059-1066 composes SpawnFields436-443; spawnFields709 handles env inheritance independently from stdout/stderr trimming1131-1132. All four Boolean combinations are supported."
+        }
+      ],
+      "overlapCheck": "Parent compared current seed file/member sets and nearby anchors. No identical owner exists; nearby distinct locals/options or calls retained separately."
+    },
+    {
+      "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+      "rawLane": "r30-cli-commands-l-q",
+      "rawReportSha256": "3f2560ece398dc0b041e3cb68fced18a25eec59f6085005c00982b395c537650",
+      "executionReceiptSha256": "4e2aa7a60865f24a194ad0a1c5eb85c534d1548024ef33c6914789783d2d0e0c",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-qualified-as-designed",
+      "privateP2Bundle": "~/.cache/beep/boolean-creep/r30-quality-outcome-design",
+      "privateP2ManifestSha256": "865b332c6266dbc408ad342e058b3de6a0a3e27e4e2037c06a4b14fe80531cac",
+      "parentDesignRead": true,
+      "change": {
+        "storage": "derived",
+        "status": "designed"
+      },
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+          "line": 1702,
+          "sha256": "6db7f2d95fa36cd8a7055ea09e266c95602d4374b451ac25ad3dfefb23768534",
+          "note": "Complete private four-payload/two-Boolean result carrier. Reuse writer1735-1736 fixes true/false; executed writer1753-1756 fixes reused false and derives stopping from nonempty failure plus red scheduling decision. Legal4/3; preserve imprecise failed ran outcomes and serial journal/failure/stop/proof order."
+        }
+      ],
+      "overlapCheck": "Distinct from R27 pre-execution reusable/activeReuse locals. Parent has read complete proposed design; sibling scope clarification staged privately."
+    },
+    {
+      "id": "r30-cli-yeet-sweep-merged-local-tip",
+      "rawLane": "r30-cli-yeet",
+      "rawReportSha256": "c852d3bcb0f50d96f2fa2ecb0e73e47c537b82cc3fff21ea9d28ceccfe48ff07",
+      "executionReceiptSha256": "06a6196f83e4fcc0c2539903fc1bad2f86f3180d7835479bf682dcd6b63cde5e",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "reject-new-qualification-class-wide-legal-cardinality-not-established",
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+          "line": 753,
+          "sha256": "6ca599a6b7334fb956e4b0b089e5364a062e4bb9281d6295a422e5257173488e",
+          "note": "Observer image4/3 is real but unchanged from prior exact source1c07c. Exported planner accepts independently observed/partial facts; sequential reads724/726-731, class124-127 and planner435-443 do not establish class-wide illegality of true/None. This is neither D1 nor a qualified row."
+        }
+      ],
+      "priorAdjudication": {
+        "file": "goals/boolean-creep/data/r29-sweep-ancestry-non-admission.md",
+        "sha256": "2efd29fb1237d0ec1d2a04caad341a040abd2845e72e013eb6cdf0ee268e3175"
+      },
+      "parentCorrection": "No new contract evidence supersedes the existing non-admission. Retain raw report and full source-cited prior argument. Native follow-up independently confirmed same disposition."
+    },
+    {
+      "id": "corpus-mail-store-exception-approved-disposition",
+      "rawLane": "r30-cli-commands-a-c",
+      "rawReportSha256": "4e67231e74acff406524d52a654b62058d8cadfa2277dc3e0184dc65cde7518f",
+      "executionReceiptSha256": "cd144d7c9b7e405d5c512a2c53fb96e462ea05d4b981f1e67f761e874f623676",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-qualified-as-designed",
+      "parentDesignRead": true,
+      "change": {
+        "cardinality": {
+          "representable": 8,
+          "legal": 4
+        },
+        "status": "designed"
+      },
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
+          "line": 1118,
+          "sha256": "9109aab6fb7d213841c93c5363c3b403a6aac083d0444ccd30c48c6b9e12fa27",
+          "note": "Exact E3 approved/presence case under DECISIONS117-118. Parent read complete class, identity spread, producers1030-1061/2074-2120, approval4174-4175, complete segment4229-4297 and explicit mismatch fixtures2820-2838. Retain approved/process supported by full decoder and disposition-independent readers; correct8/3 to8/4. Eight structural diagnostic inputs remain decodable and retain later rejection via lossless diagnostic variants."
+        }
+      ],
+      "privateP2Bundle": "~/.cache/beep/boolean-creep/r30-mail-exception-design",
+      "privateP2ManifestSha256": "953be2a2a8c623eb7179165d75ab82a3c5f48d0fb13ef972f46420062e06a1ad"
+    },
+    {
+      "id": "r30-cli-yeet-portfolio-index-staged-deletion",
+      "rawLane": "r30-cli-yeet",
+      "rawReportSha256": "c852d3bcb0f50d96f2fa2ecb0e73e47c537b82cc3fff21ea9d28ceccfe48ff07",
+      "executionReceiptSha256": "06a6196f83e4fcc0c2539903fc1bad2f86f3180d7835479bf682dcd6b63cde5e",
+      "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+      "guardDeletionCredit": false,
+      "disposition": "admit-new-qualified-as-designed",
+      "parentDesignRead": true,
+      "change": {
+        "kind": "object-literal",
+        "line": 232,
+        "status": "designed"
+      },
+      "evidence": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts",
+          "line": 232,
+          "sha256": "8ab82fe558335084558309ade4f3d1546fe6ab9b529e3856b69529e8d44e37f9",
+          "note": "Parent read complete actual constructed input232-238, deletion-query conditional221-231 and reader136-147. Raw parameter owner is excluded; actual object owns present/staged/stagedDeletion plus committedOption/regenerated full strings. Re-anchor to constructed carrier and preserve present-independent diagnostic states; staging gap4/3 has the documented subset contract."
+        }
+      ],
+      "privateP2Bundle": "~/.cache/beep/boolean-creep/r30-yeet-candidates-design",
+      "privateP2ManifestSha256": "46ca3bfe2250af478e2bc201e3804d760797e10815eef7c5f8209b4bfd7f77ea"
+    }
+  ],
+  "guardDeletionCredit": false,
+  "independentP3Approval": false
+}

@@ -137,8 +137,8 @@ const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
 });
 
 const makeFromEnvironment = Effect.fnUntraced(function* () {
-  const apiKey = yield* Config.redacted(GOVINFO_API_KEY_ENV).pipe(Config.option);
-  const apiUrl = yield* Config.string("GOVINFO_API_URL").pipe(Config.withDefault(GOVINFO_API_URL));
+  const apiKey = yield* Config.Redacted(GOVINFO_API_KEY_ENV).pipe(Config.option);
+  const apiUrl = yield* Config.String("GOVINFO_API_URL").pipe(Config.withDefault(GOVINFO_API_URL));
   return yield* makeFromResolved({ apiKey, apiUrl: URLStr.make(apiUrl) });
 });
 

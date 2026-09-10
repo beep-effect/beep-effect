@@ -1,0 +1,58 @@
+{
+  "kind": "boolean-creep-bounded-source-forward-audit/v1",
+  "recordedAt": "2026-09-09T16:55:35.519196+00:00",
+  "sourceSha": "aa714ed1fbe25850bf2031cd47d9dcb768c0cd7b",
+  "originMainSha": "284294ee24177f13f6d3a763c5d987206d351c51",
+  "model": "gpt-6-astra",
+  "reasoningEffort": "xhigh",
+  "inventorySha256": "fc4a37c261318d37cc276315d7014c61410277c7802b38806b72ae3a9437fc13",
+  "privateManifest": {
+    "file": "~/.cache/beep/boolean-creep/pre-r32-main284-graft-owner-audit/MANIFEST.sha256",
+    "sha256": "6ac32a63ddbde6ac106352d1c56dc93b074a6586e565753292a365ba624310f6",
+    "bytes": 8081
+  },
+  "privateArtifacts": 73,
+  "parentVerifiedInputBindings": 56,
+  "graftSourceFiles": 5,
+  "declarations": 17,
+  "otherExcludedOrSingleBooleanSurfaces": 15,
+  "eligibleOwners": 0,
+  "proposedInventoryRows": 0,
+  "disposition": "No eligible owner; inventory and designs unchanged. Anonymous flag parameters and parser descriptors are outside the net; report metrics are numeric.",
+  "preservedContracts": [
+    "Both/neither target selection diagnostics",
+    "Independent dry-run and JSON rendering",
+    "Refusal plan output before failure",
+    "Fresh-plan rejection before writes",
+    "Complete public plan/report codec payloads"
+  ],
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
+      "sha256": "4ca791ed0db371dd33d85e2135fc74f572cbfe568607603122e8abb15344e31a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
+      "sha256": "8a6a5b4cc9a33c1a10d230b78427880cc1c01cf942ed0843541a5d9213894318"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
+      "sha256": "7b9e7b8684f62a24847cf4e0e85bd0b7a22784294c9b3ce6a8d09874590fecc1"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
+      "sha256": "a5a3459417283bf846adbcce54e520bc4c42d1c6d332da898cad35d231efe96c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
+      "sha256": "10a9a0382282e32aa2171690beb79b40e4928b18016ec8c3f59e545f85b86db2"
+    }
+  ],
+  "privateRowValidatorExitCode": 0,
+  "productTestsRun": false,
+  "censusCredit": false,
+  "dryRoundCredit": false,
+  "independentP3Credit": false,
+  "implementationCredit": false,
+  "newerLiveMainAtSeal": "e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b"
+}

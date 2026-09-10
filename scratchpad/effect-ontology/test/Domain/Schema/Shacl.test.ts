@@ -9,7 +9,7 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ShaclValidationReport, ValidationPolicy } from "../../../Domain/Schema/Shacl.ts";
 const decodeShaclValidationReport = S.decodeEffect(ShaclValidationReport);
 const decodeValidationPolicy = S.decodeEffect(ValidationPolicy);
@@ -45,13 +45,20 @@ describe("effect-ontology SHACL schemas", () => {
     ];
 
     for (const schema of schemas) {
-      const arbitrary = S.toArbitrary(schema)(fc);
-      fc.assert(
-        fc.property(arbitrary, (value) => {
+      const arbitrary = Arbitrary.schema(schema);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([value]) => {
           expect(S.is(schema)(value)).toBe(true);
-        }),
-        { numRuns: 32 }
-      );
+
+              return true;
+            },
+            { runs: 32 }
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 

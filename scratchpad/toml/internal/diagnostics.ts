@@ -233,7 +233,7 @@ export type TomlErrorCode = typeof TomlErrorCode.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type TomlErrorCodeRaw = typeof TomlErrorCode.Type;
+export type TomlErrorCodeRaw = TomlErrorCode;
 
 /**
  * The engine's diagnostic record. Public modules derive line/character.

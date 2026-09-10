@@ -36,11 +36,11 @@ const isHubSpotUrl = (value: unknown): value is string => P.isString(value) && U
 export const HubSpotUrl = S.NonEmptyString.check(
   S.makeFilter(isHubSpotUrl, {
     message: "HubSpot URL must be an absolute URL string.",
+    arbitraryConstraint: { patterns: [{ source: "^https?://[a-z]{1,12}\\.example(?:/[a-z0-9]{1,12})?$", flags: "" }] },
   })
 ).pipe(
   $I.annoteSchema("HubSpotUrl", {
     description: "Absolute URL string accepted by the HubSpot driver.",
-    toArbitrary: () => (fc) => fc.webUrl(),
   })
 );
 
@@ -70,7 +70,6 @@ export const HubSpotBaseUrl = S.String.pipe(
   ),
   $I.annoteSchema("HubSpotBaseUrl", {
     description: "HubSpot API base URL normalized without trailing slashes.",
-    toArbitrary: () => (fc) => fc.webUrl().map(normalizeHubSpotBaseUrl),
   })
 );
 

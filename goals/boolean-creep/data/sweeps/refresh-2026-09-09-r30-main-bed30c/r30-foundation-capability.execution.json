@@ -1,0 +1,22 @@
+{
+  "lane": "r30-foundation-capability",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T12:40:02.552663+00:00",
+  "finished": "2026-09-09T12:50:03.499572+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-capability.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`api-transport`, `chalk`, `colors`, `file-processing`, `langextract`, `mcp-kit`, `nlp-processing`, `observability`, `semantic-web`). All 20 seeds still exist at the claimed owners/members; classifications remain supported (no withdrawals, no line/member drift). No unresolved source question.\n\nResidue-only: no new or changed clusters. Out-of-net leftovers were single-boolean structs, function-flag parameters, and standalone predicates.\n\n\ud83c\udf31 graft saved ~26,636 tokens this turn (8 calls)",
+  "transcriptSha256": "c4c6b640b92db2039901035101e75e45a3568bd3a0f8fc1c3f189dd138e7499c",
+  "runnerSha256": "a4d7f7629866b91b6d007f21235d50d699b49dd3a39d3b60864a91f799bbb355",
+  "seedSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

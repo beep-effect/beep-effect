@@ -1,4 +1,4 @@
 {
-  "fileChangeLimit": 1200,
+  "fileChangeLimit": 2000,
   "ignorePatterns": ".repos/effect/**"
 }

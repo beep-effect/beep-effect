@@ -1,0 +1,35 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 871,
+  "afterCount": 856,
+  "beforeInventorySha256": "1a379afa07d78b906e97cf097b59a530ab97c57935fe6ebcf36b957dcd9cff87",
+  "afterInventorySha256": "3178124ff9ab42396334ffcb1b05a0f5266eec9927ed0580b7d5080d3e9ac2b8",
+  "withdrawnIds": [
+    "html-element-meta-void-rawtext",
+    "r2-foundation-html-audio-boolean-attrs",
+    "r2-foundation-html-button-boolean-attrs",
+    "r2-foundation-html-form-boolean-attrs",
+    "r2-foundation-html-img-boolean-attrs",
+    "r2-foundation-html-input-boolean-attrs",
+    "r2-foundation-html-marquee-boolean-attrs",
+    "r2-foundation-html-object-boolean-attrs",
+    "r2-foundation-html-ol-boolean-attrs",
+    "r2-foundation-html-option-boolean-attrs",
+    "r2-foundation-html-script-boolean-attrs",
+    "r2-foundation-html-select-boolean-attrs",
+    "r2-foundation-html-template-shadowroot-flags",
+    "r2-foundation-html-textarea-boolean-attrs",
+    "r2-foundation-html-video-boolean-attrs"
+  ],
+  "disqualifierCounts": {
+    "D1": 3,
+    "D2": 12
+  },
+  "rowArchive": "history/inventory/2026-09-09-r28-generated-scope.jsonl",
+  "rowArchiveSha256": "a32a082ea01f439aae8d6edfb7b75a23fa4b37caf7b83546f2450059a302c22b",
+  "scopeCorrection": "data/r28-generated-scope-correction.json",
+  "scopeCorrectionSha256": "203f15c95554aea6dd33b24bfd95f910b6155f3732e94c5f9076a4583c1e9798",
+  "auditSha256": "0436fa5dd8e29468315264871a81fd78213ae9b9db8e54b20cffa9d2667e6def",
+  "note": "Fifteen generated-source D records withdrawn before classification; zero qualified owners/designs changed. No source/generator changes or independent-review credit."
+}

@@ -1,0 +1,23 @@
+{
+  "lane": "r27-normalize-contract-correction1",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "started": "2026-09-09T03:22:06.342082+00:00",
+  "finished": "2026-09-09T03:24:02.813203+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "I\u2019ll correct just those two normalize-option records: create the report file, then check the design note and the live request/manifest writers.Report file is in place. Next I\u2019ll check the live request schema, service fold, and manifest writer against the design note.Independent check matches the design: the request type accepts all four tuples; the manifest only records three after the fold. Writing both adjudicated records now.`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-normalize-contract-correction1.jsonl` \u2014 confirmed 1, disqualified 1. Original `NormalizeFilesOptions` 4/3 \u2192 D1 (all four request tuples supported). Original `NormalizeManifestOptions` 4/3 persisted/Tier 2 \u2192 confirmed. Covered Files request/service/plan/Apply/manifest; schema round-trips remain compatibility-only, not a fourth producer.",
+  "transcriptSha256": "d35d41a3cb2f8e098e13f36bd4be322448e57e0cec7fa0dfe24deb5c8ed377e0",
+  "runnerSha256": "828f4ed6bf06b870979692d8cdec6c02ceec2632f2c501d3718715fa08e0400c",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998",
+  "basePromptSha256": "de90878b4ff827434d129384eb9fdc6401985b89f70b7dd698e2aef4f5865cb9",
+  "extraPromptSha256": "0b1067084cfdc81e7aac3b44c11a0f8e899078a730f6956a967140863b9f49be",
+  "auditSha256": "b32e518f360caaf9434d6b0ad70b857b818e916c45c7c7cf4ec358935a1c20c8",
+  "correctsReport": "r27-cli-commands-d-k.jsonl",
+  "formalIndependentReview": false
+}

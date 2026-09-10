@@ -16,7 +16,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Config, Effect, FileSystem, Option as O, Path } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePosixPath = S.decodeEffect(PosixPath);
 
@@ -27,7 +27,7 @@ const BEEP_TEST_LIBPFF_PST_ENV = "BEEP_TEST_LIBPFF_PST";
 // Operators can point this at any real PST — the documented public sample is
 // Apache Tika's testPST.pst, pinned by commit URL and sha256 in the package
 // README; no PST binary is committed to this public repository.
-const livePstPath = Config.string(BEEP_TEST_LIBPFF_PST_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
+const livePstPath = Config.String(BEEP_TEST_LIBPFF_PST_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
 
 const provideLive = provideScopedLayer(NodeServices.layer);
 
@@ -36,7 +36,7 @@ const skipNotice = Effect.logInfo(
 );
 
 const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(PffexportMessageRecord));
-const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord)(fc);
+const PffexportMessageRecordArbitrary = Arbitrary.schema(PffexportMessageRecord);
 
 const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -72,15 +72,16 @@ const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: stri
 describe("@beep/libpff live pffexport", () => {
   // Deterministic even without the opt-in PST: proves the JSONL codec the
   // live assertions below decode through.
-  it("round-trips schema-derived message records through the JSONL string codec", () =>
-    fc.assert(
-      fc.property(PffexportMessageRecordArbitrary, (record) => {
-        const json = Effect.runSync(encodePffexportMessageRecordJson(record));
-        const decoded = Effect.runSync(decodeMessageRecord(json));
-        expect(Effect.runSync(encodePffexportMessageRecordJson(decoded))).toBe(json);
-      }),
-      fcRuns(25)
-    ));
+  it.prop(
+    "round-trips schema-derived message records through the JSONL string codec",
+    [PffexportMessageRecordArbitrary],
+    ([record]) => {
+      const json = Effect.runSync(encodePffexportMessageRecordJson(record));
+      const decoded = Effect.runSync(decodeMessageRecord(json));
+      expect(Effect.runSync(encodePffexportMessageRecordJson(decoded))).toBe(json);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.live(
     "reports a runtime pffexport version and exports a real PST",

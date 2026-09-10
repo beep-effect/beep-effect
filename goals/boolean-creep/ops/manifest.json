@@ -5,7 +5,7 @@
     "title": "Boolean-Creep Eradication",
     "status": "active",
     "created": "2026-08-17",
-    "updated": "2026-08-17",
+    "updated": "2026-09-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/boolean-creep",
@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "statement": "Not achieved until every implementation and the final reflection/completed-retained closeout are merged to main after Yeet proves each exact PR head merge-ready.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -55,30 +55,37 @@
     {
       "id": "P1",
       "name": "Inventory sweep (grok lanes) to GATE 1",
-      "status": "in-progress",
-      "exit": "Corpus swept until dry; lane outputs merged and spot-checked; Benjamin ratifies the confirmed inventory."
+      "status": "complete",
+      "exit": "Original corpus swept until dry; lane outputs merged; 100% of qualified evidence verified; Benjamin ratified the confirmed inventory."
     },
     {
       "id": "P2",
-      "name": "Design (Codex; current routing in AGENTS.md)",
-      "status": "pending",
-      "exit": "One reviewed design per confirmed instance under designs/, zero orchestrator findings; Benjamin ratifies (GATE 2)."
+      "name": "Moving-main inventory and design refresh (Codex; current routing in AGENTS.md)",
+      "status": "in-progress",
+      "exit": "The current corpus is dry for two consecutive rounds; every qualified record has verified evidence and a corrected design."
     },
     {
       "id": "P3",
-      "name": "Apply + land (tiered PRs via yeet)",
+      "name": "Independent review and delegated GATE 2 transition",
       "status": "pending",
-      "exit": "Tier 1 batches and Tier 2 singles mergeable; inventory statuses advanced to applied."
+      "exit": "A replacement exact-source receipt covers 100% of qualified records and designs with zero findings; the packet-only ratification PR is merged."
     },
     {
       "id": "P4",
-      "name": "Close",
+      "name": "Apply and land serial Tier 1 batches and Tier 2 singletons",
       "status": "pending",
-      "exit": "Reflection and lifecycle flip land in the same PR as the final work."
+      "exit": "Every implementation PR is merged to main and each implemented inventory record is applied on canonical main."
+    },
+    {
+      "id": "P5",
+      "name": "Exact-main dryness and close",
+      "status": "pending",
+      "exit": "Two consecutive exact-main rounds add no qualified records; reflection and completed-retained lifecycle are merged and verified on main."
     }
   ],
   "verificationCommands": [
     "bun goals/boolean-creep/ops/validate-inventory.ts",
+    "bun goals/boolean-creep/ops/validate-designs.ts",
     "test \"$(wc -m < goals/boolean-creep/GOAL.md)\" -le 4000",
     "jq . goals/boolean-creep/ops/manifest.json",
     "git diff --check -- goals/boolean-creep",
@@ -86,7 +93,7 @@
   ],
   "stopConditions": [
     "A sweep lane cannot honor the evidence gate after one prompt correction.",
-    "A design requires persisted/wire encoded-shape changes without a viable compat proof.",
+    "A design requires persisted/wire encoded-shape changes without a viable byte-compatible proof.",
     "Verification failures attribute as inherited/unrelated/environment-only.",
     "The same blocker repeats after reasonable investigation."
   ],

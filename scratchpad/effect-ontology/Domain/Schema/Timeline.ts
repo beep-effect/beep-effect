@@ -1,3 +1,5 @@
+import * as SchemaAST from "effect/SchemaAST";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 /**
  * Bitemporal timeline, correction-history, and conflict-query contracts.
  *
@@ -34,9 +36,7 @@ export { ClaimRank };
  * @category schemas
  * @since 0.0.0
  */
-export const PersistedClaimId = UUID.annotate({
-  toArbitrary: () => (fc) => fc.uuid().map(UUID.make),
-}).pipe(
+export const PersistedClaimId = UUID.pipe(
   $I.annoteSchema("PersistedClaimId", {
     description: "Database UUID identifying a persisted claim row, distinct from a content-derived ClaimId.",
   })
@@ -64,9 +64,7 @@ export type PersistedClaimId = typeof PersistedClaimId.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const PersistedCorrectionId = UUID.annotate({
-  toArbitrary: () => (fc) => fc.uuid().map(UUID.make),
-}).pipe(
+export const PersistedCorrectionId = UUID.pipe(
   $I.annoteSchema("PersistedCorrectionId", {
     description: "Database UUID identifying a persisted correction row.",
   })
@@ -86,9 +84,7 @@ const BooleanQueryValueDefinition = LiteralKit(["true", "false", "1", "0"]).pipe
   })
 );
 
-const BooleanQueryValue = BooleanQueryValueDefinition.annotate({
-  toArbitrary: () => (fc) => fc.boolean(),
-}).pipe(
+const BooleanQueryValue = BooleanQueryValueDefinition.pipe(
   $I.annoteSchema("BooleanQueryValue", {
     description: "Boolean URL-query codec accepting true, false, 1, or 0 and encoding canonically as true or false.",
   })
@@ -144,15 +140,8 @@ const OrderedUtcRangeDefinition = S.Struct({
 const OrderedUtcRangeFromSelf = S.declare((input: unknown): input is typeof OrderedUtcRangeDefinition.Type =>
   OrderedUtcRangeDefinition.is(input)
 ).annotate({
-  toArbitrary: () => (fc) =>
-    fc
-      .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
-      .map(([from, duration]) =>
-        OrderedUtcRangeDefinition.make({
-          from: DateTime.makeUnsafe(from),
-          to: DateTime.makeUnsafe(from + duration),
-        })
-      ),
+  toCodecArbitrary: () =>
+    new SchemaAST.Link(S.toType(OrderedUtcRangeDefinition).ast, SchemaTransformation.passthrough()),
 });
 
 /**
@@ -604,11 +593,7 @@ export class CorrectionHistoryResponse extends S.Class<CorrectionHistoryResponse
  * @category schemas
  * @since 0.0.0
  */
-export const ConflictStatus = LiteralKit(["pending", "resolved", "ignored"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("pending", "resolved", "ignored"),
-  })
-  .annotate(
+export const ConflictStatus = LiteralKit(["pending", "resolved", "ignored"]).annotate(
     $I.annote("ConflictStatus", {
       description: "Lifecycle statuses assigned to detected claim conflicts.",
     })
@@ -636,11 +621,7 @@ export type ConflictStatus = typeof ConflictStatus.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ConflictKind = LiteralKit(["position", "temporal"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("position", "temporal"),
-  })
-  .annotate(
+export const ConflictKind = LiteralKit(["position", "temporal"]).annotate(
     $I.annote("ConflictKind", {
       description: "Authoritative semantic categories persisted for claim conflicts.",
     })
@@ -794,7 +775,6 @@ const ClaimConflictDefinition = S.TaggedUnion({
 export const ClaimConflict = ClaimConflictDefinition.pipe(
   $I.annoteSchema("ClaimConflict", {
     description: "Tagged claim conflict with status-specific nested resolution data.",
-    toArbitrary: () => S.toArbitrary(ClaimConflictDefinition),
   })
 );
 
@@ -836,7 +816,6 @@ const ConflictTransitionDefinition = S.TaggedUnion({
 export const ConflictTransition = ConflictTransitionDefinition.pipe(
   $I.annoteSchema("ConflictTransition", {
     description: "One legal pending-to-terminal claim-conflict transition.",
-    toArbitrary: () => S.toArbitrary(ConflictTransitionDefinition),
   })
 );
 

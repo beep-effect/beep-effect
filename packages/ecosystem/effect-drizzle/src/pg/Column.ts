@@ -34,7 +34,6 @@ import { dual } from "effect/Function";
 import {
   orElse as matchOrElse,
   tag as matchTag,
-  tags as matchTags,
   type as matchType,
   value as matchValue,
   when as matchWhen,
@@ -1005,14 +1004,12 @@ const fromSchemaAST = (node: AST, visited: ReadonlyArray<AST> = empty()): Option
     withReturnType<Option<Spec>>(),
     matchTag("String", "TemplateLiteral", () => someOption(Text.make({}))),
     matchTag("Objects", "Arrays", () => someOption(Jsonb.make({}))),
-    matchTags({
-      Boolean: () => someOption(Bool.make({})),
-      BigInt: () => someOption(Bigint.make({ mode: "bigint" })),
-      Number: () => someOption(DoublePrecision.make({})),
-      Literal: fromLiteralAST,
-      Enum: () => someOption(Text.make({})),
-      Suspend: ({ thunk }) => fromSchemaAST(thunk(), nextVisited),
-    }),
+    matchTag("Boolean", () => someOption(Bool.make({}))),
+    matchTag("BigInt", () => someOption(Bigint.make({ mode: "bigint" }))),
+    matchTag("Number", () => someOption(DoublePrecision.make({}))),
+    matchTag("Literal", fromLiteralAST),
+    matchTag("Enum", () => someOption(Text.make({}))),
+    matchTag("Suspend", ({ thunk }) => fromSchemaAST(thunk(), nextVisited)),
     matchOrElse(() => none())
   )(node);
 };

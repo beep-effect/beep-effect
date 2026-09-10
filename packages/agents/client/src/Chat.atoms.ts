@@ -815,7 +815,7 @@ const TURN_RECEIPT_POLL_INTERVAL = Duration.millis(150);
 // The interval is real wall-clock time between receipt reads. Tests set
 // `BEEP_TURN_RECEIPT_POLL_INTERVAL` to a few millis so a starved CI runner
 // cannot stretch eight polls past their timeout; production keeps the default.
-const turnReceiptPollInterval = Config.duration("BEEP_TURN_RECEIPT_POLL_INTERVAL").pipe(
+const turnReceiptPollInterval = Config.Duration("BEEP_TURN_RECEIPT_POLL_INTERVAL").pipe(
   Config.withDefault(TURN_RECEIPT_POLL_INTERVAL),
   Effect.orElseSucceed(constant(TURN_RECEIPT_POLL_INTERVAL))
 );

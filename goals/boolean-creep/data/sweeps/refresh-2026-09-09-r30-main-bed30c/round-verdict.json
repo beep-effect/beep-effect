@@ -1,0 +1,430 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-09-r30-main-bed30c",
+  "roundNumber": 30,
+  "finalizedAt": "2026-09-09T14:12:40.261297+00:00",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "originMainSha": "bed30c6adf3beed7de8538209fbdc84d26a3b8ce",
+  "finalizationSourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "observedOriginMainSha": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "complete": true,
+  "sourceStable": true,
+  "disposition": "finalized-complete-wet",
+  "executionExitCode": 0,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "nonAdmittedSourceFindings": [
+    "goals/boolean-creep/data/r30-ancestry-local-tip-hold.md",
+    "goals/boolean-creep/data/r30-occupancy-footer-disposition.md"
+  ],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "boundedCorrections": 0,
+  "seedDispositions": 698,
+  "rawOccurrenceDispositions": 50,
+  "newQualifiedIds": [
+    "r30-tooling-library-support-open-mode",
+    "r30-tooling-library-support-open-file-descriptor",
+    "r30-cli-commands-l-q-github-check-lane-outcome",
+    "corpus-mail-store-exception-approved-disposition",
+    "r30-cli-yeet-portfolio-index-staged-deletion"
+  ],
+  "newQualifiedCount": 5,
+  "changedQualifiedIds": [
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse"
+  ],
+  "withdrawnQualifiedIds": [],
+  "qualified": 146,
+  "records": 738,
+  "disqualified": 592,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "ea376cff64c549eb542d8bc4dc10c5aec519246b0f20a6720a8f9ad5c64a98d1",
+  "seedInventorySha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "executionReceiptSha256": {
+    "r30-agents-workspace.execution.json": "2ba81c0abfd55e31a6501e7d75d306cc507657c2cbf3a8794af3c9c434ea202b",
+    "r30-apps.execution.json": "29024ad6994b884e959e84c047c1ea69eaeec72bc3cd987156d51dc9ed80e2ca",
+    "r30-architecture-ecosystem-internal.execution.json": "1089305dab2ef028e2424fb9bec75cc4e5d12f75893764eb7402a19649535497",
+    "r30-cli-commands-a-c.execution.json": "cd144d7c9b7e405d5c512a2c53fb96e462ea05d4b981f1e67f761e874f623676",
+    "r30-cli-commands-d-k.execution.json": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+    "r30-cli-commands-l-q.execution.json": "4e2aa7a60865f24a194ad0a1c5eb85c534d1548024ef33c6914789783d2d0e0c",
+    "r30-cli-commands-r-z.execution.json": "f793b494acbb4f830622c8c663d1c9983c5436d785d815e5235b7105dd8065a3",
+    "r30-cli-internal-root.execution.json": "f35f8d2999d77ec16b0e215d3bc83f3c53e16c1d0ddc3ce29d1b8279176738bc",
+    "r30-cli-yeet.execution.json": "06a6196f83e4fcc0c2539903fc1bad2f86f3180d7835479bf682dcd6b63cde5e",
+    "r30-drivers-a-f.execution.json": "a3cbbdc78b141f5abce181f2d0436beb8c5ecabb5ab16f73fea5c11cc08ea186",
+    "r30-drivers-g-m.execution.json": "3cd57549f2093bc1821102687845ea48c32606320e69e60963515efab4192814",
+    "r30-drivers-n-r.execution.json": "bb8bcf149ef41e7014aabd4a416dfd04907e14fd29611f520fd5fda91f390d14",
+    "r30-drivers-s-z.execution.json": "ddfe5150a84e268422c41740862f2092d4a465a2b27a9cc1d52aea273294e454",
+    "r30-epistemic-ontology.execution.json": "d280f59da4b4afcb3955906a372964b9285489b80506c60a6904c7caa5efe4b2",
+    "r30-foundation-capability.execution.json": "ea8462768710a37a7a647e69e9439de5fc726c4fe9abb73a91c7aadf70cfbbf4",
+    "r30-foundation-modeling-rest.execution.json": "49ea5335d58de5fc8a43553263ac61db1afc673aedd3c364c40838d34e900aa6",
+    "r30-foundation-primitive.execution.json": "a8b7285fe24ec957c8ada7808a3a8ec8cfe1787ba812dceeff119f3fb53d92cd",
+    "r30-foundation-schema-a-m.execution.json": "ff4c3281df7e0e943887554fa8b2723fc54a4465479b5c87785c217a90d8bc5d",
+    "r30-foundation-schema-n-z.execution.json": "21f52e777705727d2ff9a0ec8a627bcd7b0374fac58fbc883c08544135bb4412",
+    "r30-foundation-ui.execution.json": "98c0b468cfc9e6db3b0917364f330a67785ba99f3b2d111a5e2323af30c499ee",
+    "r30-law-practice-domain.execution.json": "4543a86b125a90a9811f32e99c9c7887ca42aac0cf36ec8e2d9fe3a612a37591",
+    "r30-law-practice-runtime.execution.json": "2580ff3260ace783750a710f2902e79e99feaab80421cb7146b0dffe3a7f90d3",
+    "r30-shared-documents.execution.json": "67c29f8eaa9915708ec4a9a1f112e738558cf073bfcd5da14f914dec9179253e",
+    "r30-tool-docgen.execution.json": "fee3fa86306a48dd04ac92e6543e97c155da0420875ac72c6c1a5f20ed327320",
+    "r30-tooling-library-observability.execution.json": "3d984c08f0dc03018afaa3b22aae8d2ce763d2724f31026e62169e4ede4e570e",
+    "r30-tooling-library-support.execution.json": "160a244f732f3a2045fde940d98952a7f170509cdd18596223b9260f707eed61",
+    "r30-tooling-policy.execution.json": "6e0579159439baf06bb6d43d7f11331faa8ecc5ab6cd245f667be453ecd43624"
+  },
+  "effectiveExecutionReceiptSha256": {
+    "r30-agents-workspace.execution.json": "2ba81c0abfd55e31a6501e7d75d306cc507657c2cbf3a8794af3c9c434ea202b",
+    "r30-apps.execution.json": "29024ad6994b884e959e84c047c1ea69eaeec72bc3cd987156d51dc9ed80e2ca",
+    "r30-architecture-ecosystem-internal.execution.json": "1089305dab2ef028e2424fb9bec75cc4e5d12f75893764eb7402a19649535497",
+    "r30-cli-commands-a-c.execution.json": "cd144d7c9b7e405d5c512a2c53fb96e462ea05d4b981f1e67f761e874f623676",
+    "r30-cli-commands-d-k.execution.json": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836",
+    "r30-cli-commands-l-q.execution.json": "4e2aa7a60865f24a194ad0a1c5eb85c534d1548024ef33c6914789783d2d0e0c",
+    "r30-cli-commands-r-z.execution.json": "f793b494acbb4f830622c8c663d1c9983c5436d785d815e5235b7105dd8065a3",
+    "r30-cli-internal-root.execution.json": "f35f8d2999d77ec16b0e215d3bc83f3c53e16c1d0ddc3ce29d1b8279176738bc",
+    "r30-cli-yeet.execution.json": "06a6196f83e4fcc0c2539903fc1bad2f86f3180d7835479bf682dcd6b63cde5e",
+    "r30-drivers-a-f.execution.json": "a3cbbdc78b141f5abce181f2d0436beb8c5ecabb5ab16f73fea5c11cc08ea186",
+    "r30-drivers-g-m.execution.json": "3cd57549f2093bc1821102687845ea48c32606320e69e60963515efab4192814",
+    "r30-drivers-n-r.execution.json": "bb8bcf149ef41e7014aabd4a416dfd04907e14fd29611f520fd5fda91f390d14",
+    "r30-drivers-s-z.execution.json": "ddfe5150a84e268422c41740862f2092d4a465a2b27a9cc1d52aea273294e454",
+    "r30-epistemic-ontology.execution.json": "d280f59da4b4afcb3955906a372964b9285489b80506c60a6904c7caa5efe4b2",
+    "r30-foundation-capability.execution.json": "ea8462768710a37a7a647e69e9439de5fc726c4fe9abb73a91c7aadf70cfbbf4",
+    "r30-foundation-modeling-rest.execution.json": "49ea5335d58de5fc8a43553263ac61db1afc673aedd3c364c40838d34e900aa6",
+    "r30-foundation-primitive.execution.json": "a8b7285fe24ec957c8ada7808a3a8ec8cfe1787ba812dceeff119f3fb53d92cd",
+    "r30-foundation-schema-a-m.execution.json": "ff4c3281df7e0e943887554fa8b2723fc54a4465479b5c87785c217a90d8bc5d",
+    "r30-foundation-schema-n-z.execution.json": "21f52e777705727d2ff9a0ec8a627bcd7b0374fac58fbc883c08544135bb4412",
+    "r30-foundation-ui.execution.json": "98c0b468cfc9e6db3b0917364f330a67785ba99f3b2d111a5e2323af30c499ee",
+    "r30-law-practice-domain.execution.json": "4543a86b125a90a9811f32e99c9c7887ca42aac0cf36ec8e2d9fe3a612a37591",
+    "r30-law-practice-runtime.execution.json": "2580ff3260ace783750a710f2902e79e99feaab80421cb7146b0dffe3a7f90d3",
+    "r30-shared-documents.execution.json": "67c29f8eaa9915708ec4a9a1f112e738558cf073bfcd5da14f914dec9179253e",
+    "r30-tool-docgen.execution.json": "fee3fa86306a48dd04ac92e6543e97c155da0420875ac72c6c1a5f20ed327320",
+    "r30-tooling-library-observability.execution.json": "3d984c08f0dc03018afaa3b22aae8d2ce763d2724f31026e62169e4ede4e570e",
+    "r30-tooling-library-support.execution.json": "160a244f732f3a2045fde940d98952a7f170509cdd18596223b9260f707eed61",
+    "r30-tooling-policy.execution.json": "6e0579159439baf06bb6d43d7f11331faa8ecc5ab6cd245f667be453ecd43624"
+  },
+  "coverageReceiptByPrimaryLane": {
+    "r30-agents-workspace": "r30-agents-workspace.execution.json",
+    "r30-apps": "r30-apps.execution.json",
+    "r30-architecture-ecosystem-internal": "r30-architecture-ecosystem-internal.execution.json",
+    "r30-cli-commands-a-c": "r30-cli-commands-a-c.execution.json",
+    "r30-cli-commands-d-k": "r30-cli-commands-d-k.execution.json",
+    "r30-cli-commands-l-q": "r30-cli-commands-l-q.execution.json",
+    "r30-cli-commands-r-z": "r30-cli-commands-r-z.execution.json",
+    "r30-cli-internal-root": "r30-cli-internal-root.execution.json",
+    "r30-cli-yeet": "r30-cli-yeet.execution.json",
+    "r30-drivers-a-f": "r30-drivers-a-f.execution.json",
+    "r30-drivers-g-m": "r30-drivers-g-m.execution.json",
+    "r30-drivers-n-r": "r30-drivers-n-r.execution.json",
+    "r30-drivers-s-z": "r30-drivers-s-z.execution.json",
+    "r30-epistemic-ontology": "r30-epistemic-ontology.execution.json",
+    "r30-foundation-capability": "r30-foundation-capability.execution.json",
+    "r30-foundation-modeling-rest": "r30-foundation-modeling-rest.execution.json",
+    "r30-foundation-primitive": "r30-foundation-primitive.execution.json",
+    "r30-foundation-schema-a-m": "r30-foundation-schema-a-m.execution.json",
+    "r30-foundation-schema-n-z": "r30-foundation-schema-n-z.execution.json",
+    "r30-foundation-ui": "r30-foundation-ui.execution.json",
+    "r30-law-practice-domain": "r30-law-practice-domain.execution.json",
+    "r30-law-practice-runtime": "r30-law-practice-runtime.execution.json",
+    "r30-shared-documents": "r30-shared-documents.execution.json",
+    "r30-tool-docgen": "r30-tool-docgen.execution.json",
+    "r30-tooling-library-observability": "r30-tooling-library-observability.execution.json",
+    "r30-tooling-library-support": "r30-tooling-library-support.execution.json",
+    "r30-tooling-policy": "r30-tooling-policy.execution.json"
+  },
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/r30-ancestry-local-tip-hold.md",
+      "sha256": "bf0ae641f621cd2bef7e912f841f826da538261f0f2960732160b00455a5a3cd"
+    },
+    {
+      "file": "goals/boolean-creep/data/r30-native-adjudications.json",
+      "sha256": "64c36d0d1bb112cadf7584a6e5a6aeafa3289db0847c4be6424b61bb93d77c68"
+    },
+    {
+      "file": "goals/boolean-creep/data/r30-occupancy-footer-disposition.md",
+      "sha256": "5f18e9290b0f8c6df092c0584eaf37cc929838838bb3bd127ddde4af44705ac3"
+    },
+    {
+      "file": "goals/boolean-creep/data/r30-parent-dispositions.json",
+      "sha256": "bbaac858dccaf52bbcb7bb91add2619a9f70bbc3b2ad5cc667b5cf91accbf4a4"
+    },
+    {
+      "file": "goals/boolean-creep/data/r30-parent-integration.json",
+      "sha256": "5cbf1a44e59fbb1c3e6ed2fee81758bae99393289b66e3576a3c24fcaa50b008"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/execution-summary.json",
+      "sha256": "471065a2634ba4a461b61faf8b8e316fb358e588aba4de0b0555fc20f0f13b30"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/final-design-bindings.json",
+      "sha256": "f468a76c2acf2fb93514ee72e7edc1e68c931eeb5ce7758398471eba8cd9e4ac"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/frozen-inputs.json",
+      "sha256": "103cd53561d02a9482f8fe056b855675b668d7569cf57c25784c1164a413a06b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/lane-map.json",
+      "sha256": "b334ec9da895ea5408c38cfb3fbd583485ef0330a1a3bae4705dbd5d4f365e69"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/launch-admission.json",
+      "sha256": "b8e2f94a917f6898784d91e28291b6d96ea14a667543931178340665f7830164"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/launch-created-inputs.json",
+      "sha256": "347b6fa0940ab813e87b082d198a04d63b9f43d47099029b2eb3f7d010eaa8c4"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/launch-dependencies.json",
+      "sha256": "ed13aa0cbf6e75e462037b06e322e00de618399b8aac6ce4a6694e827a816154"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/launch-designs.json",
+      "sha256": "9eb269998625e53c6f4d105c53981d4b5d7cf77d097c685570dc25046bcbe407"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/launch-included-files.json",
+      "sha256": "36acf5b713ea9369ab132bdb39b4e00cf7085fb9dbe22dabab9d90a84550c083"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/launch-reviewed-inputs.json",
+      "sha256": "73d0896334c55da15a9f572721309454a396c6a7dc3dab26114e7f4fb7258552"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/parent-execution-audit.json",
+      "sha256": "2588b6a3b6655d95fb599c42bf799007928d0ba0d669af69e061d88a10514b7c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-agents-workspace.execution.json",
+      "sha256": "2ba81c0abfd55e31a6501e7d75d306cc507657c2cbf3a8794af3c9c434ea202b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-agents-workspace.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-apps.execution.json",
+      "sha256": "29024ad6994b884e959e84c047c1ea69eaeec72bc3cd987156d51dc9ed80e2ca"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-apps.jsonl",
+      "sha256": "a687fa3263fc1b2cb646603dc781458e6b6f100a56b8c0e7d7971d49190f2564"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-architecture-ecosystem-internal.execution.json",
+      "sha256": "1089305dab2ef028e2424fb9bec75cc4e5d12f75893764eb7402a19649535497"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-architecture-ecosystem-internal.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-a-c.execution.json",
+      "sha256": "cd144d7c9b7e405d5c512a2c53fb96e462ea05d4b981f1e67f761e874f623676"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-a-c.jsonl",
+      "sha256": "4e67231e74acff406524d52a654b62058d8cadfa2277dc3e0184dc65cde7518f"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-d-k.execution.json",
+      "sha256": "308343fefbcc9d61006cf7916d2bbe084141bf8905c81f8bc27c4dcdcc9d9836"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-d-k.jsonl",
+      "sha256": "81d9dfc55df71eeafb7c819b607287f7ad04ed709f8089cb782e8d6d03a14eb5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-l-q.execution.json",
+      "sha256": "4e2aa7a60865f24a194ad0a1c5eb85c534d1548024ef33c6914789783d2d0e0c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-l-q.jsonl",
+      "sha256": "3f2560ece398dc0b041e3cb68fced18a25eec59f6085005c00982b395c537650"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-r-z.execution.json",
+      "sha256": "f793b494acbb4f830622c8c663d1c9983c5436d785d815e5235b7105dd8065a3"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-r-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-internal-root.execution.json",
+      "sha256": "f35f8d2999d77ec16b0e215d3bc83f3c53e16c1d0ddc3ce29d1b8279176738bc"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-internal-root.jsonl",
+      "sha256": "e652c77a61b7ab5b547cfaa1a68563a86c2d360356d2315d3f21ade7938cebd2"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-yeet.execution.json",
+      "sha256": "06a6196f83e4fcc0c2539903fc1bad2f86f3180d7835479bf682dcd6b63cde5e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-yeet.jsonl",
+      "sha256": "c852d3bcb0f50d96f2fa2ecb0e73e47c537b82cc3fff21ea9d28ceccfe48ff07"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-drivers-a-f.execution.json",
+      "sha256": "a3cbbdc78b141f5abce181f2d0436beb8c5ecabb5ab16f73fea5c11cc08ea186"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-drivers-a-f.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-drivers-g-m.execution.json",
+      "sha256": "3cd57549f2093bc1821102687845ea48c32606320e69e60963515efab4192814"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-drivers-g-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-drivers-n-r.execution.json",
+      "sha256": "bb8bcf149ef41e7014aabd4a416dfd04907e14fd29611f520fd5fda91f390d14"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-drivers-n-r.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-drivers-s-z.execution.json",
+      "sha256": "ddfe5150a84e268422c41740862f2092d4a465a2b27a9cc1d52aea273294e454"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-drivers-s-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-epistemic-ontology.execution.json",
+      "sha256": "d280f59da4b4afcb3955906a372964b9285489b80506c60a6904c7caa5efe4b2"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-epistemic-ontology.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-capability.execution.json",
+      "sha256": "ea8462768710a37a7a647e69e9439de5fc726c4fe9abb73a91c7aadf70cfbbf4"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-capability.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-modeling-rest.execution.json",
+      "sha256": "49ea5335d58de5fc8a43553263ac61db1afc673aedd3c364c40838d34e900aa6"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-modeling-rest.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-primitive.execution.json",
+      "sha256": "a8b7285fe24ec957c8ada7808a3a8ec8cfe1787ba812dceeff119f3fb53d92cd"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-primitive.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-schema-a-m.execution.json",
+      "sha256": "ff4c3281df7e0e943887554fa8b2723fc54a4465479b5c87785c217a90d8bc5d"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-schema-a-m.jsonl",
+      "sha256": "e3934056139347a985749445959b70c8f3d8bf240b949d2ab9dabf31d916cfc5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-schema-n-z.execution.json",
+      "sha256": "21f52e777705727d2ff9a0ec8a627bcd7b0374fac58fbc883c08544135bb4412"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-schema-n-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-ui.execution.json",
+      "sha256": "98c0b468cfc9e6db3b0917364f330a67785ba99f3b2d111a5e2323af30c499ee"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-ui.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-law-practice-domain.execution.json",
+      "sha256": "4543a86b125a90a9811f32e99c9c7887ca42aac0cf36ec8e2d9fe3a612a37591"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-law-practice-domain.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-law-practice-runtime.execution.json",
+      "sha256": "2580ff3260ace783750a710f2902e79e99feaab80421cb7146b0dffe3a7f90d3"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-law-practice-runtime.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-shared-documents.execution.json",
+      "sha256": "67c29f8eaa9915708ec4a9a1f112e738558cf073bfcd5da14f914dec9179253e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-shared-documents.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-tool-docgen.execution.json",
+      "sha256": "fee3fa86306a48dd04ac92e6543e97c155da0420875ac72c6c1a5f20ed327320"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-tool-docgen.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-tooling-library-observability.execution.json",
+      "sha256": "3d984c08f0dc03018afaa3b22aae8d2ce763d2724f31026e62169e4ede4e570e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-tooling-library-observability.jsonl",
+      "sha256": "e1a9304bf371135b52bee76b79a3cf3b2259e2af595a4250274802cdac37be3d"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-tooling-library-support.execution.json",
+      "sha256": "160a244f732f3a2045fde940d98952a7f170509cdd18596223b9260f707eed61"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-tooling-library-support.jsonl",
+      "sha256": "7c0a10472e46d258c4715b1200376896be755b83d06b5fe1b12a9fc2b695d845"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-tooling-policy.execution.json",
+      "sha256": "6e0579159439baf06bb6d43d7f11331faa8ecc5ab6cd245f667be453ecd43624"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-tooling-policy.jsonl",
+      "sha256": "73c2c94e7ca2fb2f9fac4080244183ba19336ceb26bc477d2e49615d6d8dc51d"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/reconciliation.md",
+      "sha256": "e382aa3312f7211673274b1ed9c83797b7174c15426b9fbe311e979d0aa0867a"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/source-sha.txt",
+      "sha256": "3b7a2bd5bf34adf22032ca18a6ab9e91c59cac0c6df92156111ef5dc6c5a1ea1"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-09-r30-after.jsonl",
+      "sha256": "ea376cff64c549eb542d8bc4dc10c5aec519246b0f20a6720a8f9ad5c64a98d1"
+    }
+  ]
+}

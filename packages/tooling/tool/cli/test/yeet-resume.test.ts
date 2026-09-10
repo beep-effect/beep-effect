@@ -19,8 +19,8 @@ import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Result, Sink, Str
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { ChildProcessSpawner } from "effect/unstable/process";
 import { makeRecord } from "./yeet-pr-fixtures.ts";
@@ -527,17 +527,22 @@ describe("yeet resume", () => {
   );
 
   it("round-trips arbitrary PR references through the PrRef codec", () => {
-    const arbitrary = S.toArbitrary(PrRef)(fc);
+    const arbitrary = Arbitrary.schema(PrRef);
     const sameRef = S.toEquivalence(PrRef);
     const encode = (ref: PrRef): string => Result.getOrThrow(encodePrRefResult(ref));
     // Decoding normalizes URL owner/name casing, so the codec is idempotent after
     // one pass rather than an identity on arbitrary input.
-    fc.assert(
-      fc.property(arbitrary, (ref) => {
-        const normalized = decodeRef(encode(ref));
-        return sameRef(normalized, decodeRef(encode(normalized)));
-      }),
-      { numRuns: 32 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([ref]) => {
+            const normalized = decodeRef(encode(ref));
+            return sameRef(normalized, decodeRef(encode(normalized)));
+          },
+          { runs: 32 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

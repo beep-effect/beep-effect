@@ -1,0 +1,795 @@
+{
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/package.json",
+      "sha256": "c9191571f0ccd375b7610907e1e8f1d151c6bae097dd3442094dad98588b7105",
+      "bytes": 2732
+    },
+    {
+      "file": "apps/labs/api-docs/package.json",
+      "sha256": "6129684fbb115253ffe0a015c3ed75548ae2e64823513cb0d1fcc2ad6d74ede9",
+      "bytes": 1862
+    },
+    {
+      "file": "apps/labs/ciops/package.json",
+      "sha256": "9aa3ef79ec73bc3966d22d2ab7522d781edd5f8ebd3ef2132addc52ceecdc000",
+      "bytes": 1703
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/package.json",
+      "sha256": "e25e2228b60ba483b03d4408705a448a271e26e35f2767fe173eb286d5c589aa",
+      "bytes": 2612
+    },
+    {
+      "file": "apps/labs/semantica/package.json",
+      "sha256": "b5c185e73e6c6738276496aeb0180903aa640a321cde00ca5fcd109c2f585409",
+      "bytes": 2873
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/Cargo.lock",
+      "sha256": "f54c5d2468d27a2e4984b22c8741703c77a932c20067760176c13b5204b402c6",
+      "bytes": 109711
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/Cargo.toml",
+      "sha256": "a21ca7205f10cad93ca5663986737c2f9a338d36be06c2aa1837777bb72fe640",
+      "bytes": 419
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/package.json",
+      "sha256": "2439759e8341f406f1b55a5d28586592da6530c02ab88f6218df3fbdac0a592f",
+      "bytes": 1932
+    },
+    {
+      "file": "apps/oip-web/package.json",
+      "sha256": "3d019b907d147a42cab5d35d4d511393de31c30cda3938c4675e03aa013ea670",
+      "bytes": 2795
+    },
+    {
+      "file": "apps/practice-kg-mcp/package.json",
+      "sha256": "a9c605271c1f5b21591a7180af0c6c5e8048c06183d31bd61580c4246692ecfb",
+      "bytes": 2399
+    },
+    {
+      "file": "apps/professional-desktop/package.json",
+      "sha256": "06c1ad1ba4083c73fe8c4eaa0afd9aa37ae14214882f05734be475db9ef32367",
+      "bytes": 6089
+    },
+    {
+      "file": "apps/professional-desktop/src-tauri/Cargo.lock",
+      "sha256": "288169c31aaa3cd8a0a5e0e9134b1cf5b6be3e5a8f7cdf587f3eed8cce8ab81f",
+      "bytes": 145981
+    },
+    {
+      "file": "apps/professional-desktop/src-tauri/Cargo.toml",
+      "sha256": "31185285a402b099acac9f4f24e0fb629a4bd3f6e67d43b972d9bad60e63172d",
+      "bytes": 649
+    },
+    {
+      "file": "apps/storybook/package.json",
+      "sha256": "96f82020a9ece5d94bf0323404bc4c168bbb4af63ca66561fd41883b5ef79f32",
+      "bytes": 3796
+    },
+    {
+      "file": "apps/todox/package.json",
+      "sha256": "855c0b450632fdd190a9100bfbec1fa491d3f4c3955699bd543c0c527cdb98a1",
+      "bytes": 1693
+    },
+    {
+      "file": "biome.jsonc",
+      "sha256": "ca78a2cadc5d0b92ba78ace7ae5c409503f8cc1438148e388579248d48e8f93a",
+      "bytes": 9648
+    },
+    {
+      "file": "bun.lock",
+      "sha256": "3677662def40b764ea3e3d6758685f337af762de7bbb1e7145e61a4de9c97a4e",
+      "bytes": 977915
+    },
+    {
+      "file": "bunfig.toml",
+      "sha256": "8cc73a15bed10a94d955451b5009c93b990afdf2b22c53f0d4ca547a107f4fc7",
+      "bytes": 258
+    },
+    {
+      "file": "package.json",
+      "sha256": "ead219e6b7aa8388489d877f9d1428723e915e30456e2139a918412c67d9a9fb",
+      "bytes": 20084
+    },
+    {
+      "file": "packages/_internal/db-admin/package.json",
+      "sha256": "00c8e6234bad30a74f7c9062847931dfeb0d292a49415cdb92fd988b4490cb87",
+      "bytes": 3262
+    },
+    {
+      "file": "packages/agents/client/package.json",
+      "sha256": "cc1118cdf70ed9bac39791b3c83289e0f27d0be4c0607cc136784a571da653b6",
+      "bytes": 3353
+    },
+    {
+      "file": "packages/agents/domain/package.json",
+      "sha256": "94c45e2d146466072c6466c1f90fc82b88f7d823b8da122504afa9d079921737",
+      "bytes": 2355
+    },
+    {
+      "file": "packages/agents/server/package.json",
+      "sha256": "9ee79f6c27d62f6f28cbdd6d58cb1ec55389903143384213ee7bbc779051a690",
+      "bytes": 3670
+    },
+    {
+      "file": "packages/agents/tables/package.json",
+      "sha256": "13077c873aa85bf328aa6ed3e3251f7ae0de447de1aca246c96cc4b7fad7e7e5",
+      "bytes": 2780
+    },
+    {
+      "file": "packages/agents/use-cases/package.json",
+      "sha256": "62ea31174d92783a929a7300b7813947ae67e192e9eac737637890ef75a2cd9b",
+      "bytes": 2536
+    },
+    {
+      "file": "packages/architecture-lab/client/package.json",
+      "sha256": "d03281677a7df546c5c0d6b1d5055926368bf4ae82ad3992c6389755ac0dc50e",
+      "bytes": 2646
+    },
+    {
+      "file": "packages/architecture-lab/config/package.json",
+      "sha256": "c88d864418649849bb3d18552c345cb01692f13effe98d82e86d0f1692ca4892",
+      "bytes": 3023
+    },
+    {
+      "file": "packages/architecture-lab/domain/package.json",
+      "sha256": "37123e93d0d76c40bb117ced3425caf88aa0f2661d9fcdb2516edf0e101afda5",
+      "bytes": 3276
+    },
+    {
+      "file": "packages/architecture-lab/server/package.json",
+      "sha256": "0ec128d80881123d0fa1d15c0e6c0f23b873513ec9df05d5c884708a56dc40e4",
+      "bytes": 3397
+    },
+    {
+      "file": "packages/architecture-lab/tables/package.json",
+      "sha256": "817c7b27fae6482846f0f1353e9a3421953061fbafa061c2a8cba864123ee9ba",
+      "bytes": 2952
+    },
+    {
+      "file": "packages/architecture-lab/ui/package.json",
+      "sha256": "f30e4d7aec8495ac7cc8b75973e4d92ed7321a48dfa5c9501e303844d3374b8d",
+      "bytes": 2820
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/package.json",
+      "sha256": "d3eabef1bdc2d68ec7380bd5f7a7457d9ce24ea12341af3d6700893811a1a953",
+      "bytes": 3388
+    },
+    {
+      "file": "packages/documents/domain/package.json",
+      "sha256": "204fb35492c782e61e5b378fe4b88b615f665c88e9ac4005b0b8e3bedb2b28fc",
+      "bytes": 3302
+    },
+    {
+      "file": "packages/documents/server/package.json",
+      "sha256": "f0b8cc79a4d4f0892f6b0150e176b691e09d4f46a4bc50a13b261522d46c54c8",
+      "bytes": 3427
+    },
+    {
+      "file": "packages/documents/tables/package.json",
+      "sha256": "1bdfd10b68dab7dc00f345e78563e9d43984976e787f22fbd85718a627567652",
+      "bytes": 3171
+    },
+    {
+      "file": "packages/documents/use-cases/package.json",
+      "sha256": "836b2926a5d3b8d8037ddc2832702d55609452bfeff4e888fecdaa20d63a69b5",
+      "bytes": 3243
+    },
+    {
+      "file": "packages/drivers/acp/package.json",
+      "sha256": "bf4684ff56be0207d8a1a19a50dc50c631aeb6ad9b86f0af5d7e84caa8b6c1b3",
+      "bytes": 3672
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/package.json",
+      "sha256": "4d7f35851f1b637c627d8e09890b764420fac7c4627271b8a9f2044160079c8c",
+      "bytes": 2668
+    },
+    {
+      "file": "packages/drivers/anthropic/package.json",
+      "sha256": "cc791d4428e9ba8417fc2e326fd37cc00a73d4a4436a296cb56a0369b4912f51",
+      "bytes": 2390
+    },
+    {
+      "file": "packages/drivers/box-provisioning/package.json",
+      "sha256": "795df4565a048184ed66c0e8b255dbbbdf8325cc877911adce15c0521b58ab9a",
+      "bytes": 2919
+    },
+    {
+      "file": "packages/drivers/box/package.json",
+      "sha256": "c327ba2b826e2118205de5639a4adfb8cc7c1c30a2ed6224ec1836ae0e072a72",
+      "bytes": 3084
+    },
+    {
+      "file": "packages/drivers/cosmos/package.json",
+      "sha256": "cd58932e0aa556768d28a9d3e4f913c904c3e116e20820ee5a91333382374136",
+      "bytes": 2471
+    },
+    {
+      "file": "packages/drivers/discord/package.json",
+      "sha256": "fcda3f33e9b44ffd6fde4445c838f5ae5a153d25d3625046d56466d292c4aead",
+      "bytes": 2619
+    },
+    {
+      "file": "packages/drivers/doc-text/package.json",
+      "sha256": "96a37186075237a8af44d75d6a35cbe9b430ecf2a96930468a843b9f85d1628c",
+      "bytes": 2935
+    },
+    {
+      "file": "packages/drivers/drizzle/package.json",
+      "sha256": "07c01bdea524abb7ce8a93fd5240443ce79bcffad715008efc8ed2da6f3d932d",
+      "bytes": 2656
+    },
+    {
+      "file": "packages/drivers/duckdb/package.json",
+      "sha256": "bc184d7787a0f9be6607f9fd003ad135fd7eecb26cd46903373efdb43835dbc8",
+      "bytes": 2341
+    },
+    {
+      "file": "packages/drivers/ecfr/package.json",
+      "sha256": "3dcf8b8861a821c1047f3332bbb2d678ed24621d9b534cc89eb94c616c434a6e",
+      "bytes": 3154
+    },
+    {
+      "file": "packages/drivers/exiftool/package.json",
+      "sha256": "e40ae5977d5c66439b05052a6f186b4d5ecb81e28bfba1d40c298788e8655232",
+      "bytes": 2835
+    },
+    {
+      "file": "packages/drivers/face-detection/package.json",
+      "sha256": "6b29854a9f27ce404ccadbd86212631f482dd63d841403ffcaa07a85703c3bdd",
+      "bytes": 2782
+    },
+    {
+      "file": "packages/drivers/ffmpeg/package.json",
+      "sha256": "550a0c51338234bf58e390a6ff5fd29038ca81fa4b8c4f6362ffc24541ec8278",
+      "bytes": 2783
+    },
+    {
+      "file": "packages/drivers/firecrawl/package.json",
+      "sha256": "f52dd4da87c4a1d73073e5f200301b48ee29b2de861d36340a39ac0e28db431d",
+      "bytes": 2796
+    },
+    {
+      "file": "packages/drivers/freshbooks/package.json",
+      "sha256": "14ae8587c1161345236af00a5e72119202595f8933aee9e8587ff6a229b49c99",
+      "bytes": 2851
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/package.json",
+      "sha256": "080ee5a9d6fc60b6ee64a1db7fc37d9a73464c0821b0676a48a03c729c383f50",
+      "bytes": 2951
+    },
+    {
+      "file": "packages/drivers/govinfo/package.json",
+      "sha256": "f1383f1a76f294ec74a3f6eee5bda960ef6df029001b053fb6afe8697bbb9ac3",
+      "bytes": 3178
+    },
+    {
+      "file": "packages/drivers/graph-3d/package.json",
+      "sha256": "8edcead01602527aac7a028ea59dd9dcdb4d92656cba3a126da007dcb13bf566",
+      "bytes": 2811
+    },
+    {
+      "file": "packages/drivers/hubspot/package.json",
+      "sha256": "cd9c0f3dc5fa0ed4bc8ee14169297cccd9ff67c8a5e93a51958ef5765f8610ac",
+      "bytes": 2578
+    },
+    {
+      "file": "packages/drivers/libpff/package.json",
+      "sha256": "da34a9fea829ab7a12ae63c76db5f6d3b8af9792333b4c7aeae9f72d4a146985",
+      "bytes": 2872
+    },
+    {
+      "file": "packages/drivers/m365-mcp/package.json",
+      "sha256": "f6232b851e388c7dacb5c51f11d42e1115f695faff490bb9bf2f868dcad04adc",
+      "bytes": 2835
+    },
+    {
+      "file": "packages/drivers/m365/package.json",
+      "sha256": "6a1876de50a000ea018fd448cabe8cfc81eeaa8994cfcc02b76dbf6a5cb63343",
+      "bytes": 2913
+    },
+    {
+      "file": "packages/drivers/n3/package.json",
+      "sha256": "2bbe00f782124e9f978467695defe6a9d0ed118fa1e38dc0b964ff23710428c0",
+      "bytes": 2364
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/package.json",
+      "sha256": "b11b3eb1e6d677757501bcd034800cd62c5e9b8ef23cdc6fdfb47b7d282ce8b6",
+      "bytes": 3044
+    },
+    {
+      "file": "packages/drivers/obs/package.json",
+      "sha256": "cc37f346a79fc2861749bae84aadd4d8378008e177dea1e631379721b0475b69",
+      "bytes": 2715
+    },
+    {
+      "file": "packages/drivers/onepassword-cli/package.json",
+      "sha256": "cf093e54f74015006fb4318dab1b917a4581e834fd6fa3d7d743390b305169f6",
+      "bytes": 2708
+    },
+    {
+      "file": "packages/drivers/openai-compat/package.json",
+      "sha256": "c17418bb94a88d39ca58b7a879b15de90da5e53dfd63f1602ab8f4826ca75a40",
+      "bytes": 2646
+    },
+    {
+      "file": "packages/drivers/openai/package.json",
+      "sha256": "5047c413b494c8308685a198fd4deddb66de525c9be1536b407035ba4ffe8bf7",
+      "bytes": 2685
+    },
+    {
+      "file": "packages/drivers/openclaw/package.json",
+      "sha256": "a4c17df04acf2a3213f745bc39c29ec9c7632fbac3f346b70fdc5dceb3c2db5f",
+      "bytes": 2815
+    },
+    {
+      "file": "packages/drivers/oxigraph/package.json",
+      "sha256": "3922edd7d656383a2f91de23a24bee51a4dd25511a7487116c22ac63d21cb015",
+      "bytes": 2416
+    },
+    {
+      "file": "packages/drivers/pacer/package.json",
+      "sha256": "333157e2763c4dba1865555dd5b26120e006fbbd976d8a01852e015bc56f1f63",
+      "bytes": 2669
+    },
+    {
+      "file": "packages/drivers/pglite/package.json",
+      "sha256": "983cb8315d7608a123d412c016f37b9bc88737d9a9c97cca58816e3357f047af",
+      "bytes": 2920
+    },
+    {
+      "file": "packages/drivers/phoenix/package.json",
+      "sha256": "f1d7988b96dab9f85bb9db6841179f66158e695bd14ef86c4676de1af0f6c8f8",
+      "bytes": 2621
+    },
+    {
+      "file": "packages/drivers/postgres/package.json",
+      "sha256": "e330d416bb912c837ce82c8cd83b771fe62c65810cc0cd7dc71763ae79566faf",
+      "bytes": 3521
+    },
+    {
+      "file": "packages/drivers/pretext/package.json",
+      "sha256": "b8dcea3d756742173991aa7601e75a88c9ee9692a5c7e9e4265207fd8c389b1d",
+      "bytes": 2786
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/package.json",
+      "sha256": "212c0c9dd9d97eee4dfdac80bf88428223e9ead8ae272af883700ab77e89e863",
+      "bytes": 2449
+    },
+    {
+      "file": "packages/drivers/runpod/package.json",
+      "sha256": "13c72ad01de1db901b34ddc56ee04fcfe5703cabf7f2414c08d05b32a7239e50",
+      "bytes": 3050
+    },
+    {
+      "file": "packages/drivers/sanity/package.json",
+      "sha256": "c4f2b35a97ca6462e88b85cb784462e2e16e4286560d86a076ac5510b22ae224",
+      "bytes": 2574
+    },
+    {
+      "file": "packages/drivers/shacl/package.json",
+      "sha256": "ebffe7a65ec9624233e13f657d7ddbc5beeab401bc2a60bcfa7429bc7f4b0744",
+      "bytes": 2485
+    },
+    {
+      "file": "packages/drivers/tailscale/package.json",
+      "sha256": "abd909b0609180ab4eb1ed11cc7db370688f8c51265f3385cc62ebbbd612910a",
+      "bytes": 2558
+    },
+    {
+      "file": "packages/drivers/tika/package.json",
+      "sha256": "58d676f18837f393bc1df930aa44de879fe9640956416ceb09b111dac8aecd55",
+      "bytes": 2909
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/package.json",
+      "sha256": "c20b1885ac4e3ea61ce50d53a1da6619eb871833b2e8aeeebfa2cda2167621b7",
+      "bytes": 2890
+    },
+    {
+      "file": "packages/drivers/uspto/package.json",
+      "sha256": "9d4318d71dd25ed0e2bf48aa4c3ffba14ae26fb4d39be00db51933a6f05dbd55",
+      "bytes": 2740
+    },
+    {
+      "file": "packages/drivers/venice-ai/package.json",
+      "sha256": "37478aee8c5232da50eb1344fa2b85395e5ad32f7d008c09e1907dc54b61f5e2",
+      "bytes": 2785
+    },
+    {
+      "file": "packages/drivers/wink/package.json",
+      "sha256": "c21653fb3c71d03adaaf7d1ea15fd5ec29da550887f46e5c202b79db20d02dc9",
+      "bytes": 2961
+    },
+    {
+      "file": "packages/drivers/xai/package.json",
+      "sha256": "557a98a3424526719c18ed086d91857e137cf7885fd11876fdae2a2cf4d82d06",
+      "bytes": 2813
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/package.json",
+      "sha256": "dfd946e911814ffb211748367cda9ec723603c543f0e35ff866a943f2b64de0c",
+      "bytes": 3359
+    },
+    {
+      "file": "packages/epistemic/client/package.json",
+      "sha256": "437b72762140188240ff6d272fc1ae5d04693d43c4d9f52e197e103bc127cfdb",
+      "bytes": 2634
+    },
+    {
+      "file": "packages/epistemic/config/package.json",
+      "sha256": "8f3e90df247286028f03507deb0f762a10780de2159dcba5364ff53365609ae0",
+      "bytes": 2974
+    },
+    {
+      "file": "packages/epistemic/domain/package.json",
+      "sha256": "2c5de1cf15ae665d81b1f97a51a002a8fff28d824e2c15be70e9521c6abbc6fa",
+      "bytes": 3982
+    },
+    {
+      "file": "packages/epistemic/server/package.json",
+      "sha256": "f65947716be94cae478a014c766bdf0f04da555189aed343edf95900b8a2ce0b",
+      "bytes": 3635
+    },
+    {
+      "file": "packages/epistemic/tables/package.json",
+      "sha256": "3efa3d1b1cf640d373ad1ad9339553c999b1d3fc02dc32fba05a396cff7ddf5c",
+      "bytes": 4006
+    },
+    {
+      "file": "packages/epistemic/ui/package.json",
+      "sha256": "448ca1becf234f1d69f2d4ebf9f68960ce1cc0921b5941c7c68d177803a744c4",
+      "bytes": 2918
+    },
+    {
+      "file": "packages/epistemic/use-cases/package.json",
+      "sha256": "d030d27559ce334e77c72eac836569da40a1de1bf879df8d0fe28cdb7833f9a3",
+      "bytes": 2750
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/package.json",
+      "sha256": "7d55e448bdf2fa32342df26bf3c30a2ae4d18bb63720d082044d01baa332ecbc",
+      "bytes": 2954
+    },
+    {
+      "file": "packages/foundation/capability/chalk/package.json",
+      "sha256": "67f1cebb4dd3ed69cdfd944cae922b99ac248af9351faa4417478aa6c31743cb",
+      "bytes": 2723
+    },
+    {
+      "file": "packages/foundation/capability/colors/package.json",
+      "sha256": "1ada81f9bbdccb8569adee8e46c24e5dbb223e0891df72697f811c8406a541b2",
+      "bytes": 2775
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/package.json",
+      "sha256": "3e20a3658067df59e40b33c6a2e0f31e0afa7eec280fbcff90f1fcd3663eb686",
+      "bytes": 3763
+    },
+    {
+      "file": "packages/foundation/capability/langextract/package.json",
+      "sha256": "0e5899e1226a2cdca0e087d48d983313011043a0ae27af9d71c34b3f0a508b32",
+      "bytes": 3332
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/package.json",
+      "sha256": "b7b61969920401e67e562d525b0d1413cf8e4f15bedba373efffbb7c1a8bd003",
+      "bytes": 2970
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/package.json",
+      "sha256": "55615f50fada0bffb24dc83f2354b5afc5b1f00ff63477982dc80b83a8db3e7d",
+      "bytes": 3632
+    },
+    {
+      "file": "packages/foundation/capability/observability/package.json",
+      "sha256": "66a6d1114e58d64cf7b61009a0bdc6f7eb4c73b49174338e7033b3015b4160e6",
+      "bytes": 4185
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/package.json",
+      "sha256": "ce5f85124aaff8ca362f59777cb2bb3685048a179f439620999c04b74644ab64",
+      "bytes": 2599
+    },
+    {
+      "file": "packages/foundation/modeling/html/package.json",
+      "sha256": "7ddf6732ceb021100877eaf6ea85bac85cd68d69b16354349097ff23355df775",
+      "bytes": 4939
+    },
+    {
+      "file": "packages/foundation/modeling/identity/package.json",
+      "sha256": "a42347e6631593c4528270397c2bd58ccc4fce7fa06c4a7d1a66d2fee1cc4a52",
+      "bytes": 2481
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/package.json",
+      "sha256": "afe55ed8e7b7f9fce7e8e0ef672260288f5672fdd8c9181b3515b8635ff932d1",
+      "bytes": 3647
+    },
+    {
+      "file": "packages/foundation/modeling/md/package.json",
+      "sha256": "29107b51374f6431af7ebfa5ec042173f19a6e168179eb618f7c7ab525a05a5f",
+      "bytes": 3284
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/package.json",
+      "sha256": "f81d9db0dc087e6510a2ce3fc7938fbc00dc1a8ea3f1c9f63c50cbda01c4db52",
+      "bytes": 3905
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/package.json",
+      "sha256": "8f8d51310cc3710dd1c6124e8745a424531b466cb3afb1cea17db4eaba143dc2",
+      "bytes": 2972
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/package.json",
+      "sha256": "c656318644b5091ec8e809c4ea261761c04a036dd1c1da3df6ab198ef8a5761a",
+      "bytes": 3604
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/package.json",
+      "sha256": "7e50872aa87d6595be4a0d6f1a0134d82536477c723e099fa1cf4f3f8875e0e2",
+      "bytes": 2612
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/package.json",
+      "sha256": "a7aed81fb69ef80cb0a73606b114ef09ba94d78ce516f9835553bb7c369f693a",
+      "bytes": 2960
+    },
+    {
+      "file": "packages/foundation/modeling/schema/package.json",
+      "sha256": "14ee1f794b5882344f980e74242e11e4fcd8b84872682454fc8bd32a9278660b",
+      "bytes": 23540
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/package.json",
+      "sha256": "8afba8ad6be416966198d50f6b27abcb6b4c69a974a7e13d6004a02f917e283b",
+      "bytes": 2919
+    },
+    {
+      "file": "packages/foundation/modeling/utils/package.json",
+      "sha256": "386a2a4a2dd6efb5ad6a596b3fb9fa2aab175c00f3980b47f4bfbb9fbe423eb0",
+      "bytes": 2583
+    },
+    {
+      "file": "packages/foundation/primitive/data/package.json",
+      "sha256": "7acfc217ba4ab2f80e902e6b164f7044ea17b0125eee02c66db57d876acbfcd7",
+      "bytes": 2403
+    },
+    {
+      "file": "packages/foundation/primitive/types/package.json",
+      "sha256": "b0b3a12d0c39ea1e775f5b5e482deb1f3779689ec31400b666e88685e885a5bc",
+      "bytes": 2215
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/package.json",
+      "sha256": "1c1bf2cd3216a9898bad3321e2dc225fce5207427c3aac4d93c5026540dc1af9",
+      "bytes": 3479
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/package.json",
+      "sha256": "348dbdc34b572b2d0c5bede3d5474f28520a3153a3b04dd12f3e2d8eda5d1394",
+      "bytes": 3372
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/package.json",
+      "sha256": "deca1bcef4e154ebfe9d3eb108764633e06d21d8010305958c63e7021897c051",
+      "bytes": 4405
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/package.json",
+      "sha256": "ea514998df8056dc4c46d550f3b95f067524bf169841e1f092cb5ccb3a095625",
+      "bytes": 6922
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/package.json",
+      "sha256": "82d67a6392ea124e62c7679527531b5418eb0bcc3f4a50ebf97952635b3bdf34",
+      "bytes": 6145
+    },
+    {
+      "file": "packages/law-practice/domain/package.json",
+      "sha256": "87c2c2862bf67aa4e9da32fbed8407156be1c99ace481a354bd4755587d89077",
+      "bytes": 4059
+    },
+    {
+      "file": "packages/law-practice/server/package.json",
+      "sha256": "36839b7458b6c2368a7787e72f65da29ad0759765820f23239a6f7bb24b95f1d",
+      "bytes": 3084
+    },
+    {
+      "file": "packages/law-practice/tables/package.json",
+      "sha256": "a9e05e71c98ff0f4d7d816c8736b5dcf9ac8dff08bcdf40a2e56ecf91831e5cd",
+      "bytes": 2884
+    },
+    {
+      "file": "packages/law-practice/use-cases/package.json",
+      "sha256": "084aebe584542b79d0c24f7b7b9c137f311b86511559790805e9077cb4d3c83e",
+      "bytes": 2869
+    },
+    {
+      "file": "packages/ontology/client/package.json",
+      "sha256": "54f081ede02261346019c1dfd5bfd2cde0bc7409d2ae006fb14f65b18074c25e",
+      "bytes": 3043
+    },
+    {
+      "file": "packages/ontology/config/package.json",
+      "sha256": "161dad9474546a7c94aee20d271ea5967a110a4dc2e09dcf5aa0621e81177cb5",
+      "bytes": 2864
+    },
+    {
+      "file": "packages/ontology/domain/package.json",
+      "sha256": "4b589698bb5d62d9d86d43d825bf584d909592263466ca95c0bc308faceee2df",
+      "bytes": 2750
+    },
+    {
+      "file": "packages/ontology/server/package.json",
+      "sha256": "e4fc2a085cdf09ff4e7ce7f86bb2d88935ac2e91116289e9fe28c93cca47db7c",
+      "bytes": 3258
+    },
+    {
+      "file": "packages/ontology/ui/package.json",
+      "sha256": "6af4c536ac3fa794dab702562fd65b4e4391df45dbc81d02d6e4f39a813eb429",
+      "bytes": 3451
+    },
+    {
+      "file": "packages/ontology/use-cases/package.json",
+      "sha256": "4df00452ee29aecc063ecdc6751fc6f687df94cc19df536396cf381797d3125d",
+      "bytes": 3547
+    },
+    {
+      "file": "packages/shared/domain/package.json",
+      "sha256": "d8ab8f52647a571ce3e875c8970fc186bb20d151862bf1f5cce34104bedb2084",
+      "bytes": 5656
+    },
+    {
+      "file": "packages/shared/tables/package.json",
+      "sha256": "d998a044566800fd8c8361f32c31281f3bdf0107e8c7eca223615a608c42de34",
+      "bytes": 2586
+    },
+    {
+      "file": "packages/shared/use-cases/package.json",
+      "sha256": "b75819ed2630766d31c292d960e08b0c4d87969e76f448f089f6e2f2be9d09d0",
+      "bytes": 2871
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/package.json",
+      "sha256": "189d59096c0a3667cdfbf05c229a6c5d8cf4599aef8b1c0a4f121230e604c7a9",
+      "bytes": 2886
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/package.json",
+      "sha256": "e2d2153d653a49ceb7306a1a63c60a998de53b6907715b16e41c19a41751e9b9",
+      "bytes": 3180
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/package.json",
+      "sha256": "ba06c6c959636f0c40448a3aac10c4b7d0f228a179584aa4b0ea0fee8588ef82",
+      "bytes": 2883
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/package.json",
+      "sha256": "210ae845eba6b09d4b61b3569c55c746dd2c4f8368a8b54b7d86e187badadbab",
+      "bytes": 3078
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/package.json",
+      "sha256": "2010bb9cb1f7f651b76d8aa9311da79b194cfb0bc2f385ca3008056cbe75520e",
+      "bytes": 2727
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/package.json",
+      "sha256": "3bf3d78f1de405eec71ffef0cb147c058886670c534cf85aca9df9f2f33d84fc",
+      "bytes": 237
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-a/package.json",
+      "sha256": "10e68587400c6bfa40b4cb646602bc3a837e31060cc345257578bc64794b4f9a",
+      "bytes": 189
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-b/package.json",
+      "sha256": "ba75f703183574f9b486d9ade97a3d9d7f669a80a1b45b2bc9f3993edc45f95a",
+      "bytes": 183
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-c/package.json",
+      "sha256": "b1023de79cf041f9d9606bcba0e68936d6560d7119f1a482045a2e0e55cb482d",
+      "bytes": 147
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/package.json",
+      "sha256": "30714e99c9d25757352ca36f829f43e335c6586626f7eb7ed8c1b9fdd5113c55",
+      "bytes": 2823
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/package.json",
+      "sha256": "a5909f1f96acdd551013fd91fb05d69d52c713137d8df159f910a7825cc60b95",
+      "bytes": 3404
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/package.json",
+      "sha256": "11f3d0f0fbf5d4bb1cc108fb1432b9dcc3b8df185a62eb59971e8eb74e8ab1c9",
+      "bytes": 2556
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/package.json",
+      "sha256": "83d5a6a966992142486b9befa225d3f42c955f5c0257556c1878b69bc01c7d42",
+      "bytes": 3224
+    },
+    {
+      "file": "packages/tooling/tool/cli/package.json",
+      "sha256": "5ed96d77de203949878f319238078633506324ab7c38060065b735041f2b2a69",
+      "bytes": 9800
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/fixtures/doctest-lane/package/package.json",
+      "sha256": "d448662dab85a2930cf9a2dcc84011b13f3390e81e9c34491d71799eb0de5e14",
+      "bytes": 207
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/fixtures/proof-epoch/bun.lock",
+      "sha256": "36b9964bfced2054d1de53dd66eadaf6e5ec964fdea3289cfb664f6abd490952",
+      "bytes": 16
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/fixtures/proof-epoch/packages/tooling/policy-pack/lint-rules/package.json",
+      "sha256": "570fbb23cc20167c2876cb3c2c348af816b1efafe63b9555777090c3e8c41fac",
+      "bytes": 63
+    },
+    {
+      "file": "packages/tooling/tool/docgen/package.json",
+      "sha256": "0bb673c6e205cf73aa27c2cd0a90339d65d3cb602ccf1e820f43563752894b2b",
+      "bytes": 2882
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/fixtures/section-example/package.json",
+      "sha256": "901e03d4bcf3a9c94aa87c64dd17e33f0452c0f4c0cada927278ababfd7d2995",
+      "bytes": 144
+    },
+    {
+      "file": "packages/workspace/domain/package.json",
+      "sha256": "7e910acb35c2d46085fef51dfdacaec6a973a878784370c376de3cc3fd2caf76",
+      "bytes": 3019
+    },
+    {
+      "file": "packages/workspace/server/package.json",
+      "sha256": "27708b7c1d2824e3872845276b50551da7d4767acc00c1b251a8f03d91b89d0e",
+      "bytes": 3618
+    },
+    {
+      "file": "packages/workspace/tables/package.json",
+      "sha256": "49e4ed3cd6265dd821e97a648be00a1479730974b4fa558e2d2e2aba3586a437",
+      "bytes": 3394
+    },
+    {
+      "file": "packages/workspace/use-cases/package.json",
+      "sha256": "2ca4117122558c9f615bee79aa25876823c38efd19ada414d0af1ff271d9dfa1",
+      "bytes": 3376
+    },
+    {
+      "file": "tsconfig.base.json",
+      "sha256": "7a054e1a51e6e4d2345bae58e46593a94b395e095cdc1b1c14876db6f94fef98",
+      "bytes": 7367
+    },
+    {
+      "file": "tsconfig.json",
+      "sha256": "375f6eca8b11417ca5f308129ff51a747c7edeee57f4eee428ffbd2a54af7f62",
+      "bytes": 89827
+    },
+    {
+      "file": "turbo.json",
+      "sha256": "32a4cf3d89cc2553c80ba68727fb2262e77a6d371ce93a7271b077a76bb42590",
+      "bytes": 8916
+    }
+  ]
+}

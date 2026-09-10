@@ -14,6 +14,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   Component,
   EntityId,
@@ -1305,15 +1306,9 @@ const mutableRetentionWithAuthorization = (
   schemaVersion: "lejeune-retention-metadata/v1",
 });
 
-const MutableRetentionMetadataModel = MutableRetentionMetadataFields.mapFields(identity)
-  .check(MutableRetentionMetadataAuthorityCheck)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.oneof(
-        fc.constant(mutableRetentionWithoutAuthorization()),
-        S.toArbitrary(RetentionAuthorization)(fc).map(mutableRetentionWithAuthorization)
-      ),
-  });
+const MutableRetentionMetadataModel = MutableRetentionMetadataFields.mapFields(identity).check(
+  MutableRetentionMetadataAuthorityCheck
+);
 
 /**
  * Effective retention decision persisted beside the mutable review ledger.
@@ -1339,6 +1334,33 @@ export class MutableRetentionMetadata extends S.Class<MutableRetentionMetadata>(
     description: "The schema-validated mutable retention authority and its effective disposition date.",
   })
 ) {}
+
+/**
+ * Generates retention metadata with its disposition date derived from its authority.
+ *
+ * **Example** (Sample consistent metadata)
+ *
+ * ```ts
+ * import { MutableRetentionMetadataArbitrary } from "@/domain/Bundle"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const samples = Arbitrary.sampleEffect(MutableRetentionMetadataArbitrary, { count: 10 })
+ * ```
+ *
+ * @category arbitraries
+ * @since 0.0.0
+ */
+export const MutableRetentionMetadataArbitrary = RetentionAuthorization.pipe(
+  S.Option,
+  Arbitrary.schema,
+  Arbitrary.map(
+    O.match({
+      onNone: mutableRetentionWithoutAuthorization,
+      onSome: mutableRetentionWithAuthorization,
+    })
+  ),
+  Arbitrary.map(MutableRetentionMetadata.make)
+);
 
 /**
  * Identity and contract revisions stored beside both durable projection engines.

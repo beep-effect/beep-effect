@@ -380,7 +380,7 @@ export const getsomesStructEntryFromCallExpression: {
 export const lintSchemaFirstCommand = Command.make(
   "schema-first",
   {
-    write: Flag.boolean("write").pipe(
+    write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Refresh standards/schema-first.inventory.jsonc")
     ),

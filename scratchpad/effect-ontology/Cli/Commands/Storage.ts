@@ -27,7 +27,7 @@ import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
 
 // --- List Command ---
 
-const listPrefix = Argument.string("prefix").pipe(
+const listPrefix = Argument.String("prefix").pipe(
   Argument.optional,
   Argument.withDescription("Path prefix to list (default: root)")
 );
@@ -72,9 +72,9 @@ const listCommand = Command.make("ls", { prefix: listPrefix }, ({ prefix }) =>
 
 // --- Cat Command ---
 
-const catPath = Argument.string("path").pipe(Argument.withDescription("Path to the object to read"));
+const catPath = Argument.String("path").pipe(Argument.withDescription("Path to the object to read"));
 
-const catLinesOption = Flag.integer("lines").pipe(
+const catLinesOption = Flag.Int("lines").pipe(
   Flag.withAlias("n"),
   Flag.withDefault(0),
   Flag.withDescription("Limit output to N lines (0 = all)")

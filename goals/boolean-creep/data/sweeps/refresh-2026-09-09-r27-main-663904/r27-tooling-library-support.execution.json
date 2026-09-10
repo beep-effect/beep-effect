@@ -1,0 +1,17 @@
+{
+  "lane": "r27-tooling-library-support",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "started": "2026-09-09T02:32:30.099069+00:00",
+  "finished": "2026-09-09T02:42:59.773948+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 4,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-tooling-library-support.jsonl` \u2014 confirmed 0, disqualified 4. All four assigned roots covered. Seeds still present; no declaration drift.",
+  "transcriptSha256": "fb32b5e823d07339b1281df7b44c297e623715e09cb03930a5865c7c3271f638",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998"
+}

@@ -1,0 +1,36 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "expandedQualifiedIds": ["yeet-status-remote-check-phase"],
+  "priorStatus": "reviewed",
+  "status": "designed",
+  "priorCardinality": {
+    "representable": 4,
+    "legal": 3
+  },
+  "cardinality": {
+    "representable": 12,
+    "legal": 5
+  },
+  "inventoryBeforeSha256": "dfd217b7b6cb971b17449d0eb56c5ef01cc7863bdeed21d5ad9846f47ff41938",
+  "inventoryAfterSha256": "b114ccfda3f504ea7d0c46b6a22cb55e27edeb25644c7cd4141e5f35dff0eb79",
+  "designSha256": {
+    "designs/yeet-status-remote-check-phase.md": "9c2ecd2e4bb125af080fe788ddcf2d7db90c9041fbdb2b4380f11caf3edd4e2f"
+  },
+  "archives": {
+    "history/inventory/2026-09-09-r27-remote-status-expansion.jsonl": "309ea98d961e31a3c4f1ccb8fd1c7ce852732656d55f3d91716ba73a989f475b",
+    "history/designs/2026-09-09-r27-pre-draft-axis-yeet-status-remote-check-phase.md": "d1ed296d0b1a38657d4da8f730b7da5933a6e1be7edd974ef81088cf320b8237"
+  },
+  "independentCorrectionReceipt": "r27-cli-yeet-contract-correction1.execution.json",
+  "independentTranscriptSha256": "d436aa52ca94453e4981849548113955f95369ca9b1ec6130edb1a72d4502e99",
+  "independentlyReaffirmed": [
+    "six eligibility withdrawals in r27-cli-seed-drift-integration.json",
+    "five D1 corrections in r27-cli-seed-drift-integration.json",
+    "r26-cli-commands-l-q-osv-ignore-expiry"
+  ],
+  "correctionUnresolvedIds": [
+    "yeet-run-options-flags",
+    "yeet-command-shared-options"
+  ],
+  "formalIndependentReview": false
+}

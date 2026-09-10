@@ -795,38 +795,40 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
   const passthroughArgs = withoutCoverageAffectedArg(args);
 
   return yield* Match.value(scope).pipe(
-    Match.discriminatorsExhaustive("_tag")({
-      full: ({ reasons }) =>
-        Console.log(`[beep-cli] coverage:affected: full fallback (${A.join(reasons, "; ")})`).pipe(
-          Effect.as(parseCoverageTaskOptions(passthroughArgs))
-        ),
-      selected: ({ packageNames, dependentPackageNames }) =>
-        Console.log(
-          `[beep-cli] coverage:affected: selected ${A.join(packageNames, ", ")}${
-            A.isReadonlyArrayNonEmpty(dependentPackageNames)
-              ? ` (dependents: ${A.join(dependentPackageNames, ", ")})`
-              : ""
-          }`
-        ).pipe(
-          Effect.as({
-            args: coverageTurboArgs([...passthroughArgs, ...A.map(packageNames, (name) => `--filter=${name}`)]),
-            expectedPackageNames: packageNames,
-            replaceAll: parsed.replaceAll,
-            scoped: true,
-            skip: false,
-            writeBaseline: parsed.writeBaseline,
-          })
-        ),
-      noop: () =>
-        Effect.succeed({
-          args: A.empty<string>(),
-          expectedPackageNames: A.empty<string>(),
+    Match.discriminator("_tag")("full", ({ reasons }) =>
+      Console.log(`[beep-cli] coverage:affected: full fallback (${A.join(reasons, "; ")})`).pipe(
+        Effect.as(parseCoverageTaskOptions(passthroughArgs))
+      )
+    ),
+    Match.discriminator("_tag")("selected", ({ packageNames, dependentPackageNames }) =>
+      Console.log(
+        `[beep-cli] coverage:affected: selected ${A.join(packageNames, ", ")}${
+          A.isReadonlyArrayNonEmpty(dependentPackageNames)
+            ? ` (dependents: ${A.join(dependentPackageNames, ", ")})`
+            : ""
+        }`
+      ).pipe(
+        Effect.as({
+          args: coverageTurboArgs([...passthroughArgs, ...A.map(packageNames, (name) => `--filter=${name}`)]),
+          expectedPackageNames: packageNames,
           replaceAll: parsed.replaceAll,
           scoped: true,
-          skip: true,
+          skip: false,
           writeBaseline: parsed.writeBaseline,
-        }),
-    })
+        })
+      )
+    ),
+    Match.discriminator("_tag")("noop", () =>
+      Effect.succeed({
+        args: A.empty<string>(),
+        expectedPackageNames: A.empty<string>(),
+        replaceAll: parsed.replaceAll,
+        scoped: true,
+        skip: true,
+        writeBaseline: parsed.writeBaseline,
+      })
+    ),
+    Match.exhaustive
   );
 });
 

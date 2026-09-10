@@ -1,0 +1,22 @@
+{
+  "lane": "r29-tooling-policy",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:51:38.279252+00:00",
+  "finished": "2026-09-09T10:59:40.032133+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tooling-policy.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nCoverage: both assigned roots were fully scanned (`packages/tooling/policy-pack/lint-rules/src`, `packages/tooling/policy-pack/repo-configs/src`, generated `EffectLawsAllowlistSnapshot.ts` excluded). All 19 seed owners still exist with the same member sets and D1/D2 classifications; SharedNextConfig analyzer/PWA D1 still matches independent plugin pass-through. No new or changed clusters.\n\nSeed drift: none that changes a record. `RedirectPermanent` seed line 175 is the `RouteBaseFields` spread; first boolean `priority` is 177. Out-of-net residue (not recorded): callable predicates, false-or-object sentinels, singleton boolean owners.\n\nUnresolved source questions: none.\n\n\ud83c\udf31 graft saved ~56,079 tokens this turn (12 calls)",
+  "transcriptSha256": "175e70fbfdfc5e68753191a7612981c0f06f829d2667953190f041fa91dfb5b3",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

@@ -114,7 +114,7 @@ describe("@beep/infra Storybook", () => {
   });
 
   it("round-trips Storybook config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(StorybookPulumiConfigValues, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(StorybookPulumiConfigValues, { runs: 25 });
     expectSchemaRoundTrip(StorybookVercelAuthenticationDeploymentType);
     expectSchemaRoundTrip(StorybookPulumiConfigValues);
     expectSchemaRoundTrip(StorybookVercelProjectConfig);

@@ -8,7 +8,7 @@ import * as Str from "effect/String";
 // values (present when secrets are not resolved, e.g. no local `op` session) as
 // not configured so live calls are skipped instead of authenticating with a
 // non-token.
-const usableRunpodApiKey = Config.redacted("RUNPOD_API_KEY").pipe(
+const usableRunpodApiKey = Config.Redacted("RUNPOD_API_KEY").pipe(
   Config.option,
   Effect.map(
     O.filter((value) => {

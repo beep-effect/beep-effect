@@ -127,7 +127,7 @@ const parseAllowlistJsonc = (content: string): Effect.Effect<unknown, SchemaIssu
 export const AllowlistJsoncTextToUnknown = S.String.pipe(
   S.decodeTo(
     S.Unknown,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: parseAllowlistJsonc,
       encode: encodeUnsupported("AllowlistJsoncTextToUnknown"),
     })

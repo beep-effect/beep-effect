@@ -20,16 +20,16 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownMdYouTube = S.decodeUnknownEffect(Md.YouTube);
 const encodePandocCompatibilityReportSync = S.encodeSync(PandocCompatibilityReport);
 const encodePandocMappingIssueSync = S.encodeSync(PandocMappingIssue);
 
-const JsonPathArbitrary = S.toArbitrary(JsonPath)(fc);
-const JsonPathSegmentArbitrary = S.toArbitrary(JsonPathSegment)(fc);
-const MdDocumentArbitrary = S.toArbitrary(Md.Document)(fc);
-const PandocDocumentArbitrary = S.toArbitrary(Pandoc.PandocDocument)(fc);
+const JsonPathArbitrary = Arbitrary.schema(JsonPath);
+const JsonPathSegmentArbitrary = Arbitrary.schema(JsonPathSegment);
+const MdDocumentArbitrary = Arbitrary.schema(Md.Document);
+const PandocDocumentArbitrary = Arbitrary.schema(Pandoc.PandocDocument);
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -381,46 +381,67 @@ describe("Pandoc.mapping", () => {
     ));
 
   it("derives JSON pointer and default severity behavior from report schemas", () =>
-    fc.assert(
-      fc.property(JsonPathArbitrary, (path) => {
-        const issue = PandocMappingIssue.fromPath({
-          construct: "Generated",
-          direction: "pandoc-to-md",
-          message: "Generated issue.",
-          path,
-        });
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([JsonPathArbitrary]),
+          ([path]) => {
+            const issue = PandocMappingIssue.fromPath({
+              construct: "Generated",
+              direction: "pandoc-to-md",
+              message: "Generated issue.",
+              path,
+            });
 
-        expect(issue.pointer).toBe(JsonPath.toPointer(path));
-        expect(issue.pointer).toBe(jsonPointerFromPath(path));
-        expect(issue.severity).toBe("unsupported");
-        expect(encodePandocMappingIssueSync(issue)).not.toHaveProperty("pointer");
+            expect(issue.pointer).toBe(JsonPath.toPointer(path));
+            expect(issue.pointer).toBe(jsonPointerFromPath(path));
+            expect(issue.severity).toBe("unsupported");
+            expect(encodePandocMappingIssueSync(issue)).not.toHaveProperty("pointer");
 
-        const report = PandocCompatibilityReport.fromIssues([issue]);
-        expect(report.profile).toBe("gap");
-        expect(encodePandocCompatibilityReportSync(report)).not.toHaveProperty("profile");
-      }),
-      fcRuns(50)
-    ));
+            const report = PandocCompatibilityReport.fromIssues([issue]);
+            expect(report.profile).toBe("gap");
+            expect(encodePandocCompatibilityReportSync(report)).not.toHaveProperty("profile");
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("generates only non-negative numeric JSON path segments", () =>
-    fc.assert(
-      fc.property(JsonPathSegmentArbitrary, (segment) => {
-        if (typeof segment === "number") {
-          expect(Number.isInteger(segment)).toBe(true);
-          expect(segment).toBeGreaterThanOrEqual(0);
-        }
-      }),
-      fcRuns(50)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([JsonPathSegmentArbitrary]),
+          ([segment]) => {
+            if (typeof segment === "number") {
+              expect(Number.isInteger(segment)).toBe(true);
+              expect(segment).toBeGreaterThanOrEqual(0);
+            }
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("preserves mapping report invariants for schema-derived documents", () =>
-    fc.assert(
-      fc.property(PandocDocumentArbitrary, MdDocumentArbitrary, (pandoc, document) => {
-        expectReportInvariants(Effect.runSync(pandocToDocument(pandoc)).report);
-        expectReportInvariants(Effect.runSync(documentToPandoc(document)).report);
-      }),
-      fcRuns(25)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([PandocDocumentArbitrary, MdDocumentArbitrary]),
+          ([pandoc, document]) => {
+            expectReportInvariants(Effect.runSync(pandocToDocument(pandoc)).report);
+            expectReportInvariants(Effect.runSync(documentToPandoc(document)).report);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("degrades @beep/md tables and YouTube embeds to Pandoc with recorded lossiness", () =>
     Effect.runPromise(

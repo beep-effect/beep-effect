@@ -81,12 +81,12 @@ const ServerConfigValue = S.Struct({
 const decodeServerConfigValue = S.decodeEffect(ServerConfigValue);
 
 const ServerConfig = Config.all({
-  port: Config.number("PORT").pipe(Config.withDefault(8080)),
-  postgresHost: Config.string("POSTGRES_HOST").pipe(Config.option),
-  useCaching: Config.boolean("ENABLE_REPO_CACHING").pipe(Config.withDefault(true)),
-  entityRegistryEnabled: Config.boolean("ENTITY_REGISTRY_ENABLED").pipe(Config.withDefault(false)),
+  port: Config.Number("PORT").pipe(Config.withDefault(8080)),
+  postgresHost: Config.String("POSTGRES_HOST").pipe(Config.option),
+  useCaching: Config.Boolean("ENABLE_REPO_CACHING").pipe(Config.withDefault(true)),
+  entityRegistryEnabled: Config.Boolean("ENTITY_REGISTRY_ENABLED").pipe(Config.withDefault(false)),
 }).pipe(
-  Config.mapOrFail((config) =>
+  Config.mapEffect((config) =>
     decodeServerConfigValue(config).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );

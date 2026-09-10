@@ -631,8 +631,8 @@ const makeService = (sdk: PhoenixSdkShape): PhoenixShape => ({
 });
 
 const makePhoenixFromEnvironment = Effect.fn("Phoenix.makePhoenixFromEnvironment")(function* () {
-  const apiKey = yield* Config.redacted("PHOENIX_API_KEY").pipe(Config.option);
-  const baseUrl = yield* Config.string("PHOENIX_HOST").pipe(Config.withDefault(PHOENIX_API_URL));
+  const apiKey = yield* Config.Redacted("PHOENIX_API_KEY").pipe(Config.option);
+  const baseUrl = yield* Config.String("PHOENIX_HOST").pipe(Config.withDefault(PHOENIX_API_URL));
   const config = resolveConfig(
     PhoenixConfigInput.make({
       apiKey,

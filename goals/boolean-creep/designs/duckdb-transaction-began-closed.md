@@ -6,7 +6,7 @@
 - members: `began`, `closed`
 - evidence classes:
   - E4 at `packages/drivers/duckdb/src/DuckDb.service.ts:377` — `rollbackIfOpen` only runs when `began && !closed`; `closed` is written only after BEGIN succeeded, so `!began && closed` is unrepresentable in practice.
-  - E1 at `packages/drivers/duckdb/src/DuckDb.service.ts:384` — BEGIN sets `began=true` with `closed` still false; COMMIT/ROLLBACK then set `closed=true`, flattening `idle|open|closed` into two bits.
+  - E4 at `packages/drivers/duckdb/src/DuckDb.service.ts:384` — BEGIN sets `began=true` with `closed` still false; COMMIT/ROLLBACK then set `closed=true`, flattening `idle|open|closed` into two bits.
 
 # Current shape
 

@@ -1,9 +1,3 @@
-/**
- * Proofs for the generic IR handoff contract: encode/decode round-trips for the
- * AnnotatedDocument envelope, span validity, provenance completeness, and the
- * pure makeProvenance constructor.
- */
-
 import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
@@ -13,15 +7,16 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeContractAnnotatedDocument = S.decodeEffect(Contract.AnnotatedDocument);
 const decodeContractProvenance = S.decodeEffect(Contract.Provenance);
 const decodeContractSpanSync = S.decodeSync(Contract.Span);
 const encodeUnknownContractAnnotatedDocument = S.encodeUnknownEffect(Contract.AnnotatedDocument);
 
-const AnnotatedDocumentArbitrary = S.toArbitrary(Contract.AnnotatedDocument)(fc);
+const AnnotatedDocumentArbitrary = Arbitrary.schema(Contract.AnnotatedDocument);
 
 const sampleProvenance = Contract.Provenance.make({
   generatedBy: "wink-nlp",
@@ -114,32 +109,47 @@ describe("AnnotatedDocument round-trip", () => {
   );
 
   it("schema-derived documents encode and decode through the production contract", () => {
-    fc.assert(
-      fc.property(AnnotatedDocumentArbitrary, (document) => {
-        const decoded = Effect.runSync(
-          Effect.gen(function* () {
-            const encoded = yield* encodeUnknownContractAnnotatedDocument(document);
-            return yield* decodeContractAnnotatedDocument(encoded);
-          })
-        );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([AnnotatedDocumentArbitrary]),
+          ([document]) => {
+            const decoded = Effect.runSync(
+              Effect.gen(function* () {
+                const encoded = yield* encodeUnknownContractAnnotatedDocument(document);
+                return yield* decodeContractAnnotatedDocument(encoded);
+              })
+            );
 
-        expect(decoded).toEqual(document);
-      }),
-      fcRuns(25)
-    );
+            expect(decoded).toEqual(document);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });
 
 describe("Span", () => {
   it("round-trips integer spans with start <= end", () => {
-    fc.assert(
-      fc.property(fc.nat(1000), fc.nat(1000), (a, b) => {
-        const start = Math.min(a, b);
-        const end = Math.max(a, b);
-        const span = Contract.Span.make({ end: NonNegativeInt.make(end), start: NonNegativeInt.make(start) });
-        return span.start <= span.end && span.start === start && span.end === end;
-      })
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
+          ]),
+          ([a, b]) => {
+            const start = Math.min(a, b);
+            const end = Math.max(a, b);
+            const span = Contract.Span.make({ end: NonNegativeInt.make(end), start: NonNegativeInt.make(start) });
+            return span.start <= span.end && span.start === start && span.end === end;
+          }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("rejects negative offsets", () => {
@@ -212,3 +222,20 @@ describe("makeProvenance", () => {
     expect(prov.confidence).toBe(0.9);
   });
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes Contract.Span through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      Contract.Span.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const codec = S.make<S.Codec<Contract.Span, unknown>>(
+      SchemaAST.decodeTo(link.to, SchemaAST.toType(Contract.Span.ast), link.transformation)
+    );
+    const value = Contract.Span.make({ start: NonNegativeInt.make(1), end: NonNegativeInt.make(4) });
+    expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
+  })
+);

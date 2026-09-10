@@ -227,12 +227,15 @@ export class AnthropicToolJsonResponse extends S.Class<AnthropicToolJsonResponse
   })
 ) {}
 
-const isFinishPart = <Tools extends Record<string, Tool.Any>, EncodedToolParameters extends boolean>(
-  part: Response.StreamPart<Tools, EncodedToolParameters>
+const isFinishPart = <Tools extends Record<string, Tool.Any>, ParametersMode extends Response.ToolParametersMode>(
+  part: Response.StreamPart<Tools, ParametersMode>
 ): part is Response.FinishPart => part.type === "finish";
 
-const isToolParamsDeltaPart = <Tools extends Record<string, Tool.Any>, EncodedToolParameters extends boolean>(
-  part: Response.StreamPart<Tools, EncodedToolParameters>
+const isToolParamsDeltaPart = <
+  Tools extends Record<string, Tool.Any>,
+  ParametersMode extends Response.ToolParametersMode,
+>(
+  part: Response.StreamPart<Tools, ParametersMode>
 ): part is Response.ToolParamsDeltaPart => part.type === "tool-params-delta";
 
 /**
@@ -265,10 +268,10 @@ const isToolParamsDeltaPart = <Tools extends Record<string, Tool.Any>, EncodedTo
  */
 export const collectToolParamsJsonWithUsage = Effect.fn("collectToolParamsJsonWithUsage")(function* <
   Tools extends Record<string, Tool.Any>,
-  EncodedToolParameters extends boolean,
+  ParametersMode extends Response.ToolParametersMode,
   E,
   R,
->(parts: Stream.Stream<Response.StreamPart<Tools, EncodedToolParameters>, E, R>) {
+>(parts: Stream.Stream<Response.StreamPart<Tools, ParametersMode>, E, R>) {
   const streamParts = A.fromIterable(yield* Stream.runCollect(parts));
   const paramsJson = pipe(
     streamParts,
@@ -330,8 +333,8 @@ export const collectToolParamsJsonWithUsage = Effect.fn("collectToolParamsJsonWi
  * @since 0.0.0
  */
 export const generateAnthropicToolJson = <Tools extends Record<string, Tool.Any>>(
-  options: GenerateTextOptions<Tools> & { readonly toolkit: Toolkit.Toolkit<Tools> }
-): Effect.Effect<AnthropicToolJsonResponse, RepairError> =>
+  options: Omit<GenerateTextOptions<Tools>, "toolkit"> & { readonly toolkit: Toolkit.Toolkit<Tools> }
+): Effect.Effect<AnthropicToolJsonResponse, RepairError, Tool.ParametersEncodingServices<Tools[keyof Tools]>> =>
   LanguageModel.streamText({
     ...options,
     disableToolCallResolution: true,

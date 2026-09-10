@@ -1,0 +1,13 @@
+{
+  "lane": "r26-docgen-coverage-implication-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-09T01:04:26.094747+00:00",
+  "finished": "2026-09-09T01:06:54.179260+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "transcriptSha256": "c4882f8567d197311dd7631c6b6e30f735f43f27901b074ecf1e971b037bc65b",
+  "supersedesReport": "r26-cli-commands-l-q.jsonl"
+}

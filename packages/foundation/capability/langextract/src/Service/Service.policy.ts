@@ -75,7 +75,7 @@ export const allowRemoteExtractionPolicyLayer = Layer.succeed(LangExtractRemoteP
  */
 export const remoteExtractionPolicyFromConfig = Layer.effect(
   LangExtractRemotePolicy,
-  Effect.map(Config.boolean("BEEP_LANGEXTRACT_ALLOW_REMOTE").pipe(Config.withDefault(false)), (allowRemote) =>
+  Effect.map(Config.Boolean("BEEP_LANGEXTRACT_ALLOW_REMOTE").pipe(Config.withDefault(false)), (allowRemote) =>
     LangExtractRemotePolicy.of({
       allowRemoteExtraction: Effect.fn("LangExtractRemotePolicy.allowRemoteExtraction.config")(
         thunkEffectSucceed(allowRemote)

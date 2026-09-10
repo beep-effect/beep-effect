@@ -34,17 +34,13 @@ export const WindowsDriveRoot = S.String.check(
     description: "A Windows drive root in the form `<letter>:` with an optional trailing separator.",
     message: "Windows drive roots must look like C: or C:\\",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(/^[A-Za-z]:[\\/]?$/),
-  })
-  .pipe(
-    S.brand("WindowsDriveRoot"),
-    $I.annoteSchema("WindowsDriveRoot", {
-      description: "A Windows drive root such as C: or C:\\.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
-  );
+).pipe(
+  S.brand("WindowsDriveRoot"),
+  $I.annoteSchema("WindowsDriveRoot", {
+    description: "A Windows drive root such as C: or C:\\.",
+  }),
+  SchemaUtils.withCodecStatics(["is"])
+);
 
 /**
  * Type for {@link WindowsDriveRoot}.

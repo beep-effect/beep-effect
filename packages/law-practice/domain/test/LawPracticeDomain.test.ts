@@ -61,9 +61,10 @@ import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeCitingApplicationIdentityOption = S.decodeOption(CitingApplicationIdentity);
 const decodeCitationSync = S.decodeSync(Citation);
@@ -126,16 +127,17 @@ const isPatentDocumentTriplet = S.is(PatentDocumentTriplet);
 const isPatentNumber = S.is(PatentNumber);
 const isWipoSt13OfficeCode = S.is(WipoSt13OfficeCode);
 
-const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 10): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, runs = 10): void => {
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => equivalent(decode(encode(value)), value)),
-    { numRuns }
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(Arbitrary.schema(schema), (value) => equivalent(decode(encode(value)), value), { runs })
+    ),
+    S.resolveAnnotations(schema)?.identifier
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 const span = (end: number) =>
@@ -276,14 +278,14 @@ describe("@beep/law-practice-domain", () => {
     expect(isKindCode("A0")).toBe(false);
   });
 
-  it("covers patent identifiers with schema-derived arbitraries", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(PatentNumber)(fc), (patentNumber) => {
-        expect(isPatentNumber(patentNumber)).toBe(true);
-      }),
-      fcRuns(25)
-    );
-  });
+  it.prop(
+    "covers patent identifiers with schema-derived arbitraries",
+    [PatentNumber],
+    ([patentNumber]) => {
+      expect(isPatentNumber(patentNumber)).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("round-trips schema-owned law-practice invariants through encoded form", () => {
     for (const schema of [
@@ -297,7 +299,7 @@ describe("@beep/law-practice-domain", () => {
       RejectionGround,
       DistinctionDetail,
     ]) {
-      assertSchemaArbitraryDecodesToSelf(schema, { numRuns: 10 });
+      assertSchemaArbitraryDecodesToSelf(schema, { runs: 10 });
       assertSchemaEncodedRoundTrips(schema, 10);
     }
   });

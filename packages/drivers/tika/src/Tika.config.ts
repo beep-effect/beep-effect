@@ -63,23 +63,6 @@ const TikaServerBaseUrl = URLStr.pipe(
   ),
   $I.annoteSchema("TikaServerBaseUrl", {
     description: "Tika Server base URL: http(s) only, no trailing slash, no query string, and no fragment.",
-    // Generated from components so every value is already normalized. Filtering
-    // URLStr's arbitrary would reject nearly everything it produces.
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(
-          fc.constantFrom("http", "https"),
-          // The domain generator excludes malformed punycode labels (`xn--`).
-          fc.oneof(fc.constant("localhost"), fc.domain()),
-          fc.oneof(
-            fc.constant(""),
-            fc.integer({ min: 1, max: 65_535 }).map((port) => `:${port}`)
-          ),
-          fc
-            .array(fc.stringMatching(/^[a-z0-9][a-z0-9-]{0,10}$/), { maxLength: 3 })
-            .map((segments) => (A.isReadonlyArrayEmpty(segments) ? "" : `/${A.join(segments, "/")}`))
-        )
-        .map(([scheme, host, port, path]) => URLStr.make(`${scheme}://${host}${port}${path}`)),
   })
 );
 

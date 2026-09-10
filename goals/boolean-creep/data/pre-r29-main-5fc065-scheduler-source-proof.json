@@ -1,0 +1,343 @@
+{
+  "kind": "pre-r29-main-5fc065-scheduler-source-proof",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "mainSha": "5fc065daff16300b8435eca3f32d55564664f57c",
+  "previousMainSha": "85cc86d1f3fd99088bf6317bfc639743de539331",
+  "priorCensusSourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "scope": "Two existing scheduler owners and one fixture exception to the prior 54-file source binding; native P2 source/design refresh only.",
+  "directSourceFiles": [
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "sha256ByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f",
+        "85cc86d1f3fd99088bf6317bfc639743de539331": "6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f",
+        "5fc065daff16300b8435eca3f32d55564664f57c": "06085119bc1e5815aff385be0aa24ed074bf6a459fd54a0984442fb7dd1e66d5",
+        "115b761d533684c5abf4ab9de83d970243c79dfc": "06085119bc1e5815aff385be0aa24ed074bf6a459fd54a0984442fb7dd1e66d5"
+      },
+      "lineCountByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": 2353,
+        "85cc86d1f3fd99088bf6317bfc639743de539331": 2353,
+        "5fc065daff16300b8435eca3f32d55564664f57c": 2356,
+        "115b761d533684c5abf4ab9de83d970243c79dfc": 2356
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "sha256ByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "c00bb7ea07b06216d238a86777abb94c58c39fc0292f2f655f5d290023141715",
+        "85cc86d1f3fd99088bf6317bfc639743de539331": "a0f7e93d6e80fbca2b47520923f8cbf1805a3bb2ad8bcc56579870806e92d562",
+        "5fc065daff16300b8435eca3f32d55564664f57c": "ab77d80d9292f509db382d5ea87f0c4db4fc474b84e7b5e2720811639441ab1c",
+        "115b761d533684c5abf4ab9de83d970243c79dfc": "ab77d80d9292f509db382d5ea87f0c4db4fc474b84e7b5e2720811639441ab1c"
+      },
+      "lineCountByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": 4986,
+        "85cc86d1f3fd99088bf6317bfc639743de539331": 5034,
+        "5fc065daff16300b8435eca3f32d55564664f57c": 5075,
+        "115b761d533684c5abf4ab9de83d970243c79dfc": 5075
+      }
+    }
+  ],
+  "unchangedOwnerSpans": [
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "label": "AdmittedState full payload",
+      "beforeRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "beforeStart": 1463,
+      "beforeEnd": 1468,
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "incomingStart": 1466,
+      "incomingEnd": 1471,
+      "sha256": "806882055f486b7fb6ddcca38f7c4d4fe0bf018f5b8961237f2a31500c0a397a",
+      "sameExactBytes": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "label": "AdmissionAttempt and complete producer",
+      "beforeRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "beforeStart": 1600,
+      "beforeEnd": 1640,
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "incomingStart": 1603,
+      "incomingEnd": 1643,
+      "sha256": "21d0934ff0c8b471b6ae6b0dc593b6abd085c8459e5f5e0e66a997d4058899ad",
+      "sameExactBytes": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "label": "PromotionTickInfo, PromotionTick and complete producer",
+      "beforeRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "beforeStart": 1744,
+      "beforeEnd": 1789,
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "incomingStart": 1747,
+      "incomingEnd": 1792,
+      "sha256": "b5ec9153fe77f9f9fc4c820bc6b18323844ad8b5bd321e891e4c0324b11a79eb",
+      "sameExactBytes": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "label": "waitForAdmission complete reader",
+      "beforeRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "beforeStart": 1858,
+      "beforeEnd": 1895,
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "incomingStart": 1861,
+      "incomingEnd": 1898,
+      "sha256": "568df80a5806443ee2219333eec1ad13596ed2f305b5b9cde0ced77b07aaeee4",
+      "sameExactBytes": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "label": "public origin gate contract",
+      "beforeRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "beforeStart": 1437,
+      "beforeEnd": 1441,
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "incomingStart": 1440,
+      "incomingEnd": 1444,
+      "sha256": "4179fb8c76901a7769c4d7f640cf272befb70a00639c58088b9de74d6a05270f",
+      "sameExactBytes": true
+    }
+  ],
+  "unchangedFixtureSpans": [
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "label": "entire earlier fixture prefix",
+      "beforeRef": "85cc86d1f3fd99088bf6317bfc639743de539331",
+      "beforeStart": 1,
+      "beforeEnd": 3318,
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "incomingStart": 1,
+      "incomingEnd": 3318,
+      "sha256": "a7098fce5c4361241e4c85b1f953b78bf07405ee03f2630f5411eb461278ce83",
+      "sameExactBytes": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "label": "ProcessIdentity raw identity plus prefixed replay compatibility proof",
+      "beforeRef": "85cc86d1f3fd99088bf6317bfc639743de539331",
+      "beforeStart": 1902,
+      "beforeEnd": 1935,
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "incomingStart": 1902,
+      "incomingEnd": 1935,
+      "sha256": "378e6bcf0481531f8ed952d4b8056d847f1caeb74df96ccaed966b310b3b902d",
+      "sameExactBytes": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "label": "complete later fixture suffix",
+      "beforeRef": "85cc86d1f3fd99088bf6317bfc639743de539331",
+      "beforeStart": 3432,
+      "beforeEnd": 5034,
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "incomingStart": 3473,
+      "incomingEnd": 5075,
+      "sha256": "c67f6b1b7196250319f38daadf7cc6bc83de4bdf4ba7ac28fb314189a6c51479",
+      "sameExactBytes": true
+    }
+  ],
+  "testCitationRelocations": [
+    {
+      "beforeRange": "3107-3154",
+      "incomingRange": "3120-3167",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": true
+    },
+    {
+      "beforeRange": "4789-4860",
+      "incomingRange": "4878-4949",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": true
+    },
+    {
+      "beforeRange": "981-1120",
+      "incomingRange": "981-1120",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": true
+    },
+    {
+      "beforeRange": "1122-1303",
+      "incomingRange": "1122-1303",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": true
+    },
+    {
+      "beforeRange": "2497-2596",
+      "incomingRange": "2498-2597",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": true
+    },
+    {
+      "beforeRange": "3156-3196",
+      "incomingRange": "3169-3212",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": false
+    },
+    {
+      "beforeRange": "4818-4860",
+      "incomingRange": "4907-4949",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": true
+    },
+    {
+      "beforeRange": "2790-3000",
+      "incomingRange": "2797-3013",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": false
+    },
+    {
+      "beforeRange": "4691-4727",
+      "incomingRange": "4780-4816",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": true
+    },
+    {
+      "beforeRange": "3625-3910",
+      "incomingRange": "3714-3999",
+      "baselineRef": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "incomingRef": "5fc065daff16300b8435eca3f32d55564664f57c",
+      "endpointBytesEqual": true,
+      "wholeSpanBytesEqual": true
+    }
+  ],
+  "priorPublicSourceBinding": "data/pre-r29-main-4f13d8-source-bindings.json",
+  "priorPublicSourceBindingSha256": "7543d00b15a16527e8f5e00af5cc7b5a9059b4dd5f24d8d0671ea2997a76b73c",
+  "priorBindingWholeFileEqualityCount": 53,
+  "priorBindingExceptions": [
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "previousBoundSha256": "a0f7e93d6e80fbca2b47520923f8cbf1805a3bb2ad8bcc56579870806e92d562",
+      "previousMainSha256": "a0f7e93d6e80fbca2b47520923f8cbf1805a3bb2ad8bcc56579870806e92d562",
+      "incomingMainSha256": "ab77d80d9292f509db382d5ea87f0c4db4fc474b84e7b5e2720811639441ab1c",
+      "mergedHeadSha256": "ab77d80d9292f509db382d5ea87f0c4db4fc474b84e7b5e2720811639441ab1c",
+      "sameWholeFileBytes": false
+    }
+  ],
+  "verifiedMergedAndWorkingSourceFileCount": 55,
+  "prior17DesignsRequireNoBodyRevision": true,
+  "ownerConclusions": {
+    "ids": [
+      "scheduler-admission-attempt-origin",
+      "scheduler-promotion-tick-origin"
+    ],
+    "members": ["originBusy", "admitted"],
+    "representable": 4,
+    "legal": 3,
+    "status": "designed",
+    "storage": "stored",
+    "exposure": "internal",
+    "tier": 1,
+    "targetShape": "tagged-union",
+    "admittedPayload": ["lease", "leasePath", "originLease", "promotionPath"],
+    "promotionInfoPayload": [
+      "availableGib",
+      "capacityTokens",
+      "nowMillis",
+      "state"
+    ],
+    "opaqueOriginLeaseCodecRequired": false
+  },
+  "preservation": [
+    "Keep the three busy/None, not-busy/None and not-busy/Some outcomes, the shared private outcome model and full payloads; keep Tier 1E shared-file sequencing.",
+    "QualityScheduler.ts:221-222,853-862 polls fs.exists until false every 25 ms, with a five-second timeout. Read errors conservatively continue as true; timeout returns true.",
+    "Keep processReapClaim:905-912 and processPromotionTransition:1183-1190 pending-result errors. The observer neither takes over sinks nor removes pending records or releases another owner lock.",
+    "Keep origin gate release on staging error/overshoot, admitted ownership handoff, transition-error release, pre-scan clock, masked promotion/restored sleep, sticky blocked clock and heartbeat order.",
+    "Keep all ticket/lease/promotion/journal codecs, v1/v2/v3 compatibility, protocol-v2 fencing, full attribution, omission and once-per-owner sink semantics.",
+    "The live fixture at quality-scheduler.test.ts:3319-3472 holds an injected sink, observes repeated claim checks and a pending observer after another second, then completes both fibers with exact event counts and empty lease/queue/claim directories.",
+    "The complete earlier fixture prefix1-3318 and explicit ProcessIdentity compatibility span1902-1935 are byte-identical. Raw default identity and prefixed recorded replay stay supported.",
+    "Current design test coordinates came from the R28 source; late citations require its earlier +48 and incoming +41, not a blanket +41. Exact endpoint mappings distinguish unchanged spans from prior fixture edits.",
+    "The original 17-design stage and all its frozen evidence remain unchanged; this public companion documents the single accepted fixture equality exception."
+  ],
+  "rowActions": [
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "action": "replace",
+      "beforeRawLineSha256": "d14f98df38662cb578969cf136a7ebb91e898f2384c5febd4d82f41e45f3d048",
+      "afterRawLineSha256": "7dd9dce2131732cbb65949c77567b6e2eba589c1b0d43afa22ef55878ba16143",
+      "beforeRowSha256": "3d4c1005b10d42e4929f6bdee6e9fe67db6cc0c595fb14e7f1c1f2bf15f86a52",
+      "afterRowSha256": "7948b6298aba5d560df7f684ce58cc99a1ab8e23ac313221c317c92ea9266ace",
+      "lineBefore": 1600,
+      "lineAfter": 1603,
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "status": "designed",
+      "tier": 1,
+      "changedFields": ["line", "evidence", "notes"],
+      "originalArchive": "history/inventory/2026-09-09-pre-r29-main-5fc065-scheduler-before.jsonl",
+      "originalLine": 536,
+      "currentInventory": "data/inventory.jsonl",
+      "currentLine": 536
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "action": "replace",
+      "beforeRawLineSha256": "4ecf6b9e97be9b84d9465045a34872756768e72f728f36c630aad42d670028a3",
+      "afterRawLineSha256": "021ee0acfcde42b5bda47e8d190c7b138be86121cb63c795784a427b403fbf3f",
+      "beforeRowSha256": "a0172be7322e1a3ee3183460fd60ea4b4f79c3e70b0e44bb91078399171706af",
+      "afterRowSha256": "7787be66c9f284823cb00478fb9a406531b1d4dfda3ab5f767c91f43feefa350",
+      "lineBefore": 1751,
+      "lineAfter": 1754,
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "status": "designed",
+      "tier": 1,
+      "changedFields": ["line", "evidence", "notes"],
+      "originalArchive": "history/inventory/2026-09-09-pre-r29-main-5fc065-scheduler-before.jsonl",
+      "originalLine": 537,
+      "currentInventory": "data/inventory.jsonl",
+      "currentLine": 537
+    }
+  ],
+  "designActions": [
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "currentPath": "designs/scheduler-admission-attempt-origin.md",
+      "archivePath": "history/designs/2026-09-09-pre-r29-main-5fc065-scheduler/scheduler-admission-attempt-origin.md",
+      "beforeSha256": "e36fde3d5767c6882b22acc99e523b3502ca8832163bc26bc5b59f114ba88d7d",
+      "afterSha256": "74104e1cae6c4b042790d12227627e03a41924bb9bda2669bb256a56166c3512",
+      "originalBlankEofLine": false
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "currentPath": "designs/scheduler-promotion-tick-origin.md",
+      "archivePath": "history/designs/2026-09-09-pre-r29-main-5fc065-scheduler/scheduler-promotion-tick-origin.md",
+      "beforeSha256": "42c2502f4dbd99ce7f05655c0f628f5084a96ea63185d11a2ba1675fbb63fbab",
+      "afterSha256": "7284a83541a1b774f0aceea117d3b4575a2c882dcb724cdd334b35a4251e647b",
+      "originalBlankEofLine": false
+    }
+  ],
+  "nativeCompanionFingerprints": {
+    "manifestSha256": "778cda284b0cf56004db4552fcc0a7f755e305b40d5f87cd31499dd702098a10",
+    "sourceManifestSha256": "9f845a0c422f68f9a5294818f27ef84c948b6a50925b944a76f6aa3cea5d6ded",
+    "receiptSha256": "81bc430ee51c67f5c44f7f017f2cdadd7f2fb3babe508fdf4d6288b419f96efc",
+    "proposedRowsSha256": "edefefb2e141e603767aa8d9538b3ffdf7ced29eaa8b69c1677c4291579aeff0"
+  },
+  "evidenceRetrieval": "Use git show <recorded immutable ref>:<file>; row originals are in originalArchive and design originals in archivePath. Current source and design conclusions are fully stated here and in the two current designs.",
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "implementationClaim": false,
+  "productTestsRun": false
+}

@@ -1,0 +1,9 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "sourceStable": true,
+  "complete": true,
+  "lanes": 3,
+  "qualifiedCandidates": 3,
+  "coverageMapSha256": "dfb01a6f65f43fce70e25aadd4d172c9a8c36f2c19c93e5ee1d1110826bd4823"
+}

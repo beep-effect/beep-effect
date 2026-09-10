@@ -72,36 +72,34 @@ const spinnerCommandAtom = Atom.family((scope: string) =>
       const stateAtom = spinnerStateAtom(scope);
       const state = ctx.get(stateAtom);
 
-      Match.type<SpinnerCommand>().pipe(
-        Match.tagsExhaustive({
-          stop: () => {
-            clearSpinnerTimers(state);
-            ctx.set(stateAtom, emptySpinnerState);
-          },
-          start: ({ run }) => {
-            clearSpinnerTimers(state);
+      Match.typeTags<SpinnerCommand>()({
+        stop: () => {
+          clearSpinnerTimers(state);
+          ctx.set(stateAtom, emptySpinnerState);
+        },
+        start: ({ run }) => {
+          clearSpinnerTimers(state);
 
-            if (state.runOnce) {
-              run();
-            }
+          if (state.runOnce) {
+            run();
+          }
 
-            const timeout = window.setTimeout(() => {
-              const interval = window.setInterval(run, spinnerSchedule.continuousChangeInterval);
-              ctx.set(stateAtom, {
-                interval,
-                runOnce: false,
-                timeout: undefined,
-              });
-            }, spinnerSchedule.continuousChangeDelay);
-
+          const timeout = window.setTimeout(() => {
+            const interval = window.setInterval(run, spinnerSchedule.continuousChangeInterval);
             ctx.set(stateAtom, {
-              interval: undefined,
-              runOnce: state.runOnce,
-              timeout,
+              interval,
+              runOnce: false,
+              timeout: undefined,
             });
-          },
-        })
-      )(command);
+          }, spinnerSchedule.continuousChangeDelay);
+
+          ctx.set(stateAtom, {
+            interval: undefined,
+            runOnce: state.runOnce,
+            timeout,
+          });
+        },
+      })(command);
     }
   )
 );

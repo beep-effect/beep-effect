@@ -497,7 +497,7 @@ describe("@beep/professional-desktop chat contract", () => {
   );
 
   it("round-trips schema-derived turn history items through the wire contract", () => {
-    assertSchemaArbitraryDecodesToSelf(TurnHistoryItem, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(TurnHistoryItem, { runs: 25 });
   });
 
   // A turn appends the user message, reads the whole conversation back, and asks

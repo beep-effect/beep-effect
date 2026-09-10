@@ -42,8 +42,8 @@ describe("PromotionGate", () => {
   });
 
   it("round-trips the shared boundary schemas", () => {
-    assertSchemaArbitraryDecodesToSelf(PromotionSubjectRef, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(PromotionGateRequest, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(PromotionGateVerdict, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(PromotionSubjectRef, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(PromotionGateRequest, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(PromotionGateVerdict, { runs: 25 });
   });
 });

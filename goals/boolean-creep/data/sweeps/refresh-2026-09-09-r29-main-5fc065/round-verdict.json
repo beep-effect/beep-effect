@@ -1,0 +1,195 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-09-r29-main-5fc065",
+  "finalizedAt": "2026-09-09T12:16:03.454065+00:00",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "originMainSha": "5fc065daff16300b8435eca3f32d55564664f57c",
+  "finalizationSourceSha": "1c07c15495aaa42f521b887b01e943e68804606c",
+  "finalizationSourceMainSha": "3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee",
+  "observedOriginMainSha": "c12c6ae651a3facc3f6e6a5190fd84670ef8a014",
+  "complete": false,
+  "sourceStable": false,
+  "disposition": "finalized-source-invalid",
+  "executionExitCode": 1,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "boundedCorrections": 2,
+  "successfulBoundedCorrections": 2,
+  "seedDispositions": 674,
+  "rawOccurrenceDispositions": 39,
+  "newQualifiedIds": [
+    "docgen-runpod-template-search-scopes",
+    "yeet-sweep-git-state",
+    "r29-yeet-sweep-worktree-probe-address"
+  ],
+  "withdrawnQualifiedIds": ["codegen-kit-cli-mode"],
+  "qualified": 141,
+  "records": 698,
+  "disqualified": 557,
+  "wet": true,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "88733c9dfe96f2cd531589206cab65daeecc87507f4534138f87b548b95a11e8",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/execution-summary.json",
+      "sha256": "1d1a132e63c02945b2964b5407fbbcd2dac2f24e51d720ea7432e442cabc3d1c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/execution-audit.json",
+      "sha256": "e64e0b282fe07700f5f87a42f48f693667e2fd53b644cc2f32d64f3127ef4fa8"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/final-design-bindings.json",
+      "sha256": "074e6a04ea1b622b590423ce59191145e4d279f06eabad47fec8df4d57cf289b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/reconciliation.md",
+      "sha256": "67424818f62439bc66382d92d25d83c4089def3953cb6b5b56639c5d9c473351"
+    },
+    {
+      "file": "goals/boolean-creep/data/r29-parent-integration.json",
+      "sha256": "4183e04f79e2152504f98f6c72c065a29c5eaf28d0e5692523c2f7a117259cdf"
+    },
+    {
+      "file": "goals/boolean-creep/data/r29-parent-dispositions.json",
+      "sha256": "467ce9ccda5be94e542fce99e267e5bad31c6adb72b248560d0254cf543cd338"
+    },
+    {
+      "file": "goals/boolean-creep/data/r29-native-adjudications.json",
+      "sha256": "afccc5d28dbe096207e90be565f8b0956c625ae8b1020bb4844222136bb58594"
+    },
+    {
+      "file": "goals/boolean-creep/data/r29-sweep-neighbor-integration.json",
+      "sha256": "bdf0ea9a9e9b94a25f2119b07754bbed1f33506dfab50737e6f6d3c4522ae989"
+    },
+    {
+      "file": "goals/boolean-creep/data/r29-sweep-ancestry-non-admission.md",
+      "sha256": "2efd29fb1237d0ec1d2a04caad341a040abd2845e72e013eb6cdf0ee268e3175"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-09-r29-neighbor-after.jsonl",
+      "sha256": "88733c9dfe96f2cd531589206cab65daeecc87507f4534138f87b548b95a11e8"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-agents-workspace.execution.json",
+      "sha256": "01267d6c6b4d2e6fbce6eaf2694f1131d67b9e92cdfe72e4463c7b32c3041117"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-apps.execution.json",
+      "sha256": "b753dbf96e315e3ee2d602df96a579ca4bcd0b96d257dccb2ada064e46024a7e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-architecture-ecosystem-internal.execution.json",
+      "sha256": "7f71b793d5e0097b10dda140e7fa46b64c75afb6051ccb9c77799a6508791fbe"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-a-c.execution.json",
+      "sha256": "258831c0f30bc4e1698380ee499d09d8a127b57792ac90c9ff59edaaa9a1a5b9"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-d-k.execution.json",
+      "sha256": "5fccb1a5ddf2e7d9fa05d475e2c0545029bf02567499f5b2f743e35ce9f764bd"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-l-q.execution.json",
+      "sha256": "478e612c0c92eafff548ef0f8df00fd428ac0a362cefde7355d6be37333803ff"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-r-z.execution.json",
+      "sha256": "d106641404b9045156920f9f18c7d8c610ae69e290ceb178779a81eb35bc40b7"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-internal-root.execution.json",
+      "sha256": "0c402a8d807dc3865f10b3c1a846d4833e5a130f8495608fbbe8f7a2f09a361b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-yeet.execution.json",
+      "sha256": "39949bc345eb25a4038f6d72eca148133e11927891e8a0b29b28cc7a7d51dd62"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-a-f-correction.execution.json",
+      "sha256": "888556f38fc0affc937419dc8a02dd07b728e0d2d236d6372a426dd8ba586b16"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-a-f.execution.json",
+      "sha256": "781aa5f65cc5abb36b3706c6b155fde67d04eced09bb271d3c5704d17dea7301"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-g-m.execution.json",
+      "sha256": "de00be7a531ffd9c68d7f2a5a95bcccf7247dfb62fd2b9a03501148f98e7c490"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-n-r.execution.json",
+      "sha256": "d34cae857e608474c6d2b6edc6dbf813c13de5b4cd5dfe2a9ac732a86618745b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-s-z.execution.json",
+      "sha256": "0ac459ab4020503d3aaa437b4fdfc0ff4d1f784e6fad928544664d827fdd5bfc"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-epistemic-ontology.execution.json",
+      "sha256": "3d61d7926a88ad579470e2f77eca2bea60d23e9542d0b1bfcddca0647c5e3248"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-capability.execution.json",
+      "sha256": "bf010c55258569bf78eb71bcf8bb963b988c9d2408e85b0f9f5c558c5e0b9cad"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-modeling-rest.execution.json",
+      "sha256": "66bbc6ecff98d696839203dbcd2d5109b465c5553a681418c87bacf454f61b40"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-primitive.execution.json",
+      "sha256": "76b41c092b8a382e96a4dbf9b618dcf34637b386dbc36e47437045690beeede1"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-schema-a-m.execution.json",
+      "sha256": "078e81583de3e19c62cf733006d02ed79f6eed13932f199e5b13e8fa8f1cb91e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-schema-n-z.execution.json",
+      "sha256": "a4125a45e3246081e6147bae1c393d174c5916148820b9934a535fe3af476861"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-ui-correction.execution.json",
+      "sha256": "5b8285d20a8b17c9b6a5f3132f68b559a2d0536696b36d0a1b250104d4344738"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-ui.execution.json",
+      "sha256": "55a233bac3625431baf9c881b13290be0372058f80c2a35f3cc17ffeed3a1689"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-law-practice-domain.execution.json",
+      "sha256": "eb7950720b93ff61798219782ae31ea6970e99b6ff8ffae63bfdbdf02e2ca29c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-law-practice-runtime.execution.json",
+      "sha256": "1f20053d43f46a66d5e344abf4da9ebb7549f3460859b71ddfa7e667354a58fe"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-shared-documents.execution.json",
+      "sha256": "fb800f3dc3137c09aa9b7009e1f131388b2a8eda7a644a11a271088c547c3a4f"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tool-docgen.execution.json",
+      "sha256": "780a46ad92e0128659962d4c6c637cfc7d41bfcd51eafb1f4e30e03d2acf6b44"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tooling-library-observability.execution.json",
+      "sha256": "921233c882f666001b2063a318116aca677d44b0b4f6590eabbe755ecfc7a802"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tooling-library-support.execution.json",
+      "sha256": "60420395f4bf625141adf62cc786f2a84b85bbb1823e2b8f46e38d97b45ccf8b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tooling-policy.execution.json",
+      "sha256": "eda3cbd62d9431d042bcc809a90a294efd917ad34eb3a21451b57812a1d2e9a1"
+    }
+  ]
+}

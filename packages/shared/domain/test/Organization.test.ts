@@ -5,7 +5,6 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 
 const decodeOrganizationLicenseTierSync = S.decodeSync(Organization.LicenseTier);
 const decodeOrganizationSettingsSync = S.decodeSync(Organization.Settings);
@@ -14,8 +13,7 @@ const encodeOrganizationSettingsSync = S.encodeSync(Organization.Settings);
 
 const decodeOrganization = S.decodeUnknownEffect(Organization.Model);
 const decodeOrganizationId = S.decodeUnknownEffect(Shared.OrganizationId);
-const LicenseTierArbitrary = S.toArbitrary(Organization.LicenseTier)(fc);
-const SettingsArbitrary = S.toArbitrary(Organization.Settings)(fc);
+
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
   assert.strictEqual(Exit.isFailure(exit), true);
@@ -80,25 +78,26 @@ describe("Organization", () => {
     })
   );
 
-  it("round-trips schema-derived license tiers and settings", () =>
-    fc.assert(
-      fc.property(LicenseTierArbitrary, SettingsArbitrary, (licenseTier, settings) => {
-        const decodedTier = decodeOrganizationLicenseTierSync(licenseTier);
-        const encodedSettings = encodeOrganizationSettingsSync(settings);
-        const decodedSettings = decodeOrganizationSettingsSync(encodedSettings);
+  it.prop(
+    "round-trips schema-derived license tiers and settings",
+    [S.Tuple([Organization.LicenseTier, Organization.Settings])],
+    ([[licenseTier, settings]]) => {
+      const decodedTier = decodeOrganizationLicenseTierSync(licenseTier);
+      const encodedSettings = encodeOrganizationSettingsSync(settings);
+      const decodedSettings = decodeOrganizationSettingsSync(encodedSettings);
 
-        expect(decodedTier).toBe(licenseTier);
-        expect(
-          Organization.LicenseTier.is.solo(decodedTier) ||
-            Organization.LicenseTier.is.team(decodedTier) ||
-            Organization.LicenseTier.is.enterprise(decodedTier)
-        ).toBe(true);
-        assert.instanceOf(decodedSettings, Organization.Settings);
-        assert.strictEqual(decodedSettings.allowAgentActions, settings.allowAgentActions);
-        assert.strictEqual(decodedSettings.defaultRetentionDays, settings.defaultRetentionDays);
-      }),
-      fcRuns(50)
-    ));
+      expect(decodedTier).toBe(licenseTier);
+      expect(
+        Organization.LicenseTier.is.solo(decodedTier) ||
+          Organization.LicenseTier.is.team(decodedTier) ||
+          Organization.LicenseTier.is.enterprise(decodedTier)
+      ).toBe(true);
+      assert.instanceOf(decodedSettings, Organization.Settings);
+      assert.strictEqual(decodedSettings.allowAgentActions, settings.allowAgentActions);
+      assert.strictEqual(decodedSettings.defaultRetentionDays, settings.defaultRetentionDays);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect(
     "decodes nullable parent organization ids to Option values",

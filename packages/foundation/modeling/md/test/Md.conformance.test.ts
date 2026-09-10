@@ -35,10 +35,10 @@ import { DocumentSafetyViolation, RawNodeSafetyViolation } from "@beep/md/Md.saf
 import { ConformanceReport } from "@beep/schema/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeHeadingResult = S.decodeResult(Heading);
 const decodeUnknownBlockResult = S.decodeUnknownResult(Block);
@@ -55,7 +55,7 @@ const isDocument = S.is(Document);
 const isGfmDocument = S.is(GfmDocument);
 const isHeadingLevel = S.is(HeadingLevel);
 
-const HeadingArbitrary = S.toArbitrary(Heading)(fc);
+const HeadingArbitrary = Arbitrary.schema(Heading);
 
 const tags = (issues: ReadonlyArray<MarkdownConformanceIssue>): ReadonlyArray<MarkdownConformanceIssue["_tag"]> =>
   A.map(issues, ({ _tag }) => _tag);
@@ -106,15 +106,22 @@ describe("Markdown semantic conformance", () => {
   });
 
   it("round-trips schema-derived headings through their codec", () =>
-    fc.assert(
-      fc.property(HeadingArbitrary, (heading) => {
-        const encoded = Result.getOrThrow(encodeHeadingResult(heading));
-        const decoded = Result.getOrThrow(decodeHeadingResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([HeadingArbitrary]),
+          ([heading]) => {
+            const encoded = Result.getOrThrow(encodeHeadingResult(heading));
+            const decoded = Result.getOrThrow(decodeHeadingResult(encoded));
 
-        expect(decoded).toEqual(heading);
-      }),
-      fcRuns(50)
-    ));
+            expect(decoded).toEqual(heading);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("rejects unknown Markdown variant tags", () => {
     expect(Result.isFailure(decodeUnknownInlineResult({ _tag: "futureInline" }))).toBe(true);

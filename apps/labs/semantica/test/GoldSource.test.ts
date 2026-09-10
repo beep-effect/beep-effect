@@ -11,7 +11,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 import { GOLD_SUBSETS } from "@/canary/Gold";
 import { CorpusPaperId } from "@/corpus/Manifest";
@@ -109,10 +109,11 @@ const writeGoldFixture = Effect.fn("GoldSourceTest.writeFixture")(function* (dir
 
 describe("C0 gold source", () => {
   it("generates schema-valid gold source paper ids", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(CorpusPaperId)(fc), (paperId) => isCorpusPaperId(paperId)),
-      { numRuns: 20 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.schema(CorpusPaperId), (paperId) => isCorpusPaperId(paperId), { runs: 20 })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("loads selected files and omits unreferenced subsets after verifying the complete gold reference", () =>

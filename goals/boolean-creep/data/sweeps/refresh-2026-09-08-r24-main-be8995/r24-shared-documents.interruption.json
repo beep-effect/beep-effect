@@ -1,0 +1,12 @@
+{
+  "lane": "r24-shared-documents",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "completion": "interrupted",
+  "exitCode": null,
+  "endTurnEvent": false,
+  "reason": "Automatic Desktop goal continuation removed the terminal handle and terminated the owned sweep driver and child processes before completion.",
+  "transcriptSha256": "a77fbab75b75019f532cd79dd7393a19116d66af81bf295bb1452e92cc9bea63",
+  "reportExists": true,
+  "reportRecords": 0,
+  "replacementLane": "r24-shared-documents-resume1"
+}

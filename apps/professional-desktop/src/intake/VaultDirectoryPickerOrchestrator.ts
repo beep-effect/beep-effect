@@ -109,7 +109,7 @@ export const pickVaultDirectoryOnHost = (
 // BEEP_DESKTOP_VAULT_PICKER_DISABLED=true makes PickVaultDirectory fail with
 // the typed error immediately, which routes the renderer to its manual
 // vault-path form.
-const vaultPickerDisabled = Config.boolean("BEEP_DESKTOP_VAULT_PICKER_DISABLED").pipe(Config.withDefault(false));
+const vaultPickerDisabled = Config.Boolean("BEEP_DESKTOP_VAULT_PICKER_DISABLED").pipe(Config.withDefault(false));
 
 /**
  * RPC handler layer that opens the sidecar host's native folder dialog.
@@ -127,7 +127,7 @@ const vaultPickerDisabled = Config.boolean("BEEP_DESKTOP_VAULT_PICKER_DISABLED")
  */
 export const VaultDirectoryPickerHandlersLive = VaultDirectoryPickerRpcs.toLayer(
   Effect.gen(function* () {
-    const startDirectory = yield* Config.string("HOME").pipe(Config.withDefault("/"));
+    const startDirectory = yield* Config.String("HOME").pipe(Config.withDefault("/"));
     const disabled = yield* vaultPickerDisabled;
     return VaultDirectoryPickerRpcs.of({
       PickVaultDirectory: () =>

@@ -4,7 +4,7 @@ import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 import { provideScopedLayer } from "./harness.ts";
 
@@ -12,7 +12,7 @@ const run = <A, E>(program: Effect.Effect<A, E, NodeServices.NodeServices>): Pro
   Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)));
 
 const sortedRuleNames = [...RULE_NAMES].sort();
-const RuleRegistryArbitrary = S.toArbitrary(RuleRegistrySchema)(fc);
+const RuleRegistryArbitrary = Arbitrary.schema(RuleRegistrySchema);
 const decodeRuleRegistry = S.decodeUnknownSync(RuleRegistrySchema);
 const encodeRuleRegistry = S.encodeSync(RuleRegistrySchema);
 
@@ -99,12 +99,19 @@ describe("rule registry", () => {
   });
 
   it("round-trips schema-derived rule registries", () => {
-    fc.assert(
-      fc.property(RuleRegistryArbitrary, (registry) => {
-        expect(decodeRuleRegistry(encodeRuleRegistry(registry))).toEqual(registry);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([RuleRegistryArbitrary]),
+          ([registry]) => {
+            expect(decodeRuleRegistry(encodeRuleRegistry(registry))).toEqual(registry);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("every rule is wired into the repo-root biome.jsonc lint pass", () =>

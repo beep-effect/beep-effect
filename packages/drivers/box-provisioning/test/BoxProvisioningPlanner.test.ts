@@ -24,7 +24,7 @@ import { Effect, Equal } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 
 const decodeBoxDesiredStateOption = S.decodeOption(BoxDesiredState);
@@ -37,12 +37,21 @@ describe("@beep/box-provisioning planner", () => {
   it("round-trips schema-derived observed folders", () => {
     const equivalent = S.toEquivalence(BoxObservedFolder);
 
-    fc.assert(
-      fc.property(S.toArbitrary(BoxObservedFolder)(fc), (folder) => {
-        expect(equivalent(decodeUnknownBoxObservedFolderSync(encodeBoxObservedFolderSync(folder)), folder)).toBe(true);
-      }),
-      fcRuns(10)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(BoxObservedFolder)]),
+          ([folder]) => {
+            expect(equivalent(decodeUnknownBoxObservedFolderSync(encodeBoxObservedFolderSync(folder)), folder)).toBe(
+              true
+            );
+
+            return true;
+          },
+          fcRuns(10)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it.effect(

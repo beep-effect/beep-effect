@@ -159,31 +159,37 @@ export const computeObsAuthentication: (options: ComputeObsAuthenticationOptions
 
 const socketFailureToObsError = (config: ObsConfig): ((error: Socket.SocketError) => ObsError) => {
   const toError: (reason: Socket.SocketErrorReason) => ObsError = Match.type<Socket.SocketErrorReason>().pipe(
-    Match.tagsExhaustive({
-      SocketOpenError: (reason) =>
-        ObsError.fromUnknown(
-          "connect",
-          `Could not connect to obs-websocket at ${webSocketUrl(config)}. ${OBS_WEBSOCKET_CONFIG_HINT}`,
-          { cause: reason.cause }
-        ),
-      SocketCloseError: (reason) =>
-        ObsError.make({
-          closeCode: O.some(reason.code),
-          message: `obs-websocket connection closed (${reason.message}).`,
-          // Close 4009 means the server was reachable and rejected the
-          // credentials: tag it "authenticate" so connect-keyed spawn/retry
-          // predicates surface it immediately instead of relaunching OBS.
-          operation: reason.code === OBS_CLOSE_CODE_AUTHENTICATION_FAILED ? "authenticate" : "connect",
-        }),
-      SocketReadError: (reason) =>
-        ObsError.fromUnknown("connect", "Reading from the obs-websocket connection failed.", {
-          cause: reason.cause,
-        }),
-      SocketWriteError: (reason) =>
-        ObsError.fromUnknown("connect", "Writing to the obs-websocket connection failed.", {
-          cause: reason.cause,
-        }),
-    })
+    Match.tag("SocketOpenError", (reason) =>
+      ObsError.fromUnknown(
+        "connect",
+        `Could not connect to obs-websocket at ${webSocketUrl(config)}. ${OBS_WEBSOCKET_CONFIG_HINT}`,
+        { cause: reason.cause }
+      )
+    ),
+    Match.tag("SocketCloseError", (reason) =>
+      ObsError.make({
+        closeCode: O.some(reason.code),
+        message: `obs-websocket connection closed (${reason.message}).`,
+        // Close 4009 means the server was reachable and rejected the
+        // credentials: tag it "authenticate" so connect-keyed spawn/retry
+        // predicates surface it immediately instead of relaunching OBS.
+        operation: reason.code === OBS_CLOSE_CODE_AUTHENTICATION_FAILED ? "authenticate" : "connect",
+      })
+    ),
+    Match.tag("SocketReadError", (reason) =>
+      ObsError.fromUnknown("connect", "Reading from the obs-websocket connection failed.", {
+        cause: reason.cause,
+      })
+    ),
+    Match.tag("SocketWriteError", (reason) =>
+      ObsError.fromUnknown("connect", "Writing to the obs-websocket connection failed.", {
+        cause: reason.cause,
+      })
+    ),
+    Match.tag("SocketUpgradeError", (reason) =>
+      ObsError.fromUnknown("connect", "Upgrading the obs-websocket connection failed.", { cause: reason })
+    ),
+    Match.exhaustive
   );
   return (error) => toError(error.reason);
 };
@@ -248,7 +254,7 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
 
   const sendMessage = Effect.fn($I`sendMessage`)((message: ObsOutgoingMessage) =>
     encodeObsOutgoingMessageJson(message).pipe(
-      Effect.flatMap(write),
+      Effect.flatMap(write.write),
       Effect.mapError((cause) => ObsError.fromUnknown("send", "Failed to send an obs-websocket message.", { cause }))
     )
   );
@@ -411,15 +417,10 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
     yield* Deferred.fail(identifiedDeferred, error);
   });
 
-  yield* socket.runString(onMessage).pipe(
-    Effect.flatMap(() =>
-      handleDisconnect(
-        ObsError.make({
-          message: "obs-websocket connection ended.",
-          operation: "connect",
-        })
-      )
-    ),
+  const reader = yield* Socket.readerString(socket).pipe(Effect.mapError(normalizeSocketFailure));
+  yield* reader.pipe(
+    Effect.flatMap((messages) => Effect.forEach(messages, onMessage, { discard: true })),
+    Effect.forever,
     Effect.catch(flow(normalizeSocketFailure, handleDisconnect)),
     Effect.catchCause((cause) =>
       handleDisconnect(

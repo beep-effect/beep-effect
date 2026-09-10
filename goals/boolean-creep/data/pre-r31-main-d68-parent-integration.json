@@ -1,0 +1,272 @@
+{
+  "kind": "pre-r31-main-d68-parent-integration",
+  "status": "installed",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "originMainSha": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "inventoryBeforeSha256": "ea376cff64c549eb542d8bc4dc10c5aec519246b0f20a6720a8f9ad5c64a98d1",
+  "inventoryAfterSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "records": 738,
+  "qualified": 146,
+  "disqualified": 592,
+  "tier1": 115,
+  "tier2": 31,
+  "recordChanges": [
+    {
+      "id": "create-package-template-type-flags",
+      "status": "designed",
+      "changedFields": ["notes"],
+      "beforeLine": 738,
+      "afterLine": 738
+    },
+    {
+      "id": "create-package-scaffold-shape",
+      "status": "designed",
+      "changedFields": ["notes"],
+      "beforeLine": 481,
+      "afterLine": 481
+    },
+    {
+      "id": "ci-lane-run-options",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 624,
+      "afterLine": 652
+    },
+    {
+      "id": "ci-local-options",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 2345,
+      "afterLine": 2466
+    },
+    {
+      "id": "ci-local-step-plan",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 2410,
+      "afterLine": 2531
+    },
+    {
+      "id": "r3-tooling-lint-tagged-union-pattern-gates",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 475,
+      "afterLine": 476
+    },
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "status": "designed",
+      "changedFields": ["notes", "evidence", "line"],
+      "beforeLine": 1735,
+      "afterLine": 1732
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "status": "designed",
+      "changedFields": ["notes", "evidence", "line"],
+      "beforeLine": 1886,
+      "afterLine": 1883
+    },
+    {
+      "id": "r25-cli-internal-root-turbo-env-configured",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 593,
+      "afterLine": 594
+    },
+    {
+      "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 624,
+      "afterLine": 652
+    },
+    {
+      "id": "create-package-retired-name-reconciliation",
+      "status": "designed",
+      "changedFields": ["notes"],
+      "beforeLine": 1399,
+      "afterLine": 1399
+    },
+    {
+      "id": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 2809,
+      "afterLine": 2820
+    },
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "status": "designed",
+      "changedFields": ["notes", "evidence"],
+      "beforeLine": 1717,
+      "afterLine": 1717
+    },
+    {
+      "id": "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 1983,
+      "afterLine": 2103
+    },
+    {
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "status": "designed",
+      "changedFields": ["notes", "evidence"],
+      "beforeLine": 809,
+      "afterLine": 809
+    },
+    {
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "status": "designed",
+      "changedFields": ["notes"],
+      "beforeLine": 317,
+      "afterLine": 317
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 2483,
+      "afterLine": 2494
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 2500,
+      "afterLine": 2511
+    },
+    {
+      "id": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 2741,
+      "afterLine": 2752
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 2492,
+      "afterLine": 2503
+    },
+    {
+      "id": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+      "status": "disqualified",
+      "changedFields": ["line", "disqualifier"],
+      "beforeLine": 2370,
+      "afterLine": 2381
+    },
+    {
+      "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+      "status": "designed",
+      "changedFields": ["notes"],
+      "beforeLine": 1702,
+      "afterLine": 1702
+    }
+  ],
+  "unchangedRecordBytes": 716,
+  "designChanges": [
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "file": "goals/boolean-creep/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "beforeSha256": "20c6a96c6289e5daeaae424c4bb6a732c482b3e8bf75cdb343ebf428d9da8bff",
+      "afterSha256": "ff3ffee6a11f78f1a8e0d5e60a489298f5ea52ce02f2d0879ed434190f9cfc9c"
+    },
+    {
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "file": "goals/boolean-creep/designs/r28-cli-quality-coverage-resolved-operation.md",
+      "beforeSha256": "f03a6307e2b66534ba13e12de9be5333c4e0afca88f667ec2c6a73f191d84d30",
+      "afterSha256": "ca053be1237e3059473c0a9992e42992d87aab1ae68d535ce58b7ec8c015d984"
+    },
+    {
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "file": "goals/boolean-creep/designs/r28-cli-quality-test-lane-resolved-selection.md",
+      "beforeSha256": "532c92d5b4c78d7c9a39a2ec5111f62ffb8434e64046482651afa7171b33b2a9",
+      "afterSha256": "5b1c4770f34f662e74d52cf90cbd07421a99917458ab8cc077b8a8444507da9c"
+    },
+    {
+      "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+      "file": "goals/boolean-creep/designs/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "beforeSha256": "7605a9405427fa41bd29c89417acb497d1838b03221641fecbad838a2bf421f9",
+      "afterSha256": "4efd05b35eeb45f5d3e224f2c8783dcc6171d0f3fa306ea9048b08ce75dfbb59"
+    },
+    {
+      "id": "package-inventory-docgen-coverage",
+      "file": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+      "beforeSha256": "59a91e7cce34275476ae1ca14777be38caa9b1ed9f566d4d6c5c1b35b34780bb",
+      "afterSha256": "942a8b273b4a346e6c804041db75c4f24a6a0822a987fb7d16774dc776618252"
+    },
+    {
+      "id": "create-package-retired-name-reconciliation",
+      "file": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+      "beforeSha256": "34074946806208c368c68781ce9e32b7c14a8899ad2f55ad6a42f0b8947e3444",
+      "afterSha256": "ed7549e3aa67fc08a7a9fddabf35c5d1cb977fb21aacdbd20073fada3faca48f"
+    },
+    {
+      "id": "create-package-scaffold-shape",
+      "file": "goals/boolean-creep/designs/create-package-scaffold-shape.md",
+      "beforeSha256": "59ef1d5915594ffef0d32d522cb3fd9dc70219ccea7bdec8b8abd7190bb10733",
+      "afterSha256": "04b01062d829c711425218e06fdc0478bf04ddad71e3c7ce3463098b3b809983"
+    },
+    {
+      "id": "create-package-template-type-flags",
+      "file": "goals/boolean-creep/designs/create-package-template-type-flags.md",
+      "beforeSha256": "3071b13321ad7ee9ff47ea170e57faf3b2927faca87a10c1ec5f1602223a36bf",
+      "afterSha256": "baf275f2aad7320c46bad3f51d11b1cc26f8f987d6bfe7a5768f38bd055ed380"
+    },
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "file": "goals/boolean-creep/designs/scheduler-admission-attempt-origin.md",
+      "beforeSha256": "c5457febe4493ef97b0fd35716ab7fc9b5cb3c84ff39fa8264ee8aafa1232d29",
+      "afterSha256": "b6a101a9c03b4a17795cc784c6420fd386dfeab7e25b5311c6708fa9b33ae1a4"
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "file": "goals/boolean-creep/designs/scheduler-promotion-tick-origin.md",
+      "beforeSha256": "3c9efa8b85202eeea306b5e1abd16ef256a05c5dc70715532fb8ceef0c06805e",
+      "afterSha256": "ecac2137798dbc2f84892dd88c9e610f1a1abf497cb34f86af165f90142d6bee"
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "file": "goals/boolean-creep/designs/r28-cli-internal-root-tmpfs-discovered-classified-skip.md",
+      "beforeSha256": "ed7d610942d557972a5348fc18ab266140b9291db2904ae6b5dc676b0b5991ab",
+      "afterSha256": "4e2c7578b22e5127266edaca776fa1f7c7535c496c117df39b485dc99e8f5c44"
+    },
+    {
+      "id": "r26-cli-commands-l-q-osv-ignore-expiry",
+      "file": "goals/boolean-creep/designs/r26-cli-commands-l-q-osv-ignore-expiry.md",
+      "beforeSha256": "d4da7b760c884013b813af488788c6bc869e1d6f57765ebe6167d872c37eea36",
+      "afterSha256": "1f09fc106d20ee6e66c918469f23720a1a7d2adbd63b82fa2698f4769ff01fbe"
+    }
+  ],
+  "retainedDesignIds": ["r2-tooling-bin-main-fast-paths"],
+  "privateBundles": [
+    {
+      "file": "~/.cache/beep/boolean-creep/pre-r31-main-d68-quality-designs/MANIFEST.json",
+      "sha256": "3a11b91dfc68823416de9541220c6ba768603fd760e568a0826c2253d7fb5afc"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/pre-r31-main-d68-create-scheduler-designs/MANIFEST.json",
+      "sha256": "b562c4a1a06118f09d703787dc7dd588a3daefe942699115bcc16a4acfb6dc17"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/pre-r31-main-d68-disqualified-locators/MANIFEST.json",
+      "sha256": "849f25ac313879c7b2ab25ecb762dc222a27b7abab0833028070ae236e8f74e3"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/pre-r31-main-d68-parent-crossrefs/MANIFEST.json",
+      "sha256": "236fa03f936e9783a164254b1aa9f82ec1b25c1d277c2583d8773b2862b75c80"
+    }
+  ],
+  "qualificationChanges": 0,
+  "cardinalityChanges": 0,
+  "tierChanges": 0,
+  "statusChanges": 0,
+  "productSourceChanges": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "dryCredit": false,
+  "validation": "Both canonical packet validators run after installation; private inventory validation must pass before installation."
+}

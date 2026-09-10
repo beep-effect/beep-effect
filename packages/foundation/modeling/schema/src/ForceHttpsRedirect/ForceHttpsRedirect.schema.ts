@@ -191,7 +191,7 @@ const formatForceHttpsRedirectValue = (config: ForceHttpsRedirectConfig): string
 export const ForceHttpsRedirectHeader = S.Union([ForceHttpsRedirectOption, S.Undefined]).pipe(
   S.decodeTo(
     ForceHttpsRedirectResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input): Effect.Effect<ForceHttpsRedirectResponseHeaderEncoded> =>
         Effect.succeed({
           name: headerName,

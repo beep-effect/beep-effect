@@ -137,7 +137,6 @@ const AnyRdfErrorDefinition = S.Union([RdfError, SerializationFailed, ParsingFai
 export const AnyRdfError = AnyRdfErrorDefinition.pipe(
   $I.annoteSchema("AnyRdfError", {
     description: "Exhaustive tagged union of RDF-processing failures.",
-    toArbitrary: () => S.toArbitrary(AnyRdfErrorDefinition),
   })
 );
 

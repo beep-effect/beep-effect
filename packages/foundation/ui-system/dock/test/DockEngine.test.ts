@@ -33,7 +33,7 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   activatePanelOne,
   clearWorkspace,
@@ -613,13 +613,20 @@ describe("DockEngine", () => {
 describe("dock snapshot codec properties", () => {
   it.effect("round-trips arbitrary snapshots through the JSON codec", () =>
     Effect.sync(() =>
-      fc.assert(
-        fc.property(S.toArbitrary(DockSnapshot)(fc), (snapshot) => {
-          const decoded = O.flatMap(encodeDockSnapshotJsonOption(snapshot), decodeUnknownDockSnapshotJsonOption);
-          expect(O.exists(decoded, (value) => workspaceEquals(value.workspace, snapshot.workspace))).toBe(true);
-        }),
-        { numRuns: 24 }
-      )
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(DockSnapshot)]),
+            ([snapshot]) => {
+              const decoded = O.flatMap(encodeDockSnapshotJsonOption(snapshot), decodeUnknownDockSnapshotJsonOption);
+              expect(O.exists(decoded, (value) => workspaceEquals(value.workspace, snapshot.workspace))).toBe(true);
+
+              return true;
+            },
+            { runs: 24 }
+          )
+        )._tag
+      ).toBe("Passed")
     )
   );
 });

@@ -22,7 +22,6 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { makeEffect } from "effect/SchemaParser";
-import { FastCheck as fc } from "effect/testing";
 import { hasFunctionStatic, invokeStatic } from "./StaticProbes.ts";
 
 const decodeEntityRefEntityType = S.decodeEffect(EntityRef.EntityType);
@@ -338,23 +337,24 @@ describe("EntityRef and shared entity primitives", () => {
     })
   );
 
-  it("round-trips schema-derived document ids through entity references", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(DocumentId)(fc), (id) => {
-        const ref = EntityRef.make(DocumentId, id);
-        const encodedRef = encodeEntityRefEntityRefSync(ref);
-        const decodedRef = decodeEntityRefEntityRefSync(encodedRef);
+  it.prop(
+    "round-trips schema-derived document ids through entity references",
+    [DocumentId],
+    ([id]) => {
+      const ref = EntityRef.make(DocumentId, id);
+      const encodedRef = encodeEntityRefEntityRefSync(ref);
+      const decodedRef = decodeEntityRefEntityRefSync(encodedRef);
 
-        expect(encodedRef).toEqual({
-          entityType: DocumentId.entityType,
-          id,
-        });
-        expect(decodedRef.entityType).toBe(DocumentId.entityType);
-        expect(DocumentId.equivalence(cast(decodedRef.id), cast(id))).toBe(true);
-        expect(Result.isSuccess(EntityRef.makeResult(DocumentId, id))).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+      expect(encodedRef).toEqual({
+        entityType: DocumentId.entityType,
+        id,
+      });
+      expect(decodedRef.entityType).toBe(DocumentId.entityType);
+      expect(DocumentId.equivalence(cast(decodedRef.id), cast(id))).toBe(true);
+      expect(Result.isSuccess(EntityRef.makeResult(DocumentId, id))).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect(
     "decodes principals, source kinds, and barrel exports",

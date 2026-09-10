@@ -10,7 +10,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { strToU8 } from "fflate";
 import {
@@ -82,12 +82,16 @@ const providerRecordingJson = S.encodeSync(ProviderRecordingFromJsonString)(
 describe("LeJeune deterministic fixture bundle", () => {
   it("round-trips schema-derived retention authorizations", () => {
     const equivalent = S.toEquivalence(RetentionAuthorization);
-    fc.assert(
-      fc.property(S.toArbitrary(RetentionAuthorization)(fc), (value) =>
-        equivalent(decodeUnknownRetentionAuthorizationSync(encodeRetentionAuthorizationSync(value)), value)
-      ),
-      fcRuns(20)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(RetentionAuthorization),
+          (value) =>
+            equivalent(decodeUnknownRetentionAuthorizationSync(encodeRetentionAuthorizationSync(value)), value),
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(

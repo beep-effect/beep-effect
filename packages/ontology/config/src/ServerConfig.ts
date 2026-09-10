@@ -34,7 +34,7 @@ const $I = $OntologyConfigId.create("ServerConfig");
  * @category configuration
  * @since 0.0.0
  */
-export const OntologyWorkspaceRootConfig = Config.nonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
+export const OntologyWorkspaceRootConfig = Config.NonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
 
 /**
  * Server-only ontology filesystem authority settings.

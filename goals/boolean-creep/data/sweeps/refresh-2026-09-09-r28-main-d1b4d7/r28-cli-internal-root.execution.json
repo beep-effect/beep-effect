@@ -1,0 +1,22 @@
+{
+  "lane": "r28-cli-internal-root",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T05:14:53.295944+00:00",
+  "finished": "2026-09-09T05:27:26.101349+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 5,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-internal-root.jsonl` \u2014 confirmed 1, disqualified 4. Validator: `inventory OK: 5 records`.\n\nCovered every assigned root: `bin-main.ts`, `bin.ts`, `index.ts`, and `packages/tooling/tool/cli/src/internal` (78 files). Unchanged eligible seeds were not re-recorded.\n\nSeed drift / withdrawals (not re-recorded):\n- `isTicketSkippable.admissionProbes` and `deadLeaseScopePlan.guards` remain callables / schema-guard aliases (QualityScheduler 1341\u20131364, 2252\u20132253); already absent from canonical inventory.\n- Still in inventory as D1 but out of net as callable predicates / `S.is` guards: `authoredKindFor`, `resolveTurboCachePlan.valueProbes`, `TmpfsReap.nameBrands`, `ResidueReap.nameBrands`, `LabsWorkspace.pathGates`, `detectGithubJobShapeClass.stepGates` / `.installGates`, `isTurboCacheControlArg`, `canUseQualityTaskFastPath`/`canUseCiFastPath`.\n- Designed `DiscoveredCandidate / ApplyOutcome` `[classified, reaped]` still exists, but the members sit on two types (`classified` at TmpfsReap 66, `reaped` at 102). Same-owner `classified`+`shapeSkipReason` is the new record.\n- `ClassifiedJournalLines` first Boolean is 325 vs inventory line 327; D1 classification unchanged.\n\nNo unresolved source question.",
+  "transcriptSha256": "41522a8cc045517043c4fd9f389638a00403ad896e6ae17dda725d05e5bf8c1b",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 5 records, 5 unique ids\n"
+}

@@ -1,0 +1,22 @@
+{
+  "lane": "r31-cli-internal-root",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T15:22:51.101965+00:00",
+  "finished": "2026-09-09T15:35:48.378126+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-internal-root.jsonl`\n\nCounts: **0 confirmed**, **1 disqualified**. Validator: `inventory OK: 1 records, 1 unique ids`.\n\nCoverage: every assigned root was scanned (`bin-main.ts`, `bin.ts`, `index.ts`, and `packages/tooling/tool/cli/src/internal`; 82 files).\n\nSeeds: no drift and no withdrawals. All 19 listed owners still exist with the claimed members; current writers/readers still support the canonical classifications (including TurboCache `configured` at line 594 and QualityScheduler `AdmissionAttempt`/`PromotionTick` at 1732/1883). GitExec `structuredCapture`/`runGitOutput` and `RepoRun.executor` `runCaptured` objects were not re-reported; they instantiate the already-recorded `RunCapturedOptions` / `RunCapturedStreamsOptions` member sets. No unresolved source question.",
+  "transcriptSha256": "5a027f434cf6f5eee8657fd0858aecec276a77cc3bace026f78b1a2d37ef542b",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

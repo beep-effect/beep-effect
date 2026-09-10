@@ -1,0 +1,12 @@
+{
+  "lane": "r24-epistemic-ontology",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "completion": "interrupted",
+  "exitCode": null,
+  "endTurnEvent": false,
+  "reason": "Automatic Desktop goal continuation removed the terminal handle and terminated the owned sweep driver and child processes before completion.",
+  "transcriptSha256": "9cb9fdfb0edb3b173612b095d79ccfe78be6d404e1ffda6b912438f4cb00d7b5",
+  "reportExists": true,
+  "reportRecords": 0,
+  "replacementLane": "r24-epistemic-ontology-resume1"
+}

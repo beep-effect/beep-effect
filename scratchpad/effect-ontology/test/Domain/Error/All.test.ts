@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as Activity from "../../../Domain/Error/Activity.ts";
 import * as Auth from "../../../Domain/Error/Auth.ts";
 import * as Base from "../../../Domain/Error/Base.ts";
@@ -115,13 +115,20 @@ const publicSchemas: ReadonlyArray<S.Constraint> = [
 describe("effect-ontology domain errors", () => {
   it("derives schema-valid values for every public error schema", () => {
     for (const schema of publicSchemas) {
-      const arbitrary = S.toArbitrary(schema)(fc);
-      fc.assert(
-        fc.property(arbitrary, (value) => {
+      const arbitrary = Arbitrary.schema(schema);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([value]) => {
           expect(S.is(schema)(value)).toBe(true);
-        }),
-        { numRuns: 16 }
-      );
+
+              return true;
+            },
+            { runs: 16 }
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 
