@@ -170,11 +170,16 @@ bun run beep graft cache sync --from ../beep-effect --to ../beep-effect2 --to ..
 Sibling discovery uses the source basename with trailing digits removed, so
 `beep-effect6` selects sibling `beep-effect*` directories containing `.git`.
 The source is excluded. Exactly one of `--to` or `--siblings` is required.
+`--siblings` now plans all discovered clones in one process. The planner caches
+directory and path checks for each plan and deduplicates entries without
+quadratic comparisons.
 
 Sync atomically replaces the summaries cache, root-level concept Markdown
-(including `INDEX.md`), and `.graph/wiring.json` when present, and removes
-root-level concept nodes the target still has but the source no longer does,
-so the target's concept set matches the source. Missing source files are
+(including `INDEX.md`), `.graph/wiring.json`, and `graft/manifest.json` when
+present. The manifest is the deep-layer index Graft needs to recognize and use
+the copied meaning tier. Sync also removes root-level concept nodes the target
+still has but the source no longer does, so the target's concept set matches
+the source. Missing source files, including the manifest, are
 reported as skipped; a missing summaries cache fails the command. Per-file
 cards in nested directories are left for each target's own structural rebuild.
 All writes stay under the target's `graft/`; overlapping clones, redirected
