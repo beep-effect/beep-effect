@@ -1,11 +1,13 @@
+import { lawsCommand } from "@beep/repo-cli/commands/Laws";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { Command } from "effect/unstable/cli";
 
 const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
 const write = Effect.fn("NativeRuntimePrefixTest.write")(function* (root: string, name: string, source: string) {
@@ -43,7 +45,20 @@ const run = Effect.fn("NativeRuntimePrefixTest.run")(function* (args: ReadonlyAr
   });
 });
 
+const runInProcess = Command.runWith(lawsCommand, { version: "0.0.0" });
+
 describe("native-runtime prefix command", { concurrent: false }, () => {
+  it.effect(
+    "rejects an escaping prefix in-process before any scan starts",
+    Effect.fnUntraced(function* () {
+      const exit = yield* runInProcess(["native-runtime", "--check", "--include-prefix", "../outside"]).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+        Effect.exit
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    }, providePlatform)
+  );
+
   it.effect(
     "reports only the requested prefix, excluding artifacts, declarations and sibling roots",
     Effect.fnUntraced(function* () {
