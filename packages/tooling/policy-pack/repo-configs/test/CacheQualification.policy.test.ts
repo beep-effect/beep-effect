@@ -554,4 +554,54 @@ describe("cache governance audit", () => {
       expect(auditCachePolicy(withEntries([entry])).unassessed).toEqual([key.computation]);
     }
   });
+  it("keeps explicit unassessed entries on the legacy audit path", () => {
+    const entry = CacheQualificationEntry.make({ key, status: { state: "unassessed", reason: "awaiting review" } });
+    const report = auditCachePolicy(withEntries([entry]));
+    expect(report.unassessed).toEqual([key.computation]);
+    expect(report.findings).not.toContainEqual({ kind: "unqualified-reuse", subject: key.computation, blocking: true });
+  });
+
+  it("rejects a contract belonging to another tuple even when its configuration matches", () => {
+    const changed = CacheTaskContract.make({
+      ...contract,
+      key: CacheQualificationKey.make({ ...key, epoch: "other" }),
+    });
+    const entry = CacheQualificationEntry.make({ key, status: { state: "candidate", contract: changed, review } });
+    expect(auditCachePolicy(withEntries([entry])).findings).toContainEqual({
+      kind: "assessment-drift",
+      subject: key.computation,
+      blocking: true,
+    });
+  });
+
+  it("blocks candidate reuse outside the reviewed cached population or explicit scope", () => {
+    const entry = CacheQualificationEntry.make({ key, status: { state: "candidate", contract, review } });
+    const request = withEntries([entry]);
+    for (const changed of [
+      CachePolicyBaseline.make({ ...baseline, projection: CachePolicyProjection.make({ ...projection, nodes: [] }) }),
+      CachePolicyBaseline.make({
+        ...baseline,
+        projection: CachePolicyProjection.make({
+          ...projection,
+          nodes: [
+            CachePolicyNode.make({
+              ...policyNode,
+              configuration: CacheTaskConfiguration.make({ ...policyNode.configuration, cache: false }),
+            }),
+          ],
+        }),
+      }),
+      CachePolicyBaseline.make({ ...baseline, scope: ["@beep/other#lint"] }),
+    ]) {
+      expect(auditCachePolicy(CachePolicyAuditRequest.make({ ...request, baseline: changed })).findings).toContainEqual(
+        { kind: "unreviewed-expansion", subject: key.computation, blocking: true }
+      );
+    }
+  });
+
+  it("omits the cross-root receipt requirement only for a contract that does not claim it", () => {
+    const local = CacheTaskContract.make({ ...contract, crossRoot: false });
+    const observations = A.filter(completeObservations(), (row) => row.kind !== "cross-root");
+    expect(cachePromotionFailures(local, observations)).toEqual([]);
+  });
 });

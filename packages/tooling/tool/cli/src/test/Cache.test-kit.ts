@@ -6,7 +6,11 @@
  */
 
 export { joinCacheCensusPlan } from "../commands/Cache/Cache.census.ts";
-export { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "../commands/Cache/Cache.command.ts";
+export {
+  makeCacheCommandForTesting,
+  runCacheWarmForTesting,
+  runCacheWarmLaneForTesting,
+} from "../commands/Cache/Cache.command.ts";
 export { inspectCacheDependencyTree } from "../commands/Cache/Cache.dependencies.ts";
 export {
   decodeCacheExperimentText,

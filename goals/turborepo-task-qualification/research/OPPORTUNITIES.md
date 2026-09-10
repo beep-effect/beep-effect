@@ -743,3 +743,16 @@ controls disable reuse and may still run after this comparison stops reuse.
   the captured request as having normalized clone locations.
 - Prevention: normalize workstation clone paths when publishing research captures,
   while preserving which upstream source each clone represented.
+
+### Exercise command dispatch as well as qualification operations
+
+- Activity: attribute PR #1068's hosted coverage regression.
+- Evidence: direct service tests left new CLI handlers uncovered; the command file
+  fell below its retained baseline and two new policy files had uncovered branches.
+- Correction: inject the qualification layer at command-tree construction and test
+  the real parser, request codecs, report output and rejection behavior. Add the
+  missing unassessed, scope-expansion and cross-root policy cases.
+- Result: focused command coverage exceeds all retained floors; both policy files
+  have complete statement, branch, function and line coverage.
+- Prevention: keep operational authority injectable and prove adapter behavior
+  alongside the domain/service contract when adding commands.

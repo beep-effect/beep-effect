@@ -46,6 +46,7 @@ import {
   CacheWarmReceiptJson,
 } from "./Cache.schemas.ts";
 import { CacheQualificationLive, CacheQualificationService } from "./Cache.service.ts";
+import type * as Layer from "effect/Layer";
 
 const TurboTaskCache = S.Struct({
   status: S.String,
@@ -629,10 +630,7 @@ const cacheAuditCommand = Command.make(
     json: Flag.Boolean("json").pipe(Flag.withDefault(false)),
   },
   ({ json }) => runCachePolicyAudit(process.cwd(), json)
-).pipe(
-  Command.withDescription("Check effective cache settings against the reviewed baseline and tuple ledger"),
-  Command.provide(CacheQualificationLive)
-);
+).pipe(Command.withDescription("Check effective cache settings against the reviewed baseline and tuple ledger"));
 
 const cacheInspectCommand = Command.make("inspect", {}, () =>
   Effect.gen(function* () {
@@ -644,10 +642,7 @@ const cacheInspectCommand = Command.make("inspect", {}, () =>
         .pipe(CacheCommandError.mapError("Cannot encode qualification ledger."))
     );
   }).pipe(renderCacheFailure)
-).pipe(
-  Command.withDescription("Read explicit qualification states; absent tuples are unassessed"),
-  Command.provide(CacheQualificationLive)
-);
+).pipe(Command.withDescription("Read explicit qualification states; absent tuples are unassessed"));
 
 const requestFlag = Flag.Path("request", { pathType: "file" }).pipe(
   Flag.withDescription("Schema-validated reviewed request JSON")
@@ -667,8 +662,7 @@ const cacheFingerprintCommand = Command.make(
         );
     }).pipe(renderCacheFailure)
 ).pipe(
-  Command.withDescription("Observe actual configuration and native binaries for a scoped qualification candidate"),
-  Command.provide(CacheQualificationLive)
+  Command.withDescription("Observe actual configuration and native binaries for a scoped qualification candidate")
 );
 
 const cacheBaselineCommand = Command.make("baseline", { request: requestFlag }, ({ request }) =>
@@ -686,10 +680,7 @@ const cacheBaselineCommand = Command.make("baseline", { request: requestFlag }, 
       `Reviewed baseline written for ${A.length(baseline.projection.nodes)} executable computations; scope ${A.join(baseline.scope, ", ")}.`
     );
   }).pipe(renderCacheFailure)
-).pipe(
-  Command.withDescription("Record reviewed legacy settings without granting qualification"),
-  Command.provide(CacheQualificationLive)
-);
+).pipe(Command.withDescription("Record reviewed legacy settings without granting qualification"));
 
 const cacheTransitionCommand = Command.make("transition", { request: requestFlag }, ({ request }) =>
   Effect.gen(function* () {
@@ -706,10 +697,7 @@ const cacheTransitionCommand = Command.make("transition", { request: requestFlag
       `Qualification revision ${store.revision}: ${input.entry.key.computation} is ${input.entry.status.state}.`
     );
   }).pipe(renderCacheFailure)
-).pipe(
-  Command.withDescription("Apply a reviewed lifecycle transition with an expected ledger revision"),
-  Command.provide(CacheQualificationLive)
-);
+).pipe(Command.withDescription("Apply a reviewed lifecycle transition with an expected ledger revision"));
 
 const readCacheRequest = Effect.fn("Cache.readRequest")(function* <Decoded, Encoded>(
   request: string,
@@ -741,10 +729,7 @@ const cacheActivationCommand = Command.make(
       const report = yield* cache.activation(process.cwd(), input);
       yield* writeEncoded(report, JsonStringCodec(CacheActivationPreview), output);
     }).pipe(renderCacheFailure)
-).pipe(
-  Command.withDescription("Preview an exact reviewed single-task cache activation without enabling reuse"),
-  Command.provide(CacheQualificationLive)
-);
+).pipe(Command.withDescription("Preview an exact reviewed single-task cache activation without enabling reuse"));
 
 const cacheSyntheticCommand = Command.make(
   "synthetic",
@@ -785,9 +770,32 @@ const cachePilotCommand = Command.make(
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Compare the real lint pilot in bounded, network-isolated read-only worktree overlays"),
-  Command.provide(MemoryStatsLive),
-  Command.provide(CacheQualificationLive)
+  Command.provide(MemoryStatsLive)
 );
+
+const makeCacheCommand = <E, R>(qualificationLayer: Layer.Layer<CacheQualificationService, E, R>) =>
+  Command.make("cache", {}, () =>
+    Console.log(
+      "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, dependencies, pilot, warm, probe, dashboard"
+    )
+  ).pipe(
+    Command.withDescription("Turbo cache recovery and evidence operations"),
+    Command.withSubcommands([
+      cacheCensusCommand,
+      cacheAuditCommand.pipe(Command.provide(qualificationLayer)),
+      cacheInspectCommand.pipe(Command.provide(qualificationLayer)),
+      cacheBaselineCommand.pipe(Command.provide(qualificationLayer)),
+      cacheFingerprintCommand.pipe(Command.provide(qualificationLayer)),
+      cacheActivationCommand.pipe(Command.provide(qualificationLayer)),
+      cacheTransitionCommand.pipe(Command.provide(qualificationLayer)),
+      cacheSyntheticCommand,
+      cacheDependenciesCommand,
+      cachePilotCommand.pipe(Command.provide(qualificationLayer)),
+      cacheWarmCommand,
+      cacheProbeCommand,
+      cacheDashboardCommand,
+    ])
+  );
 
 /**
  * Turbo cache command group.
@@ -803,25 +811,22 @@ const cachePilotCommand = Command.make(
  * @category commands
  * @since 0.0.0
  */
-export const cacheCommand = Command.make("cache", {}, () =>
-  Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, dependencies, pilot, warm, probe, dashboard"
-  )
-).pipe(
-  Command.withDescription("Turbo cache recovery and evidence operations"),
-  Command.withSubcommands([
-    cacheCensusCommand,
-    cacheAuditCommand,
-    cacheInspectCommand,
-    cacheBaselineCommand,
-    cacheFingerprintCommand,
-    cacheActivationCommand,
-    cacheTransitionCommand,
-    cacheSyntheticCommand,
-    cacheDependenciesCommand,
-    cachePilotCommand,
-    cacheWarmCommand,
-    cacheProbeCommand,
-    cacheDashboardCommand,
-  ])
-);
+export const cacheCommand = makeCacheCommand(CacheQualificationLive);
+
+/**
+ * Build the real command tree with an explicit qualification authority for tests.
+ *
+ * **Example** (Provide qualification operations)
+ *
+ * ```ts
+ * import { makeCacheCommandForTesting } from "@beep/repo-cli/test/Cache"
+ * import { CacheQualificationLive } from "@beep/repo-cli/commands/Cache"
+ * const command = makeCacheCommandForTesting(CacheQualificationLive)
+ * console.assert(command.name === "cache")
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const makeCacheCommandForTesting = makeCacheCommand;
