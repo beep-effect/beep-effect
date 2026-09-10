@@ -194,10 +194,9 @@ export const renderExtractFramesDirFailure = (outcome: ExtractFramesDirFailure):
  * @since 0.0.0
  */
 export const renderExtractFramesDirOutcome = Match.type<ExtractFramesDirOutcome>().pipe(
-  Match.discriminatorsExhaustive("status")({
-    failure: renderExtractFramesDirFailure,
-    success: renderExtractFramesDirSuccess,
-  })
+  Match.discriminator("status")("failure", renderExtractFramesDirFailure),
+  Match.discriminator("status")("success", renderExtractFramesDirSuccess),
+  Match.exhaustive
 );
 
 /**

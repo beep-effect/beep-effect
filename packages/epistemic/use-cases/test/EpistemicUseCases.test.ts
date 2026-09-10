@@ -13,13 +13,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeClaimProjectionOutputSchemaSync = S.decodeSync(ClaimProjection.outputSchema);
 const decodeUnknownCandidateClaimSync = S.decodeUnknownSync(CandidateClaim);
 const encodeClaimProjectionOutputSchemaSync = S.encodeSync(ClaimProjection.outputSchema);
 
-const ClaimProjectionAuthorityArbitrary = S.toArbitrary(ClaimProjection.inputSchema)(fc);
+const ClaimProjectionAuthorityArbitrary = Arbitrary.schema(ClaimProjection.inputSchema);
 const sameClaimProjectionView = S.toEquivalence(ClaimProjectionView);
 
 const makeCandidate = (id: number, fixtureKey: string, lifecycle: string): CandidateClaim =>
@@ -149,18 +149,25 @@ describe("@beep/epistemic-use-cases", () => {
   });
 
   it("round-trips schema-derived projection outputs without changing encoded shape", () =>
-    fc.assert(
-      fc.property(ClaimProjectionAuthorityArbitrary, (authority) => {
-        const view = projectClaims(authority);
-        const encoded = encodeClaimProjectionOutputSchemaSync(view);
-        const decoded = decodeClaimProjectionOutputSchemaSync(encoded);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ClaimProjectionAuthorityArbitrary]),
+          ([authority]) => {
+            const view = projectClaims(authority);
+            const encoded = encodeClaimProjectionOutputSchemaSync(view);
+            const decoded = decodeClaimProjectionOutputSchemaSync(encoded);
 
-        expect(encoded.total).toBe(A.length(authority));
-        for (const state of ClaimLifecycle.Options) {
-          expect(encoded.counts[state]).toBe(A.length(A.filter(authority, (claim) => claim.lifecycle === state)));
-        }
-        expect(sameClaimProjectionView(decoded, view)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(encoded.total).toBe(A.length(authority));
+            for (const state of ClaimLifecycle.Options) {
+              expect(encoded.counts[state]).toBe(A.length(A.filter(authority, (claim) => claim.lifecycle === state)));
+            }
+            expect(sameClaimProjectionView(decoded, view)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

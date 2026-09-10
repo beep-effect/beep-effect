@@ -400,7 +400,7 @@ export class Toml {
     return Schema.String.pipe(
       Schema.decodeTo(
         Schema.Unknown,
-        SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
           decode: (input: string) =>
             Toml.parse(input).pipe(
               Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input))

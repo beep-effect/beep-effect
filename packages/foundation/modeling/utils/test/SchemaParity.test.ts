@@ -2,9 +2,9 @@ import { fcRuns } from "@beep/fc-runs";
 import { AppendFileSyncOptions, ReaddirSyncOptions, RmSyncOptions } from "@beep/utils/FileSystem";
 import { GlobOptions, Pattern } from "@beep/utils/Glob";
 import { PathInput } from "@beep/utils/Struct";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const encode = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>
@@ -20,14 +20,19 @@ const expectRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: 
 };
 
 const expectSchemaRoundTrips = <C extends S.Codec<unknown, unknown>>(schema: C): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const result = Effect.runSync(
+    Arbitrary.checkEffect(
+      Arbitrary.schema(schema),
+      (value) => {
+        expectRoundTrip(schema, value);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expectRoundTrip(schema, value);
-    }),
-    fcRuns(50)
+        return true;
+      },
+      fcRuns(50)
+    )
   );
+
+  expect(result._tag).toBe("Passed");
 };
 
 describe("@beep/utils schema parity", () => {

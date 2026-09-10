@@ -3,7 +3,7 @@ import { Port, PortFromString } from "@beep/schema/Port";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePort = S.decodeEffect(Port);
 const decodeUnknownPort = S.decodeUnknownEffect(Port);
@@ -15,7 +15,7 @@ const isPort2 = S.is(Port);
 
 const portMinimum = 1;
 const portMaximum = 65_535;
-const PortArbitrary = S.toArbitrary(Port)(fc);
+const PortArbitrary = Arbitrary.schema(Port);
 
 describe("Port", () => {
   it.effect(
@@ -54,15 +54,22 @@ describe("Port", () => {
   });
 
   it("derives arbitrary values inside the port range", () => {
-    fc.assert(
-      fc.property(PortArbitrary, (value) => {
-        expect(isPort2(value)).toBe(true);
-        expect(Number.isInteger(value)).toBe(true);
-        expect(value).toBeGreaterThanOrEqual(portMinimum);
-        expect(value).toBeLessThanOrEqual(portMaximum);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([PortArbitrary]),
+          ([value]) => {
+            expect(isPort2(value)).toBe(true);
+            expect(Number.isInteger(value)).toBe(true);
+            expect(value).toBeGreaterThanOrEqual(portMinimum);
+            expect(value).toBeLessThanOrEqual(portMaximum);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 

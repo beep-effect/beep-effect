@@ -13,13 +13,15 @@ import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScr
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Config, Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
+import * as Context from "effect/Context";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
+import * as jsonc from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
+import { isLabsWorkspaceDir, LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { PackageScriptsReportFromWire } from "../../internal/package-scripts/PackageScripts.schemas.ts";
 import {
@@ -28,7 +30,7 @@ import {
 } from "../../internal/package-scripts/PackageScriptsPolicy.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
-import { runRootLintPolicyTask } from "../Quality/index.ts";
+import { runRootDeprecatedApisTask, runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
 import { lintJudgeRubricCommand } from "./JudgeRubric.ts";
@@ -642,7 +644,9 @@ const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });
 
-const lintPackageFlag = Flag.string("package").pipe(Flag.optional);
+const lintPackageFlag = Flag.String("package").pipe(Flag.optional);
+const lintBaseFlag = Flag.String("base").pipe(Flag.withDefault("origin/main"));
+const lintFullFlag = Flag.Boolean("full").pipe(Flag.withDefault(false));
 
 const resolveLintPackage = Effect.fn("Lint.resolvePackage")(function* (root: string, directory: string) {
   const path = yield* Path.Path;
@@ -660,9 +664,9 @@ const runEslintWorker = Effect.fn("Lint.eslintWorker")(function* (
 ) {
   if (A.isReadonlyArrayEmpty(targets)) return;
   const path = yield* Path.Path;
-  const nodeOptions = yield* Config.string("NODE_OPTIONS").pipe(Config.withDefault(""));
+  const nodeOptions = yield* Config.String("NODE_OPTIONS").pipe(Config.withDefault(""));
   // Workers lint a whole package with type information; @beep/repo-cli exhausts a 4 GiB heap,
-  // so the default matches the shard heap instead of a smaller worker-only budget.
+  // so preserve the established 8 GiB default.
   const heapOptions = /--max[-_]old[-_]space[-_]size(?:=|\s+)/.test(nodeOptions)
     ? nodeOptions
     : `${nodeOptions} ${DEPRECATED_API_LINT_NODE_OPTIONS}`;
@@ -672,6 +676,9 @@ const runEslintWorker = Effect.fn("Lint.eslintWorker")(function* (
       "--config",
       path.join(root, "eslint.config.mjs"),
       ...(profile === "docs" ? ["--max-warnings=0", "--no-warn-ignored"] : []),
+      ...(profile === "deprecated-apis" && A.every(targets, isLabsWorkspaceDir)
+        ? ["--no-error-on-unmatched-pattern"]
+        : []),
       ...targets,
     ],
     cwd: root,
@@ -687,7 +694,7 @@ const lintJsdocCommand = Command.make(
   "jsdoc",
   {
     package: lintPackageFlag,
-    rootOnly: Flag.boolean("root-only").pipe(Flag.withDefault(false)),
+    rootOnly: Flag.Boolean("root-only").pipe(Flag.withDefault(false)),
   },
   Effect.fn("Lint.jsdoc")(function* ({ package: directory, rootOnly }) {
     if (O.isSome(directory) === rootOnly) {
@@ -716,7 +723,7 @@ const lintJsdocCommand = Command.make(
 const lintLawsCommand = Command.make(
   "laws",
   {
-    package: Flag.string("package"),
+    package: Flag.String("package"),
   },
   Effect.fn("Lint.laws")(function* ({ package: directory }) {
     const root = yield* findRepoRoot();
@@ -796,9 +803,12 @@ const lintCircularCommand = Command.make("circular", {}, runLintCircular).pipe(
  */
 const lintDeprecatedApisCommand = Command.make(
   "deprecated-apis",
-  { package: lintPackageFlag },
-  Effect.fn("Lint.deprecatedApis")(function* ({ package: directory }) {
-    if (O.isNone(directory)) return yield* runDeprecatedApiLint();
+  { package: lintPackageFlag, full: lintFullFlag, base: lintBaseFlag },
+  Effect.fn("Lint.deprecatedApis")(function* ({ package: directory, full, base }) {
+    if (O.isNone(directory)) {
+      const ci = yield* Config.String("CI").pipe(Config.withDefault(""));
+      return yield* full || ci === "true" ? runDeprecatedApiLint() : runRootDeprecatedApisTask(base);
+    }
     const root = yield* findRepoRoot();
     yield* runEslintWorker(root, "deprecated-apis", [yield* resolveLintPackage(root, directory.value)]);
   })
@@ -819,9 +829,10 @@ const lintDeprecatedApisCommand = Command.make(
 const lintPolicyCommand = Command.make(
   "policy",
   {
-    full: Flag.boolean("full").pipe(Flag.withDefault(false), Flag.withDescription("Run the full policy sweep locally")),
+    full: lintFullFlag.pipe(Flag.withDescription("Run the full policy sweep locally")),
+    base: lintBaseFlag,
   },
-  ({ full }) => runRootLintPolicyTask(full)
+  ({ full, base }) => runRootLintPolicyTask(full, base)
 ).pipe(Command.withDescription("Run repo-wide lint policy checks"));
 
 /**
@@ -892,7 +903,41 @@ export class PolicyToolsFingerprint extends S.Class<PolicyToolsFingerprint>($I`P
   })
 ) {}
 
+/**
+ * The Turbo configuration boundary owned by the fingerprint writer.
+ *
+ * **Example** (Recognize a missing root task)
+ * ```ts
+ * import { PolicyFingerprintTurboConfiguration } from "@beep/repo-cli/test/PackageScripts"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(PolicyFingerprintTurboConfiguration)({ tasks: {} })) // false
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export class PolicyFingerprintTurboConfiguration extends S.Class<PolicyFingerprintTurboConfiguration>(
+  $I`PolicyFingerprintTurboConfiguration`
+)(
+  {
+    tasks: S.Struct({
+      "//#lint:policy-fingerprint": S.Struct({ inputs: PolicyToolsFingerprint.fields.inputs }),
+    }),
+  },
+  $I.annote("PolicyFingerprintTurboConfiguration", {
+    description: "Only the root fingerprint task inputs are decoded; unrelated Turbo configuration is preserved.",
+  })
+) {}
+
+interface PolicyToolsFingerprintPolicyShape {
+  readonly check: Effect.Effect<void, PackageScriptsPolicyError>;
+  readonly write: Effect.Effect<void, PackageScriptsPolicyError>;
+}
+
 const decodeFingerprint = S.decodeEffect(S.fromJsonString(PolicyToolsFingerprint));
+const decodeFingerprintTurboConfiguration = S.decodeEffect(S.fromJsonString(PolicyFingerprintTurboConfiguration));
+const fingerprintInputsEquivalent = S.toEquivalence(PolicyToolsFingerprint.fields.inputs);
+const isPackageScriptsPolicyError = S.is(PackageScriptsPolicyError);
 const fingerprintEquivalent = S.toEquivalence(PolicyToolsFingerprint);
 const fingerprintIsCurrent = Effect.fnUntraced(function* (file: string, expected: PolicyToolsFingerprint) {
   const fs = yield* FileSystem.FileSystem;
@@ -921,7 +966,8 @@ const fingerprintPatterns = Effect.fnUntraced(function* (repoRoot: string) {
         return yield* PackageScriptsPolicyError.make({ message: "CLI workspace is missing", cause: name });
       return [];
     }
-    patterns.push(`${path.relative(repoRoot, dir.value)}/src/**`);
+    const relativeDirectory = normalizePath(path.relative(repoRoot, dir.value));
+    patterns.push(`${relativeDirectory}/src/**`, `${relativeDirectory}/package.json`);
     const text = yield* fs.readFileString(path.join(dir.value, "package.json"));
     const manifest = yield* decodeDependencies(text);
     return A.filter(R.keys(manifest.dependencies ?? {}), (dependency) => HashMap.has(workspaces, dependency));
@@ -950,7 +996,7 @@ const fingerprintPatterns = Effect.fnUntraced(function* (repoRoot: string) {
 export const policyToolsFingerprint = Effect.fn("policyToolsFingerprint")(
   function* (repoRoot: string) {
     const patterns = yield* fingerprintPatterns(repoRoot);
-    const inputs = A.sort([...patterns, ...rootConfigs, "**/package.json", fingerprintPath], Order.String);
+    const inputs = A.sort(A.dedupe([...patterns, ...rootConfigs, "package.json", fingerprintPath]), Order.String);
     return PolicyToolsFingerprint.make({
       schemaVersion: "policy-tools-fingerprint/v1",
       inputs,
@@ -959,11 +1005,92 @@ export const policyToolsFingerprint = Effect.fn("policyToolsFingerprint")(
   Effect.mapError((cause) => PackageScriptsPolicyError.make({ message: "Cannot compute policy fingerprint", cause }))
 );
 
+const fingerprintTurboIsCurrent = Effect.fnUntraced(function* (file: string, expected: PolicyToolsFingerprint) {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(file))) return false;
+  return yield* decodeFingerprintTurboConfiguration(yield* fs.readFileString(file)).pipe(
+    Effect.map((actual) =>
+      fingerprintInputsEquivalent(actual.tasks["//#lint:policy-fingerprint"].inputs, expected.inputs)
+    ),
+    Effect.catchTag("SchemaError", () => Effect.succeed(false))
+  );
+});
+
+const materializeFingerprintInputs = Effect.fnUntraced(function* (text: string, fingerprint: PolicyToolsFingerprint) {
+  yield* decodeFingerprintTurboConfiguration(text);
+  const tree = jsonc.parseTree(text);
+  const node =
+    tree === undefined ? undefined : jsonc.findNodeAtLocation(tree, ["tasks", "//#lint:policy-fingerprint", "inputs"]);
+  if (node === undefined) {
+    return yield* PackageScriptsPolicyError.make({
+      message: "Cannot locate turbo.json fingerprint inputs array",
+      cause: 'tasks["//#lint:policy-fingerprint"].inputs',
+    });
+  }
+  // Splice only the array token range. The enclosing task and every other byte stay untouched.
+  const array = Str.replaceAll("\n", "\n      ")(yield* jsonStringifyPretty(fingerprint.inputs));
+  return `${Str.slice(0, node.offset)(text)}${array}${Str.slice(node.offset + node.length)(text)}`;
+});
+
+class PolicyToolsFingerprintPolicy extends Context.Service<
+  PolicyToolsFingerprintPolicy,
+  PolicyToolsFingerprintPolicyShape
+>()($I`PolicyToolsFingerprintPolicy`, {
+  make: Effect.fn("PolicyToolsFingerprintPolicy.make")(function* (root: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const fsUtils = yield* FsUtils;
+    const file = path.join(root, fingerprintPath);
+    const turboFile = path.join(root, "turbo.json");
+    const compute = policyToolsFingerprint(root).pipe(
+      Effect.provideService(FileSystem.FileSystem, fs),
+      Effect.provideService(Path.Path, path),
+      Effect.provideService(FsUtils, fsUtils)
+    );
+    const check = Effect.fn("PolicyToolsFingerprintPolicy.check")(
+      function* () {
+        const expected = yield* compute;
+        const drift: Array<string> = [];
+        if (!(yield* fingerprintIsCurrent(file, expected).pipe(Effect.provideService(FileSystem.FileSystem, fs))))
+          drift.push(fingerprintPath);
+        if (
+          !(yield* fingerprintTurboIsCurrent(turboFile, expected).pipe(
+            Effect.provideService(FileSystem.FileSystem, fs)
+          ))
+        )
+          drift.push('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
+        if (A.isReadonlyArrayNonEmpty(drift)) {
+          return yield* PackageScriptsPolicyError.make({
+            message: `Policy fingerprint drift: ${A.join(drift, "; ")}; run bun run beep lint policy-fingerprint --write.`,
+            cause: drift,
+          });
+        }
+      },
+      Effect.mapError((cause) =>
+        isPackageScriptsPolicyError(cause)
+          ? cause
+          : PackageScriptsPolicyError.make({ message: "Cannot check policy fingerprint", cause })
+      )
+    );
+    const write = Effect.fn("PolicyToolsFingerprintPolicy.write")(
+      function* () {
+        const expected = yield* compute;
+        const turbo = yield* materializeFingerprintInputs(yield* fs.readFileString(turboFile), expected);
+        const declaration = `${yield* jsonStringifyPretty(expected)}\n`;
+        yield* fs.writeFileString(file, declaration);
+        yield* fs.writeFileString(turboFile, turbo);
+      },
+      Effect.mapError((cause) => PackageScriptsPolicyError.make({ message: "Cannot write policy fingerprint", cause }))
+    );
+    return { check: check(), write: write() };
+  }),
+}) {}
+
 const encodeScriptsReport = S.encodeEffect(PackageScriptsReportFromWire);
 
 const gateFlags = {
-  check: Flag.boolean("check").pipe(Flag.withDefault(false)),
-  write: Flag.boolean("write").pipe(Flag.withDefault(false)),
+  check: Flag.Boolean("check").pipe(Flag.withDefault(false)),
+  write: Flag.Boolean("write").pipe(Flag.withDefault(false)),
 };
 
 const printScriptsReport = Effect.fnUntraced(function* (
@@ -996,7 +1123,7 @@ export const lintPackageScriptsCommand = Command.make(
   "package-scripts",
   {
     ...gateFlags,
-    json: Flag.boolean("json").pipe(Flag.withDefault(false)),
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false)),
   },
   Effect.fn("lintPackageScripts")(function* ({ check, write, json }) {
     if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
@@ -1026,19 +1153,12 @@ export const lintPolicyFingerprintCommand = Command.make(
   Effect.fn("lintPolicyFingerprint")(function* ({ check, write }) {
     if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
     const root = yield* findRepoRoot();
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const file = path.join(root, fingerprintPath);
-    const fingerprint = yield* policyToolsFingerprint(root);
-    const expected = `${yield* jsonStringifyPretty(fingerprint)}\n`;
+    const policy = yield* PolicyToolsFingerprintPolicy.make(root);
     if (write) {
-      yield* fs.writeFileString(file, expected);
+      yield* policy.write;
       yield* Console.log("policy-fingerprint: written");
     } else {
-      if (!(yield* fingerprintIsCurrent(file, fingerprint)))
-        return yield* failWithReportedExit(
-          "Policy fingerprint is stale; run bun run beep lint policy-fingerprint --write."
-        );
+      yield* policy.check;
       yield* Console.log("policy-fingerprint: current");
     }
   })

@@ -2218,52 +2218,52 @@ const decodeCiLaneTimingWindowOptions = Effect.fn("Ci.decodeCiLaneTimingWindowOp
   return options;
 });
 
-const runLimitFlag = Flag.integer("runs").pipe(
+const runLimitFlag = Flag.Int("runs").pipe(
   Flag.withDescription("How many recent workflow runs to read jobs for (1-100)"),
   Flag.withDefault(20)
 );
 
-const tsvFlag = Flag.boolean("tsv").pipe(
+const tsvFlag = Flag.Boolean("tsv").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the collected rows as TSV instead of the operator summary")
 );
 
-const windowFlag = Flag.boolean("window").pipe(
+const windowFlag = Flag.Boolean("window").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Collect a bounded workflow-run census instead of the recent-runs report")
 );
 
-const workflowFlag = Flag.string("workflow").pipe(
+const workflowFlag = Flag.String("workflow").pipe(
   Flag.withDefault("check.yml"),
   Flag.withDescription("Workflow file used by the bounded census")
 );
 
-const eventFlag = Flag.choice("event", CiLaneTimingWindowEvent.Options).pipe(
+const eventFlag = Flag.Literals("event", CiLaneTimingWindowEvent.Options).pipe(
   Flag.withDefault(CiLaneTimingWindowEvent.Enum.all),
   Flag.withDescription("Workflow event population used by the bounded census")
 );
 
-const branchFlag = Flag.string("branch").pipe(
+const branchFlag = Flag.String("branch").pipe(
   Flag.optional,
   Flag.withDescription("Optional workflow head branch; push waves default to main")
 );
 
-const sinceFlag = Flag.string("since").pipe(
+const sinceFlag = Flag.String("since").pipe(
   Flag.optional,
   Flag.withDescription("Inclusive UTC created_at boundary for --window")
 );
 
-const untilFlag = Flag.string("until").pipe(
+const untilFlag = Flag.String("until").pipe(
   Flag.optional,
   Flag.withDescription("Exclusive UTC created_at boundary for --window")
 );
 
-const headShaFlag = Flag.string("head-sha").pipe(
+const headShaFlag = Flag.String("head-sha").pipe(
   Flag.optional,
   Flag.withDescription("Optional exact workflow run head SHA for --window")
 );
 
-const markdownFlag = Flag.boolean("markdown").pipe(
+const markdownFlag = Flag.Boolean("markdown").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the bounded census as admission-document Markdown")
 );

@@ -2,8 +2,9 @@ import { fcRuns } from "@beep/fc-runs";
 import * as GlobModule from "@beep/schema/Glob";
 import { Glob } from "@beep/schema/Glob";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeGlobModuleSchemaSync = S.decodeSync(GlobModule.Schema);
 const decodeUnknownGlobSync = S.decodeUnknownSync(Glob);
@@ -47,14 +48,21 @@ describe("Glob", () => {
   });
 
   it("derives portable glob patterns from the source schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Glob)(fc);
-    fc.assert(
-      fc.property(arbitrary, (pattern) => {
-        expect(isGlob2(pattern)).toBe(true);
-        expect(decodeUnknownGlobSync(pattern)).toBe(pattern);
-      }),
-      fcRuns(25)
-    );
+    const arbitrary = Arbitrary.schema(Glob);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([pattern]) => {
+            expect(isGlob2(pattern)).toBe(true);
+            expect(decodeUnknownGlobSync(pattern)).toBe(pattern);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("exposes the canonical namespace module schema role", () => {

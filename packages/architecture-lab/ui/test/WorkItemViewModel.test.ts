@@ -11,7 +11,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeWorkItemSummaryViewModelSync = S.decodeSync(WorkItemSummaryViewModel);
 const decodeWorkItemVisibleActionSync = S.decodeSync(WorkItemVisibleAction);
@@ -22,9 +22,9 @@ const isWorkItemSummaryViewModel = S.is(WorkItemSummaryViewModel);
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
-const WorkItemVisibleActionArbitrary = S.toArbitrary(WorkItemVisibleAction)(fc);
-const WorkItemSummaryViewModelArbitrary = S.toArbitrary(WorkItemSummaryViewModel)(fc);
-const WorkItemArbitrary = S.toArbitrary(DomainWorkItem.WorkItem)(fc);
+const WorkItemVisibleActionArbitrary = Arbitrary.schema(WorkItemVisibleAction);
+const WorkItemSummaryViewModelArbitrary = Arbitrary.schema(WorkItemSummaryViewModel);
+const WorkItemArbitrary = Arbitrary.schema(DomainWorkItem.WorkItem);
 
 describe("WorkItem UI view model", () => {
   it.effect(
@@ -113,31 +113,54 @@ describe("WorkItem UI view model", () => {
   );
 
   it("round-trips touched schemas with schema-derived arbitraries", () => {
-    fc.assert(
-      fc.property(WorkItemVisibleActionArbitrary, (value) => {
-        expect(Equal.equals(decodeWorkItemVisibleActionSync(encodeWorkItemVisibleActionSync(value)), value)).toBe(true);
-      }),
-      fcRuns(20)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([WorkItemVisibleActionArbitrary]),
+          ([value]) => {
+            expect(Equal.equals(decodeWorkItemVisibleActionSync(encodeWorkItemVisibleActionSync(value)), value)).toBe(
+              true
+            );
 
-    fc.assert(
-      fc.property(WorkItemSummaryViewModelArbitrary, (value) => {
-        expect(Equal.equals(decodeWorkItemSummaryViewModelSync(encodeWorkItemSummaryViewModelSync(value)), value)).toBe(
-          true
-        );
-      }),
-      fcRuns(20)
-    );
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
+
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([WorkItemSummaryViewModelArbitrary]),
+          ([value]) => {
+            expect(
+              Equal.equals(decodeWorkItemSummaryViewModelSync(encodeWorkItemSummaryViewModelSync(value)), value)
+            ).toBe(true);
+
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("emits schema-accepted summaries for generated WorkItems", () => {
-    fc.assert(
-      fc.property(WorkItemArbitrary, (workItem) => {
-        expect(isWorkItemSummaryViewModel(toWorkItemSummaryViewModel(workItem, defaultWorkItemPublicConfig))).toBe(
-          true
-        );
-      }),
-      fcRuns(20)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([WorkItemArbitrary]),
+          ([workItem]) => {
+            expect(isWorkItemSummaryViewModel(toWorkItemSummaryViewModel(workItem, defaultWorkItemPublicConfig))).toBe(
+              true
+            );
+
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

@@ -10,7 +10,7 @@ import {
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer, it as propertyTest } from "@effect/vitest";
+import { expect, it, layer } from "@effect/vitest";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -18,7 +18,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as fc from "effect/testing/FastCheck";
 import { Command } from "effect/unstable/cli";
 
 const artifacts = [
@@ -108,12 +107,10 @@ const assertReportRoundTrip = Effect.fn("GraftCacheSyncTest.assertReportRoundTri
   expect(decoded).toEqual(report);
 });
 
-propertyTest("round-trips arbitrary reports without losing plan entries, reasons, or counters", () =>
-  fc.assert(
-    fc.asyncProperty(S.toArbitrary(GraftCacheSyncReport)(fc), (report) =>
-      Effect.runPromise(assertReportRoundTrip(report))
-    )
-  )
+it.effect.prop(
+  "round-trips arbitrary reports without losing plan entries, reasons, or counters",
+  [GraftCacheSyncReport],
+  ([report]) => Effect.map(assertReportRoundTrip(report), () => true)
 );
 
 layer(testLayer)("Graft cache sync", (it) => {
@@ -178,7 +175,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       const countingFs = Layer.succeed(
         FileSystem.FileSystem,
         FileSystem.FileSystem.of({
-          "~effect/platform/FileSystem": fs["~effect/platform/FileSystem"],
+          "~effect/FileSystem": fs["~effect/FileSystem"],
           access: fs.access,
           copy: fs.copy,
           copyFile: fs.copyFile,

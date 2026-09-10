@@ -29,26 +29,6 @@ const CircuitOpenErrorFields = {
   }),
 } satisfies S.Struct.Fields;
 
-const makeCircuitOpenError = (
-  input: S.Schema.Type<S.TaggedStruct<"CircuitOpenError", typeof CircuitOpenErrorFields>>
-): CircuitOpenError => CircuitOpenError.make(input);
-
-const CircuitOpenErrorBase = S.TaggedError<CircuitOpenError>($I`CircuitOpenError`)(
-  "CircuitOpenError",
-  CircuitOpenErrorFields,
-  {
-    ...$I.annote("CircuitOpenError", {
-      description: "Failure raised when a circuit breaker rejects work while open.",
-    }),
-    toArbitrary:
-      ([from]) =>
-      () => ({
-        arbitrary: from.arbitrary.map(makeCircuitOpenError),
-        terminal: from.terminal?.map(makeCircuitOpenError),
-      }),
-  }
-);
-
 /**
  * Failure raised when a circuit breaker rejects work while open.
  *
@@ -73,7 +53,15 @@ const CircuitOpenErrorBase = S.TaggedError<CircuitOpenError>($I`CircuitOpenError
  * @category errors
  * @since 0.0.0
  */
-export class CircuitOpenError extends CircuitOpenErrorBase {
+export class CircuitOpenError extends S.TaggedError<CircuitOpenError>($I`CircuitOpenError`)(
+  "CircuitOpenError",
+  CircuitOpenErrorFields,
+  {
+    ...$I.annote("CircuitOpenError", {
+      description: "Failure raised when a circuit breaker rejects work while open.",
+    }),
+  }
+) {
   /**
    * Human-readable circuit state and retry delay.
    *
@@ -112,11 +100,7 @@ export class CircuitOpenError extends CircuitOpenErrorBase {
  * @category errors
  * @since 0.0.0
  */
-export const RateLimitReason = LiteralKit(["tokens", "requests", "concurrent"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("tokens", "requests", "concurrent"),
-  })
-  .pipe(
+export const RateLimitReason = LiteralKit(["tokens", "requests", "concurrent"]).pipe(
     $I.annoteSchema("RateLimitReason", {
       description: "Closed resource dimension whose quota was exhausted.",
     })
@@ -147,22 +131,6 @@ const RateLimitErrorFields = {
   }),
 } satisfies S.Struct.Fields;
 
-const makeRateLimitError = (
-  input: S.Schema.Type<S.TaggedStruct<"RateLimitError", typeof RateLimitErrorFields>>
-): RateLimitError => RateLimitError.make(input);
-
-const RateLimitErrorBase = S.TaggedError<RateLimitError>($I`RateLimitError`)("RateLimitError", RateLimitErrorFields, {
-  ...$I.annote("RateLimitError", {
-    description: "Failure raised when a token, request, or concurrency quota is exhausted.",
-  }),
-  toArbitrary:
-    ([from]) =>
-    () => ({
-      arbitrary: from.arbitrary.map(makeRateLimitError),
-      terminal: from.terminal?.map(makeRateLimitError),
-    }),
-});
-
 /**
  * Failure raised when a token, request, or concurrency quota is exhausted.
  *
@@ -180,7 +148,13 @@ const RateLimitErrorBase = S.TaggedError<RateLimitError>($I`RateLimitError`)("Ra
  * @category errors
  * @since 0.0.0
  */
-export class RateLimitError extends RateLimitErrorBase {
+export class RateLimitError extends S.TaggedError<RateLimitError>($I`RateLimitError`)(
+  "RateLimitError",
+  RateLimitErrorFields,
+  $I.annote("RateLimitError", {
+    description: "Failure raised when a token, request, or concurrency quota is exhausted.",
+  })
+) {
   /**
    * Human-readable exhausted quota and optional retry delay.
    *
@@ -231,7 +205,6 @@ const CircuitErrorDefinition = S.Union([CircuitOpenError, RateLimitError]).pipe(
 export const CircuitError = CircuitErrorDefinition.pipe(
   $I.annoteSchema("CircuitError", {
     description: "Exhaustive tagged union of circuit-open and rate-limit failures.",
-    toArbitrary: () => S.toArbitrary(CircuitErrorDefinition),
   })
 );
 

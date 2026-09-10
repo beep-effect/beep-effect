@@ -15,10 +15,11 @@ import {
   DateTimeUtcFromValid,
 } from "@beep/schema/DateTimeUtcFromValid";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeDateTimeInputDateSync = S.decodeSync(DateTimeInputDate);
 const decodeDateTimeInputDateTaggedSync = S.decodeSync(DateTimeInputDate.Tagged);
@@ -239,20 +240,27 @@ describe("DateTimeUtcFromValid", () => {
   });
 
   it("schema-derived values satisfy the encode round-trip law", () => {
-    const arbitrary = S.toArbitrary(DateTimeUtcFromValid)(fc);
-    fc.assert(
-      fc.property(arbitrary, (utc) => {
-        // Encoding is lossy (canonical tagged ISO string), so assert the robust
-        // law encode(decode(encode(x))) deep-equals encode(x) plus the Type-level
-        // invariant that every decoded value is a DateTime.Utc preserving the instant.
-        const encoded = encodeUtc(utc);
-        const roundTripped = decodeDateTimeUtcFromValidSync(encoded);
+    const arbitrary = Arbitrary.schema(DateTimeUtcFromValid);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([utc]) => {
+            // Encoding is lossy (canonical tagged ISO string), so assert the robust
+            // law encode(decode(encode(x))) deep-equals encode(x) plus the Type-level
+            // invariant that every decoded value is a DateTime.Utc preserving the instant.
+            const encoded = encodeUtc(utc);
+            const roundTripped = decodeDateTimeUtcFromValidSync(encoded);
 
-        expect(DateTime.isDateTime(roundTripped)).toBe(true);
-        expect(Equal.equals(encodeUtc(roundTripped), encoded)).toBe(true);
-        expect(DateTime.toEpochMillis(roundTripped)).toBe(DateTime.toEpochMillis(utc));
-      }),
-      fcRuns(50)
-    );
+            expect(DateTime.isDateTime(roundTripped)).toBe(true);
+            expect(Equal.equals(encodeUtc(roundTripped), encoded)).toBe(true);
+            expect(DateTime.toEpochMillis(roundTripped)).toBe(DateTime.toEpochMillis(utc));
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

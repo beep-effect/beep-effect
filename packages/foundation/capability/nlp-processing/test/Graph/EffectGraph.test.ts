@@ -1,12 +1,3 @@
-/**
- * Proofs for the EffectGraph engine: construction, child/root queries, the
- * catamorphism/anamorphism duality, and the Functor map.
- *
- * Effect v4 + `@effect/vitest` coverage for graph tests.
- * Node construction is effectful (Clock + Random id), so tests run under the
- * default test runtime.
- */
-
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -14,20 +5,27 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expect(equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expect(equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("EffectGraph construction", () => {

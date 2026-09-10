@@ -17,17 +17,9 @@ const $I = $OipWebId.create("contact/ContactSubmission.model");
 
 const contactEmailPattern =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
-const ContactEmailArbitraryValues = ["builder@example.com", "intake@oip.law", "tom@example.com"] as const;
-const ContactNameArbitraryValues = ["Builder", "Thomas Oppold", "OIP Intake"] as const;
-const ContactMessageArbitraryValues = [
-  "I would like to discuss a patent matter.",
-  "Please contact me about protecting a new machine design.",
-  "We need help reviewing an intellectual property portfolio.",
-] as const;
-
-const TrimmedContactText = TrimmedNonEmptyText.annotate({
-  toArbitrary: () => (fc) => fc.string({ minLength: 1 }).map(Str.trim).filter(Str.isNonEmpty),
-}).pipe(
+const TrimmedContactText = TrimmedNonEmptyText.check(
+  S.isMinLength(1, { arbitraryConstraint: { patterns: [{ source: "^\\S(?:[\\s\\S]{0,80}\\S)?$", flags: "" }] } })
+).pipe(
   $I.annoteSchema("TrimmedContactText", {
     description: "Trimmed non-empty contact form text.",
   })
@@ -41,41 +33,34 @@ const ContactName = TrimmedContactText.pipe(
   ),
   $I.annoteSchema("ContactName", {
     description: "Normalized contact form name.",
-    toArbitrary: () => (fc) => fc.constantFrom(...ContactNameArbitraryValues),
   })
 );
 
-const ContactEmail = TrimmedContactText.pipe(S.decode(SchemaTransformation.toLowerCase()))
+const ContactEmail = TrimmedNonEmptyText.pipe(S.decode(SchemaTransformation.toLowerCase()))
   .check(
     S.isMaxLength(254, {
       message: "Email must be 254 characters or fewer.",
     }),
     S.isPattern(contactEmailPattern, {
       message: "Email must be a valid email address.",
+      arbitraryConstraint: { patterns: [{ source: "^[a-z][a-z0-9]{0,15}@example\\.com$", flags: "" }] },
     })
   )
   .pipe(
     $I.annoteSchema("ContactEmail", {
       description: "Normalized contact form email address.",
     })
-  )
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...ContactEmailArbitraryValues),
-  });
+  );
 
 const ContactMessage = TrimmedContactText.check(
   S.isMinLength(10, {
     message: "Message must include at least 10 characters.",
   })
-)
-  .pipe(
-    $I.annoteSchema("ContactMessage", {
-      description: "Normalized contact form message.",
-    })
-  )
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...ContactMessageArbitraryValues),
-  });
+).pipe(
+  $I.annoteSchema("ContactMessage", {
+    description: "Normalized contact form message.",
+  })
+);
 
 const ContactSubmissionStatusBase = LiteralKit(["accepted", "rejected"]);
 
@@ -140,7 +125,6 @@ export type ContactSubmissionStatus = typeof ContactSubmissionStatus.Type;
 export const ContactResponseMessage = S.NonEmptyString.pipe(
   $I.annoteSchema("ContactResponseMessage", {
     description: "Non-empty public message text returned by the OIP contact API.",
-    toArbitrary: () => (fc) => fc.constant("Your note was received."),
   })
 );
 

@@ -26,7 +26,7 @@ import {
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/EffectResolver");
 const VERSION_SPECIFIER_PATTERN = /^([~^<>=\s]*)(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;
 const EXACT_VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
-const EFFECT_SMOL_SNAPSHOT_PATTERN = /^https:\/\/pkg\.pr\.new\/Effect-TS\/effect-smol\/(.+)@([0-9a-f]+)$/i;
+const EFFECT_SMOL_SNAPSHOT_PATTERN = /^https:\/\/pkg\.pr\.new\/Effect-TS\/effect(?:-smol)?\/(.+)@([0-9a-f]+)$/i;
 const LOCKSTEP_EFFECT_PACKAGE_PREFIX = "@effect/";
 const NON_LOCKSTEP_EFFECT_PACKAGES = ["@effect/markdown-toc", "@effect/tsgo"] as const;
 
@@ -99,7 +99,7 @@ const splitSnapshotSpecifier = (specifier: string): O.Option<SnapshotSpecifierPa
   );
 
 const makeSnapshotSpecifier = (packageName: string, sha: string): string =>
-  `https://pkg.pr.new/Effect-TS/effect-smol/${packageName}@${sha}`;
+  `https://pkg.pr.new/Effect-TS/effect/${packageName}@${sha}`;
 
 const parseMajorVersion = (exactVersion: string): O.Option<number> =>
   O.flatMap(Str.match(EXACT_VERSION_PATTERN)(exactVersion), (match) => O.flatMap(O.fromUndefinedOr(match[1]), N.parse));
@@ -133,7 +133,10 @@ const isSnapshotLockstepEffectPackage = (packageName: string): boolean => {
 
   return (
     Str.startsWith(LOCKSTEP_EFFECT_PACKAGE_PREFIX)(packageName) &&
-    !A.contains(NON_LOCKSTEP_EFFECT_PACKAGES, packageName)
+    !A.some(
+      NON_LOCKSTEP_EFFECT_PACKAGES,
+      (name) => Str.Equivalence(packageName, name) || Str.startsWith(`${name}-`)(packageName)
+    )
   );
 };
 

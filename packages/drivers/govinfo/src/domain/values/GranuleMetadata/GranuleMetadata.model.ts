@@ -15,6 +15,7 @@ const Md5Hex = S.String.check(
     identifier: $I`Md5HexPatternCheck`,
     message: "Expected a 32-character hexadecimal MD5 digest",
     title: "MD5 hex digest",
+    arbitraryConstraint: { patterns: [{ source: "^[0-9a-fA-F]{32}$", flags: "" }] },
   })
 ).pipe(
   $I.annoteSchema("Md5Hex", {

@@ -253,11 +253,11 @@ export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMeth
  * @since 0.0.0
  */
 export const PubSubClientConfig: Config.Config<PubSubClientConfig> = Config.all({
-  projectId: Config.string("PUBSUB_PROJECT_ID").pipe(Config.withDefault("effect-ontology")),
-  eventsTopicId: Config.string("PUBSUB_EVENTS_TOPIC").pipe(Config.withDefault("ontology-events")),
-  jobsTopicId: Config.string("PUBSUB_JOBS_TOPIC").pipe(Config.withDefault("ontology-jobs")),
-  jobsSubscriptionId: Config.string("PUBSUB_JOBS_SUBSCRIPTION").pipe(Config.withDefault("ontology-jobs-push")),
-  dlqTopicId: Config.string("PUBSUB_DLQ_TOPIC").pipe(Config.withDefault("ontology-jobs-dlq")),
+  projectId: Config.String("PUBSUB_PROJECT_ID").pipe(Config.withDefault("effect-ontology")),
+  eventsTopicId: Config.String("PUBSUB_EVENTS_TOPIC").pipe(Config.withDefault("ontology-events")),
+  jobsTopicId: Config.String("PUBSUB_JOBS_TOPIC").pipe(Config.withDefault("ontology-jobs")),
+  jobsSubscriptionId: Config.String("PUBSUB_JOBS_SUBSCRIPTION").pipe(Config.withDefault("ontology-jobs-push")),
+  dlqTopicId: Config.String("PUBSUB_DLQ_TOPIC").pipe(Config.withDefault("ontology-jobs-dlq")),
 });
 
 // =============================================================================

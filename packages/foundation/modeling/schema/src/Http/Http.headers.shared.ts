@@ -152,7 +152,7 @@ export type HeaderMaxAgeSeconds = typeof HeaderMaxAgeSeconds.Type;
 export const EncodedStrictURIFromStrOrURL = StringOrUrl.pipe(
   S.decodeTo(
     S.String.pipe(S.brand("EncodedStrictURIFromStrOrURL")),
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input) =>
         Effect.try({
           try: () => new URL(String(input)).toString(),

@@ -12,7 +12,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import type { FastCheck } from "effect/testing";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OutputType");
 
@@ -37,21 +36,7 @@ const OutputTypeDefinition = LiteralKit({
     ["entities", "entities"],
     ["relations", "relations"],
   ],
-})
-  .annotate({
-    toArbitrary: () => (fc: typeof FastCheck) =>
-      fc.constantFrom(
-        "knowledge-graph",
-        "entity-resolution-graph",
-        "rdf-turtle",
-        "rdf-jsonld",
-        "mermaid-diagram",
-        "metadata",
-        "entities",
-        "relations"
-      ),
-  })
-  .pipe(
+}).pipe(
     $I.annoteSchema("OutputType", {
       description: "Finite set of artifacts produced by an ontology extraction run.",
     })
@@ -95,21 +80,7 @@ export const OutputFilename = LiteralKit({
     ["entities.json", "entities"],
     ["relations.json", "relations"],
   ],
-})
-  .annotate({
-    toArbitrary: () => (fc: typeof FastCheck) =>
-      fc.constantFrom(
-        "knowledge-graph.json",
-        "entity-resolution-graph.json",
-        "graph.ttl",
-        "graph.jsonld",
-        "erg-diagram.md",
-        "metadata.json",
-        "entities.json",
-        "relations.json"
-      ),
-  })
-  .pipe(
+}).pipe(
     $I.annoteSchema("OutputFilename", {
       description: "Stable persisted filename assigned to an extraction-run output artifact.",
     })

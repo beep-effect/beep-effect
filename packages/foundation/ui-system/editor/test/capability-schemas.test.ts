@@ -16,7 +16,7 @@ import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Exit } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { NodeRegistrationKey } from "@beep/editor/capability/schemas";
 
 const decodeCapabilityCatalog = S.decodeEffect(CapabilityCatalog);
@@ -154,12 +154,15 @@ describe("capability schema arbitraries", () => {
   // Schema-derived property coverage: every generated value survives an
   // encode → decode round trip structurally (S.Class instances are Equal).
   const roundTrips = <A, I>(schema: S.Codec<A, I>): void =>
-    fc.assert(
-      fc.property(S.toArbitrary(schema)(fc), (value) =>
-        Equal.equals(S.decodeSync(schema)(S.encodeSync(schema)(value)), value)
-      ),
-      { numRuns: 25 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(schema)]),
+          ([value]) => Equal.equals(S.decodeSync(schema)(S.encodeSync(schema)(value)), value),
+          { runs: 25 }
+        )
+      )._tag
+    ).toBe("Passed");
 
   it("round-trips generated classifications", () => {
     roundTrips(CapabilityClassification);

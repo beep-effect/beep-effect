@@ -58,7 +58,7 @@ export class YamlDirective extends Schema.Class<YamlDirective>("YamlDirective")(
 	},
 	$I.annote("YamlDirective", {
 		description: "A YAML directive appearing before a document, preserved for round-trip fidelity.",
-	}),
+  })
 ) {}
 
 /**
@@ -120,7 +120,7 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")(
 	},
 	$I.annote("YamlDocument", {
 		description: "A parsed YAML document carrying AST contents, recovered diagnostics, directives and framing.",
-	}),
+  })
 ) {
 	/**
 	 * Parse a single YAML document, keeping the full AST, directives and
@@ -184,17 +184,17 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")(
 		return Schema.String.pipe(
 			Schema.decodeTo(
 				Schema.instanceOf(YamlDocument),
-				SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
 					decode: (input: string) =>
 						YamlDocument.parse(input, options).pipe(
-							Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input)),
+              Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input))
 						),
 					encode: (doc: YamlDocument) =>
 						doc
 							.stringify()
 							.pipe(Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, doc))),
-				}),
-			),
+        })
+      )
 		);
 	}
 
@@ -351,7 +351,10 @@ function fromRawDocument(raw: RawYamlDocument, text: string): YamlDocument {
 		errors: raw.errors.map((e) => YamlDiagnostic.fromRaw(e, text)),
 		warnings: raw.warnings.map((w) => YamlDiagnostic.fromRaw(w, text)),
 		directives: raw.directives.map((d) => YamlDirective.make({ name: d.name, parameters: d.parameters })),
-		...OU.getSomesStruct({ commentBefore: OU.fromUndefinedOr(raw.commentBefore), comment: OU.fromUndefinedOr(raw.comment) }),
+    ...OU.getSomesStruct({
+      commentBefore: OU.fromUndefinedOr(raw.commentBefore),
+      comment: OU.fromUndefinedOr(raw.comment),
+    }),
 		hasDocumentStart: raw.hasDocumentStart,
 		hasDocumentEnd: raw.hasDocumentEnd,
 		hasDocumentStartTab: raw.hasDocumentStartTab,
@@ -365,7 +368,10 @@ function toRawDocument(doc: YamlDocument): RawYamlDocument {
 		errors: [],
 		warnings: [],
 		directives: doc.directives,
-		...OU.getSomesStruct({ commentBefore: OU.fromUndefinedOr(doc.commentBefore), comment: OU.fromUndefinedOr(doc.comment) }),
+    ...OU.getSomesStruct({
+      commentBefore: OU.fromUndefinedOr(doc.commentBefore),
+      comment: OU.fromUndefinedOr(doc.comment),
+    }),
 		hasDocumentStart: doc.hasDocumentStart ?? false,
 		hasDocumentEnd: doc.hasDocumentEnd ?? false,
 		hasDocumentStartTab: doc.hasDocumentStartTab ?? false,

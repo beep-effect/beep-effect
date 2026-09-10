@@ -8,6 +8,7 @@ import {
   HookPulseNotificationType,
   HookPulseRawEvent,
   HookPulseV1,
+  HookPulseV1Arbitrary,
   HookPulseV1FromLegacyRecord,
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
@@ -22,7 +23,7 @@ import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const baseRawEventFixture = {
   session_id: "ccd-session-raw-1",
@@ -274,20 +275,23 @@ const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
 describe("HookPulseV1", () => {
   it("round-trips disarm artifacts through their production JSON codecs", () => {
-    fc.assert(
-      fc.property(
-        S.toArbitrary(HookPulseDisarmSentinel)(fc),
-        S.toArbitrary(HookPulseDisarmWindow)(fc),
-        (sentinel, window) => {
-          const sentinelJson = Result.getOrThrow(HookPulseDisarmSentinel.encodeJsonResult(sentinel));
-          const windowJson = Result.getOrThrow(HookPulseDisarmWindow.encodeJsonResult(window));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(HookPulseDisarmSentinel), Arbitrary.schema(HookPulseDisarmWindow)]),
+          ([sentinel, window]) => {
+            const sentinelJson = Result.getOrThrow(HookPulseDisarmSentinel.encodeJsonResult(sentinel));
+            const windowJson = Result.getOrThrow(HookPulseDisarmWindow.encodeJsonResult(window));
 
-          expect(Result.getOrThrow(HookPulseDisarmSentinel.decodeJsonResult(sentinelJson))).toEqual(sentinel);
-          expect(Result.getOrThrow(HookPulseDisarmWindow.decodeJsonResult(windowJson))).toEqual(window);
-        }
-      ),
-      fcRuns(25)
-    );
+            expect(Result.getOrThrow(HookPulseDisarmSentinel.decodeJsonResult(sentinelJson))).toEqual(sentinel);
+            expect(Result.getOrThrow(HookPulseDisarmWindow.decodeJsonResult(windowJson))).toEqual(window);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect("migrates legacy v1 rows without retaining raw private identifiers", () =>
@@ -323,40 +327,52 @@ describe("HookPulseV1", () => {
   );
 
   it("round-trips schema-derived arbitrary values", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(HookPulseV1)(fc), (value) => {
-        const encoded = Result.getOrThrow(HookPulseV1.encodeResult(value));
-        const decoded = Result.getOrThrow(HookPulseV1.decodeResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([HookPulseV1Arbitrary]),
+          ([value]) => {
+            const encoded = Result.getOrThrow(HookPulseV1.encodeResult(value));
+            const decoded = Result.getOrThrow(HookPulseV1.decodeResult(encoded));
 
-        expect(hookPulseEquivalent(decoded, value)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+            expect(hookPulseEquivalent(decoded, value)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips arbitrary encodable canonical values through the raw-event codec", () => {
     // The raw codec requires transcriptPath and intentionally clamps observed evidence to derived.
-    const arbitrary = S.toArbitrary(HookPulseV1)(fc)
-      .filter((value) => O.isSome(value.transcriptPath))
-      .filter((value) => Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier)));
-
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        const encoded = Result.getOrThrow(HookPulseV1FromRawEvent.encodeResult(value));
-        const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(encoded));
-
-        expect(hookPulseEquivalent(decoded, value)).toBe(true);
-      }),
-      fcRuns(50)
+    const arbitrary = Arbitrary.filter(
+      Arbitrary.filter(HookPulseV1Arbitrary, (value) => O.isSome(value.transcriptPath)),
+      (value) => Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier))
     );
+
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            const encoded = Result.getOrThrow(HookPulseV1FromRawEvent.encodeResult(value));
+            const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(encoded));
+
+            expect(hookPulseEquivalent(decoded, value)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect("derives a total wait reason for arbitrary raw events", () =>
     Effect.forEach(
-      fc.sample(S.toArbitrary(HookPulseRawEvent)(fc), {
-        numRuns: 50,
-        seed: 804,
-      }),
+      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(HookPulseRawEvent), { count: 50, seed: 804 })),
       Effect.fnUntraced(function* (event) {
         const encodedEvent = yield* encodeRawHookPulse(event);
         const decoded = yield* withSaltEnv(

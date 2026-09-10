@@ -14,7 +14,7 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis: PgliteIntegrationTimeout } =
   makePgliteIntegrationGate();
@@ -33,10 +33,10 @@ const encodeWorkItemId = S.encodeEffect(DomainWorkItem.WorkItemId);
 const encodeWorkItemTitle = S.encodeEffect(DomainWorkItem.WorkItemTitle);
 const encodeWorkerId = S.encodeEffect(ArchitectureLabIdentity.WorkerId);
 const encodeOrganizationId = S.encodeEffect(DomainWorker.WorkerOrganizationId);
-const WorkItemIdArbitrary = S.toArbitrary(DomainWorkItem.WorkItemId)(fc);
-const WorkItemTitleArbitrary = S.toArbitrary(DomainWorkItem.WorkItemTitle)(fc);
-const WorkerIdArbitrary = S.toArbitrary(ArchitectureLabIdentity.WorkerId)(fc);
-const OrganizationIdArbitrary = S.toArbitrary(DomainWorker.WorkerOrganizationId)(fc);
+const WorkItemIdArbitrary = Arbitrary.schema(DomainWorkItem.WorkItemId);
+const WorkItemTitleArbitrary = Arbitrary.schema(DomainWorkItem.WorkItemTitle);
+const WorkerIdArbitrary = Arbitrary.schema(ArchitectureLabIdentity.WorkerId);
+const OrganizationIdArbitrary = Arbitrary.schema(DomainWorker.WorkerOrganizationId);
 const migrateArchitectureLab = Effect.fnUntraced(function* () {
   const info = yield* TestDatabaseInfo;
   const db = yield* makeDrizzle();
@@ -53,32 +53,33 @@ const WorkItemDrizzleRepositoryLayer = Layer.mergeAll(ArchitectureLabConfigTest,
 );
 
 it("round-trips schema-derived repository identity values through domain schemas", () =>
-  fc.assert(
-    fc.property(
-      WorkItemIdArbitrary,
-      WorkItemTitleArbitrary,
-      WorkerIdArbitrary,
-      OrganizationIdArbitrary,
-      (workItemId, title, workerId, organizationId) => {
-        const encodedWorkItemId = Effect.runSync(encodeWorkItemId(workItemId));
-        const decodedWorkItemId = Effect.runSync(decodeWorkItemId(encodedWorkItemId));
-        expect(Effect.runSync(encodeWorkItemId(decodedWorkItemId))).toBe(encodedWorkItemId);
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([WorkItemIdArbitrary, WorkItemTitleArbitrary, WorkerIdArbitrary, OrganizationIdArbitrary]),
+        ([workItemId, title, workerId, organizationId]) => {
+          const encodedWorkItemId = Effect.runSync(encodeWorkItemId(workItemId));
+          const decodedWorkItemId = Effect.runSync(decodeWorkItemId(encodedWorkItemId));
+          expect(Effect.runSync(encodeWorkItemId(decodedWorkItemId))).toBe(encodedWorkItemId);
 
-        const encodedTitle = Effect.runSync(encodeWorkItemTitle(title));
-        const decodedTitle = Effect.runSync(decodeWorkItemTitle(encodedTitle));
-        expect(Effect.runSync(encodeWorkItemTitle(decodedTitle))).toBe(encodedTitle);
+          const encodedTitle = Effect.runSync(encodeWorkItemTitle(title));
+          const decodedTitle = Effect.runSync(decodeWorkItemTitle(encodedTitle));
+          expect(Effect.runSync(encodeWorkItemTitle(decodedTitle))).toBe(encodedTitle);
 
-        const encodedWorkerId = Effect.runSync(encodeWorkerId(workerId));
-        const decodedWorkerId = Effect.runSync(decodeWorkerId(encodedWorkerId));
-        expect(Effect.runSync(encodeWorkerId(decodedWorkerId))).toBe(encodedWorkerId);
+          const encodedWorkerId = Effect.runSync(encodeWorkerId(workerId));
+          const decodedWorkerId = Effect.runSync(decodeWorkerId(encodedWorkerId));
+          expect(Effect.runSync(encodeWorkerId(decodedWorkerId))).toBe(encodedWorkerId);
 
-        const encodedOrganizationId = Effect.runSync(encodeOrganizationId(organizationId));
-        const decodedOrganizationId = Effect.runSync(decodeOrganizationId(encodedOrganizationId));
-        expect(Effect.runSync(encodeOrganizationId(decodedOrganizationId))).toBe(encodedOrganizationId);
-      }
-    ),
-    fcRuns(25)
-  ));
+          const encodedOrganizationId = Effect.runSync(encodeOrganizationId(organizationId));
+          const decodedOrganizationId = Effect.runSync(decodeOrganizationId(encodedOrganizationId));
+          expect(Effect.runSync(encodeOrganizationId(decodedOrganizationId))).toBe(encodedOrganizationId);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )._tag
+  ).toBe("Passed"));
 
 if (!shouldRunPgliteIntegration) {
   describe.skip("ArchitectureLab Drizzle repository PgLite integration", () => {});

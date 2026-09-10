@@ -31,21 +31,21 @@ const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Inference");
 // Options
 // =============================================================================
 
-const inputOption = Flag.file("input").pipe(Flag.withAlias("i"), Flag.withDescription("Input Turtle file path"));
+const inputOption = Flag.File("input").pipe(Flag.withAlias("i"), Flag.withDescription("Input Turtle file path"));
 
-const outputOption = Flag.string("output").pipe(
+const outputOption = Flag.String("output").pipe(
   Flag.withAlias("o"),
   Flag.withDefault("./output-enriched.ttl"),
   Flag.withDescription("Output file path for enriched graph")
 );
 
-const profileOption = Flag.choice("profile", ["rdfs", "rdfs-subclass", "owl-sameas"]).pipe(
+const profileOption = Flag.Literals("profile", ["rdfs", "rdfs-subclass", "owl-sameas"]).pipe(
   Flag.withAlias("p"),
   Flag.withDefault("rdfs"),
   Flag.withDescription("Reasoning profile to apply")
 );
 
-const deltaOnlyOption = Flag.boolean("delta-only").pipe(
+const deltaOnlyOption = Flag.Boolean("delta-only").pipe(
   Flag.withAlias("d"),
   Flag.withDefault(false),
   Flag.withDescription("Output only inferred triples (delta)")

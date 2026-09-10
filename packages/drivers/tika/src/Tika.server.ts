@@ -125,9 +125,9 @@ const operationFailure = (
   });
 
 const configFromEnvironment: Effect.Effect<TikaServerEngineConfig, TikaError> = Effect.gen(function* () {
-  const baseUrl = yield* Config.string(BEEP_TIKA_BASE_URL_ENV).pipe(Config.withDefault(TIKA_SERVER_URL));
-  const maxOutputBytes = yield* Config.int(BEEP_TIKA_MAX_OUTPUT_BYTES_ENV).pipe(Config.option);
-  const timeoutMillis = yield* Config.int(BEEP_TIKA_TIMEOUT_MILLIS_ENV).pipe(Config.option);
+  const baseUrl = yield* Config.String(BEEP_TIKA_BASE_URL_ENV).pipe(Config.withDefault(TIKA_SERVER_URL));
+  const maxOutputBytes = yield* Config.Int(BEEP_TIKA_MAX_OUTPUT_BYTES_ENV).pipe(Config.option);
+  const timeoutMillis = yield* Config.Int(BEEP_TIKA_TIMEOUT_MILLIS_ENV).pipe(Config.option);
 
   return yield* decodeTikaServerEngineConfig({
     baseUrl,

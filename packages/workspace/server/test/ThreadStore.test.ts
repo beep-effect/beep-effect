@@ -15,20 +15,17 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeWorkspaceIdentityThreadId = S.decodeEffect(WorkspaceIdentity.ThreadId);
 
-const SetThreadTitleIfEmptyInputArbitrary = S.toArbitrary(SetThreadTitleIfEmptyInput)(fc);
 const { InMemoryState, MessageEntityInput, ThreadEntityInput, TurnEntityInput } = ThreadStoreRepoTestSchemas;
 const encodeInMemoryStateSync = S.encodeSync(InMemoryState);
 const encodeMessageEntityInputSync = S.encodeSync(MessageEntityInput);
 const encodeThreadEntityInputSync = S.encodeSync(ThreadEntityInput);
 const encodeTurnEntityInputSync = S.encodeSync(TurnEntityInput);
-const InMemoryStateArbitrary = S.toArbitrary(InMemoryState)(fc);
-const MessageEntityInputArbitrary = S.toArbitrary(MessageEntityInput)(fc);
-const ThreadEntityInputArbitrary = S.toArbitrary(ThreadEntityInput)(fc);
-const TurnEntityInputArbitrary = S.toArbitrary(TurnEntityInput)(fc);
+
 const docOf = (value: string) => Document.make({ children: [P.make({ children: [Text.make({ value })] })] });
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer));
 const makeTestThreadStore = makeInMemoryThreadStore().pipe(provideScopedLayer(CuidTestLayer));
@@ -283,14 +280,15 @@ describe("ThreadStore in-memory", () => {
     })
   );
 
-  it("generates valid set-title inputs from the production schema", () => {
-    fc.assert(
-      fc.property(SetThreadTitleIfEmptyInputArbitrary, (input) => {
-        expect(input.emptyTitle.length).toBeGreaterThan(0);
-        expect(input.title.length).toBeGreaterThan(0);
-      })
-    );
-  });
+  it.prop(
+    "generates valid set-title inputs from the production schema",
+    [SetThreadTitleIfEmptyInput],
+    ([input]) => {
+      expect(input.emptyTitle.length).toBeGreaterThan(0);
+      expect(input.title.length).toBeGreaterThan(0);
+    },
+    { arbitrary: {} }
+  );
 
   it("keeps crispened construction schema encoded shapes stable", () => {
     expect(
@@ -344,22 +342,42 @@ describe("ThreadStore in-memory", () => {
   });
 
   it("round-trips crispened construction schemas from derived arbitraries", () => {
-    fc.assert(
-      fc.property(ThreadEntityInputArbitrary, (value) => schemaRoundTrips(ThreadEntityInput, value)),
-      fcRuns(25)
-    );
-    fc.assert(
-      fc.property(TurnEntityInputArbitrary, (value) => schemaRoundTrips(TurnEntityInput, value)),
-      fcRuns(25)
-    );
-    fc.assert(
-      fc.property(MessageEntityInputArbitrary, (value) => schemaRoundTrips(MessageEntityInput, value)),
-      fcRuns(25)
-    );
-    fc.assert(
-      fc.property(InMemoryStateArbitrary, (value) => schemaRoundTrips(InMemoryState, value)),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(ThreadEntityInput),
+          (value) => schemaRoundTrips(ThreadEntityInput, value),
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(TurnEntityInput),
+          (value) => schemaRoundTrips(TurnEntityInput, value),
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(MessageEntityInput),
+          (value) => schemaRoundTrips(MessageEntityInput, value),
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(InMemoryState),
+          (value) => schemaRoundTrips(InMemoryState, value),
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(

@@ -15,10 +15,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { Pattern, PatternElement } from "@beep/nlp/Core/Pattern";
-import type { FastCheck } from "effect/testing";
 
 const $I = $WinkId.create("Wink/WinkPattern");
-const makeWinkStringArrayArbitrary = (fc: typeof FastCheck) => fc.array(fc.string(), { maxLength: 64 });
 
 /**
  * Canonical schema for arrays returned by Wink string-valued accessors.
@@ -40,7 +38,6 @@ const makeWinkStringArrayArbitrary = (fc: typeof FastCheck) => fc.array(fc.strin
 export const WinkStringArray = S.Array(S.String).pipe(
   $I.annoteSchema("WinkStringArray", {
     description: "Array of strings returned by Wink NLP accessors.",
-    toArbitrary: () => makeWinkStringArrayArbitrary,
   }),
   SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
 );
@@ -54,11 +51,10 @@ export const WinkStringArray = S.Array(S.String).pipe(
 export type WinkStringArray = typeof WinkStringArray.Type;
 
 const renderPatternElement = Match.type<PatternElement>().pipe(
-  Match.tagsExhaustive({
-    EntityPatternElement: ({ value }) => A.join(value, "|"),
-    LiteralPatternElement: ({ value }) => A.join(value, "|"),
-    POSPatternElement: ({ value }) => A.join(value, "|"),
-  })
+  Match.tag("EntityPatternElement", ({ value }) => A.join(value, "|")),
+  Match.tag("LiteralPatternElement", ({ value }) => A.join(value, "|")),
+  Match.tag("POSPatternElement", ({ value }) => A.join(value, "|")),
+  Match.exhaustive
 );
 
 const patternElementToBracketString = (pattern: Pattern): ReadonlyArray<string> =>

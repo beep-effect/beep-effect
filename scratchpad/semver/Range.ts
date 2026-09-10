@@ -181,7 +181,7 @@ export class Range extends Schema.Class<Range>($I`Range`)(
   static readonly FromString: Schema.Codec<Range, string> = Schema.String.pipe(
     Schema.decodeTo(
       Range,
-      SchemaTransformation.transformOrFail({
+      SchemaTransformation.transformEffect({
         decode: (input: string) => {
           const result = parseRange(input);
           return result.ok

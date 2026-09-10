@@ -3,9 +3,10 @@ import { isMutableHashSet, MutableHashSet, MutableHashSetFromSelf } from "@beep/
 import { withKeyDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as MutableHashSet_ from "effect/MutableHashSet";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 describe("MutableHashSetFromSelf", () => {
   it("preserves schema metadata and validates existing mutable hash sets", () => {
@@ -44,19 +45,26 @@ describe("MutableHashSetFromSelf", () => {
 
   it("round-trips arbitrary sets derived from the source schema under the derived equivalence", () => {
     const schema = MutableHashSetFromSelf(S.String);
-    const arbitrary = S.toArbitrary(schema)(fc);
+    const arbitrary = Arbitrary.schema(schema);
     const equivalence = S.toEquivalence(schema);
     const decode = S.decodeSync(schema);
     const encode = S.encodeSync(schema);
 
-    fc.assert(
-      fc.property(arbitrary, (set) => {
-        const encoded = encode(set);
-        const decoded = decode(encoded);
-        expect(equivalence(decoded, set)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([set]) => {
+            const encoded = encode(set);
+            const decoded = decode(encoded);
+            expect(equivalence(decoded, set)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 

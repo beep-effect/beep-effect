@@ -42,11 +42,7 @@ export const BackgroundJobId = S.String.check(
     description: "A job- prefix followed by exactly twelve lowercase hexadecimal characters.",
     message: "Background job ID must use job- followed by exactly twelve lowercase hexadecimal characters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(backgroundJobIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("BackgroundJobId"),
     $I.annoteSchema("BackgroundJobId", {
       description: "Compact content-derived identifier for a persisted background job.",
@@ -74,11 +70,7 @@ export const BackgroundJobId = S.String.check(
  */
 export type BackgroundJobId = typeof BackgroundJobId.Type;
 
-const SimilarityReason = LiteralKit(["alias_added", "embedding_updated", "manual"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("alias_added", "embedding_updated", "manual"),
-  })
-  .annotate(
+const SimilarityReason = LiteralKit(["alias_added", "embedding_updated", "manual"]).annotate(
     $I.annote("SimilarityReason", {
       description: "Supported reasons for recomputing entity-similarity scores.",
     })
@@ -136,7 +128,6 @@ const BackgroundJobDefinition = S.TaggedUnion({
 export const EmbeddingJob = BackgroundJobDefinition.cases.EmbeddingJob.pipe(
   $I.annoteSchema("EmbeddingJob", {
     description: "Persisted background job that re-embeds a canonical entity.",
-    toArbitrary: () => S.toArbitrary(BackgroundJobDefinition.cases.EmbeddingJob),
   })
 );
 
@@ -156,7 +147,6 @@ export const EmbeddingJob = BackgroundJobDefinition.cases.EmbeddingJob.pipe(
 export const PromptCacheJob = BackgroundJobDefinition.cases.PromptCacheJob.pipe(
   $I.annoteSchema("PromptCacheJob", {
     description: "Persisted background job that updates one prompt-cache example.",
-    toArbitrary: () => S.toArbitrary(BackgroundJobDefinition.cases.PromptCacheJob),
   })
 );
 
@@ -176,7 +166,6 @@ export const PromptCacheJob = BackgroundJobDefinition.cases.PromptCacheJob.pipe(
 export const SimilarityRecomputeJob = BackgroundJobDefinition.cases.SimilarityRecomputeJob.pipe(
   $I.annoteSchema("SimilarityRecomputeJob", {
     description: "Persisted background job that recomputes similarity for one entity.",
-    toArbitrary: () => S.toArbitrary(BackgroundJobDefinition.cases.SimilarityRecomputeJob),
   })
 );
 
@@ -196,7 +185,6 @@ export const SimilarityRecomputeJob = BackgroundJobDefinition.cases.SimilarityRe
 export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.pipe(
   $I.annoteSchema("BlockingTokenJob", {
     description: "Persisted background job that rebuilds blocking tokens for one entity.",
-    toArbitrary: () => S.toArbitrary(BackgroundJobDefinition.cases.BlockingTokenJob),
   })
 );
 
@@ -217,7 +205,6 @@ export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.p
 export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
   $I.annoteSchema("WebhookJob", {
     description: "Persisted background job that delivers a JSON payload to an HTTPS webhook.",
-    toArbitrary: () => S.toArbitrary(BackgroundJobDefinition.cases.WebhookJob),
   })
 );
 
@@ -237,7 +224,6 @@ export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
 export const BackgroundJob = BackgroundJobDefinition.pipe(
   $I.annoteSchema("BackgroundJob", {
     description: "Tagged persisted background-job union for embedding, caching, similarity, blocking, and webhooks.",
-    toArbitrary: () => S.toArbitrary(BackgroundJobDefinition),
   })
 );
 
@@ -291,9 +277,7 @@ const JobMetadataDefinition = S.Struct({
  * @category models
  * @since 0.0.0
  */
-export const JobMetadata = JobMetadataDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(JobMetadataDefinition),
-}).pipe(
+export const JobMetadata = JobMetadataDefinition.pipe(
   $I.annoteSchema("JobMetadata", {
     description: "Retry metadata with a schema-owned zero-attempt default and Option-normalized failure details.",
   })

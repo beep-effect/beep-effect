@@ -649,23 +649,22 @@ export declare namespace StructuralJSDoc {
  */
 export const matchStructuralJSDoc = (value: StructuralJSDoc.Type) =>
   Match.value(value).pipe(
-    Match.discriminatorsExhaustive("_tag")({
-      param: (_jsdoc: JSDocParam) => {},
-      returns: (_jsdoc: JSDocReturns) => {},
-      throws: (_jsdoc: JSDocThrows) => {},
-      template: (_jsdoc: JSDocTemplate) => {},
-      typeParam: (_jsdoc: JSDocTypeParam) => {},
-      type: (_jsdoc: JSDocType) => {},
-      typedef: (_jsdoc: JSDocTypeDef) => {},
-      callback: (_jsdoc: JSDocCallback) => {},
-      augments: (_jsdoc: JSDocAugments) => {},
-      implements: (_jsdoc: JSDocImplements) => {},
-      class: (_jsdoc: JSDocClass) => {},
-      enum: (_jsdoc: JSDocEnum) => {},
-      async: (_jsdoc: JSDocAsync) => {},
-      generator: (_jsdoc: JSDocGenerator) => {},
-      yields: (_jsdoc: JSDocYields) => {},
-    })
+    Match.discriminator("_tag")("param", (_jsdoc: JSDocParam) => {}),
+    Match.discriminator("_tag")("returns", (_jsdoc: JSDocReturns) => {}),
+    Match.discriminator("_tag")("throws", (_jsdoc: JSDocThrows) => {}),
+    Match.discriminator("_tag")("template", (_jsdoc: JSDocTemplate) => {}),
+    Match.discriminator("_tag")("typeParam", (_jsdoc: JSDocTypeParam) => {}),
+    Match.discriminator("_tag")("type", (_jsdoc: JSDocType) => {}),
+    Match.discriminator("_tag")("typedef", (_jsdoc: JSDocTypeDef) => {}),
+    Match.discriminator("_tag")("callback", (_jsdoc: JSDocCallback) => {}),
+    Match.discriminator("_tag")("augments", (_jsdoc: JSDocAugments) => {}),
+    Match.discriminator("_tag")("implements", (_jsdoc: JSDocImplements) => {}),
+    Match.discriminator("_tag")("class", (_jsdoc: JSDocClass) => {}),
+    Match.discriminator("_tag")("enum", (_jsdoc: JSDocEnum) => {}),
+    Match.discriminator("_tag")("async", (_jsdoc: JSDocAsync) => {}),
+    Match.discriminator("_tag")("generator", (_jsdoc: JSDocGenerator) => {}),
+    Match.discriminator("_tag")("yields", (_jsdoc: JSDocYields) => {}),
+    Match.exhaustive
   );
 
 // Access modifiers — all fully in AST modifier flags

@@ -44,7 +44,7 @@ import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeSkillCompletionReceipt = S.decodeEffect(SkillCompletionReceipt);
 const decodeCompletionInvariantReasonResult = S.decodeResult(CompletionInvariantReason);
@@ -375,13 +375,20 @@ describe("@beep/skill-contract SkillCompletion", () => {
   );
 
   it("round-trips schema-derived arbitrary completion invariant reasons", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(CompletionInvariantReason)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(encodeUnknownCompletionInvariantReasonResult(candidate));
-        const decoded = Result.getOrThrow(decodeCompletionInvariantReasonResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(CompletionInvariantReason)]),
+          ([candidate]) => {
+            const encoded = Result.getOrThrow(encodeUnknownCompletionInvariantReasonResult(candidate));
+            const decoded = Result.getOrThrow(decodeCompletionInvariantReasonResult(encoded));
 
-        expect(S.toEquivalence(CompletionInvariantReason)(decoded, candidate)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(CompletionInvariantReason)(decoded, candidate)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

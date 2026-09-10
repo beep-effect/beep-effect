@@ -47,16 +47,12 @@ const BytesLength = S.makeFilter<globalThis.Uint8Array<ArrayBufferLike>>(
  * @category validation
  * @since 0.0.0
  */
-export const Bytes = S.Uint8Array.annotate({
-  toArbitrary: () => (fc) => fc.uint8Array(),
-})
-  .check(BytesLength)
-  .pipe(
-    S.brand("Bytes"),
-    $I.annoteSchema("Bytes", {
-      description: "A protobuf bytes value represented as a branded Uint8Array.",
-    })
-  );
+export const Bytes = S.Uint8Array.check(BytesLength).pipe(
+  S.brand("Bytes"),
+  $I.annoteSchema("Bytes", {
+    description: "A protobuf bytes value represented as a branded Uint8Array.",
+  })
+);
 
 /**
  * Type-level value inferred from {@link Bytes}.

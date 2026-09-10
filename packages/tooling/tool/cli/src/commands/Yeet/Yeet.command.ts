@@ -39,36 +39,36 @@ import type { YeetRunMode } from "./internal/Planner.ts";
 const $I = $RepoCliId.create("commands/Yeet/Yeet.command");
 const decodeOptionalPositiveInt = S.decodeEffect(S.Option(PositiveInt));
 
-const baseFlag = Flag.string("base").pipe(
+const baseFlag = Flag.String("base").pipe(
   Flag.withDescription("Base ref for affected feedback planning"),
   Flag.withDefault("origin/main")
 );
 
-const branchFlag = Flag.string("branch").pipe(
+const branchFlag = Flag.String("branch").pipe(
   Flag.withDescription("Sweep this branch instead of the checked-out one, so a second pass can finish a merged branch"),
   Flag.withDefault("")
 );
 
-const headFlag = Flag.string("head").pipe(
+const headFlag = Flag.String("head").pipe(
   Flag.withDescription("Head ref for affected feedback planning"),
   Flag.withDefault("HEAD")
 );
 
-const jsonFlag = Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Render plan output as JSON"));
+const jsonFlag = Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Render plan output as JSON"));
 
-const resumeListFlag = Flag.boolean("list").pipe(
+const resumeListFlag = Flag.Boolean("list").pipe(
   Flag.withDefault(false),
   Flag.withDescription("List every locally recorded agent for the pull request")
 );
-const resumePrintFlag = Flag.boolean("print").pipe(
+const resumePrintFlag = Flag.Boolean("print").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the resolved local command without executing it")
 );
-const resumeForceFlag = Flag.boolean("force").pipe(
+const resumeForceFlag = Flag.Boolean("force").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Resume even when the recorded Claude session is already live")
 );
-const resumeAgentFlag = Flag.integer("agent").pipe(
+const resumeAgentFlag = Flag.Int("agent").pipe(
   Flag.optional,
   Flag.withDescription("Select a one-based agent from the newest-first ledger")
 );
@@ -91,54 +91,54 @@ const provideYeetStateRoot = Effect.fn("Yeet.provideStateRoot")(function* <A, E,
   });
 });
 
-const packetDirFlag = Flag.string("packet-dir").pipe(
+const packetDirFlag = Flag.String("packet-dir").pipe(
   Flag.withDescription("Ignored directory for yeet run context, logs, and packets"),
   Flag.withDefault(DEFAULT_YEET_PACKET_DIR)
 );
 
-const planFlag = Flag.boolean("plan").pipe(
+const planFlag = Flag.Boolean("plan").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the yeet plan without running commands")
 );
 
-const messageFlag = Flag.string("message").pipe(
+const messageFlag = Flag.String("message").pipe(
   Flag.withDescription("Conventional commit message required before publish"),
   Flag.withDefault("")
 );
 
-const fastFlag = Flag.boolean("fast").pipe(
+const fastFlag = Flag.Boolean("fast").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Skip local full pre-push proof only when paired with --monitor on a PR branch")
 );
 
-const startPrEarlyFlag = Flag.boolean("start-pr-early").pipe(
+const startPrEarlyFlag = Flag.Boolean("start-pr-early").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Push with hooks skipped before full local proof, then run proof and monitor hosted checks")
 );
 
-const monitorFlag = Flag.boolean("monitor").pipe(
+const monitorFlag = Flag.Boolean("monitor").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Monitor hosted PR checks after publish instead of stopping at push")
 );
 
-const untilMergedFlag = Flag.boolean("until-merged").pipe(
+const untilMergedFlag = Flag.Boolean("until-merged").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
     "Keep monitoring across pushes until the PR merges or closes, rerunning known-flake jobs once per job per head SHA and sweeping the clone on merge"
   )
 );
 
-const summaryFlag = Flag.boolean("summary").pipe(
+const summaryFlag = Flag.Boolean("summary").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print a compact operator summary after monitor or closeout reads")
 );
 
-const remoteFlag = Flag.boolean("remote").pipe(
+const remoteFlag = Flag.Boolean("remote").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Include live GitHub PR and check data in yeet status")
 );
 
-const tierFlag = Flag.choiceWithValue("tier", [
+const tierFlag = Flag.ChoiceWithValue("tier", [
   ["full", "full"],
   ["cheap-gates", "cheap-gates"],
   ["review-fix", "review-fix"],
@@ -147,160 +147,160 @@ const tierFlag = Flag.choiceWithValue("tier", [
   Flag.withDefault("full" as const)
 );
 
-const mergedFlag = Flag.boolean("merged").pipe(
+const mergedFlag = Flag.Boolean("merged").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
     "Prove the merge preview of HEAD with the base ref — the tree hosted CI runs — instead of the branch tree"
   )
 );
 
-const ciParityFlag = Flag.boolean("ci-parity").pipe(
+const ciParityFlag = Flag.Boolean("ci-parity").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Run the exact affected CI battery in an installed merge-preview worktree")
 );
 
-const collectAllFlag = Flag.boolean("collect-all").pipe(
+const collectAllFlag = Flag.Boolean("collect-all").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Run every local preflight wave after failures instead of stopping before later waves")
 );
 
-const noFailFastFlag = Flag.boolean("no-fail-fast").pipe(
+const noFailFastFlag = Flag.Boolean("no-fail-fast").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Keep launching local gates after a precise red to collect the full diagnostic picture")
 );
 
-const amendFlag = Flag.boolean("amend").pipe(
+const amendFlag = Flag.Boolean("amend").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Amend the current local commit during publish")
 );
 
-const stagedOnlyFlag = Flag.boolean("staged-only").pipe(
+const stagedOnlyFlag = Flag.Boolean("staged-only").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
     "Publish exactly the staged index: stash unstaged/untracked residue after commit, prove the clean tree, restore after push"
   )
 );
 
-const allowStaleBaseFlag = Flag.boolean("allow-stale-base").pipe(
+const allowStaleBaseFlag = Flag.Boolean("allow-stale-base").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
     "Proceed with publish even when branch files overlap commits landed on the base since merge-base"
   )
 );
 
-const prFlag = Flag.boolean("pr").pipe(
+const prFlag = Flag.Boolean("pr").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Create a ready (non-draft) pull request after the push succeeds, unless one is already open")
 );
 
-const noEditFlag = Flag.boolean("no-edit").pipe(
+const noEditFlag = Flag.Boolean("no-edit").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Reuse the current commit message with --amend during publish")
 );
 
-const reuseVerifiedFlag = Flag.boolean("reuse-verified").pipe(
+const reuseVerifiedFlag = Flag.Boolean("reuse-verified").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Skip publish proof only when durable Yeet full-proof state exactly matches")
 );
 
-const pushOnlyFlag = Flag.boolean("push-only").pipe(
+const pushOnlyFlag = Flag.Boolean("push-only").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Push an already-verified clean commit without committing or rerunning local proof")
 );
 
-const botsFlag = Flag.string("bots").pipe(
+const botsFlag = Flag.String("bots").pipe(
   Flag.withDescription(
     "Comma-separated PR review bots to classify and gate during closeout (default greptile; pass greptile,coderabbit,chatgpt to restore the legacy lineup)"
   ),
   Flag.withDefault("greptile")
 );
 
-const requireGreptileScoreFlag = Flag.string("require-greptile-score").pipe(
+const requireGreptileScoreFlag = Flag.String("require-greptile-score").pipe(
   Flag.withDescription("Required Greptile score, for example 5/5; empty disables the gate"),
   Flag.withDefault("")
 );
 
-const requireGreptileIssuesFlag = Flag.integer("require-greptile-issues").pipe(
+const requireGreptileIssuesFlag = Flag.Int("require-greptile-issues").pipe(
   Flag.withDescription("Required Greptile open issue count; negative disables the gate"),
   Flag.withDefault(-1)
 );
 
-const requireReviewCommentsFlag = Flag.integer("require-review-comments").pipe(
+const requireReviewCommentsFlag = Flag.Int("require-review-comments").pipe(
   Flag.withDescription("Required unresolved actionable PR review comment count; negative disables the gate"),
   Flag.withDefault(-1)
 );
 
-const replyThreadFlag = Flag.string("reply-thread").pipe(
+const replyThreadFlag = Flag.String("reply-thread").pipe(
   Flag.withDescription("Review thread id to reply to during closeout; requires --reply-body"),
   Flag.withDefault("")
 );
 
-const replyBodyFlag = Flag.string("reply-body").pipe(
+const replyBodyFlag = Flag.String("reply-body").pipe(
   Flag.withDescription("Reply body posted to --reply-thread during closeout"),
   Flag.withDefault("")
 );
 
-const resolveThreadsFlag = Flag.string("resolve-threads").pipe(
+const resolveThreadsFlag = Flag.String("resolve-threads").pipe(
   Flag.withDescription("Comma-separated review thread ids to resolve during closeout"),
   Flag.withDefault("")
 );
 
-const retriggerGreptileFlag = Flag.boolean("retrigger-greptile").pipe(
+const retriggerGreptileFlag = Flag.Boolean("retrigger-greptile").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Post the explicit Greptile retrigger comment after reading current PR state")
 );
 
-const fallowFromFlag = Flag.string("from").pipe(
+const fallowFromFlag = Flag.String("from").pipe(
   Flag.withDescription("Directory containing Fallow advisory envelopes"),
   Flag.withDefault(".beep/fallow")
 );
 
-const fallowEmitFlag = Flag.string("emit").pipe(
+const fallowEmitFlag = Flag.String("emit").pipe(
   Flag.withDescription("QualityIssueIndex output path for Fallow advisory feedback"),
   Flag.withDefault(".beep/yeet/fallow-quality-issues.json")
 );
 
-const fallowAdvisoryFlag = Flag.boolean("advisory").pipe(
+const fallowAdvisoryFlag = Flag.Boolean("advisory").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Keep every Fallow-derived Yeet issue nonblocking")
 );
 
-const fallowRunStartedAtFlag = Flag.string("run-started-at").pipe(
+const fallowRunStartedAtFlag = Flag.String("run-started-at").pipe(
   Flag.withDescription("Reject advisory envelopes generated before this Yeet run timestamp"),
   Flag.withDefault("")
 );
 
-const fallowAssertFlag = Flag.string("assert").pipe(
+const fallowAssertFlag = Flag.String("assert").pipe(
   Flag.withDescription("Comma-separated fixture assertions to enforce"),
   Flag.withDefault("")
 );
 
-const fromStdinFlag = Flag.boolean("from-stdin").pipe(
+const fromStdinFlag = Flag.Boolean("from-stdin").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Read a Yeet plan JSON document from stdin")
 );
 
-const expectStepIdFlag = Flag.string("expect-step-id").pipe(
+const expectStepIdFlag = Flag.String("expect-step-id").pipe(
   Flag.withDescription("Required plan step id"),
   Flag.withDefault("")
 );
 
-const expectStepLabelFlag = Flag.string("expect-step-label").pipe(
+const expectStepLabelFlag = Flag.String("expect-step-label").pipe(
   Flag.withDescription("Required plan step label"),
   Flag.withDefault("")
 );
 
-const expectCommandFlag = Flag.string("expect-command").pipe(
+const expectCommandFlag = Flag.String("expect-command").pipe(
   Flag.withDescription("Required plan step command"),
   Flag.withDefault("")
 );
 
-const expectArgsFlag = Flag.string("expect-args").pipe(
+const expectArgsFlag = Flag.String("expect-args").pipe(
   Flag.withDescription("Required plan step args rendered as a space-separated string"),
   Flag.withDefault("")
 );
 
-const inboxUnackedFlag = Flag.boolean("unacked").pipe(
+const inboxUnackedFlag = Flag.Boolean("unacked").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Show only rows without an ack receipt")
 );
@@ -310,62 +310,62 @@ const inboxSeverityFlagChoices: ReadonlyArray<readonly ["all" | YeetInboxSeverit
   ...A.map(YeetInboxSeverity.Options, (tier) => [tier, tier] as const),
 ];
 
-const inboxSeverityFlag = Flag.choiceWithValue("severity", inboxSeverityFlagChoices).pipe(
+const inboxSeverityFlag = Flag.ChoiceWithValue("severity", inboxSeverityFlagChoices).pipe(
   Flag.withDescription("Show only rows of this severity tier"),
   Flag.withDefault("all" as const)
 );
 
-const inboxFixShaFlag = Flag.string("fix-sha").pipe(
+const inboxFixShaFlag = Flag.String("fix-sha").pipe(
   Flag.withDescription("Acknowledge the row as fixed by this commit"),
   Flag.withDefault("")
 );
 
-const inboxEnvironmentOnlyFlag = Flag.boolean("environment-only").pipe(
+const inboxEnvironmentOnlyFlag = Flag.Boolean("environment-only").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Acknowledge the row as environmental rather than a repository-code defect; requires --reason")
 );
 
-const inboxWontfixFlag = Flag.boolean("wontfix").pipe(
+const inboxWontfixFlag = Flag.Boolean("wontfix").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Acknowledge the row as deliberately not fixed; requires --reason")
 );
 
-const inboxReasonFlag = Flag.string("reason").pipe(
+const inboxReasonFlag = Flag.String("reason").pipe(
   Flag.withDescription("Why an environment-only, wontfix, or waiver resolution applies"),
   Flag.withDefault("")
 );
 
-const inboxThreadUrlFlag = Flag.string("thread-url").pipe(
+const inboxThreadUrlFlag = Flag.String("thread-url").pipe(
   Flag.withDescription("Acknowledge the row as continued in this review thread"),
   Flag.withDefault("")
 );
 
-const inboxWaiveFlag = Flag.boolean("waive").pipe(
+const inboxWaiveFlag = Flag.Boolean("waive").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Temporarily waive the row; requires actor, shard, reason, and expiry")
 );
 
-const inboxActorFlag = Flag.string("actor").pipe(
+const inboxActorFlag = Flag.String("actor").pipe(
   Flag.withDescription("Actor accountable for an expiring waiver"),
   Flag.withDefault("")
 );
 
-const inboxExpiresAtFlag = Flag.string("expires-at").pipe(
+const inboxExpiresAtFlag = Flag.String("expires-at").pipe(
   Flag.withDescription("ISO timestamp after which a waiver stops acknowledging the row"),
   Flag.withDefault("")
 );
 
-const inboxShardFlag = Flag.string("shard").pipe(
+const inboxShardFlag = Flag.String("shard").pipe(
   Flag.withDescription("Named local shard or required context covered by a waiver"),
   Flag.withDefault("")
 );
 
-const inboxRowStdinFlag = Flag.boolean("from-stdin").pipe(
+const inboxRowStdinFlag = Flag.Boolean("from-stdin").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Read one inbox row JSON document from stdin")
 );
 
-const inboxAckIdArgument = Argument.string("id").pipe(
+const inboxAckIdArgument = Argument.String("id").pipe(
   Argument.withDescription("Inbox row id to acknowledge, as printed by yeet inbox list")
 );
 
@@ -409,14 +409,14 @@ const publishFlags = {
   summary: summaryFlag,
 } as const;
 
-const watchFlag = Flag.boolean("watch").pipe(
+const watchFlag = Flag.Boolean("watch").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
     "Stream one NDJSON row per PR state transition until the PR settles, instead of the blocking check watch"
   )
 );
 
-const untilEventFlag = Flag.boolean("until-event").pipe(
+const untilEventFlag = Flag.Boolean("until-event").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
     "With --watch: exit on the first actionable event batch (a failing check immediately, new PR comments after a short settle window) so a supervising session is woken the moment there is something to act on"
@@ -640,7 +640,7 @@ const yeetStatusCommand = Command.make("status", statusFlags, (options) => runYe
 const yeetResumeCommand = Command.make(
   "resume",
   {
-    ref: Argument.string("number|url").pipe(Argument.withDescription("Pull request number or GitHub pull request URL")),
+    ref: Argument.String("number|url").pipe(Argument.withDescription("Pull request number or GitHub pull request URL")),
     list: resumeListFlag,
     print: resumePrintFlag,
     force: resumeForceFlag,
@@ -686,7 +686,7 @@ const yeetFallowFixtureCheckCommand = Command.make(
   {
     assert: fallowAssertFlag,
     emit: fallowEmitFlag,
-    fixturePath: Argument.string("fixture-path").pipe(
+    fixturePath: Argument.String("fixture-path").pipe(
       Argument.withDescription("Fallow report-envelope fixture document")
     ),
   },

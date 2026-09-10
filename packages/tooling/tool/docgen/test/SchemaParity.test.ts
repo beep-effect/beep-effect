@@ -6,8 +6,9 @@ import * as ProofManifest from "@beep/repo-docgen/ProofManifest";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeConfigurationConfigurationSchemaResult = S.decodeResult(Configuration.ConfigurationSchema);
 const encodeUnknownDomainFileResult = S.encodeUnknownResult(Domain.File);
@@ -16,16 +17,21 @@ const encodeUnknownProofManifestDocgenProofManifestFileResult = S.encodeUnknownR
   ProofManifest.DocgenProofManifestFile
 );
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 12): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, runs = 12): void => {
+  const arbitrary = Arbitrary.schema(schema);
   const encode = S.encodeUnknownResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => equivalent(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value)),
-    { numRuns }
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => equivalent(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value),
+        { runs }
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("schema parity", () => {

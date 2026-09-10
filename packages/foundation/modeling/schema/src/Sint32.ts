@@ -65,16 +65,12 @@ const Sint32Checks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-export const Sint32 = S.Finite.annotate({
-  toArbitrary: () => (fc) => fc.integer({ min: sint32Minimum, max: sint32Maximum }),
-})
-  .check(Sint32Checks)
-  .pipe(
-    S.brand("Sint32"),
-    $I.annoteSchema("Sint32", {
-      description: "A protobuf sint32 number in the inclusive signed 32-bit range.",
-    })
-  );
+export const Sint32 = S.Finite.check(Sint32Checks).pipe(
+  S.brand("Sint32"),
+  $I.annoteSchema("Sint32", {
+    description: "A protobuf sint32 number in the inclusive signed 32-bit range.",
+  })
+);
 
 /**
  * Type-level value inferred from {@link Sint32}.

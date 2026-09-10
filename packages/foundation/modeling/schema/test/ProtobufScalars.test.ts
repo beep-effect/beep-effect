@@ -13,7 +13,8 @@ import { Uint64 } from "@beep/schema/Uint64";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as SchemaAST from "effect/SchemaAST";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownBytes = S.decodeUnknownEffect(Bytes);
 const decodeUnknownDouble = S.decodeUnknownEffect(Double);
@@ -101,47 +102,75 @@ describe("protobuf 32-bit integer scalar schemas", () => {
   );
 
   it("derives valid unsigned 32-bit arbitraries from the schemas", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(Uint32)(fc), (value) => {
-        expect(isUint322(value)).toBe(true);
-        expect(globalThis.Number.isInteger(value)).toBe(true);
-        expect(value).toBeGreaterThanOrEqual(uint32Minimum);
-        expect(value).toBeLessThanOrEqual(uint32Maximum);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Uint32)]),
+          ([value]) => {
+            expect(isUint322(value)).toBe(true);
+            expect(globalThis.Number.isInteger(value)).toBe(true);
+            expect(value).toBeGreaterThanOrEqual(uint32Minimum);
+            expect(value).toBeLessThanOrEqual(uint32Maximum);
 
-    fc.assert(
-      fc.property(S.toArbitrary(Fixed32)(fc), (value) => {
-        expect(isFixed322(value)).toBe(true);
-        expect(globalThis.Number.isInteger(value)).toBe(true);
-        expect(value).toBeGreaterThanOrEqual(uint32Minimum);
-        expect(value).toBeLessThanOrEqual(uint32Maximum);
-      }),
-      fcRuns(100)
-    );
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
+
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Fixed32)]),
+          ([value]) => {
+            expect(isFixed322(value)).toBe(true);
+            expect(globalThis.Number.isInteger(value)).toBe(true);
+            expect(value).toBeGreaterThanOrEqual(uint32Minimum);
+            expect(value).toBeLessThanOrEqual(uint32Maximum);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("derives valid signed 32-bit arbitraries from the schemas", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(Sint32)(fc), (value) => {
-        expect(isSint322(value)).toBe(true);
-        expect(globalThis.Number.isInteger(value)).toBe(true);
-        expect(value).toBeGreaterThanOrEqual(sint32Minimum);
-        expect(value).toBeLessThanOrEqual(sint32Maximum);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Sint32)]),
+          ([value]) => {
+            expect(isSint322(value)).toBe(true);
+            expect(globalThis.Number.isInteger(value)).toBe(true);
+            expect(value).toBeGreaterThanOrEqual(sint32Minimum);
+            expect(value).toBeLessThanOrEqual(sint32Maximum);
 
-    fc.assert(
-      fc.property(S.toArbitrary(Sfixed32)(fc), (value) => {
-        expect(isSfixed322(value)).toBe(true);
-        expect(globalThis.Number.isInteger(value)).toBe(true);
-        expect(value).toBeGreaterThanOrEqual(sint32Minimum);
-        expect(value).toBeLessThanOrEqual(sint32Maximum);
-      }),
-      fcRuns(100)
-    );
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
+
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Sfixed32)]),
+          ([value]) => {
+            expect(isSfixed322(value)).toBe(true);
+            expect(globalThis.Number.isInteger(value)).toBe(true);
+            expect(value).toBeGreaterThanOrEqual(sint32Minimum);
+            expect(value).toBeLessThanOrEqual(sint32Maximum);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
@@ -173,21 +202,35 @@ describe("protobuf floating-point scalar schemas", () => {
   );
 
   it("derives protobuf float and double arbitraries from the schemas", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(Float)(fc), (value) => {
-        expect(isFloat2(value)).toBe(true);
-        expect(isProtobufFloatValue(value)).toBe(true);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Float)]),
+          ([value]) => {
+            expect(isFloat2(value)).toBe(true);
+            expect(isProtobufFloatValue(value)).toBe(true);
 
-    fc.assert(
-      fc.property(S.toArbitrary(Double)(fc), (value) => {
-        expect(isDouble2(value)).toBe(true);
-        expect(typeof value).toBe("number");
-      }),
-      fcRuns(100)
-    );
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
+
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Double)]),
+          ([value]) => {
+            expect(isDouble2(value)).toBe(true);
+            expect(typeof value).toBe("number");
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
@@ -287,43 +330,71 @@ describe("protobuf 64-bit integer scalar schemas", () => {
   );
 
   it("derives valid unsigned 64-bit arbitraries from the schemas", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(Uint64)(fc), (value) => {
-        expect(isUint642(value)).toBe(true);
-        expect(value >= uint64Minimum).toBe(true);
-        expect(value <= uint64Maximum).toBe(true);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Uint64)]),
+          ([value]) => {
+            expect(isUint642(value)).toBe(true);
+            expect(value >= uint64Minimum).toBe(true);
+            expect(value <= uint64Maximum).toBe(true);
 
-    fc.assert(
-      fc.property(S.toArbitrary(Fixed64)(fc), (value) => {
-        expect(isFixed642(value)).toBe(true);
-        expect(value >= uint64Minimum).toBe(true);
-        expect(value <= uint64Maximum).toBe(true);
-      }),
-      fcRuns(100)
-    );
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
+
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Fixed64)]),
+          ([value]) => {
+            expect(isFixed642(value)).toBe(true);
+            expect(value >= uint64Minimum).toBe(true);
+            expect(value <= uint64Maximum).toBe(true);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("derives valid signed 64-bit arbitraries from the schemas", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(Sint64)(fc), (value) => {
-        expect(isSint642(value)).toBe(true);
-        expect(value >= sint64Minimum).toBe(true);
-        expect(value <= sint64Maximum).toBe(true);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Sint64)]),
+          ([value]) => {
+            expect(isSint642(value)).toBe(true);
+            expect(value >= sint64Minimum).toBe(true);
+            expect(value <= sint64Maximum).toBe(true);
 
-    fc.assert(
-      fc.property(S.toArbitrary(Sfixed64)(fc), (value) => {
-        expect(isSfixed642(value)).toBe(true);
-        expect(value >= sint64Minimum).toBe(true);
-        expect(value <= sint64Maximum).toBe(true);
-      }),
-      fcRuns(100)
-    );
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
+
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Sfixed64)]),
+          ([value]) => {
+            expect(isSfixed642(value)).toBe(true);
+            expect(value >= sint64Minimum).toBe(true);
+            expect(value <= sint64Maximum).toBe(true);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
@@ -348,12 +419,55 @@ describe("protobuf bytes scalar schema", () => {
   );
 
   it("derives Uint8Array arbitrary values from the schema", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(Bytes)(fc), (value) => {
-        expect(isBytes2(value)).toBe(true);
-        expect(value).toBeInstanceOf(Uint8Array);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Bytes)]),
+          ([value]) => {
+            expect(isBytes2(value)).toBe(true);
+            expect(value).toBeInstanceOf(Uint8Array);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
+});
+
+describe("protobuf generation representations", () => {
+  for (const schema of [Double, Float]) {
+    it.effect(
+      `encodes finite and special values through the ${schema === Double ? "Double" : "Float"} generation link`,
+      () =>
+        Effect.gen(function* () {
+          const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+            schema.ast
+          ).annotations;
+          const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+          if (link === undefined || link.transformation._tag !== "Transformation")
+            throw new Error("Missing generation transformation");
+          const codec = S.make<S.Codec<number, unknown>>(
+            SchemaAST.decodeTo(link.to, SchemaAST.toType(schema.ast), link.transformation)
+          );
+          for (const value of [0, 1.25, -1.25, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+            const encoded = yield* S.encodeEffect(codec)(value);
+            expect(encoded).toBe(Number.isFinite(value) ? value : String(value));
+            expect(yield* S.decodeUnknownEffect(codec)(encoded)).toBe(value);
+          }
+          const result = yield* Arbitrary.checkEffect(
+            Arbitrary.schema(schema),
+            (value) =>
+              Effect.gen(function* () {
+                const encoded = yield* S.encodeEffect(codec)(value);
+                expect(yield* S.decodeUnknownEffect(codec)(encoded)).toBe(value);
+                return true;
+              }),
+            fcRuns(100)
+          );
+          expect(result._tag).toBe("Passed");
+        })
+    );
+  }
 });

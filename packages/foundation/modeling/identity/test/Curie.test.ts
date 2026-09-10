@@ -6,13 +6,15 @@ import {
   expand,
   expandOption,
   expandPredicate,
+  makeCurieCodec,
+  makeCurieFromIri,
 } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { expectTypeOf } from "vitest";
 
 const decodeUnknownCurieFromIriOption = S.decodeUnknownOption(CurieFromIri);
@@ -48,18 +50,22 @@ describe("CURIE codec", () => {
   });
 
   it("property-checks round-trips over the entire registry", () => {
-    fc.assert(
-      fc.property(fc.constant(coreCurieCases), (cases) => {
-        for (const current of cases) {
-          const iri = expandOption(current.curie, CoreVocab);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.Constant(coreCurieCases)]), ([cases]) => {
+          for (const current of cases) {
+            const iri = expandOption(current.curie, CoreVocab);
 
-          expect(O.getOrUndefined(iri), current.curie).toBe(current.iri);
-          if (O.isSome(iri)) {
-            expect(O.getOrUndefined(contractOption(iri.value, CoreVocab)), current.iri).toBe(current.curie);
+            expect(O.getOrUndefined(iri), current.curie).toBe(current.iri);
+            if (O.isSome(iri)) {
+              expect(O.getOrUndefined(contractOption(iri.value, CoreVocab)), current.iri).toBe(current.curie);
+            }
           }
-        }
-      })
-    );
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(
@@ -71,13 +77,17 @@ describe("CURIE codec", () => {
   );
 
   it("round-trips generated CoreVocab IRIs through the schema codec", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(CurieFromIri)(fc), (iri) => {
-        const decoded = O.flatMap(encodeCurieFromIriOption(iri), decodeUnknownCurieFromIriOption);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(CurieFromIri)]), ([iri]) => {
+          const decoded = O.flatMap(encodeCurieFromIriOption(iri), decodeUnknownCurieFromIriOption);
 
-        expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);
-      })
-    );
+          expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(
@@ -110,4 +120,23 @@ describe("CURIE codec", () => {
       inverse: true,
     });
   });
+});
+
+describe("custom vocabulary codecs", () => {
+  it.effect(
+    "round-trips registered terms and rejects unknown values",
+    Effect.fnUntraced(function* () {
+      const codec = makeCurieFromIri(CoreVocab);
+      const iri = "http://www.w3.org/2004/02/skos/core#prefLabel";
+      expect(yield* S.decodeEffect(codec)("skos:prefLabel")).toBe(iri);
+      expect(yield* S.encodeEffect(codec)(iri)).toBe("skos:prefLabel");
+      expect((yield* Effect.flip(S.decodeEffect(codec)("missing:term"))).message).toContain("Unknown CURIE");
+      expect((yield* Effect.flip(S.encodeEffect(codec)("https://unknown.example/term"))).message).toContain(
+        "Unknown IRI"
+      );
+      const helpers = makeCurieCodec(CoreVocab);
+      expect(helpers.decode("skos:prefLabel")).toBe(iri);
+      expect(helpers.encode(iri)).toBe("skos:prefLabel");
+    })
+  );
 });

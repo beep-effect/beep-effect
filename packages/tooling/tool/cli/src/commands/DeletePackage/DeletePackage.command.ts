@@ -622,13 +622,13 @@ const assembleDeletePolicy = Effect.fn("DeletePackage.assembleDeletePolicy")(fun
   resolved: ResolvedDeleteTarget,
   options: DeletePackageHandlerOptions
 ) {
-  const inCi = yield* Config.boolean("CI").pipe(Config.withDefault(false));
+  const inCi = yield* Config.Boolean("CI").pipe(Config.withDefault(false));
   const retiredNameCollision =
     resolved.liveWorkspace && (yield* hasRetiredCollision(repoRoot, resolved.target.packageName));
   const livePromotionRecord =
     resolved.liveWorkspace && (yield* hasLivePromotionRecord(repoRoot, resolved.target.packagePath));
   const dataSurface = A.findFirst(surfacesForTarget(resolved.target), RegistrationSurface.guards["data-resource"]);
-  const databaseUrl = yield* Config.string("DATABASE_URL").pipe(Config.option);
+  const databaseUrl = yield* Config.String("DATABASE_URL").pipe(Config.option);
   const slug = pipe(resolved.target.packageName, Str.replace("@beep/", Str.empty));
   return DeletePackagePolicy.make({
     allowPublished: options.allowPublished,
@@ -801,22 +801,22 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
 export const deletePackageCommand = Command.make(
   "delete-package",
   {
-    target: Argument.string("name-or-path"),
-    dryRun: Flag.boolean("dry-run").pipe(Flag.withDefault(false)),
-    check: Flag.boolean("check").pipe(Flag.withDefault(false)),
-    skipLockfile: Flag.boolean("skip-lockfile").pipe(Flag.withDefault(false)),
-    skipBaselines: Flag.boolean("skip-baselines").pipe(Flag.withDefault(false)),
-    retireChangesets: Flag.boolean("retire-changesets").pipe(Flag.withDefault(false)),
-    identityMajor: Flag.boolean("identity-major").pipe(Flag.withDefault(false)),
-    cascade: Flag.boolean("cascade").pipe(Flag.withDefault(false)),
-    also: Flag.string("also").pipe(Flag.withDefault(Str.empty)),
-    rewritePackets: Flag.boolean("rewrite-packets").pipe(Flag.withDefault(false)),
-    allowStalePackets: Flag.boolean("allow-stale-packets").pipe(Flag.withDefault(false)),
-    allowPublished: Flag.boolean("allow-published").pipe(Flag.withDefault(false)),
-    pruneCatalog: Flag.boolean("prune-catalog").pipe(Flag.withDefault(false)),
-    force: Flag.boolean("force").pipe(Flag.withDefault(false)),
-    dropData: Flag.boolean("drop-data").pipe(Flag.withDefault(false)),
-    allowNonLocalData: Flag.boolean("allow-non-local-data").pipe(Flag.withDefault(false)),
+    target: Argument.String("name-or-path"),
+    dryRun: Flag.Boolean("dry-run").pipe(Flag.withDefault(false)),
+    check: Flag.Boolean("check").pipe(Flag.withDefault(false)),
+    skipLockfile: Flag.Boolean("skip-lockfile").pipe(Flag.withDefault(false)),
+    skipBaselines: Flag.Boolean("skip-baselines").pipe(Flag.withDefault(false)),
+    retireChangesets: Flag.Boolean("retire-changesets").pipe(Flag.withDefault(false)),
+    identityMajor: Flag.Boolean("identity-major").pipe(Flag.withDefault(false)),
+    cascade: Flag.Boolean("cascade").pipe(Flag.withDefault(false)),
+    also: Flag.String("also").pipe(Flag.withDefault(Str.empty)),
+    rewritePackets: Flag.Boolean("rewrite-packets").pipe(Flag.withDefault(false)),
+    allowStalePackets: Flag.Boolean("allow-stale-packets").pipe(Flag.withDefault(false)),
+    allowPublished: Flag.Boolean("allow-published").pipe(Flag.withDefault(false)),
+    pruneCatalog: Flag.Boolean("prune-catalog").pipe(Flag.withDefault(false)),
+    force: Flag.Boolean("force").pipe(Flag.withDefault(false)),
+    dropData: Flag.Boolean("drop-data").pipe(Flag.withDefault(false)),
+    allowNonLocalData: Flag.Boolean("allow-non-local-data").pipe(Flag.withDefault(false)),
   },
   handler
 ).pipe(Command.withDescription("Delete a leaf workspace package or doctor a deleted package for registration residue"));

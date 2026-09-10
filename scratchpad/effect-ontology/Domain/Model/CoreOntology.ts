@@ -15,7 +15,6 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { FastCheck } from "effect/testing";
 import { ContentHash } from "../Identity.ts";
 import { Attributes } from "./shared.ts";
 
@@ -67,20 +66,7 @@ export const CoreClass = LiteralKit([
   "https://effect-ontology.dev/core#Organization",
   "https://effect-ontology.dev/core#Place",
   "https://effect-ontology.dev/core#Artifact",
-])
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.constantFrom(
-        "https://effect-ontology.dev/core#TrackedEntity",
-        "https://effect-ontology.dev/core#TrackedEvent",
-        "https://effect-ontology.dev/core#Mention",
-        "https://effect-ontology.dev/core#Person",
-        "https://effect-ontology.dev/core#Organization",
-        "https://effect-ontology.dev/core#Place",
-        "https://effect-ontology.dev/core#Artifact"
-      ),
-  })
-  .annotate(
+]).annotate(
     $I.annote("CoreClass", {
       description: "Narrow closed set of class IRIs declared by the experimental core ontology.",
     })
@@ -137,30 +123,7 @@ export const CoreProperty = LiteralKit([
   "https://effect-ontology.dev/core#startTime",
   "https://effect-ontology.dev/core#endTime",
   "https://effect-ontology.dev/core#groundingConfidence",
-])
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.constantFrom(
-        "https://effect-ontology.dev/core#hasEvidentialMention",
-        "https://effect-ontology.dev/core#mentions",
-        "https://effect-ontology.dev/core#hasParticipant",
-        "https://effect-ontology.dev/core#isParticipantIn",
-        "https://effect-ontology.dev/core#canonicalEntity",
-        "https://effect-ontology.dev/core#isCanonicalFormOf",
-        "https://effect-ontology.dev/core#mergedFrom",
-        "https://effect-ontology.dev/core#wasMergedInto",
-        "https://effect-ontology.dev/core#resolutionConfidence",
-        "https://effect-ontology.dev/core#hasLocation",
-        "https://effect-ontology.dev/core#isLocationOf",
-        "https://effect-ontology.dev/core#name",
-        "https://effect-ontology.dev/core#description",
-        "https://effect-ontology.dev/core#occurrenceTime",
-        "https://effect-ontology.dev/core#startTime",
-        "https://effect-ontology.dev/core#endTime",
-        "https://effect-ontology.dev/core#groundingConfidence"
-      ),
-  })
-  .annotate(
+]).annotate(
     $I.annote("CoreProperty", {
       description: "Narrow closed set of property IRIs declared by the experimental core ontology.",
     })
@@ -224,11 +187,7 @@ export const MentionId = S.String.check(
     description: "A mention prefix followed by 12 lowercase hexadecimal characters.",
     message: 'Mention identifier must have the form "mention-{12 lowercase hex characters}".',
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(mentionIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("MentionId"),
     $I.annoteSchema("MentionId", {
       description: "Deterministic short identifier for one document character span.",
@@ -378,11 +337,7 @@ export const CanonicalEntityId = S.String.check(
     description: "A short digest identifier or stable snake-case entity identifier.",
     message: 'Canonical entity identifier must be snake_case or have the form "entity-{12 lowercase hex characters}".',
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(canonicalEntityIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("CanonicalEntityId"),
     $I.annoteSchema("CanonicalEntityId", {
       description: "Stable canonical identifier for a persistent resolved entity.",
@@ -495,11 +450,7 @@ export const EventId = S.String.check(
     description: "An event prefix followed by 12 lowercase hexadecimal characters.",
     message: 'Event identifier must have the form "event-{12 lowercase hex characters}".',
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(eventIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("EventId"),
     $I.annoteSchema("EventId", {
       description: "Stable deterministic short identifier for a tracked event.",
@@ -565,16 +516,6 @@ class EventIntervalFieldsModel extends S.Class<EventIntervalFieldsModel>($I`Even
   })
 ) {}
 
-const makeEventIntervalArbitrary = (fc: typeof FastCheck) =>
-  S.toArbitrary(S.DateTimeUtcFromString)(fc).chain((start) =>
-    fc.boolean().map((hasEnd) =>
-      EventIntervalFieldsModel.make({
-        start,
-        end: hasEnd ? O.some(start) : O.none(),
-      })
-    )
-  );
-
 const isNotAfter = Order.isLessThanOrEqualTo(DateTime.Order);
 
 const EventIntervalDefinition = EventIntervalFieldsModel.check(
@@ -595,11 +536,6 @@ const EventIntervalDefinition = EventIntervalFieldsModel.check(
       title: "Event Interval Order",
       description: "An event interval whose optional end does not precede its start.",
       message: "Event interval end must be greater than or equal to its start.",
-      arbitrary: {
-        candidate: {
-          make: makeEventIntervalArbitrary,
-        },
-      },
     }
   )
 );
@@ -624,9 +560,7 @@ const EventIntervalDefinition = EventIntervalFieldsModel.check(
  * @category value-objects
  * @since 0.0.0
  */
-export const EventInterval = EventIntervalDefinition.annotate({
-  toArbitrary: () => makeEventIntervalArbitrary,
-}).pipe(
+export const EventInterval = EventIntervalDefinition.pipe(
   $I.annoteSchema("EventInterval", {
     description: "Ordered event start and optional end instants.",
   })
@@ -663,7 +597,6 @@ const EventTimeDefinition = S.TaggedUnion({
 export const EventTime = EventTimeDefinition.pipe(
   $I.annoteSchema("EventTime", {
     description: "Unspecified, instant, or interval temporal grounding for a tracked event.",
-    toArbitrary: () => S.toArbitrary(EventTimeDefinition),
   })
 );
 

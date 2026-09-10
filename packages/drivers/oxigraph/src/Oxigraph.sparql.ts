@@ -129,43 +129,44 @@ const toOxigraphQuad = (quad: Rdf.Quad): Oxigraph.Quad => ({
 
 const fromOxigraphSubject = (subject: Oxigraph.Subject): Rdf.Subject =>
   Match.value(subject).pipe(
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => Rdf.makeNamedNode(value.value),
-      BlankNode: (value) => Rdf.makeBlankNode(value.value),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => Rdf.makeNamedNode(value.value)),
+    Match.discriminator("termType")("BlankNode", (value) => Rdf.makeBlankNode(value.value)),
+    Match.exhaustive
   );
 
 const fromOxigraphObject = (object: Oxigraph.Object): Rdf.ObjectTerm =>
   Match.value(object).pipe(
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => Rdf.makeNamedNode(value.value),
-      BlankNode: (value) => Rdf.makeBlankNode(value.value),
-      Literal: (value) =>
-        Rdf.makeLiteral(value.value, value.datatype.value, {
-          ...O.getSomesStruct({
-            language: pipe(value.language, O.fromUndefinedOr, O.filter(Str.isNonEmpty)),
-          }),
+    Match.discriminator("termType")("NamedNode", (value) => Rdf.makeNamedNode(value.value)),
+    Match.discriminator("termType")("BlankNode", (value) => Rdf.makeBlankNode(value.value)),
+    Match.discriminator("termType")("Literal", (value) =>
+      Rdf.makeLiteral(value.value, value.datatype.value, {
+        ...O.getSomesStruct({
+          language: pipe(value.language, O.fromUndefinedOr, O.filter(Str.isNonEmpty)),
         }),
-    })
+      })
+    ),
+    Match.exhaustive
   );
 
 const fromOxigraphGraph = (graph: Oxigraph.Graph): Rdf.GraphTerm =>
   Match.value(graph).pipe(
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => Rdf.makeNamedNode(value.value),
-      BlankNode: (value) => Rdf.makeBlankNode(value.value),
-      DefaultGraph: () => Rdf.DefaultGraph.make({ termType: "DefaultGraph", value: "" }),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => Rdf.makeNamedNode(value.value)),
+    Match.discriminator("termType")("BlankNode", (value) => Rdf.makeBlankNode(value.value)),
+    Match.discriminator("termType")("DefaultGraph", () =>
+      Rdf.DefaultGraph.make({ termType: "DefaultGraph", value: "" })
+    ),
+    Match.exhaustive
   );
 
 const fromOxigraphTerm = (term: Oxigraph.Term): Rdf.Term =>
   Match.value(term).pipe(
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => Rdf.makeNamedNode(value.value),
-      BlankNode: (value) => Rdf.makeBlankNode(value.value),
-      Literal: fromOxigraphObject,
-      DefaultGraph: () => Rdf.DefaultGraph.make({ termType: "DefaultGraph", value: "" }),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => Rdf.makeNamedNode(value.value)),
+    Match.discriminator("termType")("BlankNode", (value) => Rdf.makeBlankNode(value.value)),
+    Match.discriminator("termType")("Literal", fromOxigraphObject),
+    Match.discriminator("termType")("DefaultGraph", () =>
+      Rdf.DefaultGraph.make({ termType: "DefaultGraph", value: "" })
+    ),
+    Match.exhaustive
   );
 
 const fromOxigraphQuad = (quad: Oxigraph.Quad): Rdf.Quad =>

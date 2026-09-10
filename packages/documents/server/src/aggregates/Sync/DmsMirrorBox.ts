@@ -158,7 +158,7 @@ export class BoxMirrorConfig extends Context.Service<BoxMirrorConfig, BoxMirrorC
 }
 
 const readBoxMirrorConfig = Effect.fn($I`readBoxMirrorConfig`)(function* () {
-  const mirrorRootName = yield* Config.nonEmptyString(BOX_MIRROR_ROOT_NAME_ENV).pipe(
+  const mirrorRootName = yield* Config.NonEmptyString(BOX_MIRROR_ROOT_NAME_ENV).pipe(
     Config.withDefault(BOX_MIRROR_DEFAULT_ROOT_NAME)
   );
 

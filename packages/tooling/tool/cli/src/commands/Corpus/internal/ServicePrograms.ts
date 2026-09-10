@@ -345,47 +345,46 @@ const parentDirOf = (relativePath: string): string => {
 
 const restorationToRow = (record: CorpusRestorationRecord): Array<string | number | null> =>
   Match.value(record).pipe(
-    Match.discriminatorsExhaustive("matchStatus")({
-      matched: (matched) => [
-        matched.matchStatus,
-        matched.sourceLabel,
-        matched.pairKey,
-        matched.metadataRelativePath,
-        matched.contentRelativePath,
-        matched.original.originalPath,
-        matched.original.originalName,
-        matched.original.originalSizeBytes,
-        matched.original.deletedAtIso,
-        matched.original.deletedAtFiletime,
-        matched.original.version,
-      ],
-      "unmatched-content": (content) => [
-        content.matchStatus,
-        content.sourceLabel,
-        content.pairKey,
-        null,
-        content.contentRelativePath,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      ],
-      "unmatched-metadata": (metadata) => [
-        metadata.matchStatus,
-        metadata.sourceLabel,
-        metadata.pairKey,
-        metadata.metadataRelativePath,
-        null,
-        metadata.original.originalPath,
-        metadata.original.originalName,
-        metadata.original.originalSizeBytes,
-        metadata.original.deletedAtIso,
-        metadata.original.deletedAtFiletime,
-        metadata.original.version,
-      ],
-    })
+    Match.discriminator("matchStatus")("matched", (matched) => [
+      matched.matchStatus,
+      matched.sourceLabel,
+      matched.pairKey,
+      matched.metadataRelativePath,
+      matched.contentRelativePath,
+      matched.original.originalPath,
+      matched.original.originalName,
+      matched.original.originalSizeBytes,
+      matched.original.deletedAtIso,
+      matched.original.deletedAtFiletime,
+      matched.original.version,
+    ]),
+    Match.discriminator("matchStatus")("unmatched-content", (content) => [
+      content.matchStatus,
+      content.sourceLabel,
+      content.pairKey,
+      null,
+      content.contentRelativePath,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]),
+    Match.discriminator("matchStatus")("unmatched-metadata", (metadata) => [
+      metadata.matchStatus,
+      metadata.sourceLabel,
+      metadata.pairKey,
+      metadata.metadataRelativePath,
+      null,
+      metadata.original.originalPath,
+      metadata.original.originalName,
+      metadata.original.originalSizeBytes,
+      metadata.original.deletedAtIso,
+      metadata.original.deletedAtFiletime,
+      metadata.original.version,
+    ]),
+    Match.exhaustive
   );
 
 const decodeProvenanceLines = Effect.fn("CorpusCommandService.decodeProvenanceLines")(function* (
@@ -1164,8 +1163,9 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
           ),
         onSuccess: (result) =>
           Match.value(result).pipe(
-            Match.discriminatorsExhaustive("resultKind")({
-              "archive-exported": Effect.fn("CorpusCommandService.archiveExportedOutcome")(function* (
+            Match.discriminator("resultKind")(
+              "archive-exported",
+              Effect.fn("CorpusCommandService.archiveExportedOutcome")(function* (
                 archive: ArchiveExportProcessFileResult
               ) {
                 const childLines = yield* Effect.forEach(archive.archiveExport.children, (child) =>
@@ -1197,11 +1197,11 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
                     operationKind: "export-archive",
                   }),
                 } satisfies CorpusExtractOutcome;
-              }),
-              // fallow-ignore-next-line complexity -- pre-existing extraction outcome transaction re-entered the diff only through the mixed-ledger decoder change; this function's control flow is unchanged
-              extracted: Effect.fn("CorpusCommandService.extractedOutcome")(function* (
-                extracted: ExtractedProcessFileResult
-              ) {
+              })
+            ),
+            Match.discriminator("resultKind")(
+              "extracted",
+              Effect.fn("CorpusCommandService.extractedOutcome")(function* (extracted: ExtractedProcessFileResult) {
                 const textRelative =
                   extracted.extraction.text === undefined ? O.none() : O.some(`text/${ids.operationId}.txt`);
                 if (O.isSome(textRelative) && extracted.extraction.text !== undefined) {
@@ -1242,42 +1242,44 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
                     operationKind: "extract",
                   }),
                 } satisfies CorpusExtractOutcome;
-              }),
-              skipped: (skipped) =>
-                Effect.succeed({
-                  childArtifactCount: 0,
-                  failure: O.some(
-                    SkippedFileProcessingFailureRecord.make({
-                      artifactId: ids.artifactId,
-                      engine: skipped.engine,
-                      format: skipped.format,
-                      message: A.join(skipped.warnings, " ") || `Skipped: ${skipped.skipReason}.`,
-                      operationId: ids.operationId,
-                      reason: skipped.skipReason,
-                      relativePath: ids.relativePath,
-                      status: "skipped",
-                    })
-                  ),
-                  sourceRecord: SkippedSourceProcessingRecord.make({
+              })
+            ),
+            Match.discriminator("resultKind")("skipped", (skipped) =>
+              Effect.succeed({
+                childArtifactCount: 0,
+                failure: O.some(
+                  SkippedFileProcessingFailureRecord.make({
                     artifactId: ids.artifactId,
-                    digest: ids.digest,
                     engine: skipped.engine,
                     format: skipped.format,
+                    message: A.join(skipped.warnings, " ") || `Skipped: ${skipped.skipReason}.`,
                     operationId: ids.operationId,
+                    reason: skipped.skipReason,
                     relativePath: ids.relativePath,
-                    sizeBytes: record.sizeBytes,
-                    skipReason: skipped.skipReason,
                     status: "skipped",
-                  }),
-                  strategy: DeferredSelectedStrategy.make({
-                    disposition: "deferred",
-                    engine: engineFamilyFromName(skipped.engine),
-                    format: skipped.format,
-                    operationKind: "process",
-                    skipReason: skipped.skipReason,
-                  }),
-                } satisfies CorpusExtractOutcome),
-            })
+                  })
+                ),
+                sourceRecord: SkippedSourceProcessingRecord.make({
+                  artifactId: ids.artifactId,
+                  digest: ids.digest,
+                  engine: skipped.engine,
+                  format: skipped.format,
+                  operationId: ids.operationId,
+                  relativePath: ids.relativePath,
+                  sizeBytes: record.sizeBytes,
+                  skipReason: skipped.skipReason,
+                  status: "skipped",
+                }),
+                strategy: DeferredSelectedStrategy.make({
+                  disposition: "deferred",
+                  engine: engineFamilyFromName(skipped.engine),
+                  format: skipped.format,
+                  operationKind: "process",
+                  skipReason: skipped.skipReason,
+                }),
+              } satisfies CorpusExtractOutcome)
+            ),
+            Match.exhaustive
           ),
       })
     );

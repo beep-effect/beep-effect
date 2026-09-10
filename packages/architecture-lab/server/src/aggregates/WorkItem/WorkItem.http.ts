@@ -127,12 +127,11 @@ export class WorkItemHttpResponse extends S.Class<WorkItemHttpResponse>($I`WorkI
  */
 export const toWorkItemHttpError = Match.type<WorkItemUseCases.WorkItemActionError>().pipe(
   Match.withReturnType<WorkItemHttpResponse>(),
-  Match.tagsExhaustive({
-    WorkItemActionFailed: () => WorkItemHttpResponse.make({ status: 503, body: serviceUnavailableBody }),
-    WorkItemActionRejected: (error) => WorkItemHttpResponse.make({ status: 422, body: error }),
-    WorkItemConflict: (error) => WorkItemHttpResponse.make({ status: 409, body: error }),
-    WorkItemNotFound: (error) => WorkItemHttpResponse.make({ status: 404, body: error }),
-  })
+  Match.tag("WorkItemActionFailed", () => WorkItemHttpResponse.make({ status: 503, body: serviceUnavailableBody })),
+  Match.tag("WorkItemActionRejected", (error) => WorkItemHttpResponse.make({ status: 422, body: error })),
+  Match.tag("WorkItemConflict", (error) => WorkItemHttpResponse.make({ status: 409, body: error })),
+  Match.tag("WorkItemNotFound", (error) => WorkItemHttpResponse.make({ status: 404, body: error })),
+  Match.exhaustive
 );
 
 const toSuccess =

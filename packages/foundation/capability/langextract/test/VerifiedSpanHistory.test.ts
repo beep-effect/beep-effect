@@ -23,7 +23,7 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeVerifiedSpanAttemptFailureResult = S.decodeResult(VerifiedSpanAttemptFailure);
 const decodeUnknownVerifiedSpanHistoryResult = S.decodeUnknownResult(VerifiedSpanHistory);
@@ -135,15 +135,22 @@ const persistAndReload = Effect.fnUntraced(function* (history: VerifiedSpanHisto
 
 describe("verified-span persistence and re-anchor history", () => {
   it("round-trips schema-derived persisted failures", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(VerifiedSpanAttemptFailure)(fc), (failure) => {
-        const encoded = Result.getOrThrow(encodeUnknownVerifiedSpanAttemptFailureResult(failure));
-        const decoded = Result.getOrThrow(decodeVerifiedSpanAttemptFailureResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(VerifiedSpanAttemptFailure)]),
+          ([failure]) => {
+            const encoded = Result.getOrThrow(encodeUnknownVerifiedSpanAttemptFailureResult(failure));
+            const decoded = Result.getOrThrow(decodeVerifiedSpanAttemptFailureResult(encoded));
 
-        expect(S.toEquivalence(VerifiedSpanAttemptFailure)(decoded, failure)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(VerifiedSpanAttemptFailure)(decoded, failure)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it.effect(
     "persists exact raw anchors, raw candidates, source identity, and pinned versions across restart",

@@ -89,16 +89,16 @@ export const cogneeLogin = Effect.fn("CogneeClient.cogneeLogin")(function* (): E
   HttpClient.HttpClient
 > {
   const client = yield* HttpClient.HttpClient;
-  const apiUrl = yield* Config.string("COGNEE_API_URL").pipe(
+  const apiUrl = yield* Config.String("COGNEE_API_URL").pipe(
     ResearchCommandError.mapError(
       "COGNEE_API_URL is not set; point it at the running Cognee API (e.g. http://100.84.76.60:8010)."
     )
   );
   const email = yield* Effect.orDie(
-    Config.string("COGNEE_API_EMAIL").pipe(Config.withDefault("default_user@example.com"))
+    Config.String("COGNEE_API_EMAIL").pipe(Config.withDefault("default_user@example.com"))
   );
   const password = yield* Effect.orDie(
-    Config.redacted("COGNEE_API_PASSWORD").pipe(Config.withDefault(Redacted.make("default_password")))
+    Config.Redacted("COGNEE_API_PASSWORD").pipe(Config.withDefault(Redacted.make("default_password")))
   );
   const request = HttpClientRequest.post(`${apiUrl}/api/v1/auth/login`).pipe(
     HttpClientRequest.bodyUrlParams({

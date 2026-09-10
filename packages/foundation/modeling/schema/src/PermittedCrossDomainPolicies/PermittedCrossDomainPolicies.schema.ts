@@ -161,7 +161,7 @@ type PermittedCrossDomainPoliciesResponseHeaderEncoded = typeof PermittedCrossDo
 export const PermittedCrossDomainPoliciesHeader = S.Union([PermittedCrossDomainPoliciesOption, S.Undefined]).pipe(
   S.decodeTo(
     PermittedCrossDomainPoliciesResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input): Effect.Effect<PermittedCrossDomainPoliciesResponseHeaderEncoded> =>
         Effect.succeed({
           name: headerName,

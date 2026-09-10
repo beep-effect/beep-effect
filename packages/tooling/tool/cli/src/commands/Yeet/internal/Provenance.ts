@@ -1156,17 +1156,17 @@ class ProvenanceSessionEvidence extends S.Class<ProvenanceSessionEvidence>($I`Pr
   })
 ) {}
 const optionalConfigString = (name: string): Effect.Effect<O.Option<string>> =>
-  Config.option(Config.string(name)).pipe(Effect.orElseSucceed(O.none));
+  Config.option(Config.String(name)).pipe(Effect.orElseSucceed(O.none));
 const readDetectionEnvironment = Effect.fn("PrProvenance.readDetectionEnvironment")(function* () {
   const [home, claudeId, claudePid, configuredEntrypoint, hostSessionId, childSession, companionTranscript, codexId] =
     yield* Effect.all(
       [
         optionalConfigString("HOME"),
         optionalConfigString("CLAUDE_CODE_SESSION_ID"),
-        Config.option(Config.number("CLAUDE_PID")).pipe(Effect.orElseSucceed(O.none)),
+        Config.option(Config.Number("CLAUDE_PID")).pipe(Effect.orElseSucceed(O.none)),
         optionalConfigString("CLAUDE_CODE_ENTRYPOINT"),
         optionalConfigString("CLAUDE_CODE_HOST_SESSION_ID"),
-        Config.boolean("CLAUDE_CODE_CHILD_SESSION").pipe(Config.withDefault(false)),
+        Config.Boolean("CLAUDE_CODE_CHILD_SESSION").pipe(Config.withDefault(false)),
         optionalConfigString("CODEX_COMPANION_TRANSCRIPT_PATH"),
         optionalConfigString("CODEX_THREAD_ID"),
       ],
@@ -1294,7 +1294,7 @@ const detectGitPaths = Effect.fn("PrProvenance.detectGitPaths")(function* (cwd: 
  * @category detection
  * @since 0.0.0
  */
-export const detectCodexEnvironment = Config.option(Config.string("CODEX_THREAD_ID")).pipe(
+export const detectCodexEnvironment = Config.option(Config.String("CODEX_THREAD_ID")).pipe(
   Effect.map((threadId) => [O.isSome(threadId), threadId] as const)
 );
 const classifyHarness = (environment: ProvenanceDetectionEnvironment): PrProvenanceHarness =>

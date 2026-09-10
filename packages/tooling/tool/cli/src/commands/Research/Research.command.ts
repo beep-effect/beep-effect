@@ -41,17 +41,17 @@ const decodeUnknownResearchDailyOptions = S.decodeUnknownEffect(ResearchDailyOpt
 const decodeUnknownResearchHistorySiftOptions = S.decodeUnknownEffect(ResearchHistorySiftOptions);
 
 /** @since 0.0.0 */
-const vaultFlag = Flag.directory("vault", { mustExist: true }).pipe(
+const vaultFlag = Flag.Directory("vault", { mustExist: true }).pipe(
   Flag.withDescription("Knowledge vault root; defaults to BEEP_KNOWLEDGE_VAULT or ~/YeeBois/knowledge"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const tagsFlag = Flag.string("tags").pipe(
+const tagsFlag = Flag.String("tags").pipe(
   Flag.withDescription("Comma-separated tags recorded on the captured card"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const captureUrlArgument = Argument.string("url").pipe(
+const captureUrlArgument = Argument.String("url").pipe(
   Argument.withDescription("URL to scrape into a markdown knowledge card")
 );
 
@@ -84,12 +84,12 @@ const researchCaptureCommand = Command.make(
 );
 
 /** @since 0.0.0 */
-const browserFlag = Flag.string("browser").pipe(
+const browserFlag = Flag.String("browser").pipe(
   Flag.withDefault("all"),
   Flag.withDescription("Browser history to scan: brave, chrome, or all")
 );
 /** @since 0.0.0 */
-const sinceDaysFlag = Flag.integer("since-days").pipe(
+const sinceDaysFlag = Flag.Int("since-days").pipe(
   Flag.withDefault(7),
   Flag.withDescription("Only consider history visits within this many days")
 );
@@ -114,22 +114,22 @@ const researchHistorySiftCommand = Command.make(
 );
 
 /** @since 0.0.0 */
-const researchRootFlag = Flag.directory("research-root", { mustExist: true }).pipe(
+const researchRootFlag = Flag.Directory("research-root", { mustExist: true }).pipe(
   Flag.withDescription("Research clone library root; defaults to ~/YeeBois/research"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const starsFlag = Flag.boolean("stars").pipe(
+const starsFlag = Flag.Boolean("stars").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Also card GitHub starred repositories via the gh CLI")
 );
 /** @since 0.0.0 */
-const forceFlag = Flag.boolean("force").pipe(
+const forceFlag = Flag.Boolean("force").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Rewrite cards that already exist")
 );
 /** @since 0.0.0 */
-const onlyFlag = Flag.string("only").pipe(
+const onlyFlag = Flag.String("only").pipe(
   Flag.withDescription("Only card clones whose directory name contains this substring"),
   Flag.optional
 );
@@ -145,7 +145,7 @@ const researchRepoCardCommand = Command.make(
   },
   Effect.fn(function* ({ force, only, researchRoot, stars, vault }) {
     const vaultRoot = yield* resolveVaultRoot(vault);
-    const home = yield* Effect.orDie(Config.string("HOME"));
+    const home = yield* Effect.orDie(Config.String("HOME"));
     yield* writeResearchRepoCards(
       ResearchRepoCardOptions.make({
         force,
@@ -162,17 +162,17 @@ const researchRepoCardCommand = Command.make(
 );
 
 /** @since 0.0.0 */
-const databaseFlag = Flag.string("database").pipe(
+const databaseFlag = Flag.String("database").pipe(
   Flag.withDefault("Awesome X Posts"),
   Flag.withDescription("Notion database title holding saved links (fallback when --page is not given)")
 );
 /** @since 0.0.0 */
-const pageFlag = Flag.string("page").pipe(
+const pageFlag = Flag.String("page").pipe(
   Flag.withDescription("Notion page id whose bulleted links hold saved posts (e.g. the Awesome X Posts page)"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const linksFileFlag = Flag.file("links-file", { mustExist: true }).pipe(
+const linksFileFlag = Flag.File("links-file", { mustExist: true }).pipe(
   Flag.withDescription("Local JSON backfill of { title, url, tags?, createdIso? } saved links"),
   Flag.optional
 );
@@ -202,7 +202,7 @@ const researchNotionPullCommand = Command.make(
 );
 
 /** @since 0.0.0 */
-const dryRunFlag = Flag.boolean("dry-run").pipe(
+const dryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Report what would be pushed to Cognee without pushing")
 );
@@ -223,7 +223,7 @@ const researchCognifyCommand = Command.make(
 );
 
 /** @since 0.0.0 */
-const dateFlag = Flag.string("date").pipe(
+const dateFlag = Flag.String("date").pipe(
   Flag.withDescription("Digest date (YYYY-MM-DD); defaults to today"),
   Flag.optional
 );
@@ -246,7 +246,7 @@ const researchDigestCommand = Command.make(
 );
 
 /** @since 0.0.0 */
-const commitFlag = Flag.boolean("commit").pipe(
+const commitFlag = Flag.Boolean("commit").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Commit the vault after the daily run when it changed")
 );
@@ -277,7 +277,7 @@ const researchDailyCommand = Command.make(
 );
 
 /** @since 0.0.0 */
-const uninstallFlag = Flag.boolean("uninstall").pipe(
+const uninstallFlag = Flag.Boolean("uninstall").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Disable and remove the research systemd user timers")
 );

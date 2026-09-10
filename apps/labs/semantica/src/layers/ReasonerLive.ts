@@ -46,16 +46,18 @@ const uniqueStatements = (statements: ReadonlyArray<RdfStatement>): ReadonlyArra
 
 const matchTerm = (term: RuleTerm, value: string, bindings: Bindings): O.Option<Bindings> =>
   Match.value(term).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      Constant: (constant) => (Str.Equivalence(constant.value, value) ? O.some(bindings) : O.none()),
-      Variable: (variable) =>
-        HashMap.get(bindings, variable.name).pipe(
-          O.match({
-            onNone: () => O.some(HashMap.set(bindings, variable.name, value)),
-            onSome: (bound) => (Str.Equivalence(bound, value) ? O.some(bindings) : O.none()),
-          })
-        ),
-    })
+    Match.discriminator("kind")("Constant", (constant) =>
+      Str.Equivalence(constant.value, value) ? O.some(bindings) : O.none()
+    ),
+    Match.discriminator("kind")("Variable", (variable) =>
+      HashMap.get(bindings, variable.name).pipe(
+        O.match({
+          onNone: () => O.some(HashMap.set(bindings, variable.name, value)),
+          onSome: (bound) => (Str.Equivalence(bound, value) ? O.some(bindings) : O.none()),
+        })
+      )
+    ),
+    Match.exhaustive
   );
 
 const matchStatement = (
@@ -87,10 +89,9 @@ const ruleMatches = (rule: RdfsRule, statements: ReadonlyArray<RdfStatement>): R
 
 const instantiateTerm = (term: RuleTerm, bindings: Bindings): O.Option<string> =>
   Match.value(term).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      Constant: (constant) => O.some(constant.value),
-      Variable: (variable) => HashMap.get(bindings, variable.name),
-    })
+    Match.discriminator("kind")("Constant", (constant) => O.some(constant.value)),
+    Match.discriminator("kind")("Variable", (variable) => HashMap.get(bindings, variable.name)),
+    Match.exhaustive
   );
 
 const instantiate = (rule: RdfsRule, bindings: Bindings): O.Option<RdfTriple> =>

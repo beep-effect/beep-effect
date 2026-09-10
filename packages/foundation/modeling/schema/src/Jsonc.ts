@@ -94,7 +94,7 @@ const decodeJsoncUnknown = Effect.fn("Jsonc.decodeJsoncUnknown")(function* (cont
 export const JsoncTextToUnknown = S.String.pipe(
   S.decodeTo(
     S.Unknown,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: decodeJsoncUnknown,
       encode: encodeUnsupported,
     })

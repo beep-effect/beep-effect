@@ -33,7 +33,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
-import { FastCheck as fc } from "effect/testing";
 import type { ExtractFileOperation } from "@beep/file-processing/Operation";
 
 const decodeWorkspaceSetWorkspaceVaultInput = S.decodeEffect(Workspace.SetWorkspaceVaultInput);
@@ -157,16 +156,17 @@ const expectSourceTextResolveSpan = (
 };
 
 describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
-  it("round-trips schema-derived source identities through their wire shape", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(SourceTextIdentity)(fc), (identity) => {
-        const encoded = Result.getOrThrow(encodeUnknownSourceTextIdentityResult(identity));
-        const decoded = Result.getOrThrow(decodeSourceTextIdentityResult(encoded));
+  it.prop(
+    "round-trips schema-derived source identities through their wire shape",
+    [SourceTextIdentity],
+    ([identity]) => {
+      const encoded = Result.getOrThrow(encodeUnknownSourceTextIdentityResult(identity));
+      const decoded = Result.getOrThrow(decodeSourceTextIdentityResult(encoded));
 
-        expect(S.toEquivalence(SourceTextIdentity)(decoded, identity)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+      expect(S.toEquivalence(SourceTextIdentity)(decoded, identity)).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect(
     "resolves complete UTF-8 text after verifying source, extractor, and text digests",

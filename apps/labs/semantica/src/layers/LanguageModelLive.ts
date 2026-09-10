@@ -128,7 +128,7 @@ const lookupCachedResponse = Effect.fn("LanguageModelCache.lookupCachedResponse"
  *
  * This typed boundary preserves `ProviderUnavailable { offline: true }` for a
  * replay miss. The Effect AI adapter translates it to `AiError` only because
- * the installed v4 `LanguageModel.Service` fixes its provider error channel.
+ * the installed v4 `LanguageModel.LanguageModel` fixes its provider error channel.
  *
  * **Example** (Create a replay lookup)
  *
@@ -158,7 +158,7 @@ export const replayGenerateText = Effect.fn("LanguageModelCache.replayGenerateTe
 });
 
 const cachedGenerateText = Effect.fn("LanguageModelCache.cachedGenerateText")(function* (
-  inner: LanguageModel.Service,
+  inner: LanguageModel.LanguageModel,
   prompt: string
 ): Effect.fn.Return<
   string,
@@ -552,7 +552,7 @@ export const XAiGoldLanguageModelLive = (options: {
 export const AnthropicExtractionLanguageModelLive = (artifactHash: ModelIdentity["artifactHash"]) =>
   Layer.unwrap(
     Effect.gen(function* () {
-      const model = yield* Config.nonEmptyString(ANTHROPIC_MODEL_ENV).pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL));
+      const model = yield* Config.NonEmptyString(ANTHROPIC_MODEL_ENV).pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL));
       const identity = Layer.effect(ActiveModelIdentity, AnthropicExtractionModelIdentity({ artifactHash, model }));
       const languageModel = CachingLanguageModelLive(AnthropicLanguageModelLive).pipe(Layer.provide(identity));
       return Layer.merge(languageModel, identity);

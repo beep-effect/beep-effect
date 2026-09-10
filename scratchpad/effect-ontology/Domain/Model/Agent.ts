@@ -42,11 +42,7 @@ export const AgentId = S.String.check(
     message:
       "Agent identifier must start with a lowercase letter and contain only lowercase letters, digits, dashes, or underscores.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(agentIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("AgentId"),
     $I.annoteSchema("AgentId", {
       description: "Stable lowercase identifier assigned to an agent implementation.",
@@ -83,12 +79,14 @@ export type AgentId = typeof AgentId.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AgentType = LiteralKit(["extractor", "validator", "resolver", "corrector", "reasoner", "ingestor"])
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.constantFrom("extractor", "validator", "resolver", "corrector", "reasoner", "ingestor"),
-  })
-  .annotate(
+export const AgentType = LiteralKit([
+  "extractor",
+  "validator",
+  "resolver",
+  "corrector",
+  "reasoner",
+  "ingestor",
+]).annotate(
     $I.annote("AgentType", {
       description: "Closed set of functional roles supported by the ontology pipeline.",
     })
@@ -355,7 +353,6 @@ export interface Agent<Input, Output, Error, R = never> {
 export const PipelineMode = LiteralKit(["sequential", "loop", "parallel", "graph"]).pipe(
   $I.annoteSchema("PipelineMode", {
     description: "Closed set of orchestration strategies supported by an agent pipeline.",
-    toArbitrary: () => (fc) => fc.constantFrom("sequential", "loop", "parallel", "graph"),
   })
 );
 
@@ -409,16 +406,6 @@ export const PipelineStatus = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("PipelineStatus", {
     description: "Canonical discriminated lifecycle state for an agent pipeline.",
-    toArbitrary: () => (fc) =>
-      S.toArbitrary(
-        S.TaggedUnion({
-          Pending: {},
-          Running: {},
-          Paused: {},
-          Completed: { completedAt: S.DateTimeUtcFromString },
-          Failed: { failedAt: S.DateTimeUtcFromString, error: S.NonEmptyString },
-        })
-      )(fc),
   })
 );
 
@@ -887,11 +874,7 @@ export class AgentFailed extends S.TaggedClass<AgentFailed>($I`AgentFailed`)(
  * @category schemas
  * @since 0.0.0
  */
-export const CheckpointReason = LiteralKit(["scheduled", "agent-completed", "manual", "error-recovery"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("scheduled", "agent-completed", "manual", "error-recovery"),
-  })
-  .annotate(
+export const CheckpointReason = LiteralKit(["scheduled", "agent-completed", "manual", "error-recovery"]).annotate(
     $I.annote("CheckpointReason", {
       description: "Closed set of reasons for persisting pipeline state.",
     })
@@ -985,7 +968,6 @@ const AgentEventDefinition = S.Union([
 export const AgentEvent = AgentEventDefinition.pipe(
   $I.annoteSchema("AgentEvent", {
     description: "Agent-execution and pipeline-checkpoint lifecycle event union.",
-    toArbitrary: () => S.toArbitrary(AgentEventDefinition),
   })
 );
 

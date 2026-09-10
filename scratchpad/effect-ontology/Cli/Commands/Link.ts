@@ -27,38 +27,38 @@ import type { PlatformError } from "effect/PlatformError";
 // Command Options
 // =============================================================================
 
-const entityIriOption = Flag.string("entity-id").pipe(Flag.withAlias("e"), Flag.withDescription("Entity IRI to link"));
+const entityIriOption = Flag.String("entity-id").pipe(Flag.withAlias("e"), Flag.withDescription("Entity IRI to link"));
 
-const wikidataIdOption = Flag.string("wikidata-id").pipe(
+const wikidataIdOption = Flag.String("wikidata-id").pipe(
   Flag.withAlias("w"),
   Flag.withDescription("Wikidata Q-ID (e.g., Q42)")
 );
 
-const graphOption = Flag.file("graph").pipe(
+const graphOption = Flag.File("graph").pipe(
   Flag.withAlias("g"),
   Flag.optional,
   Flag.withDescription("RDF graph file to add the link to (Turtle)")
 );
 
-const outputOption = Flag.file("output").pipe(
+const outputOption = Flag.File("output").pipe(
   Flag.withAlias("o"),
   Flag.optional,
   Flag.withDescription("Output file for updated graph (default: stdout)")
 );
 
-const searchOption = Flag.string("search").pipe(
+const searchOption = Flag.String("search").pipe(
   Flag.withAlias("s"),
   Flag.optional,
   Flag.withDescription("Search Wikidata for candidates instead of linking")
 );
 
-const limitOption = Flag.integer("limit").pipe(
+const limitOption = Flag.Int("limit").pipe(
   Flag.withAlias("l"),
   Flag.withDefault(10),
   Flag.withDescription("Maximum search results (default: 10)")
 );
 
-const dryRunOption = Flag.boolean("dry-run").pipe(
+const dryRunOption = Flag.Boolean("dry-run").pipe(
   Flag.withAlias("n"),
   Flag.withDefault(false),
   Flag.withDescription("Validate without creating the link")

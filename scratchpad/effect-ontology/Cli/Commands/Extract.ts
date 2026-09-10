@@ -38,39 +38,38 @@ const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(Unknown, { sp
 import type { ExtractionError } from "../../Domain/Error/Extraction.ts";
 import type { RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
 
-
 const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Extract");
 
 // =============================================================================
 // Command Options
 // =============================================================================
 
-const ontologyArg = Args.file("ontology").pipe(Args.withDescription("Path to ontology file (Turtle)"));
+const ontologyArg = Args.File("ontology").pipe(Args.withDescription("Path to ontology file (Turtle)"));
 
-const textOption = Flag.string("text").pipe(
+const textOption = Flag.String("text").pipe(
   Flag.withAlias("t"),
   Flag.optional,
   Flag.withDescription("Inline text to extract from")
 );
 
-const fileOption = Flag.file("file").pipe(
+const fileOption = Flag.File("file").pipe(
   Flag.withAlias("f"),
   Flag.optional,
   Flag.withDescription("Path to file containing text to extract")
 );
 
-const noExternalVocabsOption = Flag.boolean("no-external-vocabs").pipe(
+const noExternalVocabsOption = Flag.Boolean("no-external-vocabs").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Skip loading external vocabularies (PROV-O, ORG, FOAF)")
 );
 
-const formatOption = Flag.choice("format", ["json", "turtle"]).pipe(
+const formatOption = Flag.Literals("format", ["json", "turtle"]).pipe(
   Flag.withAlias("o"),
   Flag.withDefault("json"),
   Flag.withDescription("Output format: json (default) or turtle")
 );
 
-const concurrencyOption = Flag.integer("concurrency").pipe(
+const concurrencyOption = Flag.Int("concurrency").pipe(
   Flag.withAlias("c"),
   Flag.withDefault(4),
   Flag.withDescription("Extraction concurrency (default: 4)")
@@ -168,7 +167,11 @@ const extractHandler = Effect.fn("extractHandler")(function* (
   noExternalVocabs: boolean,
   format: "json" | "turtle",
   concurrency: number
-): Effect.fn.Return<void, ExtractInputError | ExtractionError | PlatformError | RdfError | S.SchemaError | SerializationFailed, ExtractionWorkflow | FileSystem.FileSystem | Path.Path | RdfBuilder | Scope> {
+): Effect.fn.Return<
+  void,
+  ExtractInputError | ExtractionError | PlatformError | RdfError | S.SchemaError | SerializationFailed,
+  ExtractionWorkflow | FileSystem.FileSystem | Path.Path | RdfBuilder | Scope
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const inputText = yield* readInputText(text, file);

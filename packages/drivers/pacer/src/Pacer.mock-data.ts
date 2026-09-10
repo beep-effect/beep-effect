@@ -2,7 +2,7 @@
  * Schema-derived data for the PACER mock + tests.
  *
  * Instead of hardcoded JSON fixtures, PCL response rows are GENERATED from the
- * effect/Schema definitions via `Schema.toArbitrary` + `FastCheck.sample`, then
+ * effect/Schema definitions via `Arbitrary.schema` + `Arbitrary.sampleEffect`, then
  * re-encoded through the envelope schema. This keeps the mock honest: any drift
  * in a schema's checks/refinements (e.g. the `CaseNumberFull` arbitrary) shows
  * up in the generated data. Auth bodies are built with the schema's validated
@@ -13,11 +13,12 @@
  * @since 0.0.0
  */
 
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { CsoAuthResponse, CsoLogoutResponse } from "./CsoAuth.models.ts";
 import {
   CaseReportList,
@@ -28,40 +29,43 @@ import {
   Receipt,
   ReportInfoType,
 } from "./Pcl.models.ts";
-import type { Effect } from "effect";
 
 const encodeUnknownCaseReportList = S.encodeUnknownEffect(CaseReportList);
 const encodeUnknownPartyReportList = S.encodeUnknownEffect(PartyReportList);
 const encodeUnknownReportInfoType = S.encodeUnknownEffect(ReportInfoType);
 
-const caseArbitrary = S.toArbitrary(CaseResult)(FastCheck);
-const partyArbitrary = S.toArbitrary(PartyResult)(FastCheck);
-const receiptArbitrary = S.toArbitrary(Receipt)(FastCheck);
+const caseArbitrary = Arbitrary.schema(CaseResult);
+const partyArbitrary = Arbitrary.schema(PartyResult);
+const receiptArbitrary = Arbitrary.schema(Receipt);
 
 /**
- * Generate schema-valid case rows with deterministic FastCheck seeding.
+ * Generate schema-valid case rows with deterministic native arbitrary seeding.
  *
  * @internal
  * @category testing
  * @since 0.0.0
  */
-const sampleCaseResults = (count: number, seed: number): ReadonlyArray<CaseResult> =>
-  FastCheck.sample(caseArbitrary, { numRuns: count, seed });
+const sampleCaseResults = Effect.fnUntraced(function* (count: number, seed: number) {
+  return yield* Arbitrary.sampleEffect(caseArbitrary, { count, seed }).pipe(Effect.orDie);
+});
 
 /**
- * Generate schema-valid party rows with deterministic FastCheck seeding.
+ * Generate schema-valid party rows with deterministic native arbitrary seeding.
  *
  * @internal
  * @category testing
  * @since 0.0.0
  */
-const samplePartyResults = (count: number, seed: number): ReadonlyArray<PartyResult> =>
-  FastCheck.sample(partyArbitrary, { numRuns: count, seed });
+const samplePartyResults = Effect.fnUntraced(function* (count: number, seed: number) {
+  return yield* Arbitrary.sampleEffect(partyArbitrary, { count, seed }).pipe(Effect.orDie);
+});
 
-const sampleReceipt = (seed: number): Receipt => {
-  const [value] = FastCheck.sample(receiptArbitrary, { numRuns: 1, seed });
-  return value ?? Receipt.make({});
-};
+const sampleReceipt = Effect.fnUntraced(function* (seed: number) {
+  return yield* Arbitrary.sampleEffect(receiptArbitrary, { count: 1, seed }).pipe(
+    Effect.map(([value]) => value ?? Receipt.make({})),
+    Effect.orDie
+  );
+});
 
 /**
  * Build one encoded `/cases/find` page envelope with controlled pagination.
@@ -70,14 +74,16 @@ const sampleReceipt = (seed: number): Receipt => {
  * @category testing
  * @since 0.0.0
  */
-const caseReportListBody = (
+const caseReportListBody = Effect.fnUntraced(function* (
   pageNumber: number,
   totalPages: number,
-  content: ReadonlyArray<CaseResult>
-): Effect.Effect<unknown, S.SchemaError> =>
-  encodeUnknownCaseReportList(
+  contentEffect: Effect.Effect<ReadonlyArray<CaseResult>>
+): Effect.fn.Return<unknown, S.SchemaError> {
+  const content = yield* contentEffect;
+  const receipt = yield* sampleReceipt(pageNumber + 1);
+  return yield* encodeUnknownCaseReportList(
     CaseReportList.make({
-      receipt: O.some(sampleReceipt(pageNumber + 1)),
+      receipt: O.some(receipt),
       pageInfo: O.some(
         PageInfo.make({
           number: O.some(pageNumber),
@@ -92,6 +98,7 @@ const caseReportListBody = (
       content: O.some(content),
     })
   );
+});
 
 /**
  * Build one encoded `/parties/find` page envelope.
@@ -100,10 +107,14 @@ const caseReportListBody = (
  * @category testing
  * @since 0.0.0
  */
-const partyReportListBody = (content: ReadonlyArray<PartyResult>): Effect.Effect<unknown, S.SchemaError> =>
-  encodeUnknownPartyReportList(
+const partyReportListBody = Effect.fnUntraced(function* (
+  contentEffect: Effect.Effect<ReadonlyArray<PartyResult>>
+): Effect.fn.Return<unknown, S.SchemaError> {
+  const content = yield* contentEffect;
+  const receipt = yield* sampleReceipt(2001);
+  return yield* encodeUnknownPartyReportList(
     PartyReportList.make({
-      receipt: O.some(sampleReceipt(2001)),
+      receipt: O.some(receipt),
       pageInfo: O.some(
         PageInfo.make({
           number: O.some(0),
@@ -119,6 +130,7 @@ const partyReportListBody = (content: ReadonlyArray<PartyResult>): Effect.Effect
       masterCase: O.none(),
     })
   );
+});
 
 /**
  * Total number of case rows the default mock serves across all pages.

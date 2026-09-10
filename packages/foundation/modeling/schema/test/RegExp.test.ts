@@ -1,8 +1,9 @@
 import { fcRuns } from "@beep/fc-runs";
 import { RegExpFromStr, RegExpStr } from "@beep/schema/RegExp";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownRegExpFromStrSync = S.decodeUnknownSync(RegExpFromStr);
 const decodeUnknownRegExpStrSync = S.decodeUnknownSync(RegExpStr);
@@ -23,15 +24,20 @@ describe("RegExpStr", () => {
   });
 
   it("every schema-derived value is a valid pattern that decodes to itself", () => {
-    const arbitrary = S.toArbitrary(RegExpStr)(fc);
+    const arbitrary = Arbitrary.schema(RegExpStr);
 
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        new globalThis.RegExp(value);
-        return isRegExpStr(value) && decodeUnknownRegExpStrSync(value) === value;
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            new globalThis.RegExp(value);
+            return isRegExpStr(value) && decodeUnknownRegExpStrSync(value) === value;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
@@ -60,11 +66,16 @@ describe("RegExpFromStr", () => {
   });
 
   it("every schema-derived value is a RegExp instance", () => {
-    const arbitrary = S.toArbitrary(RegExpFromStr)(fc);
+    const arbitrary = Arbitrary.schema(RegExpFromStr);
 
-    fc.assert(
-      fc.property(arbitrary, (value) => value instanceof RegExp && isRegExp(value)),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => value instanceof RegExp && isRegExp(value),
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

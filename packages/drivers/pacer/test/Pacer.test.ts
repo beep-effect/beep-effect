@@ -1,8 +1,9 @@
+import { fcRuns } from "@beep/test-utils";
 /**
  * Tests for the PACER driver.
  *
  * Two styles, per the repo's preference for generated-over-hardcoded data:
- *  - **Generated samples** (`Schema.toArbitrary` + `FastCheck.sample`) for
+ *  - **Generated samples** (`Arbitrary.schema` + `Arbitrary.sampleEffect`) for
  *    schema round-trips, plus property checks for status/loginResult mappings.
  *  - **End-to-end** (`it.effect`) for the auth → search → logout spine and the
  *    typed error paths over the deterministic mock transport.
@@ -20,7 +21,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const cfg = Pacer.mockPacerConfig();
 const initialToken = Str.repeat(128)("Q");
@@ -45,9 +46,9 @@ const roundTrips = Effect.fn("PacerTest.roundTrips")(function* <Schema extends S
 });
 
 const sampleSchemaValues = <Schema extends S.Constraint>(schema: Schema, seed: number): ReadonlyArray<Schema["Type"]> =>
-  fc.sample(S.toArbitrary(schema)(fc), { numRuns: 24, seed });
+  Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(schema), { count: 24, seed }));
 
-const CourtCaseSearchDtoArbitrary = S.toArbitrary(Pacer.CourtCaseSearchDto)(fc);
+const CourtCaseSearchDtoArbitrary = Arbitrary.schema(Pacer.CourtCaseSearchDto);
 
 const assertRoundTrips = Effect.fn("PacerTest.assertRoundTrips")(function* <Schema extends S.Constraint>(
   schema: Schema,
@@ -90,21 +91,25 @@ describe("PACER schema round-trips (generated)", () => {
     })
   );
 
-  it("CourtCaseSearchDto arbitrary values round-trip", () =>
-    fc.assert(
-      fc.property(CourtCaseSearchDtoArbitrary, (value) => Effect.runSync(roundTrips(Pacer.CourtCaseSearchDto, value)))
-    ));
+  it.prop(
+    "CourtCaseSearchDto arbitrary values round-trip",
+    [CourtCaseSearchDtoArbitrary],
+    ([value]) => Effect.runSync(roundTrips(Pacer.CourtCaseSearchDto, value)),
+    { arbitrary: fcRuns() }
+  );
 });
 
 describe("PACER error mappings (property-based)", () => {
-  const statusArbitrary = fc.constantFrom(
-    HttpStatus.BadRequest.literal,
-    HttpStatus.Unauthorized.literal,
-    HttpStatus.NotFound.literal,
-    HttpStatus.NotAcceptable.literal,
-    HttpStatus.TooManyRequests.literal,
-    HttpStatus.InternalServerError.literal,
-    HttpStatus.ServiceUnavailable.literal
+  const statusArbitrary = Arbitrary.schema(
+    S.Literals([
+      HttpStatus.BadRequest.literal,
+      HttpStatus.Unauthorized.literal,
+      HttpStatus.NotFound.literal,
+      HttpStatus.NotAcceptable.literal,
+      HttpStatus.TooManyRequests.literal,
+      HttpStatus.InternalServerError.literal,
+      HttpStatus.ServiceUnavailable.literal,
+    ])
   );
 
   const expectedPclReason = (status: number): Pacer.PacerPclErrorReason =>
@@ -130,7 +135,7 @@ describe("PACER error mappings (property-based)", () => {
 
   it.prop(
     "fromLoginResult maps any loginResult code to the right typed PacerAuthError",
-    { code: fc.constantFrom("0", "1", "13", "7", "99") },
+    { code: Arbitrary.schema(S.Literals(["0", "1", "13", "7", "99"])) },
     ({ code }) => {
       const error = Pacer.PacerAuthError.fromLoginResult(code);
       const expected =

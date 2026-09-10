@@ -2,9 +2,10 @@ import { fcRuns } from "@beep/fc-runs";
 import { HttpStatusCode as RootHttpStatusCode } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeHttpStatusHttpStatus1XXSync = S.decodeSync(HttpStatus.HttpStatus1XX);
 const decodeHttpStatusHttpStatus2XXSync = S.decodeSync(HttpStatus.HttpStatus2XX);
@@ -30,16 +31,23 @@ describe("HttpStatus", () => {
   });
 
   it("round-trips every status code derived from the source schema", () => {
-    const arbitrary = S.toArbitrary(HttpStatus.Schema)(fc);
+    const arbitrary = Arbitrary.schema(HttpStatus.Schema);
 
-    fc.assert(
-      fc.property(arbitrary, (code) => {
-        const name = encodeHttpStatusSchemaSync(code);
-        expect(typeof name).toBe("string");
-        expect(decodeHttpStatusSchemaSync(name)).toBe(code);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([code]) => {
+            const name = encodeHttpStatusSchemaSync(code);
+            expect(typeof name).toBe("string");
+            expect(decodeHttpStatusSchemaSync(name)).toBe(code);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("keeps category aggregate schemas wired across role files", () => {

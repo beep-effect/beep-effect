@@ -2,14 +2,14 @@ import { DbAdminMigrationTargets, DocumentsSyncMigrationTarget, WorkspaceThreadM
 import { ArchitectureLabMigrationTarget, DbAdminMigrationTarget } from "@beep/db-admin/migrations/ArchitectureLab";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeMigrationTarget = S.encodeUnknownResult(DbAdminMigrationTarget);
 const decodeMigrationTarget = S.decodeUnknownResult(DbAdminMigrationTarget);
-const MigrationTargetArbitrary = S.toArbitrary(DbAdminMigrationTarget)(fc);
+const MigrationTargetArbitrary = Arbitrary.schema(DbAdminMigrationTarget);
 
 describe("db-admin migration targets", () => {
   it("registers the architecture lab WorkItem and Worker tables", () => {
@@ -55,15 +55,22 @@ describe("db-admin migration targets", () => {
   });
 
   it("round-trips migration target metadata from schema-derived arbitraries", () => {
-    fc.assert(
-      fc.property(MigrationTargetArbitrary, (target) => {
-        const encoded = Result.getOrThrow(encodeMigrationTarget(target));
-        const decoded = Result.getOrThrow(decodeMigrationTarget(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([MigrationTargetArbitrary]),
+          ([target]) => {
+            const encoded = Result.getOrThrow(encodeMigrationTarget(target));
+            const decoded = Result.getOrThrow(decodeMigrationTarget(encoded));
 
-        expect(Eq.equals(decoded, target)).toBe(true);
-      }),
-      fcRuns(25)
-    );
+            expect(Eq.equals(decoded, target)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("rejects invalid migration target identifiers at the schema boundary", () => {

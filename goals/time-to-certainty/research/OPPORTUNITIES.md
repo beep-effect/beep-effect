@@ -652,3 +652,105 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** the same rule #1039 applied to the legacy-ticket tests, stated once
   for the scheduler: no fixed sleeps as settlement or ordering witnesses; poll with a bounded
   deadline, and gate concurrency in tests with Deferred instead of wall-clock waits.
+
+## 2026-09-09 — C3.2 Stage A: the Effect reference symlink is absent in a fresh worktree
+
+- **Doing:** validating Effect v4 APIs before the fingerprint schema and service work (lane rule:
+  read `.repos/effect` before writing any API).
+- **Evidence:** `.repos/effect/packages/effect/src/Schema.ts` does not exist in the `ttc-c3-2`
+  worktree; the parent checkout holds the machine-local `.repos/effect` symlink that
+  `scripts/setup-effect-ref.sh` provisions. The lane read the parent checkout's reference without
+  changing local wiring.
+- **Would have prevented it:** `beep worktree new` provisioning the reference symlink with each
+  worktree, or the brief naming the parent-checkout fallback.
+
+## 2026-09-09 — C3.2 Stage A: a package typecheck in a fresh worktree has no upstream outputs
+
+- **Doing:** supplementing the Stage A tests with
+  `bunx --bun --no-install tsgo -p packages/tooling/tool/cli/tsconfig.check.json`.
+- **Evidence:** exit 1 with `TS6305: Output file '…/dist/index.d.ts' has not been built from
+  source file` for every workspace dependency, then a cascade of unknown/any diagnostics. A fresh
+  worktree has no `dist` outputs, so the check overlay cannot be a type proof there. A disposable
+  source-resolving config over the three touched tests and their imports was the honest substitute;
+  it surfaced two `effect(lazyEffect)` and two `effect(effectFnIife)` diagnostics on the new service
+  contract that the passing tests alone did not (service members must be lazy Effect values, and
+  never immediately invoked `Effect.fn` expressions).
+- **Would have prevented it:** the package-verify split (which builds dependencies first), or a
+  `beep quality test-tsgo-package` route that resolves sources when outputs are missing.
+
+## 2026-09-09 — C3.2 Stage B: Graft query refreshed a forbidden cache surface
+
+- **Doing:** following the read-first Graft source-discovery rule before Stage B edits.
+- **Evidence:** the first `graft grep` reported `refreshed the graph (12 files changed)` and
+  copied the parent checkout graph. The brief forbids touching `graft/`, but the query refreshes
+  it automatically. No git write command ran. Subsequent discovery uses direct source reads.
+- **Would have prevented it:** a read-only query mode, or a brief exception that explicitly
+  addresses automatic graph refresh (the orchestrator removed the ignored copy before the
+  Stage B commit).
+
+## 2026-09-09 — C3.2 Stage C: the quality-tasks suite mixes pure plan tests with git fixtures
+
+- **Doing:** retiring the deprecated-API shard runner and verifying the two policy steps that now
+  run through Turbo (`rootRepoLintPolicySteps`).
+- **Evidence:** `test/quality-tasks.test.ts` runs `git init`, `git add`, and `git commit` inside
+  temporary fixtures, so an implementation lane whose contract forbids git writes cannot run the
+  file; it ran the nine policy-plan cases by name and left the full 205-test file to the
+  orchestrator's package-verify. `test/lint-command.test.ts` has the inherited
+  `process.chdir() is not supported in workers` failure on Bun's thread pool (53 cwd-changing
+  cases), so the file needs the Node fork pool.
+- **Would have prevented it:** keeping pure plan-shape tests in their own file, away from git
+  lifecycle fixtures, so a no-git-write lane can run the complete relevant suite.
+
+## 2026-09-10 — C3.2 first hosted round: Fallow flagged a test arrow the lane never audited
+
+- **Doing:** babysitting PR #1079's first hosted run (head f3132f000f).
+- **Evidence:** `Fallow Advisory Envelopes` red on one introduced blocking finding:
+  `quality-tasks.test.ts:3022 <arrow> cyclomatic 10, CRAP 31.6` (ten optional-chained
+  expectations in one arrow of a partially covered test file); `health` mirrored it. Every other
+  proof (package-verify, scoped coverage, both runtimes) was green because none of them runs the
+  Fallow audit. Fixed by two tiny helpers (`policyTurboStep`, `policyTurboScmBase`) so each
+  function stays trivial; local `fallow audit --check --base origin/main` and `health --check`
+  then report zero findings.
+- **Would have prevented it:** the lane brief's verification split naming
+  `beep quality fallow audit --check --base origin/main` beside biome and vitest, since Fallow
+  judges test files by CRAP and the package handoff does not run it.
+
+## 2026-09-10 — A timed-out step passed because the child flushed and exited zero
+
+- **Doing:** reading the first hosted Lint Policy run of PR #1079 (job 102722219371).
+- **Evidence:** the `lint:deprecated-apis` Turbo step ran 901,364 ms against a 900,000 ms
+  capture cap, Turbo printed `Tasks: 52 successful, 141 total` with no `Failed:` list and exited
+  0 after the kill signal, and the step was recorded as done; only `lint:schema-first` failed the
+  lane. `Effect.timeoutOrElse` races the capture against a sleep; the interrupted capture still
+  completed inside the kill grace and delivered its text and zero exit through the loser's
+  observer. Reproduced with `sh -c 'trap "echo summary; exit 0" TERM INT; ...'` under a 400 ms
+  cap: the old helper returned exit 0.
+- **Would have prevented it:** the capture helper judging a deadline by elapsed time after the
+  capture returns, whatever the child reported (now the case), and the policy lane treating a
+  Turbo summary whose successful count is below its total as a failure even at exit 0.
+
+## 2026-09-10 — Per-package typed eslint is 4× the shard runner cold on the hosted runner
+
+- **Doing:** measuring C3.2's hosted cold cost (same job).
+- **Evidence:** 52 of 140 `lint:deprecated-apis` tasks in 15 minutes at concurrency 4 on
+  `beep-ec2-heavy` (28 shards: 523.5 s); `lint:jsdoc` 728 s for 135 tasks (root invocation:
+  73.9 s). Locally the same sweep took 12 m 50 s for all 277 tasks. Every workspace export
+  resolves to `src`, so the typed project service rebuilds each package's transitive source
+  closure; 28 shards shared that work.
+- **Would have prevented it:** a hosted cold-run measurement of one package family before the
+  fleet-wide task landed (§7.1(4) measured local only), and D6 stating the amortization the
+  shard programs provided so the per-package cost was a design input, not a discovery.
+
+## 2026-09-10 — A per-test timeout capped a live worker below the coverage lane's budget
+
+- **Doing:** reading PR #1079's first complete hosted Coverage Regression run (job 102758874712,
+  30 m 56 s).
+- **Evidence:** `lint-workers.test.ts > executed lint workers > executes laws against a fixture
+  package surface` timed out at its explicit 60,000 ms while the sibling workers took 24 s and
+  39 s; the same test took 40.5 s in main's last green coverage run (job 102696760545). The
+  package config already grants 300 s under coverage (`testTimeout: vitestCoverageRunActive ? 300_000
+  : 30_000`), but an explicit per-test timeout overrides it, so the live worker raced a loaded
+  two-worker runner. Raised the executed-worker tests to 180 s.
+- **Would have prevented it:** live-process tests taking their budget from the runtime-aware
+  config instead of a literal, or a lint that flags explicit `it` timeouts below the coverage
+  budget in files that spawn the CLI.

@@ -25,7 +25,9 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { FastCheck as fc } from "effect/testing";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ActionEvent, ExtractionPlan } from "@beep/qa-capture";
 
 const T0 = 1753838000000;
@@ -37,11 +39,13 @@ type GestureSpec = {
   readonly startOffsetMs: number;
 };
 
-const gestureArbitrary = fc.record({
-  distancePx: fc.integer({ min: 0, max: 200 }),
-  durationMs: fc.integer({ min: 10, max: 4000 }),
-  kind: fc.constantFrom("click", "drag", "hover", "marker", "transition"),
-  startOffsetMs: fc.integer({ min: 0, max: 120000 }),
+const gestureArbitrary = Arbitrary.all({
+  distancePx: Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(200))),
+  durationMs: Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(10), S.isLessThanOrEqualTo(4000))),
+  kind: Arbitrary.schema(
+    S.Union([S.Literal("click"), S.Literal("drag"), S.Literal("hover"), S.Literal("marker"), S.Literal("transition")])
+  ),
+  startOffsetMs: Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(120000))),
 });
 
 const eventsForGesture = (gesture: GestureSpec, index: number): ReadonlyArray<ActionEvent> => {
@@ -113,13 +117,17 @@ const eventsForGesture = (gesture: GestureSpec, index: number): ReadonlyArray<Ac
   ];
 };
 
-const eventsArbitrary = fc
-  .array(gestureArbitrary, { minLength: 0, maxLength: 24 })
-  .map((gestures) => A.flatMap(gestures, eventsForGesture));
+const eventsArbitrary = Arbitrary.map(
+  Arbitrary.flatMap(Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 24 }))), (count) =>
+    Arbitrary.all(A.replicate(gestureArbitrary, count))
+  ),
+  (gestures) => A.flatMap(gestures, eventsForGesture)
+);
 
-const budgetArbitrary = fc
-  .integer({ min: 250000, max: 30000000 })
-  .map((maxTotalBytes) => ArtifactBudget.make({ maxGifSeconds: 6, maxTotalBytes }));
+const budgetArbitrary = Arbitrary.map(
+  Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(250000), S.isLessThanOrEqualTo(30000000))),
+  (maxTotalBytes) => ArtifactBudget.make({ maxGifSeconds: 6, maxTotalBytes })
+);
 
 describe("@beep/qa-capture extraction planner", () => {
   it("derives the documented windows from a drag gesture", () => {
@@ -198,57 +206,85 @@ describe("@beep/qa-capture extraction planner", () => {
 
   it("merge law: no two same-kind windows closer than the merge gap survive", () => {
     const kinds = ["animation", "click", "drag", "hover", "marker", "transition"] as const;
-    fc.assert(
-      fc.property(eventsArbitrary, (events) => {
-        const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
-        A.forEach(kinds, (kind) => {
-          const windows = A.filter(merged.windows, (window) => window.ruleKind === kind);
-          A.forEach(A.zip(windows, A.drop(windows, 1)), ([previous, next]) => {
-            expect(next.startEpochMs - previous.endEpochMs).toBeGreaterThanOrEqual(OVERLAP_MERGE_GAP_MS);
-          });
-        });
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([eventsArbitrary]),
+          ([events]) => {
+            const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
+            A.forEach(kinds, (kind) => {
+              const windows = A.filter(merged.windows, (window) => window.ruleKind === kind);
+              A.forEach(A.zip(windows, A.drop(windows, 1)), ([previous, next]) => {
+                expect(next.startEpochMs - previous.endEpochMs).toBeGreaterThanOrEqual(OVERLAP_MERGE_GAP_MS);
+              });
+            });
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("merge law: every absorbed window is recorded in dropped", () => {
-    fc.assert(
-      fc.property(eventsArbitrary, (events) => {
-        const planned = planWindows(events, defaultExtractionRules);
-        const merged = mergeOverlappingWindows(planned);
-        expect(A.length(planned)).toBe(A.length(merged.windows) + A.length(merged.dropped));
-        A.forEach(merged.dropped, (dropped) => {
-          expect(dropped.reason).toBe("overlap-merged");
-        });
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([eventsArbitrary]),
+          ([events]) => {
+            const planned = planWindows(events, defaultExtractionRules);
+            const merged = mergeOverlappingWindows(planned);
+            expect(A.length(planned)).toBe(A.length(merged.windows) + A.length(merged.dropped));
+            A.forEach(merged.dropped, (dropped) => {
+              expect(dropped.reason).toBe("overlap-merged");
+            });
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("budget law: the fitted estimate never exceeds the budget", () => {
-    fc.assert(
-      fc.property(eventsArbitrary, budgetArbitrary, (events, budget) => {
-        const plan = buildExtractionPlan(BuildExtractionPlanOptions.make({ budget, events }));
-        expect(plan.estimatedTotalBytes).toBeLessThanOrEqual(budget.maxTotalBytes);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([eventsArbitrary, budgetArbitrary]),
+          ([events, budget]) => {
+            const plan = buildExtractionPlan(BuildExtractionPlanOptions.make({ budget, events }));
+            expect(plan.estimatedTotalBytes).toBeLessThanOrEqual(budget.maxTotalBytes);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("budget law: dropped windows are always recorded", () => {
-    fc.assert(
-      fc.property(eventsArbitrary, budgetArbitrary, (events, budget) => {
-        const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
-        const fitted = applyBudget(merged.windows, budget);
-        const droppedWindows = A.filter(
-          fitted.dropped,
-          (dropped) => dropped.reason === "budget-priority-dropped" || dropped.reason === "budget-dropped"
-        );
-        expect(A.length(merged.windows)).toBe(A.length(fitted.windows) + A.length(droppedWindows));
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([eventsArbitrary, budgetArbitrary]),
+          ([events, budget]) => {
+            const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
+            const fitted = applyBudget(merged.windows, budget);
+            const droppedWindows = A.filter(
+              fitted.dropped,
+              (dropped) => dropped.reason === "budget-priority-dropped" || dropped.reason === "budget-dropped"
+            );
+            expect(A.length(merged.windows)).toBe(A.length(fitted.windows) + A.length(droppedWindows));
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("materializes driver requests with clamped video timestamps plus one contact sheet", () => {

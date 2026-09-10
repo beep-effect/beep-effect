@@ -8,7 +8,7 @@ import { A } from "@beep/utils";
 import { Chunk, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeDocument = S.decodeEffect(Document);
@@ -24,10 +24,10 @@ const encodeUnknownSentence = S.encodeUnknownEffect(Sentence);
 const encodeUnknownSimilarityScore = S.encodeUnknownEffect(SimilarityScore);
 const encodeUnknownToken = S.encodeUnknownEffect(Token);
 
-const TokenArbitrary = S.toArbitrary(Token)(fc);
-const SentenceArbitrary = S.toArbitrary(Sentence)(fc);
-const DocumentArbitrary = S.toArbitrary(Document)(fc);
-const SimilarityScoreArbitrary = S.toArbitrary(SimilarityScore)(fc);
+const TokenArbitrary = Arbitrary.schema(Token);
+const SentenceArbitrary = Arbitrary.schema(Sentence);
+const DocumentArbitrary = Arbitrary.schema(Document);
+const SimilarityScoreArbitrary = Arbitrary.schema(SimilarityScore);
 
 const makeToken = (index: number, text: string, start: number, end: number): Token =>
   Token.make({
@@ -163,26 +163,27 @@ describe("Core models", () => {
   });
 
   it("round-trips schema-derived core model values", () => {
-    fc.assert(
-      fc.property(
-        TokenArbitrary,
-        SentenceArbitrary,
-        DocumentArbitrary,
-        SimilarityScoreArbitrary,
-        (token, sentence, document, similarity) => {
-          const encodedToken = Effect.runSync(encodeToken(token));
-          const encodedSentence = Effect.runSync(encodeSentence(sentence));
-          const encodedDocument = Effect.runSync(encodeDocument(document));
-          const encodedSimilarity = Effect.runSync(encodeSimilarityScore(similarity));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([TokenArbitrary, SentenceArbitrary, DocumentArbitrary, SimilarityScoreArbitrary]),
+          ([token, sentence, document, similarity]) => {
+            const encodedToken = Effect.runSync(encodeToken(token));
+            const encodedSentence = Effect.runSync(encodeSentence(sentence));
+            const encodedDocument = Effect.runSync(encodeDocument(document));
+            const encodedSimilarity = Effect.runSync(encodeSimilarityScore(similarity));
 
-          expect(Effect.runSync(decodeToken(encodedToken))).toEqual(token);
-          expect(Effect.runSync(decodeSentence(encodedSentence))).toEqual(sentence);
-          expect(Effect.runSync(decodeDocument(encodedDocument))).toEqual(document);
-          expect(Effect.runSync(decodeSimilarityScore(encodedSimilarity))).toEqual(similarity);
-        }
-      ),
-      fcRuns(50)
-    );
+            expect(Effect.runSync(decodeToken(encodedToken))).toEqual(token);
+            expect(Effect.runSync(decodeSentence(encodedSentence))).toEqual(sentence);
+            expect(Effect.runSync(decodeDocument(encodedDocument))).toEqual(document);
+            expect(Effect.runSync(decodeSimilarityScore(encodedSimilarity))).toEqual(similarity);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("returns tokens whose character spans overlap the requested range", () => {

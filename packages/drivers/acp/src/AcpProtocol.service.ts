@@ -441,20 +441,16 @@ type AcpWireMessage = RpcMessage.FromClientEncoded | RpcMessage.FromServerEncode
 const toWireId = (id: string | number): string | number => (id === "" ? id : Number(id));
 
 const toWireMessage: (message: AcpWireMessage) => AcpWireMessage = Match.type<AcpWireMessage>().pipe(
-  Match.tags({
-    Request: (message): AcpWireMessage => ({ ...message, id: toWireId(message.id) }),
-    Chunk: (message): AcpWireMessage => ({ ...message, requestId: toWireId(message.requestId) }),
-    Exit: (message): AcpWireMessage => ({ ...message, requestId: toWireId(message.requestId) }),
-  }),
+  Match.tag("Request", (message): AcpWireMessage => ({ ...message, id: toWireId(message.id) })),
+  Match.tag("Chunk", (message): AcpWireMessage => ({ ...message, requestId: toWireId(message.requestId) })),
+  Match.tag("Exit", (message): AcpWireMessage => ({ ...message, requestId: toWireId(message.requestId) })),
   Match.orElse((message) => message)
 );
 
 const fromWireMessage: (message: AcpWireMessage) => AcpWireMessage = Match.type<AcpWireMessage>().pipe(
-  Match.tags({
-    Request: (message): AcpWireMessage => ({ ...message, id: String(message.id) }),
-    Chunk: (message): AcpWireMessage => ({ ...message, requestId: String(message.requestId) }),
-    Exit: (message): AcpWireMessage => ({ ...message, requestId: String(message.requestId) }),
-  }),
+  Match.tag("Request", (message): AcpWireMessage => ({ ...message, id: String(message.id) })),
+  Match.tag("Chunk", (message): AcpWireMessage => ({ ...message, requestId: String(message.requestId) })),
+  Match.tag("Exit", (message): AcpWireMessage => ({ ...message, requestId: String(message.requestId) })),
   Match.orElse((message) => ("requestId" in message ? { ...message, requestId: String(message.requestId) } : message))
 );
 
@@ -564,22 +560,15 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
 
   const handlePendingExit = (requestId: string | number) =>
     Match.type<RpcMessage.ExitEncoded<unknown, unknown>>().pipe(
-      Match.tagsExhaustive({
-        Success: (exit) => completeExtPendingSuccess(requestId, exit.value),
-        Failure: (exit) => {
-          const failure = A.findFirst(exit.cause, (entry) => entry._tag === "Fail");
-          if (O.isSome(failure) && isAcpSchemaError(failure.value.error)) {
-            return completeExtPendingFailure(
-              requestId,
-              AcpError.AcpRequestError.fromProtocolError(failure.value.error)
-            );
-          }
-          return completeExtPendingFailure(
-            requestId,
-            AcpError.AcpRequestError.internalError("Extension request failed")
-          );
-        },
-      })
+      Match.tag("Success", (exit) => completeExtPendingSuccess(requestId, exit.value)),
+      Match.tag("Failure", (exit) => {
+        const failure = A.findFirst(exit.cause, (entry) => entry._tag === "Fail");
+        if (O.isSome(failure) && isAcpSchemaError(failure.value.error)) {
+          return completeExtPendingFailure(requestId, AcpError.AcpRequestError.fromProtocolError(failure.value.error));
+        }
+        return completeExtPendingFailure(requestId, AcpError.AcpRequestError.internalError("Extension request failed"));
+      }),
+      Match.exhaustive
     );
 
   const failAllExtPending = Effect.fn($I`failAllExtPending`)((error: AcpError.AcpError) =>
@@ -750,28 +739,28 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
 
   const routeDecodedMessage = Effect.fn($I`routeDecodedMessage`)(
     Match.type<RpcMessage.FromClientEncoded | RpcMessage.FromServerEncoded>().pipe(
-      Match.tagsExhaustive({
-        Request: handleRequestEncoded,
-        Exit: handleExitEncoded,
-        Chunk: (message) =>
-          Ref.get(extPending).pipe(
-            Effect.flatMap((pending) =>
-              HashMap.has(pending, message.requestId)
-                ? completeExtPendingFailure(
-                    message.requestId,
-                    AcpError.AcpRequestError.internalError("Streaming extension responses are not supported")
-                  )
-                : offerClientMessage(message)
-            )
-          ),
-        Defect: offerClientMessage,
-        ClientProtocolError: offerClientMessage,
-        Pong: offerClientMessage,
-        Ack: offerServerMessage,
-        Interrupt: offerServerMessage,
-        Ping: offerServerMessage,
-        Eof: offerServerMessage,
-      })
+      Match.tag("Request", handleRequestEncoded),
+      Match.tag("Exit", handleExitEncoded),
+      Match.tag("Chunk", (message) =>
+        Ref.get(extPending).pipe(
+          Effect.flatMap((pending) =>
+            HashMap.has(pending, message.requestId)
+              ? completeExtPendingFailure(
+                  message.requestId,
+                  AcpError.AcpRequestError.internalError("Streaming extension responses are not supported")
+                )
+              : offerClientMessage(message)
+          )
+        )
+      ),
+      Match.tag("Defect", offerClientMessage),
+      Match.tag("ClientProtocolError", offerClientMessage),
+      Match.tag("Pong", offerClientMessage),
+      Match.tag("Ack", offerServerMessage),
+      Match.tag("Interrupt", offerServerMessage),
+      Match.tag("Ping", offerServerMessage),
+      Match.tag("Eof", offerServerMessage),
+      Match.exhaustive
     )
   );
 

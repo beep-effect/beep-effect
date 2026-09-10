@@ -32,8 +32,8 @@ import {
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 
 const provideScopedLayer =
@@ -64,11 +64,11 @@ const encodeLabelQueueResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsL
 const encodeMirrorBundleResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsMirrorBundleResult));
 const encodeOtlpExportResultResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsOtlpExportResult));
 const encodeWeeklyReportResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsWeeklyReportResult));
-const ForwarderResultArbitrary = S.toArbitrary(S.toType(AiMetricsForwarderRunResult))(fc);
-const LabelQueueArbitrary = S.toArbitrary(AiMetricsLabelQueueResult)(fc);
-const MirrorBundleArbitrary = S.toArbitrary(AiMetricsMirrorBundleResult)(fc);
-const OtlpExportResultArbitrary = S.toArbitrary(AiMetricsOtlpExportResult)(fc);
-const WeeklyReportArbitrary = S.toArbitrary(AiMetricsWeeklyReportResult)(fc);
+const ForwarderResultArbitrary = AiMetricsForwarderRunResult.pipe(S.toType, Arbitrary.schema);
+const LabelQueueArbitrary = Arbitrary.schema(AiMetricsLabelQueueResult);
+const MirrorBundleArbitrary = Arbitrary.schema(AiMetricsMirrorBundleResult);
+const OtlpExportResultArbitrary = Arbitrary.schema(AiMetricsOtlpExportResult);
+const WeeklyReportArbitrary = Arbitrary.schema(AiMetricsWeeklyReportResult);
 const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
 const isString = (value: unknown): value is string => typeof value === "string";
 const farFutureUntilEpochMs = 4_102_444_800_000;
@@ -286,39 +286,45 @@ const waitForCapturedOtlpTraceRequest = (
 
 describe("ai-metrics command", () => {
   it("round-trips schema-derived report data through JSON command boundaries", () =>
-    fc.assert(
-      fc.property(
-        ForwarderResultArbitrary,
-        LabelQueueArbitrary,
-        MirrorBundleArbitrary,
-        OtlpExportResultArbitrary,
-        WeeklyReportArbitrary,
-        (forwarderResult, labelQueue, mirrorBundle, otlpExportResult, weeklyReport) => {
-          const encodedForwarderResult = Result.getOrThrow(encodeForwarderResultResult(forwarderResult));
-          const decodedForwarderResult = Result.getOrThrow(decodeForwarderResultResult(encodedForwarderResult));
-          expect(Result.getOrThrow(encodeForwarderResultResult(decodedForwarderResult))).toBe(encodedForwarderResult);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            ForwarderResultArbitrary,
+            LabelQueueArbitrary,
+            MirrorBundleArbitrary,
+            OtlpExportResultArbitrary,
+            WeeklyReportArbitrary,
+          ]),
+          ([forwarderResult, labelQueue, mirrorBundle, otlpExportResult, weeklyReport]) => {
+            const encodedForwarderResult = Result.getOrThrow(encodeForwarderResultResult(forwarderResult));
+            const decodedForwarderResult = Result.getOrThrow(decodeForwarderResultResult(encodedForwarderResult));
+            expect(Result.getOrThrow(encodeForwarderResultResult(decodedForwarderResult))).toBe(encodedForwarderResult);
 
-          const encodedLabelQueue = Result.getOrThrow(encodeLabelQueueResult(labelQueue));
-          const decodedLabelQueue = Result.getOrThrow(decodeLabelQueueResult(encodedLabelQueue));
-          expect(Result.getOrThrow(encodeLabelQueueResult(decodedLabelQueue))).toBe(encodedLabelQueue);
+            const encodedLabelQueue = Result.getOrThrow(encodeLabelQueueResult(labelQueue));
+            const decodedLabelQueue = Result.getOrThrow(decodeLabelQueueResult(encodedLabelQueue));
+            expect(Result.getOrThrow(encodeLabelQueueResult(decodedLabelQueue))).toBe(encodedLabelQueue);
 
-          const encodedMirrorBundle = Result.getOrThrow(encodeMirrorBundleResult(mirrorBundle));
-          const decodedMirrorBundle = Result.getOrThrow(decodeMirrorBundleResult(encodedMirrorBundle));
-          expect(Result.getOrThrow(encodeMirrorBundleResult(decodedMirrorBundle))).toBe(encodedMirrorBundle);
+            const encodedMirrorBundle = Result.getOrThrow(encodeMirrorBundleResult(mirrorBundle));
+            const decodedMirrorBundle = Result.getOrThrow(decodeMirrorBundleResult(encodedMirrorBundle));
+            expect(Result.getOrThrow(encodeMirrorBundleResult(decodedMirrorBundle))).toBe(encodedMirrorBundle);
 
-          const encodedOtlpExportResult = Result.getOrThrow(encodeOtlpExportResultResult(otlpExportResult));
-          const decodedOtlpExportResult = Result.getOrThrow(decodeOtlpExportResultResult(encodedOtlpExportResult));
-          expect(Result.getOrThrow(encodeOtlpExportResultResult(decodedOtlpExportResult))).toBe(
-            encodedOtlpExportResult
-          );
+            const encodedOtlpExportResult = Result.getOrThrow(encodeOtlpExportResultResult(otlpExportResult));
+            const decodedOtlpExportResult = Result.getOrThrow(decodeOtlpExportResultResult(encodedOtlpExportResult));
+            expect(Result.getOrThrow(encodeOtlpExportResultResult(decodedOtlpExportResult))).toBe(
+              encodedOtlpExportResult
+            );
 
-          const encodedWeeklyReport = Result.getOrThrow(encodeWeeklyReportResult(weeklyReport));
-          const decodedWeeklyReport = Result.getOrThrow(decodeWeeklyReportResult(encodedWeeklyReport));
-          expect(Result.getOrThrow(encodeWeeklyReportResult(decodedWeeklyReport))).toBe(encodedWeeklyReport);
-        }
-      ),
-      fcRuns(25)
-    ));
+            const encodedWeeklyReport = Result.getOrThrow(encodeWeeklyReportResult(weeklyReport));
+            const decodedWeeklyReport = Result.getOrThrow(decodeWeeklyReportResult(encodedWeeklyReport));
+            expect(Result.getOrThrow(encodeWeeklyReportResult(decodedWeeklyReport))).toBe(encodedWeeklyReport);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it.effect("emits ingest JSON without raw local paths or Claude private identifiers", () =>
     withTempDirectory((tmpDir) =>

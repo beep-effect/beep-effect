@@ -14,9 +14,7 @@
     "encode-keys-probe.ts",
     "identity-kit-probe.ts",
     "exec.ts",
-    "effect-ontology/docs/**",
-    "effect-ontology/test/**",
-    "effect-ontology/node_modules/**",
+    "effect-ontology/**",
     "claudecode/vitest.config.ts"
   ],
   "enforceDescriptions": true,

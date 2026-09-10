@@ -11,7 +11,7 @@
  * {@link ChatRpcs} contract the HTTP transport uses — with no loopback HTTP, no
  * `:3939`, and no CSP `connect-src` carve-out.
  *
- * Inbound frames are modelled as an Effect {@link Stream} fed by the two Tauri
+ * Inbound frames are modelled as an Effect queue fed by the two Tauri
  * `listen` channels; the listeners are torn down through {@link Scope} finalizers
  * rather than manual teardown. The Tauri Promise/callback boundary (`invoke`,
  * `listen`) is lifted into Effect with `Effect.tryPromise`, so the transport
@@ -42,11 +42,9 @@ import * as Metric from "effect/Metric";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import { Socket } from "effect/unstable/socket";
 import { SidecarTransport } from "./SidecarTransport.ts";
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import type * as Cause from "effect/Cause";
 import type * as Scope from "effect/Scope";
 
 const $I = $ProfessionalDesktopId.create("transport/TauriIpcSocket");
@@ -262,7 +260,7 @@ type InboundEvent = typeof InboundEvent.Type;
 const scopedListen = (
   event: (typeof SidecarEvent)[keyof typeof SidecarEvent],
   toEvent: (payload: unknown) => InboundEvent,
-  queue: Queue.Enqueue<InboundEvent, Socket.SocketError | Cause.Done>
+  queue: Queue.Enqueue<InboundEvent, Socket.SocketError>
 ): Effect.Effect<UnlistenFn, Socket.SocketError, Scope.Scope> =>
   Effect.acquireRelease(
     Effect.tryPromise({
@@ -341,41 +339,28 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
   })(event).pipe(Effect.withSpan("desktop.ipc.decode_inbound", { attributes: { event: event._tag } }));
 
 /**
- * Inbound ndjson rpc frames as an Effect {@link Stream}. The two Tauri listeners
- * (`sidecar://rx`, `sidecar://closed`) are attached inside `Stream.callback` and
- * offer raw, tagged events onto the backing queue; the events are decoded with
- * `effect/Schema` downstream. Once both listeners are live the bridge tells Rust
- * it is ready via `sidecar_ipc_ready`, which replays any frames buffered during
- * sidecar boot (Tauri events are not durable), and finally runs `onOpen` (the
- * read handler's open hook) so it fires only after the transport is subscribed.
- * Listener teardown rides the stream's scope, so no manual unlisten bookkeeping
- * is needed.
+ * Acquire both Tauri listeners before asking Rust to replay buffered frames.
+ * The acquisition scope owns the listeners and wakes pending pulls on release.
  */
-const inboundFrames = (onOpen: O.Option<Effect.Effect<void>>): Stream.Stream<InboundFrame, Socket.SocketError> =>
-  Stream.callback<InboundEvent, Socket.SocketError>(
-    Effect.fnUntraced(function* (queue: Queue.Enqueue<InboundEvent, Socket.SocketError | Cause.Done>) {
-      // `Stream.callback` does not surface the register body's own failure, so a
-      // rejected `listen` or `sidecar_ipc_ready` would otherwise leave the
-      // consumer waiting on a queue that never closes. Push any setup failure
-      // onto the queue so the inbound stream fails (and `runRaw` retries through
-      // RpcClient) instead of hanging.
-      const setup = Effect.gen(function* () {
-        yield* scopedListen(SidecarEvent.rx, (payload) => InboundEvent.cases.Rx.make({ payload }), queue);
-        yield* scopedListen(SidecarEvent.closed, (payload) => InboundEvent.cases.Closed.make({ payload }), queue);
-
-        // Listeners are live; tell Rust to replay any frames buffered during boot.
-        yield* Effect.tryPromise({
-          try: () => invoke<void>("sidecar_ipc_ready"),
-          catch: toSocketError,
-        });
-
-        // The transport is subscribed and Rust has replayed buffered frames; only
-        // now run the read handler's open hook.
-        yield* O.getOrElse(onOpen, () => Effect.void);
-      });
-      yield* Effect.onError(setup, (cause) => Queue.failCause(queue, cause));
-    })
-  ).pipe(Stream.mapEffect(decodeInboundEvent));
+const makeReader: Socket.Socket["reader"] = Effect.gen(function* () {
+  const queue = yield* Queue.unbounded<InboundEvent, Socket.SocketError>();
+  yield* Effect.addFinalizer(() =>
+    Queue.fail(queue, Socket.SocketError.make({ reason: Socket.SocketCloseError.make({ code: 1000 }) }))
+  );
+  yield* scopedListen(SidecarEvent.rx, (payload) => InboundEvent.cases.Rx.make({ payload }), queue);
+  yield* scopedListen(SidecarEvent.closed, (payload) => InboundEvent.cases.Closed.make({ payload }), queue);
+  yield* Effect.tryPromise({
+    try: () => invoke<void>("sidecar_ipc_ready"),
+    catch: toSocketError,
+  });
+  return {
+    pull: Queue.take(queue).pipe(
+      Effect.flatMap(decodeInboundEvent),
+      Effect.map((frame): readonly [InboundFrame] => [frame])
+    ),
+    upgrade: Socket.SocketUpgradeError.unsupported,
+  };
+});
 
 /**
  * Ship a single complete, newline-terminated outbound frame to the sidecar's
@@ -450,15 +435,11 @@ const flushBufferedFrames = (buffer: Ref.Ref<string>): Effect.Effect<void, Sidec
  * by killing the child on the Rust side, not by an in-band close frame. Send
  * failures are surfaced as `Socket.SocketError` to match the writer signature.
  */
-const makeWriter: Effect.Effect<
-  (chunk: Uint8Array | string | Socket.CloseEvent) => Effect.Effect<void, Socket.SocketError>,
-  never,
-  Scope.Scope
-> = Effect.gen(function* () {
+const makeWriter: Socket.Socket["writer"] = Effect.gen(function* () {
   const decoder = new TextDecoder();
   const buffer = yield* Ref.make("");
 
-  return (chunk) =>
+  const write: Socket.Writer["write"] = (chunk) =>
     Socket.isCloseEvent(chunk)
       ? Effect.void
       : Ref.update(
@@ -470,26 +451,15 @@ const makeWriter: Effect.Effect<
             Socket.SocketError.make({ reason: Socket.SocketWriteError.make({ cause: error }) })
           )
         );
+  return {
+    write,
+    writeAll: (chunks) => Effect.forEach(chunks, write, { discard: true }),
+  };
 });
 
-/**
- * The IPC {@link Socket}, built from the inbound frame {@link Stream} and the
- * scoped outbound writer. `runRaw` drives the read handler per inbound frame and
- * fails with a clean `SocketCloseError` (code 1000) when the inbound stream ends,
- * matching the `RpcClient` socket protocol's end-of-stream contract.
- */
+/** Builds the IPC socket from its scoped pull reader and buffered writer. */
 const makeSocket: Effect.Effect<Socket.Socket> = Effect.sync(() =>
-  Socket.make({
-    runRaw: (handler, options) =>
-      inboundFrames(O.fromUndefinedOr(options?.onOpen)).pipe(
-        Stream.runForEach((frame) => {
-          const result = handler(frame);
-          return Effect.isEffect(result) ? Effect.asVoid(result) : Effect.void;
-        }),
-        Effect.andThen(Effect.fail(Socket.SocketError.make({ reason: Socket.SocketCloseError.make({ code: 1000 }) })))
-      ),
-    writer: makeWriter,
-  })
+  Socket.make({ reader: makeReader, writer: makeWriter })
 );
 
 /**

@@ -15,7 +15,7 @@ import {
   validateFileType,
 } from "@beep/schema/FileTypeChecker";
 import { describe, expect, it } from "@effect/vitest";
-import { Match, pipe } from "effect";
+import { Effect, Match, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as Num from "effect/Number";
@@ -24,7 +24,8 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as SchemaAST from "effect/SchemaAST";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { FileType as FileTypeValue } from "@beep/schema/FileTypeChecker";
 
 const decodeByteResult = S.decodeResult(Byte);
@@ -42,6 +43,18 @@ const encodeUnknownValidateFileTypeOptionsResult = S.encodeUnknownResult(Validat
 const isDetectedFileInfo = S.is(DetectedFileInfo);
 const isFileSignature = S.is(FileSignature);
 const isFileTypeInfo = S.is(FileTypeInfo);
+
+const generationLinkCodecFor = <Decoded>(ast: SchemaAST.AST): S.Codec<Decoded, unknown> => {
+  const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(ast).annotations;
+  const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+  if (link === undefined || link.transformation._tag !== "Transformation")
+    throw new Error("Missing generation transformation");
+  return S.make<S.Codec<Decoded, unknown>>(SchemaAST.decodeTo(link.to, SchemaAST.toType(ast), link.transformation));
+};
+const encodeFileSignatureLink = S.encodeEffect(generationLinkCodecFor<FileSignature>(FileSignature.ast));
+const encodeFileSignature = S.encodeEffect(FileSignature);
+const encodeDetectedFileInfoLink = S.encodeEffect(generationLinkCodecFor<DetectedFileInfo>(DetectedFileInfo.ast));
+const encodeFileTypeInfo = S.encodeEffect(FileTypeInfo);
 
 const pngBytes = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 const sharedIsoMediaSignature = [0x66, 0x74, 0x79, 0x70, 0x4d, 0x34, 0x56, 0x20];
@@ -250,29 +263,35 @@ describe("FileTypeChecker schemas", () => {
   });
 
   it("derives codec-equivalent arbitrary values from every public schema", () => {
-    fc.assert(
-      fc.property(
-        S.toArbitrary(FileType)(fc),
-        S.toArbitrary(Byte)(fc),
-        S.toArbitrary(FileContent)(fc),
-        S.toArbitrary(FileSignature)(fc),
-        S.toArbitrary(FileTypeInfo)(fc),
-        S.toArbitrary(DetectedFileInfo)(fc),
-        S.toArbitrary(DetectFileOptions)(fc),
-        S.toArbitrary(ValidateFileTypeOptions)(fc),
-        (type, byte, content, signature, info, detected, detectOptions, validateOptions) => {
-          expectSchemaRoundTrip(FileType, type);
-          expectSchemaRoundTrip(Byte, byte);
-          expectSchemaRoundTrip(FileContent, content);
-          expectSchemaRoundTrip(FileSignature, signature);
-          expectSchemaRoundTrip(FileTypeInfo, info);
-          expectSchemaRoundTrip(DetectedFileInfo, detected);
-          expectSchemaRoundTrip(DetectFileOptions, detectOptions);
-          expectSchemaRoundTrip(ValidateFileTypeOptions, validateOptions);
-        }
-      ),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(FileType),
+            Arbitrary.schema(Byte),
+            Arbitrary.schema(FileContent),
+            Arbitrary.schema(FileSignature),
+            Arbitrary.schema(FileTypeInfo),
+            Arbitrary.schema(DetectedFileInfo),
+            Arbitrary.schema(DetectFileOptions),
+            Arbitrary.schema(ValidateFileTypeOptions),
+          ]),
+          ([type, byte, content, signature, info, detected, detectOptions, validateOptions]) => {
+            expectSchemaRoundTrip(FileType, type);
+            expectSchemaRoundTrip(Byte, byte);
+            expectSchemaRoundTrip(FileContent, content);
+            expectSchemaRoundTrip(FileSignature, signature);
+            expectSchemaRoundTrip(FileTypeInfo, info);
+            expectSchemaRoundTrip(DetectedFileInfo, detected);
+            expectSchemaRoundTrip(DetectFileOptions, detectOptions);
+            expectSchemaRoundTrip(ValidateFileTypeOptions, validateOptions);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
@@ -404,3 +423,53 @@ describe("validateFileType", () => {
     expect(validateFileType([0, 0, 0], ["avif"])).toBe(false);
   });
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes FileSignature through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      FileSignature.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    expect(link.transformation._tag).toBe("Transformation");
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(FileSignature),
+      (value) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeFileSignatureLink(value);
+          expect(encoded).toEqual(yield* encodeFileSignature(value));
+          return true;
+        }),
+      fcRuns(50)
+    );
+    expect(result._tag).toBe("Passed");
+  })
+);
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes DetectedFileInfo through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      DetectedFileInfo.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    expect(link.transformation._tag).toBe("Transformation");
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(DetectedFileInfo),
+      (value) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeDetectedFileInfoLink(value);
+          expect(encoded).toEqual(yield* encodeFileTypeInfo(value.info));
+          expect(value.mimeType).toBe(value.info.mimeType);
+          expect(value.description).toBe(value.info.description);
+          return true;
+        }),
+      fcRuns(50)
+    );
+    expect(result._tag).toBe("Passed");
+  })
+);

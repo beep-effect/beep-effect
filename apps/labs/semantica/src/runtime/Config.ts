@@ -81,27 +81,27 @@ class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
 export class LabConfig extends Context.Service<LabConfig, LabConfigValue>()($I`LabConfig`) {}
 
 const labConfig = Config.all({
-  corpusRoot: Config.option(Config.nonEmptyString("SEMANTICA_CORPUS_ROOT")),
+  corpusRoot: Config.option(Config.NonEmptyString("SEMANTICA_CORPUS_ROOT")),
   embeddingDimension: Config.schema(PosInt, "SEMANTICA_EMBEDDING_DIMENSION").pipe(
     Config.withDefault(PosInt.make(1536))
   ),
-  embeddingModel: Config.nonEmptyString(OPENAI_EMBEDDING_MODEL_ENV).pipe(
+  embeddingModel: Config.NonEmptyString(OPENAI_EMBEDDING_MODEL_ENV).pipe(
     Config.withDefault(OPENAI_DEFAULT_EMBEDDING_MODEL)
   ),
-  embeddingRevision: Config.nonEmptyString("SEMANTICA_EMBEDDING_REVISION").pipe(
+  embeddingRevision: Config.NonEmptyString("SEMANTICA_EMBEDDING_REVISION").pipe(
     Config.withDefault("text-embedding-3-small@2024-01-25")
   ),
-  extractionTimeout: Config.duration("SEMANTICA_EXTRACTION_TIMEOUT").pipe(Config.withDefault(Duration.minutes(15))),
-  extractorModel: Config.nonEmptyString("AI_ANTHROPIC_MODEL").pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL)),
-  goldDirectory: Config.nonEmptyString("SEMANTICA_GOLD_DIR").pipe(Config.withDefault("fixtures/gold/v1")),
-  goldGenerationTimeout: Config.duration("SEMANTICA_GOLD_GENERATION_TIMEOUT").pipe(
+  extractionTimeout: Config.Duration("SEMANTICA_EXTRACTION_TIMEOUT").pipe(Config.withDefault(Duration.minutes(15))),
+  extractorModel: Config.NonEmptyString("AI_ANTHROPIC_MODEL").pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL)),
+  goldDirectory: Config.NonEmptyString("SEMANTICA_GOLD_DIR").pipe(Config.withDefault("fixtures/gold/v1")),
+  goldGenerationTimeout: Config.Duration("SEMANTICA_GOLD_GENERATION_TIMEOUT").pipe(
     Config.withDefault(Duration.minutes(45))
   ),
-  goldModel: Config.nonEmptyString("SEMANTICA_XAI_MODEL").pipe(Config.withDefault("grok-4.6")),
-  ledgerRoot: Config.nonEmptyString("SEMANTICA_LEDGER_ROOT").pipe(Config.withDefault(".beep/semantica/ledger")),
-  offline: Config.boolean("SEMANTICA_OFFLINE").pipe(Config.withDefault(false)),
-  projectionTimeout: Config.duration("SEMANTICA_PROJECTION_TIMEOUT").pipe(Config.withDefault(Duration.seconds(30))),
-  providerCacheDirectory: Config.nonEmptyString("SEMANTICA_PROVIDER_CACHE_DIR").pipe(
+  goldModel: Config.NonEmptyString("SEMANTICA_XAI_MODEL").pipe(Config.withDefault("grok-4.6")),
+  ledgerRoot: Config.NonEmptyString("SEMANTICA_LEDGER_ROOT").pipe(Config.withDefault(".beep/semantica/ledger")),
+  offline: Config.Boolean("SEMANTICA_OFFLINE").pipe(Config.withDefault(false)),
+  projectionTimeout: Config.Duration("SEMANTICA_PROJECTION_TIMEOUT").pipe(Config.withDefault(Duration.seconds(30))),
+  providerCacheDirectory: Config.NonEmptyString("SEMANTICA_PROVIDER_CACHE_DIR").pipe(
     Config.withDefault(".beep/semantica/provider-cache")
   ),
 }).pipe(

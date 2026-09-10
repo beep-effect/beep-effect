@@ -55,7 +55,7 @@ export interface GenerateObjectWithRetryOptions<
    * Optional callback to annotate success logs with domain-specific info
    */
   readonly annotateSuccess?: (
-    response: LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"]>
+    response: LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"], "opaque">
   ) => Record<string, unknown>;
   /**
    * Whether to enable prompt caching (only applies when prompt is StructuredPrompt)
@@ -93,7 +93,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
 >(
   options: GenerateObjectWithRetryOptions<StructuredOutputSchema>
 ): Effect.fn.Return<
-  LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"]>,
+  LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"], "opaque">,
   AiError.AiError | Cause.TimeoutError | S.SchemaError,
   LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"]
 > {

@@ -26,7 +26,7 @@ import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effe
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -86,21 +86,30 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
-  arbitrary = S.toArbitrary(schema)(fc)
+  arbitrary = Arbitrary.schema(schema)
 ): void => {
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expectRoundTrip(schema, value);
-    }),
-    { numRuns: 25 }
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expectRoundTrip(schema, value);
+
+          return true;
+        },
+        { runs: 25 }
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
-const RunpodRawRequestArbitrary = S.toArbitrary(RunpodRawRequest)(fc).map((request) =>
-  RunpodRawRequest.make({
-    ...request,
-    path: normalizeRawPathForTest(request.path),
-  })
+const RunpodRawRequestArbitrary = Arbitrary.schema(RunpodRawRequest).pipe(
+  Arbitrary.map((request) =>
+    RunpodRawRequest.make({
+      ...request,
+      path: normalizeRawPathForTest(request.path),
+    })
+  )
 );
 
 const makeJsonResponse = (body: unknown, status = 200) =>
@@ -410,12 +419,19 @@ describe("@beep/runpod", () => {
 
   layer(makeRunpodUnitLayer())((it) =>
     it("round-trips schema-derived config, error, raw, and docs models", () => {
-      fc.assert(
-        fc.property(S.toArbitrary(RunpodConfigInput)(fc), (value) => {
-          expectRoundTrip(RunpodConfigInput, value);
-        }),
-        { numRuns: 25 }
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(RunpodConfigInput)]),
+            ([value]) => {
+              expectRoundTrip(RunpodConfigInput, value);
+
+              return true;
+            },
+            { runs: 25 }
+          )
+        )
+      ).toMatchObject({ _tag: "Passed" });
       assertSchemaRoundTrip(RunpodDocsConfigInput);
       expect(encode(RunpodRawRequest, RunpodRawRequest.make({ method: "GET", path: "future" }))).toMatchObject({
         path: "/future",

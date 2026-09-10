@@ -186,11 +186,11 @@ const mapPlatformError = (cause: PlatformError.PlatformError): PrSessionRegistry
   });
 
 const resolveRoot = Effect.fn("PrSessionRegistry.resolveRoot")(function* () {
-  const configured = yield* Config.option(Config.string("BEEP_YEET_STATE_ROOT"));
+  const configured = yield* Config.option(Config.String("BEEP_YEET_STATE_ROOT"));
   if (O.isSome(configured) && Str.isNonEmpty(Str.trim(configured.value))) return configured.value;
-  const xdg = yield* Config.option(Config.string("XDG_STATE_HOME"));
+  const xdg = yield* Config.option(Config.String("XDG_STATE_HOME"));
   if (O.isSome(xdg) && Str.isNonEmpty(Str.trim(xdg.value))) return `${xdg.value}/beep/yeet`;
-  const home = yield* Config.string("HOME");
+  const home = yield* Config.String("HOME");
   return `${home}/.local/state/beep/yeet`;
 });
 

@@ -24,7 +24,7 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Equal, Layer, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { PostgresClientValue, PostgresDrizzleDatabase } from "@beep/postgres";
 
@@ -111,14 +111,21 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
-  arbitrary = S.toArbitrary(schema)(fc)
+  arbitrary = Arbitrary.schema(schema)
 ): void => {
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expectRoundTrip(schema, value);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expectRoundTrip(schema, value);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 describe("PostgresError", () => {
@@ -203,25 +210,27 @@ describe("PostgresError", () => {
   });
 
   it("round-trips schema-derived SQLSTATE and Postgres error values", () => {
-    const postgresErrorArbitrary = S.toArbitrary(PostgresError)(fc).map((error) =>
-      PostgresError.make({
-        operation: error.operation,
-        cause: O.none(),
-        message: error.message,
-        sqlState: error.sqlState,
-        sqlStateName: error.sqlStateName,
-        severity: error.severity,
-        detail: error.detail,
-        hint: error.hint,
-        where: error.where,
-        schemaName: error.schemaName,
-        tableName: error.tableName,
-        columnName: error.columnName,
-        constraintName: error.constraintName,
-        query: error.query,
-        params: O.none(),
-        sourceLocation: error.sourceLocation,
-      })
+    const postgresErrorArbitrary = Arbitrary.schema(PostgresError).pipe(
+      Arbitrary.map((error) =>
+        PostgresError.make({
+          operation: error.operation,
+          cause: O.none(),
+          message: error.message,
+          sqlState: error.sqlState,
+          sqlStateName: error.sqlStateName,
+          severity: error.severity,
+          detail: error.detail,
+          hint: error.hint,
+          where: error.where,
+          schemaName: error.schemaName,
+          tableName: error.tableName,
+          columnName: error.columnName,
+          constraintName: error.constraintName,
+          query: error.query,
+          params: O.none(),
+          sourceLocation: error.sourceLocation,
+        })
+      )
     );
 
     assertSchemaRoundTrip(PgErrorCode);

@@ -21,7 +21,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBudgetDuration = S.decodeEffect(BudgetDuration);
 const decodeFailureReceipt = S.decodeEffect(FailureReceipt);
@@ -227,13 +227,20 @@ describe("@beep/skill-contract Recovery", () => {
   });
 
   it("round-trips schema-derived arbitrary recovery policies", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(RecoveryPolicy)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(encodeUnknownRecoveryPolicyResult(candidate));
-        const decoded = Result.getOrThrow(decodeRecoveryPolicyResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(RecoveryPolicy)]),
+          ([candidate]) => {
+            const encoded = Result.getOrThrow(encodeUnknownRecoveryPolicyResult(candidate));
+            const decoded = Result.getOrThrow(decodeRecoveryPolicyResult(encoded));
 
-        expect(S.toEquivalence(RecoveryPolicy)(decoded, candidate)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(RecoveryPolicy)(decoded, candidate)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

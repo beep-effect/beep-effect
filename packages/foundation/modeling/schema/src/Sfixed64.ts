@@ -55,16 +55,13 @@ const Sfixed64BigInt = S.BigInt.check(Sfixed64Range);
  * @category validation
  * @since 0.0.0
  */
-export const Sfixed64 = ProtobufInt64Input.pipe(S.decodeTo(Sfixed64BigInt, decodeProtobufInt64InputTransformation))
-  .annotate({
-    toArbitrary: () => (fc) => fc.bigInt({ min: sfixed64Minimum, max: sfixed64Maximum }),
+export const Sfixed64 = ProtobufInt64Input.pipe(
+  S.decodeTo(Sfixed64BigInt, decodeProtobufInt64InputTransformation),
+  S.brand("Sfixed64"),
+  $I.annoteSchema("Sfixed64", {
+    description: "A protobuf sfixed64 bigint in the inclusive signed 64-bit range.",
   })
-  .pipe(
-    S.brand("Sfixed64"),
-    $I.annoteSchema("Sfixed64", {
-      description: "A protobuf sfixed64 bigint in the inclusive signed 64-bit range.",
-    })
-  );
+);
 
 /**
  * Type-level value inferred from {@link Sfixed64}.

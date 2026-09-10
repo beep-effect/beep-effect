@@ -32,7 +32,7 @@ describe.skipIf(!obsAvailable)("Obs live integration", () => {
   it.live(
     "connects to the live obs-websocket, verifies the version, and reads record status",
     Effect.fnUntraced(function* () {
-      const password = yield* Config.option(Config.redacted("OBS_WEBSOCKET_PASSWORD"));
+      const password = yield* Config.option(Config.Redacted("OBS_WEBSOCKET_PASSWORD"));
       const layer = Obs.layer.pipe(
         Layer.provideMerge(ObsProtocol.makeLayer({ password })),
         Layer.provide(Socket.layerWebSocketConstructorGlobal)

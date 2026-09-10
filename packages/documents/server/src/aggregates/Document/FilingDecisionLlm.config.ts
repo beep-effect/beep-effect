@@ -233,7 +233,7 @@ const readFilingDecisionLlmConfig = Effect.fn($I`readFilingDecisionLlmConfig`)(f
   const confidenceThreshold = yield* Config.schema(UnitInterval, FILING_DECISION_CONFIDENCE_THRESHOLD_ENV).pipe(
     Config.withDefault(FILING_DECISION_DEFAULT_CONFIDENCE_THRESHOLD)
   );
-  const extractionTimeout = yield* Config.duration(FILING_TEXT_EXTRACTION_TIMEOUT_ENV).pipe(
+  const extractionTimeout = yield* Config.Duration(FILING_TEXT_EXTRACTION_TIMEOUT_ENV).pipe(
     Config.withDefault(FILING_TEXT_EXTRACTION_DEFAULT_TIMEOUT)
   );
   const maxExcerptChars = yield* Config.schema(ConfiguredExcerptLength, FILING_DECISION_MAX_EXCERPT_CHARS_ENV).pipe(
@@ -243,7 +243,7 @@ const readFilingDecisionLlmConfig = Effect.fn($I`readFilingDecisionLlmConfig`)(f
     ConfiguredMaxMaterializedBytes,
     FILING_TEXT_EXTRACTION_MAX_BYTES_ENV
   ).pipe(Config.withDefault(FILING_TEXT_EXTRACTION_DEFAULT_MAX_BYTES));
-  const model = yield* Config.nonEmptyString(FILING_DECISION_MODEL_ENV).pipe(
+  const model = yield* Config.NonEmptyString(FILING_DECISION_MODEL_ENV).pipe(
     Config.withDefault(FILING_DECISION_DEFAULT_MODEL)
   );
 
