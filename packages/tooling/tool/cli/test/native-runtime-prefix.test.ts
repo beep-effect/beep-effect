@@ -78,6 +78,19 @@ describe("native-runtime prefix command", { concurrent: false }, () => {
   );
 
   it.effect(
+    "rejects prefixes that escape the repository or carry glob characters",
+    Effect.fnUntraced(function* () {
+      for (const prefix of ["../outside", "/scratchpad", "packages/*", "scratchpad/../packages"]) {
+        const result = yield* run(["--include-prefix", prefix]);
+        expect(result.exitCode, result.output).not.toBe(0);
+        expect(result.output).toContain("--include-prefix must name repository-relative directories");
+        expect(result.output).toContain(prefix);
+      }
+    }, providePlatform),
+    300_000
+  );
+
+  it.effect(
     "scans nothing and exits successfully for an empty directory prefix",
     Effect.fnUntraced(function* () {
       const result = yield* run(["--include-prefix", "scratchpad/empty"]);

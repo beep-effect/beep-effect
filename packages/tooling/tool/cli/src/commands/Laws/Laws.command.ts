@@ -8,6 +8,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Text } from "@beep/utils";
 import { Console, Effect } from "effect";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
@@ -18,7 +20,11 @@ import { AllowlistCheckOptions, reportAllowlistCheckSummary, runAllowlistCheck }
 import { EffectFnRulesOptions, runEffectFnRules } from "./EffectFn.ts";
 import { EffectImportCorpusMode, EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.ts";
 import { FrozenGrantSetRulesOptions, runFrozenGrantSetRules } from "./FrozenGrantSet.ts";
-import { NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "./NoNativeRuntime.ts";
+import {
+  isRepoRelativeDirectoryPrefix,
+  NoNativeRuntimeRulesOptions,
+  runNoNativeRuntimeRules,
+} from "./NoNativeRuntime.ts";
 import { runTerseEffectRules, TerseEffectRulesOptions } from "./TerseEffect.ts";
 
 const $I = $RepoCliId.create("commands/Laws/Laws.command");
@@ -567,6 +573,12 @@ const lawsNativeRuntimeCommand = Command.make(
   },
   Effect.fn(function* ({ check, exclude, include, includePrefix }) {
     const options = NoNativeRuntimeCommandOptions.make({ check, exclude, include, includePrefix });
+    const rejectedPrefixes = A.filter(parseExcludePaths(options.includePrefix), P.not(isRepoRelativeDirectoryPrefix));
+    if (A.isReadonlyArrayNonEmpty(rejectedPrefixes)) {
+      const message = `laws native-runtime: --include-prefix must name repository-relative directories without "..", a leading "/" or glob characters; rejected: ${A.join(rejectedPrefixes, ", ")}`;
+      yield* Console.error(message);
+      return yield* failWithReportedExit(message);
+    }
     const summary = yield* runNoNativeRuntimeRules(
       NoNativeRuntimeRulesOptions.make({
         strictCheck: options.check,

@@ -94,6 +94,43 @@ const TYPEOF_RUNTIME_LITERALS = HashSet.fromIterable([
 ]);
 
 /**
+ * Repository-relative directory prefix accepted by `--include-prefix`: no leading slash, no `..`
+ * segment, no glob metacharacters, so a prefix can only narrow the scan to a directory inside
+ * the repository.
+ *
+ * **Example** (Recognize a scoped prefix)
+ * ```ts
+ * import { RepoRelativeDirectoryPrefix } from "@beep/repo-cli/commands/Laws/NoNativeRuntime"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(RepoRelativeDirectoryPrefix)("scratchpad/probe")) // true
+ * console.log(S.is(RepoRelativeDirectoryPrefix)("../outside")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RepoRelativeDirectoryPrefix = S.String.check(
+  S.isPattern(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^*?[\]{}!]+$/u, {
+    title: "RepoRelativeDirectoryPrefix",
+    description: "Repository-relative directory without a leading slash, a `..` segment or glob characters.",
+  })
+);
+
+/**
+ * Derived guard for {@link RepoRelativeDirectoryPrefix} used before a prefix reaches the scan globs.
+ *
+ * **Example** (Reject an escaping prefix)
+ * ```ts
+ * import { isRepoRelativeDirectoryPrefix } from "@beep/repo-cli/commands/Laws/NoNativeRuntime"
+ * console.log(isRepoRelativeDirectoryPrefix("packages/*")) // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isRepoRelativeDirectoryPrefix = S.is(RepoRelativeDirectoryPrefix);
+
+/**
  * Runtime options for repo-local native runtime checks.
  *
  * **Example** (Configure native-runtime scanning)
@@ -115,7 +152,7 @@ export class NoNativeRuntimeRulesOptions extends S.Class<NoNativeRuntimeRulesOpt
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
     includePaths: S.Array(S.String).pipe(S.optionalKey),
-    includePrefixes: S.Array(S.String).pipe(
+    includePrefixes: S.Array(RepoRelativeDirectoryPrefix).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
