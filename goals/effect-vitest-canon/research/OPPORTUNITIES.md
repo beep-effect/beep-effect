@@ -1522,3 +1522,74 @@ covered those five piped Exit assertions. The correction must track the asserted
 result and final pipeline stage. Focused checks and a fresh repository preview
 now precede the next full package audit, avoiding a repeated expensive proof when
 the complete finding delta already shows a missed case.
+
+
+### September 10: final coverage and third-round provenance gaps
+
+The final Node 22 scoped CLI coverage run passed 181 files and 3,627 tests, with
+five skips, but failed two unchanged floors: Knowledge reference branches at
+94.8 versus 95.31, and detector functions at 97.29 versus 97.63. Source and
+baseline hashes stayed unchanged. LCOV attribution identifies meaningful public
+behavior tests for nested resource layers, malformed canonical inventory and
+Unicode-escaped evidence offsets. Coverage denominator growth can expose a
+small percentage drop even when existing tests still pass; measure the final
+source cohort before treating an earlier coverage run as current proof.
+
+The third review found unsupported scoped function references, same-file curried
+provider references, a misleading success-only outcome hint and stale charter
+pin coordinates. Complete sampled-file review caught forms absent from the
+focused fixture matrix. Regressions must cover both direct calls and function
+references at actual application sites, with lexical shadowing and lifetime
+controls. A Boolean branch assertion must not invent an expected payload or
+Cause during remediation.
+
+The review's post-compaction report initially forgot source ranges that its own
+successful read payloads had covered. Root compared returned slices to the
+immutable snapshot, retained 20 complete sampled bodies and required only the
+actual missing packet, graph and test ranges. The final audit verifies 245
+successful slices without mismatches. Durable machine-readable read coverage
+would prevent both false completeness claims and redundant rereading.
+
+Root intentionally stopped the superseded full Yeet verification after the
+third-round source repairs were confirmed. Exit 130, unchanged source and the
+complete drain of its 25 owned processes are recorded. This is not a green
+aggregate proof; the completed repair commit still requires the normal full run.
+
+
+The repaired 8,138-row inventory reconciles fully, but three ordinary scans take
+10.690s, 10.548s and 10.659s. The detection phase increases by roughly 0.9 seconds
+against the earlier cohort. Preserve all observations and resource context; these
+are failed target measurements, not load-normalized successes. Checking normal
+command timing after canonical adoption but before another full package audit
+avoids paying for an expensive proof that a performance repair would invalidate.
+The next repair must preserve every row payload and census record while reducing
+unnecessary traversal work.
+
+
+The first performance candidate used Array.filterMap with an Option-producing
+callback and lost all 211 new provider judgments. The complete row comparison
+rejected it despite a faster diagnostic time. At the pinned rc113 API,
+Array.filterMap consumes Result; the existing Array.getSomes/Array.map pattern
+preserves the Option contract. Typecheck a proposed helper substitution before
+measuring it, and require full payload equality before accepting any speedup.
+The rejected candidate and observation remain evidence, not a passing benchmark.
+
+### R3 performance margin, 2026-09-10
+
+The first traversal optimization preserves all 8,138 complete finding payloads,
+132 JSONL files and the 1,110-path census. Its 288 focused cases, compiler, lint
+and Fallow checks pass. Root's fresh ordinary-command cohort nevertheless takes
+10.284s, 10.494s and 10.512s; all commands exit zero with stable inputs. CPU,
+memory and I/O pressure are zero at the first observation, with load average
+1.56 across 64 logical CPUs and roughly 66 GiB available memory. These are
+target misses, with no load adjustment or discarded samples. Another bounded
+traversal optimization is required before full package proof. Profiling and
+full-payload equality should precede acceptance timing whenever reference
+traversal expands; one fast diagnostic run does not establish the target.
+
+A Root receipt script also referenced a nonexistent path alias and failed
+before emitting its acceptance file. The timing driver then refused the
+missing prerequisite without launching a scanner. Both failures are retained;
+the path was corrected and the fixed three-run cohort above followed. Stop
+dependent commands after an unsuccessful prerequisite rather than issuing
+them in the same orchestration batch.

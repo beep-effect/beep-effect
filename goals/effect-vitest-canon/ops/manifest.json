@@ -80,12 +80,12 @@
     {
       "id": "P0f",
       "name": "Adversarial review",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P0g",
       "name": "Initial PR and ratification",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -117,5 +117,5 @@
     "Never merge without explicit user authorization.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Main through 8cb18e6 is integrated at 3630388; remote checkpoint remains b86269212e. Final runtime suites pass on Node 22/24 and Bun with scoped Node 22 coverage. Detector 207-case, compiler/lint/Fallow and full CLI audit/docgen proofs pass. The accepted canonical inventory contains 7,775 findings across 1,000 tests and 110 support modules; complete reconciliation and all 29 declarations are verified. Three normal commands pass in 9.943s, 9.503s and 9.588s with retained load context. Rounds one and two are closed. Final CLI coverage, round three, full aggregate and exact-head hosted/review closure remain. Include the repo-configs changeset in publication. Leave PR #1067 open; P1/P2 remain gated."
+  "statusNote": "Main through 8cb18e6 is integrated. All three adversarial rounds are closed; all four R3 findings are fixed. The 288-case focused checkpoint, full CLI package audit/docgen (420.944 seconds), compiler, lint, Fallow and aggregate cheap gates pass. All 8,138 finding payloads and 1,110 census paths are reconciled. Final normal commands pass in 9.563, 9.630 and 9.926 seconds; failed cohorts remain recorded. Final scoped Node 22 coverage passes 3,656 tests across 181 files and fixes both prior metric regressions without changing the baseline. P0g exact-head full Yeet, hosted checks and review closeout evidence are tracked on PR #1067. Benjamin ratification and merge remain. Leave PR #1067 open; P1/P2 remain gated."
 }

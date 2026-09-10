@@ -67,8 +67,14 @@ type ExpressionChain = {
   readonly members: ReadonlyArray<string>;
 };
 
-const functionNode = (node: MorphNode): node is EffectVitestFunctionNode =>
-  Node.isArrowFunction(node) || Node.isFunctionExpression(node) || Node.isFunctionDeclaration(node);
+const functionNode = (node: MorphNode): node is EffectVitestFunctionNode => {
+  const kind = node.getKind();
+  return (
+    kind === SyntaxKind.ArrowFunction ||
+    kind === SyntaxKind.FunctionExpression ||
+    kind === SyntaxKind.FunctionDeclaration
+  );
+};
 
 /**
  * Resolve a lexical binding without a type checker or following another source file.
@@ -95,14 +101,18 @@ const functionNode = (node: MorphNode): node is EffectVitestFunctionNode =>
 export const resolveEffectVitestBinding = (identifier: Identifier): O.Option<MorphNode> =>
   bindingResolver()(identifier);
 
-const isLexicalScope = (scope: MorphNode): boolean =>
-  functionNode(scope) ||
-  Node.isBlock(scope) ||
-  Node.isSourceFile(scope) ||
-  Node.isForOfStatement(scope) ||
-  Node.isForInStatement(scope) ||
-  Node.isForStatement(scope) ||
-  Node.isCatchClause(scope);
+const lexicalScopeKinds = HashSet.make(
+  SyntaxKind.ArrowFunction,
+  SyntaxKind.FunctionExpression,
+  SyntaxKind.FunctionDeclaration,
+  SyntaxKind.Block,
+  SyntaxKind.SourceFile,
+  SyntaxKind.ForOfStatement,
+  SyntaxKind.ForInStatement,
+  SyntaxKind.ForStatement,
+  SyntaxKind.CatchClause
+);
+const isLexicalScope = (scope: MorphNode): boolean => HashSet.has(lexicalScopeKinds, scope.getKind());
 
 type BindSyntaxName = (name: MorphNode, declaration: MorphNode) => void;
 type AddSyntaxBinding = (name: string, declaration: MorphNode) => void;
@@ -256,25 +266,25 @@ const collectSyntaxRoles = (sourceFile: SourceFile) => {
   const forOfLoops = A.empty<MorphNode>();
   const forInLoops = A.empty<MorphNode>();
   const collectRole = (node: MorphNode): void => {
-    if (Node.isCallExpression(node)) calls.push(node);
+    const kind = node.getKind();
+    if (kind === SyntaxKind.CallExpression) calls.push(node.asKindOrThrow(kind));
     else if (functionNode(node)) functions.push(node);
-    else if (Node.isVariableDeclaration(node)) variables.push(node);
-    else if (Node.isForStatement(node)) forLoops.push(node);
-    else if (Node.isWhileStatement(node)) whileLoops.push(node);
-    else if (Node.isDoStatement(node)) doLoops.push(node);
-    else if (Node.isForOfStatement(node)) forOfLoops.push(node);
-    else if (Node.isForInStatement(node)) forInLoops.push(node);
+    else if (kind === SyntaxKind.VariableDeclaration) variables.push(node.asKindOrThrow(kind));
+    else if (kind === SyntaxKind.ForStatement) forLoops.push(node);
+    else if (kind === SyntaxKind.WhileStatement) whileLoops.push(node);
+    else if (kind === SyntaxKind.DoStatement) doLoops.push(node);
+    else if (kind === SyntaxKind.ForOfStatement) forOfLoops.push(node);
+    else if (kind === SyntaxKind.ForInStatement) forInLoops.push(node);
   };
+
   const pending = A.reverse(sourceFile.forEachChildAsArray());
   while (pending.length > 0) {
     const node = pending.pop();
-    if (node === undefined) continue;
+    // TypeScript forEachChild returns immediately for tokens; none can own a
+    // collected role. Avoid allocating their empty child arrays and wrappers.
+    if (node === undefined || node.getKind() <= SyntaxKind.LastToken) continue;
     collectRole(node);
-    const children = node.forEachChildAsArray();
-    for (let index = children.length - 1; index >= 0; index--) {
-      const child = children[index];
-      if (child !== undefined) pending.push(child);
-    }
+    for (const child of A.reverse(node.forEachChildAsArray())) pending.push(child);
   }
 
   return { calls, functions, variables, loops: [...forLoops, ...whileLoops, ...doLoops, ...forOfLoops, ...forInLoops] };

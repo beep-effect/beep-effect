@@ -642,10 +642,16 @@ type DetectorState = {
   readonly findings: Array<EffectVitestFinding>;
   readonly definitions: ReturnType<typeof sourceFunctionDefinitions>;
   readonly helperNames: ReadonlyArray<string>;
+  readonly providerNames: HashSet.HashSet<string>;
   readonly calls: ReadonlyArray<CallExpression>;
   readonly file: string;
   readonly owner: string;
 };
+
+const isPublicLayerProvider = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isProvenanceCall(call, imports, ["@beep/test-utils", "@beep/test-utils/Layer"], "provideScopedLayer", [
+    "provideScopedLayer",
+  ]);
 
 const inspectContext = (call: CallExpression, member: string, canonicalMember: string, state: DetectorState) => {
   const { imports, harness, definitions } = state;
@@ -661,13 +667,7 @@ const inspectContext = (call: CallExpression, member: string, canonicalMember: s
       isNativePropertyCheck(call, imports))
       ? harness.reachableHelper(call)
       : O.none();
-  const publicProvider = isProvenanceCall(
-    call,
-    imports,
-    ["@beep/test-utils", "@beep/test-utils/Layer"],
-    "provideScopedLayer",
-    ["provideScopedLayer"]
-  );
+  const publicProvider = isPublicLayerProvider(call, imports);
   const expression = call.getExpression();
   const definition = Node.isIdentifier(expression)
     ? O.flatMap(imports.resolveBinding(expression), (binding) =>
@@ -717,11 +717,34 @@ const detectRuntimeBoundary = (
   }
 };
 
+const emitLayerProvision = (
+  node: MorphNode,
+  layer: O.Option<Expression>,
+  symbol: string,
+  state: DetectorState
+): void => {
+  const { imports, makeFinding, findings, file, owner } = state;
+  if (O.exists(layer, (value) => !isPureStubLayer(value, imports) && !isContextProvision(value, imports))) {
+    const unresolved = !O.exists(layer, (value) => isResourceExpression(value, imports));
+    findings.push(
+      makeFinding({
+        ruleId: "EV002",
+        node,
+        file,
+        owner,
+        symbol,
+        judgment: unresolved,
+        ...(unresolved ? { className: "unresolved-layer-provide" } : {}),
+      })
+    );
+  }
+};
+
 const detectLayerProvision = (
   { call, member, effectTest, publicProvider, localProvider }: ReturnType<typeof inspectContext>,
   state: DetectorState
 ): void => {
-  const { imports, makeFinding, findings, file, owner } = state;
+  const { imports } = state;
 
   if (
     !Node.isCallExpression(call.getExpression()) &&
@@ -729,20 +752,7 @@ const detectLayerProvision = (
     effectRegistrationBody(call, effectTest, imports)
   ) {
     const layer = providedLayer(call);
-    if (O.exists(layer, (value) => !isPureStubLayer(value, imports) && !isContextProvision(value, imports))) {
-      const unresolved = !O.exists(layer, (value) => isResourceExpression(value, imports));
-      findings.push(
-        makeFinding({
-          ruleId: "EV002",
-          node: call,
-          file,
-          owner,
-          symbol: member,
-          judgment: unresolved,
-          ...(unresolved ? { className: "unresolved-layer-provide" } : {}),
-        })
-      );
-    }
+    emitLayerProvision(call, layer, member, state);
   }
 };
 
@@ -782,6 +792,20 @@ const detectResourceWrapper = (context: ReturnType<typeof inspectContext>, state
   }
 };
 
+const scopeLifetimeClass = (
+  call: CallExpression,
+  helper: ReturnType<EffectVitestHarnessIndex["reachableHelper"]>
+): string =>
+  O.match(helper, {
+    onNone: () => "shorter-scope-lifetime-review",
+    onSome: ({ callback, shared, plain }) =>
+      shared || plain
+        ? "shared-helper-scope-lifetime-review"
+        : isWholeBodyCall(call, callback)
+          ? "helper-scope-lifetime-review"
+          : "inner-helper-scope-lifetime-review",
+  });
+
 const detectScopeLifetime = (
   { call, canonicalMember, test, effectTest, helper }: ReturnType<typeof inspectContext>,
   state: DetectorState
@@ -794,15 +818,7 @@ const detectScopeLifetime = (
     isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["scoped"])
   ) {
     const wholeBody = O.exists(test, ({ callback }) => isWholeBodyCall(call, callback));
-    const scopeClass = O.match(helper, {
-      onNone: () => "shorter-scope-lifetime-review",
-      onSome: ({ callback, shared, plain }) =>
-        shared || plain
-          ? "shared-helper-scope-lifetime-review"
-          : isWholeBodyCall(call, callback)
-            ? "helper-scope-lifetime-review"
-            : "inner-helper-scope-lifetime-review",
-    });
+    const scopeClass = scopeLifetimeClass(call, helper);
     findings.push(
       makeFinding({
         ruleId: "EV004",
@@ -829,7 +845,7 @@ const detectResultAssertion = (
     isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["result"]) &&
     assertedOutcome(call, imports)
   ) {
-    findings.push(makeFinding({ ruleId: "EV005", node: call, file, owner, symbol: callMember(call) }));
+    findings.push(makeFinding({ ruleId: "EV005", node: call, file, owner, symbol: callMember(call), judgment: true }));
   }
 };
 
@@ -1223,10 +1239,152 @@ const detectLayerClockReset = ({ call, member }: ReturnType<typeof inspectContex
   }
 };
 
+const appliedStages = (
+  call: CallExpression,
+  member: string,
+  imports: EffectVitestImports
+): ReadonlyArray<MorphNode> => {
+  const candidate =
+    member === "pipe" ||
+    member === "fnUntraced" ||
+    O.exists(MutableHashMap.get(imports.bindingsByLocal, member), (bindings) =>
+      A.some(bindings, (binding) => binding.imported === "pipe" || binding.imported === "fnUntraced")
+    );
+  if (!candidate) return [];
+
+  const expression = call.getExpression();
+  if (Node.isPropertyAccessExpression(expression) && expression.getName() === "pipe") return call.getArguments();
+  if (
+    isProvenanceCall(call, imports, ["effect", "effect/Function"], "Function", ["pipe"]) ||
+    isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["fnUntraced"])
+  )
+    return A.drop(call.getArguments(), 1);
+  return [];
+};
+
+const providerCandidateNames = (imports: EffectVitestImports): HashSet.HashSet<string> =>
+  HashSet.fromIterable(
+    A.map(
+      A.filter(imports.variables, (declaration) => {
+        const initializer = declaration.getInitializer();
+        return (
+          Node.isIdentifier(initializer) ||
+          (Node.isCallExpression(initializer) &&
+            initializer.getArguments().length === 1 &&
+            (isPublicLayerProvider(initializer, imports) ||
+              isProvenanceCall(initializer, imports, EFFECT_MODULES, "Effect", ["provide"])))
+        );
+      }),
+      (declaration) => declaration.getName()
+    )
+  );
+
+const isProviderReference = (node: MorphNode, state: DetectorState): boolean =>
+  Node.isIdentifier(node) && HashSet.has(state.providerNames, node.getText());
+
+const boundProviderLayer = (
+  expression: MorphNode,
+  imports: EffectVitestImports,
+  seen: ReadonlyArray<MorphNode> = []
+): O.Option<Expression> => {
+  if (!Node.isIdentifier(expression)) return O.none();
+  return imports.resolveBinding(expression).pipe(
+    O.filter(Node.isVariableDeclaration),
+    O.filter(
+      (binding) =>
+        binding.getVariableStatement()?.getDeclarationKind() === "const" && !A.some(seen, (prior) => prior === binding)
+    ),
+    O.flatMap((binding) => {
+      const initializer = binding.getInitializer();
+      if (initializer === undefined) return O.none();
+      if (Node.isIdentifier(initializer)) return boundProviderLayer(initializer, imports, [...seen, binding]);
+      return Node.isCallExpression(initializer) &&
+        initializer.getArguments().length === 1 &&
+        (isPublicLayerProvider(initializer, imports) ||
+          isProvenanceCall(initializer, imports, EFFECT_MODULES, "Effect", ["provide"]))
+        ? providedLayer(initializer)
+        : O.none();
+    })
+  );
+};
+
+const directlyRegisteredEffect = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  rootTestBodyCall(call, imports) &&
+  O.exists(O.fromUndefinedOr(call.getParentIfKind(SyntaxKind.CallExpression)), (parent) =>
+    O.exists(classifyHarnessCall(parent, imports), (mode) => mode === "effect" || mode === "live")
+  );
+
+const scopeReferenceWholeBody = (call: CallExpression, state: DetectorState): boolean => {
+  const { imports, harness } = state;
+  if (isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["fnUntraced"])) {
+    const body = call.getArguments()[0];
+    return directlyRegisteredEffect(call, imports) && (Node.isFunctionExpression(body) || Node.isArrowFunction(body));
+  }
+  return O.exists(
+    harness.enclosingTest(call),
+    ({ callback }) =>
+      isWholeBodyCall(call, callback) &&
+      !(Node.isFunctionExpression(callback) && callback.getAsteriskToken() !== undefined) &&
+      !Node.isExpressionStatement(call.getParent())
+  );
+};
+
+const detectAppliedScope = (
+  call: CallExpression,
+  stage: MorphNode,
+  finalStage: boolean,
+  state: DetectorState
+): void => {
+  const { imports, harness, makeFinding, findings, file, owner } = state;
+  if (!Node.isExpression(stage) || !isProvenanceExpression(stage, imports, EFFECT_MODULES, "Effect", ["scoped"]))
+    return;
+  const test = harness.enclosingTest(call);
+  const helper = harness.reachableHelper(call);
+  const inEffect =
+    O.exists(test, ({ mode }) => mode === "effect" || mode === "live") || directlyRegisteredEffect(call, imports);
+  if (!inEffect && !O.exists(helper, ({ effect }) => effect)) return;
+  const wholeBody = finalStage && scopeReferenceWholeBody(call, state);
+  const scopeClass = scopeLifetimeClass(call, helper);
+  findings.push(
+    makeFinding({
+      ruleId: "EV004",
+      node: stage,
+      file,
+      owner,
+      symbol: "scoped",
+      judgment: !wholeBody,
+      ...(wholeBody ? {} : { className: scopeClass }),
+    })
+  );
+};
+
+const detectAppliedReferences = (call: CallExpression, member: string, state: DetectorState): void => {
+  const stages = appliedStages(call, member, state.imports);
+  const callee = call.getExpression();
+  if (A.isReadonlyArrayEmpty(stages) && !isProviderReference(callee, state)) return;
+  A.forEach(stages, (stage, index) => detectAppliedScope(call, stage, index === stages.length - 1, state));
+  // Resolve only applied provider references before walking test ancestry.
+  // The lexical resolver remains authoritative for aliases and shadows.
+  const providers = A.getSomes(
+    A.map(
+      A.filter([...stages, callee], (expression) => isProviderReference(expression, state)),
+      (expression) => O.map(boundProviderLayer(expression, state.imports), (layer) => ({ expression, layer }))
+    )
+  );
+  if (A.isReadonlyArrayEmpty(providers)) return;
+  const inEffect =
+    O.exists(state.harness.enclosingTest(call), ({ mode }) => mode === "effect" || mode === "live") ||
+    directlyRegisteredEffect(call, state.imports);
+  if (!inEffect) return;
+  for (const { expression, layer } of providers)
+    emitLayerProvision(expression, O.some(layer), expression.getText(), state);
+};
+
 const inspectCall = (call: CallExpression, state: DetectorState): void => {
   const { imports, helperNames } = state;
 
   const member = callMember(call);
+  detectAppliedReferences(call, member, state);
   const canonicalMember = Node.isIdentifier(call.getExpression())
     ? O.getOrElse(
         O.map(
@@ -1412,6 +1570,7 @@ export const detectEffectVitestFindings: {
     findings,
     definitions,
     helperNames,
+    providerNames: providerCandidateNames(imports),
     calls,
     file,
     owner,

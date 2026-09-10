@@ -1208,9 +1208,9 @@
       "endLine": 145,
       "signature": "Testing Successes and Failures as `Exit`",
       "description": "Capturing both Effect success and failure as Exit",
-      "whenToUse": "No detector replacement: use this section when both Effect success and failure must be captured as Exit before canonical Exit assertions.",
+      "whenToUse": "Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) with unresolved, mixed or assertion-only outcomes. Review Effect.result to Effect.exit migration while preserving matcher polarity and existing operands: Result failure holds an error, whereas Exit failure holds a Cause. Select a specific Exit helper only when its expected value or Cause is established; never invent one from a Boolean predicate or partial error field.",
       "whenNotToUse": "Do not hand-compare Exit tags or use Result helpers on an Exit.",
-      "replaces": [],
+      "replaces": ["EV005"],
       "example": "import { assertExitSuccess } from \"@effect/vitest/utils\"\nimport { Effect } from \"effect\"\nconst program = Effect.exit(Effect.succeed(2)).pipe(Effect.tap((exit) => Effect.sync(() => assertExitSuccess(exit, 2))))\nvoid program",
       "gotchas": [
         "The README predates the repository D5 helper rule; use assertExitSuccess or assertExitFailure."

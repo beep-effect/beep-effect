@@ -65,8 +65,9 @@ const entries: ReadonlyArray<readonly [EffectVitestRuleId, RulePolicy]> = [
     "EV005",
     {
       className: "result-outcome-assertion",
-      primitive: "utils.assertExitSuccess",
-      sketch: "Replace Effect.result with Effect.exit and assert the Exit success or failure branch.",
+      primitive: "readme.exit",
+      sketch:
+        "Review Effect.result to Effect.exit migration; preserve assertion polarity and existing operands. Result failure contains an error; Exit failure contains a Cause. Never invent an expected payload or Cause from a Boolean or partial-field assertion.",
       severity: "minor",
     },
   ],

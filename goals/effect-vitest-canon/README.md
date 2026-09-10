@@ -2,7 +2,8 @@
 
 ## Status
 
-Lifecycle: `active`. P0a through P0.5 are complete. P0f adversarial review is incomplete.
+Lifecycle: `active`. P0a through P0f are complete. P0g PR verification and
+ratification are in progress.
 Benjamin resumed PR #1067 closeout on 2026-09-09. Continue from
 history/2026-09-09-pr1067-resume.md; merge and later-phase gates remain.
 The machine-readable state is in [ops/manifest.json](./ops/manifest.json).
@@ -31,23 +32,27 @@ and timing behavior, and enforce the result through a syntax-only lint ratchet.
 
 The proposal contains all 15 detector rules, the 100-entry rc113 API graph, four
 lens charters and the instrumented runner. Main through 8cb18e6, including #1060
-and #1082, is merged locally at 3630388. The remote checkpoint remains b86269212e;
-its Greptile 5/5 and closed threads do not prove the unpublished repairs.
+and #1082, is integrated. Published checkpoint b721a248a9 passed hosted unit
+tests, type checks, lint policy and docgen; this follow-up closes its coverage
+regressions and the remaining adversarial findings.
 
-The adopted inventory contains 7,775 open candidates across 1,000 tests and 110
-support modules. Complete reconciliation preserves the census, all 29 generated
-declarations and every finding disposition, with no unexplained loss or exception
-transfer. The canonical writer and all three normal lint commands pass; timings
-are 9.943s, 9.503s and 9.588s with complete resource context retained. Earlier
-failed cohorts remain historical evidence.
+The adopted inventory contains 8,138 open candidates across 1,000 tests and 110
+support modules. The third-round repair preserves 7,748 previous row payloads,
+updates 27 outcome hints, and adds 363 reviewed scope/provider findings without
+removing a row or transferring an exception. All 29 generated declarations remain.
+The final ordinary commands pass in 9.563s, 9.630s and 9.926s with unchanged
+source and canonical artifacts. Earlier failed timing cohorts remain recorded
+in history/2026-09-10-r3-performance.md; no measurement is adjusted for load.
 
-The repaired runner passes all 52 registrations on Node 22, Node 24 and Bun plus
-normal scoped Node 22 coverage. The detector passes 207 focused cases and final
-repo-cli audit/docgen in 423.690 seconds. Round one and round two are closed;
-round three is the remaining adversarial review. Final CLI coverage, full
-aggregate proof and exact-head hosted/review closure remain. The publishing commit
-must include the repo-configs changeset. Continue from the September 10 integration
-record; these local proofs do not yet make the remote PR merge-ready.
+The runner's 52 registrations and scoped Node 22 coverage remain green on its
+unchanged source. The detector and Knowledge checkpoint passes 288 focused
+cases, compiler, lint, Fallow and full CLI package verification. Final scoped
+Node 22 coverage passes 3,656 tests across 181 files with five existing skips;
+both prior file-metric regressions are fixed without changing their floors.
+All three adversarial rounds are closed, with every finding fixed and verified
+in history/2026-09-10-adversarial-round-3-closure.md. See [PR #1067](https://github.com/beep-effect/beep-effect/pull/1067) for
+exact-head full local, hosted and review closeout evidence. The superseded
+aggregate run ended intentionally before edits and is not accepted proof.
 
 [PR #1047](https://github.com/beep-effect/beep-effect/pull/1047) promoted the
 conformant MemoryFileSystem and was merged by Benjamin on 2026-09-09 after all

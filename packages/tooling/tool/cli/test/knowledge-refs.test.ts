@@ -1171,3 +1171,79 @@ it.effect(
     }
   })
 );
+
+it.effect(
+  "rejects malformed canonical inventory before authorizing source evidence",
+  Effect.fnUntraced(function* () {
+    const source = 'consume("prefix /tmp/data suffix")';
+    const docs = yield* generatedDocuments(generatedFinding(source, source));
+    const valid = yield* scanFixture({
+      [generatedInventoryPath]: docs[generatedInventoryPath],
+      [generatedSourcePath]: source,
+    });
+    expect(A.map(hostObservations(valid), (row) => row.classification)).toEqual(["audit-pattern-literal"]);
+    expect(knowledgeRefsLiveDebt(valid).length).toBe(0);
+    const malformed = yield* scanFixture({
+      [generatedInventoryPath]: `${docs[generatedInventoryPath]} malformed`,
+      [generatedSourcePath]: source,
+    });
+    const hosts = hostObservations(malformed);
+    expect(hosts.length).toBe(1);
+    expect(A.map(hosts, (row) => (row.ref.kind === "host-path" ? row.ref.raw : ""))).toEqual(["/tmp/data"]);
+    expect(A.filter(hosts, (row) => row.classification === "audit-pattern-literal")).toEqual([]);
+    expect(knowledgeRefsLiveDebt(malformed).length).toBe(1);
+  })
+);
+
+it.effect(
+  "maps serialized Unicode escapes before evidence anchors without authorizing reasons or rereading source",
+  Effect.fnUntraced(function* () {
+    const source = 'consume("x /tmp/data suffix")';
+    const finding = EffectVitestFinding.make({
+      ...generatedFinding(source, source),
+      reason: O.some("note /home/operator/guidance end"),
+    });
+    const docs = yield* generatedDocuments(finding);
+    const escaped = R.map(docs, Str.replace("x /tmp/data", "\\u0078 /tmp/data"));
+    const reads = A.empty<string>();
+    const oracle = makeFixtureOracle({ ...escaped, [generatedSourcePath]: source });
+    const report = yield* census({
+      ...oracle,
+      readBytes: (file) => {
+        reads.push(file);
+        return oracle.readBytes(file);
+      },
+    });
+    const hosts = hostObservations(report);
+    expect(hosts.length).toBe(4);
+    expect(
+      A.map(
+        A.filter(hosts, (row) => row.classification === "audit-pattern-literal"),
+        (row) => (row.ref.kind === "host-path" ? row.ref.raw : "")
+      )
+    ).toEqual(["/tmp/data", "/tmp/data"]);
+    expect(A.map(knowledgeRefsLiveDebt(report), (row) => (row.ref.kind === "host-path" ? row.ref.raw : ""))).toEqual([
+      "/home/operator/guidance",
+      "/home/operator/guidance",
+    ]);
+    expect(A.filter(reads, (file) => file === generatedSourcePath).length).toBe(1);
+    const unescaped = yield* scanFixture({ ...docs, [generatedSourcePath]: source });
+    expect(A.map(hostObservations(unescaped), (row) => [row.documentId, row.classification])).toEqual(
+      A.map(hosts, (row) => [row.documentId, row.classification])
+    );
+    expect(
+      A.map(
+        hosts,
+        (row) =>
+          (row.location.column ?? 0) -
+          A.findFirst(
+            hostObservations(unescaped),
+            (other) => other.documentId === row.documentId && other.ref.raw === row.ref.raw
+          ).pipe(
+            O.map((other) => other.location.column ?? 0),
+            O.getOrElse(() => 0)
+          )
+      )
+    ).toEqual([5, 5, 5, 0]);
+  })
+);

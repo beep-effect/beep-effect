@@ -363,13 +363,15 @@ slowest: [{ file, testName, ms }] }` derived from the vitest JSON reporter outpu
 
 Rules: share the expensive outer resource through `it.layer`, keep the per-test inner resource
 scoped to the test body (`fs.makeTempDirectoryScoped()`, a fresh connection, a distinct table);
-no `Effect.scoped` inside `it.effect` / `it.live` bodies (the runner owns the scope); every
+remove redundant whole-body `Effect.scoped` inside `it.effect` / `it.live` (the runner owns
+that scope), while preserving deliberate shorter lifetimes for review; every
 `withXyz` wrapper is deleted in favor of `it.layer` + scoped resources or `MemoryFileSystem`;
 `{ timeout: "30 seconds" }` on container / server layers; nested `it.layer` for sub-dependencies;
 SQL fixtures go through `makeSqlTestLayer` inside `it.layer`; `provideScopedLayer` call sites are
-audited (most become `it.layer`). Gotchas to enforce: TestClock persists across a block (reset per
-test or `excludeTestServices: true` + explicit provide when tests adjust time); `Layer` values are
-memoized by identity inside a block, so a shared `MemoryFileSystem.layer` is one volume (make a
+audited (most become `it.layer`). Gotchas to enforce: TestClock persists across a block. Choose
+clock ownership and concurrency explicitly; do not reset a shared clock while another test uses
+it. `excludeTestServices: true` removes TestClock and requires explicit provision when needed.
+`Layer` values are memoized by identity inside a block, so a shared `MemoryFileSystem.layer` is one volume (make a
 fresh layer per block when isolation matters); an `it.layer` build failure dies the whole block
 (`Effect.orDie`), which is desired.
 
@@ -452,7 +454,7 @@ Node Vitest JSON reporter, not instrumentation duration.
 | EV012 | `vi.mock` / `vi.spyOn` on Effect services | 22 files | `Layer.mock` / `Layer.succeed` stubs |
 | EV013 | Hand-rolled retry / attempt loops in tests | 85 files (judgment) | root cause, or `it.flakyTest` with reason (D6) |
 | EV014 | `it.layer` over a container / server / scoped layer without a `timeout` option | ⊂ 27 | `{ timeout: "30 seconds" }` |
-| EV015 | `TestClock.adjust` inside an `it.layer` block without per-test reset | judgment | reset per test or `excludeTestServices` |
+| EV015 | `TestClock.adjust` inside an `it.layer` block with shared-clock ownership to review | judgment | `TestClock.adjust` guidance; choose shared or fresh clock ownership and safe concurrency explicitly |
 
 Every rule: precise AST predicate, at least one positive and one negative fixture test, a
 false-positive escape hatch (`status: exception` + `reason`), and the KG `replaces` back-link.

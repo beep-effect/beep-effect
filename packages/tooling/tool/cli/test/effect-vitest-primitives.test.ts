@@ -443,7 +443,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
       const hydrated = yield* applyEffectVitestPrimitiveGraph([outcome], graph);
       const row = hydrated[0];
       assertTrue(row !== undefined);
-      strictEqual(row.replacement.primitive, "utils.assertExitSuccess");
+      strictEqual(row.replacement.primitive, "readme.exit");
       assertTrue(Str.includes("utils.assertExitSuccess")(row.replacement.sketch));
       assertTrue(Str.includes("utils.assertExitFailure")(row.replacement.sketch));
       assertTrue(!Str.includes("utils.assertSuccess:")(row.replacement.sketch));

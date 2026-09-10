@@ -1544,3 +1544,165 @@ it("requires exact provenance for computed transforms, pipe predicates and Array
   ])
     assertFalse(hasRule(body, "EV006"));
 });
+
+it.each([
+  'it.effect("health", () => verifyHealth().pipe(Fx.scoped));',
+  'import { pipe } from "effect"; it.live("health", () => pipe(verifyHealth(), Fx.scoped));',
+  'import { scoped as closeScope } from "effect/Effect"; it.effect("health", () => program.pipe(closeScope));',
+  'it.live("tika", Fx.fnUntraced(function* () { yield* acquire; }, Fx.scoped));',
+])("recognizes final whole-body scope application: %s", (source) => {
+  const rows = A.filter(findings(source), (row) => row.ruleId === "EV004");
+  deepStrictEqual(
+    A.map(rows, (row) => [row.class, row.mechanization]),
+    [["redundant-whole-body-scope", "detector"]]
+  );
+});
+
+it.each([
+  'it.effect("reader", Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped, Fx.flip); yield* after; }));',
+  'it.effect("tail", () => program.pipe(Fx.scoped, unknown));',
+  'it.live("tika", Fx.fnUntraced(function* () { yield* acquire; }, Fx.scoped, unknown));',
+  'const shared = () => program.pipe(Fx.scoped); shared(); it.effect("shared", () => shared());',
+])("retains shorter or uncertain scope ownership: %s", (source) => {
+  const rows = A.filter(findings(source), (row) => row.ruleId === "EV004");
+  deepStrictEqual(
+    A.map(rows, (row) => row.mechanization),
+    ["judgment"]
+  );
+  assertFalse(A.some(rows, (row) => row.class === "redundant-whole-body-scope"));
+});
+
+it.each([
+  'const scoped = Fx.scoped(program); it.effect("hoisted", () => scoped);',
+  'it.effect("shadow", (Fx) => program.pipe(Fx.scoped));',
+  'import { scoped } from "lookalike"; it.effect("fake", () => program.pipe(scoped));',
+  'it("plain", () => program.pipe(Fx.scoped));',
+  "const unused = program.pipe(Fx.scoped);",
+])("does not invent applied test scopes: %s", (source) => {
+  assertFalse(hasRule(source, "EV004"));
+});
+
+it.each([
+  'const provideLive = provide(L.effect(Service, acquire)); it.live("tika", Fx.fnUntraced(function* () { yield* program; }, provideLive));',
+  'const provideLive = provide(L.effect(Service, acquire)); it.effect("pipe", () => program.pipe(provideLive));',
+  'const provideLive = provide(L.effect(Service, acquire)); it.effect("call", () => provideLive(program));',
+  'const provideLive = Fx.provide(L.effect(Service, acquire)); const alias = provideLive; it.live("alias", Fx.fnUntraced(function* () { yield* program; }, alias));',
+])("retains applied immutable provider provenance: %s", (source) => {
+  const rows = A.filter(
+    findings(`import { provideScopedLayer as provide } from "@beep/test-utils/Layer"; ${source}`),
+    (row) => row.ruleId === "EV002"
+  );
+  deepStrictEqual(
+    A.map(rows, (row) => [row.class, row.mechanization, row.replacement.primitive]),
+    [["per-test-layer-provide", "detector", "it.layer"]]
+  );
+});
+
+it("preserves pure, unknown, shadowed and unused provider-result distinctions", () => {
+  const header = 'import { provideScopedLayer as provide } from "@beep/test-utils";';
+  for (const layer of ["L.succeed(Service, {})", "L.mock(Service, {})"]) {
+    assertFalse(
+      hasRule(
+        `${header} const provideLive = provide(${layer}); it.live("stub", Fx.fnUntraced(function* () { yield* program; }, provideLive));`,
+        "EV002"
+      )
+    );
+  }
+  const rows = A.filter(
+    findings(
+      `${header} const provideLive = provide(ImportedLive); it.live("opaque", Fx.fnUntraced(function* () { yield* program; }, provideLive));`
+    ),
+    (row) => row.ruleId === "EV002"
+  );
+  deepStrictEqual(
+    A.map(rows, (row) => [row.class, row.mechanization]),
+    [["unresolved-layer-provide", "judgment"]]
+  );
+  for (const source of [
+    `${header} const unused = provide(L.effect(Service, acquire)); it.live("unused", () => program);`,
+    `${header} let mutable = provide(L.effect(Service, acquire)); it.live("mutable", Fx.fnUntraced(function* () { yield* program; }, mutable));`,
+    `${header} const provideLive = provide(L.effect(Service, acquire)); it.live("shadow", (provideLive) => program.pipe(provideLive));`,
+    'import { provideScopedLayer as provide } from "lookalike"; const provideLive = provide(Resource); it.live("fake", Fx.fnUntraced(function* () { yield* program; }, provideLive));',
+  ])
+    assertFalse(hasRule(source, "EV002"));
+});
+
+it("distinguishes nested resource, pure-stub and opaque layer provisions", () => {
+  const resource = A.filter(
+    findings(
+      'it.effect("nested", () => Fx.succeed(1).pipe(Fx.provide(L.mergeAll(L.effect(Service, acquire), L.empty))))'
+    ),
+    (row) => row.ruleId === "EV002"
+  );
+  deepStrictEqual(
+    A.map(resource, (row) => [row.class, row.mechanization, row.replacement.primitive]),
+    [["per-test-layer-provide", "detector", "it.layer"]]
+  );
+  assertFalse(
+    hasRule(
+      'it.effect("stub", () => program.pipe(Fx.provide(L.mergeAll(L.succeed(Service, {}), L.succeed(Other, {})))))',
+      "EV002"
+    )
+  );
+  const unknown = A.filter(
+    findings('it.effect("opaque", () => program.pipe(Fx.provide(wrap(unknownLayer))))'),
+    (row) => row.ruleId === "EV002"
+  );
+  deepStrictEqual(
+    A.map(unknown, (row) => [row.class, row.mechanization]),
+    [["unresolved-layer-provide", "judgment"]]
+  );
+});
+
+it.each([
+  'it.live("tika", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(engine.extract(operation)); if (R.isFailure(outcome)) expect(outcome.failure._tag).toBe("ExtractError"); }));',
+  'it.effect("success Boolean", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(program); expect(R.isSuccess(outcome)).not.toBe(false); }));',
+  'it.effect("unknown", () => expect(Fx.result(program)).toBeDefined());',
+])("keeps result migration neutral without inventing expected values: %s", (source) => {
+  const rows = A.filter(findings(source), (row) => row.ruleId === "EV005");
+  deepStrictEqual(
+    A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
+    [["readme.exit", "judgment"]]
+  );
+  assertTrue(A.every(rows, (row) => row.replacement.sketch.includes("Cause")));
+});
+
+it.each([
+  'it.effect("known success", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(Fx.succeed(42)); expect(outcome).toEqual(R.succeed(42)); }));',
+  'it.effect("known failure", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(Fx.fail(error)); expect(outcome).toEqual(R.fail(error)); }));',
+  'it.effect("mixed", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(program); expect(R.isFailure(outcome) || R.isSuccess(outcome)).toBe(true); }));',
+])("keeps Result operands intact while requiring Exit migration review: %s", (source) => {
+  const rows = A.filter(findings(source), (row) => row.ruleId === "EV005");
+  deepStrictEqual(
+    A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
+    [["readme.exit", "judgment"]]
+  );
+});
+
+it("does not invent result migration for an unexecuted unasserted effect or a shadow", () => {
+  assertFalse(hasRule('it.effect("unused", () => { const unused = Fx.result(program); return Fx.void; });', "EV005"));
+  assertFalse(hasRule('it.effect("shadow", (Fx) => expect(Fx.result(program)).toBeDefined());', "EV005"));
+});
+
+it("retains inner helper pipe scopes and ambiguous generator-return lifetimes as judgment", () => {
+  const inner = A.filter(
+    findings(
+      'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); yield* after; }); it.effect("helper", helper);'
+    ),
+    (row) => row.ruleId === "EV004"
+  );
+  deepStrictEqual(
+    A.map(inner, (row) => [row.class, row.mechanization]),
+    [["inner-helper-scope-lifetime-review", "judgment"]]
+  );
+  for (const source of [
+    'it.effect("returned value", Fx.fnUntraced(function* () { return program.pipe(Fx.scoped); }));',
+    'it.live("opaque body", Fx.fnUntraced(body, Fx.scoped));',
+  ]) {
+    const rows = A.filter(findings(source), (row) => row.ruleId === "EV004");
+    deepStrictEqual(
+      A.map(rows, (row) => row.mechanization),
+      ["judgment"]
+    );
+  }
+});

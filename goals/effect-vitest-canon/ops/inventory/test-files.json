@@ -6639,14 +6639,14 @@
     "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 68141,
-    "lines": 1546
+    "bytes": 76013,
+    "lines": 1708
   },
   {
     "file": "packages/tooling/tool/cli/test/effect-vitest-primitives.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 22062,
+    "bytes": 22050,
     "lines": 506
   },
   {
@@ -6856,8 +6856,8 @@
     "file": "packages/tooling/tool/cli/test/knowledge-refs.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 54559,
-    "lines": 1173
+    "bytes": 57696,
+    "lines": 1249
   },
   {
     "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",

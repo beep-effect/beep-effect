@@ -41,10 +41,10 @@ per-package JSON timing and relevant source. Evidence without a reproduction
 may justify a confidence limit, not an invented cause.
 Pinned anchors: readme.testclock (README 108-154), TestClock.adjust
 (testing/TestClock.ts 507-508), TestClock.withLive (580-581),
-it.live (index.ts 146), and flakyTest in the graph.
-Pinned runtime internal.ts 331-351 defines flakyTest retry behavior.
-The worked child/join shape is pinned in Effect.ts:8525 (forkChild),
-Effect.ts:2440 (as), and Fiber.ts:279 (join), at the same commit.
+it.live (index.ts 166 for the method and 195 for the export), and flakyTest in the graph.
+Pinned runtime internal.ts 357 defines flakyTest retry behavior.
+The worked child/join shape is pinned in Effect.ts:8533 (forkChild),
+Effect.ts:2459 (as), and Fiber.ts:304 (join), at the same commit.
 
 TestClock.withLive requires an installed TestClock. Default live and
 excludeTestServices environments lack one; explicit provision can add it.

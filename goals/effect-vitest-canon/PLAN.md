@@ -12,8 +12,8 @@ Status: `active`
 | P0d | complete | Pinned primitives graph | Every export/member/helper/README section covered; installed pin guard tested. |
 | P0e | complete | Charters and instrumented it | Pinned charters and Node/Bun runner proofs green. |
 | P0.5 | complete | MemoryFileSystem promotion | Node/Bun/Memory conformance and test-utils proof green; PR1047 merged by Benjamin after acceptance at 0fce23f. |
-| P0f | in-progress | Adversarial review | Three Grok rounds; no open blockers; majors fixed or waived. |
-| P0g | pending | Initial PR and ratification | Yeet merge-ready; Benjamin approves plan and merges before P1. |
+| P0f | complete | Adversarial review | Three Grok rounds; no open blockers; majors fixed or waived. |
+| P0g | in-progress | Initial PR and ratification | Yeet merge-ready; Benjamin approves plan and merges before P1. |
 | P1 | pending | Inventory | All four lenses cover every file; timing evidence; Benjamin acknowledges before P2. |
 | P2 | pending | Remediation waves | Each topological wave passes package proof and shrinks baseline exactly. |
 | P3 | pending | Close | Empty baseline; hosted proof; following-week p95; reflection and state flip in final PR. |
@@ -27,24 +27,40 @@ Main, including #1060 and #1082, is integrated through `8cb18e6` by merge `36303
 The current source contract is rc113 at d3b837aee836f35d625d55205f7d6e61305fc198.
 The 100-entry graph preserves its API names, signatures and coordinates, with
 conditional assertion and shared-clock guidance added during round two. The
-remote checkpoint remains b86269212e; its Greptile 5/5 and closed threads are
-historical evidence for that head.
+prior published checkpoint is b721a248a9. Its hosted unit, type-check, lint-policy
+and docgen lanes pass; this follow-up closes the remaining review and coverage
+findings.
 
-Final local runner repairs pass all 52 registrations on Node 22, Node 24 and Bun
-plus normal scoped Node 22 coverage. Detector repairs pass 207 focused cases,
-compiler/lint/Fallow checks and full repo-cli audit/docgen in 423.690 seconds.
-The accepted canonical inventory contains 7,775 open candidates across 1,000
-tests and 110 support modules. Its complete correspondence, graph guidance and
-all 29 generated declarations are verified without unexplained deltas or exception
-transfer. Three normal lint commands pass in 9.943s, 9.503s and 9.588s with stable
-source/artifacts and complete host context; earlier failed cohorts remain recorded.
+The unchanged runner passes all 52 registrations on Node 22, Node 24 and Bun,
+plus normal scoped Node 22 coverage. The R3 detector and Knowledge checkpoint
+passes 288 focused cases, compiler, lint and Fallow checks. The earlier full CLI
+package audit/docgen remains evidence for its own 207-case source cohort; final
+package audit and docgen pass in 420.944 seconds on the current repairs.
 
-Round one and round two are closed. Round three, final CLI coverage, full
-aggregate proof and exact-head hosted/review checks still gate readiness. Main's
-Vitest 4.1.11 remains outside the adapter's declared peer range; actual runtime
-binding and exercised behavior are recorded separately. The publishing commit
-must include the repo-configs release note. P0f/P0g remain open; P1/P2 are not
-authorized. See history/2026-09-10-pr1067-rc113-integration.md.
+The adopted canonical inventory contains 8,138 open candidates across 1,000 tests
+and 110 support modules. The complete 7,775-to-8,138 reconciliation preserves 7,748
+full payloads, updates 27 outcome hints and adds 363 reviewed scope/provider rows,
+with zero removals or exception transfers. All 29 declarations remain. Three
+final ordinary commands pass in 9.563s, 9.630s and 9.926s. The optimized
+traversal preserves every complete finding and census record, with all source
+and canonical artifacts stable. Both earlier failed cohorts remain recorded
+in history/2026-09-10-r3-performance.md. Full package proof and scoped Node 22
+coverage pass.
+
+All three adversarial rounds are closed. Round three completed its required
+reading and its two major and two minor findings are fixed, with focused tests,
+full package proof and complete row reconciliation. The final Node 22 CLI
+coverage passes 3,656 tests across 181 files,
+with five existing skips. Knowledge branch coverage is 95.60% against 95.31%;
+detector function coverage is 98.12% against 97.63%. The two prior metric
+failures are fixed; the coverage baseline remains unchanged.
+The superseded full Yeet run intentionally ended with exit 130 before source
+edits and is not accepted proof. The exact-head full local, hosted and review
+closeout evidence is tracked on PR #1067. Main's Vitest 4.1.11 remains outside the adapter's declared peer range;
+actual binding and exercised behavior are recorded separately. The repo-configs
+release note is published. P0f is complete; P0g is in progress. P1/P2 are not
+authorized. See
+history/2026-09-10-pr1067-rc113-integration.md.
 
 ## Historical evidence through rc.112
 
@@ -159,10 +175,10 @@ skipped. The first runner-loss failure is retained in the receipt.
 P0f is now in progress. Benjamin authorizes merges; P0g/P1/P2 remain pending.
 All runtime/verification limitations are in the hosted receipt and lane reports.
 
-## P0f current work
+## P0f historical round-one checkpoint
 
-
-Latest continuation (2026-09-10): full repo-cli package audit/docgen passes on
+The current state is in the integration section above. At this earlier
+checkpoint on 2026-09-10, full repo-cli package audit/docgen passes on
 the final merged inputs in 406.858s, with no source drift. The scanner suite
 passes 113 focused cases. Runner suites pass on Node 22.22.3, Node 24.20.0 and
 Bun 1.4.2; full test-utils package verification and hosted-mode scoped coverage
