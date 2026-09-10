@@ -56,13 +56,20 @@ paths = [
 [[rules]]
 id = "generic-api-key"
 
-[[allowlists]]
-description = "beep-ci-ops auditor run records (hypotheses, analyses, proposals, reviews, dockets, the archived dispositions index) quote validator config facts verbatim, e.g. (config_key_value, \"nonce=<uuid>\") and _tag=admission-<event>; the config_key_value predicate name trips the generic-api-key keyword prefilter on admission nonces that are already committed in the corpus pins. The records are digest-bound (review chain_sha256) and cannot be reworded; scoped to the run trees only."
+[[rules.allowlists]]
+description = "beep-ci-ops auditor run records (hypotheses, analyses, proposals, reviews, dockets, the archived dispositions index) quote validator config facts verbatim, e.g. (config_key_value, \"nonce=<uuid>\") and _tag=admission-<event>; the config_key_value predicate name trips this rule's keyword prefilter on admission nonces already committed in the corpus pins. The records are digest-bound (review chain_sha256) and cannot be reworded. Scoped to this rule, these trees, and lines carrying exactly those shapes; every other detector still scans them."
+condition = "AND"
+regexTarget = "line"
 paths = [
   '''^(?:/repo/)?explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/(?:hypotheses|foundational|alternative|proposals|sittings|review-audit|denotation-batches)/[^/]+$''',
   '''^(?:/repo/)?explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work-run3/impl-report\.md$''',
   '''^(?:/repo/)?explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/runs/orun-[^/]+\.(?:index|manifest)\.yaml$''',
   '''^(?:/repo/)?explorations/beep-ci-operational-ontology/ontology/extraction/s4/archives/beep-ci-ops/orun-[^/]+\.(?:observations|work)/.*$''',
+]
+regexes = [
+  '''config_key_value''',
+  '''nonce=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}''',
+  '''_tag=admission-[a-z-]+''',
 ]
 
 [[rules.allowlists]]
