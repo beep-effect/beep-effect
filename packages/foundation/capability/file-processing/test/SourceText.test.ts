@@ -14,6 +14,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -142,3 +143,35 @@ describe("@beep/file-processing SourceText", () => {
       )._tag
     ).toBe("Passed"));
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes SourceTextPage through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      SourceTextPage.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const codec = S.make<S.Codec<SourceTextPage, unknown>>(
+      SchemaAST.decodeTo(link.to, SchemaAST.toType(SourceTextPage.ast), link.transformation)
+    );
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(SourceTextPage),
+      (page) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(codec)(page);
+          expect(encoded).toEqual({
+            identity: yield* S.encodeEffect(SourceTextIdentity)(page.identity),
+            pageCount: page.pageCount,
+            pageIndex: page.pageIndex,
+            startOffset: page.startOffset,
+            text: page.text,
+          });
+          return true;
+        }),
+      fcRuns(50)
+    );
+    expect(result._tag).toBe("Passed");
+  })
+);

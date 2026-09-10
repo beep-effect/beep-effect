@@ -6,6 +6,8 @@ import {
   expand,
   expandOption,
   expandPredicate,
+  makeCurieCodec,
+  makeCurieFromIri,
 } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -118,4 +120,23 @@ describe("CURIE codec", () => {
       inverse: true,
     });
   });
+});
+
+describe("custom vocabulary codecs", () => {
+  it.effect(
+    "round-trips registered terms and rejects unknown values",
+    Effect.fnUntraced(function* () {
+      const codec = makeCurieFromIri(CoreVocab);
+      const iri = "http://www.w3.org/2004/02/skos/core#prefLabel";
+      expect(yield* S.decodeEffect(codec)("skos:prefLabel")).toBe(iri);
+      expect(yield* S.encodeEffect(codec)(iri)).toBe("skos:prefLabel");
+      expect((yield* Effect.flip(S.decodeEffect(codec)("missing:term"))).message).toContain("Unknown CURIE");
+      expect((yield* Effect.flip(S.encodeEffect(codec)("https://unknown.example/term"))).message).toContain(
+        "Unknown IRI"
+      );
+      const helpers = makeCurieCodec(CoreVocab);
+      expect(helpers.decode("skos:prefLabel")).toBe(iri);
+      expect(helpers.encode(iri)).toBe("skos:prefLabel");
+    })
+  );
 });

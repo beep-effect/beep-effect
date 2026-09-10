@@ -43,6 +43,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -1490,3 +1491,27 @@ describe("Pandoc.codec", () => {
     ).toEqual([]);
   });
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes Table through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(Table.ast).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const codec = S.make<S.Codec<Table, unknown>>(
+      SchemaAST.decodeTo(link.to, SchemaAST.toType(Table.ast), link.transformation)
+    );
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(Table),
+      (value) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(codec)(value);
+          expect(encoded).toEqual({});
+          return true;
+        }),
+      fcRuns(50)
+    );
+    expect(result._tag).toBe("Passed");
+  })
+);

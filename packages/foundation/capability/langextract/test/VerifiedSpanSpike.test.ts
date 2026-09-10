@@ -17,6 +17,7 @@ import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -402,3 +403,41 @@ describe("verified-span hostile-text contract", () => {
       )._tag
     ).toBe("Passed"));
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes TextOffsetRange through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      TextOffsetRange.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const value = TextOffsetRange.make({
+      start: NonNegativeInt.make(1),
+      end: NonNegativeInt.make(4),
+      unit: "utf16-code-unit",
+    });
+    const codec = S.make<S.Codec<TextOffsetRange, unknown>>(
+      SchemaAST.decodeTo(S.Unknown.ast, SchemaAST.toType(TextOffsetRange.ast), link.transformation)
+    );
+    expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
+  })
+);
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes Utf16TextRange through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      Utf16TextRange.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const value = Utf16TextRange.make({ startChar: NonNegativeInt.make(1), endChar: NonNegativeInt.make(4) });
+    const codec = S.make<S.Codec<Utf16TextRange, unknown>>(
+      SchemaAST.decodeTo(S.Unknown.ast, SchemaAST.toType(Utf16TextRange.ast), link.transformation)
+    );
+    expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
+  })
+);

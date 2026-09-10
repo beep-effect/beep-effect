@@ -1,5 +1,7 @@
-import { DEFAULT_FC_NUM_RUNS, fcRuns, parseFcNumRunsFloor } from "@beep/fc-runs";
-import { describe, expect, it } from "vitest";
+import { DEFAULT_FC_NUM_RUNS, envFcSeed, fcRuns, parseFcNumRunsFloor } from "@beep/fc-runs";
+import { describe, expect, it, vi } from "@effect/vitest";
+import { ConfigProvider, Context } from "effect";
+import * as O from "effect/Option";
 
 describe("fcRuns (one-round-loop P1 env-max helper)", () => {
   it("keeps the inline value as a floor and defaults to the helper's run count", () => {
@@ -40,5 +42,24 @@ describe("fcRuns (one-round-loop P1 env-max helper)", () => {
     });
     expect(result.success).toBe(true);
     expect(result.stdout.toString()).toBe("400/9000");
+  });
+});
+
+describe("environment seed parsing", () => {
+  it.each(["42", "-7", "0", "2.5", "invalid"])("reads the configured seed %s without pinning property tests", (raw) => {
+    const provider = Context.get(Context.empty(), ConfigProvider.ConfigProvider);
+    const configured = ConfigProvider.fromEnv({ env: { BEEP_FC_SEED: raw } });
+    const load = vi.spyOn(provider, "load").mockImplementation(configured.load);
+    try {
+      const parsed = Number(raw);
+      const expected = Number.isInteger(parsed) ? O.some(parsed) : O.none();
+      expect(envFcSeed()).toEqual(expected);
+      const options = fcRuns(100);
+      expect(options.runs).toBe(100);
+      if (O.isSome(expected)) expect(options.seed).toBe(expected.value);
+      else expect(options).not.toHaveProperty("seed");
+    } finally {
+      load.mockRestore();
+    }
   });
 });

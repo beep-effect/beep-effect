@@ -123,11 +123,9 @@ const makeNonEmptyReferenceChecks = (
         description,
         message,
         arbitraryConstraint: {
-          patterns: [
-            Str.startsWith(identifier, "Relative")
-              ? /^[a-z][a-z0-9/]{0,30}$/
-              : /^https:\/\/example\.org\/[a-z0-9]{1,30}$/,
-          ],
+          // Every family built here is absolute (URI, AbsoluteURI); the
+          // reference builder above owns the relative generation pattern.
+          patterns: [/^https:\/\/example\.org\/[a-z0-9]{1,30}$/],
         },
       }),
     ],

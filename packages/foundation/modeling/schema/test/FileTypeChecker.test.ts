@@ -24,6 +24,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { FileType as FileTypeValue } from "@beep/schema/FileTypeChecker";
 
@@ -410,3 +411,57 @@ describe("validateFileType", () => {
     expect(validateFileType([0, 0, 0], ["avif"])).toBe(false);
   });
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes FileSignature through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      FileSignature.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const codec = S.make<S.Codec<FileSignature, unknown>>(
+      SchemaAST.decodeTo(link.to, SchemaAST.toType(FileSignature.ast), link.transformation)
+    );
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(FileSignature),
+      (value) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(codec)(value);
+          expect(encoded).toEqual(yield* S.encodeEffect(FileSignature)(value));
+          return true;
+        }),
+      fcRuns(50)
+    );
+    expect(result._tag).toBe("Passed");
+  })
+);
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes DetectedFileInfo through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      DetectedFileInfo.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const codec = S.make<S.Codec<DetectedFileInfo, unknown>>(
+      SchemaAST.decodeTo(link.to, SchemaAST.toType(DetectedFileInfo.ast), link.transformation)
+    );
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(DetectedFileInfo),
+      (value) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(codec)(value);
+          expect(encoded).toEqual(yield* S.encodeEffect(FileTypeInfo)(value.info));
+          expect(value.mimeType).toBe(value.info.mimeType);
+          expect(value.description).toBe(value.info.description);
+          return true;
+        }),
+      fcRuns(50)
+    );
+    expect(result._tag).toBe("Passed");
+  })
+);

@@ -13,6 +13,7 @@ import { Uint64 } from "@beep/schema/Uint64";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownBytes = S.decodeUnknownEffect(Bytes);
@@ -433,4 +434,40 @@ describe("protobuf bytes scalar schema", () => {
       )
     ).toMatchObject({ _tag: "Passed" });
   });
+});
+
+describe("protobuf generation representations", () => {
+  for (const schema of [Double, Float]) {
+    it.effect(
+      `encodes finite and special values through the ${schema === Double ? "Double" : "Float"} generation link`,
+      () =>
+        Effect.gen(function* () {
+          const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+            schema.ast
+          ).annotations;
+          const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+          if (link === undefined || link.transformation._tag !== "Transformation")
+            throw new Error("Missing generation transformation");
+          const codec = S.make<S.Codec<number, unknown>>(
+            SchemaAST.decodeTo(link.to, SchemaAST.toType(schema.ast), link.transformation)
+          );
+          for (const value of [0, 1.25, -1.25, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+            const encoded = yield* S.encodeEffect(codec)(value);
+            expect(encoded).toBe(Number.isFinite(value) ? value : String(value));
+            expect(yield* S.decodeUnknownEffect(codec)(encoded)).toBe(value);
+          }
+          const result = yield* Arbitrary.checkEffect(
+            Arbitrary.schema(schema),
+            (value) =>
+              Effect.gen(function* () {
+                const encoded = yield* S.encodeEffect(codec)(value);
+                expect(yield* S.decodeUnknownEffect(codec)(encoded)).toBe(value);
+                return true;
+              }),
+            fcRuns(100)
+          );
+          expect(result._tag).toBe("Passed");
+        })
+    );
+  }
 });

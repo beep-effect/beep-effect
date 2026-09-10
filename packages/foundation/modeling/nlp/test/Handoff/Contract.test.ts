@@ -7,6 +7,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -221,3 +222,20 @@ describe("makeProvenance", () => {
     expect(prov.confidence).toBe(0.9);
   });
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes Contract.Span through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      Contract.Span.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const codec = S.make<S.Codec<Contract.Span, unknown>>(
+      SchemaAST.decodeTo(link.to, SchemaAST.toType(Contract.Span.ast), link.transformation)
+    );
+    const value = Contract.Span.make({ start: NonNegativeInt.make(1), end: NonNegativeInt.make(4) });
+    expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
+  })
+);

@@ -15,6 +15,7 @@ import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownEscapedPnLocalOption = S.decodeUnknownOption(EscapedPnLocal);
@@ -146,4 +147,37 @@ describe("PnLocal", () => {
       })
     ).toBe("<https://ns.beep.sh/x%22%3E%20%3Curn:evil%3E>");
   });
+});
+
+describe("PN_LOCAL boundary grammar", () => {
+  it("checks single characters, interior punctuation, and invalid final units", () => {
+    for (const value of ["a", ":", "a:b", "a\u0300b", "a\u203Fb"]) expect(isSafeLocal(value), value).toBe(true);
+    for (const value of ["!a", "a/b", "a ", "a.!"]) expect(isSafeLocal(value), value).toBe(false);
+    for (const value of ["a", "a.b", "a-b"]) expect(isSafePrefix(value), value).toBe(true);
+    for (const value of ["", "a:b", "a/b", "a:"]) expect(isSafePrefix(value), value).toBe(false);
+    for (const value of ["", "!a", "a.", "a/b", "%", "%A", "%GG", "bad\\z"]) {
+      expect(acceptsEscapedLocal(value), value).toBe(false);
+    }
+    for (const value of ["a", "%20", "%af", "a%20b", "a:b", "a.b", "𐀀x"]) {
+      expect(acceptsEscapedLocal(value), value).toBe(true);
+    }
+    expect(prefixedNameOrIri("term", { prefix: "ex", fullIri: "https://example.com/term" })).toBe("ex:term");
+  });
+});
+
+it("preserves PN names through both arbitrary-codec directions", () => {
+  for (const schema of [SafePnLocal, SafePnPrefix, EscapedPnLocal]) {
+    const arbitrary = S.resolveAnnotations(schema)?.toCodecArbitrary;
+    if (typeof arbitrary !== "function") return expect.fail("Expected a PN name arbitrary codec");
+    const link = (arbitrary as S.Annotations.ToArbitrary.Declaration<string, []>)({
+      typeParameters: [],
+      constraint: undefined,
+    });
+    if (link.transformation._tag !== "Transformation")
+      return expect.fail("Expected a bidirectional PN name transformation");
+    const codec = S.make<S.Codec<string, string>>(SchemaAST.decodeTo(link.to, schema.ast, link.transformation));
+    const value = schema === SafePnPrefix ? "skos" : "prefLabel";
+    expect(S.decodeSync(codec)(value)).toBe(value);
+    expect(S.encodeSync(codec)(value)).toBe(value);
+  }
 });

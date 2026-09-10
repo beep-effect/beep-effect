@@ -1368,3 +1368,51 @@ Demo video`);
     ).toBe("Passed");
   });
 });
+
+describe("render boundary shapes", () => {
+  it("renders empty and aligned tables through direct and policy adapters", () => {
+    const empty = Table.make({ children: [] });
+    const table = Md.table(
+      [
+        ["Name", "Value"],
+        ["A", "B"],
+      ],
+      { align: ["none", "right"], headerRow: true }
+    );
+    const body = Md.table([["Body"]], { headerRow: false });
+    expect(renderMarkdownBlock(empty)).toBe("");
+    expect(renderHtmlBlock(empty)).toBe("<table><tbody></tbody></table>");
+    expect(renderHtmlBlock(table)).toBe(
+      '<table><thead><tr><th>Name</th><th style="text-align:right">Value</th></tr></thead><tbody><tr><td>A</td><td style="text-align:right">B</td></tr></tbody></table>'
+    );
+    expect(renderHtmlBlock(body)).toBe("<table><tbody><tr><td>Body</td></tr></tbody></table>");
+    const markdown = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec });
+    const html = makeHtmlFragmentAdapter({ urlPolicy: BrowserSafeUrlPolicySpec });
+    expect(renderWithUnsafe(markdown, Md.make([empty]))).toBe("");
+    expect(renderWithUnsafe(html, Md.make([table]))).toBe(renderHtmlBlock(table));
+  });
+
+  it("renders empty footnotes and admonitions and image embeds with a policy", () => {
+    const footnote = Md.footnoteDef("empty", []);
+    expect(renderMarkdownBlock(footnote)).toBe("[^empty]:");
+    const document = Md.make([
+      footnote,
+      Md.admonition("note", []),
+      Md.embed("image", "https://example.com/image.png", { title: "Picture" }),
+      Md.ol(["First"]),
+    ]);
+    const markdown = renderWithUnsafe(makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec }), document);
+    expect(markdown).toBe('[^empty]:\n\n> [!NOTE]\n\n![Picture](https://example.com/image.png "Picture")\n\n1. First');
+    expect(
+      renderWithUnsafe(makeHtmlFragmentAdapter({ urlPolicy: BrowserSafeUrlPolicySpec }), Md.make([Md.ol(["First"])]))
+    ).toBe("<ol><li>First</li></ol>");
+  });
+
+  it("escapes raw Markdown inside policy-rendered link labels", () => {
+    const adapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec });
+    expect(renderWithUnsafe(adapter, Md.make([Md.p(Md.a("https://example.com", Md.rawMarkdown("[label]")))]))).toBe(
+      "[\\[label\\]](https://example.com)"
+    );
+    expect(renderWithUnsafe(adapter, Md.make([Md.p(Md.rawMarkdown("**bold**"))]))).toBe("**bold**");
+  });
+});

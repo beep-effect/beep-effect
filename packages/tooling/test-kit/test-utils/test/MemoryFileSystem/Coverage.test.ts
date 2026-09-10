@@ -50,6 +50,20 @@ const testDirectory = Effect.gen(function* () {
 
 it.layer(Subject.layer)("MemoryFileSystem public operation boundaries", (it) => {
   it.effect(
+    "rejects reads and writes after seeking beyond safe numeric positions",
+    Effect.fnUntraced(function* () {
+      const { fs, root } = yield* testDirectory;
+      const path = `${root}/position`;
+      yield* fs.writeFileString(path, "unchanged");
+      const file = yield* fs.open(path, { flag: "r+" });
+      yield* file.seek(BigInt(Number.MAX_SAFE_INTEGER) + 1n, "start");
+      assertDescriptorFailure(yield* Effect.flip(file.read(new Uint8Array(1))), "read");
+      assertDescriptorFailure(yield* Effect.flip(file.write(encoder.encode("x"))), "write");
+      assert.strictEqual(yield* fs.readFileString(path), "unchanged");
+    })
+  );
+
+  it.effect(
     "copy clones symbolic links and merges trees without removing destination-only entries",
     Effect.fnUntraced(function* () {
       const { fs, root } = yield* testDirectory;
