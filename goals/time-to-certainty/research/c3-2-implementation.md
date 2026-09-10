@@ -478,6 +478,16 @@ Cold task-seconds: `lint:deprecated-apis` 140 tasks, 2,387 s (p50 16.8 s, max 55
 - Outcome: ruling 30 (2026-09-10) took the first option; Stage E below implements it and C3.2b
   (table row 2b) owns the cheap per-package program.
 
+### Hosted round 3 (head 90b2cbce2f, Stage E, ruling 30)
+
+`Heavy / Lint Policy` **632 s** wall (started 05:26:21Z, done 05:36:53Z): `lint:deprecated-apis`
+(28 shards, concurrency 4) **538.3 s**, `lint:jsdoc` (root `eslint .`) **75.5 s**, every other
+step green. That is the pre-PR shape within noise (523.5 s / 73.9 s inside a 620 s lane), so the
+hosted budget is restored while the package tasks, the root residual and the fingerprint edge keep
+the local path: `beep lint policy` without `--full` runs `lint:deprecated-apis` and `lint:jsdoc`
+through Turbo with `--affected`, and an unchanged tree replays them in under a second. The
+hosted per-package cold cost is C3.2b's problem (table row 2b).
+
 ### Stage D — files
 
 - goals/time-to-certainty/research/c3-2-implementation.md
