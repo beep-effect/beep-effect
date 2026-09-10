@@ -1,0 +1,394 @@
+{
+  "class": "EV002",
+  "method": "heuristic semantic candidates: exact syntax Effect.provide calls in files lexically containing it.effect or it.live",
+  "fileCount": 75,
+  "occurrenceCount": 173,
+  "files": [
+    {
+      "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkerServer.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/acp/test/agent.test.ts",
+      "count": 2,
+      "lines": [192, 262]
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "count": 4,
+      "lines": [138, 205, 292, 356]
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "count": 1,
+      "lines": [470]
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "count": 2,
+      "lines": [30, 593]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "count": 1,
+      "lines": [31]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "count": 1,
+      "lines": [52]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "count": 1,
+      "lines": [40]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "count": 1,
+      "lines": [66]
+    },
+    {
+      "file": "packages/drivers/obs/test/integration/Obs.live.test.ts",
+      "count": 1,
+      "lines": [53]
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "count": 1,
+      "lines": [69]
+    },
+    {
+      "file": "packages/drivers/oxigraph/test/OxigraphLazyImport.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "count": 1,
+      "lines": [36]
+    },
+    {
+      "file": "packages/drivers/pglite/test/integration/PgliteClient.persistent.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "count": 1,
+      "lines": [75]
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "count": 1,
+      "lines": [36]
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/drivers/runpod/test/integration/Runpod.live.test.ts",
+      "count": 1,
+      "lines": [24]
+    },
+    {
+      "file": "packages/drivers/shacl/test/ShaclEngineValidation.test.ts",
+      "count": 1,
+      "lines": [47]
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
+      "count": 1,
+      "lines": [107]
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "count": 1,
+      "lines": [94]
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts",
+      "count": 1,
+      "lines": [46]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/IdentityRegistry.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Cuid.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Sha256.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "count": 1,
+      "lines": [72]
+    },
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/ontology/server/test/OntoauthorMatCompetency.test.ts",
+      "count": 1,
+      "lines": [53]
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyPublishTools.test.ts",
+      "count": 1,
+      "lines": [60]
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "count": 1,
+      "lines": [50]
+    },
+    {
+      "file": "packages/ontology/server/test/SessionServer.test.ts",
+      "count": 1,
+      "lines": [43]
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.test.ts",
+      "count": 1,
+      "lines": [82]
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
+      "count": 1,
+      "lines": [130]
+    },
+    {
+      "file": "packages/shared/domain/test/EntityKernel.test.ts",
+      "count": 1,
+      "lines": [52]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+      "count": 1,
+      "lines": [48]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+      "count": 1,
+      "lines": [67]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/eventlog-proof.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "count": 1,
+      "lines": [125]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ClockCorrelator.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/SessionStore.test.ts",
+      "count": 1,
+      "lines": [10]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/Witness.service.test.ts",
+      "count": 1,
+      "lines": [8]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts",
+      "count": 1,
+      "lines": [15]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts",
+      "count": 1,
+      "lines": [89]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+      "count": 1,
+      "lines": [130]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+      "count": 1,
+      "lines": [55]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/architecture-operation-plan.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
+      "count": 1,
+      "lines": [20]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "count": 1,
+      "lines": [204]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-json-printer.test.ts",
+      "count": 1,
+      "lines": [19]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+      "count": 1,
+      "lines": [1371]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-preservation.test.ts",
+      "count": 93,
+      "lines": [
+        173, 174, 185, 188, 194, 197, 200, 201, 205, 214, 218, 228, 229, 245,
+        258, 259, 297, 302, 303, 307, 311, 313, 346, 351, 359, 364, 376, 381,
+        386, 396, 397, 466, 471, 472, 486, 487, 507, 509, 529, 545, 546, 578,
+        601, 602, 634, 659, 660, 680, 685, 705, 717, 718, 723, 726, 727, 728,
+        734, 751, 770, 772, 791, 808, 810, 837, 839, 883, 895, 900, 906, 918,
+        930, 943, 958, 964, 976, 993, 1003, 1011, 1021, 1022, 1027, 1028, 1034,
+        1038, 1047, 1057, 1068, 1079, 1092, 1100, 1107, 1122, 1144
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "count": 1,
+      "lines": [86]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+      "count": 1,
+      "lines": [69]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "count": 1,
+      "lines": [48]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
+      "count": 1,
+      "lines": [49]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Parser.test.ts",
+      "count": 2,
+      "lines": [60, 71]
+    }
+  ],
+  "limitations": [
+    "Candidate-only file-level intersection; exact CallExpression nodes are counted, but layer stub purity and callback nesting require AST or human judgment."
+  ]
+}

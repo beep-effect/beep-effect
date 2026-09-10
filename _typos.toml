@@ -121,6 +121,9 @@ extend-exclude = [
   "goals/**",
   "standards/repo-exports.catalog.jsonc",
   "standards/repo-exports.catalog.md",
+  # Detector evidence quotes source excerpts truncated at fixed character limits.
+  # Their partial identifiers are machine output, not authored prose.
+  "standards/effect-vitest.inventory.jsonc",
   "**/internal/data/**",
   "packages/law-practice/domain/src/internal/generated/free-law-project/**",
   "**/src-tauri/gen/**",

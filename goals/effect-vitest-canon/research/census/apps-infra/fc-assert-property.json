@@ -1,0 +1,99 @@
+{
+  "class": "fc-assert-property",
+  "method": "global regular expression: /\\bfc\\.assert\\s*\\(\\s*fc\\.(?:asyncProperty|property)\\s*\\(/gs",
+  "fileCount": 18,
+  "occurrenceCount": 22,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "apps/labs/ciops/test/projection.test.ts",
+      "count": 4,
+      "lines": [136, 160, 183, 210]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "count": 1,
+      "lines": [64]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "count": 2,
+      "lines": [48, 67]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "count": 1,
+      "lines": [344]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "count": 1,
+      "lines": [45]
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "count": 1,
+      "lines": [122]
+    },
+    {
+      "file": "apps/labs/semantica/test/Fixtures.test.ts",
+      "count": 1,
+      "lines": [181]
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "count": 1,
+      "lines": [219]
+    },
+    {
+      "file": "apps/labs/semantica/test/GoldSource.test.ts",
+      "count": 1,
+      "lines": [102]
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 1,
+      "lines": [578]
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 1,
+      "lines": [217]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+      "count": 1,
+      "lines": [1077]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+      "count": 1,
+      "lines": [119]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "count": 1,
+      "lines": [61]
+    },
+    {
+      "file": "apps/professional-desktop/test/schema-parity.test.ts",
+      "count": 1,
+      "lines": [59]
+    },
+    {
+      "file": "apps/professional-desktop/test/spike-schema.test.ts",
+      "count": 1,
+      "lines": [77]
+    },
+    {
+      "file": "infra/test/schemaParity.ts",
+      "count": 1,
+      "lines": [9]
+    }
+  ],
+  "limitations": "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+}

@@ -1,0 +1,248 @@
+{
+  "capturedAt": "2026-09-08",
+  "status": "P0a reconnaissance; not detector findings",
+  "scope": {
+    "tests": 964,
+    "support": 79,
+    "total": 1043,
+    "packages": 139
+  },
+  "classes": {
+    "EV001": {
+      "fileCount": 167,
+      "occurrenceCount": 1459
+    },
+    "EV002": {
+      "fileCount": 79,
+      "occurrenceCount": 178
+    },
+    "EV003": {
+      "fileCount": 154,
+      "occurrenceCount": 1690
+    },
+    "EV004": {
+      "fileCount": 96,
+      "occurrenceCount": 206
+    },
+    "EV005": {
+      "fileCount": 15,
+      "occurrenceCount": 32
+    },
+    "EV006": {
+      "fileCount": 423,
+      "occurrenceCount": 3442
+    },
+    "EV007": {
+      "fileCount": 309,
+      "occurrenceCount": 471
+    },
+    "EV008": {
+      "fileCount": 10,
+      "occurrenceCount": 18
+    },
+    "EV009": {
+      "fileCount": 28,
+      "occurrenceCount": 116
+    },
+    "EV010": {
+      "fileCount": 77,
+      "occurrenceCount": 262
+    },
+    "EV011": {
+      "fileCount": 165,
+      "occurrenceCount": 165
+    },
+    "EV012": {
+      "fileCount": 23,
+      "occurrenceCount": 47
+    },
+    "EV013": {
+      "fileCount": 70,
+      "occurrenceCount": 619
+    },
+    "EV014": {
+      "fileCount": 26,
+      "occurrenceCount": 52
+    },
+    "EV015": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "bun-node-filesystem": {
+      "fileCount": 74,
+      "occurrenceCount": 255
+    },
+    "effect-exit": {
+      "fileCount": 117,
+      "occurrenceCount": 516
+    },
+    "effect-prop": {
+      "fileCount": 1,
+      "occurrenceCount": 1
+    },
+    "effect-provide": {
+      "fileCount": 125,
+      "occurrenceCount": 228
+    },
+    "effect-result": {
+      "fileCount": 15,
+      "occurrenceCount": 32
+    },
+    "effect-run-fork": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "effect-run-methods": {
+      "fileCount": 167,
+      "occurrenceCount": 1459
+    },
+    "effect-run-promise": {
+      "fileCount": 109,
+      "occurrenceCount": 1017
+    },
+    "effect-run-sync": {
+      "fileCount": 70,
+      "occurrenceCount": 442
+    },
+    "effect-scoped": {
+      "fileCount": 140,
+      "occurrenceCount": 278
+    },
+    "effect-sleep": {
+      "fileCount": 19,
+      "occurrenceCount": 44
+    },
+    "effect-vitest-imports": {
+      "fileCount": 818,
+      "occurrenceCount": 818
+    },
+    "effect-vitest-plain-imports": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "effect-vitest-utils-imports": {
+      "fileCount": 1,
+      "occurrenceCount": 1
+    },
+    "fc-assert": {
+      "fileCount": 309,
+      "occurrenceCount": 471
+    },
+    "fc-assert-property": {
+      "fileCount": 17,
+      "occurrenceCount": 21
+    },
+    "it-effect": {
+      "fileCount": 505,
+      "occurrenceCount": 3434
+    },
+    "it-effect-assert": {
+      "fileCount": 51,
+      "occurrenceCount": 1025
+    },
+    "it-effect-expect": {
+      "fileCount": 482,
+      "occurrenceCount": 17659
+    },
+    "it-effect-prop": {
+      "fileCount": 1,
+      "occurrenceCount": 1
+    },
+    "it-flaky-test": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "it-layer": {
+      "fileCount": 26,
+      "occurrenceCount": 52
+    },
+    "it-live": {
+      "fileCount": 40,
+      "occurrenceCount": 194
+    },
+    "it-prop": {
+      "fileCount": 1,
+      "occurrenceCount": 2
+    },
+    "named-wrapper-calls": {
+      "fileCount": 154,
+      "occurrenceCount": 1690
+    },
+    "node-fs-imports": {
+      "fileCount": 1,
+      "occurrenceCount": 2
+    },
+    "option-result-exit-expect-assertions": {
+      "fileCount": 423,
+      "occurrenceCount": 3442
+    },
+    "os-tmpdir": {
+      "fileCount": 7,
+      "occurrenceCount": 11
+    },
+    "plain-vitest-imports": {
+      "fileCount": 189,
+      "occurrenceCount": 189
+    },
+    "retries-attempts": {
+      "fileCount": 70,
+      "occurrenceCount": 619
+    },
+    "schedule-usage": {
+      "fileCount": 6,
+      "occurrenceCount": 11
+    },
+    "test-clock": {
+      "fileCount": 30,
+      "occurrenceCount": 102
+    },
+    "test-clock-adjust": {
+      "fileCount": 21,
+      "occurrenceCount": 48
+    },
+    "vi-mock": {
+      "fileCount": 5,
+      "occurrenceCount": 7
+    },
+    "vi-mocks-spies": {
+      "fileCount": 23,
+      "occurrenceCount": 47
+    },
+    "vi-spy-on": {
+      "fileCount": 7,
+      "occurrenceCount": 24
+    },
+    "withAdmissionTempRoot-calls": {
+      "fileCount": 1,
+      "occurrenceCount": 90
+    },
+    "withEnvVar-calls": {
+      "fileCount": 6,
+      "occurrenceCount": 69
+    },
+    "withTempDirectory-calls": {
+      "fileCount": 38,
+      "occurrenceCount": 472
+    },
+    "withTempRepo-calls": {
+      "fileCount": 7,
+      "occurrenceCount": 90
+    },
+    "withTempWorkingDirectory-calls": {
+      "fileCount": 26,
+      "occurrenceCount": 221
+    }
+  },
+  "limitations": [
+    "Non-wrapper class aggregates are filtered to test files. Support modules participate in wrapper discovery only.",
+    "Per-lane lexical methods differ; these rows are candidates, not enforced detector findings.",
+    "Scope uses live files rather than forcing the historical count."
+  ],
+  "wrapperDefinitionCount": 144,
+  "historicalComparison": {
+    "2026-09-04Tests": 955,
+    "2026-09-08Tests": 964,
+    "delta": 9,
+    "cause": "Live file and extension drift; exact historical list was not supplied."
+  }
+}

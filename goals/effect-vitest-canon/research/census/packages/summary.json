@@ -1,0 +1,252 @@
+{
+  "generatedOn": "2026-09-08",
+  "status": "complete",
+  "model": "gpt-daybreak-blue-latest",
+  "effort": "medium",
+  "scopeFileCount": 937,
+  "testFileCount": 865,
+  "supportFileCount": 72,
+  "packageCount": 128,
+  "classCount": 53,
+  "wrapperDefinitionCount": 136,
+  "wrapperNameCount": 101,
+  "counts": {
+    "effect-vitest-imports": {
+      "fileCount": 757,
+      "occurrenceCount": 757
+    },
+    "effect-vitest-plain-imports": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "plain-vitest-imports": {
+      "fileCount": 133,
+      "occurrenceCount": 133
+    },
+    "it-effect": {
+      "fileCount": 456,
+      "occurrenceCount": 3247
+    },
+    "it-live": {
+      "fileCount": 33,
+      "occurrenceCount": 166
+    },
+    "it-layer": {
+      "fileCount": 24,
+      "occurrenceCount": 48
+    },
+    "it-flaky-test": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    },
+    "it-prop": {
+      "fileCount": 1,
+      "occurrenceCount": 2
+    },
+    "it-effect-prop": {
+      "fileCount": 1,
+      "occurrenceCount": 1
+    },
+    "effect-prop": {
+      "fileCount": 1,
+      "occurrenceCount": 1
+    },
+    "fc-assert": {
+      "fileCount": 292,
+      "occurrenceCount": 450
+    },
+    "effect-run-promise": {
+      "fileCount": 96,
+      "occurrenceCount": 947
+    },
+    "effect-run-sync": {
+      "fileCount": 60,
+      "occurrenceCount": 408
+    },
+    "effect-run-fork": {
+      "fileCount": 1,
+      "occurrenceCount": 1
+    },
+    "effect-runners": {
+      "fileCount": 148,
+      "occurrenceCount": 1356
+    },
+    "effect-provide": {
+      "fileCount": 108,
+      "occurrenceCount": 206
+    },
+    "effect-scoped": {
+      "fileCount": 125,
+      "occurrenceCount": 236
+    },
+    "effect-exit": {
+      "fileCount": 114,
+      "occurrenceCount": 510
+    },
+    "effect-result": {
+      "fileCount": 13,
+      "occurrenceCount": 28
+    },
+    "effect-sleep": {
+      "fileCount": 12,
+      "occurrenceCount": 33
+    },
+    "test-clock": {
+      "fileCount": 27,
+      "occurrenceCount": 90
+    },
+    "test-clock-adjust": {
+      "fileCount": 19,
+      "occurrenceCount": 46
+    },
+    "effect-vitest-utils-imports": {
+      "fileCount": 1,
+      "occurrenceCount": 1
+    },
+    "option-result-exit-expect-assertions": {
+      "fileCount": 384,
+      "occurrenceCount": 3299
+    },
+    "it-effect-files-using-expect": {
+      "fileCount": 433,
+      "occurrenceCount": 16386
+    },
+    "it-effect-files-using-assert": {
+      "fileCount": 39,
+      "occurrenceCount": 925
+    },
+    "bun-node-filesystem": {
+      "fileCount": 64,
+      "occurrenceCount": 215
+    },
+    "node-fs-imports": {
+      "fileCount": 1,
+      "occurrenceCount": 2
+    },
+    "os-tmpdir": {
+      "fileCount": 7,
+      "occurrenceCount": 10
+    },
+    "vi-mocks-spies": {
+      "fileCount": 13,
+      "occurrenceCount": 16
+    },
+    "retry-attempts": {
+      "fileCount": 57,
+      "occurrenceCount": 589
+    },
+    "schedule-usage": {
+      "fileCount": 6,
+      "occurrenceCount": 11
+    },
+    "named-wrapper-calls": {
+      "fileCount": 143,
+      "occurrenceCount": 1637
+    },
+    "withTempDirectory-calls": {
+      "fileCount": 38,
+      "occurrenceCount": 472
+    },
+    "withTempWorkingDirectory-calls": {
+      "fileCount": 26,
+      "occurrenceCount": 221
+    },
+    "withTempRepo-calls": {
+      "fileCount": 7,
+      "occurrenceCount": 90
+    },
+    "withAdmissionTempRoot-calls": {
+      "fileCount": 1,
+      "occurrenceCount": 90
+    },
+    "withEnvVar-calls": {
+      "fileCount": 6,
+      "occurrenceCount": 69
+    },
+    "EV001": {
+      "fileCount": 148,
+      "occurrenceCount": 1356
+    },
+    "EV002": {
+      "fileCount": 75,
+      "occurrenceCount": 173
+    },
+    "EV003": {
+      "fileCount": 143,
+      "occurrenceCount": 1637
+    },
+    "EV004": {
+      "fileCount": 92,
+      "occurrenceCount": 199
+    },
+    "EV005": {
+      "fileCount": 13,
+      "occurrenceCount": 28
+    },
+    "EV006": {
+      "fileCount": 384,
+      "occurrenceCount": 3299
+    },
+    "EV007": {
+      "fileCount": 292,
+      "occurrenceCount": 450
+    },
+    "EV008": {
+      "fileCount": 9,
+      "occurrenceCount": 17
+    },
+    "EV009": {
+      "fileCount": 21,
+      "occurrenceCount": 88
+    },
+    "EV010": {
+      "fileCount": 67,
+      "occurrenceCount": 220
+    },
+    "EV011": {
+      "fileCount": 117,
+      "occurrenceCount": 117
+    },
+    "EV012": {
+      "fileCount": 13,
+      "occurrenceCount": 16
+    },
+    "EV013": {
+      "fileCount": 57,
+      "occurrenceCount": 589
+    },
+    "EV014": {
+      "fileCount": 24,
+      "occurrenceCount": 48
+    },
+    "EV015": {
+      "fileCount": 0,
+      "occurrenceCount": 0
+    }
+  },
+  "scopeMethod": "newline discovery list from standalone rg --files packages; D9 path exclusions; test names plus test/**/*.ts support; owner from nearest root-registered workspace root",
+  "exclusions": [
+    "scratchpad",
+    ".claude",
+    "goals",
+    "explorations",
+    "docs",
+    "node_modules",
+    "artifacts ignored by rg discovery"
+  ],
+  "historicalComparison": {
+    "historicalAppsPlusPackagesTestFiles20260904": 945,
+    "historicalInfraTestFiles20260904": 10,
+    "provisionalPackageTestFiles20260908": 865,
+    "livePackageTestFiles20260908": 865,
+    "comparablePackageTestDiscrepancy": 0,
+    "status": "945 is not a package-only comparator; support files are excluded from test-file comparisons"
+  },
+  "limitations": [
+    "No type checker, getType, tsconfig project, tests, installs, or package-source edits were used.",
+    "Callback-sensitive EV rules are conservative candidates, not detector-grade findings.",
+    "Line-oriented occurrence counts can miss multiline constructs and include comments or strings.",
+    "Directories named build, generated, or vendor were not excluded by name; standalone rg discovery found no in-scope package test/support rows under those directory names.",
+    "The nested generated @pulumi/gharunners SDK is under infra and therefore outside this packages-only lane; its owning workspace is the root-registered infra workspace and its SDK-test limitation belongs in the apps-infra census."
+  ]
+}

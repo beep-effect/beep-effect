@@ -1,0 +1,8 @@
+{
+  "class": "it-effect-prop",
+  "method": "ts-morph syntax-only exact CallExpression it.effect.prop(...)",
+  "fileCount": 0,
+  "occurrenceCount": 0,
+  "files": [],
+  "limitations": "Exact syntactic call identity; aliases are not counted."
+}

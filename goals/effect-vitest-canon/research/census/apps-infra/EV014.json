@@ -1,0 +1,19 @@
+{
+  "class": "EV014",
+  "method": "it.layer sites in files mentioning scoped/container/server resources but with no timeout token in the file",
+  "fileCount": 2,
+  "occurrenceCount": 4,
+  "files": [
+    {
+      "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 3,
+      "lines": [397, 419, 751]
+    }
+  ],
+  "limitations": "Heuristic at file granularity. Resource kind, call boundaries, and option ownership require AST and human review; any timeout token suppresses the whole file."
+}

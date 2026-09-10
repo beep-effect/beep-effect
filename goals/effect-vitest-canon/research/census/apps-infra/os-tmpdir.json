@@ -1,0 +1,14 @@
+{
+  "class": "os-tmpdir",
+  "method": "global regular expression: /\\b(?:os\\.)?tmpdir\\s*\\(/g",
+  "fileCount": 1,
+  "occurrenceCount": 2,
+  "files": [
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
+      "count": 2,
+      "lines": [21, 49]
+    }
+  ],
+  "limitations": "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+}

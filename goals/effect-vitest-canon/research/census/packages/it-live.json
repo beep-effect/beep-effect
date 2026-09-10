@@ -1,0 +1,177 @@
+{
+  "class": "it-live",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 33,
+  "occurrenceCount": 166,
+  "files": [
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "count": 8,
+      "lines": [112, 128, 179, 277, 281, 285, 289, 505]
+    },
+    {
+      "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "count": 3,
+      "lines": [104, 131, 152]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "count": 3,
+      "lines": [136, 198, 264]
+    },
+    {
+      "file": "packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts",
+      "count": 5,
+      "lines": [17, 39, 67, 89, 116]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "count": 4,
+      "lines": [324, 397, 522, 1029]
+    },
+    {
+      "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
+      "count": 2,
+      "lines": [83, 150]
+    },
+    {
+      "file": "packages/drivers/obs/test/integration/Obs.live.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "count": 1,
+      "lines": [505]
+    },
+    {
+      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
+      "count": 5,
+      "lines": [96, 116, 138, 158, 178]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+      "count": 1,
+      "lines": [317]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/DrainableWorker.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "count": 2,
+      "lines": [151, 273]
+    },
+    {
+      "file": "packages/ontology/client/test/browser/graph-renderer-toggle.test.ts",
+      "count": 2,
+      "lines": [112, 145]
+    },
+    {
+      "file": "packages/ontology/client/test/inspector-actions.test.ts",
+      "count": 2,
+      "lines": [47, 97]
+    },
+    {
+      "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+      "count": 1,
+      "lines": [33]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "count": 2,
+      "lines": [668, 734]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts",
+      "count": 1,
+      "lines": [95]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
+      "count": 3,
+      "lines": [98, 107, 118]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen-stall-watchdog.test.ts",
+      "count": 6,
+      "lines": [25, 37, 53, 71, 119, 136]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-digest.test.ts",
+      "count": 3,
+      "lines": [13, 30, 48]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "count": 10,
+      "lines": [91, 105, 126, 141, 158, 209, 233, 273, 302, 322]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+      "count": 6,
+      "lines": [135, 170, 200, 217, 257, 313]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "count": 2,
+      "lines": [1510, 1540]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
+      "count": 8,
+      "lines": [134, 167, 194, 243, 277, 305, 336, 382]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-ack.test.ts",
+      "count": 12,
+      "lines": [102, 113, 126, 150, 167, 183, 204, 226, 241, 261, 276, 298]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts",
+      "count": 12,
+      "lines": [266, 307, 323, 335, 358, 392, 407, 422, 465, 484, 503, 518]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-view.test.ts",
+      "count": 13,
+      "lines": [103, 116, 133, 148, 172, 189, 217, 243, 259, 277, 295, 313, 331]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox.test.ts",
+      "count": 8,
+      "lines": [211, 242, 276, 295, 322, 362, 376, 398]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
+      "count": 2,
+      "lines": [267, 288]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "count": 4,
+      "lines": [222, 250, 293, 317]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-remediation.test.ts",
+      "count": 10,
+      "lines": [247, 274, 294, 310, 334, 360, 372, 396, 414, 431]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-watch-mode.test.ts",
+      "count": 22,
+      "lines": [
+        301, 482, 519, 554, 571, 609, 681, 767, 818, 904, 947, 981, 1004, 1040,
+        1126, 1157, 1208, 1243, 1271, 1344, 1389, 1423
+      ]
+    }
+  ],
+  "limitations": []
+}

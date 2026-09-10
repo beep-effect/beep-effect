@@ -1,0 +1,8 @@
+{
+  "class": "it-flaky-test",
+  "method": "ts-morph syntax-only exact CallExpression it.flakyTest(...)",
+  "fileCount": 0,
+  "occurrenceCount": 0,
+  "files": [],
+  "limitations": "Exact syntactic call identity; aliases and computed property access are not counted."
+}

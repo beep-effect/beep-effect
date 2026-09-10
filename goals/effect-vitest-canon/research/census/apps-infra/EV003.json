@@ -1,0 +1,67 @@
+{
+  "class": "EV003",
+  "method": "withXyz(...) call-like occurrences plus wrapper definitions",
+  "fileCount": 11,
+  "occurrenceCount": 53,
+  "files": [
+    {
+      "file": "apps/labs/api-docs/test/Catalog.test.ts",
+      "count": 1,
+      "lines": [45]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 3,
+      "lines": [78, 332, 697]
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "count": 2,
+      "lines": [87, 140]
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 15,
+      "lines": [
+        503, 1281, 1285, 1291, 1292, 1314, 1318, 1344, 1348, 1367, 1372, 1389,
+        1407, 1411, 1416
+      ]
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "count": 8,
+      "lines": [54, 67, 82, 98, 108, 134, 147, 162]
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 5,
+      "lines": [724, 740, 748, 762, 775]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [97]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "count": 5,
+      "lines": [45, 92, 136, 302, 305]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+      "count": 4,
+      "lines": [150, 343, 459, 517]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "count": 8,
+      "lines": [151, 185, 204, 240, 300, 340, 376, 465]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+      "count": 1,
+      "lines": [30]
+    }
+  ],
+  "limitations": "Candidate census includes definition signatures and calls not necessarily at the test-body root. See wrappers.json for heuristic definition bodies and per-name call counts."
+}

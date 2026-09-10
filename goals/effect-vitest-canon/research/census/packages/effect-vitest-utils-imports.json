@@ -1,0 +1,14 @@
+{
+  "class": "effect-vitest-utils-imports",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 1,
+  "occurrenceCount": 1,
+  "files": [
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "count": 1,
+      "lines": [5]
+    }
+  ],
+  "limitations": []
+}

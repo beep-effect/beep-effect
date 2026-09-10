@@ -1,0 +1,21 @@
+{
+  "class": "effect-vitest-utils-imports",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files",
+    "apps-infra": "global regular expression: /(?:from\\s*[\"']@effect\\/vitest\\/utils[\"']|import\\s*[\"']@effect\\/vitest\\/utils[\"'])/g"
+  },
+  "scope": "tests",
+  "fileCount": 1,
+  "occurrenceCount": 1,
+  "files": [
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "count": 1,
+      "lines": [5]
+    }
+  ],
+  "limitations": [
+    "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+  ]
+}

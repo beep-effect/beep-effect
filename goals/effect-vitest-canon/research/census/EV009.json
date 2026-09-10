@@ -1,0 +1,160 @@
+{
+  "class": "EV009",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "it.live calls in files without lexical live-clock/live-console markers",
+    "apps-infra": "all exact it.live CallExpressions requiring later need assessment"
+  },
+  "scope": "tests",
+  "fileCount": 28,
+  "occurrenceCount": 116,
+  "files": [
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "count": 4,
+      "lines": [263, 322, 379, 1055]
+    },
+    {
+      "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+      "count": 2,
+      "lines": [40, 62]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+      "count": 3,
+      "lines": [69, 90, 115]
+    },
+    {
+      "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+      "count": 1,
+      "lines": [107]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 15,
+      "lines": [
+        122, 144, 162, 190, 210, 227, 246, 270, 287, 302, 322, 352, 388, 416,
+        447
+      ]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+      "count": 2,
+      "lines": [50, 87]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "count": 3,
+      "lines": [104, 131, 152]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "count": 3,
+      "lines": [136, 198, 264]
+    },
+    {
+      "file": "packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts",
+      "count": 5,
+      "lines": [17, 39, 67, 89, 116]
+    },
+    {
+      "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
+      "count": 2,
+      "lines": [83, 150]
+    },
+    {
+      "file": "packages/drivers/obs/test/integration/Obs.live.test.ts",
+      "count": 1,
+      "lines": [32]
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "count": 1,
+      "lines": [505]
+    },
+    {
+      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
+      "count": 5,
+      "lines": [96, 116, 138, 158, 178]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+      "count": 1,
+      "lines": [317]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/DrainableWorker.test.ts",
+      "count": 1,
+      "lines": [7]
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "count": 2,
+      "lines": [151, 273]
+    },
+    {
+      "file": "packages/ontology/client/test/inspector-actions.test.ts",
+      "count": 2,
+      "lines": [47, 97]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "count": 2,
+      "lines": [668, 734]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts",
+      "count": 1,
+      "lines": [95]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
+      "count": 3,
+      "lines": [98, 107, 118]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-digest.test.ts",
+      "count": 3,
+      "lines": [13, 30, 48]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "count": 10,
+      "lines": [91, 105, 126, 141, 158, 209, 233, 273, 302, 322]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "count": 2,
+      "lines": [1510, 1540]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
+      "count": 8,
+      "lines": [134, 167, 194, 243, 277, 305, 336, 382]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-ack.test.ts",
+      "count": 12,
+      "lines": [102, 113, 126, 150, 167, 183, 204, 226, 241, 261, 276, 298]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-view.test.ts",
+      "count": 13,
+      "lines": [103, 116, 133, 148, 172, 189, 217, 243, 259, 277, 295, 313, 331]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox.test.ts",
+      "count": 8,
+      "lines": [211, 242, 276, 295, 322, 362, 376, 398]
+    }
+  ],
+  "limitations": [
+    "Candidate-only negative-evidence heuristic; indirect live services and imported helpers are unresolved.",
+    "Judgment candidate: syntax-only inspection cannot reliably establish a live-clock or live-console requirement."
+  ]
+}

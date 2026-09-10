@@ -1,0 +1,53 @@
+{
+  "class": "vi-spy-on",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "apps-infra": "global regular expression: /\\bvi\\.spyOn\\s*\\(/g"
+  },
+  "scope": "tests",
+  "fileCount": 7,
+  "occurrenceCount": 24,
+  "files": [
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 3,
+      "lines": [480, 527, 773]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+      "count": 13,
+      "lines": [
+        158, 159, 205, 287, 288, 368, 375, 425, 490, 493, 700, 701, 1047
+      ]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 2,
+      "lines": [193, 394]
+    },
+    {
+      "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+      "count": 1,
+      "lines": [282]
+    },
+    {
+      "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
+      "count": 3,
+      "lines": [38, 53, 80]
+    },
+    {
+      "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+      "count": 1,
+      "lines": [129]
+    },
+    {
+      "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
+      "count": 1,
+      "lines": [26]
+    }
+  ],
+  "limitations": [
+    "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision.",
+    "Only one lane emitted this auxiliary class; use the common grouped class or wrapper name totals for full-repository comparisons."
+  ]
+}

@@ -24003,6 +24003,18 @@
             "functions": 10
           }
         },
+        "packages/tooling/tool/cli/src/commands/Lint/EffectVitest.ts": {
+          "lines": 50,
+          "statements": 50,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts": {
           "lines": 94.69,
           "statements": 94.07,
@@ -24159,6 +24171,18 @@
             "functions": 4
           }
         },
+        "packages/tooling/tool/cli/src/commands/Lint/TsconfigOverlay.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Lint/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -24169,6 +24193,78 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts": {
+          "lines": 97.28,
+          "statements": 96.17,
+          "branches": 91.66,
+          "functions": 97.63,
+          "uncovered": {
+            "lines": 10,
+            "statements": 16,
+            "branches": 29,
+            "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestPolicy.ts": {
+          "lines": 95,
+          "statements": 95.45,
+          "branches": 100,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestPrimitives.ts": {
+          "lines": 85.71,
+          "statements": 87.5,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestScan.ts": {
+          "lines": 96.69,
+          "statements": 96.09,
+          "branches": 95.12,
+          "functions": 96.66,
+          "uncovered": {
+            "lines": 4,
+            "statements": 5,
+            "branches": 2,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestStore.ts": {
+          "lines": 72.72,
+          "statements": 75,
+          "branches": 100,
+          "functions": 57.69,
+          "uncovered": {
+            "lines": 15,
+            "statements": 16,
+            "branches": 0,
+            "functions": 11
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts": {
+          "lines": 97.01,
+          "statements": 95.09,
+          "branches": 88.81,
+          "functions": 95.76,
+          "uncovered": {
+            "lines": 13,
+            "statements": 26,
+            "branches": 36,
+            "functions": 5
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstArbitraryCoverage.ts": {
@@ -24241,6 +24337,18 @@
             "statements": 6,
             "branches": 1,
             "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/WorkspaceWalk.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Purge/Purge.command.ts": {
@@ -34450,15 +34558,15 @@
     },
     "@beep/test-utils": {
       "path": "packages/tooling/test-kit/test-utils",
-      "lines": 96.19,
-      "statements": 95.51,
-      "branches": 93.16,
-      "functions": 91.04,
+      "lines": 96.41,
+      "statements": 95.74,
+      "branches": 93.3,
+      "functions": 91.75,
       "uncovered": {
-        "lines": 71,
-        "statements": 91,
-        "branches": 45,
-        "functions": 54
+        "lines": 74,
+        "statements": 95,
+        "branches": 50,
+        "functions": 56
       },
       "files": {
         "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.evidence.ts": {
@@ -34617,7 +34725,67 @@
             "functions": 1
           }
         },
+        "packages/tooling/test-kit/test-utils/src/Vitest.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/Vitest.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/test-kit/test-utils/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/internal/VitestInstrumentation.ts": {
+          "lines": 98.26,
+          "statements": 97.77,
+          "branches": 93.58,
+          "functions": 96.96,
+          "uncovered": {
+            "lines": 3,
+            "statements": 4,
+            "branches": 5,
+            "functions": 2
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/internal/VitestRuntime.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/test/Vitest.test-kit.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

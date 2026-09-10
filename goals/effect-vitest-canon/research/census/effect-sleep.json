@@ -1,0 +1,112 @@
+{
+  "class": "effect-sleep",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files",
+    "apps-infra": "ts-morph syntax-only exact CallExpression Effect.sleep(...)"
+  },
+  "scope": "tests",
+  "fileCount": 19,
+  "occurrenceCount": 44,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 4,
+      "lines": [78, 326, 332, 697]
+    },
+    {
+      "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+      "count": 1,
+      "lines": [34]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+      "count": 1,
+      "lines": [40]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+      "count": 2,
+      "lines": [38, 142]
+    },
+    {
+      "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+      "count": 1,
+      "lines": [116]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [403]
+    },
+    {
+      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+      "count": 1,
+      "lines": [109]
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "count": 2,
+      "lines": [122, 539]
+    },
+    {
+      "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
+      "count": 1,
+      "lines": [35]
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "count": 1,
+      "lines": [644]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "count": 1,
+      "lines": [1047]
+    },
+    {
+      "file": "packages/ontology/client/test/browser/graph-renderer-toggle.test.ts",
+      "count": 4,
+      "lines": [107, 126, 190, 195]
+    },
+    {
+      "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+      "count": 1,
+      "lines": [56]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "count": 14,
+      "lines": [
+        829, 2157, 2349, 2407, 2463, 2494, 2531, 2642, 2696, 2716, 2735, 3714,
+        4242, 4464
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "count": 3,
+      "lines": [1010, 1208, 1258]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+      "count": 3,
+      "lines": [352, 365, 499]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
+      "count": 1,
+      "lines": [66]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts",
+      "count": 1,
+      "lines": [187]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "count": 1,
+      "lines": [342]
+    }
+  ],
+  "limitations": ["Exact syntactic call identity; aliases are not counted."]
+}

@@ -1,0 +1,21 @@
+{
+  "class": "node-fs-imports",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "union of line-oriented lexical scans over live in-scope package files",
+    "apps-infra": "global regular expression: /(?:from\\s*[\"']node:fs(?:\\/promises)?[\"']|import\\s*[\"']node:fs(?:\\/promises)?[\"']|require\\s*\\(\\s*[\"']node:fs(?:\\/promises)?[\"']\\s*\\))/g"
+  },
+  "scope": "tests",
+  "fileCount": 1,
+  "occurrenceCount": 2,
+  "files": [
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
+      "count": 2,
+      "lines": [2, 26]
+    }
+  ],
+  "limitations": [
+    "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+  ]
+}

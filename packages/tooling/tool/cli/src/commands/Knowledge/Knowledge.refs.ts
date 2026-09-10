@@ -21,11 +21,22 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
+import { ts } from "ts-morph";
+import { repoRunSafeArtifactName } from "../../internal/repo-run/RepoRunArtifacts.ts";
 import { decodeGoalManifest } from "../Goals/Goals.schemas.ts";
 import { parseGoalManifestText } from "../Goals/Inventory.ts";
+import {
+  decodeEffectVitestFindingJson,
+  decodeEffectVitestInventoryDocument,
+  EffectVitestInventoryPath,
+  isEffectVitestTestFilePath,
+} from "../Lint/Lint.schemas.ts";
 import { KnowledgeOperationalError } from "./Knowledge.errors.ts";
 import { KnowledgeFindingLocation } from "./Knowledge.schemas.ts";
 import type * as AST from "effect/SchemaAST";
+import type { Node as JsonNode, ParseError } from "jsonc-parser";
+import type { EffectVitestFinding } from "../Lint/Lint.schemas.ts";
 import type { KnowledgeTrackedEntry } from "./Knowledge.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.refs");
@@ -2262,10 +2273,234 @@ const goalUriRef = (raw: string, slug: string, displayPath: O.Option<string>): K
     onSome: (value) => KnowledgeGoalUriRef.make({ raw, slug, displayPath: value }),
   });
 
+// These are parser/source handles and offset tables, local to one requested-tree scan.
+type GeneratedEvidenceSource = {
+  readonly source: ts.SourceFile;
+  readonly literals: ReadonlyArray<ts.StringLiteralLike>;
+  readonly ranges: MutableHashMap.MutableHashMap<string, ReadonlyArray<ts.Node>>;
+};
+
+const generatedRowsPrefix = "goals/effect-vitest-canon/ops/inventory/detector/";
+const evidenceWhitespace = /\s+/gu;
+
+const uniqueJsonProperties = (node: JsonNode): boolean => {
+  const children = node.children ?? [];
+  if (node.type === "object") {
+    const names = A.map(children, (property) => property.children?.[0]?.value);
+    if (A.dedupe(names).length !== names.length) return false;
+  }
+  return A.every(children, uniqueJsonProperties);
+};
+
+const parsedEvidenceDocument = (text: string): O.Option<JsonNode> => {
+  const errors = A.empty<ParseError>();
+  const tree = parseTree(text, errors, { allowTrailingComma: true });
+  return tree !== undefined && errors.length === 0 && uniqueJsonProperties(tree) ? O.some(tree) : O.none();
+};
+
+const closedSourceLiteral = (node: ts.Node, source: ts.SourceFile): node is ts.StringLiteralLike => {
+  if (!ts.isStringLiteral(node) && !ts.isNoSubstitutionTemplateLiteral(node)) return false;
+  let invalid = false;
+  const raw = node.getText(source);
+  const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, ts.LanguageVariant.Standard, raw, () => {
+    invalid = true;
+  });
+  scanner.scan();
+  return !invalid && !scanner.isUnterminated() && scanner.getTokenEnd() === raw.length;
+};
+
+const indexGeneratedEvidenceSource = (file: string, text: string): GeneratedEvidenceSource => {
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+  const literals = A.empty<ts.StringLiteralLike>();
+  const ranges = MutableHashMap.empty<string, ReadonlyArray<ts.Node>>();
+  const visit = (node: ts.Node): void => {
+    if (closedSourceLiteral(node, source)) literals.push(node);
+    const start = source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
+    const end = source.getLineAndCharacterOfPosition(node.getEnd()).line + 1;
+    const key = `${start}:${end}`;
+    MutableHashMap.set(ranges, key, [...O.getOrElse(MutableHashMap.get(ranges, key), A.empty<ts.Node>), node]);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return { source, literals, ranges };
+};
+
+// Reproduce compactEvidence's whitespace collapse, 200-code-unit prefix and trim,
+// retaining the corresponding original source offset for each displayed code unit.
+const evidenceSourceOffsets = (node: ts.Node, source: ts.SourceFile) => {
+  const raw = node.getText(source);
+  const offsets = A.empty<number>();
+  const chunks = A.empty<string>();
+  let cursor = 0;
+  for (const whitespace of raw.matchAll(evidenceWhitespace)) {
+    for (let index = cursor; index < whitespace.index; index++) {
+      chunks.push(Str.slice(index, index + 1)(raw));
+      offsets.push(node.getStart(source) + index);
+    }
+    chunks.push(" ");
+    offsets.push(node.getStart(source) + whitespace.index);
+    cursor = whitespace.index + whitespace[0].length;
+  }
+  for (let index = cursor; index < raw.length; index++) {
+    chunks.push(Str.slice(index, index + 1)(raw));
+    offsets.push(node.getStart(source) + index);
+  }
+  const prefix = Str.slice(0, 200)(A.join(chunks, ""));
+  const leading = prefix.length - Str.trimStart(prefix).length;
+  const evidence = Str.trim(prefix);
+  return { evidence, offsets: A.take(A.drop(offsets, leading), evidence.length) };
+};
+
+const sourceEvidenceAnchor = (
+  finding: EffectVitestFinding,
+  decodedOffset: number,
+  source: GeneratedEvidenceSource
+): boolean => {
+  if (O.isNone(finding.endLine)) return false;
+  const candidates = O.getOrElse(
+    MutableHashMap.get(source.ranges, `${finding.line}:${finding.endLine.value}`),
+    A.empty<ts.Node>
+  );
+  const matches = A.getSomes(
+    A.map(candidates, (node) => {
+      const normalized = evidenceSourceOffsets(node, source.source);
+      return normalized.evidence === finding.evidence ? O.some(normalized.offsets) : O.none();
+    })
+  );
+  return (
+    matches.length > 0 &&
+    A.every(matches, (offsets) => {
+      const start = offsets[decodedOffset];
+      if (start === undefined) return false;
+      return A.some(
+        source.literals,
+        (literal) => start > literal.getStart(source.source) && start < literal.getEnd() - 1
+      );
+    })
+  );
+};
+
+const serializedStringOffsets = (text: string, node: JsonNode): ReadonlyArray<number> => {
+  const offsets = A.empty<number>();
+  for (let index = node.offset + 1; index < node.offset + node.length - 1; index++) {
+    offsets.push(index);
+    if (text[index] === "\\") index += text[index + 1] === "u" ? 5 : 1;
+  }
+  return offsets;
+};
+
+const generatedEvidenceRow = (node: JsonNode, finding: EffectVitestFinding, base: number) =>
+  O.fromNullishOr(findNodeAtLocation(node, ["evidence"])).pipe(
+    O.filter((evidence) => evidence.type === "string"),
+    O.filter(() => extractKnowledgeHostAnchors(finding.evidence).length > 0),
+    O.map((evidence) => ({ finding, evidence, base }))
+  );
+
+const generatedJsonlEvidenceRows = (documentPath: string, text: string) => {
+  let base = 0;
+  return A.getSomes(
+    A.map(Str.split("\n")(text), (line) => {
+      const row = O.all({ tree: parsedEvidenceDocument(line), finding: decodeEffectVitestFindingJson(line) }).pipe(
+        O.filter(
+          ({ finding }) => documentPath === `${generatedRowsPrefix}${repoRunSafeArtifactName(finding.package)}.jsonl`
+        ),
+        O.flatMap(({ tree, finding }) => generatedEvidenceRow(tree, finding, base))
+      );
+      base += line.length + 1;
+      return row;
+    })
+  );
+};
+
+const generatedEvidenceRows = Effect.fnUntraced(function* (documentPath: string, text: string) {
+  if (documentPath !== EffectVitestInventoryPath) {
+    return Str.startsWith(generatedRowsPrefix)(documentPath) && Str.endsWith(".jsonl")(documentPath)
+      ? generatedJsonlEvidenceRows(documentPath, text)
+      : [];
+  }
+  const tree = parsedEvidenceDocument(text);
+  if (O.isNone(tree)) return [];
+  const document = yield* Effect.option(decodeEffectVitestInventoryDocument(getNodeValue(tree.value)));
+  if (O.isNone(document)) return [];
+  const nodes = findNodeAtLocation(tree.value, ["findings"])?.children ?? [];
+  return A.getSomes(
+    A.map(document.value.findings, (finding, index) =>
+      A.get(nodes, index).pipe(O.flatMap((node) => generatedEvidenceRow(node, finding, 0)))
+    )
+  );
+});
+
+const generatedEvidenceSource = Effect.fnUntraced(function* (
+  file: string,
+  oracle: KnowledgeTreeOracle,
+  pathIndex: HashMap.HashMap<string, KnowledgeTrackedEntry>,
+  sources: MutableHashMap.MutableHashMap<string, O.Option<GeneratedEvidenceSource>>
+) {
+  const entry = HashMap.get(pathIndex, file).pipe(O.filter(isRegularBlob));
+  if (O.isNone(entry) || !isEffectVitestTestFilePath(file)) return O.none<GeneratedEvidenceSource>();
+  const cached = MutableHashMap.get(sources, file);
+  if (O.isSome(cached)) return cached.value;
+  const source = yield* oracle.readBytes(file).pipe(
+    Effect.flatMap((bytes) => decodeUtf8(bytes, file)),
+    Effect.map((content) => indexGeneratedEvidenceSource(file, content)),
+    Effect.option
+  );
+  MutableHashMap.set(sources, file, source);
+  return source;
+});
+
+const generatedEvidenceAnchorPositions = (
+  finding: EffectVitestFinding,
+  evidence: JsonNode,
+  base: number,
+  text: string,
+  source: GeneratedEvidenceSource
+) => {
+  const localText = Str.slice(base)(text);
+  const offsets = serializedStringOffsets(localText, evidence);
+  const raw = Str.slice(evidence.offset, evidence.offset + evidence.length)(localText);
+  return A.getSomes(
+    A.map(
+      A.filter(
+        extractKnowledgeHostAnchors(raw),
+        (anchor) => anchor.anchor === "temp" || anchor.anchor === "home-absolute"
+      ),
+      (anchor) => {
+        const rawOffset = evidence.offset + anchor.column - 1;
+        return A.findFirstIndex(offsets, (offset) => offset === rawOffset).pipe(
+          O.filter((decodedOffset) => sourceEvidenceAnchor(finding, decodedOffset, source)),
+          O.map(() => base + rawOffset)
+        );
+      }
+    )
+  );
+};
+
+const generatedEvidencePositions = Effect.fnUntraced(function* (
+  documentPath: string,
+  text: string,
+  oracle: KnowledgeTreeOracle,
+  pathIndex: HashMap.HashMap<string, KnowledgeTrackedEntry>,
+  sources: MutableHashMap.MutableHashMap<string, O.Option<GeneratedEvidenceSource>>
+) {
+  let positions = HashSet.empty<number>();
+  for (const { finding, evidence, base } of yield* generatedEvidenceRows(documentPath, text)) {
+    const source = yield* generatedEvidenceSource(finding.file, oracle, pathIndex, sources);
+    const verified = source.pipe(
+      O.map((value) => generatedEvidenceAnchorPositions(finding, evidence, base, text, value)),
+      O.getOrElse(A.empty<number>)
+    );
+    positions = A.reduce(verified, positions, (set, position) => HashSet.add(set, position));
+  }
+  return positions;
+});
+
 const hostCandidates = (
   documentPath: string,
   line: KnowledgeDocumentLine,
-  surface: KnowledgeRefSurface
+  surface: KnowledgeRefSurface,
+  evidencePositions: HashSet.HashSet<number>,
+  lineOffset: number
 ): ReadonlyArray<RefCandidate> =>
   A.map(extractKnowledgeHostAnchors(line.text), (match) => ({
     kind: KnowledgeRefKind.Enum["host-path"],
@@ -2275,7 +2510,8 @@ const hostCandidates = (
     line: line.number,
     column: match.column,
     surface,
-    patternContext: knowledgeRefPatternContext(line.text),
+    patternContext:
+      knowledgeRefPatternContext(line.text) || HashSet.has(evidencePositions, lineOffset + match.column - 1),
     pairingAmbiguous: false,
     ungoverned: false,
     anchor: O.some(match.anchor),
@@ -2503,15 +2739,18 @@ const beepRefCandidates = (
 const extractDocumentRefs = (
   documentPath: string,
   text: string,
-  surface: KnowledgeRefSurface
+  surface: KnowledgeRefSurface,
+  evidencePositions: HashSet.HashSet<number>
 ): ReadonlyArray<RefCandidate> => {
   const lines = knowledgeDocumentLines(text);
+  let lineOffset = 0;
   const markdown = Str.endsWith(MARKDOWN_EXTENSION)(documentPath);
   // One flatMap allocation for the whole document: accumulating with `A.appendAll` per line
   // re-copies every prior candidate and turns a dense document quadratic.
   return A.flatMap(lines, (line, index) => {
     // Host anchors are counted line-wise on every elected file type; fences never exempt them.
-    const host = hostCandidates(documentPath, line, surface);
+    const host = hostCandidates(documentPath, line, surface, evidencePositions, lineOffset);
+    lineOffset += line.text.length + (text[lineOffset + line.text.length] === "\r" ? 2 : 1);
     if (!markdown || !line.prose) {
       return host;
     }
@@ -2659,6 +2898,7 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
     A.sort(entryPathOrder)
   );
 
+  const evidenceSources = MutableHashMap.empty<string, O.Option<GeneratedEvidenceSource>>();
   let skipped = A.getSomes(A.map(scoped, skippedEntry));
   // Per-document chunks flattened once: appending 18k candidates one document at a time re-copies
   // the whole accumulator per document and turns the corpus scan quadratic.
@@ -2676,7 +2916,14 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
     const surface = isKnowledgeArchivalPath(entry.path)
       ? KnowledgeRefSurface.Enum.archival
       : KnowledgeRefSurface.Enum.live;
-    chunks = A.append(chunks, extractDocumentRefs(entry.path, decoded.value, surface));
+    const evidencePositions = yield* generatedEvidencePositions(
+      entry.path,
+      decoded.value,
+      oracle,
+      pathIndex,
+      evidenceSources
+    );
+    chunks = A.append(chunks, extractDocumentRefs(entry.path, decoded.value, surface, evidencePositions));
   }
   const candidates = A.flatten(chunks);
 

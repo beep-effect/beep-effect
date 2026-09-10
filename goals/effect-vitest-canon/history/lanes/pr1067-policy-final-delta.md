@@ -1,0 +1,38 @@
+# PR #1067 policy final delta
+
+Status: in progress. Bounded offline attribution of the accepted 8023-row cohort to the immutable 8026-row preview. Root owns acceptance and canonical writes; the preceding cohort review remains closed.
+
+2026-09-10 terminal result: **bounded reconciliation recommended for Root acceptance; zero unexplained rows or scope changes. Canonical-write approval remains pending with Root.** This reviews only the immutable 8023→8026 preview after main integration, not the preceding historical cohort or final integrated package/timing proof.
+
+All 8023 prior rows have unique counterparts. The raw ID delta is 279 added, 276 removed, seven same-ID payload changes and 7740 exact unchanged. Source correspondence resolves this to 7740 complete-payload matches, 281 coordinate-only changes, one coordinate-plus-body-occurrence change, one body-occurrence-only change, and three new candidates. There are zero lost rows, duplicate assignments or remaining ambiguous mappings. Six apparent same-ID changes are coordinate reuse by distinct source positions; the seventh is the runtime fixture's edited body. `same-id-transitions.json` records each old destination and new origin.
+
+The ordered census retains all 1106 paths: 996 test and 110 support, with no owner/kind changes. Eight source hashes and census metadata rows change; 1098 source identities remain equal. All 7680 rows outside the eight files are ordered, whole-payload identical. The changed files contain 343→346 rows. All 29 declaration paths retain membership and identity. Existing EV003 test/support classifications are preserved without relabeling or inferred exemptions.
+
+| Changed immutable source (package-relative) | Before→after rows | Exact payload | Mapped changed | New |
+| --- | ---: | ---: | ---: | ---: |
+| test-utils/test/Vitest.runtime.test.ts | 2→2 | 1 | 1 | 0 |
+| cli/test/docgen.test.ts | 90→91 | 37 | 53 | 1 |
+| cli/test/effect-vitest-contract.test.ts | 15→16 | 15 | 0 | 1 |
+| cli/test/knowledge-refs.test.ts | 7→7 | 0 | 7 | 0 |
+| cli/test/lint-command.test.ts | 59→59 | 2 | 57 | 0 |
+| cli/test/lint-workers.test.ts | 6→6 | 3 | 3 | 0 |
+| cli/test/policy-fingerprint-turbo-inputs.test.ts | 2→2 | 2 | 0 | 0 |
+| cli/test/quality-tasks.test.ts | 162→163 | 0 | 162 | 1 |
+
+The three net-new findings are separately source-bound in `new-candidates.json`:
+
+- **EV001, docgen:1769:** the new ceremony-exempt labs regression uses `Effect.runPromise(withTempRepo(...))`. It verifies only the governed schema package is discovered and aggregated, and that the stray labs aggregate is absent. This introduces a real runtime-boundary candidate.
+- **EV002, quality-tasks:3097:** the new sweep JSONC regression rejects missing, malformed and schema-invalid inputs, then accepts valid JSONC. Its `provideScopedLayer(PlatformLayer)` introduces an unresolved-layer-provide judgment candidate. No migration or exception disposition is inferred.
+- **EV006, effect-vitest-contract:608:** the new legacy-membership versus anchored-exception regression checks that all merged rows remain open without reasons. `assertTrue(A.every(... O.isNone(row.reason)))` introduces the recorded data-assertion candidate. The `utils.assertSome` suggestion is not a demonstrated replacement for this compound predicate; candidate-specific review remains necessary. The exact payload is retained without repair or waiver.
+
+The remaining edits explain movement and body changes precisely. Docgen inserts its new regression before existing tests, shifting 53 findings. Knowledge-reference imports move seven findings by eight lines; appended source-bound evidence and anti-laundering regressions add no detector rows. Lint-command adds a lockfile and sweep-policy fixture setup, moving 57 findings. Lint-workers adds sweep configuration fixtures and full/CI/malformed-input assertions, moving three findings. Policy fingerprint tests now verify sweep configuration affects the hash and restoring it restores the hash; both existing findings remain exact. Quality-tasks adds typed sweep configuration, decode-failure and orchestration checks, moving 162 findings. Its existing runtime wrapper at old3097→new3155 gains five fixture-setup lines inside the call: the call ends at old3129→new3192 and its occurrence digest changes, while every noncoordinate/nonoccurrence field stays equal.
+
+The runtime fixture has exactly one replaced line: the unconditional thread-pool argument becomes conditional on Bun. Bun still receives that argument; Node omits the override. The enclosing scoped call remains at116–189 with a new body occurrence. Every assertion, expected result, cleanup check, timeout and other source byte is unchanged. Root's hash-bound Node22 fixture receipt records the failing forced-thread control and successful default-pool control, 130 unchanged assertions and 22 protected inputs. Its original `coverageAccepted: false` is preserved; the separately bound coverage receipt and final integrated coverage remain Root's responsibility. This attribution does not assert that the declared adapter peer range is satisfied: Root's compatibility decision explicitly retains the main stack with bounded behavioral evidence and an unsatisfied peer range.
+
+Matching first compares all fields exactly. Residual rows require equal-block mappings of both source endpoints plus equality of every other field except the explicitly listed structural omissions: `id`, `line`, `endLine`, `occurrence`. Original array indexes, complete before/after payloads and source ranges are retained; the whole-row comparison itself omits nothing. Candidates are selected uniquely by structural position, never by zipping duplicate evidence groups. Relative source-position order and exact reconstruction of both original ordered arrays pass. All 16 present fields are counted in `accounting.json`; only id/line/endLine (282 each) and occurrence (two) change. All 8023 evidence strings, nested replacement objects, classifications, confidence, severity, symbols, ownership and status fields are preserved. All 8026 results are open, with zero exception rows and no reason fields or reason transfer.
+
+`source-proof.json` contains exact preimage/postimage hashes and every hunk for all eight files. `pairs-initial.json` is the complete 8023-pair ledger despite its preparatory filename; `census-ledger.json` contains all 1106 full census pairs. Inputs are bound to the preview manifest, accepted prior JSONL rows, both scope receipts, Root input acceptance and its referenced evidence. The 1098 unchanged byte identities are established by matching retained all-source hash maps; their source bodies were not reread. No live source or transient fixture was consulted.
+
+Preview manifest SHA-256: `c82a9f5d7390c76c00c415138fd5a40fc754923cbd453a8dcc4558dc81def5da`. Root input acceptance: `ca63ac7eacf9e93a53fac8e5c63f378f042ea16f26ffd8e3f29ec5bafdf9c4c5`. Root-adopted graph identity: `60fdc32c90c86d24db1ad8591a9b2ad602251b0b140db27626c85bdca14c18c6`. The accepted input qualification still requires final integrated CLI coverage and aggregate proof and does not close P0f. Root retains all acceptance, canonical, timing, Git and publication decisions.
+
+Evidence: `~/.cache/beep/effect-vitest-canon/pr1067-resume/policy-final-delta-review/`. `terminal-manifest.json` binds this report, every private artifact and the verified before/after input receipts. Only offline JSON, text-diff and hash analysis ran. One local metadata assertion initially counted the trailing newline as an extra line; the analysis was corrected to the retained census's split-lines convention and passed. No source or census evidence changed.

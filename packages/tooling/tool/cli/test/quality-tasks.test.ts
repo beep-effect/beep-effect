@@ -142,6 +142,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import {
   Cause,
   ConfigProvider,
@@ -894,6 +895,7 @@ describe("quality task adapter", () => {
       "repo-sanity:tsconfig-sync",
       "lint:effect-imports",
       "lint:schema-first",
+      "lint:effect-vitest",
       "lint:allowlist",
       "goals:doctor",
       "quality:jsdoc-ratchet:committed",
@@ -906,6 +908,7 @@ describe("quality task adapter", () => {
     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual(["preflight"]);
     expect(qualityLaneArgs(lanes, "repo-sanity:tsconfig-sync")).toEqual(["run", "config-sync:check"]);
     expect(qualityLaneArgs(lanes, "lint:effect-imports")).toEqual(["run", "beep", "laws", "effect-imports", "--check"]);
+    expect(qualityLaneArgs(lanes, "lint:effect-vitest")).toEqual(["run", "beep", "lint", "effect-vitest"]);
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
       "run",
       "beep",
@@ -5990,6 +5993,7 @@ describe("quality task adapter", () => {
   it("leaves lint policy subcommands on the existing command tree", () => {
     expect(O.isNone(parseQualityTaskInvocation(["lint", "circular"]))).toBe(true);
     expect(O.isNone(parseQualityTaskInvocation(["lint", "deprecated-apis"]))).toBe(true);
+    assertNone(parseQualityTaskInvocation(["lint", "effect-vitest"]));
     expect(O.isNone(parseQualityTaskInvocation(["lint", "package-test-imports"]))).toBe(true);
     expect(O.isNone(parseQualityTaskInvocation(["lint", "policy"]))).toBe(true);
     expect(O.isNone(parseQualityTaskInvocation(["lint", "schema-first"]))).toBe(true);

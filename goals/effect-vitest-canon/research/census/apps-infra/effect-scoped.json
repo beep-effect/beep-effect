@@ -1,0 +1,109 @@
+{
+  "class": "effect-scoped",
+  "method": "ts-morph syntax-only exact CallExpression Effect.scoped(...)",
+  "fileCount": 20,
+  "occurrenceCount": 47,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "count": 1,
+      "lines": [33]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "count": 2,
+      "lines": [41, 51]
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "count": 1,
+      "lines": [119]
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "count": 1,
+      "lines": [64]
+    },
+    {
+      "file": "apps/labs/semantica/test/Fixtures.test.ts",
+      "count": 3,
+      "lines": [44, 132, 310]
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "count": 6,
+      "lines": [65, 302, 332, 401, 438, 480]
+    },
+    {
+      "file": "apps/labs/semantica/test/GoldSource.test.ts",
+      "count": 5,
+      "lines": [66, 111, 132, 157, 199]
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "count": 3,
+      "lines": [46, 52, 74]
+    },
+    {
+      "file": "apps/labs/semantica/test/Projection.test.ts",
+      "count": 1,
+      "lines": [53]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 8,
+      "lines": [48, 137, 303, 348, 452, 547, 607, 675]
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "count": 3,
+      "lines": [27, 41, 141]
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 1,
+      "lines": [134]
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 2,
+      "lines": [84, 96]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
+      "count": 1,
+      "lines": [161]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+      "count": 1,
+      "lines": [207]
+    },
+    {
+      "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+      "count": 4,
+      "lines": [17, 35, 59, 81]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 1,
+      "lines": [106]
+    }
+  ],
+  "limitations": "Exact syntactic call identity; aliases are not counted."
+}

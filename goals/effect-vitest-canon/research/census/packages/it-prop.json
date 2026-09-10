@@ -1,0 +1,14 @@
+{
+  "class": "it-prop",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 1,
+  "occurrenceCount": 2,
+  "files": [
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "count": 2,
+      "lines": [120, 131]
+    }
+  ],
+  "limitations": []
+}

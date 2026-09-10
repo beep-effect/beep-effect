@@ -12,6 +12,14 @@ import {
   makeKnowledgeTreeOracle,
   scanKnowledgeRefsTree,
 } from "@beep/repo-cli/commands/Knowledge";
+import {
+  EffectVitestFinding,
+  EffectVitestInventoryDocument,
+  EffectVitestReplacement,
+  encodeEffectVitestFindingJson,
+  encodeEffectVitestInventoryDocument,
+} from "@beep/repo-cli/commands/Lint";
+import { formatJsonc } from "@beep/repo-cli/test/Artifacts";
 import { renderKnowledgeRefsCheckSection } from "@beep/repo-cli/test/Knowledge";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -941,3 +949,301 @@ describe("knowledge refs baseline agreement", () => {
     BASELINE_TIMEOUT_MS
   );
 });
+
+const sourceBoundExamples = [
+  {
+    source:
+      '    const encodedSsh = Effect.runSync(\n      encodeUnknownAIMetricsRemoteSshConfig(\n        AIMetricsRemoteSshConfig.make({\n          agentSocketPath: O.some("/tmp/agent.sock"),\n        })\n      )\n    );',
+    evidence:
+      'Effect.runSync( encodeUnknownAIMetricsRemoteSshConfig( AIMetricsRemoteSshConfig.make({ agentSocketPath: O.some("/tmp/agent.sock"), }) ) )',
+  },
+  {
+    source:
+      '      yield* withObs(\n        {\n          StopRecord: (_, publish) =>\n            publish(\n              ObsRecordStateChangedEvent.make({\n                outputActive: false,\n                outputPath: O.some("/tmp/beep-qa-video/from-event.mkv"),\n                outputState: "OBS_WEBSOCKET_OUTPUT_STOPPED",\n              })\n            ).pipe(Effect.as(O.some({ outputPath: "/tmp/beep-qa-video/capture.mkv" }))),\n        },\n        Effect.fnUntraced(function* (obs) {\n          const result = yield* obs.stopRecording();\n          expect(result.outputPath).toBe("/tmp/beep-qa-video/capture.mkv");\n        })\n      );',
+    evidence:
+      'withObs( { StopRecord: (_, publish) => publish( ObsRecordStateChangedEvent.make({ outputActive: false, outputPath: O.some("/tmp/beep-qa-video/from-event.mkv"), outputState: "OBS_WEBSOCKET_OUTPUT_STOP\u0050',
+  },
+  {
+    source:
+      '    Effect.scoped(\n      Effect.gen(function* () {\n        const harness = yield* makeProbeHarness(\n          "resolved\\tgoals\\tdoctor\\nextra",\n          "\\u001B[31mwarning\\u001B[0m at /home/operator/private/runtime.ts\\u0001"\n        );\n        const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));\n\n        assert.strictEqual(error._tag, "KnowledgeOperationalError");\n        assert.include(error.message, "expected 1 line(s), received 2");\n        assert.include(error.message, "stdout:");\n        assert.include(error.message, "stderr:");\n        assert.include(error.message, "warning at <absolute-path>");\n        assert.notInclude(error.message, "/home/operator");\n        assert.notInclude(error.message, "\\u001B");\n        assert.notInclude(error.message, "\\u0001");\n      })\n    ).pipe(provideScopedLayer(testLayer))',
+    evidence:
+      'Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( "resolved\\tgoals\\tdoctor\\nextra", "\\u001B[31mwarning\\u001B[0m at /home/operator/private/runtime.ts\\u0001" ); const err',
+  },
+  {
+    source:
+      '    Effect.scoped(\n      Effect.gen(function* () {\n        const harness = yield* makeProbeHarness(\n          "unsafe stdout from /home/operator/private/stdout.ts",\n          "\\u001B[31mSyntaxError\\u001B[0m in /home/operator/private/stderr.ts\\u0001\\r\\nsecond\\rspoof at /secret and C:\\\\secret and /home/üser/prójects/tökens.ts:3:7 plus /données/été near /var/💼client-secret/config.ts:3:7 (see https://example.com/keep-this-path)",\n          1\n        );\n        const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));\n\n        assert.strictEqual(error._tag, "KnowledgeProbeBootError");\n        assert.include(error.message, "Current-checkout command probe against archive data failed with exit 1");\n        assert.include(error.message, "stdout:");\n        assert.include(error.message, "stderr:");\n        assert.notInclude(error.message, harness.currentCheckoutRoot);\n        assert.notInclude(error.message, harness.archiveRoot);\n        assert.notInclude(error.message, harness.scratchRoot);\n        assert.notInclude(error.message, "/home/operator");\n        assert.notInclude(error.message, "/secret");\n        assert.notInclude(error.message, "C:\\\\secret");\n        // Non-ASCII, emoji, and punctuation segments must be swallowed by the same redaction, tail\n        // and line:col included — an enumerated segment class used to stop at the first character\n        // outside it and leak `üser/prójects/tökens.ts:3:7` or `💼client-secret/config.ts`.\n        assert.notInclude(error.message, "üser");\n        assert.notInclude(error.message, "prójects");\n        assert.notInclude(error.message, "tökens");\n        assert.notInclude(error.message, "3:7");\n        assert.notInclude(error.message, "données");\n        assert.notInclude(error.message, "été");\n        assert.notInclude(error.message, "💼");\n        assert.notInclude(error.message, "client-secret");\n        // URLs are not filesystem paths: the redaction must leave them legible.\n        assert.include(error.message, "https://example.com/keep-this-path");\n        assert.include(error.message, "secondspoof");\n        assert.notInclude(error.message, "\\r");\n        assert.notInclude(error.message, "\\u001B");\n        assert.notInclude(error.message, "\\u0001");\n      })\n    ).pipe(provideScopedLayer(testLayer))',
+    evidence:
+      'Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( "unsafe stdout from /home/operator/private/stdout.ts", "\\u001B[31mSyntaxError\\u001B[0m in /home/operator/private/stder',
+  },
+  {
+    source:
+      '  expect(\n    Result.isFailure(\n      decodeDerivedStorageWriteResult({\n        archiveObjectCount: 0,\n        duckDbPath: "/tmp/metrics/derived/ai-metrics.duckdb",\n        ingestRunId: "ingest-1",\n        parquetExportMode: "snapshot",\n        parquetTables: ["not_a_derived_table"],\n        sourceFileCount: 0,\n        turnCount: 0,\n      })\n    )\n  ).toBe(true);',
+    evidence:
+      'expect( Result.isFailure( decodeDerivedStorageWriteResult({ archiveObjectCount: 0, duckDbPath: "/tmp/metrics/derived/ai-metrics.duckdb", ingestRunId: "ingest-1", parquetExportMode: "snapshot", parquet',
+  },
+  {
+    source:
+      '  expect(() =>\n    AiMetricsRetentionSelector.make({\n      dataRoot: "/tmp/metrics",\n      sinceEpochMillis: O.some(20),\n      untilEpochMillis: O.some(10),\n    })\n  ).toThrow();',
+    evidence:
+      'expect(() => AiMetricsRetentionSelector.make({ dataRoot: "/tmp/metrics", sinceEpochMillis: O.some(20), untilEpochMillis: O.some(10), }) ).toThrow()',
+  },
+  {
+    source:
+      '  layer(\n    mockSpawnerLayer((command) => {\n      assert.strictEqual(command.command, "kdialog");\n      assert.deepStrictEqual(command.args, [\n        "--title",\n        "Select workspace vault",\n        "--getexistingdirectory",\n        "/home/user",\n      ]);\n      assert.strictEqual(command.options.stdin, "ignore");\n      assert.strictEqual(command.options.stdout, "pipe");\n      assert.strictEqual(command.options.stderr, "ignore");\n      return { stdout: "/home/user/vault1\\n" };\n    })\n  )("with a kdialog selection", (it) => {',
+    evidence:
+      'layer( mockSpawnerLayer((command) => { assert.strictEqual(command.command, "kdialog"); assert.deepStrictEqual(command.args, [ "--title", "Select workspace vault", "--getexistingdirectory", "/home/user',
+  },
+  {
+    source:
+      '  layer(mockSpawnerLayer((command) => (command.command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\\n" })))(',
+    evidence:
+      'layer(mockSpawnerLayer((command) => (command.command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\\n" })))',
+  },
+];
+
+const generatedSourcePath = "packages/example/test/generated.test.ts";
+const generatedJsonlPath = "goals/effect-vitest-canon/ops/inventory/detector/beep_example.jsonl";
+const generatedInventoryPath = "standards/effect-vitest.inventory.jsonc";
+const generatedFinding = (source: string, evidence: string): EffectVitestFinding =>
+  EffectVitestFinding.make({
+    id: "EV001:fixture#1",
+    lens: "detector",
+    ruleId: "EV001",
+    package: "@beep/example",
+    file: generatedSourcePath,
+    line: 1,
+    endLine: O.some(Str.split("\n")(source).length),
+    symbol: O.some("fixture"),
+    class: "runtime-boundary-in-test",
+    evidence,
+    replacement: EffectVitestReplacement.make({ primitive: "it.effect", sketch: "Return the Effect." }),
+    severity: "major",
+    confidence: 0.95,
+    mechanization: "detector",
+    status: "open",
+  });
+const generatedDocuments = Effect.fnUntraced(function* (finding: EffectVitestFinding) {
+  const row = yield* encodeEffectVitestFindingJson(finding);
+  const inventory = yield* encodeEffectVitestInventoryDocument(
+    EffectVitestInventoryDocument.make({
+      schemaVersion: "effect-vitest-inventory/v1",
+      effectVitestVersion: "4.0.0-rc.113",
+      scope: [],
+      findings: [finding],
+    })
+  );
+  return {
+    [generatedJsonlPath]: row,
+    [generatedInventoryPath]: `// Generated inventory\n${yield* formatJsonc(inventory)}`,
+  };
+});
+
+describe("knowledge refs source-bound generated evidence", () => {
+  it.effect(
+    "retains all eight temp and ten home observations as verified data, including two truncated anchors",
+    Effect.fnUntraced(function* () {
+      let temp = 0;
+      let home = 0;
+      for (const { source, evidence } of sourceBoundExamples) {
+        const docs = yield* generatedDocuments(generatedFinding(source, evidence));
+        const reads = A.empty<string>();
+        const oracle = makeFixtureOracle({ ...docs, [generatedSourcePath]: source });
+        const report = yield* census({
+          ...oracle,
+          readBytes: (file) => {
+            reads.push(file);
+            return oracle.readBytes(file);
+          },
+        });
+        expect(A.filter(reads, (file) => file === generatedSourcePath).length).toBe(1);
+        const hosts = hostObservations(report);
+        expect(
+          A.map(hosts, (row) => [row.documentId, row.classification]),
+          evidence
+        ).toEqual(A.map(hosts, (row) => [row.documentId, "audit-pattern-literal"]));
+        temp += anchorCount(hosts, "temp");
+        home += anchorCount(hosts, "home-absolute");
+        const unverified = hostObservations(yield* scanFixture(docs));
+        expect(A.map(hosts, ({ classification, remediation, ...identity }) => identity)).toEqual(
+          A.map(unverified, ({ classification, remediation, ...identity }) => identity)
+        );
+        expect(knowledgeRefsLiveDebt(report).length).toBe(0);
+        expect(A.every(unverified, (row) => row.classification !== "audit-pattern-literal")).toBe(true);
+      }
+      expect(temp).toBe(8);
+      expect(home).toBe(10);
+    })
+  );
+
+  it.effect(
+    "keeps adjacent reason and command anchors gated through escaped JSON and CRLF",
+    Effect.fnUntraced(function* () {
+      const source = 'consume("quoted \\"name\\" /tmp/data");';
+      const evidence = 'consume("quoted \\"name\\" /tmp/data")';
+      const finding = EffectVitestFinding.make({
+        ...generatedFinding(source, evidence),
+        reason: O.some("/home/operator/guidance"),
+      });
+      const docs = yield* generatedDocuments(finding);
+      const row = `${Str.slice(0, -1)(docs[generatedJsonlPath])},"command":"/tmp/real-work"}`;
+      const report = yield* scanFixture({
+        [generatedJsonlPath]: row,
+        [generatedInventoryPath]: Str.replaceAll("\n", "\r\n")(docs[generatedInventoryPath]),
+        [generatedSourcePath]: source,
+      });
+      const hosts = hostObservations(report);
+      expect(A.filter(hosts, (row) => row.classification === "audit-pattern-literal").length).toBe(2);
+      expect(knowledgeRefsLiveDebt(report).length).toBe(3);
+      expect(A.every(knowledgeRefsLiveDebt(report), (row) => row.ref.kind === "host-path")).toBe(true);
+    })
+  );
+
+  it.effect(
+    "fails closed on missing, nonregular, stale, malformed and forged provenance",
+    Effect.fnUntraced(function* () {
+      const source = 'consume("/tmp/data")';
+      const finding = generatedFinding(source, source);
+      const docs = yield* generatedDocuments(finding);
+      for (const options of [
+        { modes: { [generatedSourcePath]: "120000" } },
+        { modes: { [generatedSourcePath]: "160000" } },
+        { unreadable: [generatedSourcePath] },
+      ]) {
+        const report = yield* scanFixture({ ...docs, [generatedSourcePath]: source }, options);
+        expect(knowledgeRefsLiveDebt(report).length).toBe(2);
+      }
+      for (const modified of [
+        EffectVitestFinding.make({ ...finding, line: 2, endLine: O.some(2) }),
+        EffectVitestFinding.make({ ...finding, evidence: 'consume("/tmp/forged")' }),
+        EffectVitestFinding.make({ ...finding, endLine: O.none() }),
+        EffectVitestFinding.make({ ...finding, file: "packages/missing/test/source.test.ts" }),
+      ]) {
+        const report = yield* scanFixture({ ...(yield* generatedDocuments(modified)), [generatedSourcePath]: source });
+        expect(knowledgeRefsLiveDebt(report).length).toBe(2);
+      }
+      const row = docs[generatedJsonlPath];
+      for (const content of [
+        `${row} malformed`,
+        Str.replace('"detector"', '"forged-producer"')(row),
+        `${Str.slice(0, -1)(row)},"evidence":"consume(\\"/tmp/data\\")"}`,
+        '{"evidence":"consume(\\"/tmp/data\\")"}',
+      ]) {
+        const report = yield* scanFixture({ [generatedJsonlPath]: content, [generatedSourcePath]: source });
+        expect(A.every(hostObservations(report), (row) => row.classification !== "audit-pattern-literal")).toBe(true);
+      }
+      for (const content of [source, '/* consume("/tmp/data") */', 'consume("/tmp/stale")', 'consume("/tmp/data)']) {
+        const report = yield* scanFixture({
+          "docs/quoted.jsonl": row,
+          "docs/guide.md": "`/tmp/guidance`",
+          [generatedSourcePath]: content,
+        });
+        expect(knowledgeRefsLiveDebt(report).length).toBe(2);
+      }
+      const wrongSchema = Str.replace('"effect-vitest-inventory/v1"', '"other/v1"')(docs[generatedInventoryPath]);
+      expect(
+        knowledgeRefsLiveDebt(
+          yield* scanFixture({ [generatedInventoryPath]: wrongSchema, [generatedSourcePath]: source })
+        ).length
+      ).toBe(1);
+      const comment = '/* consume("/tmp/data") */';
+      const commentDocs = yield* generatedDocuments(generatedFinding(comment, comment));
+      expect(knowledgeRefsLiveDebt(yield* scanFixture({ ...commentDocs, [generatedSourcePath]: comment })).length).toBe(
+        2
+      );
+    })
+  );
+});
+
+it.effect(
+  "knowledge refs source-bound generated evidence requires the full closed source for a truncated prefix",
+  Effect.fnUntraced(function* () {
+    const source = `consume("${"x".repeat(180)}/tmp/closed-path")`;
+    const evidence = Str.slice(0, 200)(source);
+    const docs = yield* generatedDocuments(generatedFinding(source, evidence));
+    expect(
+      A.every(
+        hostObservations(yield* scanFixture({ ...docs, [generatedSourcePath]: source })),
+        (row) => row.classification === "audit-pattern-literal"
+      )
+    ).toBe(true);
+    for (const invalid of [evidence, `/* ${source} */`, Str.replace("closed-path", "different-path")(source)]) {
+      expect(knowledgeRefsLiveDebt(yield* scanFixture({ ...docs, [generatedSourcePath]: invalid })).length).toBe(2);
+    }
+  })
+);
+
+it.effect(
+  "rejects malformed canonical inventory before authorizing source evidence",
+  Effect.fnUntraced(function* () {
+    const source = 'consume("prefix /tmp/data suffix")';
+    const docs = yield* generatedDocuments(generatedFinding(source, source));
+    const valid = yield* scanFixture({
+      [generatedInventoryPath]: docs[generatedInventoryPath],
+      [generatedSourcePath]: source,
+    });
+    expect(A.map(hostObservations(valid), (row) => row.classification)).toEqual(["audit-pattern-literal"]);
+    expect(knowledgeRefsLiveDebt(valid).length).toBe(0);
+    const malformed = yield* scanFixture({
+      [generatedInventoryPath]: `${docs[generatedInventoryPath]} malformed`,
+      [generatedSourcePath]: source,
+    });
+    const hosts = hostObservations(malformed);
+    expect(hosts.length).toBe(1);
+    expect(A.map(hosts, (row) => (row.ref.kind === "host-path" ? row.ref.raw : ""))).toEqual(["/tmp/data"]);
+    expect(A.filter(hosts, (row) => row.classification === "audit-pattern-literal")).toEqual([]);
+    expect(knowledgeRefsLiveDebt(malformed).length).toBe(1);
+  })
+);
+
+it.effect(
+  "maps serialized Unicode escapes before evidence anchors without authorizing reasons or rereading source",
+  Effect.fnUntraced(function* () {
+    const source = 'consume("x /tmp/data suffix")';
+    const finding = EffectVitestFinding.make({
+      ...generatedFinding(source, source),
+      reason: O.some("note /home/operator/guidance end"),
+    });
+    const docs = yield* generatedDocuments(finding);
+    const escaped = R.map(docs, Str.replace("x /tmp/data", "\\u0078 /tmp/data"));
+    const reads = A.empty<string>();
+    const oracle = makeFixtureOracle({ ...escaped, [generatedSourcePath]: source });
+    const report = yield* census({
+      ...oracle,
+      readBytes: (file) => {
+        reads.push(file);
+        return oracle.readBytes(file);
+      },
+    });
+    const hosts = hostObservations(report);
+    expect(hosts.length).toBe(4);
+    expect(
+      A.map(
+        A.filter(hosts, (row) => row.classification === "audit-pattern-literal"),
+        (row) => (row.ref.kind === "host-path" ? row.ref.raw : "")
+      )
+    ).toEqual(["/tmp/data", "/tmp/data"]);
+    expect(A.map(knowledgeRefsLiveDebt(report), (row) => (row.ref.kind === "host-path" ? row.ref.raw : ""))).toEqual([
+      "/home/operator/guidance",
+      "/home/operator/guidance",
+    ]);
+    expect(A.filter(reads, (file) => file === generatedSourcePath).length).toBe(1);
+    const unescaped = yield* scanFixture({ ...docs, [generatedSourcePath]: source });
+    expect(A.map(hostObservations(unescaped), (row) => [row.documentId, row.classification])).toEqual(
+      A.map(hosts, (row) => [row.documentId, row.classification])
+    );
+    expect(
+      A.map(
+        hosts,
+        (row) =>
+          (row.location.column ?? 0) -
+          A.findFirst(
+            hostObservations(unescaped),
+            (other) => other.documentId === row.documentId && other.ref.raw === row.ref.raw
+          ).pipe(
+            O.map((other) => other.location.column ?? 0),
+            O.getOrElse(() => 0)
+          )
+      )
+    ).toEqual([5, 5, 5, 0]);
+  })
+);

@@ -1,0 +1,72 @@
+{
+  "class": "effect-sleep",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 12,
+  "occurrenceCount": 33,
+  "files": [
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "count": 2,
+      "lines": [122, 539]
+    },
+    {
+      "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
+      "count": 1,
+      "lines": [35]
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "count": 1,
+      "lines": [644]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "count": 1,
+      "lines": [1047]
+    },
+    {
+      "file": "packages/ontology/client/test/browser/graph-renderer-toggle.test.ts",
+      "count": 4,
+      "lines": [107, 126, 190, 195]
+    },
+    {
+      "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+      "count": 1,
+      "lines": [56]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "count": 14,
+      "lines": [
+        829, 2157, 2349, 2407, 2463, 2494, 2531, 2642, 2696, 2716, 2735, 3714,
+        4242, 4464
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "count": 3,
+      "lines": [1010, 1208, 1258]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+      "count": 3,
+      "lines": [352, 365, 499]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
+      "count": 1,
+      "lines": [66]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts",
+      "count": 1,
+      "lines": [187]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "count": 1,
+      "lines": [342]
+    }
+  ],
+  "limitations": []
+}

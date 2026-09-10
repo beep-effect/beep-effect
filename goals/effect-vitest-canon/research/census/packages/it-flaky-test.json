@@ -1,0 +1,8 @@
+{
+  "class": "it-flaky-test",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 0,
+  "occurrenceCount": 0,
+  "files": [],
+  "limitations": []
+}

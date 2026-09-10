@@ -1,0 +1,29 @@
+{
+  "class": "withAdmissionTempRoot-calls",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files"
+  },
+  "scope": "tests and support",
+  "fileCount": 1,
+  "occurrenceCount": 90,
+  "files": [
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "count": 90,
+      "lines": [
+        711, 742, 767, 800, 850, 888, 919, 959, 979, 1005, 1040, 1073, 1119,
+        1154, 1179, 1220, 1289, 1316, 1344, 1370, 1422, 1482, 1548, 1600, 1623,
+        1664, 1690, 1722, 1810, 1873, 1927, 2004, 2059, 2098, 2123, 2149, 2171,
+        2211, 2251, 2293, 2342, 2364, 2390, 2430, 2476, 2518, 2624, 2655, 2681,
+        2711, 2730, 2748, 2768, 2821, 2919, 2953, 2983, 3037, 3083, 3113, 3159,
+        3201, 3277, 3321, 3388, 3418, 3446, 3504, 3540, 3589, 3641, 3684, 3738,
+        3785, 3820, 3871, 3915, 3970, 4004, 4055, 4097, 4196, 4225, 4302, 4321,
+        4350, 4368, 4393, 4419, 4443
+      ]
+    }
+  ],
+  "limitations": [
+    "Only one lane emitted this auxiliary class; use the common grouped class or wrapper name totals for full-repository comparisons."
+  ]
+}

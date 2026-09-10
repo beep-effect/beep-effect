@@ -1,0 +1,10 @@
+{
+  "class": "EV015",
+  "method": "TestClock.adjust/setTime calls in files also containing it.layer",
+  "fileCount": 0,
+  "occurrenceCount": 0,
+  "files": [],
+  "limitations": [
+    "Candidate-only file-level intersection; block nesting and per-test reset behavior are unresolved."
+  ]
+}

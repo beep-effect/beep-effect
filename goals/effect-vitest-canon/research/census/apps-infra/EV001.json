@@ -1,0 +1,124 @@
+{
+  "class": "EV001",
+  "method": "runPromise/runSync/runFork co-occurring with a test file or support module",
+  "fileCount": 23,
+  "occurrenceCount": 110,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "count": 4,
+      "lines": [124, 163, 221, 266]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "count": 1,
+      "lines": [49]
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "count": 7,
+      "lines": [27, 49, 66, 82, 101, 133, 143]
+    },
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "count": 5,
+      "lines": [67, 364, 408, 433, 453]
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "count": 9,
+      "lines": [50, 180, 222, 270, 301, 322, 351, 372, 409]
+    },
+    {
+      "file": "apps/labs/semantica/test/Fixtures.test.ts",
+      "count": 7,
+      "lines": [54, 80, 130, 206, 245, 295, 308]
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "count": 7,
+      "lines": [226, 300, 330, 399, 436, 478, 536]
+    },
+    {
+      "file": "apps/labs/semantica/test/GoldSource.test.ts",
+      "count": 4,
+      "lines": [109, 130, 155, 197]
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "count": 2,
+      "lines": [50, 72]
+    },
+    {
+      "file": "apps/labs/semantica/test/Projection.test.ts",
+      "count": 4,
+      "lines": [90, 126, 169, 334]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 12,
+      "lines": [135, 266, 301, 346, 450, 545, 605, 673, 717, 735, 753, 766]
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "count": 3,
+      "lines": [57, 86, 139]
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 3,
+      "lines": [147, 737, 890]
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "count": 1,
+      "lines": [176]
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 10,
+      "lines": [80, 277, 724, 732, 739, 747, 761, 765, 775, 853]
+    },
+    {
+      "file": "apps/professional-desktop/test/failure-message.test.ts",
+      "count": 1,
+      "lines": [39]
+    },
+    {
+      "file": "infra/test/AIMetrics.test.ts",
+      "count": 10,
+      "lines": [32, 35, 46, 86, 109, 117, 124, 137, 143, 150]
+    },
+    {
+      "file": "infra/test/CiRunners.test.ts",
+      "count": 3,
+      "lines": [124, 145, 146]
+    },
+    {
+      "file": "infra/test/OipWeb.test.ts",
+      "count": 3,
+      "lines": [105, 123, 131]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 8,
+      "lines": [306, 315, 316, 318, 321, 325, 350, 353]
+    },
+    {
+      "file": "infra/test/Storybook.test.ts",
+      "count": 3,
+      "lines": [70, 84, 89]
+    },
+    {
+      "file": "infra/test/schemaParity.ts",
+      "count": 2,
+      "lines": [11, 12]
+    }
+  ],
+  "limitations": "Candidate census only: syntax-only text does not prove the call is inside a test callback; module-scope pure fixture construction may be allowed."
+}

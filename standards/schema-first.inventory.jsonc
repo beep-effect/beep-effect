@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-09-09",
+  "generatedOn": "2026-09-10",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -676,6 +676,16 @@
       "reason": "Scoped test resource intentionally couples a live StartedTestContainer with its connection metadata for use and teardown."
     },
     {
+      "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 52,
+      "owner": "@beep/test-utils",
+      "reason": "Subprocess regression driver: these codecs decode child-runner evidence for explicit watchdog, cancellation and finalizer-order scenarios. Native schema-derived property behavior is exercised by the runtime.test.ts.txt child fixture and Vitest.test.ts; adding a codec round-trip in the parent would not test the process lifecycle contract."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
       "symbol": "KnowledgeDocumentLine",
       "kind": "exported-type-literal",
@@ -746,6 +756,14 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "In-process classification bag the schema-first scan stage hands to the render stage; single definition exported to kill a fallow clone between the two lint modules. Never decoded, persisted, or sent across a process boundary, and every element is already the schema-backed SchemaFirstInventoryEntry."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "symbol": "EffectVitestImports",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Per-source compiler operation context: ts-morph node identities, WeakMap and MutableHashMap caches, and a lexical binding resolver closure are live handles created by collectEffectVitestImports. They are neither decoded nor persisted and must retain identity for one immutable parse-tree pass; the emitted finding, census and graph data have annotated schemas."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",

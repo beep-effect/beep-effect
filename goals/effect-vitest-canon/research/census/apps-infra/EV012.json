@@ -1,0 +1,61 @@
+{
+  "class": "EV012",
+  "method": "vi.mock or vi.spyOn occurrences",
+  "fileCount": 10,
+  "occurrenceCount": 31,
+  "files": [
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 6,
+      "lines": [49, 64, 68, 480, 527, 773]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+      "count": 1,
+      "lines": [43]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+      "count": 13,
+      "lines": [
+        158, 159, 205, 287, 288, 368, 375, 425, 490, 493, 700, 701, 1047
+      ]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 3,
+      "lines": [34, 193, 394]
+    },
+    {
+      "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+      "count": 1,
+      "lines": [282]
+    },
+    {
+      "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
+      "count": 3,
+      "lines": [38, 53, 80]
+    },
+    {
+      "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+      "count": 1,
+      "lines": [11]
+    },
+    {
+      "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+      "count": 1,
+      "lines": [129]
+    },
+    {
+      "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
+      "count": 1,
+      "lines": [11]
+    }
+  ],
+  "limitations": "Judgment candidate: textual inspection does not determine whether the target is an Effect service."
+}

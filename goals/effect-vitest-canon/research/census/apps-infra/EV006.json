@@ -1,0 +1,211 @@
+{
+  "class": "EV006",
+  "method": "heuristic expect assertions mentioning Option/Result/Exit constructors or predicates",
+  "fileCount": 40,
+  "occurrenceCount": 144,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "apps/labs/ciops/test/projection.test.ts",
+      "count": 1,
+      "lines": [455]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "count": 3,
+      "lines": [115, 216, 234]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "count": 3,
+      "lines": [227, 288, 415]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "count": 2,
+      "lines": [200, 201]
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "count": 2,
+      "lines": [37, 53]
+    },
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "count": 3,
+      "lines": [374, 419, 420]
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "count": 3,
+      "lines": [156, 198, 285]
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "count": 7,
+      "lines": [274, 280, 296, 383, 387, 389, 391]
+    },
+    {
+      "file": "apps/labs/semantica/test/Projection.test.ts",
+      "count": 2,
+      "lines": [357, 360]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 7,
+      "lines": [167, 190, 204, 224, 225, 337, 430]
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "count": 1,
+      "lines": [187]
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 11,
+      "lines": [562, 863, 864, 902, 903, 920, 921, 931, 932, 1423, 1424]
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "count": 1,
+      "lines": [126]
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 7,
+      "lines": [213, 280, 284, 294, 629, 630, 631]
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "count": 2,
+      "lines": [76, 77]
+    },
+    {
+      "file": "apps/professional-desktop/test/UsagePricing.test.ts",
+      "count": 1,
+      "lines": [35]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-contract.test.ts",
+      "count": 1,
+      "lines": [110]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+      "count": 2,
+      "lines": [226, 245]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+      "count": 3,
+      "lines": [84, 109, 147]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+      "count": 12,
+      "lines": [314, 321, 328, 467, 470, 600, 601, 602, 1128, 1165, 1205, 1291]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [404]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-refusal.test.ts",
+      "count": 2,
+      "lines": [14, 25]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "count": 3,
+      "lines": [199, 239, 284]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
+      "count": 3,
+      "lines": [140, 147, 149]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
+      "count": 1,
+      "lines": [112]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "count": 4,
+      "lines": [128, 208, 251, 291]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "count": 2,
+      "lines": [177, 179]
+    },
+    {
+      "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
+      "count": 4,
+      "lines": [18, 19, 30, 31]
+    },
+    {
+      "file": "apps/professional-desktop/test/schema-parity.test.ts",
+      "count": 5,
+      "lines": [101, 191, 216, 217, 235]
+    },
+    {
+      "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
+      "count": 2,
+      "lines": [30, 35]
+    },
+    {
+      "file": "apps/professional-desktop/test/spike-schema.test.ts",
+      "count": 2,
+      "lines": [60, 72]
+    },
+    {
+      "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
+      "count": 3,
+      "lines": [79, 97, 115]
+    },
+    {
+      "file": "infra/test/AIMetrics.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "infra/test/CiFleetController.test.ts",
+      "count": 15,
+      "lines": [
+        36, 37, 41, 53, 65, 68, 69, 102, 114, 115, 125, 128, 136, 143, 244
+      ]
+    },
+    {
+      "file": "infra/test/CiRunners.test.ts",
+      "count": 1,
+      "lines": [37]
+    },
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "count": 15,
+      "lines": [21, 25, 26, 27, 28, 43, 45, 51, 70, 74, 75, 77, 81, 82, 83]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 3,
+      "lines": [180, 201, 211]
+    },
+    {
+      "file": "infra/test/Storybook.test.ts",
+      "count": 1,
+      "lines": [27]
+    }
+  ],
+  "limitations": "Judgment candidate. Alias imports and multiline expressions can be missed; generic names can be false positives."
+}

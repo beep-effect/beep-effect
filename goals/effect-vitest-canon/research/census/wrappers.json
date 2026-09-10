@@ -1,0 +1,1712 @@
+{
+  "method": "Merged complete declarations from the corrected lane syntax scans.",
+  "definitionCount": 144,
+  "definitions": [
+    {
+      "name": "withBunServices",
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "line": 40,
+      "endLine": 41,
+      "body": "const withBunServices = <A2, E, R>(effect: Effect.Effect<A2, E, R>) =>\n  Effect.scoped(Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Layer.build"]
+    },
+    {
+      "name": "withReportDigest",
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "line": 491,
+      "endLine": 494,
+      "body": "const withReportDigest = (body: typeof EvalReportBodySchema.Type) => ({\n  ...Result.getOrThrow(S.encodeResult(EvalReportBodySchema)(body)),\n  reportDigest: Result.getOrThrow(contentDigestSync(EvalReportBodySchema)(body)),\n});",
+      "resourcesAcquired": [],
+      "layersBuilt": []
+    },
+    {
+      "name": "withSocials",
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "line": 33,
+      "endLine": 38,
+      "body": "const withSocials = (socials: ReadonlyArray<SocialLink>): OipSiteContent =>\n  OipSiteContent.make({\n    ...oipSiteContent,\n    metadata,\n    socials,\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": []
+    },
+    {
+      "name": "withContactConfig",
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "line": 83,
+      "endLine": 93,
+      "body": "const withContactConfig = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  Effect.scoped(\n    Layer.build(\n      ConfigProvider.layer(\n        ConfigProvider.fromUnknown({\n          CRM_HUBSPOT_ACCOUNT_ID: \"12345\",\n          CRM_HUBSPOT_SERVICE_KEY: \"hubspot-service-key\",\n        })\n      )\n    ).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Layer.build"]
+    },
+    {
+      "name": "withPgliteSql",
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "line": 32,
+      "endLine": 33,
+      "body": "const withPgliteSql = <A, E, R>(dataDir: string, effect: Effect.Effect<A, E, R>) =>\n  effect.pipe(provideScopedLayer(makeBundledPgliteLayer({ dataDir, relaxedDurability: true })));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer", "makeBundledPgliteLayer"]
+    },
+    {
+      "name": "withChatDbPath",
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "line": 35,
+      "endLine": 38,
+      "body": "const withChatDbPath =\n  (dataDir: string) =>\n  <A, E, R>(effect: Effect.Effect<A, E, R>) =>\n    effect.pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ CHAT_DB_PATH: dataDir }))));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"]
+    },
+    {
+      "name": "withHttpServerImpl",
+      "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+      "line": 206,
+      "endLine": 240,
+      "body": "const withHttpServerImpl = <A2, E>(options: TransportOptions, run: WithHttpServerRun<A2, E>) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fileSystem = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: \"ontology-mcp-http-\" });\n      yield* fileSystem.writeFileString(path.join(root, \"ontology.ttl\"), fixtureSource);\n      const ontologyPath = yield* decodeOntologyFilePath(\"ontology.ttl\");\n      const useSocketTransport = yield* socketTransportConfig;\n      if (useSocketTransport) {\n        const server = transportServer(root, options).pipe(Layer.provideMerge(nodeLoopbackLayer));\n        const client = mcpSessionClientLayer.pipe(Layer.provideMerge(server));\n        return yield* run(root, ontologyPath, useSocketTransport).pipe(\n          provideScopedLayer(makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(client)))\n        );\n      }\n\n      const routes = transportLayer(root, options);\n      const { dispose, handler } = HttpRouter.toWebHandler(routes, { disableLogger: true });\n      yield* Effect.addFinalizer(() => Effect.promise(dispose));\n      function customFetch(\n        input: Parameters<typeof globalThis.fetch>[0],\n        init?: Parameters<typeof globalThis.fetch>[1]\n      ): ReturnType<typeof globalThis.fetch> {\n        return handler(new Request(input, init));\n      }\n      customFetch.preconnect = globalThis.fetch.preconnect;\n      const clientLayer = mcpSessionClientLayer.pipe(\n        Layer.provideMerge(FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, customFetch))))\n      );\n      return yield* run(root, ontologyPath, useSocketTransport).pipe(\n        provideScopedLayer(makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(clientLayer)))\n      );\n    }).pipe(provideScopedLayer(NodeServices.layer))\n  );",
+      "resourcesAcquired": ["makeTempDirectoryScoped"],
+      "layersBuilt": [
+        "Layer.provideMerge",
+        "nodeLoopbackLayer",
+        "mcpSessionClientLayer",
+        "provideScopedLayer",
+        "transportLayer",
+        "clientLayer",
+        "Layer.provide",
+        "Layer.succeed"
+      ]
+    },
+    {
+      "name": "withHttpServer",
+      "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+      "line": 242,
+      "endLine": 245,
+      "body": "export const withHttpServer: {\n  <A2, E>(run: WithHttpServerRun<A2, E>): (options: TransportOptions) => ReturnType<typeof withHttpServerImpl<A2, E>>;\n  <A2, E>(options: TransportOptions, run: WithHttpServerRun<A2, E>): ReturnType<typeof withHttpServerImpl<A2, E>>;\n} = dual(2, withHttpServerImpl);",
+      "resourcesAcquired": [],
+      "layersBuilt": []
+    },
+    {
+      "name": "withStatus",
+      "file": "packages/documents/use-cases/test/SyncOperation.test.ts",
+      "line": 79,
+      "endLine": 82,
+      "body": "const withStatus = (\n  operation: DomainSyncOperation.SyncOperation,\n  status: DomainSyncOperation.SyncOperationStatus\n): DomainSyncOperation.SyncOperation => decodeSyncOperation({ ...encodeSyncOperation(operation), status });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "line": 32,
+      "endLine": 44,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withNativeDuckDbConnection",
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "line": 46,
+      "endLine": 61,
+      "body": "const withNativeDuckDbConnection = <A, E, R>(\n  use: (connection: DuckDBConnection) => Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.promise(() =>\n      DuckDBInstance.create(\":memory:\").then((instance) =>\n        instance.connect().then((connection) => ({ connection, instance }))\n      )\n    ),\n    ({ connection }) => use(connection),\n    ({ connection, instance }) =>\n      Effect.sync(() => {\n        connection.closeSync();\n        instance.closeSync();\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withDuckDbInstanceCreate",
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "line": 63,
+      "endLine": 77,
+      "body": "const withDuckDbInstanceCreate =\n  (create: typeof DuckDBInstance.create) =>\n  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n    Effect.acquireUseRelease(\n      Effect.sync(() => {\n        const original = DuckDBInstance.create;\n        DuckDBInstance.create = create;\n        return original;\n      }),\n      () => effect,\n      (original) =>\n        Effect.sync(() => {\n          DuckDBInstance.create = original;\n        })\n    );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "line": 95,
+      "endLine": 110,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+      "line": 175,
+      "endLine": 190,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "line": 153,
+      "endLine": 168,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "line": 125,
+      "endLine": 140,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "line": 115,
+      "endLine": 130,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, {\n          recursive: true,\n          force: true,\n        });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempFixture",
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "line": 20,
+      "endLine": 41,
+      "body": "const withTempFixture = <A, E, R>(\n  name: string,\n  content: string,\n  use: (file: string) => Effect.Effect<A, E, R>\n): Effect.Effect<A, E | PlatformError, R | FileSystem.FileSystem | Path.Path> =>\n  Effect.gen(function* () {\n    const fs = yield* FileSystem.FileSystem;\n    const path = yield* Path.Path;\n    return yield* Effect.acquireUseRelease(\n      fs.makeTempDirectory(),\n      (dir) =>\n        Effect.gen(function* () {\n          const file = path.join(dir, name);\n          yield* fs.writeFileString(file, content);\n          // Configure the fixture's temp directory as the streaming tools' only\n          // allowed read root, so the path-safety guard is exercised against a\n          // legitimate in-root read rather than blocking the test's temp file.\n          return yield* use(file).pipe(Effect.provideService(StreamingAllowedRoots, [dir]));\n        }),\n      (dir) => Effect.orDie(fs.remove(dir, { force: true, recursive: true }))\n    );\n  });",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withObs",
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "line": 59,
+      "endLine": 68,
+      "body": "const withObs = <A2, E>(\n  handlers: Partial<Record<ObsRequestType, StubHandler>>,\n  use: (obs: ObsShape, calls: Effect.Effect<ReadonlyArray<RecordedRequest>>) => Effect.Effect<A2, E>\n): Effect.Effect<A2, E, Scope.Scope> =>\n  Effect.gen(function* () {\n    const stub = yield* makeStubProtocol(respondWith(handlers));\n    const context = yield* Layer.build(Obs.layer.pipe(Layer.provide(Layer.succeed(ObsProtocol)(stub.protocol))));\n    const obs = yield* Effect.service(Obs).pipe(Effect.provide(context));\n    return yield* use(obs, stub.calls);\n  });",
+      "resourcesAcquired": ["Scope"],
+      "layersBuilt": ["Effect.provide", "Layer.provide", "Layer.succeed"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withLevel",
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "line": 26,
+      "endLine": 35,
+      "body": "const withLevel = (instance: ChalkInstance, level: ColorSupportLevelType, run: () => void): void => {\n  const previousLevel = instance.level;\n\n  try {\n    instance.level = level;\n    run();\n  } finally {\n    instance.level = previousLevel;\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withMcpClient",
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "line": 111,
+      "endLine": 111,
+      "body": "const withMcpClient = (clientId: number) => Effect.provideService(McpServerClient, makeStubMcpClient(clientId));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withSessionHeader",
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "line": 113,
+      "endLine": 119,
+      "body": "const withSessionHeader = (sessionId: string) =>\n  Effect.provideService(\n    HttpServerRequest.HttpServerRequest,\n    HttpServerRequest.fromWeb(\n      new Request(\"http://localhost/mcp\", { headers: { \"mcp-session-id\": sessionId }, method: \"POST\" })\n    )\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withFileSystem",
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "line": 31,
+      "endLine": 32,
+      "body": "const withFileSystem = <E>(use: (fs: FileSystem.FileSystem) => Effect.Effect<void, E>): TestEffect<void> =>\n  provideScopedLayer(NodeServices.layer)(FileSystem.FileSystem.pipe(Effect.flatMap(use), Effect.orDie));",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withBunGlobDisabled",
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "line": 103,
+      "endLine": 123,
+      "body": "const withBunGlobDisabled = (effect: GlobProgram) => {\n  const bunRef = globalThis.Bun;\n\n  return Match.value(bunRef === undefined).pipe(\n    Match.when(true, () => effect),\n    Match.orElse(() =>\n      Effect.acquireUseRelease(\n        Effect.try({\n          try: () => disableBunGlob(bunRef),\n          catch: toGlobMutationError(\"disable\"),\n        }),\n        () => effect,\n        (originalGlob) =>\n          Effect.try({\n            try: () => restoreBunGlob(bunRef, originalGlob),\n            catch: toGlobMutationError(\"restore\"),\n          })\n      )\n    )\n  );\n};",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withBunServices",
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "line": 10,
+      "endLine": 11,
+      "body": "const withBunServices = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>\n  Effect.scoped(Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["Effect.provide"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withDuckDb",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 166,
+      "endLine": 169,
+      "body": "const withDuckDb =\n  (databasePath: string) =>\n  <A, E, R>(effect: Effect.Effect<A, E, R>) =>\n    effect.pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["makeNodeLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withDisposition",
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "line": 357,
+      "endLine": 366,
+      "body": "const withDisposition = (options: DispositionOptions, extra?: DispositionOptions) =>\n  Effect.fnUntraced(function* () {\n    const a = yield* observation(\"a\", TEXT_A);\n    const first = yield* dispositionFixture(10, targets(1, a), options);\n    const dispositions =\n      extra === undefined\n        ? [first]\n        : [first, yield* dispositionFixture(11, targets(1, a), { ...extra, supersedes: 10 })];\n    return { dispositions, events: [yield* eventFixture(1, a)], sources: [sourceEntry(a)] } satisfies Fixture;\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withEventOptions",
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "line": 407,
+      "endLine": 415,
+      "body": "const withEventOptions = (options: EventOptions) =>\n  Effect.fnUntraced(function* () {\n    const a = yield* observation(\"a\", TEXT_A);\n    return {\n      dispositions: [yield* dispositionFixture(10, targets(1, a))],\n      events: [yield* eventFixture(1, a, options)],\n      sources: [sourceEntry(a)],\n    } satisfies Fixture;\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withToolkit",
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "line": 58,
+      "endLine": 77,
+      "body": "const withToolkit = <A2, E>(\n  run: (\n    tools: OntologyToolServiceShape,\n    path: OntologyFilePath,\n    root: string\n  ) => Effect.Effect<A2, E, FileSystem.FileSystem | Path.Path>\n) =>\n  Effect.fnUntraced(function* () {\n    return yield* Effect.gen(function* () {\n      const fileSystem = yield* FileSystem.FileSystem;\n      const platformPath = yield* Path.Path;\n      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: \"beep-ontology-tools-\" });\n      yield* fileSystem.writeFileString(platformPath.join(root, \"ontology.ttl\"), fixtureSource);\n      const path = yield* S.decodeEffect(OntologyFilePath)(\"ontology.ttl\");\n      return yield* Effect.gen(function* () {\n        const tools = yield* OntologyToolService;\n        return yield* run(tools, path, root);\n      }).pipe(provideScopedLayer(toolLayerForRoot(root)));\n    }).pipe(provideScopedLayer(NodeServices.layer));\n  });",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+      "line": 50,
+      "endLine": 65,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({\n        directory: privacySafeSystemTempRoot(),\n        prefix: \"beep-agent-effectiveness-\",\n      });\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+      "line": 69,
+      "endLine": 74,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
+      "line": 12,
+      "endLine": 17,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/file-inventory.test.ts",
+      "line": 7,
+      "endLine": 12,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withSaltEnv",
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+      "line": 84,
+      "endLine": 85,
+      "body": "const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>\n  Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withSaltEnv",
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
+      "line": 262,
+      "endLine": 263,
+      "body": "const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>\n  Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "line": 32,
+      "endLine": 37,
+      "body": "const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "line": 127,
+      "endLine": 139,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
+      "line": 32,
+      "endLine": 43,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    Effect.fnUntraced(function* (tmpDir) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(tmpDir, { recursive: true, force: true });\n    })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempStore",
+      "file": "packages/tooling/library/ai-metrics/test/telemetry-v2-store.test.ts",
+      "line": 35,
+      "endLine": 43,
+      "body": "const withTempStore = Effect.fnUntraced(function* <A2, E, R>(\n  use: (dataRoot: string, store: TelemetryV2StoreShape) => Effect.Effect<A2, E, R>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  const dataRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"beep-telemetry-v2-store-\" });\n  const absoluteDataRoot = yield* requireAbsoluteAiMetricsDataRoot(dataRoot);\n  const context = yield* Layer.build(TelemetryV2Store.layer(absoluteDataRoot));\n  return yield* use(dataRoot, Context.get(context, TelemetryV2Store));\n});",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "line": 96,
+      "endLine": 108,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "line": 183,
+      "endLine": 190,
+      "body": "const withTempDirectory = <A, E, R>(use: (directory: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) =>\n      fs.makeTempDirectory({ directory: import.meta.dirname, prefix: \"codegen-kit-test-\" })\n    ),\n    use,\n    (directory) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(directory, { recursive: true, force: true }))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withOxlintFixture",
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+      "line": 150,
+      "endLine": 164,
+      "body": "const withOxlintFixture = Effect.fn(\"oxlintHarness.withOxlintFixture\")(function* <Success, Error, Requirements>(\n  prefix: string,\n  rule: OxlintRule,\n  source: string,\n  filename: string,\n  supportingFiles: ReadonlyArray<readonly [path: string, source: string]>,\n  use: (fixture: OxlintFixture) => Effect.Effect<Success, Error, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(\n    fs.makeTempDirectory({ prefix }),\n    (tempDir) => makeOxlintFixture(tempDir, rule, source, filename, supportingFiles).pipe(Effect.flatMap(use)),\n    (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory",
+        "tempDir"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempProject",
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "line": 32,
+      "endLine": 39,
+      "body": "const withTempProject = <A, E, R>(use: (projectDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const projectDir = yield* fs.makeTempDirectoryScoped({ prefix: \"effect-tsgo-effect-fn-\" });\n      return yield* use(projectDir);\n    })\n  );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+      "line": 75,
+      "endLine": 90,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({\n        directory: privacySafeSystemTempRoot(),\n        prefix: \"beep-agent-effectiveness-\",\n      });\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPhoenixBaseUrlEnv",
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+      "line": 99,
+      "endLine": 106,
+      "body": "const withPhoenixBaseUrlEnv = <A, E, R>(phoenixBaseUrl: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  provideScopedLayer(\n    ConfigProvider.layer(\n      ConfigProvider.fromUnknown({\n        BEEP_AGENT_EFFECTIVENESS_PHOENIX_BASE_URL: phoenixBaseUrl,\n      })\n    )\n  )(use);",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempFixture",
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
+      "line": 37,
+      "endLine": 49,
+      "body": "const withTempFixture = <A, E, R>(use: (fixtureDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (dir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(dir, { force: true, recursive: true });\n      })\n  ).pipe(provideTestLayer);",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideTestLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 102,
+      "endLine": 114,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withRawArchiveKeyEnv",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 150,
+      "endLine": 157,
+      "body": "const withRawArchiveKeyEnv = <A, E, R>(rawArchiveKey: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  provideScopedLayer(\n    ConfigProvider.layer(\n      ConfigProvider.fromUnknown({\n        BEEP_AI_METRICS_RAW_ARCHIVE_KEY: rawArchiveKey,\n      })\n    )\n  )(use);",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProcessEnv",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 161,
+      "endLine": 164,
+      "body": "const withProcessEnv = <A, E, R>(\n  env: { readonly [key: string]: string },\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(use);",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPrependedPath",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 206,
+      "endLine": 222,
+      "body": "const withPrependedPath = <A, E, R>(binDir: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousPath = Bun.env.PATH;\n      Bun.env.PATH = previousPath === undefined ? binDir : `${binDir}:${previousPath}`;\n      return previousPath;\n    }),\n    () => use,\n    (previousPath) =>\n      Effect.sync(() => {\n        if (previousPath === undefined) {\n          delete Bun.env.PATH;\n        } else {\n          Bun.env.PATH = previousPath;\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withOtlpSink",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 236,
+      "endLine": 261,
+      "body": "const withOtlpSink = <A, E, R>(\n  use: (baseUrl: string, requests: ReadonlyArray<CapturedOtlpRequest>) => Effect.Effect<A, E, R>,\n  responseStatus = 200\n) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const requests: Array<CapturedOtlpRequest> = [];\n      const server = Bun.serve({\n        fetch: (request) =>\n          request.arrayBuffer().then((body) => {\n            A.appendInPlace(requests, {\n              bodyByteLength: body.byteLength,\n              bodyText: new TextDecoder().decode(body),\n              contentType: request.headers.get(\"content-type\") ?? \"\",\n              path: new URL(request.url).pathname,\n            });\n            return new Response(null, { status: responseStatus });\n          }),\n        hostname: \"127.0.0.1\",\n        port: 0,\n      });\n      return { requests, server };\n    }),\n    ({ requests, server }) => use(`http://127.0.0.1:${server.port}`, requests),\n    ({ server }) => Effect.promise(() => server.stop(true))\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+      "line": 21,
+      "endLine": 32,
+      "body": "const withTempRepo = <A, E>(use: (tmpDir: string) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      yield* fs.writeFileString(`${tmpDir}/bun.lock`, \"\");\n\n      return { fs, tmpDir } as const;\n    }),\n    ({ tmpDir }) => use(tmpDir),\n    ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDir",
+      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
+      "line": 22,
+      "endLine": 27,
+      "body": "const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
+      "line": 37,
+      "endLine": 55,
+      "body": "const withEnvVar = <A, E, R>(\n  name: string,\n  value: string | undefined,\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previous = Bun.env[name];\n      if (value === undefined) delete Bun.env[name];\n      else Bun.env[name] = value;\n      return previous;\n    }),\n    () => use,\n    (previous) =>\n      Effect.sync(() => {\n        if (previous === undefined) delete Bun.env[name];\n        else Bun.env[name] = previous;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withWarmEnvironment",
+      "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
+      "line": 57,
+      "endLine": 69,
+      "body": "const withWarmEnvironment = <A, E, R>(\n  values: Readonly<{\n    readonly TURBO_API: string | undefined;\n    readonly TURBO_TOKEN: string | undefined;\n    readonly TURBO_TEAM: string | undefined;\n  }>,\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  withEnvVar(\n    \"TURBO_API\",\n    values.TURBO_API,\n    withEnvVar(\"TURBO_TOKEN\", values.TURBO_TOKEN, withEnvVar(\"TURBO_TEAM\", values.TURBO_TEAM, use))\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
+      "line": 36,
+      "endLine": 48,
+      "body": "const withTempRepo = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const tmpDir = yield* fs.makeTempDirectory();\n\n        return { fs, tmpDir } as const;\n      }),\n      ({ tmpDir }) => use(tmpDir),\n      ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true })\n    ).pipe(provideScopedLayer(testLayer))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
+      "line": 73,
+      "endLine": 94,
+      "body": "const withTempRepo = <A2, E, R>(\n  changedFiles: ReadonlyArray<string>,\n  addedChangesets: ReadonlyArray<string>,\n  spawned: Array<string>,\n  use: (tmpDir: string) => Effect.Effect<A2, E, R>\n) =>\n  Effect.scoped(\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const tmpDir = yield* fs.makeTempDirectory();\n\n        return { fs, tmpDir } as const;\n      }),\n      ({ tmpDir }) => use(tmpDir),\n      ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true })\n    ).pipe(\n      provideScopedLayer(\n        Layer.mergeAll(NodeServices.layer, TestConsole.layer, gitFixtureLayer(changedFiles, addedChangesets, spawned))\n      )\n    )\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["gitFixtureLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/ci-command.test.ts",
+      "line": 26,
+      "endLine": 51,
+      "body": "const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n      const previousGithubStepSummary = Bun.env.GITHUB_STEP_SUMMARY;\n\n      process.chdir(tmpDir);\n      delete Bun.env.GITHUB_STEP_SUMMARY;\n      yield* fs.makeDirectory(\".git\", { recursive: true });\n\n      return { fs, previousCwd, previousGithubStepSummary, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, previousGithubStepSummary, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        if (previousGithubStepSummary === undefined) {\n          delete Bun.env.GITHUB_STEP_SUMMARY;\n        } else {\n          Bun.env.GITHUB_STEP_SUMMARY = previousGithubStepSummary;\n        }\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(TestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["TestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 44,
+      "endLine": 54,
+      "body": "const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {\n  const previous = Bun.env[name];\n  if (value === undefined) delete Bun.env[name];\n  else Bun.env[name] = value;\n  try {\n    return use();\n  } finally {\n    if (previous === undefined) delete Bun.env[name];\n    else Bun.env[name] = previous;\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withEnvVarEffect",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 206,
+      "endLine": 224,
+      "body": "const withEnvVarEffect = <A, E, R>(\n  name: string,\n  value: string | undefined,\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previous = Bun.env[name];\n      if (value === undefined) delete Bun.env[name];\n      else Bun.env[name] = value;\n      return previous;\n    }),\n    () => use,\n    (previous) =>\n      Effect.sync(() => {\n        if (previous === undefined) delete Bun.env[name];\n        else Bun.env[name] = previous;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPartitionShim",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 232,
+      "endLine": 289,
+      "body": "const withPartitionShim = <A, E, R>(\n  options: PartitionShimOptions,\n  use: (fixture: { readonly commandLogPath: string; readonly tempDir: string }) => Effect.Effect<A, E, R>\n) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tempDir = yield* fs.makeTempDirectory();\n      const binDir = path.join(tempDir, \"bin\");\n      const commandLogPath = path.join(tempDir, \"commands.log\");\n      const bunxPath = path.join(binDir, \"bunx\");\n\n      yield* fs.makeDirectory(binDir, { recursive: true });\n      yield* fs.writeFileString(\n        bunxPath,\n        A.join(\n          [\n            \"#!/usr/bin/env sh\",\n            'printf \\'%s\\\\n\\' \"$*\" >> \"$CI_LANE_TEST_COMMAND_LOG\"',\n            'case \" $* \" in',\n            '  *\" --dry-run=json \"*)',\n            \"    printf '%s\\\\n' \\\"$CI_LANE_TEST_DRY_RUN_OUTPUT\\\"\",\n            '    exit \"${CI_LANE_TEST_DRY_RUN_EXIT:-0}\"',\n            \"    ;;\",\n            \"esac\",\n            'exit \"${CI_LANE_TEST_EXECUTION_EXIT:-0}\"',\n            \"\",\n          ],\n          \"\\n\"\n        )\n      );\n      yield* fs.chmod(bunxPath, 0o755);\n      yield* Effect.addFinalizer(() => fs.remove(tempDir, { force: true, recursive: true }).pipe(Effect.orDie));\n\n      return yield* withEnvVarEffect(\n        \"PATH\",\n        `${binDir}:${Bun.env.PATH ?? \"\"}`,\n        withEnvVarEffect(\n          \"CI_LANE_TEST_COMMAND_LOG\",\n          commandLogPath,\n          withEnvVarEffect(\n            \"CI_LANE_TEST_DRY_RUN_OUTPUT\",\n            options.dryRunOutput,\n            withEnvVarEffect(\n              \"CI_LANE_TEST_DRY_RUN_EXIT\",\n              String(options.dryRunExitCode ?? 0),\n              withEnvVarEffect(\n                \"CI_LANE_TEST_EXECUTION_EXIT\",\n                String(options.executionExitCode ?? 0),\n                use({ commandLogPath, tempDir })\n              )\n            )\n          )\n        )\n      );\n    })\n  );",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory", "tempDir"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 291,
+      "endLine": 300,
+      "body": "const withWorkingDirectory = <A, E, R>(directory: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previous = process.cwd();\n      process.chdir(directory);\n      return previous;\n    }),\n    () => use,\n    (previous) => Effect.sync(() => process.chdir(previous))\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
+      "line": 30,
+      "endLine": 42,
+      "body": "const withTempDirectory = <A2, E, R2>(use: (directory: string) => Effect.Effect<A2, E, R2>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (directory) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(directory, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+      "line": 82,
+      "endLine": 100,
+      "body": "const withTempRepoCommand = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(TestFileCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer), Effect.orDie);",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withLabsFixture",
+      "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+      "line": 303,
+      "endLine": 316,
+      "body": "const withLabsFixture = <A2, E, R>(\n  options: RootConfigOptions,\n  use: (context: TempRepoCommandContext) => Effect.Effect<A2, E, R>\n) =>\n  withTempRepoCommand(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const rootDir = process.cwd();\n      yield* bootstrapRootConfig(rootDir, options);\n      yield* bootstrapMarkedIdentityWorkspace(rootDir);\n      return yield* use({ fs, path, rootDir });\n    })\n  );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
+      "line": 23,
+      "endLine": 35,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withSanctionedEcosystemDiagnosticDelta",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "line": 176,
+      "endLine": 190,
+      "body": "const withSanctionedEcosystemDiagnosticDelta = (\n  plugins: ReadonlyArray<TypeScriptPluginConfig>\n): ReadonlyArray<TypeScriptPluginConfig> =>\n  A.map(plugins, (plugin) =>\n    plugin.name === \"@effect/language-service\"\n      ? {\n          ...plugin,\n          diagnosticSeverity: {\n            ...decodeUnknownRecord(plugin.diagnosticSeverity),\n            missedPipeableOpportunity: \"off\",\n            missingPipeableSignature: \"off\",\n          },\n        }\n      : plugin\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "line": 255,
+      "endLine": 273,
+      "body": "const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(TestFileCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer), Effect.orDie);",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withBunShim",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "line": 324,
+      "endLine": 339,
+      "body": "const withBunShim = <A, E, R>(binDir: string, argsFilePath: string, use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousPath = Bun.env.PATH;\n      const previousArgsFilePath = Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE;\n      Bun.env.PATH = previousPath === undefined ? binDir : `${binDir}:${previousPath}`;\n      Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE = argsFilePath;\n      return { previousArgsFilePath, previousPath } as const;\n    }),\n    () => use,\n    ({ previousArgsFilePath, previousPath }) =>\n      Effect.sync(() => {\n        Bun.env.PATH = previousPath;\n        Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE = previousArgsFilePath;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withBootstrappedRootConfig",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "line": 482,
+      "endLine": 494,
+      "body": "const withBootstrappedRootConfig = <A, E, R>(\n    options: RootConfigOptions,\n    use: (context: TempRepoCommandContext) => Effect.Effect<A, E, R>\n  ) =>\n    withTempRepoCommand(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const path = yield* Path.Path;\n        const rootDir = process.cwd();\n        yield* bootstrapRootConfig(rootDir, options);\n        return yield* use({ fs, path, rootDir });\n      })\n    );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+      "line": 36,
+      "endLine": 48,
+      "body": "const withTempDirectory = <A2, E, R>(use: (directory: string) => Effect.Effect<A2, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (directory) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(directory, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
+      "line": 36,
+      "endLine": 48,
+      "body": "const withTempDirectory = <A, E, R>(use: (directory: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (directory) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(directory, { recursive: true, force: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "line": 115,
+      "endLine": 132,
+      "body": "const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {\n  const previousValue = Bun.env[name];\n  if (value === undefined) {\n    delete Bun.env[name];\n  } else {\n    Bun.env[name] = value;\n  }\n\n  try {\n    return use();\n  } finally {\n    if (previousValue === undefined) {\n      delete Bun.env[name];\n    } else {\n      Bun.env[name] = previousValue;\n    }\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "line": 204,
+      "endLine": 223,
+      "body": "const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, path, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(TestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["TestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "line": 225,
+      "endLine": 244,
+      "body": "const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withConfigEnv",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "line": 246,
+      "endLine": 249,
+      "body": "const withConfigEnv = <A, E, R>(\n  env: { readonly [key: string]: string },\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(use);",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withFixtureRepo",
+      "file": "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts",
+      "line": 31,
+      "endLine": 39,
+      "body": "const withFixtureRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  withTempWorkingDirectory(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      yield* fs.makeDirectory(path.join(process.cwd(), \".git\"));\n      return yield* use;\n    })\n  );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/effect-fn.test.ts",
+      "line": 16,
+      "endLine": 31,
+      "body": "const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n      process.chdir(tmpDir);\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+      "line": 26,
+      "endLine": 41,
+      "body": "const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n      process.chdir(tmpDir);\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+      "line": 122,
+      "endLine": 139,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    ({ tmpDir }) => use(tmpDir),\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+      "line": 746,
+      "endLine": 762,
+      "body": "const withEnvVar = <A, E, R>(name: string, value: string, use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousValue = Bun.env[name];\n      Bun.env[name] = value;\n      return previousValue;\n    }),\n    () => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ [name]: value })))(use),\n    (previousValue) =>\n      Effect.sync(() => {\n        if (previousValue === undefined) {\n          delete Bun.env[name];\n        } else {\n          Bun.env[name] = previousValue;\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/frozen-grant-set.test.ts",
+      "line": 15,
+      "endLine": 30,
+      "body": "const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n      process.chdir(tmpDir);\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 29,
+      "endLine": 46,
+      "body": "const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    ({ tmpDir }) => use(tmpDir),\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPathPrefix",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 48,
+      "endLine": 60,
+      "body": "const withPathPrefix = <A, E, R>(pathPrefix: string, use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousPath = Bun.env.PATH;\n      Bun.env.PATH = `${pathPrefix}:${previousPath ?? \"\"}`;\n      return previousPath;\n    }),\n    () => use,\n    (previousPath) =>\n      Effect.sync(() => {\n        Bun.env.PATH = previousPath;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withFixtureRepo",
+      "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+      "line": 144,
+      "endLine": 156,
+      "body": "const withFixtureRepo = Effect.fnUntraced(function* <A, E, R>(\n  options: { readonly topoSortScript: string; readonly packages: ReadonlyArray<FixturePackage> },\n  use: (repoRoot: string) => Effect.Effect<A, E, R>\n) {\n  return yield* Effect.acquireUseRelease(\n    acquireFixtureRepo(options),\n    use,\n    Effect.fnUntraced(function* (repoRoot) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(repoRoot, { recursive: true });\n    })\n  ).pipe(provideScopedLayer(PlatformLayer));\n});",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPurpose",
+      "file": "packages/tooling/tool/cli/test/jsdoc-migrate.test.ts",
+      "line": 734,
+      "endLine": 736,
+      "body": "const withPurpose = JSON.stringify(\n      withSee.map((record) => ({ anchor: record.anchor, titles: [\"Use it\"], seePurposes: [\"for the helper.\"] }))\n    );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withUnbootableBase",
+      "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+      "line": 1524,
+      "endLine": 1534,
+      "body": "const withUnbootableBase = (\n    baseFiles: Readonly<Record<string, string>>,\n    headFiles: Readonly<Record<string, string>>,\n    headOptions: OracleOptions = {}\n  ): KnowledgePairedOracleInput => ({\n    base: unbootableProbeOracle(baseFiles),\n    gitRefNames: NO_GIT_REFS,\n    head: makeOracle(headFiles, headOptions),\n    probePolicy: \"enabled\",\n    renames: [],\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withLabsRepo",
+      "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
+      "line": 25,
+      "endLine": 41,
+      "body": "const withLabsRepo = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>\n  withTempWorkingDirectory(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.writeFileString(\"bun.lock\", \"\");\n      yield* fs.writeFileString(\n        \"package.json\",\n        `${encodeJson({\n          name: \"fixture-root\",\n          private: true,\n          type: \"module\",\n          workspaces: [\"apps/labs/*\"],\n        })}\\n`\n      );\n      return yield* use;\n    })\n  ).pipe(provideScopedLayer(LabsTestLayer), Effect.orDie);",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["LabsTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempModelRoot",
+      "file": "packages/tooling/tool/cli/test/match-person-model-store.test.ts",
+      "line": 26,
+      "endLine": 37,
+      "body": "const withTempModelRoot = <A, E, R>(use: (modelRoot: string, targetPath: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const modelRoot = yield* fs.makeTempDirectory();\n      return Tuple.make(modelRoot, path.join(modelRoot, \"model.safetensors\"));\n    }),\n    ([modelRoot, targetPath]) => use(modelRoot, targetPath),\n    ([modelRoot]) =>\n      FileSystem.FileSystem.use((fs) => fs.remove(modelRoot, { force: true, recursive: true }).pipe(Effect.ignore))\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+      "line": 96,
+      "endLine": 110,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRoot",
+      "file": "packages/tooling/tool/cli/test/person-match-model-store.test.ts",
+      "line": 24,
+      "endLine": 29,
+      "body": "const withTempRoot = <A, E, R>(use: (root: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    FileSystem.FileSystem.use((fs) => fs.makeTempDirectory()),\n    use,\n    (root) => FileSystem.FileSystem.use((fs) => fs.remove(root, { force: true, recursive: true }).pipe(Effect.ignore))\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProcStat",
+      "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+      "line": 24,
+      "endLine": 36,
+      "body": "const withProcStat = Effect.fnUntraced(function* <Value, Error, Requirements>(\n  stat: string,\n  effect: Effect.Effect<Value, Error, Requirements | FileSystem.FileSystem>\n): Effect.fn.Return<Value, Error, Requirements | FileSystem.FileSystem> {\n  const fs = yield* FileSystem.FileSystem;\n  const testFileSystem = FileSystem.FileSystem.of({\n    ...fs,\n    readFileString: Effect.fn(\"ProcessIdentityTest.readFileString\")((target, encoding) =>\n      Str.startsWith(\"/proc/\")(target) ? Effect.succeed(stat) : fs.readFileString(target, encoding)\n    ),\n  });\n  return yield* effect.pipe(Effect.provideService(FileSystem.FileSystem, testFileSystem));\n});",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withLedger",
+      "file": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "line": 80,
+      "endLine": 88,
+      "body": "const withLedger = <Value, Failure, Requirements>(\n  root: string,\n  use: (ledger: ProofLedgerShape) => Effect.Effect<Value, Failure, Requirements>,\n  tripwire: ProofChangedPackageTripwire = constFalse\n) =>\n  Effect.gen(function* () {\n    const ledger = yield* ProofLedger;\n    return yield* use(ledger);\n  }).pipe(Effect.provideServiceEffect(ProofLedger, ProofLedger.make(root, tripwire)));",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempDirectories",
+      "file": "packages/tooling/tool/cli/test/purge-security.test.ts",
+      "line": 14,
+      "endLine": 29,
+      "body": "const withTempDirectories = <A, E, R>(use: (tmpDir: string, externalDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const externalDir = yield* fs.makeTempDirectory();\n\n      return { externalDir, fs, tmpDir } as const;\n    }),\n    ({ externalDir, tmpDir }) => use(tmpDir, externalDir),\n    ({ externalDir, fs, tmpDir }) =>\n      Effect.all([\n        fs.remove(tmpDir, { recursive: true, force: true }),\n        fs.remove(externalDir, { recursive: true, force: true }),\n      ]).pipe(Effect.asVoid)\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDir",
+      "file": "packages/tooling/tool/cli/test/qa-judge-contract-parity.test.ts",
+      "line": 70,
+      "endLine": 75,
+      "body": "const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: \"beep-qa-gate-parity-\" })),\n    use,\n    (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDir",
+      "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+      "line": 95,
+      "endLine": 100,
+      "body": "const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: \"beep-qa-pure-\" })),\n    use,\n    (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempCwd",
+      "file": "packages/tooling/tool/cli/test/qa-round-pipeline.test.ts",
+      "line": 54,
+      "endLine": 59,
+      "body": "const withTempCwd = <A, E, R>(use: (cwd: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: \"beep-qa-round-\" })),\n    use,\n    (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(QaLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["QaLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withFixtureRepo",
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "line": 119,
+      "endLine": 128,
+      "body": "const withFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) {\n  return yield* Effect.acquireUseRelease(\n    acquireFixtureRepo(),\n    use,\n    Effect.fnUntraced(function* (repoRoot) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(repoRoot, { recursive: true });\n    })\n  ).pipe(provideScopedLayer(PlatformLayer));\n});",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withLabsFixtureRepo",
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "line": 160,
+      "endLine": 169,
+      "body": "const withLabsFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) {\n  return yield* Effect.acquireUseRelease(\n    acquireLabsFixtureRepo(),\n    use,\n    Effect.fnUntraced(function* (repoRoot) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(repoRoot, { recursive: true });\n    })\n  ).pipe(provideScopedLayer(PlatformLayer));\n});",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProcessPath",
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "line": 224,
+      "endLine": 243,
+      "body": "const withProcessPath = <Value, Failure, Requirements>(\n  nextPath: string,\n  use: Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousPath = Bun.env.PATH;\n      Bun.env.PATH = nextPath;\n      return previousPath;\n    }),\n    () => use,\n    (previousPath) =>\n      Effect.sync(() => {\n        if (previousPath === undefined) {\n          delete Bun.env.PATH;\n        } else {\n          Bun.env.PATH = previousPath;\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPrependedPath",
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "line": 245,
+      "endLine": 251,
+      "body": "const withPrependedPath = <Value, Failure, Requirements>(\n  binDirectory: string,\n  use: Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.suspend(() =>\n    withProcessPath(Bun.env.PATH === undefined ? binDirectory : `${binDirectory}:${Bun.env.PATH}`, use)\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withAdmissionTempRoot",
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "line": 340,
+      "endLine": 373,
+      "body": "const withAdmissionTempRoot = Effect.fn(\"withAdmissionTempRoot\")(\n  function* <Result, Error2, Requirements>(\n    gibRef: Ref.Ref<number>,\n    use: (tempRoot: AdmissionTempRoot) => Effect.Effect<Result, Error2, Requirements>,\n    totalGib = 128,\n    runScopesEnabled = false\n  ) {\n    const fs = yield* FileSystem.FileSystem;\n    const path = yield* Path.Path;\n    const runtimeDir = yield* fs.makeTempDirectory();\n    const root = path.join(runtimeDir, \"beep\", \"admit\");\n    const tempRoot: AdmissionTempRoot = {\n      root,\n      claims: path.join(root, \"claims\"),\n      leases: path.join(root, \"leases\"),\n      promotions: path.join(root, \"promotions\"),\n      queue: path.join(root, \"queue\"),\n      quarantine: path.join(root, \"quarantine\"),\n    };\n    return yield* use(tempRoot).pipe(\n      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: \"test-override\", root: runtimeDir })),\n      provideScopedLayer(\n        ConfigProvider.layer(\n          ConfigProvider.fromUnknown({\n            BEEP_RUN_SCOPES: runScopesEnabled ? \"1\" : \"0\",\n          })\n        )\n      ),\n      provideScopedLayer(memoryLayer(gibRef, totalGib)),\n      Effect.onExit(() => fs.remove(runtimeDir, { recursive: true, force: true }).pipe(Effect.ignore))\n    );\n  },\n  (effect) => effect.pipe(provideScopedLayer(PlatformLayer), Effect.scoped)\n);",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory"],
+      "layersBuilt": ["PlatformLayer", "memoryLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 250,
+      "endLine": 273,
+      "body": "const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const originalCwd = process.cwd;\n      const repositoryPath = yield* fs.makeTempDirectory();\n\n      yield* Effect.sync(() => {\n        process.cwd = () => repositoryPath;\n      });\n      yield* fs.makeDirectory(path.join(repositoryPath, \".git\"), { recursive: true });\n      yield* Effect.addFinalizer(() =>\n        Effect.gen(function* () {\n          yield* Effect.sync(() => {\n            process.cwd = originalCwd;\n          });\n          yield* fs.remove(repositoryPath, { force: true, recursive: true }).pipe(Effect.orDie);\n        })\n      );\n\n      return yield* use;\n    })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory"],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 283,
+      "endLine": 300,
+      "body": "const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {\n  const previousValue = Bun.env[name];\n  if (value === undefined) {\n    delete Bun.env[name];\n  } else {\n    Bun.env[name] = value;\n  }\n\n  try {\n    return use();\n  } finally {\n    if (previousValue === undefined) {\n      delete Bun.env[name];\n    } else {\n      Bun.env[name] = previousValue;\n    }\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withEnvVarEffect",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 302,
+      "endLine": 326,
+      "body": "const withEnvVarEffect = <Out, E, R>(\n  name: string,\n  value: string | undefined,\n  use: Effect.Effect<Out, E, R>\n): Effect.Effect<Out, E, R> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previousValue = Bun.env[name];\n      if (value === undefined) {\n        delete Bun.env[name];\n      } else {\n        Bun.env[name] = value;\n      }\n      return previousValue;\n    }),\n    () => use,\n    (previousValue) =>\n      Effect.sync(() => {\n        if (previousValue === undefined) {\n          delete Bun.env[name];\n        } else {\n          Bun.env[name] = previousValue;\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withExpectedLabsExclude",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 345,
+      "endLine": 359,
+      "body": "const withExpectedLabsExclude = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> => {\n  if (!A.contains(LABS_EXCLUDED_TASKS, task) || A.contains(args, LABS_EXCLUDE_FILTER)) {\n    return args;\n  }\n  return pipe(\n    A.findFirstIndex(args, (arg) => arg === \"--\"),\n    O.match({\n      onNone: (): ReadonlyArray<string> => [...args, LABS_EXCLUDE_FILTER],\n      onSome: (index) => {\n        const [head, tail] = A.splitAt(args, index);\n        return [...head, LABS_EXCLUDE_FILTER, ...tail];\n      },\n    })\n  );\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withRows",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "line": 3835,
+      "endLine": 3836,
+      "body": "const withRows = (packages: Record<string, CoveragePackageBaseline>) =>\n      CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, packages });",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
+      "line": 26,
+      "endLine": 40,
+      "body": "const withTempDirectory = <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({ prefix: \"residue-reap-test-\" });\n    }),\n    use,\n    (root) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(root, { force: true, recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/run-scope.test.ts",
+      "line": 20,
+      "endLine": 34,
+      "body": "const withTempDirectory = <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({ prefix: \"run-scope-test-\" });\n    }),\n    use,\n    (root) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(root, { force: true, recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
+      "line": 58,
+      "endLine": 65,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
+      "line": 13,
+      "endLine": 25,
+      "body": "const withTempDirectory = <A, E, R>(use: (tempDir: string) => Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({ prefix: \"setup-effect-ref-test-\" });\n    }),\n    use,\n    (tempDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tempDir, { force: true, recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory",
+        "tempDir"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProvider",
+      "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+      "line": 268,
+      "endLine": 271,
+      "body": "const withProvider = (value: string) =>\n        provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: value })))(\n          readOptionalConfigString(\"TOKEN\")\n        );",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTurboEnv",
+      "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+      "line": 360,
+      "endLine": 361,
+      "body": "const withTurboEnv = (env: Record<string, string>) =>\n    provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)));",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/skills-command.test.ts",
+      "line": 138,
+      "endLine": 156,
+      "body": "const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(\".git\", { recursive: true });\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempWorkingDirectory",
+      "file": "packages/tooling/tool/cli/test/support/CommandTest.ts",
+      "line": 33,
+      "endLine": 54,
+      "body": "export const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const originalCwd = process.cwd();\n      const workingDirectory = yield* fs.makeTempDirectory();\n\n      yield* Effect.sync(() => {\n        process.chdir(workingDirectory);\n      });\n      yield* Effect.addFinalizer(() =>\n        Effect.gen(function* () {\n          yield* Effect.sync(() => {\n            process.chdir(originalCwd);\n          });\n          yield* fs.remove(workingDirectory, { force: true, recursive: true }).pipe(Effect.orDie);\n        })\n      );\n\n      return yield* use;\n    })\n  );",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnv",
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "line": 222,
+      "endLine": 233,
+      "body": "const withEnv = <A, E, R>(\n  entries: Readonly<Record<string, string>>,\n  use: Effect.Effect<A, E, R>\n): Effect.Effect<A, E, R> =>\n  Effect.gen(function* () {\n    const current = yield* ConfigProvider.ConfigProvider;\n    const testEnv = ConfigProvider.fromEnv({ env: entries });\n\n    return yield* use.pipe(\n      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.orElse(testEnv, current))\n    );\n  });",
+      "resourcesAcquired": [],
+      "layersBuilt": ["Effect.provideService"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepoCommand",
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "line": 235,
+      "endLine": 254,
+      "body": "const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      process.chdir(tmpDir);\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(CommandTestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["CommandTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withRegisteredTarget",
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "line": 256,
+      "endLine": 272,
+      "body": "const withRegisteredTarget = <A, E, R>(target: SyncDataTarget, use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const targets = syncDataTargets as unknown as Array<SyncDataTarget>;\n      A.appendInPlace(targets, target);\n      return targets;\n    }),\n    () => use,\n    (targets) =>\n      Effect.sync(() => {\n        const index = O.getOrUndefined(A.findFirstIndex(targets, (candidate) => candidate.id === target.id));\n\n        if (index !== undefined) {\n          A.spliceInPlace(targets, { start: index, deleteCount: 1 });\n        }\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPackage",
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "line": 549,
+      "endLine": 560,
+      "body": "export function withPackage(packageName: string, options: PackageOptions): PackageOptions;\",\n                \"export function withPackage(packageName: string): (options: PackageOptions) => PackageOptions;\",\n                \"export function withPackage(\",\n                \"  packageName: string,\",\n                \"  options?: PackageOptions\",\n                \"): PackageOptions | ((options: PackageOptions) => PackageOptions) {\",\n                \"  if (options === undefined) {\",\n                \"    return (self) => ({ ...self, packageName });\",\n                \"  }\",\n                \"\",\n                \"  return { ...options, packageName };\",\n                \"}",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withPackage",
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "line": 550,
+      "endLine": 560,
+      "body": "export function withPackage(packageName: string): (options: PackageOptions) => PackageOptions;\",\n                \"export function withPackage(\",\n                \"  packageName: string,\",\n                \"  options?: PackageOptions\",\n                \"): PackageOptions | ((options: PackageOptions) => PackageOptions) {\",\n                \"  if (options === undefined) {\",\n                \"    return (self) => ({ ...self, packageName });\",\n                \"  }\",\n                \"\",\n                \"  return { ...options, packageName };\",\n                \"}",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withPackage",
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "line": 551,
+      "endLine": 560,
+      "body": "export function withPackage(\",\n                \"  packageName: string,\",\n                \"  options?: PackageOptions\",\n                \"): PackageOptions | ((options: PackageOptions) => PackageOptions) {\",\n                \"  if (options === undefined) {\",\n                \"    return (self) => ({ ...self, packageName });\",\n                \"  }\",\n                \"\",\n                \"  return { ...options, packageName };\",\n                \"}",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "line": 35,
+      "endLine": 49,
+      "body": "const withTempDirectory = <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory({ prefix: \"tmpfs-reap-test-\" });\n    }),\n    use,\n    (root) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(root, { force: true, recursive: true });\n      })\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempRepo",
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "line": 44,
+      "endLine": 62,
+      "body": "const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tmpDir = yield* fs.makeTempDirectory();\n      const previousCwd = process.cwd();\n\n      yield* fs.makeDirectory(path.join(tmpDir, \".git\"), { recursive: true });\n      process.chdir(tmpDir);\n      return { fs, previousCwd, tmpDir } as const;\n    }),\n    () => use,\n    ({ fs, previousCwd, tmpDir }) =>\n      Effect.gen(function* () {\n        process.chdir(previousCwd);\n        yield* fs.remove(tmpDir, { recursive: true, force: true });\n      })\n  ).pipe(provideScopedLayer(TestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["TestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withScratchRepo",
+      "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
+      "line": 129,
+      "endLine": 149,
+      "body": "const withScratchRepo = <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const path = yield* Path.Path;\n        const tmpDir = yield* fs.makeTempDirectory({ prefix: \"worktree-command-test-\" });\n        const repoRoot = path.join(tmpDir, \"main\");\n        yield* fs.makeDirectory(repoRoot);\n        yield* initScratchRepo(repoRoot);\n        const originRoot = path.join(tmpDir, \"origin.git\");\n        yield* fs.makeDirectory(originRoot);\n        yield* runGit(originRoot, [\"init\", \"--bare\"]);\n        yield* runGit(repoRoot, [\"remote\", \"add\", \"origin\", originRoot]);\n        yield* runGit(repoRoot, [\"push\", \"--set-upstream\", \"origin\", \"main\"]);\n        return { fs, repoRoot, tmpDir } as const;\n      }),\n      ({ repoRoot }) => use(repoRoot),\n      ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true }).pipe(Effect.ignore)\n    ).pipe(provideScopedLayer(testLayer))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withScratchFleet",
+      "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
+      "line": 99,
+      "endLine": 111,
+      "body": "const withScratchFleet = <A, E, R>(use: (fixture: FleetFixture) => Effect.Effect<A, E, R>) =>\n  Effect.scoped(\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const tmpDir = yield* fs.makeTempDirectory();\n        const fixture = yield* initScratchFleet(tmpDir);\n        return { fs, fixture };\n      }),\n      ({ fixture }) => use(fixture),\n      ({ fixture, fs }) => fs.remove(fixture.tmpDir, { recursive: true, force: true }).pipe(Effect.ignore)\n    ).pipe(provideScopedLayer(testLayer))\n  );",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withScratchRepo",
+      "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
+      "line": 57,
+      "endLine": 98,
+      "body": "const withScratchRepo = <Value, Failure, Requirements>(\n  use: (fixture: {\n    readonly mainHead: string;\n    readonly repoRoot: string;\n    readonly tempRoot: string;\n    readonly worktreesRoot: string;\n  }) => Effect.Effect<Value, Failure, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const tempRoot = yield* fs.makeTempDirectory({ prefix: \"worktree-reap-test-\" });\n      const repoRoot = path.join(tempRoot, \"repo\");\n      const originRoot = path.join(tempRoot, \"origin.git\");\n      const worktreesRoot = path.join(tempRoot, \"worktrees\");\n      yield* Effect.forEach(\n        [repoRoot, originRoot, worktreesRoot],\n        Effect.fn(\"WorktreeReapTest.makeFixtureDirectory\")(function* (directory) {\n          yield* fs.makeDirectory(directory, { recursive: true });\n        }),\n        { discard: true }\n      );\n      yield* runCommand(\"git\", [\"init\", \"--quiet\", \"--bare\"], originRoot);\n      yield* runCommand(\"git\", [\"init\", \"--quiet\", \"-b\", \"main\"], repoRoot);\n      yield* runCommand(\"git\", [\"config\", \"user.email\", \"worktree-reap@example.invalid\"], repoRoot);\n      yield* runCommand(\"git\", [\"config\", \"user.name\", \"Worktree Reap Test\"], repoRoot);\n      yield* runCommand(\"git\", [\"config\", \"commit.gpgsign\", \"false\"], repoRoot);\n      yield* fs.writeFileString(path.join(repoRoot, \"README.md\"), \"# fixture\\n\");\n      yield* runCommand(\"git\", [\"add\", \"README.md\"], repoRoot);\n      yield* runCommand(\"git\", [\"commit\", \"--quiet\", \"-m\", \"fixture\"], repoRoot);\n      yield* runCommand(\"git\", [\"remote\", \"add\", \"origin\", originRoot], repoRoot);\n      yield* runCommand(\"git\", [\"push\", \"--quiet\", \"--set-upstream\", \"origin\", \"main\"], repoRoot);\n      const mainHead = Str.trim(yield* runCommand(\"git\", [\"rev-parse\", \"HEAD\"], repoRoot));\n      return { mainHead, repoRoot, tempRoot, worktreesRoot };\n    }),\n    use,\n    Effect.fn(\"WorktreeReapTest.removeFixture\")(function* ({ tempRoot }) {\n      const fs = yield* FileSystem.FileSystem;\n      yield* fs.remove(tempRoot, { force: true, recursive: true });\n    })\n  ).pipe(provideScopedLayer(testLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["provideScopedLayer", "testLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
+      "line": 48,
+      "endLine": 55,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),\n    use,\n    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true }).pipe(Effect.orDie))\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-fallow-self-heal.test.ts",
+      "line": 34,
+      "endLine": 48,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(TestLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["TestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withInbox",
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
+      "line": 72,
+      "endLine": 168,
+      "body": "const withInbox = Effect.fn(\"YeetInboxHookAdapterTest.withInbox\")(function* <Value, Failure, Requirements>(\n  use: (fixture: {\n    readonly ack: (id: string, contents?: string) => Effect.Effect<void, PlatformError.PlatformError>;\n    readonly root: string;\n  }) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  const path = yield* Path.Path;\n  const root = yield* fs.makeTempDirectory({ prefix: \"beep-yeet-hook-\" });\n  const inbox = path.join(root, \".beep\", \"inbox\");\n  const acks = path.join(inbox, \"acks\");\n  yield* fs.makeDirectory(path.join(root, \".git\"), { recursive: true });\n  yield* fs.makeDirectory(acks, { recursive: true });\n\n  const rows = [\n    {\n      schemaVersion: \"yeet-inbox/v1\",\n      kind: \"check-failed\",\n      id: \"coverage-live\",\n      severity: \"P0\",\n      checkout: root,\n      ts: \"2026-08-27T00:00:00Z\",\n      capsule: {\n        bucket: \"fail\",\n        headSha: \"abc123\",\n        lane: \"Check / Coverage\",\n        link: \"https://github.com/beep/beep/actions/runs/1/job/2\",\n        observedAt: \"2026-08-27T00:00:00Z\",\n        prNumber: 900,\n        state: \"FAILURE\",\n        workflow: \"Check\",\n      },\n    },\n    {\n      schemaVersion: \"yeet-inbox/v1\",\n      kind: \"review-thread\",\n      id: \"thread-live\",\n      severity: \"P1\",\n      checkout: root,\n      ts: \"2026-08-27T00:00:01Z\",\n      capsule: {\n        headSha: \"abc123\",\n        prNumber: 900,\n        threadId: \"thread-1\",\n        link: \"https://github.com/beep/beep/pull/900#discussion_r1\",\n      },\n    },\n    {\n      schemaVersion: \"yeet-inbox/v1\",\n      kind: \"base-drift\",\n      id: \"drift-live\",\n      severity: \"P2\",\n      checkout: root,\n      ts: \"2026-08-27T00:00:02Z\",\n      capsule: {\n        base: \"origin/main\",\n        headSha: \"abc123\",\n        prNumber: 900,\n      },\n    },\n    {\n      schemaVersion: \"yeet-inbox/v1\",\n      kind: \"check-failed\",\n      id: \"lint-stale\",\n      severity: \"P0\",\n      checkout: root,\n      ts: \"2026-08-26T00:00:00Z\",\n      capsule: {\n        bucket: \"fail\",\n        headSha: \"old456\",\n        lane: \"Check / Lint\",\n        link: null,\n        observedAt: \"2026-08-26T00:00:00Z\",\n        prNumber: 899,\n        state: \"FAILURE\",\n        workflow: \"Check\",\n      },\n    },\n  ];\n\n  const encodedRows = yield* Effect.forEach(rows, (row) => encodeUnknown(row));\n  yield* fs.writeFileString(path.join(inbox, \"failures.ndjson\"), `${A.join(encodedRows, \"\\n\")}\\n`);\n  const encodedDispatch = yield* encodeUnknown({\n    schemaVersion: \"yeet-dispatch/v1\",\n    capsuleIds: [\"coverage-live\"],\n    headSha: \"abc123\",\n    prNumber: 900,\n    sessionStartedAt: \"2026-08-27T00:00:00Z\",\n    updatedAt: \"2026-08-27T00:00:00Z\",\n  });\n  yield* fs.writeFileString(path.join(inbox, \"dispatch.json\"), encodedDispatch);\n\n  return yield* use({\n    ack: (id, contents = \"{}\\n\") => fs.writeFileString(path.join(acks, id), contents),\n    root,\n  }).pipe(Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.orDie)));\n});",
+      "resourcesAcquired": ["FileSystem", "makeTempDirectory"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
+      "line": 255,
+      "endLine": 262,
+      "body": "const withTempDirectory = Effect.fn(\"withTempDirectory\")(function* <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>\n    Effect.ignore(fs.remove(root, { recursive: true }))\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "line": 102,
+      "endLine": 109,
+      "body": "const withTempDirectory = Effect.fn(\"withTempDirectory\")(function* <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>\n    Effect.ignore(fs.remove(root, { recursive: true }))\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "line": 55,
+      "endLine": 69,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withPortfolioRepo",
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "line": 112,
+      "endLine": 120,
+      "body": "const withPortfolioRepo = <Result, Error, Requirements>(\n  use: (repo: TempPortfolioRepo) => Effect.Effect<Result, Error, Requirements>,\n  slugs: ReadonlyArray<string> = [\"alpha-packet\", \"beta-packet\"]\n) =>\n  withTempDirectory((tmpDir) =>\n    Effect.gen(function* () {\n      return yield* use(yield* initPortfolioRepo(tmpDir, slugs));\n    })\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withPortfolioRepoAndOutside",
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "line": 122,
+      "endLine": 135,
+      "body": "const withPortfolioRepoAndOutside = <Result, Error, Requirements>(\n  use: (repo: TempPortfolioRepo, outsideRoot: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  withTempDirectory((tempRoot) =>\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      const repoRoot = path.join(tempRoot, \"repo\");\n      const outsideRoot = path.join(tempRoot, \"outside\");\n      yield* fs.makeDirectory(repoRoot);\n      yield* fs.makeDirectory(outsideRoot);\n      return yield* use(yield* initPortfolioRepo(repoRoot, [\"alpha-packet\", \"beta-packet\"]), outsideRoot);\n    })\n  );",
+      "resourcesAcquired": ["FileSystem"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
+      "line": 342,
+      "endLine": 349,
+      "body": "const withTempDirectory = Effect.fn(\"withTempDirectory\")(function* <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>\n    Effect.ignore(fs.remove(root, { recursive: true }))\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "line": 43,
+      "endLine": 57,
+      "body": "const withTempDirectory = <Success, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Success, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { recursive: true });\n      })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withProofCoordinatorRepo",
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "line": 76,
+      "endLine": 110,
+      "body": "const withProofCoordinatorRepo = <Success, Error, Requirements>(\n  use: (repo: {\n    readonly context: RepoRunContext;\n    readonly lockPath: string;\n    readonly repositoryIdentity: string;\n  }) => Effect.Effect<Success, Error, Requirements>,\n  availableGib = 50,\n  totalGib = 128\n) =>\n  withTempDirectory((tmpDir) =>\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      const path = yield* Path.Path;\n      yield* runGit(tmpDir, [\"init\"]);\n      const repositoryIdentity = `https://example.test/review-fixes/${path.basename(tmpDir)}.git`;\n      yield* runGit(tmpDir, [\"remote\", \"add\", \"origin\", repositoryIdentity]);\n      const context = contextAt(tmpDir);\n      const lockPath = yield* proofLockPathForContext(context);\n      yield* fs.remove(lockPath, { force: true });\n      return yield* Effect.acquireUseRelease(\n        Effect.succeed({ context, lockPath, repositoryIdentity }),\n        use,\n        ({ lockPath: acquiredPath }) =>\n          Effect.gen(function* () {\n            const fs = yield* FileSystem.FileSystem;\n            yield* fs.remove(acquiredPath, { force: true });\n          })\n      );\n    }).pipe(\n      // Coordinator locks and admission leases both live under the temp\n      // runtime root, so removing tmpDir cleans every artifact.\n      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: \"test-override\", root: `${tmpDir}/runtime` })),\n      provideScopedLayer(memoryStatsTestLayer(availableGib, totalGib))\n    )\n  );",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": ["memoryStatsTestLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "line": 479,
+      "endLine": 486,
+      "body": "const withTempDirectory = Effect.fn(\"withTempDirectory\")(function* <Value, Failure, Requirements>(\n  use: (root: string) => Effect.Effect<Value, Failure, Requirements>\n) {\n  const fs = yield* FileSystem.FileSystem;\n  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>\n    Effect.ignore(fs.remove(root, { recursive: true }))\n  );\n});",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTempDirectory",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 238,
+      "endLine": 252,
+      "body": "const withTempDirectory = <Result, Error, Requirements>(\n  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>\n) =>\n  Effect.acquireUseRelease(\n    Effect.gen(function* () {\n      const fs = yield* FileSystem.FileSystem;\n      return yield* fs.makeTempDirectory();\n    }),\n    use,\n    (tmpDir) =>\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        yield* fs.remove(tmpDir, { force: true, recursive: true });\n      })\n  ).pipe(provideScopedLayer(PlatformLayer));",
+      "resourcesAcquired": [
+        "FileSystem",
+        "acquireUseRelease",
+        "makeTempDirectory"
+      ],
+      "layersBuilt": ["PlatformLayer", "provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withEnvVar",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 254,
+      "endLine": 264,
+      "body": "const withEnvVar = <Out>(name: string, value: string | undefined, use: () => Out): Out => {\n  const previous = Bun.env[name];\n  if (value === undefined) delete Bun.env[name];\n  else Bun.env[name] = value;\n  try {\n    return use();\n  } finally {\n    if (previous === undefined) delete Bun.env[name];\n    else Bun.env[name] = previous;\n  }\n};",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withEnvVarEffect",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 266,
+      "endLine": 284,
+      "body": "const withEnvVarEffect = <Out, Error, Requirements>(\n  name: string,\n  value: string | undefined,\n  use: Effect.Effect<Out, Error, Requirements>\n): Effect.Effect<Out, Error, Requirements> =>\n  Effect.acquireUseRelease(\n    Effect.sync(() => {\n      const previous = Bun.env[name];\n      if (value === undefined) delete Bun.env[name];\n      else Bun.env[name] = value;\n      return previous;\n    }),\n    () => use,\n    (previous) =>\n      Effect.sync(() => {\n        if (previous === undefined) delete Bun.env[name];\n        else Bun.env[name] = previous;\n      })\n  );",
+      "resourcesAcquired": ["acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withTrackedFileRepo",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 309,
+      "endLine": 317,
+      "body": "const withTrackedFileRepo = <Result, Error, Requirements>(\n  use: (repo: TempTrackedFileRepo) => Effect.Effect<Result, Error, Requirements>\n) =>\n  withTempDirectory((tmpDir) =>\n    Effect.gen(function* () {\n      const repo = yield* initTrackedFileRepo(tmpDir);\n      return yield* use({ ...repo, tmpDir });\n    })\n  );",
+      "resourcesAcquired": [],
+      "layersBuilt": [],
+      "candidateKind": "pure-data-helper-candidate"
+    },
+    {
+      "name": "withProofCoordinatorRepo",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 323,
+      "endLine": 359,
+      "body": "const withProofCoordinatorRepo = <Result, Error, Requirements>(\n  use: (repo: TempProofCoordinatorRepo) => Effect.Effect<Result, Error, Requirements>\n) =>\n  withTrackedFileRepo((repo) =>\n    Effect.acquireUseRelease(\n      Effect.gen(function* () {\n        const fs = yield* FileSystem.FileSystem;\n        const path = yield* Path.Path;\n        const repositoryIdentity = `https://example.test/${path.basename(repo.tmpDir)}.git`;\n        yield* runGit(repo.tmpDir, [\"remote\", \"add\", \"origin\", repositoryIdentity]);\n        const lockPath = yield* proofLockPathForContext(repo.tempContext);\n        const fallbackPath = path.join(path.dirname(lockPath), \"scheduler-fallback.lock\");\n        yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {\n          discard: true,\n        });\n        return { ...repo, lockPath } as const;\n      }),\n      use,\n      ({ lockPath }) =>\n        Effect.gen(function* () {\n          const fs = yield* FileSystem.FileSystem;\n          const path = yield* Path.Path;\n          const coordinatorDirectory = path.dirname(lockPath);\n          const coordinatorPrefix = path.basename(lockPath);\n          const fallbackPath = path.join(coordinatorDirectory, \"scheduler-fallback.lock\");\n          yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {\n            discard: true,\n          });\n          const entries = yield* fs.readDirectory(coordinatorDirectory).pipe(Effect.orElseSucceed(A.empty<string>));\n          yield* Effect.forEach(\n            A.filter(entries, Str.startsWith(coordinatorPrefix)),\n            (entry) => fs.remove(path.join(coordinatorDirectory, entry), { force: true }).pipe(Effect.ignore),\n            { discard: true }\n          );\n        })\n    )\n  );",
+      "resourcesAcquired": ["FileSystem", "acquireUseRelease"],
+      "layersBuilt": [],
+      "candidateKind": "resource-wrapper-candidate"
+    },
+    {
+      "name": "withRuntimeConfig",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 4311,
+      "endLine": 4315,
+      "body": "const withRuntimeConfig = (env: Record<string, string>) =>\n          pipe(\n            proofCoordinatorLockPath(\"git@github.com:acme/repo.git\"),\n            provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))\n          );",
+      "resourcesAcquired": [],
+      "layersBuilt": ["provideScopedLayer"],
+      "candidateKind": "resource-wrapper-candidate"
+    }
+  ],
+  "limitations": [
+    "withXyz naming includes pure helpers; resources and layer tokens do not prove lifecycle behavior."
+  ]
+}

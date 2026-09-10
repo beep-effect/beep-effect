@@ -1,0 +1,15 @@
+{
+  "class": "it-flaky-test",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files",
+    "apps-infra": "ts-morph syntax-only exact CallExpression it.flakyTest(...)"
+  },
+  "scope": "tests",
+  "fileCount": 0,
+  "occurrenceCount": 0,
+  "files": [],
+  "limitations": [
+    "Exact syntactic call identity; aliases and computed property access are not counted."
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "class": "it-effect-assert",
+  "method": "files containing it.effect plus assert member/call occurrences",
+  "fileCount": 12,
+  "occurrenceCount": 100,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "apps/labs/ciops/test/projection.test.ts",
+      "count": 4,
+      "lines": [136, 160, 183, 210]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "count": 1,
+      "lines": [64]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "count": 2,
+      "lines": [48, 67]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+      "count": 1,
+      "lines": [1077]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+      "count": 1,
+      "lines": [119]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "count": 1,
+      "lines": [61]
+    },
+    {
+      "file": "apps/professional-desktop/test/schema-parity.test.ts",
+      "count": 1,
+      "lines": [59]
+    },
+    {
+      "file": "apps/professional-desktop/test/spike-schema.test.ts",
+      "count": 1,
+      "lines": [77]
+    },
+    {
+      "file": "apps/professional-desktop/test/vault-directory-picker.test.ts",
+      "count": 11,
+      "lines": [50, 51, 57, 58, 59, 67, 77, 87, 99, 110, 111]
+    },
+    {
+      "file": "infra/test/CiFleetController.test.ts",
+      "count": 72,
+      "lines": [
+        27, 28, 30, 223, 224, 225, 226, 227, 228, 251, 275, 282, 291, 292, 293,
+        294, 295, 312, 319, 324, 337, 338, 341, 346, 354, 357, 358, 359, 364,
+        365, 366, 367, 368, 369, 370, 375, 380, 381, 382, 383, 384, 392, 400,
+        408, 453, 458, 467, 468, 473, 480, 481, 482, 483, 484, 485, 490, 491,
+        492, 495, 496, 497, 498, 499, 500, 501, 502, 505, 511, 518, 519, 520,
+        525
+      ]
+    },
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "count": 4,
+      "lines": [141, 142, 143, 144]
+    }
+  ],
+  "limitations": "Verified co-occurrence within a file, not AST containment inside the specific it.effect callback."
+}

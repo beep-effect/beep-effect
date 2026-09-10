@@ -1,0 +1,24 @@
+{
+  "class": "effect-exit",
+  "method": "ts-morph syntax-only exact CallExpression Effect.exit(...)",
+  "fileCount": 3,
+  "occurrenceCount": 6,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "count": 1,
+      "lines": [183]
+    },
+    {
+      "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
+      "count": 3,
+      "lines": [37, 44, 51]
+    },
+    {
+      "file": "apps/professional-desktop/test/spike-schema.test.ts",
+      "count": 2,
+      "lines": [58, 71]
+    }
+  ],
+  "limitations": "Exact syntactic call identity; aliases are not counted."
+}

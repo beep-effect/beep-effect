@@ -8,25 +8,37 @@
 import { Effect, Layer } from "effect";
 
 /**
- * Provide a layer to an effect inside a scoped lifetime.
+ * Provide a pure stub layer to an effect inside a scoped lifetime.
+ *
+ * **When to use**
+ *
+ * Use with pure `Layer.succeed` or `Layer.mock` stubs for individual assertion bodies.
  *
  * **Details**
  *
- * This is the test-friendly counterpart to `Effect.provide` for layers that
- * allocate resources and need their finalizers to run after the assertion body.
+ * Each execution builds the supplied layer in a new scope. For allocating or
+ * effectful fixtures, register the layer with `it.layer` from
+ * `@beep/test-utils/Vitest` so the test block owns its lifetime. Use an inner
+ * `Effect.scoped` only for resources that must be released during an assertion body.
  *
- * **Example** (Provide layer in scoped lifetime)
+ * **Example** (Provide a pure service stub)
  *
  * ```ts
  * import { provideScopedLayer } from "@beep/test-utils"
- * import { Effect, Layer } from "effect"
+ * import { Context, Effect, Layer } from "effect"
  *
- * const layer = Layer.empty
- * const program = Effect.void.pipe(provideScopedLayer(layer))
- * console.log(program)
+ * class Greeting extends Context.Service<Greeting, { readonly message: string }>()(
+ *   "@beep/test-utils/examples/Layer/Greeting"
+ * ) {}
+ *
+ * const stub = Layer.succeed(Greeting, Greeting.of({ message: "Hello" }))
+ * const program = Greeting.use(({ message }) => Effect.succeed(message)).pipe(
+ *   provideScopedLayer(stub)
+ * )
+ * Effect.runSync(program) // "Hello"
  * ```
  *
- * @param layer - Layer to build inside the scoped test lifetime.
+ * @param layer - Pure stub layer to build for the assertion body.
  * @returns A data-last provider for the supplied layer.
  * @category layers
  * @since 0.0.0

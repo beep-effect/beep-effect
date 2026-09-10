@@ -1,0 +1,237 @@
+{
+  "class": "withTempDirectory-calls",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "line-oriented lexical scan over live in-scope package files"
+  },
+  "scope": "tests and support",
+  "fileCount": 38,
+  "occurrenceCount": 472,
+  "files": [
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "count": 5,
+      "lines": [243, 279, 709, 1028, 1098]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "count": 5,
+      "lines": [134, 195, 234, 270, 308]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+      "count": 11,
+      "lines": [204, 236, 255, 285, 310, 357, 398, 439, 477, 513, 547]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "count": 9,
+      "lines": [442, 473, 538, 574, 606, 643, 686, 724, 766]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "count": 4,
+      "lines": [272, 323, 369, 406]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "count": 3,
+      "lines": [144, 206, 272]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+      "count": 17,
+      "lines": [
+        489, 512, 536, 598, 637, 677, 713, 748, 798, 848, 892, 961, 1028, 1084,
+        1154, 1190, 1240
+      ]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+      "count": 12,
+      "lines": [123, 141, 160, 183, 205, 221, 248, 278, 311, 333, 355, 434]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
+      "count": 2,
+      "lines": [36, 56]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/file-inventory.test.ts",
+      "count": 3,
+      "lines": [16, 39, 51]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "count": 24,
+      "lines": [
+        100, 120, 147, 173, 204, 243, 260, 293, 324, 357, 391, 430, 464, 493,
+        540, 579, 595, 633, 669, 707, 735, 757, 774, 805
+      ]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "count": 34,
+      "lines": [
+        471, 571, 670, 743, 1022, 1198, 1410, 1597, 1640, 1744, 1782, 1922,
+        1987, 2217, 2334, 2422, 2514, 2602, 2680, 2806, 2860, 2904, 2928, 2973,
+        3038, 3080, 3125, 3176, 3247, 3337, 3401, 3448, 3492, 3580
+      ]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
+      "count": 1,
+      "lines": [161]
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "count": 3,
+      "lines": [300, 326, 596]
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "count": 8,
+      "lines": [194, 216, 243, 265, 433, 471, 536, 568]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+      "count": 7,
+      "lines": [155, 182, 212, 240, 275, 304, 318]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "count": 42,
+      "lines": [
+        324, 363, 387, 397, 422, 464, 481, 498, 516, 533, 555, 584, 597, 616,
+        651, 681, 712, 722, 740, 758, 797, 822, 883, 933, 1001, 1075, 1152,
+        1196, 1337, 1366, 1438, 1469, 1504, 1537, 1567, 1597, 1644, 1683, 1714,
+        1773, 1812, 1848
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
+      "count": 4,
+      "lines": [99, 126, 141, 156]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
+      "count": 7,
+      "lines": [73, 95, 123, 156, 188, 214, 239]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+      "count": 6,
+      "lines": [166, 185, 276, 295, 333, 357]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
+      "count": 7,
+      "lines": [72, 124, 196, 258, 298, 712, 739]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+      "count": 95,
+      "lines": [
+        922, 1014, 1075, 1159, 1235, 1280, 1355, 1400, 1438, 1485, 1542, 1574,
+        1617, 1652, 1683, 1709, 1753, 2084, 2107, 2149, 2192, 2245, 2311, 2365,
+        2480, 3037, 3097, 3136, 3168, 3191, 3209, 3232, 3273, 3297, 3325, 3346,
+        3370, 3398, 3419, 3440, 3460, 3477, 3503, 3530, 3558, 3574, 3591, 3611,
+        3628, 3650, 3675, 3712, 3751, 3784, 3808, 3828, 3850, 3890, 3919, 3963,
+        4012, 4062, 4123, 4180, 4240, 4278, 4330, 4392, 4435, 4455, 4483, 4507,
+        4540, 4559, 4582, 4605, 4627, 4690, 4723, 4759, 4808, 4845, 4869, 4891,
+        4909, 4933, 4981, 5001, 5027, 5112, 5173, 5211, 5273, 5365, 5433
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "count": 7,
+      "lines": [161, 198, 239, 281, 306, 341, 386]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+      "count": 13,
+      "lines": [143, 173, 204, 233, 260, 280, 305, 328, 349, 413, 476, 535, 569]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
+      "count": 11,
+      "lines": [164, 193, 224, 249, 290, 329, 358, 391, 431, 479, 577]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/run-scope.test.ts",
+      "count": 13,
+      "lines": [49, 60, 71, 95, 110, 125, 143, 158, 170, 185, 197, 211, 222]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
+      "count": 6,
+      "lines": [238, 253, 416, 536, 565, 591]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
+      "count": 6,
+      "lines": [29, 90, 151, 210, 269, 322]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "count": 29,
+      "lines": [
+        288, 330, 368, 398, 514, 549, 581, 617, 659, 691, 728, 767, 814, 848,
+        883, 919, 961, 1093, 1134, 1182, 1210, 1258, 1306, 1348, 1402, 1444,
+        1476, 1511, 1541
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
+      "count": 6,
+      "lines": [125, 219, 256, 298, 318, 337]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-fallow-self-heal.test.ts",
+      "count": 9,
+      "lines": [127, 161, 192, 224, 249, 272, 297, 329, 359]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
+      "count": 3,
+      "lines": [268, 289, 340]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "count": 9,
+      "lines": [150, 158, 172, 183, 195, 224, 255, 295, 319]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "count": 3,
+      "lines": [116, 125, 207]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
+      "count": 3,
+      "lines": [370, 395, 538]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "count": 4,
+      "lines": [85, 152, 170, 211]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "count": 10,
+      "lines": [493, 510, 524, 534, 545, 559, 584, 606, 619, 642]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "count": 31,
+      "lines": [
+        312, 572, 1191, 1719, 1779, 2381, 2399, 2418, 2460, 2517, 2572, 2638,
+        2699, 2722, 2823, 2925, 2988, 3033, 3083, 3122, 3171, 3229, 3278, 3333,
+        3377, 3424, 3469, 3501, 3785, 4336, 5257
+      ]
+    }
+  ],
+  "limitations": [
+    "Only one lane emitted this auxiliary class; use the common grouped class or wrapper name totals for full-repository comparisons."
+  ]
+}

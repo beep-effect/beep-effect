@@ -1,0 +1,19 @@
+{
+  "class": "test-clock-adjust",
+  "method": "global regular expression: /\\bTestClock\\.adjust\\s*\\(/g",
+  "fileCount": 2,
+  "occurrenceCount": 2,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 1,
+      "lines": [77]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-contract.test.ts",
+      "count": 1,
+      "lines": [631]
+    }
+  ],
+  "limitations": "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+}

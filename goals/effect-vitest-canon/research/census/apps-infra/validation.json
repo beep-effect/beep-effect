@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "checkedOn": "2026-09-08",
+  "checks": {
+    "scopeShape": "array rows contain exactly file, package, kind, bytes, lines",
+    "scopeKinds": ["test", "support"],
+    "uniqueScopePaths": 106,
+    "registeredWorkspaceOwnersOnly": true,
+    "infraOwnedByActualWorkspace": true,
+    "mockFixtureOwnersExcluded": true,
+    "classAggregatesChecked": 35,
+    "evAggregatesChecked": 15,
+    "classAndEvPathsRestrictedToScope": true,
+    "wrapperDefinitionIdentitiesUnique": 8,
+    "wrapperCallAggregatesUniqueByFileAndName": 13
+  }
+}

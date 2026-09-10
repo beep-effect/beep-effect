@@ -1,0 +1,14 @@
+{
+  "class": "it-effect-prop",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 1,
+  "occurrenceCount": 1,
+  "files": [
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "count": 1,
+      "lines": [162]
+    }
+  ],
+  "limitations": []
+}

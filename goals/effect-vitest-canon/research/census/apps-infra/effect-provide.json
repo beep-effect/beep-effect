@@ -1,0 +1,109 @@
+{
+  "class": "effect-provide",
+  "method": "ts-morph syntax-only exact CallExpression Effect.provide(...)",
+  "fileCount": 20,
+  "occurrenceCount": 25,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "count": 1,
+      "lines": [13]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "count": 1,
+      "lines": [33]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "count": 1,
+      "lines": [41]
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "count": 1,
+      "lines": [23]
+    },
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "count": 1,
+      "lines": [119]
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "count": 1,
+      "lines": [64]
+    },
+    {
+      "file": "apps/labs/semantica/test/Fixtures.test.ts",
+      "count": 3,
+      "lines": [44, 151, 169]
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "count": 1,
+      "lines": [65]
+    },
+    {
+      "file": "apps/labs/semantica/test/GoldSource.test.ts",
+      "count": 1,
+      "lines": [66]
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "count": 1,
+      "lines": [46]
+    },
+    {
+      "file": "apps/labs/semantica/test/Projection.test.ts",
+      "count": 1,
+      "lines": [53]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+      "count": 1,
+      "lines": [14]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 1,
+      "lines": [48]
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "count": 2,
+      "lines": [34, 41]
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 1,
+      "lines": [134]
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 2,
+      "lines": [92, 98]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "count": 1,
+      "lines": [58]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
+      "count": 2,
+      "lines": [158, 164]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
+      "count": 1,
+      "lines": [128]
+    }
+  ],
+  "limitations": "Exact syntactic call identity. Effect.provideService and other longer member names are excluded; aliases are not counted."
+}

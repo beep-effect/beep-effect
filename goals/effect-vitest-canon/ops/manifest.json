@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "effect-vitest-canon",
+    "title": "Canonical Effect Vitest idioms",
+    "status": "active",
+    "created": "2026-09-08",
+    "updated": "2026-09-10",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/effect-vitest-canon",
+  "lifecycle": "active",
+  "mission": "Canonical Effect Vitest idioms across every in-scope test, enforced by an empty-baseline lint ratchet.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Complete only after all packet acceptance gates and Yeet merge-ready PR evidence, an empty detector baseline, timings, and same-PR reflection/state closeout. Benjamin authorizes merges.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "goals/effect-vitest-canon/README.md",
+    "goals/effect-vitest-canon/SPEC.md",
+    "goals/effect-vitest-canon/PLAN.md",
+    "goals/effect-vitest-canon/GOAL.md",
+    "goals/effect-vitest-canon/DECISIONS.md",
+    "goals/effect-vitest-canon/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/2026-09-08-grounding-1.md",
+    "research/2026-09-08-grounding-2.md",
+    "research/2026-09-08-grounding-3.md",
+    "research/2026-09-08-grounding-4.md",
+    "research/2026-09-08-p05-platform-boundaries.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/effect-vitest-canon/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0a",
+      "name": "Grounding",
+      "status": "complete"
+    },
+    {
+      "id": "P0b",
+      "name": "Worktree and packet",
+      "status": "complete"
+    },
+    {
+      "id": "P0c",
+      "name": "Detector and census",
+      "status": "complete"
+    },
+    {
+      "id": "P0d",
+      "name": "Pinned primitives graph",
+      "status": "complete"
+    },
+    {
+      "id": "P0e",
+      "name": "Charters and instrumented it",
+      "status": "complete"
+    },
+    {
+      "id": "P0.5",
+      "name": "MemoryFileSystem promotion",
+      "status": "complete"
+    },
+    {
+      "id": "P0f",
+      "name": "Adversarial review",
+      "status": "complete"
+    },
+    {
+      "id": "P0g",
+      "name": "Initial PR and ratification",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "Inventory",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Remediation waves",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "bun run beep goals doctor",
+    "bun run beep goals index",
+    "wc -m goals/effect-vitest-canon/GOAL.md",
+    "git diff --check -- goals/effect-vitest-canon",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "P0g ratification and merge require Benjamin before P1.",
+    "P1 acknowledgement requires Benjamin before P2.",
+    "Do not delete tests, weaken schemas, add flakyTest, alter global config/timeouts or property floors, or promote without conformance without the required user decision.",
+    "Never merge without explicit user authorization.",
+    "Do not write untouched-package coverage baselines."
+  ],
+  "statusNote": "Main through 8cb18e6 is integrated. All three adversarial rounds are closed; all four R3 findings are fixed. The 288-case focused checkpoint, full CLI package audit/docgen (420.944 seconds), compiler, lint, Fallow and aggregate cheap gates pass. All 8,138 finding payloads and 1,110 census paths are reconciled. Final normal commands pass in 9.563, 9.630 and 9.926 seconds; failed cohorts remain recorded. Final scoped Node 22 coverage passes 3,656 tests across 181 files and fixes both prior metric regressions without changing the baseline. P0g exact-head full Yeet, hosted checks and review closeout evidence are tracked on PR #1067. Benjamin ratification and merge remain. Leave PR #1067 open; P1/P2 remain gated."
+}

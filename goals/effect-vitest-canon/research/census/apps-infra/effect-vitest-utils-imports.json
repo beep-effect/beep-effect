@@ -1,0 +1,8 @@
+{
+  "class": "effect-vitest-utils-imports",
+  "method": "global regular expression: /(?:from\\s*[\"']@effect\\/vitest\\/utils[\"']|import\\s*[\"']@effect\\/vitest\\/utils[\"'])/g",
+  "fileCount": 0,
+  "occurrenceCount": 0,
+  "files": [],
+  "limitations": "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+}

@@ -1,5 +1,5 @@
 /**
- * Filesystem conformance cases pinned to Effect 4.0.0-rc.112.
+ * Filesystem conformance cases pinned to Effect 4.0.0-rc.113.
  *
  * @packageDocumentation
  * @category testing
@@ -8,8 +8,8 @@
 
 /*
  * Adapted from Effect-TS/effect packages/effect/test/FileSystem.test-utils.ts
- * Commit: 2600f62f4532026928454dcea8d1c48557b3f942
- * Source SHA256: 8725010039e5ef2cee8b9b4fbcdb076f4099e8a44fe393a8e032c5fd89808abe
+ * Commit: d3b837aee836f35d625d55205f7d6e61305fc198
+ * Source SHA256: 76ea5840aac27341e822a583fd533809fe6db2787ca9f6cbb1385c749785888b
  *
  * MIT License
  *
@@ -40,8 +40,9 @@
 
 import { $TestUtilsId } from "@beep/identity/packages";
 import { assert, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Fs from "effect/FileSystem";
 import { constant, dual } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -307,6 +308,10 @@ export const testLayer: {
         const before = yield* Effect.map(fs.readFile(file), (_) => new TextDecoder().decode(_));
         expect(before).toEqual(text);
 
+        yield* fs.truncate(file, 5);
+        const truncated = yield* Effect.map(fs.readFile(file), (_) => new TextDecoder().decode(_));
+        expect(truncated).toEqual("hello");
+
         yield* fs.truncate(file);
 
         const after = yield* Effect.map(fs.readFile(file), (_) => new TextDecoder().decode(_));
@@ -433,6 +438,48 @@ export const testLayer: {
       }).pipe(Effect.provide(layer))
     );
 
+    it.effect.each([
+      { chunkSize: 1.5, bytesToRead: undefined },
+      { chunkSize: Number.NaN, bytesToRead: undefined },
+      { chunkSize: 1.5, bytesToRead: 0 },
+      { chunkSize: Number.NaN, bytesToRead: 0 },
+    ])("rejects stream chunkSize $chunkSize with bytesToRead $bytesToRead", ({ bytesToRead, chunkSize }) =>
+      Effect.gen(function* () {
+        const fs = yield* Fs.FileSystem;
+        const chunks: Array<Uint8Array> = [];
+        const path = yield* textFixture;
+        const observe = (chunk: Uint8Array) => Effect.sync(() => chunks.push(chunk));
+        yield* fs.stream(path, { chunkSize: 5 }).pipe(Stream.tap(observe), Stream.runDrain);
+        const observed = pipe(
+          chunks,
+          A.map((chunk) => new TextDecoder().decode(chunk)),
+          A.join("")
+        );
+        assert.strictEqual(observed, "lorem ipsum dolar sit amet\n");
+        chunks.length = 0;
+
+        const stream = fs.stream(path, { bytesToRead, chunkSize });
+        const exit = yield* Effect.exit(stream.pipe(Stream.tap(observe), Stream.runDrain));
+
+        assert.deepStrictEqual(chunks, []);
+        assert.strictEqual(exit._tag, "Failure");
+        assert(exit._tag === "Failure");
+        assert.isTrue(Cause.hasDies(exit.cause));
+        assert.isFalse(Cause.hasFails(exit.cause));
+        assert.instanceOf(Cause.squash(exit.cause), RangeError);
+      }).pipe(Effect.scoped, Effect.provide(layer))
+    );
+
+    it.effect("should return a numeric byte count when reading", () =>
+      Effect.gen(function* () {
+        const file = yield* openTextFixture;
+        const buffer = new Uint8Array(5);
+
+        assert.strictEqual(yield* file.read(buffer), 5);
+        assert.strictEqual(new TextDecoder().decode(buffer), "lorem");
+      }).pipe(Effect.scoped, Effect.provide(layer))
+    );
+
     it.effect("should read from a backwards seek", () =>
       Effect.gen(function* () {
         const file = yield* openTextFixture;
@@ -443,6 +490,89 @@ export const testLayer: {
         yield* file.seek(BigInt(-3), "current");
         const second = yield* readText(file, 3);
         expect(second).toBe("rem");
+      }).pipe(Effect.scoped, Effect.provide(layer))
+    );
+
+    it.effect.each<{ readonly offset: bigint; readonly from: Fs.SeekMode }>([
+      { offset: BigInt(-1), from: "start" },
+      { offset: BigInt(-3), from: "start" },
+      { offset: BigInt(-6), from: "current" },
+      { offset: BigInt(-8), from: "current" },
+    ])("should reject seeks before the start of the file ($offset from $from)", ({ from, offset }) =>
+      Effect.gen(function* () {
+        const fs = yield* Fs.FileSystem;
+
+        yield* Effect.gen(function* () {
+          const file = yield* fs.open(yield* textFixture);
+          const buffer = new Uint8Array(5);
+          assert.strictEqual(yield* file.read(buffer), 5);
+          assert.strictEqual(new TextDecoder().decode(buffer), "lorem");
+
+          const result = yield* Effect.result(file.seek(offset, from));
+          expect(result).toMatchObject({
+            _tag: "Failure",
+            failure: {
+              _tag: "PlatformError",
+              reason: { _tag: "BadArgument", module: "FileSystem", method: "seek" },
+            },
+          });
+          assert.strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(5));
+          assert.strictEqual(yield* file.read(buffer), 5);
+          assert.strictEqual(new TextDecoder().decode(buffer), " ipsu");
+          assert.strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(10));
+
+          assert.strictEqual(yield* file.seek(BigInt(-10), "current"), BigInt(0));
+          assert.strictEqual(yield* file.read(buffer), 5);
+          assert.strictEqual(new TextDecoder().decode(buffer), "lorem");
+        }).pipe(Effect.scoped);
+      }).pipe(Effect.scoped, Effect.provide(layer))
+    );
+
+    it.effect.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_VALUE])(
+      "readAlloc(%s) fails with BadArgument without moving the cursor",
+      (size) =>
+        Effect.gen(function* () {
+          const fs = yield* Fs.FileSystem;
+
+          yield* Effect.gen(function* () {
+            const file = yield* fs.open(yield* textFixture);
+            const first = yield* file.readAlloc(6).pipe(Effect.flatMap(Effect.fromOption));
+            assert.strictEqual(new TextDecoder().decode(first), "lorem ");
+
+            const exit = yield* Effect.exit(file.readAlloc(size));
+            const position = yield* file.seek(BigInt(0), "current");
+            const next = yield* file.readAlloc(5).pipe(Effect.flatMap(Effect.fromOption));
+
+            assert.strictEqual(position, BigInt(6));
+            assert.strictEqual(new TextDecoder().decode(next), "ipsum");
+            assert(exit._tag === "Failure");
+            assert.isFalse(Cause.hasDies(exit.cause));
+            const error = Cause.findErrorOption(exit.cause);
+            const hasError = O.isSome(error);
+            assert(hasError);
+            assert.strictEqual(error.value._tag, "PlatformError");
+            assert.strictEqual(error.value.reason._tag, "BadArgument");
+            assert.strictEqual(error.value.reason.module, "FileSystem");
+            assert.strictEqual(error.value.reason.method, "readAlloc");
+          }).pipe(Effect.scoped);
+        }).pipe(Effect.scoped, Effect.provide(layer))
+    );
+
+    it.effect("readAlloc(0) returns None without moving the cursor", () =>
+      Effect.gen(function* () {
+        const fs = yield* Fs.FileSystem;
+
+        yield* Effect.gen(function* () {
+          const file = yield* fs.open(yield* textFixture);
+          const first = yield* file.readAlloc(6).pipe(Effect.flatMap(Effect.fromOption));
+          assert.strictEqual(new TextDecoder().decode(first), "lorem ");
+
+          assert.deepStrictEqual(yield* file.readAlloc(0), O.none());
+          assert.strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(6));
+
+          const next = yield* file.readAlloc(5).pipe(Effect.flatMap(Effect.fromOption));
+          assert.strictEqual(new TextDecoder().decode(next), "ipsum");
+        }).pipe(Effect.scoped);
       }).pipe(Effect.scoped, Effect.provide(layer))
     );
 
@@ -466,7 +596,7 @@ export const testLayer: {
           let text: string;
           const { path, file } = yield* openTemporaryFile("w+");
 
-          yield* writeText(file, "lorem ipsum");
+          assert.strictEqual(yield* writeText(file, "lorem ipsum"), 11);
           yield* writeText(file, " ");
           yield* writeText(file, "dolor sit amet");
           text = yield* fs.readFileString(path);

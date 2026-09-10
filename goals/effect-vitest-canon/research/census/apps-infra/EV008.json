@@ -1,0 +1,14 @@
+{
+  "class": "EV008",
+  "method": "Effect.sleep or Schedule in it.effect files lacking TestClock.adjust anywhere in the file",
+  "fileCount": 1,
+  "occurrenceCount": 1,
+  "files": [
+    {
+      "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+      "count": 1,
+      "lines": [116]
+    }
+  ],
+  "limitations": "Heuristic at file granularity. The sleep/Schedule may be outside the effect test or legitimately live, and an adjustment in another callback would suppress candidates."
+}

@@ -1,0 +1,14 @@
+{
+  "class": "node-fs-imports",
+  "method": "union of line-oriented lexical scans over live in-scope package files",
+  "fileCount": 1,
+  "occurrenceCount": 2,
+  "files": [
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
+      "count": 2,
+      "lines": [325, 329]
+    }
+  ],
+  "limitations": []
+}

@@ -7,9 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { A } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { Effect, flow, Order } from "effect";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import type { Ordering } from "effect/Ordering";
@@ -653,3 +654,828 @@ export const isActiveSchemaFirstRuleAdvisory =
   (ruleId: SchemaFirstPolicyRuleId) =>
   (entry: SchemaFirstInventoryEntry): boolean =>
     entry.ruleId === ruleId && entry.status === "advisory";
+
+// Effect Vitest canon -------------------------------------------------------
+
+/**
+ * Enumerates the mechanical detector rules implemented during P0c.
+ *
+ * **Example** (Validate a detector rule)
+ *
+ * ```ts
+ * import { EffectVitestRuleId } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(EffectVitestRuleId)("EV007")) // true
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export const EffectVitestRuleId = LiteralKit([
+  "EV001",
+  "EV002",
+  "EV003",
+  "EV004",
+  "EV005",
+  "EV006",
+  "EV007",
+  "EV008",
+  "EV009",
+  "EV010",
+  "EV011",
+  "EV012",
+  "EV013",
+  "EV014",
+  "EV015",
+]).pipe($I.annoteSchema("EffectVitestRuleId", { description: "Stable P0c Effect Vitest detector rule identifier." }));
+/**
+ * Decoded detector identifier accepted by {@link EffectVitestRuleId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EffectVitestRuleId = typeof EffectVitestRuleId.Type;
+
+const EffectVitestLens = LiteralKit(["detector", "resource", "flake", "property", "observability"]).pipe(
+  $I.annoteSchema("EffectVitestLens", { description: "Originating detector or judgment lens for a finding." })
+);
+
+const EffectVitestSeverity = LiteralKit(["blocker", "major", "minor", "info"]).pipe(
+  $I.annoteSchema("EffectVitestSeverity", { description: "Review severity assigned to an Effect Vitest finding." })
+);
+/**
+ * Decoded severity assigned by Effect Vitest detector policy.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EffectVitestSeverity = typeof EffectVitestSeverity.Type;
+
+const EffectVitestMechanization = LiteralKit(["detector", "judgment"]).pipe(
+  $I.annoteSchema("EffectVitestMechanization", {
+    description: "Whether a finding is mechanically asserted or requests judgment.",
+  })
+);
+
+const EffectVitestFindingStatus = LiteralKit(["open", "fixed", "exception"]).pipe(
+  $I.annoteSchema("EffectVitestFindingStatus", { description: "Lifecycle state of an Effect Vitest finding." })
+);
+
+const EffectVitestLensRuleId = S.String.check(S.isPattern(/^L-(?:RES|FLAKE|PROP|OBS)-\d{2}$/u)).pipe(
+  $I.annoteSchema("EffectVitestLensRuleId", {
+    description: "Resource, flake, property, or observability judgment rule identifier.",
+  })
+);
+
+/**
+ * Accepts both EV detector identifiers and the four judgment-lens rule families.
+ *
+ * **Example** (Validate both rule families)
+ *
+ * ```ts
+ * import { EffectVitestFindingRuleId } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(EffectVitestFindingRuleId)("EV001")) // true
+ * console.log(S.is(EffectVitestFindingRuleId)("L-RES-01")) // true
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export const EffectVitestFindingRuleId = S.Union([EffectVitestRuleId, EffectVitestLensRuleId]).pipe(
+  $I.annoteSchema("EffectVitestFindingRuleId", {
+    description: "Detector or judgment-lens rule identifier stored in a finding row.",
+  })
+);
+/**
+ * Decoded finding rule identifier accepted by {@link EffectVitestFindingRuleId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EffectVitestFindingRuleId = typeof EffectVitestFindingRuleId.Type;
+
+const EffectVitestPositiveLine = S.Int.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("EffectVitestPositiveLine", { description: "Positive one-based source line number." })
+);
+const EffectVitestConfidence = S.Finite.check(
+  S.makeFilterGroup([S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1)], {
+    identifier: $I`EffectVitestConfidenceChecks`,
+    title: "Effect Vitest Confidence",
+    description: "Finite confidence value in the inclusive interval from zero to one.",
+  })
+).pipe($I.annoteSchema("EffectVitestConfidence", { description: "Finding confidence from zero through one." }));
+const EffectVitestEvidence = S.String.check(S.isMaxLength(200)).pipe(
+  $I.annoteSchema("EffectVitestEvidence", { description: "Compact source evidence limited to 200 characters." })
+);
+const EffectVitestOccurrence = S.String.check(S.isPattern(/^v2:[a-f0-9]{64}$/u)).pipe(
+  $I.annoteSchema("EffectVitestOccurrence", {
+    description:
+      "Versioned SHA-256 anchor of lexical registration titles and the complete containing statement token stream.",
+  })
+);
+const optionalText = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+
+/**
+ * Names the pinned primitive and concise built-in remediation available before P0d.
+ *
+ * **Example** (Create a replacement hint)
+ *
+ * ```ts
+ * import { EffectVitestReplacement } from "@beep/repo-cli/commands/Lint"
+ *
+ * const replacement = EffectVitestReplacement.make({ primitive: "it.effect", sketch: "Return the Effect." })
+ * console.log(replacement.primitive)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectVitestReplacement extends S.Class<EffectVitestReplacement>($I`EffectVitestReplacement`)(
+  { primitive: S.NonEmptyString, sketch: S.NonEmptyString },
+  $I.annote("EffectVitestReplacement", { description: "Pinned primitive identifier and concise P0c remediation hint." })
+) {}
+
+const EffectVitestFindingFields = S.Struct({
+  id: S.NonEmptyString,
+  lens: EffectVitestLens,
+  ruleId: EffectVitestFindingRuleId,
+  package: S.NonEmptyString,
+  file: S.NonEmptyString,
+  line: EffectVitestPositiveLine,
+  endLine: EffectVitestPositiveLine.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  symbol: optionalText,
+  testName: optionalText,
+  occurrence: EffectVitestOccurrence.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  class: S.NonEmptyString,
+  evidence: EffectVitestEvidence,
+  replacement: EffectVitestReplacement,
+  severity: EffectVitestSeverity,
+  confidence: EffectVitestConfidence,
+  mechanization: EffectVitestMechanization,
+  status: EffectVitestFindingStatus,
+  reason: optionalText,
+  fixSha: optionalText,
+}).check(
+  S.makeFilter(
+    (finding) =>
+      (O.isNone(finding.endLine) || finding.endLine.value >= finding.line) &&
+      ((finding.status !== "exception" && finding.class !== "flaky-test-wrap") ||
+        O.exists(finding.reason, (reason) => Str.isNonEmpty(Str.trim(reason)))),
+    {
+      identifier: $I`EffectVitestFindingInvariant`,
+      title: "Effect Vitest finding invariants",
+      description: "End lines cannot precede start lines, and exception or flaky-wrap rows require a non-empty reason.",
+      message: "Expected ordered lines and a non-empty reason for exception or flaky-test-wrap rows",
+    }
+  )
+);
+
+/**
+ * Models a schema-validated detector or judgment row with encoded optional keys.
+ *
+ * **Example** (Create a judgment finding)
+ *
+ * ```ts
+ * import { EffectVitestFinding, EffectVitestReplacement } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ *
+ * const finding = EffectVitestFinding.make({
+ *   id: "L-RES-01:packages/example/test/resource.test.ts:8:withRepo@2#1",
+ *   lens: "resource", ruleId: "L-RES-01", package: "@beep/example",
+ *   file: "packages/example/test/resource.test.ts", line: 8, endLine: O.some(8),
+ *   symbol: O.some("withRepo"), testName: O.some("uses a repository"), class: "resource-wrapper",
+ *   evidence: "withRepo(program)",
+ *   replacement: EffectVitestReplacement.make({ primitive: "it.layer", sketch: "Share the resource layer." }),
+ *   severity: "major", confidence: 0.55, mechanization: "judgment", status: "open",
+ *   reason: O.none(), fixSha: O.none()
+ * })
+ * console.log(finding.ruleId) // "L-RES-01"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectVitestFinding extends S.Class<EffectVitestFinding>($I`EffectVitestFinding`)(
+  EffectVitestFindingFields,
+  $I.annote("EffectVitestFinding", {
+    description: "Stable Effect Vitest detector or judgment finding persisted as encoded JSONL.",
+  })
+) {}
+
+const EffectVitestPrimitiveKind = LiteralKit([
+  "method",
+  "tester-method",
+  "function",
+  "type",
+  "option",
+  "readme-section",
+]).pipe(
+  $I.annoteSchema("EffectVitestPrimitiveKind", {
+    description: "Pinned API export or README-section kind represented by the P0d primitive graph.",
+  })
+);
+
+const EffectVitestPinnedCommitSha = S.String.check(S.isPattern(/^[0-9a-f]{40}$/u)).pipe(
+  $I.annoteSchema("EffectVitestPinnedCommitSha", {
+    description: "Lowercase forty-character commit SHA anchoring the Effect Vitest primitive graph.",
+  })
+);
+
+const EffectVitestPrimitiveFields = S.Struct({
+  id: S.NonEmptyString,
+  name: S.NonEmptyString,
+  kind: EffectVitestPrimitiveKind,
+  file: S.NonEmptyString,
+  startLine: EffectVitestPositiveLine,
+  endLine: EffectVitestPositiveLine,
+  signature: S.NonEmptyString,
+  description: S.NonEmptyString,
+  whenToUse: S.NonEmptyString,
+  whenNotToUse: S.NonEmptyString,
+  replaces: S.Array(EffectVitestRuleId),
+  example: S.NonEmptyString,
+  gotchas: S.Array(S.NonEmptyString),
+}).check(
+  S.makeFilter(
+    (primitive) =>
+      primitive.endLine >= primitive.startLine &&
+      A.length(A.dedupe(primitive.replaces)) === A.length(primitive.replaces) &&
+      (!A.isReadonlyArrayEmpty(primitive.replaces) || Str.startsWith("No detector replacement:")(primitive.whenToUse)),
+    {
+      identifier: $I`EffectVitestPrimitiveInvariant`,
+      title: "Effect Vitest primitive invariants",
+      description:
+        "Source ranges must be ordered, replacement rule IDs must be unique, and entries without replacements must explain why.",
+      message: "Expected ordered lines, unique replacement rule IDs, and an explicit no-replacement reason",
+    }
+  )
+);
+
+/**
+ * Defines the schema P0d will use for the complete pinned primitive graph.
+ *
+ * **Example** (Create a pinned primitive entry)
+ *
+ * ```ts
+ * import { EffectVitestPrimitive } from "@beep/repo-cli/commands/Lint"
+ *
+ * const primitive = EffectVitestPrimitive.make({
+ *   id: "it.effect",
+ *   name: "it.effect",
+ *   kind: "method",
+ *   file: "src/index.ts",
+ *   startLine: 1,
+ *   endLine: 1,
+ *   signature: "it.effect(name, effect)",
+ *   description: "Registers an Effect test.",
+ *   whenToUse: "Use for tests driven by TestClock and test services.",
+ *   whenNotToUse: "Do not use for plain synchronous functions.",
+ *   replaces: ["EV001"],
+ *   example: 'it.effect("works", () => program)',
+ *   gotchas: ["Return the Effect from the callback."]
+ * })
+ * console.log(primitive.id) // "it.effect"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectVitestPrimitive extends S.Class<EffectVitestPrimitive>($I`EffectVitestPrimitive`)(
+  EffectVitestPrimitiveFields,
+  $I.annote("EffectVitestPrimitive", {
+    description: "Schema-validated pinned primitive, source anchor, usage guidance, and detector replacement edges.",
+  })
+) {}
+
+/**
+ * Records how the portable fixture proves the pinned graph surface without
+ * expanding Vitest's export-star into invented declarations.
+ *
+ * **Example** (Describe source-derived coverage)
+ *
+ * ```ts
+ * import { EffectVitestPrimitiveCoverage } from "@beep/repo-cli/commands/Lint"
+ *
+ * const coverage = EffectVitestPrimitiveCoverage.make({
+ *   exportStarModule: "vitest",
+ *   method: "Direct declarations and named namespace members are compared with pinned source.",
+ *   sourceFiles: ["packages/vitest/src/index.ts"]
+ * })
+ * console.log(coverage.exportStarModule) // "vitest"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectVitestPrimitiveCoverage extends S.Class<EffectVitestPrimitiveCoverage>(
+  $I`EffectVitestPrimitiveCoverage`
+)(
+  {
+    exportStarModule: S.Literal("vitest"),
+    method: S.NonEmptyString,
+    sourceFiles: S.Array(S.NonEmptyString),
+  },
+  $I.annote("EffectVitestPrimitiveCoverage", {
+    description: "Portable source inventory method and deliberate Vitest export-star boundary.",
+  })
+) {}
+
+const EffectVitestPrimitiveGraphFields = S.Struct({
+  schemaVersion: S.Literal("effect-vitest-primitives/v1"),
+  package: S.Literal("@effect/vitest"),
+  version: S.NonEmptyString,
+  tag: S.NonEmptyString,
+  sha: EffectVitestPinnedCommitSha,
+  coverage: EffectVitestPrimitiveCoverage,
+  entries: S.Array(EffectVitestPrimitive),
+}).check(
+  S.makeFilter(
+    (document) => {
+      const ids = A.map(document.entries, (entry) => entry.id);
+      const replacements = A.flatMap(document.entries, (entry) => entry.replaces);
+      return (
+        document.tag === `${document.package}@${document.version}` &&
+        !A.isReadonlyArrayEmpty(document.entries) &&
+        A.length(A.dedupe(ids)) === A.length(ids) &&
+        A.every(EffectVitestRuleId.Options, (ruleId) => A.contains(replacements, ruleId))
+      );
+    },
+    {
+      identifier: $I`EffectVitestPrimitiveGraphInvariant`,
+      title: "Effect Vitest primitive graph invariants",
+      description:
+        "The tag must match the package/version pin, entry IDs must be unique, and every detector rule must have a replacement edge.",
+      message: "Expected a matching package tag, unique entries, and complete EV001-EV015 replacement coverage",
+    }
+  )
+);
+
+/**
+ * Models the complete pinned Effect Vitest primitive graph and its source-derived
+ * coverage declaration.
+ *
+ * **Example** (Reject an incomplete graph)
+ *
+ * ```ts
+ * import { EffectVitestPrimitiveGraphDocument } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * const isGraph = S.is(EffectVitestPrimitiveGraphDocument)
+ * console.log(isGraph({})) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectVitestPrimitiveGraphDocument extends S.Class<EffectVitestPrimitiveGraphDocument>(
+  $I`EffectVitestPrimitiveGraphDocument`
+)(
+  EffectVitestPrimitiveGraphFields,
+  $I.annote("EffectVitestPrimitiveGraphDocument", {
+    description: "Complete primitive graph pinned to one Effect Vitest package version and tag commit.",
+  })
+) {}
+
+/**
+ * Stores the full-scan baseline used by the default membership ratchet.
+ *
+ * **Example** (Create an empty baseline)
+ *
+ * ```ts
+ * import { EffectVitestInventoryDocument } from "@beep/repo-cli/commands/Lint"
+ *
+ * const document = EffectVitestInventoryDocument.make({ schemaVersion: "effect-vitest-inventory/v1", effectVitestVersion: "4.0.0-rc.113", scope: [], findings: [] })
+ * console.log(document.findings.length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectVitestInventoryDocument extends S.Class<EffectVitestInventoryDocument>(
+  $I`EffectVitestInventoryDocument`
+)(
+  {
+    schemaVersion: S.Literal("effect-vitest-inventory/v1"),
+    effectVitestVersion: S.NonEmptyString,
+    scope: S.Array(S.String),
+    findings: S.Array(EffectVitestFinding),
+  },
+  $I.annote("EffectVitestInventoryDocument", {
+    description: "Tracked full-scan baseline for Effect Vitest detector findings.",
+  })
+) {}
+
+const EffectVitestCensusKind = LiteralKit(["test", "support"]).pipe(
+  $I.annoteSchema("EffectVitestCensusKind", { description: "D9 test or test-support file classification." })
+);
+/**
+ * Records a D9 file with its containing workspace and physical size.
+ *
+ * **Example** (Create a census row)
+ *
+ * ```ts
+ * import { EffectVitestCensusRow } from "@beep/repo-cli/commands/Lint"
+ *
+ * const row = EffectVitestCensusRow.make({ file: "packages/example/test/Foo.test.ts", package: "@beep/example", kind: "test", bytes: 42, lines: 2 })
+ * console.log(row.kind)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectVitestCensusRow extends S.Class<EffectVitestCensusRow>($I`EffectVitestCensusRow`)(
+  {
+    file: S.NonEmptyString,
+    package: S.NonEmptyString,
+    kind: EffectVitestCensusKind,
+    bytes: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    lines: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+  },
+  $I.annote("EffectVitestCensusRow", {
+    description: "File path, actual workspace owner, kind, byte count, and line count in the D9 census.",
+  })
+) {}
+
+/**
+ * Separates detector scan duration from the later package test timing model.
+ *
+ * **Example** (Record a scan duration)
+ *
+ * ```ts
+ * import { EffectVitestScanTiming } from "@beep/repo-cli/commands/Lint"
+ *
+ * const timing = EffectVitestScanTiming.make({ scanMs: 125, fileCount: 1044, findingCount: 10 })
+ * console.log(timing.scanMs)
+ * ```
+ *
+ * @category observability
+ * @since 0.0.0
+ */
+export class EffectVitestScanTiming extends S.Class<EffectVitestScanTiming>($I`EffectVitestScanTiming`)(
+  {
+    scanMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    fileCount: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    findingCount: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+  },
+  $I.annote("EffectVitestScanTiming", { description: "Measured syntax-only scan duration and result cardinalities." })
+) {}
+
+class EffectVitestPackageFileTiming extends S.Class<EffectVitestPackageFileTiming>($I`EffectVitestPackageFileTiming`)(
+  {
+    file: S.NonEmptyString,
+    ms: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    tests: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+  },
+  $I.annote("EffectVitestPackageFileTiming", {
+    description: "Reporter-derived duration and test count for one test file.",
+  })
+) {}
+class EffectVitestSlowTestTiming extends S.Class<EffectVitestSlowTestTiming>($I`EffectVitestSlowTestTiming`)(
+  { file: S.NonEmptyString, testName: S.NonEmptyString, ms: S.Finite.check(S.isGreaterThanOrEqualTo(0)) },
+  $I.annote("EffectVitestSlowTestTiming", { description: "One slow test selected from a package reporter artifact." })
+) {}
+
+/**
+ * Models the P1 before/after package timing summary from SPEC section 5.4.
+ *
+ * **Example** (Create an empty package timing summary)
+ *
+ * ```ts
+ * import { EffectVitestPackageTiming } from "@beep/repo-cli/commands/Lint"
+ *
+ * const timing = EffectVitestPackageTiming.make({ package: "@beep/example", runner: "node-vitest", capturedAt: "2026-09-08", totalMs: 10, testCount: 0, files: [], slowest: [] })
+ * console.log(timing.runner)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectVitestPackageTiming extends S.Class<EffectVitestPackageTiming>($I`EffectVitestPackageTiming`)(
+  {
+    package: S.NonEmptyString,
+    runner: S.Literal("node-vitest"),
+    capturedAt: S.NonEmptyString,
+    totalMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    testCount: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    files: S.Array(EffectVitestPackageFileTiming),
+    slowest: S.Array(EffectVitestSlowTestTiming),
+  },
+  $I.annote("EffectVitestPackageTiming", {
+    description: "Reporter-derived package timing summary kept separate from command scan time.",
+  })
+) {}
+
+/**
+ * Selects census, baseline refresh, row emission, or default ratchet mode.
+ *
+ * **Example** (Select default ratchet mode)
+ *
+ * ```ts
+ * import { EffectVitestLintOptions } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ *
+ * const options = EffectVitestLintOptions.make({ census: false, write: false, rows: O.none() })
+ * console.log(options.write)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectVitestLintOptions extends S.Class<EffectVitestLintOptions>($I`EffectVitestLintOptions`)(
+  { census: S.Boolean, write: S.Boolean, rows: optionalText },
+  $I.annote("EffectVitestLintOptions", { description: "Validated Effect Vitest lint command operation flags." })
+) {}
+
+/**
+ * Repository-relative path of the committed full-scan baseline.
+ *
+ * **Example** (Inspect the inventory target)
+ *
+ * ```ts
+ * import { EffectVitestInventoryPath } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(EffectVitestInventoryPath) // "standards/effect-vitest.inventory.jsonc"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectVitestInventoryPath = "standards/effect-vitest.inventory.jsonc";
+/**
+ * Repository-relative path of the authoritative pinned primitive graph.
+ *
+ * **Example** (Inspect the primitive graph target)
+ *
+ * ```ts
+ * import { EffectVitestPrimitiveGraphPath } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(EffectVitestPrimitiveGraphPath) // "standards/effect-vitest.primitives.jsonc"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectVitestPrimitiveGraphPath = "standards/effect-vitest.primitives.jsonc";
+/**
+ * Repository-relative path replaced by the authoritative D9 census mode.
+ *
+ * **Example** (Inspect the census target)
+ *
+ * ```ts
+ * import { EffectVitestCensusPath } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(EffectVitestCensusPath) // "goals/effect-vitest-canon/ops/inventory/test-files.json"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectVitestCensusPath = "goals/effect-vitest-canon/ops/inventory/test-files.json";
+
+const EffectVitestTestFilePath = S.String.check(
+  S.isPattern(/\.(?:test|spec)\.(?:ts|tsx|js|jsx|mts|cts|mjs|cjs)$/u)
+).pipe(
+  $I.annoteSchema("EffectVitestTestFilePath", {
+    description: "D9 test/spec suffix accepted by the syntax-only project.",
+  })
+);
+
+/**
+ * Tests the same suffix domain used by the authoritative D9 discovery globs.
+ *
+ * **Example** (Classify a test and support module)
+ *
+ * ```ts
+ * import { isEffectVitestTestFilePath } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(isEffectVitestTestFilePath("packages/demo/test/Foo.test.ts")) // true
+ * console.log(isEffectVitestTestFilePath("packages/demo/test/utils.ts")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isEffectVitestTestFilePath = S.is(EffectVitestTestFilePath);
+
+/**
+ * Supplies the only D9 include/exclude glob set used by project discovery.
+ *
+ * **Example** (Inspect the test-root glob)
+ *
+ * ```ts
+ * import { EffectVitestSourceFileGlobs } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(EffectVitestSourceFileGlobs[0]?.startsWith("{apps,packages,infra}")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectVitestSourceFileGlobs: ReadonlyArray<string> = A.fromIterable([
+  "{apps,packages,infra}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
+  "{apps,packages,infra}/**/test/**/*.ts",
+  "!{apps,packages,infra}/**/node_modules/**",
+]);
+
+/**
+ * Builds a shift-resistant membership key with a versioned lexical occurrence anchor.
+ *
+ * **Details**
+ *
+ * Legacy rows without an anchor retain their original key. Scan comparison may
+ * bridge a legacy fingerprint only when it is unique on both sides. Anchored
+ * duplicates are never eligible for automatic exception inheritance.
+ *
+ * **Example** (Keep line numbers out of membership identity)
+ *
+ * ```ts
+ * import { EffectVitestFinding, EffectVitestReplacement, makeEffectVitestFindingKey } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ *
+ * const row = EffectVitestFinding.make({
+ *   id: "EV001:packages/example/test/a.test.ts:4:runSync@2#1",
+ *   lens: "detector", ruleId: "EV001", package: "@beep/example",
+ *   file: "packages/example/test/a.test.ts", line: 4, endLine: O.some(4),
+ *   symbol: O.some("runSync"), testName: O.none(), class: "runtime-boundary-in-test",
+ *   evidence: "Effect.runSync(program)",
+ *   replacement: EffectVitestReplacement.make({ primitive: "it.effect", sketch: "Return the Effect." }),
+ *   severity: "major", confidence: 0.95, mechanization: "detector", status: "open",
+ *   reason: O.none(), fixSha: O.none()
+ * })
+ * const shifted = EffectVitestFinding.make({ ...row, line: 14, endLine: O.some(14) })
+ * console.log(makeEffectVitestFindingKey(row) === makeEffectVitestFindingKey(shifted)) // true
+ * ```
+ *
+ * @param finding - Finding whose provenance and occurrence identity form the membership key.
+ * @returns The full canonical key, retaining occurrence anchors and ordinal multiplicity.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const makeEffectVitestFindingKey = (finding: EffectVitestFinding): string =>
+  A.join(
+    [
+      finding.ruleId,
+      finding.file,
+      O.getOrElse(finding.symbol, () => ""),
+      finding.class,
+      finding.evidence,
+      ...O.match(finding.occurrence, { onNone: A.empty<string>, onSome: (anchor) => [anchor] }),
+      `#${A.lastNonEmpty(Str.split("#")(finding.id))}`,
+    ],
+    "::"
+  );
+
+/**
+ * Decode unknown data as the complete pinned Effect Vitest primitive graph.
+ *
+ * **Example** (Decode through the schema boundary)
+ *
+ * ```ts
+ * import { decodeEffectVitestPrimitiveGraphDocument } from "@beep/repo-cli/commands/Lint"
+ * import * as Effect from "effect/Effect"
+ *
+ * const decoded = decodeEffectVitestPrimitiveGraphDocument()({})
+ * Effect.runPromiseExit(decoded).then((exit) => console.log(exit._tag)) // "Failure"
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeEffectVitestPrimitiveGraphDocument: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<EffectVitestPrimitiveGraphDocument, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<EffectVitestPrimitiveGraphDocument, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(EffectVitestPrimitiveGraphDocument));
+
+/**
+ * Encode a validated primitive graph for deterministic JSONC persistence.
+ *
+ * **Example** (Build the graph encoder)
+ *
+ * ```ts
+ * import { encodeEffectVitestPrimitiveGraphDocument } from "@beep/repo-cli/commands/Lint"
+ *
+ * const encode = encodeEffectVitestPrimitiveGraphDocument()
+ * console.log(typeof encode) // "function"
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const encodeEffectVitestPrimitiveGraphDocument: {
+  (
+    options?: AST.ParseOptions
+  ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof EffectVitestPrimitiveGraphDocument>, S.SchemaError>;
+  (
+    input: unknown,
+    options?: AST.ParseOptions
+  ): Effect.Effect<S.Codec.Encoded<typeof EffectVitestPrimitiveGraphDocument>, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(EffectVitestPrimitiveGraphDocument));
+
+/**
+ * Decode unknown data as a validated Effect Vitest inventory in the Effect error channel.
+ *
+ * **Example** (Decode an empty baseline)
+ *
+ * ```ts
+ * import { decodeEffectVitestInventoryDocument } from "@beep/repo-cli/commands/Lint"
+ * import * as Effect from "effect/Effect"
+ *
+ * const decoded = decodeEffectVitestInventoryDocument({
+ *   schemaVersion: "effect-vitest-inventory/v1",
+ *   effectVitestVersion: "4.0.0-rc.113",
+ *   scope: [],
+ *   findings: []
+ * })
+ * Effect.runPromise(decoded).then(({ findings }) => console.log(findings.length)) // 0
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeEffectVitestInventoryDocument: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<EffectVitestInventoryDocument, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<EffectVitestInventoryDocument, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(EffectVitestInventoryDocument));
+/**
+ * Encode a validated inventory document for JSONC formatting and persistence.
+ *
+ * **Example** (Encode an empty baseline)
+ *
+ * ```ts
+ * import { EffectVitestInventoryDocument, encodeEffectVitestInventoryDocument } from "@beep/repo-cli/commands/Lint"
+ * import * as Effect from "effect/Effect"
+ *
+ * const document = EffectVitestInventoryDocument.make({
+ *   schemaVersion: "effect-vitest-inventory/v1",
+ *   effectVitestVersion: "4.0.0-rc.113",
+ *   scope: [],
+ *   findings: []
+ * })
+ * Effect.runPromise(encodeEffectVitestInventoryDocument(document)).then(({ findings }) => console.log(findings.length)) // 0
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const encodeEffectVitestInventoryDocument: {
+  (
+    options?: AST.ParseOptions
+  ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof EffectVitestInventoryDocument>, S.SchemaError>;
+  (
+    input: unknown,
+    options?: AST.ParseOptions
+  ): Effect.Effect<S.Codec.Encoded<typeof EffectVitestInventoryDocument>, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(EffectVitestInventoryDocument));
+/**
+ * Encode one validated finding as its JSONL-compatible JSON string.
+ *
+ * **Example** (Encode a detector row)
+ *
+ * ```ts
+ * import { EffectVitestFinding, EffectVitestReplacement, encodeEffectVitestFindingJson } from "@beep/repo-cli/commands/Lint"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import * as Str from "effect/String"
+ *
+ * const row = EffectVitestFinding.make({
+ *   id: "EV001:packages/example/test/a.test.ts:4:runSync@2#1",
+ *   lens: "detector", ruleId: "EV001", package: "@beep/example",
+ *   file: "packages/example/test/a.test.ts", line: 4, endLine: O.some(4),
+ *   symbol: O.some("runSync"), testName: O.none(), class: "runtime-boundary-in-test",
+ *   evidence: "Effect.runSync(program)",
+ *   replacement: EffectVitestReplacement.make({ primitive: "it.effect", sketch: "Return the Effect." }),
+ *   severity: "major", confidence: 0.95, mechanization: "detector", status: "open",
+ *   reason: O.none(), fixSha: O.none()
+ * })
+ * Effect.runPromise(encodeEffectVitestFindingJson(row)).then((json) => console.log(Str.includes("EV001")(json))) // true
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const encodeEffectVitestFindingJson: {
+  (options?: AST.ParseOptions): (input: EffectVitestFinding) => Effect.Effect<string, S.SchemaError>;
+  (input: EffectVitestFinding, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeEffect(S.fromJsonString(EffectVitestFinding)));
+/**
+ * Decode one JSONL record to `Option`, rejecting unrelated producer records without throwing.
+ *
+ * **Example** (Reject an unrelated JSONL row)
+ *
+ * ```ts
+ * import { decodeEffectVitestFindingJson } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(decodeEffectVitestFindingJson('{"producer":"other"}'))) // true
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeEffectVitestFindingJson: {
+  (options?: AST.ParseOptions): (input: unknown) => O.Option<EffectVitestFinding>;
+  (input: unknown, options?: AST.ParseOptions): O.Option<EffectVitestFinding>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(S.fromJsonString(EffectVitestFinding)));

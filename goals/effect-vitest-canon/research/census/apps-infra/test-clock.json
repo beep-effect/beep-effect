@@ -1,0 +1,24 @@
+{
+  "class": "test-clock",
+  "method": "global regular expression: /\\bTestClock\\b/g",
+  "fileCount": 3,
+  "occurrenceCount": 12,
+  "files": [
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "count": 4,
+      "lines": [13, 366, 396, 449]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 6,
+      "lines": [23, 70, 77, 78, 332, 697]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-contract.test.ts",
+      "count": 2,
+      "lines": [31, 631]
+    }
+  ],
+  "limitations": "Verified textual occurrence census over the live scoped files; comments and strings can produce false positives, and multiline syntax can affect precision."
+}

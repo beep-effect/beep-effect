@@ -1,0 +1,2297 @@
+{
+  "class": "EV006",
+  "method": "Merged lane reconnaissance; see methodsByLane.",
+  "methodsByLane": {
+    "packages": "heuristic expect patterns over Option/Result/Exit-like constructors, guards, and canonical tags",
+    "apps-infra": "heuristic expect assertions mentioning Option/Result/Exit constructors or predicates"
+  },
+  "scope": "tests",
+  "fileCount": 423,
+  "occurrenceCount": 3442,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "apps/labs/ciops/test/projection.test.ts",
+      "count": 1,
+      "lines": [455]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "count": 3,
+      "lines": [115, 216, 234]
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "count": 3,
+      "lines": [227, 288, 415]
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "count": 2,
+      "lines": [200, 201]
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "count": 2,
+      "lines": [37, 53]
+    },
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "count": 3,
+      "lines": [374, 419, 420]
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "count": 3,
+      "lines": [156, 198, 285]
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "count": 7,
+      "lines": [274, 280, 296, 383, 387, 389, 391]
+    },
+    {
+      "file": "apps/labs/semantica/test/Projection.test.ts",
+      "count": 2,
+      "lines": [357, 360]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "count": 7,
+      "lines": [167, 190, 204, 224, 225, 337, 430]
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "count": 1,
+      "lines": [187]
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 11,
+      "lines": [562, 863, 864, 902, 903, 920, 921, 931, 932, 1423, 1424]
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "count": 1,
+      "lines": [126]
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 7,
+      "lines": [213, 280, 284, 294, 629, 630, 631]
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "count": 2,
+      "lines": [76, 77]
+    },
+    {
+      "file": "apps/professional-desktop/test/UsagePricing.test.ts",
+      "count": 1,
+      "lines": [35]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-contract.test.ts",
+      "count": 1,
+      "lines": [110]
+    },
+    {
+      "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+      "count": 2,
+      "lines": [226, 245]
+    },
+    {
+      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+      "count": 3,
+      "lines": [84, 109, 147]
+    },
+    {
+      "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+      "count": 12,
+      "lines": [314, 321, 328, 467, 470, 600, 601, 602, 1128, 1165, 1205, 1291]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+      "count": 1,
+      "lines": [404]
+    },
+    {
+      "file": "apps/professional-desktop/test/intake-refusal.test.ts",
+      "count": 2,
+      "lines": [14, 25]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+      "count": 3,
+      "lines": [199, 239, 284]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
+      "count": 3,
+      "lines": [140, 147, 149]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
+      "count": 1,
+      "lines": [112]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "count": 4,
+      "lines": [128, 208, 251, 291]
+    },
+    {
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "count": 2,
+      "lines": [177, 179]
+    },
+    {
+      "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
+      "count": 4,
+      "lines": [18, 19, 30, 31]
+    },
+    {
+      "file": "apps/professional-desktop/test/schema-parity.test.ts",
+      "count": 5,
+      "lines": [101, 191, 216, 217, 235]
+    },
+    {
+      "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
+      "count": 2,
+      "lines": [30, 35]
+    },
+    {
+      "file": "apps/professional-desktop/test/spike-schema.test.ts",
+      "count": 2,
+      "lines": [60, 72]
+    },
+    {
+      "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
+      "count": 3,
+      "lines": [79, 97, 115]
+    },
+    {
+      "file": "infra/test/AIMetrics.test.ts",
+      "count": 1,
+      "lines": [28]
+    },
+    {
+      "file": "infra/test/CiFleetController.test.ts",
+      "count": 15,
+      "lines": [
+        36, 37, 41, 53, 65, 68, 69, 102, 114, 115, 125, 128, 136, 143, 244
+      ]
+    },
+    {
+      "file": "infra/test/CiRunners.test.ts",
+      "count": 1,
+      "lines": [37]
+    },
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "count": 15,
+      "lines": [21, 25, 26, 27, 28, 43, 45, 51, 70, 74, 75, 77, 81, 82, 83]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 3,
+      "lines": [180, 201, 211]
+    },
+    {
+      "file": "infra/test/Storybook.test.ts",
+      "count": 1,
+      "lines": [27]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
+      "count": 2,
+      "lines": [132]
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts",
+      "count": 6,
+      "lines": [192, 193, 196, 197]
+    },
+    {
+      "file": "packages/agents/client/test/Chat.schema-parity.test.ts",
+      "count": 4,
+      "lines": [64, 65]
+    },
+    {
+      "file": "packages/agents/client/test/ProviderInstance.atoms.test.ts",
+      "count": 2,
+      "lines": [70, 112]
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-defect.test.ts",
+      "count": 7,
+      "lines": [56, 63, 66, 70]
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "count": 38,
+      "lines": [
+        164, 166, 167, 206, 207, 208, 260, 329, 330, 338, 394, 442, 443, 444,
+        488, 541, 591, 593, 697, 716, 752
+      ]
+    },
+    {
+      "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
+      "count": 2,
+      "lines": [37]
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "count": 5,
+      "lines": [135, 136, 137, 138, 139]
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "count": 5,
+      "lines": [136, 137, 155, 156, 171]
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "count": 1,
+      "lines": [152]
+    },
+    {
+      "file": "packages/agents/server/test/BlockRepair.test.ts",
+      "count": 4,
+      "lines": [49, 102, 119, 122]
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "count": 1,
+      "lines": [113]
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
+      "count": 2,
+      "lines": [115, 136]
+    },
+    {
+      "file": "packages/architecture-lab/client/test/WorkItemClient.test.ts",
+      "count": 2,
+      "lines": [37]
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "count": 1,
+      "lines": [120]
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "count": 1,
+      "lines": [93]
+    },
+    {
+      "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
+      "count": 1,
+      "lines": [99]
+    },
+    {
+      "file": "packages/documents/domain/test/SyncConflict.test.ts",
+      "count": 16,
+      "lines": [64, 65, 66, 67, 82, 83, 84, 85]
+    },
+    {
+      "file": "packages/documents/domain/test/SyncCursor.test.ts",
+      "count": 8,
+      "lines": [58, 59, 73, 74]
+    },
+    {
+      "file": "packages/documents/domain/test/SyncItem.test.ts",
+      "count": 22,
+      "lines": [60, 61, 62, 63, 82, 83, 84, 85, 86, 87, 88]
+    },
+    {
+      "file": "packages/documents/domain/test/SyncOperation.test.ts",
+      "count": 12,
+      "lines": [59, 60, 61, 78, 79, 80]
+    },
+    {
+      "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
+      "count": 70,
+      "lines": [
+        348, 349, 368, 442, 480, 513, 515, 622, 623, 624, 664, 730, 731, 732,
+        733, 738, 739, 740, 771, 772, 773, 774, 839, 866, 867, 883, 886, 887,
+        910, 913, 916, 919, 922, 925, 949, 950, 982, 983
+      ]
+    },
+    {
+      "file": "packages/documents/server/test/DocumentIntake.test.ts",
+      "count": 2,
+      "lines": [123, 168]
+    },
+    {
+      "file": "packages/documents/server/test/SyncCursorServer.test.ts",
+      "count": 8,
+      "lines": [46, 72, 73, 77, 89]
+    },
+    {
+      "file": "packages/documents/server/test/SyncItemServer.test.ts",
+      "count": 4,
+      "lines": [96, 130]
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "count": 4,
+      "lines": [247, 268]
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "count": 8,
+      "lines": [209, 227, 422, 499, 520]
+    },
+    {
+      "file": "packages/documents/server/test/integration/SyncRepositoriesDrizzle.pglite.test.ts",
+      "count": 10,
+      "lines": [159, 164, 169, 243, 246]
+    },
+    {
+      "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
+      "count": 4,
+      "lines": [102, 103]
+    },
+    {
+      "file": "packages/documents/tables/test/SyncCursorTable.test.ts",
+      "count": 4,
+      "lines": [86, 87]
+    },
+    {
+      "file": "packages/documents/tables/test/SyncItemTable.test.ts",
+      "count": 4,
+      "lines": [120, 121]
+    },
+    {
+      "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
+      "count": 4,
+      "lines": [107, 108]
+    },
+    {
+      "file": "packages/documents/use-cases/test/FilingDecision.test.ts",
+      "count": 1,
+      "lines": [16]
+    },
+    {
+      "file": "packages/documents/use-cases/test/Sync.test.ts",
+      "count": 6,
+      "lines": [88, 95, 96, 98, 99, 158]
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncCursor.test.ts",
+      "count": 3,
+      "lines": [98, 113]
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncItem.test.ts",
+      "count": 6,
+      "lines": [145, 158, 175]
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncOperation.test.ts",
+      "count": 2,
+      "lines": [175]
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "count": 34,
+      "lines": [
+        51, 52, 53, 70, 83, 84, 85, 98, 99, 100, 114, 115, 116, 129, 142, 204,
+        205
+      ]
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "count": 1,
+      "lines": [81]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningIntent.test.ts",
+      "count": 5,
+      "lines": [44, 45, 46, 62, 82]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningInventory.test.ts",
+      "count": 2,
+      "lines": [132, 144]
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningPlanner.test.ts",
+      "count": 6,
+      "lines": [195, 216, 227, 442, 463]
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "count": 42,
+      "lines": [
+        359, 370, 418, 419, 451, 452, 460, 474, 477, 497, 513, 708, 711, 715,
+        790, 793, 797, 798, 799, 800, 801, 802, 804, 994, 998, 1002
+      ]
+    },
+    {
+      "file": "packages/drivers/box/test/integration/Box.live.test.ts",
+      "count": 1,
+      "lines": [26]
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "count": 3,
+      "lines": [115, 128, 129]
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "count": 18,
+      "lines": [
+        42, 43, 44, 52, 125, 145, 146, 168, 169, 194, 195, 196, 226, 227, 283,
+        284, 285, 354
+      ]
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "count": 9,
+      "lines": [305, 520, 659, 700, 731, 876, 1147, 1189, 1236]
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "count": 1,
+      "lines": [172]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "count": 6,
+      "lines": [131, 132, 133, 134, 135, 239]
+    },
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "count": 1,
+      "lines": [66]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "count": 2,
+      "lines": [662]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.extract-args.test.ts",
+      "count": 9,
+      "lines": [21, 33, 43, 55, 74]
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "count": 1,
+      "lines": [287]
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "count": 28,
+      "lines": [
+        186, 203, 204, 205, 226, 232, 233, 280, 281, 282, 283, 284, 285, 423,
+        426, 430, 454, 457, 460, 510, 514
+      ]
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/integration/Firecrawl.live.test.ts",
+      "count": 1,
+      "lines": [21]
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "count": 2,
+      "lines": [277, 280]
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "count": 3,
+      "lines": [153, 197, 200]
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "count": 3,
+      "lines": [212, 214, 336]
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "count": 4,
+      "lines": [287, 290, 344, 347]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.eml.test.ts",
+      "count": 5,
+      "lines": [90, 104, 109, 114, 248]
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "count": 12,
+      "lines": [446, 449, 486, 489, 550, 553, 656, 659, 662, 663]
+    },
+    {
+      "file": "packages/drivers/m365/test/integration/M365.live.test.ts",
+      "count": 1,
+      "lines": [42]
+    },
+    {
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "count": 3,
+      "lines": [164, 171, 345]
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.test.ts",
+      "count": 5,
+      "lines": [55, 56, 57, 58, 59]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
+      "count": 5,
+      "lines": [97, 99, 125, 126, 287]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawCli.service.test.ts",
+      "count": 2,
+      "lines": [401, 526]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawIntent.models.test.ts",
+      "count": 4,
+      "lines": [100, 106, 111, 219]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawRender.test.ts",
+      "count": 1,
+      "lines": [348]
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawSystemd.service.test.ts",
+      "count": 4,
+      "lines": [134, 135, 136, 169]
+    },
+    {
+      "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "count": 1,
+      "lines": [49]
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "count": 7,
+      "lines": [325, 326, 333, 334, 341, 342, 356]
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "count": 17,
+      "lines": [26, 121, 146, 158, 159, 168, 188, 189, 229]
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "count": 1,
+      "lines": [80]
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "count": 8,
+      "lines": [335, 336, 338, 383]
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+      "count": 6,
+      "lines": [197, 244, 248, 264, 267]
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "count": 5,
+      "lines": [117, 149, 150, 151, 179]
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "count": 24,
+      "lines": [
+        115, 116, 117, 195, 207, 211, 212, 213, 214, 218, 219, 220, 221, 258
+      ]
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "count": 5,
+      "lines": [910, 912, 914, 1029, 1033]
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts",
+      "count": 1,
+      "lines": [31]
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
+      "count": 1,
+      "lines": [65]
+    },
+    {
+      "file": "packages/drivers/wink/test/ToolValidation.test.ts",
+      "count": 1,
+      "lines": [185]
+    },
+    {
+      "file": "packages/drivers/wink/test/Wink.models.test.ts",
+      "count": 2,
+      "lines": [14, 15]
+    },
+    {
+      "file": "packages/drivers/wink/test/WinkEngineRef.test.ts",
+      "count": 1,
+      "lines": [65]
+    },
+    {
+      "file": "packages/drivers/wink/test/WinkTokenization.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "count": 7,
+      "lines": [369, 370, 371, 372, 373, 622, 624]
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "count": 12,
+      "lines": [189, 190, 253, 254, 255, 276, 302, 438]
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "count": 1,
+      "lines": [77]
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "count": 30,
+      "lines": [
+        124, 125, 135, 136, 137, 138, 149, 150, 151, 213, 220, 221, 222, 241,
+        242, 243, 244, 245, 246, 258, 259, 269, 270, 327, 328, 329, 445, 446,
+        447, 448
+      ]
+    },
+    {
+      "file": "packages/epistemic/domain/test/ExecutionAuthority.test.ts",
+      "count": 1,
+      "lines": [239]
+    },
+    {
+      "file": "packages/epistemic/domain/test/LogicalEdgeIdentity.test.ts",
+      "count": 2,
+      "lines": [98, 99]
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedTierGate.test.ts",
+      "count": 1,
+      "lines": [147]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts",
+      "count": 16,
+      "lines": [392, 393, 413, 420, 421, 422, 497, 498]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
+      "count": 4,
+      "lines": [405, 622, 627]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
+      "count": 27,
+      "lines": [
+        451, 847, 937, 938, 1042, 1164, 1178, 1238, 1239, 1240, 1241, 1242,
+        1289, 1322
+      ]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.pglite.test.ts",
+      "count": 53,
+      "lines": [
+        200, 201, 202, 207, 208, 211, 218, 249, 256, 257, 258, 259, 301, 309,
+        310, 311, 312, 313, 346, 347, 361, 362, 363, 394, 395, 403, 404, 405,
+        470, 494, 569, 591
+      ]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts",
+      "count": 9,
+      "lines": [188, 189, 218, 219, 229]
+    },
+    {
+      "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
+      "count": 6,
+      "lines": [311, 312, 313, 409, 431, 471]
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "count": 8,
+      "lines": [343, 396, 422, 488, 489, 490, 491, 492]
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "count": 2,
+      "lines": [171, 258]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ClaimDisposition.test.ts",
+      "count": 2,
+      "lines": [86, 107]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
+      "count": 8,
+      "lines": [39, 40, 41, 42, 59, 60, 66, 67]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
+      "count": 12,
+      "lines": [91, 92, 93, 94, 95, 96, 97, 98, 119, 120, 126, 129]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/EdgeAuthorityCommands.test.ts",
+      "count": 6,
+      "lines": [61, 70, 81, 85, 105, 112]
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ExecutionLedger.test.ts",
+      "count": 2,
+      "lines": [43, 45]
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "count": 4,
+      "lines": [151, 152]
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "count": 4,
+      "lines": [102, 103, 114, 119]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
+      "count": 2,
+      "lines": [177, 178]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/PathSafety.test.ts",
+      "count": 8,
+      "lines": [33, 56, 86, 104, 196, 197, 249, 250]
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
+      "count": 8,
+      "lines": [92, 115, 116, 117, 118, 119, 120, 121]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
+      "count": 2,
+      "lines": [502]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Extraction.test.ts",
+      "count": 5,
+      "lines": [46, 203, 205, 206]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Handoff.test.ts",
+      "count": 4,
+      "lines": [36, 64]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanHistory.test.ts",
+      "count": 13,
+      "lines": [212, 215, 277, 359, 360, 361, 411, 425, 426]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "count": 5,
+      "lines": [263, 279, 374]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
+      "count": 2,
+      "lines": [124, 130]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "count": 1,
+      "lines": [211]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "count": 5,
+      "lines": [54, 76, 90, 153, 195]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "count": 2,
+      "lines": [16, 17]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "count": 3,
+      "lines": [109, 127]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "count": 2,
+      "lines": [101, 113]
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "count": 2,
+      "lines": [43, 47]
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
+      "count": 1,
+      "lines": [122]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.browser-conformance.test.ts",
+      "count": 9,
+      "lines": [134, 135, 166, 218, 265, 397, 470, 535, 573]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts",
+      "count": 85,
+      "lines": [
+        155, 158, 167, 175, 185, 194, 199, 218, 228, 230, 231, 232, 249, 262,
+        265, 266, 267, 342, 343, 396, 433, 436, 444, 458, 459, 470, 479, 552,
+        578, 591, 599, 662, 761, 775, 800, 803, 829, 837, 844, 860, 875, 904,
+        945, 949, 950, 951, 1023, 1049, 1082, 1096, 1190, 1234, 1235, 1240,
+        1249, 1253, 1254, 1255, 1260, 1262, 1268, 1328, 1329, 1330, 1365, 1368,
+        1371, 1372, 1373, 1374, 1388, 1391, 1412, 1413, 1423, 1425, 1451, 1460,
+        1480, 1481, 1487, 1610, 1612, 1667, 1675
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts",
+      "count": 11,
+      "lines": [110, 114, 248, 265, 326, 346, 357, 364, 371, 378, 379]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.entrypoints.test.ts",
+      "count": 1,
+      "lines": [71]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.form-control.test.ts",
+      "count": 8,
+      "lines": [46, 69, 72, 87, 90, 96, 130, 131]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.microsyntax.test.ts",
+      "count": 12,
+      "lines": [171, 172, 173, 174, 175, 205, 207]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts",
+      "count": 5,
+      "lines": [41, 45, 49, 138, 142]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.script.test.ts",
+      "count": 8,
+      "lines": [58, 60, 63, 104, 244, 245, 246, 247]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.security.test.ts",
+      "count": 22,
+      "lines": [
+        99, 217, 228, 239, 250, 263, 273, 303, 311, 321, 329, 346, 428, 429,
+        430, 434, 454, 455, 456, 465, 466, 467
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.source-size.test.ts",
+      "count": 5,
+      "lines": [13, 22, 31, 39, 330]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.srcset.test.ts",
+      "count": 6,
+      "lines": [52, 62, 68, 93, 107, 125]
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.test.ts",
+      "count": 5,
+      "lines": [79, 82, 93, 167, 284]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Fibered.test.ts",
+      "count": 2,
+      "lines": [84, 85]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Identity.test.ts",
+      "count": 4,
+      "lines": [44, 45]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Vocab.test.ts",
+      "count": 1,
+      "lines": [90]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
+      "count": 13,
+      "lines": [245, 321, 326, 388, 395, 400, 575]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "count": 42,
+      "lines": [
+        247, 248, 249, 260, 261, 268, 284, 295, 324, 401, 403, 445, 446, 447,
+        448, 449, 478, 479, 480, 481, 483, 484, 485, 486, 519, 588, 589, 590,
+        591, 592, 593, 594, 598, 704, 725, 740, 754, 758
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.strict-invariants.test.ts",
+      "count": 15,
+      "lines": [
+        51, 52, 53, 108, 146, 147, 148, 168, 171, 172, 173, 174, 175, 198, 216
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.conformance.test.ts",
+      "count": 11,
+      "lines": [90, 105, 106, 112, 122, 131, 140, 200, 313, 316, 317]
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "count": 14,
+      "lines": [
+        308, 319, 329, 355, 358, 370, 386, 387, 442, 464, 992, 1024, 1090, 1091
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "count": 3,
+      "lines": [236, 237, 238]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "count": 2,
+      "lines": [49, 119]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts",
+      "count": 2,
+      "lines": [184, 185]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/TextVariants.test.ts",
+      "count": 2,
+      "lines": [18, 19]
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
+      "count": 2,
+      "lines": [376, 377]
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
+      "count": 6,
+      "lines": [166, 167, 168, 169, 170, 171]
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts",
+      "count": 5,
+      "lines": [91, 92, 599]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "count": 14,
+      "lines": [
+        337, 436, 509, 553, 625, 655, 683, 718, 744, 1132, 1234, 1271, 1323,
+        1375
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
+      "count": 2,
+      "lines": [33]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "count": 3,
+      "lines": [594, 964]
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "count": 3,
+      "lines": [87, 126, 269]
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+      "count": 2,
+      "lines": [55, 56]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
+      "count": 2,
+      "lines": [73, 74]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/InteropAndMetadata.test.ts",
+      "count": 1,
+      "lines": [75]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvO.test.ts",
+      "count": 4,
+      "lines": [87, 109, 110, 177]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "count": 20,
+      "lines": [
+        90, 251, 259, 268, 277, 287, 298, 318, 369, 382, 392, 411, 412, 413,
+        426, 427, 434, 444, 459, 466
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "count": 30,
+      "lines": [
+        490, 491, 517, 518, 582, 583, 595, 648, 649, 650, 651, 690, 691, 692,
+        693, 694
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/SemanticSchemaConformance.test.ts",
+      "count": 11,
+      "lines": [196, 198, 201, 203, 215, 275, 276, 277]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ArrayBuffer.test.ts",
+      "count": 5,
+      "lines": [24, 25, 26, 35, 53]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Conformance.test.ts",
+      "count": 14,
+      "lines": [
+        91, 93, 96, 98, 109, 130, 131, 168, 169, 349, 361, 420, 451, 452
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Csv.test.ts",
+      "count": 8,
+      "lines": [207, 222, 240, 247, 263, 278, 291, 306]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/CsvParser.test.ts",
+      "count": 2,
+      "lines": [81, 93]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/EffectSchema.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileDiff.test.ts",
+      "count": 3,
+      "lines": [58, 82, 83]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileInfo.test.ts",
+      "count": 10,
+      "lines": [34, 35, 36, 55, 56, 70, 71, 72]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileTypeChecker.test.ts",
+      "count": 19,
+      "lines": [
+        95, 101, 133, 136, 144, 167, 195, 219, 301, 302, 303, 304, 305, 306,
+        307, 316, 324, 326, 339
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Fn.test.ts",
+      "count": 3,
+      "lines": [145, 158, 172]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/HttpHeaders.test.ts",
+      "count": 46,
+      "lines": [
+        54, 141, 181, 194, 197, 200, 202, 215, 234, 236, 261, 266, 269, 302,
+        305, 308, 310, 311, 328, 331, 334, 357, 360, 363, 365, 366, 372, 376,
+        377, 378, 411, 447, 450, 453, 484, 501, 586, 587, 594, 597, 599, 607
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/HttpStatus.test.ts",
+      "count": 6,
+      "lines": [12, 13, 14, 15]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Int.test.ts",
+      "count": 7,
+      "lines": [30, 31, 40, 51, 98, 99, 100]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/JSONSchema.test.ts",
+      "count": 17,
+      "lines": [
+        222, 223, 266, 267, 498, 520, 521, 522, 523, 524, 525, 526, 527, 536,
+        537, 549, 555
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Json.test.ts",
+      "count": 1,
+      "lines": [29]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Jsonc.test.ts",
+      "count": 2,
+      "lines": [40, 59]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Jsonl.test.ts",
+      "count": 2,
+      "lines": [43, 64]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+      "count": 22,
+      "lines": [
+        111, 114, 124, 127, 137, 140, 203, 211, 214, 649, 657, 665, 673, 681,
+        689, 697, 705, 713, 721, 729, 737, 745
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Markdown.test.ts",
+      "count": 6,
+      "lines": [67, 82, 100, 127, 134, 175]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Number.test.ts",
+      "count": 2,
+      "lines": [21, 22]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Options.test.ts",
+      "count": 11,
+      "lines": [16, 17, 18, 28, 38, 48, 49]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ParserOptions.test.ts",
+      "count": 18,
+      "lines": [14, 15, 16, 17, 22, 47, 50, 65, 66]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Port.test.ts",
+      "count": 10,
+      "lines": [31, 32, 42, 43, 100, 101, 102, 103, 104, 105]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ProtobufScalars.test.ts",
+      "count": 34,
+      "lines": [
+        77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 169, 170, 171, 268, 269,
+        270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 300,
+        301, 302, 374, 375
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SafeObject.test.ts",
+      "count": 13,
+      "lines": [40, 41, 42, 43, 44, 45, 46, 107, 108, 109, 110, 111, 145]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SafeRemoteHost.test.ts",
+      "count": 7,
+      "lines": [24, 34, 42, 44, 68, 80, 84]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
+      "count": 19,
+      "lines": [
+        56, 57, 58, 59, 60, 61, 97, 257, 258, 266, 274, 275, 312, 327, 328, 338
+      ]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Semver.test.ts",
+      "count": 5,
+      "lines": [15, 17, 99, 100]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Sha256.test.ts",
+      "count": 2,
+      "lines": [80, 109]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/StatusCauseError.test.ts",
+      "count": 5,
+      "lines": [35, 45, 54, 63, 73]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Toml.test.ts",
+      "count": 2,
+      "lines": [52, 71]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Unknown.test.ts",
+      "count": 2,
+      "lines": [26]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Xml.test.ts",
+      "count": 2,
+      "lines": [45, 66]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Yaml.test.ts",
+      "count": 3,
+      "lines": [63, 85, 103]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/codecStatics.test.ts",
+      "count": 10,
+      "lines": [102, 182, 183, 184, 185]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillCompletion.test.ts",
+      "count": 1,
+      "lines": [200]
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "count": 2,
+      "lines": [162, 163]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Array.test.ts",
+      "count": 12,
+      "lines": [100, 104, 108, 114, 118, 122]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+      "count": 2,
+      "lines": [53, 73]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "count": 2,
+      "lines": [130, 131]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Option.test.ts",
+      "count": 3,
+      "lines": [29, 30, 31]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Struct.test.ts",
+      "count": 4,
+      "lines": [84, 85, 86, 87]
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/currency-codes.test.ts",
+      "count": 2,
+      "lines": [23, 52]
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts",
+      "count": 5,
+      "lines": [120, 121, 122, 123, 124]
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "count": 6,
+      "lines": [100, 101, 102, 103, 104, 105]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
+      "count": 1,
+      "lines": [225]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Gestures.test.tsx",
+      "count": 2,
+      "lines": [208, 242]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "count": 7,
+      "lines": [37, 38, 46, 47, 110]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "count": 8,
+      "lines": [90, 91, 240, 333]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "count": 2,
+      "lines": [77]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Geometry.test.ts",
+      "count": 1,
+      "lines": [156]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/HiddenMaximize.test.ts",
+      "count": 6,
+      "lines": [72, 130, 172, 196, 214]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Minima.test.ts",
+      "count": 4,
+      "lines": [98, 106]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/PanelGroupUpdates.test.ts",
+      "count": 6,
+      "lines": [124, 161, 172]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-review-fixes.test.ts",
+      "count": 1,
+      "lines": [65]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-schemas.test.ts",
+      "count": 4,
+      "lines": [105, 119, 127, 135]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/chat-schema-parity.test.ts",
+      "count": 3,
+      "lines": [103, 132, 133]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/editor-nodes.test.ts",
+      "count": 3,
+      "lines": [83, 111]
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/runtime.test.ts",
+      "count": 15,
+      "lines": [45, 46, 47, 51, 52, 59, 60, 71, 72, 88, 89, 103, 104, 105, 106]
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/hooks.test.ts",
+      "count": 3,
+      "lines": [47, 48, 49]
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "count": 1,
+      "lines": [123]
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "count": 9,
+      "lines": [110, 111, 134, 137, 140, 143, 467, 644]
+    },
+    {
+      "file": "packages/law-practice/domain/test/LegalPositionTransitions.test.ts",
+      "count": 14,
+      "lines": [
+        142, 157, 163, 169, 187, 210, 211, 217, 218, 241, 268, 269, 270, 271
+      ]
+    },
+    {
+      "file": "packages/law-practice/domain/test/PatentDocument.test.ts",
+      "count": 4,
+      "lines": [171, 172, 329, 330]
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "count": 1,
+      "lines": [459]
+    },
+    {
+      "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
+      "count": 4,
+      "lines": [966, 1164, 1165, 1178]
+    },
+    {
+      "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+      "count": 2,
+      "lines": [174]
+    },
+    {
+      "file": "packages/law-practice/tables/test/CandorConverters.test.ts",
+      "count": 12,
+      "lines": [172, 185, 188, 224, 234, 235, 271, 281, 282]
+    },
+    {
+      "file": "packages/law-practice/tables/test/LawPracticeTables.test.ts",
+      "count": 3,
+      "lines": [131, 172, 212]
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "count": 17,
+      "lines": [
+        236, 244, 247, 292, 293, 328, 336, 337, 373, 381, 382, 405, 422, 423,
+        431, 432
+      ]
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "count": 4,
+      "lines": [86, 148, 156, 157]
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "count": 7,
+      "lines": [217, 227, 243, 390, 472, 473, 528]
+    },
+    {
+      "file": "packages/ontology/client/test/auto-open.test.ts",
+      "count": 6,
+      "lines": [75, 76, 126, 127, 152, 153]
+    },
+    {
+      "file": "packages/ontology/client/test/browser/graph-renderer-toggle.test.ts",
+      "count": 10,
+      "lines": [127, 132, 175, 186, 191, 196, 202]
+    },
+    {
+      "file": "packages/ontology/client/test/failure-messages.test.ts",
+      "count": 1,
+      "lines": [50]
+    },
+    {
+      "file": "packages/ontology/client/test/stale-read.test.ts",
+      "count": 3,
+      "lines": [91, 92]
+    },
+    {
+      "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+      "count": 4,
+      "lines": [59, 60]
+    },
+    {
+      "file": "packages/ontology/client/test/worker-wire.test.ts",
+      "count": 2,
+      "lines": [62, 82]
+    },
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "count": 2,
+      "lines": [49, 92]
+    },
+    {
+      "file": "packages/ontology/server/test/SessionServer.test.ts",
+      "count": 1,
+      "lines": [340]
+    },
+    {
+      "file": "packages/shared/domain/test/EntityKernel.test.ts",
+      "count": 7,
+      "lines": [102, 103, 317, 344, 380, 381, 382]
+    },
+    {
+      "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+      "count": 1,
+      "lines": [382]
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "count": 3,
+      "lines": [113, 114, 115]
+    },
+    {
+      "file": "packages/shared/domain/test/Organization.test.ts",
+      "count": 5,
+      "lines": [102, 103, 142, 161, 163]
+    },
+    {
+      "file": "packages/shared/domain/test/SchemaParity.test.ts",
+      "count": 3,
+      "lines": [56, 134, 179]
+    },
+    {
+      "file": "packages/shared/tables/test/OrganizationTable.test.ts",
+      "count": 3,
+      "lines": [68, 69, 70]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness-laws.test.ts",
+      "count": 2,
+      "lines": [49, 50]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/archive.test.ts",
+      "count": 6,
+      "lines": [44, 45, 46, 47, 48, 49]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+      "count": 3,
+      "lines": [152, 370]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/data-root.test.ts",
+      "count": 2,
+      "lines": [140, 141]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/forwarder.test.ts",
+      "count": 1,
+      "lines": [25]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+      "count": 54,
+      "lines": [
+        563, 564, 673, 690, 691, 724, 736, 751, 752, 754, 765, 766, 781, 794,
+        795, 853, 854, 857, 858, 872, 1146, 1188, 1189, 1199, 1227, 1236, 1237,
+        1239
+      ]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
+      "count": 38,
+      "lines": [
+        507, 508, 569, 570, 571, 582, 583, 603, 605, 606, 657, 658, 685, 795,
+        921, 928, 949, 968, 969, 991, 992, 1020, 1021, 1025
+      ]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "count": 3,
+      "lines": [314, 823, 826]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "count": 42,
+      "lines": [
+        394, 395, 425, 428, 460, 461, 462, 463, 464, 535, 636, 648, 876, 925,
+        935, 979, 1068, 1155, 1359, 1398, 1477, 2655, 2747, 3065, 3109, 3159,
+        3160, 3202, 3207, 3209, 3549, 3571
+      ]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
+      "count": 2,
+      "lines": [131]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
+      "count": 2,
+      "lines": [358, 359]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/session-lease.test.ts",
+      "count": 2,
+      "lines": [232, 240]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/source-discovery.test.ts",
+      "count": 10,
+      "lines": [21, 22, 27, 28, 29, 30, 31, 32]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/telemetry-v2.test.ts",
+      "count": 3,
+      "lines": [145, 225, 226]
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "count": 2,
+      "lines": [316, 645]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ActionEvent.pointer-cancel.test.ts",
+      "count": 1,
+      "lines": [30]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ClockCorrelator.test.ts",
+      "count": 3,
+      "lines": [121, 142, 157]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
+      "count": 4,
+      "lines": [134, 185, 285]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
+      "count": 1,
+      "lines": [125]
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/SessionStore.test.ts",
+      "count": 3,
+      "lines": [130, 145, 155]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
+      "count": 4,
+      "lines": [37, 53, 69, 88]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/FsUtils.test.ts",
+      "count": 10,
+      "lines": [101, 147, 401, 420, 439]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts",
+      "count": 1,
+      "lines": [350]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "count": 4,
+      "lines": [292, 347, 485, 538]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
+      "count": 3,
+      "lines": [24, 39, 54]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
+      "count": 6,
+      "lines": [39, 245, 256, 269, 284, 291]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts",
+      "count": 41,
+      "lines": [
+        155, 156, 260, 290, 291, 314, 350, 384, 385, 386, 387, 402, 414, 420,
+        424, 428, 600, 601, 602, 603, 604, 617, 618, 619, 639, 869
+      ]
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
+      "count": 80,
+      "lines": [
+        29, 30, 31, 61, 62, 63, 64, 66, 67, 68, 70, 72, 127, 128, 130, 134, 135,
+        136, 137, 144, 145, 146, 147, 148, 159, 161, 164, 166, 169, 171, 172,
+        175, 179, 180, 181, 187, 216, 224, 259, 260, 275, 278, 292, 300, 313,
+        326, 338, 357, 359, 373
+      ]
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+      "count": 2,
+      "lines": [62, 63]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts",
+      "count": 2,
+      "lines": [81, 82]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.schemas.test.ts",
+      "count": 6,
+      "lines": [28, 29, 30, 31, 32, 33]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "count": 8,
+      "lines": [53, 54, 55, 56, 57, 58, 59, 288]
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-first-regressions.test.ts",
+      "count": 1,
+      "lines": [102]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts",
+      "count": 11,
+      "lines": [98, 99, 128, 138, 159, 160, 179, 211, 227, 252, 288]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+      "count": 12,
+      "lines": [241, 272, 368, 379, 485, 511, 553, 592, 722, 734, 771, 782]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+      "count": 1,
+      "lines": [362]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+      "count": 1,
+      "lines": [44]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "count": 8,
+      "lines": [81, 673, 867, 868, 1048, 1124, 1250]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+      "count": 1,
+      "lines": [56]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
+      "count": 3,
+      "lines": [84, 106, 113]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-command.test.ts",
+      "count": 2,
+      "lines": [60, 72]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane-timings.test.ts",
+      "count": 56,
+      "lines": [
+        273, 278, 287, 288, 301, 305, 314, 325, 369, 370, 376, 377, 437, 445,
+        453, 457, 537, 539, 548, 643, 688, 755, 756, 757, 765, 766, 809, 810,
+        824, 825, 852, 853, 854, 857
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "count": 3,
+      "lines": [1220, 1540]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-kits.test.ts",
+      "count": 9,
+      "lines": [120, 121, 122, 129, 130, 131, 132]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-csv.test.ts",
+      "count": 2,
+      "lines": [92, 96]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+      "count": 28,
+      "lines": [
+        211, 215, 216, 226, 232, 233, 234, 235, 236, 237, 392, 393, 394, 847,
+        1052, 1160, 1161, 1509, 1510, 1605, 1748, 2090, 2612, 3450
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-preservation.test.ts",
+      "count": 4,
+      "lines": [365, 377, 382, 387]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
+      "count": 1,
+      "lines": [172]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/coverage-turbo-inputs.test.ts",
+      "count": 1,
+      "lines": [113]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+      "count": 6,
+      "lines": [106, 135, 136, 141, 144]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
+      "count": 20,
+      "lines": [
+        288, 289, 290, 478, 518, 519, 520, 521, 525, 529, 530, 531, 532, 533,
+        534, 549, 742
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/directory-handle.test.ts",
+      "count": 6,
+      "lines": [51, 52, 55, 56, 57, 97]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen-stall-watchdog.test.ts",
+      "count": 3,
+      "lines": [49, 67, 97]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "count": 6,
+      "lines": [182, 955, 1607, 3547, 3654, 3803]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/doctest.test.ts",
+      "count": 7,
+      "lines": [114, 131, 135, 136, 137, 138, 200]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+      "count": 3,
+      "lines": [161, 162, 196]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
+      "count": 2,
+      "lines": [188, 196]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/explore-check.test.ts",
+      "count": 9,
+      "lines": [51, 134, 144, 177, 226, 277, 320, 345, 366]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+      "count": 10,
+      "lines": [108, 1423, 1745, 1746, 1832, 1844, 1998, 3007]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/flake-quarantine.test.ts",
+      "count": 10,
+      "lines": [51, 78, 86, 95, 103, 108, 112, 127, 131, 132]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts",
+      "count": 8,
+      "lines": [160, 408, 429, 430, 431, 512, 541, 546]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-command.test.ts",
+      "count": 9,
+      "lines": [79, 103, 243, 244, 251, 252, 303, 304, 305]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-doctor.test.ts",
+      "count": 3,
+      "lines": [29, 75, 107]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts",
+      "count": 2,
+      "lines": [211, 238]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts",
+      "count": 79,
+      "lines": [
+        140, 215, 218, 240, 246, 261, 277, 309, 324, 337, 350, 363, 375, 386,
+        399, 418, 432, 573, 622, 626, 628, 634, 656, 668, 683, 712, 726, 728,
+        737, 752, 779, 783, 788, 827, 829, 840, 874, 875, 1023, 1066, 1290,
+        1304, 1329, 1338, 1342, 1361, 1386, 1416, 1434, 1440, 1462, 1464, 1490,
+        1497, 1536, 1537, 1561, 1575, 1598, 1617, 1638, 1662, 1687, 1721, 1746,
+        1780, 1801, 1820, 1821, 1822, 1823, 1846, 2132, 2394, 2402, 2440, 2473,
+        2588, 2616
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-packet-core.test.ts",
+      "count": 10,
+      "lines": [101, 107, 108, 509, 556, 576, 609, 920, 930, 950]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts",
+      "count": 8,
+      "lines": [62, 83, 89, 123, 127, 133, 161, 203]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-set-status-stream.test.ts",
+      "count": 16,
+      "lines": [
+        62, 80, 96, 118, 141, 224, 267, 311, 344, 363, 371, 389, 393, 418, 435,
+        502
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/identity-registration-removal.test.ts",
+      "count": 1,
+      "lines": [186]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "count": 8,
+      "lines": [222, 225, 291, 294, 323, 327, 371, 374]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/jsdoc-migrate.test.ts",
+      "count": 12,
+      "lines": [649, 655, 660, 685, 687, 698, 699, 707, 708, 709, 710, 731]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-refs.test.ts",
+      "count": 4,
+      "lines": [509, 526, 538]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+      "count": 5,
+      "lines": [769, 780, 791, 921]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lab-identity-segment.test.ts",
+      "count": 2,
+      "lines": [223, 245]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-judge-rubric.test.ts",
+      "count": 1,
+      "lines": [77]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+      "count": 1,
+      "lines": [401]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/person-match-portability.test.ts",
+      "count": 3,
+      "lines": [197, 198, 201]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
+      "count": 1,
+      "lines": [60]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+      "count": 14,
+      "lines": [53, 61, 62, 63, 64, 65, 66, 67, 68, 111, 114, 117, 118, 131]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-fact.test.ts",
+      "count": 1,
+      "lines": [94]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-command.test.ts",
+      "count": 5,
+      "lines": [84, 93, 124, 172, 184]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-judge-contract-parity.test.ts",
+      "count": 6,
+      "lines": [122, 147, 432, 433]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+      "count": 21,
+      "lines": [
+        218, 227, 278, 280, 290, 293, 294, 305, 307, 311, 332, 350, 697, 701
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-round-pipeline.test.ts",
+      "count": 9,
+      "lines": [153, 163, 173, 188, 202, 245, 397, 533, 601]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-command-dispatch.test.ts",
+      "count": 1,
+      "lines": [131]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "count": 18,
+      "lines": [
+        117, 121, 156, 165, 187, 704, 875, 876, 1100, 1107, 1167, 2113, 2186,
+        2200
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "count": 78,
+      "lines": [
+        528, 529, 949, 962, 963, 964, 965, 966, 967, 992, 993, 994, 1065, 1123,
+        1397, 1399, 1400, 1401, 1402, 1435, 1437, 1461, 1463, 1542, 1543, 1544,
+        1944, 2359, 2360, 2653, 3912, 3924, 4109, 4131, 5132, 5203, 5245, 5366,
+        5416, 5447, 5448, 5449, 5450, 5451, 5455, 5456, 5457, 5458, 5682, 5683,
+        5684
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ratchet-diff.test.ts",
+      "count": 2,
+      "lines": [102, 120]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/reflection-lint.test.ts",
+      "count": 3,
+      "lines": [17, 104, 258]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
+      "count": 3,
+      "lines": [385, 516, 518]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
+      "count": 13,
+      "lines": [247, 293, 297, 413, 614, 647, 650, 684, 752, 954, 985]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/restoration-transformations-coverage.test.ts",
+      "count": 46,
+      "lines": [
+        202, 211, 272, 273, 336, 404, 539, 792, 798, 816, 958, 1028, 1064, 1083,
+        1104, 1109, 1214, 1283, 1284, 1285, 1286, 1313, 1314, 1328, 1400, 1623,
+        1624, 1625, 1626, 1627, 1630, 1631, 1683, 1687, 1715, 1787, 1996, 2316,
+        2321, 2322, 2323, 2324, 2634, 2654, 2701
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/roadmap-refs.test.ts",
+      "count": 2,
+      "lines": [70, 92]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/run-scope.test.ts",
+      "count": 2,
+      "lines": [216, 227]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
+      "count": 2,
+      "lines": [247]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-catalog.test.ts",
+      "count": 1,
+      "lines": [133]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-first.test.ts",
+      "count": 56,
+      "lines": [
+        174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 199, 278, 279,
+        280, 281, 293, 318, 319, 320, 329, 343, 344, 345, 360, 380, 395, 396,
+        397, 412, 447, 448, 487, 490, 495
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+      "count": 28,
+      "lines": [
+        93, 112, 126, 137, 145, 146, 175, 176, 182, 235, 236, 272, 273, 277,
+        318, 319, 330, 341, 352, 483, 488
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/skills-command.test.ts",
+      "count": 1,
+      "lines": [266]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
+      "count": 2,
+      "lines": [324, 325]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+      "count": 2,
+      "lines": [440, 480]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-git-exec.test.ts",
+      "count": 10,
+      "lines": [141, 142, 143, 147, 148]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "count": 1,
+      "lines": [72]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "count": 4,
+      "lines": [228, 229, 230, 232]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/test-tsgo-turbo-inputs.test.ts",
+      "count": 1,
+      "lines": [113]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/version-sync-effect.test.ts",
+      "count": 19,
+      "lines": [60, 229, 230, 231, 232, 253, 254, 255, 314, 315]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
+      "count": 2,
+      "lines": [967, 1059]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+      "count": 2,
+      "lines": [235, 239]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
+      "count": 9,
+      "lines": [181, 182, 260, 311, 345, 346, 387, 420, 509]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-ack.test.ts",
+      "count": 2,
+      "lines": [96, 97]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
+      "count": 26,
+      "lines": [191, 192, 196, 199, 212, 213, 243, 273, 274, 311, 329, 380, 381]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "count": 3,
+      "lines": [54, 84, 95]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-gate-staleness.test.ts",
+      "count": 2,
+      "lines": [75, 101]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-view.test.ts",
+      "count": 5,
+      "lines": [85, 89, 93, 94, 98]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox.test.ts",
+      "count": 2,
+      "lines": [205, 206]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-merge-ready-coherence.test.ts",
+      "count": 19,
+      "lines": [57, 69, 70, 86, 100, 113, 126, 140, 153, 168, 181, 206]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-merged-preview.test.ts",
+      "count": 10,
+      "lines": [105, 111, 169, 179, 189, 199, 212, 213]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "count": 19,
+      "lines": [152, 165, 166, 177, 188, 237, 238, 268, 269, 282]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts",
+      "count": 44,
+      "lines": [
+        107, 113, 117, 121, 122, 128, 134, 145, 157, 165, 170, 178, 182, 190,
+        203, 217, 228, 236, 638, 639, 640, 641
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts",
+      "count": 2,
+      "lines": [67]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts",
+      "count": 22,
+      "lines": [39, 80, 81, 132, 146, 172, 197, 198, 233, 247, 248]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-provenance-footer.test.ts",
+      "count": 5,
+      "lines": [249, 250, 802]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-remediation.test.ts",
+      "count": 5,
+      "lines": [251, 256, 261, 389, 423]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
+      "count": 32,
+      "lines": [
+        102, 107, 116, 125, 130, 135, 178, 188, 198, 199, 227, 228, 385, 453,
+        457, 466, 477, 488
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-reply-schemas.test.ts",
+      "count": 9,
+      "lines": [84, 93, 94, 103, 114, 125]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-resume.test.ts",
+      "count": 14,
+      "lines": [99, 108, 153, 156, 159, 180, 197, 216, 218, 219, 472]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-status-triage.test.ts",
+      "count": 52,
+      "lines": [
+        185, 186, 195, 204, 213, 226, 227, 228, 243, 258, 259, 286, 287, 320,
+        321, 322, 337, 338, 351, 372, 402, 403, 486, 505, 506, 507
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "count": 15,
+      "lines": [128, 134, 152, 159, 165, 256, 263, 527, 667, 671, 700, 752]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-schemas.test.ts",
+      "count": 1,
+      "lines": [113]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-verdict-json.test.ts",
+      "count": 6,
+      "lines": [67, 123, 124]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-watch-mode.test.ts",
+      "count": 3,
+      "lines": [636, 695, 837]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-watch-stream.test.ts",
+      "count": 1,
+      "lines": [217]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "count": 58,
+      "lines": [
+        553, 1518, 1564, 2100, 3596, 3597, 3598, 3599, 3600, 3945, 4064, 4065,
+        4066, 4067, 4109, 4137, 4163, 4187, 4210, 4265, 4266, 4270, 4400, 4455,
+        4460, 4479, 4483, 4507, 4561, 4574, 4580, 4602, 4638, 4685, 5193, 5206,
+        5217, 5225, 5233, 5317, 5318, 5319, 5320, 5321, 5325, 5326
+      ]
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "count": 6,
+      "lines": [223, 224, 240]
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "count": 1,
+      "lines": [244]
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceVaultStore.test.ts",
+      "count": 3,
+      "lines": [49, 80, 85]
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "count": 1,
+      "lines": [155]
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "count": 1,
+      "lines": [66]
+    }
+  ],
+  "limitations": [
+    "Candidate-only: aliases and inferred value types are unavailable in a syntax-only census; multiline assertions can be missed and false positives remain possible.",
+    "Judgment candidate. Alias imports and multiline expressions can be missed; generic names can be false positives."
+  ]
+}

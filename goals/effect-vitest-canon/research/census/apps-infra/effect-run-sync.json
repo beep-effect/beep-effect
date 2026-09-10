@@ -1,0 +1,69 @@
+{
+  "class": "effect-run-sync",
+  "method": "ts-morph syntax-only exact CallExpression Effect.runSync(...)",
+  "fileCount": 12,
+  "occurrenceCount": 37,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "count": 1,
+      "lines": [67]
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "count": 1,
+      "lines": [50]
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "count": 2,
+      "lines": [147, 737]
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "count": 1,
+      "lines": [176]
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "count": 2,
+      "lines": [80, 765]
+    },
+    {
+      "file": "apps/professional-desktop/test/failure-message.test.ts",
+      "count": 1,
+      "lines": [39]
+    },
+    {
+      "file": "infra/test/AIMetrics.test.ts",
+      "count": 10,
+      "lines": [32, 35, 46, 86, 109, 117, 124, 137, 143, 150]
+    },
+    {
+      "file": "infra/test/CiRunners.test.ts",
+      "count": 3,
+      "lines": [124, 145, 146]
+    },
+    {
+      "file": "infra/test/OipWeb.test.ts",
+      "count": 3,
+      "lines": [105, 123, 131]
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "count": 8,
+      "lines": [306, 315, 316, 318, 321, 325, 350, 353]
+    },
+    {
+      "file": "infra/test/Storybook.test.ts",
+      "count": 3,
+      "lines": [70, 84, 89]
+    },
+    {
+      "file": "infra/test/schemaParity.ts",
+      "count": 2,
+      "lines": [11, 12]
+    }
+  ],
+  "limitations": "Exact syntactic call identity; aliases are not counted."
+}

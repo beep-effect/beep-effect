@@ -1,0 +1,14 @@
+{
+  "class": "effect-run-fork",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 1,
+  "occurrenceCount": 1,
+  "files": [
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
+      "count": 1,
+      "lines": [258]
+    }
+  ],
+  "limitations": []
+}

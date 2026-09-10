@@ -26,10 +26,11 @@ The fast triage questions:
 6. Resilience/observability? `Effect.retry` + `Schedule`, `timeoutOption`/`timeoutOrElse`, explicit concurrency, spans + structured logs from the start, `Config`/`Redacted` for env + secrets.
 7. Recovery? Precise `catchTag`/`catchFilter` in domain, `catchCause`/`matchCauseEffect` at boundaries, `Cause.pretty` for rendering, `fail` for expected vs `die` for invariants.
 
-Two checks with no law counterpart below:
+Additional checks with no law counterpart below:
 
 - Designing a service or test helper? Keep `FileSystem`, `Path`, and `SqlClient` inside the layer/service unless they are the explicit domain boundary.
 - Testing platform/runtime semantics? Prefer `@effect/vitest` for supporting tests, but spawn the real runtime when the assertion is about platform lifecycle behavior.
+- Testing assertions? Use public `@effect/vitest/utils` helpers for Option (`assertSome` / `assertNone`), Result (`assertSuccess` / `assertFailure`), and Exit (`assertExitSuccess` / `assertExitFailure`). Payload-checking helpers require the expected value; `assertExitFailure` requires an expected `Cause` (for example `Cause.fail(expectedError)`). Plain-value `expect` and `assert` remain legal inside `it.effect`; do not impose a blanket replacement. See [testing patterns](../../../.patterns/testing-patterns.md#specialized-option-result-and-exit-assertions) for complete examples and narrowing behavior.
 
 ## Non-Negotiable Laws
 

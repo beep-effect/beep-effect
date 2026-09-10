@@ -706,6 +706,13 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     bunRunLane(repoRoot, "lint:schema-first", ["beep", "lint", "schema-first"])
   ),
   githubCheckLane(
+    "lint:effect-vitest",
+    "cheap-gates",
+    "repo-quality",
+    "preflight",
+    bunRunLane(repoRoot, "lint:effect-vitest", ["beep", "lint", "effect-vitest"])
+  ),
+  githubCheckLane(
     "lint:allowlist",
     "cheap-gates",
     "repo-sanity",

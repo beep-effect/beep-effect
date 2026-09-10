@@ -1,0 +1,144 @@
+{
+  "class": "test-clock",
+  "method": "line-oriented lexical scan over live in-scope package files",
+  "fileCount": 27,
+  "occurrenceCount": 90,
+  "files": [
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "count": 1,
+      "lines": [159]
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "count": 1,
+      "lines": [1027]
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "count": 2,
+      "lines": [39, 710]
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "count": 5,
+      "lines": [26, 241, 250, 254]
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "count": 6,
+      "lines": [34, 155, 158, 196, 199, 225]
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "count": 3,
+      "lines": [20, 69, 233]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
+      "count": 3,
+      "lines": [59, 330, 495]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
+      "count": 6,
+      "lines": [73, 994, 1049, 1191, 1267, 1302]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
+      "count": 1,
+      "lines": [18]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.pglite.test.ts",
+      "count": 3,
+      "lines": [38, 216, 400]
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts",
+      "count": 2,
+      "lines": [34, 157]
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Service.test.ts",
+      "count": 4,
+      "lines": [18, 162, 196, 199]
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+      "count": 7,
+      "lines": [30, 276, 278, 287, 294, 304, 308]
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "count": 4,
+      "lines": [36, 157, 159, 163]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+      "count": 1,
+      "lines": [1076]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "count": 2,
+      "lines": [106, 2192]
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
+      "count": 2,
+      "lines": [27, 293]
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts",
+      "count": 3,
+      "lines": [16, 283]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+      "count": 3,
+      "lines": [57, 2681]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen-stall-watchdog.test.ts",
+      "count": 1,
+      "lines": [22]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "count": 9,
+      "lines": [86, 1257, 2566, 2568, 2586, 2588, 2605, 3098, 3102]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "count": 1,
+      "lines": [4304]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+      "count": 11,
+      "lines": [18, 399, 417, 436, 437, 477, 504, 526, 527, 552]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts",
+      "count": 3,
+      "lines": [18, 194]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-watch-mode.test.ts",
+      "count": 1,
+      "lines": [480]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "count": 3,
+      "lines": [148, 3176]
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "count": 2,
+      "lines": [18, 396]
+    }
+  ],
+  "limitations": []
+}
