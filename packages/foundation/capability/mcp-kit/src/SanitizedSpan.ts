@@ -227,7 +227,7 @@ const localDefsRefTarget = (schema: JsonObject): O.Option<JsonObject> =>
 // rc.113 encodes a no-argument tool's params as the non-null wildcard
 // `{ not: { type: "null" } }`, which admits objects but carries no `type`.
 const isNonNullWildcard = (target: JsonObject): boolean =>
-  Object.keys(target).length === 1 && isJsonObject(target.not) && (target.not as JsonObject).type === "null";
+  R.size(target) === 1 && isJsonObject(target.not) && (target.not as JsonObject).type === "null";
 
 const isObjectInputTarget = (target: JsonObject): boolean =>
   target.type === "object" ||
