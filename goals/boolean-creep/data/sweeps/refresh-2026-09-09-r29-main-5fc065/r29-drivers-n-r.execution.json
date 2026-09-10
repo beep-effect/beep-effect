@@ -1,0 +1,22 @@
+{
+  "lane": "r29-drivers-n-r",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:23:08.165915+00:00",
+  "finished": "2026-09-09T10:32:41.954389+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-n-r.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`n3`, `nlp-mcp`, `obs`, `onepassword-cli`, `openai`, `openai-compat`, `openclaw`, `oxigraph`, `pacer`, `pglite`, `phoenix`, `postgres`, `pretext`, `rdf-canonize`, `runpod` `src/`). All listed seed owners still exist with the claimed members; current writers/readers still support the prior classifications, so nothing was re-emitted. No seed withdrawals.\n\nCitation-only drift (not a classification change): `EnsureQaSceneResult` canonical line 419 is the `inputCreated` description; the field is at 417. `DatasetLoadLinesOptions` canonical line 252 is the field-block open (`skipEmpty` at 253). `StreamState` booleans start at 229 versus declaration 221.\n\nNo unresolved source question. Function-flag parameters (`OpenclawCli` `local`/`probe`, `spawnProcessResult.extendEnv`, `makeRequest` `stream`, `Obs.make` `spawned`) were skipped. `packages/drivers/runpod/src/_generated` was excluded.\n\n\ud83c\udf31 graft saved ~543,184 tokens this turn (1 drivers-wide `S.Boolean` grep; additional per-package greps and skeletons).",
+  "transcriptSha256": "eb1ee87b08317728fbd6b495bb911f5817aa183c96d0eec390d44a4040cdc4ca",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

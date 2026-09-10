@@ -1,0 +1,13 @@
+{
+  "lane": "r24-foundation-primitive",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "exitCode": 0,
+  "exitEvidence": "Observed run-sweep-lane.sh exit 0 in the parent terminal result.",
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "transcriptSha256": "d8317de3bf34df5e44e7ed8189b33b592da6d2f06a7f95e87fa700bfc92515bd",
+  "finished": "2026-09-08T19:54:28.368520+00:00",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-foundation-primitive.jsonl` \u2014 confirmed 0, disqualified 0. Seeds: none (no drift)."
+}

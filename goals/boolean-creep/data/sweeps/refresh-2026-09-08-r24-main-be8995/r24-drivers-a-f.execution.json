@@ -1,0 +1,14 @@
+{
+  "lane": "r24-drivers-a-f",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "started": "2026-09-08T20:04:35.608123+00:00",
+  "finished": "2026-09-08T20:15:34.389143+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "transcriptSha256": "c74245bbd862f37fec06142d6f457dd2b6ef295d3c637ee502e20f082b294fad",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-drivers-a-f.jsonl` \u2014 confirmed 0, disqualified 2. All 16 assigned areas covered. Seeds intact; AgentResponseShape class line drifted 314\u2192313."
+}

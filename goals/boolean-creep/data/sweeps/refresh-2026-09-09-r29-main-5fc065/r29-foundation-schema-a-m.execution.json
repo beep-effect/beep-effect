@@ -1,0 +1,22 @@
+{
+  "lane": "r29-foundation-schema-a-m",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:09:05.506216+00:00",
+  "finished": "2026-09-09T10:19:14.745330+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-schema-a-m.jsonl`\n\nConfirmed: 0. Disqualified: 0. Assigned roots: all 87 covered (186 authored files; none missing). HEAD matches source SHA `115b761d533684c5abf4ab9de83d970243c79dfc`. Validator: `inventory OK: 0 records`.\n\nSeeds revalidated in current source; unchanged clusters were not re-recorded. `hasCoherentEnforcement` still matches the designed 8-local E4 cluster. Csv `trim`/`ltrim`/`rtrim` remains a priority if-chain over free combinations (D1), not a masked union.\n\nSeed drift: `jsonc-parser-sdk-flags` first boolean member is now L55 (`allowTrailingComma`); seed L54 is the `jsonc.parse` call. Classification still D2.\n\nWithdrawal: `r3-foundation-conformance-annotation-integrity` (`hasUniqueIds`, `isConsistentAnnotation`) is out of net \u2014 callable predicates, not co-carried boolean members. No `AnnotationFields.integrity` owner.\n\nOut-of-net (not recorded): function flag parameters (`mutable`, `strictColumnHandling`, `excludeSimilarTypes`, `reportOnly`); single-boolean structs (`isDark`, `reportOnly`, `enforce`, `excludeSimilarTypes`, `done`, `unsigned`, `tagFilter`); false-or-object / true-or-token sentinels (JSON Schema `SubSchema`, CSP `sandbox`, HSTS/Expect-CT/CSP option unions); `$vocabulary` as `Record<string, boolean>`; remaining standalone predicates (`hasQueryOrFragment` / `hasNoQueryOrFragment`, Fn AST keyword guards). No unresolved source question.",
+  "transcriptSha256": "27198ebef83383edb1d6aa936533e4bdf5f3babe7e942c7206ae35d2c435a747",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

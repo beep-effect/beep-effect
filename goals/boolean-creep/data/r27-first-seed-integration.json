@@ -1,0 +1,82 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "inventoryBeforeSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998",
+  "inventoryAfterSha256": "bc9286980a50f59ca875947dbf2e8adad4abab02322e5a752d8222220b47775c",
+  "recordsBefore": 940,
+  "recordsAfter": 924,
+  "withdrawnIds": [
+    "cosmos-capability-probe-webgl2",
+    "cosmos-gl-graph-constructor-config",
+    "r2-drivers-arch-graph-3d-mount-latches",
+    "r25-drivers-a-f-box-applier-destructive-blocked",
+    "r25-drivers-a-f-cosmos-backend-selection-reason",
+    "r25-drivers-a-f-firecrawl-api-failure",
+    "r25-drivers-a-f-firecrawl-failure-fields",
+    "r3-domains-chat-turn-active-receipt-uncertain",
+    "r3-drivers-arch-anthropic-repair-stream-part-kind",
+    "r3-drivers-arch-box-applier-blocker-predicates",
+    "r3-drivers-arch-box-error-shape-probes",
+    "r3-drivers-arch-codex-home-entry-classifiers",
+    "r3-drivers-arch-codex-home-symlink-heuristics",
+    "r3-drivers-arch-cosmos-label-geometry",
+    "r3-drivers-arch-cosmos-module-probes",
+    "r3-drivers-arch-drizzle-error-context-probes"
+  ],
+  "correctedIds": [
+    "acp-client-protocol-capabilities",
+    "acp-server-protocol-capabilities",
+    "chat-timeline-refresh-latch",
+    "drivers-cosmos-graph-config",
+    "firecrawl-agent-status-shape",
+    "r25-drivers-a-f-box-action-base-destructive-provider",
+    "r25-drivers-a-f-box-entitlements-paid-seats",
+    "r25-drivers-a-f-firecrawl-error-options-input-retryable",
+    "r25-drivers-a-f-firecrawl-error-options-retryable",
+    "r25-drivers-a-f-firecrawl-error-retryable"
+  ],
+  "qualifiedRecordsUnchanged": true,
+  "qualifiedCount": 162,
+  "disqualifiedCounts": {
+    "D2": 166,
+    "D1": 596
+  },
+  "archives": {
+    "history/inventory/2026-09-09-r27-first-seed-withdrawals.jsonl": "ad52f2415ac0971e89f1c116b22b5a1b5e876be92b091085008f080dc7908b40",
+    "history/inventory/2026-09-09-r27-first-seed-corrections.jsonl": "6018112aa2bb2140dc4bc4b68fcfbec014a1d51ab17010f244d5fa6cbe61133b"
+  },
+  "audits": [
+    "data/design-refresh-2026-09-09-r27-drivers-a-f-carriers.md",
+    "data/design-refresh-2026-09-09-r27-drivers-g-m-carriers.md",
+    "data/design-refresh-2026-09-09-r27-agent-seed-anchors.md"
+  ],
+  "formalIndependentReview": false,
+  "packetChecks": [
+    {
+      "command": "bun goals/boolean-creep/ops/validate-inventory.ts",
+      "exitCode": 0,
+      "result": "924 records, 924 unique ids"
+    },
+    {
+      "command": "bun goals/boolean-creep/ops/validate-designs.ts",
+      "exitCode": 0,
+      "result": "162 qualified ids"
+    },
+    {
+      "command": "git diff --check HEAD -- goals/boolean-creep",
+      "exitCode": 0
+    },
+    {
+      "check": "GOAL launcher character budget",
+      "characters": 3494,
+      "limit": 4000,
+      "passed": true
+    },
+    {
+      "check": "manifest JSON parse",
+      "status": "active",
+      "passed": true
+    }
+  ],
+  "verificationScope": "Packet structural checks during the frozen round; no full repo verification or independent review claim."
+}

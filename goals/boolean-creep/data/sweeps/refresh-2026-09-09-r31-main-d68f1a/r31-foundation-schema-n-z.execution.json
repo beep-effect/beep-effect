@@ -1,0 +1,22 @@
+{
+  "lane": "r31-foundation-schema-n-z",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T14:38:38.196313+00:00",
+  "finished": "2026-09-09T14:46:52.442296+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-schema-n-z.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nCoverage: every assigned N\u2013Z root was inspected (82 authored source files). No new eligible Boolean clusters.\n\nSeeds: all 7 still exist at the claimed owners/members/lines; D1/D2 classifications still hold (`normalizeColumn` is a trim/ltrim/rtrim priority chain over free combinations; XML flags still mirror `fast-xml-parser`; descriptor bags are independent ES attributes; `supportsComments`/`limitRows` remain independent derived getters; SemVer `leftNumeric`/`rightNumeric` still admits all four combinations). No seed drift, no withdrawals, no unresolved source question.\n\nOut-of-net (not recorded): `false` sentinel unions (`NoOpen`/`NoSniff`/`ReferrerPolicy`/`XssProtection`/`PermissionsPolicy`/`PermittedCrossDomainPolicies`); standalone predicates (`Percentage.isZero`/`isFull`, Slug hyphen guards, Number sign filters, SafeRemoteHost classifiers); single-boolean bags (`exact`, `includeStack`, `strict`); `HeaderValueInput`\u2019s Boolean union arm; type-level `true`/`false` in `HasDuplicateKeys`.\n\n\ud83c\udf31 graft saved ~163,779 tokens this turn (8 calls)",
+  "transcriptSha256": "f0fac26d084123dfed72109e6d3ea70c836b497ad94c2404a86a45248aaf6e15",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

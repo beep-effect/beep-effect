@@ -1,0 +1,24 @@
+{
+  "kind": "fable-review-admission-preparation",
+  "privateManifestSha256": "6774cf5603bcdb59e152545331b7ab5c3b49ddeafddbaf36298df4cd40d867df",
+  "prepared": "Strict evidence gate for two consecutive finalized dry rounds; no process-launch code.",
+  "syntheticVerification": {
+    "kind": "synthetic-review-admission-verification",
+    "command": ["python3", "-m", "unittest", "-v", "test_review_admission.py"],
+    "observedExitCode": 0,
+    "testMethods": 4,
+    "negativeMutationCases": 31,
+    "sourceSha256": "af18571311cf3a753806f9e4d46aa464fa211160931f72c4c693ac94423dd3cc",
+    "testSha256": "6ba9e66262b5dc016dcca61e1586183bf336aeb4121550151f4d9d9421fdf238",
+    "actualModelCalls": 0,
+    "formalReviewComplete": false,
+    "currentHistoricalEvidenceRejected": true
+  },
+  "currentGateAdmitted": false,
+  "reason": "round-not-complete-and-dry",
+  "fullControllerComplete": false,
+  "runtimeAdmissionComplete": false,
+  "canonicalValidatorChanged": false,
+  "formalReviewComplete": false,
+  "implementationCredit": false
+}

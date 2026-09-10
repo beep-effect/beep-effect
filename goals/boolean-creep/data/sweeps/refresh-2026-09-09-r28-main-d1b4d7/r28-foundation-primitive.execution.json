@@ -1,0 +1,22 @@
+{
+  "lane": "r28-foundation-primitive",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:27:03.087154+00:00",
+  "finished": "2026-09-09T04:31:17.702468+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-primitive.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nBoth assigned roots were covered (`packages/foundation/primitive/data/src`, `packages/foundation/primitive/types/src`). No seeds in this lane, so no seed drift. No unresolved source question: authored source has no co-carried boolean member cluster (generated surfaces excluded; lone mime lookup latch and callable predicates are out of net).\n\n\ud83c\udf31 graft saved ~48,208 tokens this turn (8 calls)",
+  "transcriptSha256": "4df82e36a286ca577a4837b116e481e5b22a87a1e1fd06e41837e9632b1b98ef",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

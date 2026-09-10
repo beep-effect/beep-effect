@@ -1,0 +1,17 @@
+{
+  "lane": "r25-cli-commands-a-c",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:25:38.561155+00:00",
+  "finished": "2026-09-08T22:36:21.670394+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 8,
+  "qualifiedCandidates": 2,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-cli-commands-a-c.jsonl` \u2014 confirmed 2, disqualified 6. All nine assigned command dirs covered. Seeds still present; line drift vs inventory on `CiLaneRunOptions` (582\u2192619), `CiLocalOptions` (1302\u21922324), `CiLocalStepPlan` (1368\u21922389), `ScaffoldShape` (463\u2192473), `MakeForwarderRunProgramOptions` (1629\u21921722).",
+  "transcriptSha256": "85c45e159ade825c7895b920c06ab5503a5a06bbbc52889e2e27a59f6fb161f5",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

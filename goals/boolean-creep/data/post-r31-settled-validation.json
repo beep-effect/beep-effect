@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "boolean-creep-packet-validation/v1",
+  "recordedAt": "2026-09-09T16:33:25.120054+00:00",
+  "head": "131603144e0b361422bd77167c64d9ff192759b2",
+  "resolvedLiveMain": "284294ee24177f13f6d3a763c5d987206d351c51",
+  "inventorySha256": "fc4a37c261318d37cc276315d7014c61410277c7802b38806b72ae3a9437fc13",
+  "commands": [
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-inventory.ts"],
+      "exitCode": 0,
+      "stdout": "inventory OK: 751 records, 751 unique ids",
+      "stderr": ""
+    },
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-designs.ts"],
+      "exitCode": 0,
+      "stdout": "design coverage OK: 145 qualified ids",
+      "stderr": ""
+    },
+    {
+      "command": ["git", "diff", "--check", "--", "goals/boolean-creep"],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--quiet",
+        "origin/main",
+        "--",
+        ":(glob)packages/**/src/**",
+        ":(glob)apps/**/src/**"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "goalLauncherCharacters": 3494,
+  "manifestJsonValid": true,
+  "landingMapQualifiedIdsExactlyOnce": 145,
+  "familyLinksResolve": true,
+  "openSemanticHolds": 4,
+  "newMainSourceCensusPending": 5,
+  "fullRepoProofClaim": false,
+  "independentP3Credit": false,
+  "dryRoundCredit": false,
+  "implementationCredit": false
+}

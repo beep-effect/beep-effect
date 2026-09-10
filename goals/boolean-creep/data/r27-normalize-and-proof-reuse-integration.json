@@ -1,0 +1,35 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "recordsBefore": 923,
+  "recordsAfter": 926,
+  "inventoryBeforeSha256": "c6377e8ccbbd83ee40b36b231b5937233c80b878ddf68a10857489fd758b44f3",
+  "inventoryAfterSha256": "f48948dcf3cd127991f7fd6342ab21d1d940115c0dc7fa61540de7f4a5e000f8",
+  "addedQualifiedIds": [
+    "r27-cli-commands-d-k-normalize-manifest-dedupe-move",
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse"
+  ],
+  "addedDisqualifiedIds": ["r27-cli-commands-d-k-normalize-files-dedupe-move"],
+  "qualifiedCount": 162,
+  "qualifiedTiers": {
+    "1": 127,
+    "2": 35
+  },
+  "qualifiedStatuses": {
+    "reviewed": 36,
+    "designed": 126
+  },
+  "disqualifiedCounts": {
+    "D2": 166,
+    "D1": 598
+  },
+  "censusReceipts": {
+    "r27-normalize-contract-correction1.execution.json": "e7693926aa01a8289a158964a7ba96f0324f0c6fcc31a0abf8152ca78225b166",
+    "r27-cli-commands-l-q.execution.json": "c4c10983fe60dfa72b31a3c3e1a155a22a8acadf79b68a7dc5c6deb6de971679"
+  },
+  "designSha256": {
+    "designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md": "44f7ef658af241429555523c8129e647f48bee70c7db68115c349d23758e7eca",
+    "designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md": "0ba870ad1f3075b0d02281d54e6a14b817496a738cfb50e9476e510cc94bbe93"
+  },
+  "formalIndependentReview": false
+}

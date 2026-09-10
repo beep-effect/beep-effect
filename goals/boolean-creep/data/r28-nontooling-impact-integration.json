@@ -1,0 +1,54 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeInventorySha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "afterInventorySha256": "85655c13cbe0204634a2bd7a5aac6c8a5cd4d977e330214a140861eaa1bd8d2c",
+  "beforeCount": 921,
+  "afterCount": 916,
+  "withdrawnIds": [
+    "r24-foundation-ui-chart-css-sanitizer",
+    "r3-domains-ontology-iri-kind-probes",
+    "r3-domains-reasoner-module-affected-flags",
+    "r3-domains-reasoner-type-key-probes",
+    "r3-domains-session-projections-term-view-probes"
+  ],
+  "correctedIds": [
+    "chart-tooltip-hide-flags",
+    "live-waveform-mode-flags",
+    "number-input-modifier-keys",
+    "number-input-step-modifiers",
+    "ontology-infer-session-recompute-latches",
+    "ontology-inference-recompute-cause",
+    "r2-foundation-retry1-number-input-spin-disabled",
+    "r24-foundation-ui-live-waveform-audio-constraints",
+    "r24-foundation-ui-orb-webgl-context",
+    "r25-epistemic-ontology-bounded-shacl-conforms-truncated",
+    "use-number-input-options"
+  ],
+  "auditedRetainedIds": [
+    "ontology-inference-recompute-cause",
+    "live-waveform-mode-flags",
+    "use-number-input-options",
+    "number-input-modifier-keys",
+    "number-input-step-modifiers",
+    "chart-tooltip-hide-flags",
+    "r2-foundation-retry1-number-input-spin-disabled",
+    "ontology-infer-session-recompute-latches",
+    "r2-foundation-iri-ipv6-segment-facts",
+    "r24-foundation-ui-orb-webgl-context",
+    "r24-foundation-ui-live-waveform-audio-constraints",
+    "r25-epistemic-ontology-bounded-shacl-conforms-truncated"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-nontooling-impact-before.jsonl",
+  "rowArchiveSha256": "6eb84a7bc69001616e0689d54ff9f516324fc77e065c232a7d53033038996f7e",
+  "withdrawnDesignArchive": "history/designs/2026-09-09-pre-main-d1b4d7/r3-domains-reasoner-module-affected-flags.md",
+  "withdrawnDesignSha256": "8c0339955a0a966d1126e9e8a1991cb976f515d2e8718fe4f43553099688225b",
+  "refreshedDesignSha256": {
+    "ontology-inference-recompute-cause": "2d32ec2b73dcb58a3c162dec42e8b1a649eb8f8e5dc5156902c152ad5727ca50",
+    "ontology-infer-session-recompute-latches": "f715d35403c3765d47478bf55153f4b7f68f7c3a0faad7a26de6dad39cdf9888",
+    "r27-boolean-state-foundation-spinner-state": "49967cae339aa2f0a5e010b3770df2a2b6b5b4b56aa278c1574599c253eb1ea1"
+  },
+  "audit": "data/design-refresh-2026-09-09-r28-nontooling-impact.md",
+  "auditSha256": "4fd16118a4c595a72ba6ce910bd9ffc24295beb88a02590e3c1560ab7d715c41",
+  "note": "One qualified and four D rows withdraw as callable/synthetic owners. Twelve retained source dispositions are audited; changed current designs remain designed pending replacement P3. R27 and R28 frozen seed artifacts are unchanged."
+}

@@ -1,0 +1,22 @@
+{
+  "lane": "r31-law-practice-domain",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T15:05:06.128333+00:00",
+  "finished": "2026-09-09T15:14:41.264142+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 10,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-law-practice-domain.jsonl`\n\nConfirmed: 0. Disqualified: 10. Validator: OK.\n\nEvery assigned root under `packages/law-practice/domain/src` was covered (generated `internal/generated/free-law-project/*` excluded by generated headers).\n\nUnchanged seeds were not re-reported (IDS five-flag/fee/content/statement-boolean D1s; designed `statementPresent`+`statementType`, `hasBlankPage`+`page`, `isRange`+range payloads; Neutral/Statute/Regulation `[flag, inFootnote]`; CitationBase `inFootnote`+`footnoteNumber`; PinciteInfo `isRange`+`starPage`; PatentApplicationDocumentCoherenceCheck; filedSameDay+date; statutes-at-large `pinciteIsRange`+`pinciteEndPage`).\n\nSeed drift: `full-case-citation-flags` expanded with inherited `inFootnote`; Id/Supra/ShortForm inheritance clusters expanded with omitted `pinciteInheritedFromId`. `constitutional-citation-preamble` still ineligible as mixed kinds (one boolean plus numeric locators); the actual sibling booleans are the new `[preamble, inFootnote]` record. Docs on `IdsCandidateWindowFacts` still say \u201cfour flags\u201d while five booleans exist \u2014 classification unchanged.\n\nUnresolved: no in-repo producer writes `inFootnote` (D1 on those pairs follows the Neutral/Statute/Regulation constructor contract, not a six-tuple fixture matrix). No producer writes `closingActionWithdrawn: true`, so withdrawn-implies-date remains unproven.\n\nOut of net (not recorded): `Claim.independent` and `DurableLocatorOptions.fullSpan` (single booleans); callable predicates / function flag parameters; Type/Encoded mirrors of schema owners; lone `prevBlank` / `matched` locals.",
+  "transcriptSha256": "f7db7759bbc57c678b8cfeb10f1d812ac1607a0e52aeb6f7833f81226b776a14",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 10 records, 10 unique ids\n"
+}

@@ -1,0 +1,47 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 900,
+  "afterCount": 891,
+  "beforeInventorySha256": "bad6b2cfacd1ecac2aff043a838cddaf18cbaec11a1de03deab2d1a5277e082a",
+  "afterInventorySha256": "398b70c89c31b50f7250b6e5666eb1098d93996c79f2c4a81897466e467ea058",
+  "correctedIds": [
+    "scheduler-admission-attempt-origin",
+    "scheduler-promotion-tick-origin",
+    "r26-cli-commands-l-q-osv-ignore-expiry",
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+    "quality-test-lane-selection",
+    "r25-cli-commands-l-q-coverage-replace-all-scoped",
+    "r27-cli-commands-l-q-effect-tsgo-readme-parser",
+    "r27-cli-commands-l-q-tsgo-smoke-compiler-options"
+  ],
+  "withdrawnIds": [
+    "scheduler-protocol-eviction-mode",
+    "r3-tooling-quality-scheduler-admission-probes",
+    "r3-tooling-coverage-owned-arg-kinds",
+    "r3-tooling-dead-lease-scope-plan-guards",
+    "r3-tooling-quality-tasks-env-arg-gates",
+    "r3-tooling-coverage-selected-steps-options",
+    "quality-tmpfs-reap-apply-json",
+    "r25-cli-commands-l-q-github-checks-failure-policy",
+    "r25-cli-commands-l-q-residue-reap-apply-json"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-quality-scheduler-before.jsonl",
+  "rowArchiveSha256": "e8d707fa4fc17e85623ae85ea780629e7c948a08afa70fd239875caf447218d3",
+  "withdrawnDesignArchive": "history/designs/2026-09-09-pre-main-d1b4d7/scheduler-protocol-eviction-mode.md",
+  "withdrawnDesignSha256": "718c88b234c050cde9be697f9e054ac6d9b528b4354ec6b1ae1cc3c37da0008b",
+  "refreshedDesignSha256": {
+    "scheduler-admission-attempt-origin": "e36fde3d5767c6882b22acc99e523b3502ca8832163bc26bc5b59f114ba88d7d",
+    "scheduler-promotion-tick-origin": "42c2502f4dbd99ce7f05655c0f628f5084a96ea63185d11a2ba1675fbb63fbab",
+    "r26-cli-commands-l-q-osv-ignore-expiry": "d4da7b760c884013b813af488788c6bc869e1d6f57765ebe6167d872c37eea36",
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse": "802f7415406c4295b54da62af284803c3df4df073038b4fd1325371196d2e527"
+  },
+  "audit": "data/design-refresh-2026-09-09-r28-quality-scheduler-impact.md",
+  "auditSha256": "5424d8dc0e0fe0f2e4f37f97cd71cf768f7c2bdb6e49e4c2d04c68bf6a2df9f9",
+  "pendingCoverageIds": [
+    "coverage-baseline-write-mode",
+    "quality-coverage-task-options",
+    "r26-cli-commands-l-q-coverage-replace-all-skip"
+  ],
+  "note": "One qualified descriptor/parameter owner and eight D callable/parameter owners withdrawn. Four designs refreshed and four D anchors/contracts corrected. Coverage full resolved owner and overlap remain unresolved pending independent R28 owner report; no P3, applied, package or dry credit."
+}

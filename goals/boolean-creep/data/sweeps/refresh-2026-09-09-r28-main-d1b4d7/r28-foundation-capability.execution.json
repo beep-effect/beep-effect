@@ -1,0 +1,22 @@
+{
+  "lane": "r28-foundation-capability",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:27:03.087660+00:00",
+  "finished": "2026-09-09T04:37:26.761288+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-capability.jsonl`\n\nConfirmed: 1. Disqualified: 0.\n\nEvery assigned root was covered (`api-transport`, `chalk`, `colors`, `file-processing`, `langextract`, `mcp-kit`, `nlp-processing`, `observability`, `semantic-web`).\n\nSeed drift:\n- `r3-foundation-tier-gate-tool-hints` corrected (stable id): D1 predicate names \u2192 confirmed evaluate locals `[destructive, readOnly, approved]` (auto-approve implication; legal 7/8).\n- `r3-foundation-verified-span-attempt-coherence` withdrawn as ineligible: those symbols are standalone callable predicates, not co-carried Boolean members.\n\nRemaining scoped seeds still exist with the claimed owners/members; classification unchanged, so they were not re-reported. No unresolved source question.",
+  "transcriptSha256": "ced3108aedbd5b8061f0448f682b3244d980b0c4652648e89ad0a08402903f18",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

@@ -1,0 +1,42 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "recordsBefore": 924,
+  "recordsAfter": 919,
+  "inventoryBeforeSha256": "bc9286980a50f59ca875947dbf2e8adad4abab02322e5a752d8222220b47775c",
+  "inventoryAfterSha256": "0210b9e83ec6f619367e0591d9a6aa2ab78e0e765bc2da8933f5d1fc66e27df4",
+  "withdrawnOutOfNetIds": [
+    "r25-epistemic-ontology-inferred-view-session-open",
+    "r3-domains-document-region-literal-guards",
+    "r3-domains-graph-adjacency-edge-filters",
+    "r3-domains-validation-runner-session-gates"
+  ],
+  "withdrawnDuplicateIds": ["ontology-document-undo-redo"],
+  "correctedIds": [
+    "document-toolbar-busy-disabled",
+    "ontology-document-region-edit-flags",
+    "r2-domains-ontology-auto-open-and-inferred-atoms",
+    "r25-epistemic-ontology-dirty-auto-open-atoms"
+  ],
+  "qualifiedIdsAndStatusesUnchanged": true,
+  "qualifiedCount": 162,
+  "qualifiedMetadataCorrection": {
+    "id": "document-toolbar-busy-disabled",
+    "line": 81,
+    "kind": "object-literal"
+  },
+  "disqualifiedCounts": {
+    "D2": 166,
+    "D1": 591
+  },
+  "archives": {
+    "history/inventory/2026-09-09-r27-ontology-toolbar-withdrawals.jsonl": "53701a684759ef724fe6beb93c8b0f68da05a836767c27a6e0133f46ed612c22",
+    "history/inventory/2026-09-09-r27-ontology-toolbar-corrections.jsonl": "ddd3800ce9937233671ac0e7ee2414662e737af92a96b4d19f75c6ce9451279d"
+  },
+  "audit": "data/design-refresh-2026-09-09-r27-ontology-toolbar-carriers.md",
+  "rawRejectedIds": [
+    "r27-epistemic-ontology-document-toolbar-action-busy",
+    "r27-epistemic-ontology-document-session-dirty"
+  ],
+  "formalIndependentReview": false
+}

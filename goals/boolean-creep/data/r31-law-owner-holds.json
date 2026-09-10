@@ -1,0 +1,195 @@
+{
+  "schemaVersion": "boolean-creep-open-owner-holds/v1",
+  "sourceHead": "4509872869eb87071250c67717769260f850bcf5",
+  "sourceMain": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "withdrawnHistoricalRows": "../history/inventory/2026-09-09-r31-settled-before.jsonl",
+  "owners": [
+    "id-citation-pincite-inherited",
+    "supra-citation-pincite-inherited",
+    "short-form-case-citation-pincite-inherited",
+    "constitutional-citation-preamble"
+  ],
+  "inheritance": {
+    "schemaVersion": "boolean-creep-native-holds/v1",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "xhigh",
+    "holds": [
+      {
+        "id": "id-citation-pincite-inherited",
+        "disposition": "hold-contract-unresolved",
+        "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+        "line": 818,
+        "symbol": "IdCitation",
+        "members": [
+          "pinciteInherited",
+          "pinciteInheritedFrom",
+          "pinciteInheritedFromId"
+        ],
+        "existingD1RationaleRefuted": true,
+        "existingCanonicalStatusUnchanged": "disqualified",
+        "proposedInventoryRow": null,
+        "reason": "true+None does not refute Some(index) implies inherited. The supported complete cluster must include the stable-ID Option; whether ID-only provenance is legal remains unresolved. Do not promote an index-only subcluster or invent D1 independence.",
+        "explicitImplicationCite": {
+          "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+          "line": 829
+        },
+        "idPurposeCite": {
+          "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+          "line": 837
+        },
+        "trueWithBothNoneFixture": {
+          "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+          "line": 636
+        },
+        "initialNet": {
+          "ownBoolean": "pinciteInherited: boolean",
+          "inheritedBoolean": "inFootnote: Option<boolean>",
+          "cite": {
+            "file": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+            "line": 132
+          }
+        },
+        "conditionalCardinalities": [
+          {
+            "policy": "stable-id-requires-index",
+            "representable": 8,
+            "legal": 4
+          },
+          {
+            "policy": "stable-id-may-survive-without-index",
+            "representable": 8,
+            "legal": 5
+          }
+        ],
+        "remainingDecision": "Does pinciteInheritedFromId Some require pinciteInheritedFrom Some, or may inherited=true retain only a stable predecessor ID?",
+        "decisionState": "Parent has asked the user asynchronously; no answer at sealing. Elapsed time is not an answer.",
+        "independentRawCompanion": "id-citation-pincite-inherited-in-footnote",
+        "parentAction": "Keep a durable unresolved disposition outside inventory v1; do not count this source owner as settled D1 or qualified until the contract and full table are resolved. Preserve old canonical/raw bytes; parent controls post-round reconciliation."
+      },
+      {
+        "id": "supra-citation-pincite-inherited",
+        "disposition": "hold-contract-unresolved",
+        "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+        "line": 1065,
+        "symbol": "SupraCitation",
+        "members": [
+          "pinciteInherited",
+          "pinciteInheritedFrom",
+          "pinciteInheritedFromId"
+        ],
+        "existingD1RationaleRefuted": true,
+        "existingCanonicalStatusUnchanged": "disqualified",
+        "proposedInventoryRow": null,
+        "reason": "true+None does not refute Some(index) implies inherited. The supported complete cluster must include the stable-ID Option; whether ID-only provenance is legal remains unresolved. Do not promote an index-only subcluster or invent D1 independence.",
+        "explicitImplicationCite": {
+          "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+          "line": 1076
+        },
+        "idPurposeCite": {
+          "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+          "line": 1084
+        },
+        "trueWithBothNoneFixture": {
+          "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+          "line": 637
+        },
+        "initialNet": {
+          "ownBoolean": "pinciteInherited: boolean",
+          "inheritedBoolean": "inFootnote: Option<boolean>",
+          "cite": {
+            "file": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+            "line": 132
+          }
+        },
+        "conditionalCardinalities": [
+          {
+            "policy": "stable-id-requires-index",
+            "representable": 8,
+            "legal": 4
+          },
+          {
+            "policy": "stable-id-may-survive-without-index",
+            "representable": 8,
+            "legal": 5
+          }
+        ],
+        "remainingDecision": "Does pinciteInheritedFromId Some require pinciteInheritedFrom Some, or may inherited=true retain only a stable predecessor ID?",
+        "decisionState": "Parent has asked the user asynchronously; no answer at sealing. Elapsed time is not an answer.",
+        "independentRawCompanion": "supra-citation-pincite-inherited-in-footnote",
+        "parentAction": "Keep a durable unresolved disposition outside inventory v1; do not count this source owner as settled D1 or qualified until the contract and full table are resolved. Preserve old canonical/raw bytes; parent controls post-round reconciliation."
+      },
+      {
+        "id": "short-form-case-citation-pincite-inherited",
+        "disposition": "hold-contract-unresolved",
+        "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+        "line": 1258,
+        "symbol": "ShortFormCaseCitation",
+        "members": [
+          "pinciteInherited",
+          "pinciteInheritedFrom",
+          "pinciteInheritedFromId"
+        ],
+        "existingD1RationaleRefuted": true,
+        "existingCanonicalStatusUnchanged": "disqualified",
+        "proposedInventoryRow": null,
+        "reason": "true+None does not refute Some(index) implies inherited. The supported complete cluster must include the stable-ID Option; whether ID-only provenance is legal remains unresolved. Do not promote an index-only subcluster or invent D1 independence.",
+        "explicitImplicationCite": {
+          "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+          "line": 1269
+        },
+        "idPurposeCite": {
+          "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+          "line": 1277
+        },
+        "trueWithBothNoneFixture": {
+          "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+          "line": 638
+        },
+        "initialNet": {
+          "ownBoolean": "pinciteInherited: boolean",
+          "inheritedBoolean": "inFootnote: Option<boolean>",
+          "cite": {
+            "file": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+            "line": 132
+          }
+        },
+        "conditionalCardinalities": [
+          {
+            "policy": "stable-id-requires-index",
+            "representable": 8,
+            "legal": 4
+          },
+          {
+            "policy": "stable-id-may-survive-without-index",
+            "representable": 8,
+            "legal": 5
+          }
+        ],
+        "remainingDecision": "Does pinciteInheritedFromId Some require pinciteInheritedFrom Some, or may inherited=true retain only a stable predecessor ID?",
+        "decisionState": "Parent has asked the user asynchronously; no answer at sealing. Elapsed time is not an answer.",
+        "independentRawCompanion": "short-form-case-citation-pincite-inherited-in-footnote",
+        "parentAction": "Keep a durable unresolved disposition outside inventory v1; do not count this source owner as settled D1 or qualified until the contract and full table are resolved. Preserve old canonical/raw bytes; parent controls post-round reconciliation."
+      }
+    ],
+    "notInventoryRows": true,
+    "independentP3Approval": false
+  },
+  "constitutional": {
+    "id": "constitutional-citation-preamble",
+    "action": "propose withdrawal of obsolete D1 record into history; retain explicit unresolved full-owner hold outside inventory/v1",
+    "originalRowSha256": "4391ea6dc1cb03d125c7ba53661200a0197021240582bf0bac8aed6af119a30b",
+    "originalDesign": "absent; no design bytes existed to archive",
+    "net": "passes on full owner: two Option<Boolean> fields, including inherited inFootnote",
+    "semanticFinding": "annotations explicitly constrain article/amendment/preamble; numeric locators are part of the owner and cannot be dismissed",
+    "fullCandidateMembers": ["preamble", "article", "amendment", "inFootnote"],
+    "representableAbstraction": 36,
+    "legalCount": null,
+    "hold": "Some(false) preamble with a present article or amendment is unresolved; truth-based exclusion yields 21 whole-owner strata, field-presence exclusion yields 15. Neither number is asserted as the supported legal count. Exact E1-E4 classification and accepted wire compatibility must be resolved from the complete contract before qualification/P2.",
+    "gateCaution": "No exclusive-write site found: lack of producers proves neither E1 nor D1. Explicit annotation implications are retained as potential E4 evidence, not discarded or mislabeled as exclusive writes."
+  },
+  "answersReceived": false,
+  "canonicalInventoryStatus": "No hold status exists in inventory/v1. Refuted D1 rows are archived; qualification remains explicitly unresolved here.",
+  "reconciliationComplete": false,
+  "dryCredit": false,
+  "independentP3Credit": false
+}

@@ -6,7 +6,8 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 skip=" $* "
-max_jobs=5
+max_jobs="${BOOLEAN_CREEP_MAX_JOBS:-5}"
+round="${BOOLEAN_CREEP_ROUND:-round1}"
 
 drivers_extra="- In driver packages most boolean clusters mirror wire contracts: record ONE representative D2 entry per driver model file (note the mirrored contract) instead of exhaustively enumerating every mirrored struct, and spend your reading budget on internal service/logic state instead."
 
@@ -27,6 +28,7 @@ lanes=(
 )
 
 running=0
+failed=0
 for spec in "${lanes[@]}"; do
   IFS=$'\t' read -r lane turns areas <<< "$spec"
   case "$skip" in *" $lane "*)
@@ -36,12 +38,16 @@ for spec in "${lanes[@]}"; do
   esac
   extra=""
   [ "$lane" = "drivers" ] && extra="$drivers_extra"
-  "$script_dir/run-sweep-lane.sh" "$lane" round1 "$turns" "$areas" "$extra" &
+  "$script_dir/run-sweep-lane.sh" "$lane" "$round" "$turns" "$areas" "$extra" &
   running=$((running + 1))
   if [ "$running" -ge "$max_jobs" ]; then
-    wait -n || true
+    if ! wait -n; then failed=1; fi
     running=$((running - 1))
   fi
 done
-wait
+while [ "$running" -gt 0 ]; do
+  if ! wait -n; then failed=1; fi
+  running=$((running - 1))
+done
 echo "[sweep] round1 driver done"
+exit "$failed"

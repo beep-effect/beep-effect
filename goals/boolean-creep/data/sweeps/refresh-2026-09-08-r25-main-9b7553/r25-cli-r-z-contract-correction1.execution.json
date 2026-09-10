@@ -1,0 +1,13 @@
+{
+  "lane": "r25-cli-r-z-contract-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:47:05.733769+00:00",
+  "finished": "2026-09-08T22:53:04.359523+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 13,
+  "qualifiedCandidates": 13,
+  "transcriptSha256": "ab9f5d4cfcb270c3618f88c0cfdfd2a9087ec399657e47df48910f5b830e5ede",
+  "supersedesReport": "r25-cli-commands-r-z.jsonl"
+}

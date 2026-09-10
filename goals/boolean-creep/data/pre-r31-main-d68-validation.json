@@ -1,0 +1,31 @@
+{
+  "at": "2026-09-09T14:33:32.077227+00:00",
+  "status": "installed",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "originMainSha": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "inventorySha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "recordChanges": 22,
+  "designChanges": 12,
+  "installedFiles": 32,
+  "previousFinalizationBindingsPreserved": 73,
+  "checks": [
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-inventory.ts"],
+      "exitCode": 0,
+      "stdout": "inventory OK: 738 records, 738 unique ids\n",
+      "stderr": ""
+    },
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-designs.ts"],
+      "exitCode": 0,
+      "stdout": "design coverage OK: 146 qualified ids\n",
+      "stderr": ""
+    },
+    {
+      "command": ["git", "diff", "--check", "--", "goals/boolean-creep"],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

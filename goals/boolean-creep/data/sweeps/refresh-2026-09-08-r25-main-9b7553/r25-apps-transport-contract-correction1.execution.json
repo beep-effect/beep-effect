@@ -1,0 +1,14 @@
+{
+  "lane": "r25-apps-transport-contract-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:35:58.236028+00:00",
+  "finished": "2026-09-08T22:37:00.179482+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "transcriptSha256": "bc0fc0cd6f402304df9e1c7a954be956fccc0b254f241ba6289a611dd9f6a3a4",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-apps-transport-contract-correction1.jsonl` \u2014 confirmed 0, disqualified 1. SidecarTransport ipc/rpcSessionToken only; original r25-apps.jsonl unchanged.",
+  "supersedesDecisions": ["r25-apps-sidecar-transport-ipc-token"]
+}

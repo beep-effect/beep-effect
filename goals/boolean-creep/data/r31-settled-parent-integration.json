@@ -1,0 +1,78 @@
+{
+  "preparedAt": "2026-09-09T16:09:09.376089+00:00",
+  "sourceHead": "4509872869eb87071250c67717769260f850bcf5",
+  "sourceMain": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "inventoryBeforeSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "inventoryProposedSha256": "a2b2b502c89d2a08cc75df079024352135f9ab0eefff388fb8196e9215cc5475",
+  "rawAdjudicationsSha256": "a4e0dffde95164d7e9980aa67ecea326bfb327a3495ff3ecf2d937ea3bb54d05",
+  "seedAdjudicationsSha256": "c5d074a33a7fb661ab108d9ae80ae00a85e579ddf9da1d359b656beb98c76353",
+  "addedIds": [
+    "r31-foundation-capability-mcp-wire-tool-annotations",
+    "r31-tooling-library-observability-outcome-label-annotation-row-quality-gate",
+    "r31-tooling-policy-beep-next-base-config-toggles",
+    "r31-tooling-policy-beep-next-base-experimental-defaults",
+    "r31-cli-commands-a-c-storybook-affected-spawn-options",
+    "r31-cli-commands-d-k-apply-rename-plan-tempdir-remove-options",
+    "r31-cli-commands-d-k-clean-aggregate-destination-remove-options",
+    "r31-cli-commands-d-k-prepare-process-outdir-remove-options",
+    "r31-cli-commands-d-k-person-match-commit-record",
+    "r31-cli-commands-d-k-runpod-eval-otlp-observability-config",
+    "r31-cli-internal-root-admitted-child-spawn-fields",
+    "r31-law-practice-domain-ids-closing-action-withdrawn-mailing-date",
+    "r31-cli-commands-r-z-attach-csv-columns-descriptor",
+    "id-citation-pincite-inherited-in-footnote",
+    "supra-citation-pincite-inherited-in-footnote",
+    "short-form-case-citation-pincite-inherited-in-footnote",
+    "statutes-at-large-pincite-is-range-in-footnote",
+    "constitutional-citation-preamble-in-footnote"
+  ],
+  "updatedIds": [
+    "r2-tooling-docs-eslint-require-jsdoc-gates",
+    "r2-tooling-docs-eslint-require-node-types",
+    "statutes-at-large-pincite-is-range",
+    "full-case-citation-flags"
+  ],
+  "withdrawnIds": [
+    "constitutional-citation-preamble",
+    "id-citation-pincite-inherited",
+    "shacl-engine-report-shape",
+    "short-form-case-citation-pincite-inherited",
+    "supra-citation-pincite-inherited"
+  ],
+  "byteUnchangedSurvivors": 729,
+  "counts": {
+    "total": 751,
+    "qualified": 147,
+    "disqualified": 604,
+    "status": {
+      "reviewed": 23,
+      "designed": 124,
+      "disqualified": 604
+    },
+    "tiers": {
+      "1": 115,
+      "2": 32
+    },
+    "disqualifiers": {
+      "D2": 217,
+      "D1": 387
+    }
+  },
+  "canonicalApplied": true,
+  "openSemanticHolds": 4,
+  "roundDryCredit": false,
+  "note": "Settled portion only. Withdraw four refuted D1 rows into history with explicit external holds; do not infer their legal domain or final round completion.",
+  "installedAt": "2026-09-09T16:14:06.077783+00:00",
+  "inventoryBefore": "../history/inventory/2026-09-09-r31-settled-before.jsonl",
+  "inventoryAfter": "../history/inventory/2026-09-09-r31-settled-after.jsonl",
+  "design": {
+    "id": "statutes-at-large-pincite-is-range",
+    "path": "../designs/statutes-at-large-pincite-is-range.md",
+    "sha256": "c7a6b8b19d3454772b698ad362734d307d3612aad29ee1ae9451878b1f47ed14"
+  },
+  "holds": "r31-law-owner-holds.json",
+  "parentReconciliationComplete": false,
+  "sourceEdits": false,
+  "implementationCredit": false,
+  "independentP3Credit": false
+}

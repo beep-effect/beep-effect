@@ -1,0 +1,22 @@
+{
+  "lane": "r28-cli-commands-d-k",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T05:17:40.729603+00:00",
+  "finished": "2026-09-09T05:29:38.455146+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 2,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-d-k.jsonl` \u2014 confirmed 2, disqualified 0. Covered DeletePackage, Docgen, Docs, Explore, Fallow, Files, Goals, Image, and Knowledge.\n\nSeed drift (classification unchanged unless noted): `PersonMatchReport.ok` is now `S.Literal(true)`, so `[ok, manifestWritten]` is no longer a Boolean cluster (withdraw). Line-only drift with members/class intact includes `MatchPersonOptions` 732\u2192837, `DeletePackageHandlerOptions` 555\u2192594, `DocgenLocalOptions.allowFull` 99\u2192142, `KnowledgeRefClassificationInput` 1826\u21921836, `RefCandidate` 2234\u21922244, `runRefs` 409\u2192416, `isWorkerDispositionCoherent` 1268\u21921393. Ineligible seed withdrawals: `createCaptionFilesPlan.overwritePhase` (`captionExists` returns before `overwritesExisting` is written); `isFileoverviewJsDoc`/`isInternalJsDoc` and `isImageFileExtension`/`isSupportedMetadataImageFile` are callable predicates.\n\nNo unresolved source question.\n\n\ud83c\udf31 graft saved ~606,425 tokens this turn (6 calls)",
+  "transcriptSha256": "f5c132f781d4478a116ae157529fb247a8a1d21b4dc71e5312d4879e06df6393",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 2 records, 2 unique ids\n"
+}

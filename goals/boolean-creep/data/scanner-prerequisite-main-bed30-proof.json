@@ -1,0 +1,231 @@
+{
+  "kind": "scanner-prerequisite-main-bed30-proof",
+  "priorPublish": {
+    "outcome": "failure",
+    "pushed": false,
+    "prCreated": false,
+    "localCommit": "4c48003179b436723b7d3c8d4ea867d8124e1053",
+    "failedLane": "ci:local:coverage",
+    "failureAttribution": {
+      "measuredSourceMain": "3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee",
+      "previewSha": "fead5181b23b82c597e486b61bf2947f666728ce",
+      "laterComparisonMain": "bed30c6adf3beed7de8538209fbdc84d26a3b8ce",
+      "failedMeasurements": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "metric": "branches",
+          "measured": 90.79,
+          "originalFloor": 90.79,
+          "laterFloor": 91.41
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "metric": "functions",
+          "measured": 89.36,
+          "originalFloor": 89.36,
+          "laterFloor": 90.05
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "metric": "lines",
+          "measured": 92.46,
+          "originalFloor": 92.44,
+          "laterFloor": 92.76
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "metric": "statements",
+          "measured": 92.53,
+          "originalFloor": 92.52,
+          "laterFloor": 92.81
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+          "metric": "branches",
+          "measured": 70.0,
+          "originalFloor": 70.0,
+          "laterFloor": 76.66
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+          "metric": "lines",
+          "measured": 89.11,
+          "originalFloor": 89.11,
+          "laterFloor": 91.93
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+          "metric": "statements",
+          "measured": 88.62,
+          "originalFloor": 88.62,
+          "laterFloor": 91.2
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "metric": "branches",
+          "measured": 44.06,
+          "originalFloor": 32.09,
+          "laterFloor": 51.12
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "metric": "functions",
+          "measured": 46.02,
+          "originalFloor": 32.75,
+          "laterFloor": 51.18
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "metric": "lines",
+          "measured": 48.69,
+          "originalFloor": 40.67,
+          "laterFloor": 56.3
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "metric": "statements",
+          "measured": 48.65,
+          "originalFloor": 40.46,
+          "laterFloor": 56.01
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+          "metric": "functions",
+          "measured": 83.33,
+          "originalFloor": 83.11,
+          "laterFloor": 84.61
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+          "metric": "lines",
+          "measured": 90.07,
+          "originalFloor": 89.92,
+          "laterFloor": 90.83
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+          "metric": "statements",
+          "measured": 90.51,
+          "originalFloor": 90.37,
+          "laterFloor": 91.24
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "metric": "functions",
+          "measured": 97.2,
+          "originalFloor": 89.3,
+          "laterFloor": 97.46
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "metric": "lines",
+          "measured": 98.65,
+          "originalFloor": 93.09,
+          "laterFloor": 98.75
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "metric": "statements",
+          "measured": 98.38,
+          "originalFloor": 92.84,
+          "laterFloor": 98.47
+        }
+      ],
+      "allMeetOriginalFloors": true,
+      "scannerConfigSha256": "15c9ed8e120de2ee89f759b66010e3d2a1bcf44f960678f958da6b9565711873"
+    }
+  },
+  "current": {
+    "beforeHead": "4c48003179b436723b7d3c8d4ea867d8124e1053",
+    "head": "a7e15be843bd0142aff7a9903302b73394f7b156",
+    "originMain": "bed30c6adf3beed7de8538209fbdc84d26a3b8ce",
+    "mergeExitCode": 0,
+    "scannerConfigSha256": "15c9ed8e120de2ee89f759b66010e3d2a1bcf44f960678f958da6b9565711873",
+    "diffFromMain": [".gitleaks.toml"],
+    "workingTreeClean": true
+  },
+  "frozenInstall": {
+    "exitCode": 0
+  },
+  "verification": {
+    "command": ["bun", "run", "beep", "yeet", "verify"],
+    "status": "failure",
+    "sourceSha": "a7e15be843bd0142aff7a9903302b73394f7b156",
+    "originMainSha": "bed30c6adf3beed7de8538209fbdc84d26a3b8ce",
+    "exitCode": 1,
+    "failedLane": "quality:coverage",
+    "finishedAt": "2026-09-09T13:04:07.670927Z",
+    "failedMetrics": [
+      {
+        "metric": "functions",
+        "measured": 97.2,
+        "floor": 97.46
+      },
+      {
+        "metric": "lines",
+        "measured": 98.65,
+        "floor": 98.75
+      },
+      {
+        "metric": "statements",
+        "measured": 98.38,
+        "floor": 98.47
+      }
+    ],
+    "attribution": "Inherited scheduler coverage gap; source and baseline both on bed30. All other verification lanes passed."
+  },
+  "fullCurrentProofComplete": false,
+  "hostedProofComplete": false,
+  "merged": false,
+  "repair": {
+    "status": "package-verified",
+    "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
+    "behavior": "Public admissionStatus rejects an existing mode-0755 admission directory with QualitySchedulerError and preserves its mode.",
+    "sourceChanged": false,
+    "coverageFloorsChanged": false,
+    "isolatedFromActiveCensus": true,
+    "focusedTest": {
+      "command": [
+        "bun",
+        "run",
+        "beep:test",
+        "test/quality-scheduler-degraded-inputs.test.ts"
+      ],
+      "exitCode": 0,
+      "filesPassed": 1,
+      "testsPassed": 5
+    },
+    "packageVerification": {
+      "command": [
+        "bun",
+        "run",
+        "beep",
+        "quality",
+        "package-verify",
+        "@beep/repo-cli"
+      ],
+      "exitCode": 0,
+      "audit": "passed",
+      "docgen": "passed"
+    }
+  },
+  "publication": {
+    "status": "running",
+    "command": [
+      "bun",
+      "run",
+      "beep",
+      "yeet",
+      "publish",
+      "--message",
+      "fix(boolean-creep): retain exact census evidence in secret scans",
+      "--pr"
+    ],
+    "initialHead": "a7e15be843bd0142aff7a9903302b73394f7b156",
+    "initialMain": "bed30c6adf3beed7de8538209fbdc84d26a3b8ce",
+    "fullProofRequired": true,
+    "prCreated": false,
+    "committedHead": "fbfe71b77de2c49f6523c4899ba8e3c2c1db3166",
+    "workingTreeClean": true
+  }
+}

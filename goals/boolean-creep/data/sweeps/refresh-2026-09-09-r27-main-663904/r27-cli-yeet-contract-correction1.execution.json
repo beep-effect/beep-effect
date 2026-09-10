@@ -1,0 +1,23 @@
+{
+  "lane": "r27-cli-yeet-contract-correction1",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "started": "2026-09-09T03:44:01.687822+00:00",
+  "finished": "2026-09-09T03:46:55.114982+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 7,
+  "qualifiedCandidates": 2,
+  "errors": [],
+  "completionSummary": "I\u2019ll read the full correction prompt and the seed-drift audit, then create the report file before verifying the six withdrawals and disputed D1 owners.Report file is in place. Next I\u2019ll read the seed-drift audit and the original inventory records so I can revalidate the six withdrawals against current source.I\u2019ll verify the six withdrawals and the disputed carriers in current source, then append only records whose classification actually changes.Withdrawals check out as ineligible. Next I\u2019ll verify the five D1 repairs and append those corrected records, then the OSV and remote-expansion rows.`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-cli-yeet-contract-correction1.jsonl` \u2014 confirmed 2, disqualified 5.\n\nWithdrawn (ineligible, no rows): `r3-tooling-quality-law-path-gates`, `r3-tooling-quality-tsconfig-profile-gates`, `r3-tooling-test-tsgo-collect-gates` (callables, not Boolean members); `r4-corpus-effect-imports-file-latches` (`fileTouched`/`renamed` gone); `r2-tooling-pr-closeout-retrigger-echo` (cross-owner request/report); `r26-cli-commands-l-q-allowlist-check-ok` (required diagnostics array is not an optional payload; false/empty default kept as history).\n\nRemote expansion: `yeet-status-remote-check-phase` confirmed `[available,checked,isDraft]` 12/5; draft-absent \u2260 false.\n\nDisputed D1 owners `yeet-run-options-flags` / `yeet-command-shared-options`: unresolved \u2014 request interface vs one operation-state; Guards reject overlapping pairs (ciParity/merged, fast\u21d2monitor, startPrEarly\u21d2monitor, noEdit\u21d2amend, pushOnly\u21d2reuseVerified, publish exclusives) so universal D1 is unproved, and no complete co-carried cardinality was established. No rows emitted. `yeet-monitor-command-route` D1 left untouched. Planner/test-plan seams stay D1 with `ciParity`. OSV 4/3 retained.",
+  "transcriptSha256": "d436aa52ca94453e4981849548113955f95369ca9b1ec6130edb1a72d4502e99",
+  "runnerSha256": "4f47ef376f51c16c97cac16b070b8b615a31b1c95eb4e74f31ef3d9ec105e921",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998",
+  "basePromptSha256": "92916bfde221c967fa80ddb261ce966ee3921ab2fbf1f6c999037fff124e289d",
+  "extraPromptSha256": "baa5df7715721054dd74cd9d33e3edcc3661dba51bfb7a37a850fb6d87973580",
+  "auditSha256": "359799f950097c04154a1c5d2598c277a63194daa25b5f207251f678b4759af0",
+  "correctsReport": "r27-cli-yeet.jsonl",
+  "formalIndependentReview": false
+}

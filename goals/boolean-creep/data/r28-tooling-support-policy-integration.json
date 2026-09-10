@@ -1,0 +1,48 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 829,
+  "afterCount": 818,
+  "beforeInventorySha256": "4f1db0cacb616281fe14ed3fc15ee00c097673109596182189df58e1dbc3b4ea",
+  "afterInventorySha256": "f624c993565b28a38fe714765c01ca5b340a5a13f2d63bf8f299e98922ed30b6",
+  "correctedIds": [
+    "tooling-rest-next-config",
+    "r3-tooling-pglite-integration-gate-flags"
+  ],
+  "addedIds": [
+    "r28-tooling-library-support-tsmorph-project-options",
+    "r28-tooling-library-support-pglite-container-stop-options",
+    "r28-tooling-library-support-runglob-shared-glob-options",
+    "r28-tooling-policy-jsonc-parse-options"
+  ],
+  "withdrawnIds": [
+    "r3-tooling-sqltest-pglite-layer-gates",
+    "r3-tooling-codegen-export-typeonly-gates",
+    "r3-tooling-jsdoc-category-char-class-gates",
+    "r3-tooling-codegen-jsonschema-node-gates",
+    "r3-tooling-lint-global-process-object-gates",
+    "r3-tooling-tsconfig-alias-target-gates",
+    "r3-tooling-lint-js-extension-import-gates",
+    "r3-tooling-tsconfig-option-helper-gates",
+    "r3-tooling-require-category-export-gates",
+    "r3-tooling-opaque-schema-receiver-gates",
+    "r3-tooling-fsutils-stat-kind-gates",
+    "r3-tooling-process-args-option-like",
+    "r3-tooling-no-native-runtime-hotspot-paths",
+    "r3-tooling-workspaces-pattern-gates",
+    "r3-tooling-package-json-tools-issue-gates"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-tooling-support-policy-before.jsonl",
+  "rowArchiveSha256": "84154d481e7c6713f5b5c8a4683b0a28449661eda41a50e2d2ae50cea77f2065",
+  "audit": "data/design-refresh-2026-09-09-r28-tooling-support-policy.md",
+  "auditSha256": "3a33a5bb246d68eacf893bf999ead41b0023853a87756df35aaa4f7e2898356e",
+  "qualifiedRecordsUnchanged": true,
+  "qualifiedCount": 164,
+  "disqualifiedCounts": {
+    "D2": 160,
+    "D1": 494
+  },
+  "pendingIds": [],
+  "formalIndependentReview": false,
+  "note": "Four concrete D bags added, fifteen callable/service-method seeds withdrawn, NextConfig full Boolean footprint and actual Pglite driver-gate owner corrected. The two NextConfig false|object sentinel fields remain explicit context without invented true states. Constant Pglite run policy does not establish a qualified phase or a claim that all four pairs are emitted. Native source and local SDK evidence verified; no qualified/design/source changes or P3/dry/applied credit."
+}

@@ -47,8 +47,8 @@ JSON record per line, validated by
 `boolean-creep-inventory/v1`:
 
 - Common: `schemaVersion`, `id` (unique slug), `file`, `line`, `symbol`,
-  `kind` (`schema-struct | type-literal | interface | props | sibling-state |
-  class-fields`), `members` (non-empty), optional `notes`.
+  `kind` (`schema-struct | type-literal | interface | object-literal | props |
+  sibling-state | class-fields`), `members` (non-empty), optional `notes`.
 - Qualified (`status: confirmed | designed | reviewed | applied`): non-empty
   `evidence` (`class` E1–E4 + `cite {file,line}` + `note`), `cardinality`
   (`representable` vs `legal`, gap enforced), `storage` (`stored | derived`),
@@ -59,8 +59,16 @@ JSON record per line, validated by
   unrepresentable.
 
 Sweep-lane outputs land under `data/sweeps/round<N>/<lane>.jsonl` in the same
-schema and are merged into `data/inventory.jsonl` after orchestrator review
-(dedup by file+symbol).
+schema and are merged into `data/inventory.jsonl` after orchestrator review.
+Reconcile by file, symbol, and member set: one declaration may contain multiple
+independently adjudicated boolean clusters, but the same cluster must not be
+recorded twice.
+
+The 2026-09-03 refresh keeps this schema version. The canonical inventory is a
+live-corpus projection: preserve ids for surviving file-and-symbol pairs and
+archive the previous projection under `history/inventory/`. A removed historical
+census record remains discoverable in that archive; it is not represented as a
+new status in the live inventory.
 
 ## Pipeline and gates
 
@@ -70,8 +78,7 @@ schema and are merged into `data/inventory.jsonl` after orchestrator review
 - **P1 inventory** — area-scoped headless grok lanes sweep the corpus with the
   net, confirm/disqualify per the gate, write lane JSONL. Loop until dry: keep
   launching rounds until two consecutive rounds surface nothing new. The
-  orchestrator spot-checks ~20% of confirmed entries against their cited
-  evidence.
+  orchestrator verifies 100% of qualified entries against their cited evidence.
 - **GATE 1 — Benjamin ratifies the confirmed inventory (and skims the
   disqualified census) before any design work launches.**
 - **P2 design** — one codex job (`gpt-6-astra`, `medium` reasoning) per confirmed
@@ -80,20 +87,31 @@ schema and are merged into `data/inventory.jsonl` after orchestrator review
   for literal domains, class schemas, derived `S.is` guards), migration of
   every write/read site, guard-deletion accounting, encoded-side impact, test
   impact.
-- **P3 review** — orchestrator reviews every design against: taxonomy fit;
+- **P3 review** — an independent reviewer reviews every design against: taxonomy fit;
   LiteralKit law (no hand-rolled literal unions); derived-vs-stored fidelity;
   encoded-side stability for persisted/wire shapes; guard-deletion accounting
   completeness; blast-radius honesty. Findings per design; codex fixes;
   iterate to zero findings.
-- **GATE 2 — Benjamin ratifies the reviewed designs before any refactor is
-  applied.**
+- **GATE 2 — delegated transition for this campaign.** The 2026-09-03
+  current-corpus amendment authorizes the transition when the refreshed
+  inventory, corrected designs, and replacement exact-source zero-finding
+  review receipt are complete. No implementation begins before that evidence
+  exists, and no additional Benjamin decision is required after it does.
 - **P4 apply** — codex applies by landing tier; `bun run beep yeet`
-  repair/verify per batch; each instance's `status` advances as it lands.
+  repair/verify per batch; each instance's `status` advances to `applied` in
+  the same PR as its implementation so canonical `main` changes state only on
+  merge.
+- **P5 final moving-main closure** — after all implementation PRs merge, run
+  full current-corpus residue rounds on exact `main` until two consecutive
+  rounds add no qualified record. A new case is designed, reviewed,
+  implemented, verified, and merged under the same bounded mandate, then the
+  two-round count restarts. Land the reflection and `completed-retained`
+  lifecycle in a separate closeout PR.
 
 ## Landing
 
 - **Tier 1** — internal/derived view state (no encoded exposure): batched by
-  package/app into a handful of PRs; lands first.
+  package/app into five ordered subsystem PRs; lands first.
 - **Tier 2** — persisted or wire-adjacent shapes (e.g. Yeet `Verdict.ts`,
   whose JSON lives in `.beep/yeet/`): one PR each, with an encoded-compat or
   migration proof (that file's legacy normalizer is the precedent).
@@ -107,13 +125,18 @@ schema and are merged into `data/inventory.jsonl` after orchestrator review
 - Both user gates were held: no design before GATE 1, no apply before GATE 2.
 - Every applied instance's design shows non-empty guard-deletion accounting.
 - Tier 2 landings carry an encoded-compat or migration proof.
+- Every qualified record is `applied` on merged `main`, every implementation
+  and closeout PR is merged, and two consecutive exact-main residue rounds add
+  no qualified record.
+- Recorded browser QA exists for every affected gesture-bearing UI, and every
+  touched package has full package verification evidence.
 
 ## Stop conditions
 
 - A sweep lane cannot honor the evidence gate (flooding the inventory with
   ungated suspects) after one prompt correction — stop the lane and report.
 - A design requires changing persisted/wire encoded shapes without a viable
-  compat proof — park the instance as `confirmed` with a note; report at the
-  next gate.
+  byte-compatible proof — do not apply it; repair the design inside the bounded
+  mandate and retain its pre-apply status until independent review passes.
 - Verification failures that attribution shows are inherited/unrelated —
   report, do not chase.

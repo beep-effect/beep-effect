@@ -1,0 +1,278 @@
+{
+  "schemaVersion": "boolean-creep-parent-integration/v1",
+  "installedAt": "2026-09-09T16:19:58.887750+00:00",
+  "head": "c0c1b680ad782d5b6150d14285fa4c0a771382e5",
+  "main": "a2030c8bd9124d1f0de8ae03a1eebbf5f1fa621f",
+  "inventoryBefore": "history/inventory/2026-09-09-post-r31-main-a203-before.jsonl",
+  "inventoryBeforeSha256": "a2b2b502c89d2a08cc75df079024352135f9ab0eefff388fb8196e9215cc5475",
+  "inventoryAfter": "history/inventory/2026-09-09-post-r31-main-a203-after.jsonl",
+  "inventoryAfterSha256": "fc4a37c261318d37cc276315d7014c61410277c7802b38806b72ae3a9437fc13",
+  "updatedIds": [
+    "runners-bake-freshness",
+    "runners-bake-cli-mode",
+    "runners-aws-ebs-block-device",
+    "tsconfig-sync-mode-flags"
+  ],
+  "retainedRowChecked": [
+    "r30-cli-commands-l-q-check-census-overlay-compiler-options"
+  ],
+  "newQualifications": 0,
+  "withdrawnQualifications": [
+    "runners-bake-cli-mode",
+    "tsconfig-sync-mode-flags"
+  ],
+  "archivedDesigns": [
+    {
+      "id": "runners-bake-cli-mode",
+      "path": "history/designs/2026-09-09-post-r31-main-a203/runners-bake-cli-mode.md",
+      "sha256": "66df24168162493a0b9b88a33b25df7350f734dacbf1d3939380191f2fdbdb1f"
+    },
+    {
+      "id": "tsconfig-sync-mode-flags",
+      "path": "history/designs/2026-09-09-post-r31-main-a203/tsconfig-sync-mode-flags.md",
+      "sha256": "a4d97619f6a8140a480cb848cafcf8ae0055b4625a9afa40d20275dc1732d897"
+    },
+    {
+      "id": "family-cli-mode-flags",
+      "path": "history/designs/2026-09-09-post-r31-main-a203/family-cli-mode-flags.md",
+      "sha256": "359eeb5c09ea90ee9005014a057eaa50c78879e1f24a3b6d2259b82fcc96550a"
+    },
+    {
+      "id": "runners-bake-freshness",
+      "path": "history/designs/2026-09-09-post-r31-main-a203/runners-bake-freshness.md",
+      "sha256": "73e42c1531ff86092b39879a1103d13753db1c788407b51b2293edc8c002b187"
+    }
+  ],
+  "freshnessDesignSha256": "7762aebe532457d03b24babf3b20a404821f70c1fa317ed9c10eba7490faa7f9",
+  "familyDesignSha256": "0be23c7aa53d24695a34f351a07b7237cb6d3011872ec5f1fc66db51b36ad4e5",
+  "familyQualifiedCohort": 0,
+  "sourceBindings": [
+    {
+      "category": "source",
+      "path": "AGENTS.md",
+      "sha256": "0f4a97e3f02d3dae990e9f1b762e42ccf97770db28cae0f08588da689f465762"
+    },
+    {
+      "category": "source",
+      "path": "package.json",
+      "sha256": "b011b9af1e58ed7586433a36a436ad156a4816c3113f169a16c35a5fc00de282"
+    },
+    {
+      "category": "source",
+      "path": "bun.lock",
+      "sha256": "769ec9946aeb49d5e581acac05677086d2627b03bab8b3a119a5210cc50e8f25"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/package.json",
+      "sha256": "5ed96d77de203949878f319238078633506324ab7c38060065b735041f2b2a69"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/tsconfig.json",
+      "sha256": "8dc77c7c33bd4db09a1f78616f18d080a57b28959ebbd2c1c3fea0c9e3a42315"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/src/index.ts",
+      "sha256": "19c10f83b6e17ae87269aa30da8f95fb06108e01ef1330f693281b237cd7c6b8"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "sha256": "b1e9e630bba837309e3b278b855c36d83db25e38772150bd28594d2f9aade9dc"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+      "sha256": "3e95ff82ba2c746ca6d3b574c771cc74c3705301a790c7a402928cb7a1f7d7e4"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts",
+      "sha256": "6a22fc7168a24453060ef57588b06b83aa6e9fad5b3c7fa47667d35202ee7f1a"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/src/commands/Runners/Runners.errors.ts",
+      "sha256": "9350b8cd619d475bb37d6cf8efb54eff104ba3ee4e7f528f9f21fab0bb91c83a"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/src/commands/Runners/index.ts",
+      "sha256": "71cac611d7b2aae88d9db1ed2344d7bd0a79482e34e39d44d602ed0fdd24c46c"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/src/internal/schema/JsonCodec.ts",
+      "sha256": "0a2ce4c6c711b640081feb9f632efabbf8cde006f9b123c88985cd17ee16d595"
+    },
+    {
+      "category": "source",
+      "path": "packages/tooling/tool/cli/test/runners-bake.test.ts",
+      "sha256": "718780f587ac40b6aaf90adff67c451c40379462cc5286a6a6cf1b3110ceeeca"
+    },
+    {
+      "category": "source",
+      "path": "packages/foundation/modeling/schema/package.json",
+      "sha256": "3b98184c99a20c2f534e8334c64732002db0772fb208650f1781d6f025dce22b"
+    },
+    {
+      "category": "source",
+      "path": "packages/foundation/modeling/schema/src/index.ts",
+      "sha256": "4f17f32dd830581d2c3b8b5747e0570a7b72ad7a3c83a8ed4b42b69bf9507411"
+    },
+    {
+      "category": "source",
+      "path": "packages/foundation/modeling/schema/src/Sha256.ts",
+      "sha256": "57e7b88e5036adb164c796a209ac5674d339a816c033636e7b013f76240ca119"
+    },
+    {
+      "category": "source",
+      "path": "packages/foundation/modeling/schema/src/LiteralKit/index.ts",
+      "sha256": "af4c673a808fd2b76b5b4757e0b6ffcdce874710dbe1efd16a2d292ad0078593"
+    },
+    {
+      "category": "source",
+      "path": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "sha256": "36915d6791ed01e0f1e33384513441570597e84d9b5750f6b6cc009a4aea24be"
+    },
+    {
+      "category": "source",
+      "path": "standards/ARCHITECTURE.md",
+      "sha256": "1e8001f7338fb4d5138168bc15f3f9bf0da909c2f42c525c5ba861e6ed06ee23"
+    },
+    {
+      "category": "source",
+      "path": "standards/architecture/07-non-slice-families.md",
+      "sha256": "fc1736d8f1e6c9e3fb90a1a59779964f44f46f0138a2f0326ce4ade75b821f4b"
+    },
+    {
+      "category": "source",
+      "path": "infra/ci-runners/runner-image.json",
+      "sha256": "49f6670e4cfbf79d4c500d66eec28dc1b9c8335ecb3add9e20cca7f29100fc79"
+    },
+    {
+      "category": "source",
+      "path": "infra/ci-runners/Pulumi.production.yaml",
+      "sha256": "a41bd54bcdf6de0bacfd2da43c2aa088a6d39e6ab31145cd9c01590bd2a69611"
+    },
+    {
+      "category": "source",
+      "path": ".github/workflows/check.yml",
+      "sha256": "1af71e34e680f370c11bf25a0fc201efbae36f2555f47060f1e031202df51aec"
+    },
+    {
+      "category": "source",
+      "path": "docs/runbooks/aws-cost-operations.md",
+      "sha256": "18cfb83909d92cc96f23d1a7fe33f8f6164c3c1558311205f72d174cb38b7831"
+    },
+    {
+      "category": "dependencies/installed-effect",
+      "path": "package.json",
+      "sha256": "0ad20c73dfbe482996f046a0c1170b1a08d6fea7effeb6767fd247cdad53a56d"
+    },
+    {
+      "category": "dependencies/installed-effect",
+      "path": "src/Schema.ts",
+      "sha256": "9358710e2c0d613371d8feeeccb3716fe98a43f67e6aa1076b00d4079a258784"
+    },
+    {
+      "category": "dependencies/installed-effect",
+      "path": "src/SchemaTransformation.ts",
+      "sha256": "4050859c4d340b3580c5e58aceeb9984339eed1dfadb1a2e86f18a9c0ac110f5"
+    },
+    {
+      "category": "dependencies/installed-effect",
+      "path": "src/SchemaGetter.ts",
+      "sha256": "a2f2c85c41eceb1e8092ca15fd6ded1ac90c23a4c44be610200d3feefe1d6682"
+    },
+    {
+      "category": "dependencies/installed-effect",
+      "path": "src/SchemaIssue.ts",
+      "sha256": "b4cb0ada18aef01083f9179dd827fb46aea4c625c2c63308d43cae5d3a86328e"
+    },
+    {
+      "category": "dependencies/installed-effect",
+      "path": "src/SchemaAST.ts",
+      "sha256": "7f7cb03664cad0f3bfa221f963ea55b1520afe1314c39054e85ad21f322275d8"
+    },
+    {
+      "category": "dependencies/installed-effect",
+      "path": "src/SchemaParser.ts",
+      "sha256": "492dfbb294e24b2f3ebd949abbb9ba73cc19a71b4c35f290fd0137d52f8aaaaa"
+    },
+    {
+      "category": "dependencies/advisory-effect",
+      "path": "packages/effect/package.json",
+      "sha256": "63292e5763427574d003604c9f4b4e65471a22a1049822c4b86aa4ed9f80b5f0"
+    },
+    {
+      "category": "dependencies/advisory-effect",
+      "path": "packages/effect/SCHEMA.md",
+      "sha256": "6e0e28aedf132590294220d2c0e92098ac1ba434c9a9354085bb0f3164559341"
+    },
+    {
+      "category": "dependencies/advisory-effect",
+      "path": "packages/effect/src/Schema.ts",
+      "sha256": "7a6bebd5481bfc79c11e482b0185cabf31c7bce1c6dfa3fd3ce466d32d1f17a8"
+    },
+    {
+      "category": "dependencies/advisory-effect",
+      "path": "packages/effect/src/SchemaTransformation.ts",
+      "sha256": "3fdecbd252281fdadb1dbd5c37488c694d6374dc33c8af473199601f908c6e88"
+    },
+    {
+      "category": "dependencies/advisory-effect",
+      "path": "packages/effect/src/SchemaGetter.ts",
+      "sha256": "144170c9386a55ec842f6d166d434cce4c056ba34a7f67ac26d7b370430f0e84"
+    },
+    {
+      "category": "dependencies/advisory-effect",
+      "path": "packages/effect/src/SchemaIssue.ts",
+      "sha256": "ed0969e0bf569a29a045c40e76db1e112ec470b1d5dfd69506eb3bfd02da288a"
+    },
+    {
+      "category": "dependencies/advisory-effect",
+      "path": "packages/effect/src/SchemaAST.ts",
+      "sha256": "68df9dd071a100446ef047350691240aec945aede0d585637a1cb8c170b67e1a"
+    },
+    {
+      "category": "dependencies/advisory-effect",
+      "path": "packages/effect/src/SchemaParser.ts",
+      "sha256": "6a8808aedfa0ba5176ab34da5cf2ae9c5cfb656e963c9e20974059f0e8329d9e"
+    },
+    {
+      "category": "source",
+      "path": ".bun-version",
+      "sha256": "b99b4c7cdf236f59bc9f65d963deaecae3b16a7dad87939cacb9057f7664daee"
+    },
+    {
+      "category": "source",
+      "path": ".bun-linux-x64.sha256",
+      "sha256": "3d894f1f8d13a9049a4af2a3ef5ef958ccec7d9d37a93d13d18d5f590ead4b26"
+    }
+  ],
+  "nativeBundleManifests": {
+    "pre-r32-current-cli-family-audit": "70f5142a7e857debe44f2ee33c3b18ae18f1f72f3e2f383fff380283a6117b92",
+    "pre-r32-main702-runners-freshness": "33d74c975aacc6323b41551110e8dab4ba25da80de2930601ea02080c940665d",
+    "pre-r32-main702-runners-mode": "1553e9c2dcb27695e024701590aa62c2c33e177c397532e1d011dbd52b045943",
+    "pre-r32-main702-parent-crossrefs": "716ca78d1c3e7f42483d3ac2c3bdefb34b06008bb07fd0d591f530090d7e1028"
+  },
+  "counts": {
+    "records": 751,
+    "qualified": 145,
+    "disqualified": 606,
+    "tier1": 113,
+    "tier2": 32,
+    "historicallyReviewed": 21,
+    "designed": 124,
+    "D1": 389,
+    "D2": 217
+  },
+  "openSemanticHolds": 4,
+  "parentR31ReconciliationComplete": false,
+  "dryRoundCredit": false,
+  "independentP3Credit": false,
+  "implementationCredit": false
+}

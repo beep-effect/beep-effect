@@ -1,0 +1,46 @@
+{
+  "kind": "boolean-creep-packet-validation/v1",
+  "recordedAt": "2026-09-09T17:26:30.023867+00:00",
+  "sourceSha": "a942d7dab3a962963912247d4699b7986bcb9c03",
+  "originMainSha": "e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b",
+  "inventorySha256": "ed743923428ac9b8d8973a48dcf5f8011526881d64436a0779658a4159f42426",
+  "inventoryRecords": 753,
+  "qualifiedDesigns": 145,
+  "commands": [
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-inventory.ts"],
+      "exitCode": 0,
+      "stdout": "inventory OK: 753 records, 753 unique ids"
+    },
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-designs.ts"],
+      "exitCode": 0,
+      "stdout": "design coverage OK: 145 qualified ids"
+    },
+    {
+      "command": ["git", "diff", "--check", "--", "goals/boolean-creep"],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--quiet",
+        "origin/main",
+        "--",
+        ":(glob)packages/**/src/**",
+        ":(glob)apps/**/src/**"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "goalLauncherCharacters": 3494,
+  "manifestJsonValid": true,
+  "qualifiedRowsByteIdentical": 145,
+  "inventoryArchiveMatchesInstalled": true,
+  "openSemanticHolds": 4,
+  "sourceImplementationCredit": false,
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "fullRepoProofClaim": false
+}

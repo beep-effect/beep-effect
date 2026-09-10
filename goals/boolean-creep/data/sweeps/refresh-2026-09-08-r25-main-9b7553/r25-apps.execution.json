@@ -1,0 +1,17 @@
+{
+  "lane": "r25-apps",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:16:57.277219+00:00",
+  "finished": "2026-09-08T22:29:52.545675+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 7,
+  "qualifiedCandidates": 2,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-apps.jsonl` \u2014 confirmed 2, disqualified 5. Covered all assigned areas (architecture-lab-proof, oip-web, practice-kg-mcp, professional-desktop src + src-tauri, todox). Seed drift: `Thread.subscribeImmediate` now only passes `{ immediate: true }` on the timeline subscribe; streaming and unreconciled no longer take an immediate flag. Other listed seeds still present.",
+  "transcriptSha256": "6c4ffaf4b86950783d8a063d7eb11c44c86a81e80f8e72f18c4f4cb71cad7298",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

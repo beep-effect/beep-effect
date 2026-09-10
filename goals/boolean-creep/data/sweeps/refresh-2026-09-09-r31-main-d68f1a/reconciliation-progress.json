@@ -1,0 +1,293 @@
+{
+  "schemaVersion": "boolean-creep-parent-reconciliation-progress/v1",
+  "recordedAt": "2026-09-09T16:06:38.325685+00:00",
+  "sourceHead": "4509872869eb87071250c67717769260f850bcf5",
+  "sourceMain": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "inventorySha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "executionAudit": "execution-audit.json",
+  "completedLanes": 27,
+  "rawOccurrencesAccounted": 36,
+  "rawQualifiedProposals": 8,
+  "rawQualifiedAdmissions": 0,
+  "dispositionCounts": {
+    "admit-new-D2-after-round-terminal": 8,
+    "reject-out-of-net": 10,
+    "admit-new-D1-after-round-terminal": 10,
+    "reject-excluded-function-flag-parameters": 2,
+    "correct-existing-D1-members-after-round-terminal": 1,
+    "reject-insufficient-class-wide-contract-evidence": 1,
+    "hold-unsettled-complete-provenance-contract": 3,
+    "reject-contradicted-cardinality-and-unproved-alternative": 1
+  },
+  "rawDispositions": [
+    {
+      "lane": "r31-foundation-capability",
+      "occurrence": 1,
+      "id": "r31-foundation-capability-mcp-wire-tool-annotations",
+      "disposition": "admit-new-D2-after-round-terminal"
+    },
+    {
+      "lane": "r31-apps",
+      "occurrence": 1,
+      "id": "r31-apps-vault-choose-row-disabled-status",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-tooling-library-observability",
+      "occurrence": 1,
+      "id": "r31-tooling-library-observability-hook-pulse-v1-is-interrupt",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-tooling-library-observability",
+      "occurrence": 3,
+      "id": "r31-tooling-library-observability-phoenix-sync-result-dry-run",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-tooling-library-observability",
+      "occurrence": 4,
+      "id": "r31-tooling-library-observability-phoenix-project-has-traces",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-tooling-library-observability",
+      "occurrence": 2,
+      "id": "r31-tooling-library-observability-hook-pulse-raw-event-is-interrupt",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-tooling-library-observability",
+      "occurrence": 6,
+      "id": "r31-tooling-library-observability-benchmark-run-quality-gate",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-tooling-library-observability",
+      "occurrence": 7,
+      "id": "r31-tooling-library-observability-benchmark-run-input-quality-gate",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-tooling-library-observability",
+      "occurrence": 8,
+      "id": "r31-tooling-library-observability-benchmark-run-annotation-row-quality-gate",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-tooling-library-observability",
+      "occurrence": 5,
+      "id": "r31-tooling-library-observability-outcome-label-annotation-row-quality-gate",
+      "disposition": "admit-new-D1-after-round-terminal"
+    },
+    {
+      "lane": "r31-tooling-policy",
+      "occurrence": 1,
+      "id": "r31-tooling-policy-beep-next-base-config-toggles",
+      "disposition": "admit-new-D2-after-round-terminal"
+    },
+    {
+      "lane": "r31-tooling-policy",
+      "occurrence": 2,
+      "id": "r31-tooling-policy-beep-next-base-experimental-defaults",
+      "disposition": "admit-new-D2-after-round-terminal"
+    },
+    {
+      "lane": "r31-cli-commands-a-c",
+      "occurrence": 2,
+      "id": "r31-cli-commands-a-c-inspect-symlink-exists-target",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-cli-commands-a-c",
+      "occurrence": 3,
+      "id": "r31-cli-commands-a-c-storybook-affected-spawn-options",
+      "disposition": "admit-new-D1-after-round-terminal"
+    },
+    {
+      "lane": "r31-cli-commands-d-k",
+      "occurrence": 1,
+      "id": "r31-cli-commands-d-k-apply-rename-plan-tempdir-remove-options",
+      "disposition": "admit-new-D2-after-round-terminal"
+    },
+    {
+      "lane": "r31-cli-commands-d-k",
+      "occurrence": 2,
+      "id": "r31-cli-commands-d-k-clean-aggregate-destination-remove-options",
+      "disposition": "admit-new-D2-after-round-terminal"
+    },
+    {
+      "lane": "r31-cli-commands-d-k",
+      "occurrence": 3,
+      "id": "r31-cli-commands-d-k-prepare-process-outdir-remove-options",
+      "disposition": "admit-new-D2-after-round-terminal"
+    },
+    {
+      "lane": "r31-cli-commands-d-k",
+      "occurrence": 4,
+      "id": "r31-cli-commands-d-k-goals-adopt-plan-json",
+      "disposition": "reject-excluded-function-flag-parameters"
+    },
+    {
+      "lane": "r31-cli-commands-d-k",
+      "occurrence": 5,
+      "id": "r31-cli-commands-d-k-goals-bootstrap-plan-json",
+      "disposition": "reject-excluded-function-flag-parameters"
+    },
+    {
+      "lane": "r31-cli-commands-d-k",
+      "occurrence": 6,
+      "id": "r31-cli-commands-d-k-person-match-commit-record",
+      "disposition": "admit-new-D1-after-round-terminal"
+    },
+    {
+      "lane": "r31-cli-commands-d-k",
+      "occurrence": 7,
+      "id": "r31-cli-commands-d-k-runpod-eval-otlp-observability-config",
+      "disposition": "admit-new-D1-after-round-terminal"
+    },
+    {
+      "lane": "r31-cli-internal-root",
+      "occurrence": 1,
+      "id": "r31-cli-internal-root-admitted-child-spawn-fields",
+      "disposition": "admit-new-D2-after-round-terminal"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 1,
+      "id": "full-case-citation-flags",
+      "disposition": "correct-existing-D1-members-after-round-terminal"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 10,
+      "id": "r31-law-practice-domain-ids-closing-action-withdrawn-mailing-date",
+      "disposition": "admit-new-D1-after-round-terminal"
+    },
+    {
+      "lane": "r31-cli-yeet",
+      "occurrence": 1,
+      "id": "r31-cli-yeet-sweep-merged-local-tip",
+      "disposition": "reject-insufficient-class-wide-contract-evidence"
+    },
+    {
+      "lane": "r31-cli-commands-r-z",
+      "occurrence": 1,
+      "id": "worktree-conflict-derivation",
+      "disposition": "reject-out-of-net"
+    },
+    {
+      "lane": "r31-cli-commands-r-z",
+      "occurrence": 2,
+      "id": "r31-cli-commands-r-z-attach-csv-columns-descriptor",
+      "disposition": "admit-new-D2-after-round-terminal"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 2,
+      "id": "id-citation-pincite-inherited",
+      "disposition": "hold-unsettled-complete-provenance-contract"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 3,
+      "id": "supra-citation-pincite-inherited",
+      "disposition": "hold-unsettled-complete-provenance-contract"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 4,
+      "id": "short-form-case-citation-pincite-inherited",
+      "disposition": "hold-unsettled-complete-provenance-contract"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 5,
+      "id": "id-citation-pincite-inherited-in-footnote",
+      "disposition": "admit-new-D1-after-round-terminal"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 6,
+      "id": "supra-citation-pincite-inherited-in-footnote",
+      "disposition": "admit-new-D1-after-round-terminal"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 7,
+      "id": "short-form-case-citation-pincite-inherited-in-footnote",
+      "disposition": "admit-new-D1-after-round-terminal"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 8,
+      "id": "statutes-at-large-pincite-is-range-in-footnote",
+      "disposition": "admit-new-D1-after-round-terminal"
+    },
+    {
+      "lane": "r31-cli-commands-a-c",
+      "occurrence": 1,
+      "id": "r31-cli-commands-a-c-corpus-organize-materialized-path",
+      "disposition": "reject-contradicted-cardinality-and-unproved-alternative"
+    },
+    {
+      "lane": "r31-law-practice-domain",
+      "occurrence": 9,
+      "id": "constitutional-citation-preamble-in-footnote",
+      "disposition": "admit-new-D1-after-round-terminal"
+    }
+  ],
+  "seedProposals": [
+    {
+      "id": "shacl-engine-report-shape",
+      "disposition": "withdraw-out-of-net-after-round-terminal"
+    },
+    {
+      "id": "r2-tooling-docs-eslint-require-jsdoc-gates",
+      "disposition": "correct-kind-after-round-terminal"
+    },
+    {
+      "id": "r2-tooling-docs-eslint-require-node-types",
+      "disposition": "correct-kind-after-round-terminal"
+    },
+    {
+      "id": "statutes-at-large-pincite-is-range",
+      "disposition": "correct-D1-to-designed-after-round-reconciliation"
+    },
+    {
+      "id": "constitutional-citation-preamble",
+      "disposition": "withdraw-obsolete-D1-to-history-and-retain-open-audit-hold"
+    }
+  ],
+  "readyQualifiedSeedCorrection": {
+    "id": "statutes-at-large-pincite-is-range",
+    "representable": 4,
+    "legal": 3,
+    "status": "private P2 design complete; canonical installation pending"
+  },
+  "openSemanticHolds": [
+    {
+      "ids": [
+        "id-citation-pincite-inherited",
+        "supra-citation-pincite-inherited",
+        "short-form-case-citation-pincite-inherited"
+      ],
+      "question": "May stable predecessor ID remain present when positional index is absent?",
+      "answerReceived": false
+    },
+    {
+      "ids": ["constitutional-citation-preamble"],
+      "question": "May Some(false) preamble accompany an article or amendment locator?",
+      "answerReceived": false
+    }
+  ],
+  "parentSemanticReconciliationComplete": false,
+  "canonicalInstallationComplete": false,
+  "roundDryCredit": false,
+  "independentP3Credit": false,
+  "privateEvidenceHashes": {
+    "rawAdjudicationsSha256": "a4e0dffde95164d7e9980aa67ecea326bfb327a3495ff3ecf2d937ea3bb54d05",
+    "seedAdjudicationsSha256": "c5d074a33a7fb661ab108d9ae80ae00a85e579ddf9da1d359b656beb98c76353",
+    "constitutionalBundleManifestSha256": "ddeec5aa7e8cb544bb78eac495bb6b78befb3ea3b9f8ff9b060098ae39aa098f"
+  }
+}

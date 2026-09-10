@@ -1,0 +1,37 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 904,
+  "afterCount": 901,
+  "beforeInventorySha256": "342864dfbdadcfbffec61faf6440dfac5c301672b2b091ecfde2468e71060814",
+  "afterInventorySha256": "f4fc78d361409bee49873e7296ada650c0d041d0cce93fff8c20f1231bb9b0fa",
+  "correctedIds": [
+    "docgen-generation-outcome",
+    "docgen-subject-collection-outcome",
+    "r27-cli-commands-d-k-normalize-files-dedupe-move",
+    "r27-cli-commands-d-k-normalize-manifest-dedupe-move"
+  ],
+  "withdrawnIds": [
+    "r3-tooling-create-caption-overwrite-phase",
+    "r3-tooling-docgen-quality-jsdoc-tag-gates",
+    "r3-tooling-files-normalize-image-gates"
+  ],
+  "tierPromotion": {
+    "id": "docgen-generation-outcome",
+    "from": 1,
+    "to": 2,
+    "reason": "Existing generate --json output bypasses schema-specific encoding; exact outgoing compatibility required."
+  },
+  "rowArchive": "history/inventory/2026-09-09-r28-docgen-files-before.jsonl",
+  "rowArchiveSha256": "9002a7fd3e3b0af49fea535d80fcbf1f0c77a7a5be72855727cd6e1cd5b4b19f",
+  "withdrawnDesignArchive": "history/designs/2026-09-09-pre-main-d1b4d7/r3-tooling-create-caption-overwrite-phase.md",
+  "withdrawnDesignSha256": "6fba7e8fa5f6fe16591c750e6029fd65ac9166a58e4c54a19889c98466d5cb41",
+  "refreshedDesignSha256": {
+    "docgen-generation-outcome": "71e60fe8de89e9dd80c5ea3040efb5bb36c9d2f7174b866b2223844eda4a4e96",
+    "docgen-subject-collection-outcome": "229cf6b132b02e1176a9ea9ced2a315963b7cad16b065077441d163e868ca1d1",
+    "r27-cli-commands-d-k-normalize-manifest-dedupe-move": "03fb86eea9faf008a743b555fb0858189d4f629428523d6d130da99b6216b93d"
+  },
+  "audit": "data/design-refresh-2026-09-09-r28-docgen-files-impact.md",
+  "auditSha256": "49d0d230d4124f87e09c4abe01ba2ab808e665dd8a41565241548bc2f1023d00",
+  "note": "One qualified owner removed upstream, two D callable owners withdrawn, and missed outgoing JSON exposure corrected. No applied/review approval, package proof, or R27/R28 seed rewrite."
+}

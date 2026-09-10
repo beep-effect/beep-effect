@@ -1,0 +1,17 @@
+{
+  "lane": "r25-agents-workspace",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:04:03.640135+00:00",
+  "finished": "2026-09-08T22:12:01.348470+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-agents-workspace.jsonl` \u2014 confirmed 0, disqualified 0. Covered all 9 assigned roots (144 source files). Seeds still present; line drift only: `runTurnAtom.liveness` 812\u2192820, `refreshTimeline` 959\u2192964.",
+  "transcriptSha256": "2cc857733cc03179499d6f46a9cb5a35b8cee17bd9d94cfe5ea4bba812f8b4ab",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

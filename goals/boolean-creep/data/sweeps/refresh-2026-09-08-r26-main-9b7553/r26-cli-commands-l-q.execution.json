@@ -1,0 +1,17 @@
+{
+  "lane": "r26-cli-commands-l-q",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-09T00:44:40.333022+00:00",
+  "finished": "2026-09-09T00:55:40.266517+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 4,
+  "qualifiedCandidates": 2,
+  "errors": [],
+  "completionSummary": "I'll inventory boolean-creep in the assigned CLI command paths, create the report file first, then grep and classify clusters as I go.Report file is in place. Next I\u2019ll grep the six command roots and look at a sibling JSONL for record shape.S.Boolean hits are in. Next I\u2019ll collect `: boolean` clusters and list files under each command root.I'll look at prior inventories and pull remaining boolean patterns (CLI flags, structs, sibling locals).Prior records are dense. I\u2019ll pull later residue rounds for this lane and hunt remaining unrecorded clusters.I\u2019ll scan files that aren\u2019t on the skip list and look for leftover members plus derived-alias clusters.`OsvIgnoreEntry` looks like a flag-plus-payload cluster. I\u2019ll read its writers and keep scanning remaining schemas.I\u2019ve got the leftover clusters. Next I\u2019ll verify seed declarations, then append the JSONL records.goals/boolean-creep/data/sweeps/refresh-2026-09-08-r26-main-9b7553/r26-cli-commands-l-q.jsonl \u2014 confirmed 2, disqualified 2. Labs, Laws, Lint, Purge, Qa, and Quality were covered. Seeds still exist; `tmpfsReapCommand` apply/json moved 3482\u21923525, `runLintSchemaFirst.fileGates` 254\u2192259.",
+  "transcriptSha256": "33a69458e26ce40e1d467876f16d5e33a77beab758f3e0e25b7c2e73c8685182",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "9635e7ef6ae5c35bedf49420e61ee6a4893e384797dd5f26d67a1602d3c8dc1c"
+}

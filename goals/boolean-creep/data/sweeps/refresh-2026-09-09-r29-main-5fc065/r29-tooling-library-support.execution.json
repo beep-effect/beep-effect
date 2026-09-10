@@ -1,0 +1,22 @@
+{
+  "lane": "r29-tooling-library-support",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:48:54.923363+00:00",
+  "finished": "2026-09-09T10:59:34.770427+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tooling-library-support.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`codegen-kit/src`, `repo-utils/src`, `fc-runs/src`, `test-utils/src`).\n\nSeed revalidation: 14 of 15 owners still exist with the claimed members and the same classification; they were not re-recorded. Withdrawal: `CodegenKit.cli` `[check, refresh]` is still at `CodegenKit.cli.ts:42` as `Command.make` `Flag.boolean` descriptors plus handler aliases, so it is out of net under the current Flag-handle rule (canonical inventory still has it as designed). No member-list drift on the remaining seeds.\n\nUnresolved: `JSDocTagDefinition.isDeprecated` plus `deprecatedNote` is an E3-shaped boolean/payload pair, but the catalog only writes `isDeprecated: false` with no note and there are no exclusive readers, so it was not classified. Out-of-net residue (predicates, singleton object booleans, `Boolean|string[]` sentinels, one-boolean schema fields) was left unrecorded.",
+  "transcriptSha256": "f9d18c7fbeb8086ea38a4cbc65e276121d815b2d35f663ce3eb01cf99e78ee40",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

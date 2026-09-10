@@ -1,0 +1,24 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 856,
+  "afterCount": 853,
+  "beforeInventorySha256": "3178124ff9ab42396334ffcb1b05a0f5266eec9927ed0580b7d5080d3e9ac2b8",
+  "afterInventorySha256": "d2387f768a80363ca3911c89856d8c8b3e6f6d3ca071f39f022aff5868a9c7ec",
+  "qualifiedId": "r3-drivers-arch-tool-name-collision-stage-flags",
+  "withdrawnIds": [
+    "graph-3d-projection-coherence-checks",
+    "r3-drivers-arch-graph3d-module-probes",
+    "r3-drivers-arch-m365-path-extension-probes"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-driver-collision-before.jsonl",
+  "rowArchiveSha256": "0ea069f2c244deb3c3f261a547470bcfa0774100575da2c5650a9d0ab0f378b5",
+  "design": "designs/r3-drivers-arch-tool-name-collision-stage-flags.md",
+  "designSha256": "df8cad007565f68009194b0cdf81fc13e22f4df4000462076967fe0c72ea7989",
+  "provisionalSha256": "c525b1297c5b09f4021eaa5f8ce65dc357fb581eb6e9bcc3fa1517d01bc55f83",
+  "audit": "data/design-refresh-2026-09-09-r28-driver-collision-values.md",
+  "auditSha256": "6171865a20afd8658fd1e1e4d994373e6cd954b2c7e411bfb268f58c4ca824f5",
+  "independentReportSha256": "d77e246cf0ac0e9061476f9c3c7bfecdc75ece81abfcb80f127e65d91afd9dc8",
+  "independentReceiptSha256": "7c72f05fb20b2a517c614d496928fe7765f9b71198968f5c1365716139aa785b",
+  "note": "Actual two-local owner qualified4/3 with concrete final-only digest fixture. Corrected synthetic symbol and draft rebase instruction; serial staging merges main forward. Separate Tier2 row design unchanged. No P3, applied or dry credit."
+}
