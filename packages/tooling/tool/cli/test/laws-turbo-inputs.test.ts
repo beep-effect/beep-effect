@@ -1,14 +1,14 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { policyToolsFingerprint, StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const $I = $RepoCliId.create("test/laws-turbo-inputs");
 
@@ -36,7 +36,7 @@ const decodeScripts = S.decodeEffect(S.fromJsonString(RootScripts));
 const decodeSummary = S.decodeEffect(S.fromJsonString(LawsRunSummary));
 const encodeSummary = S.encodeEffect(S.fromJsonString(LawsRunSummary));
 const summaryEquivalent = S.toEquivalence(LawsRunSummary);
-const summaryArbitrary = S.toArbitrary(LawsRunSummary)(fc);
+const summaryArbitrary = Arbitrary.schema(LawsRunSummary);
 const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
 
 const expectedTasks = {
@@ -111,14 +111,21 @@ const lawHashes = Effect.fn("LawsTurboTest.lawHashes")(function* (root: string, 
 
 describe("Stage B laws Turbo inputs", { concurrent: false }, () => {
   it("round-trips schema-derived Turbo summaries through JSON", () =>
-    fc.assert(
-      fc.property(summaryArbitrary, (summary) => {
-        const encoded = Effect.runSync(encodeSummary(summary));
-        const decoded = Effect.runSync(decodeSummary(encoded));
-        expect(summaryEquivalent(decoded, summary)).toBe(true);
-        expect(Effect.runSync(encodeSummary(decoded))).toBe(encoded);
-      })
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          summaryArbitrary,
+          (summary) => {
+            const encoded = Effect.runSync(encodeSummary(summary));
+            const decoded = Effect.runSync(decodeSummary(encoded));
+            expect(summaryEquivalent(decoded, summary)).toBe(true);
+            expect(Effect.runSync(encodeSummary(decoded))).toBe(encoded);
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it.effect(
     "pins the verbatim table inputs and the prescribed nonrecursive root script",

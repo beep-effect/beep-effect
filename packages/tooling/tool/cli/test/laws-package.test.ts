@@ -7,13 +7,13 @@ import {
 } from "@beep/repo-cli/commands/Laws/LawsPackage.model";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const platform = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(NodeServices.layer));
 const providePlatform = provideScopedLayer(platform);
@@ -57,10 +57,10 @@ const fixture = Effect.fn("LawsPackageTest.fixture")(function* (directory: strin
   return yield* resolveLawsPackageScope(root, directory);
 });
 
-const ScopeArbitrary = S.toArbitrary(LawsPackageScope)(fc);
-const ReportArbitrary = S.toArbitrary(LawsPackageReport)(fc);
-const FindingArbitrary = S.toArbitrary(LawsPackageFinding)(fc);
-const LawArbitrary = S.toArbitrary(LawsPackageLaw)(fc);
+const ScopeArbitrary = Arbitrary.schema(LawsPackageScope);
+const ReportArbitrary = Arbitrary.schema(LawsPackageReport);
+const FindingArbitrary = Arbitrary.schema(LawsPackageFinding);
+const LawArbitrary = Arbitrary.schema(LawsPackageLaw);
 const encodeScope = S.encodeEffect(S.fromJsonString(LawsPackageScope));
 const decodeScope = S.decodeEffect(S.fromJsonString(LawsPackageScope));
 const encodeReport = S.encodeEffect(S.fromJsonString(LawsPackageReport));
@@ -71,20 +71,24 @@ const encodeLaw = S.encodeEffect(S.fromJsonString(LawsPackageLaw));
 const decodeLaw = S.decodeEffect(S.fromJsonString(LawsPackageLaw));
 
 describe("package-local law project", { concurrent: false }, () => {
-  it("round trips the Laws domain schemas", () =>
-    fc.assert(
-      fc.asyncProperty(ScopeArbitrary, ReportArbitrary, FindingArbitrary, LawArbitrary, (scope, report, finding, law) =>
-        Effect.runPromise(
+  it.effect(
+    "round trips the Laws domain schemas",
+    Effect.fnUntraced(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([ScopeArbitrary, ReportArbitrary, FindingArbitrary, LawArbitrary]),
+        ([scope, report, finding, law]) =>
           Effect.gen(function* () {
             expect(yield* encodeScope(scope).pipe(Effect.flatMap(decodeScope))).toEqual(scope);
             expect(yield* encodeReport(report).pipe(Effect.flatMap(decodeReport))).toEqual(report);
             expect(yield* encodeFinding(finding).pipe(Effect.flatMap(decodeFinding))).toEqual(finding);
             expect(yield* encodeLaw(law).pipe(Effect.flatMap(decodeLaw))).toEqual(law);
-          })
-        )
-      ),
-      { numRuns: 30 }
-    ));
+            return true;
+          }),
+        fcRuns(30)
+      );
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
   it.effect(
     "finds one violation per law with no root or dependency preload",
