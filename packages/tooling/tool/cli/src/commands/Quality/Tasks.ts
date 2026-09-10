@@ -2559,7 +2559,9 @@ const policyLintTurboStep = (
     decodePolicyLintConcurrencyOption(Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY),
     O.getOrElse(() => "4")
   );
-  const affected = !isCi() && !P.isUndefined(base);
+  // Scope is the caller's decision: a base means a scoped local run, no base means full scope
+  // (the policy task folds CI into full scope before building the plan).
+  const affected = !P.isUndefined(base);
   const step = turboStep(repoRoot, label, tasks, [
     `--concurrency=${concurrency}`,
     "--continue=dependencies-successful",
@@ -2585,7 +2587,9 @@ const rootRepoLintPolicySteps = (
       // Static LPT order from research/00-evidence-brief.md (run 31683014887):
       // deprecated-apis 975199ms, semantic-delta 78127ms,
       // schema-first 51162ms, then every remaining step in descending measured duration.
-      deprecatedApisTurboStep(repoRoot, base),
+      P.isUndefined(base)
+        ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
+        : deprecatedApisTurboStep(repoRoot, base),
       // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
       // introduced by this branch and lets the corpus keep its inherited ones.
       repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
@@ -2594,7 +2598,9 @@ const rootRepoLintPolicySteps = (
       repoCliStep(repoRoot, "knowledge:refs-check", ["knowledge", "refs", "--check"]),
       repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
       ...scopedLawStep(repoRoot, "lint:terse-effect", "terse-effect", ["--check", "--advisory"], files),
-      policyLintTurboStep(repoRoot, "lint:jsdoc", ["lint:jsdoc", "//#lint:jsdoc:root"], base),
+      P.isUndefined(base)
+        ? bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"])
+        : policyLintTurboStep(repoRoot, "lint:jsdoc", ["lint:jsdoc", "//#lint:jsdoc:root"], base),
       ...scopedLawStep(repoRoot, "lint:native-runtime", "native-runtime", ["--check"], files),
       repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
       ...scopedLawStep(repoRoot, "lint:frozen-grant-set", "frozen-grant-set", ["--check"], files),
@@ -2756,25 +2762,21 @@ export const runRootLintPolicyTask: {
 /**
  * Run the same bounded deprecated-API Turbo step used by the policy plan.
  *
- * **Example** (Build a full deprecated-API check)
+ * **Example** (Build an affected deprecated-API check)
  *
  * ```ts
  * import { runRootDeprecatedApisTask } from "@beep/repo-cli/commands/Quality"
  * import * as Effect from "effect/Effect"
- * console.log(Effect.isEffect(runRootDeprecatedApisTask(true, "origin/main"))) // true
+ * console.log(Effect.isEffect(runRootDeprecatedApisTask("origin/main"))) // true
  * ```
  *
- * @param full - Select all packages; hosted runs always select all packages.
  * @param base - Caller base for local affected selection.
  * @category tasks
  * @since 0.0.0
  */
-export const runRootDeprecatedApisTask = Effect.fn("QualityTasks.runRootDeprecatedApisTask")(function* (
-  full: boolean,
-  base: string
-) {
+export const runRootDeprecatedApisTask = Effect.fn("QualityTasks.runRootDeprecatedApisTask")(function* (base: string) {
   const repoRoot = yield* findRepoRoot();
-  yield* runStep(deprecatedApisTurboStep(repoRoot, full || isCi() ? undefined : base));
+  yield* runStep(deprecatedApisTurboStep(repoRoot, base));
 });
 
 const rootLintPolicySteps = (

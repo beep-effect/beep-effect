@@ -475,8 +475,119 @@ Cold task-seconds: `lint:deprecated-apis` 140 tasks, 2,387 s (p50 16.8 s, max 55
   program (D6 amended), or make the per-package typed program cheap (reference-keeping check
   overlays from #1058 with `^build` declarations instead of the project service's source
   fallback), or raise the step budget and accept the wall. Options are in the PR thread.
+- Outcome: ruling 30 (2026-09-10) took the first option; Stage E below implements it and C3.2b
+  (table row 2b) owns the cheap per-package program.
 
 ### Stage D — files
 
 - goals/time-to-certainty/research/c3-2-implementation.md
 - goals/time-to-certainty/PLAN.md (C3.1 and C3.2 ticked)
+
+## Stage E
+
+Implemented ruling 30 only, on `ttc/c3-2-eslint-package-tasks`, starting from clean
+`1363559f11`. Read the full brief, ruling 30, D6 revision 6, and the prior implementation
+results including Stage C, Stage D, and Hosted round 1. No git writes or graft commands ran.
+The results below are the Stage E handoff; no later stage was started.
+
+### Decisions and rejected alternatives
+
+1. Reused the existing schema-backed `QualityTaskStep`, `PolicyLintConcurrency`, command flags,
+   and Effect process/service contract. This restoration needs no new production schema,
+   service, exported symbol, or source module. Narrowed `runRootDeprecatedApisTask` to its
+   caller-base argument and updated its documented example before routing the command to it.
+   Rejected a second task model, process service, or exported CI helper.
+2. Restored the deprecated-API shard constants, cache-location helper, and both runner functions
+   byte-for-byte from `11b3889dd9^`. This includes all 28 shards, concurrency four, the content
+   cache, 8192 MiB heap, subtree explanation, missing-shard handling, failure propagation,
+   and labs-only unmatched-pattern tolerance. Rejected retaining the cold per-package sweep
+   for full/hosted scope or increasing the step budget.
+3. Standalone package mode retains the existing worker and lab tolerance. Without `--package`,
+   `--full` or CI selects the shard program; otherwise the command delegates to the affected
+   Turbo step with the caller base. CI is read through the existing Effect Config boundary.
+   Restored the root script to `beep-cli lint deprecated-apis`. Rejected a root Turbo wrapper
+   that would bypass the scope decision.
+4. Full policy plans (undefined base) and CI plans (even with a base) use exactly
+   `lint deprecated-apis --full` through `repoCliStep` and `eslint . --max-warnings=0` through
+   `bunxStep`. Scoped local plans keep the Stage C Turbo builders. Existing LPT positions,
+   lane labels, 15-minute capture timeouts, concurrency domain, cache posture, and full-state
+   log line remain intact. Rejected changes to Turbo registrations, fingerprint inputs,
+   lane identities, or the typed-program strategy reserved for C3.2b.
+5. Restored all four shard regressions with explicit `--full`. Named their Effect programs to
+   keep test wrappers trivial and avoid immediate-invocation diagnostics. Worker regressions
+   prove local affected routing and child-local `TURBO_SCM_BASE`, explicit full shard routing,
+   CI shard routing without `--full`, profile/heap arguments, failure propagation, and the
+   existing package lab tolerance and live workers. Full/CI shard worker mocks supply a scoped
+   filesystem service because this suite runs from the CLI package; the four restored command
+   fixtures retain real filesystem and process execution. Rejected changing process cwd in a
+   thread worker or changing production relative-path behavior to accommodate a test.
+6. Reused `policyTurboStep` and `policyTurboScmBase` for full/scoped/CI plan assertions. Kept the
+   prescribed quality-test name selection because the rest of the file contains git-writing
+   fixtures. Rejected running that whole file under this lane's no-git-write contract.
+7. Investigated P0 `local-shard-22de8c5adf48`: its saved cheap-gates log identified the fingerprint
+   boundary schema and property-test findings already fixed by `4819a259ef`. Acknowledged it
+   once with that fix SHA; current schema-first passes and the inbox has zero unacknowledged
+   rows. Rejected attributing a code finding as environment-only or making a new commit.
+
+### Stage E — files
+
+- goals/time-to-certainty/research/c3-2-implementation.md
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- package.json
+- packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+- packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+- packages/tooling/tool/cli/test/lint-command.test.ts
+- packages/tooling/tool/cli/test/lint-workers.test.ts
+- packages/tooling/tool/cli/test/quality-tasks.test.ts
+
+### Verification commands and exit codes
+
+Vitest commands ran from `packages/tooling/tool/cli`; other commands ran from the worktree
+root. `<touched>` below is the five TypeScript paths plus root `package.json` in the file list;
+`<touched TS>` is those five TypeScript paths. Markdown is the results/receipt surface.
+Ephemeral detailed logs are `/tmp/c3-2-stage-e-*.log`.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `bunx biome check --write <touched>` | 0 | Initial and post-repair formatting passes. |
+| `bunx biome check <touched>` | 0 | Six files checked, no fixes, 1,235 ms. |
+| `bunx oxlint --quiet --disable-nested-config <touched TS>` | 0 | Initial and final checks, no diagnostics. |
+| `bunx --no-install vitest run --pool=forks --maxWorkers=1 test/lint-command.test.ts` | 0, 0 | 58/58 both runs; final 12.64 s. Restored four regressions pass. |
+| `bunx --no-install vitest run --pool=threads test/lint-workers.test.ts` | 1, 0 | Initial 19 passed, two new shard mock assertions failed because package-relative shards were absent; scoped filesystem mock repaired. Final 21/21, 35.96 s. |
+| `bunx --bun vitest run --pool=threads test/quality-tasks.test.ts -t 'policy Turbo\|plans repo-wide root lint\|deprecated'` | 0 | Four selected passed, 201 skipped, 4.22 s. The shell regex uses plain pipes; backslashes here only escape Markdown table separators. |
+| `bun run beep lint schema-first` | 0, 0 | Initial and post-repair checks pass; no new findings. |
+| `bun run beep quality fallow audit --check --base origin/main --quiet` | 0, 0 | Initial and post-repair checks; `.beep/fallow/audit.check.json` has `exitStatus: 0`, zero findings. |
+| `bun run beep quality fallow health --check --base origin/main --quiet` | 0, 0 | Initial and post-repair checks; `.beep/fallow/health.check.json` has `exitStatus: 0`, zero findings. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Declaration and materialized inputs current. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, zero drifting, zero written. |
+| `bunx --bun --no-install tsgo -p /tmp/c3-2-stage-c-tests.tsconfig.json --pretty false` | 1, 0 | Four introduced `effect(effectFnIife)` diagnostics corrected with named Effect test programs. Final focused source-resolving check has no diagnostics. |
+| Python comparison of restored constants/helpers/runners against `git show 11b3889dd9^` output | 0 | Both restored source blocks match byte-for-byte. |
+| `bun run beep yeet inbox ack local-shard-22de8c5adf48 --fix-sha 4819a259ef` | 0 | Existing schema-fix commit attached to the P0 row; ignored local ack receipt only. |
+| `bun run beep yeet inbox list --unacked` | 0 | Zero unacknowledged rows. |
+| `git diff --check` | 0 | Read-only whitespace verification. |
+
+The reused temporary tsgo configuration includes exactly the three touched test files and
+imports, extends the actual CLI tsconfig, resolves workspace source, removes project references,
+and uses no-emit/non-composite options plus this checkout's Node/Bun type roots. It does not
+replace canonical package verification. No test fixture initialized, staged, or committed git.
+
+### Measurements and remaining verification
+
+- Full/hosted inventory restored from zero to **28 shards**, with **four concurrent workers**
+  and **28 distinct content-cache locations** proven by the fixture. Missing labs yields 27
+  invocations; only labs receives unmatched-pattern tolerance.
+- Local policy retains **one deprecated-API task target** and **two JSDoc task targets**, affected
+  scope, child-local base, summaries, and bounded concurrency. Full/hosted plans use the two
+  legacy command shapes and retain every step's **900,000 ms** capture timeout.
+- Final selected tests: **83 passed** across the three runs (58 command, 21 workers, four plan).
+  The 201 unselected quality tests were not run; no full-suite claim is made.
+- `turbo.json`, the fingerprint declaration, workspace manifests, root `tsconfig.json`, packet
+  lifecycle, and all protected paths have no Stage E edits. No new source module or coverage
+  baseline was created. Friction receipts were appended when the test issues were identified.
+- No fresh hosted/cold/warm timing or cache-hit measurement was attempted. Stage D's recorded
+  measurements motivate the ruling; this stage proves routing/restoration, not a new speedup.
+
+No sandbox implementation blocker remains. Per the Stage E brief, Fable owns package-verify,
+Node coverage/ratchet, and the hosted lane; those have not been run or claimed green here.
+The existing command and Tasks source coverage rows must still be evaluated by that coverage
+run. All requested sandbox checks now pass. Stop after Stage E.

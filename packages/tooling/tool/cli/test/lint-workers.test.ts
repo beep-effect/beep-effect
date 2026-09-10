@@ -29,6 +29,16 @@ const providePlatform = provideScopedLayer(platform);
 const runCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const run = (args: ReadonlyArray<string>, env: Record<string, string> = {}) =>
   runCommand(args).pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));
+const runShardCommand = Effect.fnUntraced(function* (args: ReadonlyArray<string>, env: Record<string, string>) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* run(args, env).pipe(
+    Effect.provideService(FileSystem.FileSystem, {
+      ...fs,
+      exists: () => Effect.succeed(true),
+      makeDirectory: () => Effect.void,
+    })
+  );
+});
 const prefix = "packages/tooling/tool/cli";
 const packageFiles = Effect.fnUntraced(function* (directory: string) {
   const root = yield* findRepoRoot();
@@ -141,33 +151,59 @@ describe("thin lint workers", { concurrent: false }, () => {
     "runs the standalone deprecated API command through the policy Turbo step",
     Effect.fnUntraced(function* () {
       const root = yield* findRepoRoot();
-      yield* run(["deprecated-apis", "--full"]);
-      const expected = rootLintPolicyStepsForTesting(root)[0];
+      yield* run(["deprecated-apis"]);
+      const expected = rootLintPolicyStepsForTesting(root, undefined, "origin/main")[0];
       expect(execution).toHaveBeenCalledTimes(1);
       expect(execution.mock.calls[0]?.[0]).toMatchObject({
         command: expected?.command,
         args: expected?.args,
         cwd: root,
       });
-      expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
+      expect(execution.mock.calls[0]?.[0].args).toContain("--affected");
+      expect(execution.mock.calls[0]?.[0].env?.TURBO_SCM_BASE).toBe("origin/main");
       execution.mockClear();
       execution.mockImplementation(() => Effect.succeed(7));
-      expect(yield* run(["deprecated-apis", "--full"]).pipe(Effect.isFailure)).toBe(true);
+      expect(yield* run(["deprecated-apis"]).pipe(Effect.isFailure)).toBe(true);
+    }, providePlatform)
+  );
+  it.effect(
+    "runs the full standalone deprecated API command through the shard program",
+    Effect.fnUntraced(function* () {
+      yield* runShardCommand(["deprecated-apis", "--full"], {});
+      expect(execution.mock.calls[0]?.[0]).toMatchObject({
+        command: "./node_modules/.bin/eslint",
+        args: [
+          "--cache",
+          "--cache-location",
+          "node_modules/.cache/eslint-deprecated-apis/.eslintcache-apps__architecture-lab-proof",
+          "--cache-strategy",
+          "content",
+          "--config",
+          "eslint.config.mjs",
+          "apps/architecture-lab-proof",
+        ],
+        env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=8192" },
+      });
+    }, providePlatform)
+  );
+  it.effect(
+    "runs the hosted standalone deprecated API command through the shard program",
+    Effect.fnUntraced(function* () {
+      yield* runShardCommand(["deprecated-apis", "--base", "refs/heads/caller-base"], { CI: "true" });
+      expect(execution.mock.calls[0]?.[0].command).toBe("./node_modules/.bin/eslint");
+      expect(execution.mock.calls[0]?.[0].env?.BEEP_ESLINT_PROFILE).toBe("deprecated-apis");
+      expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
     }, providePlatform)
   );
   it.effect(
     "passes the standalone caller base only to its affected Turbo child",
     Effect.fnUntraced(function* () {
       const ambientBase = yield* Config.option(Config.string("TURBO_SCM_BASE"));
+      // The command reads CI through the test's empty provider, so this is the local affected path.
       yield* run(["deprecated-apis", "--base", "refs/heads/caller-base"]);
       const invocation = execution.mock.calls[0]?.[0];
-      if ((yield* Config.string("CI").pipe(Config.withDefault(""))) === "true") {
-        expect(invocation?.args).not.toContain("--affected");
-        expect(invocation?.env?.TURBO_SCM_BASE).toBeUndefined();
-      } else {
-        expect(invocation?.args).toContain("--affected");
-        expect(invocation?.env?.TURBO_SCM_BASE).toBe("refs/heads/caller-base");
-      }
+      expect(invocation?.args).toContain("--affected");
+      expect(invocation?.env?.TURBO_SCM_BASE).toBe("refs/heads/caller-base");
       expect(yield* Config.option(Config.string("TURBO_SCM_BASE"))).toEqual(ambientBase);
     }, providePlatform)
   );

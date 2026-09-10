@@ -388,7 +388,7 @@
     "knip": "knip-bun",
     "knowledge:refs-rewrite": "bun scripts/knowledge-refs-rewrite.ts",
     "lint": "beep-cli lint",
-    "lint:deprecated-apis": "bunx turbo run lint:deprecated-apis",
+    "lint:deprecated-apis": "beep-cli lint deprecated-apis",
     "lint:fix": "beep-cli lint --fix",
     "lint:jsdoc:root": "beep-cli lint jsdoc --root-only",
     "lint:oxlint": "oxlint",
