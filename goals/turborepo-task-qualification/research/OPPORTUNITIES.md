@@ -863,3 +863,15 @@ controls disable reuse and may still run after this comparison stops reuse.
   baseline writer. Keep qualification scope, states and cache flags unchanged.
 - Prevention: inspect task-configuration deltas when merging policy changes
   before starting the full proof.
+
+### Distinguish aggregate coverage from new-file identity gates
+
+- Activity: verify the integration after adding complete orchestration tests.
+- Evidence: aggregate CLI coverage rose above all retained percentage floors,
+  but the ratchet still rejected eight new files with uncovered units and no
+  recorded file identity. Every other local verification lane passed.
+- Correction: review the initial measured per-file floors and use the scoped
+  CLI coverage writer, preserving other packages and documenting the remaining
+  census, service and dependency-path test debt.
+- Prevention: inspect both package totals and per-file identity witnesses before
+  treating an aggregate improvement as sufficient ratchet evidence.
