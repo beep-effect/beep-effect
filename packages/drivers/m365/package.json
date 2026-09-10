@@ -72,8 +72,13 @@
     "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },
-  "optionalDependencies": {
-    "@azure/msal-node-extensions": "catalog:"
+  "peerDependencies": {
+    "@azure/msal-node-extensions": "^5.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@azure/msal-node-extensions": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",

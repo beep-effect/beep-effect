@@ -188,6 +188,41 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         yield* fs.remove(tmpDir, { recursive: true });
       })
     );
+
+    it.effect(
+      "skips templated node-version values that fall back to .nvmrc at runtime",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory();
+        const workflowDir = path.join(tmpDir, ".github", "workflows");
+
+        yield* fs.makeDirectory(workflowDir, { recursive: true });
+        yield* fs.writeFileString(path.join(tmpDir, ".nvmrc"), "20.11.1\n");
+        yield* fs.writeFileString(
+          path.join(workflowDir, "heavy.yml"),
+          A.join(
+            [
+              "jobs:",
+              "  lanes:",
+              "    steps:",
+              "      - uses: actions/setup-node@v4",
+              "        with:",
+              "          node-version: ${{ matrix.node_version || '' }}",
+            ],
+            "\n"
+          )
+        );
+
+        const state = yield* resolveNodeVersions(tmpDir);
+        const report = buildNodeReport(state);
+
+        expect(state.workflowLocations).toHaveLength(0);
+        expect(report.status).toBe("ok");
+
+        yield* fs.remove(tmpDir, { recursive: true });
+      })
+    );
   });
 
   describe("buildBunReport", () => {
