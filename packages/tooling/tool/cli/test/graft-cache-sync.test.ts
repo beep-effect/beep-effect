@@ -175,7 +175,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       const countingFs = Layer.succeed(
         FileSystem.FileSystem,
         FileSystem.FileSystem.of({
-          "~effect/platform/FileSystem": fs["~effect/platform/FileSystem"],
+          "~effect/FileSystem": fs["~effect/FileSystem"],
           access: fs.access,
           copy: fs.copy,
           copyFile: fs.copyFile,
