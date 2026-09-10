@@ -421,8 +421,10 @@ describe("thin lint workers", { concurrent: false }, () => {
 
 // These tests spawn the CLI (ts-morph, eslint) for real; under coverage instrumentation on a
 // two-worker hosted runner the laws worker took 40 s on main and 60 s on PR #1079, so an explicit
-// 60 s cap raced the runner instead of catching hangs. The CLI bounds its own children.
-const EXECUTED_WORKER_TIMEOUT_MILLIS = 180_000;
+// 60 s cap raced the runner instead of catching hangs. The budget equals the package config's
+// coverage and deep-sweep `testTimeout` (300 s) so no per-test cap sits below the lane's own;
+// a hang still fails here because the CLI bounds its children.
+const EXECUTED_WORKER_TIMEOUT_MILLIS = 300_000;
 
 describe("executed lint workers", { concurrent: false }, () => {
   it.effect(

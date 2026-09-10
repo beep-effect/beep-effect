@@ -65,7 +65,7 @@ const isPnChars = (character: string): boolean => {
   );
 };
 
-const isEscapable = (character: string): boolean => PN_LOCAL_ESCAPABLE.includes(character);
+const isEscapable = (character: string): boolean => character.length === 1 && PN_LOCAL_ESCAPABLE.includes(character);
 
 const isSafeFirst = (character: string): boolean => isPnCharsU(character) || character === ":" || isDigit(character);
 

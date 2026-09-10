@@ -74,6 +74,12 @@ describe("PnLocal", () => {
     expect(acceptsEscapedLocal("bad%0Z")).toBe(false);
   });
 
+  it("rejects a local name ending in a lone backslash", () => {
+    expect(acceptsEscapedLocal("bad\\")).toBe(false);
+    expect(acceptsEscapedLocal("\\")).toBe(false);
+    expect(O.isNone(decodeUnknownEscapedPnLocalOption("bad\\"))).toBe(true);
+  });
+
   it.prop(
     "round-trips escaped PN_LOCAL characters through parser-side acceptance",
     [S.Array(S.Literals(escapableLocalCharacters)).check(S.isMinLength(1), S.isMaxLength(40))],
