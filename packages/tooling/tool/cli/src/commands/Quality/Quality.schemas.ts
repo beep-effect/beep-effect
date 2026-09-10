@@ -24,6 +24,51 @@ import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo
 const $I = $RepoCliId.create("commands/Quality/Quality.schemas");
 
 /**
+ * Program used for a full policy sweep.
+ *
+ * **Example** (Select the measured shard program)
+ * ```ts
+ * import { PolicySweepProgram } from "@beep/repo-cli/commands/Quality"
+ * console.log(PolicySweepProgram.Enum.shards)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const PolicySweepProgram = LiteralKit(["shards", "turbo"]).annotate(
+  $I.annote("PolicySweepProgram", { description: "Executable program selected for a full policy sweep." })
+);
+
+/**
+ * Decoded full-sweep program.
+ *
+ * @see {@link PolicySweepProgram}
+ * @category configuration
+ * @since 0.0.0
+ */
+export type PolicySweepProgram = typeof PolicySweepProgram.Type;
+
+/**
+ * Versioned repository policy sweep selection.
+ *
+ * **Example** (Keep the measured shard sweep)
+ * ```ts
+ * import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality"
+ * console.log(LintPolicySweeps.make({ schemaVersion: "lint-policy-sweeps/v1", deprecatedApis: "shards" }))
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export class LintPolicySweeps extends S.Class<LintPolicySweeps>($I`LintPolicySweeps`)(
+  {
+    schemaVersion: S.Literal("lint-policy-sweeps/v1"),
+    deprecatedApis: PolicySweepProgram,
+  },
+  $I.annote("LintPolicySweeps", { description: "Versioned full-scope lint policy program selection." })
+) {}
+
+/**
  * Concurrency values supported by the hosted Check lane.
  *
  * **Example** (Inspect supported worker counts)

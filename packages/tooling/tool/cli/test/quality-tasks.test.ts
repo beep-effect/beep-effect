@@ -5,6 +5,7 @@ import {
   ciLocalStepsForTesting,
 } from "@beep/repo-cli/commands/Ci";
 import {
+  LintPolicySweeps,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
 } from "@beep/repo-cli/commands/Quality";
@@ -19,6 +20,7 @@ import {
   collectGithubCheckLaneWavesForTesting,
   collectQualityTaskLaneRunsForTesting,
   parseTestLaneSelectionForTesting,
+  readLintPolicySweeps,
   runQualityTaskGithubCheckLaneWaves,
   runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
@@ -165,6 +167,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { vi } from "vitest";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
+import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
 import type { GateOrderLaneClass, GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
 const decodeQualityTaskLaneRun = S.decodeEffect(QualityTaskLaneRun);
@@ -359,8 +362,27 @@ const isTurboConcurrencyArg = (arg: string): boolean =>
 // tail so it stays a turbo option instead of leaking into the child task argv.
 const LABS_EXCLUDE_FILTER = "--filter=!./apps/labs/**";
 const POLICY_TURBO_LABELS = ["lint:deprecated-apis", "lint:jsdoc"];
-const policyTurboStep = (label: string, base?: string): QualityTaskStep =>
-  O.getOrThrow(A.findFirst(rootLintPolicyStepsForTesting("/repo", undefined, base), (entry) => entry.label === label));
+const policyTurboStep = (
+  label: string,
+  base?: string,
+  deprecatedApis: PolicySweepProgram = "shards"
+): QualityTaskStep =>
+  O.getOrThrow(
+    A.findFirst(
+      rootLintPolicyStepsForTesting(
+        "/repo",
+        undefined,
+        base,
+        LintPolicySweeps.make({ schemaVersion: "lint-policy-sweeps/v1", deprecatedApis })
+      ),
+      (entry) => entry.label === label
+    )
+  );
+const expectSweepConfigurationFailure = Effect.fnUntraced(function* (root: string) {
+  const error = yield* readLintPolicySweeps(root).pipe(Effect.flip);
+  expect(error._tag).toBe("QualityTaskConfigurationError");
+  expect(error.message).toContain(`${root}/standards/lint-policy.sweeps.jsonc`);
+});
 const policyTurboScmBase = (step: QualityTaskStep): string | undefined => step.env?.TURBO_SCM_BASE;
 const LABS_EXCLUDED_TASKS: ReadonlyArray<string> = [
   "check",
@@ -3029,6 +3051,42 @@ describe("quality task adapter", () => {
     }
   });
 
+  it("selects the full deprecated sweep without changing affected policy Turbo scope", () => {
+    const full = policyTurboStep("lint:deprecated-apis", undefined, "turbo");
+    expect(full.args).toEqual(expect.arrayContaining(["turbo", "run", "lint:deprecated-apis", "--summarize"]));
+    expect(full.args).not.toContain("--affected");
+    expect(policyTurboScmBase(full)).toBeUndefined();
+    expect(policyTurboStep("lint:jsdoc", undefined, "turbo").args).toEqual(["eslint", ".", "--max-warnings=0"]);
+    expect(policyTurboStep("lint:deprecated-apis", "review-base", "turbo")).toEqual(
+      policyTurboStep("lint:deprecated-apis", "review-base", "shards")
+    );
+  });
+
+  it.effect(
+    "decodes sweep JSONC and rejects missing or malformed sweep files",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const file = `${root}/standards/lint-policy.sweeps.jsonc`;
+      yield* expectSweepConfigurationFailure(root);
+      yield* fs.makeDirectory(`${root}/standards`);
+      for (const content of [
+        "{",
+        "{}",
+        '{"schemaVersion":"old","deprecatedApis":"turbo"}',
+        '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"invalid"}',
+      ]) {
+        yield* fs.writeFileString(file, content);
+        yield* expectSweepConfigurationFailure(root);
+      }
+      yield* fs.writeFileString(
+        file,
+        '{ /* measured */ "schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"turbo", }'
+      );
+      expect((yield* readLintPolicySweeps(root)).deprecatedApis).toBe("turbo");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
   it("bounds policy Turbo concurrency using Check overrides and a four-worker default", () => {
     for (const value of [undefined, "2", "3", "4", "8", "invalid", ""]) {
       withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", value, () => {
@@ -3094,6 +3152,11 @@ describe("quality task adapter", () => {
           const fakeBunxPath = path.join(binDir, "bunx");
           const fakeBunPath = path.join(binDir, "bun");
 
+          yield* fs.makeDirectory(path.join(tmpDir, "standards"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(tmpDir, "standards/lint-policy.sweeps.jsonc"),
+            '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"shards"}'
+          );
           yield* fs.makeDirectory(binDir, { recursive: true });
           yield* fs.writeFileString(fakeBunxPath, ["#!/usr/bin/env sh", "exit 0", ""].join("\n"));
           yield* fs.writeFileString(fakeBunPath, ["#!/usr/bin/env sh", "exit 0", ""].join("\n"));

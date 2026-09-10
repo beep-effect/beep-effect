@@ -754,3 +754,15 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** live-process tests taking their budget from the runtime-aware
   config instead of a literal, or a lint that flags explicit `it` timeouts below the coverage
   budget in files that spawn the CLI.
+
+## 2026-09-10 — C3.2b Stage A: required configuration exposes implicit fixture roots
+
+- **Doing:** adding the required sweep-file boundary and running the prescribed command tests.
+- **Evidence:** four shard command fixtures failed with `QualityTaskConfigurationError` because
+  their temporary directories had no repository marker; two worker fixtures mocked every
+  filesystem `exists` call as true, making root discovery stop at the CLI package.
+- **Attribution and repair:** introduced fixture integration failures, not production defaults.
+  Command fixtures now write an empty `bun.lock` root marker and the required sweep file;
+  worker mocks preserve real absolute-path existence checks. No git fixture writes are needed.
+- **Would have prevented it:** fixtures declaring the same root marker and required config as
+  the CLI boundary before adding root-dependent behavior.
