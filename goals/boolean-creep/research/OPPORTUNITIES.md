@@ -1265,3 +1265,14 @@ subpath after its working-tree edit. The command compares merge-base and HEAD
 archives, so that was the expected result for the unchanged committed head.
 Commit the reviewed correction before using this command as acceptance evidence;
 a dirty-file preview mode or an explicit HEAD-only notice would shorten this loop.
+
+## 2026-09-10 — Post-merge hook ran before Effect dependencies were refreshed
+
+After PR #1060 landed, merging `origin/main` into the saved draft succeeded,
+but its version-sync hook failed with `Export named 'ByteSize' not found`.
+The merged source requires Effect `4.0.0-rc.113`, while the installed dependency
+tree still held the previous version. `bun install --frozen-lockfile` succeeded
+and installed the committed upgrade. Dependency-aware hook ordering, or a clear
+install-required result when the lockfile changes, would avoid this transient
+failure. Rerunning `bun run beep version-sync --skip-network` after installation
+passed with no drift; full integration verification follows separately.
