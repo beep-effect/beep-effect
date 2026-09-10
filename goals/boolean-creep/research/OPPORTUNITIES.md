@@ -1276,3 +1276,13 @@ and installed the committed upgrade. Dependency-aware hook ordering, or a clear
 install-required result when the lockfile changes, would avoid this transient
 failure. Rerunning `bun run beep version-sync --skip-network` after installation
 passed with no drift; full integration verification follows separately.
+
+## 2026-09-10 — Workstation restart interrupted the integration proof
+
+The first integration publish committed its note, then its proof ended with
+`All fibers interrupted without error` and exit 130. The workstation's new boot
+time falls after that run started, and the original process no longer exists.
+This is an environmental interruption with no completed proof, so publication
+must wait for a fresh full run. The clean commit and captured log survived;
+durable process ownership and a resumable proof receipt would reduce recovery
+work after restarts.
