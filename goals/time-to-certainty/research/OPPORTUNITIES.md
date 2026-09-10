@@ -791,3 +791,18 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** declaring the legacy suite's process-pool requirement or moving
   its cwd-dependent fixtures to child processes (the new prefix fixtures spawn the CLI with a
   child cwd and run on both runtimes' thread pools; the legacy suite passes on Node forks).
+
+## 2026-09-10 — The coverage ratchet measures each package with its own suite, not the repo's
+
+- **Doing:** reading PR #1082's hosted Coverage Regression run after the local scoped proofs for
+  `@beep/repo-cli` and `@beep/repo-utils` had passed.
+- **Evidence:** seven regressed rows; `TSMorph.model.ts` functions 81.08 → 78.9 and
+  `TSMorph.service.ts` branches 72.32 → 70.97 although every new branch was exercised — by
+  `repo-cli` tests, which do not count toward `repo-utils` rows. `Laws.command.ts` lines
+  41.32 → 37.73 because its new guard ran only in a spawned `bun run bin.ts` child, which the
+  instrumented worker never sees. A TSMorph-only vitest subset then undercounted the model file
+  (75.7 % vs 81.1 % for the full suite), so the honest comparison is full suite on the branch vs
+  full suite on `main` (`bunx vitest run --coverage --coverage.include=<file> --coverage.reporter=lcov`).
+- **Would have prevented it:** the ratchet contract stating "own-package suite, in-process
+  execution" next to the per-file rows, and a local `beep-cli coverage --filter` delta that
+  names which package's suite each regressed row is measured from.
