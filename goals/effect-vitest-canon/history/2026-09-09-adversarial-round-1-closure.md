@@ -1,12 +1,14 @@
 # P0f round 1 closure ledger
 
-Status: open for post-adoption performance integration. All thirteen finding
-repairs or narrow dispositions have current source and package evidence. Root
-accepted complete current-row accounting and canonical refresh on rc.113; the
-normal ratchet passes with 8,023 findings across 1,106 paths. Its post-adoption
-full command takes 10.319 seconds, so D4 performance integration remains open.
-Round 2 starts after that disposition. The dated rc.112 evidence below remains
-historical; the September 10 integration record governs current proof.
+Status: closed on 2026-09-10 for round-one findings and their integration gate.
+All thirteen findings have repairs or explicit narrow dispositions, completed
+package proof, complete current-row accounting and accepted adopted-baseline
+performance. The merged ordinary command passes at 9.490s, 9.531s and 9.748s
+with 8,026 findings over 1,106 paths. Round 2 may start. This closure does not
+claim final PR readiness: current scoped CLI coverage, the remaining adversarial
+rounds, aggregate Yeet proof and exact-head hosted/review gates remain required.
+The dated handoffs below preserve historical pending states; this current
+closure and the final integration section govern their disposition.
 
 The first Grok process exited 0 with eleven well-formed findings: one blocker,
 six majors and four minors. Its report disclosed partial reads of several
@@ -128,3 +130,33 @@ Remaining integration work is the complete current D9 census/finding delta,
 normal-command timing sample and reviewed canonical regeneration. Scoped
 coverage must retain all old floors, and the required next two adversarial
 rounds and exact-head hosted checks remain open. No P1/P2 or merge is authorized.
+
+
+## Final round-one integration acceptance, 2026-09-10
+
+Main is integrated through `44502c4` by ordinary merge `da2ebe9`. The final CLI
+package audit and docgen pass in 406.858s with all 6,533 captured authored/runtime
+inputs unchanged. The scanner focused suite has 113 passing cases. All 8,023
+previous finding payloads have unique counterparts in the 8,026-row current
+baseline; only source-bound locations/two body occurrences change, and the
+three added candidates are separately attributed. Scope remains 1,106 paths,
+with no exception/reason transfers or unexplained rows. Canonical output equals
+the independently reviewed preview exactly. Three normal adopted-baseline
+runs now meet D4, closing the last round-one performance integration blocker.
+
+Runner package proof and complete Node/Bun runtime suites pass, including the
+exact hosted Node 22.22.3 environment. Its fixture-only fork-pool correction
+preserves all 130 assertions and all protected inputs. Scoped coverage with
+`CI=true` passes in 81.620s, with all baseline bytes unchanged. The reviewed
+schema/native-boundary dispositions and meaningful JSDoc fixes also have their
+applicable focused checks and full package evidence. The source-bound knowledge
+classifier has focused regression and whole-tree evidence for all 18 original
+generated anchors; remaining prose labels were repaired before final tree proof.
+
+The thirteen original finding dispositions therefore close without new waivers.
+R1-003/004/007/010 retain exactly their existing narrow semantic dispositions;
+no broad detector exemption, global runtime setting, test deletion, property
+floor or coverage-floor relaxation was introduced. Fresh full CLI coverage and
+all later-round/PR checks remain separate gates and will not be inferred from
+this round-one closure. Root receipts bind the final preview, source inputs,
+canonical artifacts, package logs and all three timing observations.

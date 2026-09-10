@@ -54,6 +54,11 @@ export class TestContextUnavailable extends S.TaggedError<TestContextUnavailable
 ) {
   static readonly is = S.is(TestContextUnavailable);
 
+  /**
+   * Describe the instrumented method whose public Vitest execution context is missing.
+   *
+   * @returns The context failure message for reporters and callers.
+   */
   override get message(): string {
     return `Instrumented ${this.method} callback ran without its Vitest execution context`;
   }
@@ -113,6 +118,11 @@ export class TestHang extends S.TaggedError<TestHang>($I`TestHang`)(
 ) {
   static readonly is = S.is(TestHang);
 
+  /**
+   * Describe the expired watchdog with its test name, budget and last captured log.
+   *
+   * @returns The watchdog failure message, including a marker when no log was captured.
+   */
   override get message(): string {
     const lastLog = O.getOrElse(this.lastLogLine, () => "<none>");
     return `Instrumented test "${this.testName}" exceeded its ${this.timeoutMillis}ms watchdog. Last log: ${lastLog}`;

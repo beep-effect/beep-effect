@@ -87,6 +87,8 @@ const functionNode = (node: MorphNode): node is EffectVitestFunctionNode =>
  * if (reference) console.log(resolveEffectVitestBinding(reference)._tag) // "Some"
  * ```
  *
+ * @param identifier - Identifier reference whose enclosing lexical scopes should be searched.
+ * @returns The shadowing declaration when resolved, or None for an unbound reference.
  * @category parsing
  * @since 0.0.0
  */
@@ -295,6 +297,8 @@ const collectSyntaxRoles = (sourceFile: SourceFile) => {
  * console.log(collectEffectVitestImports(source).hasEffectImport) // true
  * ```
  *
+ * @param sourceFile - Source file to analyze without following imports or invoking a type checker.
+ * @returns Import provenance and invocation-local syntax indexes for this source file.
  * @category parsing
  * @since 0.0.0
  */
@@ -1209,6 +1213,8 @@ export const isWholeBodyCall: {
  * console.log(A.map(sourceFunctionDefinitions(source), ({ name }) => name)) // ["withOne", "withTwo"]
  * ```
  *
+ * @param sourceFile - Source file whose named function declarations and initialized variables are inspected.
+ * @returns Named functions and directly wrapped function initializers available for local analysis.
  * @category parsing
  * @since 0.0.0
  */
@@ -1253,6 +1259,8 @@ export const sourceFunctionDefinitions = (
  * console.log(O.map(A.head(source.getDescendantsOfKind(SyntaxKind.CallExpression)), callLabel)) // Some("Effect.runSync")
  * ```
  *
+ * @param call - Call expression whose callee text is rendered as evidence.
+ * @returns The callee source text, without inferring import provenance.
  * @category formatting
  * @since 0.0.0
  */
@@ -1271,6 +1279,8 @@ export const callLabel = (call: CallExpression): string => call.getExpression().
  * console.log(compactEvidence(source)) // "const value = subject()"
  * ```
  *
+ * @param node - Syntax node whose source text supplies display evidence.
+ * @returns Whitespace-normalized display text truncated to at most 200 characters.
  * @category formatting
  * @since 0.0.0
  */
@@ -1293,6 +1303,8 @@ export const compactEvidence = (node: MorphNode): string =>
  * console.log(O.map(definition, ({ node }) => callbackCalls(node).length)) // Some(2)
  * ```
  *
+ * @param callback - Function node whose lexical descendants are inspected.
+ * @returns Descendant call expressions, including calls inside nested functions.
  * @category parsing
  * @since 0.0.0
  */

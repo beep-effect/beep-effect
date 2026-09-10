@@ -29,15 +29,18 @@ and timing behavior, and enforce the result through a syntax-only lint ratchet.
 
 ## Latest evidence
 
-The isolated proposal contains all 15 detector rules, the 85-entry pinned API
+The current proposal contains all 15 detector rules, the 100-entry rc113 API
 graph, four lens charters, and the instrumented runner with Node/Bun proof.
-The latest recorded census contains 970 test/spec files and 105 support modules;
-the starting baseline has 5,016 findings awaiting inventory and migration.
+The adopted census contains 996 test files and 110 support modules; its 8,026
+open findings are the starting candidates for later inventory and migration.
+Three normal adopted-baseline commands pass below ten seconds with recorded
+workstation resource context. Round one is closed and round two is active.
+The final CLI coverage and remaining adversarial, aggregate, hosted and review
+gates are still open. Continue from the September 10 integration record.
 
 [PR #1047](https://github.com/beep-effect/beep-effect/pull/1047) promoted the
 conformant MemoryFileSystem and was merged by Benjamin on 2026-09-09 after all
 18 required checks passed, Greptile reached 5/5, and every review thread closed.
-The first of three P0f review rounds has an accepted immutable input corpus and
-20 sampled tests. See PLAN.md and the dated receipts in history for proof and
-limits. P0g plan ratification and merge are required before P1; Benjamin must
-acknowledge the full inventory before P2 begins.
+See PLAN.md and the dated receipts in history for current proof and limits.
+P0g plan ratification and merge are required before P1; Benjamin must acknowledge
+the full inventory before P2 begins.

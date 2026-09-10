@@ -542,3 +542,69 @@ it("preserves accepted full-token occurrence digests through iterative leaf trav
     );
   }
 });
+
+it("retains unmatched duplicate payloads and stable equal-id order in both membership directions", () => {
+  const first = finding(4, "first");
+  const second = EffectVitestFinding.make({ ...first, evidence: "second", confidence: 0.7 });
+  const duplicate = EffectVitestFinding.make({ ...first, confidence: 0.6, testName: O.some("metadata") });
+  const absent = finding(8, "absent");
+  const rows = [second, duplicate, first];
+  deepStrictEqual(diffEffectVitestFindings(rows, [absent]), {
+    currentCount: 3,
+    baselineCount: 1,
+    introduced: rows,
+    resolved: [absent],
+  });
+  deepStrictEqual(diffEffectVitestFindings([absent], rows), {
+    currentCount: 1,
+    baselineCount: 3,
+    introduced: [absent],
+    resolved: rows,
+  });
+  deepStrictEqual(diffEffectVitestFindings(rows, [first, second]), {
+    currentCount: 3,
+    baselineCount: 2,
+    introduced: [],
+    resolved: [],
+  });
+  deepStrictEqual(diffEffectVitestFindings([], []), {
+    currentCount: 0,
+    baselineCount: 0,
+    introduced: [],
+    resolved: [],
+  });
+  deepStrictEqual(diffEffectVitestFindings(rows, []).introduced, rows);
+  deepStrictEqual(diffEffectVitestFindings([], rows).resolved, rows);
+  deepStrictEqual(diffEffectVitestFindings([first, second], []).introduced, [first, second]);
+});
+
+it("keeps indexed legacy membership separate from anchored exception eligibility", () => {
+  const current = EffectVitestFinding.make({ ...finding(4, "same"), occurrence: O.some(`v2:${"a".repeat(64)}`) });
+  const legacy = EffectVitestFinding.make({ ...current, occurrence: O.none() });
+  const changed = EffectVitestFinding.make({ ...current, occurrence: O.some(`v2:${"b".repeat(64)}`) });
+  deepStrictEqual(diffEffectVitestFindings([current], [legacy]), {
+    currentCount: 1,
+    baselineCount: 1,
+    introduced: [],
+    resolved: [],
+  });
+  deepStrictEqual(diffEffectVitestFindings([changed], [current]), {
+    currentCount: 1,
+    baselineCount: 1,
+    introduced: [changed],
+    resolved: [current],
+  });
+  const duplicates = [current, EffectVitestFinding.make({ ...current, id: `${Str.slice(0, -1)(current.id)}2` })];
+  deepStrictEqual(diffEffectVitestFindings(duplicates, [legacy]), {
+    currentCount: 2,
+    baselineCount: 1,
+    introduced: duplicates,
+    resolved: [legacy],
+  });
+  for (const rows of [[legacy], duplicates]) {
+    const merged = preserveEffectVitestExceptions(rows, O.some(withException(rows)));
+    deepStrictEqual(merged, rows);
+    deepStrictEqual(diffEffectVitestFindings(merged, rows).introduced, []);
+    assertTrue(A.every(merged, (row) => row.status === "open" && O.isNone(row.reason)));
+  }
+});

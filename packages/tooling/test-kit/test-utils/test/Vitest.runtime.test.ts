@@ -29,6 +29,7 @@ const reporterSource = NodeURL.fileURLToPath(
 );
 const fixtureDirectory = NodeURL.fileURLToPath(new URL("./fixtures/vitest-instrumentation", import.meta.url));
 const vitestBin = NodeURL.fileURLToPath(new URL("../../../../../node_modules/vitest/vitest.mjs", import.meta.url));
+const runtimePoolArgs = process.versions.bun === undefined ? [] : ["--pool=threads"];
 const emptyString = (): string => "";
 const rawErrorPrefix = "BEEP_VITEST_RAW_ERROR ";
 const rawErrorLines = (output: string): string =>
@@ -136,7 +137,7 @@ const runFixture = (
         vitestBin,
         "run",
         runtimeTest,
-        "--pool=threads",
+        ...runtimePoolArgs,
         "--root",
         packageRoot,
         "--reporter=json",

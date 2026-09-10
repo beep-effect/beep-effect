@@ -1,5 +1,58 @@
 # rc.113 final scanner timing
 
+## Final Fallow candidate
+
+After the behavior-preserving Fallow repairs, Root repeated the normal command
+on the final 8,026-row baseline: **9.404512s, 9.606115s and 9.547228s**, all exit
+zero. Complete source and canonical hashes remain unchanged. The only D9 source
+change moves one runtime-helper finding by one line and updates its body anchor;
+all other 8,025 full finding payloads are exact, with no count/classification,
+replacement, status, reason or exception transfer. The final candidate retains
+all earlier observations below as historical evidence.
+
+Current payload SHA256:
+`450675866d9e1102a17dfc96a91b61f450cf1b934b5671e0ff5fe40a538bf753`.
+Raw evidence and resource context are retained in
+`~/.cache/beep/effect-vitest-canon/pr1067-resume/post-fallow-timing/`.
+Root's final timing receipt is `post-fallow-timing-root-acceptance.json`.
+These observations satisfy the current D4 target; they do not establish a
+worst-case guarantee under different workstation load.
+
+
+## Prior policy candidate acceptance
+
+Root accepts three consecutive ordinary `bun run beep lint effect-vitest` runs
+on the merged implementation and the adopted **8,026-row / 1,106-path** baseline:
+**9.489577s, 9.530767s and 9.748002s**. All exit zero; the full source set and
+canonical artifact hashes remain unchanged. The narrow membership-index repair
+preserves complete ordered finding payloads, including duplicate semantics.
+The final baseline delta is independently accounted for with no unexplained loss
+or exception transfer. No package, coverage or source writer was active during
+these three observations.
+
+| Run | Full command seconds | Child CPU seconds | Load1 before | Available GiB before | Swap pages in / out |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 9.489577 | 15.509 | 5.01 | 70.50 | 40 / 0 |
+| 2 | 9.530767 | 15.580 | 4.93 | 70.74 | 26 / 0 |
+| 3 | 9.748002 | 15.932 | 4.79 | 69.71 | 28 / 0 |
+
+The host exposes 64 logical CPUs. Raw captures retain CPU/IO/memory pressure,
+CPU counters, affinity, cgroup limits, memory availability and swap/page deltas.
+Memory pressure averaged zero during these observations; existing swap use is
+not treated as activity during a run. These are observed durations under the
+recorded load, not normalized scores or a worst-case latency guarantee. The
+slowest observation leaves 0.252s of margin; workstation load remains relevant.
+All earlier observations and failures below remain historical evidence.
+
+Runtime: Bun 1.4.2, Node 24.20.0, Effect and adapter rc113, Vitest 4.1.11.
+The declared adapter peer mismatch remains separately disclosed. Current finding
+payload SHA256: `b21cba0b20cf184184b6e2c06f0e649cb0931172bda2537a7a6fa92c16472bc2`.
+Private evidence: `~/.cache/beep/effect-vitest-canon/pr1067-resume/policy-final-timing/`
+and `policy-final-timing-root-acceptance.json`.
+
+## Historical pre-adoption observations
+
+
 Root accepts the initial scan and all three ordered repeat runs against the frozen
 1,106-file D9 census. Each produced the identical 8,023 complete finding payloads.
 The initial full CLI command took 9.591994 seconds; every repeat remained under D4's

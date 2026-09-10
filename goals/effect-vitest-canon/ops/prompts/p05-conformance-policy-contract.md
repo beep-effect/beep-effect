@@ -5,20 +5,20 @@
 # P0.5 narrow conformance entrypoint policy integration
 
 Use gpt-6-astra/xhigh in this user-requested Codex CLI lane. No agents.
-Work only in ~/YeeBois/projects/beep-effect2-worktrees/effect-vitest-filesystem.
+Work only in the designated effect-vitest-filesystem sibling worktree.
 You are not alone: the conformance lane owns the test-utils helper/tests; root
 owns its dependency patch/manifests, goal docs, package checks and all git. Do not
 edit or revert their files. No git, inbox, scanner writes, dependencies, global
 config/diagnostic severity changes, broad audit/check, web, publishing or agents.
 
 Create this report first and append progressively:
-~/YeeBois/projects/beep-effect2-worktrees/effect-vitest-canon/goals/effect-vitest-canon/history/lanes/p05-conformance-policy.md
+goals/effect-vitest-canon/history/lanes/p05-conformance-policy.md
 Final message only report absolute path.
 
 Own ONLY:
 - packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts
 - packages/tooling/tool/cli/test/quality-tsgo-directives.test.ts
-- your report, plus private ~/ .cache path without the space:
+- your report, plus private cache scratch/proof files:
   ~/.cache/beep/effect-vitest-canon/p05-policy-* scratch/proof files.
 No new source role file is needed. If ownership is insufficient, give the exact
 reason and proposed extension; do not silently widen it.

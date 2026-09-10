@@ -5953,8 +5953,8 @@
     "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
     "package": "@beep/test-utils",
     "kind": "test",
-    "bytes": 21638,
-    "lines": 470
+    "bytes": 21726,
+    "lines": 471
   },
   {
     "file": "packages/tooling/test-kit/test-utils/test/Vitest.test.ts",
@@ -6583,8 +6583,8 @@
     "file": "packages/tooling/tool/cli/test/docgen.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 175439,
-    "lines": 4941
+    "bytes": 178193,
+    "lines": 4998
   },
   {
     "file": "packages/tooling/tool/cli/test/doctest-lane.test.ts",
@@ -6625,8 +6625,8 @@
     "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 24950,
-    "lines": 544
+    "bytes": 27568,
+    "lines": 610
   },
   {
     "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
@@ -6849,8 +6849,8 @@
     "file": "packages/tooling/tool/cli/test/knowledge-refs.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 39368,
-    "lines": 943
+    "bytes": 54559,
+    "lines": 1173
   },
   {
     "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
@@ -6884,8 +6884,8 @@
     "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 93661,
-    "lines": 2090
+    "bytes": 93917,
+    "lines": 2096
   },
   {
     "file": "packages/tooling/tool/cli/test/lint-identity-registry.test.ts",
@@ -6926,8 +6926,8 @@
     "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 22701,
-    "lines": 491
+    "bytes": 24434,
+    "lines": 529
   },
   {
     "file": "packages/tooling/tool/cli/test/match-person-model-store.test.ts",
@@ -6982,8 +6982,8 @@
     "file": "packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 18476,
-    "lines": 401
+    "bytes": 19170,
+    "lines": 416
   },
   {
     "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
@@ -7108,8 +7108,8 @@
     "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 252520,
-    "lines": 6253
+    "bytes": 255097,
+    "lines": 6316
   },
   {
     "file": "packages/tooling/tool/cli/test/quality-tmpfs-render.test.ts",

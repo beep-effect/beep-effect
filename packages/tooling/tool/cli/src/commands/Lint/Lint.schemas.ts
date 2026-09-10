@@ -1309,6 +1309,8 @@ export const EffectVitestSourceFileGlobs: ReadonlyArray<string> = A.fromIterable
  * console.log(makeEffectVitestFindingKey(row) === makeEffectVitestFindingKey(shifted)) // true
  * ```
  *
+ * @param finding - Finding whose provenance and occurrence identity form the membership key.
+ * @returns The full canonical key, retaining occurrence anchors and ordinal multiplicity.
  * @category utilities
  * @since 0.0.0
  */

@@ -7,7 +7,7 @@
 Use gpt-6-astra with explicit xhigh reasoning. This is the user-requested Codex
 CLI implementation lane under D10. No native agents or additional CLI agents.
 
-Working tree: ~/YeeBois/projects/beep-effect2-worktrees/effect-vitest-filesystem,
+Working tree: the designated effect-vitest-filesystem sibling worktree,
 branch codex/effect-vitest-filesystem, base 663904610c. Fresh main pins Bun 1.4.2;
 PATH is set accordingly. Node is v24.20.0. Effect, both platforms and Vitest
 adapter remain rc.112; Vitest is 4.1.11. Frozen installation passed. Root moved
@@ -15,7 +15,7 @@ adapter remain rc.112; Vitest is 4.1.11. Frozen installation passed. Root moved
 regenerated the lock. Do not change manifests, locks or root barrel yourself.
 
 Create the report first and append as you work:
-~/YeeBois/projects/beep-effect2-worktrees/effect-vitest-canon/goals/effect-vitest-canon/history/lanes/p05-conformance-port.md
+goals/effect-vitest-canon/history/lanes/p05-conformance-port.md
 Final message only that absolute report path. You are not alone: the read-only
 recon lane writes its own report in the primary goal worktree; root owns packet,
 manifest, lock, private proof scripts, package verification and git/publication.
@@ -56,7 +56,7 @@ the existing package helper entries. Record this unsupported scaffold route;
 do not hand-create a slice or mutate architecture policy.
 
 Pinned source, never HEAD:
-~/ .cache path without the intervening space:
+Private pinned source snapshot:
 ~/.cache/beep/effect-vitest-canon/effect-rc112/packages/effect/test/FileSystem.test-utils.ts
 435 lines; SHA256 8725010039e5ef2cee8b9b4fbcdb076f4099e8a44fe393a8e032c5fd89808abe.
 Snapshot commit 2600f62f4532026928454dcea8d1c48557b3f942.

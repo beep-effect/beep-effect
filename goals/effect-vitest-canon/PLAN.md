@@ -23,14 +23,18 @@ contract. Every subsequent phase waits for its predecessor's gate.
 
 ## Current integration, 2026-09-10
 
-PR #1060 is merged and main is integrated at 92fcea6. The current source contract
-is rc.113 at d3b837aee836f35d625d55205f7d6e61305fc198. Root adopted the verified
-100-entry graph; runner and the expanded FileSystem conformance suite pass full
-package verification. CLI package verification and test-utils scoped coverage
-pass; CLI scoped coverage is in progress. Native property
-APIs replace the FastCheck bridge. This PR retains main's Vitest 4.1.11 and
-qualifies behavioral proof separately from rc.113's unsatisfied Vitest 5 peer.
-See history/2026-09-10-pr1067-rc113-integration.md. P0f/P0g remain open.
+Main, including #1060, is integrated through `6c15c7f` by merge `3052f89`.
+The current source contract is rc113 at d3b837aee836f35d625d55205f7d6e61305fc198.
+The 100-entry graph is pin-verified. Both package audits/docgen pass, including
+CLI verification on the latest merged tree. Complete runner suites pass on
+Node 22, Node 24 and Bun; hosted-mode Node 22 scoped coverage passes unchanged.
+The adopted baseline has 8,026 findings across 1,106 paths, with complete
+attribution and three normal command runs below ten seconds. Round one is
+closed; round two is active. Fresh CLI coverage and all remaining adversarial,
+aggregate and exact-head PR checks still gate readiness. Main's Vitest 4.1.11
+remains outside the adapter's declared peer range; exercised behavior and that
+limitation are recorded separately. P0f/P0g remain open. See the current
+integration record in history/2026-09-10-pr1067-rc113-integration.md.
 
 ## Historical evidence through rc.112
 
@@ -148,22 +152,27 @@ All runtime/verification limitations are in the hosted receipt and lane reports.
 ## P0f current work
 
 
-Latest continuation (2026-09-10): main including #1060 is integrated, and the
-active pin is Effect/@effect/vitest rc.113. The scanner has 111 passing focused
-tests and full repo-cli package audit/docgen proof. The final runner and
-FileSystem helper pass full package verification, Node/Bun runtime checks and
-scoped coverage. CLI coverage measurement and the canonical comparison pass
-after nine measured missing identities are adopted with all prior floors and
-other packages preserved. Full Fallow and JSDoc ratchet checks pass.
+Latest continuation (2026-09-10): full repo-cli package audit/docgen passes on
+the final merged inputs in 406.858s, with no source drift. The scanner suite
+passes 113 focused cases. Runner suites pass on Node 22.22.3, Node 24.20.0 and
+Bun 1.4.2; full test-utils package verification and hosted-mode scoped coverage
+pass with the original assertions and floors. Earlier CLI coverage adoption
+added only nine measured missing identities and preserved all old floors;
+fresh coverage remains required for the final policy changes.
 
-The final source capture has 1,106 files (996 tests and 110 support) and 8,023
-candidate rows. Initial scan and three ordered repeat commands pass the
-10-second bound; the slowest leaves 0.024 seconds of margin. Root accepted exact current
-row reconciliation and canonical refresh. The post-adoption ratchet passes
-functionally but takes 10.319 seconds; the final D4 bound remains open. Early
-publication starts hosted checks alongside local proof while that timing is
-attributed. Round-one integration and rounds 2/3 still follow. P0g ratification and all P1/P2 gates remain. Current proof and limitations
-are in history/2026-09-10-pr1067-rc113-integration.md and the final timing report.
+The canonical census retains 1,106 paths (996 tests, 110 support). Its 8,026
+candidate rows preserve every previous candidate with no unexplained loss or
+exception transfer. Three new candidates are attributed to two upstream tests
+and one scanner regression. After the membership-index repair, three consecutive
+normal commands against the adopted baseline pass in 9.405s, 9.606s and 9.547s.
+Raw receipts include workstation load, pressure, memory and swap activity.
+
+Root closed all thirteen round-one findings and their integration gate. Round
+two is reviewing an immutable corpus with twenty new sample files. Round three,
+final local/hosted proof and PR review closure remain required. P0g ratification
+and all P1/P2 gates remain. Current proof and limitations are recorded in the
+September 10 integration and final timing reports; prior observations below are
+historical, including the earlier 10.319s adopted-baseline failure.
 
 ### Historical pre-resumption integration
 
@@ -350,7 +359,7 @@ Gate: each charter cites only tag-pinned APIs; the instrumented `it` passes its 
 
 ### P0.5 — MemoryFileSystem promotion (its own PR, D8)
 
-1. Port `packages/effect/test/FileSystem.test-utils.ts` (`testLayer`, `TestLayerOptions`) into
+1. Port [upstream FileSystem.test-utils.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/effect/test/FileSystem.test-utils.ts) (`testLayer`, `TestLayerOptions`) into
    `@beep/test-utils` as `FileSystemConformance.ts`, parametrized exactly like upstream, replacing
    upstream's `runPromise`-in-plain-`it` with `it.effect` + `Effect.provide(layer)` per test (the
    layer under test is the subject, so per-test provide is correct here — record this as a D14

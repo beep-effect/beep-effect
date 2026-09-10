@@ -10,6 +10,7 @@ import {
   Inspectable,
   Layer,
   Logger,
+  Match,
   MutableRef,
   Number as Num,
   Option as O,
@@ -154,125 +155,117 @@ const startTestLifecycle = Effect.fnUntraced(function* (
   }
 });
 
-const instrumentEffect = <A, E, R>(
+const instrumentEffect = Effect.fnUntraced(function* <A, E, R>(
   self: Effect.Effect<A, E, R>,
   task: ResolvedTestTask,
   clock: Clock.Clock,
   propertyRun?: PropertyRunState
-): Effect.Effect<A, E | TestHang, R | Scope.Scope> =>
-  Effect.gen(function* () {
-    const monotonicMillis = Effect.map(clock.monotonicTimeNanos, (nanos) => globalThis.Number(nanos) / 1_000_000);
-    const name = taskName(task);
-    const lastLogLine = propertyRun?.lastLogLine ?? MutableRef.make(O.none<string>());
-    const captureLogger = Logger.make<unknown, void>(({ message }) => {
-      MutableRef.set(lastLogLine, O.some(renderLogLine(message)));
-    });
-    const shouldTrace = yield* traceEnabled;
-    const loggerLayer = Logger.layer(shouldTrace ? [Logger.consolePretty()] : [], { mergeWithExisting: true });
-    const captureLoggerLayer = Logger.layer([captureLogger], { mergeWithExisting: true });
-    const startedAtMillis = yield* monotonicMillis;
-    const isFirstPropertyTrial = propertyRun !== undefined && O.isNone(propertyRun.startedAtMillis);
-    if (isFirstPropertyTrial) {
-      propertyRun.startedAtMillis = O.some(startedAtMillis);
-      propertyRun.watchdogBudgetMillis = watchdogBudget(task.timeout);
-      propertyRun.deadlineMillis = O.map(propertyRun.watchdogBudgetMillis, (timeoutMillis) =>
-        Num.sum(startedAtMillis, timeoutMillis)
-      );
-    }
-
-    return yield* provideLoggerLayer(
-      Effect.gen(function* () {
-        yield* startTestLifecycle(
-          name,
-          shouldTrace,
-          startedAtMillis,
-          monotonicMillis,
-          isFirstPropertyTrial,
-          propertyRun
-        );
-
-        const body: Effect.Effect<Exit.Exit<A, E | TestHang>, never, R | Scope.Scope> = Effect.exit(
-          provideLoggerLayer(self, captureLoggerLayer)
-        );
-        const watchdogExpired = (timeoutMillis: number) =>
-          Effect.sync(() =>
-            TestHang.make({
-              lastLogLine: MutableRef.get(lastLogLine),
-              testName: name,
-              timeoutMillis,
-            })
-          ).pipe(
-            Effect.tap((error) =>
-              shouldTrace
-                ? Effect.logError("effect-vitest watchdog expired", error).pipe(
-                    Effect.annotateLogs({ event: "watchdog", testName: name, timeoutMillis })
-                  )
-                : Effect.void
-            ),
-            Effect.map(Exit.fail)
-          );
-        // Setup consumes the stored absolute budget; sample again only when arming.
-        const armedAtMillis = yield* monotonicMillis;
-        const watchdog =
-          propertyRun === undefined
-            ? O.map(watchdogBudget(task.timeout), (timeoutMillis) => ({
-                reportMillis: timeoutMillis,
-                sleepMillis: timeoutMillis,
-                wait: Effect.provideService(Effect.sleep(timeoutMillis), Clock.Clock, clock),
-              }))
-            : O.zipWith(
-                propertyRun.deadlineMillis,
-                propertyRun.watchdogBudgetMillis,
-                (deadlineMillis, timeoutMillis) => ({
-                  reportMillis: timeoutMillis,
-                  sleepMillis: deadlineMillis - armedAtMillis,
-                  // raceFirst starts the body first. Charge synchronous body setup
-                  // too, by reading NOW again in the watchdog branch itself.
-                  wait: monotonicMillis.pipe(
-                    Effect.flatMap((nowMillis) => {
-                      const remainingMillis = deadlineMillis - nowMillis;
-                      return remainingMillis <= 0
-                        ? Effect.void
-                        : Effect.provideService(Effect.sleep(remainingMillis), Clock.Clock, clock);
-                    })
-                  ),
-                })
-              );
-        const winner = O.match(watchdog, {
-          onNone: (): Effect.Effect<Exit.Exit<A, E | TestHang>, never, R | Scope.Scope> => body,
-          onSome: ({
-            reportMillis,
-            sleepMillis,
-            wait,
-          }): Effect.Effect<Exit.Exit<A, E | TestHang>, never, R | Scope.Scope> =>
-            sleepMillis <= 0
-              ? watchdogExpired(reportMillis)
-              : Effect.raceFirst(body, wait.pipe(Effect.andThen(watchdogExpired(reportMillis)))),
-        });
-        const exit = yield* winner;
-        const outcome = outcomeOf(exit);
-        if (propertyRun !== undefined) {
-          propertyRun.outcome = retainFailureOutcome(propertyRun.outcome, outcome);
-        }
-
-        if (shouldTrace && propertyRun === undefined) {
-          const endedAtMillis = yield* monotonicMillis;
-          const durationMillis = endedAtMillis - startedAtMillis;
-          yield* Effect.log(`effect-vitest test end outcome=${outcome} durationMillis=${durationMillis}`).pipe(
-            Effect.annotateLogs({
-              durationMillis,
-              event: "end",
-              outcome,
-              testName: name,
-            })
-          );
-        }
-
-        return yield* exit;
-      }),
-      loggerLayer
-    );
+) {
+  const monotonicMillis = Effect.map(clock.monotonicTimeNanos, (nanos) => globalThis.Number(nanos) / 1_000_000);
+  const name = taskName(task);
+  const lastLogLine = propertyRun?.lastLogLine ?? MutableRef.make(O.none<string>());
+  const captureLogger = Logger.make<unknown, void>(({ message }) => {
+    MutableRef.set(lastLogLine, O.some(renderLogLine(message)));
   });
+  const shouldTrace = yield* traceEnabled;
+  const loggerLayer = Logger.layer(shouldTrace ? [Logger.consolePretty()] : [], { mergeWithExisting: true });
+  const captureLoggerLayer = Logger.layer([captureLogger], { mergeWithExisting: true });
+  const startedAtMillis = yield* monotonicMillis;
+  const isFirstPropertyTrial = propertyRun !== undefined && O.isNone(propertyRun.startedAtMillis);
+  if (isFirstPropertyTrial) {
+    propertyRun.startedAtMillis = O.some(startedAtMillis);
+    propertyRun.watchdogBudgetMillis = watchdogBudget(task.timeout);
+    propertyRun.deadlineMillis = O.map(propertyRun.watchdogBudgetMillis, (timeoutMillis) =>
+      Num.sum(startedAtMillis, timeoutMillis)
+    );
+  }
+
+  return yield* provideLoggerLayer(
+    Effect.gen(function* () {
+      yield* startTestLifecycle(name, shouldTrace, startedAtMillis, monotonicMillis, isFirstPropertyTrial, propertyRun);
+
+      const body: Effect.Effect<Exit.Exit<A, E | TestHang>, never, R | Scope.Scope> = Effect.exit(
+        provideLoggerLayer(self, captureLoggerLayer)
+      );
+      const watchdogExpired = (timeoutMillis: number) =>
+        Effect.sync(() =>
+          TestHang.make({
+            lastLogLine: MutableRef.get(lastLogLine),
+            testName: name,
+            timeoutMillis,
+          })
+        ).pipe(
+          Effect.tap((error) =>
+            shouldTrace
+              ? Effect.logError("effect-vitest watchdog expired", error).pipe(
+                  Effect.annotateLogs({ event: "watchdog", testName: name, timeoutMillis })
+                )
+              : Effect.void
+          ),
+          Effect.map(Exit.fail)
+        );
+      // Setup consumes the stored absolute budget; sample again only when arming.
+      const armedAtMillis = yield* monotonicMillis;
+      const watchdog =
+        propertyRun === undefined
+          ? O.map(watchdogBudget(task.timeout), (timeoutMillis) => ({
+              reportMillis: timeoutMillis,
+              sleepMillis: timeoutMillis,
+              wait: Effect.provideService(Effect.sleep(timeoutMillis), Clock.Clock, clock),
+            }))
+          : O.zipWith(
+              propertyRun.deadlineMillis,
+              propertyRun.watchdogBudgetMillis,
+              (deadlineMillis, timeoutMillis) => ({
+                reportMillis: timeoutMillis,
+                sleepMillis: deadlineMillis - armedAtMillis,
+                // raceFirst starts the body first. Charge synchronous body setup
+                // too, by reading NOW again in the watchdog branch itself.
+                wait: monotonicMillis.pipe(
+                  Effect.flatMap((nowMillis) => {
+                    const remainingMillis = deadlineMillis - nowMillis;
+                    return remainingMillis <= 0
+                      ? Effect.void
+                      : Effect.provideService(Effect.sleep(remainingMillis), Clock.Clock, clock);
+                  })
+                ),
+              })
+            );
+      const winner = O.match(watchdog, {
+        onNone: (): Effect.Effect<Exit.Exit<A, E | TestHang>, never, R | Scope.Scope> => body,
+        onSome: ({
+          reportMillis,
+          sleepMillis,
+          wait,
+        }): Effect.Effect<Exit.Exit<A, E | TestHang>, never, R | Scope.Scope> =>
+          sleepMillis <= 0
+            ? watchdogExpired(reportMillis)
+            : Effect.raceFirst(body, wait.pipe(Effect.andThen(watchdogExpired(reportMillis)))),
+      });
+      const exit = yield* winner;
+      const outcome = outcomeOf(exit);
+      if (propertyRun !== undefined) {
+        propertyRun.outcome = retainFailureOutcome(propertyRun.outcome, outcome);
+      }
+
+      if (shouldTrace && propertyRun === undefined) {
+        const endedAtMillis = yield* monotonicMillis;
+        const durationMillis = endedAtMillis - startedAtMillis;
+        yield* Effect.log(`effect-vitest test end outcome=${outcome} durationMillis=${durationMillis}`).pipe(
+          Effect.annotateLogs({
+            durationMillis,
+            event: "end",
+            outcome,
+            testName: name,
+          })
+        );
+      }
+
+      return yield* exit;
+    }),
+    loggerLayer
+  );
+});
 
 const missingTestContext = (method: string): Effect.Effect<never, TestContextUnavailable> =>
   Effect.fail(TestContextUnavailable.make({ method }));
@@ -394,21 +387,17 @@ const instrumentTester = <R>(tester: Vitest.Tester<R>, clock: Clock.Clock): Vite
       return Reflect.apply(target, thisArg, [name, instrumentContextCallback(self, clock), timeout]);
     },
     get(target, property, receiver) {
-      switch (property) {
-        case "skip":
-        case "only":
-        case "fails":
-          return instrumentTest(Reflect.get(target, property, receiver), clock);
-        case "skipIf":
-        case "runIf":
-          return instrumentConditional(Reflect.get(target, property, receiver), clock);
-        case "each":
-          return instrumentEach(Reflect.get(target, property, receiver), clock);
-        case "prop":
-          return instrumentProperty(Reflect.get(target, property, receiver), clock);
-        default:
-          return Reflect.get(target, property, receiver);
-      }
+      return Match.value(property).pipe(
+        Match.when(Match.is("skip", "only", "fails"), () =>
+          instrumentTest(Reflect.get(target, property, receiver), clock)
+        ),
+        Match.when(Match.is("skipIf", "runIf"), () =>
+          instrumentConditional(Reflect.get(target, property, receiver), clock)
+        ),
+        Match.when("each", () => instrumentEach(Reflect.get(target, property, receiver), clock)),
+        Match.when("prop", () => instrumentProperty(Reflect.get(target, property, receiver), clock)),
+        Match.orElse(() => Reflect.get(target, property, receiver))
+      );
     },
   });
 
@@ -443,18 +432,21 @@ const instrumentLayer = <LayerFn extends (...args: ReadonlyArray<never>) => (...
     },
   });
 
+const instrumentMethod = <R>(
+  target: Vitest.MethodsNonLive<R>,
+  property: string | symbol,
+  receiver: unknown,
+  clock: Clock.Clock
+): unknown =>
+  Match.value(property).pipe(
+    Match.when("effect", () => instrumentTester(target.effect, clock)),
+    Match.when("layer", () => instrumentLayer(target.layer, clock)),
+    Match.orElse(() => Reflect.get(target, property, receiver))
+  );
+
 const instrumentMethodsNonLive = <R>(methods: Vitest.MethodsNonLive<R>, clock: Clock.Clock): Vitest.MethodsNonLive<R> =>
   new Proxy(methods, {
-    get(target, property, receiver) {
-      switch (property) {
-        case "effect":
-          return instrumentTester(target.effect, clock);
-        case "layer":
-          return instrumentLayer(target.layer, clock);
-        default:
-          return Reflect.get(target, property, receiver);
-      }
-    },
+    get: (target, property, receiver) => instrumentMethod(target, property, receiver, clock),
   });
 
 /** @internal */
@@ -466,16 +458,10 @@ export const instrumentMethods: {
   <R>(methods: Vitest.Methods<R>, clock: Clock.Clock = liveClock): Vitest.Methods<R> =>
     new Proxy(methods, {
       get(target, property, receiver) {
-        switch (property) {
-          case "effect":
-            return instrumentTester(target.effect, clock);
-          case "live":
-            return instrumentTester(target.live, clock);
-          case "layer":
-            return instrumentLayer(target.layer, clock);
-          default:
-            return Reflect.get(target, property, receiver);
-        }
+        return Match.value(property).pipe(
+          Match.when("live", () => instrumentTester(target.live, clock)),
+          Match.orElse(() => instrumentMethod(target, property, receiver, clock))
+        );
       },
     })
 );

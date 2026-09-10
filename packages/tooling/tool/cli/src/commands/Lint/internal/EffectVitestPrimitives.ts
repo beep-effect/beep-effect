@@ -55,6 +55,8 @@ export const readEffectVitestPrimitiveGraph = Effect.fn("EffectVitestPrimitives.
  * console.log(HashMap.size(indexEffectVitestPrimitives([]))) // 0
  * ```
  *
+ * @param entries - Pinned primitive entries to look up by their public identifier.
+ * @returns An identifier-indexed map of the supplied primitive entries.
  * @category utilities
  * @since 0.0.0
  */

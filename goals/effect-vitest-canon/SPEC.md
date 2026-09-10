@@ -72,7 +72,7 @@ no-git-commands rule; create the report file within the first actions and append
 final message is a pointer to the report, never the report; package-verify is run by you (the
 orchestrator), not by lanes that share a package.
 
-**Grok lane invocation** (`~/.local/bin/grok` 1.0.24, verified 2026-09-09):
+**Grok lane invocation** (the `grok` executable resolved from PATH 1.0.24, verified 2026-09-09):
 
 ```bash
 grok --prompt-file <lane.prompt.md> --output-format streaming-json \
@@ -164,12 +164,12 @@ evaluation and shrinking. Synchronous JavaScript that never returns cannot be
 preempted. The instrumented runner must keep one lifecycle and one absolute
 watchdog deadline across the complete property registration, including shrinking.
 
-### 1.4 Repo census (rg, 2026-09-04, excluding `.claude/worktrees`)
+### 1.4 Repo census (rg, 2026-09-04, excluding Claude worktree copies)
 
 | Surface | Count |
 | --- | --- |
 | Test files in scope (apps + packages 945, infra 10) | 955 |
-| Stale copies under `.claude/worktrees/` (excluded) | 986 |
+| Stale Claude worktree copies (excluded) | 986 |
 | `scratchpad/` tests (excluded, lab) / packet fixtures under goals+explorations (excluded) | 80 / 5 |
 | Files importing `@effect/vitest` / plain `vitest` | 807 / 187 |
 | Files using `it.effect` / `it.live` / `it.layer` / `it.flakyTest` | 494 / 40 / 27 / 0 |
@@ -210,14 +210,14 @@ tests, ~10 min under coverage), `apps/professional-desktop` 57, `tooling/library
   `addEqualityTesters`, `effect`, `live`, `layer` (options `memoMap`, `timeout`,
   `excludeTestServices`, `concurrent`), `flakyTest`, `prop`, `it`, `makeMethods`, `describeWrapped`, and
   `export * from "vitest"`.
-- Upstream canon to mirror: `packages/sql/pg/test/utils.ts` (`PgContainer` service with
+- Upstream canon to mirror: [upstream utils.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/sql/pg/test/utils.ts) (`PgContainer` service with
   `layer`, `layerClient`… built with `Layer.unwrap` + `Layer.provide`), the nine
   `packages/sql/pg/test/*.test.ts` files (`it.layer(PgContainer.layer, { timeout: "30 seconds" })`,
-  per-test connections inside the shared container), `packages/platform/node-shared/test/NodeFileSystem.test.ts`
+  per-test connections inside the shared container), [upstream NodeFileSystem.test.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/platform/node-shared/test/NodeFileSystem.test.ts)
   (cheap layer provided per test, `Deferred` + `Effect.forkChild` + `TestClock.withLive` for
-  watch tests), `packages/effect/test/unstable/persistence/SqlCleanupTest.ts` (`Effect.repeat` +
+  watch tests), [upstream SqlCleanupTest.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/effect/test/unstable/persistence/SqlCleanupTest.ts) (`Effect.repeat` +
   `Effect.timeout` + `TestClock.withLive` wait helper), and
-  `packages/effect/test/FileSystem.test-utils.ts` (`testLayer`, 565 lines at rc.113).
+  [upstream FileSystem.test-utils.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/effect/test/FileSystem.test-utils.ts) (`testLayer`, 565 lines at rc.113).
   The shared helper now ports all 36 registrations, including the new
   invalid-size/cursor/stream cases. Node and Bun each pass all 108 adapter
   cases, with full package and unchanged coverage-floor proof. The 435-line
@@ -245,7 +245,7 @@ promised as the lane fix.** Timings are evidence, measured per package (D1).
   upstream conformance suite. Committed in `aac17e843f`. No seed / fault / inspect API.
 - `scratchpad/memfs/` — older facade (seeding, fault injection, sync inspection) over a vendored
   engine ported from Effect-TS/effect PR #6573 head `c0528bd5`; its adaptation ledger
-  (`.claude/design/effected/packages/memfs.md`) no longer exists.
+  under the former Claude design directory no longer exists.
 - Upstream v4 ships no in-memory `FileSystem` (only `FileSystem.layerNoop`).
 
 ### 1.9 Packet and CLI facts

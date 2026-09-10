@@ -220,8 +220,12 @@ export const applyEffectVitestPrimitiveGraph: {
   ): (
     findings: ReadonlyArray<EffectVitestFinding>
   ) => Effect.Effect<ReadonlyArray<EffectVitestFinding>, EffectVitestPrimitiveGraphError>;
-} = dual(2, (findings: ReadonlyArray<EffectVitestFinding>, graph: EffectVitestPrimitiveGraphDocument) =>
-  Effect.gen(function* () {
+} = dual(
+  2,
+  Effect.fnUntraced(function* (
+    findings: ReadonlyArray<EffectVitestFinding>,
+    graph: EffectVitestPrimitiveGraphDocument
+  ) {
     const primitives = indexEffectVitestPrimitives(graph.entries);
     yield* Effect.forEach(entries, ([ruleId, policy]) => {
       const candidates = A.filter(graph.entries, (primitive) => A.contains(primitive.replaces, ruleId));

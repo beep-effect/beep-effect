@@ -6,11 +6,11 @@ import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions
 import { A, Str } from "@beep/utils";
 import { Console, Effect, Equal, FileSystem, HashMap, Inspectable, MutableHashMap, Order, Path } from "effect";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import { diffMembership } from "../../../internal/ratchet/index.ts";
 import { createWorkspaceOwnerResolver } from "../../../internal/tsmorph/index.ts";
 import { EffectVitestLintError } from "../Lint.errors.ts";
 import {
@@ -110,6 +110,8 @@ const findingOrder = Order.mapInput(Order.String, (finding: EffectVitestFinding)
  * console.log(countEffectVitestSourceLines("one\n")) // 1
  * ```
  *
+ * @param text - Complete source text, including any final newline.
+ * @returns Physical source-line count, excluding the empty segment after a final newline.
  * @category utilities
  * @since 0.0.0
  */
@@ -286,17 +288,25 @@ export const diffEffectVitestFindings: {
     Order.String,
     (entry: { readonly finding: EffectVitestFinding }) => entry.finding.id
   );
-  const difference = diffMembership({
-    current: keyedCurrent,
-    baseline: keyedBaseline,
-    equivalence: (left, right) => left.key === right.key,
-    order: keyedOrder,
-  });
+  const currentKeys = HashSet.fromIterable(A.map(keyedCurrent, ({ key }) => key));
+  const baselineKeys = HashSet.fromIterable(A.map(keyedBaseline, ({ key }) => key));
   return {
-    currentCount: difference.currentCount,
-    baselineCount: difference.baselineCount,
-    introduced: A.map(difference.introduced, ({ finding }) => finding),
-    resolved: A.map(difference.resolved, ({ finding }) => finding),
+    currentCount: current.length,
+    baselineCount: baseline.length,
+    introduced: A.map(
+      A.sort(
+        A.filter(keyedCurrent, ({ key }) => !HashSet.has(baselineKeys, key)),
+        keyedOrder
+      ),
+      ({ finding }) => finding
+    ),
+    resolved: A.map(
+      A.sort(
+        A.filter(keyedBaseline, ({ key }) => !HashSet.has(currentKeys, key)),
+        keyedOrder
+      ),
+      ({ finding }) => finding
+    ),
   };
 });
 

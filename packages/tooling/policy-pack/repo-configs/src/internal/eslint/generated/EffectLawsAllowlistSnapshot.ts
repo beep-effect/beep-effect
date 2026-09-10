@@ -227,6 +227,30 @@ export const ALLOWLIST_SNAPSHOT = {
       "reason": "The controllable jsdom harness mirrors the native ResizeObserver contract (observer registry and per-observer Element targets) so tests drive resize callbacks exactly as the DOM would.",
       "owner": "@beep/dock-react",
       "issue": "DOCK-REACT-RESIZE-HARNESS-DOM-CONTRACT"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/test-kit/test-utils/src/internal/VitestInstrumentation.ts",
+      "kind": "new-map-set",
+      "reason": "The public Vitest adapter associates live TestContext objects with execution state using weak identity keys so finished tests are not retained. Each execution also records property registration objects in insertion order for finishPropertyRuns finalization; native Map preserves object identity and ordered in-place iteration. These are foreign runtime handles, not domain values. The Node/Bun lifecycle, overlapping-property and repeat/retry regressions verify the adapter contract.",
+      "owner": "@beep/test-utils",
+      "issue": "https://github.com/beep-effect/beep-effect/pull/1067"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "kind": "new-map-set",
+      "reason": "Per-parse compiler caches use ts-morph node objects as weak identity keys. Distinct syntax nodes with equal text must remain distinct, and caches must not keep discarded parse trees alive. Effect HashMap and HashSet do not supply weak-key lifetime semantics. These invocation-local node caches feed schema-validated findings; alias, shadowing and provenance regressions verify identity boundaries.",
+      "owner": "@beep/repo-cli",
+      "issue": "https://github.com/beep-effect/beep-effect/pull/1067"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/test-kit/test-utils/src/internal/VitestRuntime.ts",
+      "kind": "object-method",
+      "reason": "The adapter exposes Vitest methods on a callable registration function. Object.assign copies enumerable own vendor method values onto that callable before Proxy interception, preserving the combined callable/object protocol. A plain Effect Record would lose callability; omitting the copy would change own-property inspection. Public each, conditional and layer registration regression tests exercise this adapter.",
+      "owner": "@beep/test-utils",
+      "issue": "https://github.com/beep-effect/beep-effect/pull/1067"
     }
   ],
   "diagnostics": []

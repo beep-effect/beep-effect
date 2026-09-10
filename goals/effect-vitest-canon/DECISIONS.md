@@ -359,7 +359,7 @@ watchdog timing dependency: production remains bound to its captured live clock,
 while a source-only test constructor may supply a controlled clock. Package-local
 tests access that constructor through `@beep/test-utils/test/Vitest`, following
 the existing source-only `src/test/*.test-kit.ts` convention. Its explicit source
-export maps to `src/test/Vitest.test-kit.ts`; the publish export is null. Preserve
+export maps to `packages/tooling/test-kit/test-utils/src/test/Vitest.test-kit.ts`; the publish export is null. Preserve
 `./internal/*: null`, the root barrel and the public Vitest API. Root ran the
 architecture command before authorizing this role file.
 
@@ -383,12 +383,12 @@ starvation; no unconditional preemptive scheduling guarantee is inferred from D7
 ## 2026-09-09 — close alternate published paths to the watchdog test seam
 
 The deadline lane's final export audit found that blocking only the named
-`./test/Vitest` publish export still lets the package's broader `./*` mapping
-resolve `./test/Vitest.test-kit`. That contradicts the already chosen source-only
+`@beep/test-utils/test/Vitest` publish export still lets the package's broader `./*` mapping
+resolve `@beep/test-utils/test/Vitest.test-kit`. That contradicts the already chosen source-only
 test seam. The repair must add `./test/*: null` to the publish export map, retaining
 the explicit named null entry and the existing internal guards. The same scoped
 source guard may block alternate role-name imports while leaving the exact
-authorized `./test/Vitest` source entry usable. Existing schema and repo-cli
+authorized `@beep/test-utils/test/Vitest` source entry usable. Existing schema and repo-cli
 package manifests establish this convention.
 
 This is completion of the authorized publication boundary, not a waiver or a
@@ -462,3 +462,33 @@ not a claim that the declared peer range is satisfied or all combinations are
 supported. Final package, coverage and hosted checks remain required. This
 bounded retention decision permits PR closeout on main's existing stack; the
 separate upgrade question does not waive a test failure or reduce a floor.
+
+## 2026-09-10: Native runtime adapter boundaries
+
+The strict native-runtime command also gates warnings. Root retains the
+reviewed runtime primitives in three exact file/kind allowlist entries: weak
+TestContext and ordered property-registration identity maps in instrumentation;
+weak ts-morph node caches in the scanner; and own-method assignment onto the
+callable Vitest registration adapter. These operations implement vendor object
+identity, lifetime and callable-object semantics. Effect value collections do
+not supply weak keys, and replacing the callable with a Record changes its API.
+
+All other rule behavior and prior allowlist entries remain unchanged. The
+existing package codegen must regenerate the snapshot; allowlist integrity and
+the full native-runtime command must pass. Runner and scanner behavior remain
+covered by their existing identity, ordering and lifecycle regressions.
+
+## 2026-09-10: Honor the canonical Node child-worker configuration
+
+Hosted coverage uses Node 22.22.3. Its canonical shared configuration supplies
+the Float16Array feature flag to forked workers, while the regression harness
+forced a threads pool. The exact Node 22 constructor rejects that flag with
+ERR_WORKER_INVALID_EXEC_ARGV before any tests execute. The failure also occurs
+without inherited Vitest worker identity variables.
+
+Root authorizes the child fixture launcher to honor the canonical Node pool
+choice, retaining Bun's explicit threads setting where needed. Keep the shared
+configuration, feature flag, timeouts, assertions, fixtures and production
+runner unchanged. Require the existing real fixture to demonstrate failure
+before the correction and successful execution after it; prove the full runner
+on Node 22, Node 24 and Bun, then scoped coverage on the hosted Node version.

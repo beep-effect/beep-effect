@@ -49,12 +49,12 @@ Emit schema rows and per-package digest evidence using the shared contract.
 
 Read the source, wrapper call graph, existing test-utils/SQL helpers, detector
 rows and acquisition/finalizer assertions. Pinned graph anchors include it.layer
-(index.ts 147-157), nested MethodsNonLive.layer (107-114), layer options,
-readme.resource-safety (README 257-279), and Layer.mock (Layer.ts 2304-2312).
-Pinned runtime internal.ts 242-276 establishes shared build, inner scope and
+(index.ts 167-178), nested MethodsNonLive.layer (118-127), layer options,
+readme.resource-safety (README 295-317), and Layer.mock (Layer.ts 2308-2316).
+Pinned runtime internal.ts 264-301 establishes shared build, inner scope and
 nested memo-map ownership. The worked filesystem APIs are pinned in
 packages/effect/src/FileSystem.ts: exists at 143, makeTempDirectoryScoped at
-188, and the FileSystem service at 663. Cite actual lines for each finding.
+188, and the FileSystem service at 470. Cite actual lines for each finding.
 
 ## Worked lifetime migration
 
