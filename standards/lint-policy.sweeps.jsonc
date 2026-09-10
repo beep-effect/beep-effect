@@ -1,0 +1,4 @@
+{
+  "schemaVersion": "lint-policy-sweeps/v1",
+  "deprecatedApis": "shards"
+}

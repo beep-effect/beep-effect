@@ -41,6 +41,7 @@ import {
   turboEnvironmentHealthWarnings,
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
+import { decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
 import { isLabsWorkspacePath, LABS_TURBO_EXCLUDE_FILTER } from "../../internal/cli/Labs/index.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
@@ -99,6 +100,7 @@ import {
   GithubCheckMode,
   GithubCheckRunReport,
   LintPolicySubcommand,
+  LintPolicySweeps,
   PackageTaskProfile,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
@@ -2579,17 +2581,48 @@ const policyLintTurboStep = (
 const deprecatedApisTurboStep = (repoRoot: string, base?: string): QualityTaskStep =>
   policyLintTurboStep(repoRoot, "lint:deprecated-apis", ["lint:deprecated-apis"], base);
 
+const decodeLintPolicySweeps = decodeJsoncTextAs(LintPolicySweeps);
+const shardPolicySweeps = LintPolicySweeps.make({ schemaVersion: "lint-policy-sweeps/v1", deprecatedApis: "shards" });
+
+/**
+ * Read the required repository sweep selection, failing on missing or invalid JSONC.
+ *
+ * **Example** (Read the sweep configuration)
+ * ```ts
+ * import { readLintPolicySweeps } from "@beep/repo-cli/commands/Quality"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(readLintPolicySweeps("/repo")))
+ * ```
+ *
+ * @param repoRoot - Repository containing the required standards file.
+ * @returns The validated sweep configuration.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const readLintPolicySweeps = Effect.fn("QualityTasks.readLintPolicySweeps")(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const file = path.join(repoRoot, "standards/lint-policy.sweeps.jsonc");
+  return yield* fs
+    .readFileString(file)
+    .pipe(
+      Effect.flatMap(decodeLintPolicySweeps),
+      QualityTaskConfigurationError.mapError(`Cannot read lint policy sweep configuration: ${file}`)
+    );
+});
+
 const rootRepoLintPolicySteps = (
   repoRoot: string,
-  files?: ReadonlyArray<string>,
-  base?: string
+  files: ReadonlyArray<string> | undefined,
+  base: string | undefined,
+  sweeps: LintPolicySweeps
 ): ReadonlyArray<QualityTaskStep> =>
   A.map(
     [
       // Static LPT order from research/00-evidence-brief.md (run 31683014887):
       // deprecated-apis 975199ms, semantic-delta 78127ms,
       // schema-first 51162ms, then every remaining step in descending measured duration.
-      P.isUndefined(base)
+      P.isUndefined(base) && sweeps.deprecatedApis === "shards"
         ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
         : deprecatedApisTurboStep(repoRoot, base),
       // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
@@ -2675,17 +2708,31 @@ const rootRepoLintPolicySteps = (
  * @param repoRoot - Repository root directory.
  * @param files - Optional changed-file scope for naturally file-scoped policy steps.
  * @param base - Caller base for affected Turbo tasks; omitted for full scope.
+ * @param sweeps - Explicit sweep selection; pure test plans default to shards.
  * @returns Planned subprocess steps for policy-only lint verification.
  * @category utilities
  * @since 0.0.0
  */
 export const rootLintPolicyStepsForTesting: {
-  (files?: ReadonlyArray<string>, base?: string): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
-  (repoRoot: string, files?: ReadonlyArray<string>, base?: string): ReadonlyArray<QualityTaskStep>;
+  (
+    files?: ReadonlyArray<string>,
+    base?: string,
+    sweeps?: LintPolicySweeps
+  ): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+  (
+    repoRoot: string,
+    files?: ReadonlyArray<string>,
+    base?: string,
+    sweeps?: LintPolicySweeps
+  ): ReadonlyArray<QualityTaskStep>;
 } = dual(
   (args: IArguments) => P.isString(args[0]),
-  (repoRoot: string, files?: ReadonlyArray<string>, base?: string): ReadonlyArray<QualityTaskStep> =>
-    rootRepoLintPolicySteps(repoRoot, files, base)
+  (
+    repoRoot: string,
+    files?: ReadonlyArray<string>,
+    base?: string,
+    sweeps = shardPolicySweeps
+  ): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files, base, sweeps)
 );
 
 /**
@@ -2711,6 +2758,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
   const path = yield* Path.Path;
   const cwd = path.resolve(process.cwd());
   const repoRoot = yield* findRepoRoot(cwd);
+  const sweeps = yield* readLintPolicySweeps(repoRoot);
   const runFull = full || isCi();
   let files: ReadonlyArray<string> | undefined;
   if (!runFull) {
@@ -2728,7 +2776,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
   );
   yield* runStepGroup(
     "lint:policy",
-    rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base),
+    rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps),
     LINT_POLICY_STEP_CONCURRENCY
   );
 });
@@ -2772,11 +2820,11 @@ export const runRootLintPolicyTask: {
  * console.log(Effect.isEffect(runRootDeprecatedApisTask("origin/main"))) // true
  * ```
  *
- * @param base - Caller base for local affected selection.
+ * @param base - Caller base for affected selection; omitted for a full Turbo sweep.
  * @category tasks
  * @since 0.0.0
  */
-export const runRootDeprecatedApisTask = Effect.fn("QualityTasks.runRootDeprecatedApisTask")(function* (base: string) {
+export const runRootDeprecatedApisTask = Effect.fn("QualityTasks.runRootDeprecatedApisTask")(function* (base?: string) {
   const repoRoot = yield* findRepoRoot();
   yield* runStep(deprecatedApisTurboStep(repoRoot, base));
 });
@@ -2790,7 +2838,7 @@ const rootLintPolicySteps = (
     return A.empty<QualityTaskStep>();
   }
 
-  return rootRepoLintPolicySteps(repoRoot);
+  return rootRepoLintPolicySteps(repoRoot, undefined, undefined, shardPolicySweeps);
 };
 
 // The one root lint plan: the aggregate Turbo lint (or lint:fix) followed by
