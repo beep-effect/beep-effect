@@ -769,6 +769,22 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
 );
 
 /**
+ * Exercise experiment orchestration with a supplied process service.
+ *
+ * **Example** (Reference the process-boundary test entrypoint)
+ *
+ * ```ts
+ * import { runCacheSyntheticForTesting } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof runCacheSyntheticForTesting === "function")
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const runCacheSyntheticForTesting = runSynthetic;
+
+/**
  * Run the local synthetic matrix under the existing one-token admission lane.
  *
  * **Details**

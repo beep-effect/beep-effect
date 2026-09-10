@@ -1328,6 +1328,22 @@ const runPilot = Effect.fn("CachePilot.run")(
 );
 
 /**
+ * Exercise pilot orchestration with supplied process and qualification services.
+ *
+ * **Example** (Reference the process-boundary test entrypoint)
+ *
+ * ```ts
+ * import { runCachePilotForTesting } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof runCachePilotForTesting === "function")
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const runCachePilotForTesting = runPilot;
+
+/**
  * Execute admitted real-pilot comparisons in disposable overlays of read-only worktrees.
  *
  * **Details**

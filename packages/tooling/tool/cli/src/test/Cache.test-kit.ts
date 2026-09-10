@@ -18,7 +18,11 @@ export {
   readCacheEvidenceBytes,
   readCacheExperimentBytes,
 } from "../commands/Cache/Cache.evidence.ts";
-export { equivalentCacheFixtureRuns, inspectCacheFixtureCapture } from "../commands/Cache/Cache.experiment.ts";
+export {
+  equivalentCacheFixtureRuns,
+  inspectCacheFixtureCapture,
+  runCacheSyntheticForTesting,
+} from "../commands/Cache/Cache.experiment.ts";
 export {
   collectCacheToolchain,
   fingerprintCacheComputation,
@@ -31,3 +35,4 @@ export {
   parseCacheLinkerOutput,
 } from "../commands/Cache/Cache.linker.ts";
 export { extractCachePilotLog } from "../commands/Cache/Cache.pilot.capture.ts";
+export { runCachePilotForTesting } from "../commands/Cache/Cache.pilot.ts";

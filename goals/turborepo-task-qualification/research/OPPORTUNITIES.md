@@ -807,3 +807,25 @@ controls disable reuse and may still run after this comparison stops reuse.
   property run count changes generated sizes and is not the exact reproduction.
 - Prevention: inspect the live lane's runtime matrix and reproduce its seed,
   run count and worker settings before treating a local failure as a source bug.
+
+### Measure package coverage before treating focused file coverage as sufficient
+
+- Activity: prove the complete CLI change after the Effect migration.
+- Evidence: all tests pass, but package coverage reports L/S/B/F
+  80.69/80.44/70.66/75.84 against floors 81.84/81.59/72.09/76.26.
+  Most uncovered additions are the experiment and pilot orchestration paths.
+- Correction: exercise orchestration through controlled subprocess fixtures and
+  verify rejection of inconsistent native observations. These tests are not
+  qualification evidence and do not resume the paused campaign.
+- Prevention: compare the whole package's coverage while adding executable
+  orchestration, even when focused policy and command files meet their floors.
+
+### Freeze source before collecting package proof
+
+- Activity: run the CLI package audit while refining orchestration tests.
+- Evidence: 3486 tests passed, but two CLI subprocess tests observed a temporary
+  `Unterminated string literal` during an edit. That run is not package proof.
+- Correction: finish the edit, confirm the focused tests, and rerun the full
+  package audit on the settled source. Keep the failed receipt for attribution.
+- Prevention: finish source edits before starting an audit that launches fresh
+  CLI processes throughout its test phase.
