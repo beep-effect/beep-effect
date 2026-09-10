@@ -1,0 +1,17 @@
+{
+  "lane": "r25-cli-internal-root",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:20:18.345597+00:00",
+  "finished": "2026-09-08T22:31:13.528169+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 10,
+  "qualifiedCandidates": 4,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-cli-internal-root.jsonl` \u2014 confirmed 4, disqualified 6. Covered `bin-main.ts`, `bin.ts`, `index.ts`, and `packages/tooling/tool/cli/src/internal`. All 15 seed declarations still exist; line drift vs inventory: `RunCapturedOptions` 507\u2192890, `isTicketSkippable.admissionProbes` 673\u21921310, `deadLeaseScopePlan.guards` 1493\u21922168.",
+  "transcriptSha256": "719d74c8f1088e33e08e78a7dea2fc2eb171e6a4df2d3e3067bc10ecdd3212ae",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

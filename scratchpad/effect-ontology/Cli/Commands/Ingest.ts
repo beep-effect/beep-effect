@@ -42,35 +42,35 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 // Command Options
 // =============================================================================
 
-const inputDir = Argument.directory("dir").pipe(Argument.withDescription("Directory containing files to ingest"));
+const inputDir = Argument.Directory("dir").pipe(Argument.withDescription("Directory containing files to ingest"));
 
-const ontologyOption = Flag.file("ontology").pipe(
+const ontologyOption = Flag.File("ontology").pipe(
   Flag.withAlias("o"),
   Flag.withDescription("Path to ontology file (Turtle)")
 );
 
-const namespaceOption = Flag.string("namespace").pipe(
+const namespaceOption = Flag.String("namespace").pipe(
   Flag.withAlias("n"),
   Flag.withDescription("Target namespace for entity minting")
 );
 
-const ontologyIdOption = Flag.string("ontology-id").pipe(
+const ontologyIdOption = Flag.String("ontology-id").pipe(
   Flag.withDescription("Ontology registry ID (e.g., 'seattle')")
 );
 
-const outputOption = Flag.file("output").pipe(
+const outputOption = Flag.File("output").pipe(
   Flag.withAlias("out"),
   Flag.optional,
   Flag.withDescription("Output path for manifest JSON (default: stdout)")
 );
 
-const batchIdOption = Flag.string("batch-id").pipe(
+const batchIdOption = Flag.String("batch-id").pipe(
   Flag.withAlias("b"),
   Flag.optional,
   Flag.withDescription("Custom batch ID (default: auto-generated)")
 );
 
-const prefixOption = Flag.string("prefix").pipe(
+const prefixOption = Flag.String("prefix").pipe(
   Flag.withAlias("p"),
   Flag.optional,
   Flag.withDescription("Storage path prefix for uploaded files")

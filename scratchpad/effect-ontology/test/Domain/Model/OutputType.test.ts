@@ -1,19 +1,27 @@
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { OutputFilename, OutputType, OutputTypeRegistry } from "../../../Domain/Model/OutputType.ts";
 const isOutputFilename = S.is(OutputFilename);
 
 describe("effect-ontology output artifact taxonomy", () => {
   it("derives arbitraries for output types and filenames", () => {
     for (const schema of [OutputType, OutputFilename]) {
-      const arbitrary = S.toArbitrary(schema)(fc);
-      fc.assert(
-        fc.property(arbitrary, (value) => {
+      const arbitrary = Arbitrary.schema(schema);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([value]) => {
           expect(S.is(schema)(value)).toBe(true);
-        }),
-        { numRuns: 32 }
-      );
+
+              return true;
+            },
+            { runs: 32 }
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 
@@ -32,5 +40,4 @@ describe("effect-ontology output artifact taxonomy", () => {
     expect(OutputFilename.is.graphJsonld("graph.jsonld")).toBe(true);
     expect(OutputFilename.is.graphJsonld("custom-output.json")).toBe(false);
   });
-
 });

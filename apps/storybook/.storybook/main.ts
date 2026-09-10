@@ -9,8 +9,8 @@ import type { Plugin, ServerOptions } from "vite";
 const repoRoot = new URL("../../..", import.meta.url).pathname;
 const portlessConfig = Effect.runSync(
   Config.all({
-    mode: Config.string("PORTLESS").pipe(Config.withDefault("1")),
-    url: Config.url("PORTLESS_URL").pipe(Config.option),
+    mode: Config.String("PORTLESS").pipe(Config.withDefault("1")),
+    url: Config.URL("PORTLESS_URL").pipe(Config.option),
   })
 );
 const proxyHmr = O.map(portlessConfig.mode === "0" ? O.none() : portlessConfig.url, (url): ServerOptions["hmr"] => {

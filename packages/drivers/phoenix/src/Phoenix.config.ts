@@ -23,6 +23,7 @@ const normalizedPhoenixBaseUrlFilter = S.makeFilter(isNormalizedPhoenixBaseUrl, 
   title: "Phoenix normalized base URL",
   description: "A valid Phoenix API base URL without trailing slash separators.",
   message: "Phoenix API base URLs must be valid and normalized without trailing slash separators.",
+  arbitraryConstraint: { patterns: [{ source: "^https://[a-z]{1,12}\\.example(?:/[a-z0-9]{1,12})?$", flags: "" }] },
 });
 
 const PhoenixBaseUrl = S.String.pipe(

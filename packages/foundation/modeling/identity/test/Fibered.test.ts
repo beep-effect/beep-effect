@@ -1,8 +1,9 @@
 import { Fibered } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { expectTypeOf } from "vitest";
 
 const Base = S.Literals(["text", "count", "flag"]);
@@ -55,12 +56,16 @@ describe("Fibered", () => {
   });
 
   it("maps every schema-generated union value to its point's section", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(family.union)(fc), (value) => {
-        expect(family.fiberOf(value)).toBe(family.meta(value._tag));
-        expect(S.is(family.member(value._tag))(value)).toBe(true);
-      })
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(family.union)]), ([value]) => {
+          expect(family.fiberOf(value)).toBe(family.meta(value._tag));
+          expect(S.is(family.member(value._tag))(value)).toBe(true);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("maps decoded member values back to their section metadata", () => {
@@ -96,26 +101,40 @@ describe("Fibered", () => {
   it("property-checks pullback restriction and composition over random subsets", () => {
     const points = [...Base.literals];
 
-    fc.assert(
-      fc.property(fc.subarray(points), fc.subarray(points), (subset, candidate) => {
-        const subsubset = A.filter(subset, (point) => A.contains(candidate, point));
-        const restricted = family.pullback(subset);
-        const composed = restricted.pullback(subsubset);
-        const direct = family.pullback(subsubset);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(S.Array(S.Literals(points)).check(S.isMaxLength(points.length))).pipe(
+              Arbitrary.map(A.dedupe)
+            ),
+            Arbitrary.schema(S.Array(S.Literals(points)).check(S.isMaxLength(points.length))).pipe(
+              Arbitrary.map(A.dedupe)
+            ),
+          ]),
+          ([subset, candidate]) => {
+            const subsubset = A.filter(subset, (point) => A.contains(candidate, point));
+            const restricted = family.pullback(subset);
+            const composed = restricted.pullback(subsubset);
+            const direct = family.pullback(subsubset);
 
-        expect(restricted.points).toEqual(subset);
-        for (const point of subset) {
-          expect(restricted.member(point)).toBe(family.member(point));
-          expect(restricted.meta(point)).toBe(family.meta(point));
-        }
+            expect(restricted.points).toEqual(subset);
+            for (const point of subset) {
+              expect(restricted.member(point)).toBe(family.member(point));
+              expect(restricted.meta(point)).toBe(family.meta(point));
+            }
 
-        expect(composed.points).toEqual(direct.points);
-        for (const point of subsubset) {
-          expect(composed.member(point)).toBe(direct.member(point));
-          expect(composed.meta(point)).toBe(direct.meta(point));
-        }
-      })
-    );
+            expect(composed.points).toEqual(direct.points);
+            for (const point of subsubset) {
+              expect(composed.member(point)).toBe(direct.member(point));
+              expect(composed.meta(point)).toBe(direct.meta(point));
+            }
+
+            return true;
+          }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("preserves point-specific member and pullback types", () => {

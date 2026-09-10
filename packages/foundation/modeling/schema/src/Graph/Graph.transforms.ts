@@ -119,23 +119,18 @@ const makeGraphTransform = <Node extends S.Top, Edge extends S.Top>(
   expectedType: GraphKindValue
 ) => {
   const decodedGraph = GraphEncoded(S.toType(options.node), S.toType(options.edge));
+  const typeOptions = { node: S.toType(options.node), edge: S.toType(options.edge) };
 
   if (mutable) {
     const target =
       expectedType === "directed"
-        ? MutableDirectedGraphFromSelf({
-            node: S.toType(options.node),
-            edge: S.toType(options.edge),
-          })
-        : MutableUndirectedGraphFromSelf({
-            node: S.toType(options.node),
-            edge: S.toType(options.edge),
-          });
+        ? MutableDirectedGraphFromSelf(typeOptions)
+        : MutableUndirectedGraphFromSelf(typeOptions);
 
     return GraphEncoded(options.node, options.edge).pipe(
       S.decodeTo(
         target,
-        SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
           decode: (encoded) => rebuildMutableGraph(encoded, { expectedType }),
           encode: (graph, parseOptions) =>
             SchemaParser.decodeUnknownEffect(decodedGraph)(toRawGraphEncoded(graph), parseOptions),
@@ -145,20 +140,12 @@ const makeGraphTransform = <Node extends S.Top, Edge extends S.Top>(
   }
 
   const target =
-    expectedType === "directed"
-      ? DirectedGraphFromSelf({
-          node: S.toType(options.node),
-          edge: S.toType(options.edge),
-        })
-      : UndirectedGraphFromSelf({
-          node: S.toType(options.node),
-          edge: S.toType(options.edge),
-        });
+    expectedType === "directed" ? DirectedGraphFromSelf(typeOptions) : UndirectedGraphFromSelf(typeOptions);
 
   return GraphEncoded(options.node, options.edge).pipe(
     S.decodeTo(
       target,
-      SchemaTransformation.transformOrFail({
+      SchemaTransformation.transformEffect({
         decode: (encoded) => rebuildImmutableGraph(encoded, { expectedType }),
         encode: (graph, parseOptions) =>
           SchemaParser.decodeUnknownEffect(decodedGraph)(toRawGraphEncoded(graph), parseOptions),

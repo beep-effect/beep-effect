@@ -134,7 +134,7 @@ const appendToSummary = Effect.fn("Ci.appendToSummary")(function* (
 ): Effect.fn.Return<void, CiCommandError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const summaryPath = pipe(
-    yield* Config.option(Config.string("GITHUB_STEP_SUMMARY")).pipe(Effect.orElseSucceed(O.none<string>)),
+    yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(Effect.orElseSucceed(O.none<string>)),
     O.getOrUndefined
   );
 
@@ -307,11 +307,11 @@ export const appendTurboSummary = Effect.fn("Ci.appendTurboSummary")(function* (
 const appendTurboSummaryCommand = Command.make(
   "append-turbo-summary",
   {
-    all: Flag.boolean("all").pipe(
+    all: Flag.Boolean("all").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Append every Turbo run summary from the current job")
     ),
-    summaryPath: Argument.string("summary-path").pipe(Argument.optional),
+    summaryPath: Argument.String("summary-path").pipe(Argument.optional),
   },
   ({ all, summaryPath }) =>
     pipe(

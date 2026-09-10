@@ -1,0 +1,38 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 802,
+  "afterCount": 805,
+  "beforeInventorySha256": "c13fe2dc79cb6a90f76ca5d3683cc00a42ec9cc5be8f1b5b0dfbc9c5950e080e",
+  "afterInventorySha256": "12c9df6482f9943cbcbc726c5d6cb9052ed60ae9f2e82f4df62b9d5b7e890066",
+  "addedIds": [
+    "r28-foundation-ui-chart-tooltip-indicator-flags",
+    "r28-foundation-ui-chart-tooltip-default-item-flags",
+    "r28-foundation-ui-chart-tooltip-item-flags"
+  ],
+  "newQualifiedIds": [
+    "r28-foundation-ui-chart-tooltip-indicator-flags",
+    "r28-foundation-ui-chart-tooltip-default-item-flags",
+    "r28-foundation-ui-chart-tooltip-item-flags"
+  ],
+  "reverifiedUnchangedIds": [
+    "r3-foundation-todo-item-presence",
+    "todo-item-due-tone"
+  ],
+  "sharedDesign": "designs/family-chart-tooltip-layout.md",
+  "sharedDesignSha256": "24a3c2dc8fb0e162b5501621aa1ba46afaab44633289c26de1b0576e87a45dc0",
+  "currentDesignSha256": {
+    "r28-foundation-ui-chart-tooltip-indicator-flags": "f5e5fb7aedc2b0c8785e185c42f3a3d5454e88088d8b14b3b53b59985126f254",
+    "r28-foundation-ui-chart-tooltip-default-item-flags": "16f194f194ab2688773063221216fd0e1f02f770cfe221342f784ef5b4ff7e09",
+    "r28-foundation-ui-chart-tooltip-item-flags": "656278b280a189a041ecc46379aefad87a0c8a84335fceb68a5c30db5182c56b"
+  },
+  "correctionReport": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-ui-contract-correction1.jsonl",
+  "correctionReportSha256": "d4e906fd1353012718ace9dcf0704878344a51ec195b131afe5944048ff75fbc",
+  "correctionReceipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-ui-contract-correction1.execution.json",
+  "correctionReceiptSha256": "b81a7dfaefdaa4a5b9ca4ae7cc7ab13ab1e095002853c4bcc439cc5862d930e7",
+  "provisional": "data/provisional-r28-chart-tooltip-layout-family.md",
+  "provisionalSha256": "084a27b08d8ebf925e1b5e4e079889f132103d7d5464d62ff19c9420b7936c65",
+  "qualifiedCount": 167,
+  "formalIndependentReview": false,
+  "note": "Three real private two-Boolean props owners independently confirmed with minimal indicator/nestLabel6/5 relation. One shared five-case LiteralKit and atomic migration; companion helpers are not additional qualifications. Current designs require recorded interactive browser evidence at implementation. Existing rows and source/tests unchanged; no P3/applied/dry credit."
+}

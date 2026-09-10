@@ -43,6 +43,7 @@ const Aes256KeyBase64 = S.String.check(
     decodedBase64ByteLengthSatisfies((byteLength) => byteLength === AES_GCM_KEY_BYTES),
     {
       identifier: $I`Aes256KeyByteLengthCheck`,
+      arbitraryConstraint: { patterns: [{ source: "^[A-Za-z0-9+/]{42}[AEIMQUYcgkosw048]=$", flags: "" }] },
       title: "AES-256 Key Byte Length",
       description: "A Base64 value that decodes to exactly 32 AES-256 key bytes.",
       message: "Raw archive key must decode to exactly 32 bytes for AES-256-GCM",
@@ -65,6 +66,7 @@ const AesGcmNonceBase64 = S.String.check(
     decodedBase64ByteLengthSatisfies((byteLength) => byteLength === AES_GCM_NONCE_BYTES),
     {
       identifier: $I`AesGcmNonceByteLengthCheck`,
+      arbitraryConstraint: { patterns: [{ source: "^[A-Za-z0-9+/]{16}$", flags: "" }] },
       title: "AES-GCM Nonce Byte Length",
       description: "A Base64 value that decodes to exactly 12 nonce bytes.",
       message: "Archive envelope nonce must decode to exactly 12 bytes",
@@ -87,6 +89,7 @@ const AesGcmCiphertextBase64 = S.String.check(
     decodedBase64ByteLengthSatisfies((byteLength) => byteLength >= AES_GCM_TAG_BYTES),
     {
       identifier: $I`AesGcmCiphertextTagLengthCheck`,
+      arbitraryConstraint: { patterns: [{ source: "^(?:[A-Za-z0-9+/]{4}){6,20}$", flags: "" }] },
       title: "AES-GCM Ciphertext Tag Length",
       description: "Ciphertext bytes long enough to contain the 16-byte AES-GCM authentication tag.",
       message: "Archive envelope ciphertext must include a 16-byte AES-GCM authentication tag",

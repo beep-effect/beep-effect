@@ -85,8 +85,8 @@ export const parseYaml = makeParseYaml(yamlRuntime, loadYamlModule);
  */
 export const YamlTextToUnknown = S.String.pipe(
   S.decodeTo(S.Unknown, {
-    decode: SchemaGetter.transformOrFail(decodeYamlUnknown),
-    encode: SchemaGetter.transformOrFail(encodeUnsupported),
+    decode: SchemaGetter.transformEffect(decodeYamlUnknown),
+    encode: SchemaGetter.transformEffect(encodeUnsupported),
   }),
   $I.annoteSchema("YamlTextToUnknown", {
     description: "Schema transformation that parses YAML text into unknown values.",

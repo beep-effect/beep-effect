@@ -45,8 +45,14 @@ export const Float64Arr = S.instanceOf<globalThis.Float64ArrayConstructor, globa
   globalThis.Float64Array
 )
   .annotate({
-    toArbitrary: () => (fc) =>
-      fc.array(fc.integer({ max: 1_000, min: -1_000 }), { maxLength: 8 }).map((values) => new Float64Array(values)),
+    toCodecArbitrary: () =>
+      S.link<globalThis.Float64Array>()(
+        S.Array(S.Int.check(S.isBetween({ minimum: -1_000, maximum: 1_000 }))).check(S.isMaxLength(8)),
+        SchemaTransformation.transform({
+          decode: (values): globalThis.Float64Array => new globalThis.Float64Array(values),
+          encode: A.fromIterable,
+        })
+      ),
   })
   .pipe(
     $I.annoteSchema("Float64Arr", {

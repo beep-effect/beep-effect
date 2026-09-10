@@ -1,0 +1,17 @@
+{
+  "lane": "r25-drivers-s-z",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:00:44.648337+00:00",
+  "finished": "2026-09-08T22:09:15.897008+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-drivers-s-z.jsonl` \u2014 confirmed 0, disqualified 0. Covered all assigned src roots (sanity, shacl, tailscale, tika, uspto, uspto-mcp, venice-ai, wink, xai). Seeds: all 18 still present. Line drift: `XAiServerSentEvent.done` 387 (inventory 390), `VeniceAIServerSentEvent.done` 654 (inventory 648), `XAiWebSocketEvent.isBinary` 474 (inventory 469), `addRequestBody.unexpectedPayload` 330 (inventory 333), `isSameUsptoHost` 231 (pair still starts at 152).",
+  "transcriptSha256": "343c8ebd4ec4b54a0cb6deb14bda1717830ef789da43a92fb55a5e13cca50bc8",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

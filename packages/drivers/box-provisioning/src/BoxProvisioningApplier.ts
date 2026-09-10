@@ -162,28 +162,29 @@ const validateActionDesiredBinding = Effect.fn("BoxProvisioningApplier.validateA
 
 const validateActionShape = (action: BoxPlanAction): Effect.Effect<void, BoxProvisioningInvariantError> =>
   Match.value(action).pipe(
-    Match.tags({
-      Blocked: () => Effect.void,
-      Create: (candidate) =>
-        candidate.precondition.state === "absent" &&
-        O.isNone(candidate.precondition.providerId) &&
-        O.isNone(candidate.precondition.etag) &&
-        O.isNone(candidate.beforeDigest)
-          ? Effect.void
-          : Effect.fail(invariant("action-precondition-mismatch")),
-      Noop: (candidate) =>
-        candidate.precondition.state === "unchanged" &&
-        O.isSome(candidate.precondition.providerId) &&
-        O.isSome(candidate.beforeDigest)
-          ? Effect.void
-          : Effect.fail(invariant("action-precondition-mismatch")),
-      Update: (candidate) =>
-        candidate.precondition.state === "present" &&
-        O.isSome(candidate.precondition.providerId) &&
-        O.isSome(candidate.beforeDigest)
-          ? Effect.void
-          : Effect.fail(invariant("action-precondition-mismatch")),
-    }),
+    Match.tag("Blocked", () => Effect.void),
+    Match.tag("Create", (candidate) =>
+      candidate.precondition.state === "absent" &&
+      O.isNone(candidate.precondition.providerId) &&
+      O.isNone(candidate.precondition.etag) &&
+      O.isNone(candidate.beforeDigest)
+        ? Effect.void
+        : Effect.fail(invariant("action-precondition-mismatch"))
+    ),
+    Match.tag("Noop", (candidate) =>
+      candidate.precondition.state === "unchanged" &&
+      O.isSome(candidate.precondition.providerId) &&
+      O.isSome(candidate.beforeDigest)
+        ? Effect.void
+        : Effect.fail(invariant("action-precondition-mismatch"))
+    ),
+    Match.tag("Update", (candidate) =>
+      candidate.precondition.state === "present" &&
+      O.isSome(candidate.precondition.providerId) &&
+      O.isSome(candidate.beforeDigest)
+        ? Effect.void
+        : Effect.fail(invariant("action-precondition-mismatch"))
+    ),
     Match.orElse(() => Effect.fail(invariant("unsupported-action")))
   );
 
@@ -813,15 +814,15 @@ const makeService = (
       );
     });
     const applyAction = Match.type<BoxPlanAction>().pipe(
-      Match.tagsExhaustive({
-        Blocked: (action) => Effect.succeed(applyBlocked(action)),
-        Create: (action) =>
-          journalMutation(action, applyCreate(box, desiredState, action, folderProviderIds, folderIdentities)),
-        Delete: () => Effect.fail(invariant("unsupported-action")),
-        Noop: (action) => applyNoop(action, folderProviderIds),
-        Replace: () => Effect.fail(invariant("unsupported-action")),
-        Update: (action) => journalMutation(action, applyUpdate(box, desiredState, action)),
-      })
+      Match.tag("Blocked", (action) => Effect.succeed(applyBlocked(action))),
+      Match.tag("Create", (action) =>
+        journalMutation(action, applyCreate(box, desiredState, action, folderProviderIds, folderIdentities))
+      ),
+      Match.tag("Delete", () => Effect.fail(invariant("unsupported-action"))),
+      Match.tag("Noop", (action) => applyNoop(action, folderProviderIds)),
+      Match.tag("Replace", () => Effect.fail(invariant("unsupported-action"))),
+      Match.tag("Update", (action) => journalMutation(action, applyUpdate(box, desiredState, action))),
+      Match.exhaustive
     );
     const applyOne = Effect.fn("BoxProvisioningApplier.applyOne")(function* (action: BoxPlanAction) {
       if (A.some(action.dependencies, (dependency) => !MutableHashSet.has(completed, dependency))) {
@@ -830,10 +831,8 @@ const makeService = (
       yield* validateActionDesiredBinding(desiredState, action);
       yield* validateActionShape(action);
       const validatedFolder = yield* Match.value(action).pipe(
-        Match.tags({
-          Noop: (candidate) => validateExistingPrecondition(box, candidate),
-          Update: (candidate) => validateExistingPrecondition(box, candidate),
-        }),
+        Match.tag("Noop", (candidate) => validateExistingPrecondition(box, candidate)),
+        Match.tag("Update", (candidate) => validateExistingPrecondition(box, candidate)),
         Match.orElse(() => Effect.succeed(O.none<BoxObservedFolder>()))
       );
       const outcome = yield* applyAction(action);

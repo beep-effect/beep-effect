@@ -7,9 +7,9 @@ import {
 } from "@beep/schema/EthereumValidatorPublicKey";
 import { EvmAddressRedacted } from "@beep/schema/EvmAddress";
 import { describe, expect, it } from "@effect/vitest";
-import { Redacted } from "effect";
+import { Effect, Redacted } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeCryptoTxnHashRedactedSync = S.decodeSync(CryptoTxnHashRedacted);
 const decodeCryptoWalletAddressRedactedSync = S.decodeSync(CryptoWalletAddressRedacted);
@@ -39,14 +39,21 @@ describe("blockchain redacted schemas", () => {
     expect(Redacted.value(decodedValidatorPublicKey)).toBe(validatorPublicKey);
     expect(Redacted.value(decodedTransactionHash)).toBe(transactionHash);
   });
-  const validatorPublicKeyArbitrary = S.toArbitrary(EthereumValidatorPublicKey)(fc);
+  const validatorPublicKeyArbitrary = Arbitrary.schema(EthereumValidatorPublicKey);
 
   it("derives valid validator public keys from the source schema and round-trips", () => {
-    fc.assert(
-      fc.property(validatorPublicKeyArbitrary, (value) => {
-        expect(decodeUnknownEthereumValidatorPublicKeySync(value)).toBe(value);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([validatorPublicKeyArbitrary]),
+          ([value]) => {
+            expect(decodeUnknownEthereumValidatorPublicKeySync(value)).toBe(value);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

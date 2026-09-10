@@ -13,12 +13,13 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEnvVarNameResult = S.decodeResult(EnvVarName);
 const decodeAuthSnapshotSync = S.decodeSync(AuthSnapshot);
@@ -210,10 +211,18 @@ describe("@beep/agents-domain ProviderInstance", () => {
     const schemas: ReadonlyArray<S.Codec<unknown>> = [AuthSnapshot, ProviderKind, ProviderInstance];
 
     for (const schema of schemas) {
-      fc.assert(
-        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
-        fcRuns(10)
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(schema)]),
+            ([value]) => {
+              roundTrip(schema, value);
+              return true;
+            },
+            fcRuns(10)
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 });

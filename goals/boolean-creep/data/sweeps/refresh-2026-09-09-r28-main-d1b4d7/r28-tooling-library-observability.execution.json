@@ -1,0 +1,22 @@
+{
+  "lane": "r28-tooling-library-observability",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T05:03:40.883309+00:00",
+  "finished": "2026-09-09T05:17:40.727089+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 6,
+  "qualifiedCandidates": 3,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tooling-library-observability.jsonl`\n\nConfirmed 3, disqualified 3. Validator: inventory OK, 6 unique ids.\n\nEvery assigned root was covered (`ai-metrics/src`, `ai-sync/src`, `qa-capture/src`).\n\nSeed drift: `buildJsdocWorkerSection` `[hasFailures, hasWarnings]` moved 2707 \u2192 2860 (reported, D1 unchanged). Ineligible callable seeds were not re-recorded: `unapprovedClaudePermission.permissionGates`, `jsonlSourceFiles.windowGates`, `discoverTranscriptFiles.windowGates`, `probePhoenixEndpoints.statusGates`, `enumerateSnapshotPaths.pathKindGates`, `findPhoenixDatasetInfo.notFoundGates`, `identityRegistry.pathErrorGates`. Remaining scoped seeds still exist with the same owners, members, and classifications.\n\nNo unresolved source question.\n\n\ud83c\udf31 graft saved ~446,064 tokens this turn (14 calls)",
+  "transcriptSha256": "da4fd7a1b32f09c35dd9b127a236c99be16d0faf1c3c0e082dc81b18bd819b08",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 6 records, 6 unique ids\n"
+}

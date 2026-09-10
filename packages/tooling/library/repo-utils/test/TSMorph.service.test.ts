@@ -21,7 +21,7 @@ import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { REPO_ROOT, TestLayer, WORKSPACE_ROOT } from "./TSMorph.test-support.ts";
 
 const decodeUnknownSymbolIdSync = S.decodeUnknownSync(SymbolId);
@@ -87,14 +87,21 @@ const TSMORPH_TIMEOUT = 40_000;
 
 describe("SymbolId schema arbitrary", () => {
   it("only generates decodable, round-tripping symbol ids", () => {
-    const symbolIdArbitrary = S.toArbitrary(SymbolId)(fc);
-    fc.assert(
-      fc.property(symbolIdArbitrary, (symbolId) => {
-        const decoded = decodeUnknownSymbolIdSync(symbolId);
-        expect(encodeUnknownSymbolIdSync(decoded)).toBe(symbolId);
-      }),
-      fcRuns(50)
-    );
+    const symbolIdArbitrary = Arbitrary.schema(SymbolId);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([symbolIdArbitrary]),
+          ([symbolId]) => {
+            const decoded = decodeUnknownSymbolIdSync(symbolId);
+            expect(encodeUnknownSymbolIdSync(decoded)).toBe(symbolId);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });
 

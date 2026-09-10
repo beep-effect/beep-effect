@@ -96,7 +96,7 @@ const CsvEffect = <RowSchema extends RowSchemaWithFields>(
   return CsvText.pipe(
     S.decodeTo(
       rowsSchema,
-      SchemaTransformation.transformOrFail({
+      SchemaTransformation.transformEffect({
         decode: (input) => decodeRows(input).pipe(Effect.mapError(toSchemaIssue)),
         encode: (rows) => encodeRows(rows).pipe(Effect.mapError(toSchemaIssue)),
       })

@@ -1,0 +1,46 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "recordsBefore": 933,
+  "recordsAfter": 927,
+  "inventoryBeforeSha256": "d65189f0ca9f33023356373a77bbd0d6cc92932815fcb5c0b8f5ca38f59f6b85",
+  "inventoryAfterSha256": "775ae4cefd03eef80542b767a8d496d6a5edfd2fec184b57a17515c82d070e9a",
+  "withdrawnIds": [
+    "r2-tooling-pr-closeout-retrigger-echo",
+    "r26-cli-commands-l-q-allowlist-check-ok",
+    "r3-tooling-quality-law-path-gates",
+    "r3-tooling-quality-tsconfig-profile-gates",
+    "r3-tooling-test-tsgo-collect-gates",
+    "r4-corpus-effect-imports-file-latches"
+  ],
+  "correctedIds": [
+    "quality-tmpfs-reap-apply-json",
+    "laws-terse-effect-command-options",
+    "yeet-run-plan-mode-options",
+    "yeet-handler-test-plan-options",
+    "r25-cli-yeet-shared-options-ci-parity-no-fail-fast",
+    "r26-cli-commands-l-q-osv-ignore-expiry"
+  ],
+  "archivedDesignIds": ["r26-cli-commands-l-q-allowlist-check-ok"],
+  "qualifiedCount": 168,
+  "statuses": {
+    "reviewed": 36,
+    "designed": 125,
+    "disqualified": 759,
+    "confirmed": 7
+  },
+  "archives": {
+    "history/inventory/2026-09-09-r27-cli-seed-drift-withdrawals.jsonl": "003414d1cec5d90fc9b7ce9b243fb1fb2dd897ce17c7ae0adfd7ea2c37b44700",
+    "history/inventory/2026-09-09-r27-cli-seed-drift-corrections.jsonl": "cf2fcc936eaa36fa8a5977f5008ad84cedc51e5ccc82afe5cd6a2cc1c2e9addc",
+    "history/designs/2026-09-09-r27-r26-cli-commands-l-q-allowlist-check-ok.md": "1c83317104319091f07002db3d174c83409406a54804d6b6248983d84cb676d2"
+  },
+  "audit": "data/design-refresh-2026-09-09-r27-cli-seed-drift.md",
+  "auditSha256": "359799f950097c04154a1c5d2598c277a63194daa25b5f207251f678b4759af0",
+  "independentCorrectionPending": "r27-cli-yeet-contract-correction1",
+  "deferredCorrections": [
+    "yeet-status-remote-check-phase",
+    "yeet-run-options-flags",
+    "yeet-command-shared-options"
+  ],
+  "formalIndependentReview": false
+}

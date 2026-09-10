@@ -17,7 +17,9 @@ import { identity, Number as N } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $ProvenanceId.create("TextAnchor");
 const isNonNegativeInt = S.is(NonNegativeInt);
@@ -124,18 +126,7 @@ export const isUtf16Boundary: {
   return isNonNegativeInt(boundary) && N.isLessThanOrEqualTo(boundary, Str.length(sourceText)) && !splitsSurrogatePair;
 });
 
-const TextAnchorSchema = TextAnchorStruct.mapFields(identity)
-  .check(TextAnchorWidthCheck)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.tuple(fc.nat(10_000), fc.string({ minLength: 1, maxLength: 256 })).map(([startChar, quote]) =>
-        TextAnchorStruct.make({
-          startChar: NonNegativeInt.make(startChar),
-          endChar: NonNegativeInt.make(startChar + Str.length(quote)),
-          quote,
-        })
-      ),
-  });
+const TextAnchorSchema = TextAnchorStruct.mapFields(identity).check(TextAnchorWidthCheck);
 
 /**
  * A half-open character-offset anchor into a source document.
@@ -161,6 +152,18 @@ const TextAnchorSchema = TextAnchorStruct.mapFields(identity)
 export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
   TextAnchorSchema,
   $I.annote("TextAnchor", {
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<TextAnchor>()(
+        S.Struct({
+          startChar: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
+          quote: S.NonEmptyString.check(S.isMaxLength(256)),
+        }),
+        SchemaTransformation.transform({
+          decode: (value) =>
+            TextAnchor.make({ ...value, endChar: NonNegativeInt.make(value.startChar + Str.length(value.quote)) }),
+          encode: identity,
+        })
+      ),
     description:
       "A non-empty half-open character range [startChar, endChar) whose UTF-16 width equals its exact quote.",
   })

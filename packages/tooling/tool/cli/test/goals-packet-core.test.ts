@@ -28,7 +28,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodePacketTraceProjectionJson = S.decodeEffect(S.fromJsonString(PacketTraceProjection));
@@ -150,16 +150,21 @@ describe("canonical encoding and digests", () => {
 });
 
 describe("schema-derived properties", () => {
-  const PacketTraceEntryArbitrary = S.toArbitrary(PacketTraceEntry)(fc);
+  const PacketTraceEntryArbitrary = Arbitrary.schema(PacketTraceEntry);
   it("round-trips arbitrary timeline entries through encode/decode byte-stably", () => {
-    fc.assert(
-      fc.property(PacketTraceEntryArbitrary, (entry) => {
-        const encoded = encodeUnknownPacketTraceEntrySync(entry);
-        const reencoded = encodeUnknownPacketTraceEntrySync(decodeUnknownPacketTraceEntrySync(encoded));
-        return canonicalJsonText(reencoded) === canonicalJsonText(encoded);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([PacketTraceEntryArbitrary]),
+          ([entry]) => {
+            const encoded = encodeUnknownPacketTraceEntrySync(entry);
+            const reencoded = encodeUnknownPacketTraceEntrySync(decodeUnknownPacketTraceEntrySync(encoded));
+            return canonicalJsonText(reencoded) === canonicalJsonText(encoded);
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });
 
@@ -257,7 +262,11 @@ describe("foldPacketEvents", () => {
           const siblingId = yield* packetEventDigest(sibling);
           const withFork = A.append(
             events,
-            StoredPacketEvent.make({ id: siblingId, fileName: packetEventFileName(sibling, siblingId), event: sibling })
+            StoredPacketEvent.make({
+              id: siblingId,
+              fileName: packetEventFileName(sibling, siblingId),
+              event: sibling,
+            })
           );
           const derived = foldPacketEvents({ packet: "demo", root: "goals", events: withFork });
           expect(A.length(derived.forks)).toBe(1);
@@ -293,7 +302,11 @@ describe("foldPacketEvents", () => {
           const siblingId = yield* packetEventDigest(sibling);
           const withFork = A.append(
             events,
-            StoredPacketEvent.make({ id: siblingId, fileName: packetEventFileName(sibling, siblingId), event: sibling })
+            StoredPacketEvent.make({
+              id: siblingId,
+              fileName: packetEventFileName(sibling, siblingId),
+              event: sibling,
+            })
           );
           const derived = foldPacketEvents({ packet: "demo", root: "goals", events: withFork });
           expect(A.length(derived.forks)).toBe(1);

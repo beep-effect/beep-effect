@@ -18,7 +18,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeGateSummaryReceipt = S.decodeEffect(GateSummaryReceipt);
 const decodeAttestationResourceResult = S.decodeResult(AttestationResource);
@@ -129,13 +129,20 @@ describe("@beep/skill-contract GateSummary", () => {
   );
 
   it("round-trips schema-derived arbitrary attestation resources", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(AttestationResource)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(encodeUnknownAttestationResourceResult(candidate));
-        const decoded = Result.getOrThrow(decodeAttestationResourceResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(AttestationResource)]),
+          ([candidate]) => {
+            const encoded = Result.getOrThrow(encodeUnknownAttestationResourceResult(candidate));
+            const decoded = Result.getOrThrow(decodeAttestationResourceResult(encoded));
 
-        expect(S.toEquivalence(AttestationResource)(decoded, candidate)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(AttestationResource)(decoded, candidate)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

@@ -11,7 +11,7 @@ export default mergeConfig(
       // files for resource-intensive lanes while each suite serializes its own
       // tests.
       fileParallelism: !(vitestCoverageRunActive || fcDeepSweepActive),
-      // These suites compile large recursive Lexical schemas (`S.toArbitrary`
+      // These suites compile large recursive Lexical schemas (`Arbitrary.schema`
       // + first-touch decoder compilation of `SerializedEditorState`) and run
       // codec round-trip property tests over arbitrary editor states. Under v8
       // coverage instrumentation the first decode is 10x+ slower, and the

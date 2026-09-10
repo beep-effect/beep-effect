@@ -98,7 +98,7 @@ const providerSmokeError = (stage: string, message: string): ProviderSmokeError 
 const providerSmokeErrorWithCause = (stage: string, message: string, cause: unknown): ProviderSmokeError =>
   ProviderSmokeError.make({ cause, message, stage });
 
-const configuredProviderKind = Config.string("LEJEUNE_PROVIDER").pipe(
+const configuredProviderKind = Config.String("LEJEUNE_PROVIDER").pipe(
   Config.withDefault("anthropic"),
   Effect.flatMap(S.decodeUnknownEffect(ProviderKind)),
   Effect.mapError((cause) =>
@@ -106,7 +106,7 @@ const configuredProviderKind = Config.string("LEJEUNE_PROVIDER").pipe(
   )
 );
 
-const configuredRecordingMode = Config.string("LEJEUNE_RECORDING_MODE").pipe(
+const configuredRecordingMode = Config.String("LEJEUNE_RECORDING_MODE").pipe(
   Config.withDefault("freeze"),
   Effect.flatMap(S.decodeUnknownEffect(RecordingMode)),
   Effect.mapError((cause) =>
@@ -225,7 +225,7 @@ const prepareRecordingTarget = Effect.fn("LeJeuneProviderSmoke.prepareRecordingT
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const mode = yield* configuredRecordingMode;
-  const reviewRecordingPath = yield* Config.nonEmptyString("LEJEUNE_REVIEW_RECORDING_OUT").pipe(
+  const reviewRecordingPath = yield* Config.NonEmptyString("LEJEUNE_REVIEW_RECORDING_OUT").pipe(
     Config.withDefault(DEFAULT_REVIEW_RECORDING_PATH),
     Effect.mapError((cause) =>
       providerSmokeErrorWithCause("configuration", "The review recording output path is invalid.", cause)
@@ -267,10 +267,10 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
   const provider = yield* configuredProviderKind;
   const model = yield* Match.value(provider).pipe(
     Match.when("anthropic", () =>
-      Config.nonEmptyString("AI_ANTHROPIC_MODEL").pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL))
+      Config.NonEmptyString("AI_ANTHROPIC_MODEL").pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL))
     ),
     Match.when("venice-ai", () =>
-      Config.nonEmptyString("LEJEUNE_VENICE_MODEL").pipe(Config.withDefault(VENICE_CHAT_MODEL))
+      Config.NonEmptyString("LEJEUNE_VENICE_MODEL").pipe(Config.withDefault(VENICE_CHAT_MODEL))
     ),
     Match.exhaustive,
     Effect.mapError((cause) =>
@@ -362,7 +362,7 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
 });
 
 const VeniceLanguageModelLive = Layer.unwrap(
-  Config.nonEmptyString("LEJEUNE_VENICE_MODEL").pipe(
+  Config.NonEmptyString("LEJEUNE_VENICE_MODEL").pipe(
     Config.withDefault(VENICE_CHAT_MODEL),
     Effect.map((model) => VeniceAiLanguageModel.layer({ model }).pipe(Layer.provide(VeniceAI.layer)))
   )

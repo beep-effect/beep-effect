@@ -1,0 +1,22 @@
+{
+  "lane": "r29-apps",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:46:49.353022+00:00",
+  "finished": "2026-09-09T10:58:37.762510+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-apps.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nCoverage: every assigned root was scanned (`architecture-lab-proof`, `oip-web`, `practice-kg-mcp`, `professional-desktop` src and src-tauri, `todox`). Architecture-lab-proof and todox have no Boolean clusters.\n\nSeed drift (pointer only; unchanged records not re-emitted):\n- `r2-apps-intake-drag-configured` \u2014 members still sit on different owners (`DocumentIntakeState.isDragging` vs `DocumentIntakeSurface.configured`); ineligible net.\n- `r26-apps-box-auth-ccg-subject` and `r26-apps-box-auth-mode-priority` \u2014 Option/config presence only, zero Boolean members; ineligible net.\n- Surviving seeds still match current writers/readers (including `ThreadTranscriptView` 16/7 with the `streaming` Option, `HeroVideoState` D1 playing-without-element write, and `Sidecar.ipcReady` at `lib.rs:1426`/`1530`).\n- Previously withdrawn JSX/cross-owner carriers (`BackToTop` hidden projection, radio `checked` pairs, `DesktopShell.rpcAccess`) were not re-recorded.\n\nNo unresolved source question.\n\n\ud83c\udf31 graft saved ~65,532 tokens this turn (2 calls)",
+  "transcriptSha256": "38fdde21ce353a84baaebe7f205806d22185c778705d005a7ad3ab73bc3389ec",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

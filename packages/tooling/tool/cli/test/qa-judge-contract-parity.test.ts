@@ -62,7 +62,7 @@ import { Effect, Equal, Exit, FileSystem, HashSet, Layer, Path, Result } from "e
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { EvidencePredicateType, GateDeclaration } from "@beep/skill-contract";
 
 const decodeGateRegistry = S.decodeEffect(GateRegistry);
@@ -490,15 +490,22 @@ describe("commands/Qa complete judge contract parity", () => {
   );
 
   it("round-trips schema-derived event gate inputs", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(CitedEventIdExistsInput)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(encodeUnknownCitedEventIdExistsInputResult(candidate));
-        const decoded = Result.getOrThrow(decodeCitedEventIdExistsInputResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(CitedEventIdExistsInput)]),
+          ([candidate]) => {
+            const encoded = Result.getOrThrow(encodeUnknownCitedEventIdExistsInputResult(candidate));
+            const decoded = Result.getOrThrow(decodeCitedEventIdExistsInputResult(encoded));
 
-        expect(S.toEquivalence(CitedEventIdExistsInput)(decoded, candidate)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(CitedEventIdExistsInput)(decoded, candidate)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 });
 
 describe("commands/Qa judge contract completion through the kernel evaluator", () => {

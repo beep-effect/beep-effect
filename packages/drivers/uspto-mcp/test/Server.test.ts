@@ -1,3 +1,4 @@
+import { expect } from "@effect/vitest";
 /**
  * Fixture proofs for the USPTO MCP proving host, mirroring
  * `packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts`'s
@@ -32,9 +33,9 @@ import {
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Equal, Layer, Redacted } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
@@ -159,20 +160,25 @@ const textOf = (result: {
 
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
-  options?: { readonly numRuns?: number }
+  options?: { readonly runs?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const encode = S.encodeEffect(schema);
   const decode = S.decodeUnknownEffect(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      const encoded = Effect.runSync(encode(value));
-      const decoded = Effect.runSync(decode(encoded));
-      return Equal.equals(decoded, value);
-    }),
-    fcRuns(options?.numRuns ?? 20)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          const encoded = Effect.runSync(encode(value));
+          const decoded = Effect.runSync(decode(encoded));
+          return Equal.equals(decoded, value);
+        },
+        fcRuns(options?.runs ?? 20)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 describe("uspto-mcp fixture proofs", () => {

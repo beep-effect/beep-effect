@@ -24,6 +24,8 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { dual } from "@beep/utils";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $NlpId.create("Handoff/Contract");
 
@@ -212,6 +214,17 @@ class SpanFields extends S.Class<SpanFields>($I`SpanFields`)(
     start: NonNegativeInt,
   },
   $I.annote("SpanFields", {
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<SpanFields>()(
+        S.Struct({
+          start: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
+          end: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
+        }),
+        SchemaTransformation.transform({
+          decode: (value) => SpanFields.make({ start: value.start, end: NonNegativeInt.make(value.start + value.end) }),
+          encode: (value) => value,
+        })
+      ),
     description: "Internal half-open character span fields with branded non-negative offsets.",
   })
 ) {}
@@ -240,22 +253,12 @@ export const Span = SpanFields.check(
           issue: "Span end must be greater than or equal to start",
         }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.tuple(fc.nat(10_000), fc.nat(10_000)).map(([start, length]) =>
-        SpanFields.make({
-          end: NonNegativeInt.make(start + length),
-          start: NonNegativeInt.make(start),
-        })
-      ),
+).pipe(
+  $I.annoteSchema("Span", {
+    description:
+      "A half-open span [start, end) into the source text, measured in zero-based UTF-16 code units (the unit `String.length` and `slice` use).",
   })
-  .pipe(
-    $I.annoteSchema("Span", {
-      description:
-        "A half-open span [start, end) into the source text, measured in zero-based UTF-16 code units (the unit `String.length` and `slice` use).",
-    })
-  );
+);
 
 /**
  * Runtime type of {@link Span}.

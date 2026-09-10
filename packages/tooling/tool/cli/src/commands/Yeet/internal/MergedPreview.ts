@@ -534,25 +534,26 @@ export const createYeetMergePreview = Effect.fn("Yeet.createYeetMergePreview")(f
 
   const merge = yield* gitCapture(context.repoRoot, ["merge-tree", "--write-tree", baseSha, headSha]);
   const treeSha = yield* Match.value(parseYeetMergeTreeResult(merge.exitCode, merge.output)).pipe(
-    Match.discriminatorsExhaustive("status")({
-      merged: (value) => Effect.succeed(value.treeSha),
-      conflicted: (value) =>
-        Effect.fail(
-          YeetCommandError.make({
-            message: renderYeetMergePreviewConflict(context.base, value),
-            command: `git merge-tree --write-tree ${context.base} ${context.head}`,
-            exitCode: 1,
-          })
-        ),
-      unavailable: (value) =>
-        Effect.fail(
-          YeetCommandError.make({
-            message: `yeet verify --merged could not compute the merge preview: ${value.detail}`,
-            command: `git merge-tree --write-tree ${context.base} ${context.head}`,
-            exitCode: 1,
-          })
-        ),
-    })
+    Match.discriminator("status")("merged", (value) => Effect.succeed(value.treeSha)),
+    Match.discriminator("status")("conflicted", (value) =>
+      Effect.fail(
+        YeetCommandError.make({
+          message: renderYeetMergePreviewConflict(context.base, value),
+          command: `git merge-tree --write-tree ${context.base} ${context.head}`,
+          exitCode: 1,
+        })
+      )
+    ),
+    Match.discriminator("status")("unavailable", (value) =>
+      Effect.fail(
+        YeetCommandError.make({
+          message: `yeet verify --merged could not compute the merge preview: ${value.detail}`,
+          command: `git merge-tree --write-tree ${context.base} ${context.head}`,
+          exitCode: 1,
+        })
+      )
+    ),
+    Match.exhaustive
   );
 
   const parents = baseSha === headSha ? ["-p", baseSha] : ["-p", baseSha, "-p", headSha];

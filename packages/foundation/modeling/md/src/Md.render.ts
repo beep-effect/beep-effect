@@ -542,24 +542,22 @@ const makeMarkdownInlineMatcher = (
   renderRawMarkdown: (node: { readonly value: string }) => string,
   urlPolicy: UrlPolicySpec
 ) =>
-  Match.type<Inline>().pipe(
-    Match.tagsExhaustive({
-      text: ({ value }) => escapeMarkdownText(value),
-      rawMarkdown: renderRawMarkdown,
-      rawHtml: renderEscapedRawHtmlAsMarkdown,
-      strong: ({ children }) => `**${renderInlines(children)}**`,
-      em: ({ children }) => `*${renderInlines(children)}*`,
-      del: ({ children }) => `~~${renderInlines(children)}~~`,
-      code: ({ value }) => renderInlineCode(value),
-      a: ({ href, children, title }) =>
-        `[${renderMarkdownLinkLabelInlines(children)}](${renderMarkdownDestinationWithTitle(href, title, urlPolicy)})`,
-      img: ({ src, alt, title }) =>
-        `![${escapeMarkdownText(alt)}](${renderMarkdownDestinationWithTitle(src, title, urlPolicy)})`,
-      br: () => "<br/>",
-      inlineMath: ({ value }) => `$${escapeInlineMath(value)}$`,
-      footnoteReference: ({ identifier }) => `[^${identifier}]`,
-    })
-  );
+  Match.typeTags<Inline>()({
+    text: ({ value }) => escapeMarkdownText(value),
+    rawMarkdown: renderRawMarkdown,
+    rawHtml: renderEscapedRawHtmlAsMarkdown,
+    strong: ({ children }) => `**${renderInlines(children)}**`,
+    em: ({ children }) => `*${renderInlines(children)}*`,
+    del: ({ children }) => `~~${renderInlines(children)}~~`,
+    code: ({ value }) => renderInlineCode(value),
+    a: ({ href, children, title }) =>
+      `[${renderMarkdownLinkLabelInlines(children)}](${renderMarkdownDestinationWithTitle(href, title, urlPolicy)})`,
+    img: ({ src, alt, title }) =>
+      `![${escapeMarkdownText(alt)}](${renderMarkdownDestinationWithTitle(src, title, urlPolicy)})`,
+    br: () => "<br/>",
+    inlineMath: ({ value }) => `$${escapeInlineMath(value)}$`,
+    footnoteReference: ({ identifier }) => `[^${identifier}]`,
+  });
 
 const renderMarkdownInlineMatcher = makeMarkdownInlineMatcher(
   renderMarkdownInlines,
@@ -618,25 +616,23 @@ const renderHtmlOptionalAttribute: {
  * @category utilities
  * @since 0.0.0
  */
-const renderHtmlInlineMatcher = Match.type<Inline>().pipe(
-  Match.tagsExhaustive({
-    text: ({ value }) => Html.escapeHtml(value),
-    rawMarkdown: ({ value }) => Html.escapeHtml(value),
-    rawHtml: renderEscapedRawHtmlAsHtml,
-    strong: ({ children }) => `<strong>${renderHtmlInlines(children)}</strong>`,
-    em: ({ children }) => `<em>${renderHtmlInlines(children)}</em>`,
-    del: ({ children }) => `<del>${renderHtmlInlines(children)}</del>`,
-    code: ({ value }) => `<code>${Html.escapeHtml(value)}</code>`,
-    a: ({ href, children, title }) =>
-      `<a href="${escapeHtmlUrlAttribute(href)}"${renderHtmlOptionalAttribute("title", title)}>${renderHtmlInlines(children)}</a>`,
-    img: ({ src, alt, title }) =>
-      `<img src="${escapeHtmlUrlAttribute(src)}" alt="${Html.escapeHtml(alt)}"${renderHtmlOptionalAttribute("title", title)} />`,
-    br: () => "<br />",
-    inlineMath: ({ value }) => `<span class="math math-inline">${Html.escapeHtml(value)}</span>`,
-    footnoteReference: ({ identifier }) =>
-      `<sup id="fnref-${Html.escapeHtml(identifier)}"><a href="#fn-${Html.escapeHtml(identifier)}">${Html.escapeHtml(identifier)}</a></sup>`,
-  })
-);
+const renderHtmlInlineMatcher = Match.typeTags<Inline>()({
+  text: ({ value }) => Html.escapeHtml(value),
+  rawMarkdown: ({ value }) => Html.escapeHtml(value),
+  rawHtml: renderEscapedRawHtmlAsHtml,
+  strong: ({ children }) => `<strong>${renderHtmlInlines(children)}</strong>`,
+  em: ({ children }) => `<em>${renderHtmlInlines(children)}</em>`,
+  del: ({ children }) => `<del>${renderHtmlInlines(children)}</del>`,
+  code: ({ value }) => `<code>${Html.escapeHtml(value)}</code>`,
+  a: ({ href, children, title }) =>
+    `<a href="${escapeHtmlUrlAttribute(href)}"${renderHtmlOptionalAttribute("title", title)}>${renderHtmlInlines(children)}</a>`,
+  img: ({ src, alt, title }) =>
+    `<img src="${escapeHtmlUrlAttribute(src)}" alt="${Html.escapeHtml(alt)}"${renderHtmlOptionalAttribute("title", title)} />`,
+  br: () => "<br />",
+  inlineMath: ({ value }) => `<span class="math math-inline">${Html.escapeHtml(value)}</span>`,
+  footnoteReference: ({ identifier }) =>
+    `<sup id="fnref-${Html.escapeHtml(identifier)}"><a href="#fn-${Html.escapeHtml(identifier)}">${Html.escapeHtml(identifier)}</a></sup>`,
+});
 
 /**
  * Renders an inline node as an HTML fragment.
@@ -672,45 +668,43 @@ export function renderHtmlInline(inline: Inline): string {
  * @category utilities
  * @since 0.0.0
  */
-export const renderMarkdownBlock: (block: Block) => string = Match.type<Block>().pipe(
-  Match.tagsExhaustive({
-    heading: renderMarkdownHeading,
-    p: (block) => renderMarkdownInlines(block.children),
-    blockquote: (block) => pipe(block.children, renderMarkdownBlocks, prefixLines("> ")),
-    pre: (block) => renderFencedCode(block.value, languageToMarkdown(block.language)),
-    ul: (block) =>
-      pipe(
-        block.children,
-        A.map((item) => renderMarkdownMarkedItem("- ", renderMarkdownListItem(item))),
-        A.join("\n")
-      ),
-    ol: (block) =>
-      pipe(
-        block.children,
-        A.map((item, index) => {
-          const marker = `${index + block.start}. `;
+export const renderMarkdownBlock: (block: Block) => string = Match.typeTags<Block>()({
+  heading: renderMarkdownHeading,
+  p: (block) => renderMarkdownInlines(block.children),
+  blockquote: (block) => pipe(block.children, renderMarkdownBlocks, prefixLines("> ")),
+  pre: (block) => renderFencedCode(block.value, languageToMarkdown(block.language)),
+  ul: (block) =>
+    pipe(
+      block.children,
+      A.map((item) => renderMarkdownMarkedItem("- ", renderMarkdownListItem(item))),
+      A.join("\n")
+    ),
+  ol: (block) =>
+    pipe(
+      block.children,
+      A.map((item, index) => {
+        const marker = `${index + block.start}. `;
 
-          return renderMarkdownMarkedItem(marker, renderMarkdownListItem(item));
-        }),
-        A.join("\n")
+        return renderMarkdownMarkedItem(marker, renderMarkdownListItem(item));
+      }),
+      A.join("\n")
+    ),
+  taskList: (block) =>
+    pipe(
+      block.children,
+      A.map((item) =>
+        renderMarkdownMarkedItem(`- [${item.checked ? "x" : " "}] `, renderMarkdownListItemChildren(item.children))
       ),
-    taskList: (block) =>
-      pipe(
-        block.children,
-        A.map((item) =>
-          renderMarkdownMarkedItem(`- [${item.checked ? "x" : " "}] `, renderMarkdownListItemChildren(item.children))
-        ),
-        A.join("\n")
-      ),
-    table: renderMarkdownTable,
-    youtube: (block) => youtubeWatchUrl(block.videoId),
-    mathBlock: renderMarkdownMathBlock,
-    footnoteDefinition: renderMarkdownFootnoteDefinition,
-    admonition: renderMarkdownAdmonition,
-    embed: renderMarkdownEmbed,
-    hr: () => "---",
-  })
-);
+      A.join("\n")
+    ),
+  table: renderMarkdownTable,
+  youtube: (block) => youtubeWatchUrl(block.videoId),
+  mathBlock: renderMarkdownMathBlock,
+  footnoteDefinition: renderMarkdownFootnoteDefinition,
+  admonition: renderMarkdownAdmonition,
+  embed: renderMarkdownEmbed,
+  hr: () => "---",
+});
 
 /**
  * Renders a block node as an HTML fragment.
@@ -727,27 +721,25 @@ export const renderMarkdownBlock: (block: Block) => string = Match.type<Block>()
  * @category utilities
  * @since 0.0.0
  */
-export const renderHtmlBlock: (block: Block) => string = Match.type<Block>().pipe(
-  Match.tagsExhaustive({
-    heading: renderHtmlHeading,
-    p: (block) => `<p>${renderHtmlInlines(block.children)}</p>`,
-    blockquote: (block) => `<blockquote>${renderHtmlBlocks(block.children)}</blockquote>`,
-    pre: (block) => `<pre><code${languageToHtmlClass(block.language)}>${Html.escapeHtml(block.value)}</code></pre>`,
-    ul: (block) => `<ul>${pipe(block.children, A.map(renderHtmlListItem), joinEmpty)}</ul>`,
-    ol: (block) =>
-      `<ol${block.start === 1 ? "" : ` start="${block.start}"`}>${pipe(block.children, A.map(renderHtmlListItem), joinEmpty)}</ol>`,
-    taskList: (block) =>
-      `<ul class="contains-task-list">${pipe(block.children, A.map(renderHtmlTaskItem), joinEmpty)}</ul>`,
-    table: renderHtmlTable,
-    youtube: (block) =>
-      `<iframe src="${escapeHtmlUrlAttribute(youtubeEmbedUrl(block.videoId))}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
-    mathBlock: (block) => `<div class="math math-display">${Html.escapeHtml(block.value)}</div>`,
-    footnoteDefinition: renderHtmlFootnoteDefinition,
-    admonition: renderHtmlAdmonition,
-    embed: renderHtmlEmbed,
-    hr: () => "<hr />",
-  })
-);
+export const renderHtmlBlock: (block: Block) => string = Match.typeTags<Block>()({
+  heading: renderHtmlHeading,
+  p: (block) => `<p>${renderHtmlInlines(block.children)}</p>`,
+  blockquote: (block) => `<blockquote>${renderHtmlBlocks(block.children)}</blockquote>`,
+  pre: (block) => `<pre><code${languageToHtmlClass(block.language)}>${Html.escapeHtml(block.value)}</code></pre>`,
+  ul: (block) => `<ul>${pipe(block.children, A.map(renderHtmlListItem), joinEmpty)}</ul>`,
+  ol: (block) =>
+    `<ol${block.start === 1 ? "" : ` start="${block.start}"`}>${pipe(block.children, A.map(renderHtmlListItem), joinEmpty)}</ol>`,
+  taskList: (block) =>
+    `<ul class="contains-task-list">${pipe(block.children, A.map(renderHtmlTaskItem), joinEmpty)}</ul>`,
+  table: renderHtmlTable,
+  youtube: (block) =>
+    `<iframe src="${escapeHtmlUrlAttribute(youtubeEmbedUrl(block.videoId))}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
+  mathBlock: (block) => `<div class="math math-display">${Html.escapeHtml(block.value)}</div>`,
+  footnoteDefinition: renderHtmlFootnoteDefinition,
+  admonition: renderHtmlAdmonition,
+  embed: renderHtmlEmbed,
+  hr: () => "<hr />",
+});
 
 /**
  * Renders block nodes as a Markdown document body.
@@ -1043,22 +1035,27 @@ const renderMarkdownInlinesWithPolicy = (
 
 const renderMarkdownInlineWithPolicy = (policy: UrlPolicySpec, inline: Inline, linkLabel = false): string =>
   Match.value(inline).pipe(
-    Match.tagsExhaustive({
-      text: ({ value }) => escapeMarkdownText(value),
-      rawMarkdown: ({ value }) => (linkLabel ? escapeMarkdownText(value) : value),
-      rawHtml: renderEscapedRawHtmlAsMarkdown,
-      strong: ({ children }) => `**${renderMarkdownInlinesWithPolicy(policy, children, linkLabel)}**`,
-      em: ({ children }) => `*${renderMarkdownInlinesWithPolicy(policy, children, linkLabel)}*`,
-      del: ({ children }) => `~~${renderMarkdownInlinesWithPolicy(policy, children, linkLabel)}~~`,
-      code: ({ value }) => renderInlineCode(value),
-      a: ({ href, children, title }) =>
-        `[${renderMarkdownInlinesWithPolicy(policy, children, true)}](${renderMarkdownDestinationWithTitle(href, title, policy)})`,
-      img: ({ src, alt, title }) =>
-        `![${escapeMarkdownText(alt)}](${renderMarkdownDestinationWithTitle(src, title, policy)})`,
-      br: () => "<br/>",
-      inlineMath: ({ value }) => `$${escapeInlineMath(value)}$`,
-      footnoteReference: ({ identifier }) => `[^${identifier}]`,
-    })
+    Match.tag("text", ({ value }) => escapeMarkdownText(value)),
+    Match.tag("rawMarkdown", ({ value }) => (linkLabel ? escapeMarkdownText(value) : value)),
+    Match.tag("rawHtml", renderEscapedRawHtmlAsMarkdown),
+    Match.tag("strong", ({ children }) => `**${renderMarkdownInlinesWithPolicy(policy, children, linkLabel)}**`),
+    Match.tag("em", ({ children }) => `*${renderMarkdownInlinesWithPolicy(policy, children, linkLabel)}*`),
+    Match.tag("del", ({ children }) => `~~${renderMarkdownInlinesWithPolicy(policy, children, linkLabel)}~~`),
+    Match.tag("code", ({ value }) => renderInlineCode(value)),
+    Match.tag(
+      "a",
+      ({ href, children, title }) =>
+        `[${renderMarkdownInlinesWithPolicy(policy, children, true)}](${renderMarkdownDestinationWithTitle(href, title, policy)})`
+    ),
+    Match.tag(
+      "img",
+      ({ src, alt, title }) =>
+        `![${escapeMarkdownText(alt)}](${renderMarkdownDestinationWithTitle(src, title, policy)})`
+    ),
+    Match.tag("br", () => "<br/>"),
+    Match.tag("inlineMath", ({ value }) => `$${escapeInlineMath(value)}$`),
+    Match.tag("footnoteReference", ({ identifier }) => `[^${identifier}]`),
+    Match.exhaustive
   );
 
 const renderHtmlInlinesWithPolicy = (policy: UrlPolicySpec, children: ReadonlyArray<Inline>): string =>
@@ -1070,23 +1067,31 @@ const renderHtmlInlinesWithPolicy = (policy: UrlPolicySpec, children: ReadonlyAr
 
 const renderHtmlInlineWithPolicy = (policy: UrlPolicySpec, inline: Inline): string =>
   Match.value(inline).pipe(
-    Match.tagsExhaustive({
-      text: ({ value }) => Html.escapeHtml(value),
-      rawMarkdown: ({ value }) => Html.escapeHtml(value),
-      rawHtml: renderEscapedRawHtmlAsHtml,
-      strong: ({ children }) => `<strong>${renderHtmlInlinesWithPolicy(policy, children)}</strong>`,
-      em: ({ children }) => `<em>${renderHtmlInlinesWithPolicy(policy, children)}</em>`,
-      del: ({ children }) => `<del>${renderHtmlInlinesWithPolicy(policy, children)}</del>`,
-      code: ({ value }) => `<code>${Html.escapeHtml(value)}</code>`,
-      a: ({ href, children, title }) =>
-        `<a href="${escapeHtmlUrlAttributeWithPolicy(href, policy)}"${renderHtmlOptionalAttribute("title", title)}>${renderHtmlInlinesWithPolicy(policy, children)}</a>`,
-      img: ({ src, alt, title }) =>
-        `<img src="${escapeHtmlUrlAttributeWithPolicy(src, policy)}" alt="${Html.escapeHtml(alt)}"${renderHtmlOptionalAttribute("title", title)} />`,
-      br: () => "<br />",
-      inlineMath: ({ value }) => `<span class="math math-inline">${Html.escapeHtml(value)}</span>`,
-      footnoteReference: ({ identifier }) =>
-        `<sup id="fnref-${Html.escapeHtml(identifier)}"><a href="#fn-${Html.escapeHtml(identifier)}">${Html.escapeHtml(identifier)}</a></sup>`,
-    })
+    Match.tag("text", ({ value }) => Html.escapeHtml(value)),
+    Match.tag("rawMarkdown", ({ value }) => Html.escapeHtml(value)),
+    Match.tag("rawHtml", renderEscapedRawHtmlAsHtml),
+    Match.tag("strong", ({ children }) => `<strong>${renderHtmlInlinesWithPolicy(policy, children)}</strong>`),
+    Match.tag("em", ({ children }) => `<em>${renderHtmlInlinesWithPolicy(policy, children)}</em>`),
+    Match.tag("del", ({ children }) => `<del>${renderHtmlInlinesWithPolicy(policy, children)}</del>`),
+    Match.tag("code", ({ value }) => `<code>${Html.escapeHtml(value)}</code>`),
+    Match.tag(
+      "a",
+      ({ href, children, title }) =>
+        `<a href="${escapeHtmlUrlAttributeWithPolicy(href, policy)}"${renderHtmlOptionalAttribute("title", title)}>${renderHtmlInlinesWithPolicy(policy, children)}</a>`
+    ),
+    Match.tag(
+      "img",
+      ({ src, alt, title }) =>
+        `<img src="${escapeHtmlUrlAttributeWithPolicy(src, policy)}" alt="${Html.escapeHtml(alt)}"${renderHtmlOptionalAttribute("title", title)} />`
+    ),
+    Match.tag("br", () => "<br />"),
+    Match.tag("inlineMath", ({ value }) => `<span class="math math-inline">${Html.escapeHtml(value)}</span>`),
+    Match.tag(
+      "footnoteReference",
+      ({ identifier }) =>
+        `<sup id="fnref-${Html.escapeHtml(identifier)}"><a href="#fn-${Html.escapeHtml(identifier)}">${Html.escapeHtml(identifier)}</a></sup>`
+    ),
+    Match.exhaustive
   );
 
 const renderMarkdownListItemChildrenWithPolicy = (
@@ -1164,78 +1169,82 @@ const renderHtmlTableWithPolicy = (policy: UrlPolicySpec, block: Table): string 
 
 const renderMarkdownBlockWithPolicy = (policy: UrlPolicySpec, block: Block): string =>
   Match.value(block).pipe(
-    Match.tagsExhaustive({
-      heading: ({ children, level }) =>
-        `${pipe("#", Str.repeat(level))} ${renderMarkdownInlinesWithPolicy(policy, children)}`,
-      p: ({ children }) => renderMarkdownInlinesWithPolicy(policy, children),
-      blockquote: ({ children }) => prefixLines(renderMarkdownBlocksWithPolicy(policy, children), "> "),
-      pre: ({ language, value }) => renderFencedCode(value, languageToMarkdown(language)),
-      ul: ({ children }) =>
-        pipe(
-          children,
-          A.map((item) =>
-            renderMarkdownMarkedItem("- ", renderMarkdownListItemChildrenWithPolicy(policy, item.children))
-          ),
-          A.join("\n")
+    Match.tag(
+      "heading",
+      ({ children, level }) => `${pipe("#", Str.repeat(level))} ${renderMarkdownInlinesWithPolicy(policy, children)}`
+    ),
+    Match.tag("p", ({ children }) => renderMarkdownInlinesWithPolicy(policy, children)),
+    Match.tag("blockquote", ({ children }) => prefixLines(renderMarkdownBlocksWithPolicy(policy, children), "> ")),
+    Match.tag("pre", ({ language, value }) => renderFencedCode(value, languageToMarkdown(language))),
+    Match.tag("ul", ({ children }) =>
+      pipe(
+        children,
+        A.map((item) =>
+          renderMarkdownMarkedItem("- ", renderMarkdownListItemChildrenWithPolicy(policy, item.children))
         ),
-      ol: ({ children, start }) =>
-        pipe(
-          children,
-          A.map((item, index) =>
-            renderMarkdownMarkedItem(
-              `${index + start}. `,
-              renderMarkdownListItemChildrenWithPolicy(policy, item.children)
-            )
-          ),
-          A.join("\n")
+        A.join("\n")
+      )
+    ),
+    Match.tag("ol", ({ children, start }) =>
+      pipe(
+        children,
+        A.map((item, index) =>
+          renderMarkdownMarkedItem(
+            `${index + start}. `,
+            renderMarkdownListItemChildrenWithPolicy(policy, item.children)
+          )
         ),
-      taskList: ({ children }) =>
-        pipe(
-          children,
-          A.map((item) =>
-            renderMarkdownMarkedItem(
-              `- [${item.checked ? "x" : " "}] `,
-              renderMarkdownListItemChildrenWithPolicy(policy, item.children)
-            )
-          ),
-          A.join("\n")
+        A.join("\n")
+      )
+    ),
+    Match.tag("taskList", ({ children }) =>
+      pipe(
+        children,
+        A.map((item) =>
+          renderMarkdownMarkedItem(
+            `- [${item.checked ? "x" : " "}] `,
+            renderMarkdownListItemChildrenWithPolicy(policy, item.children)
+          )
         ),
-      table: (table) => renderMarkdownTableWithPolicy(policy, table),
-      youtube: ({ videoId }) => {
-        const destination = youtubeWatchUrl(videoId);
-        return isUrlDestinationAllowedWithPolicy(destination, policy)
-          ? escapeMarkdownDestinationWithPolicy(destination, policy)
-          : escapeMarkdownText("YouTube video");
-      },
-      mathBlock: renderMarkdownMathBlock,
-      footnoteDefinition: ({ children, identifier }) => {
-        const body = renderMarkdownBlocksWithPolicy(policy, children);
-        return Str.isEmpty(body) ? `[^${identifier}]:` : `[^${identifier}]: ${indentContinuationLines(body, "    ")}`;
-      },
-      admonition: ({ children, kind, title }) => {
-        const renderedTitle = pipe(
-          title,
-          O.map((value) => ` ${escapeMarkdownText(value)}`),
-          O.getOrElse(thunkEmptyStr)
-        );
-        const header = `> [!${Str.toUpperCase(kind)}]${renderedTitle}`;
-        const body = renderMarkdownBlocksWithPolicy(policy, children);
-        return Str.isEmpty(body) ? header : `${header}\n${prefixLines(body, "> ")}`;
-      },
-      embed: ({ description, kind, src, title }) => {
-        const label = pipe(
-          title,
-          O.getOrElse(() => src)
-        );
-        const destination = renderMarkdownDestinationWithTitle(src, title, policy);
-        const rendered =
-          kind === "image"
-            ? `![${escapeMarkdownText(label)}](${destination})`
-            : `[${escapeMarkdownText(label)}](${destination})`;
-        return `${rendered}${embedDescriptionMarkdown(description)}`;
-      },
-      hr: () => "---",
-    })
+        A.join("\n")
+      )
+    ),
+    Match.tag("table", (table) => renderMarkdownTableWithPolicy(policy, table)),
+    Match.tag("youtube", ({ videoId }) => {
+      const destination = youtubeWatchUrl(videoId);
+      return isUrlDestinationAllowedWithPolicy(destination, policy)
+        ? escapeMarkdownDestinationWithPolicy(destination, policy)
+        : escapeMarkdownText("YouTube video");
+    }),
+    Match.tag("mathBlock", renderMarkdownMathBlock),
+    Match.tag("footnoteDefinition", ({ children, identifier }) => {
+      const body = renderMarkdownBlocksWithPolicy(policy, children);
+      return Str.isEmpty(body) ? `[^${identifier}]:` : `[^${identifier}]: ${indentContinuationLines(body, "    ")}`;
+    }),
+    Match.tag("admonition", ({ children, kind, title }) => {
+      const renderedTitle = pipe(
+        title,
+        O.map((value) => ` ${escapeMarkdownText(value)}`),
+        O.getOrElse(thunkEmptyStr)
+      );
+      const header = `> [!${Str.toUpperCase(kind)}]${renderedTitle}`;
+      const body = renderMarkdownBlocksWithPolicy(policy, children);
+      return Str.isEmpty(body) ? header : `${header}\n${prefixLines(body, "> ")}`;
+    }),
+    Match.tag("embed", ({ description, kind, src, title }) => {
+      const label = pipe(
+        title,
+        O.getOrElse(() => src)
+      );
+      const destination = renderMarkdownDestinationWithTitle(src, title, policy);
+      const rendered =
+        kind === "image"
+          ? `![${escapeMarkdownText(label)}](${destination})`
+          : `[${escapeMarkdownText(label)}](${destination})`;
+      return `${rendered}${embedDescriptionMarkdown(description)}`;
+    }),
+    Match.tag("hr", () => "---"),
+    Match.exhaustive
   );
 
 const renderMarkdownBlocksWithPolicy = (policy: UrlPolicySpec, blocks: ReadonlyArray<Block>): Markdown =>
@@ -1247,28 +1256,41 @@ const renderMarkdownBlocksWithPolicy = (policy: UrlPolicySpec, blocks: ReadonlyA
 
 const renderHtmlBlockWithPolicy = (policy: UrlPolicySpec, block: Block): string =>
   Match.value(block).pipe(
-    Match.tagsExhaustive({
-      heading: (heading) => {
-        const { children } = heading;
-        const tag = headingTag(heading);
-        return `<${tag}>${renderHtmlInlinesWithPolicy(policy, children)}</${tag}>`;
-      },
-      p: ({ children }) => `<p>${renderHtmlInlinesWithPolicy(policy, children)}</p>`,
-      blockquote: ({ children }) => `<blockquote>${renderHtmlBlocksWithPolicy(policy, children)}</blockquote>`,
-      pre: ({ language, value }) => `<pre><code${languageToHtmlClass(language)}>${Html.escapeHtml(value)}</code></pre>`,
-      ul: ({ children }) =>
+    Match.tag("heading", (heading) => {
+      const { children } = heading;
+      const tag = headingTag(heading);
+      return `<${tag}>${renderHtmlInlinesWithPolicy(policy, children)}</${tag}>`;
+    }),
+    Match.tag("p", ({ children }) => `<p>${renderHtmlInlinesWithPolicy(policy, children)}</p>`),
+    Match.tag(
+      "blockquote",
+      ({ children }) => `<blockquote>${renderHtmlBlocksWithPolicy(policy, children)}</blockquote>`
+    ),
+    Match.tag(
+      "pre",
+      ({ language, value }) => `<pre><code${languageToHtmlClass(language)}>${Html.escapeHtml(value)}</code></pre>`
+    ),
+    Match.tag(
+      "ul",
+      ({ children }) =>
         `<ul>${pipe(
           children,
           A.map((item) => `<li>${renderHtmlListItemChildrenWithPolicy(policy, item.children)}</li>`),
           joinEmpty
-        )}</ul>`,
-      ol: ({ children, start }) =>
+        )}</ul>`
+    ),
+    Match.tag(
+      "ol",
+      ({ children, start }) =>
         `<ol${start === 1 ? "" : ` start="${start}"`}>${pipe(
           children,
           A.map((item) => `<li>${renderHtmlListItemChildrenWithPolicy(policy, item.children)}</li>`),
           joinEmpty
-        )}</ol>`,
-      taskList: ({ children }) =>
+        )}</ol>`
+    ),
+    Match.tag(
+      "taskList",
+      ({ children }) =>
         `<ul class="contains-task-list">${pipe(
           children,
           A.map((item) => {
@@ -1276,39 +1298,43 @@ const renderHtmlBlockWithPolicy = (policy: UrlPolicySpec, block: Block): string 
             return `<li><input type="checkbox" disabled${checked} /> ${renderHtmlListItemChildrenWithPolicy(policy, item.children)}</li>`;
           }),
           joinEmpty
-        )}</ul>`,
-      table: (table) => renderHtmlTableWithPolicy(policy, table),
-      youtube: ({ videoId }) => {
-        const destination = youtubeEmbedUrl(videoId);
-        return isUrlDestinationAllowedWithPolicy(destination, policy)
-          ? `<iframe src="${escapeHtmlUrlAttributeWithPolicy(destination, policy)}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
-          : Html.escapeHtml("YouTube video");
-      },
-      mathBlock: ({ value }) => `<div class="math math-display">${Html.escapeHtml(value)}</div>`,
-      footnoteDefinition: ({ children, identifier }) =>
-        `<section id="fn-${Html.escapeHtml(identifier)}" class="footnote-definition"><sup>${Html.escapeHtml(identifier)}</sup>${renderHtmlBlocksWithPolicy(policy, children)}</section>`,
-      admonition: ({ children, kind, title }) => {
-        const renderedTitle = pipe(
-          title,
-          O.map((value) => `<p class="admonition-title">${Html.escapeHtml(value)}</p>`),
-          O.getOrElse(thunkEmptyStr)
-        );
-        return `<aside class="admonition admonition-${Html.escapeHtml(kind)}">${renderedTitle}${renderHtmlBlocksWithPolicy(policy, children)}</aside>`;
-      },
-      embed: ({ description, kind, src, title }) => {
-        const caption = pipe(
-          description,
-          O.map((value) => `<figcaption>${Html.escapeHtml(value)}</figcaption>`),
-          O.getOrElse(thunkEmptyStr)
-        );
-        const label = pipe(
-          title,
-          O.getOrElse(() => src)
-        );
-        return `<figure data-embed-kind="${Html.escapeHtml(kind)}"><a href="${escapeHtmlUrlAttributeWithPolicy(src, policy)}">${Html.escapeHtml(label)}</a>${caption}</figure>`;
-      },
-      hr: () => "<hr />",
-    })
+        )}</ul>`
+    ),
+    Match.tag("table", (table) => renderHtmlTableWithPolicy(policy, table)),
+    Match.tag("youtube", ({ videoId }) => {
+      const destination = youtubeEmbedUrl(videoId);
+      return isUrlDestinationAllowedWithPolicy(destination, policy)
+        ? `<iframe src="${escapeHtmlUrlAttributeWithPolicy(destination, policy)}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+        : Html.escapeHtml("YouTube video");
+    }),
+    Match.tag("mathBlock", ({ value }) => `<div class="math math-display">${Html.escapeHtml(value)}</div>`),
+    Match.tag(
+      "footnoteDefinition",
+      ({ children, identifier }) =>
+        `<section id="fn-${Html.escapeHtml(identifier)}" class="footnote-definition"><sup>${Html.escapeHtml(identifier)}</sup>${renderHtmlBlocksWithPolicy(policy, children)}</section>`
+    ),
+    Match.tag("admonition", ({ children, kind, title }) => {
+      const renderedTitle = pipe(
+        title,
+        O.map((value) => `<p class="admonition-title">${Html.escapeHtml(value)}</p>`),
+        O.getOrElse(thunkEmptyStr)
+      );
+      return `<aside class="admonition admonition-${Html.escapeHtml(kind)}">${renderedTitle}${renderHtmlBlocksWithPolicy(policy, children)}</aside>`;
+    }),
+    Match.tag("embed", ({ description, kind, src, title }) => {
+      const caption = pipe(
+        description,
+        O.map((value) => `<figcaption>${Html.escapeHtml(value)}</figcaption>`),
+        O.getOrElse(thunkEmptyStr)
+      );
+      const label = pipe(
+        title,
+        O.getOrElse(() => src)
+      );
+      return `<figure data-embed-kind="${Html.escapeHtml(kind)}"><a href="${escapeHtmlUrlAttributeWithPolicy(src, policy)}">${Html.escapeHtml(label)}</a>${caption}</figure>`;
+    }),
+    Match.tag("hr", () => "<hr />"),
+    Match.exhaustive
   );
 
 const renderHtmlBlocksWithPolicy = (policy: UrlPolicySpec, blocks: ReadonlyArray<Block>): HtmlFragment =>

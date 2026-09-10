@@ -12,20 +12,16 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { ShaclValidationResult, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Duration, flow, Result } from "effect";
+import { Duration } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type { FastCheck } from "effect/testing";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Shacl");
 
 const isValidValidationDuration = P.every([Duration.isFinite, Duration.isGreaterThanOrEqualTo(Duration.zero)]);
-const decodeValidationDuration = S.decodeUnknownResult(S.DurationFromMillis);
-const makeValidationDurationArbitrary = (fc: typeof FastCheck) =>
-  fc.maxSafeNat().map(flow(decodeValidationDuration, Result.getOrThrow));
 
 const ValidationDurationMs = S.DurationFromMillis.check(
   S.makeFilter(isValidValidationDuration, {
@@ -33,17 +29,8 @@ const ValidationDurationMs = S.DurationFromMillis.check(
     title: "Finite Validation Duration",
     description: "A measured validation duration that is finite and non-negative.",
     message: "Validation duration must be finite and non-negative.",
-    arbitrary: {
-      candidate: {
-        make: makeValidationDurationArbitrary,
-      },
-    },
   })
-)
-  .annotate({
-    toArbitrary: () => makeValidationDurationArbitrary,
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("ValidationDurationMs", {
       description: "Finite, non-negative validation duration encoded as milliseconds.",
     })
@@ -71,25 +58,6 @@ class ShaclValidationReportFields extends S.Class<ShaclValidationReportFields>($
     description: "Experiment execution metadata wrapped around the canonical SHACL validation result.",
   })
 ) {}
-
-const makeShaclValidationReportArbitrary = (fc: typeof FastCheck) =>
-  fc
-    .record({
-      validation: S.toArbitrary(ShaclValidationResult)(fc),
-      validatedAt: S.toArbitrary(S.DateTimeUtcFromString)(fc),
-      dataGraphTripleCount: S.toArbitrary(NonNegativeInt)(fc),
-      shapesGraphTripleCount: S.toArbitrary(NonNegativeInt)(fc),
-      durationMs: S.toArbitrary(ValidationDurationMs)(fc),
-    })
-    .map(({ validation, validatedAt, dataGraphTripleCount, shapesGraphTripleCount, durationMs }) =>
-      ShaclValidationReportFields.make({
-        validation,
-        validatedAt,
-        dataGraphTripleCount,
-        shapesGraphTripleCount,
-        durationMs,
-      })
-    );
 
 /**
  * Complete normalized report for one SHACL validation run.
@@ -125,9 +93,7 @@ const makeShaclValidationReportArbitrary = (fc: typeof FastCheck) =>
  * @category schemas
  * @since 0.0.0
  */
-export const ShaclValidationReport = ShaclValidationReportFields.annotate({
-  toArbitrary: () => makeShaclValidationReportArbitrary,
-}).pipe(
+export const ShaclValidationReport = ShaclValidationReportFields.pipe(
   $I.annoteSchema("ShaclValidationReport", {
     description:
       "Complete normalized SHACL validation report with spec-consistent conformance, graph sizes, completion time, and finite duration.",
@@ -208,16 +174,7 @@ class ValidationPolicyFields extends S.Class<ValidationPolicyFields>($I`Validati
  * @category policies
  * @since 0.0.0
  */
-export const ValidationPolicy = ValidationPolicyFields.annotate({
-  toArbitrary: () => (fc) =>
-    fc
-      .record({
-        failOnViolation: fc.boolean(),
-        failOnWarning: fc.boolean(),
-        logOnly: fc.boolean(),
-      })
-      .map((input) => ValidationPolicyFields.make(input)),
-}).pipe(
+export const ValidationPolicy = ValidationPolicyFields.pipe(
   $I.annoteSchema("ValidationPolicy", {
     description: "Workflow policy for failing on SHACL Violation or Warning results, with an overriding log-only mode.",
   }),

@@ -16,12 +16,13 @@ import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEvidenceModelResult = S.decodeResult(EvidenceModel);
 const decodeUnknownEvidenceModelResult = S.decodeUnknownResult(EvidenceModel);
@@ -31,7 +32,7 @@ const decodeUnknownEdgeVersionModelSync = S.decodeUnknownSync(EdgeVersionModel);
 const decodeUnknownEvidenceModelSync = S.decodeUnknownSync(EvidenceModel);
 const decodeUnknownUsageRecordModelSync = S.decodeUnknownSync(UsageRecordModel);
 
-const UsageRecordArbitrary = S.toArbitrary(UsageRecordModel)(fc);
+const UsageRecordArbitrary = Arbitrary.schema(UsageRecordModel);
 const UsageRecordEquivalence = S.toEquivalence(UsageRecordModel);
 
 const usageRecordInput = (id: number) => ({
@@ -582,24 +583,31 @@ describe("EpistemicTables", () => {
   });
 
   it("round-trips schema-derived UsageRecords through the row converters", () =>
-    fc.assert(
-      fc.property(UsageRecordArbitrary, (record) => {
-        const insert = UsageRecord.toUsageRecordInsert(record);
-        const decoded = UsageRecord.fromUsageRecordRow({
-          ...insert,
-          id: record.id,
-          activityId: insert.activityId ?? null,
-          costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
-          credentialReference: insert.credentialReference ?? null,
-          inputTokens: insert.inputTokens ?? null,
-          latencyMillis: insert.latencyMillis ?? null,
-          outputTokens: insert.outputTokens ?? null,
-          totalTokens: insert.totalTokens ?? null,
-          unitCount: insert.unitCount ?? null,
-        });
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([UsageRecordArbitrary]),
+          ([record]) => {
+            const insert = UsageRecord.toUsageRecordInsert(record);
+            const decoded = UsageRecord.fromUsageRecordRow({
+              ...insert,
+              id: record.id,
+              activityId: insert.activityId ?? null,
+              costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
+              credentialReference: insert.credentialReference ?? null,
+              inputTokens: insert.inputTokens ?? null,
+              latencyMillis: insert.latencyMillis ?? null,
+              outputTokens: insert.outputTokens ?? null,
+              totalTokens: insert.totalTokens ?? null,
+              unitCount: insert.unitCount ?? null,
+            });
 
-        expect(UsageRecordEquivalence(decoded, record)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(UsageRecordEquivalence(decoded, record)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

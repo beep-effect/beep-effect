@@ -23,7 +23,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeArtifactId = S.decodeEffect(ArtifactId);
 const decodeContentDigest = S.decodeEffect(ContentDigest);
@@ -36,7 +36,7 @@ const testLayer = NodeServices.layer;
 const provideTestLayer = provideScopedLayer(testLayer);
 
 const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(PffexportMessageRecord));
-const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord)(fc);
+const PffexportMessageRecordArbitrary = Arbitrary.schema(PffexportMessageRecord);
 const fixtureDigestHex = "166df44db090f14dbb3ec7730fc17e78c170477163a6c913e5485d075c4b92d0";
 
 const stubVersionBanner = 'if [ "$1" = "-V" ]; then printf "pffexport 20260608\\n\\nCopyright (C) test\\n"; exit 0; fi';
@@ -291,15 +291,16 @@ const readExported = Effect.fn(function* (exportRoot: string, relativePath: stri
 });
 
 describe("makePffexportFileProcessingEngine", () => {
-  it("round-trips schema-derived message records through the JSONL string codec", () =>
-    fc.assert(
-      fc.property(PffexportMessageRecordArbitrary, (record) => {
-        const json = Effect.runSync(encodePffexportMessageRecordJson(record));
-        const decoded = Effect.runSync(decodeMessageRecord(json));
-        expect(Effect.runSync(encodePffexportMessageRecordJson(decoded))).toBe(json);
-      }),
-      fcRuns(25)
-    ));
+  it.prop(
+    "round-trips schema-derived message records through the JSONL string codec",
+    [PffexportMessageRecordArbitrary],
+    ([record]) => {
+      const json = Effect.runSync(encodePffexportMessageRecordJson(record));
+      const decoded = Effect.runSync(decodeMessageRecord(json));
+      expect(Effect.runSync(encodePffexportMessageRecordJson(decoded))).toBe(json);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect(
     "exports directly from a file locator when the caller omits source bytes",

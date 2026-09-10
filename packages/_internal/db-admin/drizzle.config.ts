@@ -2,7 +2,7 @@ import { defineConfig } from "drizzle-kit";
 import { Config, Effect } from "effect";
 
 const databaseUrl = Effect.runSync(
-  Config.string("BEEP_TEST_DATABASE_URL").pipe(
+  Config.String("BEEP_TEST_DATABASE_URL").pipe(
     Config.withDefault("postgres://postgres:postgres@127.0.0.1:5432/postgres")
   )
 );

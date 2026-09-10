@@ -1,7 +1,7 @@
 {
   "name": "@beep/fc-runs",
   "version": "0.0.0",
-  "description": "Env-max fast-check run-count helpers (property-law lane floor)",
+  "description": "Env-max Effect Arbitrary run-count helpers (property-law lane floor)",
   "license": "MIT",
   "private": true,
   "type": "module",

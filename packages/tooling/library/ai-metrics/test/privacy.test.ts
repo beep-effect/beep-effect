@@ -10,10 +10,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isSha256Hex = S.is(Sha256Hex);
-const SecretTokenArbitrary = fc.stringMatching(/^[A-Za-z0-9]{8,64}$/);
+const SecretTokenArbitrary = Arbitrary.schema(S.String.check(S.isPattern(/^[A-Za-z0-9]{8,64}$/)));
 
 describe("AI metrics privacy boundaries", () => {
   it.effect("returns schema-valid SHA-256 digests", () =>
@@ -36,13 +36,20 @@ describe("AI metrics privacy boundaries", () => {
   );
 
   it("redacts arbitrary bearer credentials without exposing the token", () =>
-    fc.assert(
-      fc.property(SecretTokenArbitrary, (token) => {
-        const redacted = redactAiMetricsSensitiveText(`Authorization: Bearer ${token}`);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([SecretTokenArbitrary]),
+          ([token]) => {
+            const redacted = redactAiMetricsSensitiveText(`Authorization: Bearer ${token}`);
 
-        expect(redacted).not.toContain(token);
-        expect(redacted).toContain("[REDACTED]");
-      }),
-      fcRuns(50)
-    ));
+            expect(redacted).not.toContain(token);
+            expect(redacted).toContain("[REDACTED]");
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

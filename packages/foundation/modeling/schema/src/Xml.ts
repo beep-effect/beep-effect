@@ -86,7 +86,7 @@ const decodeXmlUnknown = Effect.fn("Xml.decodeXmlUnknown")(function* (content: s
 export const XmlTextToUnknown = S.String.pipe(
   S.decodeTo(
     S.Unknown,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: decodeXmlUnknown,
       encode: encodeUnsupported,
     })

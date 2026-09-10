@@ -58,7 +58,7 @@ export const makeTextConfigOptionReader: {
   2,
   <Error>(effectName: string, onConfigError: ConfigErrorFactory<Error>): TextConfigOptionReader<Error> =>
     Effect.fn(effectName)(function* (key: string) {
-      const value = yield* Config.string(key).pipe(
+      const value = yield* Config.String(key).pipe(
         Config.option,
         Effect.mapError(() => onConfigError())
       );
@@ -90,7 +90,7 @@ export const makeRedactedConfigOptionReader: {
   2,
   <Error>(effectName: string, onConfigError: ConfigErrorFactory<Error>): RedactedConfigOptionReader<Error> =>
     Effect.fn(effectName)(function* (key: string) {
-      const value = yield* Config.redacted(key).pipe(
+      const value = yield* Config.Redacted(key).pipe(
         Config.option,
         Effect.mapError(() => onConfigError())
       );

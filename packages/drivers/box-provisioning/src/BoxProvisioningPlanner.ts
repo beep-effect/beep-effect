@@ -380,26 +380,28 @@ const blockedCapabilityAction = <A extends BoxMetadataIntent | BoxRetentionInten
   const reason = folder.blocked
     ? BoxBlockedByPolicy.make({ policy: "blocked-folder-dependency" })
     : Match.value(discovery).pipe(
-        Match.tagsExhaustive({
-          Available: (available) =>
-            assertedAvailability === "unavailable"
-              ? available.count > 0
-                ? BoxBlockedByPolicy.make({
-                    policy: `${resourceKind}-entitlement-assertion-conflicts-with-live-discovery`,
-                  })
-                : BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
-              : BoxBlockedByPolicy.make({ policy: `${resourceKind}-mutation-out-of-scope-v1` }),
-          BlockedByEntitlement: () =>
-            assertedAvailability === "unavailable"
-              ? BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
-              : BoxBlockedByPolicy.make({
+        Match.tag("Available", (available) =>
+          assertedAvailability === "unavailable"
+            ? available.count > 0
+              ? BoxBlockedByPolicy.make({
                   policy: `${resourceKind}-entitlement-assertion-conflicts-with-live-discovery`,
-                }),
-          BlockedByPermission: () =>
-            assertedAvailability === "unavailable"
-              ? BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
-              : BoxBlockedByPolicy.make({ policy: `${resourceKind}-discovery-permission-denied` }),
-        })
+                })
+              : BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
+            : BoxBlockedByPolicy.make({ policy: `${resourceKind}-mutation-out-of-scope-v1` })
+        ),
+        Match.tag("BlockedByEntitlement", () =>
+          assertedAvailability === "unavailable"
+            ? BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
+            : BoxBlockedByPolicy.make({
+                policy: `${resourceKind}-entitlement-assertion-conflicts-with-live-discovery`,
+              })
+        ),
+        Match.tag("BlockedByPermission", () =>
+          assertedAvailability === "unavailable"
+            ? BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
+            : BoxBlockedByPolicy.make({ policy: `${resourceKind}-discovery-permission-denied` })
+        ),
+        Match.exhaustive
       );
   return BoxBlockedAction.make({
     ...actionBase({

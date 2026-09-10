@@ -1,0 +1,14 @@
+{
+  "lane": "r24-foundation-ui",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "started": "2026-09-08T20:04:33.736363+00:00",
+  "finished": "2026-09-08T20:14:13.111099+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 6,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "transcriptSha256": "302ee11c8effdebcf74bca5e696a9045fc1462bbf4f5ed93da6ee9a6bd0e93f6",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-foundation-ui.jsonl` \u2014 confirmed 0, disqualified 6. Covered all five assigned areas (brand/src, dock/src, dock-react/src, editor/src, ui/src). All 54 seed file+symbol pairs still exist. Line drift vs inventory: ChatComposerProps 212\u2192181, FooterProps 222\u2192191, ComposerSurfaceProps 332\u2192302, ComposerBodyProps 397\u2192371, UseNumberInputOptions 660\u2192657, useNumberInput 967\u2192964, ToolbarToggleButtonProps 172\u2192175, MentionPlugin 533\u2192540."
+}

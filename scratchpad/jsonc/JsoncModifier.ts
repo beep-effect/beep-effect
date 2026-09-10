@@ -255,19 +255,19 @@ export class JsoncModifier {
     });
 
     return yield* Match.value(result).pipe(
-      Match.tagsExhaustive({
-        Mismatch: (result) =>
+      Match.tag("Mismatch", (result) =>
           Effect.fail(
             JsoncModificationError.make({
               path,
               expected: result.expected,
               depth: result.depth,
             })
+        )
           ),
-        NoOp: () => Effect.succeed([] as ReadonlyArray<JsoncEdit>),
-        Located: modifyLocated,
-        Insert: modifyInsert,
-      })
+      Match.tag("NoOp", () => Effect.succeed([] as ReadonlyArray<JsoncEdit>)),
+      Match.tag("Located", modifyLocated),
+      Match.tag("Insert", modifyInsert),
+      Match.exhaustive
     );
   });
 }

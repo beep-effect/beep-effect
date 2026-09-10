@@ -17,9 +17,11 @@ import * as Eq from "effect/Equal";
 import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { VERIFIED_SPAN_NORMALIZATION_VERSION } from "./VerifiedSpan.config.ts";
 import { VerifiedSpanErrorReason } from "./VerifiedSpan.errors.ts";
 import { normalizeTextLocator } from "./VerifiedSpan.normalization.ts";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $LangExtractId.create("VerifiedSpan");
 
@@ -75,34 +77,14 @@ class TextOffsetRangeStruct extends S.Class<TextOffsetRangeStruct>($I`TextOffset
   })
 ) {}
 
-const TextOffsetRangeInvariant = TextOffsetRangeStruct.mapFields(identity)
-  .check(
-    S.makeFilter(({ end, start }) => start < end, {
-      identifier: $I`TextOffsetRangeOrderCheck`,
-      title: "Text Offset Range Order",
-      description: "Checks that an incoming half-open text range is non-empty and forward ordered.",
-      message: "Expected start to be less than end.",
-    })
-  )
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(
-          fc.nat(10_000),
-          fc.integer({
-            min: 1,
-            max: 10_000,
-          }),
-          fc.constantFrom(...TextOffsetUnit.Options)
-        )
-        .map(([start, width, unit]) =>
-          TextOffsetRangeStruct.make({
-            end: NonNegativeInt.make(start + width),
-            start: NonNegativeInt.make(start),
-            unit,
-          })
-        ),
-  });
+const TextOffsetRangeInvariant = TextOffsetRangeStruct.mapFields(identity).check(
+  S.makeFilter(({ end, start }) => start < end, {
+    identifier: $I`TextOffsetRangeOrderCheck`,
+    title: "Text Offset Range Order",
+    description: "Checks that an incoming half-open text range is non-empty and forward ordered.",
+    message: "Expected start to be less than end.",
+  })
+);
 
 /**
  * Half-open incoming offset range with an explicit unit.
@@ -127,6 +109,15 @@ const TextOffsetRangeInvariant = TextOffsetRangeStruct.mapFields(identity)
 export class TextOffsetRange extends S.Class<TextOffsetRange>($I`TextOffsetRange`)(
   TextOffsetRangeInvariant,
   $I.annote("TextOffsetRange", {
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<TextOffsetRange>()(
+        TextOffsetRangeStruct,
+        SchemaTransformation.transform({
+          decode: (value) =>
+            TextOffsetRange.make({ ...value, end: NonNegativeInt.make(value.start + 1 + (value.end % 10_000)) }),
+          encode: (value) => value,
+        })
+      ),
     description: "A non-empty half-open incoming text range whose offset unit is declared explicitly.",
   })
 ) {}
@@ -145,32 +136,14 @@ class Utf16TextRangeStruct extends S.Class<Utf16TextRangeStruct>($I`Utf16TextRan
   })
 ) {}
 
-const Utf16TextRangeInvariant = Utf16TextRangeStruct.mapFields(identity)
-  .check(
-    S.makeFilter(({ endChar, startChar }) => startChar < endChar, {
-      identifier: $I`Utf16TextRangeOrderCheck`,
-      title: "UTF-16 Text Range Order",
-      description: "Checks that a canonical half-open UTF-16 range is non-empty and forward ordered.",
-      message: "Expected startChar to be less than endChar.",
-    })
-  )
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(
-          fc.nat(10_000),
-          fc.integer({
-            min: 1,
-            max: 10_000,
-          })
-        )
-        .map(([startChar, width]) =>
-          Utf16TextRangeStruct.make({
-            endChar: NonNegativeInt.make(startChar + width),
-            startChar: NonNegativeInt.make(startChar),
-          })
-        ),
-  });
+const Utf16TextRangeInvariant = Utf16TextRangeStruct.mapFields(identity).check(
+  S.makeFilter(({ endChar, startChar }) => startChar < endChar, {
+    identifier: $I`Utf16TextRangeOrderCheck`,
+    title: "UTF-16 Text Range Order",
+    description: "Checks that a canonical half-open UTF-16 range is non-empty and forward ordered.",
+    message: "Expected startChar to be less than endChar.",
+  })
+);
 
 /**
  * Canonical half-open UTF-16 code-unit range.
@@ -194,6 +167,18 @@ const Utf16TextRangeInvariant = Utf16TextRangeStruct.mapFields(identity)
 export class Utf16TextRange extends S.Class<Utf16TextRange>($I`Utf16TextRange`)(
   Utf16TextRangeInvariant,
   $I.annote("Utf16TextRange", {
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<Utf16TextRange>()(
+        Utf16TextRangeStruct,
+        SchemaTransformation.transform({
+          decode: (value) =>
+            Utf16TextRange.make({
+              ...value,
+              endChar: NonNegativeInt.make(value.startChar + 1 + (value.endChar % 10_000)),
+            }),
+          encode: (value) => value,
+        })
+      ),
     description: "Canonical non-empty half-open UTF-16 code-unit source-text range.",
   })
 ) {}

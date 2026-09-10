@@ -40,7 +40,7 @@ import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, Layer, Result, Schedule } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import { vi } from "vitest";
 import type {
@@ -536,15 +536,23 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
   const encode = S.encodeResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      const encoded = Result.getOrThrow(encode(value));
-      const decoded = Result.getOrThrow(decode(encoded));
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          const encoded = Result.getOrThrow(encode(value));
+          const decoded = Result.getOrThrow(decode(encoded));
 
-      expect(equivalent(decoded, value)).toBe(true);
-    }),
-    fcRuns(10)
-  );
+          expect(equivalent(decoded, value)).toBe(true);
+
+          return true;
+        },
+        // Partition/quad coherence rejects more native samples than the default budget allows.
+        { ...fcRuns(10), maxDiscards: fcRuns(10).runs * 100 }
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("Session atoms schema round-trips", () => {

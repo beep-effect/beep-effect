@@ -157,7 +157,7 @@ type CrossOriginOpenerPolicyResponseHeaderEncoded = typeof CrossOriginOpenerPoli
 export const CrossOriginOpenerPolicyHeader = S.Union([CrossOriginOpenerPolicyOption, S.Undefined]).pipe(
   S.decodeTo(
     CrossOriginOpenerPolicyResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input): Effect.Effect<CrossOriginOpenerPolicyResponseHeaderEncoded> =>
         Effect.succeed({
           name: headerName,

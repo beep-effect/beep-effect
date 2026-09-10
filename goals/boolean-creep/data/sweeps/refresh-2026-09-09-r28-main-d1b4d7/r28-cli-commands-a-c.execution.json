@@ -1,0 +1,22 @@
+{
+  "lane": "r28-cli-commands-a-c",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T05:15:29.617760+00:00",
+  "finished": "2026-09-09T05:26:37.648049+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 6,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-a-c.jsonl`  \nValidator: `inventory OK: 6 records`. Confirmed 0, disqualified 6.\n\nEvery assigned root was covered (AIMetrics, AgentEffectiveness, Architecture, Cache, Ci, Codegen, Codex, Corpus, CreatePackage).\n\nSeed drift: three D1 line corrections (`create-package-template-lab-ecosystem` 723\u2192754, `r3-tooling-phoenix-sync-program-options` 320\u2192412, `corpus-organize-category-flags` 2250\u21922264). Ten callable-guard seeds are withdrawn out of net (not re-recorded): retention window probes, package-level file predicates, relative-path gates, codegen skip gates, language-service plugin gates, T7 path gates, scaffold literal guards, lane-timing window-row guards, restoration source-identity predicates, and `docgenLaneModeForChangedPaths.inputKind`. Remaining seeds still exist with the same members and classification. No unresolved source question.\n\n\ud83c\udf31 graft saved ~495,378 tokens this turn (1 call)",
+  "transcriptSha256": "957777bd479e5f9eb74f904e168e382a1a998282a5376fb37773c3cd08ec1d10",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 6 records, 6 unique ids\n"
+}

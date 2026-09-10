@@ -15,7 +15,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeExtractionCandidate = S.decodeEffect(ExtractionCandidate);
 const decodeGroundedExtraction = S.decodeEffect(GroundedExtraction);
@@ -24,7 +24,7 @@ const decodeUnknownGroundedExtraction = S.decodeUnknownEffect(GroundedExtraction
 const decodeUnknownLangExtractRequest = S.decodeUnknownEffect(LangExtractRequest);
 
 const ExtractionCandidates = S.Array(ExtractionCandidate);
-const ExtractionCandidatesArbitrary = S.toArbitrary(ExtractionCandidates)(fc);
+const ExtractionCandidatesArbitrary = Arbitrary.schema(ExtractionCandidates);
 const ExtractionCandidatesEquivalence = S.toEquivalence(ExtractionCandidates);
 const encodeCandidateArrayJson = S.encodeUnknownEffect(S.fromJsonString(ExtractionCandidates));
 const encodeCandidateEnvelopeJson = S.encodeUnknownEffect(
@@ -64,26 +64,33 @@ describe("parseModelOutput", () => {
   );
 
   it("round-trips schema-derived candidates from both accepted wire shapes", () =>
-    fc.assert(
-      fc.property(ExtractionCandidatesArbitrary, (candidates) => {
-        const fromArray = Effect.runSync(
-          Effect.gen(function* () {
-            const text = yield* encodeCandidateArrayJson(candidates);
-            return yield* parseModelOutput(text);
-          })
-        );
-        const fromEnvelope = Effect.runSync(
-          Effect.gen(function* () {
-            const text = yield* encodeCandidateEnvelopeJson({ extractions: candidates });
-            return yield* parseModelOutput(text);
-          })
-        );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ExtractionCandidatesArbitrary]),
+          ([candidates]) => {
+            const fromArray = Effect.runSync(
+              Effect.gen(function* () {
+                const text = yield* encodeCandidateArrayJson(candidates);
+                return yield* parseModelOutput(text);
+              })
+            );
+            const fromEnvelope = Effect.runSync(
+              Effect.gen(function* () {
+                const text = yield* encodeCandidateEnvelopeJson({ extractions: candidates });
+                return yield* parseModelOutput(text);
+              })
+            );
 
-        expect(ExtractionCandidatesEquivalence(fromArray, candidates)).toBe(true);
-        expect(ExtractionCandidatesEquivalence(fromEnvelope, candidates)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(ExtractionCandidatesEquivalence(fromArray, candidates)).toBe(true);
+            expect(ExtractionCandidatesEquivalence(fromEnvelope, candidates)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it.effect(
     "keeps grounded-case encoded optional-key shape unchanged",

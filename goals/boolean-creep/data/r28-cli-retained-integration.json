@@ -1,0 +1,788 @@
+{
+  "schemaVersion": "boolean-creep-integration-staging/v1",
+  "integration": "r28-cli-retained",
+  "mode": "staged-not-installed",
+  "installed": false,
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "preparedAt": "2026-09-09T07:04:26.383507+00:00",
+  "scriptSha256": "9df5a65152c42be10bbce2a4a2f1aa75105f524411da8bbec148a368c218217b",
+  "beforeCount": 678,
+  "afterCount": 673,
+  "beforeInventorySha256": "334f80654e0f1fd95c35ecb790a60c8787d4797f33d51e11f8cc15dde78d8b2c",
+  "afterInventorySha256": "239fc74853c05331d39f0c43ee33952e1529ddee3bc3f8fe18a6958dc80620c1",
+  "beforeQualified": 149,
+  "afterQualified": 138,
+  "before": {
+    "records": 678,
+    "qualified": 149,
+    "disqualified": 529
+  },
+  "after": {
+    "records": 673,
+    "qualified": 138,
+    "disqualified": 535
+  },
+  "delta": {
+    "records": -5,
+    "qualified": -11,
+    "disqualified": 6
+  },
+  "rowArchive": "history/inventory/2026-09-09-r28-cli-retained-before.jsonl",
+  "rowArchiveSha256": "13f57429d2c1afeda2543f1246315e4a7999f3726fc2082932841012b6d95ec8",
+  "withdrawalArchive": "history/inventory/2026-09-09-r28-cli-retained-withdrawals.jsonl",
+  "withdrawalArchiveSha256": "967fbcf8b789395f4879bb976a2439117f6ad0fcb80e9844140578f42ccc225a",
+  "proposalIds": [
+    "codex-findings-ingest-force-refresh",
+    "codex-findings-ingest-command-force-refresh",
+    "docgen-local-json-requires-plan",
+    "goals-repair-fork-mode",
+    "goals-migrate-conventions-mode",
+    "goals-set-status-input",
+    "docgen-runpod-template-search-mode",
+    "create-package-template-type-flags",
+    "r2-tooling-packet-transition-stream-trace",
+    "goals-packet-migration-kind",
+    "goals-transition-plan-disposition",
+    "files-face-detection-presence",
+    "files-person-reference-disposition",
+    "create-package-retired-name-reconciliation",
+    "files-worker-score-thresholds"
+  ],
+  "withdrawalIds": [
+    "create-package-template-app-kind-flags",
+    "create-package-template-lab-ecosystem",
+    "files-border-side-measurement",
+    "goals-packet-snapshot-presence",
+    "tmpfs-dangling-stub-disposition"
+  ],
+  "d1ReplacementIds": [
+    "codex-findings-ingest-command-force-refresh",
+    "codex-findings-ingest-force-refresh",
+    "docgen-local-json-requires-plan",
+    "docgen-runpod-template-search-mode",
+    "goals-migrate-conventions-mode",
+    "goals-repair-fork-mode",
+    "goals-set-status-input"
+  ],
+  "newIds": [],
+  "promotedDesignIds": [
+    "create-package-template-type-flags",
+    "goals-transition-plan-disposition",
+    "r2-tooling-packet-transition-stream-trace",
+    "goals-packet-migration-kind",
+    "files-face-detection-presence",
+    "files-person-reference-disposition"
+  ],
+  "locatorRepairIds": [
+    "create-package-retired-name-reconciliation",
+    "files-worker-score-thresholds"
+  ],
+  "retiredDesignIds": [
+    "codex-findings-ingest-command-force-refresh",
+    "codex-findings-ingest-force-refresh",
+    "create-package-template-app-kind-flags",
+    "docgen-local-json-requires-plan",
+    "docgen-runpod-template-search-mode",
+    "files-border-side-measurement",
+    "goals-migrate-conventions-mode",
+    "goals-packet-snapshot-presence",
+    "goals-repair-fork-mode",
+    "goals-set-status-input",
+    "tmpfs-dangling-stub-disposition"
+  ],
+  "archivedRows": {
+    "codex-findings-ingest-command-force-refresh": {
+      "withLineEndingSha256": "2f7dc979fe71b8386f9650d6d94d8cab0ccf5ed5450dea97fcf44c4fcd8c455e",
+      "withoutLineEndingSha256": "ffbe57aec5281b50a9d8507b12719cbb5f8fd34803e0eea2b7240a7ca68076ce"
+    },
+    "codex-findings-ingest-force-refresh": {
+      "withLineEndingSha256": "d0837862739d012684fdc3764ec747a4f19c3af074deae156f825ec1f10ddd1d",
+      "withoutLineEndingSha256": "100d636659675b9ea80db3e033ba4ffde30b6177f2dd544a315c8d9205642f00"
+    },
+    "create-package-retired-name-reconciliation": {
+      "withLineEndingSha256": "eaf3bcdcb984b8b8cb11888915b6cfadb9c20afc9d2884d6db684e5ddf600426",
+      "withoutLineEndingSha256": "41293dc185c7ae76a91230c5933401947a200b4afdf8501e85b477a7a65f817f"
+    },
+    "create-package-template-app-kind-flags": {
+      "withLineEndingSha256": "b2f64f1357ef040e60a55a281852680fcb247bfdaffdc8b9544e3aaecc17a6ee",
+      "withoutLineEndingSha256": "538f9ffc3ee875ed69b9fe5e1fc13df189c39b662e6d9732cf7105f2fce20268"
+    },
+    "create-package-template-lab-ecosystem": {
+      "withLineEndingSha256": "2f5efad069c6619b1e01f26498b32212e502899bc8389f1a01709e93b2dbb62f",
+      "withoutLineEndingSha256": "ad5ade0a37cd820b354e6884468fb0ee99ea7763df6ef385934ef30563ebb769"
+    },
+    "create-package-template-type-flags": {
+      "withLineEndingSha256": "62ba517e3d6055d2c9455d2c3d10d1c276ff91a8789ce74a95bf9c3805f21b65",
+      "withoutLineEndingSha256": "f331cf12753c82f55af37ac0f88c9ab1582d78caaf56a5cd64f2c56a75047340"
+    },
+    "docgen-local-json-requires-plan": {
+      "withLineEndingSha256": "d748ec89c2cefd00d1cdb36e585f1e1c993d77f93c0cc324112e9f7ea9be9641",
+      "withoutLineEndingSha256": "39cd41af0cde606b5bedf009ad31b20a86a1ee6e54b8b5134a6cbb00f1ebbf9f"
+    },
+    "docgen-runpod-template-search-mode": {
+      "withLineEndingSha256": "f0ccae42b48663cdfa32a54499273420b274d80ea08587dd03bd7f0ab25c1b8e",
+      "withoutLineEndingSha256": "32df25d5e14df1b3247f2d386d8b13ad6872d742d61dcebb0c2c35e4c23c4322"
+    },
+    "files-border-side-measurement": {
+      "withLineEndingSha256": "75bec2d705b03d8ea5ac556c899d78e0142fa9addef06a0e5c37812fd5000fad",
+      "withoutLineEndingSha256": "c61fb31403202ad45c892a481a645d6550995e85d980757a823cc630c9281810"
+    },
+    "files-face-detection-presence": {
+      "withLineEndingSha256": "93a9e36156e23c69068e2cf95ddc0a73d6a221e469e75ae61af07dcaa97dd4ad",
+      "withoutLineEndingSha256": "0daf86b8ea17561455e3b83fde6bd810db76b06cc6d17546a1ea41a83702e0c4"
+    },
+    "files-person-reference-disposition": {
+      "withLineEndingSha256": "bc18ca74105d9dc32589021ac12092298923c1159ae0aeb34a4b43a706572be6",
+      "withoutLineEndingSha256": "e6a1fbd1aa707096d662af5c84fad63c0fb906c480c45b5798860d6e7f7e928c"
+    },
+    "files-worker-score-thresholds": {
+      "withLineEndingSha256": "70ba8cf8e383092c3a62451ede5b206f91a957f69e5a3aac4c754503f717ccda",
+      "withoutLineEndingSha256": "b0632a0e6dd427fa3e896326c16106c1c29beb0ddd480f76844e57417ef297f8"
+    },
+    "goals-migrate-conventions-mode": {
+      "withLineEndingSha256": "80597d5579a7f2c7a7ff440fb933e992c8c1d96da916778b564d69b02617063e",
+      "withoutLineEndingSha256": "7b2e15967d1fd6ab57fff84dd59b59f4bfdaa813d13e6128fa8615daa669461c"
+    },
+    "goals-packet-migration-kind": {
+      "withLineEndingSha256": "b0696051e8a4c64b8c033b586b3605c7d16b4181530231ea24f36fb8037ecf30",
+      "withoutLineEndingSha256": "cb6622a8bda3571d4f2530e400f29fd777e7a64a59c2075ae1b8e12b7015901f"
+    },
+    "goals-packet-snapshot-presence": {
+      "withLineEndingSha256": "7c74b657cb02557192c08cfd20969fffe270b435be676626fd32378e2c034ef3",
+      "withoutLineEndingSha256": "fb3ca715be7eb86bf3387ebd943b6a9ec858c385dd583a1f0eee1589e5fd007c"
+    },
+    "goals-repair-fork-mode": {
+      "withLineEndingSha256": "be047f81d52644be5ae0f3562dfac41b990a41efbcb27e3e845a4979182ffc15",
+      "withoutLineEndingSha256": "659d1ce3947e10f15a2273972c9c79a8fd18c724a76a6a3d9fb25e593fa63464"
+    },
+    "goals-set-status-input": {
+      "withLineEndingSha256": "aa3cbc7c9b4f44ec3686b743a298ef607209d9590e8ee3aee808e63936de38e2",
+      "withoutLineEndingSha256": "32967243bda3a0b0afe86ec85b5d63a7bdf4138a437dd04c7fc3826bccb92022"
+    },
+    "goals-transition-plan-disposition": {
+      "withLineEndingSha256": "fc51530bc3649a2f3d670056ded45d7101900fd138bb76b6af5f0c7731579beb",
+      "withoutLineEndingSha256": "87b4263f477bebc8bf4a914a9b2fd1776e1a1c3f8c7f8358cd261d3ebbf042c7"
+    },
+    "r2-tooling-packet-transition-stream-trace": {
+      "withLineEndingSha256": "275ce7441c54ac69e2aa1afb13723b4a9e03388b06bda26401d9ef47b4508603",
+      "withoutLineEndingSha256": "7260205c82add69f5f788ad5c1f2102c18cb1586ccde6e4aa028d5426f79111e"
+    },
+    "tmpfs-dangling-stub-disposition": {
+      "withLineEndingSha256": "1720486d65a71e3b82065c4de93070a801f03cbb52413dd99410c5aff09a7aa2",
+      "withoutLineEndingSha256": "73a3a7b82f7cebfcd19531ba19622c190b2a09a9f5757c9a87190bdf892c86f8"
+    }
+  },
+  "archivedDesignIds": [
+    "codex-findings-ingest-command-force-refresh",
+    "codex-findings-ingest-force-refresh",
+    "create-package-retired-name-reconciliation",
+    "create-package-template-app-kind-flags",
+    "create-package-template-type-flags",
+    "docgen-local-json-requires-plan",
+    "docgen-runpod-template-search-mode",
+    "files-border-side-measurement",
+    "files-face-detection-presence",
+    "files-person-reference-disposition",
+    "files-worker-score-thresholds",
+    "goals-migrate-conventions-mode",
+    "goals-packet-migration-kind",
+    "goals-packet-snapshot-presence",
+    "goals-repair-fork-mode",
+    "goals-set-status-input",
+    "goals-transition-plan-disposition",
+    "r2-tooling-packet-transition-stream-trace",
+    "tmpfs-dangling-stub-disposition"
+  ],
+  "originalDesignHashes": {
+    "codex-findings-ingest-command-force-refresh": "0d12c63e6247323d9bc8e04601d85143772acf1329fc2cc645736ff7330918c1",
+    "codex-findings-ingest-force-refresh": "2c92e77675d2a97e2504f1d0da60b013aa8df136fe9defa3751c998895c00618",
+    "create-package-retired-name-reconciliation": "6b2ece10838983110d5f2026beb4df51a88fb9dbe6349d5316fbccde4ae24759",
+    "create-package-template-app-kind-flags": "0a472ccf25952c51e7050d36fe615d89a08c12b55ddcd96ee9b8eec6269f62e3",
+    "create-package-template-type-flags": "f65e2c489346edd9f1147e3d1a063d67af8b7686bf0811c707a590fef1511135",
+    "docgen-local-json-requires-plan": "af2f5dabc305696b611af19218154ce04b65663df7074a6da4c5e674dd0f3192",
+    "docgen-runpod-template-search-mode": "860fe4fa8c72a3ab59c52ace13735ffe8db9ee3728899da9149e155acd82e6f7",
+    "files-border-side-measurement": "bbb82b9adad871cd0ddfa3646e0a5223859a9146828f3500a34373543bcd7dbc",
+    "files-face-detection-presence": "a5a6ca7b429a1abe1673707db1a7f87b9da1ab5abf7ac5a25ac1b2bc1da28d7d",
+    "files-person-reference-disposition": "40beba9b9a13774eeec8457886dba24ece2a6ba43f9a3f29516717c2531ca653",
+    "files-worker-score-thresholds": "573cc362c279d1c184ac837d6256c2a2b4a6a3014496e65cce4304281df9019b",
+    "goals-migrate-conventions-mode": "b3c86095415b64a4a68df6a4869c902829cb97792c33917f07ac5fb77a061ce8",
+    "goals-packet-migration-kind": "402079c5dea2cbcaa396741652e0fd4af599760e2e56399f876a129a935d2436",
+    "goals-packet-snapshot-presence": "054c662f12fb10fc72aa64ca4a8b2eb3e0d532d4a899f48b69c57846520f2441",
+    "goals-repair-fork-mode": "a33d4ebc2ada8927fd6c7be4aa5e8f238ae740d7c29fcff146775c3356aaa571",
+    "goals-set-status-input": "338744dc1d5e45dedd161a715b5a5c96226b4cdd819e9c9632f3c2f83ca6a23d",
+    "goals-transition-plan-disposition": "c524d084e0f28e886c13899d350c8fc36bf00d7fd271eeed67a9a0dfdc64b7f7",
+    "r2-tooling-packet-transition-stream-trace": "c48956bf6c28486c0e7f4b02fb5b7f7b0911e8fe272aecbe8baa2c0e99fd0a3a",
+    "tmpfs-dangling-stub-disposition": "406886795783feaf9975f064c3895553013f4c3e2129cd215b96cbf937bf18c2"
+  },
+  "replacementRowHashes": {
+    "codex-findings-ingest-force-refresh": "d8d6ac92ee15d6c010c4a5adc66164cd4937e89b68ead06ec07b1153abd4724b",
+    "codex-findings-ingest-command-force-refresh": "5447b10f03ee4d1a42af921dd5c1319f6f4ab3032724fa24e1fee659b5313583",
+    "docgen-local-json-requires-plan": "2cff1dae7e980246a983f2ae5694fb5303ba2a9fbd30fcdbcb176a4aaa6bcb8e",
+    "goals-repair-fork-mode": "67cdd933e16cade863cac888e1c9fb2f1e178b124366aa5fc7cb741e8fa802c4",
+    "goals-migrate-conventions-mode": "9e1b73653705bc12c0ce483c2298dfbd6fa056d8541c8afd5f8c64905de85ea8",
+    "goals-set-status-input": "c041feb71b5576fce05910db27a7d051affaf6d2440b8eb3d08be538302df26d",
+    "docgen-runpod-template-search-mode": "df8fe0bae82b9d943213c23352498e32be6569bbbbce112bebce2fa8aa8b4c82",
+    "create-package-template-type-flags": "f99a96608d453f9abae94fb54033014b5ace3180cde06c96bb50338a40163371",
+    "r2-tooling-packet-transition-stream-trace": "2e5c6b0e89dbf336253b38163b1a5971ee2829ac9cf797eb8f9d054b0fc4d5b1",
+    "goals-packet-migration-kind": "81130bc62cc5839ff959f2176ab60bcc8f1c9ff9acc0c130706174cd0e153aad",
+    "goals-transition-plan-disposition": "007584b9ca3bca2eb05a5ad9b18159d0a25f5c3e602b17e38ae5e7d64b399eb6",
+    "files-face-detection-presence": "d112fc58642ab8a381dbe5092b1f640872df1a078dfe90a71eb74c67c0bcdec3",
+    "files-person-reference-disposition": "89940c75157c4fa7c0f7a772ed171aefed2cd64173e6fa88d8eeb950c4714cfb",
+    "create-package-retired-name-reconciliation": "920df71d35a4908bc7a4fc983ed1103f714c0df1fa262d61112a2010edcc2721",
+    "files-worker-score-thresholds": "e32e5aee2eb3b99bd8476bd53d47701f3244b95b133010b87a2c855dbcb5ff19"
+  },
+  "boundInputHashes": {
+    "data/design-refresh-2026-09-09-r28-cli-retained-qualified-gap-audit.md": "f0a8e217edde77b97effcb6c03444d77c55ab23944eb009a5c428f497f2c898e",
+    "data/design-refresh-2026-09-09-r28-cli-first-owners.md": "611d6d0bc3ad5dd378b7680a79cf4622d60d45cbbfb7eef0b6b72c5d2e9b8f02",
+    "data/design-refresh-2026-09-09-r28-docgen-files-impact.md": "49d0d230d4124f87e09c4abe01ba2ab808e665dd8a41565241548bc2f1023d00",
+    "data/design-refresh-2026-09-09-r28-quality-scheduler-impact.md": "5424d8dc0e0fe0f2e4f37f97cd71cf768f7c2bdb6e49e4c2d04c68bf6a2df9f9",
+    "data/design-refresh-2026-09-09-cli-fence-spawn-proof.md": "7b68256c7faedfdc9446923ac15b438e3c7de30982277d6ed92fc80160e1bf3c",
+    "data/design-refresh-2026-09-09-r28-cli-l-q-seeds.md": "6eac635c6e37b78e41f715a2947ab4f71b40b828fb73add3076bab1aea2e27af",
+    "data/design-refresh-2026-09-09-tooling-qualified-carriers.md": "12156f74620ea367700ae74fa312e394fbc2d55b12b6c38f721cd87752064ba4",
+    "data/design-refresh-2026-09-09-fallback-retirement-coverage.md": "ea5bfe06795e95577fe4917ecad18bc74e390e3788c36692183515832a2a4291",
+    "data/design-refresh-2026-09-09-r26-remaining-d1.md": "4429f40e19a43509f683ddd291c53452138dcfc62aaa2d82e30b6c2c761a720b",
+    "data/design-refresh-2026-09-09-r27-cli-normalize-carriers.md": "b32e518f360caaf9434d6b0ad70b857b818e916c45c7c7cf4ec358935a1c20c8",
+    "data/design-refresh-2026-09-09-r28-create-package-scaffold-shape.md": "25dfe942d4a5c7e7244dc5b98f862e283fd936fdc57dd9e5ea6c3f639583b8e3",
+    "data/provisional-r28-create-package-scaffold-shape.md": "501aed172c458f55fb65d99a407fb58805f53d1ef18842acbfb3601028c067f0",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/lane-map.json": "19b29ac1e1acbf4138645330dd8a82a8ee9407bd3dd410136a22efef8eccb22d",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-a-c-contract-correction1.jsonl": "dd64cdeaf0309615a9b9fe9669b8f567a10bc98e50b0720b144b89b0f52b2329",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-a-c-contract-correction1.execution.json": "f66bdb0878d3bf0f94662b5dd052c714979ea242ca78fd4b49717afd74f13eff",
+    "data/provisional-r28-create-package-template-context.md": "08ca6e437c6c513056cdc5fabe3c0fc07ccbf73d5f063b413968b63059b86c5c",
+    "data/provisional-r28-goals-transition-plan-disposition.md": "433fcf5183b7e795ee6c2d5bbd89e5bf0c2ce31ec03a8c7d66d397722348ce25",
+    "data/provisional-r28-r2-tooling-packet-transition-stream-trace.md": "151483e145d1ece9549514c7d7d48ec3308d9ed4d94c5be641ea90f6f680a6bf",
+    "data/provisional-r28-goals-packet-migration-kind.md": "38a17a91d03e834f6396f0d3063869047ee90548d7573a88c870a39866c46707",
+    "data/provisional-r28-files-face-detection-presence.md": "524ae411ceceda97f443a89f2c772d918f6fa62f0c32705a939060cabb3a2013",
+    "data/provisional-r28-files-person-reference-disposition.md": "9f32fec1629f4b33a3e3777d1c2eb7288b4abaeaed428adee2b388a9a9c04b95"
+  },
+  "sourceFileHashes": {
+    "packages/tooling/tool/cli/package.json": "afcc48072032175baf36b3a7ea79950d274f1bea5e14aba48c4ff60cba7c9d0c",
+    "packages/tooling/tool/cli/python/photo-face/beep_photo_face/worker.py": "db31d4c86b6773a099142bea2518cdddd9082be03d4bf3780f4f1572a184dae0",
+    "packages/tooling/tool/cli/src/bin-main.ts": "a8eba686bcfd61b0f2617152d8542f75f8a1de39fd9e3ce7c3d90524aa76180e",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts": "d23f4a34d977de088cacad6ad54ac15c7f83791759cfac9780132304c6d5a0d0",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts": "80f3f7b5348f7a500adecbb5b247466db8b28ec1009928105f086a52ca5e612e",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts": "fe22d08ae970cd936f53542ba65cbdf954c03be35fde43ed88419646dfeb9101",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.write.ts": "c900dc426ba616a26d6880c3b0ce426fde30053f61384d4bf1dedf07bd5847e3",
+    "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts": "2208bfdf8a6f78cb91b99bbde4ba6cabc9419d4de8220dec639e6459c411457f",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts": "8b3108c7db97b1817f9f1504fc1e8d34ce3c72219b18c456e609920bb4203b75",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/TemplateService.ts": "70e5e1544cf16a5ad2b16ff024c82dd4d3a60a5fcd6f8d556f858b23265e04cd",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/index.ts": "4097f8871b5b25b21611d31fa04d59fa434fbb456f25ebb2c59e13f45bc43482",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/internal/RetiredNameRegistry.ts": "ef6b6b2d7ec76b43c46c9f26f6b75fabefb5635080ca0d1f5147c5871e467d4e",
+    "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts": "47fd492d490230d0413af2c6e7be0a30641dafa973d0b8e2d3a93c42fd3e0753",
+    "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts": "6a8c8072026603aa2f149ced16c9c570ad0db5b0effd4f2a8e4ca270164c8905",
+    "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts": "e50cf7d481eb39fa48fa98d52e107e6d732602e66110ee5a54747d3969c9f5e2",
+    "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts": "4614d9f3603d0e3e0575c63f33f9a2688525acbdaf74593e22b923c41f954b06",
+    "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts": "febfc733b28082b43daef844c73d1ea2dac75627f7ce5b368c803573889b5d26",
+    "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts": "4a76d791b598187897f29408ed00edfb9f03652b9a5966e395bf0ac7fc4c2dc3",
+    "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.service.ts": "e608927c34929c99c3526776f25781ecc90de3e973d913b3b8b914d2f9dd6f16",
+    "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts": "82ca325dc6881dfe72a4b736993ab417f81c1e21cccc967b8950e652d9cf56d3",
+    "packages/tooling/tool/cli/src/commands/Files/Files.render.ts": "db88d0f9cb2bc6347f964fe3219987a9d869ee4242249b40fed6c885bbfc5750",
+    "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts": "cafa371c7f0efaee48583d9c9037e2dbcd14abc7840af4f8fbac9dd62cfa9ec0",
+    "packages/tooling/tool/cli/src/commands/Files/Files.service.ts": "c3649fb3dfd079dc4e2b39ae01ce7716f738c93afef68b4abfd5fe06b817682b",
+    "packages/tooling/tool/cli/src/commands/Files/index.ts": "e31b73393da5626f90dac1d587fb0a67018f9df1d66e998dee950d262d51d4d5",
+    "packages/tooling/tool/cli/src/commands/Files/internal/Analysis.ts": "4be4542e7b4b31fcc3e9c5ee6ffa715379f20f192db468821345ad96bf65a28f",
+    "packages/tooling/tool/cli/src/commands/Files/internal/Apply.ts": "5cc9c9eeef54b7f11805c3d4ad1a9c45ce3b277aca54002fe7efb3f49b880df4",
+    "packages/tooling/tool/cli/src/commands/Files/internal/BorderDetection.ts": "31ba83424e5bffffbf2d36a0b9e4e94d8e577b011457d52fe606b2a81c3cedc3",
+    "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts": "36de3e3a811f1f2f6cbc164e4ced7d67e52677a360e42e61bbba34a2037e7b03",
+    "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts": "a23462dda9c2ed7e7f375084e23a901d10a44d497bfb34818cc6dcac72ab7ea9",
+    "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts": "02be20cee50532e79713e543331dccf67f99a17a19467d23bb433439dc5618c2",
+    "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts": "6f4fbb4b7bbe9af427920197ae16b17f54605e3f30fc6d4bf9caebfd3cf64cad",
+    "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts": "2fd505c8179cbf84c77819d027290157e573d3e74ebaff069211799b11c02059",
+    "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts": "f75ed5f362a6049b7ba6cfc492d9b966dd00d4b6004419e611ae6d3781f28da7",
+    "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts": "856690578d3906c5709c5447b83d1a7cc64d76aed6a903faa70742af6fa9e91d",
+    "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts": "f2ae78c8b8afb35ef134de2e225634f428e294bc98376b33583d77ce14005f6c",
+    "packages/tooling/tool/cli/src/commands/Goals/Adopt.ts": "4d81c15d3b0370e86ebbe0bbab1431798a7e48b08bbaa094ce6b2d786bb1948c",
+    "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.schemas.ts": "630b47783379a7ab519a20200d58186942138bbe28f8a619641ce259d7f08af9",
+    "packages/tooling/tool/cli/src/commands/Goals/Migration.ts": "c077f133b69738f2451fe095dbda7f8f90b59cd036836325cd863117c51a960b",
+    "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts": "cfd33c0b7be0dfa84490cb9b20d74c28ce745a5a263e25e4997a1c6f8522da1e",
+    "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketEventStore.ts": "df9fa3910ca6f90fc2792c50e9e4cb2ade91e4851eab6f87a2bb5e67685ea694",
+    "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts": "486d6192fb4df960ac73b41fd0b8e05ae0f00f87d4c5a48426547d9dd553d9f4",
+    "packages/tooling/tool/cli/src/commands/Goals/SetRiskTier.ts": "83986df40a23846df622035e90aae97a580a053787e41c1dd6f42c28c9a00c11",
+    "packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts": "3fc0620fa095f4a76d6b5085763d755235b933a46a49bc8ab0ad81715b1fb9bd",
+    "packages/tooling/tool/cli/src/commands/Goals/index.ts": "1a7f2b81e0dc7cf46e240ce1b9070da25b1ee9feb211db7a666427031802c423",
+    "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts": "fe607cf8d64ccc25fe6cfba5533b5adc2d14c919ece6f02dda3c72a2bb2e8be1",
+    "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts": "7d118605464a37620fe0fa59bc53f508b480a93566ce92720b17073845904ce5",
+    "packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts": "5114a625f41242020520a07bef596ff2da963305581a9b1a3315956585871e31",
+    "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": "6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f",
+    "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
+    "packages/tooling/tool/cli/src/test/Goals.test-kit.ts": "29d65dea504bf4cb4be802ab7065cde4017de879390bbbe478421b83fb962132",
+    "packages/tooling/tool/cli/test/codex-findings-normalize.test.ts": "74b5e2f0cac029d51304933c9389bab4949b754e393094eb7fa44536073f6cc6",
+    "packages/tooling/tool/cli/test/codex-findings-refresh.test.ts": "77d68f62d86e944a9cdd5921fa2e690a0325d8574f135b8eb248c5c7affdcd1d",
+    "packages/tooling/tool/cli/test/create-package-lab.test.ts": "d6fa0d3a5a9dc21ad0c65ecb375662e687721a654738d4b7600528a4053818d9",
+    "packages/tooling/tool/cli/test/create-package.test.ts": "b20130164ddfd6e4a8e33e4b69553e7b8843bb483c454a5665fe6dc5bf8f296a",
+    "packages/tooling/tool/cli/test/docgen.test.ts": "afd71f787eb90c06ff20d6dded18dd72bd11acde300474b2d9298ed4ec7f52a0",
+    "packages/tooling/tool/cli/test/files-command.test.ts": "ddf94910bcba8f882d47b04d42ecf0968a64b309f445394fed949f3641660e1b",
+    "packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts": "245560ed3b9a93706b2fb28031bf9e1ad66088d9b1552ecdfd5baeb74ea7bb3e",
+    "packages/tooling/tool/cli/test/goals-command.test.ts": "d66fc6b35b64422be9f41d86dc2f6e8298ec95752712fe2ce3dfb603f899faa6",
+    "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts": "484c2cf36217ba06fb1c4c82ac3b22bed0ca5a5c8eed56741dd6d59802946f4f",
+    "packages/tooling/tool/cli/test/goals-set-status-stream.test.ts": "6ea5973ea71f439ade05bc3e997bcc138c35cfdc2add1b72e1be220a5492d63e",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-src-styles-globals.css.hbs": "1130591d0d571f9283a4f9a414974f3e270078c356af594fa958c8975417f5d8",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.json.hbs": "8bcd7adfb2e7514ddf27c665139ee7b0d045c7f5abff614cd14c81a377e7a7bf",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.test.json.hbs": "c180e9d9e802af650e337114af05304f29b51065e64b50cc7eb692939d23bb25",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-real-AGENTS.md.hbs": "7a74f78671ac103ca1ecfabbd59a433bff061076375f0c188325c935f75aa8be"
+  },
+  "localReferenceHashes": {
+    ".repos/effect/packages/effect/src/Schema.ts": "0f0daf6b6ec3b6c827083d8b76278a4f52fe48a636dfff031ddf18e6c93f82ad"
+  },
+  "currentRuleAndDesignHashes": {
+    "goals/boolean-creep/SPEC.md": "495eb18327549f55c5b0f3ac329d4f1b71ddfea302318ff5ae1754250daefaeb",
+    "goals/boolean-creep/DECISIONS.md": "422a5c29c50fe757ab5d1c58e23e560c73f41588adc01fc7b0ef36a38b0d9690",
+    "goals/boolean-creep/PLAN.md": "36d8a9038217d18d4c083dba5992d78ddcf51e387071bedd3048b45d9e5accf1",
+    "goals/boolean-creep/ops/validate-inventory.ts": "f1a02edfa18248538c5afda3f83ed2738cc74130df46292abd3c83dc232aa32e",
+    "goals/boolean-creep/ops/validate-designs.ts": "1f3a7ea87ff409b5ce591413e52507b0f69bbe68121517c33587c8bd85913e5a",
+    "goals/boolean-creep/designs/ontology-inspector-form-state.md": "d457c01a17564921d9d1a37be124de132e7d3c1cc3688d4f998d06118dfb08b7",
+    "goals/boolean-creep/designs/dock-tab-drag-phase.md": "70b4c16b34b405c85e0107296e1e4f8d37d0605d40af85e1850d47625195b1e9",
+    "goals/boolean-creep/designs/ontology-inference-recompute-cause.md": "2d32ec2b73dcb58a3c162dec42e8b1a649eb8f8e5dc5156902c152ad5727ca50",
+    "goals/boolean-creep/designs/yeet-merge-ready-verdict.md": "364bf672271f39d1473b4ebeae61dffceb80f97a2416c3fe99be25d42b217aa7",
+    "goals/boolean-creep/designs/runners-bake-freshness.md": "73e42c1531ff86092b39879a1103d13753db1c788407b51b2293edc8c002b187",
+    "goals/boolean-creep/designs/intake-vault-status.md": "1b2bef5fa7a1f560573c035bdbb0a074c4dcfc878b80f7da8a7fa0249a68029f",
+    "goals/boolean-creep/designs/thread-transcript-load-state.md": "85967cc1beaef9bdb894f52b11b904f6213b445c930e405aeda8fc7d109af30c",
+    "goals/boolean-creep/designs/desktop-panel-menu-item-state.md": "3d25d1747bcda4d49bc8ef4c76e0e76becd7eb02a169f38e212a800f839d8e03",
+    "goals/boolean-creep/designs/link-preview-fetch-machine.md": "01da2051eb15dbe3aa3deda53a6c854ed7320f1a0a51431e8f8114a51c49698f",
+    "goals/boolean-creep/designs/todo-item-due-tone.md": "7decf6802eaf1173a4eef184350cb11436c471f7c632442f362bc67658605dd5",
+    "goals/boolean-creep/designs/document-violation-flags.md": "4c976acb8f64e41e97e8d45a225fbac286b9a627ba779af3dc076e16b1ddc7ae",
+    "goals/boolean-creep/designs/thread-load-state-props.md": "b0108f4f8fd0c3a63add234e1c1eb736b6d13c95c7533158ed4caa3fc1c712e9",
+    "goals/boolean-creep/designs/drivers-stream-state.md": "fa1ab266f5bc33a1fe7d9c628de001c388057d4c730283752445144a2f78fff6",
+    "goals/boolean-creep/designs/drivers-migration-journal-shape-row.md": "88d6a4725cb90304f1ab2266c78ee3f6c45269ae39772a752b2fad56bec29c80",
+    "goals/boolean-creep/designs/epistemic-proposal-card-action-flags.md": "f07570aa767056c46b74f9acaccb38a0b3ad2bf25fbaab39748e1dcaaa22b8a1",
+    "goals/boolean-creep/designs/epistemic-candidate-comparison-action-gates.md": "8cf3094936527852cbf217790c2c514ed83cc11be63af830b0d29cb6fb5bad8d",
+    "goals/boolean-creep/designs/epistemic-review-dialog-reason-gates.md": "bda572d6807878e5c4030e8e51064a4c85e5ee2e2988259207f961234c97d48a",
+    "goals/boolean-creep/designs/color-support-level-flags.md": "57cdde407a66b52710e9d8256b9fcf48501036a4734c08ae52592d07606ad876",
+    "goals/boolean-creep/designs/foundation-ui-system-menus-open.md": "e58b82403515da636a540e61b28bad2936305a69585f5b0cd24c6d3012a643ec",
+    "goals/boolean-creep/designs/foundation-ui-system-speech-input-connection.md": "2c9397fd6b25ebffabd8c8f6939c154ef3083cf3282e1f920e8042dc95189cfc",
+    "goals/boolean-creep/designs/dms-mirror-probe-connected.md": "e399b4a730d707516cc315d43229687f18eec2e18a558f19abba1a00188b2fb4",
+    "goals/boolean-creep/designs/vault-sync-status-connected.md": "98d9fb5ed8fd96c1fa8671f555f6c9d25e46e7dbecb384b580c567680450d89d",
+    "goals/boolean-creep/designs/package-verify-step-outcome.md": "fcb71342ad7d5aeb04ee7f3eb3f08527e2abb1d5fd4135ee4b750f3c1f3dae21",
+    "goals/boolean-creep/designs/yeet-status-remote-check-phase.md": "9c2ecd2e4bb125af080fe788ddcf2d7db90c9041fbdb2b4380f11caf3edd4e2f",
+    "goals/boolean-creep/designs/runners-bake-cli-mode.md": "66df24168162493a0b9b88a33b25df7350f734dacbf1d3939380191f2fdbdb1f",
+    "goals/boolean-creep/designs/create-package-scaffold-shape.md": "0699ea15f501283b4857e32ce72167daf7379957d59cd2134c3b6aa49dd44572",
+    "goals/boolean-creep/designs/sync-data-target-selection.md": "1af843b60061f32f73fb74088d910b011d6bd52834bce14437863f6cf253dba5",
+    "goals/boolean-creep/designs/scan-state-json-lexer-flags.md": "26fb57ce7bc9f94630620a5c011b134fdd3b46ab1353b0f23d887544ca5d3548",
+    "goals/boolean-creep/designs/r2-apps-sidebar-thread-list-phase.md": "7baf69040464eceda83a77c2559083680dc8527a556961ca5e6089eadad48a7f",
+    "goals/boolean-creep/designs/r2-apps-contact-form-submit-phase.md": "410231ed204443a96162347c246bb8076522b82135ccd0ef9a8bbde1895f0c7e",
+    "goals/boolean-creep/designs/r2-apps-vault-sync-command-busy.md": "e51dcec7d2f1238eb0f2755362007677c1bc5b9a0c02c05fc93d93bb05356567",
+    "goals/boolean-creep/designs/tsconfig-sync-mode-flags.md": "a4d97619f6a8140a480cb848cafcf8ae0055b4625a9afa40d20275dc1732d897",
+    "goals/boolean-creep/designs/r2-tooling-bin-main-fast-paths.md": "9adcc317b5a107c5148eedbfdc85d5b2102e14a4a9a6fc30ea1fe0a851505536",
+    "goals/boolean-creep/designs/document-toolbar-busy-disabled.md": "207bae595ea4980394db93390b6950c5ec4d3aa83c6ddaa23d5b5c034eebc28d",
+    "goals/boolean-creep/designs/duckdb-transaction-began-closed.md": "c9490de0c064ee6e52331433c2902426e4bf697b981cac318f60d5309e30cd77",
+    "goals/boolean-creep/designs/phoenix-prompt-read-exists.md": "7de3ce190031e90cce829cd898d15ef6429bb0722182206471d1954509704dcb",
+    "goals/boolean-creep/designs/nlp-mcp-file-info-exists.md": "9502877d2d306436a651b1bfe327ed98d621829f1b3865bb4824adf42f20b7e5",
+    "goals/boolean-creep/designs/xai-sse-done-payload.md": "0f98b5ef369e49f3c9eb6bc8bf4675c5f21e94afac727a2f383ada61b724f55a",
+    "goals/boolean-creep/designs/venice-sse-done-payload.md": "4f124d75f092874b38426e5cd877272cd905091eedabfa75e8370521cd9b82eb",
+    "goals/boolean-creep/designs/r3-foundation-mention-plugin-lookup-phase.md": "e92189878687287559ec4a498b08151f0bb5281894405e005af2ad38236f9074",
+    "goals/boolean-creep/designs/r3-foundation-notification-action-busy.md": "1a9933365b385787ca56e928789047745896655198412a2f78d58c6ac89b0aa8",
+    "goals/boolean-creep/designs/tour-state-open-payload.md": "016ce30d984695b06d51f7bf32fbed8d9bc8a861d65c3297754ecef2654eee82",
+    "goals/boolean-creep/designs/xai-websocket-message-binary.md": "cb8005a9d4c6516bc749aa153eef279e06c5992ba0ef9322dccf18a6af662d56",
+    "goals/boolean-creep/designs/corpus-legacy-word-terminal.md": "0a3fd27786bbb8b0734bea77bc5376258a233b514004dc2317a0a7dce41691ac",
+    "goals/boolean-creep/designs/yeet-ack-resolution-flags.md": "d2ea7da4c29f60c282e35632043e4342c6e2e26ed7124422e2b64cde27729f0b",
+    "goals/boolean-creep/designs/langextract-minimal-fold-segment-kind.md": "c59a0b8267a9c00afe1069be15fbef0944a0e9ea433cb40e57cf4bbcce7467a0",
+    "goals/boolean-creep/designs/codegen-kit-cli-mode.md": "059838a61d0ed67471b6ee6e8b56d4b93bc3b70f446f7c0c44f5f5e7012ad92a",
+    "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md": "88966e73c1f862f70c98730d6ce5f05cd2d80827629a89ee6e702b62a102bb47",
+    "goals/boolean-creep/designs/worktree-removal-mode.md": "b56e734858e225c4e4a1a88f606e85fb97817758f789088ce4bae749ab9aa53d",
+    "goals/boolean-creep/designs/r2-apps-hero-clip-playback.md": "5e5a1a60e1bbbaac3add9ce950384ea76f9b89286f95cdd6d5179e4adf35c51f",
+    "goals/boolean-creep/designs/html-select-child-grammar.md": "c62d0a18d49ff059e914c160bcff0f9bf595c1410dd5e96e7dace06a30489ff2",
+    "goals/boolean-creep/designs/html-dl-child-grammar.md": "80017068d12451f8ec7042aa6611bb488cc9ea0090abf7138a9cb6f6f9c9ddfc",
+    "goals/boolean-creep/designs/r3-apps-pglite-data-dir-probe.md": "18f0646ae792cb539a6b9f4c0ea18ed20344acd5c82055943785a18f886da56c",
+    "goals/boolean-creep/designs/r3-apps-sidecar-devtools-gates.md": "1646727647e0bdefc044760aab49c50232c4f0f7eb281cd6fa25c1a8402c1603",
+    "goals/boolean-creep/designs/ontology-infer-session-recompute-latches.md": "f715d35403c3765d47478bf55153f4b7f68f7c3a0faad7a26de6dad39cdf9888",
+    "goals/boolean-creep/designs/r3-drivers-arch-tool-name-collision-stage-flags.md": "df8cad007565f68009194b0cdf81fc13e22f4df4000462076967fe0c72ea7989",
+    "goals/boolean-creep/designs/cosmos-backend-selection-webgl2.md": "d3f268e51e46103a771f5704191a208e5eec9b1d11137b420e1ac8369dc963b2",
+    "goals/boolean-creep/designs/r3-tooling-docker-tag-kind-flags.md": "631a01ff29db947a3fd05648c3e5acf412a2779d44490cb845a2247822a863e7",
+    "goals/boolean-creep/designs/r3-tooling-bun-report-drift-flags.md": "619cbd72ec172a514d85b0dc85ae785deb2b6887048a9afb7ec5ac3f25c76ac1",
+    "goals/boolean-creep/designs/r3-tooling-ecosystem-polarity-specifier-call.md": "a92c2ac0d5b7ed337ec3edcb3de33656fb157fad5a82dfa2e298827f5e5dba6e",
+    "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md": "dadc2d70635921b00ea15166d67ead567f5dcb6a7066d3059bf03b089e73f27f",
+    "goals/boolean-creep/designs/html-datalist-child-grammar.md": "90e2c0feb53716e8cfebf9f4d940e4feef19a18dbb5685cb8bbee195c1da8e6d",
+    "goals/boolean-creep/designs/r2-domains-ontology-graph-worker-requeue-latches.md": "5316d882ed8bd4bf7e5618c4db721bbcfb793ff20a0c38c00f29f1da50d13ad8",
+    "goals/boolean-creep/designs/r3-foundation-todo-item-presence.md": "59019a38bdcb6891722ede838c54202b220d4002ed3c1ecf5e8e57b41971069a",
+    "goals/boolean-creep/designs/r3-tooling-registration-deletion-note-phase.md": "7e15e4d80990e422adb574f7dd0fcc554d6819454733c7ac1324d83b6ba3a9fa",
+    "goals/boolean-creep/designs/tool-name-collision-row-truncated-digest.md": "a0debf9cc1118c628ef395b063706fa6d07a2b2de57f3c8baa78a5097439f1fd",
+    "goals/boolean-creep/designs/r2-foundation-unique-match-search.md": "0998085f931e5038bfb407d637704d5ed0d51d51afa97fd4e426bf40293dea29",
+    "goals/boolean-creep/designs/r2-foundation-graph-validation-result.md": "344d9f22031f44ce6ee15dbe867942a5adb7f87fdfc7365352cee944b03cb2c0",
+    "goals/boolean-creep/designs/r3-arch-ecosystem-internal-pg-timestamp-timezone.md": "841575a18d3bb7144d3763fcc89fe5b21f7d26f91fb0f424e3b3103cb64955bf",
+    "goals/boolean-creep/designs/effect-import-rules-summary-operation.md": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee",
+    "goals/boolean-creep/designs/effect-import-source-transform-phase.md": "e070717bf1da0c5f1e4d13da237d431cd67475ae3504f2e8c10b00d20e3869d1",
+    "goals/boolean-creep/designs/r3-foundation-tier-gate-tool-hints.md": "13ece9a600765600ab9680c31483d4b90edf0443dbbc7e00a917db2ae2fb71b5",
+    "goals/boolean-creep/designs/organization-tenant-placement-bits.md": "f97c02c057c1c046b88b1fd1c8065a4ffd406b4a52245c52fae1aeb88e71543f",
+    "goals/boolean-creep/designs/r3-foundation-invariant-enforcement-channels.md": "e160fc888b3915a2e215838fe97a00ce66b209fbc0767a9b8ee9be56e33238b7",
+    "goals/boolean-creep/designs/r3-tooling-version-sync-category-filter-gates.md": "f0c2e60236361fd3db3561ca29eefe2fa104c6dc3060aeb2dbfb8c9b91824396",
+    "goals/boolean-creep/designs/r3-drivers-arch-folder-resolution-blocked-provider.md": "04906695148a635ff4cc347dc5048aba4a9a1bc72342ac7bb2aec426700fce42",
+    "goals/boolean-creep/designs/html-img-sizes-disposition.md": "5408ccaf6bd2641522aedc4585cc582c3d70209a5b05f72927ffc50b699f20c7",
+    "goals/boolean-creep/designs/html-link-imagesizes-disposition.md": "7743dfae911f4ea3899c7e0ee413a54569bc28c91a919908bfc24e1aa900f556",
+    "goals/boolean-creep/designs/tabstrip-overflow-disposition.md": "f23f0d628e21270c05af2ea0fa8bba0e5153ac623759224cb9af194989ad9b7c",
+    "goals/boolean-creep/designs/composer-shell-edit-content.md": "cf7815ee513fd326d18396a18430addbcce9bc5cb5938fd4fe85ae0eb8076733",
+    "goals/boolean-creep/designs/contained-file-read-outcome.md": "d2450ed75ef4fcb3c1c352d3108467c3765bde1a29bb144c44aaf2fa777d1829",
+    "goals/boolean-creep/designs/scheduler-admission-attempt-origin.md": "e36fde3d5767c6882b22acc99e523b3502ca8832163bc26bc5b59f114ba88d7d",
+    "goals/boolean-creep/designs/scheduler-promotion-tick-origin.md": "42c2502f4dbd99ce7f05655c0f628f5084a96ea63185d11a2ba1675fbb63fbab",
+    "goals/boolean-creep/designs/yeet-prepared-publish-commit.md": "be69e91002b5768165af6312cd10a2e398b51851df68a17ad782f448b48ce856",
+    "goals/boolean-creep/designs/ids-statement-presence-kind.md": "a4ee5df6e9992870dec01fa90356b35c81d2c678b23364b08013bccb58f7aa6d",
+    "goals/boolean-creep/designs/citation-blank-page.md": "28984e804da621ecae70200956dd52514877f0a0ae97c88367252b34e6230983",
+    "goals/boolean-creep/designs/pincite-range-endpoints.md": "41daa4ed2dd929ec9c79f253830848d884d0c037b64e7ad615e3dc1735a05eec",
+    "goals/boolean-creep/designs/corpus-pst-terminal.md": "37fd0dded32871ecfd7f0df714b8dbc119c1242270b64a7e604844e428f6cf9c",
+    "goals/boolean-creep/designs/ai-metrics-config-snapshot-bounds.md": "6ab40f465a8b45df06ab00fa96ea21ea60e7251101799282135fc2ff2515d8e7",
+    "goals/boolean-creep/designs/ai-metrics-canonical-root-kind.md": "8b044426ecadf4a9ad602a066dd0439991b7667f3079635711d8b1bd193f5573",
+    "goals/boolean-creep/designs/docgen-generation-outcome.md": "71e60fe8de89e9dd80c5ea3040efb5bb36c9d2f7174b866b2223844eda4a4e96",
+    "goals/boolean-creep/designs/docgen-quality-package-outcome.md": "9e43563b1fd03309948285b83bf2551533defec5fca73e82ecda7ed994b0f32e",
+    "goals/boolean-creep/designs/docgen-subject-collection-outcome.md": "229cf6b132b02e1176a9ea9ced2a315963b7cad16b065077441d163e868ca1d1",
+    "goals/boolean-creep/designs/docgen-runpod-cleanup-outcome.md": "3d07ded4c6415ec01de8d2bd46481a550e37e8c4b46c8a9b8883ede88e69e428",
+    "goals/boolean-creep/designs/docgen-worker-packet-review.md": "e33284a639587d4c4919dd7deabd1b42bfa96b88708b0bb30be8e4d4b7b11517",
+    "goals/boolean-creep/designs/worktree-fleet-epoch-target.md": "1794afb7eb798e7c8efa2afb1e15600dc5217832879d4618c78b984a923bdad7",
+    "goals/boolean-creep/designs/worktree-process-cwd-reading.md": "4e6a762578ea39b05ca4b9f5b157e2ba49edd7c19fa228bedea80352cdfa6ee3",
+    "goals/boolean-creep/designs/worktree-idle-reading.md": "17eaebf017b562952b852dfbb4195e0611cc5f072398d798e4de9ee86fe00965",
+    "goals/boolean-creep/designs/worktree-pr-classification.md": "e7b4f5f5fd98843c23b733b4c643b45bbbbed40d4d820d376f77c698a2bb7925",
+    "goals/boolean-creep/designs/worktree-reap-candidate-retirement.md": "5a4bb8bc7c11309b04cc3edaa01174f906470668440f15172b39d48fc7322bc1",
+    "goals/boolean-creep/designs/worktree-branch-diff-reading.md": "b4f07f3f167b8d340a5f41787786cf3090d03c59503f9730b387741b35dde482",
+    "goals/boolean-creep/designs/worktree-policy-reading.md": "16dff1b94ba22277c3331467d5471c2ed3f8a6a7d0cdadcb46a4477b3281fdb2",
+    "goals/boolean-creep/designs/files-border-classification.md": "7f88cd5ff44697c82ba022b46eb708f42cf85f4000872e36cc32cbe33e9c0896",
+    "goals/boolean-creep/designs/files-image-orientation-state.md": "43240d90a49709355e141483ef8486614642a784742f6d9447cab80e15379c1d",
+    "goals/boolean-creep/designs/obs-qa-scene-provisioning.md": "e567a9c317ccb660694135b7aecd1db4166cf5730c56f8711215e9fba9aaa668",
+    "goals/boolean-creep/designs/m365-tool-error-retryability.md": "47816a65ea4b956c0217864cbb60fc265e7c7511423db3d7af70aeafcc1ec4c1",
+    "goals/boolean-creep/designs/runtime-activity-payload-kind.md": "c09aa824a7a40236757588a42d1b44ce43b7b9f424ecbb81b2aea930c63140ef",
+    "goals/boolean-creep/designs/vault-sync-push-failure-disposition.md": "4a47803a6bf78bb984655bee6378f96aa29e3ee9958f4ec29b49eceae406e345",
+    "goals/boolean-creep/designs/jsdoc-fence-state.md": "bb577b931aa561e1b81522b749e88517a19e53de92e2d0495e55a0072c86c62e",
+    "goals/boolean-creep/designs/codex-findings-packet-commit-kind.md": "23f158b8039af76a3d82451a08d76774e1195ea8fdbc92f4e41f211a03c2a38f",
+    "goals/boolean-creep/designs/r26-apps-sidecar-ipc-ready-latch.md": "abca4ccceaba750f91806fae24d1b6532005d938629b40ec38d615f181bd0951",
+    "goals/boolean-creep/designs/r26-cli-commands-l-q-osv-ignore-expiry.md": "d4da7b760c884013b813af488788c6bc869e1d6f57765ebe6167d872c37eea36",
+    "goals/boolean-creep/designs/receipt-fallback-draft-occupancy.md": "05d687a01342d185545ada759b82abc152d9187f4dafea5334a06db4cca36a83",
+    "goals/boolean-creep/designs/package-inventory-docgen-coverage.md": "709197e9864e8b1410a2516cde588407aaf557536b72c4e6ce37521bfa019ab8",
+    "goals/boolean-creep/designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md": "03fb86eea9faf008a743b555fb0858189d4f629428523d6d130da99b6216b93d",
+    "goals/boolean-creep/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md": "988c97777d4d7431b3aaccbaea171f135d920385ba2fcc6115472209f5a80133",
+    "goals/boolean-creep/designs/r27-tooling-library-observability-outcomes-dataset-scorecard-presence.md": "ce529592a4a378fdbc4224f0d6a59ea6bec16eff51605e9d1a9b36c2e3d26ead",
+    "goals/boolean-creep/designs/r27-tooling-library-observability-config-snapshots-dataset-presence.md": "f7ae29d4ff81796dd0dc6fa9bfa6f36826ff962f122eccea21653590762ac4ee",
+    "goals/boolean-creep/designs/r27-boolean-state-foundation-spinner-state.md": "49967cae339aa2f0a5e010b3770df2a2b6b5b4b56aa278c1574599c253eb1ea1",
+    "goals/boolean-creep/designs/r27-boolean-state-foundation-use-scribe-result-connected.md": "f67a9a7c64d057e5881f8b08fddbf059894c6c2585e55ae5175aa144f3c62ec2",
+    "goals/boolean-creep/designs/r27-boolean-state-foundation-sidebar-context-open-state.md": "48b81bbe371a2d28d878bd7951e483532ba8ce57cf7cb830119d6241bd9cbaf4",
+    "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-indicator-flags.md": "f5e5fb7aedc2b0c8785e185c42f3a3d5454e88088d8b14b3b53b59985126f254",
+    "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-default-item-flags.md": "16f194f194ab2688773063221216fd0e1f02f770cfe221342f784ef5b4ff7e09",
+    "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-item-flags.md": "656278b280a189a041ecc46379aefad87a0c8a84335fceb68a5c30db5182c56b",
+    "goals/boolean-creep/designs/r28-tooling-library-observability-deployment-remote-fields.md": "8f5f55e1c20964415224a797a39e693dfd248dfd259db7cff312861b6c38855d",
+    "goals/boolean-creep/designs/r28-cli-internal-root-tmpfs-discovered-classified-skip.md": "c1ddb1622ff1ff463991776f626cf7db0ace88b0b5595372f583a68f6c161003",
+    "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-eval-source.md": "0ea03e8d2485f4eb2fd3e1a1d723145af456a180fe16f48ba126a9ab6d05c217",
+    "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.md": "189cf0c1cfcd008d20f19cdb8cf470e451f0b30b22834c2e803ea63a349df505",
+    "goals/boolean-creep/designs/r28-cli-quality-coverage-resolved-operation.md": "93c0c2335ba360acbc15037162a7c4da1d01c93a3597c1136a3fef2d983e7f26",
+    "goals/boolean-creep/designs/r28-cli-quality-test-lane-resolved-selection.md": "7eec3c2f39291f53cb83532a3edc4602134f9859df2dcd4ddb12397865cc1fcd"
+  },
+  "semanticReconciliations": [
+    {
+      "id": "create-package-template-type-flags",
+      "resolution": "Full connected 1658880/31 TemplateContext supersedes app-kind Q and lab/ecosystem D. A-C correction corroborates only the lab relation; full expansion is native P2 and receives no transferred review credit. Separate ScaffoldShape24/11 remains unchanged."
+    },
+    {
+      "id": "goals-packet-migration-kind",
+      "resolution": "Parent-requested promotion wording replaces five-field cluster with four finite members and explicitly preserves required ordered edits; frozen provisional is unchanged."
+    },
+    {
+      "id": "request-boundaries",
+      "resolution": "Retire seven former Q designs while retaining their actual named D1 request objects, all option/default/payload contracts and typed diagnostic order. Returned plans/results remain qualified."
+    },
+    {
+      "id": "locators",
+      "resolution": "Repair only actual enclosing symbols/source pins and landing prose in the two existing complete designs; retain 4/3 retired-name no-op and 16/6 threshold-overlap laws."
+    },
+    {
+      "id": "TemplateService",
+      "resolution": "Existing registered helpers are four casing helpers; the provisional accurately proposes a new local literal-equality helper and does not claim an existing equality helper."
+    }
+  ],
+  "semanticQuestions": [
+    "Independent replacement P3 remains pending for the expanded/repaired designs; native staging and source correction receipts do not grant it.",
+    "Neighboring Tmpfs Option path/stat observations are outside this 15+5 stage and remain owned by the separate bounded parent/agent audit; no speculative replacement owner or design is created here.",
+    "Unknown external custom constructors are not claimed absent; preserve each provisional decoded-export and exact codec/payload compatibility obligation during implementation review."
+  ],
+  "sequencing": {
+    "tier1": "Ordered Tier1E internal tooling subsystem batches: serial CreatePackage classification/lifecycle edits; coordinated Goals migration, plan then outcome edits; Files threshold classifier in the internal batch. Withdrawn/D1 rows are not work items.",
+    "tier2": "DetectFacesEntry and PersonMatchReference each remain a separate singleton PR; maintain parent Files ordering and serialize shared modules with Tier1E work."
+  },
+  "validation": {
+    "inventoryExitCode": 0,
+    "inventorySummary": "inventory OK: 673 records, 673 unique ids",
+    "designCoverageQualified": 138,
+    "eightChangedDesignsExactSections": true,
+    "unrelatedRowsByteIdentical": true,
+    "sourceFilesEqualFrozenHead": 64,
+    "allGuardsRechecked": true,
+    "productTestsRun": false,
+    "modelsOrServicesLaunched": false,
+    "formalIndependentReview": false,
+    "p3Approved": false,
+    "dryCredit": 0
+  },
+  "outputsSha256": {
+    "inventory.before.jsonl": "334f80654e0f1fd95c35ecb790a60c8787d4797f33d51e11f8cc15dde78d8b2c",
+    "inventory.after.jsonl": "239fc74853c05331d39f0c43ee33952e1529ddee3bc3f8fe18a6958dc80620c1",
+    "archives/inventory/2026-09-09-r28-cli-retained-before.jsonl": "13f57429d2c1afeda2543f1246315e4a7999f3726fc2082932841012b6d95ec8",
+    "archives/inventory/2026-09-09-r28-cli-retained-withdrawals.jsonl": "967fbcf8b789395f4879bb976a2439117f6ad0fcb80e9844140578f42ccc225a",
+    "archives/designs/2026-09-09-r28-cli-retained/codex-findings-ingest-command-force-refresh.md": "0d12c63e6247323d9bc8e04601d85143772acf1329fc2cc645736ff7330918c1",
+    "archives/designs/2026-09-09-r28-cli-retained/codex-findings-ingest-force-refresh.md": "2c92e77675d2a97e2504f1d0da60b013aa8df136fe9defa3751c998895c00618",
+    "archives/designs/2026-09-09-r28-cli-retained/create-package-retired-name-reconciliation.md": "6b2ece10838983110d5f2026beb4df51a88fb9dbe6349d5316fbccde4ae24759",
+    "archives/designs/2026-09-09-r28-cli-retained/create-package-template-app-kind-flags.md": "0a472ccf25952c51e7050d36fe615d89a08c12b55ddcd96ee9b8eec6269f62e3",
+    "archives/designs/2026-09-09-r28-cli-retained/create-package-template-type-flags.md": "f65e2c489346edd9f1147e3d1a063d67af8b7686bf0811c707a590fef1511135",
+    "archives/designs/2026-09-09-r28-cli-retained/docgen-local-json-requires-plan.md": "af2f5dabc305696b611af19218154ce04b65663df7074a6da4c5e674dd0f3192",
+    "archives/designs/2026-09-09-r28-cli-retained/docgen-runpod-template-search-mode.md": "860fe4fa8c72a3ab59c52ace13735ffe8db9ee3728899da9149e155acd82e6f7",
+    "archives/designs/2026-09-09-r28-cli-retained/files-border-side-measurement.md": "bbb82b9adad871cd0ddfa3646e0a5223859a9146828f3500a34373543bcd7dbc",
+    "archives/designs/2026-09-09-r28-cli-retained/files-face-detection-presence.md": "a5a6ca7b429a1abe1673707db1a7f87b9da1ab5abf7ac5a25ac1b2bc1da28d7d",
+    "archives/designs/2026-09-09-r28-cli-retained/files-person-reference-disposition.md": "40beba9b9a13774eeec8457886dba24ece2a6ba43f9a3f29516717c2531ca653",
+    "archives/designs/2026-09-09-r28-cli-retained/files-worker-score-thresholds.md": "573cc362c279d1c184ac837d6256c2a2b4a6a3014496e65cce4304281df9019b",
+    "archives/designs/2026-09-09-r28-cli-retained/goals-migrate-conventions-mode.md": "b3c86095415b64a4a68df6a4869c902829cb97792c33917f07ac5fb77a061ce8",
+    "archives/designs/2026-09-09-r28-cli-retained/goals-packet-migration-kind.md": "402079c5dea2cbcaa396741652e0fd4af599760e2e56399f876a129a935d2436",
+    "archives/designs/2026-09-09-r28-cli-retained/goals-packet-snapshot-presence.md": "054c662f12fb10fc72aa64ca4a8b2eb3e0d532d4a899f48b69c57846520f2441",
+    "archives/designs/2026-09-09-r28-cli-retained/goals-repair-fork-mode.md": "a33d4ebc2ada8927fd6c7be4aa5e8f238ae740d7c29fcff146775c3356aaa571",
+    "archives/designs/2026-09-09-r28-cli-retained/goals-set-status-input.md": "338744dc1d5e45dedd161a715b5a5c96226b4cdd819e9c9632f3c2f83ca6a23d",
+    "archives/designs/2026-09-09-r28-cli-retained/goals-transition-plan-disposition.md": "c524d084e0f28e886c13899d350c8fc36bf00d7fd271eeed67a9a0dfdc64b7f7",
+    "archives/designs/2026-09-09-r28-cli-retained/r2-tooling-packet-transition-stream-trace.md": "c48956bf6c28486c0e7f4b02fb5b7f7b0911e8fe272aecbe8baa2c0e99fd0a3a",
+    "archives/designs/2026-09-09-r28-cli-retained/tmpfs-dangling-stub-disposition.md": "406886795783feaf9975f064c3895553013f4c3e2129cd215b96cbf937bf18c2",
+    "designs/create-package-retired-name-reconciliation.md": "cb8d0d07b3f6ea9b3a7e60e77b2932cedcdc3bed7eba66ae1d70cda6d10f7445",
+    "designs/create-package-template-type-flags.md": "986f58cf41da310cfccd068a0b17e3d734d33a870dcbdaff2b0afaf17a6a9853",
+    "designs/files-face-detection-presence.md": "1c2a6281c7913a540bb0aa30d2795b61a39eb69ee59f1d019151e9d02fa21743",
+    "designs/files-person-reference-disposition.md": "0ec9cabb88bb6829149fa86dced825ca3e64261254821d749482f4de1d8aefd5",
+    "designs/files-worker-score-thresholds.md": "280b55d34c564bf42b0abd78e4d503d3ac8f224b7a2b4234783e21f68e040cc8",
+    "designs/goals-packet-migration-kind.md": "cc8b80d24ec7fc89a017f32c2abf6e0b43d89a5e15bde48a8d0c0f482c5ecabb",
+    "designs/goals-transition-plan-disposition.md": "a48692bc497dafb3b15ac0bf825d55af6ba207eadd3140cbcc5bda0911422f2a",
+    "designs/r2-tooling-packet-transition-stream-trace.md": "48a5e8631f330c5d59d7fbf4b29d37abad0a01a4f487a4d1d91acc2adbf45648",
+    "validation/inventory.stdout.txt": "7b6d3065f5c05ea9769879e13eca12246a02b79b89a949f7fd10df715e6e273e",
+    "validation/inventory.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "installation": [
+    {
+      "operation": "create-archive",
+      "staged": "archives/inventory/2026-09-09-r28-cli-retained-before.jsonl",
+      "target": "goals/boolean-creep/history/inventory/2026-09-09-r28-cli-retained-before.jsonl",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/inventory/2026-09-09-r28-cli-retained-withdrawals.jsonl",
+      "target": "goals/boolean-creep/history/inventory/2026-09-09-r28-cli-retained-withdrawals.jsonl",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/codex-findings-ingest-command-force-refresh.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/codex-findings-ingest-command-force-refresh.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/codex-findings-ingest-force-refresh.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/codex-findings-ingest-force-refresh.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/create-package-retired-name-reconciliation.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/create-package-retired-name-reconciliation.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/create-package-template-app-kind-flags.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/create-package-template-app-kind-flags.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/create-package-template-type-flags.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/create-package-template-type-flags.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/docgen-local-json-requires-plan.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/docgen-local-json-requires-plan.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/docgen-runpod-template-search-mode.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/docgen-runpod-template-search-mode.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/files-border-side-measurement.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/files-border-side-measurement.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/files-face-detection-presence.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/files-face-detection-presence.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/files-person-reference-disposition.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/files-person-reference-disposition.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/files-worker-score-thresholds.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/files-worker-score-thresholds.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/goals-migrate-conventions-mode.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/goals-migrate-conventions-mode.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/goals-packet-migration-kind.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/goals-packet-migration-kind.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/goals-packet-snapshot-presence.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/goals-packet-snapshot-presence.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/goals-repair-fork-mode.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/goals-repair-fork-mode.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/goals-set-status-input.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/goals-set-status-input.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/goals-transition-plan-disposition.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/goals-transition-plan-disposition.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/r2-tooling-packet-transition-stream-trace.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/r2-tooling-packet-transition-stream-trace.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "create-archive",
+      "staged": "archives/designs/2026-09-09-r28-cli-retained/tmpfs-dangling-stub-disposition.md",
+      "target": "goals/boolean-creep/history/designs/2026-09-09-r28-cli-retained/tmpfs-dangling-stub-disposition.md",
+      "expectedBeforeSha256": null
+    },
+    {
+      "operation": "replace",
+      "staged": "designs/create-package-retired-name-reconciliation.md",
+      "target": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+      "expectedBeforeSha256": "6b2ece10838983110d5f2026beb4df51a88fb9dbe6349d5316fbccde4ae24759"
+    },
+    {
+      "operation": "replace",
+      "staged": "designs/create-package-template-type-flags.md",
+      "target": "goals/boolean-creep/designs/create-package-template-type-flags.md",
+      "expectedBeforeSha256": "f65e2c489346edd9f1147e3d1a063d67af8b7686bf0811c707a590fef1511135"
+    },
+    {
+      "operation": "replace",
+      "staged": "designs/files-face-detection-presence.md",
+      "target": "goals/boolean-creep/designs/files-face-detection-presence.md",
+      "expectedBeforeSha256": "a5a6ca7b429a1abe1673707db1a7f87b9da1ab5abf7ac5a25ac1b2bc1da28d7d"
+    },
+    {
+      "operation": "replace",
+      "staged": "designs/files-person-reference-disposition.md",
+      "target": "goals/boolean-creep/designs/files-person-reference-disposition.md",
+      "expectedBeforeSha256": "40beba9b9a13774eeec8457886dba24ece2a6ba43f9a3f29516717c2531ca653"
+    },
+    {
+      "operation": "replace",
+      "staged": "designs/files-worker-score-thresholds.md",
+      "target": "goals/boolean-creep/designs/files-worker-score-thresholds.md",
+      "expectedBeforeSha256": "573cc362c279d1c184ac837d6256c2a2b4a6a3014496e65cce4304281df9019b"
+    },
+    {
+      "operation": "replace",
+      "staged": "designs/goals-packet-migration-kind.md",
+      "target": "goals/boolean-creep/designs/goals-packet-migration-kind.md",
+      "expectedBeforeSha256": "402079c5dea2cbcaa396741652e0fd4af599760e2e56399f876a129a935d2436"
+    },
+    {
+      "operation": "replace",
+      "staged": "designs/goals-transition-plan-disposition.md",
+      "target": "goals/boolean-creep/designs/goals-transition-plan-disposition.md",
+      "expectedBeforeSha256": "c524d084e0f28e886c13899d350c8fc36bf00d7fd271eeed67a9a0dfdc64b7f7"
+    },
+    {
+      "operation": "replace",
+      "staged": "designs/r2-tooling-packet-transition-stream-trace.md",
+      "target": "goals/boolean-creep/designs/r2-tooling-packet-transition-stream-trace.md",
+      "expectedBeforeSha256": "c48956bf6c28486c0e7f4b02fb5b7f7b0911e8fe272aecbe8baa2c0e99fd0a3a"
+    },
+    {
+      "operation": "replace",
+      "staged": "inventory.after.jsonl",
+      "target": "goals/boolean-creep/data/inventory.jsonl",
+      "expectedBeforeSha256": "334f80654e0f1fd95c35ecb790a60c8787d4797f33d51e11f8cc15dde78d8b2c"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/codex-findings-ingest-command-force-refresh.md",
+      "expectedBeforeSha256": "0d12c63e6247323d9bc8e04601d85143772acf1329fc2cc645736ff7330918c1"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/codex-findings-ingest-force-refresh.md",
+      "expectedBeforeSha256": "2c92e77675d2a97e2504f1d0da60b013aa8df136fe9defa3751c998895c00618"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/create-package-template-app-kind-flags.md",
+      "expectedBeforeSha256": "0a472ccf25952c51e7050d36fe615d89a08c12b55ddcd96ee9b8eec6269f62e3"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/docgen-local-json-requires-plan.md",
+      "expectedBeforeSha256": "af2f5dabc305696b611af19218154ce04b65663df7074a6da4c5e674dd0f3192"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/docgen-runpod-template-search-mode.md",
+      "expectedBeforeSha256": "860fe4fa8c72a3ab59c52ace13735ffe8db9ee3728899da9149e155acd82e6f7"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/files-border-side-measurement.md",
+      "expectedBeforeSha256": "bbb82b9adad871cd0ddfa3646e0a5223859a9146828f3500a34373543bcd7dbc"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/goals-migrate-conventions-mode.md",
+      "expectedBeforeSha256": "b3c86095415b64a4a68df6a4869c902829cb97792c33917f07ac5fb77a061ce8"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/goals-packet-snapshot-presence.md",
+      "expectedBeforeSha256": "054c662f12fb10fc72aa64ca4a8b2eb3e0d532d4a899f48b69c57846520f2441"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/goals-repair-fork-mode.md",
+      "expectedBeforeSha256": "a33d4ebc2ada8927fd6c7be4aa5e8f238ae740d7c29fcff146775c3356aaa571"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/goals-set-status-input.md",
+      "expectedBeforeSha256": "338744dc1d5e45dedd161a715b5a5c96226b4cdd819e9c9632f3c2f83ca6a23d"
+    },
+    {
+      "operation": "remove-after-archive",
+      "target": "goals/boolean-creep/designs/tmpfs-dangling-stub-disposition.md",
+      "expectedBeforeSha256": "406886795783feaf9975f064c3895553013f4c3e2129cd215b96cbf937bf18c2"
+    },
+    {
+      "operation": "create",
+      "staged": "integration-receipt.json",
+      "target": "goals/boolean-creep/data/r28-cli-retained-integration.json",
+      "expectedBeforeSha256": null
+    }
+  ],
+  "installationWarning": "This script never installs. Parent must run --verify-stage immediately before a serialized installation. Archive exact originals first, promote/repair eight designs, replace inventory, retire eleven archived designs, and retain this normalized preparation receipt. Any changed current inventory/input/design hash requires a fresh stage; verification does not lock files or authorize product implementation. Record actual installation separately if an installed-state attestation is needed."
+}

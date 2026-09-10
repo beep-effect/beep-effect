@@ -646,12 +646,10 @@ const readVettedSlice = Effect.fn("TaxonomyLoader.readVettedSlice")(function* (
   entry: VendorLoadManifestEntry,
   vendorRoot: string
 ) {
-  return yield* Match.type<VendorLoadManifestEntry>().pipe(
-    Match.tagsExhaustive({
-      VendorConceptAlignmentSlice: (entry) => readAlignmentSlice(entry, vendorRoot),
-      VendorTaxonomySeedSlice: (entry) => readTaxonomySeedSlice(entry, vendorRoot),
-    })
-  )(entry);
+  return yield* Match.typeTags<VendorLoadManifestEntry>()({
+    VendorConceptAlignmentSlice: (entry) => readAlignmentSlice(entry, vendorRoot),
+    VendorTaxonomySeedSlice: (entry) => readTaxonomySeedSlice(entry, vendorRoot),
+  })(entry);
 });
 
 const readSlice: {
@@ -692,19 +690,15 @@ const readSlice: {
   })
 );
 
-const toTaxonomySeed = Match.type<LoadedVendorSlice>().pipe(
-  Match.tagsExhaustive({
-    LoadedAlignmentSlice: () => O.none(),
-    LoadedTaxonomySeedSlice: ({ seed }) => O.some(seed),
-  })
-);
+const toTaxonomySeed = Match.typeTags<LoadedVendorSlice>()({
+  LoadedAlignmentSlice: () => O.none(),
+  LoadedTaxonomySeedSlice: ({ seed }) => O.some(seed),
+});
 
-const toAlignment = Match.type<LoadedVendorSlice>().pipe(
-  Match.tagsExhaustive({
-    LoadedAlignmentSlice: (slice) => O.some(slice),
-    LoadedTaxonomySeedSlice: () => O.none(),
-  })
-);
+const toAlignment = Match.typeTags<LoadedVendorSlice>()({
+  LoadedAlignmentSlice: (slice) => O.some(slice),
+  LoadedTaxonomySeedSlice: () => O.none(),
+});
 
 const appendAlignment = (concept: TaxonomyConcept, loaded: LoadedAlignmentSlice): TaxonomyConcept =>
   Bool.match(

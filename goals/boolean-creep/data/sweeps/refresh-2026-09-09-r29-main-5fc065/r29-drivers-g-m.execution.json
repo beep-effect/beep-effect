@@ -1,0 +1,22 @@
+{
+  "lane": "r29-drivers-g-m",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:21:46.682786+00:00",
+  "finished": "2026-09-09T10:35:23.611768+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-g-m.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`gov-legal-mcp`, `govinfo`, `graph-3d`, `hubspot`, `libpff`, `m365`, `m365-mcp`). No seed drift and no unresolved source question: all eight seed owners still exist with the claimed members, and current writers/readers still support the prior classifications (D2 Graph/Three.js mirrors; designed E3/E4 on tool-name collision and `M365ToolError`). Unchanged seeds were not re-reported.\n\nOut-of-net (not recorded): generated `govinfo` `_generated` surfaces; singleton flags (`SearchBody.historical`, `syntheticExport`); standalone predicates; function-flag parameters; `GraphDriveItem` file/folder optional facets with no Boolean members; single latches (`cancelled`, `destroyed`, `dropping`); a second `ShaderMaterial` options object overlapping the existing seed.",
+  "transcriptSha256": "c03e1038a6bc8aeb5ce835d50f0c2eaff377232664a450b54d0b245d09be1091",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

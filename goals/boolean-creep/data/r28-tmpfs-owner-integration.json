@@ -1,0 +1,76 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 673,
+  "afterCount": 674,
+  "beforeQualified": 138,
+  "afterQualified": 139,
+  "beforeInventorySha256": "239fc74853c05331d39f0c43ee33952e1529ddee3bc3f8fe18a6958dc80620c1",
+  "afterInventorySha256": "7e37a70f69587d2e324b58c4a1531ec12b6b68cfb8105b24ec55fd7d34d58341",
+  "addedIds": ["r28-cli-internal-root-tmpfs-stub-observations"],
+  "correctedIds": ["r28-cli-internal-root-tmpfs-discovered-classified-skip"],
+  "withdrawnIds": [],
+  "designedIds": [
+    "r28-cli-internal-root-tmpfs-stub-observations",
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-tmpfs-owner-before.jsonl",
+  "rowArchiveSha256": "da72c0f3754456f2e8d05ed9b019679d1ea952c8c0e7e25c9650fd6cf4f6455b",
+  "designArchive": "history/designs/2026-09-09-r28-tmpfs-owner/r28-cli-internal-root-tmpfs-discovered-classified-skip.md",
+  "designArchiveSha256": "c1ddb1622ff1ff463991776f626cf7db0ace88b0b5595372f583a68f6c161003",
+  "inputSha256": {
+    "data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md": "0e5beff69f0a3e1db2283127132fb999b0e6ccb0d7a95f4264b007487745c23b",
+    "data/provisional-r28-tmpfs-stub-observations.md": "585b81cdaed784f14400cca828cadd79195f3e5ba3987e08bd6ed70b5e826a3a",
+    "data/provisional-r28-tmpfs-discovered-candidate-full-owner.md": "5d61ab7da52d0e462196bc9687e854be980ace2b508a8b9219092f4f0d4e00a2"
+  },
+  "boundSourceReferenceAndProofSha256": {
+    "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
+    "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
+    "packages/tooling/tool/cli/src/internal/repo-run/index.ts": "8700650d67f60eeebdbc9830b1f47c415fcd80d26b2d51e0c6d0b4314079934a",
+    "packages/tooling/tool/cli/src/test/RepoRun.test-kit.ts": "88affd301f15a26a60bc1aa7d9fc6bb6a43dab0fcfb35a437ab6d28a6e5f5f8f",
+    "packages/tooling/tool/cli/test/tmpfs-reap.test.ts": "ab3db06585ab6baab7d17e42b3f5a705edb089d7a555111304eb17910ddbaece",
+    "packages/tooling/tool/cli/test/quality-tmpfs-render.test.ts": "670c08e3ea32a7b17651e72422a4bf6c8eed1b77dab64e3588e58a6a29b19219",
+    "packages/foundation/modeling/utils/src/Option.ts": "9058fcd6349a90f2ae7949250d5e6a1a324c2b140ada7d0f0cfe78e6b1d549c1",
+    ".repos/effect/packages/effect/src/FileSystem.ts": "b9e289a8a0d18d04879d0fb507c2ad342aaaf8b9b01cff0cd0acae9cd23fba17",
+    ".repos/effect/packages/effect/src/PlatformError.ts": "d0864c39319b0da62dec6445e5eb85ebceb8570b2f93c9bd3a68f011e1d31f45",
+    ".repos/effect/packages/effect/src/Schema.ts": "0f0daf6b6ec3b6c827083d8b76278a4f52fe48a636dfff031ddf18e6c93f82ad",
+    "node_modules/effect/src/FileSystem.ts": "ace43cfd791f76d2362542cee2dbb6b6ee41de1b2375859a0dfbf8eed2dee933",
+    "node_modules/effect/src/Option.ts": "db5876bc08e213e95575ab0d1a71f6a2db0a5fe0e00f90f8fa6f828a039b71eb",
+    "goals/boolean-creep/designs/r28-cli-internal-root-tmpfs-discovered-classified-skip.md": "c1ddb1622ff1ff463991776f626cf7db0ace88b0b5595372f583a68f6c161003",
+    "goals/boolean-creep/data/provisional-r28-cli-internal-root-tmpfs-discovered-classified-skip.md": "0903cb070e291370efc2f5533dc33fd60f3c4c439b79d670136782ce366c9071",
+    "goals/boolean-creep/data/design-refresh-2026-09-09-r28-cli-retained-qualified-gap-audit.md": "f0a8e217edde77b97effcb6c03444d77c55ab23944eb009a5c428f497f2c898e",
+    "goals/boolean-creep/data/r28-cli-first-owners-integration.json": "0cba2cf0c46b2662f3d3a1463bd654c615391acaf4d340aec6325bc18f43f869",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-internal-contract-correction1.jsonl": "b20deb9984bd19e9b424c40e3b052d9ef46c74cf314b33fefdd5bfcffa7db75d",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-internal-contract-correction1.execution.json": "da96d560e91a02e3cbfc135b5dd6ef81f8ecbe505a17804db709c1d5401fd6ed",
+    "~/.cache/beep/boolean-creep/r28-tmpfs-observation-owner/probe.ts": "3489c53a5092548c846224dd0b206ded03803522327a3db857ad9591a0aa682f",
+    "~/.cache/beep/boolean-creep/r28-tmpfs-observation-owner/extraction.json": "59e82d32e706a4ead5decd1c54658b7fc77b69f7e1b6805a35564ffe97dc63c5",
+    "~/.cache/beep/boolean-creep/r28-tmpfs-observation-owner/results.json": "3a1f782d2032ddfed4eeea02917a8144b0af56f46ad7d1666032029f94e62fa7"
+  },
+  "designSha256": {
+    "r28-cli-internal-root-tmpfs-stub-observations": "37f13a6f753eb5b6703212474946e02f528ce166366d23eb7712c7a5b31dbfdc",
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip": "640840561de30da42feead26bbaabad0a2d01763e6d5e7a66456694ae74e9dfc"
+  },
+  "allOther672RowsPreservedExactly": true,
+  "installationCompleted": true,
+  "formalIndependentReview": false,
+  "currentDryCredit": 0,
+  "verification": {
+    "inventory": 0,
+    "designs": 0,
+    "sourceAndDependencyDiff": 0,
+    "defaultPacketDiffCheck": 2,
+    "attribution": "Existing frozen packet audit EOF whitespace, newly visible as staged additions; both exact historical hashes match. Not introduced by Tmpfs changes. Preserve evidence bytes; packaging verification remains open.",
+    "existingWhitespaceArtifactSha256": {
+      "data/design-refresh-2026-09-09-r28-cli-l-q-seeds.md": "6eac635c6e37b78e41f715a2947ab4f71b40b828fb73add3076bab1aea2e27af",
+      "data/design-refresh-2026-09-09-r28-execution-coverage-audit.md": "767110abebdfc4e76995b8254262bdf4ea038872fcb0ff8f6af29006ac93b2c4"
+    },
+    "indexUnchangedDuringCompletionVerification": true
+  },
+  "notes": [
+    "The successful initial installer archived the old row/design, installed two current designs and wrote the canonical projection. It stopped after validators passed because the default broad diff check surfaced existing frozen EOF whitespace. This completion verifies the already-written result without rerunning mutations.",
+    "The new local Option-observation owner is72/14; full DiscoveredCandidate is312/13. All14 temporal observations, unknown error results, full paths, stat ordering and lazy contents behavior are preserved.",
+    "The original26/6 correction remains selected-pair evidence. Full-owner expansion and neighboring local admission are native P2, not another independent correction. Keep the dotted-field row withdrawn and avoid helper-copy or duplicate guard credit.",
+    "Both promoted designs specify the ordered Tier1E subsystem batch. Candidate outer schema uses the verified S.toTaggedUnion(\"reapClass\") API; private nested subfamilies use S.TaggedUnion/_tag.",
+    "No product implementation, P3 approval, dry-round credit or GATE2 transition is claimed. No source, dependency, generated output or ref mutation occurred; unrelated staged settings remain intact."
+  ]
+}

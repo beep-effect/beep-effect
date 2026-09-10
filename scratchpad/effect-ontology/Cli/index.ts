@@ -84,7 +84,7 @@ const LinkIngestionLive = LinkIngestionService.Default.pipe(
  */
 const LinkIngestionLayer = Layer.unwrap(
   Effect.gen(function* () {
-    const postgresHost = yield* Config.string("POSTGRES_HOST").pipe(Config.option);
+    const postgresHost = yield* Config.String("POSTGRES_HOST").pipe(Config.option);
 
     if (O.isSome(postgresHost)) {
       return LinkIngestionLive;

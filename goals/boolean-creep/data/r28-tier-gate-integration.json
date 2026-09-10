@@ -1,0 +1,20 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 901,
+  "afterCount": 900,
+  "beforeInventorySha256": "f4fc78d361409bee49873e7296ada650c0d041d0cce93fff8c20f1231bb9b0fa",
+  "afterInventorySha256": "bad6b2cfacd1ecac2aff043a838cddaf18cbaec11a1de03deab2d1a5277e082a",
+  "qualifiedId": "r3-foundation-tier-gate-tool-hints",
+  "withdrawnIds": ["r3-foundation-verified-span-attempt-coherence"],
+  "rowArchive": "history/inventory/2026-09-09-r28-tier-gate-before.jsonl",
+  "rowArchiveSha256": "78f4de7986c64321545b93f3c8da248717849dd65828891ed903522287bdb64d",
+  "design": "designs/r3-foundation-tier-gate-tool-hints.md",
+  "designSha256": "13ece9a600765600ab9680c31483d4b90edf0443dbbc7e00a917db2ae2fb71b5",
+  "provisionalSha256": "2bc56e926f8e10922511a54bdc23fdb7b38bb5e213caa15aea754db8bf067997",
+  "audit": "data/design-refresh-2026-09-09-r28-tier-gate-values.md",
+  "auditSha256": "cc81f767e38b2947c6eb7c799760dd39bece572f25f27f35ee19d949dad8b7df",
+  "independentReportSha256": "32742e1152c0b1899397a7533a4b9047dfcadd02da74333a9586cc8b52f4a70c",
+  "independentReceiptSha256": "9babc5b23a914478acac971628f882108762e695e5ed0a06c0e6f1acff150856",
+  "note": "Stable historical seed ID corrected to the actual same-policy value flow; callable predicate seed was not itself eligible. Eight/seven source tuples reduce to five observable decisions. No P3, applied, package-proof or dry credit; frozen seed/report preserved."
+}

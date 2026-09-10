@@ -1,0 +1,17 @@
+{
+  "lane": "r25-ui-implication-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:09:57.552675+00:00",
+  "finished": "2026-09-08T22:11:44.439020+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 2,
+  "transcriptSha256": "52464f9c61d7db73a725720313bf3d9bcfc7b56a9dcab75ba3f4e4b2b59bd59a",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-ui-implication-correction1.jsonl` \u2014 confirmed 2, disqualified 0. Covered both assigned files. Old r25-foundation-ui report preserved. Seeds still present (MentionPlugin pending/failed; TabStrip floating/overflowOpen).",
+  "supersedesDecisions": [
+    "r25-foundation-ui-tabstrip-unmeasured-all-fit",
+    "r25-foundation-ui-mention-plugin-settled"
+  ]
+}

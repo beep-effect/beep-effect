@@ -63,17 +63,13 @@ export const ApplicationNumber = S.String.check(
       "A WIPO ST.13 patent application number with patent type code 10-19 or 91, four year digits, and nine serial positions.",
     message: "Patent application number must match the WIPO ST.13 machine-readable patent application format.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(/^(?:1[0-9]|91)[0-9]{4}[A-Z0-9]{2}[0-9]{7}$/u),
+).pipe(
+  S.brand("ApplicationNumber"),
+  $I.annoteSchema("ApplicationNumber", {
+    description:
+      "Canonical WIPO ST.13 patent application number in machine-readable form: patent type code, year designation, and serial positions.",
   })
-  .pipe(
-    S.brand("ApplicationNumber"),
-    $I.annoteSchema("ApplicationNumber", {
-      description:
-        "Canonical WIPO ST.13 patent application number in machine-readable form: patent type code, year designation, and serial positions.",
-    })
-  );
+);
 
 /**
  * Type-level brand produced by {@link ApplicationNumber}.

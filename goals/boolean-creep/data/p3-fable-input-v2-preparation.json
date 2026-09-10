@@ -1,0 +1,62 @@
+{
+  "kind": "fable-controller-input-v2-preparation/v1",
+  "status": "prepared-not-admitted",
+  "recordedAt": "2026-09-09T17:06:18.516187+00:00",
+  "sourceSha": "a942d7dab3a962963912247d4699b7986bcb9c03",
+  "originMainSha": "e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b",
+  "inventorySha256": "fc4a37c261318d37cc276315d7014c61410277c7802b38806b72ae3a9437fc13",
+  "privateManifest": {
+    "file": "~/.cache/beep/boolean-creep/p3-fable-controller-input-v2/MANIFEST.json",
+    "sha256": "75dd832d79dec27c8507eb4bc85b193da3bb1f376b15d17a967173a72d5ce5a1"
+  },
+  "priorSnapshotRefusal": "Frozen v7 partition had no owner for the five Graft command files.",
+  "partitionUpdate": {
+    "owner": "r32-cli-commands-d-k",
+    "addedArea": "packages/tooling/tool/cli/src/commands/Graft",
+    "corpusFiles": 3056,
+    "lanes": 27,
+    "addedFilesSinceR31": [
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/index.ts"
+    ],
+    "removedFilesSinceR31": [],
+    "nonTypeScriptInputsRetained": 61
+  },
+  "snapshot": {
+    "files": 6381,
+    "bytes": 104170634,
+    "qualified": 145,
+    "reviewLanes": 35,
+    "endingVerificationPassed": true,
+    "currentAfterSourceForwardIntegration": false,
+    "supersededAsCurrentBy": "goals/boolean-creep/data/pre-r32-main-e7b-parent-integration.json"
+  },
+  "testMethods": 10,
+  "affectedSnapshotMethodsRerun": 3,
+  "testsPassed": true,
+  "cliMetadataObservation": {
+    "version": "2.1.266",
+    "commands": ["--version", "--help"],
+    "privateManifest": {
+      "file": "~/.cache/beep/boolean-creep/p3-fable-current-input-runtime-observation-main-e7b/MANIFEST.json",
+      "sha256": "6778603c22aec5ef7a86779395624102ccc0b546a6029a2dfd9406d64517d12c"
+    },
+    "executableStableThroughObservation": true,
+    "managedConfigurationBound": false,
+    "runtimeCapabilityVerified": false
+  },
+  "censusLaunched": false,
+  "modelCalls": 0,
+  "modelInvocationAuthorized": false,
+  "independentP3Approval": false,
+  "pending": [
+    "Install and bind explicit partition update in the future R32 launcher",
+    "Resolve held owners and finalize prior round before another census",
+    "Two consecutive finalized current-source dry rounds",
+    "Fresh final snapshot after inventory or source changes",
+    "Full review controller, durable launcher, runtime admission and validator transition"
+  ]
+}

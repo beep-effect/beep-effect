@@ -1,0 +1,28 @@
+{
+  "kind": "fable-controller-input-preparation",
+  "status": "prepared-not-admitted",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "originMainSha": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "inventorySha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "privateManifest": {
+    "file": "~/.cache/beep/boolean-creep/p3-fable-controller-preparation/MANIFEST.json",
+    "sha256": "627f52fc593f5d47099bafe4a6375135fb9ab0706c25e665696fe2c9868ecb7e"
+  },
+  "currentSnapshotFiles": 6376,
+  "currentSnapshotBytes": 103967037,
+  "currentQualified": 146,
+  "currentPlannedLanes": 35,
+  "maxIdsPerLane": 6,
+  "syntheticTestMethods": 7,
+  "syntheticTestsPassed": true,
+  "modelCalls": 0,
+  "independentP3Approval": false,
+  "modelInvocationAuthorized": false,
+  "pending": [
+    "Two finalized consecutive current-source dry rounds",
+    "Full process controller and durable launcher",
+    "Runtime executable/configuration and advisory-reference bindings",
+    "Actual runtime capability probe",
+    "Canonical Fable validator installation and final admission"
+  ]
+}

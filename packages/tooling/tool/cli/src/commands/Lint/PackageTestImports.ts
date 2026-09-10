@@ -389,11 +389,11 @@ const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTe
 export const lintPackageTestImportsCommand = Command.make(
   "package-test-imports",
   {
-    include: Flag.string("include").pipe(
+    include: Flag.String("include").pipe(
       Flag.withDescription("Comma-separated repo-relative test files to scan; defaults to the full package test scope"),
       Flag.withDefault("*")
     ),
-    includeRoot: Flag.string("include-root").pipe(
+    includeRoot: Flag.String("include-root").pipe(
       Flag.withDescription("Repo-relative package directory whose test files should be scanned"),
       Flag.withDefault("*")
     ),

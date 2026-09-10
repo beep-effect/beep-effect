@@ -1,0 +1,17 @@
+{
+  "lane": "r27-tooling-policy",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "started": "2026-09-09T02:35:51.655824+00:00",
+  "finished": "2026-09-09T02:43:36.827774+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-tooling-policy.jsonl` \u2014 confirmed 0, disqualified 2. Covered lint-rules/src and repo-configs/src. All listed seed declarations still present; no drift.",
+  "transcriptSha256": "5073c3c1bda403439039ca8ea923f92d988469ca4be3e7f90a7204c3e922c8eb",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998"
+}

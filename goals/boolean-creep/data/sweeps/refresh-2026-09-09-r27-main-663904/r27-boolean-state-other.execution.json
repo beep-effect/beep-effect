@@ -1,0 +1,19 @@
+{
+  "lane": "r27-boolean-state-other",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "started": "2026-09-09T03:11:25.683115+00:00",
+  "finished": "2026-09-09T03:20:29.589829+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-boolean-state-other.jsonl` \u2014 confirmed 0, disqualified 0. All 54 assigned files covered for this Boolean-state dimension (lexical `atom`/`reactivity` hits were atomic writes, Effect Reactivity, JSDoc `\"atoms\"`, or a type-name regex; no `Atom.make`/`Atom.map`/`workbenchState`/`useState` sibling booleans). Seed drift: `runEffectImportRules.fileLatches` `[fileTouched, renamed]` is gone (single `fileAffected` latch at EffectImports.ts:1746); other listed seeds still present.",
+  "transcriptSha256": "9329d92aefd55e4c90523660e9ddc8c0c70940e66877d95d714c3d43e1a58bc8",
+  "runnerSha256": "3022ac65379b0bc0460eba3bf078515644afab6dc7c711805f6702f89e5bfbac",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998",
+  "coverageMapSha256": "dfb01a6f65f43fce70e25aadd4d172c9a8c36f2c19c93e5ee1d1110826bd4823",
+  "coveragePurpose": "Supplemental Boolean-valued state coverage; not a primary-lane replacement."
+}

@@ -9,15 +9,18 @@
  *
  * With no arguments it validates the canonical inventory. Extra arguments let
  * sweep-lane outputs (files under `data/sweeps/`) be validated before merge.
- * Exits non-zero on any malformed line, duplicate id, or status-shape
- * mismatch.
+ * Exits non-zero on any malformed line, duplicate id, duplicate
+ * file/symbol/member cluster, duplicate declaration-line/member cluster, or
+ * status-shape mismatch.
  */
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const SCHEMA_VERSION = "boolean-creep-inventory/v1";
 
@@ -38,6 +41,7 @@ export const ScopeKind = LiteralKit([
   "schema-struct",
   "type-literal",
   "interface",
+  "object-literal",
   "props",
   "sibling-state",
   "class-fields",
@@ -124,10 +128,38 @@ const targets = Bun.argv.length > 2 ? Bun.argv.slice(2) : [defaultInventory];
 let failures = 0;
 let total = 0;
 const seenIds = MutableHashMap.empty<string, string>();
+const seenClusters = MutableHashMap.empty<string, string>();
+const seenDeclarationClusters = MutableHashMap.empty<string, string>();
+const sourceLineCounts = MutableHashMap.empty<string, number>();
+
+const sourceLineCount = async (relativePath: string): Promise<O.Option<number>> => {
+  const cached = MutableHashMap.get(sourceLineCounts, relativePath);
+  if (O.isSome(cached)) return cached;
+  const source = Bun.file(`${repoRoot}${relativePath}`);
+  if (!(await source.exists())) return O.none();
+  const count = sourceLineCountFromText(await source.text());
+  MutableHashMap.set(sourceLineCounts, relativePath, count);
+  return O.some(count);
+};
+
+const sourceLineCountFromText = (text: string): number => A.length(Str.split(text, "\n"));
+
+const validateSourceReference = async (where: string, relativePath: string, line: number): Promise<void> => {
+  const count = await sourceLineCount(relativePath);
+  if (O.isNone(count)) {
+    failures += 1;
+    console.error(`${where}: source reference does not exist: ${relativePath}`);
+    return;
+  }
+  if (line < 1 || line > count.value) {
+    failures += 1;
+    console.error(`${where}: source line ${line} is outside ${relativePath} (1-${count.value})`);
+  }
+};
 
 for (const target of targets) {
   const text = await Bun.file(target).text();
-  const lines = text.split("\n").filter((line) => line.trim().length > 0);
+  const lines = A.filter(Str.split(text, "\n"), (line) => Str.isNonEmpty(Str.trim(line)));
   for (const [index, line] of lines.entries()) {
     total += 1;
     const where = `${target}:${index + 1}`;
@@ -138,6 +170,12 @@ for (const target of targets) {
       continue;
     }
     const record = decoded.success;
+    await validateSourceReference(`${where} record`, record.file, record.line);
+    if ("evidence" in record) {
+      for (const [evidenceIndex, evidence] of record.evidence.entries()) {
+        await validateSourceReference(`${where} evidence ${evidenceIndex + 1}`, evidence.cite.file, evidence.cite.line);
+      }
+    }
     const prior = MutableHashMap.get(seenIds, record.id);
     if (O.isSome(prior)) {
       failures += 1;
@@ -145,6 +183,30 @@ for (const target of targets) {
       continue;
     }
     MutableHashMap.set(seenIds, record.id, where);
+    const clusterKey = A.join(
+      [record.file, record.symbol, A.join(A.sort(record.members, Order.String), "\u0000")],
+      "\u0001"
+    );
+    const priorCluster = MutableHashMap.get(seenClusters, clusterKey);
+    if (O.isSome(priorCluster)) {
+      failures += 1;
+      console.error(`${where}: duplicate file/symbol/member cluster (first seen at ${priorCluster.value})`);
+      continue;
+    }
+    MutableHashMap.set(seenClusters, clusterKey, where);
+    const declarationClusterKey = A.join(
+      [record.file, `${record.line}`, A.join(A.sort(record.members, Order.String), "\u0000")],
+      "\u0001"
+    );
+    const priorDeclarationCluster = MutableHashMap.get(seenDeclarationClusters, declarationClusterKey);
+    if (O.isSome(priorDeclarationCluster)) {
+      failures += 1;
+      console.error(
+        `${where}: duplicate file/declaration-line/member cluster (first seen at ${priorDeclarationCluster.value})`
+      );
+      continue;
+    }
+    MutableHashMap.set(seenDeclarationClusters, declarationClusterKey, where);
   }
 }
 

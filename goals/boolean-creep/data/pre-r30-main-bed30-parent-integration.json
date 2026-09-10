@@ -1,0 +1,336 @@
+{
+  "kind": "r30-main-bed30-parent-integration",
+  "status": "installed",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "originMainSha": "bed30c6adf3beed7de8538209fbdc84d26a3b8ce",
+  "priorMainSha": "3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee",
+  "inventoryBeforeSha256": "88733c9dfe96f2cd531589206cab65daeecc87507f4534138f87b548b95a11e8",
+  "inventoryAfterSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "records": 698,
+  "qualified": 141,
+  "disqualified": 557,
+  "changedRows": 22,
+  "unchangedRowsByteIdentical": 676,
+  "newQualified": 0,
+  "withdrawnQualified": 0,
+  "designReplacements": [
+    {
+      "id": "package-inventory-docgen-coverage",
+      "before": {
+        "file": "goals/boolean-creep/history/pre-r30-main-bed30/designs/package-inventory-docgen-coverage.md",
+        "sha256": "709197e9864e8b1410a2516cde588407aaf557536b72c4e6ce37521bfa019ab8"
+      },
+      "after": {
+        "file": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+        "sha256": "59a91e7cce34275476ae1ca14777be38caa9b1ed9f566d4d6c5c1b35b34780bb"
+      }
+    },
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "before": {
+        "file": "goals/boolean-creep/history/pre-r30-main-bed30/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+        "sha256": "1c8684a06d669425326159e7f9952332e529ba943608eaa06b21696b1a2b6f8f"
+      },
+      "after": {
+        "file": "goals/boolean-creep/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+        "sha256": "16080071d446a73f296487d958b28a5e9cdc0719a5179c902e6775bd503019f2"
+      }
+    },
+    {
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "before": {
+        "file": "goals/boolean-creep/history/pre-r30-main-bed30/designs/r28-cli-quality-coverage-resolved-operation.md",
+        "sha256": "5b8bedb2688715b16591a45aae71f045f30f689258d3bf29b528d12922ed549a"
+      },
+      "after": {
+        "file": "goals/boolean-creep/designs/r28-cli-quality-coverage-resolved-operation.md",
+        "sha256": "f03a6307e2b66534ba13e12de9be5333c4e0afca88f667ec2c6a73f191d84d30"
+      }
+    },
+    {
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "before": {
+        "file": "goals/boolean-creep/history/pre-r30-main-bed30/designs/r28-cli-quality-test-lane-resolved-selection.md",
+        "sha256": "55da229cd4754caaa36a3c0fd760654609f46b614dcf61b761bbdd2d030b8892"
+      },
+      "after": {
+        "file": "goals/boolean-creep/designs/r28-cli-quality-test-lane-resolved-selection.md",
+        "sha256": "532c92d5b4c78d7c9a39a2ec5111f62ffb8434e64046482651afa7171b33b2a9"
+      }
+    }
+  ],
+  "rowReplacements": [
+    {
+      "id": "ci-lane-run-options",
+      "beforeSha256": "118ba6e123905a052f2b5ec68c843ac16ebe8d8c4240fbedb2175ad42daf7073",
+      "afterSha256": "e41cd7ce6897a7c31cf71e19fa092d22679f8f71cfe0ebe2dd8c2eba0e9ce03f",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "ci-local-options",
+      "beforeSha256": "addb71e53c07512358cf2f4934a211b4ee57cc1f682c51d7889d568a801d2a4a",
+      "afterSha256": "58bf9887da0f60169120cd6df964807e2f649adeb8d5e2e6e3fbe570d5bea171",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "ci-local-step-plan",
+      "beforeSha256": "96fd1673b0c7f9e052c964666e90937dcc5cc0b458bb47419809d86a743f12d9",
+      "afterSha256": "3fe366625011602c0d0122ed7afff26667b34d59c0c480db092efdbdb56a4f88",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "package-inventory-docgen-coverage",
+      "beforeSha256": "8e3aa2f7ecd85fecc80a552857c72e415c278691e1d3ef9c2993b4c7c053e229",
+      "afterSha256": "61af7e64b56260df23b96f0090774ecd6eb38809b57b1c2df2979517f5da33e6",
+      "kind": "qualified-design-refresh"
+    },
+    {
+      "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+      "beforeSha256": "d4be9d3a016c8dcd67a4c0b77d74ef164bed3c06763a1f39a86fcb3eee46d84a",
+      "afterSha256": "0b983482f9473eccfe5a8d4ed510031f0be3aa833c5d0427297983e7460d29ef",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r27-cli-commands-l-q-effect-tsgo-readme-parser",
+      "beforeSha256": "bca039dba8ed98ac983e6ae92b53e059063605002faea6c1f6cfc965d4775069",
+      "afterSha256": "63158795d861bceeec8da3a8cc10369389e73bcfef3ae98a0d145946ce8d9b39",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "beforeSha256": "6c1d564a814d2c439cf2244c347a9f6de1694f8abcd028203c39e3a7eefc4c05",
+      "afterSha256": "5fd4292fd7a714f24126d90b7a8cff1ca32e6fb33093b1a00cc200e1389f1754",
+      "kind": "qualified-design-refresh"
+    },
+    {
+      "id": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+      "beforeSha256": "a4f8b6252d321619f56d4b3a6169fe82743b9f4d2bf2555436aa499342f22193",
+      "afterSha256": "5f56e424e018a3dc1e3ee305a7a8696faaeb4026e46d8c1bedcf6f7ae4c49c4d",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+      "beforeSha256": "e418e74ea1b1f0b1b55cff13b38846cd5637bcdc80b583c1f42f7735d4136d4b",
+      "afterSha256": "ac80bf94fe9fac91b2f2a316b70753300f6029b264d30d596ba90fd59997f58d",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "beforeSha256": "cd825c5bc6fb377f647a329ae7446c91e24d0f8fad4f6582b72333b57aa3a569",
+      "afterSha256": "d798616cb9c588535eab53af3dfdd89480b878477cf1db4a14b81e28a712e726",
+      "kind": "qualified-design-refresh"
+    },
+    {
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "beforeSha256": "2ac2c960cab03463b289dabe0adf14d864ee6ce0cce6eb29a37f6f654542a9ab",
+      "afterSha256": "432eb6149bf42393de658206672c6f6b662ebc93446e4259a01440caba6f5dbc",
+      "kind": "qualified-design-refresh"
+    },
+    {
+      "id": "r29-cli-commands-l-q-collect-output-capture-options",
+      "beforeSha256": "ed0ad6cbc7b6f22d9665b68d6b1d0209aff89841ceeb9539f8d9d864c9f6a80a",
+      "afterSha256": "0123451a32d073df926c9127c3df81046c2b7fe7b108826e08a5972b05e37bba",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+      "beforeSha256": "2f4c6a50ab0657c4c7b51a2e1179fb65a5401b5dba780b5d86a8265e46f39501",
+      "afterSha256": "b88f67be0b60aa277aa4d68f5774838b4de1b4e302385b658b5a2b2b3c77e73d",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+      "beforeSha256": "f47d6eb7a9af0f3a0fed5f256db28111aa767d934df262bdef5760cdbec4dfe8",
+      "afterSha256": "0f2987a805efa9fbd851eef91016bc40cbd0088db112479e98e514c666064454",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r29-cli-commands-l-q-pre-push-ci-lane-plan",
+      "beforeSha256": "0886b22a83e93f01d2800a529cc532f4b8647d3e36a0915d2a4fdee4c0c56d6b",
+      "afterSha256": "320c7e94cc8db664d124f99268e895e30237c1b134cd33d092c0f00b33fa258b",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
+      "beforeSha256": "7eeb9240e507e80e9196d3c1147a63456cdddea2f7699f69d93dca4b5dd79acd",
+      "afterSha256": "461d648ac9ff1e02c51a72244172237e9f08cca134747c8dfffc80372cfebdd8",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+      "beforeSha256": "e7720638e659d5940d5efff02e431de6ccd730aa6268cddd34348c0459c4bc8d",
+      "afterSha256": "8fc4b6ba5340407212f24cb3a5409e9ae140e63d96df5f20c5429b59f0db4ff6",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+      "beforeSha256": "d3fb622e3bc95ef40c819c2699b10f5cae0c31474f3add443724b7695ceada57",
+      "afterSha256": "1e80ccd9fb146071266234fe7fdffe6509286c024af43d00f7148c2e0e182ea8",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+      "beforeSha256": "7c3320c210f8900c8663098d6535a89167c2079b04c3d94c2ea95b3a673418d5",
+      "afterSha256": "49211c0dd4999e6823170579d3a8f1c8768767fdf830b4854e5fb3b20841f661",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+      "beforeSha256": "033f95960428eb2e14bc5780bf4844584ba8ec5cc0daa8c39e73cb4d75cacf50",
+      "afterSha256": "0cabe3eec3cf66fb2f7bd332f91b9221e88018234acd701027264f445ca6028c",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+      "beforeSha256": "48ba63f1782c915d6dbd1b653796a4c9c786b92942875fb59b8091b9740354c0",
+      "afterSha256": "36401867ef0a777b6d2597cf9d5856ab940d8f045010a9fa21f7b59bbbf78486",
+      "kind": "disqualified-source-locator"
+    },
+    {
+      "id": "r3-tooling-jsdoc-tsdoc-tag-presence",
+      "beforeSha256": "f556b3bdc140e4223fd9e4fabfcab5e2240ffd98df99ed98c7ca7d69a555b0f0",
+      "afterSha256": "639d2f36823bdcf15a68accf91aec8b47bcf6ca2479c1ba94203219703ff41dc",
+      "kind": "disqualified-source-locator"
+    }
+  ],
+  "archives": [
+    {
+      "file": "goals/boolean-creep/history/pre-r30-main-bed30/inventory.before.jsonl",
+      "sha256": "88733c9dfe96f2cd531589206cab65daeecc87507f4534138f87b548b95a11e8"
+    },
+    {
+      "file": "goals/boolean-creep/history/pre-r30-main-bed30/inventory.after.jsonl",
+      "sha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d"
+    }
+  ],
+  "sourceBindings": [
+    {
+      "file": "AGENTS.md",
+      "sha256": "0f4a97e3f02d3dae990e9f1b762e42ccf97770db28cae0f08588da689f465762"
+    },
+    {
+      "file": "packages/tooling/tool/cli/package.json",
+      "sha256": "5ed96d77de203949878f319238078633506324ab7c38060065b735041f2b2a69"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "a7684f116d768a9a893b167625c4a26a31ece9f0acdc7cad6126286625cac1d7"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "sha256": "8155432992426283cd9a5741298a06a97d96bce82793a2b1003b5091c7423305"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "1e35023d2db8e3c4830f4b793e955cd90a45058e7a9431b2c11f4fb086965311"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "sha256": "71650c60cc8d9535d29432765d2480a72da487098cacfcd8ed02c5a4181ac6ba"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "6db7f2d95fa36cd8a7055ea09e266c95602d4374b451ac25ad3dfefb23768534"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/index.ts",
+      "sha256": "b46e2477044b422247254f79e7ac5756c46995059d3674d5f7fc04f19d39f864"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "sha256": "d2332d334480350f38cfa2773449453da5dc16254c0cbc6da7cb5b5f5ec4e9a7"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+      "sha256": "d9423b4a69971e25a74c7d1923a65429269afd6b2ce9436a03a7cd67464559ef"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "sha256": "893b87018428a9a2733a6e707ac9b84a2cbe92cbdaab715e8d0a1fb49881f7b6"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "sha256": "12067d83b03ab2062faf5c1b5cc8d09ded327fdeb7ad939ef588e1690d2cbc31"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
+      "sha256": "2551c8a22a43b9b272e196b5c9c440c5a01799bcfaa7b980be2cfa93cb9c64ca"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "sha256": "db1cd299540d7f14cb4d4cdcbc35827da7506c84f78e4ef356626220334be785"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "sha256": "80ba4ed94010b5acf6a9a2eb22fc55625c26f8fb014d3c32b26743e74fc097a7"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/test/Quality.test-kit.ts",
+      "sha256": "90773f97a6eade3fbd50533d637f5de1989ab02f1e1730ac5ff5ea7b2ebb2f8c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+      "sha256": "ef87a43c45dc18333de55e836d4f9a3c2267d0de82f8a9e3b4c86fd19235e759"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "sha256": "92902c60c211f6c7e30e4c71119730be508358843fced072ef0cb61c4449da92"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-command-dispatch.test.ts",
+      "sha256": "27444390800ab671da1d94f674ec25b698f3f9a8b04d8c8cf50a44ca793b4e86"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "sha256": "981a379cb6a4117f962c3b9fef87f042eee0a546d4b2240a3ee51579b23036d6"
+    }
+  ],
+  "nativeEvidence": {
+    "model": "gpt-6-astra",
+    "reasoningEffort": "xhigh",
+    "privateManifestSha256": "87315283cb96a531d2137e62a0a56c7a919d8908068ef117ac421c7728872003",
+    "privateRowDesignMapSha256": "5b4aa2383dcf985608b4a02baa8055dcc35ad39744a45f3ad6dc6262310aa60f",
+    "privateVerificationSha256": "3b14de2045b16c81eca1c21ea131da0fb3b1b9fb473698a3e3ed2ab058ac1d04",
+    "privateHandoffSha256": "d727e481fbfb5a67c6282bfa272cd31ef9ed5f89a02d0bbc8a21bb91e8a0c259",
+    "parentReadAllFourDesigns": true
+  },
+  "preservation": [
+    "Concurrent lane execution and serial wave-order journaling/proof writes.",
+    "Exported decoded test-selection result and removal of obsolete static plans.",
+    "Raw coverage step helper accepts its existing broader inputs.",
+    "Primary and optional JSDoc mirrors retain exact rendering and write order.",
+    "D-row classifications and all inventory statuses/cardinalities/tiers are unchanged."
+  ],
+  "validation": [
+    {
+      "scope": "prepared-inventory",
+      "exitCode": 0,
+      "stdout": "inventory OK: 698 records, 698 unique ids\n",
+      "stderr": ""
+    },
+    {
+      "scope": "prepared-designs",
+      "exitCode": 0,
+      "stdout": "design coverage OK: 141 qualified ids\n",
+      "stderr": ""
+    },
+    {
+      "scope": "installed-inventory",
+      "exitCode": 0,
+      "stdout": "inventory OK: 698 records, 698 unique ids\n",
+      "stderr": ""
+    },
+    {
+      "scope": "installed-designs",
+      "exitCode": 0,
+      "stdout": "design coverage OK: 141 qualified ids\n",
+      "stderr": ""
+    }
+  ],
+  "logicalIndexUnchanged": true,
+  "productSourceChanged": false,
+  "productTestsRun": false,
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "appliedCount": 0
+}

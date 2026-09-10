@@ -1,0 +1,31 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "recordsBefore": 926,
+  "recordsAfter": 933,
+  "inventoryBeforeSha256": "f48948dcf3cd127991f7fd6342ab21d1d940115c0dc7fa61540de7f4a5e000f8",
+  "inventoryAfterSha256": "d65189f0ca9f33023356373a77bbd0d6cc92932815fcb5c0b8f5ca38f59f6b85",
+  "addedQualifiedIds": [
+    "r27-tooling-library-observability-outcomes-dataset-scorecard-presence",
+    "r27-tooling-library-observability-config-snapshots-dataset-presence",
+    "hook-pulse-v1-owned-fields",
+    "ai-metrics-source-attribution-thread-spawn",
+    "ai-metrics-discovered-transcript-file-thread-spawn",
+    "ai-metrics-otlp-turn-export-row-thread-spawn",
+    "ai-metrics-sanitized-transcript-thread-spawn"
+  ],
+  "qualifiedCount": 169,
+  "addedStatus": "confirmed",
+  "designs": "P2 drafting in progress; do not claim full design coverage until every file is validated.",
+  "correctionReceiptSha256": "f7dd3fd6efcc4221d94add0adf60186c7971e43638ab14e1941f5a1eeaaac565",
+  "rawReportSha256": "8997009ff0e3e2876fa145d9443d6ece06bc60a8248c474ffca5900c6dae1494",
+  "kindCorrections": [
+    "r27-tooling-library-observability-outcomes-dataset-scorecard-presence",
+    "r27-tooling-library-observability-config-snapshots-dataset-presence"
+  ],
+  "existingD1InputsRetained": [
+    "ai-metrics-benchmark-run-input-passed-quality-gate",
+    "agent-effectiveness-phoenix-sync-new-options"
+  ],
+  "formalIndependentReview": false
+}

@@ -18,7 +18,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { OpenclawProcessRequest } from "@beep/openclaw/Openclaw.models";
 import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service";
@@ -579,22 +579,25 @@ describe("@beep/openclaw OpenclawCli service", () => {
   it("round-trips the schema-derived CLI result unions asserted above", () => {
     const validationEquivalence = S.toEquivalence(OpenclawConfigValidation);
     const reloadEquivalence = S.toEquivalence(OpenclawSecretsReload);
-    fc.assert(
-      fc.property(
-        S.toArbitrary(OpenclawConfigValidation)(fc),
-        S.toArbitrary(OpenclawSecretsReload)(fc),
-        (validation, reload) => {
-          const validationWire = Result.getOrThrow(encodeOpenclawConfigValidationResult(validation));
-          const reloadWire = Result.getOrThrow(encodeOpenclawSecretsReloadResult(reload));
-          expect(
-            validationEquivalence(Result.getOrThrow(decodeOpenclawConfigValidationResult(validationWire)), validation)
-          ).toBe(true);
-          expect(reloadEquivalence(Result.getOrThrow(decodeOpenclawSecretsReloadResult(reloadWire)), reload)).toBe(
-            true
-          );
-        }
-      ),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(OpenclawConfigValidation), Arbitrary.schema(OpenclawSecretsReload)]),
+          ([validation, reload]) => {
+            const validationWire = Result.getOrThrow(encodeOpenclawConfigValidationResult(validation));
+            const reloadWire = Result.getOrThrow(encodeOpenclawSecretsReloadResult(reload));
+            expect(
+              validationEquivalence(Result.getOrThrow(decodeOpenclawConfigValidationResult(validationWire)), validation)
+            ).toBe(true);
+            expect(reloadEquivalence(Result.getOrThrow(decodeOpenclawSecretsReloadResult(reloadWire)), reload)).toBe(
+              true
+            );
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

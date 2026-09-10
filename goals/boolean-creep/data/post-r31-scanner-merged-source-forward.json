@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "boolean-creep-source-forward/v1",
+  "recordedAt": "2026-09-09T16:26:11.915495+00:00",
+  "previousHead": "c0c1b680ad782d5b6150d14285fa4c0a771382e5",
+  "previousMain": "a2030c8bd9124d1f0de8ae03a1eebbf5f1fa621f",
+  "head": "a51a779f0312c3eab0a73268ffb62ac3572a95c4",
+  "main": "be5b589aa013c8350a4fad5cdfe36a6f6188db1f",
+  "mergedPrerequisitePr": 1059,
+  "packetFiles": 1447,
+  "packetByteDrift": [],
+  "censusSourceChanges": [],
+  "configSha256": "15c9ed8e120de2ee89f759b66010e3d2a1bcf44f960678f958da6b9565711873",
+  "schedulerTestSha256": "6fe705fb7c854116a5e83ce3334451f9c12f569ae4d60b733a7c630d9b427299",
+  "conflictResolution": {
+    "conflictedPath": ".gitleaks.toml",
+    "reason": "The branch retained the older top-level targeted allowlists; merged PR1059 uses portable per-rule allowlists.",
+    "oursSha256": "4bec311f262d6dcc7a4887b5672cab63fea4caa6b88e73c1a7d3a3561a483c36",
+    "mergedMainSha256": "15c9ed8e120de2ee89f759b66010e3d2a1bcf44f960678f958da6b9565711873",
+    "exactRulePathLinePairs": 46,
+    "pairMultisetEqual": true,
+    "preexistingConfigurationPrefixByteEqual": true,
+    "resolution": "Use exact verified merged-main configuration; no change to rules, paths, regexes or targeted evidence pairs beyond the already landed syntax migration."
+  },
+  "verification": {
+    "commitHooks": "passed: gitleaks, typos, biome, commitlint",
+    "censusSourceEqualsMergedMain": true,
+    "dependencyChanges": false,
+    "fullRepoProofRerun": false
+  },
+  "inventorySha256": "fc4a37c261318d37cc276315d7014c61410277c7802b38806b72ae3a9437fc13",
+  "dryRoundCredit": false,
+  "replacementReviewCredit": false
+}

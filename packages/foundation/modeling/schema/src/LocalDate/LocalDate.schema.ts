@@ -692,7 +692,7 @@ export const daysInMonth: {
 
 export const LocalDateFromString = S.String.pipe(
   S.decodeTo(LocalDate, {
-    decode: SchemaGetter.transformOrFail(decodeLocalDateFromString),
+    decode: SchemaGetter.transformEffect(decodeLocalDateFromString),
     encode: SchemaGetter.transform(encodeLocalDateFromString),
   }),
   $I.annoteSchema("LocalDateFromString", {

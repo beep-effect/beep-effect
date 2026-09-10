@@ -3,7 +3,7 @@ import { SafeObject, SafeObjectFromObjectKeyword } from "@beep/schema/SafeObject
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSafeObject = S.decodeUnknownEffect(SafeObject);
 const decodeUnknownSafeObjectFromObjectKeyword = S.decodeUnknownEffect(SafeObjectFromObjectKeyword);
@@ -11,8 +11,8 @@ const encodeSafeObject = S.encodeEffect(SafeObject);
 const encodeSafeObjectFromObjectKeyword = S.encodeEffect(SafeObjectFromObjectKeyword);
 const isSafeObject2 = S.is(SafeObject);
 
-const SafeObjectArbitrary = S.toArbitrary(SafeObject)(fc);
-const SafeObjectFromObjectKeywordArbitrary = S.toArbitrary(SafeObjectFromObjectKeyword)(fc);
+const SafeObjectArbitrary = Arbitrary.schema(SafeObject);
+const SafeObjectFromObjectKeywordArbitrary = Arbitrary.schema(SafeObjectFromObjectKeyword);
 
 describe("SafeObject", () => {
   it.effect(
@@ -66,15 +66,22 @@ describe("SafeObject", () => {
   );
 
   it("derives arbitrary values that round-trip", () => {
-    fc.assert(
-      fc.property(SafeObjectArbitrary, (value) => {
-        expect(isSafeObject2(value)).toBe(true);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([SafeObjectArbitrary]),
+          ([value]) => {
+            expect(isSafeObject2(value)).toBe(true);
 
-        const encoded = Effect.runSync(encodeSafeObject(value));
-        expect(Effect.runSync(decodeUnknownSafeObject(encoded))).toEqual(value);
-      }),
-      fcRuns(100)
-    );
+            const encoded = Effect.runSync(encodeSafeObject(value));
+            expect(Effect.runSync(decodeUnknownSafeObject(encoded))).toEqual(value);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
@@ -148,12 +155,19 @@ describe("SafeObjectFromObjectKeyword", () => {
   });
 
   it("derives arbitrary safe objects that round-trip", () => {
-    fc.assert(
-      fc.property(SafeObjectFromObjectKeywordArbitrary, (value) => {
-        const encoded = Effect.runSync(encodeSafeObjectFromObjectKeyword(value));
-        expect(Effect.runSync(decodeUnknownSafeObjectFromObjectKeyword(encoded))).toEqual(value);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([SafeObjectFromObjectKeywordArbitrary]),
+          ([value]) => {
+            const encoded = Effect.runSync(encodeSafeObjectFromObjectKeyword(value));
+            expect(Effect.runSync(decodeUnknownSafeObjectFromObjectKeyword(encoded))).toEqual(value);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

@@ -7,7 +7,6 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import * as O from "@beep/utils/Option";
 import {
   Effect,
   MutableHashSet as MutableHashSet_,
@@ -198,31 +197,6 @@ export const MutableHashSetFromSelf = <Value extends S.Top>(value: Value): Mutab
             encode: A.fromIterable,
           })
         ),
-      toArbitrary:
-        ([value]) =>
-        (fc, ctx) => {
-          const constraint = ctx.constraint ?? {};
-          const constraints = O.getSomesStruct({
-            minLength: O.fromUndefinedOr(constraint.minLength),
-            maxLength: O.fromUndefinedOr(constraint.maxLength),
-          });
-          const minLength = constraints.minLength ?? 0;
-          const terminalValues =
-            minLength === 0
-              ? fc.constant<Array<Value["Type"]>>([])
-              : value.terminal === undefined
-                ? undefined
-                : fc.array(value.terminal, { ...constraints, maxLength: minLength });
-          const values = fc.array(value.arbitrary, constraints);
-          const arbitraryValues =
-            terminalValues === undefined || ctx.recursion === undefined
-              ? values
-              : fc.oneof(ctx.recursion, terminalValues, values);
-          return {
-            arbitrary: arbitraryValues.map(MutableHashSet_.fromIterable),
-            terminal: terminalValues?.map(MutableHashSet_.fromIterable),
-          };
-        },
       toEquivalence: ([value]) => makeMutableHashSetEquivalence(value),
       toFormatter:
         ([value]) =>

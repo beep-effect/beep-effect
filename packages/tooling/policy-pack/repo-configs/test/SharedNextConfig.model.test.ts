@@ -17,7 +17,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { NextConfig } from "next";
 
 const decodeSecureHeadersConfigResult = S.decodeResult(SecureHeadersConfig);
@@ -175,18 +175,42 @@ describe("Shared Next.js config preset", () => {
   );
 
   it("round-trips defaulted shared feature schemas", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(BeepNextMdxConfig)(fc), (value) => expectRoundTrip(BeepNextMdxConfig, value)),
-      fcRuns(25)
-    );
-    fc.assert(
-      fc.property(S.toArbitrary(BeepNextPwaConfig)(fc), (value) => expectRoundTrip(BeepNextPwaConfig, value)),
-      fcRuns(25)
-    );
-    fc.assert(
-      fc.property(S.toArbitrary(SecureHeadersConfig)(fc), (value) => expectRoundTrip(SecureHeadersConfig, value)),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(BeepNextMdxConfig)]),
+          ([value]) => {
+            expectRoundTrip(BeepNextMdxConfig, value);
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(BeepNextPwaConfig)]),
+          ([value]) => {
+            expectRoundTrip(BeepNextPwaConfig, value);
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(SecureHeadersConfig)]),
+          ([value]) => {
+            expectRoundTrip(SecureHeadersConfig, value);
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("composes plugin helpers in explicit left-to-right order", () => {

@@ -371,11 +371,11 @@ export class Freshbooks extends Context.Service<Freshbooks, FreshbooksShape>()($
   static readonly layer: Layer.Layer<Freshbooks, FreshbooksError, FreshbooksTokenStore> = Layer.effect(
     Freshbooks,
     Effect.gen(function* () {
-      const clientId = yield* Config.string("FRESHBOOKS_CLIENT_ID");
-      const clientSecret = yield* Config.redacted("FRESHBOOKS_CLIENT_SECRET");
-      const redirectUri = yield* Config.string("FRESHBOOKS_REDIRECT_URI");
-      const apiUrl = yield* Config.string("FRESHBOOKS_API_URL").pipe(Config.option);
-      const authUrl = yield* Config.string("FRESHBOOKS_AUTH_URL").pipe(Config.option);
+      const clientId = yield* Config.String("FRESHBOOKS_CLIENT_ID");
+      const clientSecret = yield* Config.Redacted("FRESHBOOKS_CLIENT_SECRET");
+      const redirectUri = yield* Config.String("FRESHBOOKS_REDIRECT_URI");
+      const apiUrl = yield* Config.String("FRESHBOOKS_API_URL").pipe(Config.option);
+      const authUrl = yield* Config.String("FRESHBOOKS_AUTH_URL").pipe(Config.option);
       const client = yield* HttpClient.HttpClient;
       const store = yield* FreshbooksTokenStore;
       const resolved = yield* resolveConfig(

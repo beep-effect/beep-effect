@@ -3,7 +3,7 @@ import { Int64, Int64FromString, isInt64 } from "@beep/schema/Int";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeInt64 = S.decodeEffect(Int64);
 const decodeUnknownInt64 = S.decodeUnknownEffect(Int64);
@@ -13,7 +13,7 @@ const isInt642 = S.is(Int64);
 
 const int64Minimum = -BigInt("9223372036854775808");
 const int64Maximum = BigInt("9223372036854775807");
-const Int64Arbitrary = S.toArbitrary(Int64)(fc);
+const Int64Arbitrary = Arbitrary.schema(Int64);
 const SignedInt64 = S.BigInt.check(isInt64());
 const decodeSignedInt64 = S.decodeUnknownEffect(SignedInt64);
 
@@ -56,14 +56,21 @@ describe("Int64", () => {
   );
 
   it("derives schema arbitrary values inside the signed 64-bit range", () => {
-    fc.assert(
-      fc.property(Int64Arbitrary, (value) => {
-        expect(isInt642(value)).toBe(true);
-        expect(value >= int64Minimum).toBe(true);
-        expect(value <= int64Maximum).toBe(true);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Int64Arbitrary]),
+          ([value]) => {
+            expect(isInt642(value)).toBe(true);
+            expect(value >= int64Minimum).toBe(true);
+            expect(value <= int64Maximum).toBe(true);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 

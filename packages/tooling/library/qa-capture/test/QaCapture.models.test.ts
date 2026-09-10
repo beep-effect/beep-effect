@@ -42,18 +42,25 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schema): void => {
   const encode = S.encodeSync(schema);
   const decode = S.decodeUnknownSync(schema);
 
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      expect(Equal.equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("@beep/qa-capture models", () => {

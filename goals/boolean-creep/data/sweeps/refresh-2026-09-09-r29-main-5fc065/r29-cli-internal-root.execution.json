@@ -1,0 +1,22 @@
+{
+  "lane": "r29-cli-internal-root",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:59:12.571900+00:00",
+  "finished": "2026-09-09T11:11:34.083126+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-internal-root.jsonl`\n\nCounts: **1 confirmed**, **1 disqualified**. Validator: inventory OK.\n\nCoverage: **yes** \u2014 `bin-main.ts`, `bin.ts`, `index.ts`, and every authored file under `packages/tooling/tool/cli/src/internal`.\n\nSeed drift: `DiscoveredCandidate` first Boolean is now `classified` at line **66** (canonical/seed line 65 is `idleSinceMillis`). Members, 312/13 rows, and writers are unchanged; reported as a line correction under the stable id. The other 17 scoped seeds still exist with the claimed owners, members, and classifications; not re-recorded.\n\nNo unresolved source question.\n\nOut-of-net (not recorded): `assertExclusiveModeFlags` `{write,check}` (anonymous function flag parameters); `Flags.ts` `json`/`verbose`/`dry-run`/`force` Command handles; `enforceRatchet` `present` (single Boolean on an excluded input carrier).",
+  "transcriptSha256": "a8a8fad9da3ce5014e0cd89a353bd15859314f46257539313c580dd82b115934",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 2 records, 2 unique ids\n"
+}

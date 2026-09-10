@@ -8,9 +8,9 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Response from "effect/unstable/ai/Response";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand } from "@/canary/Command";
@@ -229,10 +229,11 @@ const makeGoldTestLayer = (
 
 describe("C0 gold proposer", () => {
   it("generates schema-valid corpus paper ids", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(CorpusPaperId)(fc), (paperId) => isCorpusPaperId(paperId)),
-      { numRuns: 20 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.schema(CorpusPaperId), (paperId) => isCorpusPaperId(paperId), { runs: 20 })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("keeps the committed E6 annotation and refreeze receipt coherent", () =>

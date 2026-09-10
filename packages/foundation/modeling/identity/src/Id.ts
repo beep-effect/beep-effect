@@ -1069,7 +1069,7 @@ export interface IdentityComposer<
    * **Details**
    *
    * Supply the declared schema and schema type-parameter tuple so
-   * declaration-only hooks such as `toArbitrary` and `toEquivalence` receive
+   * declaration-only hooks such as `toCodecArbitrary` and `toEquivalence` receive
    * their real contextual types.
    *
    * **Example** (Supply a declaration-only equivalence hook)

@@ -64,7 +64,7 @@ import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 
 const externalUrl = pipe(
-  Effect.runSync(Config.option(Config.string("BEEP_EPISTEMIC_CONTRADICTION_PG_URL"))),
+  Effect.runSync(Config.option(Config.String("BEEP_EPISTEMIC_CONTRADICTION_PG_URL"))),
   O.getOrElse(() => "")
 );
 

@@ -1,0 +1,17 @@
+{
+  "lane": "r25-law-practice-domain",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:11:06.511925+00:00",
+  "finished": "2026-09-08T22:20:01.191375+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-law-practice-domain.jsonl` \u2014 confirmed 0, disqualified 3. Lane covered (`packages/law-practice/domain/src`; tests/generated excluded). All 22 seed declarations still present; no symbol/member drift.",
+  "transcriptSha256": "79c7ab14a907a5c1cd76fd14a5d607d7de06dedcfb7b5debf817f2233efc3831",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

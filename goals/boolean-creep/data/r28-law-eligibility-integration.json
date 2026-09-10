@@ -1,0 +1,35 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeInventorySha256": "342ff1926309b1dfe1d065213577b4bcc68fe57262d52c157664780e8ef6e8a9",
+  "afterInventorySha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "beforeCount": 930,
+  "afterCount": 921,
+  "qualifiedWithdrawals": [
+    "effect-import-rules-strict-failure",
+    "r2-tooling-law-scan-strict-failure",
+    "r2-tooling-no-native-runtime-strict-failure",
+    "r3-tooling-terse-effect-file-flags",
+    "skills-run-mode",
+    "terse-effect-rules-strict-failure"
+  ],
+  "disqualifiedWithdrawals": [
+    "r2-tooling-effect-fn-strict-check-failure",
+    "r2-tooling-frozen-grant-set-strict-check-failure",
+    "r25-cli-commands-l-q-terse-effect-informational-severity"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-law-eligibility-withdrawals.jsonl",
+  "rowArchiveSha256": "58d0d45ea4777af83df44c5d25c8a7176e7e1c008befbcb26637b045d279e42d",
+  "designArchiveSha256": {
+    "history/designs/2026-09-09-r28-law-eligibility/effect-import-rules-strict-failure.md": "1375c2930d674baeb29563b3370547df70780e8bc304875b319396d846e3e095",
+    "history/designs/2026-09-09-r28-law-eligibility/r2-tooling-law-scan-strict-failure.md": "774edd4a8f72a9ae8917b6fb09ac807bd59b031ab919099e9b0aa41de0287d5e",
+    "history/designs/2026-09-09-r28-law-eligibility/r2-tooling-no-native-runtime-strict-failure.md": "c3d858e3d1a11ef7a542dfbc7be5c3463262d82bb8ed508c25a34024feafa294",
+    "history/designs/2026-09-09-r28-law-eligibility/r3-tooling-terse-effect-file-flags.md": "2d1f59dc5b455bfec63a6caa380e83df7925b72ce23be1596391cb5b743688bd",
+    "history/designs/2026-09-09-r28-law-eligibility/skills-run-mode.md": "266c375f0bc8bced3e7677f1771f11b897bb171fa778dd94eceba77135662c62",
+    "history/designs/2026-09-09-r28-law-eligibility/terse-effect-rules-strict-failure.md": "46fb68cfbbc6dc25863abfb69dffda8c9e08c4b6403443e13d5fa7c60eebb74d",
+    "history/designs/2026-09-09-r28-law-eligibility/family-cli-mode-flags.md": "bb36d2c736bbde6a4a4838152d2749dbb5bec69d5bcab8dd31f6e64d79af53c3"
+  },
+  "audit": "data/design-refresh-2026-09-09-r28-laws-skills-impact.md",
+  "auditSha256": "8ce8a65d455682fce55159203f3c05bcd03b488d32539ee7eb85f6ccf44520a2",
+  "note": "One qualified and one D carrier were removed upstream. Remaining withdrawals correct earlier owner eligibility; no new status or implementation credit. R27 artifacts unchanged."
+}

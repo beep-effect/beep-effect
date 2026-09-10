@@ -2,9 +2,10 @@ import { fcRuns } from "@beep/fc-runs";
 import * as GraphSchema from "@beep/schema/Graph";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as Graph_ from "effect/Graph";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeGraphSchemaEdgeIndexSync = S.decodeSync(GraphSchema.EdgeIndex);
 const decodeGraphSchemaEdgeIndexFromStringSync = S.decodeSync(GraphSchema.EdgeIndexFromString);
@@ -15,9 +16,9 @@ const isGraphSchemaEdgeIndex = S.is(GraphSchema.EdgeIndex);
 const isGraphSchemaGraphKind = S.is(GraphSchema.GraphKind);
 const isGraphSchemaNodeIndex = S.is(GraphSchema.NodeIndex);
 
-const NodeIndexArbitrary = S.toArbitrary(GraphSchema.NodeIndex)(fc);
-const EdgeIndexArbitrary = S.toArbitrary(GraphSchema.EdgeIndex)(fc);
-const GraphKindArbitrary = S.toArbitrary(GraphSchema.GraphKind)(fc);
+const NodeIndexArbitrary = Arbitrary.schema(GraphSchema.NodeIndex);
+const EdgeIndexArbitrary = Arbitrary.schema(GraphSchema.EdgeIndex);
+const GraphKindArbitrary = Arbitrary.schema(GraphSchema.GraphKind);
 
 describe("Graph indices", () => {
   it("brands non-negative integer node and edge indices", () => {
@@ -38,14 +39,21 @@ describe("Graph indices", () => {
   });
 
   it("derives valid graph primitives from their source schemas", () => {
-    fc.assert(
-      fc.property(NodeIndexArbitrary, EdgeIndexArbitrary, GraphKindArbitrary, (nodeIndex, edgeIndex, graphKind) => {
-        expect(isGraphSchemaNodeIndex(nodeIndex)).toBe(true);
-        expect(isGraphSchemaEdgeIndex(edgeIndex)).toBe(true);
-        expect(isGraphSchemaGraphKind(graphKind)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([NodeIndexArbitrary, EdgeIndexArbitrary, GraphKindArbitrary]),
+          ([nodeIndex, edgeIndex, graphKind]) => {
+            expect(isGraphSchemaNodeIndex(nodeIndex)).toBe(true);
+            expect(isGraphSchemaEdgeIndex(edgeIndex)).toBe(true);
+            expect(isGraphSchemaGraphKind(graphKind)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 

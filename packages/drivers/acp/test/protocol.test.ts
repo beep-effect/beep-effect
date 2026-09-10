@@ -14,7 +14,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import {
   encodeJsonl,
@@ -41,19 +41,21 @@ const decodeExtRequest = Schema.decodeEffect(Schema.fromJsonString(ExtRequest));
 const decodeRequestPermissionResponse = Schema.decodeEffect(Schema.fromJsonString(RequestPermissionResponse));
 const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonString(SessionCancelNotification));
 const encodeRequestPermissionResponse = Schema.encodeEffect(Schema.fromJsonString(RequestPermissionResponse));
-const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification)(fc);
-const RequestPermissionResponseArbitrary = Schema.toArbitrary(RequestPermissionResponse)(fc);
-const AcpProtocolLogEventArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLogEvent)(fc);
-const AcpProtocolLoggingOptionsArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLoggingOptions)(fc);
-const AcpIncomingNotificationArbitrary = Schema.toArbitrary(AcpProtocol.AcpIncomingNotification)(fc);
-const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError)(fc).filter((error) =>
-  AcpError.AcpError.match(error, {
-    AcpProcessExitedError: (failure) => O.isNone(failure.cause),
-    AcpProtocolParseError: (failure) => O.isNone(failure.cause),
-    AcpRequestError: () => true,
-    AcpSpawnError: (failure) => O.isNone(failure.cause),
-    AcpTransportError: (failure) => O.isNone(failure.cause),
-  })
+const SessionCancelNotificationArbitrary = Arbitrary.schema(SessionCancelNotification);
+const RequestPermissionResponseArbitrary = Arbitrary.schema(RequestPermissionResponse);
+const AcpProtocolLogEventArbitrary = Arbitrary.schema(AcpProtocol.AcpProtocolLogEvent);
+const AcpProtocolLoggingOptionsArbitrary = Arbitrary.schema(AcpProtocol.AcpProtocolLoggingOptions);
+const AcpIncomingNotificationArbitrary = Arbitrary.schema(AcpProtocol.AcpIncomingNotification);
+const AcpErrorArbitrary = Arbitrary.schema(AcpError.AcpError).pipe(
+  Arbitrary.filter((error) =>
+    AcpError.AcpError.match(error, {
+      AcpProcessExitedError: (failure) => O.isNone(failure.cause),
+      AcpProtocolParseError: (failure) => O.isNone(failure.cause),
+      AcpRequestError: () => true,
+      AcpSpawnError: (failure) => O.isNone(failure.cause),
+      AcpTransportError: (failure) => O.isNone(failure.cause),
+    })
+  )
 );
 const childProcessProtocolTestTimeout = 30_000;
 const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
@@ -94,29 +96,20 @@ const makeHandle = Effect.fn("AcpProtocolTest.makeHandle")(function* (env?: Reco
   return yield* spawner.spawn(command);
 });
 
-it("round-trips schema-derived JSON-RPC notifications and responses through JSON boundaries", () =>
-  fc.assert(
-    fc.property(
-      SessionCancelNotificationArbitrary,
-      RequestPermissionResponseArbitrary,
-      (cancelNotification, permissionResponse) => {
-        const encodedCancelNotification = Effect.runSync(encodeSessionCancelNotification(cancelNotification));
-        const decodedCancelNotification = Effect.runSync(decodeSessionCancelNotification(encodedCancelNotification));
-        assert.equal(
-          Effect.runSync(encodeSessionCancelNotification(decodedCancelNotification)),
-          encodedCancelNotification
-        );
+it.prop(
+  "round-trips schema-derived JSON-RPC notifications and responses through JSON boundaries",
+  [SessionCancelNotificationArbitrary, RequestPermissionResponseArbitrary],
+  ([cancelNotification, permissionResponse]) => {
+    const encodedCancelNotification = Effect.runSync(encodeSessionCancelNotification(cancelNotification));
+    const decodedCancelNotification = Effect.runSync(decodeSessionCancelNotification(encodedCancelNotification));
+    assert.equal(Effect.runSync(encodeSessionCancelNotification(decodedCancelNotification)), encodedCancelNotification);
 
-        const encodedPermissionResponse = Effect.runSync(encodeRequestPermissionResponse(permissionResponse));
-        const decodedPermissionResponse = Effect.runSync(decodeRequestPermissionResponse(encodedPermissionResponse));
-        assert.equal(
-          Effect.runSync(encodeRequestPermissionResponse(decodedPermissionResponse)),
-          encodedPermissionResponse
-        );
-      }
-    ),
-    fcRuns(25)
-  ));
+    const encodedPermissionResponse = Effect.runSync(encodeRequestPermissionResponse(permissionResponse));
+    const decodedPermissionResponse = Effect.runSync(decodeRequestPermissionResponse(encodedPermissionResponse));
+    assert.equal(Effect.runSync(encodeRequestPermissionResponse(decodedPermissionResponse)), encodedPermissionResponse);
+  },
+  { arbitrary: fcRuns(25) }
+);
 
 it("keeps handwritten ACP schema encoded shapes byte-identical", () => {
   assert.deepEqual(
@@ -190,22 +183,22 @@ it("keeps handwritten ACP schema encoded shapes byte-identical", () => {
   );
 });
 
-it("round-trips handwritten ACP schemas through encoded form", () =>
-  fc.assert(
-    fc.property(
-      AcpProtocolLogEventArbitrary,
-      AcpProtocolLoggingOptionsArbitrary,
-      AcpIncomingNotificationArbitrary,
-      AcpErrorArbitrary,
-      (event, options, notification, error) => {
-        assertEncodedRoundTrip(AcpProtocol.AcpProtocolLogEvent, event);
-        assertEncodedRoundTrip(AcpProtocol.AcpProtocolLoggingOptions, options);
-        assertEncodedRoundTrip(AcpProtocol.AcpIncomingNotification, notification);
-        assertEncodedRoundTrip(AcpError.AcpError, error);
-      }
-    ),
-    fcRuns(25)
-  ));
+it.prop(
+  "round-trips handwritten ACP schemas through encoded form",
+  [
+    AcpProtocolLogEventArbitrary,
+    AcpProtocolLoggingOptionsArbitrary,
+    AcpIncomingNotificationArbitrary,
+    AcpErrorArbitrary,
+  ],
+  ([event, options, notification, error]) => {
+    assertEncodedRoundTrip(AcpProtocol.AcpProtocolLogEvent, event);
+    assertEncodedRoundTrip(AcpProtocol.AcpProtocolLoggingOptions, options);
+    assertEncodedRoundTrip(AcpProtocol.AcpIncomingNotification, notification);
+    assertEncodedRoundTrip(AcpError.AcpError, error);
+  },
+  { arbitrary: fcRuns(25) }
+);
 
 it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
   it.effect(

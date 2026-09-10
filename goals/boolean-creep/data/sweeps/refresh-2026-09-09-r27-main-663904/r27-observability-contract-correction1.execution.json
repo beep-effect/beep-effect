@@ -1,0 +1,23 @@
+{
+  "lane": "r27-observability-contract-correction1",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "started": "2026-09-09T03:22:05.947108+00:00",
+  "finished": "2026-09-09T03:27:02.402505+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 9,
+  "qualifiedCandidates": 7,
+  "errors": [],
+  "completionSummary": "I'll create the correction report file first, then independently check the design hypothesis against frozen source, producers, and the original raw ids.Report file is in place. I\u2019ll read the rest of the design hypothesis and independently check the frozen source before emitting any records.I\u2019ll verify HookPulse domains, both codec directions, OTLP join producers, and the sanitized-transcript pair against frozen source before writing any corrected records.HookPulse 162/14 and the OTLP 9/7 join check out. I\u2019ll append corrected records as each carrier is proven.`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-observability-contract-correction1.jsonl` \u2014 confirmed 7, disqualified 2, rejected-without-row 2. Original report preserved. Both assigned roots covered.\n\n**Raw ids:** outcomes-dataset and config-snapshots retained (4/3 and 4/2; kind stays `sibling-state`, not `object-literal`). hook-pulse-v1 retained at 162/14 (three-member projection 18/6; decode+encode both owner-filter; optional absence on owners; canonical foreign-field rejection; shell `.claude/hooks/hook-pulse.sh:310-313`). source-attribution retained 9/5 derived/internal/tier 2. discovered-file retained 9/5 wire. otlp-turn-export-row retained **9/7** (primary/Some false and true via session REPLACE + turn INSERT OR IGNORE; gateway_metadata/None only; Some(threadSpawn) does not imply subagent). scorecard-summary-row **rejected** (one Boolean plus required numbers; same defect as `ai-metrics-scorecard-readiness` and `ai-metrics-scorecard-summary-readiness`). benchmark-run-input retained D1 (Boolean \u00d7 four-literal = 8). benchmark-run-annotation-row **rejected** (`qualityGate` is required `S.String`). phoenix-sync-new-options retained D1 (required `dryRun`, default is on the input class).\n\n**Six withdrawals:** `r2-tooling-hook-pulse-interrupt`, `r2-tooling-qa-beacon-polarity`, `r2-tooling-ai-metrics-thread-spawn-wire`, `r2-tooling-phoenix-insufficient-storage-wire` (cross-declaration members); plus the two readiness count-axis records above.\n\n**Sanitized transcript:** admitted as extra confirmed `ai-metrics-sanitized-transcript-thread-spawn` (`sourceRole`/`threadSpawn` 9/5), not the withdrawn snake/camel seed. `AgentSession.fields` is an attribution schema dependency, not a new carrier.",
+  "transcriptSha256": "9d087fd447ae42995f42078da1f5c996d13a9e2b52708da974c67ecdbcb56d7f",
+  "runnerSha256": "2c1e36bf3314506772ba010b2a691708d9b034b695faf6e4fe2d651aab93f86c",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998",
+  "basePromptSha256": "de90878b4ff827434d129384eb9fdc6401985b89f70b7dd698e2aef4f5865cb9",
+  "extraPromptSha256": "6557f6f5453250204aa70c2e8df97d7068ccfe20a333f8d2e0ca25dc8e7897fd",
+  "auditSha256": "e57ce5bcaa9396177b69ee92b8bb43657ebce68dadaf7738c4396642ee81db1c",
+  "correctsReport": "r27-tooling-library-observability.jsonl",
+  "formalIndependentReview": false
+}

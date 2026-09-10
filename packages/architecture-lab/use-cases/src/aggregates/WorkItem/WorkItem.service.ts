@@ -65,27 +65,32 @@ import type { WorkItemUseCasesShape } from "./WorkItem.use-cases.ts";
 export const toWorkItemActionError: (
   error: WorkItemRepositoryError | DomainWorkItem.WorkItemDomainError
 ) => WorkItemActionError = Match.type<WorkItemRepositoryError | DomainWorkItem.WorkItemDomainError>().pipe(
-  Match.tagsExhaustive({
-    WorkItemRepositoryNotFound: (error) => WorkItemNotFound.make({ workItemId: error.workItemId }),
-    WorkItemRepositoryConflict: (error) =>
-      WorkItemConflict.make({ workItemId: error.workItemId, reason: error.reason }),
-    WorkItemRepositoryUnavailable: () => WorkItemActionFailed.make({ reason: WORK_ITEM_ACTION_UNAVAILABLE_REASON }),
-    WorkItemAlreadyArchived: (error) =>
-      WorkItemActionRejected.make({
-        workItemId: error.workItemId,
-        reason: error._tag,
-      }),
-    WorkItemInvalidTransition: (error) =>
-      WorkItemActionRejected.make({
-        workItemId: error.workItemId,
-        reason: error._tag,
-      }),
-    WorkItemAssigneeRequired: (error) =>
-      WorkItemActionRejected.make({
-        workItemId: error.workItemId,
-        reason: error._tag,
-      }),
-  })
+  Match.tag("WorkItemRepositoryNotFound", (error) => WorkItemNotFound.make({ workItemId: error.workItemId })),
+  Match.tag("WorkItemRepositoryConflict", (error) =>
+    WorkItemConflict.make({ workItemId: error.workItemId, reason: error.reason })
+  ),
+  Match.tag("WorkItemRepositoryUnavailable", () =>
+    WorkItemActionFailed.make({ reason: WORK_ITEM_ACTION_UNAVAILABLE_REASON })
+  ),
+  Match.tag("WorkItemAlreadyArchived", (error) =>
+    WorkItemActionRejected.make({
+      workItemId: error.workItemId,
+      reason: error._tag,
+    })
+  ),
+  Match.tag("WorkItemInvalidTransition", (error) =>
+    WorkItemActionRejected.make({
+      workItemId: error.workItemId,
+      reason: error._tag,
+    })
+  ),
+  Match.tag("WorkItemAssigneeRequired", (error) =>
+    WorkItemActionRejected.make({
+      workItemId: error.workItemId,
+      reason: error._tag,
+    })
+  ),
+  Match.exhaustive
 );
 
 const mutateStoredWorkItem = (

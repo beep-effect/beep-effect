@@ -44,7 +44,7 @@ const makeLanguageModelLayer = (text: string): Layer.Layer<LanguageModel.Languag
     generateObject: () => Effect.die("generateObject is not used by law-practice tests") as never,
     generateText: () => Effect.succeed({ text }) as never,
     streamText: () => Stream.empty as never,
-  } as LanguageModel.Service);
+  } as unknown as LanguageModel.LanguageModel);
 
 const TestLangExtractLayer = LangExtractLayer.pipe(Layer.provide(remoteExtractionPolicyFromConfig));
 

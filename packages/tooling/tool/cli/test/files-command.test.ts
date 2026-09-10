@@ -45,8 +45,8 @@ import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Pa
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import sharp from "sharp";
@@ -87,15 +87,15 @@ const encodeNormalizeManifest = S.encodeUnknownEffect(S.fromJsonString(Normalize
 const encodeProcessRunManifest = S.encodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
 const encodeSourceProcessingRecord = S.encodeUnknownEffect(S.fromJsonString(SourceProcessingRecord));
 const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const DetectBordersReportArbitrary = S.toArbitrary(DetectBordersReport)(fc);
-const ChildArtifactRecordArbitrary = S.toArbitrary(ChildArtifactRecord)(fc);
-const FileProcessingCoverageSummaryArbitrary = S.toArbitrary(FileProcessingCoverageSummary)(fc);
-const FileProcessingFailureRecordArbitrary = S.toArbitrary(FileProcessingFailureRecord)(fc);
-const NormalizeManifestArbitrary = S.toArbitrary(NormalizeManifest)(fc);
-const ImageAuditManifestArbitrary = S.toArbitrary(ImageAuditManifest)(fc);
-const ImageCurationManifestArbitrary = S.toArbitrary(ImageCurationManifest)(fc);
-const ProcessRunManifestArbitrary = S.toArbitrary(ProcessRunManifest)(fc);
-const SourceProcessingRecordArbitrary = S.toArbitrary(SourceProcessingRecord)(fc);
+const DetectBordersReportArbitrary = Arbitrary.schema(DetectBordersReport);
+const ChildArtifactRecordArbitrary = Arbitrary.schema(ChildArtifactRecord);
+const FileProcessingCoverageSummaryArbitrary = Arbitrary.schema(FileProcessingCoverageSummary);
+const FileProcessingFailureRecordArbitrary = Arbitrary.schema(FileProcessingFailureRecord);
+const NormalizeManifestArbitrary = Arbitrary.schema(NormalizeManifest);
+const ImageAuditManifestArbitrary = Arbitrary.schema(ImageAuditManifest);
+const ImageCurationManifestArbitrary = Arbitrary.schema(ImageCurationManifest);
+const ProcessRunManifestArbitrary = Arbitrary.schema(ProcessRunManifest);
+const SourceProcessingRecordArbitrary = Arbitrary.schema(SourceProcessingRecord);
 const decodeChildArtifactRecordLine = (line: string) => decodeChildArtifactRecord(line);
 const decodeFileProcessingFailureRecordLine = (line: string) => decodeFileProcessingFailureRecord(line);
 const decodeSourceProcessingRecordLine = (line: string) => decodeSourceProcessingRecord(line);
@@ -832,81 +832,87 @@ const sha256FileRef = Effect.fn("FilesTest.sha256FileRef")(function* (filePath: 
 
 describe("files command", { concurrent: false }, () => {
   it("round-trips schema-derived report data through JSON command boundaries", () =>
-    fc.assert(
-      fc.property(
-        DetectBordersReportArbitrary,
-        ImageAuditManifestArbitrary,
-        ImageCurationManifestArbitrary,
-        ChildArtifactRecordArbitrary,
-        FileProcessingCoverageSummaryArbitrary,
-        FileProcessingFailureRecordArbitrary,
-        NormalizeManifestArbitrary,
-        ProcessRunManifestArbitrary,
-        SourceProcessingRecordArbitrary,
-        (
-          detectBordersReport,
-          imageAuditManifest,
-          imageCurationManifest,
-          childArtifactRecord,
-          coverageSummary,
-          failureRecord,
-          normalizeManifest,
-          processRunManifest,
-          sourceProcessingRecord
-        ) => {
-          const encodedDetectBordersReport = Effect.runSync(encodeDetectBordersReport(detectBordersReport));
-          const decodedDetectBordersReport = decodeDetectBordersReport(encodedDetectBordersReport);
-          expect(Effect.runSync(encodeDetectBordersReport(decodedDetectBordersReport))).toBe(
-            encodedDetectBordersReport
-          );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            DetectBordersReportArbitrary,
+            ImageAuditManifestArbitrary,
+            ImageCurationManifestArbitrary,
+            ChildArtifactRecordArbitrary,
+            FileProcessingCoverageSummaryArbitrary,
+            FileProcessingFailureRecordArbitrary,
+            NormalizeManifestArbitrary,
+            ProcessRunManifestArbitrary,
+            SourceProcessingRecordArbitrary,
+          ]),
+          ([
+            detectBordersReport,
+            imageAuditManifest,
+            imageCurationManifest,
+            childArtifactRecord,
+            coverageSummary,
+            failureRecord,
+            normalizeManifest,
+            processRunManifest,
+            sourceProcessingRecord,
+          ]) => {
+            const encodedDetectBordersReport = Effect.runSync(encodeDetectBordersReport(detectBordersReport));
+            const decodedDetectBordersReport = decodeDetectBordersReport(encodedDetectBordersReport);
+            expect(Effect.runSync(encodeDetectBordersReport(decodedDetectBordersReport))).toBe(
+              encodedDetectBordersReport
+            );
 
-          const encodedImageAuditManifest = Effect.runSync(encodeImageAuditManifest(imageAuditManifest));
-          const decodedImageAuditManifest = Effect.runSync(decodeImageAuditManifest(encodedImageAuditManifest));
-          expect(Effect.runSync(encodeImageAuditManifest(decodedImageAuditManifest))).toBe(encodedImageAuditManifest);
+            const encodedImageAuditManifest = Effect.runSync(encodeImageAuditManifest(imageAuditManifest));
+            const decodedImageAuditManifest = Effect.runSync(decodeImageAuditManifest(encodedImageAuditManifest));
+            expect(Effect.runSync(encodeImageAuditManifest(decodedImageAuditManifest))).toBe(encodedImageAuditManifest);
 
-          const encodedImageCurationManifest = Effect.runSync(encodeImageCurationManifest(imageCurationManifest));
-          const decodedImageCurationManifest = Effect.runSync(
-            decodeImageCurationManifest(encodedImageCurationManifest)
-          );
-          expect(Effect.runSync(encodeImageCurationManifest(decodedImageCurationManifest))).toBe(
-            encodedImageCurationManifest
-          );
+            const encodedImageCurationManifest = Effect.runSync(encodeImageCurationManifest(imageCurationManifest));
+            const decodedImageCurationManifest = Effect.runSync(
+              decodeImageCurationManifest(encodedImageCurationManifest)
+            );
+            expect(Effect.runSync(encodeImageCurationManifest(decodedImageCurationManifest))).toBe(
+              encodedImageCurationManifest
+            );
 
-          const encodedChildArtifactRecord = Effect.runSync(encodeChildArtifactRecord(childArtifactRecord));
-          const decodedChildArtifactRecord = Effect.runSync(decodeChildArtifactRecord(encodedChildArtifactRecord));
-          expect(Effect.runSync(encodeChildArtifactRecord(decodedChildArtifactRecord))).toBe(
-            encodedChildArtifactRecord
-          );
+            const encodedChildArtifactRecord = Effect.runSync(encodeChildArtifactRecord(childArtifactRecord));
+            const decodedChildArtifactRecord = Effect.runSync(decodeChildArtifactRecord(encodedChildArtifactRecord));
+            expect(Effect.runSync(encodeChildArtifactRecord(decodedChildArtifactRecord))).toBe(
+              encodedChildArtifactRecord
+            );
 
-          const encodedCoverageSummary = Effect.runSync(encodeFileProcessingCoverageSummary(coverageSummary));
-          const decodedCoverageSummary = Effect.runSync(decodeFileProcessingCoverageSummary(encodedCoverageSummary));
-          expect(Effect.runSync(encodeFileProcessingCoverageSummary(decodedCoverageSummary))).toBe(
-            encodedCoverageSummary
-          );
+            const encodedCoverageSummary = Effect.runSync(encodeFileProcessingCoverageSummary(coverageSummary));
+            const decodedCoverageSummary = Effect.runSync(decodeFileProcessingCoverageSummary(encodedCoverageSummary));
+            expect(Effect.runSync(encodeFileProcessingCoverageSummary(decodedCoverageSummary))).toBe(
+              encodedCoverageSummary
+            );
 
-          const encodedFailureRecord = Effect.runSync(encodeFileProcessingFailureRecord(failureRecord));
-          const decodedFailureRecord = Effect.runSync(decodeFileProcessingFailureRecord(encodedFailureRecord));
-          expect(Effect.runSync(encodeFileProcessingFailureRecord(decodedFailureRecord))).toBe(encodedFailureRecord);
+            const encodedFailureRecord = Effect.runSync(encodeFileProcessingFailureRecord(failureRecord));
+            const decodedFailureRecord = Effect.runSync(decodeFileProcessingFailureRecord(encodedFailureRecord));
+            expect(Effect.runSync(encodeFileProcessingFailureRecord(decodedFailureRecord))).toBe(encodedFailureRecord);
 
-          const encodedNormalizeManifest = Effect.runSync(encodeNormalizeManifest(normalizeManifest));
-          const decodedNormalizeManifest = decodeNormalizeManifest(encodedNormalizeManifest);
-          expect(Effect.runSync(encodeNormalizeManifest(decodedNormalizeManifest))).toBe(encodedNormalizeManifest);
+            const encodedNormalizeManifest = Effect.runSync(encodeNormalizeManifest(normalizeManifest));
+            const decodedNormalizeManifest = decodeNormalizeManifest(encodedNormalizeManifest);
+            expect(Effect.runSync(encodeNormalizeManifest(decodedNormalizeManifest))).toBe(encodedNormalizeManifest);
 
-          const encodedProcessRunManifest = Effect.runSync(encodeProcessRunManifest(processRunManifest));
-          const decodedProcessRunManifest = Effect.runSync(decodeProcessRunManifest(encodedProcessRunManifest));
-          expect(Effect.runSync(encodeProcessRunManifest(decodedProcessRunManifest))).toBe(encodedProcessRunManifest);
+            const encodedProcessRunManifest = Effect.runSync(encodeProcessRunManifest(processRunManifest));
+            const decodedProcessRunManifest = Effect.runSync(decodeProcessRunManifest(encodedProcessRunManifest));
+            expect(Effect.runSync(encodeProcessRunManifest(decodedProcessRunManifest))).toBe(encodedProcessRunManifest);
 
-          const encodedSourceProcessingRecord = Effect.runSync(encodeSourceProcessingRecord(sourceProcessingRecord));
-          const decodedSourceProcessingRecord = Effect.runSync(
-            decodeSourceProcessingRecord(encodedSourceProcessingRecord)
-          );
-          expect(Effect.runSync(encodeSourceProcessingRecord(decodedSourceProcessingRecord))).toBe(
-            encodedSourceProcessingRecord
-          );
-        }
-      ),
-      fcRuns(25)
-    ));
+            const encodedSourceProcessingRecord = Effect.runSync(encodeSourceProcessingRecord(sourceProcessingRecord));
+            const decodedSourceProcessingRecord = Effect.runSync(
+              decodeSourceProcessingRecord(encodedSourceProcessingRecord)
+            );
+            expect(Effect.runSync(encodeSourceProcessingRecord(decodedSourceProcessingRecord))).toBe(
+              encodedSourceProcessingRecord
+            );
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("renders a plain ascii files progress bar when colors are disabled", () => {
     const rendered = renderFilesProgressBar({

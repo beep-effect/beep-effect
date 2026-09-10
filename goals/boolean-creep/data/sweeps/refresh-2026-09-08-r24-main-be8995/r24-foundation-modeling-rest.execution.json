@@ -1,0 +1,14 @@
+{
+  "lane": "r24-foundation-modeling-rest",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "started": "2026-09-08T19:53:24.516543+00:00",
+  "finished": "2026-09-08T20:04:35.607883+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 4,
+  "qualifiedCandidates": 0,
+  "errors": ["Nonterminal diagnostic; inspect the private transcript."],
+  "transcriptSha256": "c575479e3f4f2033cc7c82f78f3ed08e8ba45949c97b059a86d05cd338eef471",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-foundation-modeling-rest.jsonl` \u2014 confirmed 0, disqualified 4. All 11 assigned areas covered.\n\nSeed drift: `Md.escape.ts` `LegacyUrlPolicy` is gone (replaced by empty `CompatibilityUrlPolicy`; `AllowListUrlPolicySpec` still has the three relative flags). Other listed seeds still exist; `ResolvedGlobOptions` is now unexported."
+}

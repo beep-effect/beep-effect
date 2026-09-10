@@ -132,33 +132,31 @@ const toCanonizeDataset: (quads: ReadonlyArray<Quad>) => ReadonlyArray<CanonizeQ
 const fromCanonizeSubject = (subject: CanonizeSubject): Subject =>
   Match.value(subject).pipe(
     Match.withReturnType<Subject>(),
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => makeNamedNode(value.value),
-      BlankNode: (value) => makeBlankNode(value.value),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => makeNamedNode(value.value)),
+    Match.discriminator("termType")("BlankNode", (value) => makeBlankNode(value.value)),
+    Match.exhaustive
   );
 
 const fromCanonizeObject = (object: CanonizeObject): ObjectTerm =>
   Match.value(object).pipe(
     Match.withReturnType<ObjectTerm>(),
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => makeNamedNode(value.value),
-      BlankNode: (value) => makeBlankNode(value.value),
-      Literal: (value) =>
-        makeLiteral(value.value, value.datatype.value, {
-          ...O.getSomesStruct({ language: O.fromUndefinedOr(value.language) }),
-        }),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => makeNamedNode(value.value)),
+    Match.discriminator("termType")("BlankNode", (value) => makeBlankNode(value.value)),
+    Match.discriminator("termType")("Literal", (value) =>
+      makeLiteral(value.value, value.datatype.value, {
+        ...O.getSomesStruct({ language: O.fromUndefinedOr(value.language) }),
+      })
+    ),
+    Match.exhaustive
   );
 
 const fromCanonizeGraph = (graph: CanonizeGraph): GraphTerm =>
   Match.value(graph).pipe(
     Match.withReturnType<GraphTerm>(),
-    Match.discriminatorsExhaustive("termType")({
-      NamedNode: (value) => makeNamedNode(value.value),
-      BlankNode: (value) => makeBlankNode(value.value),
-      DefaultGraph: () => DefaultGraph.make({ termType: "DefaultGraph", value: "" }),
-    })
+    Match.discriminator("termType")("NamedNode", (value) => makeNamedNode(value.value)),
+    Match.discriminator("termType")("BlankNode", (value) => makeBlankNode(value.value)),
+    Match.discriminator("termType")("DefaultGraph", () => DefaultGraph.make({ termType: "DefaultGraph", value: "" })),
+    Match.exhaustive
   );
 
 const fromCanonizeQuad = (quad: CanonizeQuad): Quad =>

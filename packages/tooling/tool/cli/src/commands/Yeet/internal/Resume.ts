@@ -439,8 +439,8 @@ const sessionCwd = (record: PrSessionRecord, home: string): string =>
 const resolveResumeRecords = Effect.fn("HarnessResumer.resolveRecords")(function* (options: ResumeOptions) {
   const prRef = options.ref;
   const pr = prRef.pr;
-  const cwd = yield* Config.string("PWD").pipe(Config.withDefault("."));
-  const home = yield* Config.string("HOME");
+  const cwd = yield* Config.String("PWD").pipe(Config.withDefault("."));
+  const home = yield* Config.String("HOME");
   const repository = yield* O.match(prRef.repository, {
     onNone: () => detectPrRepository(cwd),
     onSome: Effect.succeed,

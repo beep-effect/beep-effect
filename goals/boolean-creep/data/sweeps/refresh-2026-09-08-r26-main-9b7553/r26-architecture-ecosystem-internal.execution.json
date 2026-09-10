@@ -1,0 +1,17 @@
+{
+  "lane": "r26-architecture-ecosystem-internal",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-09T00:10:57.945354+00:00",
+  "finished": "2026-09-09T00:18:14.363884+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r26-main-9b7553/r26-architecture-ecosystem-internal.jsonl` \u2014 confirmed 0, disqualified 0. All 9 assigned roots covered. Seeds still present; Meta first-boolean line drifted 234\u2192275.",
+  "transcriptSha256": "20686e56e593f1f98467fc6fabc793269f26fe1d3995c217ed26226699e6b0ee",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "9635e7ef6ae5c35bedf49420e61ee6a4893e384797dd5f26d67a1602d3c8dc1c"
+}

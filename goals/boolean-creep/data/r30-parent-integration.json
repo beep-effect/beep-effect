@@ -1,0 +1,196 @@
+{
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "originMainSha": "bed30c6adf3beed7de8538209fbdc84d26a3b8ce",
+  "inventoryBeforeSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "inventoryAfterSha256": "ea376cff64c549eb542d8bc4dc10c5aec519246b0f20a6720a8f9ad5c64a98d1",
+  "records": 738,
+  "qualified": 146,
+  "disqualified": 592,
+  "newQualifiedIds": [
+    "r30-tooling-library-support-open-mode",
+    "r30-tooling-library-support-open-file-descriptor",
+    "r30-cli-commands-l-q-github-check-lane-outcome",
+    "corpus-mail-store-exception-approved-disposition",
+    "r30-cli-yeet-portfolio-index-staged-deletion"
+  ],
+  "newDisqualifiedIds": [
+    "r30-tooling-library-observability-collector-serve-options",
+    "r30-tooling-library-support-test-layer-settings",
+    "r30-tooling-library-support-watch-subscription",
+    "r30-tooling-library-support-temp-directory-scoped-remove-options",
+    "r30-tooling-policy-bundle-analyzer-plugin-options",
+    "r30-tooling-policy-serwist-init-options",
+    "r30-cli-commands-a-c-preservation-dest-partial-exists",
+    "r30-cli-commands-a-c-legacy-word-dest-partial-exists",
+    "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+    "r30-cli-commands-l-q-purge-remove-options",
+    "r30-cli-commands-l-q-fallow-audit-diff-tempdir-remove-options",
+    "r30-cli-commands-l-q-coverage-regression-clean-remove-options",
+    "r30-cli-commands-l-q-check-census-overlay-compiler-options",
+    "r30-cli-commands-d-k-delete-package-tree-remove-options",
+    "r30-cli-commands-d-k-apply-create-captions-tempdir-remove-options",
+    "r30-cli-commands-d-k-apply-normalize-tempdir-remove-options",
+    "r30-cli-commands-d-k-apply-archive-poor-tempdir-remove-options",
+    "r30-cli-commands-d-k-apply-strip-metadata-tempdir-remove-options",
+    "r30-cli-commands-d-k-apply-crop-borders-tempdir-remove-options",
+    "r30-cli-commands-d-k-docgen-aggregate-destination-remove-options",
+    "r30-cli-commands-d-k-match-person-model-store-staging-remove-options",
+    "r30-cli-commands-d-k-match-person-stage-copy-tempdir-remove-options",
+    "r30-cli-commands-d-k-match-person-stage-manifest-tempdir-remove-options",
+    "r30-cli-commands-d-k-match-person-cleanup-staging-remove-options",
+    "r30-cli-commands-d-k-image-curation-json-tempdir-remove-options",
+    "r30-cli-commands-d-k-curate-images-manifest-temp-remove-options",
+    "r30-cli-commands-d-k-curate-images-tempdir-remove-options",
+    "r30-cli-commands-d-k-worker-eval-isolated-dir-create-remove-options",
+    "r30-cli-commands-d-k-worker-eval-isolated-dir-remove-options",
+    "r30-cli-commands-d-k-packet-mutation-empty-repair-root-remove-options",
+    "r30-cli-commands-d-k-match-person-glob-scan-options",
+    "r30-cli-commands-d-k-materialize-canonical-png-options",
+    "r30-cli-commands-d-k-match-person-validate-lock-capture-options",
+    "r30-cli-commands-d-k-match-person-materialize-env-capture-options",
+    "r30-cli-commands-d-k-match-person-execute-worker-capture-options"
+  ],
+  "changedSeedIds": [
+    "practice-kg-closed-world-four-hints",
+    "tsconfig-compiler-options-export",
+    "ts-node-compiler-options",
+    "redirect-permanent",
+    "docgen-config-document-toggles",
+    "r2-apps-ipc-spike-mount-gates",
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip"
+  ],
+  "bundleBindings": [
+    {
+      "bundle": "~/.cache/beep/boolean-creep/r30-memory-filesystem-designs",
+      "manifestSha256": "7fae3475de0f3035d5936308b3d8e1376f82568ea7e3e0c09d5783d70de63143",
+      "qualifiedIds": [
+        "r30-tooling-library-support-open-mode",
+        "r30-tooling-library-support-open-file-descriptor"
+      ]
+    },
+    {
+      "bundle": "~/.cache/beep/boolean-creep/r30-quality-outcome-design",
+      "manifestSha256": "865b332c6266dbc408ad342e058b3de6a0a3e27e4e2037c06a4b14fe80531cac",
+      "qualifiedIds": ["r30-cli-commands-l-q-github-check-lane-outcome"]
+    },
+    {
+      "bundle": "~/.cache/beep/boolean-creep/r30-mail-exception-design",
+      "manifestSha256": "953be2a2a8c623eb7179165d75ab82a3c5f48d0fb13ef972f46420062e06a1ad",
+      "qualifiedIds": ["corpus-mail-store-exception-approved-disposition"]
+    },
+    {
+      "bundle": "~/.cache/beep/boolean-creep/r30-yeet-candidates-design",
+      "manifestSha256": "46ca3bfe2250af478e2bc201e3804d760797e10815eef7c5f8209b4bfd7f77ea",
+      "qualifiedIds": ["r30-cli-yeet-portfolio-index-staged-deletion"]
+    }
+  ],
+  "canonicalInstalled": true,
+  "independentP3Approval": false,
+  "applied": 0,
+  "kind": "boolean-creep-parent-integration/v1",
+  "transactionRole": "Expected result, activated only by the parent installation that publishes this receipt.",
+  "tier1": 115,
+  "tier2": 31,
+  "historicalReviewed": 23,
+  "designed": 123,
+  "D1": 382,
+  "D2": 210,
+  "rawDispositionCounts": {
+    "newQualified": 5,
+    "newDisqualified": 35,
+    "existingCorrection": 2,
+    "rejectedOrNonAdmitted": 8
+  },
+  "files": [
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "ea376cff64c549eb542d8bc4dc10c5aec519246b0f20a6720a8f9ad5c64a98d1",
+      "previousSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d"
+    },
+    {
+      "file": "goals/boolean-creep/data/r30-ancestry-local-tip-hold.md",
+      "sha256": "bf0ae641f621cd2bef7e912f841f826da538261f0f2960732160b00455a5a3cd",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/data/r30-native-adjudications.json",
+      "sha256": "64c36d0d1bb112cadf7584a6e5a6aeafa3289db0847c4be6424b61bb93d77c68",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/data/r30-occupancy-footer-disposition.md",
+      "sha256": "5f18e9290b0f8c6df092c0584eaf37cc929838838bb3bd127ddde4af44705ac3",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/data/r30-parent-dispositions.json",
+      "sha256": "bbaac858dccaf52bbcb7bb91add2619a9f70bbc3b2ad5cc667b5cf91accbf4a4",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/parent-execution-audit.json",
+      "sha256": "2588b6a3b6655d95fb599c42bf799007928d0ba0d669af69e061d88a10514b7c",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/reconciliation.md",
+      "sha256": "e382aa3312f7211673274b1ed9c83797b7174c15426b9fbe311e979d0aa0867a",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/designs/corpus-mail-store-exception-approved-disposition.md",
+      "sha256": "f2033046f977d6f84366f617c78b2889fd6bef5e3d770895227403ca771b0924",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "sha256": "20c6a96c6289e5daeaae424c4bb6a732c482b3e8bf75cdb343ebf428d9da8bff",
+      "previousSha256": "16080071d446a73f296487d958b28a5e9cdc0719a5179c902e6775bd503019f2"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r28-cli-internal-root-tmpfs-discovered-classified-skip.md",
+      "sha256": "ed7d610942d557972a5348fc18ab266140b9291db2904ae6b5dc676b0b5991ab",
+      "previousSha256": "0e731e5082b4e4e3e372cbe4151c15bf00fd8d602b2925c2d83666a0d8f9fdaf"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "7605a9405427fa41bd29c89417acb497d1838b03221641fecbad838a2bf421f9",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/designs/r30-cli-yeet-portfolio-index-staged-deletion.md",
+      "sha256": "1aaca17891e36d30f1e70c9fa3de765e802c3398ee7c959d76a6742b2a682af6",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/designs/r30-tooling-library-support-open-file-descriptor.md",
+      "sha256": "eb3b32af41684af11ba76ba56ba72a96863f64daa23b359fe8fccfe819598f4e",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/designs/r30-tooling-library-support-open-mode.md",
+      "sha256": "268e398eaa03e533e321e16986fb4a045d4b6b4807fe5c216d421b9d57e59d78",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-09-r30/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "sha256": "16080071d446a73f296487d958b28a5e9cdc0719a5179c902e6775bd503019f2",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-09-r30/r28-cli-internal-root-tmpfs-discovered-classified-skip.md",
+      "sha256": "0e731e5082b4e4e3e372cbe4151c15bf00fd8d602b2925c2d83666a0d8f9fdaf",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-09-r30-after.jsonl",
+      "sha256": "ea376cff64c549eb542d8bc4dc10c5aec519246b0f20a6720a8f9ad5c64a98d1",
+      "previousSha256": null
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-09-r30-before.jsonl",
+      "sha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+      "previousSha256": null
+    }
+  ]
+}

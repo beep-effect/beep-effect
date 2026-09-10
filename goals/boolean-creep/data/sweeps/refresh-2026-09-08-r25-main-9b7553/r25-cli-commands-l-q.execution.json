@@ -1,0 +1,17 @@
+{
+  "lane": "r25-cli-commands-l-q",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:31:13.530183+00:00",
+  "finished": "2026-09-08T22:41:20.277899+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 7,
+  "qualifiedCandidates": 2,
+  "errors": [],
+  "completionSummary": "ort file is in place. Next I\u2019ll grep the lane for boolean clusters and list files so we can group by scope.Report file is created. I\u2019ll list every assigned root and hunt clustered booleans, skipping already-recorded member sets.I\u2019ll cluster consecutive boolean members with a bounded scan, then read those scopes against the already-recorded skip list.The skip list covers many known clusters. I\u2019ll now parse structs, return objects, and sibling locals for anything not already recorded.Inventory already covers most named clusters. I\u2019ll inspect files with no prior records and leftover members in recorded declarations.`enableEvictions`/`disableEvictions` looks like a real exclusive pair. I\u2019ll read those command option clusters next.I\u2019ve decided the residue clusters. Next I\u2019ll append each JSONL record and check seed drift.goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-cli-commands-l-q.jsonl \u2014 confirmed 2, disqualified 5. Covered Labs, Laws, Lint, Purge, Qa, Quality. Seeds still present; drift: `runTerseEffectRules.fileFlags` gained `fileHasInformationalCandidate`; `CoverageTaskOptions` leftover `replaceAll`; `tmpfsReapCommand` now ~3522; `isLawSourcePath` now 2371.",
+  "transcriptSha256": "db32997f4b4ef7f2d9fb7bfaaf1c5b3bd0c0fdb1080a9eae1cb7d47f66f6132a",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

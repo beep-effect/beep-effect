@@ -41,10 +41,12 @@ export const renderExtractFramesEvent: {
     event: FFmpegEvent
   ): Effect.fn.Return<void, never> {
     return yield* Match.value(event).pipe(
-      Match.discriminators("kind")({
-        completed: (event) => pipe(renderCompletedProgress(label, event.frameCount), terminal.display, Effect.ignore),
-        progress: (event) => pipe(renderProgressBar(label, event), terminal.display, Effect.ignore),
-      }),
+      Match.discriminator("kind")("completed", (event) =>
+        pipe(renderCompletedProgress(label, event.frameCount), terminal.display, Effect.ignore)
+      ),
+      Match.discriminator("kind")("progress", (event) =>
+        pipe(renderProgressBar(label, event), terminal.display, Effect.ignore)
+      ),
       Match.orElse(() => pipe(label, renderInitialProgress, terminal.display, Effect.ignore))
     );
   })

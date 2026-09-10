@@ -55,7 +55,7 @@ import type { TurboCacheValueSource } from "./TurboCache.ts";
  * @since 0.0.0
  */
 export const configStringOptionSync = (name: string): O.Option<string> =>
-  Effect.runSync(Config.option(Config.string(name)));
+  Effect.runSync(Config.option(Config.String(name)));
 
 /**
  * Check whether an optional string config value equals an expected value.
@@ -104,7 +104,7 @@ export const configStringEqualsSync: {
  * @since 0.0.0
  */
 export const configStringOption = (name: string): Effect.Effect<O.Option<string>> =>
-  Config.option(Config.string(name)).pipe(Effect.orElseSucceed(O.none<string>));
+  Config.option(Config.String(name)).pipe(Effect.orElseSucceed(O.none<string>));
 
 /**
  * Read an optional string config value through the `ConfigProvider` service.
@@ -129,7 +129,7 @@ export const configStringOption = (name: string): Effect.Effect<O.Option<string>
  * @since 0.0.0
  */
 export const readOptionalConfigString = (key: string) =>
-  ConfigProvider.ConfigProvider.use(pipe(Config.string(key), Config.option).parse);
+  ConfigProvider.ConfigProvider.use(pipe(Config.String(key), Config.option).parse);
 
 /**
  * Read an optional redacted string config value through the `ConfigProvider`
@@ -150,7 +150,7 @@ export const readOptionalConfigString = (key: string) =>
  * @since 0.0.0
  */
 export const readOptionalRedactedConfigString = (key: string) =>
-  ConfigProvider.ConfigProvider.use(pipe(key, Config.redacted, Config.option).parse);
+  ConfigProvider.ConfigProvider.use(pipe(key, Config.Redacted, Config.option).parse);
 
 /**
  * Read a non-empty string environment value, falling back to a default.

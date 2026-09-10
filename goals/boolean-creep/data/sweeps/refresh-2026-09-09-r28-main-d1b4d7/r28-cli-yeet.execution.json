@@ -1,0 +1,22 @@
+{
+  "lane": "r28-cli-yeet",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T05:27:26.103645+00:00",
+  "finished": "2026-09-09T05:38:00.970245+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-yeet.jsonl`\n\nConfirmed **1**, disqualified **0**. Validator: `inventory OK: 1 records`. Every assigned root under `packages/tooling/tool/cli/src/commands/Yeet` was covered.\n\nThe one recorded row is a seed correction: `yeet-monitor-failed-job-flags` is no longer D1. Production writers never emit `logPending && runCompleted`.\n\nUnchanged eligible seeds were not re-recorded. Line-only drift (owners, members, and class intact): `YeetVerdict` 484\u2192567, `YeetSweepOptions` 64\u219288, `YeetMergeReadyEncoded` 322\u2192362, `SelectYeetMonitorCommandRoute` 503\u2192557, `YeetInboxListOptions` 69\u219270 (`unacked` now lives on parent `YeetInboxListFilter`; `json` at 77), `YeetRunResult` 431\u2192433.\n\nIneligible, not re-recorded: the seven callable/schema-guard seeds (`GateStalenessVerdict.guards`, `YeetMonitorComment.guards`, `isGateInputRelevant.pathGates`, `ProofLedgerRow.guards`, `summarizeRemoteChecks.stateGates`, `runRemoteDeletionStep.outputGates`, `GreptileSignal.authorGates`). `portfolioIndexPublishDisposition` remains an excluded anonymous function-parameter bag.\n\nNo unresolved source question.\n\n\ud83c\udf31 graft saved ~529,600 tokens this turn (31 calls)",
+  "transcriptSha256": "6766e7d9bb0d4d7b35f4d771f894058ba893dbca164197aaec06c688a44546d6",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

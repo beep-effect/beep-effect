@@ -12,7 +12,7 @@ import * as O from "effect/Option";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.string(name)));
+const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.String(name)));
 const configStringEqualsSync = (name: string, expected: string): boolean =>
   pipe(
     configStringOptionSync(name),

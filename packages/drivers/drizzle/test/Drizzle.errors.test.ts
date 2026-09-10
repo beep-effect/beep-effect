@@ -9,7 +9,7 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { DrizzleClient } from "@beep/drizzle";
 
 const decodeDrizzleErrorResult = S.decodeResult(DrizzleError);
@@ -37,9 +37,9 @@ const makeClient = (execute: DrizzleClient["execute"]): DrizzleClient => {
   return client;
 };
 
-const DrizzleErrorContextArbitrary = S.toArbitrary(DrizzleErrorContext)(fc);
-const DrizzleErrorArbitrary = S.toArbitrary(DrizzleError)(fc);
-const DrizzleRowsArbitrary = S.toArbitrary(DrizzleRows)(fc);
+const DrizzleErrorContextArbitrary = Arbitrary.schema(DrizzleErrorContext);
+const DrizzleErrorArbitrary = Arbitrary.schema(DrizzleError);
+const DrizzleRowsArbitrary = Arbitrary.schema(DrizzleRows);
 
 describe("DrizzleError", () => {
   it("constructs the single public tagged driver error", () => {
@@ -343,42 +343,63 @@ describe("DrizzleError", () => {
   });
 
   it("round-trips exported schemas with schema-derived arbitraries", () => {
-    fc.assert(
-      fc.property(DrizzleErrorContextArbitrary, (context) => {
-        const decoded = Result.getOrThrow(
-          encodeDrizzleErrorContextResult(context).pipe(Result.flatMap(decodeUnknownDrizzleErrorContextResult))
-        );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([DrizzleErrorContextArbitrary]),
+          ([context]) => {
+            const decoded = Result.getOrThrow(
+              encodeDrizzleErrorContextResult(context).pipe(Result.flatMap(decodeUnknownDrizzleErrorContextResult))
+            );
 
-        expect(Eq.equals(decoded, context)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+            expect(Eq.equals(decoded, context)).toBe(true);
 
-    fc.assert(
-      fc.property(DrizzleErrorArbitrary, (error) => {
-        const decoded = Result.getOrThrow(
-          error.pipe(encodeDrizzleErrorResult, Result.flatMap(decodeUnknownDrizzleErrorResult))
-        );
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
 
-        expect(decoded._tag).toBe(error._tag);
-        expect(decoded.operation).toBe(error.operation);
-        expect(O.isSome(decoded.cause)).toBe(O.isSome(error.cause));
-        expect(Eq.equals(decoded.query, error.query)).toBe(true);
-        expect(Eq.equals(decoded.params, error.params)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([DrizzleErrorArbitrary]),
+          ([error]) => {
+            const decoded = Result.getOrThrow(
+              error.pipe(encodeDrizzleErrorResult, Result.flatMap(decodeUnknownDrizzleErrorResult))
+            );
 
-    fc.assert(
-      fc.property(DrizzleRowsArbitrary, (rows) => {
-        const decoded = Result.getOrThrow(
-          encodeDrizzleRowsResult(rows).pipe(Result.flatMap(decodeUnknownDrizzleRowsResult))
-        );
+            expect(decoded._tag).toBe(error._tag);
+            expect(decoded.operation).toBe(error.operation);
+            expect(O.isSome(decoded.cause)).toBe(O.isSome(error.cause));
+            expect(Eq.equals(decoded.query, error.query)).toBe(true);
+            expect(Eq.equals(decoded.params, error.params)).toBe(true);
 
-        expect(Eq.equals(decoded, rows)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
+
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([DrizzleRowsArbitrary]),
+          ([rows]) => {
+            const decoded = Result.getOrThrow(
+              encodeDrizzleRowsResult(rows).pipe(Result.flatMap(decodeUnknownDrizzleRowsResult))
+            );
+
+            expect(Eq.equals(decoded, rows)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 

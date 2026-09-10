@@ -1,0 +1,1243 @@
+{
+  "kind": "completed-census-reconciliation-pointer",
+  "round": 28,
+  "updatedAt": "2026-09-09T07:24:27.985878+00:00",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "roundVerdict": "complete-wet-historical-source",
+  "currentDryCredit": 0,
+  "formalIndependentReview": false,
+  "scope": {
+    "frozenMap": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/lane-map.json",
+    "frozenMapSha256": "19b29ac1e1acbf4138645330dd8a82a8ee9407bd3dd410136a22efef8eccb22d",
+    "effectiveFileCount": 3041,
+    "generatedCorrection": "data/r28-generated-scope-correction.json",
+    "generatedCorrectionSha256": "203f15c95554aea6dd33b24bfd95f910b6155f3732e94c5f9076a4583c1e9798"
+  },
+  "canonicalSnapshot": {
+    "path": "data/inventory.jsonl",
+    "sha256": "7e37a70f69587d2e324b58c4a1531ec12b6b68cfb8105b24ec55fd7d34d58341",
+    "records": 674,
+    "qualified": 139,
+    "statuses": {
+      "reviewed": 23,
+      "designed": 116,
+      "disqualified": 535
+    },
+    "disqualified": {
+      "D2": 166,
+      "D1": 369
+    }
+  },
+  "primaryOwners": [
+    {
+      "lane": "r28-foundation-primitive",
+      "frozenFileCount": 34,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-primitive.execution.json",
+      "receiptSha256": "9d67d653d92849c8614f37070d8f0b2f0d2bed23bc5c59b11048a310ecb46832",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-primitive.jsonl",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": []
+    },
+    {
+      "lane": "r28-foundation-capability",
+      "frozenFileCount": 163,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-capability.execution.json",
+      "receiptSha256": "9babc5b23a914478acac971628f882108762e695e5ed0a06c0e6f1acff150856",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-capability.jsonl",
+      "reportSha256": "32742e1152c0b1899397a7533a4b9047dfcadd02da74333a9586cc8b52f4a70c",
+      "rawQualifiedCount": 1,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": [
+        {
+          "id": "r3-foundation-tier-gate-tool-hints",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 8,
+            "legal": 7
+          },
+          "currentCardinality": {
+            "representable": 8,
+            "legal": 7
+          }
+        }
+      ]
+    },
+    {
+      "lane": "r28-foundation-modeling-rest",
+      "frozenFileCount": 181,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-modeling-rest.execution.json",
+      "receiptSha256": "fe312cf371e346083bc435386aeb6663a7a0a43fee6eb4bee9acd1310808d195",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-modeling-rest.jsonl",
+      "reportSha256": "98b2a82e619dab4e7394d05c071897210f483181f872a0d841a14738d48a8a67",
+      "rawQualifiedCount": 2,
+      "rawDisqualifiedCount": 1,
+      "reportedCandidates": [
+        {
+          "id": "html-datalist-child-grammar",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": {
+            "representable": 4,
+            "legal": 3
+          }
+        },
+        {
+          "id": "html-element-meta-void-rawtext",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": null,
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-foundation-modeling-rest-bun-glob-scan-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-foundation-schema-a-m",
+      "frozenFileCount": 186,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-schema-a-m.execution.json",
+      "receiptSha256": "a0da85eb4aaf111d912426ed9f4a20db25f643f0efd50b3714228c388675c58a",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-schema-a-m.jsonl",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": []
+    },
+    {
+      "lane": "r28-foundation-schema-n-z",
+      "frozenFileCount": 82,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-schema-n-z.execution.json",
+      "receiptSha256": "41e1e2ed30c79473182604b9ac59a60ce79dcb524efee0d8363e60d40a850b67",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-schema-n-z.jsonl",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": []
+    },
+    {
+      "lane": "r28-foundation-ui",
+      "frozenFileCount": 218,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-ui.execution.json",
+      "receiptSha256": "3a8404825fe725a151d6c59b13baa45542f4bed4f1a6040d1296b39b87244b92",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-foundation-ui.jsonl",
+      "reportSha256": "54ba907f6d5a725bb744b1bd5434fcbbb0eda56bf4779e7ebd86fec9936437a6",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 3,
+      "reportedCandidates": [
+        {
+          "id": "r28-foundation-ui-chart-tooltip-indicator-flags",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": null,
+          "currentCardinality": {
+            "representable": 6,
+            "legal": 5
+          }
+        },
+        {
+          "id": "r28-foundation-ui-chart-tooltip-default-item-flags",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": null,
+          "currentCardinality": {
+            "representable": 6,
+            "legal": 5
+          }
+        },
+        {
+          "id": "r28-foundation-ui-chart-tooltip-item-flags",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": null,
+          "currentCardinality": {
+            "representable": 6,
+            "legal": 5
+          }
+        }
+      ]
+    },
+    {
+      "lane": "r28-drivers-a-f",
+      "frozenFileCount": 97,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-a-f.execution.json",
+      "receiptSha256": "905f1ec73bdde7bfa7632780bf2c408499a187d8fbe4023f952deb45e3eb985c",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-a-f.jsonl",
+      "reportSha256": "b55b567a86fdd66949f4b34efc63dd7ca5e7e222027a536d94e49831a4e429d0",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 4,
+      "reportedCandidates": [
+        {
+          "id": "r28-drivers-a-f-exiftool-write-tags-core-remove-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-drivers-a-f-ffmpeg-with-staging-directory-remove-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-drivers-a-f-ffmpeg-extract-frames-remove-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-drivers-a-f-box-runtime-prune-undefined-descriptor",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-drivers-g-m",
+      "frozenFileCount": 68,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-g-m.execution.json",
+      "receiptSha256": "7c72f05fb20b2a517c614d496928fe7765f9b71198968f5c1365716139aa785b",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-g-m.jsonl",
+      "reportSha256": "d77e246cf0ac0e9061476f9c3c7bfecdc75ece81abfcb80f127e65d91afd9dc8",
+      "rawQualifiedCount": 1,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": [
+        {
+          "id": "r3-drivers-arch-tool-name-collision-stage-flags",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": {
+            "representable": 4,
+            "legal": 3
+          }
+        }
+      ]
+    },
+    {
+      "lane": "r28-drivers-n-r",
+      "frozenFileCount": 88,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-n-r.execution.json",
+      "receiptSha256": "793f25a753a1a7bde14819d19693d00517d30de7eb02412ba88722fc4d28363d",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-n-r.jsonl",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": []
+    },
+    {
+      "lane": "r28-drivers-s-z",
+      "frozenFileCount": 59,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-s-z.execution.json",
+      "receiptSha256": "a38a93747173910e1dd5a416b5b3a616df1cc26c0d0c29192eb46cb0c32ca9e8",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-s-z.jsonl",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": []
+    },
+    {
+      "lane": "r28-architecture-ecosystem-internal",
+      "frozenFileCount": 115,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-architecture-ecosystem-internal.execution.json",
+      "receiptSha256": "9b2a296ba9e136341290402b8f3b0fb0548e359e8e868ed33da775e34fb4cf8b",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-architecture-ecosystem-internal.jsonl",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": []
+    },
+    {
+      "lane": "r28-agents-workspace",
+      "frozenFileCount": 144,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-agents-workspace.execution.json",
+      "receiptSha256": "f710bdb125956608aa12bed18692e8e0703d7ce0ffde1345d5890dc7c6205887",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-agents-workspace.jsonl",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": []
+    },
+    {
+      "lane": "r28-epistemic-ontology",
+      "frozenFileCount": 217,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-epistemic-ontology.execution.json",
+      "receiptSha256": "a2dbf027a8742673ecf5655ab44a3aba051baeacdee57c9ab092e83c601e0798",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-epistemic-ontology.jsonl",
+      "reportSha256": "26e59dc806c61db3dc2a67c45a21d6637b55950740cd4e6657c1c2ee005c50bd",
+      "rawQualifiedCount": 1,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": [
+        {
+          "id": "r2-domains-ontology-graph-worker-requeue-latches",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 6,
+            "legal": 5
+          },
+          "currentCardinality": {
+            "representable": 12,
+            "legal": 5
+          }
+        }
+      ]
+    },
+    {
+      "lane": "r28-shared-documents",
+      "frozenFileCount": 216,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-shared-documents.execution.json",
+      "receiptSha256": "a57f2a055b92ac23f8c6bc65474ac0ae5dba22dce5f3725857dcffd54bddc11e",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-shared-documents.jsonl",
+      "reportSha256": "7d5496868c9a031ce6ce9114f3c95b45d817745ade80de59f96db72c0a4a85ea",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 1,
+      "reportedCandidates": [
+        {
+          "id": "r28-shared-documents-vault-sync-status-cursor-position",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-law-practice-domain",
+      "frozenFileCount": 225,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-law-practice-domain.execution.json",
+      "receiptSha256": "8649e416db47f8a91af3c8b56e93f93cb9a573fa0d96d765cb79d51994911395",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-law-practice-domain.jsonl",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": []
+    },
+    {
+      "lane": "r28-law-practice-runtime",
+      "frozenFileCount": 91,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-law-practice-runtime.execution.json",
+      "receiptSha256": "14147a3e1aa6bfe85fb2f6295ea89dfcd122303be5d509c21d221c45a7f2230c",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-law-practice-runtime.jsonl",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": []
+    },
+    {
+      "lane": "r28-apps",
+      "frozenFileCount": 116,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-apps.execution.json",
+      "receiptSha256": "b0bddcdff8bfd3b37ced0086ef25cd3e785cab505c135e1d0ff4c95145e6c5c3",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-apps.jsonl",
+      "reportSha256": "23b5d54a3e1967e50750233c93b2dbe689f346fd9e86b8e04ad5826d1933ea65",
+      "rawQualifiedCount": 3,
+      "rawDisqualifiedCount": 3,
+      "reportedCandidates": [
+        {
+          "id": "thread-transcript-load-state",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 8,
+            "legal": 4
+          },
+          "currentCardinality": {
+            "representable": 16,
+            "legal": 7
+          }
+        },
+        {
+          "id": "r3-apps-back-to-top-hidden",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": null,
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 2
+          },
+          "currentCardinality": null
+        },
+        {
+          "id": "r2-apps-editor-proof-profile-picker",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": null,
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 2
+          },
+          "currentCardinality": null
+        },
+        {
+          "id": "composer-send-input-gates",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "composer-shell-edit-stream",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r2-apps-thread-composer-send-gates",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": null,
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-tooling-library-observability",
+      "frozenFileCount": 52,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tooling-library-observability.execution.json",
+      "receiptSha256": "a271ed1d2cf21f2025b9cc7964181647d3eb84645429d20ce12e711fe80e8407",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tooling-library-observability.jsonl",
+      "reportSha256": "56a904f211a8799ada54c1177e4180ea9474cb98ce4eb7700c187b98077523d8",
+      "rawQualifiedCount": 3,
+      "rawDisqualifiedCount": 3,
+      "reportedCandidates": [
+        {
+          "id": "r3-tooling-jsdoc-worker-section-flags",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-tooling-library-observability-mechanical-terminal-consistency",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": {
+            "representable": 8,
+            "legal": 2
+          },
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-tooling-library-observability-deployment-remote-fields",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 2
+          },
+          "currentCardinality": {
+            "representable": 4,
+            "legal": 2
+          }
+        },
+        {
+          "id": "r28-tooling-library-observability-phoenix-section-storage-status",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": null,
+          "rawCardinality": {
+            "representable": 8,
+            "legal": 4
+          },
+          "currentCardinality": null
+        },
+        {
+          "id": "hook-pulse-raw-event-owned-fields",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": null,
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-tooling-library-observability-witness-resolved-config",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-tooling-library-support",
+      "frozenFileCount": 84,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tooling-library-support.execution.json",
+      "receiptSha256": "639d72c3d3dd61faa30ad4a6758cc0833272381106432be3aa2b77fb99ea3d0f",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tooling-library-support.jsonl",
+      "reportSha256": "cd22df7ebb847355acff3683eb662847af8434ec3e951ffe18fbb304e6aa1ae2",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 3,
+      "reportedCandidates": [
+        {
+          "id": "r28-tooling-library-support-tsmorph-project-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-tooling-library-support-pglite-container-stop-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-tooling-library-support-runglob-shared-glob-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-tooling-policy",
+      "frozenFileCount": 38,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tooling-policy.execution.json",
+      "receiptSha256": "c30e618d5469efaabd6150a49dc974810a3d4f1a12395b016fcd18e38bbe84d3",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tooling-policy.jsonl",
+      "reportSha256": "824177055c2f72686dd741c91b6397f15da355d57a7229fca064af44fdddf02b",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 2,
+      "reportedCandidates": [
+        {
+          "id": "tooling-rest-next-config",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-tooling-policy-jsonc-parse-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-tool-docgen",
+      "frozenFileCount": 13,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tool-docgen.execution.json",
+      "receiptSha256": "b1cbf4683026dfdf145ca08f7e13b0ee3f295136fee78b68fc30e2f59637a9e6",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tool-docgen.jsonl",
+      "reportSha256": "6ba7a0889f4f94258456e1cb479354944059e059e9ca3748b9f0976863fd10c0",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 2,
+      "reportedCandidates": [
+        {
+          "id": "docgen-tool-configuration-toggles",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r25-tool-docgen-cli-config-toggles",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-cli-internal-root",
+      "frozenFileCount": 78,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-internal-root.execution.json",
+      "receiptSha256": "be0656ae0c76c3ee5c8b997d8649dc3eb5bc5b307a99fa2f1122fcdebba2f2f7",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-internal-root.jsonl",
+      "reportSha256": "bb9d1551a55192a9b37b2450162f3ca2eee034fe699c4d0e14f8bdde39216d2d",
+      "rawQualifiedCount": 1,
+      "rawDisqualifiedCount": 4,
+      "reportedCandidates": [
+        {
+          "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": {
+            "representable": 312,
+            "legal": 13
+          }
+        },
+        {
+          "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-internal-root-admission-journal-sidecar-remove-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-cli-commands-a-c",
+      "frozenFileCount": 149,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-a-c.execution.json",
+      "receiptSha256": "973b8c3829ce195c887ab74077006aac031f7d821928b74cc0cce7f5950f4478",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-a-c.jsonl",
+      "reportSha256": "1118219531731d81e1a9b80eba2ac6127f8533c7d408a65055bc677e709a9d29",
+      "rawQualifiedCount": 0,
+      "rawDisqualifiedCount": 6,
+      "reportedCandidates": [
+        {
+          "id": "create-package-template-lab-ecosystem",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": null,
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r3-tooling-phoenix-sync-program-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "corpus-organize-category-flags",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-commands-a-c-eval-law-lanes-spawn-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-commands-a-c-preservation-capacity-spawn-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-cli-commands-d-k",
+      "frozenFileCount": 112,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-d-k.execution.json",
+      "receiptSha256": "d0550eae61100e590cf4eeedbeaedf10d0387d4b707156bf68c0dde9228bc58b",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-d-k.jsonl",
+      "reportSha256": "3e8edc87cef930f11c29785fe44200082a007e33345f5953ec018fc326a9f25b",
+      "rawQualifiedCount": 2,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": [
+        {
+          "id": "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 8,
+            "legal": 3
+          },
+          "currentCardinality": {
+            "representable": 8,
+            "legal": 3
+          }
+        },
+        {
+          "id": "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 8,
+            "legal": 3
+          },
+          "currentCardinality": {
+            "representable": 8,
+            "legal": 3
+          }
+        }
+      ]
+    },
+    {
+      "lane": "r28-cli-commands-l-q",
+      "frozenFileCount": 87,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-l-q.execution.json",
+      "receiptSha256": "dc55edf2b5d106de1a0afa304181f810112fa2ff4249b9b457672133827907a7",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-l-q.jsonl",
+      "reportSha256": "eee2e7505d8a7b93367f5b3cab7b17b1c7d6c76528f58cd195b976c0803e09ca",
+      "rawQualifiedCount": 4,
+      "rawDisqualifiedCount": 4,
+      "reportedCandidates": [
+        {
+          "id": "r28-cli-quality-coverage-resolved-operation",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 16,
+            "legal": 7
+          },
+          "currentCardinality": {
+            "representable": 16,
+            "legal": 7
+          }
+        },
+        {
+          "id": "coverage-baseline-write-mode",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r26-cli-commands-l-q-coverage-replace-all-skip",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": null,
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": null
+        },
+        {
+          "id": "quality-coverage-task-options",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": null,
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": null
+        },
+        {
+          "id": "r3-tooling-schema-first-fn-eligibility",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": {
+            "representable": 4,
+            "legal": 3
+          }
+        },
+        {
+          "id": "r3-tooling-lint-tagged-union-pattern-gates",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r3-tooling-schema-first-normalization-signals",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-commands-l-q-effect-import-rules-leftover-toggles",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": null,
+          "rawCardinality": null,
+          "currentCardinality": null
+        }
+      ]
+    },
+    {
+      "lane": "r28-cli-commands-r-z",
+      "frozenFileCount": 89,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-r-z.execution.json",
+      "receiptSha256": "f725da468aa66841190ae5e58fb89ae6fdb2ccdbd824089afd2b63c49c1ea5c2",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-r-z.jsonl",
+      "reportSha256": "9a6ca534827ebda17956c957d0ceed659096a25a7e98c1a90d720b149ecb3734",
+      "rawQualifiedCount": 2,
+      "rawDisqualifiedCount": 5,
+      "reportedCandidates": [
+        {
+          "id": "skills-update-run-mode",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": null,
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": null
+        },
+        {
+          "id": "worktree-list-entry-porcelain",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-commands-r-z-checkout-entry-facts-detached-branch",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-commands-r-z-write-remote-skill-remove-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-commands-r-z-write-agents-mirror-remove-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r28-cli-commands-r-z-run-git-probe-spawn-options",
+          "rawStatus": "disqualified",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": null,
+          "currentCardinality": null
+        },
+        {
+          "id": "r3-tooling-version-sync-category-filter-gates",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "designed",
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": {
+            "representable": 4,
+            "legal": 3
+          }
+        }
+      ]
+    },
+    {
+      "lane": "r28-cli-yeet",
+      "frozenFileCount": 59,
+      "primaryState": "terminal",
+      "adjudicationState": "pending-round-reconciliation",
+      "exitCode": 0,
+      "endTurnEvent": true,
+      "reportValidationExitCode": 0,
+      "receipt": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-yeet.execution.json",
+      "receiptSha256": "4cdc69035941d6f268ac0363be760863c0ca73124c4881a85cb2f2374b44d891",
+      "report": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-yeet.jsonl",
+      "reportSha256": "84f7feaee4d8b0128e211d6f2fe604851fe2175160c6f39c3668d431d375c03f",
+      "rawQualifiedCount": 1,
+      "rawDisqualifiedCount": 0,
+      "reportedCandidates": [
+        {
+          "id": "yeet-monitor-failed-job-flags",
+          "rawStatus": "confirmed",
+          "currentCanonicalStatus": "disqualified",
+          "rawCardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "currentCardinality": null
+        }
+      ]
+    }
+  ],
+  "correctionQueues": [
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-apps-contract-correction1.queue.json",
+      "lane": "r28-apps-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-a-c-contract-correction1.queue.json",
+      "lane": "r28-cli-a-c-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-d-k-contract-correction1.queue.json",
+      "lane": "r28-cli-d-k-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-internal-contract-correction1.queue.json",
+      "lane": "r28-cli-internal-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-l-q-contract-correction1.queue.json",
+      "lane": "r28-cli-l-q-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-r-z-contract-correction1.queue.json",
+      "lane": "r28-cli-r-z-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-yeet-contract-correction1.queue.json",
+      "lane": "r28-cli-yeet-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-epistemic-contract-correction1.queue.json",
+      "lane": "r28-epistemic-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-modeling-contract-correction1.queue.json",
+      "lane": "r28-modeling-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-observability-contract-correction1.queue.json",
+      "lane": "r28-observability-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    },
+    {
+      "path": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-ui-contract-correction1.queue.json",
+      "lane": "r28-ui-contract-correction1",
+      "state": "terminal",
+      "complete": true,
+      "exitCode": 0,
+      "endTurnEvent": true
+    }
+  ],
+  "integrations": [
+    {
+      "path": "data/r28-agent-app-integration.json",
+      "sha256": "5a4b25263b64bf4c6fc4d3fee7bdc1783575491fa2ccdc1135e9ff6f1811449f"
+    },
+    {
+      "path": "data/r28-architecture-driver-callables-integration.json",
+      "sha256": "5c13899c607c7383264dcd260337b3392b9099d742a034bc7520dcdbfc5b4be0"
+    },
+    {
+      "path": "data/r28-chart-family-integration.json",
+      "sha256": "057961e51a8663372896eb73e45d26026817038fcf2b53c337825a74bd604de5"
+    },
+    {
+      "path": "data/r28-cli-a-c-integration.json",
+      "sha256": "f82fbc756443ed33de37334950f26c2120c084aacd548ba7ea775bdaf52e1068"
+    },
+    {
+      "path": "data/r28-cli-first-owners-integration.json",
+      "sha256": "0cba2cf0c46b2662f3d3a1463bd654c615391acaf4d340aec6325bc18f43f869"
+    },
+    {
+      "path": "data/r28-cli-l-q-integration.json",
+      "sha256": "46f30b5a0e7341f0b9ac9c4ac29236ad96e5327a4e72c573ea3b0063e86a38a6"
+    },
+    {
+      "path": "data/r28-cli-last-integration.json",
+      "sha256": "a6b4eba5158e011991779840615ce59d4fa318a9bdf7d28f5ec1b3c081116009"
+    },
+    {
+      "path": "data/r28-cli-last-parent-integration.json",
+      "sha256": "4d585b09b652624e4bc11a584241a67a24c33f810f34f5f7524bd3b8765ffdbe"
+    },
+    {
+      "path": "data/r28-cli-retained-integration.json",
+      "sha256": "d6c082affe7b8c15442f155361a40f4dce5e71e936b020a5fd7998328024aab3"
+    },
+    {
+      "path": "data/r28-cli-retained-parent-integration.json",
+      "sha256": "5ba14cbb20ce07de6a48da62799c3d961d103df726bf6c59c59b093701e331f5"
+    },
+    {
+      "path": "data/r28-command-data-integration.json",
+      "sha256": "08312a239b8aa976a558a68486ff76bd49662db19c5e44a8df26ac33ece4a647"
+    },
+    {
+      "path": "data/r28-docgen-files-integration.json",
+      "sha256": "65660fb698ac4553df5c66d88ba1ab4ad326196b73184e82a43cd48d00a2d103"
+    },
+    {
+      "path": "data/r28-driver-collision-integration.json",
+      "sha256": "2a95ad3f2cf0be46aa498c61e6ce40e1225c09770599322b51fec4e445de1f20"
+    },
+    {
+      "path": "data/r28-epistemic-callables-integration.json",
+      "sha256": "1e51fefd6c654bd925225d4b7ecb2bdf29d708d7a0cd836c2ac5458b93fc5ab0"
+    },
+    {
+      "path": "data/r28-first-corrections-integration.json",
+      "sha256": "8ed15babd3670095f4ac2ca6cb3b4705e148c9613d557ca3be2c9785b78c68b5"
+    },
+    {
+      "path": "data/r28-first-d-census-integration.json",
+      "sha256": "d51e44b69c38650a192102db2c4627b2c895f0e717d1fadf07e83047779017a6"
+    },
+    {
+      "path": "data/r28-generated-scope-integration.json",
+      "sha256": "df52b1c9d2f641b3383e3b3a76f1c579e939aec42e6ec8244844f6929f7b6ac4"
+    },
+    {
+      "path": "data/r28-law-eligibility-integration.json",
+      "sha256": "2493cb2f535a31d0dafe346b0221e71ec7c232043551b52a43551b2f4cef5528"
+    },
+    {
+      "path": "data/r28-law-shared-integration.json",
+      "sha256": "422704c49733390799a3bc0950c17787b6afadb7448fce1c86c10a387d58d3ae"
+    },
+    {
+      "path": "data/r28-nontooling-impact-integration.json",
+      "sha256": "5323f3d6f75049983a5a9ea1cc32283c4c79d6ac6d5c1f77d30720178f36ef3f"
+    },
+    {
+      "path": "data/r28-observability-integration.json",
+      "sha256": "c7cb16013359b54106fa3a463b3c889667545ac3acd82bdea6a8f5afa5170013"
+    },
+    {
+      "path": "data/r28-quality-scheduler-integration.json",
+      "sha256": "4d84c39b06e0028dc7d0aa8698011ea137ef6eb6f45bce349eb9944ca587b850"
+    },
+    {
+      "path": "data/r28-single-member-census-integration.json",
+      "sha256": "7aeafc053384ca56109c5909142383600f8ee4384b351e4ed2f9591b87149ed6"
+    },
+    {
+      "path": "data/r28-tier-gate-integration.json",
+      "sha256": "81a2f09fd9da3c84c7a64cf36feae9a8d72a627cc1743e3e719a05526b19bbb3"
+    },
+    {
+      "path": "data/r28-tmpfs-owner-integration.json",
+      "sha256": "cd59d4734e01811888a2d27b39b28e5bb85a347d34daaf18e584918e8bcc498f"
+    },
+    {
+      "path": "data/r28-tooling-callable-withdrawals-integration.json",
+      "sha256": "bb458a74f455449002e7adce12c8350c9ad0d9e9923775e7ab3f9e01d866d2f9"
+    },
+    {
+      "path": "data/r28-tooling-support-policy-integration.json",
+      "sha256": "cdb99fe49a6dcbe3212569b9b4b23215f3408bf1ba20a8c50401dc21da203460"
+    }
+  ],
+  "pendingWork": [
+    "R28 raw and seed reconciliation is complete with zero unresolved IDs.",
+    "Re-resolve live main, preserve dirty/index state, merge forward and refresh source/design impact before the next full census.",
+    "Two consecutive current-source dry rounds, independent P3, merged packet ratification, implementation and final merged-main closeout remain pending."
+  ],
+  "limits": [
+    "This mutable progress projection is not a frozen census verdict or independent P3 review.",
+    "A raw record absent from canonical inventory may be pending, excluded, withdrawn or superseded; absence alone is not an adjudication.",
+    "Exit0 and schema validation prove execution/record shape, not complete source eligibility or qualified evidence.",
+    "The frozen source map and raw reports are retained; effective generated scope is recorded in the separate companion."
+  ],
+  "verdict": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/round-verdict.json",
+  "verdictSha256": "0caa92d9ffedbeb609615d06529ed56acc5e8d64e46d1c87f07a691592c5d71a",
+  "originalVerdictSha256": "061f994530345b53e464eea645d6433c4d24731ad7e228ac9b9dcf772402d176",
+  "verdictFormatDrift": "data/r28-verdict-format-drift.json",
+  "observedOriginMainShaAtFinalization": "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943",
+  "currentMainFreshnessClaim": false
+}

@@ -125,95 +125,89 @@ const mdText = (value: string): Md.Text => Md.Text.make({ value });
 
 const mdInlinesText = (inlines: ReadonlyArray<Md.Inline>): string => A.join(A.map(inlines, mdInlineText), "");
 
-const mdInlineText: (inline: Md.Inline) => string = Match.type<Md.Inline>().pipe(
-  Match.tagsExhaustive({
-    text: (inline) => inline.value,
-    rawMarkdown: (inline) => inline.value,
-    rawHtml: (inline) => inline.value,
-    strong: (inline) => mdInlinesText(inline.children),
-    em: (inline) => mdInlinesText(inline.children),
-    del: (inline) => mdInlinesText(inline.children),
-    code: (inline) => inline.value,
-    a: (inline) => mdInlinesText(inline.children),
-    img: (inline) => inline.alt,
-    br: () => "\n",
-    inlineMath: (inline) => inline.value,
-    footnoteReference: (inline) => inline.identifier,
-  })
-);
+const mdInlineText: (inline: Md.Inline) => string = Match.typeTags<Md.Inline>()({
+  text: (inline) => inline.value,
+  rawMarkdown: (inline) => inline.value,
+  rawHtml: (inline) => inline.value,
+  strong: (inline) => mdInlinesText(inline.children),
+  em: (inline) => mdInlinesText(inline.children),
+  del: (inline) => mdInlinesText(inline.children),
+  code: (inline) => inline.value,
+  a: (inline) => mdInlinesText(inline.children),
+  img: (inline) => inline.alt,
+  br: () => "\n",
+  inlineMath: (inline) => inline.value,
+  footnoteReference: (inline) => inline.identifier,
+});
 
-const pandocInlineText: (inline: PandocInline.Type) => string = Match.type<PandocInline.Type>().pipe(
-  Match.tagsExhaustive({
-    str: (inline) => inline.text,
-    space: () => " ",
-    softbreak: () => " ",
-    linebreak: () => "\n",
-    emph: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    underline: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    strong: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    strikeout: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    superscript: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    subscript: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    smallCaps: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    quoted: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    cite: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    code: (inline) => inline.text,
-    link: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    image: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    span: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
-    note: (inline) => A.join(A.map(inline.blocks, pandocBlockText), "\n"),
-    math: (inline) => inline.text,
-    rawInline: (inline) => inline.text,
-    unknownInline: () => "",
-  })
-);
+const pandocInlineText: (inline: PandocInline.Type) => string = Match.typeTags<PandocInline.Type>()({
+  str: (inline) => inline.text,
+  space: () => " ",
+  softbreak: () => " ",
+  linebreak: () => "\n",
+  emph: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  underline: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  strong: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  strikeout: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  superscript: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  subscript: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  smallCaps: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  quoted: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  cite: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  code: (inline) => inline.text,
+  link: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  image: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  span: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+  note: (inline) => A.join(A.map(inline.blocks, pandocBlockText), "\n"),
+  math: (inline) => inline.text,
+  rawInline: (inline) => inline.text,
+  unknownInline: () => "",
+});
 
-const pandocBlockText: (block: PandocBlock.Type) => string = Match.type<PandocBlock.Type>().pipe(
-  Match.tagsExhaustive({
-    plain: (block) => A.join(A.map(block.children, pandocInlineText), ""),
-    para: (block) => A.join(A.map(block.children, pandocInlineText), ""),
-    lineBlock: (block) =>
-      A.join(
-        A.map(block.lines, (line) => A.join(A.map(line, pandocInlineText), "")),
-        "\n"
+const pandocBlockText: (block: PandocBlock.Type) => string = Match.typeTags<PandocBlock.Type>()({
+  plain: (block) => A.join(A.map(block.children, pandocInlineText), ""),
+  para: (block) => A.join(A.map(block.children, pandocInlineText), ""),
+  lineBlock: (block) =>
+    A.join(
+      A.map(block.lines, (line) => A.join(A.map(line, pandocInlineText), "")),
+      "\n"
+    ),
+  header: (block) => A.join(A.map(block.children, pandocInlineText), ""),
+  blockquote: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
+  codeblock: (block) => block.text,
+  rawBlock: (block) => block.text,
+  bulletlist: (block) =>
+    A.join(
+      A.map(block.items, (item) => A.join(A.map(item, pandocBlockText), "\n")),
+      "\n"
+    ),
+  orderedlist: (block) =>
+    A.join(
+      A.map(block.items, (item) => A.join(A.map(item, pandocBlockText), "\n")),
+      "\n"
+    ),
+  definitionList: (block) =>
+    A.join(
+      A.map(block.items, ([term, definitions]) =>
+        A.join(
+          [
+            A.join(A.map(term, pandocInlineText), ""),
+            A.join(
+              A.flatMap(definitions, (definition) => A.map(definition, pandocBlockText)),
+              "\n"
+            ),
+          ],
+          "\n"
+        )
       ),
-    header: (block) => A.join(A.map(block.children, pandocInlineText), ""),
-    blockquote: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
-    codeblock: (block) => block.text,
-    rawBlock: (block) => block.text,
-    bulletlist: (block) =>
-      A.join(
-        A.map(block.items, (item) => A.join(A.map(item, pandocBlockText), "\n")),
-        "\n"
-      ),
-    orderedlist: (block) =>
-      A.join(
-        A.map(block.items, (item) => A.join(A.map(item, pandocBlockText), "\n")),
-        "\n"
-      ),
-    definitionList: (block) =>
-      A.join(
-        A.map(block.items, ([term, definitions]) =>
-          A.join(
-            [
-              A.join(A.map(term, pandocInlineText), ""),
-              A.join(
-                A.flatMap(definitions, (definition) => A.map(definition, pandocBlockText)),
-                "\n"
-              ),
-            ],
-            "\n"
-          )
-        ),
-        "\n"
-      ),
-    horizontalrule: () => "",
-    div: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
-    table: (block) => block.captionPlainText,
-    figure: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
-    unknownBlock: () => "",
-  })
-);
+      "\n"
+    ),
+  horizontalrule: () => "",
+  div: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
+  table: (block) => block.captionPlainText,
+  figure: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
+  unknownBlock: () => "",
+});
 
 const imageDescriptionLossPath = (children: ReadonlyArray<PandocInline.Type>, path: JsonPath): O.Option<JsonPath> => {
   const first = children[0];
@@ -247,11 +241,11 @@ const pandocInlineToMd = (
   inline: PandocInline.Type,
   path: JsonPath
 ): Effect.Effect<Projection<ReadonlyArray<Md.Inline>>, S.SchemaError> =>
-  Match.value(inline).pipe(
-    Match.tagsExhaustive({
-      str: (node) => Effect.succeed(emptyProjection([mdText(node.text)])),
-      space: () => Effect.succeed(emptyProjection([mdText(" ")])),
-      softbreak: () =>
+  Match.value(inline)
+    .pipe(
+      Match.tag("str", (node) => Effect.succeed(emptyProjection([mdText(node.text)]))),
+      Match.tag("space", () => Effect.succeed(emptyProjection([mdText(" ")]))),
+      Match.tag("softbreak", () =>
         Effect.succeed({
           issues: [
             issue({
@@ -263,14 +257,16 @@ const pandocInlineToMd = (
             }),
           ],
           value: [mdText(" ")],
-        }),
-      linebreak: () => Effect.succeed(emptyProjection([Md.Br.make({})])),
-      emph: (node) =>
+        })
+      ),
+      Match.tag("linebreak", () => Effect.succeed(emptyProjection([Md.Br.make({})]))),
+      Match.tag("emph", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues,
           value: [Md.Em.make({ children: value })],
-        })),
-      underline: (node) =>
+        }))
+      ),
+      Match.tag("underline", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
@@ -283,18 +279,23 @@ const pandocInlineToMd = (
             }),
           ],
           value,
-        })),
-      strong: (node) =>
+        }))
+      ),
+      Match.tag("strong", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues,
           value: [Md.Strong.make({ children: value })],
-        })),
-      strikeout: (node) =>
+        }))
+      ),
+      Match.tag("strikeout", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues,
           value: [Md.Del.make({ children: value })],
-        })),
-      superscript: (node) =>
+        }))
+      )
+    )
+    .pipe(
+      Match.tag("superscript", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
@@ -307,8 +308,9 @@ const pandocInlineToMd = (
             }),
           ],
           value,
-        })),
-      subscript: (node) =>
+        }))
+      ),
+      Match.tag("subscript", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
@@ -321,8 +323,9 @@ const pandocInlineToMd = (
             }),
           ],
           value,
-        })),
-      smallCaps: (node) =>
+        }))
+      ),
+      Match.tag("smallCaps", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
@@ -335,8 +338,9 @@ const pandocInlineToMd = (
             }),
           ],
           value,
-        })),
-      quoted: (node) =>
+        }))
+      ),
+      Match.tag("quoted", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => {
           const delimiter = node.quoteType === "SingleQuote" ? "'" : '"';
           return {
@@ -352,8 +356,9 @@ const pandocInlineToMd = (
             ],
             value: [mdText(delimiter), ...value, mdText(delimiter)],
           };
-        }),
-      cite: (node) =>
+        })
+      ),
+      Match.tag("cite", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
@@ -365,8 +370,9 @@ const pandocInlineToMd = (
             }),
           ],
           value,
-        })),
-      code: (node) =>
+        }))
+      ),
+      Match.tag("code", (node) =>
         Effect.succeed({
           issues: PandocAttr.isNonEmpty(node.attr)
             ? [
@@ -380,8 +386,9 @@ const pandocInlineToMd = (
               ]
             : [],
           value: [Md.Code.make({ value: node.text })],
-        }),
-      link: (node) =>
+        })
+      ),
+      Match.tag("link", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
@@ -398,8 +405,9 @@ const pandocInlineToMd = (
               : []),
           ],
           value: [Md.A.make({ children: value, href: node.target.url, title: optionalNonEmpty(node.target.title) })],
-        })),
-      image: (node) =>
+        }))
+      ),
+      Match.tag("image", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
@@ -423,8 +431,9 @@ const pandocInlineToMd = (
               title: optionalNonEmpty(node.target.title),
             }),
           ],
-        })),
-      span: (node) =>
+        }))
+      ),
+      Match.tag("span", (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
@@ -440,8 +449,9 @@ const pandocInlineToMd = (
               : []),
           ],
           value,
-        })),
-      note: (node) =>
+        }))
+      ),
+      Match.tag("note", (node) =>
         Effect.succeed({
           issues: [
             issue({
@@ -452,8 +462,9 @@ const pandocInlineToMd = (
             }),
           ],
           value: [mdText(pandocInlineText(node))],
-        }),
-      math: (node) =>
+        })
+      ),
+      Match.tag("math", (node) =>
         Effect.succeed(
           PandocMathType.$match(node.mathType, {
             InlineMath: () => emptyProjection([Md.InlineMath.make({ value: node.text })]),
@@ -470,8 +481,9 @@ const pandocInlineToMd = (
               value: [Md.InlineMath.make({ value: node.text })],
             }),
           })
-        ),
-      rawInline: (node) =>
+        )
+      ),
+      Match.tag("rawInline", (node) =>
         Effect.succeed({
           issues: [
             issue({
@@ -482,8 +494,9 @@ const pandocInlineToMd = (
             }),
           ],
           value: [mdText(node.text)],
-        }),
-      unknownInline: (node) =>
+        })
+      ),
+      Match.tag("unknownInline", (node) =>
         Effect.succeed({
           issues: [
             issue({
@@ -494,9 +507,10 @@ const pandocInlineToMd = (
             }),
           ],
           value: [],
-        }),
-    })
-  );
+        })
+      ),
+      Match.exhaustive
+    );
 
 const pandocInlinesToMd = (
   inlines: ReadonlyArray<PandocInline.Type>,
@@ -550,10 +564,8 @@ const pandocListItemBlockToMdInlines = (
   path: JsonPath
 ): Effect.Effect<Projection<ReadonlyArray<Md.ListItemChild>>, S.SchemaError> =>
   Match.value(block).pipe(
-    Match.tags({
-      plain: (node) => pandocInlinesToMd(node.children, path),
-      para: (node) => pandocInlinesToMd(node.children, path),
-    }),
+    Match.tag("plain", (node) => pandocInlinesToMd(node.children, path)),
+    Match.tag("para", (node) => pandocInlinesToMd(node.children, path)),
     Match.orElse((node) =>
       Effect.map(pandocBlockToMd(node, path), ({ issues, value }) => ({
         issues,
@@ -708,24 +720,22 @@ const mdTableText = (block: Md.Table): string =>
 const mdEmbedText = (block: Md.Embed): string =>
   O.match({ onNone: () => block.src, onSome: (title: string) => title })(block.title);
 
-const mdBlockText: (block: Md.Block) => string = Match.type<Md.Block>().pipe(
-  Match.tagsExhaustive({
-    heading: (block) => mdInlinesText(block.children),
-    p: (block) => mdInlinesText(block.children),
-    blockquote: (block) => A.join(A.map(block.children, mdBlockText), "\n"),
-    pre: (block) => block.value,
-    ul: (block) => mdListText(block.children),
-    ol: (block) => mdListText(block.children),
-    taskList: (block) => mdListText(block.children),
-    table: (block) => mdTableText(block),
-    youtube: (block) => youtubeWatchUrl(block.videoId),
-    mathBlock: (block) => block.value,
-    footnoteDefinition: (block) => A.join(A.map(block.children, mdBlockText), "\n"),
-    admonition: (block) => A.join(A.map(block.children, mdBlockText), "\n"),
-    embed: mdEmbedText,
-    hr: () => "",
-  })
-);
+const mdBlockText: (block: Md.Block) => string = Match.typeTags<Md.Block>()({
+  heading: (block) => mdInlinesText(block.children),
+  p: (block) => mdInlinesText(block.children),
+  blockquote: (block) => A.join(A.map(block.children, mdBlockText), "\n"),
+  pre: (block) => block.value,
+  ul: (block) => mdListText(block.children),
+  ol: (block) => mdListText(block.children),
+  taskList: (block) => mdListText(block.children),
+  table: (block) => mdTableText(block),
+  youtube: (block) => youtubeWatchUrl(block.videoId),
+  mathBlock: (block) => block.value,
+  footnoteDefinition: (block) => A.join(A.map(block.children, mdBlockText), "\n"),
+  admonition: (block) => A.join(A.map(block.children, mdBlockText), "\n"),
+  embed: mdEmbedText,
+  hr: () => "",
+});
 
 const pandocChildBlocksToMd = (
   children: ReadonlyArray<PandocBlock.Type>,
@@ -767,221 +777,231 @@ const pandocParagraphToMd = (
 
 const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect<Projection<Md.Block>, S.SchemaError> =>
   Match.value(block).pipe(
-    Match.tagsExhaustive({
-      plain: (node) => pandocParagraphToMd(node, path),
-      para: (node) => pandocParagraphToMd(node, path),
-      lineBlock: (node) =>
-        Effect.map(
-          Effect.forEach(node.lines, (line, index) => pandocInlinesToMd(line, appendIndex(path, "lines", index))),
-          (lines) => ({
-            issues: [
-              ...mergeIssues(lines),
+    Match.tag("plain", (node) => pandocParagraphToMd(node, path)),
+    Match.tag("para", (node) => pandocParagraphToMd(node, path)),
+    Match.tag("lineBlock", (node) =>
+      Effect.map(
+        Effect.forEach(node.lines, (line, index) => pandocInlinesToMd(line, appendIndex(path, "lines", index))),
+        (lines) => ({
+          issues: [
+            ...mergeIssues(lines),
+            issue({
+              construct: "LineBlock",
+              direction: "pandoc-to-md",
+              message: "Pandoc non-breaking line groups are represented with hard breaks in one Md paragraph.",
+              path,
+              severity: "lossy",
+            }),
+          ],
+          value: Md.P.make({
+            children: A.flatten(
+              A.intersperse(
+                A.map(lines, (line) => line.value),
+                [Md.Br.make({})]
+              )
+            ),
+          }),
+        })
+      )
+    ),
+    Match.tag("header", (node) =>
+      Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => {
+        const headingLevel = pandocHeadingLevelProjection(node.level, path);
+
+        return {
+          issues: [
+            ...issues,
+            ...(PandocAttr.isNonEmpty(node.attr)
+              ? [
+                  issue({
+                    construct: "Header",
+                    direction: "pandoc-to-md",
+                    message: "Pandoc header attributes have no Md-core heading equivalent.",
+                    path,
+                    severity: "lossy",
+                  }),
+                ]
+              : []),
+            ...headingLevel.issues,
+          ],
+          value: headingToMd(headingLevel.value, value),
+        };
+      })
+    ),
+    Match.tag("blockquote", (node) =>
+      Effect.map(pandocChildBlocksToMd(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: Md.BlockQuote.make({ children: value }),
+      }))
+    ),
+    Match.tag("codeblock", (node) =>
+      Effect.succeed({
+        issues: hasCodeBlockDroppedAttr(node.attr)
+          ? [
               issue({
-                construct: "LineBlock",
+                construct: "CodeBlock",
                 direction: "pandoc-to-md",
-                message: "Pandoc non-breaking line groups are represented with hard breaks in one Md paragraph.",
+                message:
+                  "Pandoc code block id, key/value pairs, extra classes, or an invalid language class have no Md-core pre equivalent.",
                 path,
                 severity: "lossy",
               }),
-            ],
-            value: Md.P.make({
-              children: A.flatten(
-                A.intersperse(
-                  A.map(lines, (line) => line.value),
-                  [Md.Br.make({})]
-                )
-              ),
-            }),
-          })
-        ),
-      header: (node) =>
-        Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => {
-          const headingLevel = pandocHeadingLevelProjection(node.level, path);
-
-          return {
-            issues: [
-              ...issues,
-              ...(PandocAttr.isNonEmpty(node.attr)
-                ? [
-                    issue({
-                      construct: "Header",
-                      direction: "pandoc-to-md",
-                      message: "Pandoc header attributes have no Md-core heading equivalent.",
-                      path,
-                      severity: "lossy",
-                    }),
-                  ]
-                : []),
-              ...headingLevel.issues,
-            ],
-            value: headingToMd(headingLevel.value, value),
-          };
+            ]
+          : [],
+        value: Md.Pre.make({
+          // Pandoc code-block classes are arbitrary external tokens; fold the
+          // first class through CodeFenceLanguage so non-conforming hints drop
+          // to None (matching the Pre codec) instead of throwing on construction.
+          language: O.flatMap(O.fromUndefinedOr(node.attr.classes[0]), Md.CodeFenceLanguage.decodeOption),
+          value: node.text,
         }),
-      blockquote: (node) =>
-        Effect.map(pandocChildBlocksToMd(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: Md.BlockQuote.make({ children: value }),
-        })),
-      codeblock: (node) =>
-        Effect.succeed({
-          issues: hasCodeBlockDroppedAttr(node.attr)
+      })
+    ),
+    Match.tag("rawBlock", (node) =>
+      Effect.succeed({
+        issues: [
+          issue({
+            construct: "RawBlock",
+            direction: "pandoc-to-md",
+            message: `Untrusted raw ${node.format} block content is emitted as plain paragraph text.`,
+            path,
+          }),
+        ],
+        value: Md.P.make({ children: [mdText(node.text)] }),
+      })
+    ),
+    Match.tag("bulletlist", (node) =>
+      Effect.map(pandocListItemsToMd(node.items, path), ({ issues, value }) => ({
+        issues,
+        value: Md.Ul.make({ children: value }),
+      }))
+    ),
+    Match.tag("orderedlist", (node) =>
+      Effect.map(pandocListItemsToMd(node.items, path), ({ issues, value }) => ({
+        issues: [
+          ...issues,
+          ...(hasOrderedListMarkerLoss(node)
             ? [
                 issue({
-                  construct: "CodeBlock",
+                  construct: "OrderedList",
                   direction: "pandoc-to-md",
-                  message:
-                    "Pandoc code block id, key/value pairs, extra classes, or an invalid language class have no Md-core pre equivalent.",
+                  message: "Pandoc ordered-list style or delimiter metadata has no Md equivalent.",
                   path,
                   severity: "lossy",
                 }),
               ]
-            : [],
-          value: Md.Pre.make({
-            // Pandoc code-block classes are arbitrary external tokens; fold the
-            // first class through CodeFenceLanguage so non-conforming hints drop
-            // to None (matching the Pre codec) instead of throwing on construction.
-            language: O.flatMap(O.fromUndefinedOr(node.attr.classes[0]), Md.CodeFenceLanguage.decodeOption),
-            value: node.text,
-          }),
-        }),
-      rawBlock: (node) =>
-        Effect.succeed({
-          issues: [
-            issue({
-              construct: "RawBlock",
-              direction: "pandoc-to-md",
-              message: `Untrusted raw ${node.format} block content is emitted as plain paragraph text.`,
-              path,
-            }),
-          ],
-          value: Md.P.make({ children: [mdText(node.text)] }),
-        }),
-      bulletlist: (node) =>
-        Effect.map(pandocListItemsToMd(node.items, path), ({ issues, value }) => ({
-          issues,
-          value: Md.Ul.make({ children: value }),
-        })),
-      orderedlist: (node) =>
-        Effect.map(pandocListItemsToMd(node.items, path), ({ issues, value }) => ({
-          issues: [
-            ...issues,
-            ...(hasOrderedListMarkerLoss(node)
-              ? [
-                  issue({
-                    construct: "OrderedList",
-                    direction: "pandoc-to-md",
-                    message: "Pandoc ordered-list style or delimiter metadata has no Md equivalent.",
-                    path,
-                    severity: "lossy",
-                  }),
-                ]
-              : []),
-            ...(node.start < 0
-              ? [
-                  issue({
-                    construct: "OrderedList",
-                    direction: "pandoc-to-md",
-                    message: "A negative Pandoc ordered-list start is clamped to zero for the Md domain.",
-                    path,
-                    severity: "lossy",
-                  }),
-                ]
-              : []),
-          ],
-          value: Md.Ol.make({ children: value, start: node.start <= 0 ? 0 : PosInt.make(node.start) }),
-        })),
-      definitionList: (node) =>
-        Effect.map(
-          Effect.forEach(node.items, ([term, definitions], itemIndex) =>
-            Effect.all([
-              pandocInlinesToMd(term, appendIndex(path, "items", itemIndex)),
-              Effect.map(
-                Effect.forEach(definitions, (definition, definitionIndex) =>
-                  pandocChildBlocksToMd(
-                    definition,
-                    appendIndex(appendIndex(path, "items", itemIndex), "definitions", definitionIndex)
-                  )
-                ),
-                (projected) => ({
-                  issues: mergeIssues(projected),
-                  value: A.flatten(A.map(projected, (entry) => entry.value)),
-                })
+            : []),
+          ...(node.start < 0
+            ? [
+                issue({
+                  construct: "OrderedList",
+                  direction: "pandoc-to-md",
+                  message: "A negative Pandoc ordered-list start is clamped to zero for the Md domain.",
+                  path,
+                  severity: "lossy",
+                }),
+              ]
+            : []),
+        ],
+        value: Md.Ol.make({ children: value, start: node.start <= 0 ? 0 : PosInt.make(node.start) }),
+      }))
+    ),
+    Match.tag("definitionList", (node) =>
+      Effect.map(
+        Effect.forEach(node.items, ([term, definitions], itemIndex) =>
+          Effect.all([
+            pandocInlinesToMd(term, appendIndex(path, "items", itemIndex)),
+            Effect.map(
+              Effect.forEach(definitions, (definition, definitionIndex) =>
+                pandocChildBlocksToMd(
+                  definition,
+                  appendIndex(appendIndex(path, "items", itemIndex), "definitions", definitionIndex)
+                )
               ),
-            ])
-          ),
-          (items) => ({
-            issues: [
-              ...A.flatMap(items, ([term, definitions]) => [...term.issues, ...definitions.issues]),
-              issue({
-                construct: "DefinitionList",
-                direction: "pandoc-to-md",
-                message: "Pandoc definition-list structure is outside Md-core and is flattened to paragraph text.",
-                path,
-              }),
-            ],
-            value: Md.P.make({ children: [mdText(pandocBlockText(node))] }),
-          })
+              (projected) => ({
+                issues: mergeIssues(projected),
+                value: A.flatten(A.map(projected, (entry) => entry.value)),
+              })
+            ),
+          ])
         ),
-      horizontalrule: () => Effect.succeed(emptyProjection(Md.Hr.make({}))),
-      div: (node) =>
-        Effect.map(pandocChildBlocksToMd(node.children, path), ({ issues, value }) => ({
+        (items) => ({
           issues: [
-            ...issues,
+            ...A.flatMap(items, ([term, definitions]) => [...term.issues, ...definitions.issues]),
             issue({
-              construct: "Div",
+              construct: "DefinitionList",
               direction: "pandoc-to-md",
-              message: PandocAttr.isNonEmpty(node.attr)
-                ? "Pandoc div attributes, including DOCX custom styles, are recorded as a gap."
-                : "Pandoc div wrappers have no Md-core block equivalent and are rendered as blockquotes.",
-              path,
-              severity: PandocAttr.isNonEmpty(node.attr) ? "unsupported" : "lossy",
-            }),
-          ],
-          value: Md.BlockQuote.make({ children: value }),
-        })),
-      table: (node) => {
-        const caption = node.captionPlainText;
-        return Effect.succeed({
-          issues: [
-            issue({
-              construct: "Table",
-              direction: "pandoc-to-md",
-              message: "Pandoc tables are outside the v1 Md-core profile.",
+              message: "Pandoc definition-list structure is outside Md-core and is flattened to paragraph text.",
               path,
             }),
           ],
-          value: Md.P.make({ children: [mdText(caption.length === 0 ? "[table]" : caption)] }),
-        });
-      },
-      figure: (node) =>
-        Effect.map(pandocChildBlocksToMd(node.children, path), ({ issues, value }) => ({
-          issues: [
-            ...issues,
-            issue({
-              construct: "Figure",
-              direction: "pandoc-to-md",
-              message:
-                "Pandoc figure attributes and caption semantics are outside Md-core; figure content is retained in a blockquote.",
-              path,
-            }),
-          ],
-          value: Md.BlockQuote.make({
-            children: A.isReadonlyArrayNonEmpty(value) ? value : [Md.P.make({ children: [mdText("[figure]")] })],
+          value: Md.P.make({ children: [mdText(pandocBlockText(node))] }),
+        })
+      )
+    ),
+    Match.tag("horizontalrule", () => Effect.succeed(emptyProjection(Md.Hr.make({})))),
+    Match.tag("div", (node) =>
+      Effect.map(pandocChildBlocksToMd(node.children, path), ({ issues, value }) => ({
+        issues: [
+          ...issues,
+          issue({
+            construct: "Div",
+            direction: "pandoc-to-md",
+            message: PandocAttr.isNonEmpty(node.attr)
+              ? "Pandoc div attributes, including DOCX custom styles, are recorded as a gap."
+              : "Pandoc div wrappers have no Md-core block equivalent and are rendered as blockquotes.",
+            path,
+            severity: PandocAttr.isNonEmpty(node.attr) ? "unsupported" : "lossy",
           }),
-        })),
-      unknownBlock: (node) =>
-        Effect.succeed({
-          issues: [
-            issue({
-              construct: node.constructorName,
-              direction: "pandoc-to-md",
-              message: "Pandoc block constructor is outside the v1 supported surface.",
-              path,
-            }),
-          ],
-          value: Md.P.make({ children: [mdText(`[${node.constructorName}]`)] }),
+        ],
+        value: Md.BlockQuote.make({ children: value }),
+      }))
+    ),
+    Match.tag("table", (node) => {
+      const caption = node.captionPlainText;
+      return Effect.succeed({
+        issues: [
+          issue({
+            construct: "Table",
+            direction: "pandoc-to-md",
+            message: "Pandoc tables are outside the v1 Md-core profile.",
+            path,
+          }),
+        ],
+        value: Md.P.make({ children: [mdText(caption.length === 0 ? "[table]" : caption)] }),
+      });
+    }),
+    Match.tag("figure", (node) =>
+      Effect.map(pandocChildBlocksToMd(node.children, path), ({ issues, value }) => ({
+        issues: [
+          ...issues,
+          issue({
+            construct: "Figure",
+            direction: "pandoc-to-md",
+            message:
+              "Pandoc figure attributes and caption semantics are outside Md-core; figure content is retained in a blockquote.",
+            path,
+          }),
+        ],
+        value: Md.BlockQuote.make({
+          children: A.isReadonlyArrayNonEmpty(value) ? value : [Md.P.make({ children: [mdText("[figure]")] })],
         }),
-    })
+      }))
+    ),
+    Match.tag("unknownBlock", (node) =>
+      Effect.succeed({
+        issues: [
+          issue({
+            construct: node.constructorName,
+            direction: "pandoc-to-md",
+            message: "Pandoc block constructor is outside the v1 supported surface.",
+            path,
+          }),
+        ],
+        value: Md.P.make({ children: [mdText(`[${node.constructorName}]`)] }),
+      })
+    ),
+    Match.exhaustive
   );
 
 const mdInlineToPandoc = (
@@ -989,95 +1009,104 @@ const mdInlineToPandoc = (
   path: JsonPath
 ): Effect.Effect<Projection<ReadonlyArray<PandocInline.Type>>, S.SchemaError> =>
   Match.value(inline).pipe(
-    Match.tagsExhaustive({
-      text: (node) => Effect.succeed(emptyProjection([Str.make({ text: node.value })])),
-      rawMarkdown: (node) =>
-        Effect.succeed({
-          issues: [
-            issue({
-              construct: node._tag,
-              direction: "md-to-pandoc",
-              message: "Trusted raw Markdown or HTML is degraded to Pandoc plain text.",
-              path,
-              severity: "lossy",
+    Match.tag("text", (node) => Effect.succeed(emptyProjection([Str.make({ text: node.value })]))),
+    Match.tag("rawMarkdown", (node) =>
+      Effect.succeed({
+        issues: [
+          issue({
+            construct: node._tag,
+            direction: "md-to-pandoc",
+            message: "Trusted raw Markdown or HTML is degraded to Pandoc plain text.",
+            path,
+            severity: "lossy",
+          }),
+        ],
+        value: [Str.make({ text: node.value })],
+      })
+    ),
+    Match.tag("rawHtml", (node) =>
+      Effect.succeed({
+        issues: [
+          issue({
+            construct: node._tag,
+            direction: "md-to-pandoc",
+            message: "Trusted raw Markdown or HTML is degraded to Pandoc plain text.",
+            path,
+            severity: "lossy",
+          }),
+        ],
+        value: [Str.make({ text: node.value })],
+      })
+    ),
+    Match.tag("strong", (node) =>
+      Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: [Strong.make({ children: value })],
+      }))
+    ),
+    Match.tag("em", (node) =>
+      Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: [Emph.make({ children: value })],
+      }))
+    ),
+    Match.tag("del", (node) =>
+      Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: [Strikeout.make({ children: value })],
+      }))
+    ),
+    Match.tag("code", (node) =>
+      Effect.succeed(emptyProjection([Code.make({ attr: PandocAttr.empty, text: node.value })]))
+    ),
+    Match.tag("a", (node) =>
+      Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: [
+          Link.make({
+            attr: PandocAttr.empty,
+            children: value,
+            target: PandocTarget.make({
+              title: O.match({ onNone: () => "", onSome: (title: string) => title })(node.title),
+              url: node.href,
             }),
-          ],
-          value: [Str.make({ text: node.value })],
-        }),
-      rawHtml: (node) =>
-        Effect.succeed({
-          issues: [
-            issue({
-              construct: node._tag,
-              direction: "md-to-pandoc",
-              message: "Trusted raw Markdown or HTML is degraded to Pandoc plain text.",
-              path,
-              severity: "lossy",
+          }),
+        ],
+      }))
+    ),
+    Match.tag("img", (node) =>
+      Effect.succeed(
+        emptyProjection([
+          Image.make({
+            attr: PandocAttr.empty,
+            children: [Str.make({ text: node.alt })],
+            target: PandocTarget.make({
+              title: O.match({ onNone: () => "", onSome: (title: string) => title })(node.title),
+              url: node.src,
             }),
-          ],
-          value: [Str.make({ text: node.value })],
-        }),
-      strong: (node) =>
-        Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: [Strong.make({ children: value })],
-        })),
-      em: (node) =>
-        Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: [Emph.make({ children: value })],
-        })),
-      del: (node) =>
-        Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: [Strikeout.make({ children: value })],
-        })),
-      code: (node) => Effect.succeed(emptyProjection([Code.make({ attr: PandocAttr.empty, text: node.value })])),
-      a: (node) =>
-        Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: [
-            Link.make({
-              attr: PandocAttr.empty,
-              children: value,
-              target: PandocTarget.make({
-                title: O.match({ onNone: () => "", onSome: (title: string) => title })(node.title),
-                url: node.href,
-              }),
-            }),
-          ],
-        })),
-      img: (node) =>
-        Effect.succeed(
-          emptyProjection([
-            Image.make({
-              attr: PandocAttr.empty,
-              children: [Str.make({ text: node.alt })],
-              target: PandocTarget.make({
-                title: O.match({ onNone: () => "", onSome: (title: string) => title })(node.title),
-                url: node.src,
-              }),
-            }),
-          ])
-        ),
-      br: () => Effect.succeed(emptyProjection([LineBreak.make({})])),
-      inlineMath: (node) =>
-        Effect.succeed(emptyProjection([PandocMath.make({ mathType: "InlineMath", text: node.value })])),
-      footnoteReference: (node) =>
-        Effect.succeed({
-          issues: [
-            issue({
-              construct: "FootnoteReference",
-              direction: "md-to-pandoc",
-              message:
-                "Named Md footnote references have no standalone Pandoc-core equivalent and are emitted as text.",
-              path,
-              severity: "lossy",
-            }),
-          ],
-          value: [Str.make({ text: `[^${node.identifier}]` })],
-        }),
-    })
+          }),
+        ])
+      )
+    ),
+    Match.tag("br", () => Effect.succeed(emptyProjection([LineBreak.make({})]))),
+    Match.tag("inlineMath", (node) =>
+      Effect.succeed(emptyProjection([PandocMath.make({ mathType: "InlineMath", text: node.value })]))
+    ),
+    Match.tag("footnoteReference", (node) =>
+      Effect.succeed({
+        issues: [
+          issue({
+            construct: "FootnoteReference",
+            direction: "md-to-pandoc",
+            message: "Named Md footnote references have no standalone Pandoc-core equivalent and are emitted as text.",
+            path,
+            severity: "lossy",
+          }),
+        ],
+        value: [Str.make({ text: `[^${node.identifier}]` })],
+      })
+    ),
+    Match.exhaustive
   );
 
 const mdInlinesToPandoc = (
@@ -1117,179 +1146,187 @@ const mdListItemsToPandocBlocks = (
 
 const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Projection<PandocBlock.Type>, S.SchemaError> =>
   Match.value(block).pipe(
-    Match.tagsExhaustive({
-      heading: (node) => mdHeadingToPandoc(node, path),
-      p: (node) =>
-        Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: Para.make({ children: value }),
-        })),
-      blockquote: (node) =>
-        Effect.map(
-          Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index))),
-          (children) => ({
-            issues: mergeIssues(children),
-            value: BlockQuote.make({ children: A.map(children, (child) => child.value) }),
+    Match.tag("heading", (node) => mdHeadingToPandoc(node, path)),
+    Match.tag("p", (node) =>
+      Effect.map(mdInlinesToPandoc(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: Para.make({ children: value }),
+      }))
+    ),
+    Match.tag("blockquote", (node) =>
+      Effect.map(
+        Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index))),
+        (children) => ({
+          issues: mergeIssues(children),
+          value: BlockQuote.make({ children: A.map(children, (child) => child.value) }),
+        })
+      )
+    ),
+    Match.tag("pre", (node) =>
+      Effect.succeed(
+        emptyProjection(
+          CodeBlock.make({
+            attr: PandocAttr.make({
+              classes: O.match({ onNone: () => [], onSome: (language: string) => [language] })(node.language),
+              id: "",
+              keyValues: [],
+            }),
+            text: node.value,
           })
-        ),
-      pre: (node) =>
-        Effect.succeed(
-          emptyProjection(
-            CodeBlock.make({
-              attr: PandocAttr.make({
-                classes: O.match({ onNone: () => [], onSome: (language: string) => [language] })(node.language),
-                id: "",
-                keyValues: [],
-              }),
-              text: node.value,
-            })
-          )
-        ),
-      ul: (node) =>
-        Effect.map(mdListItemsToPandocBlocks(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: BulletList.make({
-            items: value,
+        )
+      )
+    ),
+    Match.tag("ul", (node) =>
+      Effect.map(mdListItemsToPandocBlocks(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: BulletList.make({
+          items: value,
+        }),
+      }))
+    ),
+    Match.tag("ol", (node) =>
+      Effect.map(mdListItemsToPandocBlocks(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: OrderedList.make({
+          delimiter: "DefaultDelim",
+          items: value,
+          start: node.start,
+          style: "DefaultStyle",
+        }),
+      }))
+    ),
+    Match.tag("taskList", (node) =>
+      Effect.map(mdListItemsToPandocBlocks(node.children, path), ({ issues, value }) => ({
+        issues: [
+          issue({
+            construct: "TaskList",
+            direction: "md-to-pandoc",
+            message: "Md task list checked state has no v1 Pandoc-core mapping and is emitted as a bullet list.",
+            path,
+            severity: "lossy",
           }),
-        })),
-      ol: (node) =>
-        Effect.map(mdListItemsToPandocBlocks(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: OrderedList.make({
-            delimiter: "DefaultDelim",
-            items: value,
-            start: node.start,
-            style: "DefaultStyle",
+          ...issues,
+        ],
+        value: BulletList.make({
+          items: value,
+        }),
+      }))
+    ),
+    Match.tag("table", (node) => {
+      const text = mdTableText(node);
+      return Effect.succeed({
+        issues: [
+          issue({
+            construct: "Table",
+            direction: "md-to-pandoc",
+            message: "Md tables are outside the v1 Pandoc-core profile and are emitted as plain paragraph text.",
+            path,
+            severity: "lossy",
           }),
-        })),
-      taskList: (node) =>
-        Effect.map(mdListItemsToPandocBlocks(node.children, path), ({ issues, value }) => ({
+        ],
+        value: Para.make({ children: [Str.make({ text: text.length === 0 ? "[table]" : text })] }),
+      });
+    }),
+    Match.tag("youtube", (node) => {
+      const url = youtubeWatchUrl(node.videoId);
+      return Effect.succeed({
+        issues: [
+          issue({
+            construct: "YouTube",
+            direction: "md-to-pandoc",
+            message: "Md YouTube embeds have no Pandoc-core equivalent and are emitted as a plain link.",
+            path,
+            severity: "lossy",
+          }),
+        ],
+        value: Para.make({
+          children: [
+            Link.make({
+              attr: PandocAttr.empty,
+              children: [Str.make({ text: url })],
+              target: PandocTarget.make({ title: "", url }),
+            }),
+          ],
+        }),
+      });
+    }),
+    Match.tag("mathBlock", (node) =>
+      Effect.succeed(
+        emptyProjection(Para.make({ children: [PandocMath.make({ mathType: "DisplayMath", text: node.value })] }))
+      )
+    ),
+    Match.tag("footnoteDefinition", (node) =>
+      Effect.map(
+        Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index))),
+        (children) => ({
           issues: [
             issue({
-              construct: "TaskList",
+              construct: "FootnoteDefinition",
               direction: "md-to-pandoc",
-              message: "Md task list checked state has no v1 Pandoc-core mapping and is emitted as a bullet list.",
+              message: "Named Md footnote definitions are emitted as anonymous Pandoc notes.",
               path,
               severity: "lossy",
             }),
-            ...issues,
+            ...mergeIssues(children),
           ],
-          value: BulletList.make({
-            items: value,
-          }),
-        })),
-      table: (node) => {
-        const text = mdTableText(node);
-        return Effect.succeed({
+          value: Para.make({ children: [Note.make({ blocks: A.map(children, (child) => child.value) })] }),
+        })
+      )
+    ),
+    Match.tag("admonition", (node) =>
+      Effect.map(
+        Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index))),
+        (children) => ({
           issues: [
             issue({
-              construct: "Table",
+              construct: "Admonition",
               direction: "md-to-pandoc",
-              message: "Md tables are outside the v1 Pandoc-core profile and are emitted as plain paragraph text.",
+              message: "Md admonitions are emitted as attributed Pandoc divs.",
               path,
               severity: "lossy",
             }),
+            ...mergeIssues(children),
           ],
-          value: Para.make({ children: [Str.make({ text: text.length === 0 ? "[table]" : text })] }),
-        });
-      },
-      youtube: (node) => {
-        const url = youtubeWatchUrl(node.videoId);
-        return Effect.succeed({
-          issues: [
-            issue({
-              construct: "YouTube",
-              direction: "md-to-pandoc",
-              message: "Md YouTube embeds have no Pandoc-core equivalent and are emitted as a plain link.",
-              path,
-              severity: "lossy",
+          value: Div.make({
+            attr: PandocAttr.make({
+              classes: ["admonition", node.kind],
+              id: "",
+              keyValues: O.match({
+                onNone: () => [],
+                onSome: (title: string) => [["title", title] as const],
+              })(node.title),
             }),
-          ],
-          value: Para.make({
-            children: [
-              Link.make({
-                attr: PandocAttr.empty,
-                children: [Str.make({ text: url })],
-                target: PandocTarget.make({ title: "", url }),
-              }),
-            ],
+            children: A.map(children, (child) => child.value),
           }),
-        });
-      },
-      mathBlock: (node) =>
-        Effect.succeed(
-          emptyProjection(Para.make({ children: [PandocMath.make({ mathType: "DisplayMath", text: node.value })] }))
+        })
+      )
+    ),
+    Match.tag("embed", (node) => {
+      const title = O.match({ onNone: () => "", onSome: (value: string) => value })(node.title);
+      const label = title.length === 0 ? node.src : title;
+      const target = PandocTarget.make({ title, url: node.src });
+      const child = Match.value(node.kind).pipe(
+        Match.when("image", () =>
+          Image.make({ attr: PandocAttr.empty, children: [Str.make({ text: label })], target })
         ),
-      footnoteDefinition: (node) =>
-        Effect.map(
-          Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index))),
-          (children) => ({
-            issues: [
-              issue({
-                construct: "FootnoteDefinition",
-                direction: "md-to-pandoc",
-                message: "Named Md footnote definitions are emitted as anonymous Pandoc notes.",
-                path,
-                severity: "lossy",
-              }),
-              ...mergeIssues(children),
-            ],
-            value: Para.make({ children: [Note.make({ blocks: A.map(children, (child) => child.value) })] }),
-          })
-        ),
-      admonition: (node) =>
-        Effect.map(
-          Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index))),
-          (children) => ({
-            issues: [
-              issue({
-                construct: "Admonition",
-                direction: "md-to-pandoc",
-                message: "Md admonitions are emitted as attributed Pandoc divs.",
-                path,
-                severity: "lossy",
-              }),
-              ...mergeIssues(children),
-            ],
-            value: Div.make({
-              attr: PandocAttr.make({
-                classes: ["admonition", node.kind],
-                id: "",
-                keyValues: O.match({
-                  onNone: () => [],
-                  onSome: (title: string) => [["title", title] as const],
-                })(node.title),
-              }),
-              children: A.map(children, (child) => child.value),
-            }),
-          })
-        ),
-      embed: (node) => {
-        const title = O.match({ onNone: () => "", onSome: (value: string) => value })(node.title);
-        const label = title.length === 0 ? node.src : title;
-        const target = PandocTarget.make({ title, url: node.src });
-        const child = Match.value(node.kind).pipe(
-          Match.when("image", () =>
-            Image.make({ attr: PandocAttr.empty, children: [Str.make({ text: label })], target })
-          ),
-          Match.orElse(() => Link.make({ attr: PandocAttr.empty, children: [Str.make({ text: label })], target }))
-        );
+        Match.orElse(() => Link.make({ attr: PandocAttr.empty, children: [Str.make({ text: label })], target }))
+      );
 
-        return Effect.succeed({
-          issues: [
-            issue({
-              construct: "Embed",
-              direction: "md-to-pandoc",
-              message: "Generic Md embeds are emitted as inert Pandoc image or link nodes.",
-              path,
-              severity: "lossy",
-            }),
-          ],
-          value: Para.make({ children: [child] }),
-        });
-      },
-      hr: () => Effect.succeed(emptyProjection(HorizontalRule.make({}))),
-    })
+      return Effect.succeed({
+        issues: [
+          issue({
+            construct: "Embed",
+            direction: "md-to-pandoc",
+            message: "Generic Md embeds are emitted as inert Pandoc image or link nodes.",
+            path,
+            severity: "lossy",
+          }),
+        ],
+        value: Para.make({ children: [child] }),
+      });
+    }),
+    Match.tag("hr", () => Effect.succeed(emptyProjection(HorizontalRule.make({})))),
+    Match.exhaustive
   );
 
 /**

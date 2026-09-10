@@ -1,0 +1,14 @@
+{
+  "lane": "r24-foundation-schema-a-m",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "started": "2026-09-08T19:53:24.516591+00:00",
+  "finished": "2026-09-08T20:03:47.594843+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "transcriptSha256": "65f31e2ae222980ccfaa67429fb988669908cad8de5108fc4884e216001ca296",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-foundation-schema-a-m.jsonl` \u2014 confirmed 0, disqualified 1. Assigned A\u2013M schema paths covered. Seed declarations still present; no material drift."
+}

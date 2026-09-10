@@ -5,7 +5,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as Headers from "effect/unstable/http/Headers";
 
 const decodeApiTransportOptions = S.decodeEffect(ApiTransportOptions);
@@ -13,7 +13,7 @@ const decodeUnknownApiTransportOptions = S.decodeUnknownEffect(ApiTransportOptio
 const encodeApiTransportOptions = S.encodeEffect(ApiTransportOptions);
 const isApiTransportOptions = S.is(ApiTransportOptions);
 
-const RateLimitSnapshotArbitrary = S.toArbitrary(RateLimitSnapshot)(fc);
+const RateLimitSnapshotArbitrary = Arbitrary.schema(RateLimitSnapshot);
 const RateLimitSnapshotEquivalence = S.toEquivalence(RateLimitSnapshot);
 const decodeRateLimitSnapshot = S.decodeUnknownEffect(RateLimitSnapshot);
 const encodeRateLimitSnapshot = S.encodeEffect(RateLimitSnapshot);
@@ -24,8 +24,8 @@ const HeaderRoundTripSnapshot = S.Struct({
   remaining: S.optionalKey(HeaderRoundTripNumber),
   reset: S.optionalKey(HeaderRoundTripNumber),
 });
-const HeaderRoundTripSnapshotArbitrary = S.toArbitrary(HeaderRoundTripSnapshot)(fc).map((snapshot) =>
-  RateLimitSnapshot.make(snapshot)
+const HeaderRoundTripSnapshotArbitrary = Arbitrary.schema(HeaderRoundTripSnapshot).pipe(
+  Arbitrary.map((snapshot) => RateLimitSnapshot.make(snapshot))
 );
 
 const toHeaders = (snapshot: RateLimitSnapshot): Headers.Headers =>
@@ -118,30 +118,44 @@ describe("@beep/api-transport", () => {
   });
 
   it("round-trips schema-derived RateLimitSnapshot values through the encoded shape", () =>
-    fc.assert(
-      fc.property(RateLimitSnapshotArbitrary, (snapshot) => {
-        const encoded = Effect.runSync(encodeRateLimitSnapshot(snapshot));
-        const decoded = Effect.runSync(decodeRateLimitSnapshot(encoded));
-        const reencoded = Effect.runSync(encodeRateLimitSnapshot(decoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([RateLimitSnapshotArbitrary]),
+          ([snapshot]) => {
+            const encoded = Effect.runSync(encodeRateLimitSnapshot(snapshot));
+            const decoded = Effect.runSync(decodeRateLimitSnapshot(encoded));
+            const reencoded = Effect.runSync(encodeRateLimitSnapshot(decoded));
 
-        expect(reencoded).toEqual(encoded);
-        expect(RateLimitSnapshotEquivalence(decoded, snapshot)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(reencoded).toEqual(encoded);
+            expect(RateLimitSnapshotEquivalence(decoded, snapshot)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("round-trips parseable schema-derived snapshots through rate-limit headers", () =>
-    fc.assert(
-      fc.property(HeaderRoundTripSnapshotArbitrary, (snapshot) => {
-        const parsed = RateLimitSnapshot.fromHeaders(toHeaders(snapshot));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([HeaderRoundTripSnapshotArbitrary]),
+          ([snapshot]) => {
+            const parsed = RateLimitSnapshot.fromHeaders(toHeaders(snapshot));
 
-        O.match(parsed, {
-          onNone: () => expect(hasAnyField(snapshot)).toBe(false),
-          onSome: (value) => expect(RateLimitSnapshotEquivalence(value, snapshot)).toBe(true),
-        });
-      }),
-      fcRuns(50)
-    ));
+            O.match(parsed, {
+              onNone: () => expect(hasAnyField(snapshot)).toBe(false),
+              onSome: (value) => expect(RateLimitSnapshotEquivalence(value, snapshot)).toBe(true),
+            });
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("parses rate-limit aliases and ignores non-numeric headers", () => {
     expect(

@@ -1,0 +1,17 @@
+{
+  "lane": "r25-cli-commands-d-k",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:29:52.549296+00:00",
+  "finished": "2026-09-08T22:42:07.202475+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 21,
+  "qualifiedCandidates": 18,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-cli-commands-d-k.jsonl` \u2014 confirmed 18, disqualified 3. Covered DeletePackage, Docgen, Docs, Explore, Fallow, Files, Goals, Image, Knowledge. Seed drift: `DocgenConfigDocument.runExamples` gone; `CurationCommitRecord` is now an alias of `StagedFileCommitRecord`; `PacketTransitionPlan.traceWritten` moved to `PacketTransitionOutcome`. Remaining listed seeds still exist.",
+  "transcriptSha256": "b1e61129ab054a17c7b4f247ced00faef5ea8028c36684da27f046e3b18fab49",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

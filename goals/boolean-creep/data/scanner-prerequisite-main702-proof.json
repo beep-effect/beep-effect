@@ -1,0 +1,96 @@
+{
+  "kind": "scanner-prerequisite-main702-proof",
+  "previousProof": "goals/boolean-creep/data/scanner-prerequisite-main-d68-proof.json",
+  "previousHead": "12cd15340dd99d052f99951ed80718556ed13d12",
+  "previousFullProof": "success: 35 reported steps",
+  "previousPublication": {
+    "pushed": true,
+    "prCreated": false,
+    "failure": "gh pr create could not identify the just-pushed branch; explicit --head fallback required."
+  },
+  "currentHead": "04cc73e733758e39a4e15ec294f86ef74ecc66c5",
+  "originMainSha": "702e815971a4030806cdbd9e8f6aa9260d0d3b62",
+  "mergeExitCode": 0,
+  "frozenInstallExitCode": 0,
+  "configSha256": "15c9ed8e120de2ee89f759b66010e3d2a1bcf44f960678f958da6b9565711873",
+  "schedulerTestSha256": "6fe705fb7c854116a5e83ce3334451f9c12f569ae4d60b733a7c630d9b427299",
+  "currentVerification": {
+    "command": ["bun", "run", "beep", "yeet", "verify"],
+    "startedAt": "2026-09-09T15:11:24.249447+00:00",
+    "status": "success",
+    "evidence": "~/.cache/beep/boolean-creep/scanner-pr-20260909/verify-main702-full-result/receipt.json",
+    "finishedAt": "2026-09-09T15:42:39.984877+00:00",
+    "exitCode": 0,
+    "passedSteps": 35,
+    "comparedCoveragePackages": 134,
+    "verdictSha256": "8f9ca0863cb4b8eb454469ae29858b7c3030ad443675d11f5d62eec86f64942f"
+  },
+  "fullProofComplete": true,
+  "hostedProofComplete": false,
+  "merged": true,
+  "publication": {
+    "status": "success",
+    "pushed": true,
+    "head": "04cc73e733758e39a4e15ec294f86ef74ecc66c5",
+    "pr": 1059,
+    "url": "https://github.com/beep-effect/beep-effect/pull/1059",
+    "title": "fix(quality): preserve boolean-creep evidence in secret scans",
+    "state": "MERGED",
+    "readyForReview": true,
+    "method": "Canonical publish --push-only --reuse-verified, followed by gh pr create with explicit repository/head after the prior automatic creation failure.",
+    "monitor": "bun run beep yeet monitor --watch",
+    "mergedAt": "2026-09-09T16:17:59Z",
+    "mergeCommit": "be5b589aa013c8350a4fad5cdfe36a6f6188db1f"
+  },
+  "hostedObservation": {
+    "recordedAt": "2026-09-09T15:50:21.593251+00:00",
+    "pr": 1059,
+    "head": "04cc73e733758e39a4e15ec294f86ef74ecc66c5",
+    "firstWatchExitCode": 1,
+    "failingCommitStatuses": [
+      {
+        "context": "Vercel \u2013 oip-web",
+        "state": "failure",
+        "description": "Deployment rate limited \u2014 retry in 24 hours."
+      },
+      {
+        "context": "Vercel \u2013 oip-web-staging",
+        "state": "failure",
+        "description": "Deployment rate limited \u2014 retry in 24 hours."
+      }
+    ],
+    "attribution": "Vercel deployments fail only because of provider rate limiting; exact allowed exception in AGENTS.md. Required checks and independent review remain pending. No source repair or workflow rerun is indicated by these statuses.",
+    "continuation": "Use canonical monitor --watch without until-event so the same known provider reds do not repeatedly end the watch immediately."
+  },
+  "hostedRequiredChecksGreen": true,
+  "monitorTerminal": {
+    "exitCode": 1,
+    "finishedAt": "2026-09-09T16:18:13.618823+00:00",
+    "reason": "pr-merged",
+    "requiredChecksGreenAt": "2026-09-09T16:16:39.913Z",
+    "failingStatuses": 2,
+    "attribution": "Both remaining failure statuses are the previously verified Vercel deployment rate limits allowed by AGENTS.md. The watch ended because the PR merged.",
+    "restartRequired": false
+  },
+  "mergedReviewObservation": {
+    "recordedAt": "2026-09-09T16:22:32.186851+00:00",
+    "state": "MERGED",
+    "mergedAt": "2026-09-09T16:17:59Z",
+    "mergeCommit": "be5b589aa013c8350a4fad5cdfe36a6f6188db1f",
+    "reviewThreads": 0,
+    "unresolvedCurrentThreads": []
+  },
+  "hostedLatestRollup": {
+    "recordedAt": "2026-09-09T16:26:35.398439+00:00",
+    "counts": {
+      "SUCCESS": 33,
+      "QUEUED": 1,
+      "FAILURE": 2,
+      "SKIPPED": 1
+    },
+    "queued": ["Build"],
+    "allHostedChecksComplete": false,
+    "note": "Required-green is established by the canonical watch. The rollup records optional jobs independently and makes no independent-review approval claim."
+  },
+  "rootSourceForward": "goals/boolean-creep/data/post-r31-scanner-merged-source-forward.json"
+}

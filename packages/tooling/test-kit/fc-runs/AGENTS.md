@@ -1,6 +1,6 @@
 # @beep/fc-runs
 
-Env-max fast-check run-count helpers (property-law lane floor)
+Env-max Effect Arbitrary run-count helpers (property-law lane floor)
 
 ## Surface
 

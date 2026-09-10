@@ -4,9 +4,8 @@
 - file:line: `packages/foundation/ui-system/ui/src/components/link-preview.tsx:46`
 - symbol: `LinkPreviewState`
 - members: `isLoading`, `error`, `fetchedMetadata`
-- evidence classes:
-  - E3 at `packages/foundation/ui-system/ui/src/components/link-preview.tsx:46` — isLoading plus nullable error/fetchedMetadata: the boolean duplicates payload presence — one fetch machine split across three fields.
-  - E1 at `packages/foundation/ui-system/ui/src/components/link-preview.tsx:146` — write sites set isLoading true with payloads cleared, then flip it false while setting exactly one payload (lines 146/158/182).
+- evidence class:
+  - E2 at `packages/foundation/ui-system/ui/src/components/link-preview.tsx:362-375` — the renderer dispatches loading before failure and has no combined loading/error arm; together with the metadata result it consumes the loose fields as the four exclusive fetch phases idle, loading, failed, and loaded.
 
 # Current shape
 
@@ -107,7 +106,7 @@ none (internal)
 
 # Test impact
 
-No file under `packages/foundation/ui-system/ui/test/` reads `LinkPreviewState`, `isLoading`, or `fetchedMetadata`; the `error` matches in `schema-parity.test.ts` belong to unrelated schemas. Add focused component/atom coverage for all four fetch cases, especially failure payload rendering, loaded metadata selection, and preservation of `validImage`/`validFavicon` while the fetch case changes. Existing `packages/foundation/ui-system/ui/stories/components/link-preview.stories.tsx` exercises the public component but does not access these members.
+No file under `packages/foundation/ui-system/ui/test/` reads `LinkPreviewState`, `isLoading`, or `fetchedMetadata`; the `error` matches in `schema-parity.test.ts` belong to unrelated schemas. Add focused component/atom coverage for all four fetch cases, especially failure payload rendering, loaded metadata selection, and preservation of `validImage`/`validFavicon` while the fetch case changes. Existing `packages/foundation/ui-system/ui/stories/components/link-preview.stories.tsx` exercises the public component but does not access these members. Because hover/focus opens a gesture-bearing tooltip whose contents transition through loading, failed, loaded, and invalid-URL states, run the `browser-qa-loop` through the portless package script and retain successful record -> extract -> judge evidence with `requiredCount: 0` for all four visible outcomes.
 
 # Risk & sequencing
 

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "boolean-creep-pr-readiness-correction/v1",
+  "date": "2026-09-09",
+  "pr": 1069,
+  "path": "goals/boolean-creep/designs/foundation-ui-system-menus-open.md",
+  "originalArchive": "goals/boolean-creep/history/designs/2026-09-09-pr-readiness/foundation-ui-system-menus-open.md.txt",
+  "originalSha256": "e58b82403515da636a540e61b28bad2936305a69585f5b0cd24c6d3012a643ec",
+  "correctedSha256": "818e5c3ff9b12f107eff2fa01e90c5a86dcfdd440063b8d6ffdfef1e3117aea7",
+  "reason": "The knowledge semantic-delta checker interpreted a quoted package export key as a relative file path. Spell the public package subpath explicitly; source behavior and the proposed design are unchanged.",
+  "inventoryChanged": false,
+  "independentReviewCredit": false,
+  "campaignExecution": "paused",
+  "readinessWork": "authorized by the user while keeping the PR draft"
+}

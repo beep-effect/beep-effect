@@ -1,0 +1,17 @@
+{
+  "lane": "r27-shared-documents",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "started": "2026-09-09T02:24:46.694134+00:00",
+  "finished": "2026-09-09T02:32:30.096883+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-shared-documents.jsonl` \u2014 confirmed 0, disqualified 0. All seven assigned roots covered. All 21 seed declarations still present; no member/line drift.",
+  "transcriptSha256": "3031a884cab08d21592942b9948147983bf5faa3bfff95dab5f7f591f065eae0",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998"
+}

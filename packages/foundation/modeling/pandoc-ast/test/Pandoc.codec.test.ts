@@ -24,7 +24,7 @@ import {
   PandocListNumberStyle,
   PandocMathType,
   PandocMetaValue,
-  PandocTablePayload,
+  PandocTablePayloadArbitrary,
   PandocTarget,
   Para,
   Str,
@@ -43,8 +43,9 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownPandocJsonFromStringSync = S.decodeUnknownSync(PandocJsonFromString);
 const encodeTable = S.encodeEffect(Table);
@@ -66,25 +67,25 @@ const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void =
   expect.unreachable("expected schema construction to throw");
 };
 
-const PandocDocumentArbitrary = S.toArbitrary(PandocDocument)(fc);
+const PandocDocumentArbitrary = Arbitrary.schema(PandocDocument);
 const PandocDocumentEquivalence = S.toEquivalence(PandocDocument);
-const PandocTablePayloadArbitrary = S.toArbitrary(PandocTablePayload)(fc);
-const SemanticClosureDocumentArbitrary = fc
-  .tuple(
-    PandocDocumentArbitrary,
-    S.toArbitrary(Table)(fc),
-    S.toArbitrary(UnknownBlock)(fc),
-    S.toArbitrary(UnknownInline)(fc),
-    S.toArbitrary(UnknownMeta)(fc)
-  )
-  .map(([document, table, unknownBlock, unknownInline, unknownMeta]) =>
+
+const SemanticClosureDocumentArbitrary = Arbitrary.all([
+  PandocDocumentArbitrary,
+  Arbitrary.schema(Table),
+  Arbitrary.schema(UnknownBlock),
+  Arbitrary.schema(UnknownInline),
+  Arbitrary.schema(UnknownMeta),
+]).pipe(
+  Arbitrary.map(([document, table, unknownBlock, unknownInline, unknownMeta]) =>
     PandocDocument.make({
       apiVersion: document.apiVersion,
       blocks: [...document.blocks, table, unknownBlock, Para.make({ children: [unknownInline] })],
       meta: { ...document.meta, semanticClosure: unknownMeta },
     })
-  );
-const JsonArbitrary = S.toArbitrary(S.Json)(fc);
+  )
+);
+const JsonArbitrary = Arbitrary.schema(S.Json);
 const decodeUnknownJsonString = UnknownFromJsonString.decodeUnknownEffect;
 const emptyAttr = ["", [], []];
 const pinnedPandocConstructorNames = [
@@ -350,16 +351,23 @@ describe("Pandoc.codec", () => {
   });
 
   it("uses the semantic table schema at the strict decoder boundary", () =>
-    fc.assert(
-      fc.property(PandocTablePayloadArbitrary, (payload) => {
-        const document = PandocDocument.make({ blocks: [Table.make({ payload })], meta: {} });
-        const encoded = Effect.runSync(encodePandocJson(document));
-        const decoded = Effect.runSync(decodePandocJsonStrict(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([PandocTablePayloadArbitrary]),
+          ([payload]) => {
+            const document = PandocDocument.make({ blocks: [Table.make({ payload })], meta: {} });
+            const encoded = Effect.runSync(encodePandocJson(document));
+            const decoded = Effect.runSync(decodePandocJsonStrict(encoded));
 
-        expect(PandocDocumentEquivalence(decoded, document)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(PandocDocumentEquivalence(decoded, document)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("round-trips a recursively nested table inside table-cell block content", () => {
     const nestedTable = tableWire().blocks[0];
@@ -971,44 +979,58 @@ describe("Pandoc.codec", () => {
     ));
 
   it("keeps schema-derived semantic documents closed under encode and strict decode", () =>
-    fc.assert(
-      fc.property(SemanticClosureDocumentArbitrary, (document) => {
-        const encoded = Effect.runSync(encodePandocJson(document));
-        const decoded = Effect.runSync(decodePandocJsonStrict(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([SemanticClosureDocumentArbitrary]),
+          ([document]) => {
+            const encoded = Effect.runSync(encodePandocJson(document));
+            const decoded = Effect.runSync(decodePandocJsonStrict(encoded));
 
-        expect(PandocDocumentEquivalence(decoded, document)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(PandocDocumentEquivalence(decoded, document)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("preserves arbitrary future JSON through the public lossless profile", () =>
-    fc.assert(
-      fc.property(JsonArbitrary, (extension) => {
-        const wire = {
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [{ c: extension, t: "FutureBlock" }],
-          meta: {
-            future: { c: extension, t: "MetaFuture" },
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([JsonArbitrary]),
+          ([extension]) => {
+            const wire = {
+              "pandoc-api-version": [1, 23, 1],
+              blocks: [{ c: extension, t: "FutureBlock" }],
+              meta: {
+                future: { c: extension, t: "MetaFuture" },
+              },
+              extension,
+            };
+
+            const semantic = Effect.runSync(decodePandocJsonStrict(wire));
+            expect(semantic.blocks[0]?._tag).toBe("unknownBlock");
+            expect(semantic.meta.future?._tag).toBe("unknownMeta");
+
+            const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+            expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+
+            const source = JSON.stringify(wire);
+            const fromString = Effect.runSync(decodePandocJsonStringLossless(source));
+            const output = Effect.runSync(encodePandocJsonStringLossless(fromString));
+            expect(Effect.runSync(decodeUnknownJsonString(output))).toEqual(
+              Effect.runSync(decodeUnknownJsonString(source))
+            );
+
+            return true;
           },
-          extension,
-        };
-
-        const semantic = Effect.runSync(decodePandocJsonStrict(wire));
-        expect(semantic.blocks[0]?._tag).toBe("unknownBlock");
-        expect(semantic.meta.future?._tag).toBe("unknownMeta");
-
-        const lossless = Effect.runSync(decodePandocJsonLossless(wire));
-        expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
-
-        const source = JSON.stringify(wire);
-        const fromString = Effect.runSync(decodePandocJsonStringLossless(source));
-        const output = Effect.runSync(encodePandocJsonStringLossless(fromString));
-        expect(Effect.runSync(decodeUnknownJsonString(output))).toEqual(
-          Effect.runSync(decodeUnknownJsonString(source))
-        );
-      }),
-      fcRuns(50)
-    ));
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("keeps DOCX-style gap constructs decodable as explicit model nodes", () =>
     Effect.runPromise(
@@ -1469,3 +1491,27 @@ describe("Pandoc.codec", () => {
     ).toEqual([]);
   });
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes Table through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(Table.ast).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const codec = S.make<S.Codec<Table, unknown>>(
+      SchemaAST.decodeTo(link.to, SchemaAST.toType(Table.ast), link.transformation)
+    );
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(Table),
+      (value) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(codec)(value);
+          expect(encoded).toEqual({});
+          return true;
+        }),
+      fcRuns(50)
+    );
+    expect(result._tag).toBe("Passed");
+  })
+);

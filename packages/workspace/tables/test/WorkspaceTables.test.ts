@@ -17,20 +17,18 @@ import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 
 const decodeUnknownMessageModelSync = S.decodeUnknownSync(MessageModel);
 const decodeUnknownThreadModelSync = S.decodeUnknownSync(ThreadModel);
 const decodeUnknownTurnModelSync = S.decodeUnknownSync(TurnModel);
 const decodeUnknownWorkspaceModelSync = S.decodeUnknownSync(WorkspaceModel);
 
-const ThreadArbitrary = S.toArbitrary(ThreadModel)(fc);
 const ThreadEquivalence = S.toEquivalence(ThreadModel);
-const MessageArbitrary = S.toArbitrary(MessageModel)(fc);
+
 const MessageEquivalence = S.toEquivalence(MessageModel);
-const TurnArbitrary = S.toArbitrary(TurnModel)(fc);
+
 const TurnEquivalence = S.toEquivalence(TurnModel);
-const WorkspaceArbitrary = S.toArbitrary(WorkspaceModel)(fc);
+
 const WorkspaceEquivalence = S.toEquivalence(WorkspaceModel);
 
 const expectBaseProjectionColumns = (table: typeof CandidateDraft.Table | typeof CandidateProject.Table) => {
@@ -190,43 +188,38 @@ describe("WorkspaceTables", () => {
     expect(O.getOrUndefined(roundTripped.vaultRootPath)).toBe("/tmp/beep-workspace-vault");
   });
 
-  it("round-trips schema-derived Thread, Message, Turn, and Workspace entities through the row converters", () =>
-    fc.assert(
-      fc.property(
-        ThreadArbitrary,
-        MessageArbitrary,
-        TurnArbitrary,
-        WorkspaceArbitrary,
-        (thread, message, turn, workspace) => {
-          const threadInsert = Thread.toThreadInsert(thread);
-          const messageInsert = Message.toMessageInsert(message);
-          const turnInsert = Turn.toTurnInsert(turn);
-          const workspaceInsert = Workspace.toWorkspaceInsert(workspace);
+  it.prop(
+    "round-trips schema-derived Thread, Message, Turn, and Workspace entities through the row converters",
+    [S.Tuple([ThreadModel, MessageModel, TurnModel, WorkspaceModel])],
+    ([[thread, message, turn, workspace]]) => {
+      const threadInsert = Thread.toThreadInsert(thread);
+      const messageInsert = Message.toMessageInsert(message);
+      const turnInsert = Turn.toTurnInsert(turn);
+      const workspaceInsert = Workspace.toWorkspaceInsert(workspace);
 
-          expect(ThreadEquivalence(Thread.fromThreadRow({ ...threadInsert, id: thread.id }), thread)).toBe(true);
-          expect(MessageEquivalence(Message.fromMessageRow({ ...messageInsert, id: message.id }), message)).toBe(true);
-          expect(
-            TurnEquivalence(
-              Turn.fromTurnRow({
-                ...turnInsert,
-                id: turn.id,
-                parentTurnId: turnInsert.parentTurnId ?? null,
-              }),
-              turn
-            )
-          ).toBe(true);
-          expect(
-            WorkspaceEquivalence(
-              Workspace.fromWorkspaceRow({
-                ...workspaceInsert,
-                id: workspace.id,
-                vaultRootPath: workspaceInsert.vaultRootPath ?? null,
-              }),
-              workspace
-            )
-          ).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+      expect(ThreadEquivalence(Thread.fromThreadRow({ ...threadInsert, id: thread.id }), thread)).toBe(true);
+      expect(MessageEquivalence(Message.fromMessageRow({ ...messageInsert, id: message.id }), message)).toBe(true);
+      expect(
+        TurnEquivalence(
+          Turn.fromTurnRow({
+            ...turnInsert,
+            id: turn.id,
+            parentTurnId: turnInsert.parentTurnId ?? null,
+          }),
+          turn
+        )
+      ).toBe(true);
+      expect(
+        WorkspaceEquivalence(
+          Workspace.fromWorkspaceRow({
+            ...workspaceInsert,
+            id: workspace.id,
+            vaultRootPath: workspaceInsert.vaultRootPath ?? null,
+          }),
+          workspace
+        )
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

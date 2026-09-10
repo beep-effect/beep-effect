@@ -31,7 +31,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { HttpClient, HttpClientRequest } from "effect/unstable/http";
 import { rpcSessionAuthorizationHeader } from "../../server/RpcSessionAuth.ts";
 import {
@@ -58,14 +58,19 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      const encoded = Result.getOrThrow(encode(value));
-      const decoded = Result.getOrThrow(decode(encoded));
-      return equivalent(decoded, value);
-    }),
-    fcRuns(10)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.schema(schema),
+        (value) => {
+          const encoded = Result.getOrThrow(encode(value));
+          const decoded = Result.getOrThrow(decode(encoded));
+          return equivalent(decoded, value);
+        },
+        fcRuns(10)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 interface LedgerProbe {

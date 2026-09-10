@@ -1,0 +1,22 @@
+{
+  "lane": "r31-tooling-policy",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T15:14:46.653476+00:00",
+  "finished": "2026-09-09T15:22:51.009588+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-tooling-policy.jsonl`\n\nCounts: **0 confirmed**, **2 disqualified** (both D2 constructed Next SDK option bags on `makeBaseConfig`). Validator: `inventory OK: 2 records`.\n\nCoverage: both assigned roots scanned (`packages/tooling/policy-pack/lint-rules/src`, `packages/tooling/policy-pack/repo-configs/src`). Generated `internal/eslint/generated/EffectLawsAllowlistSnapshot.ts` excluded.\n\nSeeds: all 21 still present with the same owners, members, and D1/D2 classes \u2014 not re-reported. No member expansion. `ImageConfig.default` decode input still carries the same five image toggles as the seeded schemas (not duplicated). `DocsESLintConfig.require-jsdoc` / `.require` remain D2; they are object-literals in source, previously recorded as `type-literal`. `skipMiddlewareUrlNormalize` is still the documented alias beside `skipProxyUrlNormalize` inside seeded `NextConfig` D2.\n\nlint-rules: no eligible cluster (callable predicates and a single-field `{ shadowed }` latch). Out-of-net sentinels left in the footer sense only: `devIndicators`/`logging`/`PrefetchInliningConfig`/`SecureHeadersConfig`/`BeepNextMdxConfig` false-or-object unions; single-boolean option objects (`checkDestructured`, `warnOnUnsupportedTypeScriptVersion`, `type: false` per structured tag).\n\nNo unresolved source question.",
+  "transcriptSha256": "f319d55b542ebee4a57046787f8949d6238faaa424653954c7619df44e84770c",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 2 records, 2 unique ids\n"
+}

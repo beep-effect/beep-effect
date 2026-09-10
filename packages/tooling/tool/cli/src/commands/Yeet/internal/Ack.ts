@@ -263,13 +263,15 @@ export type YeetAckResolution = typeof YeetAckResolution.Type;
  */
 export const renderYeetAckResolution = (resolution: YeetAckResolution): string =>
   Match.value(resolution).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      "environment-only": (environmentOnly) => `environment-only: ${environmentOnly.reason}`,
-      "fix-sha": (fix) => `fix-sha ${fix.sha}`,
-      "thread-url": (thread) => `thread ${thread.url}`,
-      waive: (waive) => `waive ${waive.shard} by ${waive.actor} until ${waive.expiresAt}: ${waive.reason}`,
-      wontfix: (wontfix) => `wontfix: ${wontfix.reason}`,
-    })
+    Match.discriminator("kind")("environment-only", (environmentOnly) => `environment-only: ${environmentOnly.reason}`),
+    Match.discriminator("kind")("fix-sha", (fix) => `fix-sha ${fix.sha}`),
+    Match.discriminator("kind")("thread-url", (thread) => `thread ${thread.url}`),
+    Match.discriminator("kind")(
+      "waive",
+      (waive) => `waive ${waive.shard} by ${waive.actor} until ${waive.expiresAt}: ${waive.reason}`
+    ),
+    Match.discriminator("kind")("wontfix", (wontfix) => `wontfix: ${wontfix.reason}`),
+    Match.exhaustive
   );
 
 /**

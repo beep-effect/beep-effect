@@ -7,7 +7,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeThreadThreadTimeline = S.decodeEffect(Thread.ThreadTimeline);
 const decodeThreadTimelineTurn = S.decodeEffect(Thread.TimelineTurn);
@@ -156,10 +156,15 @@ describe("ThreadTimeline", () => {
       const decode = S.decodeUnknownSync(schema);
       const encode = S.encodeSync(schema);
       const equivalent = S.toEquivalence(schema);
-      fc.assert(
-        fc.property(S.toArbitrary(schema)(fc), (value) => equivalent(decode(encode(value)), value)),
-        fcRuns(5)
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.schema(schema),
+            (value) => equivalent(decode(encode(value)), value),
+            fcRuns(5)
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 

@@ -21,7 +21,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBBoxCcgConfig = S.decodeEffect(B.BoxCcgConfig);
 const decodeBEventEventTypeField = S.decodeEffect(B.EventEventTypeField);
@@ -240,33 +240,49 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 };
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      expectRoundTrip(schema, value);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          expectRoundTrip(schema, value);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 const assertSchemaRoundTripWithArbitrary = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
-  arbitrary: fc.Arbitrary<Codec["Type"]>
+  arbitrary: Arbitrary.Arbitrary<Codec["Type"]>
 ): void => {
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expectRoundTrip(schema, value);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expectRoundTrip(schema, value);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
-const UploadBigFilePayloadArbitrary = S.toArbitrary(NonNegativeInt)(fc).map((fileSize) =>
-  B.BoxUploadBigFilePayload.make({
-    file: new Uint8Array([1, 2, 3]),
-    fileName: "large-document.txt",
-    fileSize,
-    parentFolderId: "0",
-  })
+const UploadBigFilePayloadArbitrary = Arbitrary.schema(NonNegativeInt).pipe(
+  Arbitrary.map((fileSize) =>
+    B.BoxUploadBigFilePayload.make({
+      file: new Uint8Array([1, 2, 3]),
+      fileName: "large-document.txt",
+      fileSize,
+      parentFolderId: "0",
+    })
+  )
 );
 
 describe("@beep/box", () => {
@@ -302,7 +318,10 @@ describe("@beep/box", () => {
     assertSchemaRoundTrip(B.BoxCcgConfig);
     assertSchemaRoundTrip(B.BoxErrorOptions);
     assertSchemaRoundTrip(B.BoxErrorDiagnostic);
-    assertSchemaRoundTrip(B.BoxError);
+    assertSchemaRoundTripWithArbitrary(
+      B.BoxError,
+      Arbitrary.schema(B.BoxError).pipe(Arbitrary.map((value) => B.BoxError.make({ ...value })))
+    );
     assertSchemaRoundTrip(B.BoxPartAccumulator);
     assertSchemaRoundTripWithArbitrary(B.BoxUploadBigFilePayload, UploadBigFilePayloadArbitrary);
 

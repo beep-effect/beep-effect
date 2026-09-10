@@ -52,12 +52,12 @@ type ActivityName = typeof ActivityName.Type;
 /**
  * Parse activity name from environment
  */
-const getActivityName = Config.string("ACTIVITY_NAME").pipe(Config.withDefault("extraction"));
+const getActivityName = Config.String("ACTIVITY_NAME").pipe(Config.withDefault("extraction"));
 
 /**
  * Parse activity payload from environment
  */
-const getActivityPayload = Config.string("ACTIVITY_PAYLOAD").pipe(Config.withDefault("{}"));
+const getActivityPayload = Config.String("ACTIVITY_PAYLOAD").pipe(Config.withDefault("{}"));
 
 /**
  * Dispatch to correct activity based on ACTIVITY_NAME

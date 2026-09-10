@@ -1651,7 +1651,7 @@ const copyArchiveBytes = Effect.fn("CorpusRestoration.copyArchiveBytes")(functio
       .pipe(CorpusCommandError.mapError("Failed safely truncating rejected partial archive destination."));
   }
   yield* source
-    .seek(partialState.resumeBytes, "start")
+    .seek(BigInt(partialState.resumeBytes), "start")
     .pipe(CorpusCommandError.mapError("Failed seeking preservation source copy handle."));
   const hasher = sha256.create();
   if (partialState.resumeBytes > 0) {

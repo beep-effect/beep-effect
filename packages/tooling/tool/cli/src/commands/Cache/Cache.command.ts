@@ -471,7 +471,7 @@ export const runCacheRestorationProbe = Effect.fn("Cache.runCacheRestorationProb
   return { cold, warm } as const;
 });
 
-const outputFlag = Flag.path("output", { pathType: "file" }).pipe(
+const outputFlag = Flag.Path("output", { pathType: "file" }).pipe(
   Flag.optional,
   Flag.withDescription("Write the schema-encoded report to this path")
 );
@@ -490,7 +490,7 @@ const cacheWarmCommand = Command.make("warm", { output: outputFlag }, ({ output 
 const cacheProbeCommand = Command.make(
   "probe",
   {
-    cacheDir: Flag.path("cache-dir", { pathType: "directory" }).pipe(
+    cacheDir: Flag.Path("cache-dir", { pathType: "directory" }).pipe(
       Flag.withDefault(".beep/cache/restoration-probe"),
       Flag.withDescription("Isolated local cache directory for the cold/warm restoration probe")
     ),
@@ -507,11 +507,11 @@ type CacheDashboardOptions = {
 const cacheDashboardCommand = Command.make(
   "dashboard",
   {
-    runsDir: Flag.path("runs-dir", { pathType: "directory" }).pipe(
+    runsDir: Flag.Path("runs-dir", { pathType: "directory" }).pipe(
       Flag.withDefault(".turbo/runs"),
       Flag.withDescription("Directory containing Turbo --summarize JSON files")
     ),
-    lambdaLogs: Flag.path("lambda-logs", { pathType: "file" }).pipe(
+    lambdaLogs: Flag.Path("lambda-logs", { pathType: "file" }).pipe(
       Flag.optional,
       Flag.withDescription("Optional sanitized Lambda log export (NDJSON or text)")
     ),

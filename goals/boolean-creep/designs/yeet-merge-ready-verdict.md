@@ -1,275 +1,116 @@
-## Instance
+# Current shape
+
+R28 P2 design for stable `yeet-merge-ready-verdict`. Frozen source: HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`, origin/main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. The successful R28 R–Z/Yeet contract corrections independently confirmed source eligibility; this is designed, with independent P3 design review still pending. Full source and prior-design byte receipts are preserved by `data/r28-cli-last-integration.json`.
 
 - id: `yeet-merge-ready-verdict`
-- file:line: `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:389`
+- file:line: `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:469`
 - symbol: `YeetMergeReady`
-- members: `ready`, `criteria.closeoutRun`, `criteria.checksGreen`, `criteria.threadsResolved`
+- members: `ready`, `failing`, and eight booleans in `criteria`
 - evidence classes:
-  - E3 — `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:291`: YeetMergeReadyCoherenceCheck exists solely to reject the illegal ready/failing/criteria combinations — a runtime guard standing in for the type.
+  - E3 at `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:339` — absence of a blocker requires ready plus every criterion true.
+  - E4 at `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:347` — a named blocker requires not-ready plus that criterion false.
 
-## Current shape
+`YeetMergeReadyCriterion` at `Verdict.ts:215-237` names eight hard criteria. The broad `YeetMergeReadyCriteria` observation class at `:265-280` stores all eight booleans plus display-only Greptile score. `YeetMergeReady` at `:469-478` adds `ready` and optional `failing`, checked by `YeetMergeReadyCoherenceCheck` at `:330-359`. Its persisted source schema at `:361-380` also accepts legacy missing fields and the `checks-green`/`checksGreen` spellings.
 
-The current criteria declaration is at `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:239`:
+The persisted contract does not require the named blocker to be the first false criterion. The coherence check requires only that the named criterion is false, JSDoc at `:443-447` calls it “the one recorded as unsatisfied,” the coherence suite proves that rule, and `MonitorLoop.ts:958-962` renders the stored name as operator guidance. `Status.ts:1051-1058` chooses the first false criterion only for newly derived status.
 
-```ts
-export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`YeetMergeReadyCriteria`)(
-  {
-    closeoutRun: S.Boolean,
-    checksGreen: S.Boolean,
-    threadsResolved: S.Boolean,
-    greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  },
-  $I.annote("YeetMergeReadyCriteria", {
-    description: "Observed state of each merge-protocol criterion; the Greptile score is display-only.",
-  })
-) {}
-```
+# Cardinality gap
 
-The live verdict declaration is at `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:387`:
+Ignoring Greptile, the bag represents 4,608 combinations: two ready values, nine blocker values, and 256 truth tables. It has 1,025 coherent states. The all-true table has one ready/no-blocker state. Across all truth tables, every choice of one false criterion is a legitimate stored blocker: the sum of false positions is `8 * 2^7 = 1,024`. The earlier 256 figure described the current Status writer’s first-false projection, not the accepted persisted domain.
 
-```ts
-export class YeetMergeReady extends S.Class<YeetMergeReady>($I`YeetMergeReady`)(
-  S.Struct({
-    ready: S.Boolean,
-    failing: YeetMergeReadyCriterion.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    criteria: YeetMergeReadyCriteria,
-  }).pipe(S.check(YeetMergeReadyCoherenceCheck)),
-  $I.annote("YeetMergeReady", {
-    description: "Merge readiness as data, naming the criterion that blocks the merge when one does.",
-  })
-) {}
-```
+# Target schema
 
-## Cardinality gap
+Retain `YeetMergeReadyCriterion` and broad `YeetMergeReadyCriteria`; watch mode needs the independently constructible observation carrier and all later observations.
 
-The encoded bag represents 64 combinations: two `ready` values × four `failing` states (`none` plus three criteria) × eight criterion truth tables. Exactly eight canonical protocol states are legal when `failing` means the first failed criterion in protocol order:
+Create `YeetMergeReadyReadyCriteria` with all eight fields `S.Literal(true)` and the same Greptile Option field. Create eight named blocked-criteria classes. Each blocked class makes only its named criterion `S.Literal(false)` and leaves all other criteria `S.Boolean`; this preserves coherent artifacts whose meaningful named blocker is not the earliest false observation.
 
-- `ready`: closeout, checks, and threads are all satisfied.
-- `blocked / closeout-run`: closeout is false; checks and threads may independently be false or true (four states).
-- `blocked / checks-green`: closeout is true, checks are false; threads may be false or true (two states).
-- `blocked / threads-resolved`: closeout and checks are true, threads are false (one state).
+This gives the structural invariant directly: the ready case can exist only with all eight true; every blocked case can exist only with its discriminating named criterion false. Earlier and later criteria remain independent observations in a blocked case. There is no decoded `ready` boolean and no optional decoded blocker to reconcile.
 
-The Greptile score is display-only and does not affect cardinality.
-
-## Target schema
-
-Keep the existing `YeetMergeReadyCriterion` `LiteralKit`; do not duplicate it. Model the eight states with exact criterion classes, a blocker union discriminated by `failing`, and an outer union discriminated by `status`. These are payload-varying variants, so `S.Union(...).pipe(S.toTaggedUnion(...))` is the correct shape rather than a new status literal kit.
+Wrap the blocked criteria in eight classes discriminated by `failing: S.tag(...)`, then form `YeetMergeReadyBlocker` from the existing criterion LiteralKit members and `S.toTaggedUnion("failing")`. Reuse that eight-value identity vocabulary. Define one annotated `YeetMergeReadyStatus = LiteralKit(["ready", "blocked"])` for the outer cases and derive the outer union from its members:
 
 ```ts
-const GreptileScore = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
-
-export class YeetMergeReadySatisfiedCriteria extends S.Class<YeetMergeReadySatisfiedCriteria>(
-  $I`YeetMergeReadySatisfiedCriteria`
-)(
-  {
-    closeoutRun: S.Literal(true),
-    checksGreen: S.Literal(true),
-    threadsResolved: S.Literal(true),
-    greptileScore: GreptileScore,
-  },
-  $I.annote("YeetMergeReadySatisfiedCriteria", {
-    description: "All hard merge criteria satisfied.",
-  })
+class YeetMergeReadyReady extends S.Class<YeetMergeReadyReady>(...)(
+  { status: S.tag("ready"), criteria: YeetMergeReadyReadyCriteria }, ...
 ) {}
 
-export class YeetMergeReadyCloseoutBlockedCriteria extends S.Class<YeetMergeReadyCloseoutBlockedCriteria>(
-  $I`YeetMergeReadyCloseoutBlockedCriteria`
-)(
-  {
-    closeoutRun: S.Literal(false),
-    checksGreen: S.Boolean,
-    threadsResolved: S.Boolean,
-    greptileScore: GreptileScore,
-  },
-  $I.annote("YeetMergeReadyCloseoutBlockedCriteria", {
-    description: "Criteria whose first protocol blocker is closeout-run.",
-  })
+class YeetMergeReadyBlocked extends S.Class<YeetMergeReadyBlocked>(...)(
+  { status: S.tag("blocked"), blocker: YeetMergeReadyBlocker }, ...
 ) {}
 
-export class YeetMergeReadyChecksBlockedCriteria extends S.Class<YeetMergeReadyChecksBlockedCriteria>(
-  $I`YeetMergeReadyChecksBlockedCriteria`
-)(
-  {
-    closeoutRun: S.Literal(true),
-    checksGreen: S.Literal(false),
-    threadsResolved: S.Boolean,
-    greptileScore: GreptileScore,
-  },
-  $I.annote("YeetMergeReadyChecksBlockedCriteria", {
-    description: "Criteria whose first protocol blocker is checks-green.",
-  })
-) {}
-
-export class YeetMergeReadyThreadsBlockedCriteria extends S.Class<YeetMergeReadyThreadsBlockedCriteria>(
-  $I`YeetMergeReadyThreadsBlockedCriteria`
-)(
-  {
-    closeoutRun: S.Literal(true),
-    checksGreen: S.Literal(true),
-    threadsResolved: S.Literal(false),
-    greptileScore: GreptileScore,
-  },
-  $I.annote("YeetMergeReadyThreadsBlockedCriteria", {
-    description: "Criteria whose first protocol blocker is threads-resolved.",
-  })
-) {}
-
-export class YeetMergeReadyCloseoutBlocker extends S.Class<YeetMergeReadyCloseoutBlocker>(
-  $I`YeetMergeReadyCloseoutBlocker`
-)(
-  {
-    failing: S.tag("closeout-run"),
-    criteria: YeetMergeReadyCloseoutBlockedCriteria,
-  },
-  $I.annote("YeetMergeReadyCloseoutBlocker", { description: "Merge blocked first by closeout proof." })
-) {}
-
-export class YeetMergeReadyChecksBlocker extends S.Class<YeetMergeReadyChecksBlocker>(
-  $I`YeetMergeReadyChecksBlocker`
-)(
-  {
-    failing: S.tag("checks-green"),
-    criteria: YeetMergeReadyChecksBlockedCriteria,
-  },
-  $I.annote("YeetMergeReadyChecksBlocker", { description: "Merge blocked first by hosted checks." })
-) {}
-
-export class YeetMergeReadyThreadsBlocker extends S.Class<YeetMergeReadyThreadsBlocker>(
-  $I`YeetMergeReadyThreadsBlocker`
-)(
-  {
-    failing: S.tag("threads-resolved"),
-    criteria: YeetMergeReadyThreadsBlockedCriteria,
-  },
-  $I.annote("YeetMergeReadyThreadsBlocker", { description: "Merge blocked first by review threads." })
-) {}
-
-export const YeetMergeReadyBlocker = S.Union([
-  YeetMergeReadyCloseoutBlocker,
-  YeetMergeReadyChecksBlocker,
-  YeetMergeReadyThreadsBlocker,
-]).pipe(
-  S.toTaggedUnion("failing"),
-  $I.annoteSchema("YeetMergeReadyBlocker", {
-    description: "The first failed hard criterion with its statically coherent observations.",
-  })
-)
-export type YeetMergeReadyBlocker = typeof YeetMergeReadyBlocker.Type
-
-export class YeetMergeReadyReady extends S.Class<YeetMergeReadyReady>($I`YeetMergeReadyReady`)(
-  {
-    status: S.tag("ready"),
-    criteria: YeetMergeReadySatisfiedCriteria,
-  },
-  $I.annote("YeetMergeReadyReady", { description: "Every hard merge criterion is satisfied." })
-) {}
-
-export class YeetMergeReadyBlocked extends S.Class<YeetMergeReadyBlocked>($I`YeetMergeReadyBlocked`)(
-  {
-    status: S.tag("blocked"),
-    blocker: YeetMergeReadyBlocker,
-  },
-  $I.annote("YeetMergeReadyBlocked", { description: "Merge is blocked by the first failed hard criterion." })
-) {}
-
-export const YeetMergeReady = S.Union([YeetMergeReadyReady, YeetMergeReadyBlocked]).pipe(
-  S.toTaggedUnion("status"),
-  $I.annoteSchema("YeetMergeReady", {
-    description: "Merge readiness as an exhaustive ready or blocked verdict.",
-  })
+export const YeetMergeReady = YeetMergeReadyStatus.mapMembers(
+  Tuple.evolve([() => YeetMergeReadyReady, () => YeetMergeReadyBlocked])
+).pipe(
+  S.toTaggedUnion("status"), ...
 )
 export type YeetMergeReady = typeof YeetMergeReady.Type
-
-export const yeetMergeReadyCriteria = YeetMergeReady.match({
-  ready: (value) => value.criteria,
-  blocked: (value) => value.blocker.criteria,
-})
 ```
 
-Constructors omit `status`/`failing` because `S.tag(...)` supplies those discriminator fields, matching current repo idioms. Branch with `YeetMergeReady.match`, `.guards`, and `YeetMergeReadyBlocker.match`; do not add hand-written boolean predicates.
+Use named classes and annotations. `S.tag` supplies discriminators. Export a lossless projection from every exact verdict to broad criteria. Keep `mergeReadyCriterionHolds` dual over the broad carrier for watch snapshots/diffs.
 
-## Migration inventory
+The missing canonical `failing` member was already present in this design's model and cardinality. Reanchoring the separate encoded D1 census record to the actual nested `criteria` schema changes no persistence contract here: its complete wire schema remains the boundary input, including all optional fields. The material R28 repair is the separate generic command serializer at `Handler.ts:1251`, which otherwise exposes the new decoded union instead of the old readiness value.
 
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:203` — retain `YeetMergeReadyCriterion` for the stable encoded `failing` domain and public options.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:239` — replace the broad `YeetMergeReadyCriteria` class with the four exact criterion classes above.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:269` — delete `mergeReadyCriterionHolds`; exact class fields and union cases replace this parallel interpreter.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:291` — delete `YeetMergeReadyCoherenceCheck` in full.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:321` — retain the legacy/current encoded bag as the source schema for the compatibility transform.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:336` — replace `normalizeLegacyYeetMergeReady` with a canonical decoder that defaults missing legacy `closeoutRun` to false, derives the first blocker from criteria in closeout/checks/threads order, and ignores redundant encoded `ready`/`failing` as authorities.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:387` — replace the checked class with the outer tagged union and nested blocker union.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:425` — make `YeetMergeReadyFromEncoded` bidirectional: decode the old bag to the canonical union; encode the union back to the old bag.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:508` — keep `YeetVerdict.mergeReady` on `YeetMergeReadyFromEncoded` so persisted verdict JSON uses compatibility encoding.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:666` — `BuildYeetVerdictInput.mergeReady` continues to use the decoded `YeetMergeReady` union.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:756` — no semantic change: carry the optional decoded union into the verdict.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:32` — remove `mergeReadyCriterionHolds` and broad-criteria imports; import the needed case classes/union helpers.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:945` — delete `firstFailingCriterion`; branch once in protocol order while constructing an exact union case.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:1003` — after confirming the paired remote phase is `checked-present`, compute the three criterion facts and construct exactly one case: closeout blocker, checks blocker, threads blocker, or ready.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:1013` — replace `YeetMergeReady.make({ ready, failing, criteria })` with `YeetMergeReady.cases.*.make(...)` and the appropriate blocker case constructor.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:1024` — replace `.ready` with `YeetMergeReady.guards.ready`.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:1173` — obtain Greptile display data through `yeetMergeReadyCriteria`, then render with `YeetMergeReady.match`; the blocked branch reads `value.blocker.failing`.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:761` — replace the `Option` match on `.failing` with `YeetMergeReady.match`; the blocked branch reads `blocker.failing`.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:911` — type remains `O.Option<YeetMergeReady>`; no shape-specific read occurs.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:1015` — optional decoded union continues into `BuildYeetVerdictInput` unchanged.
+Define one total inverse from the new union to the exact old decoded readiness value: `{ ready: boolean, failing: Option<YeetMergeReadyCriterion>, criteria: YeetMergeReadyCriteria }`, retaining that property order and the criteria's complete runtime Greptile Option. The ready case maps to true/None; a blocked case maps to false/Some(the stored named blocker) and the full broad criteria projection. This inverse is shared by two schema-owned output boundaries: the existing artifact boundary converts those old decoded fields through their original optional-key codecs, while the generic command boundary retains them as runtime Options. Use the local Effect v4 `S.toType` pattern already specified by the remote-status design when a boundary's Encoded side must be the old decoded value; do not feed Options into a schema expecting optional keys or double-decode them.
 
-The remaining source occurrences at `Handler.ts:632`, `:793`, and `:1110` only copy or initialize the enclosing `mergeReady` option and require no case-specific logic. `Verdict.ts` JSDoc examples at lines 224, 257, 373, and 414 must be rewritten to demonstrate case constructors and compatibility decoding.
+Extend the bounded `printYeetStatusCommandJson` adapter specified by `yeet-status-remote-check-phase.md`: retain its existing remote projection, and map only the Some value of `snapshot.mergeReady` through the same readiness inverse. Preserve the outer mergeReady Option exactly, including None. Replace the two values at their existing snapshot property positions, then use the existing `printCommandJson`; do not serialize the whole snapshot through `YeetStatusSnapshotJson`, which would change established Option representations on command stdout. If readiness is integrated before the remote adapter, add the bounded readiness projection and let the later remote change compose into that one adapter. There must be one command printer, not competing adapters or a second readiness truth table.
 
-## Guard-deletion accounting
+# Migration inventory
 
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:269` — delete the criterion-to-boolean `$match` helper that reinterprets the broad criteria bag.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:280` — delete the comment-only invariant through line 289; the exact variants become the documentation and type.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:291` — delete the complete runtime coherence filter through line 319, including both `ready`/`failing` branches and the named-criterion check.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:364` — delete the “mutually derivable fields” gotcha through line 368; those parallel decoded fields no longer exist.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:942` — delete `firstFailingCriterion` and its ordered array search through line 949; construction branches create the correct blocker case directly.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:1012` — delete the `failing` Option plus `ready: O.isNone(failing)` coherence write.
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:1178` and `packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:762` — delete two read-time `Option` branches that reconstruct ready-versus-blocked from `failing`.
+- `Verdict.ts:215-317` — retain criterion kit, broad carrier, and dual observation helper; add ready and eight named blocker-specific criteria classes.
+- `Verdict.ts:330-359` — delete the bag coherence filter; structural ready/blocker cases replace it.
+- `Verdict.ts:361-428` — retain the exact current/legacy encoded bag and conservative legacy normalizer behavior. `threadsResolved` remains required. The seven optional hard-criterion fields default false. A record is complete only when all seven current optional fields, including `requiredChecksGreen`, are present. Complete records preserve `ready` and the stored blocker, mapping legacy `failing:"checks-green"` to `required-checks-green`; the new structural union rejects the same complete contradictions as today. Incomplete records remain forced blocked and select the first false criterion after defaults, ignoring their redundant encoded answer as today. A legacy `criteria.checksGreen` value does not make the current required-check observation complete and is not substituted for `requiredChecksGreen`; the tests at `yeet-merge-ready-coherence.test.ts:145-170` prove this conservative downgrade.
+- `Verdict.ts:469-518` — replace the checked bag with nested tagged unions; make `YeetMergeReadyFromEncoded` bidirectional so it projects exact decoded cases to the old object.
+- `Verdict.ts:594,776,867` — keep the compatibility codec at `YeetVerdict` persistence and the decoded union in build inputs/projection.
+- `Status.ts:281` — keep the same compatibility codec nested in `YeetStatusSnapshot` persistence.
+- `Status.ts:1051-1127` — preserve first-false as this producer’s documented policy; construct the matching exact case from the complete observation carrier.
+- `Status.ts:1138,1299-1308` — use outer guards/match and project criteria once for display.
+- `MonitorLoop.ts:958-962` — render ready/blocked through the outer union while preserving exact messages and the stored blocker name.
+- `WatchMode.ts:321`, `WatchStream.ts:42,253-256,794-813`, and `YeetWatchSnapshot` — preserve broad observation construction, defaults, and all eight comparisons.
+- `Handler.ts:1248-1253` — use the bounded status command printer above, preserving `YeetCommandError` mapping, `CommandJsonOutput` injection, compact JSON, bounded UTF-8 writes and one trailing newline (`src/internal/cli/Json.ts:16-39,115-120,296-302`). Artifact encoding alone does not prove this output.
+- `Handler.ts:1053,1215,1333,1518` — preserve the opaque `O.Option<YeetMergeReady>` state transfer; it has no shape reader.
+- `src/test/Yeet.test-kit.ts:69` — existing internal wildcard export covers new cases; do not expand the public Yeet facade solely for tests.
 
-The encoded normalizer remains only at the persisted boundary; it no longer validates decoded-object coherence. It deterministically projects a legacy boolean bag into one of the statically legal variants.
+Graft's complete incoming graph found Status, Handler, MonitorLoop, Porcelain and Yeet.command. Exhaustive source searches separately located the class/codec, broad observation readers, artifact writers and Handler's generic print at `:1251`; graph absence was not used as no-consumer proof. The current remote-status design already names that generic boundary but changes only `snapshot.remote`, which is why this readiness projection must be added. No new public Yeet facade is needed solely to expose private Value/boundary models.
 
-## Encoded-side impact
+The withdrawn `r2-tooling-sweep-plan-operator-handoff` is not a data or schema dependency of this migration. The current design names no SweepPlanStep fields; Verdict readiness, Status collection and Watch observation schemas do not import that carrier. MonitorLoop/Porcelain also orchestrate sweeps, but shared orchestration does not require redesigning SweepPlanStep. Preserve those sweep calls and existing encoded precondition/operator behavior unchanged. Remove only any parent plan sequencing dependency on implementing its withdrawn design.
 
-Tier 2 compatibility design: keep today's JSON object unchanged.
+# Guard-deletion accounting
 
-`YeetMergeReadyEncoded` remains:
+Delete `YeetMergeReadyCoherenceCheck` and its three-way invariant prose at `Verdict.ts:330-359`; decoded cases make ready/no-blocker and blocked/named-false structural. Delete boolean/Option reconstruction in `Status.ts:1126-1127`, `:1299-1308`, and `MonitorLoop.ts:958-962`. Retain first-false selection in Status as a producer policy and retain the broad criterion interpreter for watch observations. The compatibility transform and the two existing output contracts remain required. Add no parallel coherence predicate to the command adapter: it uses the single total inverse from valid union cases. Schema decoding, not an ad-hoc repair wall, rejects complete contradictions.
+
+# Encoded-side impact
+
+Keep the persisted object exactly:
 
 ```ts
 {
   ready: boolean
-  failing?: "closeout-run" | "checks-green" | "threads-resolved"
+  failing?: YeetMergeReadyCriterion | "checks-green"
   criteria: {
-    closeoutRun?: boolean
-    checksGreen: boolean
-    threadsResolved: boolean
+    prOpen?: boolean; notDraft?: boolean; closeoutRun?: boolean
+    requiredChecksGreen?: boolean; checksGreen?: boolean
+    threadsResolved: boolean; mergeable?: boolean
+    mergeStateAcceptable?: boolean; reviewDecisionAcceptable?: boolean
     greptileScore?: string
   }
 }
 ```
 
-Decode migration proof:
+Complete coherent artifacts decode and re-encode with the same current keys, all observations, and the same named blocker, including a later false blocker. Contradictory complete artifacts retain current rejection. Incomplete legacy records retain the exact current conservative rules: optional criteria default false, the result is forced blocked, and the first defaulted false criterion becomes the blocker. `failing:"checks-green"` is accepted and migrates to `required-checks-green` for a complete record; incomplete records retain current recomputation. The optional `criteria.checksGreen` observation remains accepted but does not replace missing `requiredChecksGreen`. Writers emit only current names. Ready encodes `ready:true` without `failing`; blocked encodes `ready:false` with the stored exact blocker. Internal tags never enter verdict JSON.
 
-1. Missing legacy `criteria.closeoutRun` becomes `false`, preserving the current safety downgrade.
-2. Derive the canonical first blocker from the three criteria, in protocol order.
-3. Construct the matching exact criteria class and blocker/ready case; encoded `ready` and `failing` are compatibility inputs, not a second source of truth.
-4. Therefore every accepted old/current artifact decodes to one of exactly eight legal states. Previously incoherent bags normalize to their criteria-derived canonical state instead of creating an incoherent decoded value.
+Generic command JSON is separately preserved: before this migration `Handler.ts:1251` prints a decoded snapshot through `UnknownFromJsonString`, not the artifact schema. Keep the outer `mergeReady` Option, inner `failing` Option and criteria `greptileScore` Option in their prior runtime representation on that output. The adapter maps the inner readiness value without normalizing other snapshot fields or stripping Some(empty string). Internal status/blocker tags must not appear on stdout. Canonical artifact and command output are deliberately tested separately; a successful artifact round trip cannot establish generic output compatibility.
 
-Encode stability proof:
+# Test impact
 
-1. `ready` case encodes `{ ready: true, criteria }` with no `failing` key.
-2. `blocked` case encodes `{ ready: false, failing: blocker.failing, criteria: blocker.criteria }`.
-3. Every canonical JSON artifact produced today is byte-shape equivalent after decode/encode (subject to the existing JSON formatter's key ordering), including optional `greptileScore` behavior.
-4. `YeetVerdict` continues to decode via `YeetMergeReadyFromEncoded` at `Verdict.ts:508`; writers continue through `YeetVerdictJson`, so no caller can accidentally emit the new internal tags into `.beep/yeet`.
+- Replace checked-bag construction in `test/yeet-merge-ready-coherence.test.ts` with schema-derived cases. Deterministically enumerate all 256 truth tables. Emit the ready case only for the all-true table; for every other table, emit one blocked case for each false criterion, without calling the Status first-failing helper. Assert the resulting count is 1,025, every case satisfies `S.is(YeetMergeReady)`, and every case survives compatibility encode/decode with its same named blocker and all eight observations. `S.toArbitrary(YeetMergeReady)` may supplement this exhaustive matrix but must not replace it, because random generation does not prove coverage and a first-false-only generator would cover only 256 producer tuples.
+- Add a complete artifact with multiple false observations and a later named blocker; prove exact decode/encode preservation. Add a complete record using `failing:"checks-green"` plus `requiredChecksGreen:false` and prove migration to the current blocker spelling on encode. Keep contradiction rejection and both incomplete legacy downgrade fixtures, including `criteria.checksGreen` being accepted without defeating conservative defaults.
+- Migrate `test/yeet-status-triage.test.ts` to outer guards/blocker access while retaining Status first-blocker precedence tests.
+- Migrate `test/yeet-verdict-json.test.ts` and `test/yeet-artifact-writers.test.ts` to cases while retaining exact persisted keys.
+- Preserve watch-stream tests for all eight independent observation transitions after the named blocker. Coordinate with the separate criterion-changed event design only at shared files; the broad criteria carrier remains independent.
+- Capture whole command output through `CommandJsonOutput` for absent readiness, ready with None score, blocked with a later named false blocker, and Some(empty/nonempty score), both before and after the remote-phase migration. Compare exact bytes with the old decoded serializer, including outer/inner Option forms, property order, compact output and trailing newline. Include a snapshot larger than 64 KiB to preserve chunked stdout behavior. Verify that neither remote phase nor readiness tags leak.
+- Retain full `YeetVerdictJson` and `YeetStatusSnapshotJson` artifact fixtures independently of command output, including unrelated attempt facts and enclosing snapshot fields. Required CLI package verification belongs to implementation; no package command or test ran for this P2 design.
 
-## Test impact
+# Risk
 
-- `packages/tooling/tool/cli/test/yeet-merge-ready-coherence.test.ts:12` — retain decoding through `YeetMergeReadyFromEncoded`, but change illegal-bag rejection tests to criteria-authoritative canonicalization tests; lines 108–114 construct a blocked case through union/blocker cases.
-- `packages/tooling/tool/cli/test/yeet-merge-ready-coherence.test.ts:124` and `:139` — assert union guards/status and blocker tags instead of `.ready`/optional `.failing`; keep the legacy closeout downgrade assertions.
-- `packages/tooling/tool/cli/test/yeet-status-triage.test.ts:155`–`:305` — replace `.ready`, optional `.failing`, and broad `.criteria` assertions with outer guards, `blocker.failing`, and `yeetMergeReadyCriteria`; preserve every first-blocker ordering case.
-- `packages/tooling/tool/cli/test/yeet-status-triage.test.ts:331`, `:363`, and `:382` — enclosing status snapshot/JSON behavior remains optional; update the decoded blocked assertion.
-- `packages/tooling/tool/cli/test/yeet-verdict-json.test.ts:88`–`:106` — construct a blocked union case and assert the encoded JSON still contains `"ready":false`, `"failing":"threads-resolved"`, and the unchanged criteria bag.
-- `packages/tooling/tool/cli/test/yeet-verdict-json.test.ts:113`–`:123` — keep pre-`mergeReady` compatibility and `YeetMergeReadyCriterion.Options` coverage.
-- `packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts:72`–`:83`, `:130`, `:255`–`:266` — replace the shared blocked fixture with union case construction; keep persisted writer assertions against the old encoded keys.
-- `packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts:34` and `:65` — no case-shape change; it proves the enclosing option remains absent when no status snapshot exists.
-- Add a schema-derived table covering all eight decoded legal states and an encode/decode identity test over all eight. Add explicit legacy bags with missing `closeoutRun` and contradictory redundant `ready`/`failing` to prove deterministic normalization.
+Tier 2 singleton. Highest risk is silently changing a stored blocker to the first false observation, losing later observations, or encoding internal tags. Land union, transform, all consumers, exhaustive compatibility tests, and focused Yeet suites atomically. Preserve enclosing attempt facts unchanged. Coordinate the bounded command adapter with the existing remote-status design; both inverse projections must compose before the generic printer. The withdrawn sweep-plan design is not a prerequisite. No new stored state, general serializer or generic helper is introduced. The completed source correction does not constitute independent P3 design approval.
 
-## Risk & sequencing
-
-This is the only Tier 2 item in the batch and should land alone after `yeet-status-remote-check-phase` or include that phase atomically. It touches the persisted verdict codec, status derivation/rendering, monitor rendering, Handler types, Yeet barrels, and five focused test files. The highest risk is accidentally encoding internal `status`/`blocker` tags into `.beep/yeet`; keep the old source schema on the encoded side and prove canonical old-shape round trips before changing consumers. Do not land a temporary state that changes `YeetVerdict.mergeReady` directly to the internal union without the transformation.
+Landing: Tier 2 remains a singleton PR. Coordinate sequentially with the remote-status/readiness compatibility work and keep shared WatchStream, Status and Handler edits serial.

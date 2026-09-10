@@ -15,17 +15,17 @@ import { GraftCacheSyncAction, GraftCacheSyncPlan, GraftCacheSyncReport } from "
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
 
 const flags = {
-  from: Flag.string("from").pipe(Flag.withDescription("Source clone containing graft/.cache/summaries.json")),
-  to: Flag.string("to").pipe(Flag.atLeast(0), Flag.withDescription("Target clone root; repeat for multiple targets")),
-  siblings: Flag.boolean("siblings").pipe(
+  from: Flag.String("from").pipe(Flag.withDescription("Source clone containing graft/.cache/summaries.json")),
+  to: Flag.String("to").pipe(Flag.atLeast(0), Flag.withDescription("Target clone root; repeat for multiple targets")),
+  siblings: Flag.Boolean("siblings").pipe(
     Flag.withDefault(false),
     Flag.withDescription("Discover sibling clones matching the source basename without trailing digits")
   ),
-  dryRun: Flag.boolean("dry-run").pipe(
+  dryRun: Flag.Boolean("dry-run").pipe(
     Flag.withDefault(false),
     Flag.withDescription("Print the plan without writing files")
   ),
-  json: Flag.boolean("json").pipe(
+  json: Flag.Boolean("json").pipe(
     Flag.withDefault(false),
     Flag.withDescription("Print a schema-encoded JSON plan or report")
   ),

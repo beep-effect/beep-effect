@@ -23,13 +23,6 @@ const SupportedPathFamilyKit = LiteralKit([
   "windowsRelative",
 ]);
 
-const FilePathArbitraryValues = [
-  "data/ontology.ttl",
-  "/tmp/ontology.ttl",
-  "fixtures/embeddings.bin",
-  "C:\\ontology\\shapes.ttl",
-] as const;
-
 /**
  * Literal union of file-path families recognized by {@link FilePath}.
  *
@@ -166,17 +159,13 @@ const FilePathChecks = S.makeFilterGroup(
  * @category constructors
  * @since 0.0.0
  */
-export const FilePath = S.String.check(FilePathChecks)
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...FilePathArbitraryValues),
+export const FilePath = S.String.check(FilePathChecks).pipe(
+  S.brand("FilePath"),
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
+  $I.annoteSchema("FilePath", {
+    description: "A file path string valid for at least one supported operating-system path family.",
   })
-  .pipe(
-    S.brand("FilePath"),
-    SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
-    $I.annoteSchema("FilePath", {
-      description: "A file path string valid for at least one supported operating-system path family.",
-    })
-  );
+);
 
 /**
  * Branded file path string type extracted from {@link FilePath}.

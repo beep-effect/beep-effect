@@ -42,22 +42,7 @@ export const DocumentType = LiteralKit([
   "narrative",
   "structured",
   "unknown",
-])
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.constantFrom(
-        "article",
-        "transcript",
-        "report",
-        "contract",
-        "correspondence",
-        "reference",
-        "narrative",
-        "structured",
-        "unknown"
-      ),
-  })
-  .annotate(
+]).annotate(
     $I.annote("DocumentType", {
       description: "Finite structural classifications used to select document-processing behavior.",
     })
@@ -92,11 +77,7 @@ export type DocumentType = typeof DocumentType.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const EntityDensity = LiteralKit(["sparse", "moderate", "dense"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("sparse", "moderate", "dense"),
-  })
-  .annotate(
+export const EntityDensity = LiteralKit(["sparse", "moderate", "dense"]).annotate(
     $I.annote("EntityDensity", {
       description: "Sparse, moderate, or dense entity distribution used by adaptive chunking.",
     })
@@ -125,10 +106,7 @@ const ChunkingStrategyDefinition = LiteralKit([
   "section_aware",
   "speaker_aware",
   "paragraph_based",
-]).annotate({
-  toArbitrary: () => (fc) =>
-    fc.constantFrom("standard", "fine_grained", "high_overlap", "section_aware", "speaker_aware", "paragraph_based"),
-});
+]);
 
 /**
  * Runtime value accepted by {@link ChunkingStrategy}.
@@ -205,11 +183,7 @@ const ChunkSize = PosInt.check(
       description: "Positive bounded character-count checks for a chunk.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 10_000 }).map(PosInt.make),
-  })
-  .pipe(
+).pipe(
     S.brand("ChunkSize"),
     $I.annoteSchema("ChunkSize", {
       description: "Positive target chunk size from one through ten thousand characters.",
@@ -238,11 +212,7 @@ const SentenceOverlap = NonNegativeInt.check(
       description: "Non-negative bounded sentence-overlap checks.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 0, max: 10 }).map(NonNegativeInt.make),
-  })
-  .pipe(
+).pipe(
     S.brand("SentenceOverlap"),
     $I.annoteSchema("SentenceOverlap", {
       description: "Non-negative sentence-overlap count from zero through ten.",
@@ -355,11 +325,7 @@ const ClassificationBatchSize = PosInt.check(
       description: "Positive bounded document-count checks for one classification batch.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 50 }).map(PosInt.make),
-  })
-  .pipe(
+).pipe(
     S.brand("ClassificationBatchSize"),
     $I.annoteSchema("ClassificationBatchSize", {
       description: "Positive document-classification batch size from one through fifty.",
@@ -449,11 +415,7 @@ export const LanguageCode = S.String.check(
     description: "A two-letter lowercase ISO 639-1 representation.",
     message: "Language code must contain exactly two lowercase ASCII letters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(languageCodePattern),
-  })
-  .pipe(
+).pipe(
     S.brand("LanguageCode"),
     $I.annoteSchema("LanguageCode", {
       description: "Two-letter lowercase language-code representation.",
@@ -491,13 +453,10 @@ export type LanguageCode = typeof LanguageCode.Type;
  * @category value-objects
  * @since 0.0.0
  */
-export const ComplexityScore = UnitInterval.annotate({
-  toArbitrary: () => S.toArbitrary(UnitInterval),
-}).pipe(
+export const ComplexityScore = UnitInterval.pipe(
   $I.annoteSchema("ComplexityScore", {
     description: "Finite normalized document-complexity score.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

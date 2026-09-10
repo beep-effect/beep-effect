@@ -1,0 +1,17 @@
+{
+  "lane": "r27-tool-docgen",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "started": "2026-09-09T02:42:59.777698+00:00",
+  "finished": "2026-09-09T02:51:06.956633+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-tool-docgen.jsonl` \u2014 confirmed 0, disqualified 1. Lane covered (`packages/tooling/tool/docgen/src`). Seeds still present; drift: `DocgenProofManifestVerification` `[status, reason]` is LiteralKit + optional string (not booleans); CLI `[parseTsconfigFile, parseCompilerOptionsText]` and `[examplesTsconfigFile, examplesCompilerOptionsText]` are optional file/string flags, not booleans.",
+  "transcriptSha256": "c9395f2386a9d7e260eaf74b8104a3cba032c1ac8af5eb68f16e5a03e87c2c6a",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998"
+}
