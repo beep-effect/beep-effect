@@ -19,7 +19,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isHookPulseEvidenceTier = S.is(HookPulseEvidenceTier);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
@@ -236,13 +236,20 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
   });
 
   it("keeps weakest-link propagation stable for schema-derived tier collections", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(S.Array(EvidenceTier))(fc), (tiers) => {
-        expect(weakestEvidenceTier(tiers)).toBe(weakestEvidenceTier(A.reverse(tiers)));
-        expect(weakestEvidenceTier(A.append(tiers, EvidenceTier.Enum.unknown))).toBe(EvidenceTier.Enum.unknown);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([EvidenceTier.pipe(S.Array, Arbitrary.schema)]),
+          ([tiers]) => {
+            expect(weakestEvidenceTier(tiers)).toBe(weakestEvidenceTier(A.reverse(tiers)));
+            expect(weakestEvidenceTier(A.append(tiers, EvidenceTier.Enum.unknown))).toBe(EvidenceTier.Enum.unknown);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("preserves hook-pulse/v1 literal compatibility without accepting P2-only cases", () => {

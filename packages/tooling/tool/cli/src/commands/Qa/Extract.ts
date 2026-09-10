@@ -712,57 +712,59 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
   const failed = (message: string): ExtractionOutcome => ExtractionOutcome.make({ artifacts: [], failures: [message] });
 
   return yield* Match.value(request).pipe(
-    Match.discriminators("kind")({
-      "extract-clip": (planned) =>
-        ffmpeg.extractClip(planned.request).pipe(
-          Effect.flatMap((result) =>
-            stamp("clip", result.outPath, pipe(result.outPath, path.basename, Str.replace(/\.[^.]+$/, "")), O.none())
-          ),
-          Effect.catchCause(() => Effect.succeed(failed(`extract-clip failed for ${planned.request.outPath}`)))
+    Match.discriminator("kind")("extract-clip", (planned) =>
+      ffmpeg.extractClip(planned.request).pipe(
+        Effect.flatMap((result) =>
+          stamp("clip", result.outPath, pipe(result.outPath, path.basename, Str.replace(/\.[^.]+$/, "")), O.none())
         ),
-      "extract-frames-at": (planned) =>
-        ffmpeg.extractFramesAt(planned.request).pipe(
-          Effect.flatMap((result) =>
-            Effect.map(
-              Effect.forEach(result.frames, (frame) =>
-                stamp(
-                  "frame",
-                  frame.path,
-                  O.getOrElse(planned.request.prefix, () => "frames"),
-                  // Each strip frame carries the epoch of its own source
-                  // instant — the inverse clock fit over the requested seek —
-                  // not the shared window start.
-                  O.some(videoSecondsToEpochMs(context.clockSync)(frame.requestedTimestampSeconds))
-                )
-              ),
-              (outcomes) =>
-                ExtractionOutcome.make({
-                  artifacts: A.flatMap(outcomes, (outcome) => outcome.artifacts),
-                  failures: A.flatMap(outcomes, (outcome) => outcome.failures),
-                })
-            )
-          ),
-          Effect.catchCause(() => Effect.succeed(failed(`extract-frames-at failed for ${planned.request.outDir}`)))
-        ),
-      "render-contact-sheet": (planned) =>
-        ffmpeg.renderContactSheet(planned.request).pipe(
-          Effect.flatMap((result) => stamp("sheet", result.outPath, "contact-sheet", O.none())),
-          Effect.catchCause(() =>
-            Effect.succeed(
-              failed(
-                `render-contact-sheet failed for ${planned.request.outPath} (a duration-less container cannot be tiled)`
+        Effect.catchCause(() => Effect.succeed(failed(`extract-clip failed for ${planned.request.outPath}`)))
+      )
+    ),
+    Match.discriminator("kind")("extract-frames-at", (planned) =>
+      ffmpeg.extractFramesAt(planned.request).pipe(
+        Effect.flatMap((result) =>
+          Effect.map(
+            Effect.forEach(result.frames, (frame) =>
+              stamp(
+                "frame",
+                frame.path,
+                O.getOrElse(planned.request.prefix, () => "frames"),
+                // Each strip frame carries the epoch of its own source
+                // instant — the inverse clock fit over the requested seek —
+                // not the shared window start.
+                O.some(videoSecondsToEpochMs(context.clockSync)(frame.requestedTimestampSeconds))
               )
-            )
+            ),
+            (outcomes) =>
+              ExtractionOutcome.make({
+                artifacts: A.flatMap(outcomes, (outcome) => outcome.artifacts),
+                failures: A.flatMap(outcomes, (outcome) => outcome.failures),
+              })
           )
         ),
-      "render-gif": (planned) =>
-        ffmpeg.renderGif(planned.request).pipe(
-          Effect.flatMap((result) =>
-            stamp("gif", result.outPath, pipe(result.outPath, path.basename, Str.replace(/\.gif$/, "")), O.none())
-          ),
-          Effect.catchCause(() => Effect.succeed(failed(`render-gif failed for ${planned.request.outPath}`)))
+        Effect.catchCause(() => Effect.succeed(failed(`extract-frames-at failed for ${planned.request.outDir}`)))
+      )
+    ),
+    Match.discriminator("kind")("render-contact-sheet", (planned) =>
+      ffmpeg.renderContactSheet(planned.request).pipe(
+        Effect.flatMap((result) => stamp("sheet", result.outPath, "contact-sheet", O.none())),
+        Effect.catchCause(() =>
+          Effect.succeed(
+            failed(
+              `render-contact-sheet failed for ${planned.request.outPath} (a duration-less container cannot be tiled)`
+            )
+          )
+        )
+      )
+    ),
+    Match.discriminator("kind")("render-gif", (planned) =>
+      ffmpeg.renderGif(planned.request).pipe(
+        Effect.flatMap((result) =>
+          stamp("gif", result.outPath, pipe(result.outPath, path.basename, Str.replace(/\.gif$/, "")), O.none())
         ),
-    }),
+        Effect.catchCause(() => Effect.succeed(failed(`render-gif failed for ${planned.request.outPath}`)))
+      )
+    ),
     Match.exhaustive
   );
 });

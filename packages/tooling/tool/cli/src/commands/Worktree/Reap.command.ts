@@ -101,15 +101,15 @@ export const renderWorktreeReapReportLines = reportLines;
 export const worktreeReapCommand = Command.make(
   "reap",
   {
-    apply: Flag.boolean("apply").pipe(
+    apply: Flag.Boolean("apply").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Archive and retire eligible merged-PR worktrees (default: dry run)")
     ),
-    json: Flag.boolean("json").pipe(
+    json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Emit the encoded worktree-reap/v1 report as JSON")
     ),
-    idleHours: Flag.integer("idle-hours").pipe(
+    idleHours: Flag.Int("idle-hours").pipe(
       Flag.withDefault(48),
       Flag.withDescription("Minimum hours since the newest commit or HEAD-file activity")
     ),

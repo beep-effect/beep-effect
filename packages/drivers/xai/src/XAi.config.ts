@@ -25,6 +25,13 @@ const isUrlWithProtocol =
 const isXAiHttpBaseUrl = isUrlWithProtocol(["http:", "https:"]);
 const isXAiWebSocketBaseUrl = isUrlWithProtocol(["ws:", "wss:"]);
 
+const XAiHttpBaseUrlValue = S.NonEmptyString.check(
+  S.makeFilter(isXAiHttpBaseUrl, {
+    message: "xAI HTTP base URL must be an absolute http(s) URL.",
+    arbitraryConstraint: { patterns: [{ source: "^https?://[a-z]{1,12}\\.example(?:/[a-z0-9]{1,12})?$", flags: "" }] },
+  })
+);
+
 /**
  * xAI HTTP API base URL normalized without trailing slashes.
  *
@@ -41,13 +48,9 @@ const isXAiWebSocketBaseUrl = isUrlWithProtocol(["ws:", "wss:"]);
  * @category utilities
  * @since 0.0.0
  */
-export const XAiHttpBaseUrl = S.NonEmptyString.check(
-  S.makeFilter(isXAiHttpBaseUrl, {
-    message: "xAI HTTP base URL must be an absolute http(s) URL.",
-  })
-).pipe(
+export const XAiHttpBaseUrl = XAiHttpBaseUrlValue.pipe(
   S.decodeTo(
-    S.String,
+    XAiHttpBaseUrlValue,
     SchemaTransformation.transform({
       decode: normalizeXAiBaseUrl,
       encode: identity,
@@ -55,7 +58,13 @@ export const XAiHttpBaseUrl = S.NonEmptyString.check(
   ),
   $I.annoteSchema("XAiHttpBaseUrl", {
     description: "xAI HTTP API base URL normalized without trailing slashes.",
-    toArbitrary: () => (fc) => fc.webUrl().map(normalizeXAiBaseUrl),
+  })
+);
+
+const XAiWebSocketBaseUrlValue = S.NonEmptyString.check(
+  S.makeFilter(isXAiWebSocketBaseUrl, {
+    message: "xAI WebSocket base URL must be an absolute ws(s) URL.",
+    arbitraryConstraint: { patterns: [{ source: "^wss?://[a-z]{1,12}\\.example(?:/[a-z0-9]{1,12})?$", flags: "" }] },
   })
 );
 
@@ -75,13 +84,9 @@ export const XAiHttpBaseUrl = S.NonEmptyString.check(
  * @category utilities
  * @since 0.0.0
  */
-export const XAiWebSocketBaseUrl = S.NonEmptyString.check(
-  S.makeFilter(isXAiWebSocketBaseUrl, {
-    message: "xAI WebSocket base URL must be an absolute ws(s) URL.",
-  })
-).pipe(
+export const XAiWebSocketBaseUrl = XAiWebSocketBaseUrlValue.pipe(
   S.decodeTo(
-    S.String,
+    XAiWebSocketBaseUrlValue,
     SchemaTransformation.transform({
       decode: normalizeXAiBaseUrl,
       encode: identity,
@@ -89,7 +94,6 @@ export const XAiWebSocketBaseUrl = S.NonEmptyString.check(
   ),
   $I.annoteSchema("XAiWebSocketBaseUrl", {
     description: "xAI WebSocket API base URL normalized without trailing slashes.",
-    toArbitrary: () => (fc) => fc.webUrl().map((url) => normalizeXAiBaseUrl(url.replace(/^https?:/, "wss:"))),
   })
 );
 

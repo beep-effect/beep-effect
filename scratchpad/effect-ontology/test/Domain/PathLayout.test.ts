@@ -1,8 +1,9 @@
+import * as Effect from "effect/Effect";
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { BatchId, ContentHash, DocumentId, Namespace, OntologyName } from "../../Domain/Identity.ts";
 import {
   BatchCanonicalPath,
@@ -79,13 +80,20 @@ const namespace = Namespace.make("legal");
 describe("effect-ontology storage path layout", () => {
   it("derives arbitraries whose values satisfy every public path schema", () => {
     for (const schema of storagePathSchemas) {
-      const arbitrary = S.toArbitrary(schema)(fc);
-      fc.assert(
-        fc.property(arbitrary, (value) => {
+      const arbitrary = Arbitrary.schema(schema);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([value]) => {
           expect(S.is(schema)(value)).toBe(true);
-        }),
-        { numRuns: 16 }
-      );
+
+              return true;
+            },
+            { runs: 16 }
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 
@@ -108,12 +116,10 @@ describe("effect-ontology storage path layout", () => {
 
   it("rejects traversal, non-canonical indices, and unregistered outputs", () => {
     expect(StoragePathSegment.is("../escape")).toBe(false);
-    expect(Result.isFailure(decodeRunChunkPathResult("runs/doc-deadbeefcafe/input/chunks/chunk-01.txt"))).toBe(
+    expect(Result.isFailure(decodeRunChunkPathResult("runs/doc-deadbeefcafe/input/chunks/chunk-01.txt"))).toBe(true);
+    expect(Result.isFailure(decodeUnknownRunOutputPathResult("runs/doc-deadbeefcafe/outputs/custom-output.json"))).toBe(
       true
     );
-    expect(
-      Result.isFailure(decodeUnknownRunOutputPathResult("runs/doc-deadbeefcafe/outputs/custom-output.json"))
-    ).toBe(true);
   });
 
   it("constructs image paths only from validated hash, owner, and variant values", () => {

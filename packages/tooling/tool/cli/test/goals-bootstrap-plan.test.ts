@@ -26,7 +26,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import {
@@ -99,12 +99,19 @@ const commandTestLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeServic
 
 describe("goals bootstrap --plan golden fixtures", () => {
   it("round-trips arbitrary goal slugs through the schema codec", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(GoalSlug)(fc), (slug) => {
-        expect(decodeGoalSlugSync(encodeGoalSlugSync(slug))).toBe(slug);
-      }),
-      { numRuns: 32 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(GoalSlug)]),
+          ([slug]) => {
+            expect(decodeGoalSlugSync(encodeGoalSlugSync(slug))).toBe(slug);
+
+            return true;
+          },
+          { runs: 32 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("pins the minimal standard-delivery plan byte-for-byte", () =>
@@ -139,17 +146,24 @@ describe("goals bootstrap --plan determinism", () => {
     ));
 
   it("property: schema-generated inputs compile deterministic schema-valid plans", () => {
-    const BootstrapInputArbitrary = S.toArbitrary(BootstrapInput)(fc);
-    fc.assert(
-      fc.property(BootstrapInputArbitrary, (input) => {
-        const first = compileMaterializationPlan(input, []);
-        const second = compileMaterializationPlan(input, []);
-        expect(isMaterializationPlan2(first)).toBe(true);
-        expect(second.planId).toBe(first.planId);
-        expect(second.entries).toStrictEqual(first.entries);
-      }),
-      fcRuns(32)
-    );
+    const BootstrapInputArbitrary = Arbitrary.schema(BootstrapInput);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([BootstrapInputArbitrary]),
+          ([input]) => {
+            const first = compileMaterializationPlan(input, []);
+            const second = compileMaterializationPlan(input, []);
+            expect(isMaterializationPlan2(first)).toBe(true);
+            expect(second.planId).toBe(first.planId);
+            expect(second.entries).toStrictEqual(first.entries);
+
+            return true;
+          },
+          fcRuns(32)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });
 

@@ -18,9 +18,10 @@ import { AnsiRenderLevel, ColorModelName, StyleChannel, StyleName } from "@beep/
 import { createSupportsColor } from "@beep/chalk/internal/SupportsColor";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ChalkInstance, ColorSupportLevel as ColorSupportLevelType } from "@beep/chalk";
 
 const decodeUnknownChalkConstructorOptionsSync = S.decodeUnknownSync(ChalkConstructorOptions);
@@ -185,16 +186,23 @@ describe("@beep/chalk", () => {
     ] as const;
 
     for (const schema of schemas) {
-      const arbitrary = S.toArbitrary(schema)(fc);
+      const arbitrary = Arbitrary.schema(schema);
       const decode = S.decodeSync(schema);
       const encode = S.encodeSync(schema);
 
-      fc.assert(
-        fc.property(arbitrary, (value) => {
-          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
-        }),
-        fcRuns(50)
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([value]) => {
+              expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+
+              return true;
+            },
+            fcRuns(50)
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 });

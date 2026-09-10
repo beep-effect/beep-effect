@@ -15,13 +15,13 @@ import { expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeRetentionInventoryResult = S.decodeUnknownResult(AiMetricsRetentionInventory);
 const encodeRetentionInventoryJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsRetentionInventory));
 const decodeDerivedStorageWriteResult = S.decodeUnknownResult(AiMetricsDerivedStorageWriteResult);
 const encodeDerivedStorageWriteResult = S.encodeUnknownResult(AiMetricsDerivedStorageWriteResult);
-const DerivedStorageWriteResultArbitrary = S.toArbitrary(AiMetricsDerivedStorageWriteResult)(fc);
+const DerivedStorageWriteResultArbitrary = Arbitrary.schema(AiMetricsDerivedStorageWriteResult);
 const isDerivedStorageWriteResult = S.is(AiMetricsDerivedStorageWriteResult);
 
 const provideScopedLayer =
@@ -133,10 +133,15 @@ it("enforces retention policy, window, version, and Parquet-table invariants at 
 });
 
 it("derives valid storage results from the schema", () =>
-  fc.assert(
-    fc.property(DerivedStorageWriteResultArbitrary, (result) => isDerivedStorageWriteResult(result)),
-    fcRuns(12)
-  ));
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([DerivedStorageWriteResultArbitrary]),
+        ([result]) => isDerivedStorageWriteResult(result),
+        fcRuns(12)
+      )
+    )._tag
+  ).toBe("Passed"));
 
 it.effect(
   "defaults and encodes the retention inventory schema version",

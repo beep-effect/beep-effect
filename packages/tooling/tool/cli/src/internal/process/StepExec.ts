@@ -840,6 +840,31 @@ const interruptTimedOutCapture = (
 };
 
 /**
+ * Test-only handle for the captured-step deadline classifier.
+ *
+ * **Example** (Classify an under-deadline capture)
+ *
+ * ```ts
+ * import { settleCapturedStepForTesting } from "@beep/repo-cli/test/Process"
+ * import { Effect } from "effect"
+ *
+ * const settled = settleCapturedStepForTesting({
+ *   captured: { text: "", truncated: false },
+ *   commandLine: "echo ok",
+ *   elapsed: "10 millis",
+ *   exitCode: 0,
+ *   timeout: "1 second",
+ *   trim: undefined,
+ * } as never)
+ * console.log(Effect.isEffect(settled)) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const settleCapturedStepForTesting = settleCapturedStep;
+
+/**
  * Bounds a capture stream's lifetime to its child process.
  *
  * **Details**

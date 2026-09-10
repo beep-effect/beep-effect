@@ -36,7 +36,7 @@ const Base64String = S.String.annotate({
   contentEncoding: "base64",
 });
 
-const arrayBufferFromBase64String = SchemaTransformation.transformOrFail<globalThis.ArrayBuffer, string>({
+const arrayBufferFromBase64String = SchemaTransformation.transformEffect<globalThis.ArrayBuffer, string>({
   decode: (encoded, options) =>
     Result.match(Encoding.decodeBase64(encoded), {
       onFailure: (error) => Effect.fail(new SchemaIssue.InvalidValue({ message: error.message }, encoded, options)),
@@ -97,7 +97,6 @@ const byteEquivalence = (self: globalThis.ArrayBuffer, that: globalThis.ArrayBuf
  */
 export const ArrayBuf = S.instanceOf(globalThis.ArrayBuffer, {
   expected: "ArrayBuffer",
-  toArbitrary: () => (fc) => fc.uint8Array().map((bytes) => bytes.slice().buffer),
   toCodecJson: () => S.link<globalThis.ArrayBuffer>()(Base64String, arrayBufferFromBase64String),
 })
   .check(NotDetached)

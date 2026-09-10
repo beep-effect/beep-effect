@@ -299,7 +299,6 @@ const AnyEmbeddingErrorDefinition = S.Union([
 export const AnyEmbeddingError = AnyEmbeddingErrorDefinition.pipe(
   $I.annoteSchema("AnyEmbeddingError", {
     description: "Exhaustive tagged union of embedding-operation failures.",
-    toArbitrary: () => S.toArbitrary(AnyEmbeddingErrorDefinition),
   })
 );
 

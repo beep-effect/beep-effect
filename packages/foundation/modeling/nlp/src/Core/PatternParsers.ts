@@ -102,7 +102,7 @@ const decodePatternElement = (input: string) =>
  */
 export const BracketStringToPOSPatternElement = S.String.pipe(
   S.decodeTo(POSPatternElement, {
-    decode: SchemaGetter.transformOrFail((input) =>
+    decode: SchemaGetter.transformEffect((input) =>
       Effect.fromOption(decodePOSPatternElement(input), () =>
         invalidBracketString("POS pattern must be bracketed and contain valid wink POS tags.")
       )
@@ -148,7 +148,7 @@ export type BracketStringToPOSPatternElement = typeof BracketStringToPOSPatternE
  */
 export const BracketStringToEntityPatternElement = S.String.pipe(
   S.decodeTo(EntityPatternElement, {
-    decode: SchemaGetter.transformOrFail((input) =>
+    decode: SchemaGetter.transformEffect((input) =>
       Effect.fromOption(decodeEntityPatternElement(input), () =>
         invalidBracketString("Entity pattern must be bracketed and contain valid wink entity types.")
       )
@@ -194,7 +194,7 @@ export type BracketStringToEntityPatternElement = typeof BracketStringToEntityPa
  */
 export const BracketStringToLiteralPatternElement = S.String.pipe(
   S.decodeTo(LiteralPatternElement, {
-    decode: SchemaGetter.transformOrFail((input) =>
+    decode: SchemaGetter.transformEffect((input) =>
       Effect.fromOption(decodeLiteralPatternElement(input), () =>
         invalidBracketString("Literal pattern must be bracketed and contain non-empty literal choices.")
       )
@@ -240,7 +240,7 @@ export type BracketStringToLiteralPatternElement = typeof BracketStringToLiteral
  */
 export const BracketStringToPatternElement = S.String.pipe(
   S.decodeTo(PatternElement, {
-    decode: SchemaGetter.transformOrFail(decodePatternElement),
+    decode: SchemaGetter.transformEffect(decodePatternElement),
     encode: SchemaGetter.transform(encodePatternElement),
   }),
   $I.annoteSchema("BracketStringToPatternElement", {

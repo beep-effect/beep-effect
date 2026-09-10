@@ -65,16 +65,12 @@ const Uint32Checks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-export const Uint32 = S.Finite.annotate({
-  toArbitrary: () => (fc) => fc.integer({ min: uint32Minimum, max: uint32Maximum }),
-})
-  .check(Uint32Checks)
-  .pipe(
-    S.brand("Uint32"),
-    $I.annoteSchema("Uint32", {
-      description: "A protobuf uint32 number in the inclusive unsigned 32-bit range.",
-    })
-  );
+export const Uint32 = S.Finite.check(Uint32Checks).pipe(
+  S.brand("Uint32"),
+  $I.annoteSchema("Uint32", {
+    description: "A protobuf uint32 number in the inclusive unsigned 32-bit range.",
+  })
+);
 
 /**
  * Type-level value inferred from {@link Uint32}.

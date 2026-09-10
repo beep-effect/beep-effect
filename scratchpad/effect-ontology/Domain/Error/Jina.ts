@@ -64,26 +64,6 @@ const JinaRateLimitErrorFields = {
   }),
 } satisfies S.Struct.Fields;
 
-const makeJinaRateLimitError = (
-  input: S.Schema.Type<S.TaggedStruct<"JinaRateLimitError", typeof JinaRateLimitErrorFields>>
-): JinaRateLimitError => JinaRateLimitError.make(input);
-
-const JinaRateLimitErrorBase = S.TaggedError<JinaRateLimitError>($I`JinaRateLimitError`)(
-  "JinaRateLimitError",
-  JinaRateLimitErrorFields,
-  {
-    ...$I.annote("JinaRateLimitError", {
-      description: "Jina Reader request rejected because the API quota was exhausted.",
-    }),
-    toArbitrary:
-      ([from]) =>
-      () => ({
-        arbitrary: from.arbitrary.map(makeJinaRateLimitError),
-        terminal: from.terminal?.map(makeJinaRateLimitError),
-      }),
-  }
-);
-
 /**
  * Jina Reader request rejected because the API quota was exhausted.
  *
@@ -102,7 +82,15 @@ const JinaRateLimitErrorBase = S.TaggedError<JinaRateLimitError>($I`JinaRateLimi
  * @category errors
  * @since 0.0.0
  */
-export class JinaRateLimitError extends JinaRateLimitErrorBase {
+export class JinaRateLimitError extends S.TaggedError<JinaRateLimitError>($I`JinaRateLimitError`)(
+  "JinaRateLimitError",
+  JinaRateLimitErrorFields,
+  {
+    ...$I.annote("JinaRateLimitError", {
+      description: "Jina Reader request rejected because the API quota was exhausted.",
+    }),
+  }
+) {
   /**
    * Provider-directed retry delay as an Effect `Duration`.
    *
@@ -195,7 +183,7 @@ export class JinaTimeoutError extends S.TaggedError<JinaTimeoutError>($I`JinaTim
     description: "Jina Reader request that exceeded its configured deadline.",
   })
 ) {
-  static readonly is = S.is(JinaTimeoutError)
+  static readonly is = S.is(JinaTimeoutError);
 }
 
 const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParseError, JinaTimeoutError]).pipe(
@@ -222,7 +210,6 @@ const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParse
 export const JinaError = JinaErrorDefinition.pipe(
   $I.annoteSchema("JinaError", {
     description: "Exhaustive tagged union of Jina Reader failures.",
-    toArbitrary: () => S.toArbitrary(JinaErrorDefinition),
   })
 );
 

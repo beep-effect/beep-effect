@@ -131,19 +131,19 @@ const runSetRiskTierProgram = Effect.fn("Goals.runSetRiskTierProgram")(function*
   yield* Console.log(`[goals:set-risk-tier] ${slug}: risk tier override -> ${tier} (${reason}).`);
 });
 
-const slugArgument = Argument.string("slug").pipe(
+const slugArgument = Argument.String("slug").pipe(
   Argument.withDescription("Goal packet slug under goals/"),
   Argument.optional
 );
-const tierArgument = Argument.string("tier").pipe(
+const tierArgument = Argument.String("tier").pipe(
   Argument.withDescription(`Risk tier: ${TIER_DOMAIN}`),
   Argument.optional
 );
-const reasonFlag = Flag.string("reason").pipe(
+const reasonFlag = Flag.String("reason").pipe(
   Flag.withDescription("Recorded, challengeable reason for the override (required)"),
   Flag.withDefault("")
 );
-const previewFlag = Flag.boolean("preview").pipe(
+const previewFlag = Flag.Boolean("preview").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the guarded override plan (fold, events to append, derived state) without writing")
 );

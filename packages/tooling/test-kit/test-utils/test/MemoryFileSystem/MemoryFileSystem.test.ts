@@ -192,7 +192,7 @@ it.layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
       yield* fs.writeFileString(path, "content");
       const file = yield* fs.open(path, { flag: "r+" });
 
-      yield* file.seek(Number.MAX_SAFE_INTEGER, "start");
+      yield* file.seek(BigInt(Number.MAX_SAFE_INTEGER), "start");
       yield* Effect.flip(file.writeAll(new Uint8Array([1])));
 
       for (const size of [-1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {

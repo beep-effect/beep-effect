@@ -242,7 +242,7 @@ const streamChatCompletion = (
  * @category constructors
  * @since 0.0.0
  */
-export const make: (options: XAiLanguageModelOptionsInput) => Effect.Effect<LanguageModel.Service, never, XAi> =
+export const make: (options: XAiLanguageModelOptionsInput) => Effect.Effect<LanguageModel.LanguageModel, never, XAi> =
   Effect.fn("XAiLanguageModel.make")(function* (input) {
     const xai = yield* XAi;
     const options = XAiLanguageModelOptions.make(input);

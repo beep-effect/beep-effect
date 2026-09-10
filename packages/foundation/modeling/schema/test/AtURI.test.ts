@@ -3,11 +3,11 @@ import { AtUri } from "@beep/schema/AtURI";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isAtUri2 = S.is(AtUri);
 
-const AtUriArbitrary = S.toArbitrary(AtUri)(fc);
+const AtUriArbitrary = Arbitrary.schema(AtUri);
 const decodeAtUri = S.decodeUnknownEffect(AtUri);
 
 const validAtUriExamples = [
@@ -73,19 +73,26 @@ describe("AtUri", () => {
   );
 
   it("derives schema arbitrary values that remain normalized Lexicon AT URIs", () => {
-    fc.assert(
-      fc.property(AtUriArbitrary, (uri) => {
-        const withoutScheme = uri.slice("at://".length);
-        const pathSegments = withoutScheme.split("/");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([AtUriArbitrary]),
+          ([uri]) => {
+            const withoutScheme = uri.slice("at://".length);
+            const pathSegments = withoutScheme.split("/");
 
-        expect(isAtUri2(uri)).toBe(true);
-        expect(uri.startsWith("at://")).toBe(true);
-        expect(uri).not.toMatch(/[?#]/u);
-        expect(uri.endsWith("/")).toBe(false);
-        expect(pathSegments.length).toBeLessThanOrEqual(3);
-        expect(pathSegments.every((segment) => segment.length > 0)).toBe(true);
-      }),
-      fcRuns(100)
-    );
+            expect(isAtUri2(uri)).toBe(true);
+            expect(uri.startsWith("at://")).toBe(true);
+            expect(uri).not.toMatch(/[?#]/u);
+            expect(uri.endsWith("/")).toBe(false);
+            expect(pathSegments.length).toBeLessThanOrEqual(3);
+            expect(pathSegments.every((segment) => segment.length > 0)).toBe(true);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

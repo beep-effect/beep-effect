@@ -198,13 +198,13 @@ describe("thin lint workers", { concurrent: false }, () => {
   it.effect(
     "passes the standalone caller base only to its affected Turbo child",
     Effect.fnUntraced(function* () {
-      const ambientBase = yield* Config.option(Config.string("TURBO_SCM_BASE"));
+      const ambientBase = yield* Config.option(Config.String("TURBO_SCM_BASE"));
       // The command reads CI through the test's empty provider, so this is the local affected path.
       yield* run(["deprecated-apis", "--base", "refs/heads/caller-base"]);
       const invocation = execution.mock.calls[0]?.[0];
       expect(invocation?.args).toContain("--affected");
       expect(invocation?.env?.TURBO_SCM_BASE).toBe("refs/heads/caller-base");
-      expect(yield* Config.option(Config.string("TURBO_SCM_BASE"))).toEqual(ambientBase);
+      expect(yield* Config.option(Config.String("TURBO_SCM_BASE"))).toEqual(ambientBase);
     }, providePlatform)
   );
   it.effect(

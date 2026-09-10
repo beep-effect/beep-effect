@@ -250,7 +250,7 @@ const formatXSSProtectionValue = Effect.fn("XSSProtection.formatXSSProtectionVal
 export const XSSProtectionHeader = S.Union([XSSProtectionOption, S.Undefined]).pipe(
   S.decodeTo(
     XSSProtectionResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: Effect.fnUntraced(function* (input): Effect.fn.Return<
         XSSProtectionResponseHeaderEncoded,
         SchemaIssue.Issue

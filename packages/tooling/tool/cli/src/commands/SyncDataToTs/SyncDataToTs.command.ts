@@ -26,31 +26,31 @@ import type { Crypto, JsonPatch } from "effect";
 import type { HttpClient } from "effect/unstable/http";
 import type { SyncDataFileResult, SyncDataTarget } from "./SyncDataToTs.schemas.ts";
 
-const targetFlag = Flag.string("target").pipe(
+const targetFlag = Flag.String("target").pipe(
   Flag.withAlias("t"),
   Flag.withDescription("Sync a single checked-in target by id"),
   Flag.optional
 );
 
-const allFlag = Flag.boolean("all").pipe(Flag.withDefault(false), Flag.withDescription("Sync every checked-in target"));
-const includeAuthenticatedFlag = Flag.boolean("include-authenticated").pipe(
+const allFlag = Flag.Boolean("all").pipe(Flag.withDefault(false), Flag.withDescription("Sync every checked-in target"));
+const includeAuthenticatedFlag = Flag.Boolean("include-authenticated").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Include sync targets that require configured authenticated source access when --all is used")
 );
-const checkFlag = Flag.boolean("check").pipe(
+const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Report drift without writing files and exit non-zero when changes are needed")
 );
-const dryRunFlag = Flag.boolean("dry-run").pipe(
+const dryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Preview file updates without writing them")
 );
-const verboseFlag = Flag.boolean("verbose").pipe(
+const verboseFlag = Flag.Boolean("verbose").pipe(
   Flag.withDefault(false),
   Flag.withAlias("v"),
   Flag.withDescription("Log unchanged targets in addition to changed targets")
 );
-const reportDirFlag = Flag.string("report-dir").pipe(
+const reportDirFlag = Flag.String("report-dir").pipe(
   Flag.withDescription("Write data-sync-report.md and data-sync-report.json into this directory"),
   Flag.optional
 );

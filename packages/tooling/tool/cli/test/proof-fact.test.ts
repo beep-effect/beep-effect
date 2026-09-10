@@ -20,7 +20,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeProofLedgerFactRowJson = S.decodeEffect(S.fromJsonString(ProofLedgerFactRow));
 const decodeProofLedgerShadowRowJson = S.decodeEffect(S.fromJsonString(ProofLedgerShadowRow));
@@ -105,18 +105,24 @@ const assertRejects = Effect.fn("ProofFactTest.assertRejects")(function* <Schema
 
 describe("ProofFact schemas", () => {
   it("round-trips schema-derived arbitrary ledger rows", () => {
-    const arbitrary = S.toArbitrary(ProofLedgerRow)(fc);
+    const arbitrary = Arbitrary.schema(ProofLedgerRow);
     const equivalent = S.toEquivalence(ProofLedgerRow);
 
-    fc.assert(
-      fc.property(arbitrary, (value) =>
-        equivalent(
-          Result.getOrThrow(decodeUnknownProofLedgerRowResult(Result.getOrThrow(encodeProofLedgerRowResult(value)))),
-          value
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) =>
+            equivalent(
+              Result.getOrThrow(
+                decodeUnknownProofLedgerRowResult(Result.getOrThrow(encodeProofLedgerRowResult(value)))
+              ),
+              value
+            ),
+          fcRuns(20)
         )
-      ),
-      fcRuns(20)
-    );
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect("round-trips every schema and derives a working S.is guard", () =>

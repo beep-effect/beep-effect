@@ -191,6 +191,7 @@ const hasDerivationKind = (kinds: HashSet.HashSet<PositionDerivationKind>): bool
 const PositionDerivationKinds = StoredHashSet(PositionDerivationKind).check(
   S.makeFilter(hasDerivationKind, {
     identifier: $I`PositionDerivationKindsCheck`,
+    arbitraryConstraint: { minSize: 1 },
     title: "Position Derivation Kinds",
     description: "An act frame must record at least one way it derives positions.",
     message: "Expected at least one position derivation kind.",

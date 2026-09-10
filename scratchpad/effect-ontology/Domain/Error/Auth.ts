@@ -33,7 +33,6 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Auth");
  */
 export const AuthenticationReason = LiteralKit(["missing", "invalid", "disabled", "expired"]).pipe(
   $I.annoteSchema("AuthenticationReason", {
-    toArbitrary: () => (fc) => fc.constantFrom("missing", "invalid", "disabled", "expired"),
     description: "Closed reason code explaining an authentication rejection.",
   })
 );
@@ -234,7 +233,6 @@ const AuthErrorDefinition = S.Union([
 export const AuthError = AuthErrorDefinition.pipe(
   $I.annoteSchema("AuthError", {
     description: "Exhaustive tagged union of ontology transport authentication failures.",
-    toArbitrary: () => S.toArbitrary(AuthErrorDefinition),
   })
 );
 

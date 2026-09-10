@@ -13,7 +13,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownFilingOutcomeResult = S.decodeUnknownResult(FilingOutcome);
 const encodeFilingOutcomeResult = S.encodeResult(FilingOutcome);
@@ -68,15 +68,22 @@ describe("@beep/documents-domain taxonomy seed", () => {
   it("round-trips the filing outcome union with schema-derived arbitraries", () => {
     const equivalent = S.toEquivalence(FilingOutcome);
 
-    fc.assert(
-      fc.property(S.toArbitrary(FilingOutcome)(fc), (outcome) => {
-        const encoded = Result.getOrThrow(encodeFilingOutcomeResult(outcome));
-        const decoded = Result.getOrThrow(decodeUnknownFilingOutcomeResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(FilingOutcome),
+          (outcome) => {
+            const encoded = Result.getOrThrow(encodeFilingOutcomeResult(outcome));
+            const decoded = Result.getOrThrow(decodeUnknownFilingOutcomeResult(encoded));
 
-        expect(equivalent(decoded, outcome)).toBe(true);
-      }),
-      fcRuns(10)
-    );
+            expect(equivalent(decoded, outcome)).toBe(true);
+
+            return true;
+          },
+          fcRuns(10)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("retains native tagged-union utilities alongside its selected decoder", () => {

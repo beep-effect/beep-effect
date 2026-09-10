@@ -23,7 +23,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeOpenclawDeploymentIntentResult = S.decodeResult(OpenclawDeploymentIntent);
 const decodeOpenclawGatewayIntentResult = S.decodeResult(OpenclawGatewayIntent);
@@ -42,12 +42,12 @@ const encodeOpenclawTelegramIntentResult = S.encodeResult(OpenclawTelegramIntent
 const isOpenclawModelProviderIntent = S.is(OpenclawModelProviderIntent);
 const isOpenclawProviderApiKey = S.is(OpenclawProviderApiKey);
 
-const SecretReferenceArbitrary = S.toArbitrary(OpenclawSecretReference)(fc);
-const TargetVersionArbitrary = S.toArbitrary(OpenclawTargetVersion)(fc);
-const ProviderApiKeyArbitrary = S.toArbitrary(OpenclawProviderApiKey)(fc);
-const GatewayIntentArbitrary = S.toArbitrary(OpenclawGatewayIntent)(fc);
-const TelegramIntentArbitrary = S.toArbitrary(OpenclawTelegramIntent)(fc);
-const DeploymentIntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent)(fc);
+const SecretReferenceArbitrary = Arbitrary.schema(OpenclawSecretReference);
+const TargetVersionArbitrary = Arbitrary.schema(OpenclawTargetVersion);
+const ProviderApiKeyArbitrary = Arbitrary.schema(OpenclawProviderApiKey);
+const GatewayIntentArbitrary = Arbitrary.schema(OpenclawGatewayIntent);
+const TelegramIntentArbitrary = Arbitrary.schema(OpenclawTelegramIntent);
+const DeploymentIntentArbitrary = Arbitrary.schema(OpenclawDeploymentIntent);
 
 const sameProviderApiKey = S.toEquivalence(OpenclawProviderApiKey);
 const sameGatewayIntent = S.toEquivalence(OpenclawGatewayIntent);
@@ -242,62 +242,60 @@ describe("@beep/openclaw intent models", () => {
     expect(isOpenclawModelProviderIntent(ollamaProvider)).toBe(true);
   });
 
-  it("round-trips schema-derived intent payloads", () =>
-    fc.assert(
-      fc.property(
-        SecretReferenceArbitrary,
-        TargetVersionArbitrary,
-        ProviderApiKeyArbitrary,
-        GatewayIntentArbitrary,
-        TelegramIntentArbitrary,
-        DeploymentIntentArbitrary,
-        (reference, version, apiKey, gateway, telegram, deployment) => {
-          expect(
-            Result.getOrThrow(
-              decodeOpenclawSecretReferenceResult(Result.getOrThrow(encodeOpenclawSecretReferenceResult(reference)))
-            )
-          ).toBe(reference);
-          expect(
-            Result.getOrThrow(
-              decodeOpenclawTargetVersionResult(Result.getOrThrow(encodeOpenclawTargetVersionResult(version)))
-            )
-          ).toBe(version);
-          expect(
-            sameProviderApiKey(
-              Result.getOrThrow(
-                decodeOpenclawProviderApiKeyResult(Result.getOrThrow(encodeOpenclawProviderApiKeyResult(apiKey)))
-              ),
-              apiKey
-            )
-          ).toBe(true);
-          expect(
-            sameGatewayIntent(
-              Result.getOrThrow(
-                decodeOpenclawGatewayIntentResult(Result.getOrThrow(encodeOpenclawGatewayIntentResult(gateway)))
-              ),
-              gateway
-            )
-          ).toBe(true);
-          expect(
-            sameTelegramIntent(
-              Result.getOrThrow(
-                decodeOpenclawTelegramIntentResult(Result.getOrThrow(encodeOpenclawTelegramIntentResult(telegram)))
-              ),
-              telegram
-            )
-          ).toBe(true);
-          expect(
-            sameDeploymentIntent(
-              Result.getOrThrow(
-                decodeOpenclawDeploymentIntentResult(
-                  Result.getOrThrow(encodeOpenclawDeploymentIntentResult(deployment))
-                )
-              ),
-              deployment
-            )
-          ).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+  it.prop(
+    "round-trips schema-derived intent payloads",
+    [
+      SecretReferenceArbitrary,
+      TargetVersionArbitrary,
+      ProviderApiKeyArbitrary,
+      GatewayIntentArbitrary,
+      TelegramIntentArbitrary,
+      DeploymentIntentArbitrary,
+    ],
+    ([reference, version, apiKey, gateway, telegram, deployment]) => {
+      expect(
+        Result.getOrThrow(
+          decodeOpenclawSecretReferenceResult(Result.getOrThrow(encodeOpenclawSecretReferenceResult(reference)))
+        )
+      ).toBe(reference);
+      expect(
+        Result.getOrThrow(
+          decodeOpenclawTargetVersionResult(Result.getOrThrow(encodeOpenclawTargetVersionResult(version)))
+        )
+      ).toBe(version);
+      expect(
+        sameProviderApiKey(
+          Result.getOrThrow(
+            decodeOpenclawProviderApiKeyResult(Result.getOrThrow(encodeOpenclawProviderApiKeyResult(apiKey)))
+          ),
+          apiKey
+        )
+      ).toBe(true);
+      expect(
+        sameGatewayIntent(
+          Result.getOrThrow(
+            decodeOpenclawGatewayIntentResult(Result.getOrThrow(encodeOpenclawGatewayIntentResult(gateway)))
+          ),
+          gateway
+        )
+      ).toBe(true);
+      expect(
+        sameTelegramIntent(
+          Result.getOrThrow(
+            decodeOpenclawTelegramIntentResult(Result.getOrThrow(encodeOpenclawTelegramIntentResult(telegram)))
+          ),
+          telegram
+        )
+      ).toBe(true);
+      expect(
+        sameDeploymentIntent(
+          Result.getOrThrow(
+            decodeOpenclawDeploymentIntentResult(Result.getOrThrow(encodeOpenclawDeploymentIntentResult(deployment)))
+          ),
+          deployment
+        )
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Client-safe contradiction-triage RPC and read-model contracts.
  *
@@ -290,27 +291,14 @@ class EvidenceSourceHighlightStruct extends S.Class<EvidenceSourceHighlightStruc
   })
 ) {}
 
-const EvidenceSourceHighlightSchema = EvidenceSourceHighlightStruct.mapFields(identity)
-  .check(
-    S.makeFilter(({ endChar, startChar }) => N.isLessThan(startChar, endChar), {
-      identifier: $I`EvidenceSourceHighlightOrderCheck`,
-      title: "Evidence Source Highlight Order",
-      description: "Checks that the quote-free highlight is a non-empty forward half-open UTF-16 range.",
-      message: "Expected startChar to be less than endChar.",
-    })
-  )
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(fc.nat(10_000), fc.integer({ min: 1, max: 10_000 }), S.toArbitrary(SourceTextIdentity)(fc))
-        .map(([startChar, width, source]) =>
-          EvidenceSourceHighlightStruct.make({
-            endChar: NonNegativeInt.make(startChar + width),
-            source,
-            startChar: NonNegativeInt.make(startChar),
-          })
-        ),
-  });
+const EvidenceSourceHighlightSchema = EvidenceSourceHighlightStruct.mapFields(identity).check(
+  S.makeFilter(({ endChar, startChar }) => N.isLessThan(startChar, endChar), {
+    identifier: $I`EvidenceSourceHighlightOrderCheck`,
+    title: "Evidence Source Highlight Order",
+    description: "Checks that the quote-free highlight is a non-empty forward half-open UTF-16 range.",
+    message: "Expected startChar to be less than endChar.",
+  })
+);
 
 /**
  * Quote-free projection of a freshly verified source anchor.
@@ -376,28 +364,11 @@ const EvidenceSourcePageHighlightBoundsCheck = S.makeFilter(
     message: "Expected highlight.endChar to be less than or equal to page.totalCodeUnits.",
   }
 );
-const evidenceIdArbitrary = S.toArbitrary(SharedEpistemic.EvidenceId);
-const evidenceSourceHighlightArbitrary = S.toArbitrary(EvidenceSourceHighlight);
-const sourceTextPageArbitrary = S.toArbitrary(SourceTextPage);
 
-const EvidenceSourcePageSchema = EvidenceSourcePageStruct.mapFields(identity)
-  .check(EvidenceSourcePageIdentityCheck, EvidenceSourcePageHighlightBoundsCheck)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(evidenceIdArbitrary(fc), evidenceSourceHighlightArbitrary(fc), sourceTextPageArbitrary(fc))
-        .map(([evidenceId, highlight, page]) =>
-          EvidenceSourcePageStruct.make({
-            evidenceId,
-            highlight,
-            page: SourceTextPage.make({
-              ...page,
-              identity: highlight.source,
-              totalCodeUnits: NonNegativeInt.make(N.max(page.totalCodeUnits, highlight.endChar)),
-            }),
-          })
-        ),
-  });
+const EvidenceSourcePageSchema = EvidenceSourcePageStruct.mapFields(identity).check(
+  EvidenceSourcePageIdentityCheck,
+  EvidenceSourcePageHighlightBoundsCheck
+);
 
 /**
  * Bounded canonical source page and quote-free verified highlight projection.
@@ -607,4 +578,68 @@ export const ContradictionRpcs = RpcGroup.make(
   GetContradictionCandidateRpc,
   ReviewContradictionCandidateRpc,
   GetEvidenceSourcePageRpc
+);
+
+/**
+ * Native generator preserving the cross-field invariants of EvidenceSourceHighlight.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { EvidenceSourceHighlightArbitrary } from "@beep/epistemic-use-cases/public"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(EvidenceSourceHighlightArbitrary, { count: 1 })
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const EvidenceSourceHighlightArbitrary = Arbitrary.schema(
+  S.Struct({
+    startChar: S.Int.check(S.isBetween({ minimum: 0, maximum: 10_000 })),
+    width: S.Int.check(S.isBetween({ minimum: 1, maximum: 10_000 })),
+    source: SourceTextIdentity,
+  })
+).pipe(
+  Arbitrary.map(({ startChar, width, source }) =>
+    EvidenceSourceHighlight.make({
+      startChar: NonNegativeInt.make(startChar),
+      endChar: NonNegativeInt.make(startChar + width),
+      source,
+    })
+  )
+);
+
+/**
+ * Native generator preserving the cross-field invariants of EvidenceSourcePage.
+ *
+ * **Example** (Sample a valid value)
+ *
+ * ```ts
+ * import { EvidenceSourcePageArbitrary } from "@beep/epistemic-use-cases/public"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ *
+ * const sample = Arbitrary.sampleEffect(EvidenceSourcePageArbitrary, { count: 1 })
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const EvidenceSourcePageArbitrary = Arbitrary.all({
+  evidenceId: Arbitrary.schema(SharedEpistemic.EvidenceId),
+  highlight: EvidenceSourceHighlightArbitrary,
+  page: Arbitrary.schema(SourceTextPage),
+}).pipe(
+  Arbitrary.map(({ evidenceId, highlight, page }) =>
+    EvidenceSourcePage.make({
+      evidenceId,
+      highlight,
+      page: SourceTextPage.make({
+        ...page,
+        identity: highlight.source,
+        totalCodeUnits: NonNegativeInt.make(N.max(page.totalCodeUnits, highlight.endChar)),
+      }),
+    })
+  )
 );

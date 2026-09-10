@@ -21,6 +21,7 @@ const isURLStr = (u: unknown): u is URLStr => isNonEmptyTrimmedStr(u) && O.isSom
 
 const filterURLStr = S.makeFilter(isURLStr, {
   message: "URL must be a valid URL encoded string",
+  arbitraryConstraint: { patterns: [{ source: "^https?://[a-z]{1,12}\\.example(?:/[a-z0-9]{0,12})?$", flags: "" }] },
 });
 
 const urlStr = Brand.check<URLStr>(filterURLStr);
@@ -51,7 +52,6 @@ export const URLStr = NonEmptyTrimmedStr.pipe(
   })),
   $I.annoteSchema("URLStr", {
     description: "A URL encoded as a string",
-    toArbitrary: () => (fc) => fc.webUrl().map(urlStr),
   })
 );
 
@@ -85,11 +85,11 @@ const filterHttpsUrl = S.makeFilter(
   },
   {
     message: "URL must use the https protocol",
+    arbitraryConstraint: { patterns: [{ source: "^https://[a-z]{1,12}\\.example(?:/[a-z0-9]{0,12})?$", flags: "" }] },
   }
 );
 
 const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("HttpsUrl"));
-const decodeHttpsUrlDefinitionSync = S.decodeSync(HttpsUrlDefinition);
 
 /**
  * Branded schema for absolute URL strings that use the `https:` protocol.
@@ -111,8 +111,6 @@ export const HttpsUrl = HttpsUrlDefinition.pipe(
   SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
   $I.annoteSchema("HttpsUrl", {
     description: "An absolute URL string constrained to the https protocol.",
-    toArbitrary: () => (fc) =>
-      fc.uuid().map((id) => decodeHttpsUrlDefinitionSync(`https://example.test/resource/${id}`)),
   })
 );
 

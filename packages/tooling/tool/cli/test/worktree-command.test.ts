@@ -38,8 +38,8 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path, Runtime, Stream } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
 
@@ -359,21 +359,27 @@ describe("WorktreeResidueManifest", () => {
   );
 
   it("round-trips arbitrary archive models through their JSON codecs", () => {
-    fc.assert(
-      fc.property(
-        S.toArbitrary(WorktreeResidueManifest)(fc),
-        S.toArbitrary(WorktreeRemovalReceipt)(fc),
-        S.toArbitrary(WorktreeArchivePlan)(fc),
-        (manifest, receipt, plan) => {
-          const manifestJson = S.encodeSync(residueManifestJson)(manifest);
-          const receiptJson = S.encodeSync(removalReceiptJson)(receipt);
-          const planJson = S.encodeSync(archivePlanJson)(plan);
-          expect(S.decodeSync(residueManifestJson)(manifestJson)).toEqual(manifest);
-          expect(S.decodeSync(removalReceiptJson)(receiptJson)).toEqual(receipt);
-          expect(S.decodeSync(archivePlanJson)(planJson)).toEqual(plan);
-        }
-      )
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(WorktreeResidueManifest),
+            Arbitrary.schema(WorktreeRemovalReceipt),
+            Arbitrary.schema(WorktreeArchivePlan),
+          ]),
+          ([manifest, receipt, plan]) => {
+            const manifestJson = S.encodeSync(residueManifestJson)(manifest);
+            const receiptJson = S.encodeSync(removalReceiptJson)(receipt);
+            const planJson = S.encodeSync(archivePlanJson)(plan);
+            expect(S.decodeSync(residueManifestJson)(manifestJson)).toEqual(manifest);
+            expect(S.decodeSync(removalReceiptJson)(receiptJson)).toEqual(receipt);
+            expect(S.decodeSync(archivePlanJson)(planJson)).toEqual(plan);
+
+            return true;
+          }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });
 

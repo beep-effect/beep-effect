@@ -14,7 +14,7 @@ import { Float32Arr } from "@beep/schema/Float32Array";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, O, Str } from "@beep/utils";
-import { Effect, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
+import { Effect, MutableHashMap, MutableHashSet, Order, pipe, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
@@ -34,8 +34,14 @@ const RDFS_SUB_PROPERTY_OF = makeNamedNode(`${RDFS_NAMESPACE}subPropertyOf`);
 
 const Uint32Arr = S.instanceOf<globalThis.Uint32ArrayConstructor, globalThis.Uint32Array>(globalThis.Uint32Array)
   .annotate({
-    toArbitrary: () => (fc) =>
-      fc.array(fc.integer({ max: 1_000, min: 0 }), { maxLength: 8 }).map((values) => new Uint32Array(values)),
+    toCodecArbitrary: () =>
+      S.link<globalThis.Uint32Array>()(
+        S.Array(S.Int.check(S.isBetween({ minimum: 0, maximum: 1_000 }))).check(S.isMaxLength(8)),
+        SchemaTransformation.transform({
+          decode: (values): globalThis.Uint32Array => new Uint32Array(values),
+          encode: A.fromIterable,
+        })
+      ),
   })
   .pipe(
     $I.annoteSchema("Uint32Arr", {

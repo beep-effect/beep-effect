@@ -32,13 +32,14 @@ export type SearchRequest = {
   readonly query?: string;
   readonly pageSize?: number;
   readonly offsetMark?: string;
-  readonly sorts?: ReadonlyArray<{
-    readonly field?: string;
-    readonly sortOrder?: "ASC" | "DESC";
-  }>;
+  readonly sorts?: ReadonlyArray<
+    { readonly field?: string; readonly sortOrder?: "ASC" | "DESC" } & {
+      readonly [x: string]: S.Json;
+    }
+  >;
   readonly historical?: boolean;
   readonly resultLevel?: string;
-};
+} & { readonly [x: string]: S.Json };
 /**
  * Generated SearchRequest declaration for \@beep/govinfo.
  *
@@ -53,25 +54,25 @@ export type SearchRequest = {
  * @category tools
  * @since 0.0.0
  */
-export const SearchRequest = S.Struct({
-  query: S.optionalKey(S.String),
-  pageSize: S.optionalKey(S.Int.annotate({ format: "int32" })),
-  offsetMark: S.optionalKey(S.String),
-  sorts: S.Array(
-    S.Struct({
-      field: S.optionalKey(S.String),
-      sortOrder: S.optionalKey(S.Literals(["ASC", "DESC"])),
-    }),
-  ).pipe(S.optionalKey),
-  historical: S.optionalKey(S.Boolean),
-  resultLevel: S.optionalKey(S.String),
-})
-  .annotate({ identifier: "SearchRequest" })
-  .pipe(
-    $I.annoteSchema("SearchRequest", {
-      description: "Generated GOVINFO schema for SearchRequest.",
-    }),
-  );
+export const SearchRequest = S.StructWithRest(
+  S.Struct({
+    query: S.optionalKey(S.String),
+    pageSize: S.optionalKey(S.Int.annotate({ format: "int32" })),
+    offsetMark: S.optionalKey(S.String),
+    sorts: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          field: S.optionalKey(S.String),
+          sortOrder: S.optionalKey(S.Literals(["ASC", "DESC"])),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ),
+    ).pipe(S.optionalKey),
+    historical: S.optionalKey(S.Boolean),
+    resultLevel: S.optionalKey(S.String),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({ identifier: "SearchRequest" });
 /**
  * Generated SearchResponse declaration for \@beep/govinfo.
  *
@@ -79,22 +80,24 @@ export const SearchRequest = S.Struct({
  * @since 0.0.0
  */
 export type SearchResponse = {
-  readonly results?: ReadonlyArray<{
-    readonly title?: string;
-    readonly packageId?: string;
-    readonly granuleId?: string;
-    readonly lastModified?: string;
-    readonly governmentAuthor?: ReadonlyArray<string>;
-    readonly dateIssued?: string;
-    readonly collectionCode?: string;
-    readonly resultLink?: string;
-    readonly dateIngested?: string;
-    readonly download?: { readonly [x: string]: string };
-    readonly relatedLink?: string;
-  }>;
+  readonly results?: ReadonlyArray<
+    {
+      readonly title?: string;
+      readonly packageId?: string;
+      readonly granuleId?: string;
+      readonly lastModified?: string;
+      readonly governmentAuthor?: ReadonlyArray<string>;
+      readonly dateIssued?: string;
+      readonly collectionCode?: string;
+      readonly resultLink?: string;
+      readonly dateIngested?: string;
+      readonly download?: { readonly [x: string]: string };
+      readonly relatedLink?: string;
+    } & { readonly [x: string]: S.Json }
+  >;
   readonly offsetMark?: string;
   readonly count?: number;
-};
+} & { readonly [x: string]: S.Json };
 /**
  * Generated SearchResponse declaration for \@beep/govinfo.
  *
@@ -109,31 +112,31 @@ export type SearchResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const SearchResponse = S.Struct({
-  results: S.Array(
-    S.Struct({
-      title: S.optionalKey(S.String),
-      packageId: S.optionalKey(S.String),
-      granuleId: S.optionalKey(S.String),
-      lastModified: S.optionalKey(S.String),
-      governmentAuthor: S.Array(S.String).pipe(S.optionalKey),
-      dateIssued: S.optionalKey(S.String),
-      collectionCode: S.optionalKey(S.String),
-      resultLink: S.optionalKey(S.String),
-      dateIngested: S.optionalKey(S.String),
-      download: S.Record(S.String, S.String).pipe(S.optionalKey),
-      relatedLink: S.optionalKey(S.String),
-    }),
-  ).pipe(S.optionalKey),
-  offsetMark: S.optionalKey(S.String),
-  count: S.optionalKey(S.Int.annotate({ format: "int32" })),
-})
-  .annotate({ identifier: "SearchResponse" })
-  .pipe(
-    $I.annoteSchema("SearchResponse", {
-      description: "Generated GOVINFO schema for SearchResponse.",
-    }),
-  );
+export const SearchResponse = S.StructWithRest(
+  S.Struct({
+    results: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          title: S.optionalKey(S.String),
+          packageId: S.optionalKey(S.String),
+          granuleId: S.optionalKey(S.String),
+          lastModified: S.optionalKey(S.String),
+          governmentAuthor: S.Array(S.String).pipe(S.optionalKey),
+          dateIssued: S.optionalKey(S.String),
+          collectionCode: S.optionalKey(S.String),
+          resultLink: S.optionalKey(S.String),
+          dateIngested: S.optionalKey(S.String),
+          download: S.Record(S.String, S.String).pipe(S.optionalKey),
+          relatedLink: S.optionalKey(S.String),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ),
+    ).pipe(S.optionalKey),
+    offsetMark: S.optionalKey(S.String),
+    count: S.optionalKey(S.Int.annotate({ format: "int32" })),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({ identifier: "SearchResponse" });
 /**
  * Generated CollectionContainer declaration for \@beep/govinfo.
  *
@@ -145,16 +148,18 @@ export type CollectionContainer = {
   readonly message?: string;
   readonly nextPage?: string;
   readonly previousPage?: string;
-  readonly packages?: ReadonlyArray<{
-    readonly packageId?: string;
-    readonly lastModified?: string;
-    readonly packageLink?: string;
-    readonly docClass?: string;
-    readonly title?: string;
-    readonly congress?: string;
-    readonly dateIssued?: string;
-  }>;
-};
+  readonly packages?: ReadonlyArray<
+    {
+      readonly packageId?: string;
+      readonly lastModified?: string;
+      readonly packageLink?: string;
+      readonly docClass?: string;
+      readonly title?: string;
+      readonly congress?: string;
+      readonly dateIssued?: string;
+    } & { readonly [x: string]: S.Json }
+  >;
+} & { readonly [x: string]: S.Json };
 /**
  * Generated CollectionContainer declaration for \@beep/govinfo.
  *
@@ -169,29 +174,29 @@ export type CollectionContainer = {
  * @category tools
  * @since 0.0.0
  */
-export const CollectionContainer = S.Struct({
-  count: S.optionalKey(S.Int.annotate({ format: "int64" })),
-  message: S.optionalKey(S.String),
-  nextPage: S.optionalKey(S.String),
-  previousPage: S.optionalKey(S.String),
-  packages: S.Array(
-    S.Struct({
-      packageId: S.optionalKey(S.String),
-      lastModified: S.optionalKey(S.String),
-      packageLink: S.optionalKey(S.String),
-      docClass: S.optionalKey(S.String),
-      title: S.optionalKey(S.String),
-      congress: S.optionalKey(S.String),
-      dateIssued: S.optionalKey(S.String),
-    }),
-  ).pipe(S.optionalKey),
-})
-  .annotate({ identifier: "CollectionContainer" })
-  .pipe(
-    $I.annoteSchema("CollectionContainer", {
-      description: "Generated GOVINFO schema for CollectionContainer.",
-    }),
-  );
+export const CollectionContainer = S.StructWithRest(
+  S.Struct({
+    count: S.optionalKey(S.Int.annotate({ format: "int64" })),
+    message: S.optionalKey(S.String),
+    nextPage: S.optionalKey(S.String),
+    previousPage: S.optionalKey(S.String),
+    packages: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          packageId: S.optionalKey(S.String),
+          lastModified: S.optionalKey(S.String),
+          packageLink: S.optionalKey(S.String),
+          docClass: S.optionalKey(S.String),
+          title: S.optionalKey(S.String),
+          congress: S.optionalKey(S.String),
+          dateIssued: S.optionalKey(S.String),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ),
+    ).pipe(S.optionalKey),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({ identifier: "CollectionContainer" });
 /**
  * Generated GranuleContainer declaration for \@beep/govinfo.
  *
@@ -204,16 +209,18 @@ export type GranuleContainer = {
   readonly pageSize?: number;
   readonly nextPage?: string;
   readonly previousPage?: string;
-  readonly granules?: ReadonlyArray<{
-    readonly title?: string;
-    readonly granuleId?: string;
-    readonly granuleLink?: string;
-    readonly dateIssued?: string;
-    readonly granuleClass?: string;
-    readonly md5?: string;
-  }>;
+  readonly granules?: ReadonlyArray<
+    {
+      readonly title?: string;
+      readonly granuleId?: string;
+      readonly granuleLink?: string;
+      readonly dateIssued?: string;
+      readonly granuleClass?: string;
+      readonly md5?: string;
+    } & { readonly [x: string]: S.Json }
+  >;
   readonly message?: string;
-};
+} & { readonly [x: string]: S.Json };
 /**
  * Generated GranuleContainer declaration for \@beep/govinfo.
  *
@@ -228,30 +235,30 @@ export type GranuleContainer = {
  * @category tools
  * @since 0.0.0
  */
-export const GranuleContainer = S.Struct({
-  count: S.optionalKey(S.Int.annotate({ format: "int32" })),
-  offset: S.optionalKey(S.Int.annotate({ format: "int32" })),
-  pageSize: S.optionalKey(S.Int.annotate({ format: "int32" })),
-  nextPage: S.optionalKey(S.String),
-  previousPage: S.optionalKey(S.String),
-  granules: S.Array(
-    S.Struct({
-      title: S.optionalKey(S.String),
-      granuleId: S.optionalKey(S.String),
-      granuleLink: S.optionalKey(S.String),
-      dateIssued: S.optionalKey(S.String),
-      granuleClass: S.optionalKey(S.String),
-      md5: S.optionalKey(S.String),
-    }),
-  ).pipe(S.optionalKey),
-  message: S.optionalKey(S.String),
-})
-  .annotate({ identifier: "GranuleContainer" })
-  .pipe(
-    $I.annoteSchema("GranuleContainer", {
-      description: "Generated GOVINFO schema for GranuleContainer.",
-    }),
-  );
+export const GranuleContainer = S.StructWithRest(
+  S.Struct({
+    count: S.optionalKey(S.Int.annotate({ format: "int32" })),
+    offset: S.optionalKey(S.Int.annotate({ format: "int32" })),
+    pageSize: S.optionalKey(S.Int.annotate({ format: "int32" })),
+    nextPage: S.optionalKey(S.String),
+    previousPage: S.optionalKey(S.String),
+    granules: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          title: S.optionalKey(S.String),
+          granuleId: S.optionalKey(S.String),
+          granuleLink: S.optionalKey(S.String),
+          dateIssued: S.optionalKey(S.String),
+          granuleClass: S.optionalKey(S.String),
+          md5: S.optionalKey(S.String),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ),
+    ).pipe(S.optionalKey),
+    message: S.optionalKey(S.String),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({ identifier: "GranuleContainer" });
 /**
  * Generated CollectionSummary declaration for \@beep/govinfo.
  *
@@ -259,13 +266,15 @@ export const GranuleContainer = S.Struct({
  * @since 0.0.0
  */
 export type CollectionSummary = {
-  readonly collections?: ReadonlyArray<{
-    readonly collectionCode?: string;
-    readonly collectionName?: string;
-    readonly packageCount?: number;
-    readonly granuleCount?: number;
-  }>;
-};
+  readonly collections?: ReadonlyArray<
+    {
+      readonly collectionCode?: string;
+      readonly collectionName?: string;
+      readonly packageCount?: number;
+      readonly granuleCount?: number;
+    } & { readonly [x: string]: S.Json }
+  >;
+} & { readonly [x: string]: S.Json };
 /**
  * Generated CollectionSummary declaration for \@beep/govinfo.
  *
@@ -280,22 +289,22 @@ export type CollectionSummary = {
  * @category tools
  * @since 0.0.0
  */
-export const CollectionSummary = S.Struct({
-  collections: S.Array(
-    S.Struct({
-      collectionCode: S.optionalKey(S.String),
-      collectionName: S.optionalKey(S.String),
-      packageCount: S.optionalKey(S.Int.annotate({ format: "int64" })),
-      granuleCount: S.optionalKey(S.Int.annotate({ format: "int64" })),
-    }),
-  ).pipe(S.optionalKey),
-})
-  .annotate({ identifier: "CollectionSummary" })
-  .pipe(
-    $I.annoteSchema("CollectionSummary", {
-      description: "Generated GOVINFO schema for CollectionSummary.",
-    }),
-  );
+export const CollectionSummary = S.StructWithRest(
+  S.Struct({
+    collections: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          collectionCode: S.optionalKey(S.String),
+          collectionName: S.optionalKey(S.String),
+          packageCount: S.optionalKey(S.Int.annotate({ format: "int64" })),
+          granuleCount: S.optionalKey(S.Int.annotate({ format: "int64" })),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ),
+    ).pipe(S.optionalKey),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({ identifier: "CollectionSummary" });
 // schemas
 /**
  * Generated SearchRequestJson declaration for \@beep/govinfo.

@@ -66,7 +66,7 @@ export const destructiveTransform: {
 
     return S.Unknown.pipe(
       S.decodeTo(output, {
-        decode: Getter.transformOrFail((input: unknown, options) =>
+        decode: Getter.transformEffect((input: unknown, options) =>
           decodeInput(input, options).pipe(Effect.mapError(Struct.get("issue")), Effect.flatMap(applyTransform))
         ),
         // Lossy transforms intentionally keep encode as a passthrough so the

@@ -16,7 +16,7 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);
 const decodeUnknownEntityIdOptionsSync = S.decodeUnknownSync(EntityId.Options);
@@ -39,16 +39,20 @@ const CustomDocumentId = makeSharedId("document", {
   tableName: "custom_document",
 });
 
-const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I, never, never>, options?: { readonly numRuns?: number }) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I, never, never>, options?: { readonly runs?: number }) => {
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => equivalent(decode(encode(value)), value)),
-    fcRuns(options?.numRuns ?? 50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.schema(schema),
+        (value) => equivalent(decode(encode(value)), value),
+        fcRuns(options?.runs ?? 50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("shared-domain schema parity", () => {
@@ -155,31 +159,31 @@ describe("shared-domain schema parity", () => {
   });
 
   it("round-trips schema-derived values through absorbed invariants", () => {
-    assertSchemaArbitraryDecodesToSelf(EntityId.EntityIdValue, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(EntityRef.EntityType, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(EntityRef.EntityRef, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(primitives.Ed25519Signature, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(primitives.EncryptionKeyId, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(primitives.HybridLogicalClock, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(primitives.VectorClock, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(SourceKind.SourceKind, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(Organization.LicenseTier, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(Membership.Role, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(Membership.Status, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(Principal.SystemComponent, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(Rule.Effect, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(Rule.Rule, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(Rule.Ruleset, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(ClaimLifecycle.ClaimLifecycle, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(ClaimLifecycle.ClaimLifecycleTransition, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(OnePasswordReference, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(EntityId.EntityIdValue, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(EntityRef.EntityType, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(EntityRef.EntityRef, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(primitives.Ed25519Signature, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(primitives.EncryptionKeyId, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(primitives.HybridLogicalClock, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(primitives.VectorClock, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(SourceKind.SourceKind, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(Organization.LicenseTier, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(Membership.Role, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(Membership.Status, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(Principal.SystemComponent, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(Rule.Effect, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(Rule.Rule, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(Rule.Ruleset, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(ClaimLifecycle.ClaimLifecycle, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(ClaimLifecycle.ClaimLifecycleTransition, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(OnePasswordReference, { runs: 10 });
 
-    assertCodecRoundTrip(EntityId.Options, { numRuns: 25 });
-    assertCodecRoundTrip(EntityId.Definition, { numRuns: 25 });
-    assertCodecRoundTrip(Principal.ServiceAccountPrincipal, { numRuns: 25 });
-    assertCodecRoundTrip(Principal.AgentPrincipal, { numRuns: 25 });
-    assertCodecRoundTrip(Principal.ConnectorAccountPrincipal, { numRuns: 25 });
-    assertCodecRoundTrip(Principal.Principal, { numRuns: 25 });
+    assertCodecRoundTrip(EntityId.Options, { runs: 25 });
+    assertCodecRoundTrip(EntityId.Definition, { runs: 25 });
+    assertCodecRoundTrip(Principal.ServiceAccountPrincipal, { runs: 25 });
+    assertCodecRoundTrip(Principal.AgentPrincipal, { runs: 25 });
+    assertCodecRoundTrip(Principal.ConnectorAccountPrincipal, { runs: 25 });
+    assertCodecRoundTrip(Principal.Principal, { runs: 25 });
   });
 
   it("keeps entity-id value statics colocated on the schema", () => {

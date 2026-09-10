@@ -1,8 +1,9 @@
+import * as Effect from "effect/Effect";
 import { SafePnLocal } from "@beep/identity";
 import * as CanonicalRdf from "@beep/rdf";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Triple } from "../../../Domain/Rdf/Types.ts";
 const isSafePnLocal = S.is(SafePnLocal);
 
@@ -15,14 +16,21 @@ const isQuad = S.is(Quad);
 describe("effect-ontology RDF types", () => {
   it("derives arbitraries whose values satisfy local adapter schemas", () => {
     for (const schema of [SafePnLocal, Triple]) {
-      const arbitrary = S.toArbitrary(schema)(fc);
+      const arbitrary = Arbitrary.schema(schema);
 
-      fc.assert(
-        fc.property(arbitrary, (value) => {
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([value]) => {
           expect(S.is(schema)(value)).toBe(true);
-        }),
-        { numRuns: 32 }
-      );
+
+              return true;
+            },
+            { runs: 32 }
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 

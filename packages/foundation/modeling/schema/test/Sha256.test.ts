@@ -5,7 +5,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeSha256Hex = S.decodeEffect(Sha256Hex);
 const decodeUnknownSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
@@ -25,21 +25,28 @@ const provideScopedLayer =
 const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 
 describe("Sha256Hex", () => {
-  const arbitrary = S.toArbitrary(Sha256Hex)(fc);
+  const arbitrary = Arbitrary.schema(Sha256Hex);
 
   it("accepts canonical lowercase digests", () => {
     expect(decodeUnknownSha256HexSync(knownDigest)).toBe(knownDigest);
   });
 
   it("derives canonical digest examples from the source schema", () => {
-    fc.assert(
-      fc.property(arbitrary, (digest) => {
-        expect(decodeUnknownSha256HexSync(digest)).toBe(digest);
-        expect(digest).toHaveLength(64);
-        expect(digest).toMatch(/^[0-9a-f]{64}$/);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([digest]) => {
+            expect(decodeUnknownSha256HexSync(digest)).toBe(digest);
+            expect(digest).toHaveLength(64);
+            expect(digest).toMatch(/^[0-9a-f]{64}$/);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("rejects uppercase digests", () => {

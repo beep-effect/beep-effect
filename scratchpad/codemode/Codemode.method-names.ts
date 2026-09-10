@@ -82,7 +82,7 @@ export type arrayMethods = typeof arrayMethods.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type ArrayMethod = typeof arrayMethods.Type;
+export type ArrayMethod = arrayMethods;
 
 /**
  * Finite Array constructor names the interpreter may dispatch as statics.
@@ -120,7 +120,7 @@ export type arrayStatics = typeof arrayStatics.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type ArrayStatic = typeof arrayStatics.Type;
+export type ArrayStatic = arrayStatics;
 
 /**
  * Finite Map instance method names the interpreter may dispatch on guest maps.
@@ -168,7 +168,7 @@ export type mapMethods = typeof mapMethods.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type MapMethod = typeof mapMethods.Type;
+export type MapMethod = mapMethods;
 
 /**
  * Finite Map constructor names the interpreter may dispatch as statics.
@@ -206,7 +206,7 @@ export type mapStatics = typeof mapStatics.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type MapStatic = typeof mapStatics.Type;
+export type MapStatic = mapStatics;
 
 /**
  * Finite Set instance method names the interpreter may dispatch on guest sets.
@@ -260,7 +260,7 @@ export type setMethods = typeof setMethods.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type SetMethod = typeof setMethods.Type;
+export type SetMethod = setMethods;
 
 /**
  * Finite String instance method names the interpreter may dispatch on guest strings.
@@ -328,7 +328,7 @@ export type stringMethods = typeof stringMethods.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type StringMethod = typeof stringMethods.Type;
+export type StringMethod = stringMethods;
 
 /**
  * Finite String constructor names the interpreter may dispatch as statics.
@@ -366,7 +366,7 @@ export type stringStatics = typeof stringStatics.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type StringStatic = typeof stringStatics.Type;
+export type StringStatic = stringStatics;
 
 /**
  * Finite Date setter names that mutate guest Date adapters.
@@ -523,7 +523,7 @@ export type dateMethods = typeof dateMethods.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type DateMethod = typeof dateMethods.Type;
+export type DateMethod = dateMethods;
 
 /**
  * Finite Date constructor names the interpreter may dispatch as statics.
@@ -561,7 +561,7 @@ export type dateStatics = typeof dateStatics.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type DateStatic = typeof dateStatics.Type;
+export type DateStatic = dateStatics;
 
 /**
  * Finite RegExp instance method names the interpreter may dispatch.
@@ -599,7 +599,7 @@ export type regexpMethods = typeof regexpMethods.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type RegExpMethod = typeof regexpMethods.Type;
+export type RegExpMethod = regexpMethods;
 
 /**
  * Finite RegExp constructor names the interpreter may dispatch as statics.
@@ -637,7 +637,7 @@ export type regexpStatics = typeof regexpStatics.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type RegExpStatic = typeof regexpStatics.Type;
+export type RegExpStatic = regexpStatics;
 
 /**
  * Finite Object constructor names the interpreter may dispatch as statics.
@@ -684,7 +684,7 @@ export type objectStatics = typeof objectStatics.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type ObjectStatic = typeof objectStatics.Type;
+export type ObjectStatic = objectStatics;
 
 /**
  * Finite Number instance method names the interpreter may dispatch.
@@ -722,7 +722,7 @@ export type numberMethods = typeof numberMethods.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type NumberMethod = typeof numberMethods.Type;
+export type NumberMethod = numberMethods;
 
 /**
  * Finite Number constructor names the interpreter may dispatch as statics.
@@ -767,7 +767,7 @@ export type numberStatics = typeof numberStatics.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type NumberStatic = typeof numberStatics.Type;
+export type NumberStatic = numberStatics;
 
 /**
  * Finite Math function names the interpreter may dispatch.
@@ -843,7 +843,7 @@ export type mathMethods = typeof mathMethods.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type MathMethod = typeof mathMethods.Type;
+export type MathMethod = mathMethods;
 
 /**
  * Finite console method names captured into CodeMode logs.

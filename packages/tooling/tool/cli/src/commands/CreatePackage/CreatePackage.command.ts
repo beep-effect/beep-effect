@@ -1109,57 +1109,57 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
 export const createPackageCommand = Command.make(
   "create-package",
   {
-    name: Argument.string("name").pipe(Argument.withDescription("Package name (e.g. my-utils)")),
-    type: Flag.string("type").pipe(
+    name: Argument.String("name").pipe(Argument.withDescription("Package name (e.g. my-utils)")),
+    type: Flag.String("type").pipe(
       Flag.withDescription("Package type: library, tool, or app"),
       Flag.withDefault("library")
     ),
-    appKind: Flag.string("app-kind").pipe(
+    appKind: Flag.String("app-kind").pipe(
       Flag.withDescription(
         "App scaffold kind for --type app. Supports: nextjs, vite, service, tauri, or runtime-proof"
       ),
       Flag.withDefault("")
     ),
-    lab: Flag.boolean("lab").pipe(
+    lab: Flag.Boolean("lab").pipe(
       Flag.withDefault(false),
       Flag.withDescription(
         "Scaffold a lab app under apps/labs with a schema-validated lab manifest, the labs portless namespace, and the generated labs identity segment"
       )
     ),
-    reuseRetiredName: Flag.boolean("reuse-retired-name").pipe(
+    reuseRetiredName: Flag.Boolean("reuse-retired-name").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Allow reusing a package name recorded in standards/changesets.retired-packages.json")
     ),
-    parentDir: Flag.string("parent-dir").pipe(
+    parentDir: Flag.String("parent-dir").pipe(
       Flag.withDescription("Optional output parent directory relative to repo root (e.g. tooling or packages/shared)"),
       Flag.withDefault("")
     ),
-    family: Flag.string("family").pipe(
+    family: Flag.String("family").pipe(
       Flag.withDescription("Optional canonical package family. Supports: drivers, ecosystem, foundation, or tooling"),
       Flag.withDefault("")
     ),
-    kind: Flag.string("kind").pipe(
+    kind: Flag.String("kind").pipe(
       Flag.withDescription(
         "Package kind for --family foundation or --family tooling. Tooling supports: library, tool, policy-pack, test-kit"
       ),
       Flag.withDefault("")
     ),
-    dirName: Flag.string("dir-name").pipe(
+    dirName: Flag.String("dir-name").pipe(
       Flag.withDescription(
         "Override folder name (defaults to package name). E.g. --dir-name domain for packages/example/domain"
       ),
       Flag.withDefault("")
     ),
-    description: Flag.string("description").pipe(Flag.withDescription("Package description"), Flag.withDefault("")),
-    dryRun: Flag.boolean("dry-run").pipe(
+    description: Flag.String("description").pipe(Flag.withDescription("Package description"), Flag.withDefault("")),
+    dryRun: Flag.Boolean("dry-run").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Preview changes without writing files")
     ),
-    skipLockfile: Flag.boolean("skip-lockfile").pipe(
+    skipLockfile: Flag.Boolean("skip-lockfile").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Skip the default bun.lock refresh after package creation")
     ),
-    withStoriesTsconfig: Flag.boolean("with-stories-tsconfig").pipe(
+    withStoriesTsconfig: Flag.Boolean("with-stories-tsconfig").pipe(
       Flag.withDefault(false),
       Flag.withDescription(
         "Generate tsconfig.stories.json and wire beep:check:stories for foundation/ui-system packages"

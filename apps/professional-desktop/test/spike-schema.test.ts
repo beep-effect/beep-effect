@@ -4,7 +4,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { CosmosSpikeProbeContract, CosmosSpikeSize, CosmosSpikeStatus } from "@/spikes/CosmosSpike";
 import { SyntheticProjectionCount, SyntheticProjectionNodeCount } from "@/spikes/CosmosSpike.rpc";
 import { Graph3DSpikeStatus } from "@/spikes/Graph3DSpike";
@@ -74,15 +74,17 @@ describe("spike state schemas", () => {
   );
 
   it("derives only valid Cosmos spike counts from the production schema", () => {
-    fc.assert(
-      fc.property(
-        S.toArbitrary(CosmosSpikeSize)(fc),
-        (size) =>
-          isSyntheticProjectionCount(size.edgeCount) &&
-          isSyntheticProjectionNodeCount(size.elementCount) &&
-          isSyntheticProjectionNodeCount(size.nodeCount)
-      ),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(CosmosSpikeSize),
+          (size) =>
+            isSyntheticProjectionCount(size.edgeCount) &&
+            isSyntheticProjectionNodeCount(size.elementCount) &&
+            isSyntheticProjectionNodeCount(size.nodeCount),
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

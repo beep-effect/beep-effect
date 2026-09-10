@@ -28,7 +28,7 @@ import { Effect, Exit, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeExtensionKeyOption = S.decodeOption(ExtensionKey);
 
@@ -48,9 +48,9 @@ const isAbsoluteUriString = S.is(AbsoluteUriString);
 const isIdUriReferenceString = S.is(IdUriReferenceString);
 const isUriReferenceString = S.is(UriReferenceString);
 
-const NodeArbitrary = S.toArbitrary(Node)(fc);
-const SubSchemaArbitrary = S.toArbitrary(SubSchema)(fc);
-const DocumentArbitrary = S.toArbitrary(Document)(fc);
+const NodeArbitrary = Arbitrary.schema(Node);
+const SubSchemaArbitrary = Arbitrary.schema(SubSchema);
+const DocumentArbitrary = Arbitrary.schema(Document);
 const nodeEquivalence = S.toEquivalence(Node);
 const subSchemaEquivalence = S.toEquivalence(SubSchema);
 const documentEquivalence = S.toEquivalence(Document);
@@ -273,19 +273,43 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
     );
 
     it("property: encode then decode returns an equivalent node", () => {
-      fc.assert(fc.property(NodeArbitrary, nodeRoundTrips), fcRuns(100));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([NodeArbitrary]), (values) => nodeRoundTrips(...values), fcRuns(100))
+        )
+      ).toMatchObject({ _tag: "Passed" });
     });
 
     it("property: SubSchema round-trips booleans and nodes", () => {
-      fc.assert(fc.property(SubSchemaArbitrary, subSchemaRoundTrips), fcRuns(100));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([SubSchemaArbitrary]),
+            (values) => subSchemaRoundTrips(...values),
+            fcRuns(100)
+          )
+        )
+      ).toMatchObject({ _tag: "Passed" });
     });
 
     it("property: Document round-trips through its envelope", () => {
-      fc.assert(fc.property(DocumentArbitrary, documentRoundTrips), fcRuns(50));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([DocumentArbitrary]),
+            (values) => documentRoundTrips(...values),
+            fcRuns(50)
+          )
+        )
+      ).toMatchObject({ _tag: "Passed" });
     });
 
     it("property: nodes survive a JSON string boundary", () => {
-      fc.assert(fc.property(NodeArbitrary, nodeJsonRoundTrips), fcRuns(100));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([NodeArbitrary]), (values) => nodeJsonRoundTrips(...values), fcRuns(100))
+        )
+      ).toMatchObject({ _tag: "Passed" });
     });
   });
 
@@ -411,15 +435,19 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
     };
 
     it("property: every generated node encodes to a valid draft-2020-12 document", () => {
-      fc.assert(
-        fc.property(NodeArbitrary, (node) =>
-          Result.match(encodeNodeResult(node), {
-            onFailure: () => false,
-            onSuccess: isValidEncodedSchema,
-          })
-        ),
-        fcRuns(100)
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([NodeArbitrary]),
+            ([node]) =>
+              Result.match(encodeNodeResult(node), {
+                onFailure: () => false,
+                onSuccess: isValidEncodedSchema,
+              }),
+            fcRuns(100)
+          )
+        )
+      ).toMatchObject({ _tag: "Passed" });
     });
 
     it("property: leaf schemas generate values that decode to themselves", () => {
@@ -437,7 +465,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
         Types,
         UriReferenceString,
       ]) {
-        assertSchemaArbitraryDecodesToSelf(leaf, { numRuns: 50 });
+        assertSchemaArbitraryDecodesToSelf(leaf, { runs: 50 });
       }
     });
   });

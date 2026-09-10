@@ -24,21 +24,18 @@ export const q1Standalone = S.decodeSync(RenamedStruct)({
 export class Q1Class extends S.Class<Q1Class>("Q1Class")(RenamedStruct) {}
 
 // --- Q2: use-site encodeKeys on a model's json variant static ------------
-const kit = EffectDrizzle.make({
-  dialect: "pg",
-  defaultColumns: (pg) => ({
+const kit = EffectDrizzle.make((pg) => ({
+  defaultColumns: {
     id: S.Int.pipe(pg.primaryKey(), pg.serial()),
-  }),
-});
+  },
+}));
 
 export class Frontmatter extends kit.Entity<Frontmatter>("Frontmatter")({
   name: S.String.check(S.isMaxLength(64)).pipe(kit.pg.varchar()),
   approvedSkills: S.String.pipe(kit.pg.text(), kit.pg.columnName("approved_skills")),
 }) {}
 
-export const FrontmatterWire = Frontmatter.json.pipe(
-  S.encodeKeys({ approvedSkills: "approved-skills" })
-);
+export const FrontmatterWire = Frontmatter.json.pipe(S.encodeKeys({ approvedSkills: "approved-skills" }));
 
 export const q2Decoded = S.decodeSync(FrontmatterWire)({
   id: 1,

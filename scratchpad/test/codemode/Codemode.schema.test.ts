@@ -3,7 +3,7 @@ import { A, N, O, Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, pipe, Result as Rs } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   DiagnosticLocation,
   DiagnosticModel,
@@ -72,16 +72,21 @@ const isMemberReference = S.is(MemberReference);
 const isResult = S.is(Result);
 const isInt = S.is(S.Int);
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 40): void => {
-  const derived = S.toArbitrary(schema)(fc);
+const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, runs = 40): void => {
+  const derived = Arbitrary.schema(schema);
   const encode = S.encodeUnknownResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(derived, (value) => equivalent(Rs.getOrThrow(decode(Rs.getOrThrow(encode(value)))), value)),
-    fcRuns(numRuns)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([derived]),
+        ([value]) => equivalent(Rs.getOrThrow(decode(Rs.getOrThrow(encode(value)))), value),
+        fcRuns(runs)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("CodeMode schema laws", () => {
@@ -136,26 +141,38 @@ describe("CodeMode schema laws", () => {
   });
 
   it("keeps string-domain checks equivalent to their defining laws", () => {
-    fc.assert(
-      fc.property(
-        fc.string(),
-        (candidate) => isIdentifierSegment(candidate) === /^[A-Za-z_$][A-Za-z0-9_$]*$/u.test(candidate)
-      ),
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.String)]),
+          ([candidate]) => isIdentifierSegment(candidate) === /^[A-Za-z_$][A-Za-z0-9_$]*$/u.test(candidate),
       fcRuns(200)
-    );
-    fc.assert(
-      fc.property(fc.string(), (candidate) => isApiPath2(candidate) === /^\/.*$/u.test(candidate)),
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.String)]),
+          ([candidate]) => isApiPath2(candidate) === /^\/.*$/u.test(candidate),
       fcRuns(200)
-    );
-    fc.assert(
-      fc.property(fc.string(), (candidate) => {
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.String)]),
+          ([candidate]) => {
         const trimmed = Str.trim(candidate);
         const decoded = decodeUnknownOperationIdResult(candidate);
 
         return Str.isEmpty(trimmed) ? Rs.isFailure(decoded) : Rs.isSuccess(decoded) && decoded.success === trimmed;
-      }),
+          },
       fcRuns(200)
-    );
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("decodes defaults once and keeps absent Option fields off the wire", () => {
@@ -271,23 +288,30 @@ describe("CodeMode schema laws", () => {
   });
 
   it("keeps numeric execution-limit checks equivalent to positive and non-negative integers", () => {
-    const numeric = fc.double({ noDefaultInfinity: false, noNaN: false });
+    const numeric = Arbitrary.schema(S.Finite);
 
-    fc.assert(
-      fc.property(
-        numeric,
-        (value) => Rs.isSuccess(decodeUnknownExecutionLimitsResult({ timeoutMs: value })) === (isInt(value) && N.isGreaterThan(0)(value))
-      ),
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([numeric]),
+          ([value]) =>
+            Rs.isSuccess(decodeUnknownExecutionLimitsResult({ timeoutMs: value })) ===
+            (isInt(value) && N.isGreaterThan(0)(value)),
       fcRuns(200)
-    );
-    fc.assert(
-      fc.property(
-        numeric,
-        (value) =>
-          Rs.isSuccess(decodeUnknownExecutionLimitsResult({ maxToolCalls: value })) === (isInt(value) && N.isGreaterThanOrEqualTo(0)(value))
-      ),
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([numeric]),
+          ([value]) =>
+            Rs.isSuccess(decodeUnknownExecutionLimitsResult({ maxToolCalls: value })) ===
+            (isInt(value) && N.isGreaterThanOrEqualTo(0)(value)),
       fcRuns(200)
-    );
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("constructs and matches interpreter tagged unions through schema statics", () => {

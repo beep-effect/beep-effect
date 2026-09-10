@@ -37,11 +37,12 @@ import {
 } from "@beep/nlp-mcp/StreamingTools";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encode = <Sch extends S.Top & S.ConstraintEncoder<unknown>>(schema: Sch, value: Sch["Type"]): Sch["Encoded"] =>
   Result.getOrThrow(S.encodeUnknownResult(schema)(value));
@@ -52,12 +53,19 @@ const decode = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(schema: Sch, v
 const assertRoundTrip = <Sch extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
   schema: Sch
 ): void =>
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      expect(Eq.equals(decode(schema, encode(schema, value)), value)).toBe(true);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          expect(Eq.equals(decode(schema, encode(schema, value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 
 describe("streaming schema laws", () => {
   it("round-trips defaulted option schemas", () => {

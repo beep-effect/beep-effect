@@ -29,7 +29,7 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -109,7 +109,7 @@ class OpenApiSpec extends S.Class<OpenApiSpec>($TestI`OpenApiSpec`)(
 const decodeOpenApiSpec = S.decodeUnknownEffect(OpenApiSpec);
 const decodeOpenApiOperation = S.decodeUnknownEffect(OpenApiOperation);
 const encodeOpenApiOperation = S.encodeEffect(OpenApiOperation);
-const OpenApiOperationArbitrary = S.toArbitrary(OpenApiOperation)(fc);
+const OpenApiOperationArbitrary = Arbitrary.schema(OpenApiOperation);
 
 class PromptBody extends S.Class<PromptBody>($TestI`PromptBody`)(
   {
@@ -124,20 +124,20 @@ class PromptBody extends S.Class<PromptBody>($TestI`PromptBody`)(
 
 const decodePromptBody = S.decodeUnknownEffect(PromptBody);
 const encodePromptBody = S.encodeEffect(PromptBody);
-const PromptBodyArbitrary = S.toArbitrary(PromptBody)(fc);
+const PromptBodyArbitrary = Arbitrary.schema(PromptBody);
 
 const decodeVeniceAIConfigInput = S.decodeUnknownEffect(VeniceAIConfigInput);
 const encodeVeniceAIConfigInput = S.encodeEffect(VeniceAIConfigInput);
-const VeniceAIConfigInputArbitrary = S.toArbitrary(VeniceAIConfigInput)(fc);
+const VeniceAIConfigInputArbitrary = Arbitrary.schema(VeniceAIConfigInput);
 const encodeVeniceAIRequestOptions = S.encodeEffect(VeniceAIRequestOptions);
-const VeniceAIRequestOptionsArbitrary = S.toArbitrary(VeniceAIRequestOptions)(fc);
-const VeniceAIOperationDescriptorArbitrary = S.toArbitrary(VeniceAIOperationDescriptor)(fc);
+const VeniceAIRequestOptionsArbitrary = Arbitrary.schema(VeniceAIRequestOptions);
+const VeniceAIOperationDescriptorArbitrary = Arbitrary.schema(VeniceAIOperationDescriptor);
 const encodeVeniceAIResponse = S.encodeEffect(VeniceAIResponse);
-const VeniceAIResponseArbitrary = S.toArbitrary(VeniceAIResponse)(fc);
+const VeniceAIResponseArbitrary = Arbitrary.schema(VeniceAIResponse);
 const encodeVeniceAIServerSentEvent = S.encodeEffect(VeniceAIServerSentEvent);
-const VeniceAIServerSentEventArbitrary = S.toArbitrary(VeniceAIServerSentEvent)(fc);
+const VeniceAIServerSentEventArbitrary = Arbitrary.schema(VeniceAIServerSentEvent);
 const encodeVeniceAIError = S.encodeEffect(VeniceAIError);
-const VeniceAIErrorArbitrary = S.toArbitrary(VeniceAIError)(fc);
+const VeniceAIErrorArbitrary = Arbitrary.schema(VeniceAIError);
 
 const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
   const encoded = Effect.runSync(S.encodeEffect(schema)(value));
@@ -403,19 +403,20 @@ describe("@beep/venice-ai", () => {
     expect(VeniceAiLanguageModel.model()("venice-uncensored-1-2")).toBeDefined();
   });
 
-  it("round-trips schema-derived OpenAPI fixture and prompt body data", () =>
-    fc.assert(
-      fc.property(OpenApiOperationArbitrary, PromptBodyArbitrary, (operation, promptBody) => {
-        const encodedOperation = Effect.runSync(encodeOpenApiOperation(operation));
-        const decodedOperation = Effect.runSync(decodeOpenApiOperation(encodedOperation));
-        expect(Effect.runSync(encodeOpenApiOperation(decodedOperation))).toEqual(encodedOperation);
+  it.prop(
+    "round-trips schema-derived OpenAPI fixture and prompt body data",
+    [OpenApiOperationArbitrary, PromptBodyArbitrary],
+    ([operation, promptBody]) => {
+      const encodedOperation = Effect.runSync(encodeOpenApiOperation(operation));
+      const decodedOperation = Effect.runSync(decodeOpenApiOperation(encodedOperation));
+      expect(Effect.runSync(encodeOpenApiOperation(decodedOperation))).toEqual(encodedOperation);
 
-        const encodedPromptBody = Effect.runSync(encodePromptBody(promptBody));
-        const decodedPromptBody = Effect.runSync(decodePromptBody(encodedPromptBody));
-        expect(Effect.runSync(encodePromptBody(decodedPromptBody))).toEqual(encodedPromptBody);
-      }),
-      fcRuns(25)
-    ));
+      const encodedPromptBody = Effect.runSync(encodePromptBody(promptBody));
+      const decodedPromptBody = Effect.runSync(decodePromptBody(encodedPromptBody));
+      expect(Effect.runSync(encodePromptBody(decodedPromptBody))).toEqual(encodedPromptBody);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("keeps crispened production schema encoded shapes stable", () => {
     expect(Effect.runSync(encodeVeniceAIConfigInput(VeniceAIConfigInput.make({})))).toEqual({
@@ -520,26 +521,26 @@ describe("@beep/venice-ai", () => {
     });
   });
 
-  it("round-trips crispened production schemas with schema-derived arbitraries", () =>
-    fc.assert(
-      fc.property(
-        VeniceAIConfigInputArbitrary,
-        VeniceAIRequestOptionsArbitrary,
-        VeniceAIOperationDescriptorArbitrary,
-        VeniceAIResponseArbitrary,
-        VeniceAIServerSentEventArbitrary,
-        VeniceAIErrorArbitrary,
-        (config, request, descriptor, response, event, error) => {
-          expectRoundTrip(VeniceAIConfigInput, config);
-          expectRoundTrip(VeniceAIRequestOptions, request);
-          expectRoundTrip(VeniceAIOperationDescriptor, descriptor);
-          expectRoundTrip(VeniceAIResponse, response);
-          expectRoundTrip(VeniceAIServerSentEvent, event);
-          expectRoundTrip(VeniceAIError, error);
-        }
-      ),
-      fcRuns(15)
-    ));
+  it.prop(
+    "round-trips crispened production schemas with schema-derived arbitraries",
+    [
+      VeniceAIConfigInputArbitrary,
+      VeniceAIRequestOptionsArbitrary,
+      VeniceAIOperationDescriptorArbitrary,
+      VeniceAIResponseArbitrary,
+      VeniceAIServerSentEventArbitrary,
+      VeniceAIErrorArbitrary,
+    ],
+    ([config, request, descriptor, response, event, error]) => {
+      expectRoundTrip(VeniceAIConfigInput, config);
+      expectRoundTrip(VeniceAIRequestOptions, request);
+      expectRoundTrip(VeniceAIOperationDescriptor, descriptor);
+      expectRoundTrip(VeniceAIResponse, response);
+      expectRoundTrip(VeniceAIServerSentEvent, event);
+      expectRoundTrip(VeniceAIError, error);
+    },
+    { arbitrary: fcRuns(15) }
+  );
 
   layer(makeVeniceAIUnitLayer())((it) =>
     it.effect(

@@ -67,8 +67,8 @@ import {
   Stream,
 } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -619,14 +619,17 @@ describe("Docgen operations", () => {
     expect(decoded.srcDir).toBe("src");
     expect(decoded.exclude).toEqual([]);
 
-    const arbitrary = S.toArbitrary(DocgenConfigDocument)(fc);
+    const arbitrary = Arbitrary.schema(DocgenConfigDocument);
     const sameConfig = S.toEquivalence(DocgenConfigDocument);
-    fc.assert(
-      fc.property(arbitrary, (config) =>
-        sameConfig(config, decodeDocgenConfigDocument(encodeDocgenConfigDocument(config)))
-      ),
-      fcRuns(16)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([config]) => sameConfig(config, decodeDocgenConfigDocument(encodeDocgenConfigDocument(config))),
+          fcRuns(16)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("aggregates only canonical Docgen output configurations during scoped runs", () => {
@@ -4921,14 +4924,18 @@ export const ValidExport = packageDocAnchor;
 
 describe("DocgenQualityWorkerEvalReport schema", () => {
   it("every schema-derived report round-trips through its JSON codec", () => {
-    const arbitrary = S.toArbitrary(DocgenQualityWorkerEvalReport)(fc);
+    const arbitrary = Arbitrary.schema(DocgenQualityWorkerEvalReport);
     const sameReport = S.toEquivalence(DocgenQualityWorkerEvalReport);
 
-    fc.assert(
-      fc.property(arbitrary, (report) =>
-        sameReport(report, decodeWorkerEvalReportJson(encodeDocgenQualityWorkerEvalReportJsonSync(report)))
-      ),
-      fcRuns(16)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([report]) =>
+            sameReport(report, decodeWorkerEvalReportJson(encodeDocgenQualityWorkerEvalReportJsonSync(report))),
+          fcRuns(16)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

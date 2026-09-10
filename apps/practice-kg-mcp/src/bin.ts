@@ -17,16 +17,16 @@ import "../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type
 import "../../../node_modules/@electric-sql/pglite/dist/pglite.data" with { type: "file" };
 import "../../../node_modules/@electric-sql/pglite/dist/pglite.wasm" with { type: "file" };
 
-const bundleDir = Flag.directory("bundle-dir", { mustExist: true }).pipe(Flag.optional);
-const corpusRoot = Flag.directory("corpus-root", { mustExist: true }).pipe(Flag.optional);
+const bundleDir = Flag.Directory("bundle-dir", { mustExist: true }).pipe(Flag.optional);
+const corpusRoot = Flag.Directory("corpus-root", { mustExist: true }).pipe(Flag.optional);
 
 const serverCommand = Command.make(
   "practice-kg-mcp",
   { bundleDir, corpusRoot },
   Effect.fnUntraced(function* (flags) {
-    const configuredBundleDir = yield* Config.option(Config.string("PRACTICE_KG_BUNDLE_DIR"));
-    const shortBundleDir = yield* Config.option(Config.string("BUNDLE_DIR"));
-    const configuredCorpusRoot = yield* Config.option(Config.string("PRACTICE_KG_CORPUS_ROOT"));
+    const configuredBundleDir = yield* Config.option(Config.String("PRACTICE_KG_BUNDLE_DIR"));
+    const shortBundleDir = yield* Config.option(Config.String("BUNDLE_DIR"));
+    const configuredCorpusRoot = yield* Config.option(Config.String("PRACTICE_KG_CORPUS_ROOT"));
     const resolvedBundleDir = yield* O.firstSomeOf([flags.bundleDir, configuredBundleDir, shortBundleDir]).pipe(
       O.match({
         onNone: () =>

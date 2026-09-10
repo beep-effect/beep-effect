@@ -18,11 +18,7 @@ const Base64ImageData = S.NonEmptyString.check(
     description: "A non-empty canonical base64 text payload.",
     message: "Image data must be valid padded base64 text.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("AA==", "AQID", "aGVsbG8="),
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("Base64ImageData", {
       description: "Non-empty base64-encoded image bytes prepared for a multimodal prompt.",
     })
@@ -42,11 +38,7 @@ const Base64ImageData = S.NonEmptyString.check(
  * @category schemas
  * @since 0.0.0
  */
-export const ImageRole = LiteralKit(["hero", "inline", "thumbnail"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("hero", "inline", "thumbnail"),
-  })
-  .annotate(
+export const ImageRole = LiteralKit(["hero", "inline", "thumbnail"]).annotate(
     $I.annote("ImageRole", {
       description: "Closed set of roles an image can play in a source document.",
     })
@@ -84,7 +76,6 @@ export type ImageRole = typeof ImageRole.Type;
 export const ImageOwnerType = LiteralKit(["link", "document"]).pipe(
   $I.annoteSchema("ImageOwnerType", {
     description: "Closed set of owner kinds supported by image manifests.",
-    toArbitrary: () => (fc) => fc.constantFrom("link", "document"),
   })
 );
 
@@ -372,9 +363,11 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
     return S.encodeEffect(schema)(i);
   };
 
-  static readonly encodeEffectFromJsonStringFormatted = S.encodeEffect(S.fromJsonString(ImageManifest, {
-    space: 2
-  }))
+  static readonly encodeEffectFromJsonStringFormatted = S.encodeEffect(
+    S.fromJsonString(ImageManifest, {
+      space: 2,
+    })
+  );
 }
 
 /**
@@ -475,5 +468,5 @@ export class ImageFetchResult extends S.Class<ImageFetchResult>($I`ImageFetchRes
     description: "Fetched image bytes paired with their digest, media type, and discovery provenance.",
   })
 ) {
-  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageFetchResult)
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageFetchResult);
 }

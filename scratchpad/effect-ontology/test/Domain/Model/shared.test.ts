@@ -1,8 +1,9 @@
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Attributes, AttributeValue, EntityId, OptionalConfidence } from "../../../Domain/Model/shared.ts";
 const decodeOptionalConfidenceResult = S.decodeResult(OptionalConfidence);
 
@@ -11,13 +12,20 @@ const sharedSchemas: ReadonlyArray<S.Constraint> = [AttributeValue, Attributes, 
 describe("effect-ontology shared model schemas", () => {
   it("derives arbitraries whose values satisfy every public schema", () => {
     for (const schema of sharedSchemas) {
-      const arbitrary = S.toArbitrary(schema)(fc);
-      fc.assert(
-        fc.property(arbitrary, (value) => {
+      const arbitrary = Arbitrary.schema(schema);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([value]) => {
           expect(S.is(schema)(value)).toBe(true);
-        }),
-        { numRuns: 32 }
-      );
+
+              return true;
+            },
+            { runs: 32 }
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 

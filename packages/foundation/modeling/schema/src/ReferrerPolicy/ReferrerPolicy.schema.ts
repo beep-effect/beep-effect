@@ -219,7 +219,7 @@ const formatReferrerPolicyValue = Effect.fn("ReferrerPolicy.formatReferrerPolicy
 export const ReferrerPolicyHeader = S.Union([ReferrerPolicyOption, S.Undefined]).pipe(
   S.decodeTo(
     ReferrerPolicyResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: Effect.fn("ReferrerPolicy.decode")(function* (input): Effect.fn.Return<
         ReferrerPolicyResponseHeaderEncoded,
         SchemaIssue.Issue

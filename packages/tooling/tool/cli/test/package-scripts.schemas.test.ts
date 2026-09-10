@@ -17,7 +17,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as fc from "effect/testing/FastCheck";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { PackageScriptsReportWire } from "@beep/repo-cli/test/PackageScripts";
 
 const appCodec = scriptsBlockFromRecord("app");
@@ -30,7 +30,7 @@ const decodeReport = S.decodeEffect(PackageScriptsReportFromWire);
 const encodeReport = S.encodeEffect(PackageScriptsReportFromWire);
 const decodeAppResult = S.decodeResult(appCodec);
 const encodeAppResult = S.encodeResult(appCodec);
-const scriptsArbitrary = S.toArbitrary(ScriptsRecord)(fc);
+const scriptsArbitrary = Arbitrary.schema(ScriptsRecord);
 
 const presenceRows: ReadonlyArray<readonly [string, string]> = [
   ["build", "required required required required required required optional"],
@@ -54,13 +54,20 @@ const presenceRows: ReadonlyArray<readonly [string, string]> = [
 
 describe("canonical package scripts schemas", () => {
   it("round trips schema-derived script records", () => {
-    fc.assert(
-      fc.property(scriptsArbitrary, (input) => {
-        const block = Result.getOrThrow(decodeAppResult(input));
-        expect(Result.getOrThrow(encodeAppResult(block))).toEqual(input);
-      }),
-      { numRuns: 100 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([scriptsArbitrary]),
+          ([input]) => {
+            const block = Result.getOrThrow(decodeAppResult(input));
+            expect(Result.getOrThrow(encodeAppResult(block))).toEqual(input);
+
+            return true;
+          },
+          { runs: 100 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
   it.effect(
     "round trips implementation text and extras without interpretation",

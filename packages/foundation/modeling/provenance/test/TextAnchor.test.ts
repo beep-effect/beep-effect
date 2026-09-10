@@ -4,14 +4,14 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeTextAnchor = S.decodeEffect(TextAnchor);
 const decodeTextAnchorResult = S.decodeResult(TextAnchor);
 const encodeUnknownTextAnchorResult = S.encodeUnknownResult(TextAnchor);
 const isTextAnchor = S.is(TextAnchor);
 
-const TextAnchorArbitrary = S.toArbitrary(TextAnchor)(fc);
+const TextAnchorArbitrary = Arbitrary.schema(TextAnchor);
 const TextAnchorEquivalence = S.toEquivalence(TextAnchor);
 
 describe("@beep/provenance TextAnchor", () => {
@@ -62,30 +62,47 @@ describe("@beep/provenance TextAnchor", () => {
   });
 
   it("round-trips schema-derived anchors through the encoded wire shape", () =>
-    fc.assert(
-      fc.property(TextAnchorArbitrary, (anchor) => {
-        const encoded = Result.getOrThrow(encodeUnknownTextAnchorResult(anchor));
-        const decoded = Result.getOrThrow(decodeTextAnchorResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([TextAnchorArbitrary]),
+          ([anchor]) => {
+            const encoded = Result.getOrThrow(encodeUnknownTextAnchorResult(anchor));
+            const decoded = Result.getOrThrow(decodeTextAnchorResult(encoded));
 
-        expect(encoded).toEqual({
-          startChar: anchor.startChar,
-          endChar: anchor.endChar,
-          quote: anchor.quote,
-        });
-        expect(TextAnchor.isInternallyConsistent(anchor)).toBe(true);
-        expect(TextAnchorEquivalence(decoded, anchor)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(encoded).toEqual({
+              startChar: anchor.startChar,
+              endChar: anchor.endChar,
+              quote: anchor.quote,
+            });
+            expect(TextAnchor.isInternallyConsistent(anchor)).toBe(true);
+            expect(TextAnchorEquivalence(decoded, anchor)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("colocated well-ordered predicate agrees with ordered offset pairs", () =>
-    fc.assert(
-      fc.property(fc.nat(), fc.nat(), (startChar, length) => {
-        const endChar = startChar + length;
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0))),
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0))),
+          ]),
+          ([startChar, length]) => {
+            const endChar = startChar + length;
 
-        expect(TextAnchor.isWellOrdered({ startChar, endChar })).toBe(true);
-        expect(isWellOrdered({ startChar: endChar + 1, endChar: startChar })).toBe(false);
-      }),
-      fcRuns(50)
-    ));
+            expect(TextAnchor.isWellOrdered({ startChar, endChar })).toBe(true);
+            expect(isWellOrdered({ startChar: endChar + 1, endChar: startChar })).toBe(false);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

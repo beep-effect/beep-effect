@@ -21,7 +21,7 @@ const { metadata: siteMetadata } = oipSiteContent;
 const twitterHandle = oipTwitterHandle(oipSiteContent);
 const REACT_GRAB_VERSION = "0.1.48";
 const REACT_GRAB_INTEGRITY = "sha384-6fIsuvxec6hC2tuREOwkhknBAwJIbXCIAdezU6+IIb/Iy/Ups0sKMh2Vh4O6AcBp";
-const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.string(name)));
+const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.String(name)));
 const configStringEqualsSync: {
   (name: string, expected: string): boolean;
   (expected: string): (name: string) => boolean;

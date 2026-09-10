@@ -55,16 +55,13 @@ const Uint64BigInt = S.BigInt.check(Uint64Range);
  * @category validation
  * @since 0.0.0
  */
-export const Uint64 = ProtobufInt64Input.pipe(S.decodeTo(Uint64BigInt, decodeProtobufInt64InputTransformation))
-  .annotate({
-    toArbitrary: () => (fc) => fc.bigInt({ min: uint64Minimum, max: uint64Maximum }),
+export const Uint64 = ProtobufInt64Input.pipe(
+  S.decodeTo(Uint64BigInt, decodeProtobufInt64InputTransformation),
+  S.brand("Uint64"),
+  $I.annoteSchema("Uint64", {
+    description: "A protobuf uint64 bigint in the inclusive unsigned 64-bit range.",
   })
-  .pipe(
-    S.brand("Uint64"),
-    $I.annoteSchema("Uint64", {
-      description: "A protobuf uint64 bigint in the inclusive unsigned 64-bit range.",
-    })
-  );
+);
 
 /**
  * Type-level value inferred from {@link Uint64}.

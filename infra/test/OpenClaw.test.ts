@@ -378,7 +378,7 @@ describe("@beep/infra OpenClaw", () => {
   });
 
   it("round-trips OpenClaw config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(OpenClawPulumiConfigValues, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(OpenClawPulumiConfigValues, { runs: 25 });
     expectSchemaRoundTrip(OpenClawPulumiConfigValues);
     expectSchemaRoundTrip(OpenClawExpectedIdentity);
     expectSchemaRoundTrip(OpenClawWorkstationPaths);

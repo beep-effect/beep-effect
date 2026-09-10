@@ -706,17 +706,31 @@ const flakeEvidenceSuffix = (flakeClass: YeetMonitorFlakeClass): string =>
  */
 export const renderYeetMonitorJobDecision = (decision: YeetMonitorJobDecision): string =>
   Match.value(decision).pipe(
-    Match.discriminatorsExhaustive("status")({
-      rerun: (value) =>
-        `[yeet] ${value.name}: ${value.flakeClass} flake fingerprint matched${flakeEvidenceSuffix(value.flakeClass)}; rerunning once -> ${value.command}`,
-      "rerun-spent": (value) =>
-        `[yeet] ${value.name}: ${value.flakeClass} matched again at this SHA; rerun budget spent, needs attention`,
-      "needs-code-fix": (value) => `[yeet] ${value.name}: red with no known flake fingerprint; needs code fix`,
-      "awaiting-log": (value) =>
-        `[yeet] ${value.name}: red; failing-step log not available yet (run still in progress), reclassifying next poll`,
-      "awaiting-run": (value) =>
-        `[yeet] ${value.name}: known flake matched, but the parent run is still active; deferring rerun to the next poll`,
-    })
+    Match.discriminator("status")(
+      "rerun",
+      (value) =>
+        `[yeet] ${value.name}: ${value.flakeClass} flake fingerprint matched${flakeEvidenceSuffix(value.flakeClass)}; rerunning once -> ${value.command}`
+    ),
+    Match.discriminator("status")(
+      "rerun-spent",
+      (value) =>
+        `[yeet] ${value.name}: ${value.flakeClass} matched again at this SHA; rerun budget spent, needs attention`
+    ),
+    Match.discriminator("status")(
+      "needs-code-fix",
+      (value) => `[yeet] ${value.name}: red with no known flake fingerprint; needs code fix`
+    ),
+    Match.discriminator("status")(
+      "awaiting-log",
+      (value) =>
+        `[yeet] ${value.name}: red; failing-step log not available yet (run still in progress), reclassifying next poll`
+    ),
+    Match.discriminator("status")(
+      "awaiting-run",
+      (value) =>
+        `[yeet] ${value.name}: known flake matched, but the parent run is still active; deferring rerun to the next poll`
+    ),
+    Match.exhaustive
   );
 
 /**

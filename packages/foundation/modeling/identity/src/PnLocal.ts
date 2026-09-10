@@ -7,7 +7,9 @@
 
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const PN_LOCAL_ESCAPABLE = "_~.-!$&'()*+,;=/?#@%";
 const HEX = /^[0-9A-Fa-f]$/;
@@ -133,19 +135,19 @@ const iriReferenceValue = (iri: string): string => iri.replace(IriReferenceUnsaf
  * @category predicates
  * @since 0.0.0
  */
-export const SafePnLocal = S.String.check(
-  S.makeFilter(isSafeLocalInternal, {
+export const SafePnLocal = S.declare<string>(
+  (value): value is string => P.isString(value) && isSafeLocalInternal(value),
+  {
     identifier: "@beep/identity/PnLocal/SafePnLocal",
     title: "Safe PN_LOCAL",
     description: "A local name that can be emitted as an unescaped Turtle PN_LOCAL value.",
-    message: "Expected an unescaped Turtle PN_LOCAL value.",
-  })
-).annotate({
-  identifier: "@beep/identity/PnLocal/SafePnLocal",
-  title: "Safe PN_LOCAL",
-  description: "A local name that can be emitted as an unescaped Turtle PN_LOCAL value.",
-  toArbitrary: () => (fc) => fc.constantFrom(...SafePnLocalArbitraryValues),
-});
+    toCodecArbitrary: () =>
+      S.link<string>()(
+        S.Literals<ReadonlyArray<string>>(SafePnLocalArbitraryValues),
+        SchemaTransformation.transform({ decode: (value) => value, encode: (value) => value })
+      ),
+  }
+);
 
 /**
  * Runtime type for {@link SafePnLocal}.
@@ -181,19 +183,19 @@ const isSafePnLocal = S.is(SafePnLocal);
  * @category predicates
  * @since 0.0.0
  */
-export const SafePnPrefix = S.String.check(
-  S.makeFilter(isSafePrefixInternal, {
+export const SafePnPrefix = S.declare<string>(
+  (value): value is string => P.isString(value) && isSafePrefixInternal(value),
+  {
     identifier: "@beep/identity/PnLocal/SafePnPrefix",
     title: "Safe PN_PREFIX",
     description: "A namespace prefix that can be emitted as an unescaped Turtle PN_PREFIX value.",
-    message: "Expected an unescaped Turtle PN_PREFIX value.",
-  })
-).annotate({
-  identifier: "@beep/identity/PnLocal/SafePnPrefix",
-  title: "Safe PN_PREFIX",
-  description: "A namespace prefix that can be emitted as an unescaped Turtle PN_PREFIX value.",
-  toArbitrary: () => (fc) => fc.constantFrom(...SafePnPrefixArbitraryValues),
-});
+    toCodecArbitrary: () =>
+      S.link<string>()(
+        S.Literals<ReadonlyArray<string>>(SafePnPrefixArbitraryValues),
+        SchemaTransformation.transform({ decode: (value) => value, encode: (value) => value })
+      ),
+  }
+);
 
 /**
  * Runtime type for {@link SafePnPrefix}.
@@ -339,19 +341,19 @@ const acceptsEscapedLocalInternal = (local: string): boolean =>
  * @category predicates
  * @since 0.0.0
  */
-export const EscapedPnLocal = S.String.check(
-  S.makeFilter(acceptsEscapedLocalInternal, {
+export const EscapedPnLocal = S.declare<string>(
+  (value): value is string => P.isString(value) && acceptsEscapedLocalInternal(value),
+  {
     identifier: "@beep/identity/PnLocal/EscapedPnLocal",
     title: "Escaped PN_LOCAL",
     description: "A local name with Turtle PN_LOCAL parser-side escapes accepted at the parser boundary.",
-    message: "Expected a Turtle PN_LOCAL value with valid parser-side escapes.",
-  })
-).annotate({
-  identifier: "@beep/identity/PnLocal/EscapedPnLocal",
-  title: "Escaped PN_LOCAL",
-  description: "A local name with Turtle PN_LOCAL parser-side escapes accepted at the parser boundary.",
-  toArbitrary: () => (fc) => fc.constantFrom(...EscapedPnLocalArbitraryValues),
-});
+    toCodecArbitrary: () =>
+      S.link<string>()(
+        S.Literals<ReadonlyArray<string>>(EscapedPnLocalArbitraryValues),
+        SchemaTransformation.transform({ decode: (value) => value, encode: (value) => value })
+      ),
+  }
+);
 
 /**
  * Runtime type for {@link EscapedPnLocal}.

@@ -26,29 +26,35 @@ const $I = $EcfrId.create("_generated/Ecfr.gen");
  * @since 0.0.0
  */
 export type AgenciesResponse = {
-  readonly agencies: ReadonlyArray<{
-    readonly name: string;
-    readonly short_name?: string;
-    readonly display_name?: string;
-    readonly sortable_name?: string;
-    readonly slug: string;
-    readonly children?: ReadonlyArray<{
+  readonly agencies: ReadonlyArray<
+    {
       readonly name: string;
       readonly short_name?: string;
       readonly display_name?: string;
       readonly sortable_name?: string;
       readonly slug: string;
-      readonly cfr_references?: ReadonlyArray<{
-        readonly title: number;
-        readonly chapter: string;
-      }>;
-    }>;
-    readonly cfr_references?: ReadonlyArray<{
-      readonly title: number;
-      readonly chapter: string;
-    }>;
-  }>;
-};
+      readonly children?: ReadonlyArray<
+        {
+          readonly name: string;
+          readonly short_name?: string;
+          readonly display_name?: string;
+          readonly sortable_name?: string;
+          readonly slug: string;
+          readonly cfr_references?: ReadonlyArray<
+            { readonly title: number; readonly chapter: string } & {
+              readonly [x: string]: S.Json;
+            }
+          >;
+        } & { readonly [x: string]: S.Json }
+      >;
+      readonly cfr_references?: ReadonlyArray<
+        { readonly title: number; readonly chapter: string } & {
+          readonly [x: string]: S.Json;
+        }
+      >;
+    } & { readonly [x: string]: S.Json }
+  >;
+} & { readonly [x: string]: S.Json };
 /**
  * Generated AgenciesResponse declaration for \@beep/ecfr.
  *
@@ -63,100 +69,132 @@ export type AgenciesResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const AgenciesResponse = S.Struct({
-  agencies: S.Array(
-    S.Struct({
-      name: S.String.annotate({ description: "Full official agency name." }),
-      short_name: S.optionalKey(
-        S.String.annotate({
-          description: "Agency abbreviation when supplied.",
-        }),
-      ),
-      display_name: S.optionalKey(
-        S.String.annotate({
-          description: "Human-readable agency display name.",
-        }),
-      ),
-      sortable_name: S.optionalKey(
-        S.String.annotate({
-          description: "Agency name normalized for alphabetical sorting.",
-        }),
-      ),
-      slug: S.String.annotate({ description: "URL-safe agency identifier." }),
-      children: S.optionalKey(
-        S.Array(
-          S.Struct({
-            name: S.String.annotate({
-              description: "Full official agency name.",
+export const AgenciesResponse = S.StructWithRest(
+  S.Struct({
+    agencies: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          name: S.String.annotate({
+            description: "Full official agency name.",
+          }),
+          short_name: S.optionalKey(
+            S.String.annotate({
+              description: "Agency abbreviation when supplied.",
             }),
-            short_name: S.optionalKey(
-              S.String.annotate({
-                description: "Agency abbreviation when supplied.",
-              }),
-            ),
-            display_name: S.optionalKey(
-              S.String.annotate({
-                description: "Human-readable agency display name.",
-              }),
-            ),
-            sortable_name: S.optionalKey(
-              S.String.annotate({
-                description: "Agency name normalized for alphabetical sorting.",
-              }),
-            ),
-            slug: S.String.annotate({
-              description: "URL-safe agency identifier.",
+          ),
+          display_name: S.optionalKey(
+            S.String.annotate({
+              description: "Human-readable agency display name.",
             }),
-            cfr_references: S.optionalKey(
-              S.Array(
+          ),
+          sortable_name: S.optionalKey(
+            S.String.annotate({
+              description: "Agency name normalized for alphabetical sorting.",
+            }),
+          ),
+          slug: S.String.annotate({
+            description: "URL-safe agency identifier.",
+          }),
+          children: S.optionalKey(
+            S.Array(
+              S.StructWithRest(
+                S.Struct({
+                  name: S.String.annotate({
+                    description: "Full official agency name.",
+                  }),
+                  short_name: S.optionalKey(
+                    S.String.annotate({
+                      description: "Agency abbreviation when supplied.",
+                    }),
+                  ),
+                  display_name: S.optionalKey(
+                    S.String.annotate({
+                      description: "Human-readable agency display name.",
+                    }),
+                  ),
+                  sortable_name: S.optionalKey(
+                    S.String.annotate({
+                      description:
+                        "Agency name normalized for alphabetical sorting.",
+                    }),
+                  ),
+                  slug: S.String.annotate({
+                    description: "URL-safe agency identifier.",
+                  }),
+                  cfr_references: S.optionalKey(
+                    S.Array(
+                      S.StructWithRest(
+                        S.Struct({
+                          title: S.Int.annotate({
+                            description: "CFR title number.",
+                          }),
+                          chapter: S.String.annotate({
+                            description: "Chapter identifier within the title.",
+                          }),
+                        }),
+                        [
+                          S.Record(
+                            S.String,
+                            S.Json.annotate({ expected: "JSON value" }),
+                          ),
+                        ],
+                      ).annotate({
+                        description:
+                          "A CFR title and chapter reference associated with an agency.",
+                      }),
+                    ).annotate({
+                      description: "CFR chapters assigned to the child agency.",
+                    }),
+                  ),
+                }),
+                [
+                  S.Record(
+                    S.String,
+                    S.Json.annotate({ expected: "JSON value" }),
+                  ),
+                ],
+              ).annotate({
+                description:
+                  "A child agency represented in the CFR agency roster.",
+              }),
+            ).annotate({ description: "Child agencies in name order." }),
+          ),
+          cfr_references: S.optionalKey(
+            S.Array(
+              S.StructWithRest(
                 S.Struct({
                   title: S.Int.annotate({ description: "CFR title number." }),
                   chapter: S.String.annotate({
                     description: "Chapter identifier within the title.",
                   }),
-                }).annotate({
-                  description:
-                    "A CFR title and chapter reference associated with an agency.",
                 }),
+                [
+                  S.Record(
+                    S.String,
+                    S.Json.annotate({ expected: "JSON value" }),
+                  ),
+                ],
               ).annotate({
-                description: "CFR chapters assigned to the child agency.",
+                description:
+                  "A CFR title and chapter reference associated with an agency.",
               }),
-            ),
-          }).annotate({
-            description: "A child agency represented in the CFR agency roster.",
-          }),
-        ).annotate({ description: "Child agencies in name order." }),
-      ),
-      cfr_references: S.optionalKey(
-        S.Array(
-          S.Struct({
-            title: S.Int.annotate({ description: "CFR title number." }),
-            chapter: S.String.annotate({
-              description: "Chapter identifier within the title.",
+            ).annotate({
+              description: "CFR chapters assigned directly to the agency.",
             }),
-          }).annotate({
-            description:
-              "A CFR title and chapter reference associated with an agency.",
-          }),
-        ).annotate({
-          description: "CFR chapters assigned directly to the agency.",
+          ),
         }),
-      ),
-    }).annotate({
-      description:
-        "A top-level agency represented in the CFR, including child agencies and CFR references.",
-    }),
-  ).annotate({ description: "Top-level agencies in name order." }),
-})
-  .annotate({
-    description: "Response envelope containing the agency roster.",
-    identifier: "AgenciesResponse",
-  })
-  .pipe(
-    $I.annoteSchema("AgenciesResponse", {
-      description: "Generated ECFR schema for AgenciesResponse.",
-    }),
-  );
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ).annotate({
+        description:
+          "A top-level agency represented in the CFR, including child agencies and CFR references.",
+      }),
+    ).annotate({ description: "Top-level agencies in name order." }),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description: "Response envelope containing the agency roster.",
+  identifier: "AgenciesResponse",
+});
 /**
  * Generated CorrectionsResponse declaration for \@beep/ecfr.
  *
@@ -164,32 +202,36 @@ export const AgenciesResponse = S.Struct({
  * @since 0.0.0
  */
 export type CorrectionsResponse = {
-  readonly ecfr_corrections: ReadonlyArray<{
-    readonly id: number;
-    readonly cfr_references?: ReadonlyArray<{
-      readonly cfr_reference: string;
-      readonly hierarchy: {
-        readonly title?: string;
-        readonly subtitle?: string;
-        readonly chapter?: string;
-        readonly subchapter?: string;
-        readonly part?: string;
-        readonly subpart?: string;
-        readonly section?: string;
-        readonly appendix?: string;
-      };
-    }>;
-    readonly corrective_action?: string;
-    readonly error_corrected?: string;
-    readonly error_occurred?: string;
-    readonly fr_citation?: string;
-    readonly position?: number;
-    readonly display_in_toc?: boolean;
-    readonly title: number;
-    readonly year?: number;
-    readonly last_modified?: string;
-  }>;
-};
+  readonly ecfr_corrections: ReadonlyArray<
+    {
+      readonly id: number;
+      readonly cfr_references?: ReadonlyArray<
+        {
+          readonly cfr_reference: string;
+          readonly hierarchy: {
+            readonly title?: string;
+            readonly subtitle?: string;
+            readonly chapter?: string;
+            readonly subchapter?: string;
+            readonly part?: string;
+            readonly subpart?: string;
+            readonly section?: string;
+            readonly appendix?: string;
+          } & { readonly [x: string]: S.Json };
+        } & { readonly [x: string]: S.Json }
+      >;
+      readonly corrective_action?: string;
+      readonly error_corrected?: string;
+      readonly error_occurred?: string;
+      readonly fr_citation?: string;
+      readonly position?: number;
+      readonly display_in_toc?: boolean;
+      readonly title: number;
+      readonly year?: number;
+      readonly last_modified?: string;
+    } & { readonly [x: string]: S.Json }
+  >;
+} & { readonly [x: string]: S.Json };
 /**
  * Generated CorrectionsResponse declaration for \@beep/ecfr.
  *
@@ -204,131 +246,150 @@ export type CorrectionsResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const CorrectionsResponse = S.Struct({
-  ecfr_corrections: S.Array(
-    S.Struct({
-      id: S.Int.annotate({
-        description: "Stable correction record identifier.",
-      }),
-      cfr_references: S.optionalKey(
-        S.Array(
-          S.Struct({
-            cfr_reference: S.String.annotate({
-              description:
-                "Human-readable CFR citation for the corrected content.",
-            }),
-            hierarchy: S.Struct({
-              title: S.optionalKey(
-                S.String.annotate({ description: "CFR title identifier." }),
-              ),
-              subtitle: S.optionalKey(
-                S.String.annotate({
-                  description: "Subtitle identifier when present.",
-                }),
-              ),
-              chapter: S.optionalKey(
-                S.String.annotate({
-                  description: "Chapter identifier when present.",
-                }),
-              ),
-              subchapter: S.optionalKey(
-                S.String.annotate({
-                  description: "Subchapter identifier when present.",
-                }),
-              ),
-              part: S.optionalKey(
-                S.String.annotate({
-                  description: "Part identifier when present.",
-                }),
-              ),
-              subpart: S.optionalKey(
-                S.String.annotate({
-                  description: "Subpart identifier when present.",
-                }),
-              ),
-              section: S.optionalKey(
-                S.String.annotate({
-                  description: "Section identifier when present.",
-                }),
-              ),
-              appendix: S.optionalKey(
-                S.String.annotate({
-                  description: "Appendix identifier when present.",
-                }),
-              ),
-            }).annotate({
-              description:
-                "Known CFR hierarchy identifiers locating corrected content.",
-            }),
-          }).annotate({
-            description:
-              "Human-readable and structured CFR location for a correction.",
+export const CorrectionsResponse = S.StructWithRest(
+  S.Struct({
+    ecfr_corrections: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          id: S.Int.annotate({
+            description: "Stable correction record identifier.",
           }),
-        ).annotate({
-          description: "CFR locations affected by the correction.",
+          cfr_references: S.optionalKey(
+            S.Array(
+              S.StructWithRest(
+                S.Struct({
+                  cfr_reference: S.String.annotate({
+                    description:
+                      "Human-readable CFR citation for the corrected content.",
+                  }),
+                  hierarchy: S.StructWithRest(
+                    S.Struct({
+                      title: S.optionalKey(
+                        S.String.annotate({
+                          description: "CFR title identifier.",
+                        }),
+                      ),
+                      subtitle: S.optionalKey(
+                        S.String.annotate({
+                          description: "Subtitle identifier when present.",
+                        }),
+                      ),
+                      chapter: S.optionalKey(
+                        S.String.annotate({
+                          description: "Chapter identifier when present.",
+                        }),
+                      ),
+                      subchapter: S.optionalKey(
+                        S.String.annotate({
+                          description: "Subchapter identifier when present.",
+                        }),
+                      ),
+                      part: S.optionalKey(
+                        S.String.annotate({
+                          description: "Part identifier when present.",
+                        }),
+                      ),
+                      subpart: S.optionalKey(
+                        S.String.annotate({
+                          description: "Subpart identifier when present.",
+                        }),
+                      ),
+                      section: S.optionalKey(
+                        S.String.annotate({
+                          description: "Section identifier when present.",
+                        }),
+                      ),
+                      appendix: S.optionalKey(
+                        S.String.annotate({
+                          description: "Appendix identifier when present.",
+                        }),
+                      ),
+                    }),
+                    [
+                      S.Record(
+                        S.String,
+                        S.Json.annotate({ expected: "JSON value" }),
+                      ),
+                    ],
+                  ).annotate({
+                    description:
+                      "Known CFR hierarchy identifiers locating corrected content.",
+                  }),
+                }),
+                [
+                  S.Record(
+                    S.String,
+                    S.Json.annotate({ expected: "JSON value" }),
+                  ),
+                ],
+              ).annotate({
+                description:
+                  "Human-readable and structured CFR location for a correction.",
+              }),
+            ).annotate({
+              description: "CFR locations affected by the correction.",
+            }),
+          ),
+          corrective_action: S.optionalKey(
+            S.String.annotate({
+              description: "Description of the corrective editorial action.",
+            }),
+          ),
+          error_corrected: S.optionalKey(
+            S.String.annotate({
+              description: "Date the error was corrected.",
+              format: "date",
+            }),
+          ),
+          error_occurred: S.optionalKey(
+            S.String.annotate({
+              description: "Date the error entered the eCFR material.",
+              format: "date",
+            }),
+          ),
+          fr_citation: S.optionalKey(
+            S.String.annotate({
+              description:
+                "Federal Register citation associated with the correction.",
+            }),
+          ),
+          position: S.optionalKey(
+            S.Int.annotate({
+              description:
+                "Display order among corrections for the same source.",
+            }),
+          ),
+          display_in_toc: S.optionalKey(
+            S.Boolean.annotate({
+              description:
+                "Whether the correction is displayed in the table of contents.",
+            }),
+          ),
+          title: S.Int.annotate({ description: "Affected CFR title number." }),
+          year: S.optionalKey(
+            S.Int.annotate({
+              description: "Calendar year associated with the correction.",
+            }),
+          ),
+          last_modified: S.optionalKey(
+            S.String.annotate({
+              description: "Date the correction record was last modified.",
+              format: "date",
+            }),
+          ),
         }),
-      ),
-      corrective_action: S.optionalKey(
-        S.String.annotate({
-          description: "Description of the corrective editorial action.",
-        }),
-      ),
-      error_corrected: S.optionalKey(
-        S.String.annotate({
-          description: "Date the error was corrected.",
-          format: "date",
-        }),
-      ),
-      error_occurred: S.optionalKey(
-        S.String.annotate({
-          description: "Date the error entered the eCFR material.",
-          format: "date",
-        }),
-      ),
-      fr_citation: S.optionalKey(
-        S.String.annotate({
-          description:
-            "Federal Register citation associated with the correction.",
-        }),
-      ),
-      position: S.optionalKey(
-        S.Int.annotate({
-          description: "Display order among corrections for the same source.",
-        }),
-      ),
-      display_in_toc: S.optionalKey(
-        S.Boolean.annotate({
-          description:
-            "Whether the correction is displayed in the table of contents.",
-        }),
-      ),
-      title: S.Int.annotate({ description: "Affected CFR title number." }),
-      year: S.optionalKey(
-        S.Int.annotate({
-          description: "Calendar year associated with the correction.",
-        }),
-      ),
-      last_modified: S.optionalKey(
-        S.String.annotate({
-          description: "Date the correction record was last modified.",
-          format: "date",
-        }),
-      ),
-    }).annotate({
-      description:
-        "An eCFR editorial correction and its affected CFR locations.",
-    }),
-  ).annotate({ description: "Correction records matching the request." }),
-})
-  .annotate({
-    description: "Response envelope containing eCFR correction records.",
-    identifier: "CorrectionsResponse",
-  })
-  .pipe(
-    $I.annoteSchema("CorrectionsResponse", {
-      description: "Generated ECFR schema for CorrectionsResponse.",
-    }),
-  );
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ).annotate({
+        description:
+          "An eCFR editorial correction and its affected CFR locations.",
+      }),
+    ).annotate({ description: "Correction records matching the request." }),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description: "Response envelope containing eCFR correction records.",
+  identifier: "CorrectionsResponse",
+});
 /**
  * Generated SearchResultsResponse declaration for \@beep/ecfr.
  *
@@ -336,14 +397,16 @@ export const CorrectionsResponse = S.Struct({
  * @since 0.0.0
  */
 export type SearchResultsResponse = {
-  readonly results: ReadonlyArray<{
-    readonly title?: number;
-    readonly type?: string;
-    readonly hierarchy_headings?: ReadonlyArray<string>;
-    readonly headings?: ReadonlyArray<string>;
-    readonly full_text_excerpt?: string;
-    readonly score?: number;
-  }>;
+  readonly results: ReadonlyArray<
+    {
+      readonly title?: number;
+      readonly type?: string;
+      readonly hierarchy_headings?: ReadonlyArray<string>;
+      readonly headings?: ReadonlyArray<string>;
+      readonly full_text_excerpt?: string;
+      readonly score?: number;
+    } & { readonly [x: string]: S.Json }
+  >;
   readonly meta: {
     readonly description?: string;
     readonly current_page: number;
@@ -352,8 +415,8 @@ export type SearchResultsResponse = {
     readonly max_score?: number;
     readonly min_date?: string;
     readonly max_date?: string;
-  };
-};
+  } & { readonly [x: string]: S.Json };
+} & { readonly [x: string]: S.Json };
 /**
  * Generated SearchResultsResponse declaration for \@beep/ecfr.
  *
@@ -368,89 +431,94 @@ export type SearchResultsResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const SearchResultsResponse = S.Struct({
-  results: S.Array(
-    S.Struct({
-      title: S.optionalKey(
-        S.Int.annotate({
-          description: "CFR title number containing the match.",
+export const SearchResultsResponse = S.StructWithRest(
+  S.Struct({
+    results: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          title: S.optionalKey(
+            S.Int.annotate({
+              description: "CFR title number containing the match.",
+            }),
+          ),
+          type: S.optionalKey(
+            S.String.annotate({
+              description: "Hierarchy node type of the matching content.",
+            }),
+          ),
+          hierarchy_headings: S.optionalKey(
+            S.Array(S.String).annotate({
+              description:
+                "Ordered headings locating the match in the CFR hierarchy.",
+            }),
+          ),
+          headings: S.optionalKey(
+            S.Array(S.String).annotate({
+              description: "Headings associated with the matching content.",
+            }),
+          ),
+          full_text_excerpt: S.optionalKey(
+            S.String.annotate({
+              description: "Highlighted excerpt surrounding the matching text.",
+            }),
+          ),
+          score: S.optionalKey(
+            S.Finite.annotate({
+              description: "Search relevance score when supplied.",
+            }).check(S.isFinite().annotate({ expected: "a finite number" })),
+          ),
         }),
-      ),
-      type: S.optionalKey(
-        S.String.annotate({
-          description: "Hierarchy node type of the matching content.",
-        }),
-      ),
-      hierarchy_headings: S.optionalKey(
-        S.Array(S.String).annotate({
-          description:
-            "Ordered headings locating the match in the CFR hierarchy.",
-        }),
-      ),
-      headings: S.optionalKey(
-        S.Array(S.String).annotate({
-          description: "Headings associated with the matching content.",
-        }),
-      ),
-      full_text_excerpt: S.optionalKey(
-        S.String.annotate({
-          description: "Highlighted excerpt surrounding the matching text.",
-        }),
-      ),
-      score: S.optionalKey(
-        S.Finite.annotate({
-          description: "Search relevance score when supplied.",
-        }).check(S.isFinite().annotate({ expected: "a finite number" })),
-      ),
-    }).annotate({
-      description: "A section or appendix matching an eCFR search.",
-    }),
-  ).annotate({ description: "Sections and appendices matching the request." }),
-  meta: S.Struct({
-    description: S.optionalKey(
-      S.String.annotate({
-        description: "Human-readable description of the search results.",
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ).annotate({
+        description: "A section or appendix matching an eCFR search.",
       }),
-    ),
-    current_page: S.Int.annotate({
-      description: "One-based current result page.",
+    ).annotate({
+      description: "Sections and appendices matching the request.",
     }),
-    total_count: S.Int.annotate({
-      description: "Total number of matching results across all pages.",
-    }),
-    total_pages: S.Int.annotate({
-      description: "Total number of result pages.",
-    }),
-    max_score: S.optionalKey(
-      S.Finite.annotate({
-        description: "Maximum relevance score among matches.",
-      }).check(S.isFinite().annotate({ expected: "a finite number" })),
-    ),
-    min_date: S.optionalKey(
-      S.String.annotate({
-        description: "Minimum result date when paginating by date.",
-        format: "date",
+    meta: S.StructWithRest(
+      S.Struct({
+        description: S.optionalKey(
+          S.String.annotate({
+            description: "Human-readable description of the search results.",
+          }),
+        ),
+        current_page: S.Int.annotate({
+          description: "One-based current result page.",
+        }),
+        total_count: S.Int.annotate({
+          description: "Total number of matching results across all pages.",
+        }),
+        total_pages: S.Int.annotate({
+          description: "Total number of result pages.",
+        }),
+        max_score: S.optionalKey(
+          S.Finite.annotate({
+            description: "Maximum relevance score among matches.",
+          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+        ),
+        min_date: S.optionalKey(
+          S.String.annotate({
+            description: "Minimum result date when paginating by date.",
+            format: "date",
+          }),
+        ),
+        max_date: S.optionalKey(
+          S.String.annotate({
+            description: "Maximum result date when paginating by date.",
+            format: "date",
+          }),
+        ),
       }),
-    ),
-    max_date: S.optionalKey(
-      S.String.annotate({
-        description: "Maximum result date when paginating by date.",
-        format: "date",
-      }),
-    ),
-  }).annotate({
-    description: "Pagination and score metadata for eCFR search results.",
+      [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+    ).annotate({
+      description: "Pagination and score metadata for eCFR search results.",
+    }),
   }),
-})
-  .annotate({
-    description: "Paginated eCFR search-results envelope.",
-    identifier: "SearchResultsResponse",
-  })
-  .pipe(
-    $I.annoteSchema("SearchResultsResponse", {
-      description: "Generated ECFR schema for SearchResultsResponse.",
-    }),
-  );
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description: "Paginated eCFR search-results envelope.",
+  identifier: "SearchResultsResponse",
+});
 /**
  * Generated SearchCountResponse declaration for \@beep/ecfr.
  *
@@ -460,7 +528,7 @@ export const SearchResultsResponse = S.Struct({
 export type SearchCountResponse = {
   readonly count?: number;
   readonly total_count?: number;
-};
+} & { readonly [x: string]: S.Json };
 /**
  * Generated SearchCountResponse declaration for \@beep/ecfr.
  *
@@ -475,29 +543,26 @@ export type SearchCountResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const SearchCountResponse = S.Struct({
-  count: S.optionalKey(
-    S.Int.annotate({
-      description:
-        "Number of matching search results when supplied by the service.",
-    }),
-  ),
-  total_count: S.optionalKey(
-    S.Int.annotate({
-      description:
-        "Total matching result count when supplied under the paginated-result field name.",
-    }),
-  ),
-})
-  .annotate({
-    description: "Conservative envelope for the eCFR search count endpoint.",
-    identifier: "SearchCountResponse",
-  })
-  .pipe(
-    $I.annoteSchema("SearchCountResponse", {
-      description: "Generated ECFR schema for SearchCountResponse.",
-    }),
-  );
+export const SearchCountResponse = S.StructWithRest(
+  S.Struct({
+    count: S.optionalKey(
+      S.Int.annotate({
+        description:
+          "Number of matching search results when supplied by the service.",
+      }),
+    ),
+    total_count: S.optionalKey(
+      S.Int.annotate({
+        description:
+          "Total matching result count when supplied under the paginated-result field name.",
+      }),
+    ),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description: "Conservative envelope for the eCFR search count endpoint.",
+  identifier: "SearchCountResponse",
+});
 /**
  * Generated SearchSummaryResponse declaration for \@beep/ecfr.
  *
@@ -507,7 +572,7 @@ export const SearchCountResponse = S.Struct({
 export type SearchSummaryResponse = {
   readonly description?: string;
   readonly count?: number;
-};
+} & { readonly [x: string]: S.Json };
 /**
  * Generated SearchSummaryResponse declaration for \@beep/ecfr.
  *
@@ -522,24 +587,21 @@ export type SearchSummaryResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const SearchSummaryResponse = S.Struct({
-  description: S.optionalKey(
-    S.String.annotate({ description: "Human-readable search summary." }),
-  ),
-  count: S.optionalKey(
-    S.Int.annotate({ description: "Matching result count when included." }),
-  ),
-})
-  .annotate({
-    description:
-      "Conservative envelope for eCFR search summary details; all known fields remain optional because the official spec leaves the response schema unspecified.",
-    identifier: "SearchSummaryResponse",
-  })
-  .pipe(
-    $I.annoteSchema("SearchSummaryResponse", {
-      description: "Generated ECFR schema for SearchSummaryResponse.",
-    }),
-  );
+export const SearchSummaryResponse = S.StructWithRest(
+  S.Struct({
+    description: S.optionalKey(
+      S.String.annotate({ description: "Human-readable search summary." }),
+    ),
+    count: S.optionalKey(
+      S.Int.annotate({ description: "Matching result count when included." }),
+    ),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description:
+    "Conservative envelope for eCFR search summary details; all known fields remain optional because the official spec leaves the response schema unspecified.",
+  identifier: "SearchSummaryResponse",
+});
 /**
  * Generated SearchDailyCountsResponse declaration for \@beep/ecfr.
  *
@@ -547,11 +609,12 @@ export const SearchSummaryResponse = S.Struct({
  * @since 0.0.0
  */
 export type SearchDailyCountsResponse = {
-  readonly counts?: ReadonlyArray<{
-    readonly date?: string;
-    readonly count?: number;
-  }>;
-};
+  readonly counts?: ReadonlyArray<
+    { readonly date?: string; readonly count?: number } & {
+      readonly [x: string]: S.Json;
+    }
+  >;
+} & { readonly [x: string]: S.Json };
 /**
  * Generated SearchDailyCountsResponse declaration for \@beep/ecfr.
  *
@@ -566,36 +629,36 @@ export type SearchDailyCountsResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const SearchDailyCountsResponse = S.Struct({
-  counts: S.optionalKey(
-    S.Array(
-      S.Struct({
-        date: S.optionalKey(
-          S.String.annotate({
-            description: "ISO date represented by the bucket.",
-            format: "date",
+export const SearchDailyCountsResponse = S.StructWithRest(
+  S.Struct({
+    counts: S.optionalKey(
+      S.Array(
+        S.StructWithRest(
+          S.Struct({
+            date: S.optionalKey(
+              S.String.annotate({
+                description: "ISO date represented by the bucket.",
+                format: "date",
+              }),
+            ),
+            count: S.optionalKey(
+              S.Int.annotate({
+                description: "Number of matches in the date bucket.",
+              }),
+            ),
           }),
-        ),
-        count: S.optionalKey(
-          S.Int.annotate({
-            description: "Number of matches in the date bucket.",
-          }),
-        ),
-      }).annotate({
-        description: "Search-result count associated with one date.",
-      }),
-    ).annotate({ description: "Daily result-count buckets when supplied." }),
-  ),
-})
-  .annotate({
-    description: "Conservative envelope for daily eCFR search counts.",
-    identifier: "SearchDailyCountsResponse",
-  })
-  .pipe(
-    $I.annoteSchema("SearchDailyCountsResponse", {
-      description: "Generated ECFR schema for SearchDailyCountsResponse.",
-    }),
-  );
+          [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+        ).annotate({
+          description: "Search-result count associated with one date.",
+        }),
+      ).annotate({ description: "Daily result-count buckets when supplied." }),
+    ),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description: "Conservative envelope for daily eCFR search counts.",
+  identifier: "SearchDailyCountsResponse",
+});
 /**
  * Generated SearchTitleCountsResponse declaration for \@beep/ecfr.
  *
@@ -603,11 +666,12 @@ export const SearchDailyCountsResponse = S.Struct({
  * @since 0.0.0
  */
 export type SearchTitleCountsResponse = {
-  readonly counts?: ReadonlyArray<{
-    readonly title?: number;
-    readonly count?: number;
-  }>;
-};
+  readonly counts?: ReadonlyArray<
+    { readonly title?: number; readonly count?: number } & {
+      readonly [x: string]: S.Json;
+    }
+  >;
+} & { readonly [x: string]: S.Json };
 /**
  * Generated SearchTitleCountsResponse declaration for \@beep/ecfr.
  *
@@ -622,37 +686,37 @@ export type SearchTitleCountsResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const SearchTitleCountsResponse = S.Struct({
-  counts: S.optionalKey(
-    S.Array(
-      S.Struct({
-        title: S.optionalKey(
-          S.Int.annotate({
-            description: "CFR title number represented by the bucket.",
+export const SearchTitleCountsResponse = S.StructWithRest(
+  S.Struct({
+    counts: S.optionalKey(
+      S.Array(
+        S.StructWithRest(
+          S.Struct({
+            title: S.optionalKey(
+              S.Int.annotate({
+                description: "CFR title number represented by the bucket.",
+              }),
+            ),
+            count: S.optionalKey(
+              S.Int.annotate({
+                description: "Number of matches in the title bucket.",
+              }),
+            ),
           }),
-        ),
-        count: S.optionalKey(
-          S.Int.annotate({
-            description: "Number of matches in the title bucket.",
-          }),
-        ),
-      }).annotate({
-        description: "Search-result count associated with one CFR title.",
+          [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+        ).annotate({
+          description: "Search-result count associated with one CFR title.",
+        }),
+      ).annotate({
+        description: "Per-title result-count buckets when supplied.",
       }),
-    ).annotate({
-      description: "Per-title result-count buckets when supplied.",
-    }),
-  ),
-})
-  .annotate({
-    description: "Conservative envelope for per-title eCFR search counts.",
-    identifier: "SearchTitleCountsResponse",
-  })
-  .pipe(
-    $I.annoteSchema("SearchTitleCountsResponse", {
-      description: "Generated ECFR schema for SearchTitleCountsResponse.",
-    }),
-  );
+    ),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description: "Conservative envelope for per-title eCFR search counts.",
+  identifier: "SearchTitleCountsResponse",
+});
 /**
  * Generated SearchHierarchyCountsResponse declaration for \@beep/ecfr.
  *
@@ -660,12 +724,14 @@ export const SearchTitleCountsResponse = S.Struct({
  * @since 0.0.0
  */
 export type SearchHierarchyCountsResponse = {
-  readonly counts?: ReadonlyArray<{
-    readonly label?: string;
-    readonly identifier?: string;
-    readonly count?: number;
-  }>;
-};
+  readonly counts?: ReadonlyArray<
+    {
+      readonly label?: string;
+      readonly identifier?: string;
+      readonly count?: number;
+    } & { readonly [x: string]: S.Json }
+  >;
+} & { readonly [x: string]: S.Json };
 /**
  * Generated SearchHierarchyCountsResponse declaration for \@beep/ecfr.
  *
@@ -680,40 +746,41 @@ export type SearchHierarchyCountsResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const SearchHierarchyCountsResponse = S.Struct({
-  counts: S.optionalKey(
-    S.Array(
-      S.Struct({
-        label: S.optionalKey(
-          S.String.annotate({ description: "Human-readable hierarchy label." }),
-        ),
-        identifier: S.optionalKey(
-          S.String.annotate({ description: "Hierarchy node identifier." }),
-        ),
-        count: S.optionalKey(
-          S.Int.annotate({
-            description: "Number of matches in the hierarchy bucket.",
+export const SearchHierarchyCountsResponse = S.StructWithRest(
+  S.Struct({
+    counts: S.optionalKey(
+      S.Array(
+        S.StructWithRest(
+          S.Struct({
+            label: S.optionalKey(
+              S.String.annotate({
+                description: "Human-readable hierarchy label.",
+              }),
+            ),
+            identifier: S.optionalKey(
+              S.String.annotate({ description: "Hierarchy node identifier." }),
+            ),
+            count: S.optionalKey(
+              S.Int.annotate({
+                description: "Number of matches in the hierarchy bucket.",
+              }),
+            ),
           }),
-        ),
-      }).annotate({
-        description:
-          "Search-result count associated with one CFR hierarchy node.",
+          [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+        ).annotate({
+          description:
+            "Search-result count associated with one CFR hierarchy node.",
+        }),
+      ).annotate({
+        description: "Hierarchy result-count buckets when supplied.",
       }),
-    ).annotate({
-      description: "Hierarchy result-count buckets when supplied.",
-    }),
-  ),
-})
-  .annotate({
-    description:
-      "Conservative envelope for hierarchy-level eCFR search counts.",
-    identifier: "SearchHierarchyCountsResponse",
-  })
-  .pipe(
-    $I.annoteSchema("SearchHierarchyCountsResponse", {
-      description: "Generated ECFR schema for SearchHierarchyCountsResponse.",
-    }),
-  );
+    ),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description: "Conservative envelope for hierarchy-level eCFR search counts.",
+  identifier: "SearchHierarchyCountsResponse",
+});
 /**
  * Generated SearchSuggestionsResponse declaration for \@beep/ecfr.
  *
@@ -722,7 +789,7 @@ export const SearchHierarchyCountsResponse = S.Struct({
  */
 export type SearchSuggestionsResponse = {
   readonly suggestions?: ReadonlyArray<string>;
-};
+} & { readonly [x: string]: S.Json };
 /**
  * Generated SearchSuggestionsResponse declaration for \@beep/ecfr.
  *
@@ -737,37 +804,36 @@ export type SearchSuggestionsResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const SearchSuggestionsResponse = S.Struct({
-  suggestions: S.optionalKey(
-    S.Array(S.String).annotate({
-      description: "Suggested search strings when supplied.",
-    }),
-  ),
-})
-  .annotate({
-    description: "Conservative envelope for eCFR search suggestions.",
-    identifier: "SearchSuggestionsResponse",
-  })
-  .pipe(
-    $I.annoteSchema("SearchSuggestionsResponse", {
-      description: "Generated ECFR schema for SearchSuggestionsResponse.",
-    }),
-  );
+export const SearchSuggestionsResponse = S.StructWithRest(
+  S.Struct({
+    suggestions: S.optionalKey(
+      S.Array(S.String).annotate({
+        description: "Suggested search strings when supplied.",
+      }),
+    ),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description: "Conservative envelope for eCFR search suggestions.",
+  identifier: "SearchSuggestionsResponse",
+});
 /**
  * Generated AncestryResponse declaration for \@beep/ecfr.
  *
  * @category models
  * @since 0.0.0
  */
-export type AncestryResponse = ReadonlyArray<{
-  readonly type: string;
-  readonly label: string;
-  readonly label_level?: string;
-  readonly label_description?: string;
-  readonly identifier: string;
-  readonly reserved?: boolean;
-  readonly section_range?: string;
-}>;
+export type AncestryResponse = ReadonlyArray<
+  {
+    readonly type: string;
+    readonly label: string;
+    readonly label_level?: string;
+    readonly label_description?: string;
+    readonly identifier: string;
+    readonly reserved?: boolean;
+    readonly section_range?: string;
+  } & { readonly [x: string]: S.Json }
+>;
 /**
  * Generated AncestryResponse declaration for \@beep/ecfr.
  *
@@ -783,35 +849,39 @@ export type AncestryResponse = ReadonlyArray<{
  * @since 0.0.0
  */
 export const AncestryResponse = S.Array(
-  S.Struct({
-    type: S.String.annotate({
-      description: "Hierarchy level such as title, chapter, part, or section.",
-    }),
-    label: S.String.annotate({
-      description: "Complete human-readable node label.",
-    }),
-    label_level: S.optionalKey(
-      S.String.annotate({
-        description: "Hierarchy level portion of the label.",
+  S.StructWithRest(
+    S.Struct({
+      type: S.String.annotate({
+        description:
+          "Hierarchy level such as title, chapter, part, or section.",
       }),
-    ),
-    label_description: S.optionalKey(
-      S.String.annotate({ description: "Descriptive portion of the label." }),
-    ),
-    identifier: S.String.annotate({
-      description: "Identifier within the node's hierarchy level.",
+      label: S.String.annotate({
+        description: "Complete human-readable node label.",
+      }),
+      label_level: S.optionalKey(
+        S.String.annotate({
+          description: "Hierarchy level portion of the label.",
+        }),
+      ),
+      label_description: S.optionalKey(
+        S.String.annotate({ description: "Descriptive portion of the label." }),
+      ),
+      identifier: S.String.annotate({
+        description: "Identifier within the node's hierarchy level.",
+      }),
+      reserved: S.optionalKey(
+        S.Boolean.annotate({
+          description: "Whether the hierarchy node is reserved.",
+        }),
+      ),
+      section_range: S.optionalKey(
+        S.String.annotate({
+          description: "Section range covered by the node when supplied.",
+        }),
+      ),
     }),
-    reserved: S.optionalKey(
-      S.Boolean.annotate({
-        description: "Whether the hierarchy node is reserved.",
-      }),
-    ),
-    section_range: S.optionalKey(
-      S.String.annotate({
-        description: "Section range covered by the node when supplied.",
-      }),
-    ),
-  }).annotate({
+    [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+  ).annotate({
     description: "A CFR hierarchy node returned in an ancestry response.",
   }),
 )
@@ -839,16 +909,18 @@ export type StructureNode = {
   readonly identifier: string;
   readonly reserved?: boolean;
   readonly section_range?: string;
-  readonly children?: ReadonlyArray<{
-    readonly type: string;
-    readonly label: string;
-    readonly label_level?: string;
-    readonly label_description?: string;
-    readonly identifier: string;
-    readonly reserved?: boolean;
-    readonly section_range?: string;
-  }>;
-};
+  readonly children?: ReadonlyArray<
+    {
+      readonly type: string;
+      readonly label: string;
+      readonly label_level?: string;
+      readonly label_description?: string;
+      readonly identifier: string;
+      readonly reserved?: boolean;
+      readonly section_range?: string;
+    } & { readonly [x: string]: S.Json }
+  >;
+} & { readonly [x: string]: S.Json };
 /**
  * Generated StructureNode declaration for \@beep/ecfr.
  *
@@ -863,80 +935,84 @@ export type StructureNode = {
  * @category tools
  * @since 0.0.0
  */
-export const StructureNode = S.Struct({
-  type: S.String.annotate({ description: "Hierarchy level of the root node." }),
-  label: S.String.annotate({
-    description: "Complete human-readable root label.",
+export const StructureNode = S.StructWithRest(
+  S.Struct({
+    type: S.String.annotate({
+      description: "Hierarchy level of the root node.",
+    }),
+    label: S.String.annotate({
+      description: "Complete human-readable root label.",
+    }),
+    label_level: S.optionalKey(
+      S.String.annotate({
+        description: "Hierarchy level portion of the root label.",
+      }),
+    ),
+    label_description: S.optionalKey(
+      S.String.annotate({
+        description: "Descriptive portion of the root label.",
+      }),
+    ),
+    identifier: S.String.annotate({
+      description: "Identifier within the hierarchy level.",
+    }),
+    reserved: S.optionalKey(
+      S.Boolean.annotate({ description: "Whether the root node is reserved." }),
+    ),
+    section_range: S.optionalKey(
+      S.String.annotate({
+        description: "Section range covered by the root node.",
+      }),
+    ),
+    children: S.optionalKey(
+      S.Array(
+        S.StructWithRest(
+          S.Struct({
+            type: S.String.annotate({
+              description: "Hierarchy level of the child node.",
+            }),
+            label: S.String.annotate({
+              description: "Complete human-readable child label.",
+            }),
+            label_level: S.optionalKey(
+              S.String.annotate({
+                description: "Hierarchy level portion of the child label.",
+              }),
+            ),
+            label_description: S.optionalKey(
+              S.String.annotate({
+                description: "Descriptive portion of the child label.",
+              }),
+            ),
+            identifier: S.String.annotate({
+              description: "Identifier within the hierarchy level.",
+            }),
+            reserved: S.optionalKey(
+              S.Boolean.annotate({
+                description: "Whether the child node is reserved.",
+              }),
+            ),
+            section_range: S.optionalKey(
+              S.String.annotate({
+                description: "Section range covered by the child node.",
+              }),
+            ),
+          }),
+          [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+        ).annotate({
+          description: "A direct child in an eCFR structure tree.",
+        }),
+      ).annotate({
+        description:
+          "Direct child nodes. Deeper tree parsing is intentionally conservative in v1.",
+      }),
+    ),
   }),
-  label_level: S.optionalKey(
-    S.String.annotate({
-      description: "Hierarchy level portion of the root label.",
-    }),
-  ),
-  label_description: S.optionalKey(
-    S.String.annotate({
-      description: "Descriptive portion of the root label.",
-    }),
-  ),
-  identifier: S.String.annotate({
-    description: "Identifier within the hierarchy level.",
-  }),
-  reserved: S.optionalKey(
-    S.Boolean.annotate({ description: "Whether the root node is reserved." }),
-  ),
-  section_range: S.optionalKey(
-    S.String.annotate({
-      description: "Section range covered by the root node.",
-    }),
-  ),
-  children: S.optionalKey(
-    S.Array(
-      S.Struct({
-        type: S.String.annotate({
-          description: "Hierarchy level of the child node.",
-        }),
-        label: S.String.annotate({
-          description: "Complete human-readable child label.",
-        }),
-        label_level: S.optionalKey(
-          S.String.annotate({
-            description: "Hierarchy level portion of the child label.",
-          }),
-        ),
-        label_description: S.optionalKey(
-          S.String.annotate({
-            description: "Descriptive portion of the child label.",
-          }),
-        ),
-        identifier: S.String.annotate({
-          description: "Identifier within the hierarchy level.",
-        }),
-        reserved: S.optionalKey(
-          S.Boolean.annotate({
-            description: "Whether the child node is reserved.",
-          }),
-        ),
-        section_range: S.optionalKey(
-          S.String.annotate({
-            description: "Section range covered by the child node.",
-          }),
-        ),
-      }).annotate({ description: "A direct child in an eCFR structure tree." }),
-    ).annotate({
-      description:
-        "Direct child nodes. Deeper tree parsing is intentionally conservative in v1.",
-    }),
-  ),
-})
-  .annotate({
-    description: "Root of a CFR title structure tree without regulation text.",
-    identifier: "StructureNode",
-  })
-  .pipe(
-    $I.annoteSchema("StructureNode", {
-      description: "Generated ECFR schema for StructureNode.",
-    }),
-  );
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description: "Root of a CFR title structure tree without regulation text.",
+  identifier: "StructureNode",
+});
 /**
  * Generated TitlesResponse declaration for \@beep/ecfr.
  *
@@ -944,20 +1020,22 @@ export const StructureNode = S.Struct({
  * @since 0.0.0
  */
 export type TitlesResponse = {
-  readonly titles: ReadonlyArray<{
-    readonly number: number;
-    readonly name: string;
-    readonly latest_amended_on?: string;
-    readonly latest_issue_date?: string;
-    readonly up_to_date_as_of?: string;
-    readonly reserved: boolean;
-    readonly processing_in_progress?: boolean;
-  }>;
+  readonly titles: ReadonlyArray<
+    {
+      readonly number: number;
+      readonly name: string;
+      readonly latest_amended_on?: string;
+      readonly latest_issue_date?: string;
+      readonly up_to_date_as_of?: string;
+      readonly reserved: boolean;
+      readonly processing_in_progress?: boolean;
+    } & { readonly [x: string]: S.Json }
+  >;
   readonly meta?: {
     readonly date?: string;
     readonly import_in_progress?: boolean;
-  };
-};
+  } & { readonly [x: string]: S.Json };
+} & { readonly [x: string]: S.Json };
 /**
  * Generated TitlesResponse declaration for \@beep/ecfr.
  *
@@ -972,72 +1050,75 @@ export type TitlesResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const TitlesResponse = S.Struct({
-  titles: S.Array(
-    S.Struct({
-      number: S.Int.annotate({
-        description: "CFR title number, from 1 through 50.",
+export const TitlesResponse = S.StructWithRest(
+  S.Struct({
+    titles: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          number: S.Int.annotate({
+            description: "CFR title number, from 1 through 50.",
+          }),
+          name: S.String.annotate({ description: "Official CFR title name." }),
+          latest_amended_on: S.optionalKey(
+            S.String.annotate({
+              description: "Most recent amendment date.",
+              format: "date",
+            }),
+          ),
+          latest_issue_date: S.optionalKey(
+            S.String.annotate({
+              description: "Most recent published issue date.",
+              format: "date",
+            }),
+          ),
+          up_to_date_as_of: S.optionalKey(
+            S.String.annotate({
+              description: "Date through which the title is confirmed current.",
+              format: "date",
+            }),
+          ),
+          reserved: S.Boolean.annotate({
+            description: "Whether the title number is reserved.",
+          }),
+          processing_in_progress: S.optionalKey(
+            S.Boolean.annotate({
+              description: "Whether title processing is currently in progress.",
+            }),
+          ),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ).annotate({
+        description: "A CFR title with currency and processing metadata.",
       }),
-      name: S.String.annotate({ description: "Official CFR title name." }),
-      latest_amended_on: S.optionalKey(
-        S.String.annotate({
-          description: "Most recent amendment date.",
-          format: "date",
+    ).annotate({ description: "CFR titles and their currency metadata." }),
+    meta: S.optionalKey(
+      S.StructWithRest(
+        S.Struct({
+          date: S.optionalKey(
+            S.String.annotate({
+              description: "Metadata snapshot date.",
+              format: "date",
+            }),
+          ),
+          import_in_progress: S.optionalKey(
+            S.Boolean.annotate({
+              description: "Whether an eCFR title import is in progress.",
+            }),
+          ),
         }),
-      ),
-      latest_issue_date: S.optionalKey(
-        S.String.annotate({
-          description: "Most recent published issue date.",
-          format: "date",
-        }),
-      ),
-      up_to_date_as_of: S.optionalKey(
-        S.String.annotate({
-          description: "Date through which the title is confirmed current.",
-          format: "date",
-        }),
-      ),
-      reserved: S.Boolean.annotate({
-        description: "Whether the title number is reserved.",
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ).annotate({
+        description:
+          "Import status metadata accompanying the CFR titles catalog.",
       }),
-      processing_in_progress: S.optionalKey(
-        S.Boolean.annotate({
-          description: "Whether title processing is currently in progress.",
-        }),
-      ),
-    }).annotate({
-      description: "A CFR title with currency and processing metadata.",
-    }),
-  ).annotate({ description: "CFR titles and their currency metadata." }),
-  meta: S.optionalKey(
-    S.Struct({
-      date: S.optionalKey(
-        S.String.annotate({
-          description: "Metadata snapshot date.",
-          format: "date",
-        }),
-      ),
-      import_in_progress: S.optionalKey(
-        S.Boolean.annotate({
-          description: "Whether an eCFR title import is in progress.",
-        }),
-      ),
-    }).annotate({
-      description:
-        "Import status metadata accompanying the CFR titles catalog.",
-    }),
-  ),
-})
-  .annotate({
-    description:
-      "Response envelope containing the CFR titles catalog and import metadata.",
-    identifier: "TitlesResponse",
-  })
-  .pipe(
-    $I.annoteSchema("TitlesResponse", {
-      description: "Generated ECFR schema for TitlesResponse.",
-    }),
-  );
+    ),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description:
+    "Response envelope containing the CFR titles catalog and import metadata.",
+  identifier: "TitlesResponse",
+});
 /**
  * Generated VersionsResponse declaration for \@beep/ecfr.
  *
@@ -1045,26 +1126,28 @@ export const TitlesResponse = S.Struct({
  * @since 0.0.0
  */
 export type VersionsResponse = {
-  readonly content_versions: ReadonlyArray<{
-    readonly date?: string;
-    readonly amendment_date?: string;
-    readonly issue_date?: string;
-    readonly identifier: string;
-    readonly name?: string;
-    readonly part?: string;
-    readonly substantive?: boolean;
-    readonly removed?: boolean;
-    readonly subpart?: string;
-    readonly title: string;
-    readonly type: string;
-  }>;
+  readonly content_versions: ReadonlyArray<
+    {
+      readonly date?: string;
+      readonly amendment_date?: string;
+      readonly issue_date?: string;
+      readonly identifier: string;
+      readonly name?: string;
+      readonly part?: string;
+      readonly substantive?: boolean;
+      readonly removed?: boolean;
+      readonly subpart?: string;
+      readonly title: string;
+      readonly type: string;
+    } & { readonly [x: string]: S.Json }
+  >;
   readonly meta: {
     readonly title?: string;
     readonly result_count?: string;
     readonly latest_amendment_date?: string;
     readonly latest_issue_date?: string;
-  };
-};
+  } & { readonly [x: string]: S.Json };
+} & { readonly [x: string]: S.Json };
 /**
  * Generated VersionsResponse declaration for \@beep/ecfr.
  *
@@ -1079,98 +1162,104 @@ export type VersionsResponse = {
  * @category tools
  * @since 0.0.0
  */
-export const VersionsResponse = S.Struct({
-  content_versions: S.Array(
-    S.Struct({
-      date: S.optionalKey(
-        S.String.annotate({
-          description:
-            "Deprecated alias of amendment_date retained by the API.",
-          format: "date",
+export const VersionsResponse = S.StructWithRest(
+  S.Struct({
+    content_versions: S.Array(
+      S.StructWithRest(
+        S.Struct({
+          date: S.optionalKey(
+            S.String.annotate({
+              description:
+                "Deprecated alias of amendment_date retained by the API.",
+              format: "date",
+            }),
+          ),
+          amendment_date: S.optionalKey(
+            S.String.annotate({
+              description: "Date the content was amended.",
+              format: "date",
+            }),
+          ),
+          issue_date: S.optionalKey(
+            S.String.annotate({
+              description: "Issue date on which this content version appeared.",
+              format: "date",
+            }),
+          ),
+          identifier: S.String.annotate({
+            description: "Section or appendix identifier.",
+          }),
+          name: S.optionalKey(
+            S.String.annotate({ description: "Human-readable content name." }),
+          ),
+          part: S.optionalKey(
+            S.String.annotate({
+              description: "Containing CFR part identifier.",
+            }),
+          ),
+          substantive: S.optionalKey(
+            S.Boolean.annotate({
+              description: "Whether the change is substantive.",
+            }),
+          ),
+          removed: S.optionalKey(
+            S.Boolean.annotate({
+              description: "Whether the content was removed in this version.",
+            }),
+          ),
+          subpart: S.optionalKey(
+            S.String.annotate({
+              description: "Containing subpart identifier when present.",
+            }),
+          ),
+          title: S.String.annotate({
+            description: "Containing CFR title identifier.",
+          }),
+          type: S.String.annotate({
+            description: "Content type, normally section or appendix.",
+          }),
         }),
-      ),
-      amendment_date: S.optionalKey(
-        S.String.annotate({
-          description: "Date the content was amended.",
-          format: "date",
-        }),
-      ),
-      issue_date: S.optionalKey(
-        S.String.annotate({
-          description: "Issue date on which this content version appeared.",
-          format: "date",
-        }),
-      ),
-      identifier: S.String.annotate({
-        description: "Section or appendix identifier.",
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ).annotate({
+        description: "A dated version of one CFR section or appendix.",
       }),
-      name: S.optionalKey(
-        S.String.annotate({ description: "Human-readable content name." }),
-      ),
-      part: S.optionalKey(
-        S.String.annotate({ description: "Containing CFR part identifier." }),
-      ),
-      substantive: S.optionalKey(
-        S.Boolean.annotate({
-          description: "Whether the change is substantive.",
-        }),
-      ),
-      removed: S.optionalKey(
-        S.Boolean.annotate({
-          description: "Whether the content was removed in this version.",
-        }),
-      ),
-      subpart: S.optionalKey(
-        S.String.annotate({
-          description: "Containing subpart identifier when present.",
-        }),
-      ),
-      title: S.String.annotate({
-        description: "Containing CFR title identifier.",
+    ).annotate({ description: "Content versions matching the request." }),
+    meta: S.StructWithRest(
+      S.Struct({
+        title: S.optionalKey(
+          S.String.annotate({ description: "Requested CFR title identifier." }),
+        ),
+        result_count: S.optionalKey(
+          S.String.annotate({
+            description:
+              "Number of content versions returned, as encoded by the upstream API.",
+          }),
+        ),
+        latest_amendment_date: S.optionalKey(
+          S.String.annotate({
+            description: "Latest amendment date among returned versions.",
+            format: "date",
+          }),
+        ),
+        latest_issue_date: S.optionalKey(
+          S.String.annotate({
+            description: "Latest issue date among returned versions.",
+            format: "date",
+          }),
+        ),
       }),
-      type: S.String.annotate({
-        description: "Content type, normally section or appendix.",
-      }),
-    }).annotate({
-      description: "A dated version of one CFR section or appendix.",
+      [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+    ).annotate({
+      description:
+        "Query and currency metadata for a content-version response.",
     }),
-  ).annotate({ description: "Content versions matching the request." }),
-  meta: S.Struct({
-    title: S.optionalKey(
-      S.String.annotate({ description: "Requested CFR title identifier." }),
-    ),
-    result_count: S.optionalKey(
-      S.String.annotate({
-        description:
-          "Number of content versions returned, as encoded by the upstream API.",
-      }),
-    ),
-    latest_amendment_date: S.optionalKey(
-      S.String.annotate({
-        description: "Latest amendment date among returned versions.",
-        format: "date",
-      }),
-    ),
-    latest_issue_date: S.optionalKey(
-      S.String.annotate({
-        description: "Latest issue date among returned versions.",
-        format: "date",
-      }),
-    ),
-  }).annotate({
-    description: "Query and currency metadata for a content-version response.",
   }),
-})
-  .annotate({
-    description:
-      "Response envelope containing CFR content versions and query metadata.",
-    identifier: "VersionsResponse",
-  })
-  .pipe(
-    $I.annoteSchema("VersionsResponse", {
-      description: "Generated ECFR schema for VersionsResponse.",
-    }),
-  );
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({
+  description:
+    "Response envelope containing CFR content versions and query metadata.",
+  identifier: "VersionsResponse",
+});
 // schemas
 /**
  * Generated ListAgencies200 declaration for \@beep/ecfr.

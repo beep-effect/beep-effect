@@ -33,19 +33,19 @@ import { KnowledgeService, KnowledgeServiceLive } from "./Knowledge.service.ts";
 import type { KnowledgeRef, KnowledgeRefObservation, KnowledgeRefsReport } from "./Knowledge.refs.ts";
 import type { KnowledgeFinding, KnowledgeSemanticDeltaReport } from "./Knowledge.schemas.ts";
 
-const baseFlag = Flag.string("base").pipe(
+const baseFlag = Flag.String("base").pipe(
   Flag.withDescription("Local base ref used to resolve the merge-base; the command never fetches"),
   Flag.withDefault("origin/main")
 );
-const jsonFlag = Flag.boolean("json").pipe(
+const jsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Render the semantic delta as JSON")
 );
-const treeFlag = Flag.string("tree").pipe(
+const treeFlag = Flag.String("tree").pipe(
   Flag.withDescription("Commit-ish whose tracked tree is censused; the command never fetches"),
   Flag.withDefault("HEAD")
 );
-const surfaceFlag = Flag.choiceWithValue("surface", [
+const surfaceFlag = Flag.ChoiceWithValue("surface", [
   ["all", KnowledgeRefSurfaceFilter.Enum.all],
   ["live", KnowledgeRefSurfaceFilter.Enum.live],
   ["archival", KnowledgeRefSurfaceFilter.Enum.archival],
@@ -53,11 +53,11 @@ const surfaceFlag = Flag.choiceWithValue("surface", [
   Flag.withDefault(KnowledgeRefSurfaceFilter.Enum.all),
   Flag.withDescription("Narrow the detailed listing; summary counts stay whole-corpus")
 );
-const refsJsonFlag = Flag.boolean("json").pipe(
+const refsJsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Render the whole census as JSON")
 );
-const refsCheckFlag = Flag.boolean("check").pipe(
+const refsCheckFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Fail when any live observation sits in a gated host-path class")
 );
@@ -230,11 +230,10 @@ const TOP_DOCUMENT_COUNT = 10;
 
 const refSubject = (ref: KnowledgeRef): string =>
   Match.value(ref).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      "repo-path": (repoPath) => repoPath.normalized,
-      "host-path": (hostPath) => `${hostPath.anchor} ${hostPath.raw}`,
-      "goal-uri": (goalUri) => `repo://goal/${goalUri.slug}`,
-    })
+    Match.discriminator("kind")("repo-path", (repoPath) => repoPath.normalized),
+    Match.discriminator("kind")("host-path", (hostPath) => `${hostPath.anchor} ${hostPath.raw}`),
+    Match.discriminator("kind")("goal-uri", (goalUri) => `repo://goal/${goalUri.slug}`),
+    Match.exhaustive
   );
 
 const renderObservation = (observation: KnowledgeRefObservation): string => {

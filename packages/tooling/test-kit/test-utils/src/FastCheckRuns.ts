@@ -1,5 +1,5 @@
 /**
- * Re-exports the env-max fast-check run-count helpers from `@beep/fc-runs`.
+ * Re-exports the env-max Effect Arbitrary run-count helpers from `@beep/fc-runs`.
  *
  * The helpers live in `@beep/fc-runs` — a leaf package upstream of this
  * package's dependency closure — so that `@beep/schema`, `@beep/utils`,
@@ -13,7 +13,7 @@
  */
 
 /**
- * Re-exported env-max fast-check run-count helpers (`fcRuns`,
+ * Re-exported env-max Effect Arbitrary run-count helpers (`fcRuns`,
  * `envFcNumRunsFloor`, `parseFcNumRunsFloor`, `DEFAULT_FC_NUM_RUNS`).
  *
  * **Example** (Re-exported fcRuns helper)
@@ -21,7 +21,7 @@
  * ```ts
  * import { fcRuns } from "@beep/test-utils"
  *
- * console.log(fcRuns(40).numRuns >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
+ * console.log(fcRuns(40).runs >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
  * ```
  *
  * @category testing

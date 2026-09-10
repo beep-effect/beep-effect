@@ -161,6 +161,15 @@ const AtUriChecks = S.makeFilterGroup(
     }),
     S.makeFilter(hasLexiconAtUriShape, {
       identifier: $I`AtUriLexiconShapeCheck`,
+      arbitraryConstraint: {
+        patterns: [
+          {
+            source:
+              "^at://(?:[a-z]{1,12}\\.example|did:plc:[a-z2-7]{24})(?:/app\\.bsky\\.feed\\.post(?:/[a-zA-Z0-9]{1,12})?)?$",
+            flags: "",
+          },
+        ],
+      },
       title: "AT URI Lexicon Shape",
       description:
         "An AT URI matching at://AUTHORITY[/COLLECTION[/RKEY]] with AT Protocol authority, NSID collection, and record-key components.",
@@ -228,48 +237,14 @@ const AtUriChecks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-export const AtUri = S.String.check(AtUriChecks)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const handle = fc
-        .tuple(
-          fc.array(fc.constantFrom("alice", "bsky", "feed", "photos", "repo"), { minLength: 1, maxLength: 2 }),
-          fc.constantFrom("app", "com", "net", "social")
-        )
-        .map(([labels, topLevelLabel]) => `${labels.join(".")}.${topLevelLabel}`);
-      const did = fc.constantFrom(
-        "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
-        "did:plc:ragtjsm2j2vknwkz3zp4oxrd",
-        "did:web:example.com",
-        "did:example:abc%2Fdef"
-      );
-      const collection = fc.constantFrom(
-        "app.bsky.feed.post",
-        "com.atproto.repo.strongRef",
-        "tools.ozone.moderation.defs"
-      );
-      const recordKey = fc.constantFrom("3jui7kd54zh2y", "self", "A_B-1~z", "2026-06-29T12:34:56.000Z");
-      const path = fc.oneof(
-        fc.constant(""),
-        collection.map((collectionSegment) => `/${collectionSegment}`),
-        fc
-          .tuple(collection, recordKey)
-          .map(([collectionSegment, recordKeySegment]) => `/${collectionSegment}/${recordKeySegment}`)
-      );
-
-      return fc
-        .tuple(fc.oneof(handle, did), path)
-        .map(([authority, pathSegment]) => `${AT_URI_SCHEME}${authority}${pathSegment}`);
-    },
+export const AtUri = S.String.check(AtUriChecks).pipe(
+  S.brand("AtUri"),
+  $I.annoteSchema("AtUri", {
+    description: "A normalized AT Protocol Lexicon AT URI string shaped as at://AUTHORITY[/COLLECTION[/RKEY]].",
+    documentation:
+      "Validates the current Lexicon at-uri subset from https://atproto.com/specs/at-uri-scheme, using official AT Protocol handle, DID, NSID, and record-key component syntax.",
   })
-  .pipe(
-    S.brand("AtUri"),
-    $I.annoteSchema("AtUri", {
-      description: "A normalized AT Protocol Lexicon AT URI string shaped as at://AUTHORITY[/COLLECTION[/RKEY]].",
-      documentation:
-        "Validates the current Lexicon at-uri subset from https://atproto.com/specs/at-uri-scheme, using official AT Protocol handle, DID, NSID, and record-key component syntax.",
-    })
-  );
+);
 
 /**
  * Type for {@link AtUri}.

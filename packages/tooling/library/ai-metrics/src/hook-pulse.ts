@@ -13,6 +13,7 @@ import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { hashPrivateIdentifier } from "./privacy.ts";
 import { EvidenceTier, InstrumentClass, WaitReason } from "./telemetry-v2.ts";
 
@@ -749,8 +750,8 @@ const isSha256Hex = S.is(Sha256Hex);
  * @category utilities
  * @since 0.0.0
  */
-export const hookPulseHashSalt: Config.Config<O.Option<string>> = Config.string("BEEP_HOOK_PULSE_HASH_SALT").pipe(
-  Config.orElse(() => Config.string("BEEP_AI_METRICS_HASH_SALT")),
+export const hookPulseHashSalt: Config.Config<O.Option<string>> = Config.String("BEEP_HOOK_PULSE_HASH_SALT").pipe(
+  Config.orElse(() => Config.String("BEEP_AI_METRICS_HASH_SALT")),
   Config.option
 );
 
@@ -969,6 +970,36 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
   static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(HookPulseV1));
 }
 
+/**
+ * Generates canonical hook pulses with event-owned fields and derived wait reasons.
+ *
+ * **Example** (Sample canonical hook pulses)
+ * ```ts
+ * import { HookPulseV1Arbitrary } from "@beep/repo-ai-metrics"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * console.log(Arbitrary.sampleEffect(HookPulseV1Arbitrary, { count: 3 }))
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const HookPulseV1Arbitrary = Arbitrary.schema(S.Struct(HookPulseV1.fields)).pipe(
+  Arbitrary.map((value) => {
+    const notificationType = filterHookPulseEventOwnedField(
+      "notificationType",
+      value.hookEvent,
+      value.notificationType
+    );
+    return HookPulseV1.make({
+      ...value,
+      notificationType,
+      sessionEndReason: filterHookPulseEventOwnedField("sessionEndReason", value.hookEvent, value.sessionEndReason),
+      isInterrupt: filterHookPulseEventOwnedField("isInterrupt", value.hookEvent, value.isInterrupt),
+      waitReason: deriveWaitReason(value.hookEvent, value.toolName, notificationType),
+    });
+  })
+);
+
 // Deliberately without `isInterrupt`, and the omission is a dating argument
 // rather than an oversight. "Legacy" here means exactly one thing: a row written
 // before private identifiers were pseudonymized. `isInterrupt` and its only
@@ -1031,7 +1062,7 @@ const HookPulseLegacyV1Record = S.Struct({
 export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
   S.decodeTo(
     HookPulseV1,
-    SchemaTransformation.transformOrFail<typeof HookPulseV1.Encoded, typeof HookPulseLegacyV1Record.Type>({
+    SchemaTransformation.transformEffect<typeof HookPulseV1.Encoded, typeof HookPulseLegacyV1Record.Type>({
       decode: (input) =>
         hookPulsePrivateReferences({
           cwd: input.cwd,
@@ -1124,7 +1155,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
 export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
   S.decodeTo(
     HookPulseV1,
-    SchemaTransformation.transformOrFail<typeof HookPulseV1.Encoded, HookPulseRawEventInput>({
+    SchemaTransformation.transformEffect<typeof HookPulseV1.Encoded, HookPulseRawEventInput>({
       decode: (input) =>
         hookPulsePrivateReferences({
           cwd: input.event.cwd,

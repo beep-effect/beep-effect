@@ -85,14 +85,17 @@ export const isFloat16Array = (u: unknown): u is Float16Array<ArrayBufferLike> =
  */
 export const Float16Arr = S.declare(isFloat16Array)
   .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .array(fc.integer({ max: 1_000, min: -1_000 }), { maxLength: 8 })
-        .map((values) =>
-          P.isUndefined(float16ArrayConstructor)
-            ? unsupportedFloat16ArrayRuntime()
-            : (new float16ArrayConstructor(values) as Float16Array<ArrayBufferLike>)
-        ),
+    toCodecArbitrary: () =>
+      S.link<globalThis.Float16Array>()(
+        S.Array(S.Int.check(S.isBetween({ minimum: -1_000, maximum: 1_000 }))).check(S.isMaxLength(8)),
+        SchemaTransformation.transform({
+          decode: (values): globalThis.Float16Array =>
+            P.isNotUndefined(float16ArrayConstructor)
+              ? new float16ArrayConstructor(values)
+              : unsupportedFloat16ArrayRuntime(),
+          encode: A.fromIterable,
+        })
+      ),
   })
   .pipe(
     $I.annoteSchema("Float16Arr", {

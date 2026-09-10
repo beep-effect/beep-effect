@@ -411,8 +411,8 @@ export class Uspto extends Context.Service<Uspto, UsptoShape>()($I`Uspto`) {
   static readonly layer: Layer.Layer<Uspto, UsptoError> = Layer.effect(
     Uspto,
     Effect.gen(function* () {
-      const apiKey = yield* Config.redacted("USPTO_API_KEY").pipe(Config.option);
-      const apiUrl = yield* Config.string("USPTO_API_URL").pipe(Config.withDefault(USPTO_API_URL));
+      const apiKey = yield* Config.Redacted("USPTO_API_KEY").pipe(Config.option);
+      const apiUrl = yield* Config.String("USPTO_API_URL").pipe(Config.withDefault(USPTO_API_URL));
       const client = yield* HttpClient.HttpClient;
       return Uspto.of(
         makeService(

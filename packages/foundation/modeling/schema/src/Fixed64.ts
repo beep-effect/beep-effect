@@ -55,16 +55,13 @@ const Fixed64BigInt = S.BigInt.check(Fixed64Range);
  * @category validation
  * @since 0.0.0
  */
-export const Fixed64 = ProtobufInt64Input.pipe(S.decodeTo(Fixed64BigInt, decodeProtobufInt64InputTransformation))
-  .annotate({
-    toArbitrary: () => (fc) => fc.bigInt({ min: fixed64Minimum, max: fixed64Maximum }),
+export const Fixed64 = ProtobufInt64Input.pipe(
+  S.decodeTo(Fixed64BigInt, decodeProtobufInt64InputTransformation),
+  S.brand("Fixed64"),
+  $I.annoteSchema("Fixed64", {
+    description: "A protobuf fixed64 bigint in the inclusive unsigned 64-bit range.",
   })
-  .pipe(
-    S.brand("Fixed64"),
-    $I.annoteSchema("Fixed64", {
-      description: "A protobuf fixed64 bigint in the inclusive unsigned 64-bit range.",
-    })
-  );
+);
 
 /**
  * Type-level value inferred from {@link Fixed64}.

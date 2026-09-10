@@ -14,7 +14,7 @@ import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -40,12 +40,14 @@ class HubSpotTestHttp extends Context.Service<HubSpotTestHttp, HubSpotTestHttpSh
   "@beep/hubspot/test/HubSpot.service.test/HubSpotTestHttp"
 ) {}
 
-const ConfigInputArbitrary = S.toArbitrary(HubSpotConfigInput)(fc).filter((config) => config.accessToken === undefined);
-const SubmitFormRequestArbitrary = S.toArbitrary(HubSpotSubmitFormRequest)(fc);
-const UpsertContactRequestArbitrary = S.toArbitrary(HubSpotUpsertContactRequest)(fc);
-const SubmitFormResponseArbitrary = S.toArbitrary(HubSpotSubmitFormResponse)(fc);
-const UpsertContactResponseArbitrary = S.toArbitrary(HubSpotUpsertContactResponse)(fc);
-const ErrorArbitrary = S.toArbitrary(HubSpotError)(fc);
+const ConfigInputArbitrary = Arbitrary.schema(HubSpotConfigInput).pipe(
+  Arbitrary.filter((config) => config.accessToken === undefined)
+);
+const SubmitFormRequestArbitrary = Arbitrary.schema(HubSpotSubmitFormRequest);
+const UpsertContactRequestArbitrary = Arbitrary.schema(HubSpotUpsertContactRequest);
+const SubmitFormResponseArbitrary = Arbitrary.schema(HubSpotSubmitFormResponse);
+const UpsertContactResponseArbitrary = Arbitrary.schema(HubSpotUpsertContactResponse);
+const ErrorArbitrary = Arbitrary.schema(HubSpotError);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -220,42 +222,42 @@ describe("@beep/hubspot", () => {
     });
   });
 
-  it("round-trips schema-derived HubSpot payloads through encoded form", () =>
-    fc.assert(
-      fc.property(
-        ConfigInputArbitrary,
-        SubmitFormRequestArbitrary,
-        UpsertContactRequestArbitrary,
-        SubmitFormResponseArbitrary,
-        UpsertContactResponseArbitrary,
-        ErrorArbitrary,
-        (config, submitRequest, upsertRequest, submitResponse, upsertResponse, error) => {
-          expect(config.crmApiUrl.endsWith("/")).toBe(false);
-          expect(config.formsApiUrl.endsWith("/")).toBe(false);
-          expect(submitRequest.formGuid.length).toBeGreaterThan(0);
-          expect(A.every(submitRequest.fields, (field) => field.name.length > 0)).toBe(true);
-          expect(upsertRequest.email.length).toBeGreaterThan(0);
-          expect(A.every(Object.keys(upsertRequest.properties), (name) => name.length > 0)).toBe(true);
-          if (error.status !== undefined) {
-            expect(error.status).toBeGreaterThanOrEqual(100);
-            expect(error.status).toBeLessThanOrEqual(599);
-          }
+  it.prop(
+    "round-trips schema-derived HubSpot payloads through encoded form",
+    [
+      ConfigInputArbitrary,
+      SubmitFormRequestArbitrary,
+      UpsertContactRequestArbitrary,
+      SubmitFormResponseArbitrary,
+      UpsertContactResponseArbitrary,
+      ErrorArbitrary,
+    ],
+    ([config, submitRequest, upsertRequest, submitResponse, upsertResponse, error]) => {
+      expect(config.crmApiUrl.endsWith("/")).toBe(false);
+      expect(config.formsApiUrl.endsWith("/")).toBe(false);
+      expect(submitRequest.formGuid.length).toBeGreaterThan(0);
+      expect(A.every(submitRequest.fields, (field) => field.name.length > 0)).toBe(true);
+      expect(upsertRequest.email.length).toBeGreaterThan(0);
+      expect(A.every(Object.keys(upsertRequest.properties), (name) => name.length > 0)).toBe(true);
+      if (error.status !== undefined) {
+        expect(error.status).toBeGreaterThanOrEqual(100);
+        expect(error.status).toBeLessThanOrEqual(599);
+      }
 
-          expectRoundTrip(HubSpotConfigInput, config);
-          expectRoundTrip(HubSpotSubmitFormRequest, submitRequest);
-          expectRoundTrip(HubSpotUpsertContactRequest, upsertRequest);
-          expectRoundTrip(HubSpotSubmitFormResponse, submitResponse);
-          expectRoundTrip(HubSpotUpsertContactResponse, upsertResponse);
+      expectRoundTrip(HubSpotConfigInput, config);
+      expectRoundTrip(HubSpotSubmitFormRequest, submitRequest);
+      expectRoundTrip(HubSpotUpsertContactRequest, upsertRequest);
+      expectRoundTrip(HubSpotSubmitFormResponse, submitResponse);
+      expectRoundTrip(HubSpotUpsertContactResponse, upsertResponse);
 
-          const encodedError = encode(HubSpotError, error);
-          const decodedError = decode(HubSpotError, encodedError);
+      const encodedError = encode(HubSpotError, error);
+      const decodedError = decode(HubSpotError, encodedError);
 
-          expect(decodedError).toBeInstanceOf(HubSpotError);
-          expect(encode(HubSpotError, decodedError)).toEqual(encodedError);
-        }
-      ),
-      fcRuns(50)
-    ));
+      expect(decodedError).toBeInstanceOf(HubSpotError);
+      expect(encode(HubSpotError, decodedError)).toEqual(encodedError);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   layer(TestLayer)((it) => {
     it.effect(

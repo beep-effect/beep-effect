@@ -11,14 +11,15 @@ import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownDomainProviderInstanceProviderInstanceSync = S.decodeUnknownSync(
   DomainProviderInstance.ProviderInstance
 );
 
-const ProviderInstanceArbitrary = S.toArbitrary(DomainProviderInstance.ProviderInstance)(fc);
+const ProviderInstanceArbitrary = Arbitrary.schema(DomainProviderInstance.ProviderInstance);
 const ProviderInstanceEquivalence = S.toEquivalence(DomainProviderInstance.ProviderInstance);
 
 const providerInstanceRow = {
@@ -118,18 +119,25 @@ describe("ProviderInstance table", () => {
   });
 
   it("round-trips schema-derived ProviderInstances through the row converters", () =>
-    fc.assert(
-      fc.property(ProviderInstanceArbitrary, (providerInstance) => {
-        const insert = toProviderInstanceInsert(providerInstance);
-        const decoded = fromProviderInstanceRow({
-          ...insert,
-          id: providerInstance.id,
-          homePath: insert.homePath ?? null,
-          lastProbe: insert.lastProbe ?? null,
-        });
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ProviderInstanceArbitrary]),
+          ([providerInstance]) => {
+            const insert = toProviderInstanceInsert(providerInstance);
+            const decoded = fromProviderInstanceRow({
+              ...insert,
+              id: providerInstance.id,
+              homePath: insert.homePath ?? null,
+              lastProbe: insert.lastProbe ?? null,
+            });
 
-        expect(ProviderInstanceEquivalence(decoded, providerInstance)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(ProviderInstanceEquivalence(decoded, providerInstance)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

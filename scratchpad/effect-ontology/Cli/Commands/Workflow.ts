@@ -22,27 +22,27 @@ import type {DrizzleError} from "drizzle-orm";
 // Command Options
 // =============================================================================
 
-const ontologyOption = Flag.string("ontology").pipe(
+const ontologyOption = Flag.String("ontology").pipe(
   Flag.withAlias("o"),
   Flag.optional,
   Flag.withDescription("Ontology ID to scope operations to")
 );
 
-const minutesOption = Flag.integer("minutes").pipe(
+const minutesOption = Flag.Int("minutes").pipe(
   Flag.withAlias("m"),
   Flag.withDefault(30),
   Flag.withDescription("Consider links stale after this many minutes (default: 30)")
 );
 
-const limitOption = Flag.integer("limit").pipe(
+const limitOption = Flag.Int("limit").pipe(
   Flag.withAlias("l"),
   Flag.withDefault(100),
   Flag.withDescription("Maximum links to list (default: 100)")
 );
 
-const linkIdOption = Flag.string("link-id").pipe(Flag.withDescription("Specific link ID to re-enrich"));
+const linkIdOption = Flag.String("link-id").pipe(Flag.withDescription("Specific link ID to re-enrich"));
 
-const dryRunOption = Flag.boolean("dry-run").pipe(
+const dryRunOption = Flag.Boolean("dry-run").pipe(
   Flag.withAlias("n"),
   Flag.withDefault(false),
   Flag.withDescription("Show what would be done without making changes")

@@ -12,10 +12,10 @@ import {
   SpinParams,
 } from "@beep/ui/hooks/useNumberInput";
 import { ReactContextInvariantError, ReactContextInvariantOptions } from "@beep/ui/lib/react-invariant";
-import { Equal, Result } from "effect";
+import { Effect, Equal, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeBoundaryParamsResult = S.decodeResult(BoundaryParams);
@@ -37,57 +37,63 @@ const isNumberInputError = S.is(NumberInputError);
 
 describe("@beep/ui schema parity", () => {
   it("round-trips exported schema models through encoded form", () => {
-    fc.assert(
-      fc.property(
-        S.toArbitrary(BoundaryParams)(fc),
-        S.toArbitrary(SpinParams)(fc),
-        S.toArbitrary(NumberInputChangeMetadata)(fc),
-        S.toArbitrary(NotificationAction)(fc),
-        S.toArbitrary(ToastData)(fc),
-        S.toArbitrary(ReactContextInvariantOptions)(fc),
-        S.toArbitrary(ReactContextInvariantError)(fc),
-        (boundary, spin, metadata, action, toast, invariantOptions, invariantError) => {
-          const roundTrippedBoundary = Result.getOrThrow(
-            decodeBoundaryParamsResult(Result.getOrThrow(encodeBoundaryParamsResult(boundary)))
-          );
-          const roundTrippedSpin = Result.getOrThrow(
-            decodeSpinParamsResult(Result.getOrThrow(encodeSpinParamsResult(spin)))
-          );
-          const roundTrippedMetadata = Result.getOrThrow(
-            decodeNumberInputChangeMetadataResult(Result.getOrThrow(encodeNumberInputChangeMetadataResult(metadata)))
-          );
-          const roundTrippedAction = Result.getOrThrow(
-            decodeNotificationActionResult(Result.getOrThrow(encodeNotificationActionResult(action)))
-          );
-          const roundTrippedToast = Result.getOrThrow(
-            decodeToastDataResult(Result.getOrThrow(encodeToastDataResult(toast)))
-          );
-          const roundTrippedInvariantOptions = Result.getOrThrow(
-            decodeReactContextInvariantOptionsResult(
-              Result.getOrThrow(encodeReactContextInvariantOptionsResult(invariantOptions))
-            )
-          );
-          const roundTrippedInvariantError = Result.getOrThrow(
-            decodeReactContextInvariantErrorResult(
-              Result.getOrThrow(encodeReactContextInvariantErrorResult(invariantError))
-            )
-          );
-          const encodedInvariantError = Result.getOrThrow(encodeReactContextInvariantErrorResult(invariantError));
-          const encodedRoundTrippedInvariantError = Result.getOrThrow(
-            encodeReactContextInvariantErrorResult(roundTrippedInvariantError)
-          );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(BoundaryParams),
+            Arbitrary.schema(SpinParams),
+            Arbitrary.schema(NumberInputChangeMetadata),
+            Arbitrary.schema(NotificationAction),
+            Arbitrary.schema(ToastData),
+            Arbitrary.schema(ReactContextInvariantOptions),
+            Arbitrary.schema(ReactContextInvariantError),
+          ]),
+          ([boundary, spin, metadata, action, toast, invariantOptions, invariantError]) => {
+            const roundTrippedBoundary = Result.getOrThrow(
+              decodeBoundaryParamsResult(Result.getOrThrow(encodeBoundaryParamsResult(boundary)))
+            );
+            const roundTrippedSpin = Result.getOrThrow(
+              decodeSpinParamsResult(Result.getOrThrow(encodeSpinParamsResult(spin)))
+            );
+            const roundTrippedMetadata = Result.getOrThrow(
+              decodeNumberInputChangeMetadataResult(Result.getOrThrow(encodeNumberInputChangeMetadataResult(metadata)))
+            );
+            const roundTrippedAction = Result.getOrThrow(
+              decodeNotificationActionResult(Result.getOrThrow(encodeNotificationActionResult(action)))
+            );
+            const roundTrippedToast = Result.getOrThrow(
+              decodeToastDataResult(Result.getOrThrow(encodeToastDataResult(toast)))
+            );
+            const roundTrippedInvariantOptions = Result.getOrThrow(
+              decodeReactContextInvariantOptionsResult(
+                Result.getOrThrow(encodeReactContextInvariantOptionsResult(invariantOptions))
+              )
+            );
+            const roundTrippedInvariantError = Result.getOrThrow(
+              decodeReactContextInvariantErrorResult(
+                Result.getOrThrow(encodeReactContextInvariantErrorResult(invariantError))
+              )
+            );
+            const encodedInvariantError = Result.getOrThrow(encodeReactContextInvariantErrorResult(invariantError));
+            const encodedRoundTrippedInvariantError = Result.getOrThrow(
+              encodeReactContextInvariantErrorResult(roundTrippedInvariantError)
+            );
 
-          expect(Equal.equals(roundTrippedBoundary, boundary)).toBe(true);
-          expect(Equal.equals(roundTrippedSpin, spin)).toBe(true);
-          expect(Equal.equals(roundTrippedMetadata, metadata)).toBe(true);
-          expect(Equal.equals(roundTrippedAction, action)).toBe(true);
-          expect(Equal.equals(roundTrippedToast, toast)).toBe(true);
-          expect(Equal.equals(roundTrippedInvariantOptions, invariantOptions)).toBe(true);
-          expect(encodedRoundTrippedInvariantError).toEqual(encodedInvariantError);
-        }
-      ),
-      fcRuns(50)
-    );
+            expect(Equal.equals(roundTrippedBoundary, boundary)).toBe(true);
+            expect(Equal.equals(roundTrippedSpin, spin)).toBe(true);
+            expect(Equal.equals(roundTrippedMetadata, metadata)).toBe(true);
+            expect(Equal.equals(roundTrippedAction, action)).toBe(true);
+            expect(Equal.equals(roundTrippedToast, ToastData.make({ ...toast }))).toBe(true);
+            expect(Equal.equals(roundTrippedInvariantOptions, invariantOptions)).toBe(true);
+            expect(encodedRoundTrippedInvariantError).toEqual(encodedInvariantError);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("preserves nullable and optional encoded compatibility at UI boundaries", () => {

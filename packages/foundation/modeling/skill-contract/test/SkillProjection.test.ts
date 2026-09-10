@@ -24,7 +24,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSkillArtifactVerdict = S.decodeUnknownEffect(SkillArtifactVerdict);
 
@@ -201,13 +201,20 @@ describe("@beep/skill-contract SkillProjection", () => {
   );
 
   it("allows every schema-derived contract after render and verification", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(SkillContract)(fc), (candidate) => {
-        const committed = Result.getOrThrow(renderSkillMarkdown(candidate));
-        const verdict = Effect.runSync(verifySkillArtifact({ committed, contract: candidate }));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(SkillContract)]),
+          ([candidate]) => {
+            const committed = Result.getOrThrow(renderSkillMarkdown(candidate));
+            const verdict = Effect.runSync(verifySkillArtifact({ committed, contract: candidate }));
 
-        expect(verdict.verdict).toBe("allowed");
-      }),
-      fcRuns(25)
-    ));
+            expect(verdict.verdict).toBe("allowed");
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

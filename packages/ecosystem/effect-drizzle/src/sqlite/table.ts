@@ -19,7 +19,7 @@ import {
 import { isArray, reduce } from "effect/Array";
 import {
   exhaustive,
-  tags as matchTags,
+  tag as matchTag,
   type as matchType,
   value as matchValue,
   when as matchWhen,
@@ -212,29 +212,27 @@ const buildColumn = (
     onNone: () => withUnique,
     onSome: matchType<Meta.Default>().pipe(
       withReturnType<SqliteColumn.DrizzleBuilder>(),
-      matchTags({
-        value: ({ value }) => withUnique.default(value),
-        sqlExpr: ({ expression }) => {
-          assertSchemaExpression(expression, `SQLite default expression for '${key}'`);
-          return withUnique.default(expression);
-        },
-        now: () => withUnique.default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
-        unsafeSql: ({ sql: statement }) => withUnique.default(sql.raw(statement)),
+      matchTag("value", ({ value }) => withUnique.default(value)),
+      matchTag("sqlExpr", ({ expression }) => {
+        assertSchemaExpression(expression, `SQLite default expression for '${key}'`);
+        return withUnique.default(expression);
       }),
+      matchTag("now", () => withUnique.default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`)),
+      matchTag("unsafeSql", ({ sql: statement }) => withUnique.default(sql.raw(statement))),
       exhaustive
     ),
   });
   return matchValue(meta.generated).pipe(
     withReturnType<SqliteColumn.DrizzleBuilder>(),
     matchWhen(false, () => withDefault),
-    matchTags({
-      identityAlways: () => withDefault,
-      sqlExpr: ({ expression }) => {
-        assertSchemaExpression(expression, `SQLite generated expression for '${key}'`);
-        return withDefault.generatedAlwaysAs(expression, { mode: "stored" });
-      },
-      unsafeSql: ({ sql: statement }) => withDefault.generatedAlwaysAs(sql.raw(statement), { mode: "stored" }),
+    matchTag("identityAlways", () => withDefault),
+    matchTag("sqlExpr", ({ expression }) => {
+      assertSchemaExpression(expression, `SQLite generated expression for '${key}'`);
+      return withDefault.generatedAlwaysAs(expression, { mode: "stored" });
     }),
+    matchTag("unsafeSql", ({ sql: statement }) =>
+      withDefault.generatedAlwaysAs(sql.raw(statement), { mode: "stored" })
+    ),
     exhaustive
   );
 };

@@ -151,7 +151,7 @@ type NoOpenResponseHeaderEncoded = typeof NoOpenResponseHeader.Encoded;
 export const NoOpenHeader = S.UndefinedOr(NoOpenOption).pipe(
   S.decodeTo(
     NoOpenResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input): Effect.Effect<NoOpenResponseHeaderEncoded> =>
         Effect.succeed({
           name: headerName,

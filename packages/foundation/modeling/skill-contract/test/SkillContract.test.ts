@@ -18,7 +18,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeSkillContract = S.decodeEffect(SkillContract);
 const decodeSchemaReferenceResult = S.decodeResult(SchemaReference);
@@ -72,13 +72,20 @@ describe("@beep/skill-contract SkillContract", () => {
   );
 
   it("round-trips schema-derived arbitrary schema references", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(SchemaReference)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(encodeUnknownSchemaReferenceResult(candidate));
-        const decoded = Result.getOrThrow(decodeSchemaReferenceResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(SchemaReference)]),
+          ([candidate]) => {
+            const encoded = Result.getOrThrow(encodeUnknownSchemaReferenceResult(candidate));
+            const decoded = Result.getOrThrow(decodeSchemaReferenceResult(encoded));
 
-        expect(S.toEquivalence(SchemaReference)(decoded, candidate)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(SchemaReference)(decoded, candidate)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

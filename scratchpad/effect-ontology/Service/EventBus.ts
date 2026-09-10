@@ -293,7 +293,7 @@ const decodeEventPayload = Effect.fn("EventBus.decodeEventPayload")(function* (e
       })
     )
   );
-  const decodePayloadMsgPack = pipe(definition.payloadMsgPack, S.decodeEffect);
+  const decodePayloadMsgPack = pipe(definition.payloadSchemaBinary, S.decodeEffect);
   return yield* decodePayloadMsgPack(new Uint8Array(payload)).pipe(
     Effect.mapError((cause) =>
       EventBusError.make({
@@ -383,7 +383,12 @@ export const EventBusServiceMemory = Layer.effect(
     const publishCurationEvent: EventBusServiceMethods["publishCurationEvent"] = Effect.fn("publishCurationEvent")(
       function* (tag, payload) {
         const definition = yield* eventDefinition(CurationEventGroup.events, tag, "curation");
-        const prepared = yield* prepareEvent(definition.tag, definition.primaryKey, definition.payloadMsgPack, payload);
+        const prepared = yield* prepareEvent(
+          definition.tag,
+          definition.primaryKey,
+          definition.payloadSchemaBinary,
+          payload
+        );
         yield* publishEvent(prepared);
       }
     );
@@ -392,7 +397,12 @@ export const EventBusServiceMemory = Layer.effect(
       "publishExtractionEvent"
     )(function* (tag, payload) {
       const definition = yield* eventDefinition(ExtractionEventGroup.events, tag, "extraction");
-      const prepared = yield* prepareEvent(definition.tag, definition.primaryKey, definition.payloadMsgPack, payload);
+      const prepared = yield* prepareEvent(
+        definition.tag,
+        definition.primaryKey,
+        definition.payloadSchemaBinary,
+        payload
+      );
       yield* publishEvent(prepared);
     });
 
@@ -559,9 +569,11 @@ export const EventBusServiceSql = Layer.effect(
     const sql = yield* SqlClient.SqlClient;
 
     // Create a typed PersistedQueue for background jobs
-    const jobQueue = yield* PersistedQueue.make({
+    const queueFactory = yield* PersistedQueue.PersistedQueueFactory;
+    const jobQueue = yield* queueFactory.make({
       name: JOBS_QUEUE_NAME,
       schema: BackgroundJob,
+      maxAttempts: 1,
     });
 
     // Subscribe to journal changes for event streaming
@@ -591,7 +603,12 @@ export const EventBusServiceSql = Layer.effect(
     const publishCurationEvent: EventBusServiceMethods["publishCurationEvent"] = Effect.fn("publishCurationEvent")(
       function* (tag, payload) {
         const definition = yield* eventDefinition(CurationEventGroup.events, tag, "curation");
-        const prepared = yield* prepareEvent(definition.tag, definition.primaryKey, definition.payloadMsgPack, payload);
+        const prepared = yield* prepareEvent(
+          definition.tag,
+          definition.primaryKey,
+          definition.payloadSchemaBinary,
+          payload
+        );
         yield* publishEvent(prepared);
         yield* Effect.logDebug("Curation event published", {
           event: prepared.event,
@@ -604,7 +621,12 @@ export const EventBusServiceSql = Layer.effect(
       "publishExtractionEvent"
     )(function* (tag, payload) {
       const definition = yield* eventDefinition(ExtractionEventGroup.events, tag, "extraction");
-      const prepared = yield* prepareEvent(definition.tag, definition.primaryKey, definition.payloadMsgPack, payload);
+      const prepared = yield* prepareEvent(
+        definition.tag,
+        definition.primaryKey,
+        definition.payloadSchemaBinary,
+        payload
+      );
       yield* publishEvent(prepared);
       yield* Effect.logDebug("Extraction event published", {
         event: prepared.event,
@@ -628,7 +650,7 @@ export const EventBusServiceSql = Layer.effect(
     );
 
     const takeJob: EventBusServiceMethods["takeJob"] = jobQueue
-      .take((job, { attempts, id }) => Effect.succeed({ attempts, id, job }), { maxAttempts: 1 })
+      .take((job, { attempts, id }) => Effect.succeed({ attempts, id, job }))
       .pipe(
         Effect.timeoutOption(Duration.millis(10)),
         Effect.mapError((cause) =>
@@ -643,13 +665,12 @@ export const EventBusServiceSql = Layer.effect(
     const processJob: EventBusServiceMethods["processJob"] = Effect.fn("processJob")(
       function* (handler, options) {
         const maxAttempts = options?.maxAttempts ?? 5;
-        return yield* jobQueue.take(
-          (job, { attempts, id }) =>
+        const processingQueue = yield* queueFactory.make({ name: JOBS_QUEUE_NAME, schema: BackgroundJob, maxAttempts });
+        return yield* processingQueue.take((job, { attempts, id }) =>
             handler(job, {
               id,
               attempts,
-            }).pipe(Effect.asSome),
-          { maxAttempts }
+          }).pipe(Effect.asSome)
         );
       },
       Effect.mapError((cause) =>

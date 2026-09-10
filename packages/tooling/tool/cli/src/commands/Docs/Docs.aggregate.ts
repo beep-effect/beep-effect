@@ -16,16 +16,16 @@ import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { aggregateGeneratedDocs } from "../Docgen/internal/Operations.ts";
 
-const packageFlag = Flag.string("package").pipe(
+const packageFlag = Flag.String("package").pipe(
   Flag.withAlias("p"),
   Flag.withDescription("Limit aggregation to one workspace package"),
   Flag.optional
 );
-const filterFlag = Flag.string("filter").pipe(
+const filterFlag = Flag.String("filter").pipe(
   Flag.withDescription('Compatibility selector for commands like "bun run docgen --filter=@beep/schema"'),
   Flag.optional
 );
-const cleanFlag = Flag.boolean("clean").pipe(
+const cleanFlag = Flag.Boolean("clean").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Remove the generated docs directory (docs/generated) before aggregating")
 );

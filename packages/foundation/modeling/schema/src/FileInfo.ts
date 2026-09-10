@@ -11,9 +11,9 @@
  *
  * ```ts
  * import { FileInfo } from "@beep/schema/FileInfo";
- * import { FileSystem } from "effect";
+ * import * as ByteSize from "effect/ByteSize";
  *
- * const info = FileInfo.cases.File.make({ dev: 1, mode: 0o644, size: FileSystem.Size(12n) });
+ * const info = FileInfo.cases.File.make({ dev: 1, mode: 0o644, size: ByteSize.bytes(12n) });
  *
  * console.log(info.type); // "File"
  * ```
@@ -29,8 +29,7 @@ import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("FileInfo");
 
-const FileInfoSize = S.BigInt.pipe(
-  S.brand("Size"),
+const FileInfoSize = S.ByteSize.pipe(
   $I.annoteSchema("FileInfoSize", {
     description: "A file-system entry size or block size measured in bytes.",
   })
@@ -133,9 +132,9 @@ export type FileInfoType = typeof FileInfoType.Type;
  *
  * ```ts
  * import { FileInfo } from "@beep/schema/FileInfo";
- * import { FileSystem } from "effect";
+ * import * as ByteSize from "effect/ByteSize";
  *
- * const info = FileInfo.cases.Directory.make({ dev: 1, mode: 0o755, size: FileSystem.Size(0n) });
+ * const info = FileInfo.cases.Directory.make({ dev: 1, mode: 0o755, size: ByteSize.bytes(0n) });
  *
  * console.log(info.type); // "Directory"
  * ```
@@ -170,9 +169,9 @@ export const FileInfo = FileInfoType.mapMembers(
  *
  * ```typescript
  * import { FileInfo } from "@beep/schema/FileInfo";
- * import { FileSystem } from "effect";
+ * import * as ByteSize from "effect/ByteSize";
  *
- * const info: FileInfo = FileInfo.cases.Socket.make({ dev: 1, mode: 0o600, size: FileSystem.Size(0n) });
+ * const info: FileInfo = FileInfo.cases.Socket.make({ dev: 1, mode: 0o600, size: ByteSize.bytes(0n) });
  *
  * console.log(info.type); // "Socket"
  * ```

@@ -5,7 +5,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Result } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeMarkdown2 = S.decodeEffect(Markdown);
 const decodeUnknownMarkdown = S.decodeUnknownEffect(Markdown);
@@ -38,7 +38,7 @@ const restoreGlobalBunMarkdownHtml = ({
   });
 
 describe("Markdown", () => {
-  const markdownArbitrary = S.toArbitrary(Markdown)(fc);
+  const markdownArbitrary = Arbitrary.schema(Markdown);
 
   it.effect(
     "brands Markdown text accepted by the active parser",
@@ -50,12 +50,19 @@ describe("Markdown", () => {
   );
 
   it("derives accepted Markdown examples from the source schema", () => {
-    fc.assert(
-      fc.property(markdownArbitrary, (document) => {
-        expect(decodeUnknownMarkdownSync(document)).toBe(document);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([markdownArbitrary]),
+          ([document]) => {
+            expect(decodeUnknownMarkdownSync(document)).toBe(document);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("falls back to micromark with GFM extensions when Bun is unavailable", () => {

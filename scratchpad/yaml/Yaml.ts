@@ -79,7 +79,7 @@ export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseO
 	},
 	$I.annote("YamlParseOptions", {
 		description: "Parse options that bound alias expansion and duplicate-key policy while decoding YAML into values.",
-	}),
+  })
 ) {}
 
 /**
@@ -149,7 +149,8 @@ export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseO
  * @category configuration
  * @since 0.0.0
  */
-export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("YamlStringifyOptions")({
+export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("YamlStringifyOptions")(
+  {
 	indent: Schema.optionalKey(Schema.Finite),
 	/**
 	 * Column at which to fold long scalars. Default `0` (and any value `<= 0`)
@@ -213,7 +214,7 @@ export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("Ya
 },
 	$I.annote("YamlStringifyOptions", {
 		description: "Stringify options for indent, folding, quote fallback and collection presentation.",
-	}),
+  })
 ) {}
 
 /**
@@ -261,7 +262,7 @@ export class YamlParseError extends Schema.TaggedError<YamlParseError>()(
 	},
 	$I.annote("YamlParseError", {
 		description: "Aggregate YAML parse failure carrying fatal diagnostics and DuplicateKey promotions from one input.",
-	}),
+  })
 ) {
 	/**
 	 * One-line summary of every aggregated diagnostic: count, then `code at
@@ -325,8 +326,9 @@ export class YamlStringifyError extends Schema.TaggedError<YamlStringifyError>()
 		value: Schema.Unknown,
 	},
 	$I.annote("YamlStringifyError", {
-		description: "YAML stringify failure carrying structured diagnostics for circular references and nesting-depth blow-ups.",
-	}),
+    description:
+      "YAML stringify failure carrying structured diagnostics for circular references and nesting-depth blow-ups.",
+  })
 ) {
 	/**
 	 * One-line summary of the diagnostic messages joined with `"; "`.
@@ -477,7 +479,7 @@ const parseResultImpl = (text: string, options?: YamlParseOptions): Result.Resul
  */
 const parseAllResultImpl = (
 	text: string,
-	options?: YamlParseOptions,
+  options?: YamlParseOptions
 ): Result.Result<ReadonlyArray<unknown>, YamlParseError> => {
 	const { documents, streamErrors } = composeAllDocuments(text, toParseInput(options));
 	const uniqueKeys = options?.uniqueKeys ?? true;
@@ -520,7 +522,7 @@ const parseAllResultImpl = (
  */
 const stringifyResultImpl = (
 	value: unknown,
-	options?: YamlStringifyOptions,
+  options?: YamlStringifyOptions
 ): Result.Result<string, YamlStringifyError> => {
 	try {
 		return Result.succeed(stringifyValue(value, toStringifyInput(options)));
@@ -652,7 +654,7 @@ export class Yaml {
 	 * use that variant directly.
 	 */
 	static readonly parse = Effect.fn("Yaml.parse")((text: string, options?: YamlParseOptions) =>
-		Effect.fromResult(Yaml.parseResult(text, options)),
+    Effect.fromResult(Yaml.parseResult(text, options))
 	);
 
 	/**
@@ -669,7 +671,7 @@ export class Yaml {
 	 * can use that variant directly.
 	 */
 	static readonly parseAll = Effect.fn("Yaml.parseAll")((text: string, options?: YamlParseOptions) =>
-		Effect.fromResult(Yaml.parseAllResult(text, options)),
+    Effect.fromResult(Yaml.parseAllResult(text, options))
 	);
 
 	/**
@@ -769,7 +771,7 @@ export class Yaml {
 	 */
 	static parseAllResult(
 		text: string,
-		options?: YamlParseOptions,
+    options?: YamlParseOptions
 	): Result.Result<ReadonlyArray<unknown>, YamlParseError> {
 		return parseAllResultImpl(text, options);
 	}
@@ -954,17 +956,17 @@ export class Yaml {
 		return Schema.String.pipe(
 			Schema.decodeTo(
 				Schema.Unknown,
-				SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
 					decode: (input: string) =>
 						Yaml.parse(input, options).pipe(
-							Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input)),
+              Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input))
 						),
 					encode: (value: unknown) =>
 						stringifyOrFail(value).pipe(
-							Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, value)),
+              Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, value))
 						),
-				}),
-			),
+        })
+      )
 		);
 	}
 
@@ -1002,24 +1004,24 @@ export class Yaml {
 		return Schema.String.pipe(
 			Schema.decodeTo(
 				Schema.Array(Schema.Unknown),
-				SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
 					decode: (input: string) =>
 						Yaml.parseAll(input, options).pipe(
-							Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input)),
+              Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input))
 						),
 					encode: Effect.fn("Yaml.allFromString.encode")(function* (values: ReadonlyArray<unknown>) {
 							if (values.length === 0) return "";
 							const parts: Array<string> = [];
 							for (let index = 0; index < values.length; index++) {
 								const yaml = yield* stringifyOrFail(values[index]).pipe(
-									Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, values)),
+                Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, values))
 								);
 								parts.push(index > 0 ? `---\n${yaml}` : yaml);
 							}
 							return parts.join("");
 						}),
-				}),
-			),
+        })
+      )
 		);
 	}
 
@@ -1050,10 +1052,10 @@ export class Yaml {
 	 */
 	static schema<T, E, RD = never, RE = never>(
 		target: Schema.Codec<T, E, RD, RE>,
-		options?: YamlParseOptions,
+    options?: YamlParseOptions
 	): Schema.Codec<T, string, RD, RE> {
 		return Yaml.fromString(options).pipe(
-			Schema.decodeTo(target as unknown as Schema.Codec<T, unknown, RD, RE>),
+      Schema.decodeTo(target as unknown as Schema.Codec<T, unknown, RD, RE>)
 		) as unknown as Schema.Codec<T, string, RD, RE>;
 	}
 

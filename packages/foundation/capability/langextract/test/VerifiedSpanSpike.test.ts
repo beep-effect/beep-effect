@@ -17,8 +17,9 @@ import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeTextOffsetRangeResult = S.decodeResult(TextOffsetRange);
 const decodeUtf16TextRangeResult = S.decodeResult(Utf16TextRange);
@@ -380,18 +381,63 @@ describe("verified-span hostile-text contract", () => {
   });
 
   it("derives only ordered, round-trippable ranges from both schemas", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(TextOffsetRange)(fc), S.toArbitrary(Utf16TextRange)(fc), (offsetRange, utf16Range) => {
-        const encodedOffsetRange = Result.getOrThrow(encodeUnknownTextOffsetRangeResult(offsetRange));
-        const encodedUtf16Range = Result.getOrThrow(encodeUnknownUtf16TextRangeResult(utf16Range));
-        const decodedOffsetRange = Result.getOrThrow(decodeTextOffsetRangeResult(encodedOffsetRange));
-        const decodedUtf16Range = Result.getOrThrow(decodeUtf16TextRangeResult(encodedUtf16Range));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(TextOffsetRange), Arbitrary.schema(Utf16TextRange)]),
+          ([offsetRange, utf16Range]) => {
+            const encodedOffsetRange = Result.getOrThrow(encodeUnknownTextOffsetRangeResult(offsetRange));
+            const encodedUtf16Range = Result.getOrThrow(encodeUnknownUtf16TextRangeResult(utf16Range));
+            const decodedOffsetRange = Result.getOrThrow(decodeTextOffsetRangeResult(encodedOffsetRange));
+            const decodedUtf16Range = Result.getOrThrow(decodeUtf16TextRangeResult(encodedUtf16Range));
 
-        expect(offsetRange.start).toBeLessThan(offsetRange.end);
-        expect(utf16Range.startChar).toBeLessThan(utf16Range.endChar);
-        expect(S.toEquivalence(TextOffsetRange)(decodedOffsetRange, offsetRange)).toBe(true);
-        expect(S.toEquivalence(Utf16TextRange)(decodedUtf16Range, utf16Range)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+            expect(offsetRange.start).toBeLessThan(offsetRange.end);
+            expect(utf16Range.startChar).toBeLessThan(utf16Range.endChar);
+            expect(S.toEquivalence(TextOffsetRange)(decodedOffsetRange, offsetRange)).toBe(true);
+            expect(S.toEquivalence(Utf16TextRange)(decodedUtf16Range, utf16Range)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes TextOffsetRange through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      TextOffsetRange.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const value = TextOffsetRange.make({
+      start: NonNegativeInt.make(1),
+      end: NonNegativeInt.make(4),
+      unit: "utf16-code-unit",
+    });
+    const codec = S.make<S.Codec<TextOffsetRange, unknown>>(
+      SchemaAST.decodeTo(S.Unknown.ast, SchemaAST.toType(TextOffsetRange.ast), link.transformation)
+    );
+    expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
+  })
+);
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes Utf16TextRange through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      Utf16TextRange.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const value = Utf16TextRange.make({ startChar: NonNegativeInt.make(1), endChar: NonNegativeInt.make(4) });
+    const codec = S.make<S.Codec<Utf16TextRange, unknown>>(
+      SchemaAST.decodeTo(S.Unknown.ast, SchemaAST.toType(Utf16TextRange.ast), link.transformation)
+    );
+    expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
+  })
+);

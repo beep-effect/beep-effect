@@ -1,8 +1,9 @@
 import { fcRuns } from "@beep/fc-runs";
 import { FileName } from "@beep/schema/FileName";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownFileNameSync = S.decodeUnknownSync(FileName);
 const isFileName2 = S.is(FileName);
@@ -61,13 +62,20 @@ describe("FileName", () => {
   });
 
   it("derives only-valid names from the schema arbitrary and round-trips them", () => {
-    const arbitrary = S.toArbitrary(FileName)(fc);
-    fc.assert(
-      fc.property(arbitrary, (name) => {
-        expect(isFileName2(name)).toBe(true);
-        expect(decodeUnknownFileNameSync(name)).toBe(name);
-      }),
-      fcRuns(50)
-    );
+    const arbitrary = Arbitrary.schema(FileName);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([name]) => {
+            expect(isFileName2(name)).toBe(true);
+            expect(decodeUnknownFileNameSync(name)).toBe(name);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

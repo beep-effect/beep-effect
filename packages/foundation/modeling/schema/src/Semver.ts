@@ -647,8 +647,8 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
  */
 export const SemverFromString = S.String.pipe(
   S.decodeTo(Semver, {
-    decode: SchemaGetter.transformOrFail(decodeSemverFromString),
-    encode: SchemaGetter.transformOrFail(encodeSemverToString),
+    decode: SchemaGetter.transformEffect(decodeSemverFromString),
+    encode: SchemaGetter.transformEffect(encodeSemverToString),
   }),
   $I.annoteSchema("SemverFromString", {
     description: "Codec that decodes supported semantic version strings into structured Semver values.",

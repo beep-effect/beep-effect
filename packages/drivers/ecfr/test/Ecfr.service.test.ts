@@ -26,7 +26,7 @@ import { Context, Effect, Layer, Match, pipe, Ref, Result } from "effect";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -46,19 +46,19 @@ type EcfrTestHttpShape = {
 
 class EcfrTestHttp extends Context.Service<EcfrTestHttp, EcfrTestHttpShape>()($TestI`EcfrTestHttp`) {}
 
-const EcfrConfigInputArbitrary = S.toArbitrary(EcfrConfigInput)(fc);
-const EcfrErrorReasonArbitrary = S.toArbitrary(EcfrErrorReason)(fc);
-const EcfrErrorOptionsArbitrary = S.toArbitrary(EcfrErrorOptions)(fc).map((options) =>
-  EcfrErrorOptions.make({ status: options.status })
+const EcfrConfigInputArbitrary = Arbitrary.schema(EcfrConfigInput);
+const EcfrErrorReasonArbitrary = Arbitrary.schema(EcfrErrorReason);
+const EcfrErrorOptionsArbitrary = Arbitrary.schema(EcfrErrorOptions).pipe(
+  Arbitrary.map((options) => EcfrErrorOptions.make({ status: options.status }))
 );
-const EcfrErrorArbitrary = S.toArbitrary(EcfrError)(fc).map((error) =>
-  EcfrError.of(error.reason, EcfrErrorOptions.make({ status: error.status }))
+const EcfrErrorArbitrary = Arbitrary.schema(EcfrError).pipe(
+  Arbitrary.map((error) => EcfrError.of(error.reason, EcfrErrorOptions.make({ status: error.status })))
 );
-const AgenciesResponseArbitrary = S.toArbitrary(AgenciesResponse)(fc);
-const CorrectionsResponseArbitrary = S.toArbitrary(CorrectionsResponse)(fc);
-const SearchResultsResponseArbitrary = S.toArbitrary(SearchResultsResponse)(fc);
-const StructureNodeArbitrary = S.toArbitrary(StructureNode)(fc);
-const VersionsResponseArbitrary = S.toArbitrary(VersionsResponse)(fc);
+const AgenciesResponseArbitrary = Arbitrary.schema(AgenciesResponse);
+const CorrectionsResponseArbitrary = Arbitrary.schema(CorrectionsResponse);
+const SearchResultsResponseArbitrary = Arbitrary.schema(SearchResultsResponse);
+const StructureNodeArbitrary = Arbitrary.schema(StructureNode);
+const VersionsResponseArbitrary = Arbitrary.schema(VersionsResponse);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -185,41 +185,36 @@ describe("@beep/ecfr", () => {
     expect(EcfrConfigInput.make({}).apiUrl).toBe(ECFR_API_URL);
   });
 
-  it("round-trips hand-authored schema-derived values through encoded form", () =>
-    fc.assert(
-      fc.property(
-        EcfrConfigInputArbitrary,
-        EcfrErrorReasonArbitrary,
-        EcfrErrorOptionsArbitrary,
-        EcfrErrorArbitrary,
-        (config, reason, options, error) => {
-          expectRoundTrip(EcfrConfigInput, config);
-          expectRoundTrip(EcfrErrorReason, reason);
-          expectRoundTrip(EcfrErrorOptions, options);
-          expectRoundTrip(EcfrError, error);
-        }
-      ),
-      fcRuns(50)
-    ));
+  it.prop(
+    "round-trips hand-authored schema-derived values through encoded form",
+    [EcfrConfigInputArbitrary, EcfrErrorReasonArbitrary, EcfrErrorOptionsArbitrary, EcfrErrorArbitrary],
+    ([config, reason, options, error]) => {
+      expectRoundTrip(EcfrConfigInput, config);
+      expectRoundTrip(EcfrErrorReason, reason);
+      expectRoundTrip(EcfrErrorOptions, options);
+      expectRoundTrip(EcfrError, error);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("round-trips representative generated models through encoded form", () =>
-    fc.assert(
-      fc.property(
-        AgenciesResponseArbitrary,
-        CorrectionsResponseArbitrary,
-        SearchResultsResponseArbitrary,
-        StructureNodeArbitrary,
-        VersionsResponseArbitrary,
-        (agencies, corrections, searchResults, structure, versions) => {
-          expectRoundTrip(AgenciesResponse, agencies);
-          expectRoundTrip(CorrectionsResponse, corrections);
-          expectRoundTrip(SearchResultsResponse, searchResults);
-          expectRoundTrip(StructureNode, structure);
-          expectRoundTrip(VersionsResponse, versions);
-        }
-      ),
-      fcRuns(25)
-    ));
+  it.prop(
+    "round-trips representative generated models through encoded form",
+    [
+      AgenciesResponseArbitrary,
+      CorrectionsResponseArbitrary,
+      SearchResultsResponseArbitrary,
+      StructureNodeArbitrary,
+      VersionsResponseArbitrary,
+    ],
+    ([agencies, corrections, searchResults, structure, versions]) => {
+      expectRoundTrip(AgenciesResponse, agencies);
+      expectRoundTrip(CorrectionsResponse, corrections);
+      expectRoundTrip(SearchResultsResponse, searchResults);
+      expectRoundTrip(StructureNode, structure);
+      expectRoundTrip(VersionsResponse, versions);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   layer(makeEcfrUnitLayer())((it) =>
     it.effect(

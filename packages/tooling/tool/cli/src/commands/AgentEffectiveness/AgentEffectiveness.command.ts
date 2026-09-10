@@ -60,44 +60,44 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.com
 
 const agentEffectivenessPhoenixBaseUrlEnvVar = "BEEP_AGENT_EFFECTIVENESS_PHOENIX_BASE_URL";
 const defaultAgentEffectivenessPhoenixBaseUrl = "https://dankserver.tailc7c348.ts.net:8447";
-const agentEffectivenessPhoenixBaseUrlConfig = Config.string(agentEffectivenessPhoenixBaseUrlEnvVar).pipe(
+const agentEffectivenessPhoenixBaseUrlConfig = Config.String(agentEffectivenessPhoenixBaseUrlEnvVar).pipe(
   Config.withDefault(defaultAgentEffectivenessPhoenixBaseUrl)
 );
 
-const noPhoenixFlag = Flag.boolean("no-phoenix").pipe(
+const noPhoenixFlag = Flag.Boolean("no-phoenix").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Skip live Phoenix probes and report Phoenix as unavailable")
 );
-const targetFlag = Flag.choiceWithValue("target", [
+const targetFlag = Flag.ChoiceWithValue("target", [
   ["local", AiMetricsDeployTarget.Enum.local],
   ["dankserver", AiMetricsDeployTarget.Enum.dankserver],
 ]).pipe(
   Flag.withDefault(AiMetricsDeployTarget.Enum.dankserver),
   Flag.withDescription("Agent-effectiveness evidence target")
 );
-const phoenixBaseUrlFlag = Flag.string("phoenix-base-url").pipe(
+const phoenixBaseUrlFlag = Flag.String("phoenix-base-url").pipe(
   Flag.withFallbackConfig(agentEffectivenessPhoenixBaseUrlConfig),
   Flag.withDescription(`Read-only Phoenix base URL, or ${agentEffectivenessPhoenixBaseUrlEnvVar}`)
 );
-const workerEvalReportFlag = Flag.string("worker-eval-report").pipe(
+const workerEvalReportFlag = Flag.String("worker-eval-report").pipe(
   Flag.withDefault(DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH),
   Flag.withDescription("JSDoc worker-eval report or initiative manifest path")
 );
-const writeFlag = Flag.boolean("write").pipe(
+const writeFlag = Flag.Boolean("write").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Perform live Phoenix writes instead of the default dry-run")
 );
-const evalFixtureDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+const evalFixtureDirFlag = Flag.Directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("SkillOpt fixture copy directory to score")
 );
-const evalTaskManifestFlag = Flag.file("task", { mustExist: true }).pipe(
+const evalTaskManifestFlag = Flag.File("task", { mustExist: true }).pipe(
   Flag.withDescription("SkillOpt task manifest JSON path")
 );
-const evalRecordFlag = Flag.boolean("record").pipe(
+const evalRecordFlag = Flag.Boolean("record").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Record the score as an ai-metrics BenchmarkRun row")
 );
-const confirmPhoenixWriteFlag = Flag.string("confirm-phoenix-write").pipe(
+const confirmPhoenixWriteFlag = Flag.String("confirm-phoenix-write").pipe(
   Flag.withDescription(
     `Confirmation token required for live Phoenix writes: ${AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION}`
   ),

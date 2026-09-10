@@ -8,9 +8,10 @@ import {
 } from "@beep/repo-ai-metrics";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { SessionLeaseReconciliation, SessionLeaseTransition } from "@beep/repo-ai-metrics";
 
 const decodeSessionLeaseExpiryCandidateResult = S.decodeResult(SessionLeaseExpiryCandidate);
@@ -104,15 +105,22 @@ const reconciliationStatus = (result: SessionLeaseReconciliation) => result.stat
 
 describe("telemetry-v2 session leases", () => {
   it("round-trips schema-generated leases and liveness events", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(SessionLease)(fc), S.toArbitrary(SessionLeaseEvent)(fc), (lease, event) => {
-        const roundTrippedLease = decodeSessionLeaseSync(encodeSessionLeaseSync(lease));
-        const roundTrippedEvent = decodeSessionLeaseEventSync(encodeSessionLeaseEventSync(event));
-        expect(leaseEquivalent(lease, roundTrippedLease)).toBe(true);
-        expect(eventEquivalent(event, roundTrippedEvent)).toBe(true);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(SessionLease), Arbitrary.schema(SessionLeaseEvent)]),
+          ([lease, event]) => {
+            const roundTrippedLease = decodeSessionLeaseSync(encodeSessionLeaseSync(lease));
+            const roundTrippedEvent = decodeSessionLeaseEventSync(encodeSessionLeaseEventSync(event));
+            expect(leaseEquivalent(lease, roundTrippedLease)).toBe(true);
+            expect(eventEquivalent(event, roundTrippedEvent)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("creates a lease only from SessionStart and renews on ordinary activity", () => {

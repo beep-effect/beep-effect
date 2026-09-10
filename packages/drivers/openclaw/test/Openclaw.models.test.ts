@@ -46,7 +46,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Duration, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeOpenclawAgentTurnJsonResult = S.decodeResult(S.fromJsonString(OpenclawAgentTurn));
 const decodeOpenclawChannelAccountStatusJsonResult = S.decodeResult(S.fromJsonString(OpenclawChannelAccountStatus));
@@ -64,21 +64,21 @@ const encodeOpenclawSecretsReloadResult = S.encodeResult(OpenclawSecretsReload);
 const isOpenclawCliError = S.is(OpenclawCliError);
 const isOpenclawCompatibilitySet = S.is(OpenclawCompatibilitySet);
 
-const ExitCodeArbitrary = S.toArbitrary(OpenclawExitCode)(fc);
-const DiagnosticTextArbitrary = S.toArbitrary(OpenclawDiagnosticText)(fc);
-const ProcessRequestArbitrary = S.toArbitrary(OpenclawProcessRequest)(fc);
-const ProcessResultArbitrary = S.toArbitrary(OpenclawProcessResult)(fc);
-const VersionInfoArbitrary = S.toArbitrary(OpenclawVersionInfo)(fc);
-const SecretsReloadArbitrary = S.toArbitrary(OpenclawSecretsReload)(fc);
-const ConfigValidationArbitrary = S.toArbitrary(OpenclawConfigValidation)(fc);
-const ChannelAccountStatusArbitrary = S.toArbitrary(OpenclawChannelAccountStatus)(fc);
-const AgentTurnArbitrary = S.toArbitrary(OpenclawAgentTurn)(fc);
-const InvocationContextArbitrary = S.toArbitrary(OpenclawInvocationContext)(fc);
-const SystemdUnitStateArbitrary = S.toArbitrary(OpenclawSystemdUnitState)(fc);
-const HttpProbeArbitrary = S.toArbitrary(OpenclawHttpProbe)(fc);
-const PlaceholderFindingArbitrary = S.toArbitrary(OpenclawSchemaPlaceholderFinding)(fc);
-const GatewayHealthArbitrary = S.toArbitrary(OpenclawGatewayHealth)(fc);
-const CompatibilitySetArbitrary = S.toArbitrary(OpenclawCompatibilitySet)(fc);
+const ExitCodeArbitrary = Arbitrary.schema(OpenclawExitCode);
+const DiagnosticTextArbitrary = Arbitrary.schema(OpenclawDiagnosticText);
+const ProcessRequestArbitrary = Arbitrary.schema(OpenclawProcessRequest);
+const ProcessResultArbitrary = Arbitrary.schema(OpenclawProcessResult);
+const VersionInfoArbitrary = Arbitrary.schema(OpenclawVersionInfo);
+const SecretsReloadArbitrary = Arbitrary.schema(OpenclawSecretsReload);
+const ConfigValidationArbitrary = Arbitrary.schema(OpenclawConfigValidation);
+const ChannelAccountStatusArbitrary = Arbitrary.schema(OpenclawChannelAccountStatus);
+const AgentTurnArbitrary = Arbitrary.schema(OpenclawAgentTurn);
+const InvocationContextArbitrary = Arbitrary.schema(OpenclawInvocationContext);
+const SystemdUnitStateArbitrary = Arbitrary.schema(OpenclawSystemdUnitState);
+const HttpProbeArbitrary = Arbitrary.schema(OpenclawHttpProbe);
+const PlaceholderFindingArbitrary = Arbitrary.schema(OpenclawSchemaPlaceholderFinding);
+const GatewayHealthArbitrary = Arbitrary.schema(OpenclawGatewayHealth);
+const CompatibilitySetArbitrary = Arbitrary.schema(OpenclawCompatibilitySet);
 
 const sameProcessRequest = S.toEquivalence(OpenclawProcessRequest);
 const sameProcessResult = S.toEquivalence(OpenclawProcessResult);
@@ -398,57 +398,55 @@ describe("@beep/openclaw models", () => {
     expect(hermeticOpenclawEnv(overrideCtx)).toEqual({ PATH: "/override" });
   });
 
-  it("round-trips schema-derived process and CLI output payloads", () =>
-    fc.assert(
-      fc.property(
-        ExitCodeArbitrary,
-        DiagnosticTextArbitrary,
-        ProcessRequestArbitrary,
-        ProcessResultArbitrary,
-        VersionInfoArbitrary,
-        SecretsReloadArbitrary,
-        ConfigValidationArbitrary,
-        (exitCode, diagnosticText, request, result, versionInfo, secretsReload, configValidation) => {
-          expect(roundTrip(OpenclawExitCode, exitCode)).toBe(exitCode);
-          expect(roundTrip(OpenclawDiagnosticText, diagnosticText)).toBe(diagnosticText);
-          expect(sameProcessRequest(roundTrip(OpenclawProcessRequest, request), request)).toBe(true);
-          expect(sameProcessResult(roundTrip(OpenclawProcessResult, result), result)).toBe(true);
-          expect(sameVersionInfo(roundTrip(OpenclawVersionInfo, versionInfo), versionInfo)).toBe(true);
-          expect(sameSecretsReload(roundTrip(OpenclawSecretsReload, secretsReload), secretsReload)).toBe(true);
-          expect(sameConfigValidation(roundTrip(OpenclawConfigValidation, configValidation), configValidation)).toBe(
-            true
-          );
-        }
-      ),
-      fcRuns(50)
-    ));
+  it.prop(
+    "round-trips schema-derived process and CLI output payloads",
+    [
+      ExitCodeArbitrary,
+      DiagnosticTextArbitrary,
+      ProcessRequestArbitrary,
+      ProcessResultArbitrary,
+      VersionInfoArbitrary,
+      SecretsReloadArbitrary,
+      ConfigValidationArbitrary,
+    ],
+    ([exitCode, diagnosticText, request, result, versionInfo, secretsReload, configValidation]) => {
+      expect(roundTrip(OpenclawExitCode, exitCode)).toBe(exitCode);
+      expect(roundTrip(OpenclawDiagnosticText, diagnosticText)).toBe(diagnosticText);
+      expect(sameProcessRequest(roundTrip(OpenclawProcessRequest, request), request)).toBe(true);
+      expect(sameProcessResult(roundTrip(OpenclawProcessResult, result), result)).toBe(true);
+      expect(sameVersionInfo(roundTrip(OpenclawVersionInfo, versionInfo), versionInfo)).toBe(true);
+      expect(sameSecretsReload(roundTrip(OpenclawSecretsReload, secretsReload), secretsReload)).toBe(true);
+      expect(sameConfigValidation(roundTrip(OpenclawConfigValidation, configValidation), configValidation)).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("round-trips schema-derived status and probe payloads", () =>
-    fc.assert(
-      fc.property(
-        ChannelAccountStatusArbitrary,
-        AgentTurnArbitrary,
-        InvocationContextArbitrary,
-        SystemdUnitStateArbitrary,
-        HttpProbeArbitrary,
-        PlaceholderFindingArbitrary,
-        GatewayHealthArbitrary,
-        CompatibilitySetArbitrary,
-        (accountStatus, agentTurn, invocationContext, unitState, httpProbe, finding, gatewayHealth, compatibility) => {
-          expect(sameChannelAccountStatus(roundTrip(OpenclawChannelAccountStatus, accountStatus), accountStatus)).toBe(
-            true
-          );
-          expect(sameAgentTurn(roundTrip(OpenclawAgentTurn, agentTurn), agentTurn)).toBe(true);
-          expect(
-            sameInvocationContext(roundTrip(OpenclawInvocationContext, invocationContext), invocationContext)
-          ).toBe(true);
-          expect(sameSystemdUnitState(roundTrip(OpenclawSystemdUnitState, unitState), unitState)).toBe(true);
-          expect(sameHttpProbe(roundTrip(OpenclawHttpProbe, httpProbe), httpProbe)).toBe(true);
-          expect(samePlaceholderFinding(roundTrip(OpenclawSchemaPlaceholderFinding, finding), finding)).toBe(true);
-          expect(sameGatewayHealth(roundTrip(OpenclawGatewayHealth, gatewayHealth), gatewayHealth)).toBe(true);
-          expect(sameCompatibilitySet(roundTrip(OpenclawCompatibilitySet, compatibility), compatibility)).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+  it.prop(
+    "round-trips schema-derived status and probe payloads",
+    [
+      ChannelAccountStatusArbitrary,
+      AgentTurnArbitrary,
+      InvocationContextArbitrary,
+      SystemdUnitStateArbitrary,
+      HttpProbeArbitrary,
+      PlaceholderFindingArbitrary,
+      GatewayHealthArbitrary,
+      CompatibilitySetArbitrary,
+    ],
+    ([accountStatus, agentTurn, invocationContext, unitState, httpProbe, finding, gatewayHealth, compatibility]) => {
+      expect(sameChannelAccountStatus(roundTrip(OpenclawChannelAccountStatus, accountStatus), accountStatus)).toBe(
+        true
+      );
+      expect(sameAgentTurn(roundTrip(OpenclawAgentTurn, agentTurn), agentTurn)).toBe(true);
+      expect(sameInvocationContext(roundTrip(OpenclawInvocationContext, invocationContext), invocationContext)).toBe(
+        true
+      );
+      expect(sameSystemdUnitState(roundTrip(OpenclawSystemdUnitState, unitState), unitState)).toBe(true);
+      expect(sameHttpProbe(roundTrip(OpenclawHttpProbe, httpProbe), httpProbe)).toBe(true);
+      expect(samePlaceholderFinding(roundTrip(OpenclawSchemaPlaceholderFinding, finding), finding)).toBe(true);
+      expect(sameGatewayHealth(roundTrip(OpenclawGatewayHealth, gatewayHealth), gatewayHealth)).toBe(true);
+      expect(sameCompatibilitySet(roundTrip(OpenclawCompatibilitySet, compatibility), compatibility)).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

@@ -67,6 +67,7 @@ import { $TestUtilsId } from "@beep/identity/packages";
 import { HasNullByte } from "@beep/schema/FilePath";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -254,9 +255,9 @@ interface Volume {
   readonly withState: <A, E, R>(use: (state: State) => Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
 }
 
-const Cursor = S.BigInt.pipe(S.brand("Size")).annotate(
+const Cursor = S.BigInt.annotate(
   $I.annote("Cursor", {
-    description: "Signed stored file position; nonempty IO, not seek, enforces valid read/write positions.",
+    description: "Stored file position; seek rejects positions before the start of the file.",
   })
 );
 type Cursor = typeof Cursor.Type;
@@ -1764,7 +1765,7 @@ const allocateDescriptor = (state: State, entry: FileInode, mode: OpenMode): rea
     readable: mode.readable,
     writable: mode.writable,
     append: mode.append,
-    position: FileSystem.Size(0),
+    position: BigInt(0),
   };
   return Tuple.make(
     {
@@ -1855,7 +1856,7 @@ const fileInfo = (entry: InodeEntry): FileSystem.File.Info => ({
   uid: O.some(entry.uid),
   gid: O.some(entry.gid),
   rdev: O.some(0),
-  size: FileSystem.Size(
+  size: ByteSize.bytes(
     isFileInode(entry)
       ? entry.data.length
       : isSymbolicLinkInode(entry)
@@ -1877,7 +1878,7 @@ const readDescriptorUnlocked = Effect.fnUntraced(function* (
     return {
       state,
       bytes: entry.data.subarray(0, 0),
-      size: FileSystem.Size(0),
+      size: 0,
     };
   }
   const position = Number(descriptor.position);
@@ -1891,12 +1892,12 @@ const readDescriptorUnlocked = Effect.fnUntraced(function* (
       ...state,
       descriptors: HashMap.set(state.descriptors, fd, {
         ...descriptor,
-        position: FileSystem.Size(position + bytesRead),
+        position: BigInt(position + bytesRead),
       }),
       inodes: HashMap.set(state.inodes, entry.ino, { ...entry, atime: now }),
     },
     bytes: entry.data.subarray(position, position + bytesRead),
-    size: FileSystem.Size(bytesRead),
+    size: bytesRead,
   };
 });
 
@@ -1922,7 +1923,7 @@ const writeDescriptorUnlocked = Effect.fnUntraced(function* (
 ) {
   const [descriptor, entry] = yield* getOpenFile(state, fd, method, "writable");
   if (buffer.length === 0) {
-    return Tuple.make(state, FileSystem.Size(0));
+    return Tuple.make(state, 0);
   }
   const position = descriptor.append ? entry.data.length : Number(descriptor.position);
   if (!isSafeSize(position)) {
@@ -1938,7 +1939,7 @@ const writeDescriptorUnlocked = Effect.fnUntraced(function* (
     ? state.descriptors
     : HashMap.set(state.descriptors, fd, {
         ...descriptor,
-        position: FileSystem.Size(length),
+        position: BigInt(length),
       });
   const nextState = {
     ...state,
@@ -1956,7 +1957,7 @@ const writeDescriptorUnlocked = Effect.fnUntraced(function* (
   // NOTE: This is the only mutation of committed file bytes. All typed failure and
   // allocation points have completed, and the volume permit excludes readers.
   data.set(buffer, position);
-  return Tuple.make(nextState, FileSystem.Size(buffer.length));
+  return Tuple.make(nextState, buffer.length);
 });
 
 const writeDescriptor = Effect.fnUntraced(function* (
@@ -1968,7 +1969,7 @@ const writeDescriptor = Effect.fnUntraced(function* (
   return yield* volume.mutate(
     Effect.fnUntraced(function* (state) {
       const [nextState, written] = yield* writeDescriptorUnlocked(state, fd, buffer, method);
-      if (written === FileSystem.Size(0)) return transitionResult(nextState, written);
+      if (written === 0) return transitionResult(nextState, written);
       const descriptor = HashMap.get(nextState.descriptors, fd);
       return transitionResult(
         nextState,
@@ -1987,14 +1988,14 @@ class MemoryFile implements FileSystem.File {
   readonly [FileSystem.FileTypeId]: typeof FileSystem.FileTypeId = FileSystem.FileTypeId;
   readonly fd: FileDescriptor;
   private readonly volume: Volume;
-  private closedPosition: FileSystem.Size = FileSystem.Size(0);
+  private closedPosition: bigint = BigInt(0);
 
   constructor(volume: Volume, fd: FileDescriptor) {
     this.volume = volume;
     this.fd = fd;
   }
 
-  // rc.112 seek is infallible and retains a handle-local cursor after close.
+  // Seek retains a handle-local cursor after close and rejects negative positions.
   // Snapshot under the same permit as descriptor removal, without retaining the
   // descriptor/inode. Repeated close cannot reset that cursor or decrement twice.
   get close(): Effect.Effect<void> {
@@ -2017,51 +2018,53 @@ class MemoryFile implements FileSystem.File {
     return this.volume.withState((state) => Effect.asVoid(getOpenFile(state, this.fd, "sync")));
   }
 
-  seek(offset: FileSystem.SizeInput, from: FileSystem.SeekMode): Effect.Effect<FileSystem.Size> {
+  seek(offset: bigint, from: FileSystem.SeekMode): Effect.Effect<bigint, PlatformError> {
     return this.volume.mutate((state) =>
-      Effect.sync(() => {
+      Effect.suspend(() => {
         const descriptorOption = HashMap.get(state.descriptors, this.fd);
         const currentPosition = O.isSome(descriptorOption) ? descriptorOption.value.position : this.closedPosition;
-        const size = FileSystem.Size(offset);
-        const position = from === "start" ? size : FileSystem.Size(currentPosition + size);
+        const position = from === "start" ? offset : currentPosition + offset;
+        if (position < BigInt(0)) {
+          return Effect.fail(argumentError("seek", "Cannot seek before the start of the file"));
+        }
         if (O.isNone(descriptorOption)) {
           this.closedPosition = position;
-          return transitionResult(state, position);
+          return Effect.succeed(transitionResult(state, position));
         }
         const descriptor = descriptorOption.value;
-        return transitionResult(
-          {
-            ...state,
-            descriptors: HashMap.set(state.descriptors, this.fd, {
-              ...descriptor,
-              position,
-            }),
-          },
-          position
+        return Effect.succeed(
+          transitionResult(
+            {
+              ...state,
+              descriptors: HashMap.set(state.descriptors, this.fd, {
+                ...descriptor,
+                position,
+              }),
+            },
+            position
+          )
         );
       })
     );
   }
 
-  read(buffer: Uint8Array): Effect.Effect<FileSystem.Size, PlatformError> {
+  read(buffer: Uint8Array): Effect.Effect<number, PlatformError> {
     return readDescriptor(this.volume, this.fd, buffer, "read");
   }
 
-  readAlloc(size: FileSystem.SizeInput): Effect.Effect<O.Option<Uint8Array>, PlatformError> {
+  readAlloc(size: number): Effect.Effect<O.Option<Uint8Array>, PlatformError> {
     const length = Number(size);
     if (!isSafeSize(length)) {
       return Effect.fail(argumentError("readAlloc", "size must be a non-negative safe integer"));
     }
     return Effect.flatMap(allocateBytes(length, this.fd, "readAlloc"), (buffer) =>
       Effect.map(readDescriptor(this.volume, this.fd, buffer, "readAlloc"), (bytesRead) =>
-        bytesRead === FileSystem.Size(0)
-          ? O.none()
-          : O.some(bytesRead === FileSystem.Size(length) ? buffer : buffer.slice(0, Number(bytesRead)))
+        bytesRead === 0 ? O.none() : O.some(bytesRead === length ? buffer : buffer.slice(0, bytesRead))
       )
     );
   }
 
-  truncate(length: FileSystem.SizeInput = 0): Effect.Effect<void, PlatformError> {
+  truncate(length = 0): Effect.Effect<void, PlatformError> {
     const volume = this.volume;
     const fd = this.fd;
     return Effect.flatMap(validateSize("truncate", length), (size) =>
@@ -2074,10 +2077,10 @@ class MemoryFile implements FileSystem.File {
           const nextState = {
             ...state,
             descriptors:
-              !descriptor.append && descriptor.position > FileSystem.Size(size)
+              !descriptor.append && descriptor.position > BigInt(size)
                 ? HashMap.set(state.descriptors, fd, {
                     ...descriptor,
-                    position: FileSystem.Size(size),
+                    position: BigInt(size),
                   })
                 : state.descriptors,
             inodes: HashMap.set(state.inodes, entry.ino, {
@@ -2093,7 +2096,7 @@ class MemoryFile implements FileSystem.File {
     );
   }
 
-  write(buffer: Uint8Array): Effect.Effect<FileSystem.Size, PlatformError> {
+  write(buffer: Uint8Array): Effect.Effect<number, PlatformError> {
     return writeDescriptor(this.volume, this.fd, buffer, "write");
   }
 
@@ -2249,7 +2252,7 @@ const writeFile =
       )
       .pipe(Effect.mapError((error) => withOperationError(error, "writeFile", path)));
 
-const validateSize = Effect.fnUntraced(function* (method: string, size: FileSystem.SizeInput | undefined) {
+const validateSize = Effect.fnUntraced(function* (method: string, size: number | undefined) {
   const value = Number(size ?? 0);
   return yield* isSafeSize(value)
     ? Effect.succeed(value)
@@ -2264,7 +2267,7 @@ const allocatePathBytes = Effect.fnUntraced(function* (length: number, method: s
 });
 
 const truncate = (volume: Volume) =>
-  Effect.fnUntraced(function* (path: string, length?: FileSystem.SizeInput) {
+  Effect.fnUntraced(function* (path: string, length?: number) {
     const size = yield* validateSize("truncate", length);
     return yield* volume.mutate(
       Effect.fnUntraced(function* (state) {

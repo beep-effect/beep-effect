@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   PolicyFingerprintTurboConfiguration,
@@ -13,7 +14,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const $I = $RepoCliId.create("test/policy-fingerprint-turbo-inputs");
 
@@ -118,7 +119,7 @@ const decodeScripts = S.decodeEffect(S.fromJsonString(RootScripts));
 const decodeSummary = S.decodeEffect(S.fromJsonString(FingerprintRunSummary));
 const encodeSummary = S.encodeEffect(S.fromJsonString(FingerprintRunSummary));
 const summaryEquivalent = S.toEquivalence(FingerprintRunSummary);
-const FingerprintRunSummaryArbitrary = S.toArbitrary(FingerprintRunSummary)(fc);
+const FingerprintRunSummaryArbitrary = Arbitrary.schema(FingerprintRunSummary);
 const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 const providePlatform = provideScopedLayer(platform);
 
@@ -195,15 +196,23 @@ const policyHashes = Effect.fn("PolicyFingerprintTurboTest.policyHashes")(functi
 });
 
 describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
-  it("round-trips schema-derived dry-run summaries through the JSON boundary", () =>
-    fc.assert(
-      fc.property(FingerprintRunSummaryArbitrary, (summary) => {
-        const encoded = Effect.runSync(encodeSummary(summary));
-        const decoded = Effect.runSync(decodeSummary(encoded));
-        expect(summaryEquivalent(decoded, summary)).toBe(true);
-        expect(Effect.runSync(encodeSummary(decoded))).toBe(encoded);
-      })
-    ));
+  it.effect("round-trips schema-derived dry-run summaries through the JSON boundary", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        FingerprintRunSummaryArbitrary,
+        (summary) =>
+          Effect.gen(function* () {
+            const encoded = yield* encodeSummary(summary);
+            const decoded = yield* decodeSummary(encoded);
+            expect(summaryEquivalent(decoded, summary)).toBe(true);
+            expect(yield* encodeSummary(decoded)).toBe(encoded);
+            return true;
+          }),
+        fcRuns()
+      );
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
   it.effect(
     "materializes exactly the computed repository closure and registers a nonrecursive cached root script",

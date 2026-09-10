@@ -4,7 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Context, Effect, Equal, Layer, Logger } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownPrettyLoggerConfigOption = S.decodeUnknownOption(PrettyLoggerConfig);
 const decodeUnknownRenderLogBannerOptionsOption = S.decodeUnknownOption(RenderLogBannerOptions);
@@ -42,26 +42,40 @@ describe("Logging", () => {
   });
 
   it("round-trips schema-derived pretty logger configs", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(PrettyLoggerConfig)(fc), (pretty) => {
-        const decoded = O.flatMap(encodePrettyLoggerConfigOption(pretty), decodeUnknownPrettyLoggerConfigOption);
-        expect(O.exists(decoded, (value) => Equal.equals(value, pretty))).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(PrettyLoggerConfig)]),
+          ([pretty]) => {
+            const decoded = O.flatMap(encodePrettyLoggerConfigOption(pretty), decodeUnknownPrettyLoggerConfigOption);
+            expect(O.exists(decoded, (value) => Equal.equals(value, pretty))).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips schema-derived banner options", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(RenderLogBannerOptions)(fc), (options) => {
-        const decoded = O.flatMap(
-          encodeRenderLogBannerOptionsOption(options),
-          decodeUnknownRenderLogBannerOptionsOption
-        );
-        expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(RenderLogBannerOptions)]),
+          ([options]) => {
+            const decoded = O.flatMap(
+              encodeRenderLogBannerOptionsOption(options),
+              decodeUnknownRenderLogBannerOptionsOption
+            );
+            expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("renders with default pretty config when options omit it", () => {

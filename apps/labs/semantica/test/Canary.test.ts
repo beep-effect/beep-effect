@@ -4,7 +4,7 @@ import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import { ConfigProvider, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand, CanaryOptions, CanaryStage } from "@/canary/Command";
@@ -127,14 +127,15 @@ describe("Semantica canary command", () => {
 
 describe("Semantica canary schemas", () => {
   it("generates values accepted by the source schemas", () => {
-    fc.assert(
-      fc.property(
-        S.toArbitrary(CanaryStage)(fc),
-        S.toArbitrary(CanaryOptions)(fc),
-        (stage, options) => isCanaryStage(stage) && isCanaryOptions(options)
-      ),
-      { numRuns: 25 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(CanaryStage), Arbitrary.schema(CanaryOptions)]),
+          ([stage, options]) => isCanaryStage(stage) && isCanaryOptions(options),
+          { runs: 25 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips CanaryStage", () =>
