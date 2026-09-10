@@ -358,6 +358,10 @@ const isTurboConcurrencyArg = (arg: string): boolean =>
 // excluded root turbo task must carry, inserted before any `--` passthrough
 // tail so it stays a turbo option instead of leaking into the child task argv.
 const LABS_EXCLUDE_FILTER = "--filter=!./apps/labs/**";
+const POLICY_TURBO_LABELS = ["lint:deprecated-apis", "lint:jsdoc"];
+const policyTurboStep = (label: string, base?: string): QualityTaskStep =>
+  O.getOrThrow(A.findFirst(rootLintPolicyStepsForTesting("/repo", undefined, base), (entry) => entry.label === label));
+const policyTurboScmBase = (step: QualityTaskStep): string | undefined => step.env?.TURBO_SCM_BASE;
 const LABS_EXCLUDED_TASKS: ReadonlyArray<string> = [
   "check",
   "lint",
@@ -3020,26 +3024,24 @@ describe("quality task adapter", () => {
 
   it("scopes policy Turbo tasks to the caller base and retains full hosted scope", () => {
     withEnvVar("CI", undefined, () => {
-      const steps = rootLintPolicyStepsForTesting("/repo", [], "refs/heads/review-base");
-      for (const label of ["lint:deprecated-apis", "lint:jsdoc"]) {
-        const step = steps.find((entry) => entry.label === label);
-        expect(step?.command).toBe("bunx");
-        expect(step?.args).toContain("--affected");
-        expect(step?.args).toContain("--summarize");
-        expect(step?.args).toContain("--continue=dependencies-successful");
-        expect(step?.args).not.toContain(LABS_EXCLUDE_FILTER);
-        expect(step?.env?.TURBO_SCM_BASE).toBe("refs/heads/review-base");
-        const full = rootLintPolicyStepsForTesting("/repo").find((entry) => entry.label === label);
-        expect(full?.args).not.toContain("--affected");
-        expect(full?.env?.TURBO_SCM_BASE).toBeUndefined();
+      for (const label of POLICY_TURBO_LABELS) {
+        const scoped = policyTurboStep(label, "refs/heads/review-base");
+        expect(scoped.command).toBe("bunx");
+        expect(scoped.args).toEqual(
+          expect.arrayContaining(["--affected", "--summarize", "--continue=dependencies-successful"])
+        );
+        expect(scoped.args).not.toContain(LABS_EXCLUDE_FILTER);
+        expect(policyTurboScmBase(scoped)).toBe("refs/heads/review-base");
+        const full = policyTurboStep(label);
+        expect(full.args).not.toContain("--affected");
+        expect(policyTurboScmBase(full)).toBeUndefined();
       }
     });
     withEnvVar("CI", "true", () => {
-      const steps = rootLintPolicyStepsForTesting("/repo", [], "refs/heads/review-base");
-      for (const label of ["lint:deprecated-apis", "lint:jsdoc"]) {
-        const step = steps.find((entry) => entry.label === label);
-        expect(step?.args).not.toContain("--affected");
-        expect(step?.env?.TURBO_SCM_BASE).toBeUndefined();
+      for (const label of POLICY_TURBO_LABELS) {
+        const hosted = policyTurboStep(label, "refs/heads/review-base");
+        expect(hosted.args).not.toContain("--affected");
+        expect(policyTurboScmBase(hosted)).toBeUndefined();
       }
     });
   });
@@ -3047,9 +3049,8 @@ describe("quality task adapter", () => {
   it("bounds policy Turbo concurrency using Check overrides and a four-worker default", () => {
     for (const value of [undefined, "2", "3", "4", "8", "invalid", ""]) {
       withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", value, () => {
-        const step = rootLintPolicyStepsForTesting("/repo")[0];
         const expected = value === "2" || value === "3" ? value : "4";
-        expect(step?.args).toContain(`--concurrency=${expected}`);
+        expect(policyTurboStep("lint:deprecated-apis").args).toContain(`--concurrency=${expected}`);
       });
     }
   });

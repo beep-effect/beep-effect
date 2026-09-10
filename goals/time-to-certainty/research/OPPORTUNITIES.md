@@ -700,3 +700,17 @@ subprocess diagnostics would make inventory stalls attributable.
   cases), so the file needs the Node fork pool.
 - **Would have prevented it:** keeping pure plan-shape tests in their own file, away from git
   lifecycle fixtures, so a no-git-write lane can run the complete relevant suite.
+
+## 2026-09-10 — C3.2 first hosted round: Fallow flagged a test arrow the lane never audited
+
+- **Doing:** babysitting PR #1079's first hosted run (head f3132f000f).
+- **Evidence:** `Fallow Advisory Envelopes` red on one introduced blocking finding:
+  `quality-tasks.test.ts:3022 <arrow> cyclomatic 10, CRAP 31.6` (ten optional-chained
+  expectations in one arrow of a partially covered test file); `health` mirrored it. Every other
+  proof (package-verify, scoped coverage, both runtimes) was green because none of them runs the
+  Fallow audit. Fixed by two tiny helpers (`policyTurboStep`, `policyTurboScmBase`) so each
+  function stays trivial; local `fallow audit --check --base origin/main` and `health --check`
+  then report zero findings.
+- **Would have prevented it:** the lane brief's verification split naming
+  `beep quality fallow audit --check --base origin/main` beside biome and vitest, since Fallow
+  judges test files by CRAP and the package handoff does not run it.
