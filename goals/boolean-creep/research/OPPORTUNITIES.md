@@ -1286,3 +1286,43 @@ This is an environmental interruption with no completed proof, so publication
 must wait for a fresh full run. The clean commit and captured log survived;
 durable process ownership and a resumable proof receipt would reduce recovery
 work after restarts.
+
+## 2026-09-10 — Coverage prebuild hit a locationless compiler failure
+
+The integration proof passed 30 of 31 pre-push lanes, then coverage's preparatory
+build stopped with `@beep/box:build: error TS2589` and no source location.
+The package is unchanged from `origin/main`. A fresh standalone build passed
+all eight tasks and compiled all 111 Box files without source changes, matching
+the known locationless compiler flake. Coverage retries moved past Box and
+then reported the same locationless error in UI and XAI, both also unchanged
+from main. Forced standalone builds passed;
+XAI also passed with a new TypeScript build-info file. The full coverage lane
+and full proof still need successful reruns; isolated builds do not replace them.
+
+The outer Yeet packet incorrectly suggested a security-audit repair even though
+the lane verdict identified coverage. Preserve the innermost failed command and
+diagnostic in failure packets so recovery starts at the actual failure.
+
+## 2026-09-10 — Local coverage runtime differed from the hosted lane
+
+After all 135 prebuild tasks passed, nine coverage shards passed and ACP's
+seeded JSON-RPC property failed in the remaining shard. Seed `20260708` exposed
+an escaped extension key changing from NUL to backslash. The same failure
+reproduced with native JSON parsing outside ACP and Vitest on Node 24.16,
+24.19 and 24.20; Bun and Node 22.22.3 passed the same seeded case.
+
+This matches the upstream V8 key-cache defect tracked in
+[nodejs/node#63785](https://github.com/nodejs/node/issues/63785).
+The imported `main` already pins hosted coverage to Node 22.22.3 in
+`.github/workflows/heavy.yml`; the local shell selected Node 24.20.0.
+The temporary test diagnostics were removed. Prepend the installed Node
+22.22.3 `bin` directory to `PATH` for the local proof to match hosted coverage;
+`mise exec` alone still let Bun resolve the shell's Node 24.20.0 here. The
+protocol assertion and generated schemas remain unchanged. All 12 protocol
+tests then passed with seed `20260708` on Node 22.22.3. Full proof is still
+required.
+
+Local coverage should announce and validate its Node runtime against the
+hosted lane before starting its full prebuild and test fan-out. Reading that
+existing pin first would have avoided rediscovering an already documented
+runtime defect during this recovery.
