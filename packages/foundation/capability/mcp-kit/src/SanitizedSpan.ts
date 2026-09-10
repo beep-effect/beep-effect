@@ -239,6 +239,26 @@ const withTopLevelObjectInputSchema = (schema: JsonObject): JsonObject =>
     ? schema
     : { type: "object", ...schema };
 
+/**
+ * Test-only handle for the wire input-schema patch helper.
+ *
+ * **Example** (Patch a wildcard input schema)
+ *
+ * ```ts
+ * import { withTopLevelObjectInputSchemaForTesting } from "@beep/mcp-kit/SanitizedSpan"
+ *
+ * const patched = withTopLevelObjectInputSchemaForTesting({
+ *   $ref: "#/$defs/Params",
+ *   $defs: { Params: { not: { type: "null" } } },
+ * })
+ * console.log(patched.type) // "object"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const withTopLevelObjectInputSchemaForTesting = withTopLevelObjectInputSchema;
+
 const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Record<string, AiTool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>
 ) {

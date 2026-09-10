@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import { sanitizeTracerAttributes, withSanitizedToolSpan } from "@beep/mcp-kit";
+import { withTopLevelObjectInputSchemaForTesting } from "@beep/mcp-kit/SanitizedSpan";
 import { assert, describe, expect, it, layer } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
@@ -103,3 +104,42 @@ it.effect(
     expect(span.attributes.get("parameters")).toBe("retained with empty deny list");
   })
 );
+
+describe("withTopLevelObjectInputSchema guard arms", () => {
+  it("patches a local wildcard target with a top-level object type", () => {
+    const patched = withTopLevelObjectInputSchemaForTesting({
+      $ref: "#/$defs/Params",
+      $defs: { Params: { not: { type: "null" } } },
+    });
+    expect(patched.type).toBe("object");
+  });
+
+  it("leaves an external ref untouched", () => {
+    const schema = { $ref: "https://example.org/schema.json#/$defs/Params" };
+    expect(withTopLevelObjectInputSchemaForTesting(schema)).toBe(schema);
+  });
+
+  it("leaves a local ref without matching defs untouched", () => {
+    const schema = { $ref: "#/$defs/Params", $defs: { Other: { type: "object" } } };
+    expect(withTopLevelObjectInputSchemaForTesting(schema)).toBe(schema);
+  });
+
+  it("leaves a non-ref schema without a defs table untouched", () => {
+    const schema = { anyOf: [{ type: "string" }] };
+    expect(withTopLevelObjectInputSchemaForTesting(schema)).toBe(schema);
+  });
+
+  it("patches an anyOf object target and skips a non-object wildcard-shaped miss", () => {
+    const anyOfTarget = {
+      $ref: "#/$defs/Params",
+      $defs: { Params: { anyOf: [{ type: "object" }, { type: "array" }] } },
+    };
+    expect(withTopLevelObjectInputSchemaForTesting(anyOfTarget).type).toBe("object");
+
+    const nonWildcard = {
+      $ref: "#/$defs/Params",
+      $defs: { Params: { not: { type: "string" } } },
+    };
+    expect(withTopLevelObjectInputSchemaForTesting(nonWildcard)).toBe(nonWildcard);
+  });
+});
