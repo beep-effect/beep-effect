@@ -34,42 +34,49 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as SchemaAST from "effect/SchemaAST";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
 
 const decodeEditorStateWireFromJson = S.decodeEffect(EditorStateWireFromJson);
-const decodeEditorStateFromJsonResult = S.decodeResult(EditorStateFromJson);
-const decodeLexicalNodeResult = S.decodeResult(LexicalNode);
-const decodeSerializedEditorStateResult = S.decodeResult(SerializedEditorState);
-const decodeEditorStateFromJsonSync = S.decodeSync(EditorStateFromJson);
-const decodeLexicalNodeSync = S.decodeSync(LexicalNode);
+const decodeEditorStateFromJsonResult = S.decodeResult(EditorStateFromJson, { onExcessProperty: "error" });
+const decodeLexicalNodeResult = S.decodeResult(LexicalNode, { onExcessProperty: "error" });
+const decodeSerializedEditorStateResult = S.decodeResult(SerializedEditorState, { onExcessProperty: "error" });
+const decodeEditorStateFromJsonSync = S.decodeSync(EditorStateFromJson, { onExcessProperty: "error" });
+const decodeLexicalNodeSync = S.decodeSync(LexicalNode, { onExcessProperty: "error" });
 const decodeSafeUrlSync = S.decodeSync(SafeUrl);
 const decodeTextFormatMaskSync = S.decodeSync(TextFormatMask);
 const decodeUnknownListNode = S.decodeUnknownEffect(ListNode);
-const decodeUnknownLexicalNodeResult = S.decodeUnknownResult(LexicalNode);
+const decodeUnknownLexicalNodeResult = S.decodeUnknownResult(LexicalNode, { onExcessProperty: "error" });
 const decodeUnknownListNodeResult = S.decodeUnknownResult(ListNode);
-const decodeUnknownSerializedEditorStateResult = S.decodeUnknownResult(SerializedEditorState);
-const decodeUnknownLexicalNodeSync = S.decodeUnknownSync(LexicalNode);
+const decodeUnknownSerializedEditorStateResult = S.decodeUnknownResult(SerializedEditorState, {
+  onExcessProperty: "error",
+});
+const decodeUnknownLexicalNodeSync = S.decodeUnknownSync(LexicalNode, { onExcessProperty: "error" });
 const decodeUnknownRootNodeSync = S.decodeUnknownSync(RootNode);
-const encodeEditorStateFromJson = S.encodeEffect(EditorStateFromJson);
+const encodeEditorStateFromJson = S.encodeEffect(EditorStateFromJson, { onExcessProperty: "error" });
 const encodeSerializedEditorStateWire = S.encodeEffect(SerializedEditorStateWire);
-const encodeEditorStateFromJsonResult = S.encodeResult(EditorStateFromJson);
-const encodeSerializedEditorStateResult = S.encodeResult(SerializedEditorState);
-const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
+const encodeEditorStateFromJsonResult = S.encodeResult(EditorStateFromJson, { onExcessProperty: "error" });
+const encodeSerializedEditorStateResult = S.encodeResult(SerializedEditorState, { onExcessProperty: "error" });
+const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson, { onExcessProperty: "error" });
 const encodeSafeUrlSync = S.encodeSync(SafeUrl);
-const encodeUnknownEditorStateFromJsonResult = S.encodeUnknownResult(EditorStateFromJson);
-const encodeUnknownSerializedEditorStateResult = S.encodeUnknownResult(SerializedEditorState);
+const encodeUnknownEditorStateFromJsonResult = S.encodeUnknownResult(EditorStateFromJson, {
+  onExcessProperty: "error",
+});
+const encodeUnknownSerializedEditorStateResult = S.encodeUnknownResult(SerializedEditorState, {
+  onExcessProperty: "error",
+});
 const isListNodeValue = S.is(ListNodeValue);
 
-const ListNodeArbitrary = S.toArbitrary(ListNode)(fc);
-const NodeArbitrary = S.toArbitrary(LexicalNode)(fc);
-const SafeUrlArbitrary = S.toArbitrary(SafeUrl)(fc);
-const StateArbitrary = S.toArbitrary(SerializedEditorState)(fc);
-const WireStateArbitrary = S.toArbitrary(SerializedEditorStateWire)(fc);
-const decodeEditorState = S.decodeUnknownSync(SerializedEditorState);
-const encodeEditorState = S.encodeSync(SerializedEditorState);
-const encodeLexicalNode = S.encodeSync(LexicalNode);
+const ListNodeArbitrary = Arbitrary.schema(ListNode);
+const NodeArbitrary = Arbitrary.schema(LexicalNode);
+const SafeUrlArbitrary = Arbitrary.schema(SafeUrl);
+const StateArbitrary = Arbitrary.schema(SerializedEditorState);
+const WireStateArbitrary = Arbitrary.schema(SerializedEditorStateWire);
+const decodeEditorState = S.decodeUnknownSync(SerializedEditorState, { onExcessProperty: "error" });
+const encodeEditorState = S.encodeSync(SerializedEditorState, { onExcessProperty: "error" });
+const encodeLexicalNode = S.encodeSync(LexicalNode, { onExcessProperty: "error" });
 
 const matchedNodeType: (node: LexicalNode) => LexicalNode["type"] = LexicalNode.match({
   "artifact-ref": (node) => node.type,
@@ -331,27 +338,38 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("round-trips schema-derived arbitrary nodes through encode/decode", () => {
-    fc.assert(
-      fc.property(NodeArbitrary, (node) => {
-        expect(matchedNodeType(node)).toBe(node.type);
-        expect(LexicalNode.decodeUnknownSync(encodeLexicalNode(node))).toEqual(node);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([NodeArbitrary]),
+          ([node]) => {
+            expect(matchedNodeType(node)).toBe(node.type);
+            expect(LexicalNode.decodeUnknownSync(encodeLexicalNode(node))).toEqual(node);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips schema-derived arbitrary editor states through encode/decode", () => {
-    fc.assert(
-      fc.property(StateArbitrary, (state) => {
-        const encodedState = encodeEditorState(state);
-        expect(decodeEditorState(encodedState)).toEqual(state);
-        expect(SerializedEditorState.decodeOption(encodedState)).toEqual(O.some(state));
-      }),
-      // Pinned at the original 50. Nightly `BEEP_FC_NUM_RUNS=1000` times out at
-      // 300s on unbounded SerializedEditorState trees (#663). Hard `numRuns`
-      // is the one-round-loop seed-exclude form: the env floor cannot raise it.
-      { numRuns: 50 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([StateArbitrary]),
+          ([state]) => {
+            const encodedState = encodeEditorState(state);
+            expect(decodeEditorState(encodedState)).toEqual(state);
+            expect(SerializedEditorState.decodeOption(encodedState)).toEqual(O.some(state));
+
+            return true;
+          },
+          { runs: 50 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("sanitizes link URLs at the schema boundary and keeps safe URLs fixed", () => {
@@ -366,13 +384,20 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(decodeSafeUrlSync("docs/page")).toBe("docs/page");
     expect(encodeSafeUrlSync(decodeSafeUrlSync(unsafeDataUrl))).toBe("#");
 
-    fc.assert(
-      fc.property(SafeUrlArbitrary, (url) => {
-        expect(sanitizeUrl(url)).toBe(url);
-        expect(decodeSafeUrlSync(encodeSafeUrlSync(url))).toBe(url);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([SafeUrlArbitrary]),
+          ([url]) => {
+            expect(sanitizeUrl(url)).toBe(url);
+            expect(decodeSafeUrlSync(encodeSafeUrlSync(url))).toBe(url);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("rejects unsafe values passed directly to semantic node constructors", () => {
@@ -514,15 +539,22 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("round-trips arbitrary open wire states without losing extension fields", () =>
-    fc.assert(
-      fc.property(WireStateArbitrary, (wire) => {
-        const decoded = Effect.runSync(decodeEditorStateLossless(wire));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([WireStateArbitrary]),
+          ([wire]) => {
+            const decoded = Effect.runSync(decodeEditorStateLossless(wire));
 
-        expect(decoded).toEqual(wire);
-        expect(Effect.runSync(encodeSerializedEditorStateWire(decoded))).toEqual(wire);
-      }),
-      fcRuns(50)
-    ));
+            expect(decoded).toEqual(wire);
+            expect(Effect.runSync(encodeSerializedEditorStateWire(decoded))).toEqual(wire);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("preserves opaque future children fields without imposing semantic child grammar", () => {
     const future = {
@@ -631,18 +663,25 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("generates only runtime-canonical list metadata", () =>
-    fc.assert(
-      fc.property(ListNodeArbitrary, (node) => {
-        const expectedTag = ListType.$match(node.listType, {
-          number: ListTag.thunk.ol,
-          bullet: ListTag.thunk.ul,
-          check: ListTag.thunk.ul,
-        });
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ListNodeArbitrary]),
+          ([node]) => {
+            const expectedTag = ListType.$match(node.listType, {
+              number: ListTag.thunk.ol,
+              bullet: ListTag.thunk.ul,
+              check: ListTag.thunk.ul,
+            });
 
-        expect(node.tag).toBe(expectedTag);
-      }),
-      fcRuns(100)
-    ));
+            expect(node.tag).toBe(expectedTag);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("keeps canonical list metadata fixed through the real Lexical runtime", () => {
     const editor = createEditor({
@@ -925,3 +964,29 @@ describe("Lexical.model", { concurrent: false }, () => {
     ).toBe("\t");
   });
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes SerializedEditorState through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      SerializedEditorState.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const codec = S.make<S.Codec<SerializedEditorState, unknown>>(
+      SchemaAST.decodeTo(link.to, SchemaAST.toType(SerializedEditorState.ast), link.transformation)
+    );
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(SerializedEditorState),
+      (value) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(codec)(value);
+          expect(encoded).toEqual([]);
+          return true;
+        }),
+      fcRuns(50)
+    );
+    expect(result._tag).toBe("Passed");
+  })
+);

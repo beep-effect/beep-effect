@@ -169,7 +169,7 @@ const encodeNumberInputFiniteText = (value: number): Effect.Effect<string> => Ef
 const NumberInputFiniteFromText = S.String.pipe(
   S.decodeTo(
     S.Finite,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: decodeNumberInputFiniteText,
       encode: encodeNumberInputFiniteText,
     })

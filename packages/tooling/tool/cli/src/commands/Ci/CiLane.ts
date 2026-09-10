@@ -38,6 +38,7 @@ import {
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
 import { isDoctestSourcePath } from "../../internal/jsdoc/DoctestSource.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
+import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
 import {
   QualityTaskStep,
   runQualityTaskStreamingLaneGroup,
@@ -756,7 +757,6 @@ const jsdocRatchetStep = (repoRoot: string, inventoryPath: string): QualityTaskS
 // not the 32GB beep-ec2-heavy fleet, so they keep the 16GB-survival turbo cap
 // instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
 const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
-const QualityCheckConcurrency = LiteralKit(["2", "3"]);
 const decodeUnknownQualityCheckConcurrencyOption = S.decodeUnknownOption(QualityCheckConcurrency);
 
 const qualityCheckConcurrencyArg = (): string =>
@@ -2311,70 +2311,70 @@ const reportCiCommandError = (error: { readonly message: string }) =>
 export const ciLaneCommand = Command.make(
   "lane",
   {
-    affected: Flag.boolean("affected").pipe(
+    affected: Flag.Boolean("affected").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Run the turbo-backed lane in CI's --affected pull-request shape")
     ),
-    base: Flag.string("base").pipe(
+    base: Flag.String("base").pipe(
       Flag.withDefault("origin/main"),
       Flag.withDescription("Base git ref for affected/docgen/fallow/commitlint shapes")
     ),
-    head: Flag.string("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for docgen shapes")),
-    summarize: Flag.boolean("summarize").pipe(
+    head: Flag.String("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for docgen shapes")),
+    summarize: Flag.Boolean("summarize").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Pass --summarize to the turbo-backed lane (CI always does)")
     ),
-    mode: Flag.choiceWithValue("mode", docgenModeFlagChoices).pipe(
+    mode: Flag.ChoiceWithValue("mode", docgenModeFlagChoices).pipe(
       Flag.withDefault("auto"),
       Flag.withDescription("Docgen lane mode; auto derives none/affected/full from --base...--head")
     ),
-    from: Flag.string("from").pipe(Flag.withDescription("Commitlint range start (defaults to --base)"), Flag.optional),
-    to: Flag.string("to").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Commitlint range end")),
-    last: Flag.boolean("last").pipe(
+    from: Flag.String("from").pipe(Flag.withDescription("Commitlint range start (defaults to --base)"), Flag.optional),
+    to: Flag.String("to").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Commitlint range end")),
+    last: Flag.Boolean("last").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Lint only the last commit (commitlint --last)")
     ),
-    changesetStatus: Flag.boolean("changeset-status").pipe(
+    changesetStatus: Flag.Boolean("changeset-status").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Also run the changeset status check (CI passes this on pull requests)")
     ),
-    validateEnvelopes: Flag.boolean("validate-envelopes").pipe(
+    validateEnvelopes: Flag.Boolean("validate-envelopes").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Also replay the fallow envelope validation steps locally")
     ),
-    runs: Flag.string("runs").pipe(
+    runs: Flag.String("runs").pipe(
       Flag.withDefault("400"),
       Flag.withDescription("BEEP_FC_NUM_RUNS floor for the property lane (values only raise, never lower)")
     ),
-    seed: Flag.string("seed").pipe(
+    seed: Flag.String("seed").pipe(
       Flag.withDefault(DEFAULT_PROPERTY_LANE_SEED),
       Flag.withDescription("BEEP_FC_SEED for the property lane; a fixed seed makes local and CI test identical inputs")
     ),
-    filter: Flag.string("filter").pipe(
+    filter: Flag.String("filter").pipe(
       Flag.withDescription("Pass one package filter to the Turbo invocation inside the selected lane"),
       Flag.optional
     ),
-    partition: Flag.choiceWithValue("partition", partitionFlagChoices).pipe(
+    partition: Flag.ChoiceWithValue("partition", partitionFlagChoices).pipe(
       Flag.withDescription("Run one deterministic Lint or Test Unit package partition"),
       Flag.optional
     ),
-    dryRun: Flag.boolean("dry-run").pipe(
+    dryRun: Flag.Boolean("dry-run").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Prove a partition's full union and selected intersection without executing tasks")
     ),
-    force: Flag.boolean("force").pipe(
+    force: Flag.Boolean("force").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Proof-only partition replay: pass --force to Turbo task execution")
     ),
-    list: Flag.boolean("list").pipe(
+    list: Flag.Boolean("list").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Print the machine-readable lane inventory and exit")
     ),
-    inventory: Flag.string("inventory").pipe(
+    inventory: Flag.String("inventory").pipe(
       Flag.withDescription("jsdoc-ratchet: ratchet this pre-built inventory instead of regenerating it"),
       Flag.optional
     ),
-    lane: Argument.choice("lane", CI_LANE_ID_VALUES).pipe(
+    lane: Argument.Literals("lane", CI_LANE_ID_VALUES).pipe(
       Argument.withDescription("CI lane id to run"),
       Argument.optional
     ),
@@ -2752,19 +2752,19 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
 export const ciLocalCommand = Command.make(
   "local",
   {
-    affected: Flag.boolean("affected").pipe(
+    affected: Flag.Boolean("affected").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Replay CI's pull-request --affected shape instead of full runs")
     ),
-    base: Flag.string("base").pipe(
+    base: Flag.String("base").pipe(
       Flag.withDefault("origin/main"),
       Flag.withDescription("Base git ref for affected/docgen/fallow/commitlint shapes")
     ),
-    fast: Flag.boolean("fast").pipe(
+    fast: Flag.Boolean("fast").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Skip the slow lanes: coverage, test-integration, nix")
     ),
-    lanes: Flag.string("lanes").pipe(
+    lanes: Flag.String("lanes").pipe(
       Flag.withDescription("Comma-separated lane ids to run (default: the full battery)"),
       Flag.optional
     ),

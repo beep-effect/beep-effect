@@ -333,9 +333,9 @@ class PubSubCreateError extends S.TaggedError<PubSubCreateError>($I`PubSubCreate
  * @since 0.0.0
  */
 export const EventBroadcastConfig = Config.all({
-  projectId: Config.string("PUBSUB_PROJECT_ID").pipe(Config.withDefault("")),
-  eventsTopicId: Config.string("PUBSUB_EVENTS_TOPIC").pipe(Config.withDefault("ontology-events")),
-  eventsSubscriptionId: Config.string("PUBSUB_EVENTS_SUBSCRIPTION").pipe(
+  projectId: Config.String("PUBSUB_PROJECT_ID").pipe(Config.withDefault("")),
+  eventsTopicId: Config.String("PUBSUB_EVENTS_TOPIC").pipe(Config.withDefault("ontology-events")),
+  eventsSubscriptionId: Config.String("PUBSUB_EVENTS_SUBSCRIPTION").pipe(
     Config.withDefault("ontology-events-broadcast")
   ),
 });
@@ -695,7 +695,7 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
     serverId,
     timestamp: NonNegativeInt.make(yield* Clock.currentTimeMillis),
   };
-  yield* writer(new TextEncoder().encode(yield* encodeServerMessage(connected)));
+  yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(connected)));
   yield* Effect.logInfo("WebSocket client connected", { ontologyId });
   const eventQueue = yield* hub.subscribe(ontologyId);
   const fibers = yield* FiberMap.make<string>();
@@ -707,7 +707,7 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
       Stream.tap(
         Effect.fnUntraced(function* (event) {
           const message: ServerMessage = { ...event, type: "event" };
-          yield* writer(new TextEncoder().encode(yield* encodeServerMessage(message)));
+          yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(message)));
         })
       ),
       Stream.runDrain
@@ -719,10 +719,11 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
   )(
     Effect.gen(function* () {
       const ping: ServerMessage = { type: "ping", timestamp: NonNegativeInt.make(yield* Clock.currentTimeMillis) };
-      yield* writer(new TextEncoder().encode(yield* encodeServerMessage(ping)));
+      yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(ping)));
     }).pipe(Effect.delay("30 seconds"), Effect.forever, Effect.ignore)
   );
-  yield* socket.run(() => Effect.void).pipe(Effect.ignore);
+  const reader = yield* socket.reader;
+  yield* reader.pull.pipe(Effect.forever, Effect.ignore);
   yield* Effect.logInfo("WebSocket client disconnected", { ontologyId });
 }, Effect.scoped);
 

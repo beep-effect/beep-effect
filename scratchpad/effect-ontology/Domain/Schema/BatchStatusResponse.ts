@@ -104,7 +104,6 @@ type BatchStatusResponseCodec = S.Codec<
 export const BatchStatusResponse: BatchStatusResponseCodec = BatchStatusResponseDefinition.pipe(
   $I.annoteSchema("BatchStatusResponse", {
     description: "Discriminated batch query response with variant-owned state, suspension, or missing data.",
-    toArbitrary: () => S.toArbitrary(BatchStatusResponseDefinition),
   })
 );
 

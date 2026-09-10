@@ -4,7 +4,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Encoding, Layer } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeCuidSync = S.encodeSync(Cuid);
 const encodeCuidSeedSync = S.encodeSync(CuidSeed);
@@ -35,15 +35,22 @@ describe("Cuid", () => {
   );
 
   it("derives valid CUIDs from the schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Cuid)(fc);
+    const arbitrary = Arbitrary.schema(Cuid);
 
-    fc.assert(
-      fc.property(arbitrary, (id) => {
-        expect(Cuid.is(id)).toBe(true);
-        expect(encodeCuidSync(id)).toBe(id);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([id]) => {
+            expect(Cuid.is(id)).toBe(true);
+            expect(encodeCuidSync(id)).toBe(id);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("keeps CuidSeed encoded shape byte-identical", () => {

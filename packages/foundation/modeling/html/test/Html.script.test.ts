@@ -10,13 +10,13 @@ import {
 } from "@beep/html/Html.script";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeHtmlMimeTypeResult = S.decodeResult(HtmlMimeType);
 const decodeScriptDataBlockMimeTypeResult = S.decodeResult(ScriptDataBlockMimeType);
@@ -24,7 +24,7 @@ const decodeScriptStateResult = S.decodeResult(ScriptState);
 const encodeScriptStateResult = S.encodeResult(ScriptState);
 const isInvalidScriptType = S.is(InvalidScriptType);
 
-const ScriptStateArbitrary = S.toArbitrary(ScriptState)(fc);
+const ScriptStateArbitrary = Arbitrary.schema(ScriptState);
 
 describe("HTML script semantic states", () => {
   it("publishes script semantics through the dedicated subpath and root boundary", () => {
@@ -271,13 +271,20 @@ describe("HTML script semantic states", () => {
   });
 
   it("round-trips schema-derived script semantic states", () => {
-    fc.assert(
-      fc.property(ScriptStateArbitrary, (state) => {
-        const encoded = Result.getOrThrow(encodeScriptStateResult(state));
-        const decoded = Result.getOrThrow(decodeScriptStateResult(encoded));
-        expect(Eq.equals(decoded, state)).toBe(true);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ScriptStateArbitrary]),
+          ([state]) => {
+            const encoded = Result.getOrThrow(encodeScriptStateResult(state));
+            const decoded = Result.getOrThrow(decodeScriptStateResult(encoded));
+            expect(Eq.equals(decoded, state)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

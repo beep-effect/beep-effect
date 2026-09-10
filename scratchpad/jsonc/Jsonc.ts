@@ -937,7 +937,7 @@ export class Jsonc {
     return Schema.String.pipe(
       Schema.decodeTo(
         Schema.Unknown,
-        SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
           decode: (input: string) => {
             const { value, errors } = parseValueInternal(input, flags);
             if (errors.length > 0) {

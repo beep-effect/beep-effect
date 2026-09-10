@@ -39,8 +39,8 @@ const runCli = (config: GenerateConfig, options: GenerateCliOptions = {}): void 
   const command = Command.make(
     "generate",
     {
-      check: Flag.boolean("check").pipe(Flag.withDefault(false)),
-      refresh: Flag.boolean("refresh").pipe(Flag.withDefault(false)),
+      check: Flag.Boolean("check").pipe(Flag.withDefault(false)),
+      refresh: Flag.Boolean("refresh").pipe(Flag.withDefault(false)),
     },
     Effect.fn("CodegenKit.cli")(function* ({ check, refresh }) {
       if (check && refresh) return yield* incompatibleFlags;

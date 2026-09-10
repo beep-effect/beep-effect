@@ -7,9 +7,9 @@ import { Duration, Effect, FileSystem, Layer, Path, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Response from "effect/unstable/ai/Response";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 import { CorpusManifest } from "@/corpus/Manifest";
 import { CorpusManifestBuilderLive } from "@/corpus/ManifestBuilder";
@@ -54,7 +54,9 @@ const provideScopedLayer =
 
 describe("C0 F1 live-to-replay slice", () => {
   it("derives execution-mode values from the runtime schema", () => {
-    fc.assert(fc.property(S.toArbitrary(RuntimeMode)(fc), (mode) => isRuntimeMode(mode)));
+    expect(
+      Effect.runSync(Arbitrary.checkEffect(Arbitrary.schema(RuntimeMode), (mode) => isRuntimeMode(mode)))._tag
+    ).toBe("Passed");
   });
 
   it("runs real F1-only sources without a corpus root and replays to an equal report digest", () =>

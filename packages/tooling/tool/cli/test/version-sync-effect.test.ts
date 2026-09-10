@@ -24,7 +24,7 @@ import * as S from "effect/Schema";
 
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownJson = S.decodeEffect(S.fromJsonString(S.Unknown));
 const decodeBunVersionStateSync = S.decodeSync(BunVersionState);
@@ -110,6 +110,70 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
     );
   });
 
+  describe("snapshot catalog synchronization", () => {
+    for (const repository of ["effect", "effect-smol"]) {
+      it.effect(
+        `normalizes ${repository} snapshots and preserves independently versioned tools`,
+        Effect.fn(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
+          const snapshot = (name: string) => `https://pkg.pr.new/Effect-TS/effect/${name}@c8349ed`;
+          const independent = {
+            "@effect/tsgo": "^0.5.0",
+            "@effect/tsgo-linux-x64": "^0.5.0",
+            "@effect/markdown-toc": "^0.1.0",
+            "@effect/markdown-toc-cli": "^0.1.0",
+            typescript: "^5.9.0",
+          };
+          const packageJsonPath = path.join(tmpDir, "package.json");
+          yield* fs.writeFileString(
+            packageJsonPath,
+            encodeJson({
+              catalog: {
+                effect: `https://pkg.pr.new/Effect-TS/${repository}/effect@c8349ed`,
+                "@effect/vitest": "https://pkg.pr.new/Effect-TS/effect-smol/@effect/vitest@abcdef0",
+                "@effect/platform-node": snapshot("@effect/platform-node"),
+                ...independent,
+              },
+            })
+          );
+          const state = yield* resolveEffectCatalog(tmpDir);
+          expect(A.map(state.packages, (pkg) => pkg.name)).toEqual([
+            "@effect/platform-node",
+            "@effect/vitest",
+            "effect",
+          ]);
+          const report = buildEffectReport(state);
+          expect(report.status).toBe("drift");
+          expect(A.map(report.items, (item) => [item.field, item.expected])).toEqual([
+            ["catalog.@effect/vitest", snapshot("@effect/vitest")],
+            ...(repository === "effect-smol" ? [["catalog.effect", snapshot("effect")]] : []),
+          ]);
+          const updater = yield* UpdateApplierService;
+          expect(
+            yield* updater.apply(
+              tmpDir,
+              VersionSyncResolution.make({
+                report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
+                nodeLocations: [],
+              })
+            )
+          ).toBe(repository === "effect-smol" ? 2 : 1);
+          const resolved = yield* resolveEffectCatalog(tmpDir);
+          expect(buildEffectReport(resolved).status).toBe("ok");
+          expect(A.map(resolved.packages, (pkg) => pkg.versionSpecifier)).toEqual([
+            snapshot("@effect/platform-node"),
+            snapshot("@effect/vitest"),
+            snapshot("effect"),
+          ]);
+          const updated = yield* UnknownFromJsonString.decodeEffect(yield* fs.readFileString(packageJsonPath));
+          expect(updated).toMatchObject({ catalog: independent });
+        })
+      );
+    }
+  });
+
   describe("updateCatalogEntry", () => {
     it.effect(
       "rewrites a root package.json catalog entry in place",
@@ -188,17 +252,56 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         yield* fs.remove(tmpDir, { recursive: true });
       })
     );
+
+    it.effect(
+      "skips templated node-version values that fall back to .nvmrc at runtime",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory();
+        const workflowDir = path.join(tmpDir, ".github", "workflows");
+
+        yield* fs.makeDirectory(workflowDir, { recursive: true });
+        yield* fs.writeFileString(path.join(tmpDir, ".nvmrc"), "20.11.1\n");
+        yield* fs.writeFileString(
+          path.join(workflowDir, "heavy.yml"),
+          A.join(
+            [
+              "jobs:",
+              "  lanes:",
+              "    steps:",
+              "      - uses: actions/setup-node@v4",
+              "        with:",
+              "          node-version: ${{ matrix.node_version || '' }}",
+            ],
+            "\n"
+          )
+        );
+
+        const state = yield* resolveNodeVersions(tmpDir);
+        const report = buildNodeReport(state);
+
+        expect(state.workflowLocations).toHaveLength(0);
+        expect(report.status).toBe("ok");
+
+        yield* fs.remove(tmpDir, { recursive: true });
+      })
+    );
   });
 
   describe("buildBunReport", () => {
     it("round-trips schema-derived Bun version states", () => {
       const equivalent = S.toEquivalence(BunVersionState);
 
-      fc.assert(
-        fc.property(S.toArbitrary(BunVersionState)(fc), (state) => {
-          expect(equivalent(decodeBunVersionStateSync(encodeBunVersionStateSync(state)), state)).toBe(true);
-        })
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(BunVersionState)]), ([state]) => {
+            expect(equivalent(decodeBunVersionStateSync(encodeBunVersionStateSync(state)), state)).toBe(true);
+
+            return true;
+          })
+        )._tag
+      ).toBe("Passed");
     });
 
     it.effect(

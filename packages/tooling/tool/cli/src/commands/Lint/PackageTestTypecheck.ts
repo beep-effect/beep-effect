@@ -597,11 +597,11 @@ export const defaultTestTypecheckBaselinePath = defaultBaselinePath;
 export const lintPackageTestTypecheckCommand = Command.make(
   "package-test-typecheck",
   {
-    baseline: Flag.string("baseline").pipe(
+    baseline: Flag.String("baseline").pipe(
       Flag.withDefault(defaultBaselinePath),
       Flag.withDescription("Committed test-typecheck blind-spot baseline JSONC path")
     ),
-    writeBaseline: Flag.boolean("write-baseline").pipe(
+    writeBaseline: Flag.Boolean("write-baseline").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Rewrite the blind-spot baseline from the current scan, preserving hand-authored notes")
     ),

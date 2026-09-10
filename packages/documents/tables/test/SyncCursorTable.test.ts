@@ -14,11 +14,9 @@ import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 
 const decodeUnknownDomainSyncCursorSyncCursorSync = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
 
-const SyncCursorArbitrary = S.toArbitrary(DomainSyncCursor.SyncCursor)(fc);
 const SyncCursorEquivalence = S.toEquivalence(DomainSyncCursor.SyncCursor);
 
 const indexConfigNamed = (name: string) =>
@@ -90,19 +88,20 @@ describe("SyncCursor table", () => {
     expect(SyncCursorEquivalence(roundTripped, syncCursor)).toBe(true);
   });
 
-  it("round-trips schema-derived SyncCursors through the row converters", () =>
-    fc.assert(
-      fc.property(SyncCursorArbitrary, (syncCursor) => {
-        const insert = toSyncCursorInsert(syncCursor);
-        const decoded = fromSyncCursorRow({
-          ...insert,
-          id: syncCursor.id,
-          lastError: insert.lastError ?? null,
-          lastEventId: insert.lastEventId ?? null,
-        });
+  it.prop(
+    "round-trips schema-derived SyncCursors through the row converters",
+    [S.toType(DomainSyncCursor.SyncCursor)],
+    ([syncCursor]) => {
+      const insert = toSyncCursorInsert(syncCursor);
+      const decoded = fromSyncCursorRow({
+        ...insert,
+        id: syncCursor.id,
+        lastError: insert.lastError ?? null,
+        lastEventId: insert.lastEventId ?? null,
+      });
 
-        expect(SyncCursorEquivalence(decoded, syncCursor)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+      expect(SyncCursorEquivalence(decoded, syncCursor)).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

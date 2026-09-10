@@ -93,9 +93,9 @@ orchestrator owns schemas, contracts, and judgment.
         `tasks[].hash` is the ledger input).
   - [ ] Lint-policy — heterogeneous sublanes have root-wide inputs; one union glob would recreate a
         whole-tree hash. Grilled 2026-09-08 (rulings 19–25): one task per sublane, in two shapes.
-    - [ ] C3.1 scripts-block schema, generator parity, `beep lint package-scripts` gate, codegen
+    - [x] C3.1 scripts-block schema, generator parity, `beep lint package-scripts` gate, codegen
           placeholder removal and root `codegen` split (ruling 23, 24).
-    - [ ] C3.2 `lint:deprecated-apis` and `lint:jsdoc` package tasks (eslint profiles); the 4-way
+    - [x] C3.2 `lint:deprecated-apis` and `lint:jsdoc` package tasks (eslint profiles); the 4-way
           shard runner retires (ruling 21).
     - [ ] C3.3 `lint:laws` package task (sub-second laws plus package-test-imports); `beep:policy`
           retires (ruling 21).

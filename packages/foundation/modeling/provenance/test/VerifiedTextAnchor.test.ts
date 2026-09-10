@@ -20,7 +20,7 @@ import { Effect, flow, Layer, Result } from "effect";
 import * as Crypto from "effect/Crypto";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeTextAnchorVerificationReceipt = S.decodeEffect(TextAnchorVerificationReceipt);
 const decodeSourceTextIdentityResult = S.decodeResult(SourceTextIdentity);
@@ -404,13 +404,20 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
   );
 
   it("derives constructive arbitrary source identities from the schema", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(SourceTextIdentity)(fc), (source) => {
-        const encoded = Result.getOrThrow(encodeUnknownSourceTextIdentityResult(source));
-        const decoded = Result.getOrThrow(decodeSourceTextIdentityResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(SourceTextIdentity)]),
+          ([source]) => {
+            const encoded = Result.getOrThrow(encodeUnknownSourceTextIdentityResult(source));
+            const decoded = Result.getOrThrow(decodeSourceTextIdentityResult(encoded));
 
-        expect(S.toEquivalence(SourceTextIdentity)(decoded, source)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(SourceTextIdentity)(decoded, source)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

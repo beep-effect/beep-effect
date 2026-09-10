@@ -19,7 +19,7 @@ import { Effect, Encoding, Equal, HashMap, HashSet, Layer, Option, Order, Result
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 import { canonicalJson } from "@/corpus/Canonical";
 import { CorpusPaperId } from "@/corpus/Manifest";
@@ -598,15 +598,15 @@ describe("C0 schema exports", () => {
   });
 
   it("derives fast-check values from representative source schemas", () => {
-    fc.assert(
-      fc.property(
-        S.toArbitrary(DocumentId)(fc),
-        S.toArbitrary(DegradedKind)(fc),
-        S.toArbitrary(MetricName)(fc),
-        (id, kind, metric) => isDocumentId(id) && isDegradedKind(kind) && isMetricName(metric)
-      ),
-      { numRuns: 25 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(DocumentId), Arbitrary.schema(DegradedKind), Arbitrary.schema(MetricName)]),
+          ([id, kind, metric]) => isDocumentId(id) && isDegradedKind(kind) && isMetricName(metric),
+          { runs: 25 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });
 

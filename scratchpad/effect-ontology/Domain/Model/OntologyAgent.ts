@@ -36,11 +36,7 @@ const AgentConcurrency = PosInt.check(
       message: "Ontology agent concurrency must be an integer between 1 and 64.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 64 }).map(PosInt.make),
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("AgentConcurrency", {
       description: "Bounded ontology-agent concurrency from one through 64 tasks.",
     })
@@ -92,9 +88,7 @@ class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`Onto
  * @category configuration
  * @since 0.0.0
  */
-export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(OntologyAgentConfigModel)(fc),
-}).pipe(
+export const OntologyAgentConfig = OntologyAgentConfigModel.pipe(
   $I.annoteSchema("OntologyAgentConfig", {
     description: "Complete schema-defaulted policy for ontology-agent operations.",
   }),
@@ -436,9 +430,7 @@ class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsMode
  * @category configuration
  * @since 0.0.0
  */
-export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ExtractWithClaimsOptionsModel)(fc),
-}).pipe(
+export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.pipe(
   $I.annoteSchema("ExtractWithClaimsOptions", {
     description: "Schema-defaulted options for extraction with claim provenance.",
   })
@@ -653,7 +645,6 @@ class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
 export const QueryBinding = QueryBindingModel.pipe(
   $I.annoteSchema("QueryBinding", {
     description: "One immutable row of SPARQL variable bindings.",
-    toArbitrary: () => (fc) => S.toArbitrary(QueryBindingModel)(fc),
   })
 );
 
@@ -730,9 +721,7 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
  * @category models
  * @since 0.0.0
  */
-export const QueryResult = QueryResultModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(QueryResultModel)(fc),
-}).pipe(
+export const QueryResult = QueryResultModel.pipe(
   $I.annoteSchema("QueryResult", {
     description: "Natural-language answer, transparent SPARQL, bindings, and confidence.",
   })
@@ -778,9 +767,7 @@ class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningRes
  * @category models
  * @since 0.0.0
  */
-export const ReasoningResult = ReasoningResultModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ReasoningResultModel)(fc),
-}).pipe(
+export const ReasoningResult = ReasoningResultModel.pipe(
   $I.annoteSchema("ReasoningResult", {
     description: "Inferred-triple count, applied reasoning rules, and elapsed duration.",
   })
@@ -874,9 +861,7 @@ class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`Violatio
  * @category validation
  * @since 0.0.0
  */
-export const ViolationsByLevel = ViolationsByLevelModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ViolationsByLevelModel)(fc),
-}).pipe(
+export const ViolationsByLevel = ViolationsByLevelModel.pipe(
   $I.annoteSchema("ViolationsByLevel", {
     description: "SHACL diagnostics partitioned by standard severity.",
   })
@@ -936,9 +921,7 @@ class ViolationExplanationModel extends S.Class<ViolationExplanationModel>($I`Vi
  * @category validation
  * @since 0.0.0
  */
-export const ViolationExplanation = ViolationExplanationModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ViolationExplanationModel)(fc),
-}).pipe(
+export const ViolationExplanation = ViolationExplanationModel.pipe(
   $I.annoteSchema("ViolationExplanation", {
     description: "Explainable SHACL diagnostic with focus, path, severity, and optional correction.",
   })
@@ -1076,9 +1059,7 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
  * @category validation
  * @since 0.0.0
  */
-export const EnhancedValidationReport = EnhancedValidationReportModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(EnhancedValidationReportModel)(fc),
-}).pipe(
+export const EnhancedValidationReport = EnhancedValidationReportModel.pipe(
   $I.annoteSchema("EnhancedValidationReport", {
     description: "SHACL conformance report augmented with grouped and explainable diagnostics.",
   })

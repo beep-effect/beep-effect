@@ -16,13 +16,13 @@ import {
 import { Button, Input, Select } from "@beep/html/Html.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeButtonStateResult = S.decodeResult(ButtonState);
 const decodeInputResult = S.decodeResult(Input);
@@ -34,8 +34,8 @@ const encodeInputStateResult = S.encodeResult(InputState);
 const isHtmlConditionalInputAttributeName = S.is(HtmlConditionalInputAttributeName);
 const isHtmlInputStateName = S.is(HtmlInputStateName);
 
-const InputStateArbitrary = S.toArbitrary(InputState)(fc);
-const ButtonStateArbitrary = S.toArbitrary(ButtonState)(fc);
+const InputStateArbitrary = Arbitrary.schema(InputState);
+const ButtonStateArbitrary = Arbitrary.schema(ButtonState);
 
 describe("HTML form-control semantic states", () => {
   it("keeps both applicability axes inside their generated finite domains", () => {
@@ -142,21 +142,35 @@ describe("HTML form-control semantic states", () => {
   });
 
   it("round-trips schema-derived input and button semantic states", () => {
-    fc.assert(
-      fc.property(InputStateArbitrary, (state) => {
-        const encoded = Result.getOrThrow(encodeInputStateResult(state));
-        const decoded = Result.getOrThrow(decodeInputStateResult(encoded));
-        expect(Eq.equals(decoded, state)).toBe(true);
-      }),
-      fcRuns(25)
-    );
-    fc.assert(
-      fc.property(ButtonStateArbitrary, (state) => {
-        const encoded = Result.getOrThrow(encodeButtonStateResult(state));
-        const decoded = Result.getOrThrow(decodeButtonStateResult(encoded));
-        expect(Eq.equals(decoded, state)).toBe(true);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([InputStateArbitrary]),
+          ([state]) => {
+            const encoded = Result.getOrThrow(encodeInputStateResult(state));
+            const decoded = Result.getOrThrow(decodeInputStateResult(encoded));
+            expect(Eq.equals(decoded, state)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ButtonStateArbitrary]),
+          ([state]) => {
+            const encoded = Result.getOrThrow(encodeButtonStateResult(state));
+            const decoded = Result.getOrThrow(decodeButtonStateResult(encoded));
+            expect(Eq.equals(decoded, state)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

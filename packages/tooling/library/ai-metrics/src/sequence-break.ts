@@ -7,9 +7,11 @@
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Number as Num, Order } from "effect";
+import { identity, Number as Num, Order } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { HookPulseAgentKind, HookPulseWaitReason } from "./hook-pulse.ts";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $RepoAiMetricsId.create("sequence-break");
 
@@ -414,6 +416,20 @@ export class SequenceBreakDampingV1 extends S.Class<SequenceBreakDampingV1>($I`S
   ),
   $I.annote("SequenceBreakDampingV1", {
     description: "Content-free shared claim that damps duplicate sequence-break notifications.",
+    // Generate ordered endpoints constructively; decoding still checks the original invariant.
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<SequenceBreakDampingV1>()(
+        S.Struct(SequenceBreakDampingV1.fields),
+        SchemaTransformation.transform({
+          decode: (value) =>
+            SequenceBreakDampingV1.make({
+              ...value,
+              claimedEpochMs: NonNegativeInt.make(Num.min(value.claimedEpochMs, value.expiresEpochMs)),
+              expiresEpochMs: NonNegativeInt.make(Num.max(value.claimedEpochMs, value.expiresEpochMs)),
+            }),
+          encode: identity,
+        })
+      ),
   })
 ) {
   static readonly decodeEffect = S.decodeUnknownEffect(SequenceBreakDampingV1);
@@ -486,6 +502,16 @@ export class SequenceBreakNotificationV1 extends S.Class<SequenceBreakNotificati
   ),
   $I.annote("SequenceBreakNotificationV1", {
     description: "Privacy-safe delivery evidence for one time-based sequence-break notification stage.",
+    // Derive the dependent reason instead of discarding independently generated mismatches.
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<SequenceBreakNotificationV1>()(
+        S.Struct(SequenceBreakNotificationV1.fields),
+        SchemaTransformation.transform({
+          decode: (value) =>
+            SequenceBreakNotificationV1.make({ ...value, waitReason: waitReasonForTarget(value.target) }),
+          encode: identity,
+        })
+      ),
   })
 ) {
   static readonly decodeEffect = S.decodeUnknownEffect(SequenceBreakNotificationV1);

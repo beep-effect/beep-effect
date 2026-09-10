@@ -3,8 +3,10 @@ import { $SchemaId } from "@beep/identity";
 import { CSV } from "@beep/schema/Csv";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Str from "effect/String";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const $I = $SchemaId.create("csv_test");
 
@@ -54,8 +56,6 @@ class InvalidNumberRow extends S.Class<InvalidNumberRow>($I`InvalidNumberRow`)(
 ) {}
 
 describe("CSV", () => {
-  const userRowArbitrary = S.toArbitrary(UserRow)(fc);
-
   it.effect(
     "decodes headered CSV text into typed row arrays",
     Effect.fnUntraced(function* () {
@@ -151,18 +151,34 @@ describe("CSV", () => {
     })
   );
 
-  it("round-trips schema-derived rows through the CSV codec", () => {
+  it("round-trips schema-derived rows with CSV null-byte normalization", () => {
     const csv = CSV(UserRow);
 
-    fc.assert(
-      fc.property(fc.array(userRowArbitrary, { maxLength: 5 }), (rows) => {
-        const encoded = S.encodeSync(csv)(rows);
-        const decoded = S.decodeSync(csv)(encoded);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.Array(UserRow).check(S.isMaxLength(5)))]),
+          ([rows]) => {
+            const encoded = S.encodeSync(csv)(rows);
+            const decoded = S.decodeSync(csv)(encoded);
 
-        expect(decoded).toEqual(rows);
-      }),
-      fcRuns(25)
-    );
+            expect(decoded).toEqual(
+              A.map(rows, (row) =>
+                UserRow.make({
+                  ...row,
+                  first_name: Str.replaceAll("\0", "")(row.first_name),
+                  last_name: Str.replaceAll("\0", "")(row.last_name),
+                  address: Str.replaceAll("\0", "")(row.address),
+                })
+              )
+            );
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it.effect(

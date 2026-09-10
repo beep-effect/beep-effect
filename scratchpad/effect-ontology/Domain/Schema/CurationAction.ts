@@ -28,11 +28,7 @@ const WikidataQid = S.String.check(
     description: "A Wikidata item identifier beginning with Q and a non-zero canonical decimal integer.",
     message: "Wikidata QID must use Q followed by a positive decimal integer without leading zeroes.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: Number.MAX_SAFE_INTEGER }).map((id) => `Q${id}`),
-  })
-  .pipe(
+).pipe(
     S.brand("WikidataQid"),
     $I.annoteSchema("WikidataQid", {
       description: "Canonical Wikidata item identifier.",
@@ -130,7 +126,6 @@ const CurationActionDefinition = S.TaggedUnion({
 export const CorrectTripleAction = CurationActionDefinition.cases.CorrectTripleAction.pipe(
   $I.annoteSchema("CorrectTripleAction", {
     description: "Curation command that replaces an incorrect claim with a complete canonical RDF triple.",
-    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.CorrectTripleAction),
   })
 );
 
@@ -166,7 +161,6 @@ export type CorrectTripleAction = typeof CorrectTripleAction.Type;
 export const MarkAsWrongAction = CurationActionDefinition.cases.MarkAsWrongAction.pipe(
   $I.annoteSchema("MarkAsWrongAction", {
     description: "Curation command that deprecates an incorrect claim and optionally records a negative example.",
-    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.MarkAsWrongAction),
   })
 );
 
@@ -204,7 +198,6 @@ export type MarkAsWrongAction = typeof MarkAsWrongAction.Type;
 export const AddAliasAction = CurationActionDefinition.cases.AddAliasAction.pipe(
   $I.annoteSchema("AddAliasAction", {
     description: "Curation command that attaches a surface-form alias to a canonical RDF entity.",
-    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.AddAliasAction),
   })
 );
 /**
@@ -239,7 +232,6 @@ export type AddAliasAction = typeof AddAliasAction.Type;
 export const PromoteToPreferredAction = CurationActionDefinition.cases.PromoteToPreferredAction.pipe(
   $I.annoteSchema("PromoteToPreferredAction", {
     description: "Curation command that promotes a claim to preferred rank.",
-    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.PromoteToPreferredAction),
   })
 );
 /**
@@ -275,7 +267,6 @@ export type PromoteToPreferredAction = typeof PromoteToPreferredAction.Type;
 export const LinkToWikidataAction = CurationActionDefinition.cases.LinkToWikidataAction.pipe(
   $I.annoteSchema("LinkToWikidataAction", {
     description: "Curation command that confirms an owl:sameAs link to one Wikidata item.",
-    toArbitrary: () => S.toArbitrary(CurationActionDefinition.cases.LinkToWikidataAction),
   })
 );
 /**
@@ -310,7 +301,6 @@ export type LinkToWikidataAction = typeof LinkToWikidataAction.Type;
 export const CurationAction = CurationActionDefinition.pipe(
   $I.annoteSchema("CurationAction", {
     description: "Tagged union of claim correction, deprecation, aliasing, promotion, and Wikidata-link actions.",
-    toArbitrary: () => S.toArbitrary(CurationActionDefinition),
   })
 );
 
@@ -386,7 +376,6 @@ const CurationEventDefinition = S.TaggedUnion({
 export const ClaimCorrectedEvent = CurationEventDefinition.cases.ClaimCorrectedEvent.pipe(
   $I.annoteSchema("ClaimCorrectedEvent", {
     description: "Domain event emitted after a claim correction is applied successfully.",
-    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.ClaimCorrectedEvent),
   })
 );
 
@@ -415,7 +404,6 @@ export const ClaimCorrectedEvent = CurationEventDefinition.cases.ClaimCorrectedE
 export const ClaimDeprecatedEvent = CurationEventDefinition.cases.ClaimDeprecatedEvent.pipe(
   $I.annoteSchema("ClaimDeprecatedEvent", {
     description: "Domain event emitted after an incorrect claim is deprecated.",
-    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.ClaimDeprecatedEvent),
   })
 );
 
@@ -446,7 +434,6 @@ export const ClaimDeprecatedEvent = CurationEventDefinition.cases.ClaimDeprecate
 export const AliasAddedEvent = CurationEventDefinition.cases.AliasAddedEvent.pipe(
   $I.annoteSchema("AliasAddedEvent", {
     description: "Domain event emitted after a surface-form alias is attached to an entity.",
-    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.AliasAddedEvent),
   })
 );
 
@@ -475,7 +462,6 @@ export const AliasAddedEvent = CurationEventDefinition.cases.AliasAddedEvent.pip
 export const ClaimPromotedEvent = CurationEventDefinition.cases.ClaimPromotedEvent.pipe(
   $I.annoteSchema("ClaimPromotedEvent", {
     description: "Domain event emitted after a claim is promoted to preferred rank.",
-    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.ClaimPromotedEvent),
   })
 );
 
@@ -505,7 +491,6 @@ export const ClaimPromotedEvent = CurationEventDefinition.cases.ClaimPromotedEve
 export const EntityLinkedEvent = CurationEventDefinition.cases.EntityLinkedEvent.pipe(
   $I.annoteSchema("EntityLinkedEvent", {
     description: "Domain event emitted after an entity is linked to a Wikidata item.",
-    toArbitrary: () => S.toArbitrary(CurationEventDefinition.cases.EntityLinkedEvent),
   })
 );
 
@@ -534,7 +519,6 @@ export const EntityLinkedEvent = CurationEventDefinition.cases.EntityLinkedEvent
 export const CurationEvent = CurationEventDefinition.pipe(
   $I.annoteSchema("CurationEvent", {
     description: "Tagged union of events emitted after successful curation actions.",
-    toArbitrary: () => S.toArbitrary(CurationEventDefinition),
   })
 );
 
@@ -584,7 +568,6 @@ const CurationJobDefinition = S.TaggedUnion({
 export const EmbeddingJob = CurationJobDefinition.cases.EmbeddingJob.pipe(
   $I.annoteSchema("EmbeddingJob", {
     description: "Asynchronous curation job that re-embeds a canonical entity.",
-    toArbitrary: () => S.toArbitrary(CurationJobDefinition.cases.EmbeddingJob),
   })
 );
 
@@ -613,7 +596,6 @@ export const EmbeddingJob = CurationJobDefinition.cases.EmbeddingJob.pipe(
 export const PromptCacheJob = CurationJobDefinition.cases.PromptCacheJob.pipe(
   $I.annoteSchema("PromptCacheJob", {
     description: "Asynchronous curation job that updates the prompt example cache.",
-    toArbitrary: () => S.toArbitrary(CurationJobDefinition.cases.PromptCacheJob),
   })
 );
 
@@ -642,7 +624,6 @@ export const PromptCacheJob = CurationJobDefinition.cases.PromptCacheJob.pipe(
 export const CurationJob = CurationJobDefinition.pipe(
   $I.annoteSchema("CurationJob", {
     description: "Tagged union of embedding and prompt-cache work requested by curation.",
-    toArbitrary: () => S.toArbitrary(CurationJobDefinition),
   })
 );
 

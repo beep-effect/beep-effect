@@ -97,7 +97,7 @@ export const installResearchTimers = Effect.fn("ResearchTimers.installResearchTi
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const home = yield* Config.string("HOME").pipe(
+  const home = yield* Config.String("HOME").pipe(
     ResearchCommandError.mapError("HOME is not set; cannot locate systemd user directory.")
   );
   const unitDir = path.join(home, ".config", "systemd", "user");

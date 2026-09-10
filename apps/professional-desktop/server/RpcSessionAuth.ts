@@ -33,7 +33,7 @@ const DESKTOP_RPC_SESSION_TOKEN_ENV = "BEEP_DESKTOP_RPC_SESSION_TOKEN" as const;
  * @category configuration
  * @since 0.0.0
  */
-export const DesktopRpcSessionToken = Config.redacted(DESKTOP_RPC_SESSION_TOKEN_ENV).pipe(Config.option);
+export const DesktopRpcSessionToken = Config.Redacted(DESKTOP_RPC_SESSION_TOKEN_ENV).pipe(Config.option);
 
 /**
  * Build the HTTP Authorization header value for a desktop RPC session token.

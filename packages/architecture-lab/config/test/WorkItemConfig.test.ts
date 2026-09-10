@@ -14,7 +14,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Layer } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownWorkItemConfigValueSync = S.decodeUnknownSync(WorkItemConfigValue);
 const decodeUnknownWorkItemPublicConfigSync = S.decodeUnknownSync(WorkItemPublicConfig);
@@ -68,28 +68,38 @@ describe("WorkItem configuration", () => {
   });
 
   it("round-trips schema-derived WorkItem config values", () => {
-    fc.assert(
-      fc.property(
-        S.toArbitrary(WorkItemPublicConfig)(fc),
-        S.toArbitrary(WorkItemServerConfig)(fc),
-        S.toArbitrary(WorkItemSecretConfig)(fc),
-        S.toArbitrary(WorkItemConfigValue)(fc),
-        (publicConfig, serverConfig, secretConfig, configValue) =>
-          Equal.equals(
-            decodeUnknownWorkItemPublicConfigSync(encodeWorkItemPublicConfigSync(publicConfig)),
-            publicConfig
-          ) &&
-          Equal.equals(
-            decodeUnknownWorkItemServerConfigSync(encodeWorkItemServerConfigSync(serverConfig)),
-            serverConfig
-          ) &&
-          Equal.equals(
-            decodeUnknownWorkItemSecretConfigSync(encodeWorkItemSecretConfigSync(secretConfig)),
-            secretConfig
-          ) &&
-          Equal.equals(decodeUnknownWorkItemConfigValueSync(encodeWorkItemConfigValueSync(configValue)), configValue)
-      ),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(WorkItemPublicConfig),
+            Arbitrary.schema(WorkItemServerConfig),
+            Arbitrary.schema(WorkItemSecretConfig),
+            Arbitrary.schema(WorkItemConfigValue),
+          ]),
+          ([publicConfig, serverConfig, secretConfig, configValue]) => {
+            const result =
+              Equal.equals(
+                decodeUnknownWorkItemPublicConfigSync(encodeWorkItemPublicConfigSync(publicConfig)),
+                publicConfig
+              ) &&
+              Equal.equals(
+                decodeUnknownWorkItemServerConfigSync(encodeWorkItemServerConfigSync(serverConfig)),
+                serverConfig
+              ) &&
+              Equal.equals(
+                decodeUnknownWorkItemSecretConfigSync(encodeWorkItemSecretConfigSync(secretConfig)),
+                secretConfig
+              ) &&
+              Equal.equals(
+                decodeUnknownWorkItemConfigValueSync(encodeWorkItemConfigValueSync(configValue)),
+                configValue
+              );
+            return result;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

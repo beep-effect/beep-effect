@@ -65,16 +65,12 @@ const Fixed32Checks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-export const Fixed32 = S.Finite.annotate({
-  toArbitrary: () => (fc) => fc.integer({ min: fixed32Minimum, max: fixed32Maximum }),
-})
-  .check(Fixed32Checks)
-  .pipe(
-    S.brand("Fixed32"),
-    $I.annoteSchema("Fixed32", {
-      description: "A protobuf fixed32 number in the inclusive unsigned 32-bit range.",
-    })
-  );
+export const Fixed32 = S.Finite.check(Fixed32Checks).pipe(
+  S.brand("Fixed32"),
+  $I.annoteSchema("Fixed32", {
+    description: "A protobuf fixed32 number in the inclusive unsigned 32-bit range.",
+  })
+);
 
 /**
  * Type-level value inferred from {@link Fixed32}.

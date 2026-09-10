@@ -1,9 +1,10 @@
 import { EdgeAsOfQuery, RecordEdgeFact, SupersedeEdgeFact } from "@beep/epistemic-use-cases/EdgeAuthority";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEdgeAsOfQuerySync = S.decodeSync(EdgeAsOfQuery);
 const decodeUnknownRecordEdgeFactOption = S.decodeUnknownOption(RecordEdgeFact);
@@ -61,7 +62,7 @@ const withoutValidFrom = ({ validFrom: _validFrom, ...rest }: { readonly validFr
 // EdgeAsOfQuery carries both axes and no cross-field check, so its arbitrary generates
 // freely; the write commands require orgScope/orgId agreement, which a generate-and-filter
 // arbitrary would essentially never satisfy.
-const EdgeAsOfQueryArbitrary = S.toArbitrary(EdgeAsOfQuery)(fc);
+const EdgeAsOfQueryArbitrary = Arbitrary.schema(EdgeAsOfQuery);
 
 describe("@beep/epistemic-use-cases edge authority commands", () => {
   it("round-trips RecordEdgeFact through its epoch-millis encoding", () => {
@@ -95,18 +96,25 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
   });
 
   it("round-trips schema-derived as-of queries without changing the encoded shape", () =>
-    fc.assert(
-      fc.property(EdgeAsOfQueryArbitrary, (query) => {
-        const encoded = encodeEdgeAsOfQuerySync(query);
-        const decoded = decodeEdgeAsOfQuerySync(encoded);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([EdgeAsOfQueryArbitrary]),
+          ([query]) => {
+            const encoded = encodeEdgeAsOfQuerySync(query);
+            const decoded = decodeEdgeAsOfQuerySync(encoded);
 
-        // Both axes survive the millis boundary for every generated instant, not just the fixture.
-        expect(encodeEdgeAsOfQuerySync(decoded)).toStrictEqual(encoded);
-        expect(typeof encoded.knownAt).toBe("number");
-        expect(typeof encoded.validAt).toBe("number");
-      }),
-      fcRuns(50)
-    ));
+            // Both axes survive the millis boundary for every generated instant, not just the fixture.
+            expect(encodeEdgeAsOfQuerySync(decoded)).toStrictEqual(encoded);
+            expect(typeof encoded.knownAt).toBe("number");
+            expect(typeof encoded.validAt).toBe("number");
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("rejects a record command whose identity org scope names a different organization", () => {
     const mismatched = { ...recordEncoded, identity: { ...identity, orgScope: "2" } };

@@ -12,9 +12,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Auth");
 
 const TicketTokenDefinition = S.RedactedFromValue(S.NonEmptyString);
 
-const TicketToken = TicketTokenDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(TicketTokenDefinition),
-}).pipe(
+const TicketToken = TicketTokenDefinition.pipe(
   $I.annoteSchema("TicketToken", {
     description: "Non-empty, redacted bearer credential used once to authenticate a WebSocket connection.",
   })
@@ -22,9 +20,7 @@ const TicketToken = TicketTokenDefinition.annotate({
 
 const ApiKeyDefinition = S.RedactedFromValue(S.NonEmptyString);
 
-const ApiKey = ApiKeyDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(ApiKeyDefinition),
-}).pipe(
+const ApiKey = ApiKeyDefinition.pipe(
   $I.annoteSchema("ApiKey", {
     description: "Non-empty API credential retained in redacted form inside a ticket record.",
   })
@@ -60,7 +56,7 @@ export class TicketRequest extends S.Class<TicketRequest>($I`TicketRequest`)(
     description: "Request for a single-use WebSocket ticket scoped to one ontology.",
   })
 ) {
-  static readonly decodeUnknownEffect = S.decodeUnknownEffect(TicketRequest)
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(TicketRequest);
 }
 
 /**
@@ -109,7 +105,7 @@ export class TicketResponse extends S.Class<TicketResponse>($I`TicketResponse`)(
 ) {
   static readonly is = S.is(TicketResponse);
 
-  static readonly decodeUnknownEffect = S.decodeUnknownEffect(TicketResponse)
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(TicketResponse);
 }
 
 /**

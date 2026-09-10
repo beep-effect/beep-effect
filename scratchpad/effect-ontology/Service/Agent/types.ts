@@ -60,13 +60,9 @@ type AgentGraphCodec = S.Codec<KnowledgeGraph | RdfStore, typeof KnowledgeGraph.
  * @category schemas
  * @since 0.0.0
  */
-export const AgentGraph: AgentGraphCodec = S.Union([
-  KnowledgeGraph,
-  RdfStoreFromSelf,
-]).pipe(
+export const AgentGraph: AgentGraphCodec = S.Union([KnowledgeGraph, RdfStoreFromSelf]).pipe(
   $I.annoteSchema("AgentGraph", {
     description: "Agent graph boundary accepting a knowledge graph or opaque RDF store.",
-    toArbitrary: () => S.toArbitrary(KnowledgeGraph),
   })
 );
 
@@ -369,7 +365,8 @@ export const AgentTask = AgentTaskModel;
  * @category schemas
  * @since 0.0.0
  */
-export class PipelineConfig extends S.Class<PipelineConfig>($I`PipelineConfig`)({
+export class PipelineConfig extends S.Class<PipelineConfig>($I`PipelineConfig`)(
+  {
   /**
    * Unique pipeline identifier
    */
@@ -626,7 +623,8 @@ export type HumanFeedback = typeof HumanFeedback.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class RefinementConfig extends S.Class<RefinementConfig>($I`RefinementConfig`)({
+export class RefinementConfig extends S.Class<RefinementConfig>($I`RefinementConfig`)(
+  {
   /**
    * Maximum number of correction iterations
    */
@@ -783,7 +781,8 @@ export type RefinementStatus =
  * @category schemas
  * @since 0.0.0
  */
-export class RefinementResult extends S.Class<RefinementResult>($I`RefinementResult`)({
+export class RefinementResult extends S.Class<RefinementResult>($I`RefinementResult`)(
+  {
   /**
    * Final knowledge graph
    */

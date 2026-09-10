@@ -271,16 +271,12 @@ export const AiSyncSourceId = S.String.check(
   S.isPattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
     message: "AI sync source ids must be lowercase kebab-case tokens.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.constant("codex-config"),
+).pipe(
+  S.brand("AiSyncSourceId"),
+  $I.annoteSchema("AiSyncSourceId", {
+    description: "Lowercase kebab-case identifier for an upstream AI sync source.",
   })
-  .pipe(
-    S.brand("AiSyncSourceId"),
-    $I.annoteSchema("AiSyncSourceId", {
-      description: "Lowercase kebab-case identifier for an upstream AI sync source.",
-    })
-  );
+);
 
 /**
  * Runtime type for {@link AiSyncSourceId}.
@@ -319,16 +315,12 @@ export const AiSyncSourceUrl = S.String.check(
   S.isPattern(/^https?:\/\/\S+$/, {
     message: "AI sync source URLs must be absolute http(s) URLs without whitespace.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.constant("https://example.com/schema.json"),
+).pipe(
+  S.brand("AiSyncSourceUrl"),
+  $I.annoteSchema("AiSyncSourceUrl", {
+    description: "Absolute HTTP(S) URL for a schema or documentation source.",
   })
-  .pipe(
-    S.brand("AiSyncSourceUrl"),
-    $I.annoteSchema("AiSyncSourceUrl", {
-      description: "Absolute HTTP(S) URL for a schema or documentation source.",
-    })
-  );
+);
 
 /**
  * Runtime type for {@link AiSyncSourceUrl}.

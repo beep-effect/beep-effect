@@ -56,17 +56,13 @@ export const UsptoNormalizedApplicationNumber = S.String.check(
     description: "A normalized USPTO application number is exactly eight digits.",
     message: "Expected an eight-digit USPTO application number.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(/^\d{8}$/u),
+).pipe(
+  S.brand("UsptoNormalizedApplicationNumber"),
+  $I.annoteSchema("UsptoNormalizedApplicationNumber", {
+    description:
+      "Normalized eight-digit USPTO application number (series code plus serial number), mirrored into law-practice.",
   })
-  .pipe(
-    S.brand("UsptoNormalizedApplicationNumber"),
-    $I.annoteSchema("UsptoNormalizedApplicationNumber", {
-      description:
-        "Normalized eight-digit USPTO application number (series code plus serial number), mirrored into law-practice.",
-    })
-  );
+);
 
 /**
  * Type-level brand produced by {@link UsptoNormalizedApplicationNumber}.

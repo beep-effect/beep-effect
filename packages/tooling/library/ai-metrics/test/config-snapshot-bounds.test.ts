@@ -16,7 +16,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isAiMetricsConfigSnapshotTruncationReason = S.is(AiMetricsConfigSnapshotTruncationReason);
 
@@ -113,13 +113,15 @@ const snapshotPaths = (files: ReadonlyArray<{ readonly relativePath: string }>):
 
 describe("@beep/repo-ai-metrics bounded config snapshots", () => {
   it("generates only canonical truncation reasons", () =>
-    fc.assert(
-      fc.property(
-        S.toArbitrary(AiMetricsConfigSnapshotTruncationReason)(fc),
-        isAiMetricsConfigSnapshotTruncationReason
-      ),
-      fcRuns(25)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(AiMetricsConfigSnapshotTruncationReason)]),
+          (values) => isAiMetricsConfigSnapshotTruncationReason(...values),
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it.effect("stops at every nested git root and records it instead of walking into it", () =>
     withTempDirectory(

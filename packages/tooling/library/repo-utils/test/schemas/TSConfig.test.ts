@@ -7,21 +7,21 @@ import {
   encodeTSConfigToJsonEffect,
   jsonParse,
   TSConfig,
+  TSConfigCompilerOptions,
 } from "@beep/repo-utils";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeTSConfigFieldsCompilerOptionsSync = S.decodeSync(TSConfig.fields.compilerOptions);
 const encodeTSConfigFieldsCompilerOptionsSync = S.encodeSync(TSConfig.fields.compilerOptions);
 
 const renderSchemaFailure = (exit: Exit.Exit<unknown, S.SchemaError>): string =>
   Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
-const TSConfigCompilerOptionsArbitrary = S.toArbitrary(TSConfig.fields.compilerOptions)(fc);
+const TSConfigCompilerOptionsArbitrary = Arbitrary.map(Arbitrary.schema(TSConfigCompilerOptions), O.some);
 
 describe("TSConfig schema", () => {
   describe("valid structures", () => {
@@ -35,15 +35,22 @@ describe("TSConfig schema", () => {
     });
 
     it("round-trips schema-derived compiler options through the encoded wire shape", () => {
-      fc.assert(
-        fc.property(TSConfigCompilerOptionsArbitrary.filter(O.isSome), (value) => {
-          const encoded = encodeTSConfigFieldsCompilerOptionsSync(value);
-          const decoded = decodeTSConfigFieldsCompilerOptionsSync(encoded);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([TSConfigCompilerOptionsArbitrary]),
+            ([value]) => {
+              const encoded = encodeTSConfigFieldsCompilerOptionsSync(value);
+              const decoded = decodeTSConfigFieldsCompilerOptionsSync(encoded);
 
-          expect(decoded).toEqual(value);
-        }),
-        fcRuns(20)
-      );
+              expect(decoded).toEqual(value);
+
+              return true;
+            },
+            fcRuns(20)
+          )
+        )._tag
+      ).toBe("Passed");
     });
 
     it("decodes references and collapses nullable fields to Option.none", () => {
@@ -283,16 +290,11 @@ describe("TSConfig schema", () => {
       expect(renderSchemaFailure(nested)).toContain('["compilerOptions"]["unexpected"]');
     });
 
-    it("drops prototype-polluting keys instead of carrying them into the model", () => {
-      // JSON parsing creates `__proto__` as an own data property, but effect's
-      // record decode cannot carry it, so it never reaches the Type domain.
-      // The TSConfigJsonKey check mirrors that boundary on the Type side so
-      // schema-derived arbitraries only generate round-trippable records.
+    it("rejects prototype-polluting keys at the strict record boundary", () => {
       const parsed = Effect.runSync(jsonParse('{"compilerOptions":{"paths":{"__proto__":["./src"],"@x":["./x"]}}}'));
-      const result = decodeTSConfig(parsed);
-
-      const paths = O.getOrThrow(result.compilerOptions).paths;
-      expect(O.map(paths, R.keys)).toEqual(O.some(["@x"]));
+      const result = decodeTSConfigExit(parsed);
+      expect(Exit.isFailure(result)).toBe(true);
+      expect(renderSchemaFailure(result)).toContain('["__proto__"]');
     });
 
     it("rejects duplicate uniqueItems arrays", () => {

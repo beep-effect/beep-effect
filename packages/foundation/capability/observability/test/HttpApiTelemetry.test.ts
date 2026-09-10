@@ -12,7 +12,7 @@ import { fcRuns } from "@beep/test-utils";
 import { Effect, Equal, Metric } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
@@ -33,13 +33,20 @@ describe("HttpApiTelemetry", () => {
   });
 
   it("round-trips schema-derived HTTP status codes", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(HttpStatusCode)(fc), (status) => {
-        const decoded = O.flatMap(encodeHttpStatusCodeOption(status), decodeUnknownHttpStatusCodeOption);
-        expect(O.exists(decoded, (value) => Equal.equals(value, status))).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(HttpStatusCode)]),
+          ([status]) => {
+            const decoded = O.flatMap(encodeHttpStatusCodeOption(status), decodeUnknownHttpStatusCodeOption);
+            expect(O.exists(decoded, (value) => Equal.equals(value, status))).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("tracks HTTP API request metrics", () =>

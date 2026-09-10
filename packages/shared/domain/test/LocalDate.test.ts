@@ -33,7 +33,7 @@ import * as Duration from "effect/Duration";
 import * as Hash from "effect/Hash";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
 
 const decodeModel = S.decodeEffect(Model);
 const decodeLocalDateFromStringSync = S.decodeSync(LocalDateFromString);
@@ -45,7 +45,7 @@ const encodeLocalDateFromStringSync = S.encodeSync(LocalDateFromString);
 const encodeModelSync = S.encodeSync(Model);
 
 const juneFifteenth = () => make({ year: 2024, month: 6, day: 15 });
-const ModelArbitrary = S.toArbitrary(Model)(fc);
+
 const Params = S.Struct({
   startDate: LocalDateFromString,
   endDate: LocalDateFromString,
@@ -96,21 +96,22 @@ describe("LocalDate.Model", () => {
     })
   );
 
-  it("round-trips schema-derived values through the class and string codecs", () =>
-    fc.assert(
-      fc.property(ModelArbitrary, (date) => {
-        const encoded = encodeModelSync(date);
-        const decoded = decodeModelSync(encoded);
-        const encodedString = encodeLocalDateFromStringSync(date);
-        const decodedString = decodeLocalDateFromStringSync(encodedString);
+  it.prop(
+    "round-trips schema-derived values through the class and string codecs",
+    [Model],
+    ([date]) => {
+      const encoded = encodeModelSync(date);
+      const decoded = decodeModelSync(encoded);
+      const encodedString = encodeLocalDateFromStringSync(date);
+      const decodedString = decodeLocalDateFromStringSync(encodedString);
 
-        assert.instanceOf(decoded, Model);
-        assert.strictEqual(equals(decoded, date), true);
-        assert.strictEqual(encodedString, date.toISOString());
-        assert.strictEqual(equals(decodedString, date), true);
-      }),
-      fcRuns(50)
-    ));
+      assert.instanceOf(decoded, Model);
+      assert.strictEqual(equals(decoded, date), true);
+      assert.strictEqual(encodedString, date.toISOString());
+      assert.strictEqual(equals(decodedString, date), true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect("rejects impossible calendar dates at the schema boundary", () =>
     expectFailure(decodeModel({ year: 2024, month: 2, day: 30 }))

@@ -32,8 +32,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const decodeBakeConfig = S.decodeEffect(BakeConfig);
@@ -230,12 +230,16 @@ describe("runner bake schemas", () => {
   );
 
   it("round-trips arbitrary reports through the JSON codec", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(BakeReport)(fc), (original) => {
-        const encoded = Effect.runSync(BakeReportJson.encode(original));
-        expect(Effect.runSync(BakeReportJson.decode(encoded))).toStrictEqual(original);
-      })
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(BakeReport)]), ([original]) => {
+          const encoded = Effect.runSync(BakeReportJson.encode(original));
+          expect(Effect.runSync(BakeReportJson.decode(encoded))).toStrictEqual(original);
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed"));
 });
 
 describe("runner image manifest checks", () => {
@@ -862,6 +866,8 @@ describe("runner bake planning and argv", () => {
           cwd: repoRoot,
           env: {
             HOME: home,
+            // Keep an inherited host nvm installation out of this allocation-failure fixture.
+            NVM_DIR: path.join(home, ".nvm"),
             PATH: `${fakeBin}:/usr/bin:/bin`,
             XDG_CACHE_HOME: path.join(fixtureRoot, "cache"),
           },

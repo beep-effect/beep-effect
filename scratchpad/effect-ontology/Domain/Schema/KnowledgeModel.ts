@@ -1,3 +1,5 @@
+import * as SchemaAST from "effect/SchemaAST";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 /**
  * Provenance-aware claims, curated assertions, derivations, and events.
  *
@@ -19,7 +21,6 @@ import { AbsoluteIRI, NamedNode, ObjectTerm } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
-import type { FastCheck } from "effect/testing";
 import { GcsUri, withContentHashIdStatics } from "../Identity.ts";
 import { EventId as CanonicalEventId } from "../Model/CoreOntology.ts";
 
@@ -52,11 +53,7 @@ export const ClaimId = S.String.check(
     description: "A claim- prefix followed by exactly twelve lowercase hexadecimal characters.",
     message: "Claim ID must use claim- followed by exactly twelve lowercase hexadecimal characters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(claimIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("ClaimId"),
     $I.annoteSchema("ClaimId", {
       description: "Deterministic compact identifier for one extracted claim.",
@@ -103,11 +100,7 @@ export const AssertionId = S.String.check(
     description: "An assertion- prefix followed by exactly twelve lowercase hexadecimal characters.",
     message: "Assertion ID must use assertion- followed by exactly twelve lowercase hexadecimal characters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(assertionIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("AssertionId"),
     $I.annoteSchema("AssertionId", {
       description: "Deterministic compact identifier for one curated assertion.",
@@ -154,11 +147,7 @@ export const DerivedAssertionId = S.String.check(
     description: "A derived- prefix followed by exactly twelve lowercase hexadecimal characters.",
     message: "Derived assertion ID must use derived- followed by exactly twelve lowercase hexadecimal characters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(derivedAssertionIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("DerivedAssertionId"),
     $I.annoteSchema("DerivedAssertionId", {
       description: "Deterministic compact identifier for one rule-derived assertion.",
@@ -208,11 +197,7 @@ export const RuleId = S.String.check(
     description: "A rule- prefix followed by lowercase alphanumeric hyphen-separated segments.",
     message: "Rule ID must use rule- followed by lowercase alphanumeric segments separated by single hyphens.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(ruleIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("RuleId"),
     $I.annoteSchema("RuleId", {
       description: "Canonical lowercase identifier for a reasoning rule.",
@@ -315,7 +300,6 @@ const EvidenceSourceDefinition = S.TaggedUnion({
 const EvidenceSource = EvidenceSourceDefinition.pipe(
   $I.annoteSchema("EvidenceSource", {
     description: "Tagged evidence source containing either a GCS URI or an absolute resource IRI.",
-    toArbitrary: () => S.toArbitrary(EvidenceSourceDefinition),
   })
 );
 
@@ -387,13 +371,10 @@ export class Evidence extends S.Class<Evidence>($I`Evidence`)(
  * @category models
  * @since 0.0.0
  */
-export const RdfObject = ObjectTerm.annotate({
-  toArbitrary: () => S.toArbitrary(ObjectTerm),
-}).pipe(
+export const RdfObject = ObjectTerm.pipe(
   $I.annoteSchema("RdfObject", {
     description: "Canonical RDF/JS named-node, blank-node, or literal object term.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -407,7 +388,6 @@ export type RdfObject = typeof RdfObject.Type;
 /** Literal domain underlying the public claim-rank schema. */
 const ClaimRankDefinition = LiteralKit(["preferred", "normal", "deprecated"]).annotate(
   $I.annote("ClaimRank", {
-    toArbitrary: () => (fc: typeof FastCheck) => fc.constantFrom("preferred", "normal", "deprecated"),
     description: "Wikidata-style preferred, normal, or deprecated claim rank.",
   })
 );
@@ -476,21 +456,8 @@ const isTemporalIntervalDefinition = S.is(TemporalIntervalDefinition);
 const TemporalIntervalFromSelf = S.declare((input: unknown): input is typeof TemporalIntervalDefinition.Type =>
   isTemporalIntervalDefinition(input)
 ).annotate({
-  toArbitrary: () => (fc) =>
-    fc
-      .tuple(
-        fc.integer({ min: 0, max: 4_000_000_000_000 }),
-        fc.integer({
-          min: 0,
-          max: 86_400_000,
-        })
-      )
-      .map(([from, duration]) =>
-        TemporalIntervalDefinition.make({
-          from: DateTime.makeUnsafe(from),
-          to: DateTime.makeUnsafe(from + duration),
-        })
-      ),
+  toCodecArbitrary: () =>
+    new SchemaAST.Link(S.toType(TemporalIntervalDefinition).ast, SchemaTransformation.passthrough()),
 });
 
 const TemporalInterval = TemporalIntervalDefinition.pipe(
@@ -579,11 +546,7 @@ export class Claim extends S.Class<Claim>($I`Claim`)(
  * @category schemas
  * @since 0.0.0
  */
-export const AssertionStatus = LiteralKit(["accepted", "rejected", "pending"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("accepted", "rejected", "pending"),
-  })
-  .annotate(
+export const AssertionStatus = LiteralKit(["accepted", "rejected", "pending"]).annotate(
     $I.annote("AssertionStatus", {
       description: "Accepted, rejected, or pending curation status of an assertion.",
     })
@@ -763,20 +726,7 @@ export const EventType = LiteralKit([
   "BudgetAction",
   "PublicMeeting",
   "Generic",
-])
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.constantFrom(
-        "StaffAnnouncement",
-        "PolicyInitiative",
-        "CouncilVote",
-        "Appointment",
-        "BudgetAction",
-        "PublicMeeting",
-        "Generic"
-      ),
-  })
-  .annotate(
+]).annotate(
     $I.annote("EventType", {
       description: "Finite event categories used for timeline grouping and presentation.",
     })

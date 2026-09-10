@@ -36,33 +36,33 @@ const decodeUnknownArchitecturePackageRole = S.decodeUnknownEffect(ArchitectureP
 const decodeUnknownArchitecturePlanStage = S.decodeUnknownEffect(ArchitecturePlanStage);
 const decodeUnknownArchitectureSliceRole = S.decodeUnknownEffect(ArchitectureSliceRole);
 
-const planFileFlag = Flag.string("file").pipe(
+const planFileFlag = Flag.String("file").pipe(
   Flag.withAlias("f"),
   Flag.withDescription("Path to a JSON operation plan emitted by `beep architecture plan`")
 );
 
 const stageFlag = (defaultValue: ArchitecturePlanStage) =>
-  Flag.string("stage").pipe(
+  Flag.String("stage").pipe(
     Flag.withDescription("Architecture proof stage: core, persistence, protocol, client, or full"),
     Flag.withDefault(defaultValue)
   );
 
-const domainKindFlag = Flag.string("domain-kind").pipe(
+const domainKindFlag = Flag.String("domain-kind").pipe(
   Flag.withDescription("Domain-kind archetype for the concept: aggregates, entities, or values"),
   Flag.withDefault(defaultArchitecturePlanTarget.domainKind)
 );
 
-const dryRunFlag = Flag.boolean("dry-run").pipe(
+const dryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Emit the schema-versioned JSON operation plan without writing files")
 );
 
-const planSliceFlag = Flag.string("slice").pipe(
+const planSliceFlag = Flag.String("slice").pipe(
   Flag.withDescription("Slice or bounded-context name"),
   Flag.withDefault(defaultArchitecturePlanTarget.boundedContext)
 );
 
-const planConceptFlag = Flag.string("concept").pipe(
+const planConceptFlag = Flag.String("concept").pipe(
   Flag.withDescription("Concept name"),
   Flag.withDefault(defaultArchitecturePlanTarget.concept)
 );
@@ -205,8 +205,8 @@ const architectureCheckCommand = Command.make(
 const createSliceCommand = Command.make(
   "slice",
   {
-    slice: Argument.string("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
-    concept: Argument.string("concept").pipe(Argument.withDescription("Concept name")),
+    slice: Argument.String("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
+    concept: Argument.String("concept").pipe(Argument.withDescription("Concept name")),
     domainKind: domainKindFlag,
     stage: stageFlag("core"),
     dryRun: dryRunFlag,
@@ -220,8 +220,8 @@ const createSliceCommand = Command.make(
 const createPackageCommand = Command.make(
   "package",
   {
-    slice: Argument.string("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
-    role: Argument.string("role").pipe(Argument.withDescription("Slice package role to create")),
+    slice: Argument.String("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
+    role: Argument.String("role").pipe(Argument.withDescription("Slice package role to create")),
     dryRun: dryRunFlag,
   },
   Effect.fn(function* ({ slice, role, dryRun }) {
@@ -233,8 +233,8 @@ const createPackageCommand = Command.make(
 const addConceptCommand = Command.make(
   "concept",
   {
-    slice: Argument.string("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
-    concept: Argument.string("concept").pipe(Argument.withDescription("Concept name")),
+    slice: Argument.String("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
+    concept: Argument.String("concept").pipe(Argument.withDescription("Concept name")),
     domainKind: domainKindFlag,
     stage: stageFlag("core"),
     dryRun: dryRunFlag,
@@ -248,9 +248,9 @@ const addConceptCommand = Command.make(
 const addRoleCommand = Command.make(
   "role",
   {
-    slice: Argument.string("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
-    concept: Argument.string("concept").pipe(Argument.withDescription("Concept name")),
-    role: Argument.string("role").pipe(Argument.withDescription("Architecture role to add")),
+    slice: Argument.String("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
+    concept: Argument.String("concept").pipe(Argument.withDescription("Concept name")),
+    role: Argument.String("role").pipe(Argument.withDescription("Architecture role to add")),
     domainKind: domainKindFlag,
     stage: stageFlag(defaultArchitecturePlanTarget.stage),
     dryRun: dryRunFlag,

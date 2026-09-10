@@ -110,19 +110,19 @@ export type WorkItemConfigShape = WorkItemConfigValue;
 export class WorkItemConfig extends Context.Service<WorkItemConfig, WorkItemConfigShape>()($I`WorkItemConfig`) {}
 
 const readWorkItemConfig = Effect.fn("ArchitectureLab.WorkItemConfig.read")(function* () {
-  const assignmentEnabled = yield* Config.boolean("ARCHITECTURE_LAB_WORK_ITEM_ASSIGNMENT_ENABLED").pipe(
+  const assignmentEnabled = yield* Config.Boolean("ARCHITECTURE_LAB_WORK_ITEM_ASSIGNMENT_ENABLED").pipe(
     Config.withDefault(defaultWorkItemPublicConfig.assignmentEnabled)
   );
-  const reopenCompletedEnabled = yield* Config.boolean("ARCHITECTURE_LAB_WORK_ITEM_REOPEN_COMPLETED_ENABLED").pipe(
+  const reopenCompletedEnabled = yield* Config.Boolean("ARCHITECTURE_LAB_WORK_ITEM_REOPEN_COMPLETED_ENABLED").pipe(
     Config.withDefault(defaultWorkItemPublicConfig.reopenCompletedEnabled)
   );
-  const repositoryName = yield* Config.string("ARCHITECTURE_LAB_WORK_ITEM_REPOSITORY_NAME").pipe(
+  const repositoryName = yield* Config.String("ARCHITECTURE_LAB_WORK_ITEM_REPOSITORY_NAME").pipe(
     Config.withDefault(defaultWorkItemServerConfig.repositoryName)
   );
-  const migrationSchemaName = yield* Config.string("ARCHITECTURE_LAB_WORK_ITEM_MIGRATION_SCHEMA_NAME").pipe(
+  const migrationSchemaName = yield* Config.String("ARCHITECTURE_LAB_WORK_ITEM_MIGRATION_SCHEMA_NAME").pipe(
     Config.withDefault(defaultWorkItemServerConfig.migrationSchemaName)
   );
-  const connectionName = yield* Config.string("ARCHITECTURE_LAB_WORK_ITEM_CONNECTION_NAME").pipe(
+  const connectionName = yield* Config.String("ARCHITECTURE_LAB_WORK_ITEM_CONNECTION_NAME").pipe(
     Config.withDefault(defaultWorkItemSecretConfig.connectionName)
   );
 

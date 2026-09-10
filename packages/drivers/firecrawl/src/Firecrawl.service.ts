@@ -820,11 +820,11 @@ export class Firecrawl extends Context.Service<Firecrawl, FirecrawlShape>()($I`F
   static readonly layer: Layer.Layer<Firecrawl, FirecrawlError> = Layer.effect(
     Firecrawl,
     Effect.gen(function* () {
-      const apiKey = yield* Config.redacted("FIRECRAWL_API_KEY");
-      const apiUrl = yield* Config.string("FIRECRAWL_API_URL").pipe(Config.withDefault(FIRECRAWL_API_URL));
-      const backoffFactor = yield* Config.number("FIRECRAWL_BACKOFF_FACTOR").pipe(Config.option);
-      const maxRetries = yield* Config.number("FIRECRAWL_MAX_RETRIES").pipe(Config.option);
-      const timeoutMs = yield* Config.number("FIRECRAWL_TIMEOUT_MS").pipe(Config.option);
+      const apiKey = yield* Config.Redacted("FIRECRAWL_API_KEY");
+      const apiUrl = yield* Config.String("FIRECRAWL_API_URL").pipe(Config.withDefault(FIRECRAWL_API_URL));
+      const backoffFactor = yield* Config.Number("FIRECRAWL_BACKOFF_FACTOR").pipe(Config.option);
+      const maxRetries = yield* Config.Number("FIRECRAWL_MAX_RETRIES").pipe(Config.option);
+      const timeoutMs = yield* Config.Number("FIRECRAWL_TIMEOUT_MS").pipe(Config.option);
       const resolved = yield* resolveConfig(
         FirecrawlConfigInput.make({
           apiKey,

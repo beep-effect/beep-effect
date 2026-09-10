@@ -889,13 +889,13 @@ export type HtmlUrlPotentiallySurroundedBySpaces = typeof HtmlUrlPotentiallySurr
 export const makeHtmlUrlFromString = (base: URL) =>
   HtmlUrlPotentiallySurroundedBySpaces.pipe(
     S.decodeTo(S.URLFromString, {
-      decode: SchemaGetter.transformOrFail((value) =>
+      decode: SchemaGetter.transformEffect((value) =>
         Effect.try({
           try: () => new URL(value, base).href,
           catch: () => invalidValue("Could not parse the HTML URL relative to its document base"),
         })
       ),
-      encode: SchemaGetter.transformOrFail(SchemaParser.decodeEffect(HtmlUrlTokenString)),
+      encode: SchemaGetter.transformEffect(SchemaParser.decodeEffect(HtmlUrlTokenString)),
     }),
     $I.annoteSchema("HtmlUrlFromString", { description: "WHATWG URL resolved against an explicit document base." }),
     SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
@@ -964,7 +964,7 @@ export type MicrodataSerializedUrlString = typeof MicrodataSerializedUrlString.T
 export const MicrodataUrlFromString = MicrodataSerializedUrlString.pipe(
   S.decodeTo(S.URLFromString, {
     decode: SchemaGetter.passthroughSubtype(),
-    encode: SchemaGetter.transformOrFail(SchemaParser.decodeEffect(MicrodataSerializedUrlString)),
+    encode: SchemaGetter.transformEffect(SchemaParser.decodeEffect(MicrodataSerializedUrlString)),
   }),
   $I.annoteSchema("MicrodataUrlFromString", {
     description: "Microdata URL-property string decoded to a platform URL.",
@@ -1166,13 +1166,13 @@ export type HtmlDurationValue = typeof HtmlDurationValue.Type;
  */
 export const MicrodataDurationFromString = HtmlDurationString.pipe(
   S.decodeTo(HtmlDurationValue, {
-    decode: SchemaGetter.transformOrFail(
+    decode: SchemaGetter.transformEffect(
       flow(
         HtmlDurationValue.parse,
         Effect.fromOption(() => invalidValue("Could not parse the valid HTML duration"))
       )
     ),
-    encode: SchemaGetter.transformOrFail(
+    encode: SchemaGetter.transformEffect(
       flow(
         HtmlDurationValue.format,
         Effect.fromOption(() => invalidValue("Duration cannot be encoded as an HTML duration")),
@@ -1226,7 +1226,7 @@ const normalizeHtmlGlobalDateTime: (value: HtmlGlobalDateTimeString) => string =
 export const MicrodataDateTimeFromString = HtmlGlobalDateTimeString.pipe(
   S.decodeTo(S.DateTimeUtcFromString, {
     decode: SchemaGetter.transform(normalizeHtmlGlobalDateTime),
-    encode: SchemaGetter.transformOrFail(SchemaParser.decodeEffect(HtmlGlobalDateTimeString)),
+    encode: SchemaGetter.transformEffect(SchemaParser.decodeEffect(HtmlGlobalDateTimeString)),
   }),
   $I.annoteSchema("MicrodataDateTimeFromString", {
     description: "HTML global date-time lexical value decoded to DateTime.Utc.",
@@ -1332,13 +1332,13 @@ export type XsdIntegerValue = typeof XsdIntegerValue.Type;
  */
 export const XsdIntegerFromString = XsdIntegerString.pipe(
   S.decodeTo(XsdIntegerValue, {
-    decode: SchemaGetter.transformOrFail(
+    decode: SchemaGetter.transformEffect(
       flow(
         BInt.fromString,
         Effect.fromOption(() => invalidValue("Could not parse xsd:integer"))
       )
     ),
-    encode: SchemaGetter.transformOrFail(flow(Str.String, SchemaParser.decodeEffect(XsdIntegerString))),
+    encode: SchemaGetter.transformEffect(flow(Str.String, SchemaParser.decodeEffect(XsdIntegerString))),
   }),
   $I.annoteSchema("XsdIntegerFromString", {
     description: "XML Schema integer string decoded to a branded arbitrary-precision integer.",
@@ -1445,7 +1445,7 @@ export type XsdDoubleString = typeof XsdDoubleString.Type;
 export const XsdDoubleFromString = XsdDoubleString.pipe(
   S.decodeTo(Double, {
     decode: SchemaGetter.transform(XsdDoubleString.parse),
-    encode: SchemaGetter.transformOrFail(flow(XsdDoubleString.format, SchemaParser.decodeEffect(XsdDoubleString))),
+    encode: SchemaGetter.transformEffect(flow(XsdDoubleString.format, SchemaParser.decodeEffect(XsdDoubleString))),
   }),
   $I.annoteSchema("XsdDoubleFromString", {
     description: "XML Schema double string decoded to a branded IEEE-754 binary64 value.",
@@ -2030,8 +2030,8 @@ export type VCardValueTypeString = typeof VCardValueTypeString.Type;
  */
 export const VCardValueTypeFromString = VCardValueTypeString.pipe(
   S.decodeTo(VCardValueType, {
-    decode: SchemaGetter.transformOrFail(flow(Str.toLowerCase, SchemaParser.decodeUnknownEffect(VCardValueType))),
-    encode: SchemaGetter.transformOrFail(SchemaParser.decodeEffect(VCardValueTypeString)),
+    decode: SchemaGetter.transformEffect(flow(Str.toLowerCase, SchemaParser.decodeUnknownEffect(VCardValueType))),
+    encode: SchemaGetter.transformEffect(SchemaParser.decodeEffect(VCardValueTypeString)),
   }),
   $I.annoteSchema("VCardValueTypeFromString", {
     description: "Predefined RFC 6350 VALUE type normalized to its lowercase literal.",
@@ -2660,7 +2660,7 @@ export type VCardLanguageTagString = typeof VCardLanguageTagString.Type;
 export const VCardBooleanFromString = VCardBooleanString.pipe(
   S.decodeTo(S.Boolean, {
     decode: SchemaGetter.transform((value) => Str.toUpperCase(value) === "TRUE"),
-    encode: SchemaGetter.transformOrFail((value) =>
+    encode: SchemaGetter.transformEffect((value) =>
       SchemaParser.decodeEffect(VCardBooleanString)(value ? "TRUE" : "FALSE")
     ),
   }),
@@ -2741,13 +2741,13 @@ export type VCardIntegerValue = typeof VCardIntegerValue.Type;
  */
 export const VCardIntegerFromString = VCardIntegerString.pipe(
   S.decodeTo(VCardIntegerValue, {
-    decode: SchemaGetter.transformOrFail(
+    decode: SchemaGetter.transformEffect(
       flow(
         BInt.fromString,
         Effect.fromOption(() => invalidValue("Could not parse RFC 6350 integer"))
       )
     ),
-    encode: SchemaGetter.transformOrFail(flow(Str.String, SchemaParser.decodeEffect(VCardIntegerString))),
+    encode: SchemaGetter.transformEffect(flow(Str.String, SchemaParser.decodeEffect(VCardIntegerString))),
   }),
   $I.annoteSchema("VCardIntegerFromString", {
     description: "RFC 6350 INTEGER string decoded to a signed 64-bit branded bigint.",
@@ -2837,13 +2837,13 @@ export type VCardFloatValue = typeof VCardFloatValue.Type;
  */
 export const VCardFloatFromString = VCardFloatString.pipe(
   S.decodeTo(VCardFloatValue, {
-    decode: SchemaGetter.transformOrFail(
+    decode: SchemaGetter.transformEffect(
       flow(
         BigDecimal.fromString,
         Effect.fromOption(() => invalidValue("Could not parse RFC 6350 float"))
       )
     ),
-    encode: SchemaGetter.transformOrFail(flow(VCardFloatValue.format, SchemaParser.decodeEffect(VCardFloatString))),
+    encode: SchemaGetter.transformEffect(flow(VCardFloatValue.format, SchemaParser.decodeEffect(VCardFloatString))),
   }),
   $I.annoteSchema("VCardFloatFromString", {
     description: "RFC 6350 FLOAT string decoded to an arbitrary-precision branded decimal.",
@@ -2974,13 +2974,13 @@ export type VCardUtcOffsetValue = typeof VCardUtcOffsetValue.Type;
  */
 export const VCardUtcOffsetFromString = VCardUtcOffsetString.pipe(
   S.decodeTo(VCardUtcOffsetValue, {
-    decode: SchemaGetter.transformOrFail(
+    decode: SchemaGetter.transformEffect(
       flow(
         VCardUtcOffsetValue.parse,
         Effect.fromOption(() => invalidValue("Could not parse RFC 6350 UTC offset"))
       )
     ),
-    encode: SchemaGetter.transformOrFail(
+    encode: SchemaGetter.transformEffect(
       flow(
         VCardUtcOffsetValue.format,
         Effect.fromOption(() => invalidValue("Could not encode RFC 6350 UTC offset")),
@@ -3095,10 +3095,10 @@ export type VCardTimestampValue = typeof VCardTimestampValue.Type;
  */
 export const VCardTimestampFromString = VCardZonedTimestampString.pipe(
   S.decodeTo(VCardTimestampValue, {
-    decode: SchemaGetter.transformOrFail(
+    decode: SchemaGetter.transformEffect(
       flow(normalizeVCardTimestamp, SchemaParser.decodeEffect(S.DateTimeUtcFromString))
     ),
-    encode: SchemaGetter.transformOrFail(
+    encode: SchemaGetter.transformEffect(
       flow(DateTime.formatIso, isoUtcToVCardTimestamp, SchemaParser.decodeEffect(VCardZonedTimestampString))
     ),
   }),
@@ -3141,7 +3141,7 @@ export type VCardTimestampFromString = typeof VCardTimestampFromString.Type;
 export const VCardUrlFromString = VCardUriString.pipe(
   S.decodeTo(S.URLFromString, {
     decode: SchemaGetter.passthroughSubtype(),
-    encode: SchemaGetter.transformOrFail(SchemaParser.decodeEffect(VCardUriString)),
+    encode: SchemaGetter.transformEffect(SchemaParser.decodeEffect(VCardUriString)),
   }),
   $I.annoteSchema("VCardUrlFromString", {
     description: "RFC 6350 URI value in the URL-compatible subset decoded to a platform URL.",

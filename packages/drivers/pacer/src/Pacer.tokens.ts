@@ -168,10 +168,9 @@ export type JurisdictionType = typeof JurisdictionType.Type;
  *
  * **Details**
  *
- * Plain `string` at the type level, but it carries a custom `toArbitrary`
- * annotation so any schema-derived generation (`Schema.toArbitrary` for mock
- * bodies and property tests) produces realistic case numbers instead of random
- * unicode — exercising the real shape rather than hardcoded fixtures.
+ * Plain `string` at the type level. Schema-derived generation follows the
+ * string domain; realistic case-number fixtures can use the validated `.make`
+ * constructor.
  *
  * **Example** (Make full case number)
  *
@@ -189,10 +188,7 @@ export const CaseNumberFull = S.String.pipe(
   $I.annoteSchema("CaseNumberFull", {
     description: "PCL full case number, e.g. 1:2002bk20340.",
   })
-).annotate({
-  toArbitrary: () => (fc) =>
-    fc.constantFrom("1:2002bk20340", "2:2019cv01234", "0:2001ap00100", "3:2020bk00777", "1:2018cr00045"),
-});
+);
 
 /**
  * Type for {@link CaseNumberFull}.

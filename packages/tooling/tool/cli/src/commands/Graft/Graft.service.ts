@@ -12,7 +12,11 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Random from "effect/Random";
@@ -112,25 +116,36 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
     }
   });
 
-  const safePath = Effect.fn("GraftCacheSync.safePath")(function* (root: string, relative: string, directory: boolean) {
-    const segments = Str.split(path.sep)(relative);
-    const last = A.length(segments) - 1;
-    let current = root;
-    for (const { segment, index } of A.map(segments, (segment, index) => ({ segment, index }))) {
-      const names = yield* fs.readDirectory(current).pipe(Effect.mapError(ioError(current)));
-      if (!A.contains(names, segment)) return false;
-      current = path.join(current, segment);
-      yield* verifySegment(current, directory || index < last ? "Directory" : "File");
-    }
-    return true;
+  const readDirectory = Effect.fnUntraced(function* (current: string) {
+    return HashSet.fromIterable(yield* fs.readDirectory(current).pipe(Effect.mapError(ioError(current))));
   });
 
-  const sourceRoot = Effect.fn("GraftCacheSync.sourceRoot")(function* (input: string) {
+  const makeSafePath = (listDirectory: typeof readDirectory, checkSegment: typeof verifySegment) =>
+    Effect.fnUntraced(function* (root: string, relative: string, directory: boolean) {
+      const segments = Str.split(path.sep)(relative);
+      const last = A.length(segments) - 1;
+      let current = root;
+      for (const { segment, index } of A.map(segments, (segment, index) => ({ segment, index }))) {
+        const names = yield* listDirectory(current);
+        if (!HashSet.has(names, segment)) return false;
+        current = path.join(current, segment);
+        yield* checkSegment(current, directory || index < last ? "Directory" : "File");
+      }
+      return true;
+    });
+
+  // Writes and sibling discovery always check the current filesystem.
+  const safePath = makeSafePath(readDirectory, verifySegment);
+
+  const sourceRoot = Effect.fn("GraftCacheSync.sourceRoot")(function* (
+    input: string,
+    checkPath: typeof safePath = safePath
+  ) {
     const sourceError = (cause: GraftCacheTargetError | GraftCacheIoError) =>
       GraftCacheSourceError.make({ path: cause.path, message: cause.message, cause });
     const root = yield* cloneRoot(input).pipe(Effect.mapError(sourceError));
     const summaries = path.join("graft", ".cache", "summaries.json");
-    const exists = yield* safePath(root, summaries, false).pipe(Effect.mapError(sourceError));
+    const exists = yield* checkPath(root, summaries, false).pipe(Effect.mapError(sourceError));
     if (!exists) {
       return yield* GraftCacheSourceError.make({
         path: path.join(root, summaries),
@@ -157,13 +172,14 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
   const targetOnlyConcepts = Effect.fn("GraftCacheSync.targetOnlyConcepts")(function* (
     source: string,
     target: GraftCacheSyncTarget,
-    sourceNames: ReadonlyArray<string>
+    sourceNames: HashSet.HashSet<string>,
+    listDirectory: typeof readDirectory
   ) {
-    const listed = yield* Effect.result(fs.readDirectory(target.graftDir));
+    const listed = yield* Effect.result(listDirectory(target.graftDir));
     const names = Result.isSuccess(listed) ? listed.success : [];
     return A.map(
       A.sort(
-        A.filter(names, (name) => Str.endsWith(".md")(name) && !A.contains(sourceNames, name)),
+        A.filter(names, (name) => Str.endsWith(".md")(name) && !HashSet.has(sourceNames, name)),
         Order.String
       ),
       (name) =>
@@ -179,13 +195,43 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
   });
 
   const plan: GraftCacheSyncShape["plan"] = Effect.fn("GraftCacheSync.plan")(function* (input, targets) {
-    const source = yield* sourceRoot(input);
+    // Each invocation owns its snapshot, including failures. Apply's fresh plan
+    // and its per-write checks must never reuse these observations.
+    const directoryEntries = MutableHashMap.empty<string, HashSet.HashSet<string>>();
+    const directoryErrors = MutableHashMap.empty<string, GraftCacheIoError>();
+    const verifiedSegments = MutableHashMap.empty<
+      string,
+      Result.Result<undefined, GraftCacheTargetError | GraftCacheIoError>
+    >();
+    const cachedReadDirectory = Effect.fnUntraced(function* (current: string) {
+      const cached = MutableHashMap.get(directoryEntries, current);
+      if (O.isSome(cached)) return cached.value;
+      const failed = MutableHashMap.get(directoryErrors, current);
+      if (O.isSome(failed)) return yield* failed.value;
+      const result = yield* Effect.result(readDirectory(current));
+      if (Result.isFailure(result)) {
+        MutableHashMap.set(directoryErrors, current, result.failure);
+        return yield* result.failure;
+      }
+      MutableHashMap.set(directoryEntries, current, result.success);
+      return result.success;
+    });
+    const cachedVerifySegment = Effect.fnUntraced(function* (current: string, expectedType: string) {
+      const cached = MutableHashMap.get(verifiedSegments, current);
+      if (O.isSome(cached)) return yield* Effect.fromResult(cached.value);
+      const result = yield* Effect.result(verifySegment(current, expectedType));
+      MutableHashMap.set(verifiedSegments, current, result);
+      return yield* Effect.fromResult(result);
+    });
+    const planSafePath = makeSafePath(cachedReadDirectory, cachedVerifySegment);
+    const source = yield* sourceRoot(input, planSafePath);
     const graft = path.join(source, "graft");
-    const names = yield* fs.readDirectory(graft).pipe(Effect.mapError(ioError(graft)));
+    const names = yield* cachedReadDirectory(graft);
     const conceptNames = A.sort(
       A.filter(names, (name) => Str.endsWith(".md")(name) && !Eq.equals(name, "INDEX.md")),
       Order.String
     );
+    const sourceNames = HashSet.fromIterable(A.prepend(conceptNames, "INDEX.md"));
     const artifacts = yield* Effect.forEach(
       GraftCacheArtifact.Options,
       Effect.fn("GraftCacheSync.artifacts")(function* (artifact) {
@@ -193,12 +239,13 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
           Match.when("summaries", () => [path.join("graft", ".cache", "summaries.json")]),
           Match.when("concepts", () => A.map(["INDEX.md", ...conceptNames], (name) => path.join("graft", name))),
           Match.when("wiring", () => [path.join("graft", ".graph", "wiring.json")]),
+          Match.when("manifest", () => [path.join("graft", "manifest.json")]),
           Match.exhaustive
         );
         return yield* Effect.forEach(
           relativePaths,
           Effect.fn("GraftCacheSync.sourceArtifact")(function* (relative) {
-            const exists = yield* safePath(source, relative, false).pipe(
+            const exists = yield* planSafePath(source, relative, false).pipe(
               Effect.mapError((cause) =>
                 GraftCacheSourceError.make({ path: cause.path, message: cause.message, cause })
               )
@@ -215,6 +262,7 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
         );
       })
     );
+    const sourceArtifacts = A.flatten(artifacts);
     const entries = yield* Effect.forEach(
       A.dedupe(A.map(targets, (target) => path.resolve(target))),
       Effect.fn("GraftCacheSync.targetPlan")(function* (inputTarget) {
@@ -222,12 +270,12 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
         const root = Result.isSuccess(resolved) ? resolved.success : path.resolve(inputTarget);
         const target = GraftCacheSyncTarget.make({ root, graftDir: path.join(root, "graft") });
         const copies = yield* Effect.forEach(
-          A.flatten(artifacts),
+          sourceArtifacts,
           Effect.fn("GraftCacheSync.targetArtifact")(function* (artifact) {
             const relative = path.relative(source, artifact.sourcePath);
             const safety = Result.isFailure(resolved)
               ? Result.fail(resolved.failure)
-              : yield* Effect.result(safePath(root, relative, false));
+              : yield* Effect.result(planSafePath(root, relative, false));
             return GraftCacheSyncPlanEntry.make({
               ...artifact,
               target,
@@ -242,13 +290,21 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
         // are never touched.
         const removals = Result.isFailure(resolved)
           ? []
-          : yield* targetOnlyConcepts(source, target, A.append(conceptNames, "INDEX.md"));
+          : yield* targetOnlyConcepts(source, target, sourceNames, cachedReadDirectory);
         return A.appendAll(copies, removals);
       })
     );
+    const seen = MutableHashSet.empty<string>();
     return GraftCacheSyncPlan.make({
       source,
-      entries: A.dedupeWith(A.flatten(entries), S.toEquivalence(GraftCacheSyncPlanEntry)),
+      entries: A.filter(A.flatten(entries), (entry) => {
+        // Canonical roots and artifact paths identify entries, including aliases.
+        // NUL cannot occur in a filesystem path, so the separator is unambiguous.
+        const key = `${entry.target.root}\0${entry.targetPath}`;
+        if (MutableHashSet.has(seen, key)) return false;
+        MutableHashSet.add(seen, key);
+        return true;
+      }),
     });
   });
 

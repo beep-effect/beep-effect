@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Versioned ontology-embedding artifacts.
  *
@@ -14,34 +15,13 @@ import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { FastCheck } from "effect/testing";
 import { ContentHash, GcsUri } from "../Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OntologyEmbeddings");
 const utf8Encoder = new TextEncoder();
 const encodeUtf8 = (text: string): Uint8Array => utf8Encoder.encode(text);
 
-const EmbeddingVector = S.NonEmptyArray(S.Finite)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(
-          fc.double({ min: -1, max: 1, noNaN: true, noDefaultInfinity: true }),
-          fc.array(
-            fc.double({
-              min: -1,
-              max: 1,
-              noNaN: true,
-              noDefaultInfinity: true,
-            }),
-            {
-              maxLength: 31,
-            }
-          )
-        )
-        .map(([head, tail]) => [head, ...tail]),
-  })
-  .pipe(
+const EmbeddingVector = S.NonEmptyArray(S.Finite).pipe(
     $I.annoteSchema("EmbeddingVector", {
       description: "Non-empty finite numeric vector produced by an embedding model.",
     })
@@ -167,47 +147,12 @@ const hasConsistentEmbeddingDimension = (artifact: OntologyEmbeddingsFieldsModel
     N.Equivalence(A.length(element.embedding), artifact.dimension)
   );
 
-const makeOntologyEmbeddingsArbitrary = (fc: typeof FastCheck) => {
-  const resize = (element: ElementEmbedding): ElementEmbedding =>
-    ElementEmbedding.make({
-      iri: element.iri,
-      text: element.text,
-      embedding: [0],
-    });
-
-  return fc
-    .record({
-      ontologyUri: S.toArbitrary(GcsUri)(fc),
-      version: S.toArbitrary(ContentHash)(fc),
-      model: fc.constantFrom("nomic-embed-text-v1.5", "text-embedding-3-small"),
-      createdAt: S.toArbitrary(S.DateTimeUtcFromString)(fc),
-      classes: fc.array(S.toArbitrary(ElementEmbedding)(fc), { maxLength: 16 }),
-      properties: fc.array(S.toArbitrary(ElementEmbedding)(fc), { maxLength: 16 }),
-    })
-    .map(({ ontologyUri, version, model, createdAt, classes, properties }) =>
-      OntologyEmbeddingsFieldsModel.make({
-        ontologyUri,
-        version,
-        model,
-        dimension: NonNegativeInt.make(1),
-        createdAt,
-        classes: A.map(classes, resize),
-        properties: A.map(properties, resize),
-      })
-    );
-};
-
 const OntologyEmbeddingsDefinition = OntologyEmbeddingsFieldsModel.check(
   S.makeFilter(hasConsistentEmbeddingDimension, {
     identifier: $I`ConsistentEmbeddingDimensionCheck`,
     title: "Consistent Embedding Dimension",
     description: "Every class and property vector has the artifact's declared dimension.",
     message: "Every embedding vector must match the declared embedding dimension.",
-    arbitrary: {
-      candidate: {
-        make: makeOntologyEmbeddingsArbitrary,
-      },
-    },
   })
 );
 
@@ -251,9 +196,7 @@ const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
  * @category models
  * @since 0.0.0
  */
-export const OntologyEmbeddings = OntologyEmbeddingsDefinition.annotate({
-  toArbitrary: () => makeOntologyEmbeddingsArbitrary,
-}).pipe(
+export const OntologyEmbeddings = OntologyEmbeddingsDefinition.pipe(
   $I.annoteSchema("OntologyEmbeddings", {
     description: "Versioned ontology embedding artifact with uniform finite vector dimensions.",
   }),
@@ -308,7 +251,6 @@ export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
   SchemaUtils.withCodecStatics(["encodeEffect"]),
   $I.annoteSchema("OntologyEmbeddingsJson", {
     description: "JSON string codec for versioned ontology-embedding artifacts.",
-    toArbitrary: () => S.toArbitrary(OntologyEmbeddingsJsonDefinition),
   })
 );
 
@@ -319,3 +261,27 @@ export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
  * @since 0.0.0
  */
 export type OntologyEmbeddingsJson = typeof OntologyEmbeddingsJson.Type;
+
+/**
+ * Generates values satisfying the schema's cross-field invariant.
+ *
+ * **Example** (Sample consistent values)
+ * ```ts
+ * import { OntologyEmbeddingsArbitrary } from "@effect-ontology/Model/OntologyEmbeddings"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * const samples = Arbitrary.sampleEffect(OntologyEmbeddingsArbitrary)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const OntologyEmbeddingsArbitrary = Arbitrary.schema(OntologyEmbeddingsFieldsModel).pipe(
+  Arbitrary.map((value) =>
+    OntologyEmbeddingsFieldsModel.make({
+      ...value,
+      dimension: NonNegativeInt.make(1),
+      classes: A.map(value.classes, (element) => ElementEmbedding.make({ ...element, embedding: [0] })),
+      properties: A.map(value.properties, (element) => ElementEmbedding.make({ ...element, embedding: [0] })),
+    })
+  )
+);

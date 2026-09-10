@@ -30,14 +30,6 @@ import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("Glob");
 const MAX_GLOB_PATTERN_LENGTH = 1024 * 64;
-const GlobArbitraryValues = [
-  "src/**/*.ts",
-  "{src,test}/**/*.ts",
-  "foo/bar",
-  "foo/[abc]",
-  "foo/{bar,baz}",
-  "!index.ts",
-] as const;
 type BunGlobConstructor = new (pattern: string) => object;
 
 const isBunGlobConstructor = (input: unknown): input is BunGlobConstructor => P.isFunction(input);
@@ -116,16 +108,12 @@ const GlobChecks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-export const Glob = S.String.check(GlobChecks)
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...GlobArbitraryValues),
+export const Glob = S.String.check(GlobChecks).pipe(
+  S.brand("Glob"),
+  $I.annoteSchema("Glob", {
+    description: "A portable non-empty glob pattern string accepted by the current Bun glob parser.",
   })
-  .pipe(
-    S.brand("Glob"),
-    $I.annoteSchema("Glob", {
-      description: "A portable non-empty glob pattern string accepted by the current Bun glob parser.",
-    })
-  );
+);
 
 /**
  * Type for {@link Glob}.

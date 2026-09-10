@@ -40,7 +40,7 @@ import { Flag } from "effect/unstable/cli";
  * @since 0.0.0
  */
 export const jsonFlagWith = (description: string) =>
-  Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription(description));
+  Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription(description));
 
 /**
  * Standard `--json` flag used by commands that support machine-readable output.
@@ -116,8 +116,8 @@ export const aiMetricsDataRootEnvVar = "BEEP_AI_METRICS_DATA_ROOT";
  * @category flags
  * @since 0.0.0
  */
-export const aiMetricsDataRootFlag = Flag.string("data-root").pipe(
-  Flag.withFallbackConfig(Config.string(aiMetricsDataRootEnvVar)),
+export const aiMetricsDataRootFlag = Flag.String("data-root").pipe(
+  Flag.withFallbackConfig(Config.String(aiMetricsDataRootEnvVar)),
   Flag.withDescription(
     `AI metrics data root, or ${aiMetricsDataRootEnvVar}; defaults to \${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`
   ),
@@ -160,8 +160,8 @@ export const yeetStateRootEnvVar = "BEEP_YEET_STATE_ROOT";
  * @category flags
  * @since 0.0.0
  */
-export const yeetStateRootFlag = Flag.string("state-root").pipe(
-  Flag.withFallbackConfig(Config.string(yeetStateRootEnvVar)),
+export const yeetStateRootFlag = Flag.String("state-root").pipe(
+  Flag.withFallbackConfig(Config.String(yeetStateRootEnvVar)),
   Flag.withDescription(
     `Yeet state root, or ${yeetStateRootEnvVar}; defaults to \${XDG_STATE_HOME:-$HOME/.local/state}/beep/yeet`
   ),
@@ -198,7 +198,7 @@ export const yeetStateRootFlag = Flag.string("state-root").pipe(
  * @since 0.0.0
  */
 export const packageFlag = (description = "Target a workspace package by name or repo-relative path") =>
-  Flag.string("package").pipe(Flag.withAlias("p"), Flag.withDescription(description));
+  Flag.String("package").pipe(Flag.withAlias("p"), Flag.withDescription(description));
 
 /**
  * `--output` / `-o` flag selecting an output file path.
@@ -224,7 +224,7 @@ export const packageFlag = (description = "Target a workspace package by name or
  * @since 0.0.0
  */
 export const outputFlag = (description = "Write output to a specific file path") =>
-  Flag.string("output").pipe(Flag.withAlias("o"), Flag.withDescription(description));
+  Flag.String("output").pipe(Flag.withAlias("o"), Flag.withDescription(description));
 
 /**
  * `--verbose` flag toggling additional diagnostic output.
@@ -250,7 +250,7 @@ export const outputFlag = (description = "Write output to a specific file path")
  * @since 0.0.0
  */
 export const verboseFlag = (description = "Print additional diagnostic output") =>
-  Flag.boolean("verbose").pipe(Flag.withDefault(false), Flag.withDescription(description));
+  Flag.Boolean("verbose").pipe(Flag.withDefault(false), Flag.withDescription(description));
 
 /**
  * `--dry-run` flag previewing changes without writing.
@@ -281,7 +281,7 @@ export const verboseFlag = (description = "Print additional diagnostic output") 
  * @since 0.0.0
  */
 export const dryRunFlag = (description = "Preview changes without writing files") =>
-  Flag.boolean("dry-run").pipe(Flag.withDefault(false), Flag.withDescription(description));
+  Flag.Boolean("dry-run").pipe(Flag.withDefault(false), Flag.withDescription(description));
 
 /**
  * `--force` flag permitting destructive overwrites.
@@ -313,7 +313,7 @@ export const dryRunFlag = (description = "Preview changes without writing files"
  * @since 0.0.0
  */
 export const forceFlag = (description = "Overwrite existing output") =>
-  Flag.boolean("force").pipe(Flag.withDefault(false), Flag.withDescription(description));
+  Flag.Boolean("force").pipe(Flag.withDefault(false), Flag.withDescription(description));
 
 /**
  * Split a comma-separated flag value, trimming entries and dropping empties.

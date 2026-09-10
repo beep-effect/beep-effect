@@ -20,7 +20,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 
 const decodePosixPath = S.decodeEffect(PosixPath);
@@ -35,12 +35,19 @@ const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: C
 // reproduce the original encoding byte-for-byte. This holds for every schema,
 // including class schemas whose decoded side is an Error subclass.
 const assertEncodedRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      expect(encode(schema, decode(schema, encode(schema, value)))).toEqual(encode(schema, value));
-    }),
-    fcRuns(10)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          expect(encode(schema, decode(schema, encode(schema, value)))).toEqual(encode(schema, value));
+
+          return true;
+        },
+        fcRuns(10)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 // Decoded-side equivalence additionally pins that the decoded instance equals
@@ -53,12 +60,19 @@ const assertEncodedRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema:
 // Property Laws lane fail at run 121 on a seed this repo pins for determinism.
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
   assertEncodedRoundTrip(schema);
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      expect(S.toEquivalence(schema)(decode(schema, encode(schema, value)), value)).toBe(true);
-    }),
-    fcRuns(10)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          expect(S.toEquivalence(schema)(decode(schema, encode(schema, value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(10)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 const fixtureIds = Effect.all({

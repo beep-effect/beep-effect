@@ -128,7 +128,7 @@ const decodeMarkdownText = Effect.fn("Markdown.decodeMarkdownText")(function* (c
  */
 export const Markdown = S.String.pipe(
   S.decodeTo(MarkdownBrand, {
-    decode: SchemaGetter.transformOrFail(decodeMarkdownText),
+    decode: SchemaGetter.transformEffect(decodeMarkdownText),
     encode: SchemaGetter.transform((content: string): string => content),
   }),
   $I.annoteSchema("Markdown", {
@@ -186,8 +186,8 @@ export const MarkdownTextToHtml = (options?: MarkdownRenderOptions) => {
 
   return S.String.pipe(
     S.decodeTo(S.String, {
-      decode: SchemaGetter.transformOrFail(renderMarkdownHtml),
-      encode: SchemaGetter.transformOrFail(encodeUnsupported),
+      decode: SchemaGetter.transformEffect(renderMarkdownHtml),
+      encode: SchemaGetter.transformEffect(encodeUnsupported),
     }),
     $I.annoteSchema("MarkdownTextToHtml", {
       description: "Schema factory that renders Markdown text into HTML text with Bun's Markdown runtime.",

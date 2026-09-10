@@ -43,7 +43,7 @@ import {
  */
 export const AnthropicLive: Layer.Layer<AnthropicClient.AnthropicClient, Config.ConfigError, never> =
   AnthropicClient.layerConfig({
-    apiKey: Config.redacted(ANTHROPIC_API_KEY_ENV),
+    apiKey: Config.Redacted(ANTHROPIC_API_KEY_ENV),
   }).pipe(Layer.provide(FetchHttpClient.layer));
 
 /**
@@ -111,7 +111,7 @@ export const makeAnthropicLanguageModelLayer = (
  * @since 0.0.0
  */
 export const AnthropicLanguageModelLive = Layer.unwrap(
-  Config.nonEmptyString(ANTHROPIC_MODEL_ENV).pipe(
+  Config.NonEmptyString(ANTHROPIC_MODEL_ENV).pipe(
     Config.withDefault(ANTHROPIC_DEFAULT_MODEL),
     Effect.map((model) => makeAnthropicLanguageModelLayer(AnthropicLanguageModelOptions.make({ model })))
   )

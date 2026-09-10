@@ -5,7 +5,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Context, Effect, Equal, Layer, Logger, Metric, References } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePhaseProfileOption = S.decodeOption(PhaseProfile);
 const decodeUnknownPhaseProfileOption = S.decodeUnknownOption(PhaseProfile);
@@ -29,13 +29,20 @@ class TestPhaseError extends S.TaggedError<TestPhaseError>()("TestPhaseError", {
 
 describe("PhaseProfiler", () => {
   it("round-trips schema-derived phase profiles", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(PhaseProfile)(fc), (profile) => {
-        const decoded = O.flatMap(encodePhaseProfileOption(profile), decodeUnknownPhaseProfileOption);
-        expect(O.exists(decoded, (value) => Equal.equals(value, profile))).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(PhaseProfile)]),
+          ([profile]) => {
+            const decoded = O.flatMap(encodePhaseProfileOption(profile), decodeUnknownPhaseProfileOption);
+            expect(O.exists(decoded, (value) => Equal.equals(value, profile))).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("rejects empty phase labels", () => {

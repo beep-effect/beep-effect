@@ -7,7 +7,7 @@
  * callers when the credential is missing.
  *
  * Credential resolution is intentionally narrow: it reads exactly one
- * optional-secret shape, `Config.redacted(envVar).pipe(Config.option)`,
+ * optional-secret shape, `Config.Redacted(envVar).pipe(Config.option)`,
  * mirroring the idiom already used by seven in-repo drivers (see
  * `packages/drivers/uspto/src/Uspto.service.ts:398`). This module
  * consolidates that idiom into one reusable, schema-first record instead of
@@ -120,7 +120,7 @@ export class SourceAuthRegistration extends S.Class<SourceAuthRegistration>($I`S
 
 /**
  * Resolves a source's credential using the optional-secret idiom
- * `Config.redacted(envVar).pipe(Config.option)`. Missing environment
+ * `Config.Redacted(envVar).pipe(Config.option)`. Missing environment
  * variables decode to `Option.none()` rather than failing.
  *
  * **Example** (Missing credential resolves none)
@@ -147,7 +147,7 @@ export class SourceAuthRegistration extends S.Class<SourceAuthRegistration>($I`S
 export const resolveSourceCredential = (
   registration: SourceAuthRegistration
 ): Effect.Effect<O.Option<Redacted.Redacted<string>>, Config.ConfigError> =>
-  Config.redacted(registration.envVar).pipe(Config.option);
+  Config.Redacted(registration.envVar).pipe(Config.option);
 
 /**
  * The composition-time verdict for one registered source: `Mount` when the

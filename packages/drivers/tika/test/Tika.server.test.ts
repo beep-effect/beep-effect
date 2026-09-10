@@ -15,7 +15,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer, Option as O, Result } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -128,22 +127,23 @@ describe("TikaServerEngineConfig", () => {
     });
   });
 
-  it("round-trips schema-derived Tika Server config through encoded form", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(TikaServerEngineConfig)(fc), (config) => {
-        expectRoundTrip(TikaServerEngineConfig, config);
-      }),
-      fcRuns(25)
-    ));
+  it.prop(
+    "round-trips schema-derived Tika Server config through encoded form",
+    [TikaServerEngineConfig],
+    ([config]) => {
+      expectRoundTrip(TikaServerEngineConfig, config);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-  it("generates valid Tika Server configs for the nightly regression seed", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(TikaServerEngineConfig)(fc), (config) => {
-        expectRoundTrip(TikaServerEngineConfig, config);
-      }),
-      // Issue #1014: the old host generator could emit invalid punycode labels.
-      { ...fcRuns(1_000), seed: 1_754_546_950 }
-    ));
+  it.prop(
+    "generates valid Tika Server configs for the nightly regression seed",
+    [TikaServerEngineConfig],
+    ([config]) => {
+      expectRoundTrip(TikaServerEngineConfig, config);
+    },
+    { arbitrary: { ...fcRuns(1_000), seed: 1_754_546_950 } }
+  );
 
   it("strips trailing slashes from the base URL", () => {
     expect(decode(TikaServerEngineConfig, { baseUrl: "http://localhost:9998/" }).baseUrl).toBe(TIKA_SERVER_URL);

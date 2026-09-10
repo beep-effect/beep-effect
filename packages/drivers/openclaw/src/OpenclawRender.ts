@@ -92,19 +92,17 @@ const execSecretsProviderDocument = (resolver: OpenclawSecretsResolverIntent, re
 const modelProviderSecretReference = (provider: OpenclawModelProviderIntent): O.Option<OpenclawSecretReference> =>
   pipe(
     Match.value(provider.apiKey),
-    Match.tagsExhaustive({
-      Placeholder: O.none<OpenclawSecretReference>,
-      SecretRef: (secretRef) => O.some(secretRef.ref),
-    })
+    Match.tag("Placeholder", O.none<OpenclawSecretReference>),
+    Match.tag("SecretRef", (secretRef) => O.some(secretRef.ref)),
+    Match.exhaustive
   );
 
 const modelProviderApiKeyDocument = (provider: OpenclawModelProviderIntent): unknown =>
   pipe(
     Match.value(provider.apiKey),
-    Match.tagsExhaustive({
-      Placeholder: (placeholder): unknown => placeholder.value,
-      SecretRef: () => secretRefDocument(modelProviderSecretsName(provider.id)),
-    })
+    Match.tag("Placeholder", (placeholder): unknown => placeholder.value),
+    Match.tag("SecretRef", () => secretRefDocument(modelProviderSecretsName(provider.id))),
+    Match.exhaustive
   );
 
 const modelProviderDocument = (provider: OpenclawModelProviderIntent) => ({

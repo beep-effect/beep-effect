@@ -11,7 +11,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Effect, FileSystem, HashMap, Layer, Path } from "effect";
+import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -509,7 +509,7 @@ describe("restoration archive boundary helpers", () => {
                       Effect.map((info) =>
                         mutation === "directory"
                           ? { ...info, type: "Directory" as const }
-                          : { ...info, size: FileSystem.Size(info.size + 1n) }
+                          : { ...info, size: ByteSize.sum(info.size, ByteSize.bytes(1)) }
                       )
                     ),
                   };
@@ -521,7 +521,7 @@ describe("restoration archive boundary helpers", () => {
                   if (filePath !== ledgerPath) return info;
                   ledgerStatCount += 1;
                   const shouldDrift = (race === "repair-current" && ledgerStatCount === 2) || race === "append-current";
-                  return shouldDrift ? { ...info, size: FileSystem.Size(info.size + 1n) } : info;
+                  return shouldDrift ? { ...info, size: ByteSize.sum(info.size, ByteSize.bytes(1)) } : info;
                 })
               ),
           };

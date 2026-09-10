@@ -162,6 +162,12 @@ describe("packages/tooling/tool/cli schema-first models", () => {
         ].join("\n")
       )
     ).toBe(true);
+    expect(
+      sourceTextHasSchemaArbitraryPropertyCoverage(
+        "const worker = Arbitrary.schema(Worker); Arbitrary.checkEffect(Arbitrary.all([worker]), ([value]) => true);"
+      )
+    ).toBe(true);
+    expect(sourceTextHasSchemaArbitraryPropertyCoverage("const worker = Arbitrary.schema(Worker);")).toBe(false);
     expect(sourceTextHasSchemaArbitraryPropertyCoverage("const WorkerArbitrary = S.toArbitrary(Worker);")).toBe(false);
     expect(
       sourceTextHasSchemaArbitraryPropertyCoverage(

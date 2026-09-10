@@ -55,16 +55,13 @@ const Sint64BigInt = S.BigInt.check(Sint64Range);
  * @category validation
  * @since 0.0.0
  */
-export const Sint64 = ProtobufInt64Input.pipe(S.decodeTo(Sint64BigInt, decodeProtobufInt64InputTransformation))
-  .annotate({
-    toArbitrary: () => (fc) => fc.bigInt({ min: sint64Minimum, max: sint64Maximum }),
+export const Sint64 = ProtobufInt64Input.pipe(
+  S.decodeTo(Sint64BigInt, decodeProtobufInt64InputTransformation),
+  S.brand("Sint64"),
+  $I.annoteSchema("Sint64", {
+    description: "A protobuf sint64 bigint in the inclusive signed 64-bit range.",
   })
-  .pipe(
-    S.brand("Sint64"),
-    $I.annoteSchema("Sint64", {
-      description: "A protobuf sint64 bigint in the inclusive signed 64-bit range.",
-    })
-  );
+);
 
 /**
  * Type-level value inferred from {@link Sint64}.

@@ -43,7 +43,6 @@ import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import type { LegalPositionRecordRepositoryShape } from "@beep/law-practice-use-cases/LegalPositionRecord";
 
 const decodeUnknownActFrame = S.decodeUnknownEffect(ActFrame);
@@ -297,7 +296,7 @@ describe("@beep/law-practice-server legal position record repository", () => {
     // over organizations and ids nobody chose to make the assertion easy. Each
     // run builds its own store, which is stricter isolation than a shared
     // `Layer.fresh` gives across runs of one property.
-    const relators = S.toArbitrary(LegalPositionRelator)(fc);
+    const relators = LegalPositionRelator;
 
     const readPerOrganization = Effect.fnUntraced(function* (recorded: ReadonlyArray<LegalPositionRelator>) {
       const repository = yield* makeInMemoryLegalPositionRecordRepository();
@@ -319,15 +318,15 @@ describe("@beep/law-practice-server legal position record repository", () => {
       );
     });
 
-    it("returns exactly the relations recorded under each organization, id ascending", () => {
-      fc.assert(
-        fc.property(fc.array(relators, { maxLength: 12 }), (recorded) => {
-          for (const { expected, read } of Effect.runSync(readPerOrganization(recorded))) {
-            expect(read).toEqual(expected);
-          }
-        }),
-        { numRuns: 10 }
-      );
-    });
+    it.prop(
+      "returns exactly the relations recorded under each organization, id ascending",
+      [S.Array(relators).check(S.isMaxLength(12))],
+      ([recorded]) => {
+        for (const { expected, read } of Effect.runSync(readPerOrganization(recorded))) {
+          expect(read).toEqual(expected);
+        }
+      },
+      { arbitrary: { runs: 10 } }
+    );
   });
 });

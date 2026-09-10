@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   BatchId,
   ChunkId,
@@ -49,13 +49,21 @@ describe("effect-ontology identity schemas", () => {
 
   it("derives arbitraries whose values satisfy every public identity schema", () => {
     for (const schema of identitySchemas) {
-      const arbitrary = S.toArbitrary(schema)(fc);
-      fc.assert(
-        fc.property(arbitrary, (value) => {
+      const arbitrary = Arbitrary.schema(schema);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([value]) => {
           expect(S.is(schema)(value)).toBe(true);
-        }),
-        { numRuns: 32 }
-      );
+
+              return true;
+            },
+            { runs: 32 }
+          )
+        )._tag,
+        identitySchemas.indexOf(schema).toString()
+      ).toBe("Passed");
     }
   });
 

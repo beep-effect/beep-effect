@@ -152,7 +152,7 @@ describe("@beep/infra CiRunners", () => {
   });
 
   it("round-trips CI runner config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(CiRunnersPulumiConfigValues, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(CiRunnersPulumiConfigValues, { runs: 25 });
     expectSchemaRoundTrip(CiRunnersPulumiConfigValues);
     expectSchemaRoundTrip(CiRunnersImageConfig);
     expectSchemaRoundTrip(CiRunnersWorkerConfig);

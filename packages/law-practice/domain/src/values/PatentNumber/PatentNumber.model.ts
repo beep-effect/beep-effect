@@ -48,17 +48,13 @@ export const PatentNumber = S.String.check(
     description: "A WIPO ST.6 publication number containing between 1 and 13 digits.",
     message: "Patent publication number must contain 1 to 13 digits.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(/^[0-9]{1,13}$/),
+).pipe(
+  S.brand("PatentNumber"),
+  $I.annoteSchema("PatentNumber", {
+    description:
+      "Canonical WIPO ST.6 patent publication number: digits only, 1 to 13 digits, excluding ST.3 office and ST.16 kind metadata.",
   })
-  .pipe(
-    S.brand("PatentNumber"),
-    $I.annoteSchema("PatentNumber", {
-      description:
-        "Canonical WIPO ST.6 patent publication number: digits only, 1 to 13 digits, excluding ST.3 office and ST.16 kind metadata.",
-    })
-  );
+);
 
 /**
  * Type-level brand produced by {@link PatentNumber}.

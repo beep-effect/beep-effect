@@ -17,7 +17,7 @@ import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeDocumentIntakeDroppedFileInput = S.decodeEffect(Document.IntakeDroppedFileInput);
 const decodeUnknownUint8ArrayFromBase64Result = S.decodeUnknownResult(S.Uint8ArrayFromBase64);
@@ -50,15 +50,22 @@ describe("@beep/documents-server DocumentIntake", () => {
   it("round-trips dropped-file bytes through the Base64 wire codec with schema-derived arbitraries", () => {
     const equivalent = S.toEquivalence(S.Uint8ArrayFromBase64);
 
-    fc.assert(
-      fc.property(S.toArbitrary(S.Uint8ArrayFromBase64)(fc), (bytes) => {
-        const encoded = Result.getOrThrow(encodeUint8ArrayFromBase64Result(bytes));
-        const decoded = Result.getOrThrow(decodeUnknownUint8ArrayFromBase64Result(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(S.Uint8ArrayFromBase64),
+          (bytes) => {
+            const encoded = Result.getOrThrow(encodeUint8ArrayFromBase64Result(bytes));
+            const decoded = Result.getOrThrow(decodeUnknownUint8ArrayFromBase64Result(encoded));
 
-        expect(equivalent(decoded, bytes)).toBe(true);
-      }),
-      fcRuns(10)
-    );
+            expect(equivalent(decoded, bytes)).toBe(true);
+
+            return true;
+          },
+          fcRuns(10)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(

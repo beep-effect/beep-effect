@@ -103,7 +103,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
   const formatIssue = SchemaIssue.makeFormatterDefault();
@@ -238,93 +239,103 @@ const spanIdsByName = (
 
 const assertEncodeDecodeRoundTrip = <A>(
   law: {
-    readonly arbitrary: fc.Arbitrary<A>;
+    readonly arbitrary: Arbitrary.Arbitrary<A>;
     readonly decode: (input: unknown) => A;
     readonly encode: (value: A) => unknown;
     readonly equivalent: (self: A, that: A) => boolean;
   },
-  options?: { readonly numRuns?: number }
+  options?: { readonly runs?: number }
 ): void => {
-  fc.assert(
-    fc.property(law.arbitrary, (value) => {
-      const decoded = law.decode(law.encode(value));
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([law.arbitrary]),
+        ([value]) => {
+          const decoded = law.decode(law.encode(value));
 
-      return Equal.equals(decoded, value) || law.equivalent(decoded, value);
-    }),
-    fcRuns(options?.numRuns ?? 12)
-  );
+          return Equal.equals(decoded, value) || law.equivalent(decoded, value);
+        },
+        fcRuns(options?.runs ?? 12)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const transcriptTextSummaryInputLaw = {
-  arbitrary: S.toArbitrary(AiMetricsTranscriptTextSummaryInput)(fc),
+  arbitrary: Arbitrary.schema(AiMetricsTranscriptTextSummaryInput),
   decode: S.decodeUnknownSync(AiMetricsTranscriptTextSummaryInput),
   encode: S.encodeUnknownSync(AiMetricsTranscriptTextSummaryInput),
   equivalent: S.toEquivalence(AiMetricsTranscriptTextSummaryInput),
 };
 const agentSessionLaw = {
-  arbitrary: S.toArbitrary(AgentSession)(fc),
+  arbitrary: Arbitrary.schema(AgentSession),
   decode: S.decodeUnknownSync(AgentSession),
   encode: S.encodeUnknownSync(AgentSession),
   equivalent: S.toEquivalence(AgentSession),
 };
 const isAgentSession = S.is(AgentSession);
-const AgentSessionSchemaProperty = fc.property(S.toArbitrary(AgentSession)(fc), (session) => isAgentSession(session));
+const AgentSessionSchemaProperty = (options: Arbitrary.CheckOptions) =>
+  Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(AgentSession)]),
+    ([session]) => isAgentSession(session),
+    options
+  );
 const agentTurnLaw = {
-  arbitrary: S.toArbitrary(AgentTurn)(fc),
+  arbitrary: Arbitrary.schema(AgentTurn),
   decode: S.decodeUnknownSync(AgentTurn),
   encode: S.encodeUnknownSync(AgentTurn),
   equivalent: S.toEquivalence(AgentTurn),
 };
 const codexTranscriptLineLaw = {
-  arbitrary: S.toArbitrary(CodexTranscriptLine)(fc),
+  arbitrary: Arbitrary.schema(CodexTranscriptLine),
   decode: S.decodeUnknownSync(CodexTranscriptLine),
   encode: S.encodeUnknownSync(CodexTranscriptLine),
   equivalent: S.toEquivalence(CodexTranscriptLine),
 };
 const claudeTranscriptLineLaw = {
-  arbitrary: S.toArbitrary(ClaudeTranscriptLine)(fc),
+  arbitrary: Arbitrary.schema(ClaudeTranscriptLine),
   decode: S.decodeUnknownSync(ClaudeTranscriptLine),
   encode: S.encodeUnknownSync(ClaudeTranscriptLine),
   equivalent: S.toEquivalence(ClaudeTranscriptLine),
 };
 const openClawTranscriptLineLaw = {
-  arbitrary: S.toArbitrary(OpenClawTranscriptLine)(fc),
+  arbitrary: Arbitrary.schema(OpenClawTranscriptLine),
   decode: S.decodeUnknownSync(OpenClawTranscriptLine),
   encode: S.encodeUnknownSync(OpenClawTranscriptLine),
   equivalent: S.toEquivalence(OpenClawTranscriptLine),
 };
 const transcriptIngestSummaryLaw = {
-  arbitrary: S.toArbitrary(TranscriptIngestSummary)(fc),
+  arbitrary: Arbitrary.schema(TranscriptIngestSummary),
   decode: S.decodeUnknownSync(TranscriptIngestSummary),
   encode: S.encodeUnknownSync(TranscriptIngestSummary),
   equivalent: S.toEquivalence(TranscriptIngestSummary),
 };
 const otlpAttributeValueLaw = {
-  arbitrary: S.toArbitrary(AiMetricsOtlpAttributeValue)(fc),
+  arbitrary: Arbitrary.schema(AiMetricsOtlpAttributeValue),
   decode: S.decodeUnknownSync(AiMetricsOtlpAttributeValue),
   encode: S.encodeUnknownSync(AiMetricsOtlpAttributeValue),
   equivalent: S.toEquivalence(AiMetricsOtlpAttributeValue),
 };
 const forwarderOtlpExportLaw = {
-  arbitrary: S.toArbitrary(AiMetricsForwarderOtlpExport)(fc),
+  arbitrary: Arbitrary.schema(AiMetricsForwarderOtlpExport),
   decode: S.decodeUnknownSync(AiMetricsForwarderOtlpExport),
   encode: S.encodeUnknownSync(AiMetricsForwarderOtlpExport),
   equivalent: S.toEquivalence(AiMetricsForwarderOtlpExport),
 };
 const effectivenessAnnotationValueLaw = {
-  arbitrary: S.toArbitrary(AgentEffectivenessAnnotationValue)(fc),
+  arbitrary: Arbitrary.schema(AgentEffectivenessAnnotationValue),
   decode: S.decodeUnknownSync(AgentEffectivenessAnnotationValue),
   encode: S.encodeUnknownSync(AgentEffectivenessAnnotationValue),
   equivalent: S.toEquivalence(AgentEffectivenessAnnotationValue),
 };
 const retentionMutationResultLaw = {
-  arbitrary: S.toArbitrary(AiMetricsRetentionMutationResult)(fc),
+  arbitrary: Arbitrary.schema(AiMetricsRetentionMutationResult),
   decode: S.decodeUnknownSync(AiMetricsRetentionMutationResult),
   encode: S.encodeUnknownSync(AiMetricsRetentionMutationResult),
   equivalent: S.toEquivalence(AiMetricsRetentionMutationResult),
 };
 const nonEmptyTrimmedStringLaw = {
-  arbitrary: S.toArbitrary(NonEmptyTrimmedStr)(fc),
+  arbitrary: Arbitrary.schema(NonEmptyTrimmedStr),
   decode: S.decodeUnknownSync(NonEmptyTrimmedStr),
   encode: S.encodeUnknownSync(NonEmptyTrimmedStr),
   equivalent: S.toEquivalence(NonEmptyTrimmedStr),
@@ -336,7 +347,8 @@ const phoenixService = <A extends { readonly tool: string }>(spec: { readonly se
     A.findFirst((service) => service.tool === AiMetricsTool.Enum.phoenix)
   );
 
-it("derives valid agent sessions from the schema", () => fc.assert(AgentSessionSchemaProperty, fcRuns(12)));
+it("derives valid agent sessions from the schema", () =>
+  expect(Effect.runSync(AgentSessionSchemaProperty(fcRuns(12)))._tag).toBe("Passed"));
 
 it("rejects impossible line and measurement values at construction", () => {
   expect(() =>
@@ -430,12 +442,12 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
     );
 
     assertEncodeDecodeRoundTrip(transcriptTextSummaryInputLaw);
-    assertEncodeDecodeRoundTrip(agentSessionLaw, { numRuns: 8 });
-    assertEncodeDecodeRoundTrip(agentTurnLaw, { numRuns: 8 });
-    assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, { numRuns: 8 });
-    assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, { numRuns: 8 });
-    assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, { numRuns: 8 });
-    assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(agentSessionLaw, { runs: 8 });
+    assertEncodeDecodeRoundTrip(agentTurnLaw, { runs: 8 });
+    assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, { runs: 8 });
+    assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, { runs: 8 });
+    assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, { runs: 8 });
+    assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, { runs: 8 });
     assertEncodeDecodeRoundTrip(otlpAttributeValueLaw);
     assertEncodeDecodeRoundTrip(forwarderOtlpExportLaw);
     assertEncodeDecodeRoundTrip(effectivenessAnnotationValueLaw);

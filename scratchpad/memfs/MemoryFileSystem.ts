@@ -567,11 +567,10 @@ const seedVolume = (
         continue;
       }
       yield* Match.value(entry).pipe(
-        Match.tagsExhaustive({
-          MemoryFileSystemSeedFile: (entry) => seedFile(fs, path, entry),
-          MemoryFileSystemSeedDirectory: (entry) => seedDirectory(fs, path, entry),
-          MemoryFileSystemSeedSymlink: (entry) => fs.symlink(entry.target, path),
-        })
+        Match.tag("MemoryFileSystemSeedFile", (entry) => seedFile(fs, path, entry)),
+        Match.tag("MemoryFileSystemSeedDirectory", (entry) => seedDirectory(fs, path, entry)),
+        Match.tag("MemoryFileSystemSeedSymlink", (entry) => fs.symlink(entry.target, path)),
+        Match.exhaustive
       );
     }
   });

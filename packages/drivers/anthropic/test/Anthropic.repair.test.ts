@@ -4,15 +4,15 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import { Response } from "effect/unstable/ai";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const JsonAnthropicToolJsonResponse = S.fromJsonString(AnthropicToolJsonResponse);
 const decodeJsonAnthropicToolJsonResponse = S.decodeEffect(JsonAnthropicToolJsonResponse);
 const decodeJsonAnthropicToolJsonResponseOption = S.decodeOption(JsonAnthropicToolJsonResponse);
 const encodeJsonAnthropicToolJsonResponse = S.encodeEffect(JsonAnthropicToolJsonResponse);
 const encodeJsonAnthropicToolJsonResponseOption = S.encodeOption(JsonAnthropicToolJsonResponse);
-const AnthropicToolJsonResponseArbitrary = S.toArbitrary(AnthropicToolJsonResponse)(fc);
+const AnthropicToolJsonResponseArbitrary = Arbitrary.schema(AnthropicToolJsonResponse);
 
 describe("Anthropic repair helpers", () => {
   it.effect(
@@ -72,18 +72,25 @@ describe("Anthropic repair helpers", () => {
 
   it.effect("round-trips schema-derived repair responses through JSON", () =>
     Effect.sync(() =>
-      fc.assert(
-        fc.property(AnthropicToolJsonResponseArbitrary, (response) => {
-          const encoded = encodeJsonAnthropicToolJsonResponseOption(response);
-          const reencoded = O.flatMap(encoded, (json) =>
-            O.flatMap(decodeJsonAnthropicToolJsonResponseOption(json), encodeJsonAnthropicToolJsonResponseOption)
-          );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([AnthropicToolJsonResponseArbitrary]),
+            ([response]) => {
+              const encoded = encodeJsonAnthropicToolJsonResponseOption(response);
+              const reencoded = O.flatMap(encoded, (json) =>
+                O.flatMap(decodeJsonAnthropicToolJsonResponseOption(json), encodeJsonAnthropicToolJsonResponseOption)
+              );
 
-          expect(O.isSome(encoded)).toBe(true);
-          expect(reencoded).toStrictEqual(encoded);
-        }),
-        fcRuns(25)
-      )
+              expect(O.isSome(encoded)).toBe(true);
+              expect(reencoded).toStrictEqual(encoded);
+
+              return true;
+            },
+            fcRuns(25)
+          )
+        )
+      ).toMatchObject({ _tag: "Passed" })
     )
   );
 });

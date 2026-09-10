@@ -10,11 +10,13 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   GoldenReplayReceipt,
   GoldenReplayReceiptFromJsonString,
   MutableRetentionMetadata,
+  MutableRetentionMetadataArbitrary,
   MutableRetentionMetadataFromJsonString,
   MutableReviewLedger,
   ProjectionStoreMetadata,
@@ -55,35 +57,43 @@ describe("LeJeune transactional bundle builder", () => {
   it("round-trips schema-derived mutable retention metadata", () => {
     const equivalent = S.toEquivalence(MutableRetentionMetadata);
 
-    fc.assert(
-      fc.property(S.toArbitrary(MutableRetentionMetadata)(fc), (value) =>
-        encodeMutableRetentionMetadataResult(value).pipe(
-          Result.flatMap(decodeUnknownMutableRetentionMetadataResult),
-          Result.match({
-            onFailure: () => false,
-            onSuccess: (decoded) => equivalent(decoded, value),
-          })
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          MutableRetentionMetadataArbitrary,
+          (value) =>
+            encodeMutableRetentionMetadataResult(value).pipe(
+              Result.flatMap(decodeUnknownMutableRetentionMetadataResult),
+              Result.match({
+                onFailure: () => false,
+                onSuccess: (decoded) => equivalent(decoded, value),
+              })
+            ),
+          fcRuns(20)
         )
-      ),
-      fcRuns(20)
-    );
+      )._tag
+    ).toBe("Passed");
   });
 
   it("round-trips the schema-derived exact-empty review ledger", () => {
     const equivalent = S.toEquivalence(MutableReviewLedger);
 
-    fc.assert(
-      fc.property(S.toArbitrary(MutableReviewLedger)(fc), (value) =>
-        encodeMutableReviewLedgerResult(value).pipe(
-          Result.flatMap(decodeUnknownMutableReviewLedgerResult),
-          Result.match({
-            onFailure: () => false,
-            onSuccess: (decoded) => equivalent(decoded, value),
-          })
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(MutableReviewLedger),
+          (value) =>
+            encodeMutableReviewLedgerResult(value).pipe(
+              Result.flatMap(decodeUnknownMutableReviewLedgerResult),
+              Result.match({
+                onFailure: () => false,
+                onSuccess: (decoded) => equivalent(decoded, value),
+              })
+            ),
+          fcRuns(20)
         )
-      ),
-      fcRuns(20)
-    );
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect("refuses an existing publication containing the mutable root without changing its contents", () =>

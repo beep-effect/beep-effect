@@ -43,7 +43,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const decodeUnknownSafeMetadataKeySync = S.decodeUnknownSync(SafeMetadataKey);
@@ -60,12 +60,19 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
   const encode = S.encodeSync(schema);
   const decode = S.decodeUnknownSync(schema);
 
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      expect(Equal.equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 const ffprobeJson = UnknownFromJsonString.encodeUnknownSync({

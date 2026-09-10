@@ -3,10 +3,11 @@ import { HashSet } from "@beep/schema/HashSet";
 import { withKeyDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as HashSet_ from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 describe("HashSet", () => {
   it("decodes arrays into hash sets and removes duplicates", () => {
@@ -58,19 +59,26 @@ describe("HashSet", () => {
 
   it("round-trips arbitrary sets through the array form under the derived equivalence", () => {
     const schema = HashSet(S.String);
-    const arbitrary = S.toArbitrary(schema)(fc);
+    const arbitrary = Arbitrary.schema(schema);
     const equivalence = S.toEquivalence(schema);
     const decode = S.decodeSync(schema);
     const encode = S.encodeSync(schema);
 
-    fc.assert(
-      fc.property(arbitrary, (set) => {
-        const encoded = encode(set);
-        expect(Array.isArray(encoded)).toBe(true);
-        expect(equivalence(decode(encoded), set)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([set]) => {
+            const encoded = encode(set);
+            expect(Array.isArray(encoded)).toBe(true);
+            expect(equivalence(decode(encoded), set)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("survives the JSON trip a jsonb column puts a set through", () => {

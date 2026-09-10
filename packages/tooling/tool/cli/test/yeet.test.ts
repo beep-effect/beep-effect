@@ -146,8 +146,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
 import * as TestClock from "effect/testing/TestClock";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
 const decodeRepoStepRunResult = S.decodeEffect(RepoStepRunResult);
@@ -344,6 +344,7 @@ const withProofCoordinatorRepo = <Result, Error, Requirements>(
         const repositoryIdentity = `https://example.test/${path.basename(repo.tmpDir)}.git`;
         yield* runGit(repo.tmpDir, ["remote", "add", "origin", repositoryIdentity]);
         const lockPath = yield* proofLockPathForContext(repo.tempContext);
+        yield* fs.makeDirectory(path.dirname(lockPath), { recursive: true, mode: 0o700 });
         const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
         yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {
           discard: true,
@@ -368,6 +369,9 @@ const withProofCoordinatorRepo = <Result, Error, Requirements>(
             { discard: true }
           );
         })
+    ).pipe(
+      // Keep every coordinator and nested repository in this test on one disposable root.
+      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${repo.tmpDir}/runtime` }))
     )
   );
 
@@ -4130,17 +4134,24 @@ describe("yeet publish scope helpers", () => {
   });
 
   it("property: verdict schema round-trips arbitrary verdicts", () => {
-    const VerdictArbitrary = S.toArbitrary(YeetVerdict)(fc);
-    fc.assert(
-      fc.property(VerdictArbitrary, (verdict) => {
-        const encoded = encodeYeetVerdictSync(verdict);
-        const decoded = decodeYeetVerdictSync(encoded);
-        expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
-        expect(decoded.lanes.length).toBe(verdict.lanes.length);
-        expect(decoded.outcome).toBe(verdict.outcome);
-      }),
-      fcRuns(32)
-    );
+    const VerdictArbitrary = Arbitrary.schema(YeetVerdict);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([VerdictArbitrary]),
+          ([verdict]) => {
+            const encoded = encodeYeetVerdictSync(verdict);
+            const decoded = decodeYeetVerdictSync(encoded);
+            expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
+            expect(decoded.lanes.length).toBe(verdict.lanes.length);
+            expect(decoded.outcome).toBe(verdict.outcome);
+
+            return true;
+          },
+          fcRuns(32)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("parks and restores staged-only residue through a marked stash", () =>

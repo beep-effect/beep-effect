@@ -78,73 +78,73 @@ import {
 import type { MarkPlan } from "./Doctest.schemas.ts";
 import type { DocgenPackageAnalysis, DocgenWorkspacePackage } from "./internal/Operations.ts";
 
-const packageFlag = Flag.string("package").pipe(
+const packageFlag = Flag.String("package").pipe(
   Flag.withAlias("p"),
   Flag.withDescription("Target a workspace package by name or repo-relative path"),
   Flag.optional
 );
-const filterFlag = Flag.string("filter").pipe(
+const filterFlag = Flag.String("filter").pipe(
   Flag.withDescription('Compatibility selector for commands like "bun run docgen --filter=@beep/schema"'),
   Flag.optional
 );
-const requiredPackageFlag = Flag.string("package").pipe(
+const requiredPackageFlag = Flag.String("package").pipe(
   Flag.withAlias("p"),
   Flag.withDescription("Target a workspace package by name or repo-relative path")
 );
-const outputFlag = Flag.string("output").pipe(
+const outputFlag = Flag.String("output").pipe(
   Flag.withAlias("o"),
   Flag.withDescription("Write output to a specific file path"),
   Flag.optional
 );
-const localBaseFlag = Flag.string("base").pipe(
+const localBaseFlag = Flag.String("base").pipe(
   Flag.withDefault("origin/main"),
   Flag.withDescription("Git base ref used for local changed-file discovery")
 );
-const localHeadFlag = Flag.string("head").pipe(
+const localHeadFlag = Flag.String("head").pipe(
   Flag.withDefault("HEAD"),
   Flag.withDescription("Git head ref used for local changed-file discovery")
 );
-const inputFlag = Flag.string("input").pipe(
+const inputFlag = Flag.String("input").pipe(
   Flag.withDescription("Read input from a specific file path"),
   Flag.optional
 );
-const includeFlag = Flag.string("include").pipe(
+const includeFlag = Flag.String("include").pipe(
   Flag.withDescription("Comma-separated package-relative or srcDir-relative file globs to include"),
   Flag.optional
 );
-const doctestWriteFlag = Flag.boolean("write").pipe(
+const doctestWriteFlag = Flag.Boolean("write").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Apply the verified marker and assertion rewrite plan")
 );
-const planFlag = Flag.boolean("plan").pipe(
+const planFlag = Flag.Boolean("plan").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the local docgen plan without executing it")
 );
-const fullFlag = Flag.boolean("full").pipe(
+const fullFlag = Flag.Boolean("full").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Run the canonical full docgen proof")
 );
-const allowFullFlag = Flag.boolean("allow-full").pipe(
+const allowFullFlag = Flag.Boolean("allow-full").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Execute the canonical full docgen proof automatically when the bounded plan requires it")
 );
-const allFlag = Flag.boolean("all").pipe(
+const allFlag = Flag.Boolean("all").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Run against every configured docgen package")
 );
-const checkFlag = Flag.boolean("check").pipe(
+const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Fail when the command reports failure findings")
 );
-const reuseProofManifestFlag = Flag.boolean("reuse-proof-manifest").pipe(
+const reuseProofManifestFlag = Flag.Boolean("reuse-proof-manifest").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Skip docgen metadata analysis for packages with current package-local proof manifests")
 );
-const changedFilesFlag = Flag.boolean("changed-files").pipe(
+const changedFilesFlag = Flag.Boolean("changed-files").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Run against packages touched by working-tree TypeScript changes only")
 );
-const qualityScoreFlag = Flag.choiceWithValue("score", [
+const qualityScoreFlag = Flag.ChoiceWithValue("score", [
   ["none", "none"],
   ["rubric", "rubric"],
   ["codex", "codex"],
@@ -154,33 +154,33 @@ const qualityScoreFlag = Flag.choiceWithValue("score", [
     "Advisory scoring mode: rubric for deterministic findings, none as a compatibility alias, codex for Codex-ready packets"
   )
 );
-const packetLimitFlag = Flag.integer("packet-limit").pipe(
+const packetLimitFlag = Flag.Int("packet-limit").pipe(
   Flag.withDefault(25),
   Flag.withDescription(
     "Maximum number of Codex advisory remediation packets to emit; use 0 to suppress packets; must be zero or greater"
   )
 );
-const qualityWorkerEvalPacketLimitFlag = Flag.integer("packet-limit").pipe(
+const qualityWorkerEvalPacketLimitFlag = Flag.Int("packet-limit").pipe(
   Flag.withDefault(defaultQualityWorkerEvalPacketLimit()),
   Flag.withDescription("Maximum number of remediation packets to send to the worker; must be zero or greater")
 );
-const qualityWorkerRunpodEvalPacketLimitFlag = Flag.integer("packet-limit").pipe(
+const qualityWorkerRunpodEvalPacketLimitFlag = Flag.Int("packet-limit").pipe(
   Flag.withDefault(defaultQualityWorkerRunpodEvalPacketLimit()),
   Flag.withDescription("Maximum number of remediation packets to send to the Runpod worker; must be zero or greater")
 );
-const qualityWorkerEvalProviderFlag = Flag.choiceWithValue("provider", [
+const qualityWorkerEvalProviderFlag = Flag.ChoiceWithValue("provider", [
   ["codex", "codex"],
   ["ollama", "ollama"],
   ["lmstudio", "lmstudio"],
 ]).pipe(Flag.withDescription("Codex worker provider to evaluate; choose codex, ollama, or lmstudio"));
-const qualityWorkerEvalModelFlag = Flag.string("model").pipe(
+const qualityWorkerEvalModelFlag = Flag.String("model").pipe(
   Flag.withDescription("Model id to pass to Codex; required to avoid provider-specific default drift")
 );
-const qualityWorkerEvalBaseUrlFlag = Flag.string("base-url").pipe(
+const qualityWorkerEvalBaseUrlFlag = Flag.String("base-url").pipe(
   Flag.withDescription("Optional OpenAI-compatible base URL passed through to the Codex SDK"),
   Flag.optional
 );
-const qualityWorkerEvalReasoningEffortFlag = Flag.choiceWithValue("reasoning-effort", [
+const qualityWorkerEvalReasoningEffortFlag = Flag.ChoiceWithValue("reasoning-effort", [
   ["minimal", "minimal"],
   ["low", "low"],
   ["medium", "medium"],
@@ -190,84 +190,84 @@ const qualityWorkerEvalReasoningEffortFlag = Flag.choiceWithValue("reasoning-eff
   Flag.withDescription("Optional Codex reasoning effort; hosted codex defaults to low when omitted"),
   Flag.optional
 );
-const confirmRunpodEvalFlag = Flag.boolean("confirm-runpod-eval").pipe(
+const confirmRunpodEvalFlag = Flag.Boolean("confirm-runpod-eval").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Acknowledge that quality-worker-eval-runpod creates a billable remote GPU pod")
 );
-const keepRunpodPodFlag = Flag.boolean("keep-pod").pipe(
+const keepRunpodPodFlag = Flag.Boolean("keep-pod").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Debug mode: leave the Runpod pod running instead of deleting it after the eval")
 );
-const allow24GbFallbackFlag = Flag.boolean("allow-24gb-fallback").pipe(
+const allow24GbFallbackFlag = Flag.Boolean("allow-24gb-fallback").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Allow explicitly verified 24 GiB GPU fallbacks when preferred 48 GiB GPUs are unavailable")
 );
-const runpodGpuTypeIdsFlag = Flag.string("gpu-type").pipe(
+const runpodGpuTypeIdsFlag = Flag.String("gpu-type").pipe(
   Flag.withDescription("Comma-separated Runpod GPU type ids; overrides the default 48 GiB preference list"),
   Flag.optional
 );
-const runpodTemplateIdFlag = Flag.string("template-id").pipe(
+const runpodTemplateIdFlag = Flag.String("template-id").pipe(
   Flag.withDescription(
     "Optional trusted Runpod template id override; otherwise the repo fallback image is used unless public template search is explicitly enabled"
   ),
   Flag.optional
 );
-const skipRunpodTemplateSearchFlag = Flag.boolean("skip-template-search").pipe(
+const skipRunpodTemplateSearchFlag = Flag.Boolean("skip-template-search").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Use the repo fallback image instead of searching public Runpod templates")
 );
-const allowPublicRunpodTemplateSearchFlag = Flag.boolean("allow-public-template-search").pipe(
+const allowPublicRunpodTemplateSearchFlag = Flag.Boolean("allow-public-template-search").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Opt into searching public Runpod templates instead of using the repo fallback image")
 );
-const runpodReadinessTimeoutMsFlag = Flag.integer("readiness-timeout-ms").pipe(
+const runpodReadinessTimeoutMsFlag = Flag.Int("readiness-timeout-ms").pipe(
   Flag.withDefault(defaultQualityWorkerRunpodEvalReadinessTimeoutMs()),
   Flag.withDescription("Milliseconds to wait for remote Ollama readiness after pod creation")
 );
-const qualityWorkerRunpodEvalOtlpFlag = Flag.boolean("otlp").pipe(
+const qualityWorkerRunpodEvalOtlpFlag = Flag.Boolean("otlp").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Emit sanitized summary and hashed packet spans to the configured Phoenix OTLP endpoint")
 );
-const qualityWorkerRunpodEvalOtlpBaseUrlFlag = Flag.string("otlp-base-url").pipe(
+const qualityWorkerRunpodEvalOtlpBaseUrlFlag = Flag.String("otlp-base-url").pipe(
   Flag.withDefault(defaultQualityWorkerRunpodEvalOtlpBaseUrl()),
   Flag.withDescription("Phoenix-compatible OTLP collector base URL")
 );
-const qualityWorkerRunpodEvalOtlpProjectFlag = Flag.string("otlp-project").pipe(
+const qualityWorkerRunpodEvalOtlpProjectFlag = Flag.String("otlp-project").pipe(
   Flag.withDefault(defaultQualityWorkerRunpodEvalOtlpProject()),
   Flag.withDescription("Phoenix project name carried as openinference.project.name")
 );
-const verboseFlag = Flag.boolean("verbose").pipe(
+const verboseFlag = Flag.Boolean("verbose").pipe(
   Flag.withDefault(false),
   Flag.withAlias("v"),
   Flag.withDescription("Include extra package detail")
 );
-const cleanFlag = Flag.boolean("clean").pipe(
+const cleanFlag = Flag.Boolean("clean").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Remove docs/generated before aggregating")
 );
-const forceFlag = Flag.boolean("force").pipe(
+const forceFlag = Flag.Boolean("force").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Overwrite an existing docgen.json file")
 );
-const dryRunFlag = Flag.boolean("dry-run").pipe(
+const dryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Preview output without writing files")
 );
-const fixModeFlag = Flag.boolean("fix-mode").pipe(
+const fixModeFlag = Flag.Boolean("fix-mode").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Render the markdown analysis as a checklist rather than a findings report")
 );
-const validateExamplesFlag = Flag.boolean("validate-examples").pipe(
+const validateExamplesFlag = Flag.Boolean("validate-examples").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Compatibility flag; the repo-local docgen implementation always validates extracted examples")
 );
-const parallelFlag = Flag.integer("parallel").pipe(
+const parallelFlag = Flag.Int("parallel").pipe(
   Flag.withAlias("j"),
   Flag.withDefault(4),
   Flag.withDescription("Maximum number of packages to process concurrently")
 );
-const docgenConcurrencyConfig = Config.int("BEEP_DOCGEN_CONCURRENCY").pipe(Config.withDefault(3));
-const localParallelFlag = Flag.integer("parallel").pipe(
+const docgenConcurrencyConfig = Config.Int("BEEP_DOCGEN_CONCURRENCY").pipe(Config.withDefault(3));
+const localParallelFlag = Flag.Int("parallel").pipe(
   Flag.withAlias("j"),
   Flag.optional,
   Flag.withDescription("Maximum number of local docgen packages to process concurrently")
@@ -1044,7 +1044,7 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
         O.filter((values) => A.length(values) > 0),
         O.getOrUndefined
       );
-      const runpodApiKey = yield* Config.redacted("RUNPOD_API_KEY").pipe(
+      const runpodApiKey = yield* Config.Redacted("RUNPOD_API_KEY").pipe(
         Effect.mapError(
           DomainError.newCause(
             "RUNPOD_API_KEY is required for docgen quality-worker-eval-runpod. Use RUNPOD_API_KEY=\"$(op read 'op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_RUNPOD_API_KEY')\"."

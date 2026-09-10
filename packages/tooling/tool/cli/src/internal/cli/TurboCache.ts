@@ -698,11 +698,10 @@ export const resolveTurboCachePlan: {
  */
 export const turboCachePlanArgs = (plan: TurboCachePlan): ReadonlyArray<string> =>
   Match.value(plan).pipe(
-    Match.discriminatorsExhaustive("_tag")({
-      "caller-controlled": A.empty<string>,
-      "local-only": () => [`${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}`],
-      "remote-read": ({ mode }) => [`${CACHE_ARG_PREFIX}${mode}`],
-    })
+    Match.discriminator("_tag")("caller-controlled", A.empty<string>),
+    Match.discriminator("_tag")("local-only", () => [`${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}`]),
+    Match.discriminator("_tag")("remote-read", ({ mode }) => [`${CACHE_ARG_PREFIX}${mode}`]),
+    Match.exhaustive
   );
 
 /**

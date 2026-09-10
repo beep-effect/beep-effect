@@ -36,7 +36,7 @@ import * as Random from "effect/Random";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { migrateOnBoot } from "@/runtime/Migrations";
 import {
@@ -118,7 +118,11 @@ ex:canary ex:value "${workspaceCanary}" .
 
 describe("professional desktop execution-authority schema laws", () => {
   it("generates valid ontology SPARQL query requests", () => {
-    fc.assert(fc.property(S.toArbitrary(OntologySparqlQueryRequest)(fc), isOntologySparqlQueryRequest), fcRuns(25));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.schema(OntologySparqlQueryRequest), isOntologySparqlQueryRequest, fcRuns(25))
+      )._tag
+    ).toBe("Passed");
   });
 });
 

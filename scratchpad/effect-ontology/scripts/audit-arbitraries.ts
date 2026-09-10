@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Audits every public schema declaration in the quarantined Domain tree.
  *
@@ -21,7 +22,6 @@ import { Effect, SchemaAST } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 
 const sampleCount = 8;
 const baseSeed = 0x5eed;
@@ -54,7 +54,6 @@ for await (const relativePath of domainModules.scan({
         ["identifier", SchemaAST.resolveIdentifier(value.ast)],
         ["title", SchemaAST.resolveTitle(value.ast)],
         ["description", SchemaAST.resolveDescription(value.ast)],
-        ["toArbitrary", SchemaAST.resolve(value.ast)?.toArbitrary],
       ] satisfies ReadonlyArray<readonly [string, unknown]>,
       ([name, annotation]) => (annotation === undefined ? [name] : [])
     );
@@ -65,12 +64,15 @@ for await (const relativePath of domainModules.scan({
       });
     }
 
-    const arbitrary = S.toArbitrary(value)(fc);
+    const companion = moduleExports[`${exportName}Arbitrary`];
+    const arbitrary = Arbitrary.isArbitrary(companion) ? companion : Arbitrary.schema(value);
 
-    const samples = fc.sample(arbitrary, {
-      numRuns: sampleCount,
+    const samples = Effect.runSync(
+      Arbitrary.sampleEffect(arbitrary, {
+        count: sampleCount,
       seed: baseSeed + auditedSchemas,
-    });
+      })
+    );
     auditedSamples += samples.length;
 
     if (!A.every(samples, (sample) => S.is(value)(sample))) {

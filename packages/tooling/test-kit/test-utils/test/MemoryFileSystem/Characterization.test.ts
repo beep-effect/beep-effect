@@ -9,16 +9,6 @@ import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import type * as PlatformError from "effect/PlatformError";
-
-const assertPositionError = (error: PlatformError.PlatformError, method: string, fd: number): void => {
-  strictEqual(error._tag, "PlatformError");
-  assertTrue(error.reason._tag === "BadResource");
-  strictEqual(error.reason.module, "FileSystem");
-  strictEqual(error.reason.method, method);
-  strictEqual(error.reason.pathOrDescriptor, fd);
-  strictEqual(error.reason.description, "Invalid file position");
-};
 
 // These two cases prove sharing across test-body scopes. Sequence is local to
 // this suite; all other tests remain independent of this deliberately shared file.
@@ -79,9 +69,9 @@ it.layer(Subject.layer)("public core characterization", (it) => {
       assertSome(O.map(allocated, A.fromIterable), [65, 66]);
       yield* Effect.map(Effect.fromOption(allocated), (bytes) => bytes.set([1, 2]));
       strictEqual(yield* fs.readFileString(path), "ABC");
-      yield* file.seek(0, "start");
+      yield* file.seek(BigInt(0), "start");
       const replacement = new Uint8Array([68]);
-      strictEqual(yield* file.write(replacement), Fs.Size(1));
+      strictEqual(yield* file.write(replacement), 1);
       replacement.set([69]);
       strictEqual(yield* fs.readFileString(path), "DBC");
     })
@@ -134,26 +124,23 @@ it.layer(Subject.layer)("public core characterization", (it) => {
   );
 
   it.effect(
-    "07 signed seek defers errors and zero-length IO preserves the cursor",
+    "07 seeks before zero fail without moving the cursor and zero-length IO preserves it",
     Effect.fnUntraced(function* () {
       const fs = yield* Subject.make;
       const root = yield* fs.makeTempDirectoryScoped();
       const path = `${root}/cursor`;
       yield* fs.writeFileString(path, "content");
       const file = yield* fs.open(path, { flag: "r+" });
-      strictEqual(yield* file.seek(-1, "start"), Fs.Size(-1));
-      strictEqual(yield* file.seek(-2, "current"), Fs.Size(-3));
-      const output = new Uint8Array([99]);
-      assertPositionError(yield* Effect.flip(file.read(output)), "read", 4);
-      deepStrictEqual(A.fromIterable(output), [99]);
-      assertPositionError(yield* Effect.flip(file.readAlloc(1)), "readAlloc", 4);
-      assertPositionError(yield* Effect.flip(file.write(new Uint8Array([65]))), "write", 4);
-      assertPositionError(yield* Effect.flip(file.writeAll(new Uint8Array([65]))), "writeAll", 4);
-      strictEqual(yield* file.read(new Uint8Array()), Fs.Size(0));
-      strictEqual(yield* file.write(new Uint8Array()), Fs.Size(0));
-      strictEqual(yield* file.seek(0, "current"), Fs.Size(-3));
+      yield* file.seek(BigInt(2), "start");
+      const absoluteError = yield* Effect.flip(file.seek(BigInt(-1), "start"));
+      strictEqual(absoluteError.reason._tag, "BadArgument");
+      const relativeError = yield* Effect.flip(file.seek(BigInt(-3), "current"));
+      strictEqual(relativeError.reason._tag, "BadArgument");
+      strictEqual(yield* file.read(new Uint8Array()), 0);
+      strictEqual(yield* file.write(new Uint8Array()), 0);
+      strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(2));
       strictEqual(yield* fs.readFileString(path), "content");
-      strictEqual(yield* file.seek(0, "start"), Fs.Size(0));
+      strictEqual(yield* file.seek(BigInt(0), "start"), BigInt(0));
       const recovered = yield* file.readAlloc(7);
       assertSome(
         O.map(recovered, (bytes) => new TextDecoder().decode(bytes)),
@@ -341,19 +328,19 @@ it.layer(Subject.layer)("public core characterization", (it) => {
         Effect.gen(function* () {
           const file = yield* fs.open(path, { flag: "w+" });
           yield* file.writeAll(new TextEncoder().encode("abcdef"));
-          strictEqual(yield* file.seek(1, "start"), Fs.Size(1));
-          strictEqual(yield* file.read(new Uint8Array(2)), Fs.Size(2));
+          strictEqual(yield* file.seek(BigInt(1), "start"), BigInt(1));
+          strictEqual(yield* file.read(new Uint8Array(2)), 2);
           return file;
         })
       );
 
-      // rc.112 seek is infallible even after release; relative seek starts at
+      // Non-negative seek works after release; relative seek starts at
       // the final IO cursor, while descriptor operations must still fail.
-      strictEqual(yield* file.seek(0, "current"), Fs.Size(3));
-      strictEqual(yield* file.seek(2, "current"), Fs.Size(5));
-      strictEqual(yield* file.seek(7, "start"), Fs.Size(7));
-      strictEqual(yield* file.seek(-4, "current"), Fs.Size(3));
-      strictEqual(yield* file.seek(-1, "start"), Fs.Size(-1));
+      strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(3));
+      strictEqual(yield* file.seek(BigInt(2), "current"), BigInt(5));
+      strictEqual(yield* file.seek(BigInt(7), "start"), BigInt(7));
+      strictEqual(yield* file.seek(BigInt(-4), "current"), BigInt(3));
+      strictEqual((yield* Effect.flip(file.seek(BigInt(-1), "start"))).reason._tag, "BadArgument");
 
       const reopened = yield* fs.open(path, { flag: "r+" });
       const output = new Uint8Array([99]);
@@ -374,9 +361,9 @@ it.layer(Subject.layer)("public core characterization", (it) => {
         strictEqual(error.reason.description, "File descriptor is closed");
       }
       deepStrictEqual(A.fromIterable(output), [99]);
-      strictEqual(yield* file.seek(0, "current"), Fs.Size(-1));
-      strictEqual(yield* reopened.seek(0, "current"), Fs.Size(0));
-      strictEqual(yield* reopened.read(new Uint8Array(1)), Fs.Size(1));
+      strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(3));
+      strictEqual(yield* reopened.seek(BigInt(0), "current"), BigInt(0));
+      strictEqual(yield* reopened.read(new Uint8Array(1)), 1);
       strictEqual(yield* fs.readFileString(path), "abcdef");
     })
   );

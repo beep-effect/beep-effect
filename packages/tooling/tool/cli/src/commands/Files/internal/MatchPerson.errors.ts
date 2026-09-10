@@ -360,16 +360,15 @@ const commandError = (error: MatchPersonControlPlaneError): FilesCommandError =>
  * @since 0.0.0
  */
 export const toFilesCommandError = Match.type<MatchPersonControlPlaneError>().pipe(
-  Match.tagsExhaustive({
-    MatchPersonConfigError: commandError,
-    MatchPersonLicenseError: commandError,
-    MatchPersonMaterializationError: commandError,
-    MatchPersonModelAcquisitionError: commandError,
-    MatchPersonModelIntegrityError: commandError,
-    MatchPersonPathError: commandError,
-    MatchPersonProcessError: commandError,
-    MatchPersonProtocolError: commandError,
-    MatchPersonRuntimeError: commandError,
-    MatchPersonSemanticError: commandError,
-  })
+  Match.tag("MatchPersonConfigError", commandError),
+  Match.tag("MatchPersonLicenseError", commandError),
+  Match.tag("MatchPersonMaterializationError", commandError),
+  Match.tag("MatchPersonModelAcquisitionError", commandError),
+  Match.tag("MatchPersonModelIntegrityError", commandError),
+  Match.tag("MatchPersonPathError", commandError),
+  Match.tag("MatchPersonProcessError", commandError),
+  Match.tag("MatchPersonProtocolError", commandError),
+  Match.tag("MatchPersonRuntimeError", commandError),
+  Match.tag("MatchPersonSemanticError", commandError),
+  Match.exhaustive
 );

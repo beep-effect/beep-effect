@@ -35,7 +35,6 @@ import {
   Types,
   UriReferenceString,
 } from "./JSONSchema.shared.ts";
-import type { FastCheck } from "effect/testing";
 
 const RequiredKeysUniqueCheck = S.isUnique({
   identifier: $I`RequiredKeysUniqueCheck`,
@@ -47,89 +46,13 @@ const RequiredKeysUniqueCheck = S.isUnique({
 const RequiredKeys = S.Array(S.String).check(RequiredKeysUniqueCheck);
 
 /**
- * Shared depth identifier for {@link SubSchema} generation: every recursive
- * position draws from one fast-check depth budget, mirroring effect's own
- * per-suspend bounding (`maxDepth: 2`).
- */
-let subSchemaDepthIdentifier: FastCheck.DepthIdentifier | undefined;
-
-const getSubSchemaDepthIdentifier = (fc: typeof FastCheck): FastCheck.DepthIdentifier =>
-  (subSchemaDepthIdentifier ??= fc.createDepthIdentifier());
-
-// Deriving the Node arbitrary walks all 57 fields; without memoization every
-// recursive draw pays that derivation again.
-let nodeArbitrary: FastCheck.Arbitrary<Node.Type> | undefined;
-
-const getNodeArbitrary = (fc: typeof FastCheck): FastCheck.Arbitrary<Node.Type> =>
-  (nodeArbitrary ??= S.toArbitrary(Node)(fc));
-
-// Explicit types on the arbitrary factories are load-bearing: they keep the
-// closures' bodies (which reference `Node`) out of the class's own type
-// resolution, breaking the base-expression circularity.
-const subSchemaArbitrary = (fc: typeof FastCheck): FastCheck.Arbitrary<SubSchema.Type> =>
-  fc.oneof(
-    { maxDepth: 2, depthIdentifier: getSubSchemaDepthIdentifier(fc) },
-    { arbitrary: fc.boolean(), weight: 4 },
-    { arbitrary: fc.constant(null).chain(() => getNodeArbitrary(fc)), weight: 1 }
-  );
-
-const subSchemaToArbitrary: () => (fc: typeof FastCheck) => FastCheck.Arbitrary<SubSchema.Type> = () =>
-  subSchemaArbitrary;
-
-const nodeToArbitrary: () => (fc: typeof FastCheck) => FastCheck.Arbitrary<Node.Type> = () => (fc) =>
-  fc.constant(null).chain(() => getNodeArbitrary(fc));
-
-const subSchemaRecordArbitrary = (
-  fc: typeof FastCheck
-): FastCheck.Arbitrary<{ readonly [key: string]: SubSchema.Type }> =>
-  fc.dictionary(fc.constantFrom("a", "b", "key", "name", "x-1"), subSchemaArbitrary(fc), { maxKeys: 2 });
-
-const subSchemaListArbitrary = (
-  fc: typeof FastCheck
-): FastCheck.Arbitrary<readonly [SubSchema.Type, ...Array<SubSchema.Type>]> =>
-  fc
-    .tuple(
-      subSchemaArbitrary(fc),
-      fc.option(subSchemaArbitrary(fc), { nil: undefined, depthIdentifier: getSubSchemaDepthIdentifier(fc) })
-    )
-    .map(([head, tail]): readonly [SubSchema.Type, ...Array<SubSchema.Type>] =>
-      tail === undefined ? [head] : [head, tail]
-    );
-
-// A node has 19 recursive keyword positions; generating each as `Option.some`
-// at the derived default frequency multiplies into ~500KB documents. Real
-// schemas are sparse, so recursive keywords generate mostly-none, thinning
-// further with depth (the shared identifier is the same budget the SubSchema
-// oneof draws from).
-const sparseKeywordOption =
-  <A>(
-    build: (fc: typeof FastCheck) => FastCheck.Arbitrary<A>
-  ): (() => (fc: typeof FastCheck) => FastCheck.Arbitrary<O.Option<A>>) =>
-  () =>
-  (fc) =>
-    fc.oneof(
-      { maxDepth: 2, depthIdentifier: getSubSchemaDepthIdentifier(fc) },
-      { arbitrary: fc.constant<O.Option<A>>(O.none()), weight: 7 },
-      {
-        arbitrary: fc
-          .constant(null)
-          .chain(() => build(fc))
-          .map(O.some),
-        weight: 1,
-      }
-    );
-
-/**
  * A complete schema at any subschema position: draft-2020-12 allows `true`
  * (accept everything) and `false` (reject everything) wherever a schema is
  * expected, so every recursive position in {@link Node} uses this union.
  *
  * **Details**
  *
- * The `toArbitrary` annotation is load-bearing: effect `4.0.0-beta.98` cannot
- * derive arbitraries for recursion through Option/Union fields (its suspend
- * bounding only short-circuits at empty-collection cuts such as `S.Array`),
- * so generation is depth-gated here instead of relying on derivation.
+ * Native arbitrary derivation bounds recursion through the schema structure.
  *
  * **Example** (Decode boolean and object schemas)
  *
@@ -148,7 +71,6 @@ const sparseKeywordOption =
 export const SubSchema = S.Union([S.Boolean, S.suspend((): S.Codec<Node.Type, Node.Encoded> => NodeCodec)]).pipe(
   $I.annoteSchema("SubSchema", {
     description: "A boolean schema or a full JSON Schema node.",
-    toArbitrary: subSchemaToArbitrary,
   })
 );
 
@@ -203,23 +125,9 @@ export declare namespace SubSchema {
 const optionalKeyword = <Inner extends S.Top>(inner: Inner, description: string) =>
   S.OptionFromOptionalKey(inner).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
 
-const recursiveKeyword = <Inner extends S.Top>(
-  inner: Inner,
-  description: string,
-  build: (fc: typeof FastCheck) => FastCheck.Arbitrary<Inner["Type"]>
-) =>
-  S.OptionFromOptionalKey(inner)
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotate({ toArbitrary: sparseKeywordOption(build) })
-    .annotateKey({ description });
+const SubSchemaRecord = S.Record(S.String, SubSchema);
 
-const SubSchemaRecord = S.Record(S.String, SubSchema).annotate({
-  toArbitrary: () => subSchemaRecordArbitrary,
-});
-
-const SubSchemaList = S.NonEmptyArray(SubSchema).annotate({
-  toArbitrary: () => subSchemaListArbitrary,
-});
+const SubSchemaList = S.NonEmptyArray(SubSchema);
 
 const isAbsoluteUriString = S.is(AbsoluteUriString);
 
@@ -236,18 +144,9 @@ const VocabularyKeysCheck = S.makeFilter<{ readonly [key: string]: boolean }>(
 const Vocabulary = S.Record(S.String, S.Boolean)
   .check(VocabularyKeysCheck)
   .pipe(
+    S.decodeTo(S.Record(AbsoluteUriString, S.Boolean)),
     $I.annoteSchema("Vocabulary", {
       description: "Draft-2020-12 vocabulary declarations keyed by absolute URI.",
-      toArbitrary: () => (fc) =>
-        fc.dictionary(
-          fc.constantFrom(
-            "https://json-schema.org/draft/2020-12/vocab/core",
-            "https://json-schema.org/draft/2020-12/vocab/applicator",
-            "urn:example:vocabulary"
-          ),
-          fc.boolean(),
-          { maxKeys: 3 }
-        ),
     })
   );
 
@@ -277,11 +176,7 @@ export class Node extends S.Class<Node>($I`Node`)(
   {
     $anchor: optionalKeyword(AnchorName, "Plain-name fragment identifier for this subschema."),
     $comment: optionalKeyword(S.String, "Free-form commentary for schema maintainers; never affects validation."),
-    $defs: recursiveKeyword(
-      SubSchemaRecord,
-      "Locally defined reusable subschemas, referenceable via $ref.",
-      subSchemaRecordArbitrary
-    ),
+    $defs: optionalKeyword(SubSchemaRecord, "Locally defined reusable subschemas, referenceable via $ref."),
     $dynamicAnchor: optionalKeyword(AnchorName, "Dynamic anchor name resolvable by $dynamicRef at evaluation time."),
     $dynamicRef: optionalKeyword(UriReferenceString, "Dynamically resolved reference cooperating with $dynamicAnchor."),
     $id: optionalKeyword(IdUriReferenceString, "Base URI identifier for this schema resource."),
@@ -291,50 +186,39 @@ export class Node extends S.Class<Node>($I`Node`)(
     ),
     $schema: optionalKeyword(AbsoluteUriString, "Dialect meta-schema URI this schema conforms to."),
     $vocabulary: optionalKeyword(Vocabulary, "Vocabulary availability declarations (meta-schemas only)."),
-    additionalProperties: recursiveKeyword(
+    additionalProperties: optionalKeyword(
       SubSchema,
-      "Schema for properties not matched by properties or patternProperties.",
-      subSchemaArbitrary
+      "Schema for properties not matched by properties or patternProperties."
     ),
-    allOf: recursiveKeyword(
+    allOf: optionalKeyword(SubSchemaList, "Instance must validate against every subschema (non-empty per spec)."),
+    anyOf: optionalKeyword(
       SubSchemaList,
-      "Instance must validate against every subschema (non-empty per spec).",
-      subSchemaListArbitrary
-    ),
-    anyOf: recursiveKeyword(
-      SubSchemaList,
-      "Instance must validate against at least one subschema (non-empty per spec).",
-      subSchemaListArbitrary
+      "Instance must validate against at least one subschema (non-empty per spec)."
     ),
     const: optionalKeyword(JsonValue, "Instance must equal exactly this JSON value."),
-    contains: recursiveKeyword(
-      SubSchema,
-      "At least one array item must validate against this schema.",
-      subSchemaArbitrary
-    ),
+    contains: optionalKeyword(SubSchema, "At least one array item must validate against this schema."),
     contentEncoding: optionalKeyword(S.String, "Encoding (e.g. base64) of string content."),
     contentMediaType: optionalKeyword(S.String, "MIME type of string content."),
-    contentSchema: recursiveKeyword(SubSchema, "Schema for the decoded string content.", subSchemaArbitrary),
+    contentSchema: optionalKeyword(SubSchema, "Schema for the decoded string content."),
     default: optionalKeyword(JsonValue, "Default JSON value tooling may substitute for absent instances."),
     dependentRequired: optionalKeyword(
       S.Record(S.String, RequiredKeys),
       "When the key property is present, the listed unique property names are required."
     ),
-    dependentSchemas: recursiveKeyword(
+    dependentSchemas: optionalKeyword(
       SubSchemaRecord,
-      "When the key property is present, the mapped schema must also validate.",
-      subSchemaRecordArbitrary
+      "When the key property is present, the mapped schema must also validate."
     ),
     deprecated: optionalKeyword(S.Boolean, "Marks the schema as deprecated for consumers."),
     description: optionalKeyword(S.String, "Human-readable description of the schema's purpose."),
-    else: recursiveKeyword(SubSchema, "Applied when the instance fails the if schema.", subSchemaArbitrary),
+    else: optionalKeyword(SubSchema, "Applied when the instance fails the if schema."),
     enum: optionalKeyword(S.Array(JsonValue), "Instance must equal one of these JSON values."),
     examples: optionalKeyword(S.Array(JsonValue), "Sample JSON instances illustrating the schema."),
     exclusiveMaximum: optionalKeyword(S.Finite, "Numeric instances must be strictly less than this value."),
     exclusiveMinimum: optionalKeyword(S.Finite, "Numeric instances must be strictly greater than this value."),
     format: optionalKeyword(S.String, "Semantic format hint (open vocabulary, e.g. date-time, uuid)."),
-    if: recursiveKeyword(SubSchema, "Conditional gate: outcome selects then or else.", subSchemaArbitrary),
-    items: recursiveKeyword(SubSchema, "Schema for array items beyond prefixItems.", subSchemaArbitrary),
+    if: optionalKeyword(SubSchema, "Conditional gate: outcome selects then or else."),
+    items: optionalKeyword(SubSchema, "Schema for array items beyond prefixItems."),
     maxContains: optionalKeyword(NonNegativeCount, "Upper bound on items matching contains."),
     maxItems: optionalKeyword(NonNegativeCount, "Maximum number of array items."),
     maxLength: optionalKeyword(NonNegativeCount, "Maximum string length in Unicode code points."),
@@ -346,40 +230,25 @@ export class Node extends S.Class<Node>($I`Node`)(
     minProperties: optionalKeyword(NonNegativeCount, "Minimum number of object properties."),
     minimum: optionalKeyword(S.Finite, "Inclusive numeric lower bound."),
     multipleOf: optionalKeyword(PositiveNumber, "Numeric instances must be an integer multiple of this value."),
-    not: recursiveKeyword(SubSchema, "Instance must NOT validate against this schema.", subSchemaArbitrary),
-    oneOf: recursiveKeyword(
-      SubSchemaList,
-      "Instance must validate against exactly one subschema (non-empty per spec).",
-      subSchemaListArbitrary
-    ),
+    not: optionalKeyword(SubSchema, "Instance must NOT validate against this schema."),
+    oneOf: optionalKeyword(SubSchemaList, "Instance must validate against exactly one subschema (non-empty per spec)."),
     pattern: optionalKeyword(RegexPatternString, "ECMA-262 regular expression string instances must match."),
-    patternProperties: recursiveKeyword(
-      S.Record(S.String, SubSchema).check(RegexKeysCheck),
-      "Schemas applied to properties whose names match the regex keys.",
-      subSchemaRecordArbitrary
+    patternProperties: optionalKeyword(
+      S.Record(S.String, SubSchema)
+        .check(RegexKeysCheck)
+        .pipe(S.decodeTo(S.Record(RegexPatternString, S.toType(SubSchema)))),
+      "Schemas applied to properties whose names match the regex keys."
     ),
-    prefixItems: recursiveKeyword(
-      SubSchemaList,
-      "Positional tuple schemas (non-empty per spec).",
-      subSchemaListArbitrary
-    ),
-    properties: recursiveKeyword(SubSchemaRecord, "Schemas for named object properties.", subSchemaRecordArbitrary),
-    propertyNames: recursiveKeyword(SubSchema, "Schema every property name must validate against.", subSchemaArbitrary),
+    prefixItems: optionalKeyword(SubSchemaList, "Positional tuple schemas (non-empty per spec)."),
+    properties: optionalKeyword(SubSchemaRecord, "Schemas for named object properties."),
+    propertyNames: optionalKeyword(SubSchema, "Schema every property name must validate against."),
     readOnly: optionalKeyword(S.Boolean, "Value is managed by the authority and read-only for clients."),
     required: optionalKeyword(RequiredKeys, "Unique property names that must be present."),
-    then: recursiveKeyword(SubSchema, "Applied when the instance passes the if schema.", subSchemaArbitrary),
+    then: optionalKeyword(SubSchema, "Applied when the instance passes the if schema."),
     title: optionalKeyword(S.String, "Short human-readable title."),
     type: optionalKeyword(Types, "Primitive type name or non-empty unique array of type names."),
-    unevaluatedItems: recursiveKeyword(
-      SubSchema,
-      "Schema for array items not evaluated by other applicators.",
-      subSchemaArbitrary
-    ),
-    unevaluatedProperties: recursiveKeyword(
-      SubSchema,
-      "Schema for properties not evaluated by other applicators.",
-      subSchemaArbitrary
-    ),
+    unevaluatedItems: optionalKeyword(SubSchema, "Schema for array items not evaluated by other applicators."),
+    unevaluatedProperties: optionalKeyword(SubSchema, "Schema for properties not evaluated by other applicators."),
     uniqueItems: optionalKeyword(S.Boolean, "When true, all array items must be distinct."),
     writeOnly: optionalKeyword(S.Boolean, "Value is accepted on writes but omitted from reads."),
     extensions: ExtensionsBag.pipe(SchemaUtils.withKeyDefaults({})).annotateKey({
@@ -554,7 +423,6 @@ export const NodeCodec = S.Record(S.String, S.Unknown).pipe(
   }),
   $I.annoteSchema("NodeCodec", {
     description: "Wire codec between flat JSON Schema objects and Node instances.",
-    toArbitrary: nodeToArbitrary,
   })
 );
 
@@ -609,16 +477,6 @@ export class Document extends S.Class<Document>($I`Document`)(
       description: "Root schema of the document (object form; the envelope has no boolean root).",
     }),
     definitions: S.Record(S.String, NodeCodec)
-      .annotate({
-        toArbitrary: () => (fc) =>
-          fc.dictionary(
-            fc.constantFrom("User", "Item", "A1"),
-            fc.constant(null).chain(() => getNodeArbitrary(fc)),
-            {
-              maxKeys: 2,
-            }
-          ),
-      })
       .pipe(SchemaUtils.withKeyDefaults({}))
       .annotateKey({ description: "Definitions hoisted out of the root schema, keyed by definition name." }),
   },

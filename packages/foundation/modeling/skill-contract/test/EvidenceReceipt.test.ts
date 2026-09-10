@@ -4,7 +4,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const emptySha256 = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const predicateType = EvidencePredicateType.make("https://beep.dev/evidence/artifact-exists/v1");
@@ -84,13 +84,20 @@ describe("@beep/skill-contract EvidenceReceipt", () => {
   });
 
   it("round-trips schema-derived arbitrary receipts", () =>
-    fc.assert(
-      fc.property(S.toArbitrary(Receipt)(fc), (candidate) => {
-        const encoded = Result.getOrThrow(encodeUnknownReceiptResult(candidate));
-        const decoded = Result.getOrThrow(decodeReceiptResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(Receipt)]),
+          ([candidate]) => {
+            const encoded = Result.getOrThrow(encodeUnknownReceiptResult(candidate));
+            const decoded = Result.getOrThrow(decodeReceiptResult(encoded));
 
-        expect(S.toEquivalence(Receipt)(decoded, candidate)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+            expect(S.toEquivalence(Receipt)(decoded, candidate)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

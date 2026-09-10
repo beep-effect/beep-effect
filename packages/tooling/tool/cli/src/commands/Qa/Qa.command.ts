@@ -70,81 +70,81 @@ export const QaCommandLayers = Layer.mergeAll(
   SessionStore.layer
 ).pipe(Layer.provideMerge(Layer.mergeAll(FFmpegLive, Witness.layer)));
 
-const laneFlag = Flag.choice("lane", CaptureLane.Options).pipe(
+const laneFlag = Flag.Literals("lane", CaptureLane.Options).pipe(
   Flag.withDescription("Recording lane: playwright drives a headless harness, obs records a real window"),
   Flag.withDefault(CaptureLane.Enum.playwright)
 );
-const urlFlag = Flag.string("url").pipe(
+const urlFlag = Flag.String("url").pipe(
   Flag.withDescription("Absolute URL to capture; takes precedence over --app"),
   Flag.optional
 );
-const appFlag = Flag.string("app").pipe(
+const appFlag = Flag.String("app").pipe(
   Flag.withDescription(
     "Portless app name; apps expand to http://<app>.beep.localhost:1355, labs (apps/labs/<app>) to http://<app>.labs.beep.localhost:1355"
   ),
   Flag.optional
 );
-const roundFlag = Flag.integer("round").pipe(
+const roundFlag = Flag.Int("round").pipe(
   Flag.withDescription("Round number; defaults to the next free round under .beep/qa"),
   Flag.optional
 );
-const requiredRoundFlag = Flag.integer("round").pipe(Flag.withDescription("Round number under .beep/qa"));
-const scenarioFlag = Flag.string("scenario").pipe(
+const requiredRoundFlag = Flag.Int("round").pipe(Flag.withDescription("Round number under .beep/qa"));
+const scenarioFlag = Flag.String("scenario").pipe(
   Flag.withDescription("Playwright capture harness spawned with bun"),
   Flag.withDefault(DEFAULT_SCENARIO_PATH)
 );
-const durationFlag = Flag.integer("duration").pipe(
+const durationFlag = Flag.Int("duration").pipe(
   Flag.withDescription("Auto-stop the obs lane after this many seconds"),
   Flag.optional
 );
-const portFlag = Flag.integer("port").pipe(
+const portFlag = Flag.Int("port").pipe(
   Flag.withDescription("Collector bind port; 0 requests an ephemeral port"),
   Flag.withDefault(43117)
 );
-const cursorFlag = Flag.boolean("cursor").pipe(
+const cursorFlag = Flag.Boolean("cursor").pipe(
   Flag.withDescription("Render the witness cursor dot (disable with --no-cursor)"),
   Flag.withDefault(true)
 );
-const beaconFlag = Flag.boolean("beacon").pipe(
+const beaconFlag = Flag.Boolean("beacon").pipe(
   Flag.withDescription("Run the clock sync beacon (disable with --no-beacon)"),
   Flag.withDefault(true)
 );
-const recordBudgetFlag = Flag.integer("budget-mb").pipe(
+const recordBudgetFlag = Flag.Int("budget-mb").pipe(
   Flag.withDescription("Artifact budget in MiB recorded for this round's extraction"),
   Flag.withDefault(20)
 );
-const extractBudgetFlag = Flag.integer("budget-mb").pipe(
+const extractBudgetFlag = Flag.Int("budget-mb").pipe(
   Flag.withDescription("Artifact budget in MiB; defaults to the budget recorded with the round"),
   Flag.optional
 );
-const sessionFlag = Flag.directory("session", { mustExist: true }).pipe(
+const sessionFlag = Flag.Directory("session", { mustExist: true }).pipe(
   Flag.withDescription("Round directory to operate on; defaults to the latest recorded round"),
   Flag.optional
 );
-const rulesFlag = Flag.fileSchema("rules", ExtractionRuleSet, { format: "json" }).pipe(
+const rulesFlag = Flag.FileSchema("rules", ExtractionRuleSet, { format: "json" }).pipe(
   Flag.withDescription("Extraction rule set overriding the defaults"),
   Flag.optional
 );
-const dryRunFlag = Flag.boolean("dry-run").pipe(
+const dryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print and persist the extraction plan without running any driver")
 );
-const surfaceFlag = Flag.string("surface").pipe(
+const surfaceFlag = Flag.String("surface").pipe(
   Flag.withDescription("Surface name rendered into the judge prompt; defaults to the recorded URL"),
   Flag.optional
 );
-const fromFlag = Flag.file("from", { mustExist: true }).pipe(
+const fromFlag = Flag.File("from", { mustExist: true }).pipe(
   Flag.withDescription("File holding the judge transcript; the last fenced JSON block is ingested")
 );
-const writeSkillFlag = Flag.string("write").pipe(
+const writeSkillFlag = Flag.String("write").pipe(
   Flag.withDescription("Write the rendered qa-inventory judge SKILL.md to this path instead of stdout"),
   Flag.optional
 );
-const dataFlag = Flag.string("data").pipe(
+const dataFlag = Flag.String("data").pipe(
   Flag.withDescription("Extra text appended to the marker label (witness markers carry a label only)"),
   Flag.optional
 );
-const labelArgument = Argument.string("label").pipe(
+const labelArgument = Argument.String("label").pipe(
   Argument.withDescription("Marker label, conventionally scenario:<name> or gesture:<name>")
 );
 
