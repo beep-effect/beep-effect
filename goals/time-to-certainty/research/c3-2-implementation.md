@@ -263,3 +263,157 @@ workers successfully. The deprecated-API smoke uses a writable temporary cache a
 warning. These are explicit limitations, not permission changes or git writes.
 
 The results file is the Stage B handoff. Stop here; do not start Stage C from this launch.
+
+## Stage C
+
+Implemented Stage C only on `ttc/c3-2-eslint-package-tasks`, starting from the clean committed
+Stage A/B tree. Read the Stage A/B results, the full brief, its ordered references, the current
+step/worker boundaries, and the parent checkout's Effect reference (the local link is absent).
+No Graft command or Git write ran, including inside fixtures. Stage D has not begun.
+
+### Decisions and rejected alternatives
+
+1. Moved the existing Check concurrency LiteralKit (`2`, `3`) into `Quality.schemas.ts`, then
+   derived the private policy domain from those options plus `4`, before implementing its
+   consumer. The existing option-decoder boundary accepts `2`, `3`, or `4`; missing, empty, or
+   invalid values fall back to `4`. CiLane imports the unchanged Check domain and retains its
+   existing local/hosted defaults and accepted overrides. Rejected widening Check to four,
+   accepting arbitrary fleet concurrency, or duplicating its accepted overrides in another list.
+2. Reused the existing schema-backed `QualityTaskStep` plan and the existing
+   `ChildProcessSpawner` Context.Service / StepExec execution contract. No new process service,
+   source module, or wire shape is needed. The shared `policyLintTurboStep` delegates to
+   `turboStep` and therefore `turboRunArgs`, preserving the existing local/remote-cache posture.
+   Rejected direct process spawning and a second cache or secret-session wrapper.
+3. Replaced only the two Stage C policy subprocesses: `lint:deprecated-apis` targets that
+   package task; `lint:jsdoc` targets both `lint:jsdoc` and `//#lint:jsdoc:root`. Both use bounded
+   concurrency, `--continue=dependencies-successful`, and `--summarize`. Their step labels,
+   capture timeouts, and positions in the existing plan remain intact. Neither gets the labs
+   exclusion filter. Rejected implementing the later C3.5 whole-policy invocation regrouping
+   or changing GithubChecks, IssueClassification, or WaveOrder identities.
+4. Added `--base` (default `origin/main`) to `beep lint policy` and the standalone
+   `beep lint deprecated-apis` wrapper. Local policy uses the same caller base for its existing
+   changed-file collector and both Turbo steps. Local non-full Turbo runs get `--affected`
+   and a child-local `env.TURBO_SCM_BASE`; full and CI plans get neither. Hosted `lint-policy`
+   already invokes `beep lint policy --full` and keeps doing so. The existing aggregate root
+   lint route retains its full policy plan. Rejected changing ambient `TURBO_SCM_BASE`, adding
+   a filter-union trick for the root task, or applying hosted affected selection.
+5. The standalone deprecated-API command now executes the same `deprecatedApisTurboStep`
+   builder through the existing quality runner, including its cache posture and typed failure
+   handling. Package mode still directly invokes ESLint. Root `lint:deprecated-apis` is exactly
+   `bunx turbo run lint:deprecated-apis`, as required; no `//#lint:deprecated-apis` task exists.
+   Rejected keeping the old shard wrapper behind the root script or registering a recursive
+   Turbo root task. The Quality barrel exports the shared runner for the Lint command.
+6. Deleted the 28-shard list, runner/loop, concurrency/cache constants, cache-location helper,
+   four shard tests, and their fixture code. Kept the established 8192 MiB worker heap. Labs
+   retain unmatched-pattern tolerance in package mode through the existing schema-derived
+   `isLabsWorkspaceDir` guard; a neighboring `apps/labsx` path does not qualify. Rejected
+   tolerating unmatched patterns globally or narrowing root `tsconfig.json`; that file is
+   byte-unchanged. The live ciops lab worker passes on both test runtimes.
+7. Retained the existing full command tests and moved replacement execution assertions into
+   `lint-workers.test.ts`, where the typed process mock and runtime-agnostic platform layer
+   already exist. Added local/full/CI plan tests, custom-base isolation, default/valid/invalid
+   concurrency cases, wrapper failure propagation, lab-only tolerance, and a real lab smoke.
+   Rejected adding a duplicate fixture module or running Git-writing quality fixtures under
+   this launch's no-Git-write contract.
+8. Regenerated the fingerprint after the final CLI edits. The declaration and Turbo
+   materialization both compare byte-identical with their Stage C entry copies. Rejected
+   hand-editing the declaration or treating source content changes as declaration drift.
+
+### Stage C — files
+
+- goals/time-to-certainty/research/c3-2-implementation.md
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- package.json
+- packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+- packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+- packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+- packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+- packages/tooling/tool/cli/src/commands/Quality/index.ts
+- packages/tooling/tool/cli/test/lint-command.test.ts
+- packages/tooling/tool/cli/test/lint-workers.test.ts
+- packages/tooling/tool/cli/test/quality-tasks.test.ts
+
+### Verification commands and exit codes
+
+Vitest commands run from `packages/tooling/tool/cli`; other commands run from the worktree
+root. Logs and dry-run JSON are ephemeral `/tmp/c3-2-stage-c-*` files. The eight touched
+TypeScript paths and root `package.json` are the nine-file Biome set; oxlint uses the eight
+TypeScript paths. The results below are the durable verification record.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `bunx --no-install biome check --write <nine touched TS/JSON files>` | 1, then 0 | First pass found three unused imports left after shard-fixture deletion. Removed them. Subsequent formatting passes passed. |
+| `bunx --no-install biome check <nine touched TS/JSON files>` | 0 | Final check: nine files, 1,157 ms, no fixes. |
+| `bunx --bun vitest run --pool=threads test/lint-workers.test.ts test/lint-command.test.ts` | 1 | Initial run: 18 passed, 54 failed. One introduced predicate defect; 53 inherited cwd-changing command fixtures cannot run in threads. |
+| `bunx --bun vitest run --pool=threads test/lint-workers.test.ts` | 0 | After repair: 18/18. After custom-base assertion: 19/19. Final post-typecheck-repair run: 19/19, 31.21 s. |
+| `bunx --no-install vitest run --pool=threads test/lint-workers.test.ts` | 0 | Final Node worker suite: 19/19, 40.08 s, including real laws/docs/deprecated workers and ciops lab smoke. |
+| `bunx --no-install vitest run --pool=forks --maxWorkers=1 test/lint-command.test.ts` | 0 | Full Node command suite: 54/54, 17.92 s. No Git-writing fixtures in this file. |
+| `bunx --bun vitest run --pool=threads test/quality-tasks.test.ts -t '<policy plan selection>'` | 1 | Initial selection: five passed, one failed, 199 skipped. The override test exposed the Config/helper versus existing Bun.env test-boundary mismatch; fixed by reusing CiLane's exact option-decoding boundary. |
+| `bunx --bun vitest run --pool=threads test/quality-tasks.test.ts test/lint-command.test.ts test/ci-lane.test.ts -t '<final selection below>'` | 0 | Ten passed, 328 skipped, three files, 15.56 s. Includes all six policy-plan cases, the pure lint detector, and three unchanged Check-concurrency cases. |
+| `bunx --bun --no-install tsgo -p /tmp/c3-2-stage-c-tests.tsconfig.json --pretty false` | 1, 1, 0, 1, 0 | Final focused typecheck is clean. Intermediate failures and their fixes are attributed below. |
+| `bunx oxlint --quiet --disable-nested-config <eight touched TS files>` | 0 | Both passes, including final post-repair pass, produced no diagnostics. |
+| `bun run beep lint policy-fingerprint --write` | 0 | Both runs passed; the second follows every CLI source edit. |
+| `cmp standards/policy-tools.fingerprint.json /tmp/c3-2-stage-c-fingerprint-before.json` | 0 | Byte-identical after both writer runs. |
+| `cmp turbo.json /tmp/c3-2-stage-c-turbo-before.json` | 0 | Byte-identical after both writer runs. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Current declaration and materialized inputs. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, zero drifting, zero written. |
+| `bunx turbo run lint:jsdoc --filter=@beep/schema --dry-run=json` | 0 | Expected cached package task and fingerprint dependency. |
+| `bunx turbo run lint:deprecated-apis --filter=@beep/identity --dry-run=json` | 0 | Expected cached typed package task, transit/fingerprint dependencies, and worker script. |
+| `bun run lint:deprecated-apis -- --filter=@beep/identity --dry-run=json` | 0 | New root wrapper resolves the same four-node graph, with no recursive deprecated-API root task. |
+| `git --no-optional-locks diff --check` | 0 | No whitespace errors; read-only Git operation. |
+
+Final selection is the literal regex:
+
+```text
+plans repo-wide root lint|scopes policy Turbo|bounds policy Turbo|passes changed TypeScript files|omits empty changed-scope|tooling schema-first lint detectors|uses the local PR-shape check concurrency|uses the hosted PR-shape check concurrency|lowers Check to c2
+```
+
+The source-resolving focused tsgo config copies Stage B's synthetic posture, includes exactly
+the three touched test files and their imports, extends the real CLI config, removes project
+references, and keeps no-emit/non-composite options, the workspace rootDir, and local Node/Bun
+type roots. It is supporting evidence, not canonical package verification. The initial
+predicate, overload, environment-boundary, direct process.env-in-Effect test reads, and
+Effect.fn default-parameter diagnostics were introduced and corrected. Biome removed primitive
+annotations on defaulted parameters; the runner now requires the two arguments its CLI caller
+already supplies. Friction was recorded as encountered in `OPPORTUNITIES.md`.
+
+Tests used external `timeout --signal=INT --kill-after=5s` watchdogs of 90–150 seconds; none
+expired. No arbitrary tests were skipped inside the worker or full Node command suites.
+The quality-file selection is required by the no-Git-write boundary, not a claim that its full
+205-test suite passed.
+
+### Measurements
+
+- Deprecated-API shard inventory: **28 to zero**. Dedicated ESLint cache flags/paths in the
+  retired command and tests: **zero remaining**. Worker heap: **8192 MiB**, unchanged.
+- Policy worker limit: **4 by default**; tested overrides **2, 3, 4**; missing/empty/invalid
+  values including `8` fall back to **4**. Check's local **3** / hosted **2** defaults and
+  its override **2** tests remain green.
+- Both policy labels survive unchanged. JSDoc's single step now has **two explicit task
+  targets**; deprecated APIs has **one**. Each invocation requests a Turbo summary.
+- Schema JSDoc dry run: **2 graph tasks**, **14 resolved inputs**, **910 matched files**;
+  dependency `//#lint:policy-fingerprint`.
+- Identity deprecated-API dry run: **4 graph tasks**, **22 resolved inputs**, **653 matched
+  files**; dependencies `//#lint:policy-fingerprint` and `@beep/types#transit`.
+- Fingerprint: **73 declared inputs**, byte-identical. `turbo.json` and root `tsconfig.json`
+  have no Stage C diff. Workspace manifests have no Stage C diff.
+- Final Bun workers: **19/19**, **31.21 s** (26.98 s reported tests). Node workers:
+  **19/19**, **40.08 s** (33.00 s tests). Full Node command tests: **54/54**, **17.92 s**.
+  Selected Bun plan/regression tests: **10/10 selected**, **15.56 s**.
+- No Stage D cold/warm fleet run, hosted comparison, per-task hit-ratio claim, or whole-proof
+  speed claim was made. These tests establish routing and worker execution, not cache economics.
+
+### Blockers, verification split, and stopping point
+
+No Stage C implementation blocker remains. The required Bun thread-pool attempt exposed
+inherited cwd-changing command fixtures; the complete file passes under Node forks. The
+quality file contains Git init/add/commit fixtures and was deliberately not run in full.
+Fable still owns canonical `CI=true TMPDIR=/tmp bun run beep quality package-verify
+@beep/repo-cli`, `bun run docgen:local`, Node coverage/ratchet for the touched sources,
+`bun run beep lint policy`, and full quality-file acceptance. No coverage baseline or
+new source-module row was added. Remote-cache credentials/availability were not established
+by the dry runs, and no secret operation was needed for these checks.
+
+The results file and its named paths are the handoff. Temporary worker source fixtures were
+cleaned by their scopes; no untracked files remain. No Git writes, workspace manifest rewrite,
+protected-path edits, PLAN/packet-state flips, or Stage D work occurred. Stop after Stage C.

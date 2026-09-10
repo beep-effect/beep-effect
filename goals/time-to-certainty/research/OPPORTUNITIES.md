@@ -687,3 +687,16 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** a read-only query mode, or a brief exception that explicitly
   addresses automatic graph refresh (the orchestrator removed the ignored copy before the
   Stage B commit).
+
+## 2026-09-09 — C3.2 Stage C: the quality-tasks suite mixes pure plan tests with git fixtures
+
+- **Doing:** retiring the deprecated-API shard runner and verifying the two policy steps that now
+  run through Turbo (`rootRepoLintPolicySteps`).
+- **Evidence:** `test/quality-tasks.test.ts` runs `git init`, `git add`, and `git commit` inside
+  temporary fixtures, so an implementation lane whose contract forbids git writes cannot run the
+  file; it ran the nine policy-plan cases by name and left the full 205-test file to the
+  orchestrator's package-verify. `test/lint-command.test.ts` has the inherited
+  `process.chdir() is not supported in workers` failure on Bun's thread pool (53 cwd-changing
+  cases), so the file needs the Node fork pool.
+- **Would have prevented it:** keeping pure plan-shape tests in their own file, away from git
+  lifecycle fixtures, so a no-git-write lane can run the complete relevant suite.

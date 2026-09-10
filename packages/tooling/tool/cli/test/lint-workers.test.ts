@@ -1,10 +1,11 @@
 import { lintCommand } from "@beep/repo-cli/commands/Lint";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
+import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
 import { FsUtils, FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
+import { Cause, Config, ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -134,6 +135,56 @@ describe("thin lint workers", { concurrent: false }, () => {
         extendEnv: true,
         stdio: "inherit",
       });
+    }, providePlatform)
+  );
+  it.effect(
+    "runs the standalone deprecated API command through the policy Turbo step",
+    Effect.fnUntraced(function* () {
+      const root = yield* findRepoRoot();
+      yield* run(["deprecated-apis", "--full"]);
+      const expected = rootLintPolicyStepsForTesting(root)[0];
+      expect(execution).toHaveBeenCalledTimes(1);
+      expect(execution.mock.calls[0]?.[0]).toMatchObject({
+        command: expected?.command,
+        args: expected?.args,
+        cwd: root,
+      });
+      expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
+      execution.mockClear();
+      execution.mockImplementation(() => Effect.succeed(7));
+      expect(yield* run(["deprecated-apis", "--full"]).pipe(Effect.isFailure)).toBe(true);
+    }, providePlatform)
+  );
+  it.effect(
+    "passes the standalone caller base only to its affected Turbo child",
+    Effect.fnUntraced(function* () {
+      const ambientBase = yield* Config.option(Config.string("TURBO_SCM_BASE"));
+      yield* run(["deprecated-apis", "--base", "refs/heads/caller-base"]);
+      const invocation = execution.mock.calls[0]?.[0];
+      if ((yield* Config.string("CI").pipe(Config.withDefault(""))) === "true") {
+        expect(invocation?.args).not.toContain("--affected");
+        expect(invocation?.env?.TURBO_SCM_BASE).toBeUndefined();
+      } else {
+        expect(invocation?.args).toContain("--affected");
+        expect(invocation?.env?.TURBO_SCM_BASE).toBe("refs/heads/caller-base");
+      }
+      expect(yield* Config.option(Config.string("TURBO_SCM_BASE"))).toEqual(ambientBase);
+    }, providePlatform)
+  );
+  it.effect(
+    "tolerates unmatched deprecated API targets only for lab packages",
+    Effect.fnUntraced(function* () {
+      const root = yield* findRepoRoot();
+      yield* run(["deprecated-apis", "--package", `${root}/apps/labs/ciops`]);
+      expect(execution.mock.calls[0]?.[0].args).toEqual([
+        "--config",
+        `${root}/eslint.config.mjs`,
+        "--no-error-on-unmatched-pattern",
+        "apps/labs/ciops",
+      ]);
+      execution.mockClear();
+      yield* run(["deprecated-apis", "--package", `${root}/apps/labsx/member`]);
+      expect(execution.mock.calls[0]?.[0].args).not.toContain("--no-error-on-unmatched-pattern");
     }, providePlatform)
   );
   it.effect(
@@ -333,6 +384,21 @@ describe("thin lint workers", { concurrent: false }, () => {
 });
 
 describe("executed lint workers", { concurrent: false }, () => {
+  it.effect(
+    "executes deprecated APIs on the ciops lab package",
+    Effect.fnUntraced(function* () {
+      const root = yield* findRepoRoot();
+      const result = yield* StepExec.runCaptured({
+        command: "bun",
+        args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", "deprecated-apis", "--package", "."],
+        cwd: `${root}/apps/labs/ciops`,
+        env: R.filter(process.env, (_, key) => !Str.startsWith("VITEST")(key)),
+        extendEnv: false,
+      });
+      expect(result.exitCode, result.output).toBe(0);
+    }, providePlatform),
+    60000
+  );
   for (const worker of ["laws", "jsdoc", "deprecated-apis"]) {
     it.effect(
       `executes ${worker} against a fixture package surface`,

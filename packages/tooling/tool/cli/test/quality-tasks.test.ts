@@ -2998,7 +2998,16 @@ describe("quality task adapter", () => {
     expect(steps.find((step) => step.label === "lint:policy-fingerprint")?.args).toEqual(
       repoCliEntryArgs("lint", "policy-fingerprint", "--check")
     );
-    expect(steps.find((step) => step.label === "lint:jsdoc")?.args).toEqual(["eslint", ".", "--max-warnings=0"]);
+    expect(steps.find((step) => step.label === "lint:jsdoc")?.args).toEqual(
+      expect.arrayContaining([
+        "turbo",
+        "run",
+        "lint:jsdoc",
+        "//#lint:jsdoc:root",
+        "--summarize",
+        "--continue=dependencies-successful",
+      ])
+    );
     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
     expect(steps.find((step) => step.label === "lint:native-runtime")?.args).toEqual(
       repoCliEntryArgs("laws", "native-runtime", "--check")
@@ -3007,6 +3016,42 @@ describe("quality task adapter", () => {
       repoCliEntryArgs("laws", "effect-imports", "--mode", "markdown", "--check")
     );
     expect(steps.every((step) => step.captureTimeoutMillis === 15 * 60 * 1_000)).toBe(true);
+  });
+
+  it("scopes policy Turbo tasks to the caller base and retains full hosted scope", () => {
+    withEnvVar("CI", undefined, () => {
+      const steps = rootLintPolicyStepsForTesting("/repo", [], "refs/heads/review-base");
+      for (const label of ["lint:deprecated-apis", "lint:jsdoc"]) {
+        const step = steps.find((entry) => entry.label === label);
+        expect(step?.command).toBe("bunx");
+        expect(step?.args).toContain("--affected");
+        expect(step?.args).toContain("--summarize");
+        expect(step?.args).toContain("--continue=dependencies-successful");
+        expect(step?.args).not.toContain(LABS_EXCLUDE_FILTER);
+        expect(step?.env?.TURBO_SCM_BASE).toBe("refs/heads/review-base");
+        const full = rootLintPolicyStepsForTesting("/repo").find((entry) => entry.label === label);
+        expect(full?.args).not.toContain("--affected");
+        expect(full?.env?.TURBO_SCM_BASE).toBeUndefined();
+      }
+    });
+    withEnvVar("CI", "true", () => {
+      const steps = rootLintPolicyStepsForTesting("/repo", [], "refs/heads/review-base");
+      for (const label of ["lint:deprecated-apis", "lint:jsdoc"]) {
+        const step = steps.find((entry) => entry.label === label);
+        expect(step?.args).not.toContain("--affected");
+        expect(step?.env?.TURBO_SCM_BASE).toBeUndefined();
+      }
+    });
+  });
+
+  it("bounds policy Turbo concurrency using Check overrides and a four-worker default", () => {
+    for (const value of [undefined, "2", "3", "4", "8", "invalid", ""]) {
+      withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", value, () => {
+        const step = rootLintPolicyStepsForTesting("/repo")[0];
+        const expected = value === "2" || value === "3" ? value : "4";
+        expect(step?.args).toContain(`--concurrency=${expected}`);
+      });
+    }
   });
 
   it("passes changed TypeScript files to file-oriented policy laws", () => {
