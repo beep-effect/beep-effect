@@ -108,3 +108,24 @@ package's own `tsconfig.json` for compiler options only, with config preload dis
 full package TS/TSX surface added explicitly; `LawsPackageScope` records the path actually used.
 Rejected: falling back to the repository root (the root preload is what D5 removes), creating a
 fleet of unrequested overlays, or silently omitting package tests.
+
+## Amendment 2026-09-10 (2) — Stage C: `--include-prefix` for `laws native-runtime`
+
+Stage B proved the table's root residual command cannot run: `laws native-runtime` accepts only
+`--include` (source-file paths). Stage C gives it the prefix scope the residual needs, schema first:
+
+1. `NoNativeRuntimeCommandOptions` gains `includePrefix` (default `""`, comma-separated
+   repo-relative directory prefixes, parsed with the same helper effect-imports uses); the
+   command takes `includePrefix: includePrefixFlag` beside `include`.
+2. Scope: each prefix expands to `<prefix>/**/*.{ts,tsx}` source globs through the law's existing
+   scan (`lawScanSourcePaths` / `sourceFileGlobs`) with the standard artifact and declaration
+   exclusions and the law's own diagnostic exclusions; `--include` keeps its file semantics and the
+   two compose as a union. No root preload beyond the requested globs.
+3. Tests: a fixture with one native-runtime violation under a prefix root and a clean file outside
+   it (only the former is reported); the union with `--include`; an empty prefix scans nothing and
+   exits 0. Then the real tree: `bun run lint:native-runtime:roots` exits 0, and
+   `bunx turbo run //#lint:native-runtime:roots --summarize --cache=local:rw` (writable
+   `TURBO_CACHE_DIR`) runs green and replays warm; record both in the results file.
+4. `bun run beep lint policy-fingerprint --write` after the CLI edit (shape unchanged expected).
+
+Everything else in the brief's hard rules and verification split applies; no `Quality/Tasks.ts`.
