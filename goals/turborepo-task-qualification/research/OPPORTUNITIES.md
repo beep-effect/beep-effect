@@ -887,3 +887,27 @@ controls disable reuse and may still run after this comparison stops reuse.
   negative controls. Keep the base-branch config and ignore-file enforcement.
 - Prevention: run policy fixtures with the actual hosted scanner image; a local
   binary pass does not establish configuration compatibility in CI.
+
+### Compare generated JSON with its schema equivalence
+
+- Activity: run hosted Property Laws after migrating the entrypoint property.
+- Evidence: the 400-run CI floor generated negative zero; JSON encoded it as
+  zero, and strict object equality rejected the valid round trip. The local
+  20-run sample had not exposed this case.
+- Correction: use the JSON schema's equivalence without restricting generated
+  values, and add a deterministic direct and nested negative-zero regression.
+  Validate the repaired attachment property with 1,000 generated cases.
+- Prevention: choose equality semantics that match the serialization contract
+  and retain explicit regressions for edge cases found by larger CI samples.
+
+### Review inherited task expansion before repeating full verification
+
+- Activity: integrate main PR #1082 while closing the draft PR.
+- Evidence: cache policy reports 141 new executable lint tasks and two changed
+  root command digests. Package checking initially resolves the pre-merge
+  `repo-utils` declarations and cannot find `packageSyntax`.
+- Correction: rebuild the changed dependency, confirm package lint and check,
+  and review the inherited census delta before using the baseline writer.
+- Prevention: inspect executable-task and dependency-output changes after a
+  merge before starting another full proof. An interrupted prior-head run is
+  retained as partial evidence, never treated as a pass for the new merge.

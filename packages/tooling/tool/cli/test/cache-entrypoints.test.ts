@@ -21,6 +21,7 @@ const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 const encodeJsonObjectJson = S.encodeEffect(S.fromJsonString(S.JsonObject));
+const jsonObjectEquivalence = S.toEquivalence(S.JsonObject);
 
 const fixture = Effect.fn("CacheEntrypointsTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -85,11 +86,37 @@ describe("source-bound census entrypoints", () => {
             ],
           });
           const result = yield* attachCacheEntrypointReview(f.root, f.census, request);
-          expect(O.getOrThrow(result.entrypointReview).artifacts[0].document).toEqual(document);
+          expect(jsonObjectEquivalence(O.getOrThrow(result.entrypointReview).artifacts[0].document, document)).toBe(
+            true
+          );
           return true;
         }).pipe(provideScopedLayer(testLayer)),
       fcRuns(20)
     ).pipe(Effect.map((result) => expect(result._tag).toBe("Passed")))
+  );
+
+  it.effect(
+    "preserves owner fields when JSON normalizes negative zero",
+    Effect.fnUntraced(function* () {
+      const f = yield* fixture();
+      const first = f.request.artifacts[0];
+      const document = {
+        schemaVersion: first.format,
+        value: -0,
+        ownerFields: { values: [-0, 0, 1, -1], label: "retained" },
+      };
+      const reference = yield* f.write(first.reference.path, yield* encodeJsonObjectJson(document));
+      const request = CacheEntrypointReviewRequest.make({
+        ...f.request,
+        artifacts: [CacheEntrypointArtifactReference.make({ ...first, reference }), ...A.drop(f.request.artifacts, 1)],
+      });
+      const result = yield* attachCacheEntrypointReview(f.root, f.census, request);
+      expect(O.getOrThrow(result.entrypointReview).artifacts[0].document).toEqual({
+        schemaVersion: first.format,
+        value: 0,
+        ownerFields: { values: [0, 0, 1, -1], label: "retained" },
+      });
+    }, provideScopedLayer(testLayer))
   );
 
   it.effect(

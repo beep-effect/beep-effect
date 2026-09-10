@@ -1,0 +1,17 @@
+{
+  "previous": "50f78e6f0b97777d757e94dc39b3de567e6bb579bdae0d49d9d66406613711aa",
+  "review": {
+    "reviewer": "Codex integration review",
+    "reason": "Record inherited main law tasks and root script-map digests without changing qualification or reuse state.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/laws-policy-baseline-review.md",
+      "sha256": "d364051b40955e876a8ef4a0b3ba5c304ebe8d9609882d81fcc112a612c22477"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}
