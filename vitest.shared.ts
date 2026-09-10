@@ -192,6 +192,18 @@ const config: ViteUserConfig = {
       ...(vitestDoctestActive ? ["**/test/fixtures/**", "**/*.d.ts"] : []),
     ],
     setupFiles: [new URL("./vitest.setup.ts", import.meta.url).pathname],
+    // V8 gates Float16Array behind --js-float16array below Node 24 and rejects
+    // that flag inside NODE_OPTIONS, so the coverage lane's Node 22 runtime can
+    // only receive it as real argv. Granting it to forked test workers scopes
+    // the flag to test execution; a job-wide node wrapper is off the table
+    // because Next.js builds copy parent execArgv into worker NODE_OPTIONS.
+    // The predicate is version-based, not capability-based: vitest hands the
+    // pool an explicit execArgv (overriding fork inheritance), so a flagged
+    // main process with an unflagged worker list would strand the workers.
+    execArgv:
+      process.versions.bun === undefined && Number(process.versions.node.split(".")[0]) < 24
+        ? ["--js-float16array"]
+        : [],
     sequence: {
       concurrent: !vitestDoctestActive,
     },

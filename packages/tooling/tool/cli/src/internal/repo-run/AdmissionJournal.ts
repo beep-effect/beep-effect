@@ -1031,6 +1031,16 @@ const adoptJournalLockReapClaim = Effect.fnUntraced(function* (
     election._tag === "takeover"
       ? election.adopterPath
       : yield* fs.link(lockPath, claimPath).pipe(Effect.as(claimPath), Effect.orElseSucceed(constant(claimPath)));
+  // The winner's rename frees the deterministic claim name while the lock still
+  // holds the dead generation, so a contender whose adopter listing predates
+  // that rename can recreate the claim from the same lock and adopt a second
+  // time. Re-run the election once the claim exists: a live adopter that
+  // appeared meanwhile blocks this contender, which drops the claim it may
+  // have just recreated so no stale snapshot outlives the adoption.
+  if (election._tag === "unclaimed" && (yield* electReapAdopter(claimPath, nowMillis))._tag === "blocked") {
+    yield* fs.remove(claimPath, { force: true }).pipe(Effect.ignore);
+    return O.none();
+  }
   const claimedToken = yield* fs.readFileString(sourcePath).pipe(Effect.option);
   if (!O.exists(claimedToken, (token) => token === observedToken)) {
     return O.none();
