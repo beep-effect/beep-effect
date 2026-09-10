@@ -793,3 +793,17 @@ controls disable reuse and may still run after this comparison stops reuse.
   after each successful isolation. An isolated build alone is not full proof.
 - Prevention: preserve package and compiler-phase context in aggregate diagnostics
   so a reproducible source error can be distinguished from an intermittent build.
+
+### Match the hosted coverage runtime before investigating a property failure
+
+- Activity: run local full coverage after the Effect upgrade.
+- Evidence: the ACP JSON round-trip property fails at its pinned coverage seed
+  under Node 24. Native `JSON.parse` changes an escaped NUL property key into a
+  backslash. The same property passes under Node 22.22.3.
+- Attribution: the hosted coverage matrix already pins Node 22.22.3 and documents
+  this exact Node 24/26 defect. The local process had selected Node 24 instead.
+- Correction: preserve the schema and assertion, remove temporary diagnostics,
+  and run local proof with the existing hosted coverage runtime. Raising the
+  property run count changes generated sizes and is not the exact reproduction.
+- Prevention: inspect the live lane's runtime matrix and reproduce its seed,
+  run count and worker settings before treating a local failure as a source bug.
