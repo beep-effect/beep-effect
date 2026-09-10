@@ -46,6 +46,12 @@ export class LawScanProject extends Context.Service<
 /**
  * Production TypeScript globs scanned by the repo-local supplemental laws.
  *
+ * **Example** (Read the default law globs)
+ * ```ts
+ * import { LAW_SCAN_INCLUDED_GLOBS } from "@beep/repo-cli/commands/Laws/internal/LawScan"
+ * console.log(LAW_SCAN_INCLUDED_GLOBS.length) // 3
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -55,6 +61,13 @@ const ECOSYSTEM_MEMBER_SOURCE_PREFIX = "packages/ecosystem/";
 
 /**
  * Reports whether a normalized repo-relative path is inside an ecosystem member.
+ *
+ * **Example** (Recognize an ecosystem member path)
+ * ```ts
+ * import { isEcosystemMemberSourcePath } from "@beep/repo-cli/commands/Laws/internal/LawScan"
+ * console.log(isEcosystemMemberSourcePath("packages/ecosystem/demo/src/index.ts")) // true
+ * console.log(isEcosystemMemberSourcePath("packages/foundation/demo/src/index.ts")) // false
+ * ```
  *
  * @param filePath - Repo-relative source path under consideration.
  * @returns `true` for paths shaped as `packages/ecosystem/<member>/...`.
@@ -185,6 +198,20 @@ export type LawScanResult<Diagnostic> = {
 
 /**
  * Scan repo TypeScript source with a per-source-file diagnostic visitor.
+ *
+ * **Example** (Build a scan over the default globs)
+ * ```ts
+ * import { LAW_SCAN_INCLUDED_GLOBS, runLawScan } from "@beep/repo-cli/commands/Laws/internal/LawScan"
+ * import * as Effect from "effect/Effect"
+ * const scan = runLawScan({
+ *   sourceFileGlobs: LAW_SCAN_INCLUDED_GLOBS,
+ *   includePaths: undefined,
+ *   excludePaths: [],
+ *   strictCheck: false,
+ *   collect: () => [],
+ * })
+ * console.log(Effect.isEffect(scan)) // true
+ * ```
  *
  * @category utilities
  * @since 0.0.0
