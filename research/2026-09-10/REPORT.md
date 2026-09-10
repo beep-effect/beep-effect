@@ -1,6 +1,6 @@
 # REPORT — 2026-09-10
 
-Window 2026-09-05 08:20 → 2026-09-10 09:10 America/Chicago (~120h50m). Status: **partial** (X search `client-not-enrolled` on every axis, x=0; no Sol/Luna). 21 claims. Novel-URL collision rate 0 against exclusion digest (8 intentional refute URL re-cites). selfReject false. Refutation quota: 10 standing claims challenged (6 HOLD; 2 BROKEN — effect rc.113 + Jazz alpha.54; 2 HOLD on MCP adapter / SEP-2640 / #3306 / ODP / partnership clocks / Instant / drizzle counted in the six). Thursday: no weekly consolidation, no tombstone reaper.
+Window 2026-09-05 08:20 → 2026-09-10 09:10 America/Chicago (~120h50m). Status: **partial** (X search `client-not-enrolled` on every axis, x=0; no Sol/Luna). 21 claims. Novel-URL collision rate 0 against exclusion digest (8 intentional refute URL re-cites). selfReject false. Refutation quota: 10 standing claims challenged (8 HOLD; 2 BROKEN — effect rc.113 + Jazz alpha.54). HOLD covers ODP, TR partnership MCP, Harvey–Everlaw, Effect #7265, drizzle #6162, Instant sunset, SEP-2640, and MCP #3306. Thursday: no weekly consolidation, no tombstone reaper.
 
 The 2026-09-05 packet (#1015) merged 2026-09-08 ~2:02 PM CT. No open research PR at preflight. Stamp was 2026-09-05T08:20-05:00 / lastSuccessfulPr=1015.
 
