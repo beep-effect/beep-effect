@@ -42,7 +42,7 @@ export const PolicySweepProgram = LiteralKit(["shards", "turbo"]).annotate(
 /**
  * Decoded full-sweep program.
  *
- * @see {@link PolicySweepProgram}
+ * @see {@link PolicySweepProgram} for the literal domain this type decodes from.
  * @category configuration
  * @since 0.0.0
  */
