@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { isEcosystemMemberSourcePath, isExcludedLawScanPath } from "./internal/LawScan.ts";
+import { isEcosystemMemberSourcePath, isExcludedLawScanPath, LawScanProject } from "./internal/LawScan.ts";
 import { TerseEffectRulesPersistenceError } from "./Laws.errors.ts";
 import type { ArrowFunction, CallExpression, FunctionDeclaration, ObjectLiteralExpression, SourceFile } from "ts-morph";
 
@@ -684,26 +684,26 @@ const countFindingKind = (findings: ReadonlyArray<DetectedTerseFinding>, kind: T
  */
 export const runTerseEffectRules = Effect.fn(function* (options: TerseEffectRulesOptions) {
   const path = yield* Path.Path;
+  const shared = yield* Effect.serviceOption(LawScanProject);
+  const repoRoot = O.isSome(shared) ? shared.value.repoRoot : process.cwd();
 
   const isExcludedFile = (filePath: string): boolean => {
-    const relative = toPosixPath(path.relative(process.cwd(), filePath));
+    const relative = toPosixPath(path.relative(repoRoot, filePath));
     return isEcosystemMemberSourcePath(relative) || isExcludedLawScanPath(options.excludePaths, filePath);
   };
 
-  const project = new Project({
-    tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
-    skipAddingFilesFromTsConfig: true,
-  });
+  const project = O.isSome(shared)
+    ? shared.value.project
+    : new Project({
+        tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
+        skipAddingFilesFromTsConfig: true,
+      });
 
-  project.addSourceFilesAtPaths(A.fromIterable(options.includePaths ?? SOURCE_FILE_GLOBS));
+  if (O.isNone(shared)) project.addSourceFilesAtPaths(A.fromIterable(options.includePaths ?? SOURCE_FILE_GLOBS));
 
   const sourceFiles = A.filter(project.getSourceFiles(), (sourceFile) => !isExcludedFile(sourceFile.getFilePath()));
   const scans = A.map(sourceFiles, (sourceFile) =>
-    scanTerseEffectSourceFile(
-      sourceFile,
-      toPosixPath(path.relative(process.cwd(), sourceFile.getFilePath())),
-      options.write
-    )
+    scanTerseEffectSourceFile(sourceFile, toPosixPath(path.relative(repoRoot, sourceFile.getFilePath())), options.write)
   );
   const touchedScans = A.filter(scans, (scan) => scan.findings.length > 0);
   const findings = A.flatMap(scans, (scan) => scan.findings);

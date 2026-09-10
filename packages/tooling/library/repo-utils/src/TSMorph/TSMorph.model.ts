@@ -1814,12 +1814,41 @@ export class TsMorphProjectInspectionRequest extends S.Class<TsMorphProjectInspe
     referencePolicy: TsMorphReferencePolicy,
     filePaths: S.Array(TypeScriptImplementationFilePath),
     sourceFileGlobs: S.Array(S.NonEmptyString),
+    loadTsconfigFiles: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefault(Effect.succeed(true))
+    ),
   },
   $I.annote("TsMorphProjectInspectionRequest", {
     description:
       "Request to inspect a resolved ts-morph project with optional source file loading without persisting edits.",
   })
-) {}
+) {
+  /**
+   * Request one package syntax project through its explicit test overlay.
+   *
+   * **Example** (Select a package overlay)
+   * ```ts
+   * import { TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index"
+   * console.log(TsMorphProjectInspectionRequest.packageSyntax("/repo", "packages/demo/tsconfig.test.json", []))
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly packageSyntax = (repoRoot: string, overlayPath: string, files: ReadonlyArray<string>) =>
+    decodePackageProjectInspectionRequest({
+      entrypoint: { _tag: "tsconfig", tsConfigPath: overlayPath },
+      repoRootPath: repoRoot,
+      mode: "syntax",
+      referencePolicy: "workspaceOnly",
+      filePaths: [],
+      sourceFileGlobs: files,
+      loadTsconfigFiles: false,
+    });
+}
+
+const decodePackageProjectInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspectionRequest);
 
 /**
  * Resolved ts-morph project scope payload.

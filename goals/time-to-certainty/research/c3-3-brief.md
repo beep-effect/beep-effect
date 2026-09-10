@@ -99,3 +99,12 @@ no `node:http`; JSDoc `**Example** (Title)` with `console.log`, module-path impo
 aliases, runtime-agnostic (no `Bun.*`), `describe(name, { concurrent: false }, fn)`; no inline
 `S.decodeUnknownSync`; every new `src` module needs full coverage or a note for the baseline row;
 workspace scripts blocks are generated; keep `turbo.json` Biome-formatted; stop at the end of the stage.
+
+## Amendment 2026-09-10 (1) — packages without a test overlay
+
+Ratified by the orchestrator after Stage A: `repo-cli`, `todox`, `ciops` and `infra` have no
+`tsconfig.test.json`. The scanner prefers that overlay when present and otherwise takes the
+package's own `tsconfig.json` for compiler options only, with config preload disabled and the
+full package TS/TSX surface added explicitly; `LawsPackageScope` records the path actually used.
+Rejected: falling back to the repository root (the root preload is what D5 removes), creating a
+fleet of unrequested overlays, or silently omitting package tests.

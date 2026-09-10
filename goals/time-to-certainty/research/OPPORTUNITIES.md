@@ -754,3 +754,17 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** live-process tests taking their budget from the runtime-aware
   config instead of a literal, or a lint that flags explicit `it` timeouts below the coverage
   budget in files that spawn the CLI.
+
+## 2026-09-10 — C3.3 Stage A: the package scanner's overlay assumption and its memory cost
+
+- **Doing:** building the package-local law scanner (one process, one package-scoped syntax
+  project) from the brief, which names `tsconfig.test.json` as the overlay to scan with.
+- **Evidence:** `repo-cli`, `todox`, `ciops` and `infra` have no package-root `tsconfig.test.json`
+  (repo-cli keeps `test/tsconfig.json`), so the lane had to stop and ask; the ratified fallback
+  takes the package's own `tsconfig.json` for compiler options with config preload disabled and
+  the explicit package surface (brief amendment 1). The scanner cut wall time by 79 / 74 / 61 %
+  on identity, schema and repo-cli, but max RSS rose 4 / 17 / 38 % (repo-cli 2.8 → 3.9 GB):
+  one live project now holds the package's test sources beside its production sources.
+- **Would have prevented it:** a fleet census of overlay presence in the brief before naming the
+  overlay, and an acceptance budget that names wall and RSS separately so fleet concurrency is
+  chosen against both.

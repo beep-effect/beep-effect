@@ -25,7 +25,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import { createRepoTsMorphProject } from "../../internal/tsmorph/index.ts";
-import { isEcosystemMemberSourcePath, isExcludedLawScanPath } from "./internal/LawScan.ts";
+import { isEcosystemMemberSourcePath, isExcludedLawScanPath, LawScanProject } from "./internal/LawScan.ts";
 import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.ts";
 import type {
   BinaryExpression,
@@ -575,7 +575,8 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
   options: NoNativeRuntimeRulesOptions
 ) {
   const path = yield* Path.Path;
-  const cwd = process.cwd();
+  const shared = yield* Effect.serviceOption(LawScanProject);
+  const cwd = O.isSome(shared) ? shared.value.repoRoot : process.cwd();
   const allowlistDiagnostics = getAllowlistDiagnostics();
   const expectedAllowlistKeys = pipe(
     getAllowlistEntries(),
@@ -587,10 +588,12 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
   const isExcludedFile = (filePath: string): boolean =>
     isEcosystemMemberSourcePath(filePath) || isExcludedLawScanPath(options.excludePaths, filePath);
 
-  const project = createRepoTsMorphProject({
-    tsConfigFilePath: path.join(cwd, "tsconfig.json"),
-    sourceFileGlobs: options.includePaths ?? SOURCE_FILE_GLOBS,
-  });
+  const project = O.isSome(shared)
+    ? shared.value.project
+    : createRepoTsMorphProject({
+        tsConfigFilePath: path.join(cwd, "tsconfig.json"),
+        sourceFileGlobs: options.includePaths ?? SOURCE_FILE_GLOBS,
+      });
 
   let sourceFiles = A.empty<ScannedSourceFile>();
 
