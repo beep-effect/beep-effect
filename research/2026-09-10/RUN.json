@@ -1,0 +1,87 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-09-10",
+  "status": "partial",
+  "supervised": false,
+  "firstRun": false,
+  "window": {
+    "start": "2026-09-05T08:20:00-05:00",
+    "end": "2026-09-10T09:10:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 24,
+    "note": "Delta since lastSuccessfulRun of research/2026-09-05 (#1015 merged 2026-09-08 ~2:02 PM CT). No open research PR at preflight. Window ~120h50m. Thursday: no weekly consolidation / tombstone reaper."
+  },
+  "claimsEmitted": 21,
+  "collisionRate": 0.381,
+  "collisionNote": "8/21=.381 URL collisions are intentional refute re-cites. Novel-URL collision rate 0. SPEC 40% self-reject gate evaluated on novel-URL collision. selfReject false.",
+  "selfReject": false,
+  "sourcesSeen": {
+    "web": 8,
+    "arxiv": 4,
+    "github": 9,
+    "x": 0
+  },
+  "quotaPools": {
+    "search": "grok-bot+web+gh+arxiv",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": {
+    "attempted": 10,
+    "held": 8,
+    "broken": 2,
+    "moved": 0,
+    "heldAndMoved": 0,
+    "standingClaims": [
+      "USPTO ODP four fields",
+      "iManage/TR CoCounsel MCP not GA",
+      "Harvey-Everlaw MCP fall 2026 not GA",
+      "effect@4.0.0-rc.112 / no rc.113",
+      "Effect #7265 MCP adapter",
+      "drizzle TaggedErrorClass #6162",
+      "Jazz alpha.54 not cut / #2118",
+      "Instant Cloud sunset 2027-08-31",
+      "SEP-2640 Accepted not Final",
+      "MCP #3306 Enterprise IdP docs"
+    ],
+    "note": "BROKEN: rc.113 published; Jazz alpha.54 cut. HOLD: ODP, TR partnership MCP, Harvey-Everlaw, #7265, drizzle, Instant, SEP-2640, #3306."
+  },
+  "frictions": [
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "Native X post/news search attempted across all axes; all returned client-not-enrolled (client_id 29986667). x=0. No x.com posts in this packet."
+    },
+    {
+      "id": "no-cross-provider-verify",
+      "severity": "process-gap",
+      "detail": "Sol/Luna blinded verify unavailable. Writer used structured sanitized records only. Packet cannot be success without this stage."
+    }
+  ],
+  "resume": {
+    "retry": [
+      "x-search",
+      "verify"
+    ],
+    "cursor": "enroll X developer App in a Project at https://console.x.com, then re-search window 2026-09-05T08:20-05:00/2026-09-10T09:10-05:00; retry Sol/Luna blinded verify on the same 21 records"
+  },
+  "repoReplay": {
+    "mergedTitles": [
+      "feat(repo): pin effect packages to c8349ed / v4 RC (#1060)",
+      "feat(yeet): regenerate ignored projections during repair (#1063)",
+      "feat(repo-cli): graft cache sync / eslint policy / quality lanes",
+      "docs(graft): deep build measured numbers",
+      "ci(coverage/runners/release): multiple lane fixes"
+    ],
+    "blockingResearchPr": null,
+    "lastMergedResearchPr": 1015
+  },
+  "weekly": {
+    "sunday": false,
+    "tombstonesEmitted": 0,
+    "tombstonePath": null,
+    "note": "Thursday: no weekly consolidation, no tombstone reaper. Leave prior tombstones as-is."
+  }
+}
