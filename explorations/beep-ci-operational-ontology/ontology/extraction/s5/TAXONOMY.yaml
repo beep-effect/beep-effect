@@ -410,7 +410,11 @@ terms:
   parents: []
   rigidity: rigid
   identity_ref: ic:pa-package-dependency-closure:001
-  parameters: []
+  parameters:
+  - property: dependsOnTransitive
+    range: domain=workspace package (in one pinned graph); range=workspace package (reachable by the declared
+      Datalog fixpoint over direct dependency edges in that graph)
+    range_kind: class
   ratification: rat-037
 - term: VerificationLane
   kind: class
@@ -424,7 +428,11 @@ terms:
   parents: []
   rigidity: unresolved
   identity_ref: ic:pb-package-dependency:001
-  parameters: []
+  parameters:
+  - property: dependsOn
+    range: domain=importing workspace package (in one pinned repository dependency graph); range=imported
+      workspace package (connected by a direct dependency edge in that graph)
+    range_kind: class
   ratification: rat-042
 - term: hasCurrentProposal
   kind: property

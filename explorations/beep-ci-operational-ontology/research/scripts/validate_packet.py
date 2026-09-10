@@ -695,6 +695,8 @@ if _args.s5:
                 for ref in later:
                     if not isinstance(ref, str) or ref not in rats:
                         blocker(f"candidate seq={r.get('seq')} later_ratification {ref} is not a ratification on disk")
+                    elif r.get("candidate") not in ratified_terms.get(ref, set()):
+                        blocker(f"candidate seq={r.get('seq')} later_ratification {ref} does not accept candidate {r.get('candidate')} on disk")
     # ledger totality
     lrows = disp.get("ledger") or []
     if {r.get("entry") for r in lrows} != ledger_ids or len(lrows) != len(ledger):

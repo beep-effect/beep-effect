@@ -735,11 +735,5 @@
   The wording predates this lane.
 - **Handling:** changed the docstring to `required-field/query drift`; the
   validator's rules and messages are unaffected by this spelling repair.
-  The residue check also found three inherited home-relative cache examples in
-  this ledger; they now name the same caches descriptively without host paths.
 - **Prevention:** include the packet's Python validators in the same touched-file
   spelling check used for contract amendments.
-
-  uv's default user cache.
-  mise's user-state tracked-configs registry. The corpus verifier still passed.
-  Beep's user cache. This lane permits fixture writes inside its own worktree.
