@@ -1,13 +1,12 @@
 import { lintCommand } from "@beep/repo-cli/commands/Lint";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
-import { FsUtils, FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
+import { FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { Cause, Config, ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
+import { Cause, Config, ConfigProvider, Effect, Exit, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
-import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
@@ -56,23 +55,6 @@ const runSweepCommand = Effect.fnUntraced(function* (
   );
 });
 const prefix = "packages/tooling/tool/cli";
-const packageFiles = Effect.fnUntraced(function* (directory: string) {
-  const root = yield* findRepoRoot();
-  const fs = yield* FsUtils;
-  const files = yield* fs.globFiles([`${directory}/**/*.{ts,tsx}`], {
-    cwd: root,
-    ignore: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/build/**",
-      "**/.turbo/**",
-      "**/coverage/**",
-      "**/*.d.ts",
-      "**/*.d.tsx",
-    ],
-  });
-  return A.join(A.sort(files, Order.String), ",");
-});
 beforeEach(() => execution.mockReset().mockImplementation(() => Effect.succeed(0)));
 
 describe("thin lint workers", { concurrent: false }, () => {
@@ -337,122 +319,35 @@ describe("thin lint workers", { concurrent: false }, () => {
     }, providePlatform)
   );
   it.effect(
-    "runs all five scoped law checks serially with inherited environment",
-    Effect.fnUntraced(function* () {
-      const root = yield* findRepoRoot();
-      yield* run(["laws", "--package", "."]);
-      const include = yield* packageFiles(prefix);
-      const suffixes = [
-        ["laws", "terse-effect", "--check", "--advisory", "--include", include],
-        ["laws", "native-runtime", "--check", "--include", include],
-        ["laws", "frozen-grant-set", "--check", "--include", include],
-        ["laws", "effect-fn", "--check", "--include", include],
-        ["lint", "package-test-imports", "--include-root", prefix],
-      ];
-      expect(execution).toHaveBeenCalledTimes(5);
-      for (const [index, suffix] of suffixes.entries()) {
-        expect(execution).toHaveBeenNthCalledWith(index + 1, {
-          command: "bun",
-          args: ["run", `${root}/packages/tooling/tool/cli/src/bin.ts`, "--", ...suffix],
-          cwd: root,
-          extendEnv: true,
-          stdio: "inherit",
-        });
-      }
-    }, providePlatform)
-  );
-  for (const directory of ["apps/todox", "apps/labs/ciops", "infra"])
-    it.effect(
-      `runs only four laws for ${directory}`,
-      Effect.fnUntraced(function* () {
-        const root = yield* findRepoRoot();
-        yield* run(["laws", "--package", `${root}/${directory}`]);
-        const include = yield* packageFiles(directory);
-        expect(execution).toHaveBeenCalledTimes(4);
-        for (const [index, law] of ["terse-effect", "native-runtime", "frozen-grant-set", "effect-fn"].entries()) {
-          expect(execution).toHaveBeenNthCalledWith(index + 1, {
-            command: "bun",
-            args: [
-              "run",
-              `${root}/packages/tooling/tool/cli/src/bin.ts`,
-              "--",
-              "laws",
-              law,
-              "--check",
-              ...(law === "terse-effect" ? ["--advisory"] : []),
-              "--include",
-              include,
-            ],
-            cwd: root,
-            extendEnv: true,
-            stdio: "inherit",
-          });
-        }
-      }, providePlatform)
-    );
-  it.effect(
-    "expands TS and TSX across the package, excludes artifacts, and skips empty law surfaces",
+    "runs laws in process and propagates findings without subprocesses",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const fixtureRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lint-law-surface-" });
-      const directory = "packages/fixture";
-      for (const file of [
-        "src/index.ts",
-        "src/view.tsx",
-        "test/example.test.ts",
-        "src/types.d.ts",
-        "src/types.d.tsx",
-        "node_modules/bad.ts",
-        "dist/bad.ts",
-        "build/bad.ts",
-        ".turbo/bad.ts",
-        "coverage/bad.ts",
-      ]) {
-        const target = `${fixtureRoot}/${directory}/${file}`;
-        const path = yield* Path.Path;
-        yield* fs.makeDirectory(path.dirname(target), { recursive: true });
-        yield* fs.writeFileString(target, "export {};\n");
-      }
-      selection.root = fixtureRoot;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "lint-laws-worker-" });
+      yield* fs.makeDirectory(`${root}/packages/fixture/src`, { recursive: true });
+      yield* fs.writeFileString(`${root}/packages/fixture/package.json`, '{"name":"@beep/fixture"}');
+      yield* fs.writeFileString(`${root}/packages/fixture/tsconfig.test.json`, '{"include":["src","test"]}');
+      yield* fs.writeFileString(`${root}/packages/fixture/src/index.ts`, "export const value = 1;");
+      selection.root = root;
       try {
-        yield* run(["laws", "--package", `${fixtureRoot}/${directory}`]);
-        expect(execution).toHaveBeenCalledTimes(5);
-        const include =
-          "packages/fixture/src/index.ts,packages/fixture/src/view.tsx,packages/fixture/test/example.test.ts";
-        for (const call of A.take(execution.mock.calls, 4)) {
-          expect(call[0].args).toContain("--include");
-          expect(call[0].args).toContain(include);
-          expect(call[0].args).not.toContain("--include-prefix");
-        }
-        for (const file of ["src/index.ts", "src/view.tsx", "test/example.test.ts"]) {
-          yield* fs.remove(`${fixtureRoot}/${directory}/${file}`);
-        }
-        execution.mockClear();
-        yield* run(["laws", "--package", `${fixtureRoot}/${directory}`]);
-        expect(execution).toHaveBeenCalledTimes(1);
-        expect(execution.mock.calls[0]?.[0].args).toEqual([
-          "run",
-          `${fixtureRoot}/packages/tooling/tool/cli/src/bin.ts`,
-          "--",
-          "lint",
-          "package-test-imports",
-          "--include-root",
-          directory,
-        ]);
+        yield* run(["laws", "--package", `${root}/packages/fixture`]);
+        expect(execution).not.toHaveBeenCalled();
+        yield* fs.makeDirectory(`${root}/packages/failing/src`, { recursive: true });
+        yield* fs.writeFileString(`${root}/packages/failing/package.json`, '{"name":"@beep/failing"}');
+        yield* fs.writeFileString(`${root}/packages/failing/tsconfig.test.json`, '{"include":["src"]}');
+        yield* fs.writeFileString(`${root}/packages/failing/src/index.ts`, "export const value = new Set();");
+        expect(yield* run(["laws", "--package", `${root}/packages/failing`]).pipe(Effect.isFailure)).toBe(true);
+        expect(execution).not.toHaveBeenCalled();
       } finally {
         selection.root = "";
       }
     }, providePlatform)
   );
   it.effect(
-    "propagates eslint failure and stops laws at the first failure",
+    "propagates eslint worker failures",
     Effect.fnUntraced(function* () {
       execution.mockImplementation(() => Effect.succeed(7));
       expect(yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.isFailure)).toBe(true);
       expect(yield* run(["jsdoc", "--package", "."]).pipe(Effect.isFailure)).toBe(true);
-      execution.mockClear();
-      expect(yield* run(["laws", "--package", "."]).pipe(Effect.isFailure)).toBe(true);
-      expect(execution).toHaveBeenCalledTimes(1);
     }, providePlatform)
   );
 });
@@ -492,6 +387,7 @@ describe("executed lint workers", { concurrent: false }, () => {
           prefix: "lint-worker-fixture-",
         });
         yield* fs.writeFileString(`${fixture}/index.ts`, "export {};\n");
+        if (worker === "laws") yield* fs.writeFileString(`${fixture}/tsconfig.test.json`, '{"include":["index.ts"]}');
         const { exitCode, output } = yield* StepExec.runCaptured({
           command: "bun",
           args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", worker, "--package", "."],
@@ -505,7 +401,7 @@ describe("executed lint workers", { concurrent: false }, () => {
         expect(exitCode, output).toBe(0);
         if (worker === "laws") {
           expect(output).not.toContain("skipping four laws");
-          expect(output).toContain("scanned_files=1");
+          expect(output).toContain("project_source_files=1");
           expect(output).toContain("package-test-imports");
         }
       }, providePlatform),

@@ -17,7 +17,7 @@ import {
 } from "@beep/repo-configs/eslint/NoNativeRuntimeHotspots";
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { LiteralKit } from "@beep/schema";
-import { A } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { Effect, HashSet, Inspectable, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -25,7 +25,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import { createRepoTsMorphProject } from "../../internal/tsmorph/index.ts";
-import { isEcosystemMemberSourcePath, isExcludedLawScanPath } from "./internal/LawScan.ts";
+import { isEcosystemMemberSourcePath, isExcludedLawScanPath, LawScanProject } from "./internal/LawScan.ts";
 import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.ts";
 import type {
   BinaryExpression,
@@ -94,6 +94,43 @@ const TYPEOF_RUNTIME_LITERALS = HashSet.fromIterable([
 ]);
 
 /**
+ * Repository-relative directory prefix accepted by `--include-prefix`: no leading slash, no `..`
+ * segment, no glob metacharacters, so a prefix can only narrow the scan to a directory inside
+ * the repository.
+ *
+ * **Example** (Recognize a scoped prefix)
+ * ```ts
+ * import { RepoRelativeDirectoryPrefix } from "@beep/repo-cli/commands/Laws/NoNativeRuntime"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(RepoRelativeDirectoryPrefix)("scratchpad/probe")) // true
+ * console.log(S.is(RepoRelativeDirectoryPrefix)("../outside")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RepoRelativeDirectoryPrefix = S.String.check(
+  S.isPattern(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^*?[\]{}!]+$/u, {
+    title: "RepoRelativeDirectoryPrefix",
+    description: "Repository-relative directory without a leading slash, a `..` segment or glob characters.",
+  })
+);
+
+/**
+ * Derived guard for {@link RepoRelativeDirectoryPrefix} used before a prefix reaches the scan globs.
+ *
+ * **Example** (Reject an escaping prefix)
+ * ```ts
+ * import { isRepoRelativeDirectoryPrefix } from "@beep/repo-cli/commands/Laws/NoNativeRuntime"
+ * console.log(isRepoRelativeDirectoryPrefix("packages/*")) // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isRepoRelativeDirectoryPrefix = S.is(RepoRelativeDirectoryPrefix);
+
+/**
  * Runtime options for repo-local native runtime checks.
  *
  * **Example** (Configure native-runtime scanning)
@@ -115,6 +152,10 @@ export class NoNativeRuntimeRulesOptions extends S.Class<NoNativeRuntimeRulesOpt
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
     includePaths: S.Array(S.String).pipe(S.optionalKey),
+    includePrefixes: S.Array(RepoRelativeDirectoryPrefix).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<string>())),
+      S.withDecodingDefault(Effect.succeed(A.empty<string>()))
+    ),
   },
   $I.annote("NoNativeRuntimeRulesOptions", {
     description: "Runtime options for repo-local native runtime checks.",
@@ -575,7 +616,8 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
   options: NoNativeRuntimeRulesOptions
 ) {
   const path = yield* Path.Path;
-  const cwd = process.cwd();
+  const shared = yield* Effect.serviceOption(LawScanProject);
+  const cwd = O.isSome(shared) ? shared.value.repoRoot : process.cwd();
   const allowlistDiagnostics = getAllowlistDiagnostics();
   const expectedAllowlistKeys = pipe(
     getAllowlistEntries(),
@@ -587,10 +629,22 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
   const isExcludedFile = (filePath: string): boolean =>
     isEcosystemMemberSourcePath(filePath) || isExcludedLawScanPath(options.excludePaths, filePath);
 
-  const project = createRepoTsMorphProject({
-    tsConfigFilePath: path.join(cwd, "tsconfig.json"),
-    sourceFileGlobs: options.includePaths ?? SOURCE_FILE_GLOBS,
-  });
+  const sourceFileGlobs =
+    P.isUndefined(options.includePaths) && A.isReadonlyArrayEmpty(options.includePrefixes)
+      ? SOURCE_FILE_GLOBS
+      : pipe(
+          options.includePaths ?? A.empty<string>(),
+          A.appendAll(A.map(options.includePrefixes, (prefix) => `${Str.replace(/\/+$/u, "")(prefix)}/**/*.{ts,tsx}`)),
+          A.dedupe,
+          A.append("!**/docs/**")
+        );
+
+  const project = O.isSome(shared)
+    ? shared.value.project
+    : createRepoTsMorphProject({
+        tsConfigFilePath: path.join(cwd, "tsconfig.json"),
+        sourceFileGlobs,
+      });
 
   let sourceFiles = A.empty<ScannedSourceFile>();
 

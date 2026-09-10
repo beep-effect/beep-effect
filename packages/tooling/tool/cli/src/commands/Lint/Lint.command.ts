@@ -30,6 +30,7 @@ import {
 } from "../../internal/package-scripts/PackageScriptsPolicy.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
+import { resolveLawsPackageScope, scanLawsPackage } from "../Laws/LawsPackage.ts";
 import { readLintPolicySweeps, runRootDeprecatedApisTask, runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
@@ -727,48 +728,17 @@ const lintLawsCommand = Command.make(
   },
   Effect.fn("Lint.laws")(function* ({ package: directory }) {
     const root = yield* findRepoRoot();
-    const path = yield* Path.Path;
     const prefix = yield* resolveLintPackage(root, directory);
-    const fsUtils = yield* FsUtils;
-    const files = A.sort(
-      yield* fsUtils.globFiles([`${prefix}/**/*.{ts,tsx}`], {
-        cwd: root,
-        ignore: [
-          "**/node_modules/**",
-          "**/dist/**",
-          "**/build/**",
-          "**/.turbo/**",
-          "**/coverage/**",
-          "**/*.d.ts",
-          "**/*.d.tsx",
-        ],
-      }),
-      Order.String
-    );
-    const include = A.join(files, ",");
-    const commands = [
-      ...A.flatMap(["terse-effect", "native-runtime", "frozen-grant-set", "effect-fn"], (law) =>
-        A.isReadonlyArrayEmpty(files)
-          ? []
-          : [["laws", law, "--check", ...(law === "terse-effect" ? ["--advisory"] : []), "--include", include]]
-      ),
-      ...(Str.startsWith(prefix, "packages/") ? [["lint", "package-test-imports", "--include-root", prefix]] : []),
-    ];
-    if (A.isReadonlyArrayEmpty(files)) {
-      yield* Console.log(`lint laws: skipping four laws for ${prefix}; no TypeScript source files.`);
-    }
+    const scope = yield* resolveLawsPackageScope(root, prefix);
     if (!Str.startsWith(prefix, "packages/")) {
       yield* Console.log(`lint laws: skipping package-test-imports for ${prefix}; it only scans packages/.`);
     }
-    for (const args of commands) {
-      const exitCode = yield* runToExit({
-        command: "bun",
-        args: ["run", path.join(root, "packages/tooling/tool/cli/src/bin.ts"), "--", ...args],
-        cwd: root,
-        extendEnv: true,
-        stdio: "inherit",
-      });
-      if (exitCode !== 0) return yield* failWithReportedExit(`lint laws: ${A.join(args, " ")} failed.`, exitCode);
+    const report = yield* scanLawsPackage(scope);
+    yield* Console.log(`lint laws: ${prefix}; project_source_files=${report.projectSourceFileCount}`);
+    for (const finding of report.findings) {
+      yield* Console.log(`lint laws: ${finding.law}; findings=${finding.findingCount}; advisory=${finding.advisory}`);
+      for (const diagnostic of finding.diagnostics) yield* Console.log(`lint laws: ${diagnostic}`);
+      if (finding.strictFailure) return yield* failWithReportedExit(`lint laws: ${finding.law} failed.`);
     }
   })
 ).pipe(Command.withDescription("Run the package-scoped law checks"));
