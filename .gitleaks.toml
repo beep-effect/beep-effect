@@ -2,6 +2,22 @@
 useDefault = true
 
 [[allowlists]]
+description = "Qualification runtime-key evidence stores public SHA-256 computation digests, not credentials. Restrict the exception to the three digest fields in the four reviewed receipts."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "match"
+regexes = ['''^runtimeKey(?:Digest|Value|ObservationSha256)"\s*:\s*"[0-9a-f]{64}"$''']
+paths = ['''^(?:/repo/)?goals/turborepo-task-qualification/research/(?:runtime-key-checkpoint|runtime-keyed-invalidation-observation|pilot-runtime-key-v5-stable|pilot-runtime-key-v5-canary)\.json$''']
+
+[[allowlists]]
+description = "Exact public synthetic canary used to verify cache capture rejection; never an operator credential."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^QUALIFICATION_SYNTHETIC_SECRET_629a94d2$''']
+paths = ['''^(?:/repo/)?packages/tooling/tool/cli/src/commands/Cache/Cache\.experiment\.ts$''']
+
+[[allowlists]]
 description = "Vendored subtrees (openclaw, effect) contain upstream docs and test fixtures with placeholder secrets"
 paths = [
   '''^\.repos/openclaw/.*$''',
