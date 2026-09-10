@@ -1,0 +1,153 @@
+{
+  "kind": "pre-r29-main-5fc065-scheduler-parent-authorized-integration",
+  "status": "installed-validated",
+  "installedAtUtc": "2026-09-09T09:57:57.663522+00:00",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "mainSha": "5fc065daff16300b8435eca3f32d55564664f57c",
+  "refsAfter": {
+    "head": "115b761d533684c5abf4ab9de83d970243c79dfc",
+    "main": "5fc065daff16300b8435eca3f32d55564664f57c"
+  },
+  "beforeCount": 674,
+  "afterCount": 674,
+  "beforeQualified": 139,
+  "afterQualified": 139,
+  "beforeInventorySha256": "a40ecc54eaa2583e7b326fe44e1d58bf848d162438a9e26ecce89665d1aa44fd",
+  "afterInventorySha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "rowArchive": "history/inventory/2026-09-09-pre-r29-main-5fc065-scheduler-before.jsonl",
+  "replacedIds": [
+    "scheduler-admission-attempt-origin",
+    "scheduler-promotion-tick-origin"
+  ],
+  "rowActions": [
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "action": "replace",
+      "beforeRawLineSha256": "d14f98df38662cb578969cf136a7ebb91e898f2384c5febd4d82f41e45f3d048",
+      "afterRawLineSha256": "7dd9dce2131732cbb65949c77567b6e2eba589c1b0d43afa22ef55878ba16143",
+      "beforeRowSha256": "3d4c1005b10d42e4929f6bdee6e9fe67db6cc0c595fb14e7f1c1f2bf15f86a52",
+      "afterRowSha256": "7948b6298aba5d560df7f684ce58cc99a1ab8e23ac313221c317c92ea9266ace",
+      "lineBefore": 1600,
+      "lineAfter": 1603,
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "status": "designed",
+      "tier": 1,
+      "changedFields": ["line", "evidence", "notes"],
+      "originalArchive": "history/inventory/2026-09-09-pre-r29-main-5fc065-scheduler-before.jsonl",
+      "originalLine": 536,
+      "currentInventory": "data/inventory.jsonl",
+      "currentLine": 536
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "action": "replace",
+      "beforeRawLineSha256": "4ecf6b9e97be9b84d9465045a34872756768e72f728f36c630aad42d670028a3",
+      "afterRawLineSha256": "021ee0acfcde42b5bda47e8d190c7b138be86121cb63c795784a427b403fbf3f",
+      "beforeRowSha256": "a0172be7322e1a3ee3183460fd60ea4b4f79c3e70b0e44bb91078399171706af",
+      "afterRowSha256": "7787be66c9f284823cb00478fb9a406531b1d4dfda3ab5f767c91f43feefa350",
+      "lineBefore": 1751,
+      "lineAfter": 1754,
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "status": "designed",
+      "tier": 1,
+      "changedFields": ["line", "evidence", "notes"],
+      "originalArchive": "history/inventory/2026-09-09-pre-r29-main-5fc065-scheduler-before.jsonl",
+      "originalLine": 537,
+      "currentInventory": "data/inventory.jsonl",
+      "currentLine": 537
+    }
+  ],
+  "designActions": [
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "currentPath": "designs/scheduler-admission-attempt-origin.md",
+      "archivePath": "history/designs/2026-09-09-pre-r29-main-5fc065-scheduler/scheduler-admission-attempt-origin.md",
+      "beforeSha256": "e36fde3d5767c6882b22acc99e523b3502ca8832163bc26bc5b59f114ba88d7d",
+      "afterSha256": "74104e1cae6c4b042790d12227627e03a41924bb9bda2669bb256a56166c3512",
+      "originalBlankEofLine": false
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "currentPath": "designs/scheduler-promotion-tick-origin.md",
+      "archivePath": "history/designs/2026-09-09-pre-r29-main-5fc065-scheduler/scheduler-promotion-tick-origin.md",
+      "beforeSha256": "42c2502f4dbd99ce7f05655c0f628f5084a96ea63185d11a2ba1675fbb63fbab",
+      "afterSha256": "7284a83541a1b774f0aceea117d3b4575a2c882dcb724cdd334b35a4251e647b",
+      "originalBlankEofLine": false
+    }
+  ],
+  "unchangedExistingInventoryRows": 672,
+  "sourceProof": "data/pre-r29-main-5fc065-scheduler-source-proof.json",
+  "sourceProofSha256": "d2ad55240fb843900b4430f512fa418acb42fbe7a38fb801fec58e070b6b3986",
+  "installedArtifactSha256": [
+    {
+      "path": "data/inventory.jsonl",
+      "sha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3"
+    },
+    {
+      "path": "history/inventory/2026-09-09-pre-r29-main-5fc065-scheduler-before.jsonl",
+      "sha256": "a40ecc54eaa2583e7b326fe44e1d58bf848d162438a9e26ecce89665d1aa44fd"
+    },
+    {
+      "path": "data/pre-r29-main-5fc065-scheduler-source-proof.json",
+      "sha256": "d2ad55240fb843900b4430f512fa418acb42fbe7a38fb801fec58e070b6b3986"
+    },
+    {
+      "path": "designs/scheduler-admission-attempt-origin.md",
+      "sha256": "74104e1cae6c4b042790d12227627e03a41924bb9bda2669bb256a56166c3512"
+    },
+    {
+      "path": "history/designs/2026-09-09-pre-r29-main-5fc065-scheduler/scheduler-admission-attempt-origin.md",
+      "sha256": "e36fde3d5767c6882b22acc99e523b3502ca8832163bc26bc5b59f114ba88d7d"
+    },
+    {
+      "path": "designs/scheduler-promotion-tick-origin.md",
+      "sha256": "7284a83541a1b774f0aceea117d3b4575a2c882dcb724cdd334b35a4251e647b"
+    },
+    {
+      "path": "history/designs/2026-09-09-pre-r29-main-5fc065-scheduler/scheduler-promotion-tick-origin.md",
+      "sha256": "42c2502f4dbd99ce7f05655c0f628f5084a96ea63185d11a2ba1675fbb63fbab"
+    }
+  ],
+  "validation": [
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-inventory.ts"],
+      "exitCode": 0,
+      "stdout": "inventory OK: 674 records, 674 unique ids\n",
+      "stderr": ""
+    },
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-designs.ts"],
+      "exitCode": 0,
+      "stdout": "design coverage OK: 139 qualified ids\n",
+      "stderr": ""
+    },
+    {
+      "command": ["git", "diff", "--check", "--", "goals/boolean-creep"],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "newPublicJsonFormattedBeforeHashBinding": true,
+  "formatterVersion": "Version: 2.5.6",
+  "formatterConfigSha256": "ca78a2cadc5d0b92ba78ace7ae5c409503f8cc1438148e388579248d48e8f93a",
+  "logicalIndexBeforeSha256": "9bb1c30733539c9c8d128d33d455ac724064481cd84c0d972e3c372ae00bde45",
+  "logicalIndexAfterSha256": "9bb1c30733539c9c8d128d33d455ac724064481cd84c0d972e3c372ae00bde45",
+  "logicalIndexUnchanged": true,
+  "helperSha256": "2071cbc4a652354a5397ef05bbbef6eb84f2a08ef33d0b1baa05c237468142ab",
+  "sourceAndRefsUnchanged": true,
+  "previousFrozenArtifactsWritten": false,
+  "otherCurrentDesignsWritten": false,
+  "sourceFilesWritten": false,
+  "gitMutations": [],
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "implementationClaim": false,
+  "productTestsRun": false
+}

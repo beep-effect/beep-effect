@@ -1,0 +1,190 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "reports": {
+    "r27-agents-workspace.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-apps.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-architecture-ecosystem-internal.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-boolean-state-domains-apps.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-boolean-state-foundation.jsonl": {
+      "reportSha256": "3f5983af1b19c9fbabed1469f7e54dd53895cada6ae488c157e901122b8f5c68",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-boolean-state-other.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-cli-commands-a-c.jsonl": {
+      "reportSha256": "0f1c377530138004ab4e92cc1bad3d3218c791a4686481ca398da4fcb15566f0",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-cli-commands-d-k.jsonl": {
+      "reportSha256": "8e288810d78911d9dc0e8c336bd2586b1209ae0e00d63dfa31d96f12323794fc",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-cli-commands-l-q.jsonl": {
+      "reportSha256": "876c07b1a7ca2e98965d608d20ad29fa6277c21e89493d23a331d6fbcf7698c0",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-cli-commands-r-z.jsonl": {
+      "reportSha256": "cc79ed5e6011d77e9fdc891bb572806950891298b66f4a71cdf500c2ba0cddb3",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-cli-internal-root.jsonl": {
+      "reportSha256": "4d68da052cd50f0fbaf6af50719550a204d0344c54c276ff2fe4b94ee8701cc8",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-cli-yeet-contract-correction1.jsonl": {
+      "reportSha256": "43c15e4f315277f0756dd6713b9a03a61a93395df0229244847333f09e1df635",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-cli-yeet.jsonl": {
+      "reportSha256": "a951206134032f9df0fd655f7cdaa44c65ecc70bc6185cff80e9a6e2b42c8255",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-drivers-a-f.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-drivers-g-m.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-drivers-n-r.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-drivers-s-z.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-epistemic-ontology.jsonl": {
+      "reportSha256": "90601c3490c26031e6ecef6de331c87e9abb19f3b6e4d395a685cf86a195754f",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-foundation-capability.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-foundation-modeling-rest-recovery1.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-foundation-modeling-rest.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-foundation-primitive.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-foundation-schema-a-m.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-foundation-schema-n-z.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-foundation-ui.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-law-practice-domain.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-law-practice-runtime.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-normalize-contract-correction1.jsonl": {
+      "reportSha256": "99b9ab1b5516314725a96765f414ba91fccfdb74d7af386bcdca9be36dec54ff",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-observability-contract-correction1.jsonl": {
+      "reportSha256": "8997009ff0e3e2876fa145d9443d6ece06bc60a8248c474ffca5900c6dae1494",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-shared-documents.jsonl": {
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-tool-docgen.jsonl": {
+      "reportSha256": "68abe23d47599a39d66e7eebfb3a18a19eab2893fb59aa73df0cbe8ce548329c",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-tooling-library-observability.jsonl": {
+      "reportSha256": "3d2b7621e2ab96116809a403bc1af44a12d7beaf5eb2dba475314fe91d9b4453",
+      "exitCode": 0,
+      "valid": true
+    },
+    "r27-tooling-library-support.jsonl": {
+      "reportSha256": "2c321b2caa8f9ca3651834230e5abb64bee2c26eb8e998276e24467d67765479",
+      "exitCode": 1,
+      "valid": false,
+      "diagnostics": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-tooling-library-support.jsonl:2: duplicate file/declaration-line/member cluster (first seen at goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-tooling-library-support.jsonl:1)\ngoals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-tooling-library-support.jsonl:3: duplicate file/declaration-line/member cluster (first seen at goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-tooling-library-support.jsonl:1)\ninventory INVALID: 2/4 records failed",
+      "individualRecordsValid": true,
+      "scope": "Two duplicate declaration-line/member-cluster diagnostics in the immutable raw compiler-options residue report.",
+      "resolution": "data/r27-tooling-config-integration.json",
+      "resolutionSha256": "af6e6968c9b35df5d0d218265d4342f2e1196a80280cd3bdd353e97cfe5cbb78",
+      "correctedCanonicalIds": [
+        "ts-node-compiler-options",
+        "tsconfig-compiler-options",
+        "tsconfig-compiler-options-export"
+      ],
+      "adjudicated": true
+    },
+    "r27-tooling-policy.jsonl": {
+      "reportSha256": "49507d4e62e36b189547751611d48a974dad4de671af4e1b34cfd7d9be8b8c6b",
+      "exitCode": 0,
+      "valid": true
+    }
+  },
+  "validReportCount": 33,
+  "invalidRawReports": ["r27-tooling-library-support.jsonl"],
+  "canonicalInventoryValidatedSeparately": true,
+  "note": "Raw reports are immutable. One original D2 residue report repeats an inherited member anchor for three distinct source declarations; the source audit already consolidated and corrected these owners in canonical inventory. This receipt reports the original violation and its existing resolution rather than rewriting the raw output."
+}

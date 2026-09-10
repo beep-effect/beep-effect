@@ -1,0 +1,17 @@
+{
+  "lane": "r27-foundation-modeling-rest",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "started": "2026-09-09T01:55:41.349946+00:00",
+  "finished": "2026-09-09T02:07:53.977359+00:00",
+  "exitCode": 1,
+  "endTurnEvent": false,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "I'll start by creating the report file, then scan the assigned modeling paths for boolean clusters and adjudicate as I go.Report file is in place. Next I\u2019ll cluster `: boolean` hits per package so I can read scopes instead of dumping raw matches.Most hits so far are function returns. I\u2019ll look at how HTML attributes and other structs actually declare boolean members.",
+  "transcriptSha256": "20a5651a7d61dec1136e122f9c5bcaff7de061a3ede2fd878c9e334ac019fc08",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998"
+}

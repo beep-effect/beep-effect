@@ -1,0 +1,22 @@
+{
+  "lane": "r30-tool-docgen",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T13:30:08.582954+00:00",
+  "finished": "2026-09-09T13:35:58.798213+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-tool-docgen.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nCoverage: every assigned root under `packages/tooling/tool/docgen/src` was inspected (`bin.ts`, `Checker.ts`, `CLI.ts`, `Configuration.ts`, `Core.ts`, `Domain.ts`, `index.ts`, `internal/JsonFile.ts`, `markdown-toc.d.ts`, `Parser.ts`, `Printer.ts`, `ProofManifest.ts`, `Version.ts`).\n\nSeed revalidation: all 17 assigned clusters still exist at the recorded owners/members/lines; D1/D2 classifications still match current writers, readers, and constructor contracts. No corrections, expansions, or withdrawals.\n\nNo unresolved source question. Out-of-net residue (not recorded): Flag/`Command.make` handles and handler-parameter aliases; `checkEntry`/`checkEntries` function-flag parameter types; single-boolean `Export.isNamespaceExport` and `File.isOverwritable`; standalone predicates; `DocgenProofManifestVerification` status/reason (no Boolean members); `getMarkdownConfigYML` `exists` vs `File.isOverwritable` on distinct owners.\n\n\ud83c\udf31 graft saved ~28,529 tokens this turn (1 call)",
+  "transcriptSha256": "5d1079d1bbae7d34fba2e4afaa0e47d064be5e3bbe7261f0b2ede5a077f2e355",
+  "runnerSha256": "a4d7f7629866b91b6d007f21235d50d699b49dd3a39d3b60864a91f799bbb355",
+  "seedSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

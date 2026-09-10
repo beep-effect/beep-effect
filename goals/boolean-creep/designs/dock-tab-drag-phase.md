@@ -110,6 +110,7 @@ none (internal)
 
 - `packages/foundation/ui-system/dock-react/test/Gestures.test.tsx:230` and `:236` — replace assertions on `drag.concluded` with `TabDragPhase.is.concluded(drag.phase)` (or exact comparison with `TabDragPhase.Enum.concluded`); update the comment at line 232 to say “concluded phase.”
 - No other file under `packages/foundation/ui-system/dock-react/test/` reads `TabDrag.moved` or `TabDrag.concluded`.
+- The pointer press-to-drag promotion, Escape cancellation, pointer release, drag ghost, and overlay are gesture-bearing UI. Run the `browser-qa-loop` through the portless package script and retain successful record -> extract -> judge evidence with `requiredCount: 0` for those transitions.
 
 # Risk & sequencing
 

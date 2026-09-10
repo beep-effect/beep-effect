@@ -1,0 +1,22 @@
+{
+  "lane": "r29-cli-commands-l-q",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T11:04:23.475572+00:00",
+  "finished": "2026-09-09T11:15:48.110998+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 11,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-l-q.jsonl`\n\nConfirmed: 0. Disqualified: 11. Validator: inventory OK.\n\nAssigned roots covered: Labs, Laws, Lint, Purge, Qa, Quality.\n\nSeed drift: none. All listed seed owners, members, and classifications still match current source. Unchanged seeds were not re-reported. `EffectImportRulesSummary.strictFailure` remains an independent leftover on the designed `write`/`candidate` owner and was not expanded. Raw `CoverageTaskOptions.skip` still belongs to the resolved 16/7 owner rather than a new raw-type cluster.\n\nNo unresolved source question.",
+  "transcriptSha256": "f49f6e35cb74b23063b98bbd5a6744ef7d7ffbb3fb714b745194d795f0e6d838",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 11 records, 11 unique ids\n"
+}

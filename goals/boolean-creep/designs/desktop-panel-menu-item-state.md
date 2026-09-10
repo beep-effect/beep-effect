@@ -1,150 +1,149 @@
-## 1. Instance
+# Design: desktop-panel-menu-item-state
 
-- id: `desktop-panel-menu-item-state`
-- file:line: `apps/professional-desktop/src/App.tsx:652`
-- symbol: `OntologyMenuItem`
-- members: `current`, `open`
-- evidence classes:
-  - E4 at `apps/professional-desktop/src/App.tsx:696` — current implies open by construction at every call site — a panel can only be current while open.
+Current P2 design on source `93217d998f851e2e93d9864e2b5315552eaa58a7`,
+main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Actual owner `OntologyMenuItem`;
+4 representable / 3 legal; derived/internal, Tier 1.
+The R28 bounded correction confirms the source qualification. This design
+awaits independent P3 review; no implementation or independent P3 approval is claimed.
+Prior design bytes and source receipts are bound in
+`data/r28-first-corrections-integration.json`.
 
-## 2. Current shape
+## Current shape
 
-Live declaration at `apps/professional-desktop/src/App.tsx:646`:
+`OntologyMenuItem` at `App.tsx:654-680` receives actual Boolean props
+`current` (`660`) and `open` (`662`), plus a callback and full panel descriptor.
+It projects currentness into `aria-current` at668 and openness into filled
+versus outlined dot styling at675. The only JSX writer is
+`OntologyMenuList:702-708`, which computes both values from the same workspace
+and currentness closure.
 
-```tsx
-const OntologyMenuItem = ({
-  current,
-  onSelect,
-  open,
-  panel,
-}: {
-  readonly current: boolean;
-  readonly onSelect: () => void;
-  readonly open: boolean;
-  readonly panel: (typeof DESKTOP_PANELS)[number];
-}): JSX.Element => (
-```
+`DesktopShell.isPanelCurrent` at `779-786` chooses the active panel of the
+focused group, or falls back to `isPanelActive` when no group is focused.
+The actual source query helpers in `workspace/dock.atoms.ts:643-672` are
+callables; their pair is not an eligible stored/derived Boolean carrier and
+its canonical design is proposed for archival withdrawal. That withdrawal
+does not remove or invalidate the actual menu props owner.
 
-The two reads are at `apps/professional-desktop/src/App.tsx:660` and `:667`:
+## Cardinality gap
 
-```tsx
-aria-current={current ? "page" : undefined}
-```
+The props permit four Boolean tuples; the actual writer supports three:
 
-```tsx
-open ? "h-1.5 w-1.5 rounded-full bg-primary" : "h-1.5 w-1.5 rounded-full border border-muted-foreground/50"
-```
+| Menu state | `current` | `open` |
+| --- | --- | --- |
+| `closed` | false | false |
+| `open` | false | true |
+| `current` | true | true |
 
-The sole call site at `apps/professional-desktop/src/App.tsx:693` writes both props:
+Current implies open in both source currentness branches. A focused-group
+match finds that group's active panel; the no-focus branch finds an active
+panel in a containing group. `Dock.models-tree.ts:597-598` includes the
+active panel in its panels list, and searches at `586-592,1350-1356` therefore
+find it. A stale focused group yields false. An active tab in an unfocused
+group can be open but not current; preserve that legal distinction.
 
-```tsx
-<OntologyMenuItem
-  key={panel.key}
-  current={isCurrent(panel.key)}
-  open={isPanelOpen(workspace, panel.key)}
-  onSelect={() => onNavigate(panel.key)}
-  panel={panel}
-/>
-```
+The sibling query callables do not create an additional four-state census
+owner. Required panel descriptors, workspace trees, floating members and
+callbacks are payloads and context, not new Boolean axes.
 
-## 3. Cardinality gap
+## Target schema
 
-Two booleans represent four combinations, but only three are legal:
-
-- `closed`: the panel is not open and cannot be current.
-- `open`: the panel is open but not current in the focused group.
-- `current`: the panel is open and current.
-
-`current && !open` is illegal.
-
-## 4. Target schema
-
-`App.tsx` already imports `LiteralKit` and owns the `$I` composer. Add one named local kit and derived type:
+Reuse the current design's one local annotated literal kit in `App.tsx`,
+which already imports LiteralKit and owns the identity composer:
 
 ```ts
 const OntologyMenuItemState = LiteralKit(["closed", "open", "current"]).pipe(
   $I.annoteSchema("OntologyMenuItemState", {
-    description: "Exclusive visibility and focus state of an ontology panel menu entry.",
-  })
+    description: "Visibility and focus state of an ontology panel menu entry.",
+  }),
 );
-
 type OntologyMenuItemState = typeof OntologyMenuItemState.Type;
 ```
 
-Replace the props and reads:
+Replace the two Boolean props with `state: OntologyMenuItemState`. Keep the
+callback and exact `(typeof DESKTOP_PANELS)[number]` panel payload. Use the
+derived `is.current` guard for `aria-current="page"`; use `is.closed` to
+choose the outlined dot, with both remaining cases using the filled dot.
 
-```tsx
-const OntologyMenuItem = ({
-  onSelect,
-  panel,
-  state,
-}: {
-  readonly onSelect: () => void;
-  readonly panel: (typeof DESKTOP_PANELS)[number];
-  readonly state: OntologyMenuItemState;
-}): JSX.Element => (
-  <button
-    type="button"
-    data-panel-menu-item={panel.key}
-    aria-current={OntologyMenuItemState.is.current(state) ? "page" : undefined}
-    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
-    onClick={onSelect}
-  >
-    <span
-      aria-hidden
-      className={
-        OntologyMenuItemState.is.closed(state)
-          ? "h-1.5 w-1.5 rounded-full border border-muted-foreground/50"
-          : "h-1.5 w-1.5 rounded-full bg-primary"
-      }
-    />
-    {panel.label}
-  </button>
-);
-```
+At the actual JSX boundary, select current first when `isCurrent(panel.key)`
+is true; otherwise select open or closed from the existing
+`isPanelOpen(workspace, panel.key)` query. Express the selection with the
+existing match/helper conventions. Do not first store two new parallel
+Boolean locals or pass a reverse `{ current, open }` compatibility object.
+The existing dock predicates remain available and retain their public app
+call signatures; no new `DesktopPanelPresence` schema/query is required.
 
-Project the literal once at the call boundary:
+This is a pure derived rendering state. Do not add storage, a reducer, a
+codec, a new service, a cross-package helper, or a new public export.
 
-```tsx
-state={
-  isCurrent(panel.key)
-    ? OntologyMenuItemState.Enum.current
-    : isPanelOpen(workspace, panel.key)
-      ? OntologyMenuItemState.Enum.open
-      : OntologyMenuItemState.Enum.closed
-}
-```
+## Migration inventory
 
-## 5. Migration inventory
+| Source site | Atomic implementation change |
+| --- | --- |
+| `App.tsx` local schema declarations | Add the local annotated three-case kit/type using existing imports/composer. |
+| `App.tsx:653-664` | Update the comment; replace current/open destructuring and props declarations with state. Preserve onSelect and the full panel payload. |
+| `App.tsx:668` | Derive the same ARIA value from the current case. |
+| `App.tsx:672-677` | Preserve both exact dot class strings and the aria-hidden span; derive style from closed versus open/current. |
+| `App.tsx:702-708` | Replace the pair of writes with the ordered three-case projection. Preserve key, onNavigate callback and panel descriptor. |
+| `App.tsx:779-786` | Keep both existing focused/no-focus currentness branches exactly; the query APIs remain unchanged. |
+| `workspace/dock.atoms.ts:643-672` | No implementation change. Retain both dual callable APIs, their supported consumers and documentation examples. They are proof dependencies, not additional qualified owners. |
+| `test/dock-shell.test.tsx` | Preserve validated workspace, query and snapshot tests; add focused menu-entry state/render assertions. |
 
-- `apps/professional-desktop/src/App.tsx:645` — update the row comment to describe the single item state rather than an open-state flag.
-- `apps/professional-desktop/src/App.tsx:647` — remove `current` and `open` from the destructuring and add `state`.
-- `apps/professional-desktop/src/App.tsx:652` — replace the two boolean prop members with `state: OntologyMenuItemState`.
-- `apps/professional-desktop/src/App.tsx:660` — derive `aria-current` from the `current` literal guard.
-- `apps/professional-desktop/src/App.tsx:667` — choose the filled/open dot for both `open` and `current` by checking only the `closed` case.
-- `apps/professional-desktop/src/App.tsx:696` — replace the `current`/`open` prop pair with one ordered state projection from `isCurrent` and `isPanelOpen`.
+No other source or fixture directly constructs `OntologyMenuItem`; its sole
+writer is the map callback above. No app/package barrel exports the private
+component or new literal. Other shell navigation, query consumers, dock
+persistence and panel activation commands continue to use current source.
+The revised implementation does not depend on the withdrawn
+`r2-apps-dock-panel-open-active` design landing first or atomically.
 
-No other source or test constructs `OntologyMenuItem`.
+## Guard-deletion accounting
 
-## 6. Guard-deletion accounting
+Delete the two independent Boolean props and paired JSX writes, replacing
+them with a single state. Delete independent current/open reads at668/675;
+both render choices consume one schema-owned value. The caller can no longer
+pass current without open to this private component.
 
-- `apps/professional-desktop/src/App.tsx:652` — delete the prop-level comment-only invariant that `current` implies `open`; the literal cannot represent the illegal combination.
-- `apps/professional-desktop/src/App.tsx:660` and `:667` — delete independent boolean reads over `current` and `open`; both presentation choices consume one state.
-- `apps/professional-desktop/src/App.tsx:696` — delete the call-site pair whose coherence depended on two separate helper calls and replace it with one ordered projection.
+There is no runtime mutual-exclusion throw or legacy normalizer to remove.
+The currentness/presence queries still perform necessary derivation. Do not
+claim their functions or lookups as deleted guards, and do not remove tests
+of those supported callable APIs merely because their census row is withdrawn.
 
-There is no legacy normalizer or runtime mutual-exclusion error.
+## Encoded-side impact
 
-## 7. Encoded-side impact
+The new state exists only in private React props. Keep the button's
+`data-panel-menu-item`, label, click behavior, ARIA current value, dot styles
+and DOM structure identical. Preserve focused-group semantics and stale-focus
+behavior. Dock model/snapshot encodings, local storage, panel ids, workspaces,
+floating groups, sidecar access and command payloads are unchanged.
 
-none (internal)
+No persisted/wire migration or compatibility alias is needed. The source
+predicate APIs remain callable in both data-first and data-last forms; this
+corrected design no longer proposes their removal.
 
-The literal exists only in local React props and is derived from the dock workspace on every render.
+## Test impact
 
-## 8. Test impact
+No tests or product commands run for this draft. At implementation, extend
+`test/dock-shell.test.tsx` with three observable menu-entry cases: closed
+outlined dot, open-not-current filled dot without page ARIA, and current
+filled dot with `aria-current="page"`. Cover an active tab in another group,
+the no-focus fallback, a stale focus id, and clicking a closed entry to open
+and navigate. Preserve existing tests of validated default workspaces,
+snapshots and the two callable queries.
 
-- `apps/professional-desktop/test/dock-shell.test.tsx:170` — the existing closed-panel navigation test continues to cover the `closed` transition into an opened panel.
-- `apps/professional-desktop/test/dock-shell.test.tsx:158` — current-page ARIA assertions cover the same semantic contract elsewhere in the shell, but no test currently inspects an ontology menu item's `aria-current` or dot style. Extend this file with closed, open-not-current, and current menu-entry assertions.
+The existing shell is gesture-bearing, so eventual implementation uses the
+repo's recorded portless browser-QA workflow for the actual menu interaction
+and required app/package handoff checks. This source/design audit starts no
+browser or service and runs no package verification.
 
-## 9. Risk & sequencing
+## Risk
 
-The change is confined to `App.tsx`, which is shared with other shell designs and therefore has merge-conflict risk. Keep the kit adjacent to `OntologyMenuItem`; no dock package API changes. Preserve the ordering `current` before `open`, because current is the narrower state.
+The prior design's material defect is its mandatory dependency on an
+ineligible callable-pair refactor. This revision removes that dependency
+without weakening the actual menu's current-implies-open invariant. Keep
+currentness narrower than arbitrary group activity, especially with multiple
+open groups or stale focus.
+
+The withdrawn callable row/current design are archived together in the R28 receipt;
+retain the actual menu row, and independently review this replacement before
+promoting it. No new row or cardinality is proposed for the menu. Source hashes
+and complete evidence are in the apps audit; this draft does not claim that
+the implementation or browser parity has already been verified.

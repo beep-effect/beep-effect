@@ -1,0 +1,12 @@
+{
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "originMainSha": "be8995e66aeefedf0dabf131deaeaaf25c8e6fc8",
+  "complete": false,
+  "completedPrimaryLanes": 12,
+  "interruptedPrimaryLanes": 3,
+  "notStartedPrimaryLanes": 10,
+  "qualifiedAdmissions": 1,
+  "dryRoundCredit": false,
+  "supersededBy": "refresh-2026-09-08-r25-main-9b7553",
+  "reason": "Desktop continuation terminated the driver; origin/main then advanced with five corpus file changes. New full census runs on the merged source."
+}

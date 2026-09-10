@@ -1,0 +1,22 @@
+{
+  "lane": "r28-law-practice-runtime",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:57:17.290890+00:00",
+  "finished": "2026-09-09T05:05:45.282581+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-law-practice-runtime.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nAssigned roots covered: `packages/law-practice/server/src`, `packages/law-practice/tables/src`, `packages/law-practice/use-cases/src`.\n\nUnchanged seeds (not re-reported): `practice-kg-options`, `practice-kg-source-spec-exists`, `practice-kg-document-tool-row-truncated`, `practice-kg-tool-result-truncated`, `practice-kg-closed-world-four-hints`, `r25-law-practice-runtime-bundle-overwrite-gate`. No line or member drift.\n\nIneligible seed withdrawals (callable guards, not boolean members): `walkForHeaderFiles` `[Directory, File]` (`FileInfo.guards` over a tagged union); `effectiveDispositions` `[active, retired]` (lifecycle guard plus set membership). No unresolved source question.",
+  "transcriptSha256": "4102d5c7611be0e0fa14705796be0748dc37d2850c9d8fd3cf4b06693b53f482",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

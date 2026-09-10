@@ -1,0 +1,17 @@
+{
+  "lane": "r27-drivers-g-m",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "started": "2026-09-09T02:07:52.456915+00:00",
+  "finished": "2026-09-09T02:17:35.486613+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-drivers-g-m.jsonl` \u2014 confirmed 0, disqualified 0. All seven assigned roots covered (`gov-legal-mcp`, `govinfo` authored only, `graph-3d`, `hubspot`, `libpff`, `m365`, `m365-mcp`); `_generated` excluded. Seeds still present; drift: `useGraph3DHandle.mountLatches` keeps `cancelled` in `Graph3D.react.ts:69` while `destroyed` is only in `Graph3D.renderer.ts:359`; `ToolNameCollisionRow.digest` and `M365ToolError.reason` remain payloads, not booleans.",
+  "transcriptSha256": "8022caaa42c18e33110fe6ecc9e918c8a229a4efd12e2fbbfabeb1711cd7ab90",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998"
+}

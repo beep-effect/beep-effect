@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "boolean-creep-source-forward/v1",
+  "observedAt": "2026-09-09T11:45:21.252311+00:00",
+  "previousSourceSha": "06c381b61abee8356b78c52b72eb8a5562015bfd",
+  "sourceSha": "1c07c15495aaa42f521b887b01e943e68804606c",
+  "previousOriginMainSha": "5fc065daff16300b8435eca3f32d55564664f57c",
+  "originMainSha": "3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee",
+  "includedFiles": 3044,
+  "changedIncludedFiles": [
+    {
+      "file": "packages/tooling/library/ai-sync/src/validation.ts",
+      "beforeSha256": "308dc413594892b7da1b896115f1279fea1e423b5be05b4670c5722aacc02293",
+      "afterSha256": "2c58487050d4dd558e09c745f75d29d90cd848404b163235d42f2df77bd02ca4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/JudgePack.ts",
+      "beforeSha256": "b477008d227b2079efe7be18daa2adb005009baf36d1f2f01f2c1ac311bcde23",
+      "afterSha256": "60f9935c2e14f8cf6c2d22316415f303c990e8f0df0aba8c238ddd0d5e94d066"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "beforeSha256": "06085119bc1e5815aff385be0aa24ed074bf6a459fd54a0984442fb7dd1e66d5",
+      "afterSha256": "987b70f1316c7ac05a4c7ee5c7f6eb3348cddc15cf32dd1c747cadcbfa5c1aa6"
+    }
+  ],
+  "unchangedIncludedFiles": 3041,
+  "unchangedDependencyInputs": 157,
+  "changedDependencyInputs": [
+    {
+      "file": "biome.jsonc",
+      "beforeSha256": "ca78a2cadc5d0b92ba78ace7ae5c409503f8cc1438148e388579248d48e8f93a",
+      "afterSha256": "2b286ea9285a4067e68bf6c9478f55dd50d9993de7e3d4f9ff4981644c9fc984"
+    }
+  ],
+  "uiAndAcpCorrectionSourceFilesUnchanged": 148,
+  "driversAFAllSourceFilesUnchanged": 97,
+  "inventorySha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "packetFilesPreserved": 1223,
+  "upstreamPacketRoutingUpdates": [
+    "DECISIONS.md",
+    "SPEC.md",
+    "ops/run-design-batch.sh"
+  ],
+  "sourceDiffAssessment": [
+    "QualityScheduler adds staging ownership/finalizer and orphan cleanup; both scheduler designs require current-source rebinding.",
+    "ai-sync changes allowed Graft permission literals and deny entries, not Boolean owner semantics.",
+    "Qa JudgePack changes only the printed Codex reasoning-effort recommendation.",
+    "The dependency manifest includes formatting/configuration inputs. Only biome.jsonc changed: it narrows the Graft helper exclusions and removes the deleted OpenCode-config exclusion. Package manifests and lock bytes are unchanged.",
+    "Both bounded correction scopes retain their exact admitted source bytes. Corrections bind the current Biome configuration and new exactHEAD/main; no whole-round dry credit."
+  ],
+  "formalIndependentReview": false,
+  "dryCredit": false
+}

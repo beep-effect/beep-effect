@@ -1,0 +1,41 @@
+{
+  "kind": "fable-process-attempt-preparation/v1",
+  "status": "prepared-not-admitted",
+  "recordedAt": "2026-09-09T16:55:35.519196+00:00",
+  "privateManifest": {
+    "file": "~/.cache/beep/boolean-creep/p3-fable-attempt-preparation/MANIFEST.json",
+    "sha256": "8f062e94d9cf8bfdbe4c5c1da9970c9d7fb98743f4875d7b095261ac6a64cf27",
+    "bytes": 746
+  },
+  "privateFiles": 5,
+  "testMethods": 10,
+  "testCommand": [
+    "python",
+    "-W",
+    "error::ResourceWarning",
+    "-m",
+    "unittest",
+    "-v",
+    "test_review_attempt"
+  ],
+  "testExitCode": 0,
+  "testChildren": "Local Python fixtures only",
+  "capabilities": [
+    "Exclusive attempt creation and two admission callbacks",
+    "Exact prompt/stdout/stderr preservation and artifact hashes",
+    "PID/start-time/boot identity without command-line or environment inspection",
+    "Bounded timeout, cancellation and interruption handling",
+    "Unconfirmed cleanup retains an interruption receipt without a terminal",
+    "Strict terminal receipt verification with zero review credit"
+  ],
+  "modelCalls": 0,
+  "independentP3Approval": false,
+  "modelInvocationAuthorized": false,
+  "processGroupDrainVerified": false,
+  "pending": [
+    "Two finalized consecutive current-source dry rounds",
+    "Full controller composition and systemd cgroup ownership/drain",
+    "Runtime/configuration/advisory-reference bindings and capability proof",
+    "Canonical Fable validator installation and final admission"
+  ]
+}

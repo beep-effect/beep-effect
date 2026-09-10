@@ -1,0 +1,48 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 698,
+  "afterCount": 698,
+  "beforeQualified": 153,
+  "afterQualified": 154,
+  "beforeInventorySha256": "8459bed7eeceb2434866432a2924dcf537d47d976a98a8becb46fb82fa4a5187",
+  "afterInventorySha256": "240c560e8724e0a0523f5efedf8ce008640a4a75d1bd5c81221788819e1e91fc",
+  "correctedIds": [
+    "create-package-scaffold-shape",
+    "r3-tooling-phoenix-sync-program-options",
+    "corpus-organize-category-flags",
+    "r28-cli-commands-a-c-eval-law-lanes-spawn-options",
+    "r28-cli-commands-a-c-preservation-capacity-spawn-options",
+    "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options"
+  ],
+  "qualifiedIds": ["create-package-scaffold-shape"],
+  "rowArchive": "history/inventory/2026-09-09-r28-cli-a-c-before.jsonl",
+  "rowArchiveSha256": "264623ab35383a1905e4e2bb87c349795aa4f6e8db37d88e3fbc388aab3e958a",
+  "currentDesignSha256": {
+    "create-package-scaffold-shape": "0699ea15f501283b4857e32ce72167daf7379957d59cd2134c3b6aa49dd44572"
+  },
+  "inputSha256": {
+    "data/design-refresh-2026-09-09-r28-create-package-scaffold-shape.md": "25dfe942d4a5c7e7244dc5b98f862e283fd936fdc57dd9e5ea6c3f639583b8e3",
+    "data/provisional-r28-create-package-scaffold-shape.md": "501aed172c458f55fb65d99a407fb58805f53d1ef18842acbfb3601028c067f0",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-a-c-contract-correction1.execution.json": "f66bdb0878d3bf0f94662b5dd052c714979ea242ca78fd4b49717afd74f13eff",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-a-c-contract-correction1.jsonl": "dd64cdeaf0309615a9b9fe9669b8f567a10bc98e50b0720b144b89b0f52b2329"
+  },
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts": "8b3108c7db97b1817f9f1504fc1e8d34ce3c72219b18c456e609920bb4203b75",
+    "packages/tooling/tool/cli/src/commands/CreatePackage/index.ts": "4097f8871b5b25b21611d31fa04d59fa434fbb456f25ebb2c59e13f45bc43482",
+    "packages/tooling/tool/cli/src/index.ts": "19c10f83b6e17ae87269aa30da8f95fb06108e01ef1330f693281b237cd7c6b8",
+    "packages/tooling/tool/cli/src/commands/Root.ts": "fe224f04bbf3099678acd77912c67f14c9834dba085cf14994e4412b72f05a64",
+    "packages/tooling/tool/cli/test/create-package.test.ts": "b20130164ddfd6e4a8e33e4b69553e7b8843bb483c454a5665fe6dc5bf8f296a",
+    "packages/tooling/tool/cli/test/create-package-lab.test.ts": "d6fa0d3a5a9dc21ad0c65ecb375662e687721a654738d4b7600528a4053818d9",
+    ".repos/effect/packages/effect/src/Schema.ts": "0f0daf6b6ec3b6c827083d8b76278a4f52fe48a636dfff031ddf18e6c93f82ad"
+  },
+  "formalIndependentReview": false,
+  "currentDryCredit": 0,
+  "deferredRawQualifiedIds": ["create-package-template-lab-ecosystem"],
+  "notes": [
+    "The successful one bounded A-C correction independently confirms ScaffoldShape24/11 and five retained D metadata repairs. All original reports and native provisionals are unchanged.",
+    "The broad command descriptor/parameter row and ten callables were already withdrawn by prior integrations; this receipt does not archive them twice.",
+    "The raw TemplateContext pair confirmation is not admitted here. The ongoing native audit must reconcile it with the already-qualified connected type/app-kind owners and complete literal payload before parent integration. No second A-C correction is requested.",
+    "Private ScaffoldShape preserves all eleven resolved modes and every raw diagnostic, full generated artifact, template, asset and manifest contract. Tier1E batching remains binding."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "lane": "r26-drivers-s-z",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-09T00:09:49.806053+00:00",
+  "finished": "2026-09-09T00:23:15.836855+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r26-main-9b7553/r26-drivers-s-z.jsonl` \u2014 confirmed 0, disqualified 2. Covered all assigned src roots (sanity, shacl, tailscale, tika, uspto, uspto-mcp, venice-ai, wink, xai). Seeds: all 18 still present. Line drift: `tokenToAi` 123 (listed 121), `XAiServerSentEvent.done` 387 (inventory 390/384), `VeniceAIServerSentEvent.done` 654 (inventory 648), `XAiWebSocketEvent.isBinary` 474 (inventory 469), `addRequestBody.unexpectedPayload` 330 (inventory 333; expansion starts at `hasRequestPayload` 321), `isSameUsptoHost` 231 (pair still starts at 152).",
+  "transcriptSha256": "12df59a674a9ff391ad26af3af737e8727812fac8d827438276898246feaf864",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "9635e7ef6ae5c35bedf49420e61ee6a4893e384797dd5f26d67a1602d3c8dc1c"
+}

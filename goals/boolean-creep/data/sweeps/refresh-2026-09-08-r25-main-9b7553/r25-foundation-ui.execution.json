@@ -1,0 +1,17 @@
+{
+  "lane": "r25-foundation-ui",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T21:50:47.776687+00:00",
+  "finished": "2026-09-08T22:04:03.637507+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 9,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-foundation-ui.jsonl` \u2014 confirmed 0, disqualified 9. Covered all five assigned areas (brand/src, dock/src, dock-react/src, editor/src, ui/src). All 54 seed file+symbol pairs still exist. Line drift vs inventory: ChatComposerProps 212\u2192181, FooterProps 222\u2192191, ComposerSurfaceProps 332\u2192302, ComposerBodyProps 397\u2192371, UseNumberInputOptions 660\u2192657, useNumberInput 967\u2192964, MentionPlugin 533\u2192540, menusOpenAtom 91\u219292, uploadBoxClassName 329\u2192328.",
+  "transcriptSha256": "3cc0fe728a0004d9c8e81bebb76d1128d0332ddef5840f0a13099fccf414e08b",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

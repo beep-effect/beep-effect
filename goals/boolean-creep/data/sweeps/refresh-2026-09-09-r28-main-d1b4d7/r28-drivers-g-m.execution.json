@@ -1,0 +1,22 @@
+{
+  "lane": "r28-drivers-g-m",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:39:00.074158+00:00",
+  "finished": "2026-09-09T04:46:04.385146+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-g-m.jsonl`  \nConfirmed: 1. Disqualified: 0. Validator: OK.\n\nEvery assigned root was covered (`gov-legal-mcp`, authored `govinfo` only, `graph-3d`, `hubspot`, `libpff`, `m365`, `m365-mcp`). `_generated` excluded.\n\nSeed drift: `r3-drivers-arch-tool-name-collision-stage-flags` is a D1\u2192confirmed E4 correction (normalized collision implies final collision; `(true,false)` is unreachable). Unchanged and not re-recorded: GraphMessage/GraphEvent D2, ShaderMaterial/SpriteMaterial/WebGLRenderer D2, ToolNameCollisionRow E3, M365ToolError E4. Ineligible callable seeds (not re-recorded): `graph-3d-projection-coherence-checks`, `r3-drivers-arch-graph3d-module-probes`, `r3-drivers-arch-m365-path-extension-probes`. Prior mount-latch split still holds (`cancelled` in `Graph3D.react.ts`, `destroyed` in `Graph3D.renderer.ts`). No unresolved source question.",
+  "transcriptSha256": "6c4f8a4e272bf968dafd2b763ce42dac8c762e939eb31bee1cbd563b589a7362",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

@@ -1,0 +1,235 @@
+{
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "updates": [
+    {
+      "id": "drivers-graph-message",
+      "previousLine": 575,
+      "currentDeclarationLine": 564
+    },
+    {
+      "id": "drivers-obs-record-status",
+      "previousLine": 1122,
+      "currentDeclarationLine": 1127
+    },
+    {
+      "id": "backend-capabilities",
+      "previousLine": 251,
+      "currentDeclarationLine": 247
+    },
+    {
+      "id": "annotation-options-include-flags",
+      "previousLine": 319,
+      "currentDeclarationLine": 316
+    },
+    {
+      "id": "parser-options-csv-toggles",
+      "previousLine": 140,
+      "currentDeclarationLine": 137
+    },
+    {
+      "id": "chat-composer-props-gates",
+      "previousLine": 212,
+      "currentDeclarationLine": 147
+    },
+    {
+      "id": "composer-footer-feature-gates",
+      "previousLine": 222,
+      "currentDeclarationLine": 190
+    },
+    {
+      "id": "composer-surface-props-gates",
+      "previousLine": 332,
+      "currentDeclarationLine": 295
+    },
+    {
+      "id": "composer-body-props-gates",
+      "previousLine": 397,
+      "currentDeclarationLine": 359
+    },
+    {
+      "id": "use-number-input-options",
+      "previousLine": 660,
+      "currentDeclarationLine": 652
+    },
+    {
+      "id": "outcome-label",
+      "previousLine": 640,
+      "currentDeclarationLine": 896
+    },
+    {
+      "id": "ai-metrics-outcome-label-input",
+      "previousLine": 207,
+      "currentDeclarationLine": 197
+    },
+    {
+      "id": "outcome-label-annotation-row",
+      "previousLine": 1888,
+      "currentDeclarationLine": 2055
+    },
+    {
+      "id": "ai-metrics-install-input",
+      "previousLine": 194,
+      "currentDeclarationLine": 178
+    },
+    {
+      "id": "ai-metrics-install-spec",
+      "previousLine": 379,
+      "currentDeclarationLine": 351
+    },
+    {
+      "id": "ai-metrics-install-plan-step",
+      "previousLine": 484,
+      "currentDeclarationLine": 464
+    },
+    {
+      "id": "ai-metrics-install-plan",
+      "previousLine": 543,
+      "currentDeclarationLine": 524
+    },
+    {
+      "id": "ai-metrics-retention-mutation-result",
+      "previousLine": 448,
+      "currentDeclarationLine": 526
+    },
+    {
+      "id": "ai-metrics-retention-restore-drill-result",
+      "previousLine": 636,
+      "currentDeclarationLine": 731
+    },
+    {
+      "id": "npm-package-json",
+      "previousLine": 1115,
+      "currentDeclarationLine": 1158
+    },
+    {
+      "id": "tsconfig-compiler-options",
+      "previousLine": 612,
+      "currentDeclarationLine": 1205
+    },
+    {
+      "id": "tsconfig-build-options",
+      "previousLine": 1354,
+      "currentDeclarationLine": 1425
+    },
+    {
+      "id": "ts-node-config",
+      "previousLine": 1439,
+      "currentDeclarationLine": 1565
+    },
+    {
+      "id": "image-config-complete",
+      "previousLine": 286,
+      "currentDeclarationLine": 238
+    },
+    {
+      "id": "create-package-scaffold-shape",
+      "previousLine": 463,
+      "currentDeclarationLine": 473
+    },
+    {
+      "id": "worktree-porcelain-accumulator",
+      "previousLine": 343,
+      "currentDeclarationLine": 360
+    },
+    {
+      "id": "worktree-doctor-entry-facts",
+      "previousLine": 224,
+      "currentDeclarationLine": 227
+    },
+    {
+      "id": "ci-lane-run-options",
+      "previousLine": 582,
+      "currentDeclarationLine": 619
+    },
+    {
+      "id": "ci-local-options",
+      "previousLine": 1302,
+      "currentDeclarationLine": 2324
+    },
+    {
+      "id": "ci-local-step-plan",
+      "previousLine": 1368,
+      "currentDeclarationLine": 2389
+    },
+    {
+      "id": "aimetrics-forwarder-run-options",
+      "previousLine": 1629,
+      "currentDeclarationLine": 1722
+    },
+    {
+      "id": "sync-data-target-selection",
+      "previousLine": 57,
+      "currentDeclarationLine": 61
+    },
+    {
+      "id": "step-exec-run-captured-options",
+      "previousLine": 507,
+      "currentDeclarationLine": 884
+    },
+    {
+      "id": "openclaw-channel-account-status",
+      "previousLine": 683,
+      "currentDeclarationLine": 675
+    },
+    {
+      "id": "m365-graph-event-flags",
+      "previousLine": 612,
+      "currentDeclarationLine": 602
+    },
+    {
+      "id": "phoenix-prompt-read-exists",
+      "previousLine": 828,
+      "currentDeclarationLine": 825
+    },
+    {
+      "id": "xai-sse-done-payload",
+      "previousLine": 390,
+      "currentDeclarationLine": 384
+    },
+    {
+      "id": "html-element-meta-void-rawtext",
+      "previousLine": 1624,
+      "currentDeclarationLine": 1754
+    },
+    {
+      "id": "r24-drivers-n-r-openclaw-channel-account-probe-ok-error",
+      "previousLine": 694,
+      "currentDeclarationLine": 675
+    },
+    {
+      "id": "r25-drivers-n-r-stream-state-finished-finish-reason",
+      "previousLine": 229,
+      "currentDeclarationLine": 221
+    },
+    {
+      "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+      "previousLine": 635,
+      "currentDeclarationLine": 619
+    },
+    {
+      "id": "r25-cli-commands-r-z-porcelain-accumulator-detached-branch",
+      "previousLine": 364,
+      "currentDeclarationLine": 360
+    },
+    {
+      "id": "r25-cli-commands-r-z-worktree-doctor-entry-detached-branch",
+      "previousLine": 231,
+      "currentDeclarationLine": 227
+    },
+    {
+      "id": "r25-tooling-library-policy-test-tsconfig-compiler-options-residue",
+      "previousLine": 660,
+      "currentDeclarationLine": 1205
+    },
+    {
+      "id": "r25-tooling-library-policy-test-outcome-label-quality-gate",
+      "previousLine": 904,
+      "currentDeclarationLine": 896
+    },
+    {
+      "id": "r25-tooling-library-policy-test-outcome-label-input-quality-gate",
+      "previousLine": 204,
+      "currentDeclarationLine": 197
+    }
+  ]
+}

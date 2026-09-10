@@ -1,0 +1,13 @@
+{
+  "lane": "r26-push-failure-implication-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-09T00:31:15.487386+00:00",
+  "finished": "2026-09-09T00:33:47.563669+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "transcriptSha256": "34c258977e2f449890d01f8e0e957c597d0b2aa52ec5c9a087933807fa874b99",
+  "supersedesReport": "r26-shared-documents.jsonl"
+}

@@ -1,0 +1,514 @@
+{
+  "schemaVersion": "boolean-creep-main-impact/v1",
+  "oldSourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "oldOriginMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "upstreamChangedFileCount": 2237,
+  "includedCorpusFileCount": 3061,
+  "includedCorpusPathsSha256": "718ae95a8091705c0e610cd824f5e9da8e8dbb34573b744d5c4bf30a09d9e3a1",
+  "includedChangedFiles": [
+    "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts",
+    "packages/foundation/modeling/rdf/src/Iri.ts",
+    "packages/foundation/ui-system/ui/src/components/chart.tsx",
+    "packages/foundation/ui-system/ui/src/components/live-waveform.tsx",
+    "packages/foundation/ui-system/ui/src/components/orb.tsx",
+    "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+    "packages/foundation/ui-system/ui/src/themes/components/button.ts",
+    "packages/foundation/ui-system/ui/src/themes/components/chip.ts",
+    "packages/foundation/ui-system/ui/src/themes/components/controls.ts",
+    "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+    "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+    "packages/tooling/library/ai-sync/src/validation.ts",
+    "packages/tooling/library/repo-utils/src/Graph.ts",
+    "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+    "packages/tooling/policy-pack/lint-rules/src/rules/no-inline-schema-compile.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+    "packages/tooling/tool/cli/src/commands/Docgen/Docgen.render.ts",
+    "packages/tooling/tool/cli/src/commands/Docgen/internal/Aggregate.ts",
+    "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts",
+    "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
+    "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
+    "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+    "packages/tooling/tool/cli/src/commands/Research/internal/RepoCardRun.ts",
+    "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
+    "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Guards.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts"
+  ],
+  "changedExcludedFiles": [
+    "packages/tooling/tool/cli/src/test/Quality.test-kit.ts"
+  ],
+  "newIncludedFiles": [],
+  "removedIncludedFiles": [],
+  "affectedInventoryRows": [
+    {
+      "id": "ontology-inference-recompute-cause",
+      "status": "reviewed",
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts"
+    },
+    {
+      "id": "live-waveform-mode-flags",
+      "status": "disqualified",
+      "file": "packages/foundation/ui-system/ui/src/components/live-waveform.tsx"
+    },
+    {
+      "id": "use-number-input-options",
+      "status": "disqualified",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts"
+    },
+    {
+      "id": "number-input-modifier-keys",
+      "status": "disqualified",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts"
+    },
+    {
+      "id": "number-input-step-modifiers",
+      "status": "disqualified",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts"
+    },
+    {
+      "id": "chart-tooltip-hide-flags",
+      "status": "disqualified",
+      "file": "packages/foundation/ui-system/ui/src/components/chart.tsx"
+    },
+    {
+      "id": "yeet-run-plan-mode-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts"
+    },
+    {
+      "id": "laws-terse-effect-rules-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    },
+    {
+      "id": "ci-lane-run-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+    },
+    {
+      "id": "ci-local-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+    },
+    {
+      "id": "ci-local-step-plan",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+    },
+    {
+      "id": "quality-test-lane-selection",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    },
+    {
+      "id": "quality-coverage-task-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    },
+    {
+      "id": "fallow-command-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts"
+    },
+    {
+      "id": "r3-tooling-terse-effect-file-flags",
+      "status": "reviewed",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    },
+    {
+      "id": "r3-tooling-schema-first-file-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts"
+    },
+    {
+      "id": "skills-run-mode",
+      "status": "reviewed",
+      "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts"
+    },
+    {
+      "id": "quality-tmpfs-reap-apply-json",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+    },
+    {
+      "id": "r2-foundation-retry1-number-input-spin-disabled",
+      "status": "disqualified",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts"
+    },
+    {
+      "id": "ontology-infer-session-recompute-latches",
+      "status": "designed",
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts"
+    },
+    {
+      "id": "r3-tooling-schema-first-normalization-signals",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts"
+    },
+    {
+      "id": "r3-tooling-schema-first-fn-eligibility",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts"
+    },
+    {
+      "id": "r3-tooling-create-caption-overwrite-phase",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts"
+    },
+    {
+      "id": "r2-tooling-no-native-runtime-strict-failure",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts"
+    },
+    {
+      "id": "terse-effect-rules-strict-failure",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    },
+    {
+      "id": "r3-tooling-quality-scheduler-admission-probes",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts"
+    },
+    {
+      "id": "r2-foundation-iri-ipv6-segment-facts",
+      "status": "disqualified",
+      "file": "packages/foundation/modeling/rdf/src/Iri.ts"
+    },
+    {
+      "id": "r3-domains-reasoner-module-affected-flags",
+      "status": "designed",
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts"
+    },
+    {
+      "id": "r3-domains-ontology-iri-kind-probes",
+      "status": "disqualified",
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts"
+    },
+    {
+      "id": "r3-tooling-docgen-quality-jsdoc-tag-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts"
+    },
+    {
+      "id": "r3-tooling-aisync-claude-permission-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/library/ai-sync/src/validation.ts"
+    },
+    {
+      "id": "r3-tooling-coverage-owned-arg-kinds",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    },
+    {
+      "id": "r3-tooling-tsmorph-path-error-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts"
+    },
+    {
+      "id": "r3-domains-reasoner-type-key-probes",
+      "status": "disqualified",
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts"
+    },
+    {
+      "id": "r3-domains-session-projections-term-view-probes",
+      "status": "disqualified",
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts"
+    },
+    {
+      "id": "r3-tooling-terse-effect-object-thunk-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    },
+    {
+      "id": "r3-tooling-terse-effect-matcher-receiver-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    },
+    {
+      "id": "r3-tooling-dead-lease-scope-plan-guards",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts"
+    },
+    {
+      "id": "r3-tooling-terse-effect-optional-spread-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    },
+    {
+      "id": "r3-tooling-schema-topology-export-key-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts"
+    },
+    {
+      "id": "r3-tooling-schema-topology-export-target-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts"
+    },
+    {
+      "id": "r3-tooling-terse-effect-nested-matcher-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    },
+    {
+      "id": "r3-tooling-no-native-runtime-typeof-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts"
+    },
+    {
+      "id": "r3-tooling-files-normalize-image-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts"
+    },
+    {
+      "id": "r3-tooling-quality-tasks-env-arg-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    },
+    {
+      "id": "r3-tooling-tsconfig-sync-plan-export-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts"
+    },
+    {
+      "id": "r3-tooling-coverage-selected-steps-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    },
+    {
+      "id": "r3-tooling-lint-tagged-union-pattern-gates",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts"
+    },
+    {
+      "id": "r3-tooling-ci-lane-docgen-input-kind",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+    },
+    {
+      "id": "r24-foundation-ui-orb-webgl-context",
+      "status": "disqualified",
+      "file": "packages/foundation/ui-system/ui/src/components/orb.tsx"
+    },
+    {
+      "id": "r24-foundation-ui-live-waveform-audio-constraints",
+      "status": "disqualified",
+      "file": "packages/foundation/ui-system/ui/src/components/live-waveform.tsx"
+    },
+    {
+      "id": "r24-foundation-ui-chart-css-sanitizer",
+      "status": "disqualified",
+      "file": "packages/foundation/ui-system/ui/src/components/chart.tsx"
+    },
+    {
+      "id": "r25-epistemic-ontology-bounded-shacl-conforms-truncated",
+      "status": "disqualified",
+      "file": "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts"
+    },
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts"
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts"
+    },
+    {
+      "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+    },
+    {
+      "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    },
+    {
+      "id": "r25-cli-commands-l-q-github-checks-failure-policy",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+    },
+    {
+      "id": "r25-cli-commands-l-q-residue-reap-apply-json",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+    },
+    {
+      "id": "scheduler-protocol-eviction-mode",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+    },
+    {
+      "id": "coverage-baseline-write-mode",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    },
+    {
+      "id": "docgen-generation-outcome",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts"
+    },
+    {
+      "id": "docgen-subject-collection-outcome",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts"
+    },
+    {
+      "id": "r25-cli-commands-l-q-terse-effect-informational-severity",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    },
+    {
+      "id": "r26-cli-commands-l-q-coverage-replace-all-skip",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    },
+    {
+      "id": "r27-cli-commands-l-q-effect-tsgo-readme-parser",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+    },
+    {
+      "id": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+    },
+    {
+      "id": "r27-cli-commands-d-k-normalize-manifest-dedupe-move",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts"
+    },
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "status": "designed",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    }
+  ],
+  "affectedQualifiedDesignIds": [
+    "coverage-baseline-write-mode",
+    "docgen-generation-outcome",
+    "docgen-subject-collection-outcome",
+    "ontology-infer-session-recompute-latches",
+    "ontology-inference-recompute-cause",
+    "r2-tooling-no-native-runtime-strict-failure",
+    "r26-cli-commands-l-q-osv-ignore-expiry",
+    "r27-boolean-state-foundation-spinner-state",
+    "r27-cli-commands-d-k-normalize-manifest-dedupe-move",
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+    "r3-domains-reasoner-module-affected-flags",
+    "r3-tooling-create-caption-overwrite-phase",
+    "r3-tooling-terse-effect-file-flags",
+    "scheduler-admission-attempt-origin",
+    "scheduler-promotion-tick-origin",
+    "scheduler-protocol-eviction-mode",
+    "skills-run-mode",
+    "terse-effect-rules-strict-failure"
+  ],
+  "changedSourceDesignReferences": {
+    "ontology-inference-recompute-cause": [
+      "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts"
+    ],
+    "r3-tooling-terse-effect-file-flags": [
+      "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    ],
+    "skills-run-mode": [
+      "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts"
+    ],
+    "ontology-infer-session-recompute-latches": [
+      "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts"
+    ],
+    "r3-tooling-create-caption-overwrite-phase": [
+      "packages/tooling/tool/cli/src/commands/Files/Files.service.ts"
+    ],
+    "r2-tooling-no-native-runtime-strict-failure": [
+      "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts"
+    ],
+    "terse-effect-rules-strict-failure": [
+      "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
+    ],
+    "r3-domains-reasoner-module-affected-flags": [
+      "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts"
+    ],
+    "scheduler-admission-attempt-origin": [
+      "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts"
+    ],
+    "scheduler-promotion-tick-origin": [
+      "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts"
+    ],
+    "scheduler-protocol-eviction-mode": [
+      "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+    ],
+    "coverage-baseline-write-mode": [
+      "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    ],
+    "docgen-subject-collection-outcome": [
+      "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts"
+    ],
+    "r26-cli-commands-l-q-osv-ignore-expiry": [
+      "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+    ],
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse": [
+      "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+    ],
+    "r27-boolean-state-foundation-spinner-state": [
+      "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts"
+    ]
+  },
+  "archivedDesignSha256": {
+    "history/designs/2026-09-09-pre-main-d1b4d7/coverage-baseline-write-mode.md": "e7999ecc6a3fba04eefd81f9815cdc4bd958db7f363facd51ce2263342f4a43d",
+    "history/designs/2026-09-09-pre-main-d1b4d7/docgen-generation-outcome.md": "9e67d5b0db8ddacbd9c8f800c11d09bd30315e67e0c4c8d110409677e9dbfbd6",
+    "history/designs/2026-09-09-pre-main-d1b4d7/docgen-subject-collection-outcome.md": "7ff7c622b49db76a0ec60be22259a36b4524f40627592ce82aff4a05159f3507",
+    "history/designs/2026-09-09-pre-main-d1b4d7/ontology-infer-session-recompute-latches.md": "dc75302edf78f1e698ca6db0a847e2b9b0986001012e5180fc9db237ccaa721a",
+    "history/designs/2026-09-09-pre-main-d1b4d7/ontology-inference-recompute-cause.md": "ffa4209e91041e59a29e1fe2abf837307574f1c088f687a92f5db2296275bd7d",
+    "history/designs/2026-09-09-pre-main-d1b4d7/r2-tooling-no-native-runtime-strict-failure.md": "c3d858e3d1a11ef7a542dfbc7be5c3463262d82bb8ed508c25a34024feafa294",
+    "history/designs/2026-09-09-pre-main-d1b4d7/r26-cli-commands-l-q-osv-ignore-expiry.md": "b89a0b0faea3ade5743b2ed606f26c6e00b802d265ec4067efe92a9796a049ba",
+    "history/designs/2026-09-09-pre-main-d1b4d7/r27-boolean-state-foundation-spinner-state.md": "74827cb919841538e9e2dc988f3024f42118290bdd4c5a35a7d07a4d9169e18b",
+    "history/designs/2026-09-09-pre-main-d1b4d7/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md": "f8130c5d4b82bdf888ba49df9a78128c1d7ba2fbbcc54d1d4c25cdbe168aca60",
+    "history/designs/2026-09-09-pre-main-d1b4d7/r27-cli-commands-l-q-github-check-lane-proof-reuse.md": "dab5e5a7d8880a766821c6af266b111c4f279009406eafcbb9e9885ea7e685f8",
+    "history/designs/2026-09-09-pre-main-d1b4d7/r3-domains-reasoner-module-affected-flags.md": "8c0339955a0a966d1126e9e8a1991cb976f515d2e8718fe4f43553099688225b",
+    "history/designs/2026-09-09-pre-main-d1b4d7/r3-tooling-create-caption-overwrite-phase.md": "6fba7e8fa5f6fe16591c750e6029fd65ac9166a58e4c54a19889c98466d5cb41",
+    "history/designs/2026-09-09-pre-main-d1b4d7/r3-tooling-terse-effect-file-flags.md": "2d1f59dc5b455bfec63a6caa380e83df7925b72ce23be1596391cb5b743688bd",
+    "history/designs/2026-09-09-pre-main-d1b4d7/scheduler-admission-attempt-origin.md": "201e24314ff18219ef4e8f6283c317ba7c951149d377c52e710428c9d5f437e2",
+    "history/designs/2026-09-09-pre-main-d1b4d7/scheduler-promotion-tick-origin.md": "ae3f75f0d414ab9bc4092eb3fd573047d40c8d5da06e6ffe57f31df48d4b7395",
+    "history/designs/2026-09-09-pre-main-d1b4d7/scheduler-protocol-eviction-mode.md": "718c88b234c050cde9be697f9e054ac6d9b528b4354ec6b1ae1cc3c37da0008b",
+    "history/designs/2026-09-09-pre-main-d1b4d7/skills-run-mode.md": "266c375f0bc8bced3e7677f1771f11b897bb171fa778dd94eceba77135662c62",
+    "history/designs/2026-09-09-pre-main-d1b4d7/terse-effect-rules-strict-failure.md": "46fb68cfbbc6dc25863abfb69dffda8c9e08c4b6403443e13d5fa7c60eebb74d"
+  },
+  "mergePreservation": {
+    "oldHead": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+    "originMain": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+    "newHead": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+    "mergeExit": 0,
+    "packetFiles": 846,
+    "stagedPaths": 409,
+    "stagedPacketRestoredExactly": true,
+    "packetFilesPreservedExactly": true,
+    "graftFiles": 5205,
+    "graftPreservedExactly": true,
+    "ignoreFilesPreservedExactly": true,
+    "ignoreOverlapDisposition": "Existing local bytes exactly match newly committed upstream files; both become tracked and clean."
+  },
+  "dependencyInstall": {
+    "command": "mise exec bun@1.4.2 -- bun install --frozen-lockfile",
+    "exitCode": 0
+  },
+  "auditStatus": "pending",
+  "note": "Impact map only. Historical R27 findings/designs remain frozen; these affected current designs require source adjudication. No qualification, status advancement, dry round, P3 review or implementation is claimed."
+}

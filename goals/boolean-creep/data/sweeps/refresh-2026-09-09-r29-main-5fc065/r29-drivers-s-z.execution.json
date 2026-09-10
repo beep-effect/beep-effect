@@ -1,0 +1,22 @@
+{
+  "lane": "r29-drivers-s-z",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:28:51.246534+00:00",
+  "finished": "2026-09-09T10:37:47.632179+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-s-z.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`sanity`, `shacl`, `tailscale`, `tika`, `uspto`, `uspto-mcp`, `venice-ai`, `wink`, `xai` under `packages/drivers/*/src`; 57 authored source files).\n\n**Seeds:** all nine owners, members, and classifications still hold. No withdrawals, no expanded members, no unresolved source question.\n\n**Seed cite drift (classification unchanged, not re-reported):** `xai-sse-done-payload` E2 cite `XAiLanguageModel.service.ts:211` is now the `withSpan` line; the `event.done === true` reader is at line 210. `xai-websocket-message-binary` E1 cite `:708` is the binary-writer closer; the text writer starts at 713. Other seed declaration lines and Venice SSE cites still land.\n\n**Out of net (not recorded):** exclusive payloads with no Boolean members (`XAiRequestOptions` body/bytes/formData, Venice body/formData, Tika source bytes vs text); standalone predicates (`isJsonContentType`/`isTextContentType`, `hasUnexpected*`); single-Boolean owners (`authenticated`, `retryable`, `includeText`, `dedupeById`, `reindexRequired`, `deleted`, `acceptJson`, `stream`, `{ binary: true }`); scalar query unions that admit `S.Boolean`; function-flag parameters (`includeCustom`, `prefersJson`, `processOov`).\n\n\ud83c\udf31 graft saved ~102,480 tokens this turn (17 calls)",
+  "transcriptSha256": "deed99cd266cfb8b24a11dcec880583f660e2e354843dc85613d0261ad445473",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

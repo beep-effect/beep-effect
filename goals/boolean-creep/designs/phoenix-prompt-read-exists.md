@@ -104,11 +104,11 @@ The similarly named reads at `packages/drivers/phoenix/test/Phoenix.service.test
 
 # Encoded-side impact
 
-none (internal)
+The schema encoding changes from `{ exists, promptVersionId }` to the tagged `missing | present` structure. This is an internal workspace migration rather than Phoenix API wire data: the SDK response is converted in `Phoenix.service.ts`, the package is `private: true`, and repository search finds no persistence or network encoder for this result. The exported decoded TypeScript/codec shape may therefore migrate atomically under the decision rider, with every known constructor and reader listed above.
 
 # Test impact
 
-- `packages/drivers/phoenix/test/Phoenix.service.test.ts:55-70` — schema inventory continues to include `PhoenixPromptReadResult`; schema-derived arbitrary/codec coverage now generates only the two legal cases.
+- `packages/drivers/phoenix/test/Phoenix.service.test.ts:47-70,174-182` — schema inventory continues to include `PhoenixPromptReadResult`; schema-derived arbitrary/codec coverage now generates only the two legal cases.
 - `packages/drivers/phoenix/test/Phoenix.service.test.ts:152-153` and `258-269` — update the fake writer and getPrompt assertion to the present case; add a missing SDK result assertion if absent.
 - `packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts:474-480` — update the cross-package fake constructor.
 

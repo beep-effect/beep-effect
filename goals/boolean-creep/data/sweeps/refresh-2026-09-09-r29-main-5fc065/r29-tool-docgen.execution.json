@@ -1,0 +1,22 @@
+{
+  "lane": "r29-tool-docgen",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:58:37.836831+00:00",
+  "finished": "2026-09-09T11:04:23.364587+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-tool-docgen.jsonl`\n\nConfirmed 0, disqualified 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root under `packages/tooling/tool/docgen/src` was covered (13 files, including `internal/JsonFile.ts` and `markdown-toc.d.ts`).\n\nNo seed drift and no unresolved source question. All eight seeded clusters still exist at the cited owners/members and keep their canonical D1/D2 readings, so they were not duplicated.\n\nOut of net (footer only): `checkEntry`/`checkEntries` `{enforceExample,enforceVersion}` (function-flag parameters and their argument objects); CLI `Flag.boolean` handles and the `options` descriptor bag; `DocgenProofManifestVerification` `status`/`reason` (LiteralKit + optional string, zero Booleans); predicate/invented locals (`isDocgenSourceFile`, `hasDocumentedExample`, `isTypeCheckableFenceMatch`); `getMarkdownConfigYML` `exists` vs later `File.isOverwritable` (distinct owners); parse/examples compiler CLI overlays (`Option<string>`/`file`); single-boolean SDK bags (`unwrap`, `recursive`, `absolute`, `discard`, `mustExist`, Parser `strict`).",
+  "transcriptSha256": "635b42805c5f5d049e341c19d60c8de37941344b0f617f28736f9485b395e768",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

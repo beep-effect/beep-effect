@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "boolean-creep-source-forward/v1",
+  "recordedAt": "2026-09-09T16:32:42.449499+00:00",
+  "previousHead": "a51a779f0312c3eab0a73268ffb62ac3572a95c4",
+  "previousMain": "be5b589aa013c8350a4fad5cdfe36a6f6188db1f",
+  "head": "131603144e0b361422bd77167c64d9ff192759b2",
+  "main": "284294ee24177f13f6d3a763c5d987206d351c51",
+  "mergedPr": 1056,
+  "mergeConflicts": false,
+  "packetFiles": 1448,
+  "packetByteDrift": [],
+  "censusDiffPathspecs": [":(glob)packages/**/src/**", ":(glob)apps/**/src/**"],
+  "censusSourceChanges": [
+    {
+      "status": "A",
+      "path": "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
+      "sha256": "4ca791ed0db371dd33d85e2135fc74f572cbfe568607603122e8abb15344e31a"
+    },
+    {
+      "status": "A",
+      "path": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
+      "sha256": "8a6a5b4cc9a33c1a10d230b78427880cc1c01cf942ed0843541a5d9213894318"
+    },
+    {
+      "status": "A",
+      "path": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
+      "sha256": "7b9e7b8684f62a24847cf4e0e85bd0b7a22784294c9b3ce6a8d09874590fecc1"
+    },
+    {
+      "status": "A",
+      "path": "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
+      "sha256": "a5a3459417283bf846adbcce54e520bc4c42d1c6d332da898cad35d231efe96c"
+    },
+    {
+      "status": "A",
+      "path": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
+      "sha256": "10a9a0382282e32aa2171690beb79b40e4928b18016ec8c3f59e545f85b86db2"
+    },
+    {
+      "status": "M",
+      "path": "packages/tooling/tool/cli/src/commands/Root.ts",
+      "sha256": "84079945a78e1dfd27dba94db2d155a780eeb8c2b22256d542ab5689b97b1220"
+    }
+  ],
+  "newCensusFiles": 5,
+  "expectedNextCorpusFiles": 3056,
+  "existingQualifiedOwnerChanges": [],
+  "publicContractDelta": {
+    "file": "packages/tooling/tool/cli/package.json",
+    "change": "Only commands/Graft source and publish exports are added. All existing manifest fields, dependencies and exports are unchanged.",
+    "afterSha256": "32f8737968fd14058925ddd37caa6e04a44d4584206bf9cfc0c29d83604ea996"
+  },
+  "generatedAliases": "Main adds the matching Graft command alias in root tsconfig and vitest aliases. No local generation was run.",
+  "postMergeVersionSync": "passed",
+  "censusSourceEqualsMergedMain": true,
+  "inventorySha256": "fc4a37c261318d37cc276315d7014c61410277c7802b38806b72ae3a9437fc13",
+  "futureCensusRequired": true,
+  "newSourceOwnerAdjudicationComplete": false,
+  "r31EvidenceRetargeted": false,
+  "dryRoundCredit": false,
+  "replacementReviewCredit": false
+}

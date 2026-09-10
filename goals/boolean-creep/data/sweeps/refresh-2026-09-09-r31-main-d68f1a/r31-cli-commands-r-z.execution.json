@@ -1,0 +1,22 @@
+{
+  "lane": "r31-cli-commands-r-z",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T15:35:48.485270+00:00",
+  "finished": "2026-09-09T15:48:51.132795+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-r-z.jsonl`\n\nConfirmed: 1. Disqualified: 1. Validator: `inventory OK: 2 records, 2 unique ids`.\n\nEvery assigned root was covered (Research, Root.ts, Runners, Skills, SyncDataToTs, TopoSort, TsconfigSync, VersionSync, Worktree). Root.ts and TopoSort have no boolean clusters.\n\nSeed drift: none. All listed seed owners still exist at the claimed lines with the claimed members; classifications still match current writers/readers (including D1/D2 claims). Unchanged seeds were not re-emitted.\n\nUnresolved: `PolicyDerivation` in `Fleet.service.ts` still co-carries `probeFailed` with `policyMovement`/`policyReason`, but `probeFailed` is the OR of branch-diff and policy child failures, so the PolicyReading E3 (`probeFailed` iff reason is `probe-failed`) does not hold, while `false`/`unknown` tuples remain unproduced \u2014 not confirmed and not a D1 legality claim.",
+  "transcriptSha256": "3c94acbd0b9d681b9dae84d5d10d63f0ca56eaaa228d334675413703560f6ad9",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 2 records, 2 unique ids\n"
+}

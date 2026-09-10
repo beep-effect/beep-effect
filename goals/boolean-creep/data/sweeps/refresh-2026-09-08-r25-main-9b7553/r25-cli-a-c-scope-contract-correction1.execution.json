@@ -1,0 +1,13 @@
+{
+  "lane": "r25-cli-a-c-scope-contract-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:48:08.784788+00:00",
+  "finished": "2026-09-08T22:50:15.405684+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 2,
+  "transcriptSha256": "802fc0a6676d195a3f91d0b7e6c256110ac6e93702a065d1769f82e98e4ec8b7",
+  "supersedesReport": "r25-cli-commands-a-c.jsonl"
+}

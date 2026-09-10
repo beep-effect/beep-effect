@@ -1,0 +1,22 @@
+{
+  "lane": "r31-cli-commands-d-k",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T15:23:35.365774+00:00",
+  "finished": "2026-09-09T15:36:41.252134+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 7,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-d-k.jsonl`\n\nConfirmed: 0. Disqualified: 7. Validator: OK.\n\nEvery assigned root was covered (DeletePackage, Docgen, Docs, Explore, Fallow, Files, Goals, Image, Knowledge).\n\nUnchanged seeds were not re-reported, including the 17 designed clusters and the D1/D2 leftovers (policy/handler flags, DocgenLocal json/plan and allowFull/full, quality-command and goals-index request objects, repair-fork/set-status modes, grandfathered-note withdrawal, StagedFileCommitRecord, FS/Bun/sharp/tar/ts-morph SDK options).\n\nSeed drift: none requiring a record. Minor declaration-vs-first-boolean line offsets (DeletePackageHandlerOptions 598 vs 600, DocgenConfigDocument 107 vs 115, Runpod template class 121 vs 126) do not change members or class. `goal-completion-gate-grandfathered-note` D1 still holds: Doctor still reads only `grandfathered`; the note remains documented optional prose.\n\nOut of net (not recorded): Command.make Flag descriptors and handler aliases (`explore atlas` write/check, `fallow boundaries` write/check, `knowledge refs` json/check on `runRefs`); function flag parameters; single-boolean schemas (Image overwrite, FenceInfo, FlattenMedia destinationExisted); `analyzePackageDocumentation` ts-morph Project with only `skipAddingFilesFromTsConfig`.\n\nUnresolved: none.\n\n\ud83c\udf31 graft saved ~494,018 tokens this turn (1 call)",
+  "transcriptSha256": "41a3a43557a1688bb0c864984be034b9bbf2e221e35daa0778946e50a06cb96d",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 7 records, 7 unique ids\n"
+}

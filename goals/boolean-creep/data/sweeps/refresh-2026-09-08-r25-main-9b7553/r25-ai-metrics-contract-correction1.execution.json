@@ -1,0 +1,20 @@
+{
+  "lane": "r25-ai-metrics-contract-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:39:37.317920+00:00",
+  "finished": "2026-09-08T22:43:42.439200+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 5,
+  "qualifiedCandidates": 5,
+  "transcriptSha256": "8ddc69d74e0798652b5f3443ae455388b93ae4d56c87e60652beec0972f88115",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-ai-metrics-contract-correction1.jsonl` \u2014 confirmed 5, disqualified 0. Five qualified AiMetrics rows re-audited; original tooling report left unchanged.",
+  "supersedesDecisions": [
+    "r25-tooling-library-policy-test-mirror-privacy-proof-safe",
+    "r25-tooling-library-policy-test-config-snapshot-truncated",
+    "r25-tooling-library-policy-test-redaction-safe-for-derived-ui",
+    "r25-tooling-library-policy-test-canonical-root-excluded",
+    "r25-tooling-library-policy-test-phoenix-sync-dry-run"
+  ]
+}

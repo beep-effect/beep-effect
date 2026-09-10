@@ -1,0 +1,946 @@
+{
+  "kind": "pre-r29-bounded-native-source-bindings",
+  "sourceSha": "f03850b762e41217b5a0c26f26041daee490a070",
+  "mainSha": "4f13d83e13d61275a57004050ffc62a90d86c014",
+  "priorCensusSourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "priorCensusMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "intermediateMainSha": "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943",
+  "files": [
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "27fe2aed538150b6a86f0a00aabb41c2ba0fa31a75ec150e04c2edd13e83e805",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "e574c0cdcbf66153a6a52a87a83d00a8b7a5bfba9e739b466503611cfd10109f",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "e574c0cdcbf66153a6a52a87a83d00a8b7a5bfba9e739b466503611cfd10109f",
+        "f03850b762e41217b5a0c26f26041daee490a070": "e574c0cdcbf66153a6a52a87a83d00a8b7a5bfba9e739b466503611cfd10109f"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.token.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "6363802e5bea74a988b198055d319aa302e1292731f5cded01bd64489874f489",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "e1080e5e4925e567dd2483fc552ea5aa8e629129c7203bd4afd7cc22d763664f",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "e1080e5e4925e567dd2483fc552ea5aa8e629129c7203bd4afd7cc22d763664f",
+        "f03850b762e41217b5a0c26f26041daee490a070": "e1080e5e4925e567dd2483fc552ea5aa8e629129c7203bd4afd7cc22d763664f"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "09e759a50989dd52e7db9eb85477f98b780732b08453c811b5ef418278a227b7",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "40896859ba487a7c31e750960e9666f832cfc96214e18c9700f505b4b1c15c47",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "40896859ba487a7c31e750960e9666f832cfc96214e18c9700f505b4b1c15c47",
+        "f03850b762e41217b5a0c26f26041daee490a070": "40896859ba487a7c31e750960e9666f832cfc96214e18c9700f505b4b1c15c47"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/validation.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "a87fe5285364124fe8c7d6d12849f2e2f9737e58b1b5da2a7709c4c45dcf0660",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "308dc413594892b7da1b896115f1279fea1e423b5be05b4670c5722aacc02293",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "308dc413594892b7da1b896115f1279fea1e423b5be05b4670c5722aacc02293",
+        "f03850b762e41217b5a0c26f26041daee490a070": "308dc413594892b7da1b896115f1279fea1e423b5be05b4670c5722aacc02293"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "83899ececa22f5118fe4e29e8428ad8ffdf2e6b51a12cc1a02d29c9db88134d9",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "a13cb053edeb115b38aa374e7f85cd72229e6f8519d597cfc012e5bd915b240f",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "a13cb053edeb115b38aa374e7f85cd72229e6f8519d597cfc012e5bd915b240f",
+        "f03850b762e41217b5a0c26f26041daee490a070": "a13cb053edeb115b38aa374e7f85cd72229e6f8519d597cfc012e5bd915b240f"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/package.json",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "afcc48072032175baf36b3a7ea79950d274f1bea5e14aba48c4ff60cba7c9d0c",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "afcc48072032175baf36b3a7ea79950d274f1bea5e14aba48c4ff60cba7c9d0c",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "5ed96d77de203949878f319238078633506324ab7c38060065b735041f2b2a69",
+        "f03850b762e41217b5a0c26f26041daee490a070": "5ed96d77de203949878f319238078633506324ab7c38060065b735041f2b2a69"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlanPackageJson.ts",
+      "auditGroups": ["parent package-script new-source whole-module check"],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "5d38be07f2232ccf60c2af05f42c572e1538cf404397524f5d1d874da5df80c7",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "8add6aa1c5d18c66225a06322c376c50376f538dafa71b75960603f1478d7616",
+        "f03850b762e41217b5a0c26f26041daee490a070": "8add6aa1c5d18c66225a06322c376c50376f538dafa71b75960603f1478d7616"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codegen/Codegen.command.ts",
+      "auditGroups": ["parent package-script new-source whole-module check"],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "d8cffab21c19e0cf5706937d24fa3017f7b5cc8e4a0768308cddec2cb649d7e9",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "70ed33ec4f99882f7b16f99afa3c8a4c63e70c31a488ef6318a2b33777e2f1ab",
+        "f03850b762e41217b5a0c26f26041daee490a070": "70ed33ec4f99882f7b16f99afa3c8a4c63e70c31a488ef6318a2b33777e2f1ab"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "d23f4a34d977de088cacad6ad54ac15c7f83791759cfac9780132304c6d5a0d0",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "d23f4a34d977de088cacad6ad54ac15c7f83791759cfac9780132304c6d5a0d0",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "d23f4a34d977de088cacad6ad54ac15c7f83791759cfac9780132304c6d5a0d0",
+        "f03850b762e41217b5a0c26f26041daee490a070": "d23f4a34d977de088cacad6ad54ac15c7f83791759cfac9780132304c6d5a0d0"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "80f3f7b5348f7a500adecbb5b247466db8b28ec1009928105f086a52ca5e612e",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "c41e9c39c6b267304b3b054747ea941bfcd3f74548cc4487083ff6a6f6a3a2cd",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "c41e9c39c6b267304b3b054747ea941bfcd3f74548cc4487083ff6a6f6a3a2cd",
+        "f03850b762e41217b5a0c26f26041daee490a070": "c41e9c39c6b267304b3b054747ea941bfcd3f74548cc4487083ff6a6f6a3a2cd"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.write.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "c900dc426ba616a26d6880c3b0ce426fde30053f61384d4bf1dedf07bd5847e3",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "8e10178d1fa0c80e98c6ab8f3bd4292982034ed85c32df7e3444db4c8a5a5f82",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "8e10178d1fa0c80e98c6ab8f3bd4292982034ed85c32df7e3444db4c8a5a5f82",
+        "f03850b762e41217b5a0c26f26041daee490a070": "8e10178d1fa0c80e98c6ab8f3bd4292982034ed85c32df7e3444db4c8a5a5f82"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "auditGroups": [
+        "package-script existing-owner source and fixture review",
+        "parent package-script new-source whole-module check"
+      ],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "8b3108c7db97b1817f9f1504fc1e8d34ce3c72219b18c456e609920bb4203b75",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "4a93c3fcfd89a06b4b64617a4af63d023b1c41842a7ebaae0516efd53fc6cd05",
+        "f03850b762e41217b5a0c26f26041daee490a070": "4a93c3fcfd89a06b4b64617a4af63d023b1c41842a7ebaae0516efd53fc6cd05"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+      "auditGroups": [
+        "package-script existing-owner source and fixture review",
+        "parent package-script new-source whole-module check"
+      ],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "9532c4fac44c6a9330563a537d71e1b6753e9f2738ff1f80bb90275e62e18d54",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "12ea0b216e5622c3989fc27ebfa3e04944804c30a514900a9c9412b792971b80",
+        "f03850b762e41217b5a0c26f26041daee490a070": "12ea0b216e5622c3989fc27ebfa3e04944804c30a514900a9c9412b792971b80"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+      "auditGroups": [
+        "package-script existing-owner source and fixture review",
+        "parent package-script new-source whole-module check"
+      ],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "52e459420b78ec55abc70395678cd2b7955795764758ce5513a1ca44cec7e24f",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "da693d59cdfc694b0f699d56d548be6d268d96e60fc908973dd107fc37bd91e7",
+        "f03850b762e41217b5a0c26f26041daee490a070": "da693d59cdfc694b0f699d56d548be6d268d96e60fc908973dd107fc37bd91e7"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/JudgePack.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "939b66827d0785a44fc521b44c15261c8747cea8cd9780fd759cbafed0748ece",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "b477008d227b2079efe7be18daa2adb005009baf36d1f2f01f2c1ac311bcde23",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "b477008d227b2079efe7be18daa2adb005009baf36d1f2f01f2c1ac311bcde23",
+        "f03850b762e41217b5a0c26f26041daee490a070": "b477008d227b2079efe7be18daa2adb005009baf36d1f2f01f2c1ac311bcde23"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "16fe731bf9d23d882c229d2bd1004d3352fbee461513944d6b60effb7dddd081",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "bbb5754f80877f5692e35560481400ed0f774f457c347aab250407b1c2988e6e",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "bbb5754f80877f5692e35560481400ed0f774f457c347aab250407b1c2988e6e",
+        "f03850b762e41217b5a0c26f26041daee490a070": "bbb5754f80877f5692e35560481400ed0f774f457c347aab250407b1c2988e6e"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "auditGroups": [
+        "package-script existing-owner source and fixture review",
+        "parent package-script new-source whole-module check"
+      ],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "3c0e3d971a4e67f48f2979c2f19042f8b4e5ac44729564f0101bb2b3782c82b0",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "0a23be1ba3b4956ed6e4a1a767e622d08da590650d39d6f62292186b986f6ab0",
+        "f03850b762e41217b5a0c26f26041daee490a070": "0a23be1ba3b4956ed6e4a1a767e622d08da590650d39d6f62292186b986f6ab0"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.command.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "35c08fd02fc30e78a0c5b8492a018673715a1026869a2282875f53ca2a8a0b8c",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "35c08fd02fc30e78a0c5b8492a018673715a1026869a2282875f53ca2a8a0b8c",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "35c08fd02fc30e78a0c5b8492a018673715a1026869a2282875f53ca2a8a0b8c",
+        "f03850b762e41217b5a0c26f26041daee490a070": "35c08fd02fc30e78a0c5b8492a018673715a1026869a2282875f53ca2a8a0b8c"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "2ab4c2b6a0404d305b45e32db7239ec72d29d61244ae47dac6201a4490cb741d",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "ce834399710cc1c081ee1f6e9922647cf4658f42b27e0194985fd518510c6e81",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "ce834399710cc1c081ee1f6e9922647cf4658f42b27e0194985fd518510c6e81",
+        "f03850b762e41217b5a0c26f26041daee490a070": "ce834399710cc1c081ee1f6e9922647cf4658f42b27e0194985fd518510c6e81"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.command.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "81314777ca02ef49f15feb0b9ce9c1a7fc136563aed5c41c6a538d98347132f7",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "81314777ca02ef49f15feb0b9ce9c1a7fc136563aed5c41c6a538d98347132f7",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "81314777ca02ef49f15feb0b9ce9c1a7fc136563aed5c41c6a538d98347132f7",
+        "f03850b762e41217b5a0c26f26041daee490a070": "81314777ca02ef49f15feb0b9ce9c1a7fc136563aed5c41c6a538d98347132f7"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.schemas.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "73316900c0434fe6549b3dfadab25f18deb555e510b6b93e4df6ce2321460b23",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "73316900c0434fe6549b3dfadab25f18deb555e510b6b93e4df6ce2321460b23",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "73316900c0434fe6549b3dfadab25f18deb555e510b6b93e4df6ce2321460b23",
+        "f03850b762e41217b5a0c26f26041daee490a070": "73316900c0434fe6549b3dfadab25f18deb555e510b6b93e4df6ce2321460b23"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "d3b9b9dd088befa0de039a504b5e622f69d41a3792990af5ab9572031e041aa7",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "764e79c27ed155e66f828fd4648a86a4fc7c6f6f0f83fe9d9012c96da738fae8",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "764e79c27ed155e66f828fd4648a86a4fc7c6f6f0f83fe9d9012c96da738fae8",
+        "f03850b762e41217b5a0c26f26041daee490a070": "764e79c27ed155e66f828fd4648a86a4fc7c6f6f0f83fe9d9012c96da738fae8"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "c9d56566bf2d828200bc761a55af5a17b5fac5b43d51047f0c4d37804f6ecd17",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "c848de56fd79c630a62a8a34126de373a4aaeb1571cbb6a5d79b59c67e42018e",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "c848de56fd79c630a62a8a34126de373a4aaeb1571cbb6a5d79b59c67e42018e",
+        "f03850b762e41217b5a0c26f26041daee490a070": "c848de56fd79c630a62a8a34126de373a4aaeb1571cbb6a5d79b59c67e42018e"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "d723d71d33f69b007b78c5824756c3a2c3519947fd0bf88f487c347249c3a168",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "a20b1262021b2a778a56ec88585a61f9d1d0df817f0b400ba168c3dcbef85d26",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "a20b1262021b2a778a56ec88585a61f9d1d0df817f0b400ba168c3dcbef85d26",
+        "f03850b762e41217b5a0c26f26041daee490a070": "a20b1262021b2a778a56ec88585a61f9d1d0df817f0b400ba168c3dcbef85d26"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "43f87978377f1c525d13e41deb754fba4d204b7be08422813e3df59e7e9f5e39",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "6a2ce68eefa4689444533be49b1af6cb53a49879fceed1dab0effa9883e7ee36",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "6a2ce68eefa4689444533be49b1af6cb53a49879fceed1dab0effa9883e7ee36",
+        "f03850b762e41217b5a0c26f26041daee490a070": "6a2ce68eefa4689444533be49b1af6cb53a49879fceed1dab0effa9883e7ee36"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/index.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "6301b2115a50ab420b083920447a5871eb31f30055489cebfa978f63ef0b99ca",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "6301b2115a50ab420b083920447a5871eb31f30055489cebfa978f63ef0b99ca",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "6301b2115a50ab420b083920447a5871eb31f30055489cebfa978f63ef0b99ca",
+        "f03850b762e41217b5a0c26f26041daee490a070": "6301b2115a50ab420b083920447a5871eb31f30055489cebfa978f63ef0b99ca"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "27b6ac5d2257ec8c0533cce46a972dd014208a1c7d5d1fc35aeddfd3e9a7f025",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "27b6ac5d2257ec8c0533cce46a972dd014208a1c7d5d1fc35aeddfd3e9a7f025",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "27b6ac5d2257ec8c0533cce46a972dd014208a1c7d5d1fc35aeddfd3e9a7f025",
+        "f03850b762e41217b5a0c26f26041daee490a070": "27b6ac5d2257ec8c0533cce46a972dd014208a1c7d5d1fc35aeddfd3e9a7f025"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofLedger.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "9760bdca9c2c3fbbe29583164a8981c8ec1d0097a0c234683273c66e6b8e051b",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "9760bdca9c2c3fbbe29583164a8981c8ec1d0097a0c234683273c66e6b8e051b",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "9760bdca9c2c3fbbe29583164a8981c8ec1d0097a0c234683273c66e6b8e051b",
+        "f03850b762e41217b5a0c26f26041daee490a070": "9760bdca9c2c3fbbe29583164a8981c8ec1d0097a0c234683273c66e6b8e051b"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "e7e6c6f1152626afce342163615e21e3dd58a33dbdda8f7bf2397e2bd62548b3",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "bfc967e6e8fb307c4bcba719035732821324bd1074d694fceb6d1074ec9d4196",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "bfc967e6e8fb307c4bcba719035732821324bd1074d694fceb6d1074ec9d4196",
+        "f03850b762e41217b5a0c26f26041daee490a070": "bfc967e6e8fb307c4bcba719035732821324bd1074d694fceb6d1074ec9d4196"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/index.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "19c10f83b6e17ae87269aa30da8f95fb06108e01ef1330f693281b237cd7c6b8",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "19c10f83b6e17ae87269aa30da8f95fb06108e01ef1330f693281b237cd7c6b8",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "19c10f83b6e17ae87269aa30da8f95fb06108e01ef1330f693281b237cd7c6b8",
+        "f03850b762e41217b5a0c26f26041daee490a070": "19c10f83b6e17ae87269aa30da8f95fb06108e01ef1330f693281b237cd7c6b8"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "fe607cf8d64ccc25fe6cfba5533b5adc2d14c919ece6f02dda3c72a2bb2e8be1",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "8cf462c8c8034b19624a8f49f413b1271bd73bbf3de15ac6605ac7842afc6a6e",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "8cf462c8c8034b19624a8f49f413b1271bd73bbf3de15ac6605ac7842afc6a6e",
+        "f03850b762e41217b5a0c26f26041daee490a070": "8cf462c8c8034b19624a8f49f413b1271bd73bbf3de15ac6605ac7842afc6a6e"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Json.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "836450fb0bd3dbba3d8f6c61567744b30149af3941a58a7ca2d1a8b8b2e57453",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "836450fb0bd3dbba3d8f6c61567744b30149af3941a58a7ca2d1a8b8b2e57453",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "836450fb0bd3dbba3d8f6c61567744b30149af3941a58a7ca2d1a8b8b2e57453",
+        "f03850b762e41217b5a0c26f26041daee490a070": "836450fb0bd3dbba3d8f6c61567744b30149af3941a58a7ca2d1a8b8b2e57453"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts",
+      "auditGroups": ["parent package-script new-source whole-module check"],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "c8ce53c78e15c6f66dfa6601f9530ce6b30c0eaca9bc589ebf89a0dee9cc5b16",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "520d170546c45144945f868c907c3686ea2d0e4c291346e344a87dce2c2d2259",
+        "f03850b762e41217b5a0c26f26041daee490a070": "520d170546c45144945f868c907c3686ea2d0e4c291346e344a87dce2c2d2259"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts",
+      "auditGroups": ["parent package-script new-source whole-module check"],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": null,
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "09abeedc164aea5e37e068c06027578fa987282398daa993601922e3ff273cfa",
+        "f03850b762e41217b5a0c26f26041daee490a070": "09abeedc164aea5e37e068c06027578fa987282398daa993601922e3ff273cfa"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts",
+      "auditGroups": ["parent package-script new-source whole-module check"],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": null,
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "44a3476292f5aae3231938cb06bca75089d440c5f7778f5f67b1d3bcf6ec6d6e",
+        "f03850b762e41217b5a0c26f26041daee490a070": "44a3476292f5aae3231938cb06bca75089d440c5f7778f5f67b1d3bcf6ec6d6e"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/package-scripts/index.ts",
+      "auditGroups": ["parent package-script new-source whole-module check"],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": null,
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "8a997c04e871c0c0b31770bf022b55d3684b39dd4cc4a708270997ec1f349ec4",
+        "f03850b762e41217b5a0c26f26041daee490a070": "8a997c04e871c0c0b31770bf022b55d3684b39dd4cc4a708270997ec1f349ec4"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "c9095827267eba53f61e3fcc00792d8c667b48043f17ef2f60e50fc0946a67bd",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "521d4f4c52e24ed9077222eabc45ba61767257285df42dcd959b8f4956dda356",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "521d4f4c52e24ed9077222eabc45ba61767257285df42dcd959b8f4956dda356",
+        "f03850b762e41217b5a0c26f26041daee490a070": "521d4f4c52e24ed9077222eabc45ba61767257285df42dcd959b8f4956dda356"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
+      "auditGroups": ["non-Worktree scoped source"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "693383ab275abc92beb8c676a6fbf674cf33b70c25c28715367628f45c0c8a7f",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "f444c15d5cc91b85535542ba133306b74d4b5601839e68ea305749372dc26de4",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "f444c15d5cc91b85535542ba133306b74d4b5601839e68ea305749372dc26de4",
+        "f03850b762e41217b5a0c26f26041daee490a070": "f444c15d5cc91b85535542ba133306b74d4b5601839e68ea305749372dc26de4"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
+        "f03850b762e41217b5a0c26f26041daee490a070": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
+        "f03850b762e41217b5a0c26f26041daee490a070": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/test/Cli.test-kit.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "f03b5b2448ad44d9da8e505b67528998d7575f4ada47178a158160c296a59e3a",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "f03b5b2448ad44d9da8e505b67528998d7575f4ada47178a158160c296a59e3a",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "f03b5b2448ad44d9da8e505b67528998d7575f4ada47178a158160c296a59e3a",
+        "f03850b762e41217b5a0c26f26041daee490a070": "f03b5b2448ad44d9da8e505b67528998d7575f4ada47178a158160c296a59e3a"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-refresh.test.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "77d68f62d86e944a9cdd5921fa2e690a0325d8574f135b8eb248c5c7affdcd1d",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "1ef544db430e33c8eaf9c300bca6f398119a876b9cfcbbd53f167d230654030f",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "1ef544db430e33c8eaf9c300bca6f398119a876b9cfcbbd53f167d230654030f",
+        "f03850b762e41217b5a0c26f26041daee490a070": "1ef544db430e33c8eaf9c300bca6f398119a876b9cfcbbd53f167d230654030f"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-write.test.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "d904d4e3c56466a185235a9a20c15f36e5149f9717edbe641166441d3d18ceb9",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "1ea488e6127c4b4dc128e7786262687e9a07c7a117524a204fe0f16ebcda586d",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "1ea488e6127c4b4dc128e7786262687e9a07c7a117524a204fe0f16ebcda586d",
+        "f03850b762e41217b5a0c26f26041daee490a070": "1ea488e6127c4b4dc128e7786262687e9a07c7a117524a204fe0f16ebcda586d"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "auditGroups": [
+        "package-script existing-owner source and fixture review"
+      ],
+      "hashesByRef": {
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "b20130164ddfd6e4a8e33e4b69553e7b8843bb483c454a5665fe6dc5bf8f296a",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "238f0043a65a519ad223d543c5af96a489757a02459adadb112737462a219c6f",
+        "f03850b762e41217b5a0c26f26041daee490a070": "238f0043a65a519ad223d543c5af96a489757a02459adadb112737462a219c6f"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "222eefeda32c743f578c2bd46725389881820b914d9c91d0f63cc5ad54bc094a",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "2eb6f53eda15715e30ced552c24971ddd7bdf63722629d583f5f31f0439edc16",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "2eb6f53eda15715e30ced552c24971ddd7bdf63722629d583f5f31f0439edc16",
+        "f03850b762e41217b5a0c26f26041daee490a070": "2eb6f53eda15715e30ced552c24971ddd7bdf63722629d583f5f31f0439edc16"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts",
+      "auditGroups": [
+        "non-Worktree earlier fixture context; later delta not claimed reviewed by that audit"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": null,
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "0ee8d157ffce4a113ab1b2acc4e1c598a098f491c67850fd6071009dd9c5f983",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "01da537c755c54b232bcebc6600d076b2548af13d52a2ac8940d6e7c4f65e3e5",
+        "f03850b762e41217b5a0c26f26041daee490a070": "01da537c755c54b232bcebc6600d076b2548af13d52a2ac8940d6e7c4f65e3e5"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "c00bb7ea07b06216d238a86777abb94c58c39fc0292f2f655f5d290023141715",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "a0f7e93d6e80fbca2b47520923f8cbf1805a3bb2ad8bcc56579870806e92d562",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "a0f7e93d6e80fbca2b47520923f8cbf1805a3bb2ad8bcc56579870806e92d562",
+        "f03850b762e41217b5a0c26f26041daee490a070": "a0f7e93d6e80fbca2b47520923f8cbf1805a3bb2ad8bcc56579870806e92d562"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "auditGroups": [
+        "non-Worktree earlier fixture context; later delta not claimed reviewed by that audit",
+        "package-script existing-owner source and fixture review"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "ae4aa0e2a1e4a88eed6e56541ce600679d7397f6763fbb0c89fb5f895cfced84",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "80eee54be5d1d4893f7b39bdaf3be7c1581c4aaa61befc9603a6c20d993971f6",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "ede799ca0b06418d49fe5bff7134cc81138093b5fe5f55129b21451df7252f74",
+        "f03850b762e41217b5a0c26f26041daee490a070": "ede799ca0b06418d49fe5bff7134cc81138093b5fe5f55129b21451df7252f74"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "6e6ae914a4294fe00b5f6bb58e54fa803eab4aa9406dd0381340d0c244356bc4",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "d510e404654d2b6ba902a637640a1d07b9f7adb0100c997ad28d46290bbe6b62",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "d510e404654d2b6ba902a637640a1d07b9f7adb0100c997ad28d46290bbe6b62",
+        "f03850b762e41217b5a0c26f26041daee490a070": "d510e404654d2b6ba902a637640a1d07b9f7adb0100c997ad28d46290bbe6b62"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "7d01b3f0bdf2eedbaaed77468a31c70b3ea6da9aa5659f97bfc50bc8014cfcb3",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "75587c52f38ec0ec7a20ff6bcf0a68b01717f0a37d7c5cc6346f8ff47f542a1e",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "75587c52f38ec0ec7a20ff6bcf0a68b01717f0a37d7c5cc6346f8ff47f542a1e",
+        "f03850b762e41217b5a0c26f26041daee490a070": "75587c52f38ec0ec7a20ff6bcf0a68b01717f0a37d7c5cc6346f8ff47f542a1e"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "b2fadd88fd014ca6849170e7fc55079034db8ef9377a016c53719e5a439c34e2",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "073e0473b743262cbb307981e372c9ffa295f0319de43811c810af2b00fa560b",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "073e0473b743262cbb307981e372c9ffa295f0319de43811c810af2b00fa560b",
+        "f03850b762e41217b5a0c26f26041daee490a070": "073e0473b743262cbb307981e372c9ffa295f0319de43811c810af2b00fa560b"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "79f92b45d889c9d887ef2ab7c55fb26d8c39f4f66c39072da75a94b1454381ea",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "79f92b45d889c9d887ef2ab7c55fb26d8c39f4f66c39072da75a94b1454381ea",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "79f92b45d889c9d887ef2ab7c55fb26d8c39f4f66c39072da75a94b1454381ea",
+        "f03850b762e41217b5a0c26f26041daee490a070": "79f92b45d889c9d887ef2ab7c55fb26d8c39f4f66c39072da75a94b1454381ea"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
+      "auditGroups": [
+        "Worktree source and consumer context",
+        "Worktree incoming-source equality"
+      ],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "f826e2da99a78fe4bf5db87ca7283b7cd07c1e79cfc67b5c666017adc6564d70",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "4caaf9cb9b8cb90845f6b126260398225fb9eb8e7a1e34b72089a98296ebf708",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "4caaf9cb9b8cb90845f6b126260398225fb9eb8e7a1e34b72089a98296ebf708",
+        "f03850b762e41217b5a0c26f26041daee490a070": "4caaf9cb9b8cb90845f6b126260398225fb9eb8e7a1e34b72089a98296ebf708"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-provenance-footer.test.ts",
+      "auditGroups": ["non-Worktree supporting fixture/context"],
+      "hashesByRef": {
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": "ea2e0e611551606c779012b6e330c2e7a2fccd3dafc7e2f281ae3d465e821595",
+        "3bb59f37c02b7d677c6a5b58651fe85bb4bb5943": "dc64f0f30d88f7c7d3d4c6791ea1069fe19787022c8dbd7a98b2c3312984c250",
+        "4f13d83e13d61275a57004050ffc62a90d86c014": "dc64f0f30d88f7c7d3d4c6791ea1069fe19787022c8dbd7a98b2c3312984c250",
+        "f03850b762e41217b5a0c26f26041daee490a070": "dc64f0f30d88f7c7d3d4c6791ea1069fe19787022c8dbd7a98b2c3312984c250"
+      },
+      "workingEqualsAuditedMergedHeadAtPreparation": true
+    }
+  ],
+  "fileCount": 54,
+  "exactUnchangedWorktreeSpans": [
+    {
+      "id": "worktree-removal-mode",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "beforeStart": 310,
+      "beforeEnd": 311,
+      "incomingStart": 311,
+      "incomingEnd": 312,
+      "sameExactBytes": true,
+      "spanSha256": "883d8af04561659a151f40485b3f80ef827f1b9e6b73d2f308bded883ed8318d"
+    },
+    {
+      "id": "worktree-removal-mode",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+      "beforeStart": 689,
+      "beforeEnd": 694,
+      "incomingStart": 702,
+      "incomingEnd": 707,
+      "sameExactBytes": true,
+      "spanSha256": "f8dcc682004389642c61b4252c306e43d60475a1fa7202575c65c0b14266615b"
+    },
+    {
+      "id": "worktree-fleet-epoch-target",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "beforeStart": 1047,
+      "beforeEnd": 1056,
+      "incomingStart": 1068,
+      "incomingEnd": 1077,
+      "sameExactBytes": true,
+      "spanSha256": "13d66a790f1f8b48e9b7163b7364ce4a2e6d981bec392692e353252037790cae"
+    },
+    {
+      "id": "worktree-fleet-epoch-target",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "beforeStart": 859,
+      "beforeEnd": 905,
+      "incomingStart": 865,
+      "incomingEnd": 911,
+      "sameExactBytes": true,
+      "spanSha256": "59238c15229198feed8d216c409d6e0843f3da25db94b1610266db0f49332dba"
+    },
+    {
+      "id": "worktree-fleet-epoch-target",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.command.ts",
+      "beforeStart": 124,
+      "beforeEnd": 129,
+      "incomingStart": 124,
+      "incomingEnd": 129,
+      "sameExactBytes": true,
+      "spanSha256": "ec8faba727fe9c592ae6c7a6206204be27af20b3f0faf2c1a1ec76013c7d7193"
+    },
+    {
+      "id": "worktree-process-cwd-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "beforeStart": 588,
+      "beforeEnd": 604,
+      "incomingStart": 594,
+      "incomingEnd": 610,
+      "sameExactBytes": true,
+      "spanSha256": "cf8ce65cd3d1460d1a1addf9e85c173d0304481eeac5970d43d0b2a93d509d81"
+    },
+    {
+      "id": "worktree-process-cwd-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "beforeStart": 622,
+      "beforeEnd": 640,
+      "incomingStart": 628,
+      "incomingEnd": 646,
+      "sameExactBytes": true,
+      "spanSha256": "06ffc2ebdebfc4c2b2610844296fd3a3e4073739b94561782157b71fb6693f35"
+    },
+    {
+      "id": "worktree-idle-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "beforeStart": 88,
+      "beforeEnd": 91,
+      "incomingStart": 88,
+      "incomingEnd": 91,
+      "sameExactBytes": true,
+      "spanSha256": "c928c2b270613e4f6b0d897d71d71961f973fc8fe052c6f81ea4a8800bb35018"
+    },
+    {
+      "id": "worktree-idle-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "beforeStart": 198,
+      "beforeEnd": 233,
+      "incomingStart": 198,
+      "incomingEnd": 233,
+      "sameExactBytes": true,
+      "spanSha256": "9b996f40b5aba6ce8668c01dbefa8f341a60d600ba995f5c0007c088c7075fd8"
+    },
+    {
+      "id": "worktree-idle-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "beforeStart": 364,
+      "beforeEnd": 375,
+      "incomingStart": 364,
+      "incomingEnd": 375,
+      "sameExactBytes": true,
+      "spanSha256": "585cc1db595aeadb904d99a271a23363328354b14948fed824f299bdf74baf73"
+    },
+    {
+      "id": "worktree-pr-classification",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "beforeStart": 80,
+      "beforeEnd": 86,
+      "incomingStart": 80,
+      "incomingEnd": 86,
+      "sameExactBytes": true,
+      "spanSha256": "8eaa8fb1c4ccfd88f0b5d6851efadb647ffa1f33c8aa9502e0ea9dc0b6a63801"
+    },
+    {
+      "id": "worktree-pr-classification",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "beforeStart": 152,
+      "beforeEnd": 196,
+      "incomingStart": 152,
+      "incomingEnd": 196,
+      "sameExactBytes": true,
+      "spanSha256": "cfa29e7a9f2465d93b816d67cbab24e15a285b012cf225659a47794bd0e17484"
+    },
+    {
+      "id": "worktree-pr-classification",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "beforeStart": 332,
+      "beforeEnd": 389,
+      "incomingStart": 332,
+      "incomingEnd": 389,
+      "sameExactBytes": true,
+      "spanSha256": "4c888db92e0499343b86985990489e80e7a97b9e26503063e24e309b24d9d369"
+    },
+    {
+      "id": "worktree-reap-candidate-retirement",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.schemas.ts",
+      "beforeStart": 61,
+      "beforeEnd": 77,
+      "incomingStart": 61,
+      "incomingEnd": 77,
+      "sameExactBytes": true,
+      "spanSha256": "a34532fdb9b69db8d1fc56c694d4d87ecee85fac66efd8a140ae4341cce10f33"
+    },
+    {
+      "id": "worktree-reap-candidate-retirement",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.schemas.ts",
+      "beforeStart": 123,
+      "beforeEnd": 137,
+      "incomingStart": 123,
+      "incomingEnd": 137,
+      "sameExactBytes": true,
+      "spanSha256": "7389db8a8ecb4797e911009538266e7b88cea80ee8b134d686ef0fda629719d1"
+    },
+    {
+      "id": "worktree-reap-candidate-retirement",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "beforeStart": 391,
+      "beforeEnd": 585,
+      "incomingStart": 391,
+      "incomingEnd": 585,
+      "sameExactBytes": true,
+      "spanSha256": "b459e4862d2562c5555df821b21ba827d42cfa618b4e65d269dc8923875b15a9"
+    },
+    {
+      "id": "worktree-branch-diff-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "beforeStart": 986,
+      "beforeEnd": 1009,
+      "incomingStart": 992,
+      "incomingEnd": 1015,
+      "sameExactBytes": true,
+      "spanSha256": "f825601d72ccb7efc9c692d5165786d3b9c72a0a21c5bb0cd12d9232df977a3c"
+    },
+    {
+      "id": "worktree-branch-diff-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "beforeStart": 1075,
+      "beforeEnd": 1085,
+      "incomingStart": 1081,
+      "incomingEnd": 1091,
+      "sameExactBytes": true,
+      "spanSha256": "153706a36c79a7c24560637fcee5f2dc13645938384690f700aaef654f65a12f"
+    },
+    {
+      "id": "worktree-policy-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "beforeStart": 1011,
+      "beforeEnd": 1043,
+      "incomingStart": 1017,
+      "incomingEnd": 1049,
+      "sameExactBytes": true,
+      "spanSha256": "526e39498c94bfedf7337ba1202bcbda9e815dcd0c959bb4f5f202698f0cbea5"
+    },
+    {
+      "id": "worktree-policy-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "beforeStart": 1075,
+      "beforeEnd": 1085,
+      "incomingStart": 1081,
+      "incomingEnd": 1091,
+      "sameExactBytes": true,
+      "spanSha256": "153706a36c79a7c24560637fcee5f2dc13645938384690f700aaef654f65a12f"
+    }
+  ],
+  "localEffectReferenceSha256": {
+    ".repos/effect/packages/effect/SCHEMA.md": "87de0c138314a1d07230520f5ce6638b30b5169c668ec39f1e043d77d22728af",
+    ".repos/effect/packages/effect/src/Schema.ts": "0f0daf6b6ec3b6c827083d8b76278a4f52fe48a636dfff031ddf18e6c93f82ad",
+    ".repos/effect/packages/effect/src/SchemaTransformation.ts": "947245c47df981964af41897878955adb7a60a370d8fd050eee7fa198bfb4afd"
+  },
+  "auditFingerprints": [
+    {
+      "auditGroup": "Worktree",
+      "artifact": "audit.json",
+      "sha256": "2a8af9aa547e0a78b92e114701b74b408997aff53959296e9d1c86b41922348f",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "Worktree",
+      "artifact": "worktree-impact-audit.md",
+      "sha256": "006581809670ca3bf4c2231cec90446e66f6a84d65bd23c1fcc73cf09e6876e2",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "Worktree",
+      "artifact": "verification.json",
+      "sha256": "c83eee835a729b0655146c2dbc9c82dbbabcea63f51a1d0e38e0cd682c4846d3",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "Worktree",
+      "artifact": "merged-source-binding.json",
+      "sha256": "60b8574fbcb27b11e0d3c226558a4082586f8862161d135644475e76c4c42a04",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "non-Worktree",
+      "artifact": "artifact-manifest.json",
+      "sha256": "bd6af99a479c6644356c4788d718f3bee4ea2a5e6d4afecdf6982bbf44f43e96",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "non-Worktree",
+      "artifact": "AUDIT.md",
+      "sha256": "0a2d6d986bb064a642c58ddc8658fab65a3b38a070a2e0cb4d08230f7007e321",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "package-script existing owners",
+      "artifact": "manifest.json",
+      "sha256": "ade6ff0f0d443ab0c79490bbe7f190db5472912eb8d482dd4b106c05114adb2f",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "package-script existing owners",
+      "artifact": "audit.md",
+      "sha256": "a0c1db8c18a6b983cc79a351b3b90646fadc1538bf5f283ff114c3679ea51ab6",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "package-script new-source check",
+      "artifact": "PARENT-NEW-SOURCE-AUDIT.md",
+      "sha256": "33a1320a6d092dcb53578d723b81bf4b3d823d4bbf64a0ac70328e94a2baa454",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "package-script new-source check",
+      "artifact": "parent-audit-receipt.json",
+      "sha256": "995e100234cc4354769b9cf32e12a406c892d62fd87af1345be476267a1d011a",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    },
+    {
+      "auditGroup": "package-script new-source check",
+      "artifact": "source-manifest.json",
+      "sha256": "1735605efeead4a1d67289cc71cfef130220d4ee6c9dddc4b09b07a6d7128386",
+      "purpose": "Frozen native P2 provenance fingerprint; public conclusions and source bindings accompany this transaction."
+    }
+  ],
+  "sourceRetrieval": "git show <hashesByRef key>:<file>; null means the file is absent at that immutable ref.",
+  "reviewLimits": [
+    "Full file equality is provenance, not a fresh semantic rescan.",
+    "Worktree CLI package.json changed at 4f13; its exports subtree is unchanged, not its full bytes.",
+    "The non-Worktree supplemental quality-tasks fixture changed at 4f13 and is covered by the driver audit; the new quality-scheduler-synthetic-scenario fixture is context only here.",
+    "Local Effect references are exact API proof outside the census source tree.",
+    "Later parent commits or main merges require a separate equality rebind before installation."
+  ],
+  "independentP3Approval": false,
+  "dryRoundCredit": false
+}

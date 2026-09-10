@@ -1,0 +1,17 @@
+{
+  "lane": "r26-foundation-ui",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T23:57:21.563171+00:00",
+  "finished": "2026-09-09T00:09:49.804078+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 4,
+  "qualifiedCandidates": 2,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r26-main-9b7553/r26-foundation-ui.jsonl` \u2014 confirmed 2, disqualified 2. Covered all five assigned areas (brand/src, dock/src, dock-react/src, editor/src, ui/src). All listed seed file+symbol pairs still exist; no declaration drift.",
+  "transcriptSha256": "86a38572c76798b444d94bbd549f201604b7ae4318884b3332235dc608aeb89e",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "9635e7ef6ae5c35bedf49420e61ee6a4893e384797dd5f26d67a1602d3c8dc1c"
+}

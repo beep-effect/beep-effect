@@ -1,0 +1,17 @@
+{
+  "lane": "r25-cli-yeet",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:36:21.673368+00:00",
+  "finished": "2026-09-08T22:46:21.236824+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 6,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-cli-yeet.jsonl` \u2014 confirmed 1, disqualified 5. Lane covered (all assigned Yeet sources). Seeds still present. Drift: SharedOptions/YeetRunOptions/YeetRunPlanModeOptions/BuildYeetRunPlanTestOptions gained `ciParity`; SharedOptions also `noFailFast`; `portfolioIndexPublishDisposition` gained `stagedDeletion`; `YeetStatusRemote` gained optional `isDraft`; `GhStatusReviewThread` no longer has `isDraft`; `YeetMergeReadyCriteria` is the eight-criterion shape (`requiredChecksGreen`, no class-level `checksGreen`).",
+  "transcriptSha256": "38a6d78e386f1324f69f261d261596358deb4d0cf36099db52e9a3a98cbb8066",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

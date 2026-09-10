@@ -1,0 +1,36 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "recordsBefore": 927,
+  "recordsAfter": 930,
+  "newQualifiedIds": [
+    "r27-boolean-state-foundation-spinner-state",
+    "r27-boolean-state-foundation-use-scribe-result-connected",
+    "r27-boolean-state-foundation-sidebar-context-open-state"
+  ],
+  "correctedDisqualifiedIds": [
+    "path-safety-atomic-write-remove-options",
+    "r2-foundation-youtube-watch-event-init",
+    "chat-composer-props-gates"
+  ],
+  "coordinatedExistingDesignId": "foundation-ui-system-speech-input-connection",
+  "priorCompanionStatus": "reviewed",
+  "companionStatus": "designed",
+  "inventoryBeforeSha256": "68f071f10ae29e273a508cf8aec1bd639b874d12692594548ee40874bb83f021",
+  "inventoryAfterSha256": "dfd217b7b6cb971b17449d0eb56c5ef01cc7863bdeed21d5ad9846f47ff41938",
+  "designSha256": {
+    "designs/r27-boolean-state-foundation-spinner-state.md": "74827cb919841538e9e2dc988f3024f42118290bdd4c5a35a7d07a4d9169e18b",
+    "designs/r27-boolean-state-foundation-use-scribe-result-connected.md": "f67a9a7c64d057e5881f8b08fddbf059894c6c2585e55ae5175aa144f3c62ec2",
+    "designs/r27-boolean-state-foundation-sidebar-context-open-state.md": "48b81bbe371a2d28d878bd7951e483532ba8ce57cf7cb830119d6241bd9cbaf4",
+    "designs/foundation-ui-system-speech-input-connection.md": "2c9397fd6b25ebffabd8c8f6939c154ef3083cf3282e1f920e8042dc95189cfc"
+  },
+  "archives": {
+    "history/designs/2026-09-09-r27-pre-hook-coordination-foundation-ui-system-speech-input-connection.md": "436e06e8075ad7774aba509fd62443342538ea5bfba8ae082681a0eee1f4b69b",
+    "history/inventory/2026-09-09-r27-boolean-ui-corrections.jsonl": "7a1306a224abfdfc9152ee5d4022b8b5f366ec488e33aadd8e3475d8f5cdaaa1"
+  },
+  "audit": "data/design-refresh-2026-09-09-r27-boolean-ui-carriers.md",
+  "auditSha256": "42dcb3f4234d7bcebc1a3b6005b1f7cfc7c03567dbfac994a169c47a1c5ab1c6",
+  "independentCensusReceipt": "r27-boolean-state-foundation.execution.json",
+  "independentTranscriptSha256": "222a9c4e9709083e5f238d43eeb865cc0b0f3a2ab7f29996e44aabe18e08d05e",
+  "formalIndependentReview": false
+}

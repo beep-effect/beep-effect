@@ -1,0 +1,22 @@
+{
+  "lane": "r29-foundation-capability",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:09:05.505633+00:00",
+  "finished": "2026-09-09T10:23:08.100659+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-capability.jsonl`\n\nConfirmed: 0. Disqualified: 0.\n\nEvery assigned root was covered (`api-transport`, `chalk`, `colors`, `file-processing`, `langextract`, `mcp-kit`, `nlp-processing`, `observability`, `semantic-web`). All 20 scoped seeds still exist at the claimed owners, members, and lines; writers/readers still support the canonical classifications, so they were not re-reported. No seed drift. No unresolved source question.\n\nOut-of-net (not recorded): function-flag parameters; single-boolean structs and literals (`exportChildren`, `includeText`, `includeCustom`, `dedupeById`, `retryable`, `fromCache`, `isFailure`/`isError`, `includeStack`, `loggerMergeWithExisting`, `optionalHyphen`, `interrupted`); `ColorInfo` false-or-object sentinel; `ObservedExitSummary.interrupted` plus a required classification tag; `mergeMinimalFoldStartMatches` Pick overlapping the UniqueMatchSearch seed; TextNode `*Flag` Options live in `@beep/nlp/Graph/Schema` outside this lane.\n\nValidator: `inventory OK: 0 records, 0 unique ids`.\n\n\ud83c\udf31 graft saved ~117,467 tokens this turn (12 calls)",
+  "transcriptSha256": "8d4f82ef86473b2fc18a47ccbdcc88169b71c4c6e3687574fb0492b5e113ab25",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

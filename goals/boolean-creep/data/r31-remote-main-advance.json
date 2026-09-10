@@ -1,0 +1,20 @@
+{
+  "kind": "r31-remote-main-advance",
+  "observedDuringRound": true,
+  "admittedSourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "admittedMainSha": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "observedRemoteMainSha": "702e815971a4030806cdbd9e8f6aa9260d0d3b62",
+  "sourceAndLocalMainHeld": true,
+  "evidence": "~/.cache/beep/boolean-creep/scanner-pr-20260909/post-publish-main702-forward/before.json",
+  "newMainPreparation": {
+    "auditedSourceSha": "04cc73e733758e39a4e15ec294f86ef74ecc66c5",
+    "qualifiedDesigns": ["runners-bake-freshness", "runners-bake-cli-mode"],
+    "nativeP2Status": "running-private-only",
+    "parentD2Audits": 2,
+    "parentLocatorCorrections": 1,
+    "parentAuditManifestSha256": "716ca78d1c3e7f42483d3ac2c3bdefb34b06008bb07fd0d591f530090d7e1028"
+  },
+  "canonicalInventoryOrDesignWritten": false,
+  "currentSourceDryCredit": false,
+  "nextAction": "Finish and reconcile R31 without rewriting launch evidence, then merge current main forward and integrate validated source-bound design/locator proposals before the next full census."
+}

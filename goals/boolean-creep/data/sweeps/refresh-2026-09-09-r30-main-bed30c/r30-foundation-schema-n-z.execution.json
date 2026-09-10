@@ -1,0 +1,22 @@
+{
+  "lane": "r30-foundation-schema-n-z",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T12:44:04.505495+00:00",
+  "finished": "2026-09-09T12:51:43.517159+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-schema-n-z.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nCoverage: all 52 assigned roots (82 authored source files). No missing roots, no generated surfaces in-lane.\n\nSeed drift: none. All seven prior records still exist on the claimed owners/members, and current writers/readers still support the original D1/D2 calls (`ParserOptions` config toggles and derived getters, `makeXmlParser` fast-xml-parser flags, the three `PropertyDescriptor` bags, SemVer `leftNumeric`/`rightNumeric`). Unchanged, so not re-emitted.\n\nUnresolved source questions: none.\n\nOut-of-net residue (not recorded): header `false | literal | struct` sentinels; standalone predicates (`isZero`/`isFull`, slug hyphen checks, host classifiers); function flag parameters (`includeStack`, `boolKeyWithDefault`); single-flag option bags (`exact`, `strict`).\n\n\ud83c\udf31 graft saved ~194,747 tokens this turn (12 calls)",
+  "transcriptSha256": "191d9d9d7b598d9117ac56b829b3fc6d9f8bf5488f40cc19159253506ac1b07b",
+  "runnerSha256": "a4d7f7629866b91b6d007f21235d50d699b49dd3a39d3b60864a91f799bbb355",
+  "seedSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}
