@@ -145,24 +145,29 @@ describe("@beep/file-processing SourceText", () => {
 });
 
 // The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+const sourceTextPageLinkCodec = (() => {
+  const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+    SourceTextPage.ast
+  ).annotations;
+  const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+  if (link === undefined || link.transformation._tag !== "Transformation")
+    throw new Error("Missing generation transformation");
+  return S.make<S.Codec<SourceTextPage, unknown>>(
+    SchemaAST.decodeTo(link.to, SchemaAST.toType(SourceTextPage.ast), link.transformation)
+  );
+})();
+const encodeSourceTextPageLink = S.encodeEffect(sourceTextPageLinkCodec);
+const encodeSourceTextIdentity = S.encodeEffect(SourceTextIdentity);
+
 it.effect("encodes SourceTextPage through its generation link", () =>
   Effect.gen(function* () {
-    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
-      SourceTextPage.ast
-    ).annotations;
-    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
-    if (link === undefined || link.transformation._tag !== "Transformation")
-      throw new Error("Missing generation transformation");
-    const codec = S.make<S.Codec<SourceTextPage, unknown>>(
-      SchemaAST.decodeTo(link.to, SchemaAST.toType(SourceTextPage.ast), link.transformation)
-    );
     const result = yield* Arbitrary.checkEffect(
       Arbitrary.schema(SourceTextPage),
       (page) =>
         Effect.gen(function* () {
-          const encoded = yield* S.encodeEffect(codec)(page);
+          const encoded = yield* encodeSourceTextPageLink(page);
           expect(encoded).toEqual({
-            identity: yield* S.encodeEffect(SourceTextIdentity)(page.identity),
+            identity: yield* encodeSourceTextIdentity(page.identity),
             pageCount: page.pageCount,
             pageIndex: page.pageIndex,
             startOffset: page.startOffset,
