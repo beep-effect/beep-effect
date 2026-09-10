@@ -6013,12 +6013,12 @@
           "lines": 31.57,
           "statements": 28.57,
           "branches": 0,
-          "functions": 0,
+          "functions": 27.27,
           "uncovered": {
             "lines": 13,
             "statements": 15,
             "branches": 2,
-            "functions": 11
+            "functions": 8
           }
         },
         "packages/foundation/ui-system/editor/src/code-block-view.tsx": {
@@ -6061,12 +6061,12 @@
           "lines": 35.29,
           "statements": 30,
           "branches": 0,
-          "functions": 0,
+          "functions": 25,
           "uncovered": {
             "lines": 11,
             "statements": 14,
             "branches": 2,
-            "functions": 12
+            "functions": 9
           }
         },
         "packages/foundation/ui-system/editor/src/mermaid-view.tsx": {
