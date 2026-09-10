@@ -1,5 +1,6 @@
 /**
  * Package-local law scan inputs and reports.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -27,7 +28,9 @@ export const LawsPackageLaw = LiteralKit([
   "effect-fn",
   "package-test-imports",
 ]).annotate($I.annote("LawsPackageLaw", { description: "Laws evaluated by the package worker." }));
-/** Law identity decoded from the literal domain.
+/**
+ * Law identity decoded from the literal domain.
+ *
  * @category type-level
  * @since 0.0.0
  */

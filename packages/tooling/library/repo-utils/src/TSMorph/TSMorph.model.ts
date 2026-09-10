@@ -1833,6 +1833,10 @@ export class TsMorphProjectInspectionRequest extends S.Class<TsMorphProjectInspe
    * console.log(TsMorphProjectInspectionRequest.packageSyntax("/repo", "packages/demo/tsconfig.test.json", []))
    * ```
    *
+   * @param repoRoot - Absolute repository root the overlay path is resolved against.
+   * @param overlayPath - Repository-relative tsconfig overlay whose compiler options scope the project.
+   * @param files - Absolute source paths added explicitly; the overlay's own include list is not loaded.
+   * @returns The decoded inspection request for a syntax-only, workspace-only package project.
    * @category constructors
    * @since 0.0.0
    */

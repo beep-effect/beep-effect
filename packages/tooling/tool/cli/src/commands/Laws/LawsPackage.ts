@@ -1,5 +1,6 @@
 /**
  * Single-project package law worker.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
