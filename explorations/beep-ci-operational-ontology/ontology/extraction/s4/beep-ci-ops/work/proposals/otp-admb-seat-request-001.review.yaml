@@ -1,0 +1,75 @@
+target: otp:admb-seat-request:001
+target_sha256: 34603a58de94a81997a8d4d6f7e125aa6b1e31d81da57b28d1a1e40566978297
+chain_sha256: 20c68faa450605f1e99d5d16ace367c2383c2c7cfefc1df14fb61914ebf52d3e
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: parents is empty. No requester-role superclass, grant superclass, or work-kind/priority subclass
+    edge is proposed.
+revision_requests:
+- For discriminator-true-of-dto, ground null rejection in an observed effective registration/removal or
+  a queue/admission consumer whose behavior changes with the demand. Bind the trace to the asserted request
+  without using capture aliases. A report that merely says registration occurred does not distinguish
+  the operational relator from the pure-record null.
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  counterexample: 'Null-world counterexample: emit the two recorded enqueue/withdrawal pairs for nonces
+    3234b861 and 355f5fd7 as diagnostic or replay data, without inserting a demand into any effective
+    admission queue. Their merged-preview/publish fields, five-token requested charge and paired timestamps
+    remain present exactly as in so:32c61047477e and so:7ac3b5cb1ac0. A false registration claim is still
+    a recorded registration claim. The discriminator''s statement that the claim would be false under
+    no contender is therefore not a fact falsified in the cited observations. No observed queue-registration/removal
+    or scheduler decision in this closure rules out the pure-record account.'
+  outcome: landed
+  evidence:
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  - CQ-021
+  - CQ-023
+- surface: identity
+  rule: registration-versus-enduring-demand
+  counterexample: 'Countermodel: withdraw and resubmit unchanged intended work with the same kind, priority
+    and charge; separately, copy the original queue report. Registration-continuity identity makes the
+    resubmission another request and permits the copy to describe the original. The proposal explicitly
+    retains an enduring demand with an anti-rigid queued role as a different steward choice, rather than
+    claiming that such a bearer is destroyed. The full-proof/publish and merged-preview/verify observations
+    also remain attribute combinations, not incompatible identity classes. Capture aliases are excluded.'
+  outcome: survived
+  evidence:
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  - so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+  - so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973
+- surface: warrant
+  rule: exact-reuse-decision-warrant
+  counterexample: 'Counterexample attempt: represent only the resulting grant or submitting agent. CQ-021
+    requires a SeatRequest binding requester, work kind, priority, requested charge and enqueue time;
+    CQ-023 binds that request to observed wait, policy and exception. The withdrawn demand can have no
+    grant, so those substitutes lose a required subject. This is exact reuse of ratified SeatRequest,
+    not an optional subclass. The proposal correctly requires snapshot closure rather than inserting historical
+    entries into the present queue.'
+  outcome: survived
+  evidence:
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+  - CQ-021
+  - CQ-023
+rival_models_still_viable:
+- Enduring demand or demand-content bearer with an anti-rigid queued role.
+- Information account of a putative registered demand.
+- Occurrence-centered requesting account with separately qualified participation.
+evidence:
+- so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+- so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+- CQ-021
+- CQ-023
+- so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+- so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973
+- so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06

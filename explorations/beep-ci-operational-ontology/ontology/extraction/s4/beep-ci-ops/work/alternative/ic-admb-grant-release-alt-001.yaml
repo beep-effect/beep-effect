@@ -1,0 +1,53 @@
+id: "ic:admb-grant-release-alt:001"
+hypothesis_ref: "dh:admb-grant-release:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two release occurrences are the same when they are the same dated
+    relinquishment of a particular admitted grant. so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+    pairs admission-admitted (admittedAtMillis=1788926595216) with
+    admission-released (releasedAtMillis=1788927008574,
+    memoryPeakBytes=9904820224) for nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088.
+    The release is not the holding, not the conferment, not request
+    withdrawal, and not lease eviction. memoryPeakBytes is reported
+    measurement content, not identity, not the token charge, and not a
+    reusable cost estimate. ownerRef is not identity.
+  reidentification_key:
+    - "releasedAtMillis (boundary evidence)"
+    - "nonce (chain correlation only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "one atomic dated relinquishment of one grant"
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - relator
+  existential_dependencies:
+    - "the seat grant being terminated"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "completed (the relinquishment has occurred)"
+counterexamples:
+  - description: >-
+      Treating withdrawal as release fails: so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+      has admission-withdrawn and no admission-admitted, so no grant exists to
+      relinquish (CQ-008 holder is a grant, not a withdrawn request).
+  - description: >-
+      Treating lease eviction as release fails: so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+      ends nonce=39193b80-5f90-4e70-a432-fc259b3d994c with
+      admission-lease-evicted, not admission-released.
+  - description: >-
+      Reading memoryPeakBytes as weightTokens, as a physical memory limit, or
+      as proof of lane success infers quantities and outcomes the release tag
+      does not carry; release also does not prove voluntary intent.
+  - description: >-
+      Inferring an uninterrupted holding interval between admittedAtMillis and
+      releasedAtMillis asserts a snapshot the two point timestamps do not
+      supply.
+status: proposed

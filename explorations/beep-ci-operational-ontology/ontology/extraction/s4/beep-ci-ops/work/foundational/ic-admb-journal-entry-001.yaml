@@ -1,0 +1,83 @@
+id: ic:admb-journal-entry:001
+hypothesis_ref: dh:admb-journal-entry:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    On the proposed content model, two representations carry the same individual exactly when they
+    express the same bounded assertion content, with the same particular target, boundary type, asserted
+    time and associated reported values under the same interpretation. Faithful copying or a serialization-version
+    change can preserve the content; a change to what is asserted yields a different content version.
+    Equal bytes or equal nonce/tag/time alone do not prove semantic identity. Distinct physical entry
+    tokens may carry the same information object.
+  reidentification_key:
+  - nonce
+  - _tag
+  - event-specific timestamp (where present; retrieval aid, not a unique entry identifier)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    The semantic unity is one assertion about one event-specific boundary, including its own attached
+    values. The three enqueue/admitted/released entries for one nonce are distinct contents, even
+    though a broad observation span contains all three and neighboring chains.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - A journal entry token individuated by one original append occurrence and its preservation history
+  - The operational occurrence asserted by the entry
+  existential_dependencies:
+  - >-
+    The fixed structured assertion content and its referential interpretation; this is informational
+    rather than dependence on an active scheduler authorization.
+  - >-
+    Some representation is needed to retain or communicate the content, but no particular file, capture
+    pass, writer pseudonym or storage medium is essential. The asserted occurrence can be uncorroborated
+    or false.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: >-
+    Counterfactual: an identical release assertion is copied into another journal without a second
+    release. The selected content object can be the same while there are two entry tokens and only
+    one asserted occurrence. Conversely, two independent emissions with identical reported fields
+    could concern distinct occurrences that the current tuple cannot distinguish. A consumer counting
+    append operations needs entry-token identity rather than the content identity selected here.
+status: proposed
+referent_grain: >-
+  One immutable, event-specific assertion-content unit expressed by a bounded journal entry. This
+  card selects content grain: a physical entry token, an act of writing it, a classified event tag,
+  a complete nonce history, and the asserted operational occurrence are distinct.
+analysis_notes:
+  rigidity: >-
+    Rigid for the selected immutable informational content: a stale, disputed or false assertion is
+    still an information object. Evidence-use status can change without changing that classification.
+  dependence: >-
+    Dependence is on informational constitution and interpretation. A particular live operational
+    subject, file, capture pass or pseudonym is not an existential identity provider.
+  temporality: >-
+    The content persists rather than unfolds. Carrier, availability and evidence-use state may change
+    while its content identity is preserved; editing asserted content produces a different version.
+    Event timestamps do not establish content creation, retention or destruction dates; no actual
+    retention endpoint is supplied.
+  evidence_limits: >-
+    The released example contains three distinct associated entry contents. The two ticket-eviction-only
+    observations show that one assertion can be available without an opening boundary. The content
+    criterion is proposed; no semantic canonicalization, global uniqueness or observed copy/replay
+    behavior is claimed.
+  provenance: >-
+    The cited observation records are from the current run's fleet admission journal. No synthetic
+    observation is used. Capture, corpus, generator, sanitization and ownerRef metadata are excluded
+    from identity criteria and reidentification keys.
+evidence_refs:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+- so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+- CQ-008
+- CQ-009
+- CQ-010
+- CQ-021

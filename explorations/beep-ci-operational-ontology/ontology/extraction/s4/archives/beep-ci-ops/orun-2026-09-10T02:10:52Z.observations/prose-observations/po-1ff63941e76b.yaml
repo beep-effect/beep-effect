@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/test/fixtures/emission-v2.ttl"
+  },
+  "source_span": {
+    "start_line": 32,
+    "end_line": 32
+  },
+  "quote": "ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-step-1 ciops-prov:schedulesSeatRequest ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-1 .",
+  "epistemic_status": "quoted_prose"
+}

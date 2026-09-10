@@ -1,0 +1,380 @@
+{
+  "id": "so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect/fix_ship-velocity-main-push-parity-d7281d09fe50/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 136,
+    "content_sha256": "fba2edb6211ef4a9b1bfd30866cff7c68c827ebd11ff4dfd3c267e7df88b2436"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect/fix_ship-velocity-main-push-parity-d7281d09fe50/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=d48b7f4e-17d0-4ef4-8301-f60dfea6c261"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "behindCount=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=fix/ship-velocity-main-push-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-08-30T08:54:45.175Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1365035.333416"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1398.218066"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=14167.416759"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2611.801207"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=304763.09927"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=5492.374803"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=1867770"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-30T08:54:45.175Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=full:01-pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=advisory:01-fallow-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:allowlist-check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:exploration-atlas"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:goals-doctor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:goals-index"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:schema-first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:test-tsgo"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:tsgo-rules"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=commit:01-git-commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow:dead-code"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:00-cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:01-pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:02-ci-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:02-pr-checks-watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:00-head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:01-git-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:02-pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:changeset-status"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:allowlist-check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:exploration-atlas"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:goals-doctor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:goals-index"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:schema-first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:test-tsgo"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:tsgo-rules"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=commit:git:commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=early-publish:git:push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow-advisory-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow:dead-code"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:ci-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-checks:watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:changeset-status"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mergeBase=f1383148c6c4873badd9a4c9f4cf9baa83c9601a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=17939404"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=4728704"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=499424"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=53224"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=early-publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=fix_ship-velocity-main-push-parity-d7281d09fe50"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-30T08:23:37.405Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=not-run"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=fix/ship-velocity-main-push-parity\ncommitted=true\ncreatedAt=2026-08-30T08:54:45.175Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=2611.801207\npeakRssKb=499424\nexitCode=0\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=5492.374803\npeakRssKb=4728704\nexitCode=0\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=early-publish\nstatus=passed\ndurationMs=14167.416759\nexitCode=0\nid=publish:01-git-push\nlabel=early-publish:git:push\nphase=early-publish\nstatus=passed\ndurationMs=1398.218066\npeakRssKb=53224\nexitCode=0\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=early-publish\nstatus=passed\nexitCode=0\nid=full:00-cheap-gates\nlabel=full:cheap-gates\nphase=full\nstatus=passed\ndurationMs=304763.09927\npeakRssKb=17939404\nexitCode=0\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=failed\ndurationMs=1365035.333416\nexitCode=1\nrepairCommand=Inspect the OSV finding and rerun `bun run beep quality github-checks security`.\nid=quality:changeset-status\nlabel=quality:changeset-status\nphase=full\nstatus=passed\nid=cheap-gates:goals-index\nlabel=cheap-gates:goals-index\nphase=full\nstatus=passed\nid=cheap-gates:exploration-atlas\nlabel=cheap-gates:exploration-atlas\nphase=full\nstatus=passed\nid=cheap-gates:config-sync\nlabel=cheap-gates:config-sync\nphase=full\nstatus=passed\nid=cheap-gates:tsgo-rules\nlabel=cheap-gates:tsgo-rules\nphase=full\nstatus=passed\nid=cheap-gates:test-tsgo\nlabel=cheap-gates:test-tsgo\nphase=full\nstatus=passed\nid=cheap-gates:effect-imports\nlabel=cheap-gates:effect-imports\nphase=full\nstatus=passed\nid=cheap-gates:schema-first\nlabel=cheap-gates:schema-first\nphase=full\nstatus=passed\nid=cheap-gates:allowlist-check\nlabel=cheap-gates:allowlist-check\nphase=full\nstatus=passed\nid=cheap-gates:goals-doctor\nlabel=cheap-gates:goals-doctor\nphase=full\nstatus=passed\nid=cheap-gates:jsdoc-ratchet\nlabel=cheap-gates:jsdoc-ratchet\nphase=full\nstatus=passed\nid=cheap-gates:knip\nlabel=cheap-gates:knip\nphase=full\nstatus=passed\nid=fallow:audit\nlabel=fallow:audit\nphase=full\nstatus=passed\nid=fallow:dead-code\nlabel=fallow:dead-code\nphase=full\nstatus=passed\nid=full:02-ci-parity\nlabel=full:ci-parity\nphase=full\nstatus=not-run\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=not-run\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=not-run\nmessage=yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again.\nmode=publish\noutcome=failure\npushed=true\nrunId=fix_ship-velocity-main-push-parity-d7281d09fe50\nattemptId=d48b7f4e-17d0-4ef4-8301-f60dfea6c261\nstartedAt=2026-08-30T08:23:37.405Z\nendedAt=2026-08-30T08:54:45.175Z\nelapsedMs=1867770\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\nbehindCount=0\nmergeBase=f1383148c6c4873badd9a4c9f4cf9baa83c9601a\nfailedStepId=full:01-pre-push\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

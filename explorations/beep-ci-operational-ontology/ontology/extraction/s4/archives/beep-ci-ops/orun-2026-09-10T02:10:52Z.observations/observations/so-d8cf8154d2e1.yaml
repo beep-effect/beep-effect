@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:d8cf8154d2e1435f81698ec0c8d67ea4bce53283ef275029392ce1a2d2f2f03f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect10/fix_remove-yeet-pr-lease-0b94e262df14/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 134,
+    "content_sha256": "34e3ef6abebe305914a1c6c094154d8a23622a4d8d4fe6b254e238feda1727e9"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect10/fix_remove-yeet-pr-lease-0b94e262df14/verdict.properties",
+    "lexical_name": "overlappingPaths",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "overlappingPaths=standards/coverage.regression-baseline.jsonc"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=fix/remove-yeet-pr-lease\ncommitted=false\ncreatedAt=2026-08-31T00:29:03.125Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1921.619134\npeakRssKb=504836\nexitCode=0\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=early-publish\nstatus=passed\ndurationMs=14192.36435\nexitCode=0\nid=publish:01-git-push\nlabel=early-publish:git:push\nphase=early-publish\nstatus=passed\ndurationMs=3281.044561\npeakRssKb=23968\nexitCode=0\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=early-publish\nstatus=passed\nexitCode=0\nid=full:00-cheap-gates\nlabel=full:cheap-gates\nphase=full\nstatus=passed\ndurationMs=313613.24975\npeakRssKb=17963252\nexitCode=0\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=failed\ndurationMs=1127199.744073\nexitCode=1\nrepairCommand=Inspect the OSV finding and rerun `bun run beep quality github-checks security`.\nid=quality:changeset-status\nlabel=quality:changeset-status\nphase=full\nstatus=passed\nid=cheap-gates:goals-index\nlabel=cheap-gates:goals-index\nphase=full\nstatus=passed\nid=cheap-gates:exploration-atlas\nlabel=cheap-gates:exploration-atlas\nphase=full\nstatus=passed\nid=cheap-gates:config-sync\nlabel=cheap-gates:config-sync\nphase=full\nstatus=passed\nid=cheap-gates:tsgo-rules\nlabel=cheap-gates:tsgo-rules\nphase=full\nstatus=passed\nid=cheap-gates:test-tsgo\nlabel=cheap-gates:test-tsgo\nphase=full\nstatus=passed\nid=cheap-gates:effect-imports\nlabel=cheap-gates:effect-imports\nphase=full\nstatus=passed\nid=cheap-gates:schema-first\nlabel=cheap-gates:schema-first\nphase=full\nstatus=passed\nid=cheap-gates:allowlist-check\nlabel=cheap-gates:allowlist-check\nphase=full\nstatus=passed\nid=cheap-gates:goals-doctor\nlabel=cheap-gates:goals-doctor\nphase=full\nstatus=passed\nid=cheap-gates:jsdoc-ratchet\nlabel=cheap-gates:jsdoc-ratchet\nphase=full\nstatus=passed\nid=cheap-gates:knip\nlabel=cheap-gates:knip\nphase=full\nstatus=passed\nid=fallow:audit\nlabel=fallow:audit\nphase=full\nstatus=passed\nid=fallow:dead-code\nlabel=fallow:dead-code\nphase=full\nstatus=passed\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=not-run\nid=full:02-ci-parity\nlabel=full:ci-parity\nphase=full\nstatus=not-run\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=not-run\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=not-run\nmessage=yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again.\nmode=publish\noutcome=failure\npushed=true\nrunId=fix_remove-yeet-pr-lease-0b94e262df14\nattemptId=441dc176-5b5f-4885-82ba-a2fb7ae0a887\nstartedAt=2026-08-31T00:04:40.517Z\nendedAt=2026-08-31T00:29:03.125Z\nelapsedMs=1462608\nindexPath=<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json\nbehindCount=3\nmergeBase=9e46efc24e25b782982b1d024a127e8f4c5de2ef\noverlappingPaths=standards/coverage.regression-baseline.jsonc\nfailedStepId=full:01-pre-push\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,73 @@
+id: ic:admb-request-withdrawal:001
+hypothesis_ref: dh:admb-request-withdrawal:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    The same withdrawal event is one causally continuous transition removing the same registered demand
+    from the same admission context through the withdrawal path. A fresh submission followed by another
+    withdrawal is a new event even if the work content and submitter match. Duplicate reports do not
+    create another transition, and voluntary intent is not part of the criterion.
+  reidentification_key:
+  - nonce
+  - _tag=admission-withdrawn
+  - withdrawnAtMillis (reported terminal boundary only)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One ending of one registered demand's contention through withdrawal. Its preceding enqueue, any
+    unobserved work and an independently classified ticket eviction do not share event identity.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - An information assertion that a demand was withdrawn
+  - The request's withdrawn condition or queue-participation endpoint without a distinct removal event
+  existential_dependencies:
+  - >-
+    The registered demand being removed and the admission context. A particular human intention, dead
+    process, failed execution or prior grant is not required by the reported withdrawal content.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: >-
+    Both supplied enqueue/withdrawal examples have the same work kind, priority and requested charge,
+    yet concern different demands and withdrawal boundaries. Their withdrawal entries say nothing
+    about whether a person cancelled, a process was interrupted or another cause triggered removal.
+    Treating withdrawal as voluntary cancellation would add a cause; treating the absence of an admission
+    entry as proof of an exhaustive prior history would add closure.
+status: proposed
+referent_grain: >-
+  One removal transition closing a particular demand's admission registration through withdrawal.
+  It is distinct from a withdrawn condition, the demand itself, a ticket eviction, a grant release
+  and the assertion of withdrawal.
+analysis_notes:
+  rigidity: >-
+    Rigid on the proposed realized-occurrence interpretation: completing this transition does not
+    turn it into a later event, an ongoing participant or a state. Whether any particular assertion
+    corresponds to such an event remains an evidence question.
+  dependence: >-
+    Dependence is on the specified operational participants and admission relation or transition,
+    not on record storage or capture provenance. These dependencies are proposed model conditions,
+    not proof that every reported instance exists.
+  temporality: >-
+    Withdrawal unfolds as a removal transition, dated by withdrawnAtMillis. The interval from enqueuedAtMillis
+    to that boundary belongs to recorded waiting history. There is no measured withdrawal duration,
+    proof of continuous waiting or observed later status. The interval flag remains unresolved because
+    the corpus supplies a timestamp, not start/end duration. The state-change flag distinguishes unfolding
+    from a continuant changing state; no event-state progression is inferred.
+  evidence_limits: >-
+    The two cited chains explicitly associate their own enqueue and withdrawn boundaries. CQ-021 needs
+    historical removal to be kept distinct from current contenders; no missing admission or grant
+    is inferred from silence.
+  provenance: >-
+    The cited observation records are from the current run's fleet admission journal. No synthetic
+    observation is used. Capture, corpus, generator, sanitization and ownerRef metadata are excluded
+    from identity criteria and reidentification keys.
+evidence_refs:
+- so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+- so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+- CQ-021

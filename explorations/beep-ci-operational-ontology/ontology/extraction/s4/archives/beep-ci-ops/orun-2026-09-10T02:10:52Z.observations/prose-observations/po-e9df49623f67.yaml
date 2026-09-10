@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:e9df49623f67f2eac1d565f6ab8811c99128f33a8610358f0944f64ae390aa5e",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 102,
+    "end_line": 102
+  },
+  "quote": "`${specificationNode} ciops-prov:policyDigest ${turtleLiteral(proposal.policyDigest)}^^xsd:string .`,",
+  "epistemic_status": "quoted_prose"
+}

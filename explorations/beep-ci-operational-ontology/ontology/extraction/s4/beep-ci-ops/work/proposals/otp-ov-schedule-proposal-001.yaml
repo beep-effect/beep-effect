@@ -1,0 +1,94 @@
+id: otp:ov-schedule-proposal:001
+hypothesis_ref: dh:ov-schedule-proposal:001
+identity_card_ref: ic:ov-schedule-proposal:001
+foundational_status: analyzed
+term:
+  preferred_label: admission schedule proposal
+  local_name: ScheduleProposal
+  proposed_iri: https://oip.law/ontology/ci-ops#ScheduleProposal
+  owl_entity_kind: class
+definition:
+  text: An information object that prescribes an ordered sequence of admission requests for a represented
+    projection problem and instant, accounting for every pending request as a prescribed step or an explicit
+    deferred remainder.
+  source:
+  - CQ-020
+  - po:sha256:351a4375bf86d6f06e1e558697ef04f2a5e283645a772d4fe5b3e78ac0c722bd
+  - po:sha256:b18d0154d573355ca2ecfcd8a45787237eac6ba6a335c5a69c783c8d0a078f29
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  - po:sha256:5e660542834fa3d2e917207f5764b6905b0654cfb825a0f34b4ac27bfe96bb02
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#ScheduleProposal
+    compatibility: The S5 inventory already contains ciops:ScheduleProposal as a rigid class. The emitter
+      and synthetic fixture use that same term for admission prescription content, while the contract
+      supplies ordered choices and total request accounting. This proposes reuse at that information-content
+      grain; it adds no admission occurrence or issuance identity and does not use the inventory as evidence
+      for the proposed identity criterion.
+operational_warrant:
+  competency_questions:
+  - CQ-020
+  semantic_support_for: []
+alternatives_rejected:
+- 'Actual scheduler admission: the contract reserves real admission writes to the deployed scheduler;
+  a prescription and its emission are distinct from a grant occurrence.'
+- 'Rejected in fa:ov-schedule-proposal:001: Occurrence of actual scheduler admission. The preceding rejection
+  rationale and retained counterexample state the boundary.'
+open_issues:
+- 'Warrant justification: CQ-020 requires a typed prescription selected for the given episode so its governing
+  description and ordered request sequence can be returned. Without this prescription boundary, step sequences
+  from different proposals can be merged into one answer.'
+- 'Identity criterion carried from ic:ov-schedule-proposal:001: Proposed at fixed-prescription-content
+  grain: sameness requires the same represented episode and projection problem at the same reference instant,
+  with the same governing constraints and complete prescription of ordered request assignments, per-step
+  scope, and deferred partition. Re-serialization can reproduce the same content; changing a constitutive
+  prescription or context yields different content. A proposal identifier or digest tuple is a lookup
+  carrier, not this criterion.'
+- 'Steward choice required before ratification of otp:ov-schedule-proposal:001: The steward must choose
+  fixed prescription content, as proposed here, versus a transient projection-result object or an issued
+  plan record individuated by issuance. Repeated byte-equal emission does not decide whether there is
+  one content object or several issued records. Choosing an issuance or transient-result model requires
+  revisiting step and current-selection identity with the dependent proposals before ratification. Still-viable
+  models retained from fa:ov-schedule-proposal:001: Transient projection-result information object without
+  independently persistent plan identity; Issued plan record whose separate issuance episodes distinguish
+  otherwise identical prescriptions.'
+- 'Cluster dependency: otp:ov-schedule-step:001, otp:ov-proposal-step-membership:001, otp:ov-step-position:001,
+  otp:ov-step-request-assignment:001, otp:ov-step-scope-tag:001, otp:ov-seat-request:001, otp:ov-projection-specification:001,
+  otp:ov-proposal-specification-binding:001, otp:ov-current-proposal-selection:001, otp:ov-verification-episode:001.
+  Coordinate ratification or parking where endpoint grain, component identity, or the stated warrant depends
+  on these proposals; no dependent choice is settled by emission spelling.'
+- 'Reuse search: The scout report offers broad PROV-O plan/entity and P-Plan plan patterns, not an exact
+  local admission prescription with this request partition and context. Reuse the local ScheduleProposal
+  term; no external equivalence or superclass edge is proposed.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- The identity card includes the complete admitted/deferred partition in prescription content. dh:ov-deferred-tail:001
+  retains its null hypothesis for a separately queryable deferral term, so this proposal does not admit
+  defersSeatRequest. The steward must preserve the partition as represented content without treating projection
+  deferral as an actual refusal, grant, or starvation event.
+- The cited totality and admissibility statements are contract requirements. They do not establish closure
+  of a live queue or certify that a particular prescription was enacted.
+- 'Strongest counterexample carried from fa:ov-schedule-proposal:001: Hypothetical counterexample: invoking
+  the projector twice on the same explicit input yields byte-equal output as the contract requires, but
+  produces two computation occurrences. Counting two distinct prescriptions solely from those invocations
+  confuses content with its production. Conversely, identical step lists for different represented episodes
+  or input contexts need not constitute the same contextual prescription.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

@@ -1,0 +1,58 @@
+id: "fa:ver-readiness-assessment-alt:001"
+hypothesis_ref: "dh:ver-readiness-assessment:001"
+identity_card_ref: "ic:ver-readiness-assessment-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Operational eligibility condition / phase of the assessed change at a
+      time (Ready as anti-rigid intrinsic condition of the PR/change; bearer
+      is the change, not the report)
+    still_viable: true
+  - label: >-
+      Relator or situation mediating the change and the merge-assurance
+      remainder (n-ary closeout×checks×threads×mergeability). Observationally
+      equivalent to the information-object reading on current evidence because
+      all three observations are verdict-embedded flag bundles, not an
+      independent eligibility occurrence.
+    still_viable: true
+  - label: >-
+      Facet of the attempt-result report (dh:ver-attempt-verdict:001) rather
+      than a distinct information individual; readiness fields ride the same
+      verdict.properties carrier
+    still_viable: true
+  - label: >-
+      Presentation-only collection of independent dashboard flags with no
+      assessment referent
+    still_viable: false
+  - label: >-
+      Timeless Boolean eligibility formula or held CI-merge tier (CQ-006
+      remainder empty). Contradicted by checksGreen=true with failing
+      closeout-run, and by the unmapped checksGreen vs requiredChecksGreen
+      pair (CQ-017).
+    still_viable: false
+strongest_counterexample: >-
+  so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee
+  (checksGreen=true, failing=closeout-run, excerpt ready=false /
+  closeoutRun=false / threadsResolved=true / outcome=success) shows a
+  differentiated remainder that a flags-only envelope or a single ready-
+  quality would erase. Contrast
+  so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30
+  (ready=true, closeoutRun=true, requiredChecksGreen=true,
+  threadsResolved=true) and
+  so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1
+  (ready=false, closeoutRun=false, checksGreen=false, threadsResolved=false).
+verdict: analyzed
+needed_evidence: >-
+  Discriminate distinct assessment versus verdict facet: an assessment
+  snapshot that updates while its host attempt-verdict remains fixed, or an
+  assessment produced outside a verdict.properties carrier. Discriminate
+  information-object versus world eligibility/phase: a consumer rule that
+  accepts or blocks merge from these flags independently of the report, plus
+  a mapping from checksGreen/requiredChecksGreen/closeoutRun to named lane
+  obligations that would decide CQ-006 remainder and CQ-017 local-full versus
+  CI-merge asymmetry. No complete census of readiness criteria and no
+  current-PR state is inferred.

@@ -1,0 +1,67 @@
+id: ic:adm-release:001
+hypothesis_ref: dh:adm-release:001
+identity:
+  supplies_identity: false
+  identity_criterion: Two descriptions concern the same release only when they concern the same relinquishment
+    ending one particular acquired authorization's holding. The transition is individuated by that grant
+    and its actual relinquishment boundary in its admission context. It is not individuated by reported
+    memory, a success result, a nonce, or an append position. Releasing a newly conferred grant is a different
+    occurrence even if its beneficiary and charge are unchanged.
+  reidentification_key:
+  - Local journal nonce together with the matching event block and releasedAtMillis; evidence locator
+    only, neither globally unique nor sufficient for operational identity.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One relinquishment of one acquired holding unifies the occurrence. The grant's conferral and
+    the intervening holding interval are not parts of the release boundary.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - A journal information object asserting release. An observed lease relinquishment paired with the corresponding
+    holder-accounting transition would corroborate the occurrence reading.
+  - A grant's terminal boundary labeled released, without separately reifying the release act. Evidence
+    requiring release-specific participants or effects beyond the grant endpoint would discriminate this
+    domain alternative.
+  existential_dependencies:
+  - The particular previously acquired grant whose holding is relinquished.
+  - Its admission capacity context at the release transition. The grant need not remain active after the
+    event, and the evidence does not establish the work execution's outcome.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: A release report with a memory peak can be emitted after failed or canceled work, and can
+    be replayed after its grant has already ended. Reading that record as a successful verification, another
+    release, or a timeless resource census would confuse measurement, assertion, occurrence, and present
+    state.
+status: proposed
+grain: One particular operational transition, represented by a dated event assertion; not a classification
+  signature, a current binding snapshot, a governing specification, a journal block, or the whole nonce-linked
+  history.
+metaproperty_rationale: Under the operational reading, this particular transition is essentially the occurrence
+  it was, so its event classification is rigid. It carries occurrence identity and does not establish
+  a new independent continuant identity provider. Its relational dependence is on participants at the
+  transition, not their perpetual future existence. The information-object rival is kept separate, not
+  assigned these meta-properties.
+temporality_rationale: The journal supplies a single asserted boundary time, not independently measured
+  start/end times for the operation, so interval duration remains unresolved. At the selected boundary-event
+  grain it does not persist through mutable continuant states. The release completes at relinquishment.
+  Released describes the grant's ended holding in history; it is not an enduring state of the release
+  event.
+evidence_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:d90be1aaa963b3e017130d2add821e59f623ac0540f9563cd9dd1d607cae8ce9
+- CQ-008
+- CQ-009
+evidence_reading: Both cited histories positively pair admission with release. The first includes releasedAtMillis=1788927008574
+  and memoryPeakBytes=9904820224; that reported measurement is associated context, not release identity,
+  charge, a hard limit, or success evidence. These histories supply local reported endpoints, not a complete
+  current holder census.
+evidence_limits: All cited observations are parser-derived records of the current run3-fleet journal,
+  not synthetic observations. Operational reality is not established by the journal alone. Capture, owner-reference,
+  resanitization, corpus, generator, and record-position metadata are not identity criteria. No missing
+  entry is treated as closed-world evidence.

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:3c9d7d9e1165dd56fe1846e5c84f330e75fb8b966dfbd2fcf0e5a4a113b504c5",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 96,
+    "end_line": 96
+  },
+  "quote": "`${proposalNode} ciops-prov:defersSeatRequest ${proposalNode}-request-${A.length(admittedRequests) + index} .`",
+  "epistemic_status": "quoted_prose"
+}

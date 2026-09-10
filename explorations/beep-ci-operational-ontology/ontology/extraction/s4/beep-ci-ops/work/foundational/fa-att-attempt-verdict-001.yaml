@@ -1,0 +1,89 @@
+id: fa:att-attempt-verdict:001
+hypothesis_ref: dh:att-attempt-verdict:001
+identity_card_ref: ic:att-attempt-verdict:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      A dated assessment event producing a separate verdict information object;
+      viable as an occurrence-centered account, but it changes the referent grain.
+    still_viable: true
+  - label: >-
+      A contextual assertion-content object that identifies equal assertions
+      across independent assessments, rather than an issuance-bound verdict unit.
+    still_viable: true
+  - label: >-
+      A certificate whose green fields alone establish sufficient authority for
+      current correctness or transfer to another tree and cache epoch.
+    still_viable: false
+strongest_counterexample: >-
+  Record 7 in the cited excerpts is a failed verify assessment for attempt
+  84b5343b-a759-49b7-aaad-1befc685a8f9, resolved head
+  aa83e8bece590ebc53f22a2c0647275ad193e65c, with failedStepId=full:00-cheap-gates.
+  Record 19 is a successful monitor assessment for attempt
+  7f745261-e584-4446-adf4-34be72c70714, resolved head
+  9329ec920162cc4626b2148e3077184255b89cc8, with ready=true and
+  requiredChecksGreen=true. Treating the flattened projection as one verdict
+  joins incompatible attempts and heads, and treating its green fields as a
+  timeless certificate transfers findings beyond the context actually assessed.
+verdict: analyzed
+evidence_refs:
+  - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+  - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+  - CQ-005
+  - CQ-022
+  - CQ-025
+analysis:
+  identity: >-
+    The assessment unit is individuated by its originating assessment of one
+    attempt, the asserted content, and the asserted applicability context.
+    Technical fields corroborate this unit, but neither a capture filename nor
+    attemptId alone settles identity if independent or revised assessments are
+    possible. Copies of the same assessment do not add another assessed attempt.
+  rigidity: >-
+    Rigid as an originating verdict information object. Being green, useful,
+    authoritative, or presently applicable is not essential to remaining that
+    object and cannot supply its identity.
+  dependence: >-
+    Relational in the contract's coarse vocabulary: the content has an
+    assessment origin, an intended subject/context, and some concretization.
+    This is generic information dependence, not inherence as an intrinsic
+    quality of the codebase and not a grant-like mediating relator. No present
+    live process or true readiness condition is required for a stored verdict
+    to continue existing.
+  temporality: >-
+    The record persists as information after the dated assessment. Its current
+    applicability can change without changing the recorded assertion. Actual
+    lane duration and assessment recording time describe different occurrences;
+    the failed lane's 695899.047175 ms is also distinct from its attempt's
+    719613 ms elapsed measure.
+  category: >-
+    Information object is supported by the persisted, contextual assessment
+    assertions, independently of whether those assertions later remain usable.
+    The assessment event and a content-value model remain explicit alternatives;
+    no equivalence with either is asserted.
+  spec_vs_execution: >-
+    proofTier and stage qualify the assessed work but are not themselves
+    executions, and this verdict is not the procedure governing assessment.
+    Measurements report performed work; a failedStepId and not-run lane must
+    not be expanded into evidence that every prescribed lane executed.
+  world_vs_information: >-
+    An assertion that checks were green records a finding, not timeless truth
+    about all trees or present PR state. The existence of the verdict does not
+    establish the truth, completeness, or continuing validity of its findings.
+    The source_excerpt record boundaries preserve which findings belong together.
+  role_vs_bearer: >-
+    The object may serve as verification evidence under a particular assessment
+    or reuse rule. Losing that role does not destroy the verdict. The execution,
+    assessed tree, and a consumer treating it as evidence are distinct bearers
+    or subjects, and no owner is inferred from ownerRef aliases.
+  context_reification: >-
+    Keep the attempt, assessment, head/diff, tier, environment, and stage jointly
+    attached to the particular verdict. CQ-005 additionally needs an epoch and
+    invalidation/applicability conditions not supplied here; no sufficient reuse
+    test follows from the head/diff tuple alone. CQ-022 requires the failure's
+    own attempt context, and CQ-025 requires lane-level measurements and an
+    estimate snapshot before a cost-calibration pair can be constructed.

@@ -1,0 +1,97 @@
+id: ic:admb-seat-request:001
+hypothesis_ref: dh:admb-seat-request:001
+referent_grain: >-
+  One fixed version of a recorded request account: the supplied assertion of a submitted capacity
+  demand and only its explicitly correlated queue/admission/termination reports. Historical
+  request-description content is distinct from an effective registered demand, a current
+  queue-member binding, a submission act, a requester and a grant.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    The same information object has the same reported demand subject, reporting context, and
+    bounded request-assertion content, including only the attributes and boundary assertions
+    actually present. Re-encoding or copying that account preserves its content; changing its
+    subject, adding a boundary or correcting an attributed value yields another account version.
+    Distinct reported submissions remain distinct even with equal intended work, kind, priority
+    and charge. Nonce and enqueue time support local correlation, not operational demand
+    continuity or a universal sameness rule.
+  reidentification_key:
+    - >-
+      nonce within the supplied admission-journal context, for assertion correlation only
+    - >-
+      enqueuedAtMillis where explicitly present, plus each boundary entry's tag and recorded time
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    Unity belongs to one contextual request account and its explicitly attributed reports. A
+    ticket-eviction-only account is partial: it is not completed with an invented enqueue, work
+    kind, priority or charge. A subsequently reported grant is a separate description.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - >-
+      relator: a registered demand connecting a submitter, intended invocation and admission
+      service
+    - >-
+      event: the effective act of requesting capacity
+    - >-
+      role: queued participation borne by an enduring demand, potentially expressed by request
+      information
+  existential_dependencies:
+    - >-
+      The reported demand's subject binding, request-reporting context and some information
+      carrier; the content does not require a particular retained ticket file.
+    - >-
+      An actually registered contender or an independently identified submitting process is not
+      required for the information to exist. Historical reporting can remain after a purported
+      admission, withdrawal or ticket eviction.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      A withdrawal followed by another submission for identical work could describe two
+      operational demands or continued handling of one enduring demand. The reports alone cannot
+      decide that identity. Their distinct contextual assertions can still be retained without
+      merging them by work content or declaring nonce equality sufficient.
+  - description: >-
+      The two ticket-eviction-only accounts lack enqueue time, kind, priority and charge. Treating
+      a historical request account as a fully populated currently queued ticket would invent those
+      values and current membership.
+status: proposed
+analysis_notes:
+  rigidity: >-
+    Rigid for fixed request-description content. Its historical subject does not become a grant
+    merely because an admission report is later associated with it. Queued membership would be a
+    separate contingent classification of an independently established bearer.
+  dependence: >-
+    The asserted subject and reporting context bind the information; an effective
+    submitter/service relation is the unsupported operational rival, not an existential commitment
+    of this card.
+  temporality: >-
+    The account's retention lifetime differs from the queue interval it describes. Its content
+    does not unfold as a submission act. An admission, withdrawal or eviction assertion is not the
+    information object's terminal state; no retention endpoint is supplied.
+  evidence_limits: >-
+    The cited examples include explicit enqueue/withdrawal pairs, admissions retaining an earlier
+    enqueue time, and ticket-eviction-only reports. An enqueue timestamp on an admission is not a
+    separately observed enqueue entry. Work kind and priority remain distinct recorded attributes.
+    CQ-021's requestedBy and current-queue joins are not established by this historical corpus.
+  provenance: >-
+    The cited fleet-journal observations are not from corpus/run3b-synthetic.
+    Capture/corpus/generator metadata, security-resanitization fields, ownerRef variants and
+    location placeholders supply no request or requester identity.
+evidence_refs:
+  - CQ-021
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  - so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+  - so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+  - so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+  - so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+  - so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+  - so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973

@@ -1,0 +1,106 @@
+id: ic:ov-admission-token-charge:001
+hypothesis_ref: dh:ov-admission-token-charge:001
+referent_grain: >-
+  One contextual recorded integer-charge assertion about a request subject in an emitted
+  description. The assertion content is an information object; it is distinct from the integer
+  magnitude itself, a continuing administrative quality, a policy-application assignment and a
+  grant-time charge.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Within one emitted description, the same recorded charge content attributes the same integer
+    token amount to the same represented request subject in that assertion context. Different
+    request subjects bearing the literal 5 therefore give distinct contextual assertions, while
+    copying one assertion need not create new content. The subject and datatype/value locate the
+    assertion; their spelling is not a cross-emission identity criterion. Unresolved across
+    changed emission/assessment contexts: the supplied evidence does not establish when a later
+    assertion repeats, revises or replaces an earlier assignment, or whether a request charge
+    continues as a grant charge.
+  reidentification_key:
+    - >-
+      emitted request subject plus admissionChargeTokens, for lookup within that description only
+    - >-
+      xsd:integer value copied from request.weightTokens, as attributed content rather than an
+      individual key
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: unresolved
+  unity: >-
+    The request-subject binding and integer charge assertion form one bounded informational
+    content. The fixture's request-0, request-1 and request-2 assertions each carry 5; magnitude
+    equality cannot merge them. No separately identified charge node, effective policy-application
+    identity or lifecycle is inferred from the triple.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - >-
+      quality: an administrative token burden persisting on the same request through repricing
+    - >-
+      mode: a policy-specific charge assignment replaced by a new charging decision
+    - >-
+      information model: successive assertions only, with no separately reified continuing charge
+      individual
+  existential_dependencies:
+    - >-
+      The represented request subject and emitted assertion context, plus an information carrier;
+      an independently existing charged request is not required for the assertion to exist.
+    - >-
+      No continuing quality, effective policy assignment, particular policy version, assessment
+      instant or granted-capacity binding is established merely by the literal. These belong to
+      the rival models and missing observations.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The fixture assigns the integer 5 to three distinct request subjects. Identity by magnitude
+      merges three assertions; identity by a request alone also fails to distinguish a later
+      corrected value or a changed assessment context. The emitted assertion can be preserved as
+      information even if no operational charge was assessed.
+  - description: >-
+      Hypothetical repricing of one still-pending request could change an enduring quality or
+      replace a policy-specific assignment. The current emitter/fixture does not decide either
+      model or establish a request-to-grant charge continuation. Neither five tokens nor its
+      revision measures physical memory.
+status: proposed
+analysis_notes:
+  rigidity: >-
+    Rigid at fixed assertion-content grain: the assertion remains charge-description information
+    even if inaccurate or superseded. Classification and identity of an enduring operational
+    burden remain outside that bounded ruling.
+  dependence: >-
+    Relational dependence is on the represented subject and assertion context, not on an observed
+    effective charge or a presumed policy bearer. The broader quality/mode dependence question
+    stays deferred.
+  temporality: >-
+    A recorded assertion can remain available after a subject or policy changes; no retention
+    endpoint is supplied. A changed value is changed content within a description, while
+    cross-emission sameness/replacement remains unresolved. No operational assignment interval or
+    terminal transition is observed.
+  category: >-
+    The emission fixture positively contains three subject-bound admissionChargeTokens integer
+    assertions, and the Turtle site copies request.weightTokens into precisely that assertion
+    form. This supports information_object at recorded-value grain without resolving the policy
+    quantity's continuing identity or demanding a new charge individual.
+  evidence_limits: >-
+    CQ-010 reads the charge on a grant and compares it with remaining capacity before admission;
+    CQ-021 reads a request charge. The fixture supplies request-side assertions only. The quoted
+    inequality explains the value's policy use, but is not an observed policy application,
+    pre-grant capacity snapshot, execution guarantee or request/grant join.
+  provenance: >-
+    The fixture is example/test evidence and the Turtle site is a quoted emitter definition;
+    neither is an organic admission observation. No corpus/run3b-synthetic lifecycle is used.
+    Capture/generator metadata and digest/IRI spelling supply no identity criterion.
+evidence_refs:
+  - po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+  - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+  - po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+  - po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305
+  - po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8
+  - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+  - CQ-010
+  - CQ-021

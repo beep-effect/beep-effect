@@ -1,0 +1,34 @@
+id: "dh:ov-schedule-step:001"
+observation_refs:
+  - "po:sha256:14e01baa9a4fa23873722680039d098e43c3e0f315d5f6805159154577794e06"
+  - "po:sha256:35a69c5bcbf7493cc0aa7f248d138d65f2d5c8beff49e80308ef85b43a0f559d"
+  - "po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2"
+cq_warrants: ["CQ-020"]
+proposed_referent:
+  label: "schedule-step information artifact"
+  description: >-
+    An ordered component of a ScheduleProposal that records a position,
+    scheduled-target reference, and scope and that represents an admission act
+    in the v1 projection.
+representation_status: information_artifact
+alternatives:
+  - label: "Admission act occurrence itself"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "S.Class and provisional RDF-node carrier"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The observations describe ScheduleStep as the structured, ordered content
+    of a provenance-bearing proposal whose projected order is compared with
+    deployed grant order, not only as a schema or RDF node.
+  discriminator: >-
+    The contract requires proposals to preserve an ordered sequence for
+    differential comparison with deployed grant order and specifies each
+    step's position, scheduled target, and scope; that information content
+    exists independently of the S.Class and provisional graph encodings.
+epistemic_status: proposed
+confidence: {value: 0.85, use_for_acceptance: false}

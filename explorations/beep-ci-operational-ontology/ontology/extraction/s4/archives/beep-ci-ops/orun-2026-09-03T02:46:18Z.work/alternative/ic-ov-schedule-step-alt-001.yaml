@@ -1,0 +1,43 @@
+id: ic:ov-schedule-step-alt:001
+hypothesis_ref: dh:ov-schedule-step:001
+identity:
+  supplies_identity: true
+  identity_criterion: 'Two schedule-step information objects are the same iff they
+    are the same ordered content component of the same ScheduleProposal — the same
+    projection-instant proposal with the same policy and journal-prefix digests —
+    prescribing the same scheduled target and scope at the same ordinal place. The
+    S.Class record and the provisional RDF node are encodings of that content, never
+    the criterion. A later projection over the same journal is a different proposal
+    and therefore different steps.'
+  reidentification_key:
+  - stepIndex field (evidence of place)
+  - scheduled unit ref (evidence of target)
+  - scope tag (evidence of content kind)
+  - proposal id / projection instant / input digests (evidence of the whole)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one ordered prescription of one scheduled target at one place in one proposal
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - relator
+  - event
+  existential_dependencies:
+  - the ScheduleProposal of which the step is ordered content
+  - the SeatRequest or other scheduled target the step designates
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: 'Totality requires every pending request to appear exactly once as
+    an admitted step or an explicit deferred tail. A deferred-tail placement is still
+    proposal content; classifying every ScheduleStep as an admission-act event would
+    mint occurrents that did not unfold.'
+- description: 'Same ProjectionInput twice yields a structurally equal proposal. If
+    steps were dated admission occurrences, a second projection would be a second
+    unfolding rather than a repeatable information structure.'
+status: proposed

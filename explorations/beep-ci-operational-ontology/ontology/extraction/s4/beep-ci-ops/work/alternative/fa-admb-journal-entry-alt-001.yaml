@@ -1,0 +1,35 @@
+id: "fa:admb-journal-entry-alt:001"
+hypothesis_ref: "dh:admb-journal-entry:001"
+identity_card_ref: "ic:admb-journal-entry-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      information_object: one bounded tagged assertion, distinct from the
+      occurrence and from the participant it mentions (supported by distinct
+      _tag/timestamp pairs)
+    still_viable: true
+  - label: >-
+      event: the operational occurrence the entry reports, taking the journal
+      as transparent evidence of the world
+    still_viable: true
+  - label: >-
+      none: semantically empty serialization wrapper around separately modeled
+      facts
+    still_viable: false
+strongest_counterexample: >-
+  Under a wrapper-only reading, so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  could not distinguish the claim of registration (admission-enqueued) from
+  authorization (admission-admitted) from relinquishment (admission-released)
+  for nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088; CQ-008/CQ-021 need those
+  assertion boundaries even when occurrence truth remains open.
+verdict: analyzed
+needed_evidence: >-
+  A copied or replayed entry with no second scheduler transition would confirm
+  information-object identity against occurrence identity; a correlated
+  scheduler transition independent of journal emission would support the event
+  rival. The models are not fully discriminated on journal-only evidence, but
+  informational emptiness is already ruled out.

@@ -1,0 +1,38 @@
+id: dh:ov-step-scope-tag:001
+observation_refs:
+- po:sha256:004887d37eb13319a467b294764093c16a3cb02165cc88ceba6b7bfa4768f77c
+- po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7
+- po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+cq_warrants:
+- CQ-020
+- CQ-019
+proposed_referent:
+  label: Literal scope annotation on a prescribed step
+  description: The information carried by a literal scope tag on each schedule step; the observed admission
+    value describes the admission act itself. The batch does not establish a package-selection scope,
+    affected-set computation, or scope individual behind that literal.
+representation_status: information_artifact
+alternatives:
+- label: A simple controlled annotation value with no independent tag object
+  representation_status: information_artifact
+  plausibility: viable
+- label: Verification scope or affected-package set
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: Two fixture step subjects carry the admission string, and the emitter serializes step.scope
+    as a typed string. The contract explains the tag as the admission act for this projection version.
+    Those facts support the scope content requested per step and relevant to the literal-tag provenance
+    arm. They do not establish that scope-provenance obligations have been discharged.
+  discriminator: 'The emitter quote is "${stepSubject} ciops-prov:hasScopeTag ${turtleLiteral(step.scope)}^^xsd:string
+    ."; each fixture step asserts "ciops-prov:hasScopeTag "admission"^^xsd:string". The schema-description
+    quote specifies "scope tag (v1: the admission act itself". The null would leave no represented per-step
+    scope content for those explicit literals.'
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

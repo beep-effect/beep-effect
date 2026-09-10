@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/test/fixtures/emission-v2.ttl"
+  },
+  "source_span": {
+    "start_line": 19,
+    "end_line": 19
+  },
+  "quote": "ciops-prov:episode-verification%2D1 rdf:type ciops-prov:VerificationEpisode .",
+  "epistemic_status": "quoted_prose"
+}

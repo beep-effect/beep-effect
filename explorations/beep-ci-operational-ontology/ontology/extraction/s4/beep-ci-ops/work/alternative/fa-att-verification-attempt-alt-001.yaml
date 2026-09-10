@@ -1,0 +1,20 @@
+id: "fa:att-verification-attempt-alt:001"
+hypothesis_ref: "dh:att-verification-attempt:001"
+identity_card_ref: "ic:att-verification-attempt-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Event: dated start-to-terminal invocation of repair/verify/publish/monitor/closeout, distinct from later retries in the same run"
+    still_viable: true
+  - label: "Information object: the yeet-attempt-journal/v1 records describing those invocations"
+    still_viable: true
+  - label: "Reusable verification procedure (kind) instantiated by the recorded invocations"
+    still_viable: false
+  - label: "The journal file, branch-associated run, or a single lane execution identified with the attempt"
+    still_viable: false
+strongest_counterexample: "Merging distinct dated invocations because they share a journal, or treating the journal as the occurrence: so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31 records many later attemptIds after the failed d1e2faf7-31d5-4b94-b672-7a70c8f7d015 pair, and the two captures repeat one excerpt rather than doubling occurrences. The event and information-object models are observationally equivalent on current evidence because the occurrence is known only through the journal."
+verdict: analyzed
+needed_evidence: "An independent process-table or wall-clock observation of the invocation not mediated by the journal would discriminate the event from the information object. Per-lane actualWallMs versus usedCostEstimate pairing (CQ-025) must remain attempt-scoped (CQ-022) and must not be identified with elapsedMs. The late legacy-unowned-start termination does not extend the first attempt's interval to 2026-09-04."

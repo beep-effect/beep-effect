@@ -1,0 +1,11 @@
+id: rat:58
+proposal_ref: otp:ov-proposal-step-membership:001
+proposal_sha256: 38013f6ec4c454286331334acbddfbade6f7a52b1fcc17c3cbfa8faa68850625
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-proposal-step-membership:001 as the contextual hasStep object property
+  for fixed prescription components, retaining the component-versus-tuple choice as flagged and ratifying
+  it only with the complete ordering cluster.

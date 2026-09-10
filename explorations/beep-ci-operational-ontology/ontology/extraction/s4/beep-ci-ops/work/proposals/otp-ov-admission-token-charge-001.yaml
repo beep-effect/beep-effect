@@ -1,0 +1,123 @@
+id: otp:ov-admission-token-charge:001
+hypothesis_ref: dh:ov-admission-token-charge:001
+identity_card_ref: ic:ov-admission-token-charge:001
+foundational_status: explicitly_deferred
+term:
+  preferred_label: admission charge tokens
+  local_name: admissionChargeTokens
+  proposed_iri: https://oip.law/ontology/ci-ops#admissionChargeTokens
+  owl_entity_kind: data_property
+definition:
+  text: >-
+    A recorded-charge property attributing an integer token amount to a represented request or
+    grant in its assertion context. The supplied synthetic instances describe request-side
+    charges only; the recorded value does not establish an effective policy application or a
+    continuing charge assignment.
+  source:
+  - CQ-010
+  - CQ-021
+  - po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+  - po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+  - po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305
+  - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+  - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: unresolved
+  dependence: relational
+parents: []
+revision_log:
+- from_sha256: b7448957287c97fb577140515c6a74de385a55e866da89e315be5100b61bd332
+  addressed:
+  - "gate-log-1 category alignment: derive information_object and its identity account from the repaired IC/FA"
+  - "charge-assignment-versus-record-identity"
+  - "GATE OntoClean alignment: rigid and relational recorded content; cross-context identity remains unresolved and explicitly_deferred"
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#admissionChargeTokens
+    compatibility: The S5 inventory already defines admissionChargeTokens as an integer recorded-value
+      property on SeatRequest or SeatGrant. The emitter copies request.weightTokens into that same integer
+      predicate, and the contract uses the corresponding charge in the capacity comparison. This proposes
+      reuse of the recorded policy-token amount, without minting a charge individual or identifying a
+      queued assessment with a later grant assessment.
+operational_warrant:
+  competency_questions:
+  - CQ-010
+  - CQ-021
+  semantic_support_for: []
+alternatives_rejected:
+- 'Measured physical consumption or guaranteed execution resource limit: policy token accounting is neither
+  a duration distribution nor physical memory measurement, and the fixture establishes no execution ceiling.'
+- 'Rejected in fa:ov-admission-token-charge:001: Measured physical memory consumption or guaranteed execution
+  resource ceiling. The preceding rejection rationale and retained counterexample state the boundary.'
+open_issues:
+- 'Warrant justification: CQ-021 requires the recorded charge to report the cost of queued requests in
+  policy tokens. CQ-010 requires the charged amount to compare an admission against pre-admission remaining
+  capacity. An estimated duration or measured memory value cannot substitute for this policy quantity;
+  the two questions concern different assessment contexts and do not assert request/grant continuity.'
+- >-
+  Identity criterion carried from the repaired ic:ov-admission-token-charge:001: within one
+  description, recorded charge content binds the same integer amount to the same represented
+  request and assertion context. Equal values on different request subjects are distinct
+  contextual assertions. Cross-emission identity remains unresolved: subject or value spelling
+  alone cannot decide whether a later assertion repeats, revises or replaces an earlier
+  assessment, or whether a request charge continues as a grant charge.
+- 'Steward choice required before ratification of otp:ov-admission-token-charge:001: The steward must
+  choose whether the contextual information property proposed here is sufficient for the decision questions
+  or whether an independently modeled administrative quality or policy-specific assignment/mode is required.
+  All three remain viable in the foundational analysis. A quality can persist through repricing while
+  an assignment may be replaced; if either reified model is chosen, the existing unresolved identity card
+  requires new continuity evidence before a corresponding charge class can be proposed. Still-viable models
+  retained from fa:ov-admission-token-charge:001: Administrative quality whose value can change while
+  the same request persists; Policy-specific assignment or relational mode replaced on a new charging
+  decision; Contextual information assertion with a numeric value and no separately reified charge individual.'
+- 'Cluster dependency: otp:ov-seat-request:001, otp:ov-projection-specification:001. Coordinate ratification
+  or parking where endpoint grain, component identity, or the stated warrant depends on these proposals;
+  no dependent choice is settled by emission spelling.'
+- 'Reuse search: The local admissionChargeTokens property supplies the recorded-value surface. The scout
+  report''s general measurements and resource-budget patterns supply no exact token-policy charge, and
+  no physical-memory or duration vocabulary is interchangeable with it.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Representation grain: the proposed property encodes contextual information content without requiring
+  a separate assertion individual. The OntoClean fields are inherited from the joined identity card for
+  that candidate content, not asserted as identity criteria for an RDF literal or for the OWL property
+  universal.'
+- >-
+  Foundational deferral retained from fa:ov-admission-token-charge:001. Needed evidence:
+  paired emissions for one independently reidentified request before and after an effective
+  charging-policy change, with the applied policy, assessment instants, both values and
+  observation-backed copy/correction/replacement semantics. Establish whether the underlying
+  burden persists or a new assignment replaces it. Include the subsequent grant assessment and
+  pre-admission remaining capacity before asserting request/grant charge continuity or applying
+  CQ-010. Equal weightTokens fields alone are insufficient.
+- >-
+  The repaired card rules information_object with rigid classification and relational
+  dependence at fixed recorded-value grain. Cross-emission and assessment identity remain
+  unresolved, and foundational_status stays explicitly_deferred. The administrative-quality,
+  policy-assignment/mode and successive-assertion rivals remain explicit steward choices;
+  choosing this data-property shape does not settle their lifecycle or request/grant continuity.
+- The concrete values are synthetic request charges of five tokens. They establish neither a grant charge
+  instance nor actual over-capacity admission, general weights for every work kind, a memory-per-token
+  measurement, or a hard execution ceiling.
+- A queued request assessment and a grant assessment are distinct contexts. Equal integers do not identify
+  one charge or establish a request-to-grant link; CQ-010 additionally needs a separately evidenced admission
+  and its pre-grant remaining capacity.
+- 'Strongest counterexample carried from fa:ov-admission-token-charge:001: Hypothetical counterexample
+  grounded in the fixture''s three separate requests with charge 5: merging charges because their integers
+  agree collapses different charged requests. Conversely, changing the charging rule for the same still-pending
+  request could change one enduring quantity or replace one assignment with another; the supplied emissions
+  do not discriminate. Neither five tokens nor a change in that number measures memory consumption.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

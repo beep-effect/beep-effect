@@ -1,0 +1,18 @@
+id: "fa:ov-projection-specification-alt:001"
+hypothesis_ref: "dh:ov-projection-specification:001"
+identity_card_ref: "ic:ov-projection-specification-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: unresolved
+rival_models:
+  - label: "Repeatable governing specification (information object / description) (preferred as type, identity open)"
+    still_viable: true
+  - label: "Input-bound projection-context record whose identity includes journal-prefix digest"
+    still_viable: true
+  - label: "Occurrence of running the projection engine"
+    still_viable: false
+strongest_counterexample: "An execution reading cannot explain why empty and fully deferred projections still emit a typed specification, nor why same input must yield byte-equal Turtle under the determinism rule (po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6; po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864; po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: repeatable specification versus input-bound application context. Discriminator: two emissions sharing policyDigest but differing in journalPrefixDigest (same spec or different context records), or one specification individual reused across journal prefixes (po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99; po:sha256:c92cd59362565eda3098e5d0828c8c377fd934ae4d4546cc190d22b25207fd9a)."

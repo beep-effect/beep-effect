@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:aedb815bd5097d2ce32b810d3884bdfc982a296e8da81f5781edd14488f4e335",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3b-fleet/attempts/a/a/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "433262c0669a7b070d6539c5cfac01501e9f5718316b789b7fed4e68ef76dee0"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/attempts/a/a/attempts.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "key=pin-reset"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-attempt-journal/v1"
+    }
+  ],
+  "source_excerpt": "schemaVersion=yeet-attempt-journal/v1\nkey=pin-reset\n",
+  "epistemic_status": "parser_derived"
+}

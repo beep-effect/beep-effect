@@ -1,0 +1,11 @@
+id: rat:65
+proposal_ref: otp:ov-verification-episode:001
+proposal_sha256: 21aeda2de9393aa6a4e22f4bbbc05376075dd06f5df073030befb3bf4234d4f7
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-verification-episode:001 as the VerificationEpisode occurrence-context
+  proposal within the joint ordering cluster, with process/event category, unity, attempt membership and
+  closure identity explicitly deferred to run 4 as flagged.

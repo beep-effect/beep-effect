@@ -1,0 +1,54 @@
+id: fa:ov-verification-episode:001
+hypothesis_ref: dh:ov-verification-episode:001
+identity_card_ref: ic:ov-verification-episode:001
+referent_grain: Candidate verification occurrence spanning an as-yet unbounded concern or history, distinguished
+  from the caller-chosen correlation description used to attach a proposal.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: The contract gives the episode argument an occurrence-context intention. Without
+    observations of activity continuity, boundaries, and membership, that intention cannot select process,
+    event, situation, or correlation information, so category is explicitly unresolved.
+  rigidity: Whether episode membership denotes an essential occurrence category or a contingent grouping
+    of activities remains open. No rigid episode sortal is inferred from a required string.
+  dependence_and_temporality: The batch supplies no episode lifecycle, start or end observations, attempt
+    grouping, or terminal states. A process or event unfolds in time; a correlation information object
+    persists as a description. The available typing does not decide.
+  spec_vs_execution: The candidate context is distinct from its associated schedule prescription and the
+    repeatable rule specification governing that prescription.
+  world_vs_information: An episode subject is emitted, but the represented verification occurrence and
+    the correlation record are not yet discriminated. A fixture subject does not prove a completed episode.
+  role_vs_bearer: The caller supplies a reference; the caller and its actor role are not the episode.
+    Being a context for a proposal is a relation the candidate bears, not by itself an identity provider.
+  context_reification: An occurrence account needs its participating activity and temporal boundaries;
+    a grouping account needs its correlation context. Keep current-proposal selection contextual rather
+    than using it as the definition of episode identity.
+  evidence_limit: CQ-020 needs an episode anchor for its current sequence. It does not provide the missing
+    lifecycle observations, and the emitted fixture has no episode timing or attempt membership evidence.
+rival_models:
+- label: Temporally extended verification process uniting multiple activities under one continuing concern
+  still_viable: true
+- label: Bounded verification event or situation with different unity and temporal criteria
+  still_viable: true
+- label: Caller-chosen information context that correlates proposals without establishing a single occurrence
+  still_viable: true
+strongest_counterexample: 'Hypothetical counterexample: a caller reuses one non-empty episodeId for two
+  disconnected verification histories, or supplies two ids during one continuing history. The emitter
+  can type the corresponding subjects in either case. Treating identifier equality or inequality as occurrence
+  identity therefore creates an unsupported merge or split; a type assertion does not supply start, end,
+  or attempt membership.'
+verdict: explicitly_deferred
+needed_evidence: Observe one verification history from an explicit initiating boundary through retries
+  or attempt changes and proposal replacement to closure or abandonment, with an observation-backed rule
+  explaining which activities belong to that same episode. Include a contrasting disconnected history
+  or identifier reassignment so continuity and episode boundaries can be established independently of
+  episodeId equality.
+evidence_refs:
+- po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4
+- po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- CQ-020

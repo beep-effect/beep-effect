@@ -1,0 +1,51 @@
+id: fa:adm-enqueue:001
+hypothesis_ref: dh:adm-enqueue:001
+identity_card_ref: ic:adm-enqueue:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: An information object asserting queue entry; still viable because the cited observations establish
+    the assertion, not an independently observed insertion. A time-aligned ticket-store insertion trace
+    would distinguish these readings.
+  still_viable: true
+- label: The beginning of a request participation interval represented as a temporal boundary, without
+    an independently reified event. A trace or decision needing insertion-specific actors or effects would
+    distinguish this from the event model.
+  still_viable: true
+strongest_counterexample: A logger can retry the same enqueue assertion twice without inserting a second
+  ticket, or record an enqueuedAtMillis retrospectively in an admission entry. Counting the lines or the
+  timestamp as distinct operations would manufacture enqueue events. Conversely, removing and resubmitting
+  identical work is a new entry even if a local nonce is mistakenly reused.
+verdict: analyzed
+test_rationales:
+  spec_vs_execution: A queue-selection procedure or requested work description can govern repeated insertions.
+    The referent here is one dated insertion, not that specification, its whole wait, or the later work
+    execution.
+  world_vs_information: The enqueue assertion is information about a queue-entry transition. An appended
+    or replayed assertion does not itself establish queue membership. Only the matched event block supplies
+    the recorded boundary; actual insertion remains uncorroborated by this journal alone.
+  role_vs_bearer: The requester can continue to exist after its solicitation ceases waiting. Neither the
+    requester role nor the solicitation bearing queue participation is the insertion occurrence.
+  context_reification_needed: The target solicitation, queue, and particular entry boundary must be kept
+    together. A queue snapshot and its completeness boundary are additionally required for CQ-021 or CQ-023;
+    a historical enqueue alone supplies neither present membership nor a starvation finding.
+category_rationale: Event is a conditional classification of the proposed admission enqueue occurrence,
+  because its grain is one occurrence of a transition. It is not selected from the spelling of a tag.
+  The cited evidence directly establishes recorded assertion content; the linked card states the proposed
+  occurrence criterion, rigid event classification, participant dependence, and unresolved duration. A
+  coherent conditional event shape is available, so analysis can finish while the information-only and
+  boundary-only rivals remain viable. Neither rival is resolved by this seat.
+evidence_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+- CQ-007
+- CQ-021
+- CQ-023
+evidence_reading: The matched blocks for one cited history separately assert enqueue at 1788926595182
+  and admission at 1788926595216. The other separately asserts enqueue at 1788928587012 and withdrawal
+  at 1788928909789. These support an entry-boundary interpretation without making one nonce chain one
+  event. An enqueuedAtMillis value carried only by an admission entry would not be an independently recorded
+  enqueue occurrence.

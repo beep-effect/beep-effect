@@ -1,0 +1,70 @@
+id: "dh:admb-request-withdrawal:001"
+observation_refs:
+  - "so:sha256:329c44ec4fb419e458ef5823689c4c600d6d9937ee653719c6e436f5af2d468b"
+  - "so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab"
+  - "so:sha256:3538030c5bd0760a9c53c44616055c41629ed75d482ec76bcc06330275f8999d"
+  - "so:sha256:3a06414c0178479bb7922a88a9c7808ebdcf6dc04a5751d2880672a3970eacb7"
+  - "so:sha256:4cac038f3231d162cf516d669b7bbb2f945ecaff574c8f5bea1bfd6399818e09"
+  - "so:sha256:5a469137642420a8f0cbf6de9490c86e6f720de4d587ed336ab8f7173cd1c21a"
+  - "so:sha256:5b072546461a1aff37534b63ce30985da7dd245eba56a888483e95f2eaf0c33f"
+  - "so:sha256:63bf0d5c790dcfdef42e798c3612da479ebb1dcc96cf5ae91bbcc5abbe0a9129"
+  - "so:sha256:670e03a64c95c565c2755411af00c0e22ebe6e110796842e649844ddb889b827"
+  - "so:sha256:6d2b5abe8f8e770dc6c79d5f9c890565d61b30cfef5bf3e6d34123bbf7afb6c8"
+  - "so:sha256:714497e7760c9a963f4b6e998df4bdcd091a050ddcbecffa14d17f676afce38e"
+  - "so:sha256:756a2cddd24cfb1cf54e6c3eb42ce81e438a68332463fc6923239babfddb4c0f"
+  - "so:sha256:75f79179af1c07f8cd301b39b2e0a480cff2cab21b6598a4d7198fa223283b4d"
+  - "so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959"
+  - "so:sha256:8e56503bf451d7edda7047ebe49e71f58f4ee8cf6392773ddcae92e8af59c960"
+  - "so:sha256:8e77a0633f74c347ec357a4ce66dccb1b759c639006fc6251f30c8158344d548"
+  - "so:sha256:95a589bb270ccc20ef0409f27d0e9be297f9d6eb83706769f242be99dc04c6c2"
+  - "so:sha256:9a4d80db41ae3d7cdde49bd308273bbc213364ecbaecae42ae91dc5ba72e8312"
+  - "so:sha256:ba574bce897d92ed4d82236afc888a9e97316780aec858d877c64247603edc5d"
+  - "so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b"
+  - "so:sha256:cc9730a1b0d5fe267f7c65b2c1017d8e70ae518ee99ffcc01085b027a06767a6"
+  - "so:sha256:f22157463b8bb35324779e8d53a621bde8ce8b6511babab103a101a08152b3b6"
+  - "so:sha256:f38d666952f2e70a4f3c00bd6d2075a331c99c3ecae5ceaabb73df7b792c9a7f"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "Request withdrawal occurrence"
+  description: >-
+    An instance is one removal of a request from admission contention recorded by
+    admission-withdrawn and withdrawnAtMillis. It closes the recorded waiting segment that began
+    at the same request's enqueue boundary. The 23 chains with this tag support the withdrawal
+    kind; all include an enqueue assertion. Withdrawal is separate from the request it affects,
+    ticket eviction diagnosed as queued-submitter-death, lease eviction, and grant release.
+    Neither voluntary intent, an interruption cause, process death, a verification failure, nor
+    an unobserved grant is inferred. Positive withdrawal closes a recorded boundary without
+    proving a complete prior history or a present queue census.
+representation_status: domain_referent
+alternatives:
+  - label: "An information assertion that a request was withdrawn"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "The request's withdrawn condition, represented without a separate removal occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    Withdrawal is selected as the operational endpoint needed to keep a historical enqueue from
+    being treated as an ongoing queue candidate. The alternative information reading from the
+    second batch remains viable; the first batch's withdrawal-event alternative is given its own
+    kind. A request removal trace correlated to the withdrawn entry, with the operation's reason
+    or trigger observed independently, would distinguish an occurrence from a report and
+    determine whether any stronger voluntary/cancellation interpretation is justified. The
+    source only supplies the withdrawal boundary, so the cause remains open.
+  discriminator: >-
+    For (config_key_value, "nonce=3234b861-792e-4cde-96b6-5ca188435021"), (config_key_value,
+    "_tag=admission-enqueued") and (config_key_value, "enqueuedAtMillis=1788927435322") are
+    paired with (config_key_value, "_tag=admission-withdrawn") and (config_key_value,
+    "withdrawnAtMillis=1788927676757"). The other batch pairs enqueue with (config_key_value,
+    "nonce=355f5fd7-c1d1-49f9-9801-b9fa3048ea05") and (config_key_value,
+    "withdrawnAtMillis=1788928062034"). These are positive assertions of withdrawal of a
+    contender, whose truth would be denied by the implementation-only null for the removal
+    occurrence. Keeping the enqueue content but discarding the withdrawal content would
+    contradict that endpoint. The absence of an admission entry is not the discriminator.
+epistemic_status: proposed
+confidence:
+  value: 0.8
+  use_for_acceptance: false

@@ -1,0 +1,18 @@
+id: "fa:ov-step-position-alt:001"
+hypothesis_ref: "dh:ov-step-position:001"
+identity_card_ref: "ic:ov-step-position-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "Quality: 0-based ordinal of a prescribed step (preferred)"
+    still_viable: true
+  - label: "Order/precedence relator among steps without a numeric quality individual"
+    still_viable: true
+  - label: "Incidental array offset with no queryable order meaning"
+    still_viable: false
+strongest_counterexample: "An incidental-offset reading cannot explain why the contract freezes 0-based numbering and forbids the deferred tail from extending or renumbering the admitted sequence that CQ-020 orders by stepIndex (po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864; po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020; po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: ordinal quality versus a precedes-relation without integers. Discriminator: a non-numeric precedence encoding that still answers CQ-020, or an observed renumbering of a persisting step subject (po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7)."

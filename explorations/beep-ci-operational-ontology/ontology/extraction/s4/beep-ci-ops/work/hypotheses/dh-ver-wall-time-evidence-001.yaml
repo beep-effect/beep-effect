@@ -1,0 +1,56 @@
+id: dh:ver-wall-time-evidence:001
+observation_refs:
+- so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda
+- so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465
+- so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+- so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+- so:sha256:74b8c4733f1c2049ac998444c4905ba5e016d2f0cd6cf310dc5e6fa7cd414af2
+- so:sha256:7947484312042fc0ac6c5bd485427b9cc3a28829e3745b39031f6400a9c1a9c8
+- so:sha256:7a639ef29784753fbf47a4860c76a214d945a67c34fe1675915e57253dd3d628
+- so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc
+- so:sha256:a9a0813fdb533325632faeda662b8fa72b08b1e4868c9cfdf66c29939927dac9
+- so:sha256:b24d12302a876d81148174d1247fd84e7d304fababe40bf31e84e37093734224
+- so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1
+- so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30
+- so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446
+- so:sha256:f19da17d5b8f8ff5107a9b96cf4ff9256ebf03da52491e0370413f941f085e5d
+- so:sha256:faeff009ed066ab59b310901f7f127fa174f0b0e2859613529a9ac69673c3230
+cq_warrants:
+- CQ-007
+- CQ-025
+proposed_referent:
+  label: Reported execution wall-time evidence
+  description: Recorded durations and temporal bounds for particular attempts and their reported lane
+    or step results. This information supplies the observed-cost side of execution accounting; it is not
+    a P50/P95 estimate, an admission charge, a resource limit, or an episode-level time-to-certainty value.
+    Whole-attempt elapsedMs and nested durationMs values must retain different scopes. The flattened set
+    of config facts does not license a cross-product assigning every duration to every lane id, summing
+    parent and child durations, or assuming that all measured intervals are disjoint. No estimate snapshot,
+    queue/lock/repair decomposition, or completion of an entire assurance episode is established by this
+    batch.
+representation_status: information_artifact
+alternatives:
+- label: The bounded execution occurrence whose duration is reported
+  representation_status: domain_referent
+  plausibility: viable
+- label: Uninterpreted timestamp and numeric serialization fields
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The values record quantitative claims about elapsed operational time, the actual-cost evidence
+    needed for calibration and time accounting. Two explicit start/end pairs independently match their
+    reported elapsed milliseconds, providing evidence of measurement content beyond the existence of numeric
+    fields. The hypothesis preserves the reports as evidence without certifying clock accuracy or inventing
+    per-lane associations lost by flattening. A missing duration or missing queue interval is not a zero-duration
+    claim. These timestamps describe the reported attempts, not corpus capture provenance.
+  discriminator: One observation has config_key_value objects "startedAt=2026-08-24T01:31:38.047Z", "endedAt=2026-08-24T01:31:42.503Z",
+    and "elapsedMs=4456"; another has "startedAt=2026-08-27T15:26:36.585Z", "endedAt=2026-08-27T15:26:36.596Z",
+    and "elapsedMs=11". Each end-minus-start interval equals its reported elapsed value. Those are particular
+    elapsed-time claims that contribute different actual costs; under a fields-only null with no measurement
+    referent, there would be no reported operational interval to measure or compare with an estimate.
+epistemic_status: proposed
+confidence:
+  value: 0.88
+  use_for_acceptance: false

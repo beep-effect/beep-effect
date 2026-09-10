@@ -1079,3 +1079,158 @@ history, custody references, every unaffected byte, and the ratification chain
 untouched. It lands as its own PR after #1040. Rejected: folding it into #1040
 (mixes a ratified repair with un-ratified refreshes in an already large PR) and
 accepting the class as ratified residue (contradicts the public-repo law).
+
+## 2026-09-09 — auditor run-3 launch (two rulings, steward: Benjamin)
+
+Launched after the Stage B closeout (#1033, #1034, #1040, #1041 merged; main
+`85cc86d1f3`, all five corpus pins verifying). The run-2 launch grill's nine
+rulings carry as precedent except where the run-3 corpora grill, the Stage B
+grill, or a ruling below amends them. Both rulings resolved to the recommended
+arm in one round.
+
+**Ruling 1 — one end-of-run PR, run-2 choreography.** Pin commit (adapter-journal
+v1.1.0 over the four run-3 pins plus its golden, the run-3 prose transcriber, the
+intake docket, the Ruling-14/16 docket-consistency edits, and the run-2 rotation
+shelter) on `ontology-run3` off main `85cc86d1f3`; frozen HEAD through the run
+with `work/` untracked; final commit of run artifacts plus ratifications; single
+PR babysat to merge-ready; steward merges. The pin commit is tagged
+`evidence/beep-ci-ops/<run_id>-pin` and the tag pushed so a squash merge cannot
+orphan it (run-1 precedent). The run-2 pin `341cfef8b6e8` was never tagged and
+is orphaned in the primary clone; it is retro-tagged at this launch. Rejected: a
+separate pin PR merged to main before the run (the arm run-2 Ruling 8 already
+rejected).
+
+**Ruling 2 — blinded seat via the `claudeg` proxy session.** The grok-4.6
+blinded-alternative seat runs as a headless Claude Code session on the local
+proxy (`--model grok-4.6`, native x-search injected, `-alt`-namespaced ids per
+the pinned prompt) instead of the native grok CLI of run 2. This amends run-2
+Ruling 4's rejected proxy arm for run 3 only; the seat stays blinded and in an
+independent context. Codex seats keep the packet's delegated-lane effort
+directive (2026-08-27): gpt-6-astra at `max`, the adversary in an independent
+context. Rejected: the native grok CLI (no longer the steward's routed session
+type) and dropping the blinded seat.
+
+## 2026-09-10 — run-3 sitting 1 (adversary round-1 adjudication, steward: Benjamin)
+
+Docket: 26 adversary reviews (11 FAIL / 4 INDETERMINATE / 11 PASS), 13 landed attacks
+audited for validity (13 demonstrated / 0 invalid; 66 attempted attacks already recorded
+as survived; full grounds in the run's work/review-audit/validity-report-r1.md, committed
+with the run artifacts). No attack is struck and no FAIL collapses; the four abstentions
+are honest (each names a real missing continuity or grain observation). All four cluster
+rulings resolved to the recommended arm.
+
+**Ruling 1 — warrant-necessity cluster (admb-journal-entry, bind-checkout-cache-binding,
+bind-grant-termination, bind-request-termination, ver-wall-time-evidence):** revision
+remaps each warrant to the CQ whose executable query actually requires the term
+(checkout-cache binding to CQ-015's `cachedIn`/`mountsCache` join, wall-time to the
+duration CQs); a class whose warrant cannot be remapped is conceded as unsupported by
+current evidence and parks with named run-4 evidence. Rejected: parking all five now
+(forfeits the C1 cache-binding bearer) and forcing revisions the queries do not require.
+
+**Ruling 2 — grain/dto-discriminator cluster (admb-seat-grant, admb-seat-request,
+att-admission-allocation, att-verification-attempt):** recast as recorded-value
+information objects with only evidence-backed joins (the run-1/run-2 "measurements are
+recorded values" precedent); where the referent is an already-ratified term the proposal
+becomes an exact-reuse mapping carrying the nonce-chain identity provenance the
+rat-047..052 flags asked for; operational readings concede until an effective-operation
+observation exists. Rejected: discriminator repair from the v3 chains alone and outright
+concession of all four.
+
+**Ruling 3 — null-discriminator (synthetic) cluster (bind-admission-grant,
+bind-admission-request, bind-grant-termination, bind-request-termination):** keep the
+synthetic scope explicit and ground each discriminator in what the synthetic pin observes
+(reaper eviction rows, claim acknowledgements, termination joins); where only the
+hypothetical consumer remains, the hypothesis dispositions unresolved with organic-eviction
+evidence named (Ruling 19: writer behaviour, not organic incidence). Rejected: parking all
+four pending organic evictions and accepting the reconstruction as sufficient.
+
+**Ruling 4 — identity-card cluster (ov-admission-token-charge,
+ov-projection-specification, ov-seat-request, ov-verification-episode):** the four honest
+abstentions are retained as flagged deferrals; the proposals submit FLAGGED with their
+named missing observations; revision may add run-3 evidence where it exists but must not
+manufacture it; sitting 3 decides whether the ordering cluster ratifies with flags or
+parks whole. Rejected: withdrawing the four (re-parks the entire ordering cluster) and
+forcing a verdict from the adversary.
+
+## 2026-09-10 — run-3 sitting 2 (carried-row adjudication, steward: Benjamin)
+
+Docket: the 68 carried prior-index rows (run-2 observations that cannot re-emit under the
+run-3 pin), clustered into 15 referent groups against the run-3 surface
+(`work/sittings/carried-rows-docket.md` + `carried-clusters.yaml`, committed with the run
+artifacts). All three rulings resolved to the docket's recommendation.
+
+**Ruling 1 — supersession retirements (14 rows, 3 clusters):** the fleet-checkout-identity
+row retires as superseded by the timestamped bindings pin and the run-3 checkout-cache-binding
+chain; the three failure-signature rows retire as re-identified against the captured
+failureKind/failedStepId tuples in the run-3 verdict observations (signature identity stays
+open on the new chain); the ten CQ-020 ordering and governing-specification concessions retire
+as superseded by the run-3 ordering-cluster proposals and the emission-v2 observations, the
+cluster itself being judged at sitting 3. Rejected: holding the ten ordering rows open until
+sitting 3.
+
+**Ruling 2 — parks with partial run-3 evidence (17 rows, 7 clusters):** grant/resource
+contention and proof-lock paths, request and lease lifecycles with the memory rider, the
+cache-plan rider (the verdict schema carries no resolver field), passed-step execution
+boundaries, memory-measurement semantics, duration individuals and carrier issuance, and QA
+workflow / projection-conformance evidence stay `unresolved` with NEW needed_evidence naming
+what run 3 now shows and what run 4 must add. Rejected: promoting the lifecycle rows onto the
+under-revision admission proposals.
+
+**Ruling 3 — parks on missing governance contracts (37 rows, 5 clusters):** freshness /
+review-score / attribution / proof-tier governance, workspace package continuity, package
+topology and affected/docgen selection, admission capacity computation and pre-grant
+snapshot, and origin blocking / heartbeat suspicion stay `unresolved` with fresh wording
+recording what run 3 checked and why it is insufficient (run-3 corpora Rulings 6 and 16).
+Rejected: retiring the wrapper-like rows as irrelevant.
+
+## 2026-09-10 — run-3 sitting 3 (ratification docket, steward: Benjamin)
+
+Docket: 21 converged proposals after three adversary rounds (final reviews 17 PASS / 4
+INDETERMINATE / 0 FAIL; mechanical gate ARTIFACTS VALID — GATE PASSED at the pin with 112
+flags), presented individually as flagged submissions (every proposal carries a still-viable
+rival flag; no clean ratify-candidate), plus five withdrawals from the run
+(`work/sittings/ratification-docket.md`, committed with the run artifacts). Three shared-IRI
+grain questions surfaced before locking: SeatGrant, SeatRequest, and
+VerificationResultArtifact were each claimed by proposals with different identity criteria.
+All four rulings resolved to the docket's recommended arm.
+
+**Ruling 1 — ordering cluster ratified together, flagged:** the thirteen `ov-` proposals
+(ScheduleProposal and SeatRequest reuse, ScheduleStep, hasStep, stepIndex zero-based,
+schedulesSeatRequest, hasScopeTag, VerificationEpisode, hasCurrentProposal,
+AdmissionProjectionSpecification, hasProjectionSpecification, hasOriginKey and
+admissionChargeTokens reuse) are adopted as drafted at fixed-prescription-content,
+immutable-component, repeatable-rule grain, with the four sitting-1 Ruling-4 deferrals
+(token-charge repricing, rule-versus-application identity, demand continuity, episode unity)
+retained as flags for run 4. This discharges the run-2 sitting-3 deferral without dangling
+ends. Rejected: parking the cluster (63% unresolved, waiver required).
+
+**Ruling 2 — recorded-value grain governs reuse:** admb-seat-grant and
+att-admission-allocation ratify as SeatGrant recorded accounts, admb-seat-request as the
+SeatRequest recorded account, att-verification-attempt as the VerificationAttempt recorded
+history, and att-attempt-verdict as VerificationResultArtifact at assessment-origin grain,
+each adopted as drafted with its run-4 deferrals flagged. bind-admission-grant and
+bind-admission-request (synthetic operational readings; sitting-1 Ruling 3's "else
+unresolved" arm) and ver-attempt-verdict (the content-snapshot rival) are withdrawn with
+named organic and issuance evidence (`work/sittings/withdrawals-sitting-3.yaml`). Rejected:
+accepting two identity criteria per IRI as flags, and withdrawing all eight.
+
+**Ruling 3 — Queue B:** no run-2 flag is discharged. rat-047, rat-048, rat-051 and rat-052
+re-park to run 4 under Ruling 17 (issuance and custody provenance wait for the proof-ledger
+writer); the partial result-record evidence is recorded against rat-048/051 without lifting
+their flags; rat-049 (verification-plan continuity) and rat-050 (priority-class registry
+authority) stay open as separate contract and governance duties. Rejected: lifting
+rat-048/051 on partial evidence.
+
+**Ruling 4 — Queue D, withdrawals, index:** the object-valued `hasScope`/`Scope` pair parks
+with the no-punning record (run-3 fixtures exercise only the `hasScopeTag` literal);
+`schedulesWorkUnit` remains the CQ-019 arm-3 historical carrier; the five run withdrawals
+(AdmissionJournalEntry, CheckoutCacheBindingRecord, AdmissionGrantTermination,
+AdmissionRequestTermination, ExecutionDurationAssertion) stand as deferrals with named run-4
+evidence and are removed at close per the run-1/run-2 precedent; no unresolved-fraction
+waiver is entered. Rejected: converting the withdrawals to rejections.
+
+**Closure:** eighteen ratifications scribed as rat-053..rat-070 (per-proposal verbatim
+decisions adopted as drafted); the eight withdrawn proposals and their reviews removed
+(bytes preserved in git history) and their observation rows parked with named evidence; the
+68 carried run-2 rows adjudicated at sitting 2 (14 retired, 54 re-parked with fresh
+evidence); post-scribe gate re-run at the pin.

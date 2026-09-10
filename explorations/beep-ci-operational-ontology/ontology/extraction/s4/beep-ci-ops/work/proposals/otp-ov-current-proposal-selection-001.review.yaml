@@ -1,0 +1,60 @@
+target: otp:ov-current-proposal-selection:001
+target_sha256: bca2c93b66d813f36b2b0a5e3ba84335d0bf4d3fab1082c9da0ddde5899a6b7b
+chain_sha256: 00b447e316a95898194bf3c31f9adb7fb9241a3e55860f1696db3478730d8c40
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'hasCurrentProposal asserts parents: []; no is-a edge is proposed. Participant, component,
+    or governing-role relations supply no additional subsumption assertion to test.'
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  outcome: survived
+  evidence:
+  - po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7
+  - po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3
+  - CQ-020
+  counterexample: Give an episode two stored proposals P and Q and replace the selection predicate by
+    an ordinary association to both. CQ-020 then has no fact selecting the prescribed sequence it requests.
+    The emitter and fixture supply that episode-to-selected-proposal assertion. A DTO can carry it, but
+    then it carries the candidate's selection information; the proposal requires no separate selection
+    individual or claim that this is the globally latest operational plan.
+- surface: identity
+  rule: current-status-as-rigid-content
+  outcome: survived
+  evidence:
+  - po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7
+  - po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3
+  - po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+  - CQ-020
+  counterexample: At t1 E selects P; at t2 E selects Q. P remains the same prescription, and an archived
+    assertion about t1 remains the same assertion even though P is no longer current. A timeless union
+    would give both sequences in CQ-020. The criterion explicitly includes the represented reference instant
+    and projection context, and the proposal excludes such a union. Rigidity is attributed to fixed assertion
+    content, not to P's current status; a second serialization of the t1 content is not a new selection
+    occurrence.
+- surface: warrant
+  rule: listing-cq-warrant
+  outcome: survived
+  evidence:
+  - CQ-020
+  - po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7
+  counterexample: Delete E hasCurrentProposal P while retaining every proposal, specification, and step.
+    CQ-020's mandatory first join no longer binds the selected proposal. Returning every historical proposal
+    instead changes the stated current-sequence decision. This is a query-required property, with temporal
+    interpretation bounded to the supplied projection context.
+rival_models_still_viable:
+- A time-indexed property between episode and proposal without an independently reified assertion node
+- An operational current-plan situation distinct from the record describing it
+evidence:
+- CQ-020
+- po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7
+- po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6

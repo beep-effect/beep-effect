@@ -1,0 +1,45 @@
+id: "dh:bind-admission-request:001"
+observation_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+cq_warrants: ["CQ-021", "CQ-023"]
+proposed_referent:
+  label: "Request awaiting admission"
+  description: >-
+    A demand for admission during an observed queue interval, carrying the requested
+    work kind, priority, charge, origin context, and enqueue time. The two observed
+    enqueue chains supply candidate instances. The request is distinguished from
+    an allocated grant. Journal nonces correlate these particular records without
+    settling a general identity criterion or identifying an agent.
+representation_status: domain_referent
+alternatives:
+  - label: "An admission-ticket information artifact representing the demand"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A queued state of an already allocated grant"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    This is provenance: synthetic evidence from a fixture-driven scenario. Its
+    dated enqueue and terminal records ground candidate queue boundaries; they
+    establish no production-fleet frequency, current queue census, or waiting-time
+    guarantee. The requested work, priority, charge, and enqueue time are needed to
+    distinguish a queued demand from an active allocation and to assess an observed
+    wait. ownerRef and ownerRefVariant are sanitization metadata and supply no Agent
+    identity. Synthetic labels, schema versions, and path placeholders likewise
+    introduce no referents. The record does not supply a starvation policy bound
+    or a complete live queue snapshot, so this hypothesis claims no starvation verdict.
+  discriminator: >-
+    config_key_value reports "_tag=admission-enqueued", "kind=full-proof",
+    "priority=verify", and "weightTokens=3". The nonce
+    "d269a27c-6d0e-4613-8ad3-6adaa4353712" links the source excerpt's enqueue record
+    with "enqueuedAtMillis=1788931586705" to "_tag=admission-withdrawn" with
+    "withdrawnAtMillis=1788931586715". The other enqueue chain reaches
+    "_tag=admission-admitted". These are recorded queue-entry occurrences with
+    different subsequent outcomes. Omitting the represented demand would erase
+    the candidate whose queued interval those events delimit; mere field naming
+    does not account for that operational distinction.
+epistemic_status: proposed
+confidence: {value: 0.85, use_for_acceptance: false}

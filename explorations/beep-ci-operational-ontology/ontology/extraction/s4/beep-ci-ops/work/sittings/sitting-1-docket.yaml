@@ -1,0 +1,280 @@
+docket_kind: "review-validity"
+run_id: "orun-2026-09-10T02:10:52Z"
+ontology: "beep-ci-ops"
+round: "r1"
+sitting: 1
+authority: "auditor recommendations only; no steward ruling or ratification recorded"
+status: "awaiting-steward-ruling"
+repository_commit: "1c7cd98289150f481fd40721efa6b7fe6109e711"
+report: "work/review-audit/validity-report-r1.md"
+reference_base: "work/"
+attack_index_base: 1
+counting_note: "All 79 attacks-array rows are audited. Only outcome=landed rows are live adverse attacks. The 66 outcome=survived rows are invalid as adverse objections under the binary row accounting and require no new strike; they are individually accounted for in the report."
+totals:
+  reviews: 26
+  review_verdicts:
+    FAIL: 11
+    PASS: 11
+    INDETERMINATE: 4
+  attack_rows: 79
+  landed_attacks: 13
+  survived_attempts: 66
+  demonstrated_landed: 13
+  invalid_landed: 0
+  invalid_non_landed_attempts: 66
+  collapsed_fails: 0
+  abstentions_honest: 4
+  abstentions_disengaged: 0
+  contested: 0
+invalid_landed_by_class:
+  "misread CQ": 0
+  "superseded spelling used against a ratified split": 0
+  exact-reuse-treated-as-new-subclass: 0
+  "carrier-only attack on already-supported content": 0
+  "evidence misquote": 0
+  "category error in the attack itself": 0
+  "attack on a rival the proposal already exposes as an explicit steward-choice issue": 0
+invalid_non_landed_attempts_by_class:
+  "misread CQ": 10
+  "superseded spelling used against a ratified split": 0
+  exact-reuse-treated-as-new-subclass: 11
+  "carrier-only attack on already-supported content": 18
+  "evidence misquote": 0
+  "category error in the attack itself": 13
+  "attack on a rival the proposal already exposes as an explicit steward-choice issue": 14
+clusters:
+  - id: "warrant-necessity"
+    title: "Necessity of new decision/support classes"
+    attacks:
+      - proposal_id: "otp:admb-journal-entry:001"
+        review_file: "proposals/otp-admb-journal-entry-001.review.yaml"
+        attack_index: 3
+        rule: "support-reification-not-required"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:bind-checkout-cache-binding:001"
+        review_file: "proposals/otp-bind-checkout-cache-binding-001.review.yaml"
+        attack_index: 3
+        rule: "decision-class-not-required-by-cq"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:bind-grant-termination:001"
+        review_file: "proposals/otp-bind-grant-termination-001.review.yaml"
+        attack_index: 3
+        rule: "support-reification-not-required"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:bind-request-termination:001"
+        review_file: "proposals/otp-bind-request-termination-001.review.yaml"
+        attack_index: 3
+        rule: "support-reification-not-required"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:ver-wall-time-evidence:001"
+        review_file: "proposals/otp-ver-wall-time-evidence-001.review.yaml"
+        attack_index: 3
+        rule: "decision-class-not-required-by-cq"
+        audit_verdict: "demonstrated"
+        strike_class: null
+    recommended_disposition:
+      ratify-strikes: []
+      revise:
+        - proposal_id: "otp:admb-journal-entry:001"
+          review_file: "proposals/otp-admb-journal-entry-001.review.yaml"
+          attack_index: 3
+          rule: "support-reification-not-required"
+        - proposal_id: "otp:bind-checkout-cache-binding:001"
+          review_file: "proposals/otp-bind-checkout-cache-binding-001.review.yaml"
+          attack_index: 3
+          rule: "decision-class-not-required-by-cq"
+        - proposal_id: "otp:bind-grant-termination:001"
+          review_file: "proposals/otp-bind-grant-termination-001.review.yaml"
+          attack_index: 3
+          rule: "support-reification-not-required"
+        - proposal_id: "otp:bind-request-termination:001"
+          review_file: "proposals/otp-bind-request-termination-001.review.yaml"
+          attack_index: 3
+          rule: "support-reification-not-required"
+        - proposal_id: "otp:ver-wall-time-evidence:001"
+          review_file: "proposals/otp-ver-wall-time-evidence-001.review.yaml"
+          attack_index: 3
+          rule: "decision-class-not-required-by-cq"
+    reason: "The five new classes lack a necessary dependency beyond the qualified subjects, values and boundaries already used by the executable CQs; revise their warrants or park the extra classes."
+  - id: "grain/dto-discriminator"
+    title: "Organic reports versus operational referents"
+    attacks:
+      - proposal_id: "otp:admb-seat-grant:001"
+        review_file: "proposals/otp-admb-seat-grant-001.review.yaml"
+        attack_index: 1
+        rule: "discriminator-true-of-dto"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:admb-seat-request:001"
+        review_file: "proposals/otp-admb-seat-request-001.review.yaml"
+        attack_index: 1
+        rule: "discriminator-true-of-dto"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:att-admission-allocation:001"
+        review_file: "proposals/otp-att-admission-allocation-001.review.yaml"
+        attack_index: 1
+        rule: "discriminator-true-of-dto"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:att-verification-attempt:001"
+        review_file: "proposals/otp-att-verification-attempt-001.review.yaml"
+        attack_index: 1
+        rule: "discriminator-true-of-dto"
+        audit_verdict: "demonstrated"
+        strike_class: null
+    recommended_disposition:
+      ratify-strikes: []
+      revise:
+        - proposal_id: "otp:admb-seat-grant:001"
+          review_file: "proposals/otp-admb-seat-grant-001.review.yaml"
+          attack_index: 1
+          rule: "discriminator-true-of-dto"
+        - proposal_id: "otp:admb-seat-request:001"
+          review_file: "proposals/otp-admb-seat-request-001.review.yaml"
+          attack_index: 1
+          rule: "discriminator-true-of-dto"
+        - proposal_id: "otp:att-admission-allocation:001"
+          review_file: "proposals/otp-att-admission-allocation-001.review.yaml"
+          attack_index: 1
+          rule: "discriminator-true-of-dto"
+        - proposal_id: "otp:att-verification-attempt:001"
+          review_file: "proposals/otp-att-verification-attempt-001.review.yaml"
+          attack_index: 1
+          rule: "discriminator-true-of-dto"
+    reason: "Four operational null rejections change the truth of what the records assert while leaving every observed parser fact intact; add the missing effective-operation evidence or retain the informational model."
+  - id: "null-discriminator"
+    title: "Unobserved consumers in the synthetic scenario"
+    attacks:
+      - proposal_id: "otp:bind-admission-grant:001"
+        review_file: "proposals/otp-bind-admission-grant-001.review.yaml"
+        attack_index: 1
+        rule: "discriminator-hypothetical-consumer"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:bind-admission-request:001"
+        review_file: "proposals/otp-bind-admission-request-001.review.yaml"
+        attack_index: 1
+        rule: "discriminator-hypothetical-consumer"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:bind-grant-termination:001"
+        review_file: "proposals/otp-bind-grant-termination-001.review.yaml"
+        attack_index: 1
+        rule: "discriminator-hypothetical-consumer"
+        audit_verdict: "demonstrated"
+        strike_class: null
+      - proposal_id: "otp:bind-request-termination:001"
+        review_file: "proposals/otp-bind-request-termination-001.review.yaml"
+        attack_index: 1
+        rule: "discriminator-hypothetical-consumer"
+        audit_verdict: "demonstrated"
+        strike_class: null
+    recommended_disposition:
+      ratify-strikes: []
+      revise:
+        - proposal_id: "otp:bind-admission-grant:001"
+          review_file: "proposals/otp-bind-admission-grant-001.review.yaml"
+          attack_index: 1
+          rule: "discriminator-hypothetical-consumer"
+        - proposal_id: "otp:bind-admission-request:001"
+          review_file: "proposals/otp-bind-admission-request-001.review.yaml"
+          attack_index: 1
+          rule: "discriminator-hypothetical-consumer"
+        - proposal_id: "otp:bind-grant-termination:001"
+          review_file: "proposals/otp-bind-grant-termination-001.review.yaml"
+          attack_index: 1
+          rule: "discriminator-hypothetical-consumer"
+        - proposal_id: "otp:bind-request-termination:001"
+          review_file: "proposals/otp-bind-request-termination-001.review.yaml"
+          attack_index: 1
+          rule: "discriminator-hypothetical-consumer"
+    reason: "Four synthetic chains invoke an unobserved queue/holder reconstruction; preserve synthetic scope and revise the discriminator with an observed modeled-state or consumer result, or leave it unresolved."
+  - id: "identity-card"
+    title: "Four substantive identity abstentions"
+    attacks: []
+    recommended_disposition:
+      ratify-strikes: []
+      revise: []
+    reason: "The four reviews name real missing continuity or grain observations already deferred in their bound cards; retain those deferrals without promoting them to newly landed attacks."
+    abstention_refs:
+      - "otp:ov-admission-token-charge:001"
+      - "otp:ov-projection-specification:001"
+      - "otp:ov-seat-request:001"
+      - "otp:ov-verification-episode:001"
+    retain_explicit_deferral: true
+abstentions:
+  - proposal_id: "otp:ov-admission-token-charge:001"
+    judgment: "honest"
+    related_attack_indices:
+      - 2
+    reason: "No bound observation follows one independently reidentified request through repricing or establishes whether a burden persists, an assignment is replaced, or successive assertions are distinct. Three equal fixture values and the admission inequality establish recorded-charge content, not that continuity rule. The joined IdentityCard explicitly retains this deferral. This abstention does not deny the ratified scalar property's CQ warrant; selecting that scalar model and aligning its card remains a steward/synthesis choice."
+    review_file: "proposals/otp-ov-admission-token-charge-001.review.yaml"
+    needed_evidence: "A paired observation of one independently reidentified admission request before and after a policy repricing, recording the effective policy, assessment instant, both token values, and whether the charge assignment persists or is replaced. If the intended subject is only recorded charge content, an observation-backed account must distinguish successive assertions from that continuing burden. A subsequent grant assessment is also needed before any request/grant charge continuity can be asserted."
+    evidence:
+      - "po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e"
+      - "po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215"
+      - "po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305"
+      - "po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944"
+  - proposal_id: "otp:ov-projection-specification:001"
+    judgment: "honest"
+    related_attack_indices:
+      - 2
+      - 3
+    reason: "The closure contains one illustrated typed specification target with policy and journal-prefix digests, emitter quotations, normative rules, and replay material. It contains no paired rule-fixed/input-changed and input-fixed/rule-changed observation that independently settles the target's rule-object versus application-context identity. The definition expressly defers that choice; more digest equality alone would not answer it."
+    review_file: "proposals/otp-ov-projection-specification-001.review.yaml"
+    needed_evidence: "A comparison that keeps ordering/admissibility rule content and rule version fixed while changing the journal input, followed by a comparison that changes rule content with the input fixed. Each must identify whether the emitted descriptive target is the same reusable rule object or a distinct application-context record independently of policyDigest, journalPrefixDigest, or IRI spelling."
+    evidence:
+      - "po:sha256:2cbe4a487c0ebb475da0d4b4e9833105b7c1d677e942f04484e74049b825ee53"
+      - "po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3"
+      - "po:sha256:9081cf3d4060a87388a3b4285f7ed6165aa24f39dc350fc3b3c3aeffec0e6b26"
+      - "po:sha256:e9df49623f67f2eac1d565f6ab8811c99128f33a8610358f0944f64ae390aa5e"
+      - "po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864"
+  - proposal_id: "otp:ov-seat-request:001"
+    judgment: "honest"
+    related_attack_indices:
+      - 2
+    reason: "Typed synthetic requests, nonce serialization and the pending-membership inequality do not follow one independently identified demand across two handling contexts, distinguish a repeated submission, or show what survives its pending membership. The separate synthetic enqueue/withdrawal chain and the organic journal assertions do not supply that missing continuity rule for this proposal's bound hypothesis. Exact reuse preserves the request/grant/work-specification distinction but does not settle the new analysis."
+    review_file: "proposals/otp-ov-seat-request-001.review.yaml"
+    needed_evidence: "An observation chain following one admission submission through two distinct queue/projection observations and then admission or cancellation, with independently established requester/handling participants. Include a second submission for the same work and an observation distinguishing it from continued handling of the first, plus what remains after pending membership ends. Matching nonce, local request IRI, or copied grant fields alone does not establish this continuity."
+    evidence:
+      - "po:sha256:f456cbb5c883ae06a4246878847ea9d98832618f2e923b54164a79cd2acfe000"
+      - "po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05"
+      - "po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a"
+      - "po:sha256:0c5a0ac360560118bda477d323d7b7ae9977d379ec5a282b0184baf5195d43da"
+      - "po:sha256:3015f93b003a84d5a9e8ee82ac198ebe5bd86db390fd763e0aef039e2ed6c203"
+      - "CQ-021"
+  - proposal_id: "otp:ov-verification-episode:001"
+    judgment: "honest"
+    related_attack_indices:
+      - 2
+    reason: "The typed fixture subject and non-empty caller-supplied episodeId establish a represented anchor. Neither supplies initiating/closing boundaries, retry membership, proposal replacement history, or a contrast separating renamed continuity from disconnected histories. The proposed occurrence and correlation-information rival therefore remain distinguishable models that the cited evidence does not decide."
+    review_file: "proposals/otp-ov-verification-episode-001.review.yaml"
+    needed_evidence: "An observed verification history with a stated initiating boundary, activity or attempt membership through retry and proposal replacement, and a closing or abandonment boundary. Include a contrasting disconnected history or an identifier reassignment, with an observation-backed unity rule that explains whether the histories constitute one verification occurrence independently of episodeId equality. This must distinguish an occurrence from a caller-chosen correlation record."
+    evidence:
+      - "po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4"
+      - "po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3"
+      - "po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05"
+      - "po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6"
+collapsed_fails: []
+contested: []
+taxonomy:
+  landed_attacks: 0
+  proposals_with_parents: 0
+  reason: "All 26 proposals have parents: []; none supplies an asserted subsumption edge. Exact reuse is a mapping, not a new superclass edge. No taxonomy attack is introduced."
+verification:
+  proposal_digests:
+    matched: 26
+    total: 26
+  framed_chain_digests:
+    matched: 26
+    total: 26
+  unique_bound_observations: 133
+  cq_sha256: "e99e30cd801516d90fd344810867da60af9524273f46e735f3d3bed112283f64"
+  cq_manifest_digest_matches: true
+steward_effect: "Rulings apply to these attack recommendations. Reviews remain unchanged and content-bound; this audit neither turns FAIL into PASS nor ratifies any proposed term."
+

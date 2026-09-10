@@ -1,0 +1,34 @@
+id: "ic:att-admission-allocation-alt:001"
+hypothesis_ref: "dh:att-admission-allocation:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two individuals are the same admission allocation iff they are the same mediating bond of one origin-scoped capacity slice to one requested execution, created at one admission instant. so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72 and so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d share admittedAtMillis=1788941816511, enqueuedAtMillis=1788941626093, nonce, attemptId, originKey=4cc31eeb4dec, weightTokens=5, kind=merged-preview, and attachedAt; only heartbeatAtMillis differs. That is evidence of one allocation viewed twice, not a universal nonce-identity rule. ownerRef/ownerRefVariant (pid_pair vs attachedpid) are capture provenance and never identity criteria. The lease file and systemd unitName remain representations of the allocation."
+  reidentification_key:
+    - nonce
+    - attemptId
+    - originKey
+    - admittedAtMillis
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "Single mediating bond: one origin-keyed capacity charge to one attempt, enduring while the grant holds. Heartbeat and support updates are qualities of that same bond, not additional bonds."
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - information_object
+    - event
+  existential_dependencies:
+    - "an origin-scoped contended capacity (originKey; CQ-009)"
+    - "a requested execution/attempt being admitted (attemptId)"
+    - "an admission charge against remaining capacity (weightTokens; CQ-010)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "Counting the two lease snapshots as two grants because heartbeatAtMillis differs (1788941946764 vs 1788942001857) while admission instant, nonce, origin, charge, and attachment are identical."
+  - description: "Taking ownerRef or ownerRefVariant as the allocation's identity or as proof of owner liveness; support=active records attachment on the lease, not a complete inventory of active grants (CQ-008)."
+  - description: "Treating the still-queued request as this referent: both observations already report admittedAtMillis after enqueuedAtMillis and an attached execution scope."
+status: proposed

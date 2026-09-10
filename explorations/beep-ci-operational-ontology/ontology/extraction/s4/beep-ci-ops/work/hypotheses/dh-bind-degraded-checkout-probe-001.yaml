@@ -1,0 +1,36 @@
+id: "dh:bind-degraded-checkout-probe:001"
+observation_refs:
+  - "so:sha256:1d2662aa5e2f9701d80526c67b0cc29db04038e64bb84781c76616fe78f1e174"
+cq_warrants: []
+proposed_referent:
+  label: "No additional domain referent from the degraded checkout probe"
+  description: >-
+    A capture result retaining historical checkout coordinates and reporting failed
+    supplementary binding probes. It does not establish a successfully probed
+    checkout/cache binding or a new kind of checkout, cache, or operational failure.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Historical checkout-binding information whose supplementary confirmation failed"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A domain occurrence of checkout loss or cache invalidation"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The observation reports config_key_value "binding_probe_status=degraded",
+    "status=unavailable", and "exit_code=128" for the supplementary Git probes.
+    Its snapshot head and branch do not turn those failed probes into a confirmed
+    binding at the later probe instant. "turbo_local_cache_present=false" and
+    "turbo_configuration_status=absent" are bounded probe results; they do not
+    establish deletion, invalidation, or the absence of every possible cache.
+    No proof applicability decision or operational failure classification consuming
+    this degraded result is supplied. Identity-key spelling, external-path
+    placeholders, timestamps, and the generator's environment flags are capture
+    bookkeeping. A successful binding probe plus evidence at task-hash granularity
+    would be needed to ground a transferability-bearing interpretation.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

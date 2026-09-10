@@ -1,0 +1,35 @@
+id: "fa:adm-release-alt:001"
+hypothesis_ref: "dh:adm-release:001"
+identity_card_ref: "ic:adm-release-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      Dated journal assertion that a holding ended as a release
+      (information_object). Observationally equivalent on current evidence
+      until a lease-store deletion or scheduler release operation is observed
+      independently of the report.
+    still_viable: true
+  - label: >-
+      Grant-end temporal boundary without a separately reified occurrence
+      (fold releasedAtMillis into the seat grant).
+    still_viable: true
+  - label: same event kind as lease eviction or as request withdrawal
+    still_viable: false
+strongest_counterexample: >-
+  Collapsing every grant-end into one eviction class, or treating an open
+  admission as already released.
+  so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+  shows a later admission-released after a distinct admission-admitted for
+  nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088;
+  so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+  reports admission with no release (CQ-008).
+verdict: analyzed
+needed_evidence: >-
+  A contemporaneous observation of lease-store deletion aligned to
+  releasedAtMillis, independent of the journal append, would discriminate the
+  occurrence from the claim. Origin-exclusion (CQ-009) needs the ended grant's
+  originKey, not this occurrence alone.

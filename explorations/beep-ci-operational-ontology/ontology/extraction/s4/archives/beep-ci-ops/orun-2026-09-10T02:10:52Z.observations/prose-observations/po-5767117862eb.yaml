@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:5767117862eb6d9a3c039a440a4f016fb59e66016cef58838a3b6577930f0d02",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 89,
+    "end_line": 91
+  },
+  "quote": "### 3.2 Service contract (`Context.Service`, effect v4)\n\n`CiOpsProjection` with:",
+  "epistemic_status": "quoted_prose"
+}

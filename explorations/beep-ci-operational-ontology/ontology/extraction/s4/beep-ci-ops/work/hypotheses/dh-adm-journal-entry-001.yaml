@@ -1,0 +1,108 @@
+id: dh:adm-journal-entry:001
+observation_refs:
+- so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+- so:sha256:0385cf6e12920c8a96c520a7238b522f923a7c0116cd603fbeff793a7d0e6058
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:05a0dfbb8f434d75b8be6d1bd7d396925b594cb0e9ceb6b72bda31e76e9685d3
+- so:sha256:05fa73f187683c8b5cfb25a3958ed5b6f3d344d1b984cb1ce1cdffe5a9b2674a
+- so:sha256:0775b5fd356eaea7604537054326c7e97598c5f81504c0d815558297ebf0f50e
+- so:sha256:08149709f365cd0031ec1a4a17e6f76e957b70a4507b8c15e077e41ec998abce
+- so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+- so:sha256:0dcfbaeaa65aeeec90c1e9590be8a33c1ffe9438f29ebbe7d8617d09a5e45b08
+- so:sha256:0e50d84bdb1fbc2d463bced37bfe314caf8e1b5a8cc58dd5359978650ab1f53c
+- so:sha256:0e797a3deeedd27cfa75082643ce788d6c73e073bf87a640fe50ce3896a43e2b
+- so:sha256:10f2cebc7b17c5f7b15bd051ed0f0363d355c3e4cb2f927dd2b2852461ad2610
+- so:sha256:126709ea74fec8cb4b03c021d7cf121aac566b19bea91c4ac8a452f33d01a94e
+- so:sha256:146d2b385ef6e3fb892821dbd2df82091184f2dca48f8cd9b9eaa5d01019d942
+- so:sha256:155a7c875acf08bae8c3073be1e54bebd65f2b8d5192697d7687da967e781ae6
+- so:sha256:232151f9f2afc0f8662cbd2c75d368bae594686ce7f0bdbac3e9f7238d6fd062
+- so:sha256:27ba4f5468b662c17e401817a599ad4e45c2091d51423b279d8de9fbe97880b7
+- so:sha256:2e58e1311fcc9f696bc06624bab0b4e23b6597ee1919f68e1516882ab067b53a
+- so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+- so:sha256:4a98ae2d71bc800fd8718d37ccc93288cf66cc48dbffa2eddc2a0c7c3297a7d6
+- so:sha256:4bb535144f06b1e9abc6a8c75f0dcc3fc7d030f9b64214adfd1bed92ca384b08
+- so:sha256:5130545f45659ac9d904152da47d3e52ab06961250b57d626f3d8afc4993fe42
+- so:sha256:522ce0efbf2933dac38a6f574c2ff640dadb305b695e06028dad7a5c0f25d91c
+- so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67
+- so:sha256:6108f04e939048617511e050bbb2421593e88c3658829deaead9b406fcb811d9
+- so:sha256:636db00ceac88a2c4857664e7f2fb863833b68fe94f1e28a111e3451d3dfcbb1
+- so:sha256:65609cedeaf3e99b51031c38b99ab7bc16ea0ef59fa66bea1d446ef3f7bd3333
+- so:sha256:675134527a157d157274937b2f8ad90b036d30b77340d61f1e202483d9ac828e
+- so:sha256:6abcdc65b395bfc82d08b2c5e49d3c9553e97a46bd942343457e68e8da0a85e7
+- so:sha256:6cf1d332ce7ea225c24cf5aea2e2192ab91ec06838463289be284bae7677e60c
+- so:sha256:7627bd8803b5da11524904bb2c7b2fdcd7c320ba034444204852ded9c164cfff
+- so:sha256:7b8493be70e8285a866f898e5691df4cb02c5d51fd808635f508854d1ec5622c
+- so:sha256:7e4e7d3c3f97a3907222c12d770c3f618aa1502dc1fd391f0738fd93f874dbbb
+- so:sha256:7f98fb05e2fa6d6b3b08618e7f5af09ecdefc3ff88752bbf437aff900e73036a
+- so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+- so:sha256:94cda97bb49a7661b4b7bd7ed0cd0f5b8594223ad33ddbf9d9637e464ee5c902
+- so:sha256:997fca9994bcb3a70f034acd490a212d79ae083f17c0a18972bdbc8a924a5346
+- so:sha256:a3d906985080a7bb34c6364829dd3add8d8d0a7235a3b00d027d9e9685e7eb19
+- so:sha256:a4ff1bbe07b6d10ed237650df3bfbe94c9a94240167ba58443ebf37227476301
+- so:sha256:ad5ef0f6bca50e85da674990519818fb3d4a14a1650ccb135b89f2f10d875248
+- so:sha256:b0aa81e61691ffc2b4ef587508eae988e450f03407eefbfc524fb38a82c20cdc
+- so:sha256:b16055eff4bab382b33f0a5629c273a35a659e407651035b9532fb833f1a722c
+- so:sha256:b303cb0ce5ff71bf3353ee50bced00e443bbba7d77e4f3e5cf7e6e8476d054aa
+- so:sha256:b4093c2df6b7863d8c90b35246c348aecbbc5201cc8a3968132345e8e29c038e
+- so:sha256:c19aff86102184c4aafeecb71520216ed5ccf721d1d16cce9a382bdd170d1967
+- so:sha256:c1e15b1c4eaa7eb7c6aa06fd4e88909368ddeac9931936b7d68c2bf857b1bcfa
+- so:sha256:cf8f163c919cdad854f3e9aabddf18a7c7589844a69389646492c47ac1f7d8e8
+- so:sha256:cfb413d38b8e8e1903d6e83b8d2977c5fd102003636ca8403eaa958dc1791b6f
+- so:sha256:d90be1aaa963b3e017130d2add821e59f623ac0540f9563cd9dd1d607cae8ce9
+- so:sha256:dae7bbf3b41b449e027e7be2793340e99e86ffbfbc9e3781a15b2c412919fba3
+- so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+- so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+- so:sha256:f1e3e6b059c258e89fc802148a2976a93bd0ade9c8e5568b6052d81945140f7a
+cq_warrants:
+- CQ-007
+- CQ-008
+- CQ-021
+proposed_referent:
+  label: admission journal entry
+  description: An informational assertion about one admission event, carried by one bounded journal entry.
+    An instance is the content of a single event block asserting enqueue, admission, withdrawal, release,
+    lease eviction, or ticket eviction. Its asserted occurrence time is supplied by that event's timestamp;
+    no separate record-creation time is inferred. A nonce chain can witness several entry instances and
+    several operational referents, so it is neither one entry nor an additional referent kind. The journal
+    as a collection, the extraction's file-level projection, and the request, grant, or event being reported
+    remain distinct. This is an information-artifact candidate for preserving the evidential basis and
+    temporal limits of request, holder, and queue-wait claims. Its CQ warrants concern that evidential
+    support, not a new requirement to enumerate journal entries or permission to infer current state from
+    historical reports. Writing, copying, or removing an entry is not itself the operational event that
+    its content asserts.
+representation_status: information_artifact
+alternatives:
+- label: The operational request, grant, or occurrence described by the entry as the primary referent.
+    Comparing an observed operation with its separately appended, copied, or corrected assertion would
+    discriminate that bearer from the informational entry; both can coexist.
+  representation_status: domain_referent
+  plausibility: viable
+- label: Serialization-only content with no decision-bearing assertion. This is weakened by the dated
+    queue and holding transitions in the supplied entries; it would need evidence that these fields carry
+    no claims about operational history.
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: 'The entry''s positive claim content is directly observed even when the truth of the claimed
+    event has not been independently established. Keeping the assertion distinct from its referent preserves
+    the evidential limits of queue, holder, and timing decisions. This selects the information-artifact
+    reading of the journal representations, while retaining domain events and their participants as distinct
+    candidate referents. It supplies no automatic warrant to mint a journal class: any later proposal
+    must show the specific dependency on a decision term. Capture annotations, schema-version strings,
+    and placeholder values are not additional domain vocabulary.'
+  discriminator: 'For nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088, the config_key_value predicate has these
+    rechecked objects: ''_tag=admission-admitted'', ''admittedAtMillis=1788926595216'', ''weightTokens=5'',
+    ''_tag=admission-released'', ''releasedAtMillis=1788927008574'', ''memoryPeakBytes=9904820224''. For
+    nonce=acb0011d-82cf-4dfc-a812-72d10dbd566c, the config_key_value predicate has these rechecked objects:
+    ''_tag=admission-ticket-evicted'', ''evictedAtMillis=1788498598672'', ''reason=queued-submitter-death''.
+    The matched excerpts place these assertions in separate bounded event entries. Under a serialization-only
+    null there is no informational assertion of acquiring or relinquishing charged admission, or of removing
+    a queued ticket at a stated time. These predicate/object pairs establish precisely that claim content.
+    They establish the informational referent without proving either that the asserted event occurred
+    or that its stated reason was true.'
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

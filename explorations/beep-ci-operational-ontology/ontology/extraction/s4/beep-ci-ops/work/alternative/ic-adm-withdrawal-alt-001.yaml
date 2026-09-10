@@ -1,0 +1,56 @@
+id: "ic:adm-withdrawal-alt:001"
+hypothesis_ref: "dh:adm-withdrawal:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Same withdrawal occurrence iff it is the same punctual ending of one queued
+    participation reported as admission-withdrawn at one withdrawnAtMillis. It
+    is not a ticket eviction, not a lease eviction, not a release, not the
+    request's waiting interval, and not the journal entry. Nonce is evidential
+    join only. ownerRef and other capture members are never identity criteria.
+  reidentification_key:
+    - "nonce (evidential join only)"
+    - "withdrawnAtMillis"
+    - "_tag=admission-withdrawn"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One dated voluntary-end transition of one queued participation; not a mixed
+    eviction class and not the whole wait.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+  existential_dependencies:
+    - "seat request whose reported queue participation this occurrence ends"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - occurred
+counterexamples:
+  - description: >-
+      Identifying withdrawal with ticket eviction. Withdrawal is
+      _tag=admission-withdrawn
+      (so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+      nonce=c334ff81-360e-4683-a084-8bf4bf0ed20f at withdrawnAtMillis=1788928909789;
+      so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+      nonce=71181c10-f174-45cf-817e-0fdfa07295a8);
+      ticket eviction is _tag=admission-ticket-evicted
+      (so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059)
+      (CQ-021, CQ-023).
+  - description: >-
+      Identifying withdrawal with a grant release. Release uses
+      _tag=admission-released after admission
+      (so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6);
+      these withdrawal chains never admit.
+  - description: >-
+      Treating kind or priority as distinct withdrawal kinds.
+      so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+      is full-proof/publish;
+      so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+      is review-fix/verify weightTokens=1 (CQ-007).
+status: proposed

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 98,
+    "end_line": 98
+  },
+  "quote": "`${episodeNode} rdf:type ciops-prov:VerificationEpisode .`,",
+  "epistemic_status": "quoted_prose"
+}

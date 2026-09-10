@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect/chore_refresh-bun-lockfile-0f8671787597/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 72,
+    "content_sha256": "42cec5e74ecb88ef9dc068585d677064ef2ba41fdb0d2c2d37f7f56cd5296ed6"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect/chore_refresh-bun-lockfile-0f8671787597/verdict.properties",
+    "lexical_name": "failing",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "checksGreen=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failing=closeout-run"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=chore/refresh-bun-lockfile\ncommitted=true\ncreatedAt=2026-08-24T02:14:41.825Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1670.648649\nexitCode=0\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=289.810021\nexitCode=0\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=publish\nstatus=passed\ndurationMs=8120.606161\nexitCode=0\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=passed\ndurationMs=701347.655107\nexitCode=0\nid=publish:01-git-push\nlabel=publish:git:push\nphase=publish\nstatus=passed\ndurationMs=1787.080122\nexitCode=0\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=publish\nstatus=passed\nexitCode=0\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=passed\ndurationMs=361.303377\nexitCode=0\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=passed\ndurationMs=1153954.461108\nexitCode=0\nmessage=yeet publish succeeded.\nmode=publish\noutcome=success\npushed=true\nrunId=chore_refresh-bun-lockfile-0f8671787597\nattemptId=a4529191-7821-406a-b190-af281bcb79f4\nstartedAt=2026-08-24T01:43:29.889Z\nendedAt=2026-08-24T02:14:41.825Z\nelapsedMs=1871936\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\nbehindCount=0\nmergeBase=4eb7a062e5f6adad49db89c616c9ce84985e9ba8\nready=false\nfailing=closeout-run\ncloseoutRun=false\nchecksGreen=true\nthreadsResolved=true\n",
+  "epistemic_status": "parser_derived"
+}

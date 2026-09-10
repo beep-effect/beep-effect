@@ -1,0 +1,11 @@
+id: rat:60
+proposal_ref: otp:ov-schedule-step:001
+proposal_sha256: 2abdc78cb8d0646cf27aa787a46dcdad4dcf8440730bfcf081069553f12a437a
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-schedule-step:001 as the ScheduleStep immutable prescription-component
+  class, with tuple-versus-component and editable-instruction continuity retained as flags, only with
+  joint ratification of its proposal, membership, position, request and scope relations.

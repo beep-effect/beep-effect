@@ -1,0 +1,200 @@
+{
+  "id": "so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect14/docs_jsdoc-migration-spec-fixes-88cae21ce854/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 53,
+    "content_sha256": "1eea4e6aa6458f80356708573f93d609d0fc5437cee58e90ca8a9d809e3c8fd7"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect14/docs_jsdoc-migration-spec-fixes-88cae21ce854/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "behindCount=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=docs/jsdoc-migration-spec-fixes"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-08-06T09:27:58.609Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1983.297497"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2072.49676"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=4601.309024"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=839303.135424"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=935.026968"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=849330"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-06T09:27:58.609Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=publish:01-git-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=advisory:01-fallow-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=commit:01-git-commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:01-pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:00-head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:01-git-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect14/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=commit:git:commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow-advisory-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:git:push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mergeBase=eecc5c53bba9688c70b40926f04afe758e9a5ed7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=docs_jsdoc-migration-spec-fixes-88cae21ce854"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-06T09:13:49.279Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=docs/jsdoc-migration-spec-fixes\ncommitted=true\ncreatedAt=2026-08-06T09:27:58.609Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1983.297497\nexitCode=0\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=2072.49676\nexitCode=0\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=publish\nstatus=passed\ndurationMs=4601.309024\nexitCode=0\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=passed\ndurationMs=839303.135424\nexitCode=0\nid=publish:01-git-push\nlabel=publish:git:push\nphase=publish\nstatus=failed\ndurationMs=935.026968\nexitCode=1\nrepairCommand=git push -u origin HEAD\nmessage=yeet publish phase failed.\nmode=publish\noutcome=failure\npushed=false\nrunId=docs_jsdoc-migration-spec-fixes-88cae21ce854\nattemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47\nstartedAt=2026-08-06T09:13:49.279Z\nendedAt=2026-08-06T09:27:58.609Z\nelapsedMs=849330\nindexPath=<fleet>/beep-effect14/.beep/yeet/quality-issue-index.json\nbehindCount=0\nmergeBase=eecc5c53bba9688c70b40926f04afe758e9a5ed7\nfailedStepId=publish:01-git-push\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

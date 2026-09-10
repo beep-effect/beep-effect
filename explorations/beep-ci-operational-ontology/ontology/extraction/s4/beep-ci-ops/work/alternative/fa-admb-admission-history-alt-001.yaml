@@ -1,0 +1,35 @@
+id: "fa:admb-admission-history-alt:001"
+hypothesis_ref: "dh:admb-admission-history:001"
+identity_card_ref: "ic:admb-admission-history-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      information_object: a correlated admission-history collection distinct
+      from each journal entry and from the operational lifecycle it describes
+    still_viable: true
+  - label: >-
+      process: one operational admission lifecycle whose participants are the
+      request, grant, and dated occurrences (observationally equivalent on
+      current journal-only evidence)
+    still_viable: true
+  - label: >-
+      none: extractor-created nonce grouping with no information-object
+      referent beyond the constituent entries
+    still_viable: true
+strongest_counterexample: >-
+  Joining so:sha256:324b4da710ece73d2e9cf1b127faf7f8887213e04ea458ee84dd0657cced3e26
+  flattened fields (admittedAtMillis with a withdrawal from another nonce) into
+  one history would treat an extraction projection as a domain or information
+  individual; CQ-008/CQ-021 do not require that individual.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A consumer that distinguishes complete versus partial nonce-correlated
+  histories from their entries (not merely CQ-008/CQ-021 request and grant
+  lookup), plus a replay-or-copy observation in which the collection persists
+  or splits independently of the operational lifecycle it describes. Without
+  that, information-object reification and extractor-only grouping remain
+  observationally equivalent.

@@ -1,0 +1,64 @@
+{
+  "id": "so:sha256:0a952c2b02e457e3bf7a5be1c2f515a812f4ee2634dc307dcc46fc3e86c6cec3",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-fleet/verdicts/a/a/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 10,
+    "content_sha256": "d99f0dd178f7d7972567f7c51cc4a77d714e4f012aac5dd488179de8f7cd5a61"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/a/a/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "cachePlanTag=local-only"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=passed-before-failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=fixture-a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v1\nrunId=fixture-a\nfailureKind=step-exit\nfailedStepId=lint\nid=passed-before-failure\nstatus=passed\nid=lint\nstatus=failed\ncachePlanTag=local-only\n",
+  "epistemic_status": "parser_derived"
+}

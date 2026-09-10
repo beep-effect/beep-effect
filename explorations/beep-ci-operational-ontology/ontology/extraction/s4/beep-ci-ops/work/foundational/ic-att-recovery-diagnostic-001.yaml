@@ -1,0 +1,84 @@
+id: ic:att-recovery-diagnostic:001
+hypothesis_ref: dh:att-recovery-diagnostic:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    One occurrence-bound diagnostic-and-recovery assessment unit recording a
+    particular detection in one attempt for one task/lane, together with the
+    distinct recovery measurements attributed to that detection. Copies are the
+    same information unit when they preserve that originating diagnostic
+    account, subject, and measurement content; another detection or a corrected
+    attribution is another unit. The grain is recorded occurrence evidence,
+    not a reusable failure-signature classification, a recovery specification,
+    a recovery execution, or the whole enclosing attempt verdict.
+  reidentification_key:
+    - the enclosing attemptId and its own finished-verdict boundary
+    - detectedAt with taskId and laneLabel
+    - policy as an observed diagnostic label, not a unique occurrence identifier
+    - standaloneDurationMs and laneRerunDurationMs as separately attributed content
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    The account's attribution of a diagnostic and recovery measurements to one
+    detection context unifies the information unit. The standalone rerun and
+    lane rerun remain distinct measured activities. Neither sharing a policy
+    label nor occupying one verdict makes all detections one individual.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - >-
+      process: the detection and recovery activity that the information unit
+      reports, with its standalone and lane-rerun executions as components.
+    - >-
+      information_object: separate detection, standalone-measurement, and
+      lane-rerun-measurement units joined by attribution instead of one compound
+      diagnostic account.
+  existential_dependencies:
+    - >-
+      An information-bearing realization and the originating diagnostic account;
+      no particular serialization or capture copy is essential.
+    - >-
+      The intended attempt, task/lane, and detection/recovery context as content
+      referents. The artifact can persist after execution, and a mistaken
+      diagnostic or attribution does not prevent it from being an information
+      object.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The diagnostic labeled ts2589-no-location at
+      2026-08-08T11:43:52.465Z has a 1902.713545 ms standalone duration and a
+      29802.864398 ms lane-rerun duration inside a successful publish verdict.
+      Making the policy string a failed-attempt kind contradicts that enclosing
+      outcome; making every copy a new recovery occurrence doubles its cost.
+  - description: >-
+      Countermodel: another detection of the same diagnostic label for the same
+      task in a later invocation has identical measured durations. It is a new
+      occurrence-bound account, not the same diagnostic individual merely
+      because its classification and numeric payload match.
+status: proposed
+evidence_refs:
+  - so:sha256:37968f126c464470a069ac2051cb358a0a29720dd49df7256625cb4d17bfa2c6
+  - so:sha256:928e7ce7acb4292bbd03703746cd347b6fd0aeeb2c144ee33188512f3ff91939
+  - CQ-007
+  - CQ-013
+analysis_notes:
+  rigidity: >-
+    Rigid as the information unit originating in this diagnostic account. Its
+    current usefulness for attributing delay is contingent and can change
+    without creating another record. A failure label is neither its identity
+    criterion nor an inferred subclass of failed attempts.
+  temporality: >-
+    detectedAt describes detection, while the two durations describe measured
+    recovery activities. Information retention has another interval. No
+    destruction or terminal information state is observed, and the successful
+    enclosing attempt outcome is not a terminal state of this record.
+  provenance_exclusion: >-
+    The operational source excerpts repeat across the two captures, so they
+    support one diagnostic account, not two attributed costs. Capture/corpus,
+    generator, owner-alias, and resanitization provenance supply no identity.

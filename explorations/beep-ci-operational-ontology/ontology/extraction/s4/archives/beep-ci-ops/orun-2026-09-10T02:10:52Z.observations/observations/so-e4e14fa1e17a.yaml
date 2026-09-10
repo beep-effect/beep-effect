@@ -1,0 +1,248 @@
+{
+  "id": "so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect11/feat_semantica-c0-schemas-c967a8ed8aca/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 72,
+    "content_sha256": "7e5e32f6b6333e4f2a8c6027d4ad6ea9a3e64d92cb7bf54913782c03b6a68b9b"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect11/feat_semantica-c0-schemas-c967a8ed8aca/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=2d971ec5-a77b-46cd-ad2d-b5c9a056a190"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "behindCount=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/semantica-c0-schemas"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checksGreen=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "closeoutRun=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-08-26T05:51:06.955Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1382.858644"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1575167.41721"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1683.892275"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=366.275793"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3845.099285"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=774.348677"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=1585769"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-26T05:51:06.955Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=commit:01-git-commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failing=closeout-run"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=handler-error"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=advisory:01-fallow-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=commit:01-git-commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:01-pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:02-pr-checks-watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:00-head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:01-git-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:02-pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect11/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=commit:git:commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow-advisory-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-checks:watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:git:push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mergeBase=7e4b7d8c326268e0e26b5447daff2f077538d3a2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ready=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=feat_semantica-c0-schemas-c967a8ed8aca"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-26T05:24:41.186Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=not-run"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "threadsResolved=false"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=feat/semantica-c0-schemas\ncommitted=false\ncreatedAt=2026-08-26T05:51:06.955Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1683.892275\nexitCode=0\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=publish\nstatus=passed\ndurationMs=3845.099285\nexitCode=0\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=passed\ndurationMs=1575167.41721\nexitCode=0\nid=publish:01-git-push\nlabel=publish:git:push\nphase=publish\nstatus=passed\ndurationMs=1382.858644\nexitCode=0\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=publish\nstatus=passed\nexitCode=0\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=passed\ndurationMs=366.275793\nexitCode=0\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=passed\ndurationMs=774.348677\nexitCode=0\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=not-run\nmessage=Yeet merge readiness requires zero unresolved review threads; found 17: PRRT_kwDOPbO_N86cVm7f (apps/labs/semantica/src/schema/Ids.ts), PRRT_kwDOPbO_N86cVm7i (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVnX7 (apps/labs/semantica/src/schema/Gold.ts), PRRT_kwDOPbO_N86cVnYA (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVnYD (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVnYF (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVnYI (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVpJD (apps/labs/semantica/src/schema/Gold.ts), PRRT_kwDOPbO_N86cVpJH (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVpJO (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVpJR (apps/labs/semantica/src/schema/Text.ts), PRRT_kwDOPbO_N86cVpJU (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVpJX (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVpJa (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVpJb (apps/labs/semantica/src/schema/Eval.ts), PRRT_kwDOPbO_N86cVpJd (apps/labs/semantica/src/schema/Evidence.ts), PRRT_kwDOPbO_N86cVpJi (apps/labs/semantica/src/schema/Evidence.ts)\nmode=publish\noutcome=failure\npushed=true\nrunId=feat_semantica-c0-schemas-c967a8ed8aca\nattemptId=2d971ec5-a77b-46cd-ad2d-b5c9a056a190\nstartedAt=2026-08-26T05:24:41.186Z\nendedAt=2026-08-26T05:51:06.955Z\nelapsedMs=1585769\nindexPath=<fleet>/beep-effect11/.beep/yeet/quality-issue-index.json\nbehindCount=1\nmergeBase=7e4b7d8c326268e0e26b5447daff2f077538d3a2\nfailedStepId=commit:01-git-commit\nfailureKind=handler-error\nready=false\nfailing=closeout-run\ncloseoutRun=false\nchecksGreen=false\nthreadsResolved=false\n",
+  "epistemic_status": "parser_derived"
+}

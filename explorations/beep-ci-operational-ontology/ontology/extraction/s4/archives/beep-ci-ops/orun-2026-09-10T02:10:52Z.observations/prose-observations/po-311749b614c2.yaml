@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 14,
+    "end_line": 22
+  },
+  "quote": "## 1. Inputs (historical S7 baseline, frozen at `ontology-s7-projection`)\n\n| Input | Artifact | Role |\n| --- | --- | --- |\n| T-Box | `ontology/extraction/s5/TAXONOMY.yaml` (38 ratified terms) | node-class vocabulary |\n| A-Box | `ontology/extraction/s6/graphs/abox.ttl` + `ABOX.yaml` | policy parameters, weights, priorities |\n| Live instance data | `ontology/extraction/s6/snapshot/raw/journal.ndjson` — pinned golden journal (79 events, redacted digest recorded in `snapshot/raw/MANIFEST.yaml`) | replay corpus |\n| Live schema mirror | `packages/tooling/tool/cli/src/internal/repo-run/{AdmissionJournal,QualityScheduler.schemas}.ts` | decoded event/request shapes |\n| Deployed invariant | `QualityScheduler.ts` charge-vs-capacity check (`activeTokenTotal + weight <= capacityTokens`) | the semantics v1 must reproduce |",
+  "epistemic_status": "quoted_prose"
+}

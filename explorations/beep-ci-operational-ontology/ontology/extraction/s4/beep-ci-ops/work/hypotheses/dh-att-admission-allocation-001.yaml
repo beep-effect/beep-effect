@@ -1,0 +1,47 @@
+id: dh:att-admission-allocation:001
+observation_refs:
+- so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+- so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+cq_warrants:
+- CQ-007
+- CQ-008
+- CQ-009
+- CQ-010
+proposed_referent:
+  label: Admission allocation evidenced by a lease
+  description: A candidate allocation of admission capacity for one requested execution, scoped by
+    its origin and associated attempt and carrying an admission charge and admission time. Both supplied
+    snapshots carry the same nonce, attempt, origin, enqueue time, and admission time, with later
+    heartbeat evidence in the second capture; they are evidence for one candidate allocation viewed
+    twice, not two independent charges. The lease record and its systemd attachment remain representations
+    of the allocation. The support value concerns the recorded attachment and does not independently
+    prove owner liveness or a complete inventory of active grants.
+representation_status: domain_referent
+alternatives:
+- label: Two time-indexed lease information artifacts describing the candidate allocation
+  representation_status: information_artifact
+  plausibility: viable
+- label: A queued request that has not yet received admission
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The lease evidence reports admission after enqueue, an assigned five-token charge, continuing
+    heartbeat updates, and an attached execution scope. That supports an operational admission allocation
+    beyond a reusable lease format. The two snapshots preserve distinct observation provenance; matching
+    operational content supports the candidate grouping without accepting a universal nonce-based
+    identity criterion. ownerRef and ownerRefVariant, including the attached-process alias, are capture
+    provenance and supply no domain participant. Placeholder paths supply no new referent. No remaining-capacity
+    amount, fleet-wide exclusion result, release, or reaping decision is supplied, so those are not
+    asserted.
+  discriminator: Both observations report config_key_value "admittedAtMillis=1788941816511", "enqueuedAtMillis=1788941626093",
+    "weightTokens=5", "kind=merged-preview", "originKey=4cc31eeb4dec", and "attachedAt=2026-09-09T08:16:56.539Z".
+    Their heartbeatAtMillis values are 1788941946764 and 1788942001857. These report an admission
+    already made after enqueue and an execution attachment for a charged request. If there were no
+    operational allocation behind the lease, the admission-and-charge assertion would be false; neither
+    the schema name nor the sanitized owner aliases supply that discriminator.
+epistemic_status: proposed
+confidence:
+  value: 0.92
+  use_for_acceptance: false

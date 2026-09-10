@@ -1,0 +1,18 @@
+id: "fa:ov-step-scope-tag-alt:001"
+hypothesis_ref: "dh:ov-step-scope-tag:001"
+identity_card_ref: "ic:ov-step-scope-tag-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "Quality / literal annotation on a step naming the v1 admission act (preferred)"
+    still_viable: true
+  - label: "Controlled information value with no quality individual (datatype property only)"
+    still_viable: true
+  - label: "Verification scope or affected-package set individual"
+    still_viable: false
+strongest_counterexample: "If the tag denoted an affected-package Scope, CQ-019's object-property hasScope arm would be the right carrier; the observed emission is a string hasScopeTag on each step, and the schema quote specifies v1 as the admission act itself (po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf; po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f; CQ-019; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: quality trope versus datatype-only information value. Discriminator: a non-admission tag (planner-seam widened scope), a Scope individual behind the literal, or a scopedByComputation edge discharging CQ-019's step-scope-provenance arm (po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7)."

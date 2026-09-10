@@ -1,0 +1,40 @@
+{
+  "id": "so:sha256:5385e1093cb89d44a133f10137a19daf0d881f93573386f0b2c1fd3c7809a7a5",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect10/docs_candor-wedge-brief-98161af967dc/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 34,
+    "content_sha256": "bc8dcc0db77f26c82f775f888821106608b0343ccb841a7dfd96f2930c660837"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect10/docs_candor-wedge-brief-98161af967dc/verdict.properties",
+    "lexical_name": "_id",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_id=Option"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=Some"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "value=c5776ca7-7aae-4e0c-bbc3-20f3657a07c6"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=docs/candor-wedge-brief\ncommitted=false\ncreatedAt=2026-08-04T15:58:53.195Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=closeout:01-pr-context\nlabel=closeout:pr-context\nphase=monitor\nstatus=not-run\nid=closeout:02-review-gates\nlabel=closeout:review-gates\nphase=monitor\nstatus=not-run\nmessage=yeet closeout succeeded.\nmode=closeout\noutcome=success\npushed=false\nrunId=docs_candor-wedge-brief-98161af967dc\n_id=Option\n_tag=Some\nvalue=c5776ca7-7aae-4e0c-bbc3-20f3657a07c6\n_id=Option\n_tag=Some\nvalue=2026-08-04T15:58:46.957Z\n_id=Option\n_tag=Some\nvalue=2026-08-04T15:58:53.195Z\n_id=Option\n_tag=Some\nvalue=6238\nindexPath=<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json\n",
+  "epistemic_status": "parser_derived"
+}

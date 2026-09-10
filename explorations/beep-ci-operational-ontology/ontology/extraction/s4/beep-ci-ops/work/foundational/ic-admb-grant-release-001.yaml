@@ -1,0 +1,76 @@
+id: ic:admb-grant-release:001
+hypothesis_ref: dh:admb-grant-release:001
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    The same release event is one causally continuous relinquishment transition ending the same particular
+    conferred authorization in its admission context. Two reports of that transition do not create
+    two releases; releasing another authorization or retrying an ineffective cleanup is not automatically
+    the same completed event. The participant's intent and the work's success are not constitutive
+    of release identity.
+  reidentification_key:
+  - nonce
+  - _tag=admission-released
+  - releasedAtMillis (reported endpoint only)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One terminal transition of one authorization through the release path. Prior conferment and subsequent
+    journal retention are distinct events or intervals, not parts of the release merely through shared
+    nonce.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - Information asserting release, even if operational removal is uncorroborated
+  - The grant's released condition or terminal boundary without a separately reified release event
+  existential_dependencies:
+  - >-
+    The particular authorization whose standing ends, its authorized participant and the admission/capacity
+    context. The event does not require a successful work execution or voluntary intent.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: >-
+    A release entry with memoryPeakBytes can follow work that failed or never completed successfully;
+    that measurement and the release tag do not establish a verdict. A repeated release emission could
+    likewise add a second assertion after the authorization already ended without another release
+    transition. Only a correlated effective authorization/charge removal distinguishes the occurrence
+    from logging or an ineffective cleanup attempt.
+status: proposed
+referent_grain: >-
+  One release transition terminating a particular authorization. It is neither the grant's holding
+  interval, its released-at-time condition, the execution's outcome nor the information asserting
+  release.
+analysis_notes:
+  rigidity: >-
+    Rigid on the proposed realized-occurrence interpretation: completing this transition does not
+    turn it into a later event, an ongoing participant or a state. Whether any particular assertion
+    corresponds to such an event remains an evidence question.
+  dependence: >-
+    Dependence is on the specified operational participants and admission relation or transition,
+    not on record storage or capture provenance. These dependencies are proposed model conditions,
+    not proof that every reported instance exists.
+  temporality: >-
+    Release unfolds as termination, with releasedAtMillis as the reported endpoint. The admission-to-release
+    gap is not release duration and cannot be substituted for per-lane execution cost. No actual operation
+    duration or voluntary-cause evidence is provided. The interval flag remains unresolved because
+    the corpus supplies a timestamp, not start/end duration. The state-change flag distinguishes unfolding
+    from a continuant changing state; no event-state progression is inferred.
+  evidence_limits: >-
+    Both cited chains distinguish a positive admission from a later release. CQ-008 and CQ-009 need
+    the standing that release purports to end, but do not establish current activity merely from incomplete
+    historical records.
+  provenance: >-
+    The cited observation records are from the current run's fleet admission journal. No synthetic
+    observation is used. Capture, corpus, generator, sanitization and ownerRef metadata are excluded
+    from identity criteria and reidentification keys.
+evidence_refs:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- CQ-008
+- CQ-009

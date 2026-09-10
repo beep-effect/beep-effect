@@ -1,0 +1,95 @@
+target: otp:admb-seat-request:001
+target_sha256: 14fc55c6975ee0d2a4d367def83f4cbf32c820ce232526b18af92e3342b00fc7
+chain_sha256: 8f7685286fb1517ac2e38a163ec161075f01929a07c87170851ceb972428aaa4
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: parents is empty. Exact reuse of SeatRequest creates no is-a edge to a requester, queued
+    role, grant, information bearer or work kind; no valid subsumption is established or needed by
+    this proposal.
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  counterexample: Serialize the two enqueue/withdrawal accounts for nonces 3234b861 and 355f5fd7
+    without inserting either into an effective queue. That null world still satisfies the source
+    record facts, so the original operational discriminator remains defeated. The revised definition
+    now selects the recorded demand account and explicitly concedes effective registration. The source
+    preserves different demand-associated enqueue and withdrawal assertions, including different
+    attemptId associations; replaying them preserves that informational difference. Sitting-1 Ruling
+    2 permits this information-object remedy. The revision_log covers the failed r1 digest and discriminator-true-of-dto,
+    and the revision names effective insertion/removal and queue-consumer evidence for any later
+    operational reading.
+  outcome: survived
+  evidence:
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  - CQ-021
+  - CQ-023
+- surface: identity
+  rule: registration-versus-enduring-demand
+  counterexample: Withdraw unchanged intended work and resubmit it, while separately making a faithful
+    copy of the first account. Work-kind/priority/charge equality cannot tell those cases apart.
+    The revision selects originating demand account plus asserted content, preserving a faithful
+    unchanged copy and separating correction versions; it does not apply the linked IC's old registration-continuity
+    criterion as an established information identity. Whether one enduring demand-content bearer
+    spans renewed registrations remains an explicit steward choice. The matching captures and separate
+    3234b861/355f5fd7 histories support the bounded associations, without proving copy/resubmission
+    behavior or using capture aliases as participants.
+  outcome: survived
+  evidence:
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+- surface: identity
+  rule: recorded-demand-versus-queue-role
+  counterexample: 'Promote a historical withdrawal account to a currently queued participant, fill
+    the ticket-eviction-only request''s missing enqueue/kind/charge, or identify full-proof with
+    publish priority. The revision does none of these: historical content persists independently
+    of registration, missing fields remain unknown, and kind and priority remain separate attributes.
+    The fixed account can remain rigidly informational while its described request is no longer pending.
+    No submitting Agent identity is derived from ownerRef, and no grant is inferred for a withdrawn
+    demand.'
+  outcome: survived
+  evidence:
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+  - so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+  - so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973
+  - CQ-021
+  - CQ-023
+- surface: warrant
+  rule: exact-reuse-decision-warrant
+  counterexample: Keep only the submitting participant or resulting grant. The withdrawn 3234b861
+    demand can then have no subject for CQ-021's typed SeatRequest and requested-attribute joins
+    or CQ-023's wait/policy/exception joins. S5 already provides SeatRequest with recorded charge/enqueue
+    values and literal origin; the revision maps to that existing term. It requires independent requestedBy,
+    relevant current queue population and closure, observation instant and declared bound before
+    those queries can yield operational answers. Qualified request assertions retain the necessary
+    subject without requiring the withdrawn AdmissionJournalEntry class.
+  outcome: survived
+  evidence:
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+  - CQ-021
+  - CQ-023
+rival_models_still_viable:
+- Originating request account versus enduring/content-only demand information across independent
+  equal-content accounts and renewed submissions; copy/correction and withdrawal/resubmission behavior
+  remain unobserved.
+- Registered-demand relator, effective requesting occurrence and queued role remain conceded pending
+  the named effective-registration and consumer trace; Stage A's separate identity deferral is not
+  overruled.
+evidence:
+- so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+- so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+- CQ-021
+- CQ-023
+- so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+- so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+- so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973

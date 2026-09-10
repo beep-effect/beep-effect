@@ -1,0 +1,35 @@
+id: dh:ov-request-nonce-carrier:001
+observation_refs:
+- po:sha256:6077249a3b22962f264de871a3cbf161c6f63d2a581e484eb694797a0ea29854
+- po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+- po:sha256:c864b7623923f2c433680c0ebb2487b1eb949bc2c8ffb91347a3e288560dd4a3
+- po:sha256:f456cbb5c883ae06a4246878847ea9d98832618f2e923b54164a79cd2acfe000
+- po:sha256:f60ddfb04ede510a8ffe6a04a36eac20caeb92175e59245f6b436897c83907b8
+cq_warrants: []
+proposed_referent:
+  label: Request nonce serialization with no additional referent established
+  description: The scheduledUnitRef spelling carries the request nonce as a literal. It supplies trace
+    metadata for a request representation; no additional work-unit entity, request identity criterion,
+    or independently warranted nonce term follows from the spelling.
+representation_status: implementation_artifact_only
+alternatives:
+- label: Lexical carrier for a request identifier
+  representation_status: lexical_alias
+  plausibility: viable
+- label: Independent work-unit reference
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The emitter reads request.nonce, and the fixture literals admitted-a, admitted-b, and deferred-c
+    are example identifiers. The report explicitly says that the journal carries no work-unit-specification
+    identity. A field that serializes an identifier remains compatible with the null for an additional
+    domain referent; no supplied decision question requires the serialization spelling as its own term.
+    The literal values are fixture placeholders, not operational individuals. The evidence may support
+    the request interpretation without promoting the carrier itself.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

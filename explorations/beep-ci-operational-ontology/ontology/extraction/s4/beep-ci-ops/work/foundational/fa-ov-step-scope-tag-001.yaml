@@ -1,0 +1,51 @@
+id: fa:ov-step-scope-tag:001
+hypothesis_ref: dh:ov-step-scope-tag:001
+identity_card_ref: ic:ov-step-scope-tag:001
+referent_grain: Recorded scope-annotation assignment on a prescribed step; the literal admission classifies
+  the intended act in this projection version, not a package set or an affected computation.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: The emitter serializes a typed string and the descriptive contract supplies its
+    act-level meaning. That supports informational annotation content rather than an intrinsic resource
+    quality or a package-selection scope individual.
+  rigidity: A fixed annotation remains that informational annotation after the proposal is superseded.
+    Its subject's being in a certain scheduled scope is not an identity-supplying kind.
+  dependence_and_temporality: The annotation belongs to a represented step and tagging convention. It
+    can be retained as historical content; the batch does not observe a live scope change or an execution
+    interval.
+  spec_vs_execution: The tag describes the prescribed admission act. It does not prove that act happened
+    or that work ran over any package set.
+  world_vs_information: The literal records scope content. It does not establish an affected computation,
+    its result, or compliance with scope-provenance requirements.
+  role_vs_bearer: The step is the annotated bearer. The tag, its contextual assignment, and the scope
+    of an actual execution are separate candidates.
+  context_reification: Keep the step, containing proposal, and tag convention. CQ-019's literal-tag arm
+    remains relevant without interpreting the tag as an object-valued verification scope.
+  evidence_limit: The observations show per-step literals and their stated meaning. They do not prove
+    either satisfaction or violation of a scope-provenance obligation from missing triples in this open
+    observation batch.
+rival_models:
+- label: Controlled annotation literal on a contextual step without independently reified tag objects
+  still_viable: true
+- label: Classification content about the prescribed act expressed as a property rather than an information
+    individual
+  still_viable: true
+- label: A verification package scope or affected-set computation inferred from the admission literal
+  still_viable: false
+strongest_counterexample: The fixture assigns admission to both steps. Treating the common literal as
+  identity collapses separate annotations, while treating it as FullRepoScope or an affected package set
+  fabricates semantics absent from the act-level tag. Hypothetically, a later tagging convention could
+  reuse the same spelling with a narrower meaning; lexical equality would conceal the change.
+verdict: analyzed
+needed_evidence: ''
+evidence_refs:
+- po:sha256:004887d37eb13319a467b294764093c16a3cb02165cc88ceba6b7bfa4768f77c
+- po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7
+- CQ-020
+- CQ-019

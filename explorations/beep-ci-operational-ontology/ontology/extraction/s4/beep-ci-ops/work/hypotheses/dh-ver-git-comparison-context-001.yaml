@@ -1,0 +1,46 @@
+id: dh:ver-git-comparison-context:001
+observation_refs:
+- so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda
+- so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465
+- so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+- so:sha256:74b8c4733f1c2049ac998444c4905ba5e016d2f0cd6cf310dc5e6fa7cd414af2
+- so:sha256:7947484312042fc0ac6c5bd485427b9cc3a28829e3745b39031f6400a9c1a9c8
+- so:sha256:d8cf8154d2e1435f81698ec0c8d67ea4bce53283ef275029392ce1a2d2f2f03f
+- so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1
+- so:sha256:f353b053a061870ff15017fd51401ea9165d54f608052fa1ea8daea981cf5d73
+- so:sha256:faeff009ed066ab59b310901f7f127fa174f0b0e2859613529a9ac69673c3230
+cq_warrants:
+- CQ-005
+proposed_referent:
+  label: Candidate baseline-comparison context for verification applicability
+  description: A possible contextual comparison involving the checked-out branch, a comparison base, and
+    reported divergence or path overlap. The candidate groups the stored behindCount, mergeBase, and overlappingPaths
+    evidence without identifying the two compared change sets solely from field names. Whether this comparison
+    is required to decide continued applicability of verification evidence remains unresolved. The listed
+    overlap is not an affected-package closure, a cache-invalidation event, or a complete blast radius.
+representation_status: unresolved
+alternatives:
+- label: A Git divergence summary supplied only for human diagnosis
+  representation_status: information_artifact
+  plausibility: viable
+- label: Implementation metadata retained beside an unrelated verdict
+  representation_status: implementation_artifact_only
+  plausibility: viable
+- label: A comparison relation whose result constrains acceptable verification evidence
+  representation_status: domain_referent
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The supplied config_key_value objects include "behindCount=0", nonzero behind counts, stored
+    mergeBase hashes, and "overlappingPaths=standards/coverage.regression-baseline.jsonc". No supplied
+    fact connects a change in any of these values to acceptance, invalidation, or transfer of evidence.
+    In particular, the isolated overlap does not name the comparison operands or prove a dependency/hash-surface
+    computation, and a zero behind count does not prove equal trees. Needed evidence is an explicit comparison-operand
+    binding and an observed validity decision that depends on the result. The runtime mergeBase values
+    must not be confused with corpus_base or capture provenance; the latter warrant no referents.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.5
+  use_for_acceptance: false

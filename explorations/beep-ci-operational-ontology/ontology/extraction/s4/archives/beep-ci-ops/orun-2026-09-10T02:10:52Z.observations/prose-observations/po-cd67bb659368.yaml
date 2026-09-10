@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 83,
+    "end_line": 83
+  },
+  "quote": "`${stepSubject} ciops-prov:schedulesSeatRequest ${proposalNode}-request-${index} .`,",
+  "epistemic_status": "quoted_prose"
+}

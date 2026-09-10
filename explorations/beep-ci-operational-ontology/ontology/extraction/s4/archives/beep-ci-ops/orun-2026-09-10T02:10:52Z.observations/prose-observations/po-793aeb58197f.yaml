@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 132,
+    "end_line": 138
+  },
+  "quote": "### 3.5 Emission v2 individuals, relations, and identity criteria\n\nRatified `ciops:ScheduleProposal` and `ciops:SeatRequest` typing, admission\ncharges (`xsd:integer`), and origin-key literals are preserved. Every\nprojection, including empty and fully deferred proposals, emits one typed\nepisode subject and one typed specification individual. The following\nterms remain provisional under `https://oip.law/ontology/ci-ops-prov#`:",
+  "epistemic_status": "quoted_prose"
+}

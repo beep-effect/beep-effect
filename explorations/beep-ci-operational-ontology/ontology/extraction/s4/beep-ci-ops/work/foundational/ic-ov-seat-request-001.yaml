@@ -1,0 +1,57 @@
+id: ic:ov-seat-request:001
+hypothesis_ref: dh:ov-seat-request:001
+referent_grain: Candidate particular request for scheduler admission, separate from its projection-local
+  description, the act of submitting it, a reusable work specification, and a later grant.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: 'unresolved: a particular admission demand would need continuity through its initiation
+    and handling, distinguishing rerepresentation of one demand from a new demand for the same work. A
+    projection-local request description instead has contextual information-content identity. The emitted
+    subject, nonce carrier, and described pending interval do not establish that continuity or decide
+    whether request existence ends with pending membership.'
+  reidentification_key:
+  - proposal-local request subject, for lookup of the representation only
+  - scheduledUnitRef carrying request.nonce, with no demonstrated global uniqueness or cross-projection
+    sameness contract
+  - enqueuedAtMillis and admittedAtMillis as described pending-membership evidence, not an identity criterion
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: The candidate demand concerns a particular admission request, but the supplied projection view
+    does not show its establishing act, requester relation, continued handling, or termination. A coherent
+    request description is observed; unity of an enduring operational demand is unresolved.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+  - 'information_object: a projection-local description of a request'
+  - 'mode or relator: an outstanding demand relating a requester to admission handling'
+  - 'event: the act of submitting an admission request, distinguished from its pending aftermath'
+  existential_dependencies:
+  - A demand or relator interpretation would depend on a requester and an admission authority or handling
+    process.
+  - A projection-local information description instead depends on represented input content. This batch
+    does not observe the participant bindings needed to select the operational model.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+- description: 'Hypothetical counterexample: the same pending request appears in two projections at different
+    local indexes, while two separate requests for identical work use the same illustrative field values.
+    Identity by projection subject splits the first; identity by matching nonce or work description can
+    merge the second without a uniqueness-and-continuity observation. A later grant with copied values
+    would not by itself be the request.'
+evidence_refs:
+- po:sha256:0c5a0ac360560118bda477d323d7b7ae9977d379ec5a282b0184baf5195d43da
+- po:sha256:2bd636283801ce0554f90ccad18d9af687c0492f9206e9428256c3232db5790d
+- po:sha256:3015f93b003a84d5a9e8ee82ac198ebe5bd86db390fd763e0aef039e2ed6c203
+- po:sha256:83ac7ce996c2aacaf072f7c6977c423f511a3ec1d1d3b7f21a6fa64fb31ec86f
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+- po:sha256:f456cbb5c883ae06a4246878847ea9d98832618f2e923b54164a79cd2acfe000
+- CQ-020
+- CQ-021
+status: proposed

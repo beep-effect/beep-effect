@@ -1,0 +1,88 @@
+{
+  "id": "so:sha256:929aa987fb5e550c58968f28fd06947d1bfd2b788815a77376329f06d9ca765a",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect/beep_editor-15abc31b98cb/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 21,
+    "content_sha256": "ba2fa6294d7348dd9ab9583dce665df78692421c877ac75ae49741ea4efce0f3"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect/beep_editor-15abc31b98cb/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=@beep/editor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-06-14T05:49:09.634Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=closeout:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=closeout:pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=closeout"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=beep_editor-15abc31b98cb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=not-run"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v1\nbase=origin/main\nbranch=@beep/editor\ncommitted=false\ncreatedAt=2026-06-14T05:49:09.634Z\nhead=HEAD\nid=closeout:01-pr-context\nlabel=closeout:pr-context\nphase=monitor\nstatus=not-run\nid=closeout:02-review-gates\nlabel=closeout:review-gates\nphase=monitor\nstatus=not-run\nmessage=yeet PR closeout failed with 3 issue(s).\nmode=closeout\noutcome=failure\npushed=false\nrunId=beep_editor-15abc31b98cb\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\n",
+  "epistemic_status": "parser_derived"
+}

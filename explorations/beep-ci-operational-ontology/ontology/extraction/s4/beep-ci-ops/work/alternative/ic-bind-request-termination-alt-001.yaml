@@ -1,0 +1,63 @@
+id: "ic:bind-request-termination-alt:001"
+hypothesis_ref: "dh:bind-request-termination:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two request-termination occurrences are the same individual iff they are
+    the same ending of the same queued demand's queue participation by the
+    same reported mechanism at the same instant. The synthetic journal
+    (corpus/run3b-synthetic/admission/synthetic/journal.properties;
+    so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f)
+    records two distinct terminals: _tag=admission-withdrawn on nonce
+    d269a27c-6d0e-4613-8ad3-6adaa4353712 at withdrawnAtMillis=1788931586715
+    (this nonce also has admission-enqueued at enqueuedAtMillis=1788931586705),
+    and _tag=admission-ticket-evicted on nonce=synthetic-dead-ticket at
+    evictedAtMillis=1788931586729 with reason=queued-submitter-death (only the
+    terminal is in this supplied record; enqueue instant and complete waiting
+    interval are unestablished). Nonce plus terminal tag plus timestamp
+    reidentify; they are not the criterion. ownerRef/ownerRefVariant are
+    capture sanitization. These terminals are not grant releases.
+  reidentification_key:
+    - "nonce d269a27c-6d0e-4613-8ad3-6adaa4353712 + _tag=admission-withdrawn + withdrawnAtMillis=1788931586715"
+    - "nonce=synthetic-dead-ticket + _tag=admission-ticket-evicted + evictedAtMillis=1788931586729"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    Each terminal is one bounded happening. Withdrawal of the enqueued
+    synthetic request is not the same unity as ticket-eviction of
+    synthetic-dead-ticket; different nonces, tags, timestamps, reasons, and
+    presence/absence of a correlated enqueue.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - phase
+  existential_dependencies:
+    - "the queued demand whose queue participation is ended (present for the withdrawn nonce; enqueue unestablished for synthetic-dead-ticket)"
+    - "for ticket-eviction, a reported submitter-death condition (reason=queued-submitter-death is a reported cause, not independent proof of process death)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Equate queue removal with release of an allocated grant. Grant release
+      is _tag=admission-released on a different nonce
+      (9e91a4e8-cf97-44b4-9b5c-da780e47720e). CQ-008 treats queued waiters as
+      SeatRequests, never as a grant state.
+  - description: >-
+      Turn each event tag into an ontology subclass, or merge withdrawal and
+      ticket-eviction as one individual. They differ in nonce, mechanism,
+      timestamp, reason, and whether an enqueue is correlated.
+  - description: >-
+      Reconstruct a complete waiting interval or a prior grant history for
+      nonce=synthetic-dead-ticket from this record alone. Only the terminal
+      is supplied.
+  - description: >-
+      Read reason=queued-submitter-death, ownerRef, schemaVersion, or
+      provenance=synthetic as independent proof of process death, Agent
+      identity, or a starvation violation (CQ-023).
+status: proposed

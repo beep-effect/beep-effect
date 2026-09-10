@@ -1,0 +1,11 @@
+id: rat:53
+proposal_ref: otp:ov-admission-token-charge:001
+proposal_sha256: 8fdaf02ccc887f2694829575aae6a669730b2f52e30b30e13b4e7278b4cd3b5d
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-admission-token-charge:001 as the admissionChargeTokens recorded-value
+  property reuse within the joint ordering cluster, with repricing, assertion replacement, request/grant
+  continuity and pre-admission capacity evidence deferred to run 4 as flagged.

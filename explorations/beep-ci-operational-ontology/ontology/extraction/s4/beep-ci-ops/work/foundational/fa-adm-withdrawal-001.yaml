@@ -1,0 +1,50 @@
+id: fa:adm-withdrawal:001
+hypothesis_ref: dh:adm-withdrawal:001
+identity_card_ref: ic:adm-withdrawal:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: A journal information object asserting withdrawal. A time-aligned observation of ticket removal
+    by the withdrawal operation would discriminate the operational event from this report-only interpretation.
+  still_viable: true
+- label: The terminal boundary of queue participation labeled withdrawn, without a distinct event individual.
+    A decision querying the withdrawal actor, mechanism, or independent effects would distinguish the
+    event model.
+  still_viable: true
+strongest_counterexample: A withdrawn tag may result from an automatic cleanup or cancellation path with
+  no voluntary decision by the requester. Treating it as intentional abandonment, proof failure, or relinquishment
+  of an admitted grant would add facts that these enqueue/withdrawal pairs never assert. A replayed withdrawal
+  entry can also leave the queue unchanged.
+verdict: analyzed
+test_rationales:
+  spec_vs_execution: A procedure can withdraw many requests; this is one reported execution of a queue-exit
+    transition. It is not the requested work specification, a withdrawal policy, proof failure, or evidence
+    that work execution was stopped.
+  world_vs_information: The recorded withdrawal assertion and the queue exit it describes are separate.
+    A before/after ticket observation is still needed to corroborate actual withdrawal; absent grant entries
+    do not establish that no other authorization ever existed.
+  role_vs_bearer: The requester can persist after withdrawal. The solicitation participating in this exit
+    is also distinct from the exit. Calling a person or process a withdrawn requester must not convert
+    that bearer into an occurrence.
+  context_reification_needed: Interpret the boundary with its particular prior queue participation. CQ-023
+    additionally requires a snapshot instant, declared threshold, and exception context; a completed historical
+    wait alone is not a current starvation result.
+category_rationale: Event is a conditional classification of the proposed admission request withdrawal
+  occurrence, because its grain is one occurrence of a transition. It is not selected from the spelling
+  of a tag. The cited evidence directly establishes recorded assertion content; the linked card states
+  the proposed occurrence criterion, rigid event classification, participant dependence, and unresolved
+  duration. A coherent conditional event shape is available, so analysis can finish while the information-only
+  and boundary-only rivals remain viable. Neither rival is resolved by this seat.
+evidence_refs:
+- so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+- so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+- CQ-007
+- CQ-021
+- CQ-023
+evidence_reading: Both cited matched histories contain positive enqueue and withdrawal blocks. One concerns
+  merged-preview work; the other concerns review-fix with weightTokens=1. The reports therefore assert
+  a queue exit across different work descriptions, without supplying a release or eviction of a charged
+  grant.

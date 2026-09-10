@@ -1,0 +1,47 @@
+id: fa:ov-step-position:001
+hypothesis_ref: dh:ov-step-position:001
+identity_card_ref: ic:ov-step-position:001
+referent_grain: Recorded ordinal assignment to a represented step within one fixed prescription; distinct
+  from the abstract integer shared by many assignments and from actual execution order.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: The explicit zero-based rule and protection against deferred-tail renumbering
+    give ordinal values prescription semantics. The candidate is recorded order content; a data property
+    may represent it without a new class.
+  rigidity: A fixed ordinal assertion remains an ordinal assertion while retained. A change to an ordering
+    in another prescription does not mutate this fixed assertion.
+  dependence_and_temporality: The assignment is relative to one prescription, not to wall-clock time.
+    Its historical record can survive changes to what plan is current; no duration or completion state
+    is inferred.
+  spec_vs_execution: Prescribed order is separated from grant order, execution order, timestamps, and
+    durations.
+  world_vs_information: The observed integer literals record an ordering in an example prescription. They
+    are not observations of two temporally ordered admissions.
+  role_vs_bearer: The step occupies an ordered position; neither its integer value nor the record assigning
+    that value is the step bearer or its scheduled request.
+  context_reification: The containing proposal and step identify the order context. A standalone integer
+    loses that context; an existing contextual step node or sequence entry can preserve it.
+  evidence_limit: The two observed ordinals and emitter rule support order representation. They do not
+    demonstrate execution, uniqueness of positions in arbitrary malformed input, or cross-version step
+    identity.
+rival_models:
+- label: Precedence relation among prescribed components, with ordinals derived only for presentation
+  still_viable: true
+- label: Integer data property on a contextual step, without an independently instantiated position object
+  still_viable: true
+strongest_counterexample: 'Hypothetical counterexample: two unrelated prescriptions each have stepIndex
+  0. Treating the number as the identity of a position collapses their first steps. A scheduler could
+  also execute a different order, leaving the recorded prescribed ordinals unchanged; the fixture''s 0
+  and 1 therefore do not establish observed grant chronology.'
+verdict: analyzed
+needed_evidence: ''
+evidence_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020
+- po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263
+- po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7
+- CQ-020

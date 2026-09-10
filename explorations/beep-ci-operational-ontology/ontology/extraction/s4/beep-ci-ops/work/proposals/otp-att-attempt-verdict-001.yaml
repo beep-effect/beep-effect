@@ -1,0 +1,89 @@
+id: otp:att-attempt-verdict:001
+hypothesis_ref: dh:att-attempt-verdict:001
+identity_card_ref: ic:att-attempt-verdict:001
+foundational_status: analyzed
+term:
+  preferred_label: verification result artifact
+  local_name: VerificationResultArtifact
+  proposed_iri: https://oip.law/ontology/ci-ops#VerificationResultArtifact
+  owl_entity_kind: class
+definition:
+  text: An information object originating in one assessment of an operational attempt and recording
+    that assessment's outcome, component results, measurements, and asserted applicability context.
+    Copies preserving the originating assessment and its asserted content are the same unit; a new
+    assessment or corrected assertion is another unit. Findings from different finished-attempt records
+    remain distinct even when collected in one projection. The artifact can remain available after
+    its findings become stale or disputed, without being the execution, its failure event, or an authorization
+    to reuse evidence.
+  source:
+  - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+  - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+- from_sha256: 4856f0bf1d368800189dfdade0718aab1c72e039ab4281a92be6b84fdbc87e1f
+  addressed:
+  - "gate-log-1 semantic_support_for: retain only otp:att-verification-attempt:001 and its attempt-specific result-scope warrant"
+  - "sitting-1 Ruling 1 withdrawal of otp:ver-wall-time-evidence:001; receipt work/sittings/withdrawals-ver-r2.yaml; withdrawn digest 30fbd1df1aace7347865051053999ad016fba6b6e86e92c36356ea6365e88320"
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#VerificationResultArtifact
+    compatibility: Proposed exact reuse of the ratified VerificationResultArtifact for a recorded
+      operational assessment result, preserving the result-versus-evidential-use distinction and making
+      no claim of attained assurance. This chain selects assessment-origin plus assertion content
+      as the proposed identity grain. The separate content-snapshot proposal otp:ver-attempt-verdict:001
+      must be reconciled before either interpretation is accepted as the meaning of the reused term.
+      The shared name is not evidence that their identity criteria are already equivalent.
+operational_warrant:
+  competency_questions: []
+  semantic_support_for:
+  - otp:att-verification-attempt:001
+alternatives_rejected:
+- A certificate whose green fields alone prove current correctness or transferable verification would
+  erase the recorded assessment context and missing applicability conditions.
+- The execution and assessment occurrence described by a verdict are not the persisted result object;
+  an occurrence-centered rival must model the distinction explicitly.
+- 'A projection containing several verdicts is not a single result artifact: the failed verification
+  and successful monitoring belong to different attempts and heads.'
+open_issues:
+- Semantic support for otp:att-verification-attempt:001 is the grouping that keeps a reported failed
+  step and unexecuted components on their own recorded invocation. The same grouping preserves
+  measurement targets and whole-attempt versus component scope as attributes of that account.
+  A consumer cannot move a later monitor result or its duration onto an earlier failed verification
+  merely because the projection contains both. The retained target is a decision term; no separate
+  wall-time evidence class is required by this support warrant.
+- 'STEWARD CHOICE REQUIRED before ratification: choose this assessment-origin information unit, the
+  still-viable dated assessment event with a separate informational result, or the still-viable assertion-content
+  object that merges identical independent assessments. Do not identify those alternatives. Observe
+  independent equal-content assessments and a correction/copy lifecycle to distinguish their sameness
+  rules.'
+- 'Direct identity-choice pair: otp:att-attempt-verdict:001 versus otp:ver-attempt-verdict:001. Both
+  propose ciops:VerificationResultArtifact, but this card preserves assessment origin while the other
+  selects a bounded assertion-content snapshot and leaves dependence unresolved. The steward must
+  select a common compatible criterion, keep explicitly distinct shapes through revision, or park
+  a mapping; accepting both as interchangeable would silently merge the rival models.'
+- Ratify or park this support proposal together with otp:att-verification-attempt:001
+  if its selected shape requires a result object. A qualified-assertion alternative can replace
+  that dependency only through an explicit modeling choice that retains the same target and scope
+  bindings.
+- A selected proof tier and stored head/diff/environment/stage describe assessment context, not a
+  demonstrated acceptance or transfer rule. Epoch validity, invalidation, complete readiness criteria,
+  current eligibility, complete running-work inventory, and the cost estimate used at admission remain
+  unestablished. The failed lane's recorded duration differs from the enclosing attempt elapsed time.
+- 'Reuse search: the scout report''s PROV entity and OSLC automation-result candidates are broader
+  alignments. They do not settle local report individuation or evidence validity; no external exact
+  mapping or superclass is proposed.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

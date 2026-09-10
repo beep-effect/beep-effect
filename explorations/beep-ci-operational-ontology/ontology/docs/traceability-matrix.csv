@@ -16,7 +16,7 @@ Change event invalidation blast radius,UC-003,CQ-014,CacheEpoch;VerificationEvid
 Certainty accounting before publish,UC-004,CQ-015,VerificationEvidence;Checkout;SharedCache;cachedIn;mountsCache;inEpoch,ontology/tests/cq-015.sparql
 KPI attribution and lever discovery,UC-005,CQ-016,OperationalChangeEvent;landedAt,ontology/tests/cq-016.sparql
 Certainty accounting before publish,UC-004,CQ-017,AssuranceTier;VerificationLane;requiresLane,ontology/tests/cq-017.sparql
-Change event invalidation blast radius,UC-003,CQ-019,AffectedComputation;FailOpenOutcome;VerificationEvidence;ScheduleProposal;Scope;hasAffectedOutcome;scopedByComputation;hasScope,ontology/tests/cq-019.sparql
+Change event invalidation blast radius,UC-003,CQ-019,AffectedComputation;FailOpenOutcome;VerificationEvidence;ScheduleProposal;Scope;hasAffectedOutcome;scopedByComputation;hasScope;hasStep;schedulesWorkUnit;schedulesSeatRequest;hasScopeTag,ontology/tests/cq-019.sparql
 Agent plans the cheapest next validation sequence,UC-001,CQ-020,ScheduleProposal;ScheduleStep;SeatRequest;VerificationEpisode;AdmissionProjectionSpecification;hasCurrentProposal;hasProjectionSpecification;hasStep;stepIndex;schedulesSeatRequest;hasScopeTag,ontology/tests/cq-020.sparql
 Scheduler grants seats under backpressure,UC-002,CQ-021,SeatRequest;Agent;AdmissionWorkKind;AdmissionPriorityClass;requestedBy;hasWorkKind;hasPriorityClass;admissionChargeTokens;enqueuedAt,ontology/tests/cq-021.sparql
 Scheduler grants seats under backpressure,UC-002,CQ-022,CommittedFailure;WorkUnitExecution;VerificationAttempt;ExecutionState;CancelClass;inAttempt;hasExecutionState;hasCancelClass,ontology/tests/cq-022.sparql

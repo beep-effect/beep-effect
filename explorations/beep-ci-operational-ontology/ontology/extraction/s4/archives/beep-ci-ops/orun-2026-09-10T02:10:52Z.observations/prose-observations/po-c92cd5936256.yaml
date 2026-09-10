@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:c92cd59362565eda3098e5d0828c8c377fd934ae4d4546cc190d22b25207fd9a",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 39,
+    "end_line": 60
+  },
+  "quote": "## 2. Rulings (sitting 1 — summary; DECISIONS.md is authoritative)\n\n1. **Layered scope**: v1 = deterministic admission-order projection; the\n   service contract carries an explicit lane-DAG planner seam (`Graph.topo`\n   territory) that v1 declares but does not implement.\n2. **Provisional ordering vocabulary**: emitted nodes typed with ratified\n   `ciops:` classes; ordering predicates (`hasCurrentProposal`, `hasStep`,\n   `stepIndex`, `schedulesSeatRequest`, `hasScopeTag`) and class `ScheduleStep`\n   emitted in `ciops-prov:`. Emission v2 adds the episode, specification,\n   digests, nonce carrier, and deferred-tail edge described in §3.5. These\n   are prefix-separated triples under a provisional comment in valid Turtle,\n   not a TriG named-graph block. Closure is open; provisional facts are\n   excluded from negation and ratified typing. The cluster goes to run 3.\n3. **Landing zone**: new labs app `apps/labs/ciops` via\n   `bun run beep create-package` — schemas, `Context.Service` contract,\n   engine, and property tests all incubate there, off the required turbo\n   graphs. Proven pieces graduate later (`packages/ontology/domain`, then\n   repo-cli/yeet).\n4. **Differential replay gates v1**: a Must property replays the pinned\n   golden journal and requires the projected admission order to reproduce the\n   deployed scheduler's actual grant order. Mismatches are semantic findings\n   → run-2 evidence.",
+  "epistemic_status": "quoted_prose"
+}

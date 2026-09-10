@@ -1,0 +1,20 @@
+id: "fa:ov-current-proposal-selection-alt:001"
+hypothesis_ref: "dh:ov-current-proposal-selection:001"
+identity_card_ref: "ic:ov-current-proposal-selection-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Information assertion of currency bounded to one projection representation (preferred)"
+    still_viable: true
+  - label: "Temporally qualified relator mediating an episode occurrence and its current plan"
+    still_viable: true
+  - label: "Anti-rigid role CurrentProposal of a ScheduleProposal bearer"
+    still_viable: true
+  - label: "Ordinary non-selective association with no current-content meaning"
+    still_viable: false
+strongest_counterexample: "A model that treats every historically emitted proposal as jointly current would merge sequences CQ-020 forbids; the fixture asserts exactly one hasCurrentProposal edge (po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7; po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: snapshot information assertion versus temporally qualified relator or CurrentProposal role. Missing observations: a supersession trace re-pointing hasCurrentProposal, uniqueness enforcement, or a completeness contract for absence of other proposals (po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6)."

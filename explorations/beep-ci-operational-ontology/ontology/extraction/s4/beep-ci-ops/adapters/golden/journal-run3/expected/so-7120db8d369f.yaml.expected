@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:7120db8d369faf9a492921f996e3df264193064174dee6b62936452976e9cba7",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-checkout-identity/bindings/a.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 9,
+    "content_sha256": "b75ada8f98fe68161d7a5d42df59a24ce8305454d232979426f696c305d72df7"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-checkout-identity/bindings/a.properties",
+    "lexical_name": "identity_key",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "git_common_dir=<fixture>/a/.git"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "git_dir=<fixture>/a/.git"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "identity_key=<fixture>/a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=clone"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "scannedAt=2026-09-09T00:00:00Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_present=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_remote_cache_configured=false"
+    }
+  ],
+  "source_excerpt": "# record 0\nidentity_key=<fixture>/a\nscannedAt=2026-09-09T00:00:00Z\nbranch=feat/a\nkind=clone\ngit_dir=<fixture>/a/.git\ngit_common_dir=<fixture>/a/.git\nturbo_local_cache_present=true\nturbo_remote_cache_configured=false\n",
+  "epistemic_status": "parser_derived"
+}

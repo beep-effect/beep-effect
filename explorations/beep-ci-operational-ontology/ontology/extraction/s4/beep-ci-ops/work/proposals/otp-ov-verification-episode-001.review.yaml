@@ -1,0 +1,75 @@
+target: otp:ov-verification-episode:001
+target_sha256: 21aeda2de9393aa6a4e22f4bbbc05376075dd06f5df073030befb3bf4234d4f7
+chain_sha256: 4aed06a840c384dd120462b61cf1e7f7e911864918c5c70ea69d3c814dca341e
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: An observed verification history with a stated initiating boundary, activity or attempt
+  membership through retry and proposal replacement, and a closing or abandonment boundary. Include a
+  contrasting disconnected history or an identifier reassignment, with an observation-backed unity rule
+  that explains whether the histories constitute one verification occurrence independently of episodeId
+  equality. This must distinguish an occurrence from a caller-chosen correlation record.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'VerificationEpisode asserts parents: []; no is-a edge is proposed. Participant, component,
+    or governing-role relations supply no additional subsumption assertion to test.'
+revision_requests:
+- Use the bounded and contrasting histories to choose an occurrence, process/situation, or correlation-information
+  model in a new synthesis. Coordinate hasCurrentProposal's subject interpretation with that choice. Until
+  then preserve the occurrence identity/category deferral; the typed fixture and non-empty caller argument
+  do not supply the missing unity rule.
+attacks:
+- surface: null_discriminator
+  rule: typed-correlation-context-versus-occurrence
+  outcome: survived
+  evidence:
+  - po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4
+  - po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  - po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+  - CQ-020
+  counterexample: An exporter can type a caller-specific episode context even for an empty projection,
+    as the quoted contract requires. That observation is compatible with a correlation-information object
+    as well as an occurrence reference. It nevertheless carries a caller-specific anchor for the proposal
+    rather than an unreferenced type name; emitted fixture typing can support that representational candidate.
+    The attempted null attack therefore does not eliminate all episode-context denotation. It does defeat
+    any inference from typing alone to a bounded occurrence, which the proposal explicitly leaves deferred
+    and this review cannot settle.
+- surface: identity
+  rule: episode-unity-underdetermined
+  outcome: survived
+  evidence:
+  - po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4
+  - po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  - po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+  counterexample: A caller could reuse E for two disconnected verification efforts or rename one continuing
+    effort from E to F; the same non-empty argument and type-emission shape can represent either. Counting
+    episodes by identifier would merge the first pair or split the second. The card refuses that criterion
+    and claims no initiating boundary, attempt membership, or closure. The observations thus leave occurrence
+    unity versus correlation-content identity unresolved rather than furnishing a positive criterion contradicted
+    by the counterexample.
+- surface: warrant
+  rule: support-term-not-decision
+  outcome: survived
+  evidence:
+  - CQ-020
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  counterexample: 'Remove only the VerificationEpisode type triple: CQ-020 still binds its supplied ?ep,
+    so the required_classes list cannot directly warrant this class. The proposal correctly supports otp:ov-current-proposal-selection:001,
+    whose hasCurrentProposal edge is query-required. A coherent subject interpretation keeps disconnected
+    contexts from sharing a current selection. That support need survives, but it does not determine whether
+    the required anchor has occurrence unity or only correlation-content unity.'
+rival_models_still_viable:
+- Temporally extended verification process uniting multiple activities under one continuing concern
+- Bounded verification event or situation with different unity and temporal criteria
+- Caller-chosen information context that correlates proposals without establishing a single occurrence
+evidence:
+- CQ-020
+- po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4
+- po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6

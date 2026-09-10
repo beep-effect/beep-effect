@@ -1,0 +1,71 @@
+id: "ic:ver-attempt-verdict-alt:001"
+hypothesis_ref: "dh:ver-attempt-verdict:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two individuals are the same attempt-result report iff they are the same
+    captured informational snapshot of one operational attempt's reported
+    outcomes: the same aboutness to that attempt and the same result-content
+    (aggregate outcome together with per-step status and the committed/pushed
+    publication flags). attemptId (and runId+createdAt on v1 reports that lack
+    attemptId) reidentify a snapshot; they do not constitute it.
+    schemaVersion, indexPath placeholders, file path, and capture provenance
+    are representation or capture scaffolding, never identity. Distinct
+    attemptIds are distinct reports even when both carry outcome=failure.
+  reidentification_key:
+    - attemptId
+    - runId+createdAt (v1 reports lacking attemptId)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One enclosing outcome envelope for one attempt; nested step-result parts
+    belong to that snapshot. Flattened duplicate keys (multiple status,
+    durationMs, exitCode values) are parts or repeated projections, not extra
+    report individuals.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - event
+    - situation
+  existential_dependencies:
+    - the operational attempt the snapshot is about (CQ-022 VerificationAttempt grain)
+    - some encoding carrier (observed as verdict.properties projections)
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Identifier-is-identity: treating attemptId as the criterion would make
+      so:sha256:929aa987fb5e550c58968f28fd06947d1bfd2b788815a77376329f06d9ca765a
+      (yeet-verdict/v1 closeout with outcome=failure, no attemptId, no
+      failureKind, no elapsedMs) lack identity, yet it is still a result report
+      with less diagnostic detail.
+  - description: >-
+      Evidence-is-truth / push-is-verification: so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+      has committed=true, pushed=true, and outcome=failure with
+      failedStepId=full:01-pre-push; publication occurred and verification of
+      that step did not succeed.
+  - description: >-
+      Aggregate-failure-is-every-step: so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda
+      reports outcome=failure and failedStepId=publish:01-git-push while
+      status=passed holds for advisory, commit, preflight, and full:01-pre-push;
+      so:sha256:7a639ef29784753fbf47a4860c76a214d945a67c34fe1675915e57253dd3d628
+      fails feedback:01-build while feedback check/lint/test passed.
+  - description: >-
+      Spec/execution merge: proofTier=full or mode=publish on
+      so:sha256:faeff009ed066ab59b310901f7f127fa174f0b0e2859613529a9ac69673c3230
+      and so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465
+      coexists with outcome=failure; the report is not attained assurance
+      (CQ-006 discharge) and not the lane specification.
+  - description: >-
+      Report-is-the-attempt: so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+      records elapsedMs=11 with every listed step status=not-run and
+      failureKind=handler-error. If the report were the attempt-event, those
+      not-run steps would be occurrences; they are reported absences in a
+      snapshot (CQ-013 diagnosis uses the reported failedStepId/failureKind,
+      not an inferred complete execution).
+status: proposed

@@ -1,0 +1,11 @@
+id: rat:67
+proposal_ref: otp:admb-seat-request:001
+proposal_sha256: 3c63b61ebc7e98541c8564433d7a42b17ba1f495d761b318295e94f52c9eb5f3
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:admb-seat-request:001 as the SeatRequest recorded-demand-account reuse under
+  sitting-1 Ruling 2, with account-copy identity, effective queue participation and withdrawal/resubmission
+  continuity deferred to run 4 as flagged.

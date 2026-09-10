@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 101,
+    "end_line": 101
+  },
+  "quote": "`${specificationNode} rdf:type ciops-prov:AdmissionProjectionSpecification .`,",
+  "epistemic_status": "quoted_prose"
+}

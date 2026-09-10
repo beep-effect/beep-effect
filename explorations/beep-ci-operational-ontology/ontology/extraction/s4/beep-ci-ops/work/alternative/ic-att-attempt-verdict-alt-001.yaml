@@ -1,0 +1,33 @@
+id: "ic:att-attempt-verdict-alt:001"
+hypothesis_ref: "dh:att-attempt-verdict:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two individuals are the same attempt verdict iff they are the same persisted assessment of one attempt at one recorded instant. so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198 and so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f flatten several yeet-verdict/v2 payloads in one journal: a verify finish with outcome=failure, failedStepId=full:00-cheap-gates, durationMs=695899.047175; a later monitor finish with ready=true, requiredChecksGreen=true, mergeable=true, greptileScore=5/5. Those remain distinct records of distinct attempts. resolvedHeadSha, diffFingerprint, proofTier, envProfile, and stage are applicability context of each record, not identity, not a cache epoch, and not a reuse license (CQ-005, CQ-015). ownerRef/ownerRefVariant are capture provenance."
+  reidentification_key:
+    - attemptId
+    - createdAt
+    - schemaVersion
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One immutable assessment document per attempt-finished payload. Lane measurements and merge-readiness findings are content of that document, not additional verdict individuals, and must not be joined across attemptIds merely because they share a journal projection."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - event
+    - situation
+  existential_dependencies:
+    - "the attempt the assessment is about (attemptId; CQ-022)"
+    - "a journal encoding (yeet-attempt-journal/v1 wrapping yeet-verdict/v2)"
+    - "asserted checkout/diff/tier context (resolvedHeadSha, diffFingerprint, proofTier) as applicability, not as epoch identity"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Merging the failed cheap-gates verify verdict with the later monitor ready=true/requiredChecksGreen=true payload because both appear in one attempts.properties projection."
+  - description: "Reading requiredChecksGreen=true or mergeable=true as present-tense mergeability or as VerificationEvidence sufficient by itself to authorize cached proof reuse."
+  - description: "Identifying the verdict with the execution it describes, or taking ownerRef as the verdict's identity."
+status: proposed

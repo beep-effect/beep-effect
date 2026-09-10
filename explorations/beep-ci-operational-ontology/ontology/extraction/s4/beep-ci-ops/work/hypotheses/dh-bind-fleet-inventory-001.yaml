@@ -1,0 +1,37 @@
+id: "dh:bind-fleet-inventory:001"
+observation_refs:
+  - "so:sha256:4395993ded7a7f02b42edac02bacba738f4f2aa1270db85e098e9d9f62fc9aca"
+cq_warrants: []
+proposed_referent:
+  label: "No additional domain referent from fleet census bookkeeping"
+  description: >-
+    The projection inventories checkout locations and snapshot claims about branches,
+    heads, dirtiness, and liveness. Its census wrapper and scan summaries do not
+    independently warrant a fleet entity, a checkout taxonomy, or a decision-bearing
+    operational state in this batch.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A time-indexed fleet-state information artifact with a demonstrated decision consumer"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "The enduring fleet or its individual checkout bearers"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The config_key_value facts "checkoutsDiscovered=107", "clonesDiscovered=22",
+    "checkoutsDegraded=1", and "processesScanned=5" characterize the census.
+    "materialized=false", "conflict=unknown", "conflictReason=target-unmaterialized",
+    and "policyMovement=unknown" preserve limitations rather than establish a
+    conflict outcome or authorize a movement. No shared-cache binding, proof
+    applicability result, or admission decision is attached to these aggregate
+    values. A snapshot's liveness labels also do not identify admission owners or
+    prove currently active grants. The fleet-root and path placeholders and scan
+    bookkeeping remain capture coordinates. The supplied decision questions do not
+    independently require a term for this inventory wrapper; evidence of a concrete
+    decision consuming the census would be needed to reject the null for that wrapper.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

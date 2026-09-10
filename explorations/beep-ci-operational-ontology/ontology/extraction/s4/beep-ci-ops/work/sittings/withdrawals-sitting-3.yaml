@@ -1,0 +1,34 @@
+run: orun-2026-09-10T02:10:52Z
+seat: orchestrator
+pass: sitting-3 steward deferrals
+date: '2026-09-10'
+authority: run-3 sitting 3, shared-IRI grain ruling (recorded-value grain governs reuse); sitting-1 Ruling
+  3 "else unresolved" arm for the synthetic operational readings
+withdrawn:
+- id: otp:bind-admission-grant:001
+  proposal_sha256: 56f911f4da15a1595d645c0998d66138eb04eea9a1d91f356495c4baeb3bbf09
+  reviews_removed:
+  - otp-bind-admission-grant-001-r2.review.yaml
+  - otp-bind-admission-grant-001-r3.review.yaml
+  - otp-bind-admission-grant-001.review.yaml
+  named_evidence: 'Synthetic operational SeatGrant allocation-relator reading; the recorded-value grain
+    governs SeatGrant reuse this run. Needed: organic lease-eviction/renewal/transfer chains in a fleet
+    capture showing effective allocation continuity, joined to an independently identified holder.'
+- id: otp:bind-admission-request:001
+  proposal_sha256: 1ee11f84c7848d61d054beefcb2cf8d94d20096346bd0b68ad19c8a29eb73520
+  reviews_removed:
+  - otp-bind-admission-request-001-r2.review.yaml
+  - otp-bind-admission-request-001-r3.review.yaml
+  - otp-bind-admission-request-001.review.yaml
+  named_evidence: 'Synthetic SeatRequest reuse with category unresolved; the recorded-value grain governs
+    SeatRequest reuse this run. Needed: an organic withdrawal/resubmission chain with an independently
+    tracked demand referent and both ticket records.'
+- id: otp:ver-attempt-verdict:001
+  proposal_sha256: b23e3edb560ead00c9566d177fc853478828b9b5a50ddab238fd74dd56a0e122
+  reviews_removed:
+  - otp-ver-attempt-verdict-001-r2.review.yaml
+  - otp-ver-attempt-verdict-001.review.yaml
+  named_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'

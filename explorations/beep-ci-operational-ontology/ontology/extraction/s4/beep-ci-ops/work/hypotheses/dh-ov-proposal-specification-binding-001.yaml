@@ -1,0 +1,38 @@
+id: dh:ov-proposal-specification-binding:001
+observation_refs:
+- po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+- po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853
+- po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+cq_warrants:
+- CQ-020
+proposed_referent:
+  label: Recorded governing-specification binding of a proposal
+  description: The assertion selecting the typed specification associated with a particular emitted schedule
+    proposal. It enables a proposal-specific governing-description answer; it does not assert that the
+    proposal has been executed, approved, or fully validated.
+representation_status: information_artifact
+alternatives:
+- label: Governing relation between a prescription and a specification
+  representation_status: domain_referent
+  plausibility: viable
+- label: Provenance link to an input-bound projection-context record
+  representation_status: information_artifact
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: An explicit serialized edge connects the proposal to a subject independently typed as a specification.
+    The current-sequence question requires that binding to distinguish the governing description for the
+    selected proposal. The fixture illustrates the assertion, while the accompanying contract states that
+    even empty and fully deferred projections emit a typed specification. Whether the target is a repeatable
+    rule object or a contextual record remains unresolved at the referent-model level.
+  discriminator: The emitter writes "${proposalNode} ciops-prov:hasProjectionSpecification ${specificationNode}
+    ."; the fixture asserts that same relation, and both emitter and fixture type its target as AdmissionProjectionSpecification.
+    A null treating the link as semantically empty plumbing would remove the explicit proposal-to-governing-description
+    answer carried by these assertions.
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

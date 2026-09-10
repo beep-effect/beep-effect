@@ -1,0 +1,111 @@
+id: "dh:admb-admission-history:001"
+observation_refs:
+  - "so:sha256:0c6e04e7f4362f5d469f9c1eedd838e67a7a91caaba5e3ff6dac566b116bfc5a"
+  - "so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929"
+  - "so:sha256:294d794be09e649b5a17377c1360c0f7f573b667acdb9166a05c0a4df705f8fc"
+  - "so:sha256:2a6e186a42b949bfe289a0229aff20380459316332b5def65dce8cc12d748d3c"
+  - "so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0"
+  - "so:sha256:329c44ec4fb419e458ef5823689c4c600d6d9937ee653719c6e436f5af2d468b"
+  - "so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab"
+  - "so:sha256:3538030c5bd0760a9c53c44616055c41629ed75d482ec76bcc06330275f8999d"
+  - "so:sha256:3614eaf94c332c102fe2fe71112d59f710f5f4b0d2a2d2c6cb4e4bdee2c08619"
+  - "so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06"
+  - "so:sha256:38fffd45bcc04ba58312d36f4694ea9b157f7956d67452bb829952f31cf23385"
+  - "so:sha256:3a06414c0178479bb7922a88a9c7808ebdcf6dc04a5751d2880672a3970eacb7"
+  - "so:sha256:3f9618460b3680449834d6a01f7568a99c6954a085a16a60727100a6c1603ba3"
+  - "so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10"
+  - "so:sha256:4cac038f3231d162cf516d669b7bbb2f945ecaff574c8f5bea1bfd6399818e09"
+  - "so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973"
+  - "so:sha256:54999e877e0a6e55e78be44001d34f072da479c0e7bdbed660299b04759ff27b"
+  - "so:sha256:5a469137642420a8f0cbf6de9490c86e6f720de4d587ed336ab8f7173cd1c21a"
+  - "so:sha256:5abf1599e9268fb3190e199440ba2a0975670561acee0566c6805cd150491b12"
+  - "so:sha256:5b072546461a1aff37534b63ce30985da7dd245eba56a888483e95f2eaf0c33f"
+  - "so:sha256:63bf0d5c790dcfdef42e798c3612da479ebb1dcc96cf5ae91bbcc5abbe0a9129"
+  - "so:sha256:640a03f63aa4ff13b48b0368fa9f2054cf42454c1cf81394bb0828315f7b9322"
+  - "so:sha256:670e03a64c95c565c2755411af00c0e22ebe6e110796842e649844ddb889b827"
+  - "so:sha256:6d2b5abe8f8e770dc6c79d5f9c890565d61b30cfef5bf3e6d34123bbf7afb6c8"
+  - "so:sha256:714497e7760c9a963f4b6e998df4bdcd091a050ddcbecffa14d17f676afce38e"
+  - "so:sha256:728a791c0d757d9293790c2acaad9a2c8278eba56866c08cc6c2b2684f8c4584"
+  - "so:sha256:756a2cddd24cfb1cf54e6c3eb42ce81e438a68332463fc6923239babfddb4c0f"
+  - "so:sha256:75f79179af1c07f8cd301b39b2e0a480cff2cab21b6598a4d7198fa223283b4d"
+  - "so:sha256:78222350b0c0ed60ecf756d621e27ce6c664b19d324ab61f8421e3aeb7dbaafb"
+  - "so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959"
+  - "so:sha256:7e5702e0af48bd1ca7edc2d5c6350db34d8453874a5cd4344281607977584a90"
+  - "so:sha256:7e691f4aba31633d245206a65503fe36f855c86f4fd54bca5539692438ab900c"
+  - "so:sha256:8e56503bf451d7edda7047ebe49e71f58f4ee8cf6392773ddcae92e8af59c960"
+  - "so:sha256:8e77a0633f74c347ec357a4ce66dccb1b759c639006fc6251f30c8158344d548"
+  - "so:sha256:95a589bb270ccc20ef0409f27d0e9be297f9d6eb83706769f242be99dc04c6c2"
+  - "so:sha256:9a4d80db41ae3d7cdde49bd308273bbc213364ecbaecae42ae91dc5ba72e8312"
+  - "so:sha256:a03b8e201a23a02a6b82aa0c120aa205b4725195d3985dc468b271c0e4813bca"
+  - "so:sha256:a1f4b4761d924a497c1113cb2b5893bbb6559a8e5c385fdbf0c9c53f8a041b4c"
+  - "so:sha256:ac85cadefefdb5794db9a5111b67dde006ba05251cba3dc49b829b7d89b17665"
+  - "so:sha256:ba574bce897d92ed4d82236afc888a9e97316780aec858d877c64247603edc5d"
+  - "so:sha256:bbf039c9733c9bef609c0b780247a3ac0252404bc8c0708ab5b60b538aadabf2"
+  - "so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b"
+  - "so:sha256:c2dc9c1dc745720dae9ec574e7457be15301687c36071abea1c09b48cbd3ad8d"
+  - "so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a"
+  - "so:sha256:c9dddcabc8c17bd4e94ee006efe37dd3dad3e439c7a0177788f9ae0d3d9593dd"
+  - "so:sha256:cc9730a1b0d5fe267f7c65b2c1017d8e70ae518ee99ffcc01085b027a06767a6"
+  - "so:sha256:d528055a778209ef7ba8c585a447245d9828ec629052779a75a2f65dfc408d40"
+  - "so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb"
+  - "so:sha256:f22157463b8bb35324779e8d53a621bde8ce8b6511babab103a101a08152b3b6"
+  - "so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298"
+  - "so:sha256:f38d666952f2e70a4f3c00bd6d2075a331c99c3ecae5ceaabb73df7b792c9a7f"
+  - "so:sha256:fa16a716b56a1780f96785077dc9274f7a807f38a04770e008febb22d6cad15b"
+  - "so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732"
+cq_warrants: ["CQ-008","CQ-009","CQ-010","CQ-021"]
+proposed_referent:
+  label: "Admission history information object"
+  description: >-
+    An instance is a correlated collection of journal assertions describing one request and any
+    resulting grant across their observed admission boundaries. Enqueue or an enqueue timestamp
+    supplies an observed beginning when present; admission, withdrawal, release, and the two
+    distinct eviction events supply intermediate or endpoint assertions according to their own
+    tags. A ticket-eviction-only collection has an unknown beginning; an enqueue/admission
+    collection with no supplied endpoint has an unknown later status. The collection is neither
+    one journal entry nor a single operational entity joining request, grant, occurrence, and
+    execution identities. The 53 source chains are individual examples of this
+    information-object kind, not 53 different kinds. The collection may preserve a past boundary
+    after the request leaves the queue or a grant terminates; the observed event times do not
+    date the information object's retention lifetime. A journal as a whole can contain many such
+    histories. Cross-chain fields from the journal-wide projection must not be joined into one
+    history.
+representation_status: information_artifact
+alternatives:
+  - label: "An operational admission lifecycle involving a request and distinct grant, with its events as participants in the history"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "An extractor-created grouping with no information-object referent beyond its constituent entries"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The second batch's admission/withdrawal/release/eviction history reading is preserved as a
+    kind of information collection. The first batch's operational reading remains viable as the
+    history's subject; treating the collection as a process would require an occurrence-level
+    temporal and participation account, separate from record retention. An independently
+    warranted consumer that distinguishes a complete or partial correlated history from
+    individual entries would discriminate history reification from an extractor-only grouping; a
+    replay/copy and cross-store correlation test would discriminate the information collection
+    from the lifecycle it describes. None of these tests is silently assumed. The positive,
+    correctly associated temporal content is proposed as decision-relevant information, with
+    completeness left open.
+  discriminator: >-
+    For (config_key_value, "nonce=0ff912cf-d69b-4cd8-bf68-27293f6c0cce"), the reverified
+    observation jointly preserves (config_key_value, "_tag=admission-enqueued"),
+    (config_key_value, "enqueuedAtMillis=1788929720146"), (config_key_value,
+    "_tag=admission-admitted"), (config_key_value, "admittedAtMillis=1788929720160"),
+    (config_key_value, "_tag=admission-released"), and (config_key_value,
+    "releasedAtMillis=1788930321941"). The first batch also supplies a positively terminated
+    request history for (config_key_value, "nonce=3234b861-792e-4cde-96b6-5ca188435021") through
+    (config_key_value, "withdrawnAtMillis=1788927676757"). A null that denies any
+    domain-relevant informational content to these correlated histories cannot preserve their
+    distinct claims of request withdrawal versus post-admission release. The conjunction
+    distinguishes a demand, conferment, and later endpoint without inventing an actual complete
+    lifecycle or claiming the nonce is an identity criterion.
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

@@ -1,0 +1,148 @@
+{
+  "id": "so:sha256:b24d12302a876d81148174d1247fd84e7d304fababe40bf31e84e37093734224",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect/goals_ship-velocity-final-closeout-4561f2096adb/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 34,
+    "content_sha256": "f0894276e9483f04647f7171b59ac8b11d17ec2f5fdc3e64b67fa4b702376cf7"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect/goals_ship-velocity-final-closeout-4561f2096adb/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=9a4ead74-9f38-45d3-9737-3c7ad251041c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=goals/ship-velocity-final-closeout"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-08-31T08:20:13.293Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=349.694578"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=742.208249"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=4689"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-31T08:20:13.293Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=monitor:02-pr-checks-watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:02-pr-checks-watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-checks:watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=53836"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=goals_ship-velocity-final-closeout-4561f2096adb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-31T08:20:08.604Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=goals/ship-velocity-final-closeout\ncommitted=false\ncreatedAt=2026-08-31T08:20:13.293Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=passed\ndurationMs=349.694578\npeakRssKb=53836\nexitCode=0\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=failed\ndurationMs=742.208249\nexitCode=1\nrepairCommand=Rerun `bun run beep quality github-checks nix` and inspect the Nix error.\nmessage=yeet monitor failed.\nmode=monitor\noutcome=failure\npushed=false\nrunId=goals_ship-velocity-final-closeout-4561f2096adb\nattemptId=9a4ead74-9f38-45d3-9737-3c7ad251041c\nstartedAt=2026-08-31T08:20:08.604Z\nendedAt=2026-08-31T08:20:13.293Z\nelapsedMs=4689\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\nfailedStepId=monitor:02-pr-checks-watch\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

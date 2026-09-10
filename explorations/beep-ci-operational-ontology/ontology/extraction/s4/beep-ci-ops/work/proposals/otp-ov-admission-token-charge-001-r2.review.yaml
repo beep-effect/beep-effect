@@ -1,0 +1,127 @@
+target: otp:ov-admission-token-charge:001
+target_sha256: 8fdaf02ccc887f2694829575aae6a669730b2f52e30b30e13b4e7278b4cd3b5d
+chain_sha256: c4cb0cb7a81dc2b164d370924075bc3f15b20eca8e84070271afa20583aa9dca
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  Paired emissions for one independently reidentified admission request before and after effective
+  policy repricing, recording the effective policy, assessment instants and both token values, with
+  observation-backed copy/correction/replacement semantics. Against the repaired information-object
+  card, the observation must distinguish repeated or revised contextual charge assertions from a
+  continuing administrative burden or a newly instituted policy assignment; value, digest or IRI
+  equality cannot decide that. A subsequent grant assessment is still required before request/grant
+  charge continuity can be asserted, and a pre-admission remaining-capacity observation is required
+  for CQ-010's comparison. The present fixture contains none of those lifecycle observations. This
+  is the retained flagged deferral under sitting-1 Ruling 4.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The property proposal asserts parents: [] and exact reuse of admissionChargeTokens. Its
+    request/grant domain association is not an is-a edge. OntoClean is applied to the candidate
+    contextual assertion content in the repaired card, not to the integer literal or the property
+    IRI as though either were a rigid individual kind.
+revision_requests: []
+attacks:
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A DTO could carry a decorative integer 5, but the quoted emitter specifically records
+      request.weightTokens and the admission contract compares activeTokenTotal + weightTokens with
+      capacityMaxTokens. Deleting that quantity or substituting a duration changes the policy
+      comparison and the request-charge projection. Thus the implementation-only decorative-field
+      null fails at the recorded-value grain, without requiring a separate charge individual. The
+      three fixture emissions and quoted code establish subject-bound information assertions; they
+      do not demonstrate an effective admission, actual repricing, pre-grant capacity or continuing
+      policy assignment. An illustrative 6+5 versus 6+4 comparison would be hypothetical, not
+      another observation.
+    outcome: survived
+    evidence:
+      - po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+      - po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+      - po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305
+      - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+      - po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8
+      - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+      - CQ-010
+      - CQ-021
+  - surface: identity
+    rule: charge-assignment-versus-record-identity
+    counterexample: >-
+      All three fixture requests carry integer 5; magnitude identity would merge assertions about
+      distinct subjects. Reassessing one independently persistent request from 5 to 4 could instead
+      revise one burden, replace a policy assignment or produce successive information assertions.
+      The repaired card now expressly rules information_object, rigid at fixed assertion-content
+      grain and relationally dependent on the represented subject/context; it no longer classifies
+      the assertion itself as the operational burden. It still leaves cross-emission sameness,
+      correction and replacement unresolved. No positive identity assertion is falsified, so this
+      attack does not land, but the category repair supplies none of the named paired observations
+      needed to settle that remaining choice. R1's INDETERMINATE and its missing observation were
+      reread and remain material on the new closure.
+    outcome: survived
+    evidence:
+      - po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+      - po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+      - po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305
+      - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+  - surface: identity
+    rule: recorded-content-versus-effective-assessment
+    counterexample: >-
+      Copying one request assertion preserves its attributed content without showing that a charge
+      was ever assessed. Later emitting the same integer on a grant would not by itself show
+      continuity from the request, because subject and assessment context can change. The current
+      definition and repaired IC/FA separate those contexts and do not use generator metadata, hash
+      or subject spelling as a cross-emission identity criterion. Revision_log names r1's target
+      b7448957287c97fb577140515c6a74de385a55e866da89e315be5100b61bd332, addresses
+      charge-assignment-versus-record-identity and records the category alignment, while retaining
+      unresolved identity and explicit deferral. That is a real alignment repair, but it cannot turn
+      Ruling 4's missing lifecycle evidence into a PASS.
+    outcome: survived
+    evidence:
+      - po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+      - po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+      - po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305
+      - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+      - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      Removing admissionChargeTokens makes CQ-021 lose a required projected request-charge binding
+      and CQ-010 lose its numeric grant-charge/capacity comparison. Replacing it with elapsed time,
+      physical memory or a hard resource limit does not preserve either query. The exact-reuse
+      property is therefore warranted; it is not an optional new charge subclass. The synthetic
+      examples populate request-side assertions only, and the quoted admission invariant explains
+      use rather than observing its application. The current proposal respects the distinct grant
+      assessment and pre-admission remaining-capacity context. Neither the warrant nor emitted
+      integer typing resolves cross-context assertion identity.
+    outcome: survived
+    evidence:
+      - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+      - po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8
+      - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+      - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+      - CQ-010
+      - CQ-021
+rival_models_still_viable:
+  - >-
+    A persisting administrative quality on one independently reidentified request, whose token
+    value changes under repricing.
+  - >-
+    A policy-specific assignment or relational mode replaced by a new charging decision.
+  - >-
+    Successive contextual information assertions only, with observation-backed
+    repeated/corrected/replaced content semantics and no separately reified continuing charge
+    individual.
+evidence:
+  - po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+  - po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+  - po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305
+  - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+  - po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8
+  - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+  - CQ-010
+  - CQ-021
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a

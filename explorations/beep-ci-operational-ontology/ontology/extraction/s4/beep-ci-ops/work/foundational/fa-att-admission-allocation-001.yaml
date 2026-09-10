@@ -1,0 +1,109 @@
+id: fa:att-admission-allocation:001
+hypothesis_ref: dh:att-admission-allocation:001
+identity_card_ref: ic:att-admission-allocation:001
+referent_grain: >-
+  One fixed lease-description value at a reported heartbeat state, carrying admission, charge,
+  origin, attempt and attachment assertions. The two supplied heartbeat states are distinct
+  recorded values with matching admission-related content; neither is itself an effective
+  allocation, an extra five-token charge or a live owner.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    The coordination protocol and admission policy are repeatable descriptions. This record
+    describes a purported application and attachment; it is neither that rule nor admitted work
+    execution.
+  world_vs_information: >-
+    The two lease-description values are observed. They do not settle whether they describe one
+    effective binding, two bindings or stale assertions. support=active remains reported
+    attachment status.
+  role_vs_bearer: >-
+    A requester or executor could hold capacity; the snapshot is neither that bearer nor its
+    temporary holder role. No participant is individuated from ownerRef or unitName.
+  context_reification_needed: >-
+    Keep charge, admission boundary, origin, attempt, heartbeat and attachment claims together
+    within each recorded context. CQ-008/CQ-009 require effective active-grant/resource facts at a
+    common instant; CQ-010 additionally needs remaining capacity before the charge. The pair
+    supplies neither.
+analysis:
+  identity: >-
+    One recorded lease value is individuated by its complete selected
+    admission/heartbeat/attachment assertion content bound to the same represented subject and
+    reporting context. A copy of that content is another carrier; a different reported heartbeat
+    produces a distinct snapshot value even when the admission-related fields agree. Agreement on
+    nonce, attempt, origin, admission time and charge supports comparison of the records'
+    descriptions only. Identity or continuity of a real allocation across those snapshots remains
+    unestablished.
+  rigidity: >-
+    Rigid for fixed lease-description information. A record remains that information even after
+    its subject is released, its carrier moves, or an attachment report proves stale.
+  dependence: >-
+    Relational dependence is on the represented admission subject and assertion context. No actual
+    holder, admission-capacity relation or running process is inferred as an essential
+    participant.
+  temporality: >-
+    The records share admittedAtMillis=1788941816511 and enqueuedAtMillis=1788941626093;
+    heartbeatAtMillis is 1788941946764 in one and 1788942001857 in the other. These are reported
+    times within retained information, not proof of uninterrupted allocation. A changed heartbeat
+    is a changed snapshot value, not a state change of one fixed value. No record-retention
+    endpoint is observed.
+  category: >-
+    The evidence establishes recorded assertion content at the stated grain, supporting
+    information_object. A record can exist while the operational claim it reports is inaccurate or
+    ineffective. The relator, process or other operational readings remain named, unsupported
+    rivals rather than falsehoods.
+rival_models:
+  - label: >-
+      relator: one continuing allocation instituted by an effective admission decision
+    still_viable: true
+    rationale: >-
+      Conceded as unsupported by current evidence, not false. Matching admission fields and a
+      later heartbeat do not demonstrate that the instituted binding continued.
+    needed_evidence: >-
+      Observe an effective allocation, ordinary heartbeat update, actual release or eviction, and
+      renewed admission, joined to the same independently identified execution request and
+      allocation rule.
+  - label: >-
+      situation: an actual admitted-and-charged configuration at each observation instant
+    still_viable: true
+    rationale: >-
+      Still viable, but even an instantaneous operational configuration needs evidence beyond the
+      lease's self-description.
+    needed_evidence: >-
+      Observe the effective request/capacity/origin configuration contemporaneously with each
+      lease state, including whether the ledger actually accounts for that charge.
+strongest_counterexample: >-
+  A released lease could be replayed or reused for a fresh admission while retaining nonce,
+  attempt, origin, admission time and charge, then receiving a later heartbeat. This unobserved
+  countermodel fits the supplied record pair. It defeats a continuity inference while leaving two
+  recorded heartbeat values intact. Counting the two snapshots as two grants would double-count a
+  recorded five-token amount; treating support=active as owner liveness would promote an
+  attachment assertion into an observed operational fact.
+verdict: explicitly_deferred
+deferral_scope: >-
+  The lease-description values support information_object at the selected grain. Whether their
+  matching admission content describes one continuing effective allocation remains unresolved;
+  the existing continuity deferral is retained without withholding the recorded-value category.
+needed_evidence: >-
+  Observe the effective ledger allocation for an independently identified requested execution and
+  origin, an ordinary heartbeat renewal, actual release or eviction, and subsequent re-admission.
+  Join those operations to the lease assertions and observe the scheduler rule that preserves or
+  replaces the allocation across them, independently of a reused nonce or copied lease body. Add
+  contemporaneous capacity/origin state and attachment-liveness observations to distinguish a
+  persisting relator from an instantaneous situation. The recorded-value category itself does not
+  depend on those missing operational observations.
+analysis_scope: >-
+  The recorded-value category and bounded content criterion are proposed at foundational-analysis
+  authority only. Survival of the hypothesis permits this test; it does not validate the
+  operational discriminator. Remaining operational models and named missing observations are
+  retained without asserting a class equivalence, completing a CQ, or settling broader continuity.
+evidence_refs:
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  - CQ-007
+  - CQ-008
+  - CQ-009
+  - CQ-010

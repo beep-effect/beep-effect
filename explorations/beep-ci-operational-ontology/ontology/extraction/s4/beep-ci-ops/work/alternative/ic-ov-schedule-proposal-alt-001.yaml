@@ -1,0 +1,30 @@
+id: "ic:ov-schedule-proposal-alt:001"
+hypothesis_ref: "dh:ov-schedule-proposal:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two proposals are the same prescription individual when they are the same complete admitted-or-deferred partition of a pending set for the same projection input and instant. The minted subject IRI is a technical key, not the criterion; prescribed content is not identity with any actual grant (po:sha256:b18d0154d573355ca2ecfcd8a45787237eac6ba6a335c5a69c783c8d0a078f29; po:sha256:351a4375bf86d6f06e1e558697ef04f2a5e283645a772d4fe5b3e78ac0c722bd; po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a; CQ-020)."
+  reidentification_key:
+    - "rdf:type ciops:ScheduleProposal subject IRI in an emission"
+    - "input digests (policy digest + journal-prefix digest) plus projection instant"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "Functional complex: ordered admitted steps plus an explicit deferred tail forming a total partition of pending requests at one instant."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+    - event
+  existential_dependencies:
+    - "a caller-supplied episode identity"
+    - "a governing projection specification / input binding"
+    - "the pending-request set and token-ledger state at the projection instant"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Identifying the typed proposal with an actual scheduler admission occurrence contradicts the non-goal that QualityScheduler remains the only writer of real admissions, and overreads the fixture typing as a grant (po:sha256:5e660542834fa3d2e917207f5764b6905b0654cfb825a0f34b4ac27bfe96bb02; po:sha256:40e7562cb1c7744f4472ab4db2e562024f5554997915678e4ec8c759f11f1852)."
+status: proposed

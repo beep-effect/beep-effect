@@ -1,0 +1,88 @@
+id: "ic:ver-readiness-assessment:001"
+hypothesis_ref: "dh:ver-readiness-assessment:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Proposed at assessment-content snapshot grain: one recorded assessment of a
+    particular change state at a particular reference instant, carrying its
+    aggregate conclusion and the particular component assertions made under the
+    intended interpretation of those criteria. Two representations denote the
+    same content only if the assessed subject and state, reference instant,
+    criterion meanings, and asserted results are the same. A repeated Boolean
+    vector alone is insufficient; a new head, changed review/check state, or
+    different criterion meaning can make the same lexical values a different
+    assessment. Copying an assessment preserves its content, while changing its
+    asserted conclusion produces different content. This criterion does not
+    assert that the supplied projections recover every binding needed to apply
+    it, nor that they demonstrate a readiness rule. Capture provenance is excluded.
+  reidentification_key:
+    - "The enclosing operational report's attempt binding, when available: corroboration of assessment context"
+    - "resolvedHeadSha where recorded: part of subject-state evidence, never complete readiness-context identity"
+    - "No demonstrated standalone assessment identifier or complete subject-and-instant key in the cited facts"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One intended assessment scope unifies the aggregate and component assertions.
+    A report of non-readiness remains an assessment, and an obsolete assessment
+    remains the same historical information. The set of observed flags is neither
+    a proven complete checklist nor a Boolean definition of merge eligibility.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "An enduring assessment document updated through successive content states"
+    - "A time-indexed eligibility situation of the assessed change, with the assessment as a distinct description"
+    - "Qualified criterion-result assertions within the enclosing report, without a separate assessment individual"
+  existential_dependencies:
+    - >-
+      Some information bearer supports the recorded assessment; the observations
+      do not show which particular bearer, if any, is essential to its persistence.
+      Generic record support alone does not settle intrinsic versus relational
+      existential dependence in the contracted vocabulary.
+    - >-
+      Aboutness requires a represented assessment context for interpreting the
+      content. That does not require the assessed PR to remain open, the positive
+      eligibility condition to continue, or the recorded conclusion to be true.
+      No specific existential dependence on a current PR condition is established.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: >-
+      so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee
+      records checksGreen=true alongside failing=closeout-run. Green checks
+      therefore cannot identify the aggregate readiness assessment or prove
+      completion of all its conditions. This observation does not by itself
+      establish which assurance-tier obligation the closeout condition represents.
+  - description: >-
+      so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1
+      reports ready=false, closeoutRun=false, checksGreen=false, and
+      threadsResolved=false. The positive assessment in
+      so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30
+      uses requiredChecksGreen=true alongside ready=true and other component
+      assertions. These are different assessment contexts, not a witnessed
+      false-to-true transition of one bearer; checksGreen and requiredChecksGreen
+      cannot be treated as synonyms merely to align them.
+  - description: >-
+      Thought experiment, not an observed transition: a PR receives a new
+      unresolved review thread while its old positive assessment remains stored.
+      The old information is still a positive historical assessment even though
+      the current eligibility condition may differ. A timeless ready property
+      collapses the assessment, its subject, and its reference instant.
+evidence_refs:
+  - "so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee"
+  - "so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1"
+  - "so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30"
+  - "CQ-006"
+  - "CQ-017"
+notes: >-
+  Rigidity concerns being this assessment content, not being a ready PR or being
+  currently usable evidence. The information can persist and change accessibility
+  or evidential use while its asserted assessment remains fixed; changing the
+  assertions changes the selected content snapshot. No expiry or terminal
+  artifact state is observed. The category and identity criterion remain proposed;
+  exact assessment-to-subject/instant binding and specific dependence are open.
+status: proposed

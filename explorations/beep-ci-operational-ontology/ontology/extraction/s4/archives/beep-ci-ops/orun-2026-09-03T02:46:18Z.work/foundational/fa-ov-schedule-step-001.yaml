@@ -1,0 +1,36 @@
+id: "fa:ov-schedule-step:001"
+hypothesis_ref: "dh:ov-schedule-step:001"
+identity_card_ref: "ic:ov-schedule-step:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      ScheduleStep denotes the projected admission-act occurrence itself,
+      rather than information content that represents a possible admission.
+    still_viable: true
+  - label: >-
+      Each embedded step record token is individuated by its proposal carrier,
+      even when another carrier realizes byte-identical step content.
+    still_viable: true
+  - label: >-
+      Byte-identical step content is reusable across ScheduleProposal outputs,
+      so containing-proposal identity is provenance rather than identity.
+    still_viable: true
+  - label: >-
+      The S.Class instance or provisional RDF node supplies ScheduleStep
+      identity independently of the represented scheduling content.
+    still_viable: false
+strongest_counterexample: >-
+  The phrase that v1 schedules the admission act itself can support a
+  world-side occurrence reading, while differential replay permits a projected
+  step to disagree with the eventual grant order; the present observations do
+  not settle occurrence versus proposal-relative content, or content identity
+  across faithful copies.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Projection provenance must distinguish reusable step content from
+  proposal-embedded carrier tokens and record copy, replacement, correction,
+  and re-projection behavior under one contract version.
