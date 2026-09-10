@@ -840,6 +840,10 @@ controls disable reuse and may still run after this comparison stops reuse.
   CLI audit and docgen both passed after source and base integration were frozen.
 - Prevention: treat tests that create temporary source fixtures as checkout
   writers when scheduling overlapping verification commands.
+- Follow-up: a custom coverage report directory under `.beep` also exposed its
+  generated browser scripts to ESLint, producing six unused-disable warnings.
+  Preserve custom HTML reports outside the checkout; the canonical coverage
+  directory has dedicated exclusions, while arbitrary report paths may not.
 
 ### Refresh ignored goal projections after integrating packet changes
 
