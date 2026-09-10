@@ -740,3 +740,17 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** a hosted cold-run measurement of one package family before the
   fleet-wide task landed (§7.1(4) measured local only), and D6 stating the amortization the
   shard programs provided so the per-package cost was a design input, not a discovery.
+
+## 2026-09-10 — A per-test timeout capped a live worker below the coverage lane's budget
+
+- **Doing:** reading PR #1079's first complete hosted Coverage Regression run (job 102758874712,
+  30 m 56 s).
+- **Evidence:** `lint-workers.test.ts > executed lint workers > executes laws against a fixture
+  package surface` timed out at its explicit 60,000 ms while the sibling workers took 24 s and
+  39 s; the same test took 40.5 s in main's last green coverage run (job 102696760545). The
+  package config already grants 300 s under coverage (`testTimeout: vitestCoverageRunActive ? 300_000
+  : 30_000`), but an explicit per-test timeout overrides it, so the live worker raced a loaded
+  two-worker runner. Raised the executed-worker tests to 180 s.
+- **Would have prevented it:** live-process tests taking their budget from the runtime-aware
+  config instead of a literal, or a lint that flags explicit `it` timeouts below the coverage
+  budget in files that spawn the CLI.

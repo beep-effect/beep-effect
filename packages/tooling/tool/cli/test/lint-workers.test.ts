@@ -419,6 +419,11 @@ describe("thin lint workers", { concurrent: false }, () => {
   );
 });
 
+// These tests spawn the CLI (ts-morph, eslint) for real; under coverage instrumentation on a
+// two-worker hosted runner the laws worker took 40 s on main and 60 s on PR #1079, so an explicit
+// 60 s cap raced the runner instead of catching hangs. The CLI bounds its own children.
+const EXECUTED_WORKER_TIMEOUT_MILLIS = 180_000;
+
 describe("executed lint workers", { concurrent: false }, () => {
   it.effect(
     "executes deprecated APIs on the ciops lab package",
@@ -433,7 +438,7 @@ describe("executed lint workers", { concurrent: false }, () => {
       });
       expect(result.exitCode, result.output).toBe(0);
     }, providePlatform),
-    60000
+    EXECUTED_WORKER_TIMEOUT_MILLIS
   );
   for (const worker of ["laws", "jsdoc", "deprecated-apis"]) {
     it.effect(
@@ -464,7 +469,7 @@ describe("executed lint workers", { concurrent: false }, () => {
           expect(output).toContain("package-test-imports");
         }
       }, providePlatform),
-      60000
+      EXECUTED_WORKER_TIMEOUT_MILLIS
     );
   }
 });
