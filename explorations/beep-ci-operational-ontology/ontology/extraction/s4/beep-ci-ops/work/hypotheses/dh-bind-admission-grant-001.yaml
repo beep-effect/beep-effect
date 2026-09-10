@@ -1,0 +1,44 @@
+id: "dh:bind-admission-grant:001"
+observation_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+cq_warrants: ["CQ-008", "CQ-009", "CQ-010"]
+proposed_referent:
+  label: "Granted admission allocation"
+  description: >-
+    A time-bounded admission allocation represented by the admitted record and its
+    correlated release. The observed allocation carries a three-token charge for
+    full-proof work and a nonempty origin key. It is a candidate grant distinct
+    from the preceding demand and from any proof execution or correctness evidence.
+representation_status: domain_referent
+alternatives:
+  - label: "A lease information artifact documenting the allocation"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "The execution of the full-proof procedure itself"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The provenance: synthetic journal grounds a bounded allocation in the scenario,
+    which matters to active-holder and origin-exclusion questions and to identifying
+    the charge applied at admission. It does not show a production admission,
+    remaining capacity, a passed capacity check, or an execution's start, finish,
+    or success. The charge is an admission quantity, not a physical memory
+    measurement or a duration bound. Correlation by nonce does not make request and
+    grant the same entity. ownerRef and ownerRefVariant remain capture sanitization
+    fields, including where their values differ between correlated events; they
+    cannot establish an owner change. The synthetic origin spelling is a value,
+    not a vocabulary term or proof of a fleet-wide exclusion invariant.
+  discriminator: >-
+    In the nonce "9e91a4e8-cf97-44b4-9b5c-da780e47720e" chain, config_key_value
+    reports "_tag=admission-admitted", "admittedAtMillis=1788931586674",
+    "weightTokens=3", and "originKey=synthetic-admission-origin"; the correlated
+    terminal record reports "_tag=admission-released" and
+    "releasedAtMillis=1788931586743". An admitted allocation followed by its
+    release represents a bounded holding interval. Discarding that represented
+    allocation would remove the holder and charge from an active-grant reconstruction
+    between those boundaries, despite the observed admission occurrence.
+epistemic_status: proposed
+confidence: {value: 0.84, use_for_acceptance: false}

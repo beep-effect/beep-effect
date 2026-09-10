@@ -1,0 +1,84 @@
+id: otp:ov-proposal-step-membership:001
+hypothesis_ref: dh:ov-proposal-step-membership:001
+identity_card_ref: ic:ov-proposal-step-membership:001
+foundational_status: analyzed
+term:
+  preferred_label: has step
+  local_name: hasStep
+  proposed_iri: https://oip.law/ontology/ci-ops#hasStep
+  owl_entity_kind: object_property
+definition:
+  text: A component-membership property that associates a fixed admission prescription with an instruction
+    component belonging to that prescription in the represented projection context.
+  source:
+  - CQ-020
+  - CQ-019
+  - po:sha256:4b06f5efe076d7ed81dd9d5b200c268b1d9e42cbe4f8c78086928bdaf65bb41e
+  - po:sha256:a1e5e0d0916deb0cb33ee62f307e85aabb52833a88511c4c1fdc4885ec667857
+  - po:sha256:8081b5c15707c6f49878d6d871f17862c72605489c31de3a31d56b12a59c5fc9
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-020
+  - CQ-019
+  semantic_support_for: []
+alternatives_rejected:
+- 'Serializer adjacency without membership meaning: explicit proposal-to-step assertions and the admitted-step
+  restriction give the relation prescription structure.'
+open_issues:
+- 'Warrant justification: CQ-020 needs proposal-specific membership to select the steps of the current
+  prescription. CQ-019 uses the same membership path to attribute a step scope tag or derived work scope
+  to the responsible proposal; losing that path prevents the scope-provenance check.'
+- 'Identity criterion carried from ic:ov-proposal-step-membership:001: Proposed at assertion-content grain:
+  two representations express the same membership when the same step component belongs to the same containing
+  prescription content and version. Membership is relative to that prescription; reusing a step identifier,
+  request identifier, or ordinal in a different prescription does not identify the same membership.'
+- 'Steward choice required before ratification of otp:ov-proposal-step-membership:001: The steward must
+  choose a direct structural membership assertion in the proposal context, as proposed here, a separately
+  reified assertion of that membership, or sequence entries whose membership is implicit. The direct property
+  is a representation of the analyzed information content, not an independent membership individual. A
+  sequence-only choice must preserve the proposal attribution required by both decision questions. Still-viable
+  models retained from fa:ov-proposal-step-membership:001: A structural part relation recorded directly
+  as a proposal-to-step property; An ordered prescription with membership implicit in contextual sequence
+  entries.'
+- 'Cluster dependency: otp:ov-schedule-proposal:001, otp:ov-schedule-step:001. Coordinate ratification
+  or parking where endpoint grain, component identity, or the stated warrant depends on these proposals;
+  no dependent choice is settled by emission spelling.'
+- 'Reuse search: The S5 inventory has no hasStep property. The scout report offers P-Plan plan membership
+  as a related structural pattern, but gives no exact match for this contextual admission-prescription
+  membership and direction. No external identity or inverse axiom is proposed.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Representation grain: the proposed property encodes contextual information content without requiring
+  a separate assertion individual. The OntoClean fields are inherited from the joined identity card for
+  that candidate content, not asserted as identity criteria for an RDF literal or for the OWL property
+  universal.'
+- The containing fixed prescription is constitutive context. Neither a shared request nor the integer
+  zero permits merging step memberships from different proposals. The observed partition rule is not a
+  declaration that the observation batch completely inventories pending requests.
+- 'Strongest counterexample carried from fa:ov-proposal-step-membership:001: Hypothetical counterexample:
+  two proposals both contain a step at ordinal zero, perhaps scheduling the same request. Merging their
+  membership assertions by ordinal or request erases which prescription each step belongs to. Adding a
+  deferred request as a step would likewise change the prescribed component set, despite no actual admission
+  having occurred.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

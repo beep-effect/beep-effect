@@ -1,0 +1,45 @@
+id: dh:att-termination-notice:001
+observation_refs:
+- so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98
+- so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f
+cq_warrants:
+- CQ-007
+- CQ-012
+proposed_referent:
+  label: Attempt termination notice
+  description: 'A journal information artifact asserting an attempt terminal boundary with a recorded
+    reason and instant, separately from a normal completion verdict. The two observations are instances
+    of one candidate notice form with different causes: lease eviction and queued-submitter death.
+    They do not describe one shared termination occurrence. They ground scenario lifecycle boundaries
+    only; they do not establish production incidence, a started execution, completed work, measured
+    waiting time, or a committed verification failure.'
+representation_status: information_artifact
+alternatives:
+- label: The attempt termination occurrence described by the notice
+  representation_status: domain_referent
+  plausibility: viable
+- label: A fixture-only tag with no modeled lifecycle meaning
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: 'Both observations are provenance: synthetic and must retain that qualification. They
+    contain emitted attempt-terminated journal events with reason and recordedAt, so the fixture-driven
+    scenarios supply positive terminal-boundary evidence rather than merely a missing finish record.
+    The distinction matters when delimiting episode time without inventing a successful or failed
+    execution. The records alone do not prove that the scheduler reads these notices, that a lease
+    was released, or that an operating-system process was killed at recordedAt. The queued-submitter-death
+    case must not be counted as an admitted execution. The provenance: synthetic label itself is capture
+    metadata and warrants no referent.'
+  discriminator: 'The synthetic config_key_value facts explicitly report "_tag=attempt-terminated"
+    with "reason=lease-eviction" and "recordedAt=2026-09-09T05:26:26.737Z" in one observation, and
+    "_tag=attempt-terminated" with "reason=queued-submitter-death" and "recordedAt=2026-09-09T05:26:26.731Z"
+    in the other. The different attemptId values keep the notices separate. A fixture-decoration-only
+    interpretation would deny the positive terminal assertions these emitted records make about the
+    modeled attempts. This discriminator is limited to the provenance: synthetic scenarios, not a
+    claim of corresponding production terminations.'
+epistemic_status: proposed
+confidence:
+  value: 0.94
+  use_for_acceptance: false

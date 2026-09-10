@@ -1,0 +1,52 @@
+run_id: "orun-2026-09-10T02:10:52Z"
+ontology: {name: beep-ci-ops}
+engine:
+  validator_sha256_12: "45e4f856a371"
+  contracts_sha256_12: "db5aefe804fe"
+repository:
+  commit: "1c7cd98289150f481fd40721efa6b7fe6109e711"
+  dirty: false
+  pin_waived: false
+  waiver_reason: ""
+scope_doc: {path: "explorations/beep-ci-operational-ontology/ontology/docs/scope.md", sha256_12: "6c39b69481a3"}
+cq_suite: {path: "explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml", sha256_12: "e99e30cd8015", cq_count: 26}
+adapters:
+- id: adapter-journal
+  version: 1.1.0
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py
+  script_sha256_12: "028dcb1d7953"
+  golden_fixture: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3
+agents:
+  denotation: {model: gpt-6-astra, prompt: "prompts/denotation.md", prompt_sha256_12: "1d848ac2560f"}
+  foundational: {model: gpt-6-astra, prompt: "prompts/ufo-analysis.md", prompt_sha256_12: "3d94feb0629c"}
+  synthesis: {model: gpt-6-astra, prompt: "prompts/synthesis.md", prompt_sha256_12: "117d82b29904"}
+  adversary: {model: gpt-6-astra, prompt: "prompts/ontoclean-adversary.md", prompt_sha256_12: "9dbfb7fc9d4c", independent_context: true}
+  alternative: {model: grok-4.6, prompt: "prompts/alternative-model.md", prompt_sha256_12: "4563e5726438", blinded: true}
+first_run: false
+prior_index: "runs/orun-2026-09-03T02:46:18Z.index.yaml"
+prior_index_sha256_12: "a207a106de68"
+empty_corpus_reason: ""
+unresolved_fraction_waiver: ""
+notes: 'Auditor run 3 under the run-3 corpora grill (2026-09-03, sixteen rulings), the
+  Stage B capture grill (2026-09-08), the post-merge residue and ratified-pin repair
+  rulings (2026-09-09), and the run-3 launch entry (2026-09-09, two rulings) scribed in
+  packet DECISIONS.md. Docket: research/auditor-run3-intake.md. Corpora at this pin:
+  corpus/run3-fleet, corpus/run3-checkout-identity, corpus/run3b-fleet, corpus/run3b-synthetic
+  (the last labeled provenance: synthetic per Ruling 10/19); adapter-journal v1.1.0 reads
+  only their .properties projections and reads the pin commit from this manifest because
+  the no-network sandbox cannot resolve the linked-worktree gitdir; the gate checks record
+  commits against this pin and HEAD. Prose evidence: corpus/po_transcriber_run3.py
+  (script sha256_12 3341d7bcbc5a) over the emission-v2 fixture, the Turtle emission
+  sites, the S7 projection contract, the S7 replay evidence, and the one archived run-2
+  ordering capture still present verbatim (two superseded by emission v2, reported as
+  gaps). Engine freeze: validator v14 45e4f856a371, contracts db5aefe804fe, SKILL.md
+  27f2fe20ce06, sandbox runner ecb6dcab421b; every VAL invocation runs under uv
+  --python 3.12 with pyyaml (157/157 families on 3.12 and 3.13; 3.12 pinned for
+  continuity). Seats per the launch entry: codex seats gpt-6-astra at
+  model_reasoning_effort=max in separate fresh contexts, the adversary in an independent
+  context; the blinded alternative seat runs as a headless Claude Code session on the local
+  proxy with model grok-4.6, minting -alt ids. Run-2 seat trees and ratifications
+  (rat-032..052) were relocated byte-identically to the sibling shelter at this pin
+  (runs/orun-2026-09-03T02:46:18Z.README.md, 2026-09-09 note); the S5/S6 status
+  projection of the run-2 ratifications is a run-3 closeout item. Prior-run carry: all
+  68 prior unresolved rows re-open under the docket; none re-parks verbatim.'

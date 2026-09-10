@@ -1,0 +1,66 @@
+target: otp:ov-proposal-step-membership:001
+target_sha256: 38013f6ec4c454286331334acbddfbade6f7a52b1fcc17c3cbfa8faa68850625
+chain_sha256: 39d3582ab87402d126be0054d24b62d3618a0a72c43377493947ef966005ecbe
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'hasStep asserts parents: []; no is-a edge is proposed. Participant, component, or governing-role
+    relations supply no additional subsumption assertion to test.'
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: serializer-adjacency-as-membership
+  outcome: survived
+  evidence:
+  - po:sha256:4b06f5efe076d7ed81dd9d5b200c268b1d9e42cbe4f8c78086928bdaf65bb41e
+  - po:sha256:a1e5e0d0916deb0cb33ee62f307e85aabb52833a88511c4c1fdc4885ec667857
+  - po:sha256:8081b5c15707c6f49878d6d871f17862c72605489c31de3a31d56b12a59c5fc9
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+  counterexample: Place a deferred request beside the two steps in the serialization and treat physical
+    adjacency as membership. The contract restricts steps to prescribed admitted actions and excludes
+    the deferred tail from their numbering. The fixture's explicit hasStep assertions select its two components
+    independently of line order. A semantically empty adjacency field cannot preserve that admitted-component
+    distinction; an information-bearing membership field is the candidate under review.
+- surface: identity
+  rule: cross-proposal-membership-collapse
+  outcome: survived
+  evidence:
+  - po:sha256:4b06f5efe076d7ed81dd9d5b200c268b1d9e42cbe4f8c78086928bdaf65bb41e
+  - po:sha256:a1e5e0d0916deb0cb33ee62f307e85aabb52833a88511c4c1fdc4885ec667857
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - CQ-020
+  counterexample: Two prescriptions can each have ordinal zero and can schedule the same request. Identifying
+    memberships by either ordinal or request would attribute one plan's component to the other. The card
+    instead includes the containing fixed prescription and its component; re-encoding that same membership
+    preserves content, while membership in a different prescription is distinct. This relational dependence
+    concerns informational structure and supplies no admission occurrence.
+- surface: warrant
+  rule: listing-cq-warrant
+  outcome: survived
+  evidence:
+  - CQ-020
+  - CQ-019
+  - po:sha256:8081b5c15707c6f49878d6d871f17862c72605489c31de3a31d56b12a59c5fc9
+  counterexample: Retain all step indexes, request assignments, and literal tags but remove proposal-to-step
+    membership. CQ-020 cannot return the selected proposal's sequence; CQ-019's step-derived and literal-tag
+    arms cannot attribute a step to the responsible proposal. Both executable queries require hasStep.
+    This says nothing about a missing provenance edge in an open observation selection; no closed-world
+    violation is inferred here.
+rival_models_still_viable:
+- A structural part relation recorded directly as a proposal-to-step property
+- An ordered prescription with membership implicit in contextual sequence entries
+evidence:
+- CQ-019
+- CQ-020
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:4b06f5efe076d7ed81dd9d5b200c268b1d9e42cbe4f8c78086928bdaf65bb41e
+- po:sha256:8081b5c15707c6f49878d6d871f17862c72605489c31de3a31d56b12a59c5fc9
+- po:sha256:a1e5e0d0916deb0cb33ee62f307e85aabb52833a88511c4c1fdc4885ec667857
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a

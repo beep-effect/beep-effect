@@ -1,0 +1,33 @@
+id: dh:att-overlap-diagnostic:001
+observation_refs:
+- so:sha256:34a817e0c13cd3492a11ac0d305299dde6a592531cb545f4a72b674fa086c160
+- so:sha256:8e6e6fa75f2c19d8463d6d851f38ef7935b1a014f7e0e81bcdaa5a3074ea6f92
+cq_warrants: []
+proposed_referent:
+  label: No separately warranted referent for a logged overlapping path
+  description: The overlappingPaths entry remains diagnostic payload within an attempt verdict. No
+    affected-package set, dependency closure, invalidation event, merge-conflict occurrence, or scope-provenance
+    relationship is established by the single path string.
+representation_status: implementation_artifact_only
+alternatives:
+- label: An information artifact reporting overlap between two changesets
+  representation_status: information_artifact
+  plausibility: viable
+- label: A conflict or invalidation occurrence that determines verification scope
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The only observed fact is config_key_value "overlappingPaths=explorations/ATLAS.md".
+    The containing source_excerpt also reports "behindCount=1", but its actual terminal failure is
+    "failedStepId=monitor:02-pr-checks-watch" with "failureKind=step-exit". Co-location does not show
+    that the overlap caused the failure or changed any affected set or evidence applicability decision.
+    The two supplied captures repeat the same excerpt, not a before/after transition. A demonstrated
+    overlap-to-scope, overlap-to-invalidation, or overlap-to-blocking rule would be needed to give
+    this diagnostic separate decision-bearing standing.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false

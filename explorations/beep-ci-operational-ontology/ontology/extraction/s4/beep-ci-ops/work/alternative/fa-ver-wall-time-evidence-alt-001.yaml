@@ -1,0 +1,51 @@
+id: "fa:ver-wall-time-evidence-alt:001"
+hypothesis_ref: "dh:ver-wall-time-evidence:001"
+identity_card_ref: "ic:ver-wall-time-evidence-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Bounded execution occurrence (the attempt or step event whose temporal
+      extension is reported). Observationally entangled: every duration is
+      known only through the verdict snapshot.
+    still_viable: true
+  - label: >-
+      Duration quality inhering in that execution (UFO quality of an event /
+      temporal extent). Observationally equivalent to the measurement-report
+      reading on current evidence; start/end/elapsed arithmetic is internal
+      consistency of the report, not an independent clock observation.
+    still_viable: true
+  - label: >-
+      Uninterpreted timestamp and numeric serialization fields with no
+      measurement referent
+    still_viable: false
+  - label: >-
+      CostEstimate (P50/P95), admission charge, hard execution limit, or
+      episode-level time-to-certainty decomposition (CQ-007). No such
+      quantities are observed; elapsedMs is actual-cost evidence for CQ-025
+      calibration pairs, not the estimate side.
+    still_viable: false
+strongest_counterexample: >-
+  so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446
+  (startedAt=2026-08-24T01:31:38.047Z, endedAt=2026-08-24T01:31:42.503Z,
+  elapsedMs=4456) and
+  so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+  (startedAt=2026-08-27T15:26:36.585Z, endedAt=2026-08-27T15:26:36.596Z,
+  elapsedMs=11) each have end-minus-start equal to elapsedMs. Those are
+  particular elapsed-time claims with different actual costs; a fields-only
+  null would leave no operational interval to compare with an estimate
+  (CQ-025). They still do not by themselves yield CQ-007 queue/lock/repair/CI
+  shares.
+verdict: analyzed
+needed_evidence: >-
+  Discriminate measurement-report versus duration-quality/event: independent
+  process or clock observation of the same interval, or a usedCostEstimate
+  snapshot paired to a scoped durationMs (CQ-025) that is not reconstructed
+  from flattened config_key_value facts. Promote elapsedMs to
+  time-to-certainty only with an observed queue/lock/repair/CI decomposition
+  (CQ-007); a missing component is not a zero. Nested durationMs may be bound
+  to step ids only from order-preserving encodings, not from the flattened
+  fact list.

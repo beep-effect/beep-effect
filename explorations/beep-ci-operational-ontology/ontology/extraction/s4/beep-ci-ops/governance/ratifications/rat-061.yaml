@@ -1,0 +1,11 @@
+id: rat:61
+proposal_ref: otp:ov-seat-request:001
+proposal_sha256: 89d4dd06719ff636cbe9106b162a830cdee4793a41f0b75bfb30a1bf12ec70f2
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-seat-request:001 as the SeatRequest reuse within the joint ordering cluster,
+  preserving the request/grant and request/specification distinctions, with demand-versus-description
+  grain and handling/resubmission continuity deferred to run 4 as flagged.

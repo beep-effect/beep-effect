@@ -1,0 +1,49 @@
+id: fa:ov-proposal-specification-binding:001
+hypothesis_ref: dh:ov-proposal-specification-binding:001
+identity_card_ref: ic:ov-proposal-specification-binding:001
+referent_grain: Recorded proposal-to-description binding within one emitted projection; a contextual information
+  assertion, not the governing description or a compliance event.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: The emitter and fixture record a link to a typed description. That suffices to
+    analyze the contextual assertion as information content. The target's repeatable-specification versus
+    application-context identity remains open and is not settled by this analyzed verdict.
+  rigidity: A fixed binding assertion remains a binding assertion when the proposal becomes obsolete.
+    A description's being governing for a given proposal can change without the description ceasing to
+    exist.
+  dependence_and_temporality: The assertion is relative to a proposal version and projection context.
+    It can be retained historically even after that proposal stops governing future action; no binding-update
+    history is observed.
+  spec_vs_execution: The binding associates a prescription with a description, not with the event of running
+    a projection or an admission execution.
+  world_vs_information: An asserted governing association is not proof of compliance, approval, successful
+    validation, or actual admission.
+  role_vs_bearer: The target description bears the governing role if that interpretation is sustained;
+    the role, its bearer, and the assertion of the binding are distinct.
+  context_reification: Retain the proposal version and projection context. A direct edge in that context
+    may suffice; no relationship-specific lifecycle or properties establish an independent relator.
+  evidence_limit: The target is typed in the example and is described as emitted even for empty proposals.
+    Those facts do not discriminate the target's two viable information-object models.
+rival_models:
+- label: Direct governing relation to a reusable rule specification, with no separate assertion individual
+  still_viable: true
+- label: Association to a projection-context record that describes the governing rule application and
+    input binding
+  still_viable: true
+strongest_counterexample: 'Hypothetical counterexample: a proposal points to a record containing only
+  the policy and input binding, while an independent document states the reusable rules. Reading the edge
+  as proof that its target is that rule specification silently merges two grains. Changing a target while
+  keeping the proposal identifier can also change the asserted binding without establishing any new execution.'
+verdict: analyzed
+needed_evidence: ''
+evidence_refs:
+- po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+- po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853
+- po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+- CQ-020

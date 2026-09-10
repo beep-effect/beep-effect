@@ -1,0 +1,67 @@
+target: otp:att-verification-attempt:001
+target_sha256: e2c44d60e977e3390ed5e88562e9ccef8025773e88547d45f75b53ab978310b5
+chain_sha256: b316ea190c566b8186932eaf3784a2856cec57341005488a5f06b56d64edc87b
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: parents is empty. Process is an analyzed category choice, not an asserted is-a edge to a plan,
+    journal, or bounded event.
+revision_requests:
+- For discriminator-true-of-dto, add a run-scoped execution or command-driver observation linking the
+  first invocation to performed work and the separately initiated retry, or an observed consumer whose
+  attempt-scoped behavior distinguishes actual invocation from unexecuted/replayed history. Reject the
+  null using that observed fact rather than the truth of a journal claim. Otherwise retain the attempt-history
+  information model without treating the operational occurrence null as rejected.
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  counterexample: 'Null-world counterexample: an unexecuted replay/test history contains the exact first
+    repair start/finish pair, elapsedMs=81605, docgen status=failed/exitCode=1, and later feedback status=not-run,
+    followed by the separate success report. All parser facts and the record grouping in so:0b869db1f665
+    remain true. No actual causally continuous invocation need have occurred for those reports to exist.
+    The discriminator says execution claims would be false under no occurrence, but it does not cite an
+    observation of execution or a consumer behavior that would become false; it only changes the truth
+    of what the records claim. CQ-022 requires an attempt scope but cannot supply missing occurrence evidence.'
+  outcome: landed
+  evidence:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - CQ-022
+- surface: identity
+  rule: specification-versus-invocation
+  counterexample: 'Countermodel: identify the first failed repair and the later successful repair by their
+    common command, branch or run. That merges the 81605 ms failure with the independent 135370 ms success
+    and can carry failure into a healthy retry. The proposed initiating-invocation/causal-history criterion
+    keeps them separate and excludes not-run plan steps from performed temporal parts. It also refuses
+    to use the September legacy-unowned-start notice as the August execution''s actual end. The process/event
+    rival is explicitly retained, so no illicit subsumption or journal-token identity is asserted.'
+  outcome: survived
+  evidence:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - CQ-022
+- surface: warrant
+  rule: attempt-scoped-cancellation-required
+  counterexample: 'Counterexample attempt: remove the distinct attempt subjects and join committed failure
+    to running work only through the branch-level run. A healthy retry then enters the earlier failure''s
+    candidate set. CQ-022 explicitly joins both CommittedFailure and WorkUnitExecution through the same
+    inAttempt value, and its notes explain this cross-attempt counterexample. That executable dependency
+    warrants VerificationAttempt despite no rdf:type test on the join variable. The query does not warrant
+    turning every plan step or every terminal notice into an execution.'
+  outcome: survived
+  evidence:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - CQ-022
+rival_models_still_viable:
+- Bounded invocation event with internal composition left opaque.
+- Attempt-history information object reporting an invocation, with actual execution scope separately justified.
+evidence:
+- so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+- so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+- CQ-022

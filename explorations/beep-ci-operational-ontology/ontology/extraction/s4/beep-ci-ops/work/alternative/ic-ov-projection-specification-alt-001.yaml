@@ -1,0 +1,31 @@
+id: "ic:ov-projection-specification-alt:001"
+hypothesis_ref: "dh:ov-projection-specification:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "unresolved: whether sameness is repeatable governing-rule content or the input-bound digest tuple (policyDigest + journalPrefixDigest) of one projection application (po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144; po:sha256:e9df49623f67f2eac1d565f6ab8811c99128f33a8610358f0944f64ae390aa5e; po:sha256:9081cf3d4060a87388a3b4285f7ed6165aa24f39dc350fc3b3c3aeffec0e6b26; CQ-020)"
+  reidentification_key:
+    - "rdf:type ciops-prov:AdmissionProjectionSpecification"
+    - "ciops-prov:policyDigest literal"
+    - "ciops-prov:journalPrefixDigest literal"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: unresolved
+  unity: "One typed specification individual per emission, including empty and fully deferred proposals; unity as repeatable rule-object versus per-input context record is unsettled."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - situation
+    - event
+  existential_dependencies:
+    - "policy parameters whose digest is recorded on the specification"
+    - "a journal prefix whose digest is recorded on the specification"
+    - "the ScheduleProposal that binds this specification"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Treating the specification individual as the running of the projection engine (the spec consumed CPU) merges specification with execution; treating fixture placeholders policy-digest and journal-prefix-digest as operational input individuals mints capture provenance as domain entities (po:sha256:2cbe4a487c0ebb475da0d4b4e9833105b7c1d677e942f04484e74049b825ee53; po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3; po:sha256:221c15de00ddaa99cefdedac1df4d97a783e5890ff9b9fc963f21627350fe488)."
+status: proposed

@@ -1,0 +1,68 @@
+id: "ic:adm-seat-request-alt:001"
+hypothesis_ref: "dh:adm-seat-request:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Same seat request iff it is the same queue participation of one solicitation
+    in admission contention, begun by one enqueue occurrence (or, when only a
+    sparse ticket-eviction is observed, incompletely described by that end).
+    The request mediates requester and contended resource while queued; it is
+    not the grant, not the enqueue occurrence, not a later withdrawal or ticket
+    eviction, and not the journal entry. Admission ends this participation; the
+    request does not become the grant. Nonce is evidential join only. ownerRef
+    and other capture members are never identity criteria. kind, priority, and
+    weightTokens qualify without minting request subclasses. Ticket-eviction-only
+    histories leave kind, priority, charge, and enqueue time unknown; those
+    qualities are not invented.
+  reidentification_key:
+    - "nonce (evidential join only)"
+    - "enqueuedAtMillis when a positive enqueue tag is present"
+    - "_tag=admission-enqueued (when observed)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One queued participation from its reported enqueue until a reported
+    admission, withdrawal, or ticket eviction; not a currently-queued snapshot
+    and not a grant after admission.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - kind
+    - information_object
+    - event
+    - role
+  existential_dependencies:
+    - "enqueue occurrence that begins queue participation (missing on sparse ticket-eviction-only histories)"
+    - "contended admission resource / queue"
+    - "requester mediated by the request (not identified by ownerRef)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - admitted
+    - withdrawn
+    - ticket-evicted
+counterexamples:
+  - description: >-
+      Treating the request as the grant after admission, or treating nonce as
+      identity of both. so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+      shows enqueue at 1788926595182 then admit at 1788926595216 for
+      nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088; the queued participation ends
+      at admission (CQ-021, CQ-008).
+  - description: >-
+      Inventing kind, priority, charge, or enqueue time for a ticket-eviction-only
+      history. so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+      and so:sha256:65609cedeaf3e99b51031c38b99ab7bc16ea0ef59fa66bea1d446ef3f7bd3333
+      supply only _tag=admission-ticket-evicted and reason=queued-submitter-death
+      (CQ-021).
+  - description: >-
+      Treating an ended participation as a current CQ-021 queued row, or treating
+      kind/priority as request subclasses.
+      so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+      is full-proof/publish then withdrawn;
+      so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+      is review-fix/verify weightTokens=1 then withdrawn (CQ-023).
+status: proposed

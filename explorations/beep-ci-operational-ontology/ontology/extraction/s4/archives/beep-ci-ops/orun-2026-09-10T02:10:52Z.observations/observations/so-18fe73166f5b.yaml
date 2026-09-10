@@ -1,0 +1,148 @@
+{
+  "id": "so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect10/feat_citation-verified-span-substrate-d7ba8008aaac/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 35,
+    "content_sha256": "4276733852b45d5ef1ccd5f1dd0b48af1e566b430583480359dd07c8ae09dc47"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect10/feat_citation-verified-span-substrate-d7ba8008aaac/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=f6fbd2d2-07c8-4b6d-ab88-f9369ca0a051"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/citation-verified-span-substrate"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-08-27T15:26:36.596Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=11"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-27T15:26:36.596Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=publish:00-head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=handler-error"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=advisory:01-fallow-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:00-cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:01-pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:00-head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow-advisory-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=verify"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=prepare"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=feat_citation-verified-span-substrate-d7ba8008aaac"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-27T15:26:36.585Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=not-run"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=feat/citation-verified-span-substrate\ncommitted=false\ncreatedAt=2026-08-27T15:26:36.596Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=prepare\nstatus=not-run\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=not-run\nid=full:00-cheap-gates\nlabel=full:cheap-gates\nphase=full\nstatus=not-run\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=not-run\nmode=verify\noutcome=failure\npushed=false\nrunId=feat_citation-verified-span-substrate-d7ba8008aaac\nattemptId=f6fbd2d2-07c8-4b6d-ab88-f9369ca0a051\nstartedAt=2026-08-27T15:26:36.585Z\nendedAt=2026-08-27T15:26:36.596Z\nelapsedMs=11\nindexPath=<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json\nfailedStepId=publish:00-head-install-preflight\nfailureKind=handler-error\n",
+  "epistemic_status": "parser_derived"
+}

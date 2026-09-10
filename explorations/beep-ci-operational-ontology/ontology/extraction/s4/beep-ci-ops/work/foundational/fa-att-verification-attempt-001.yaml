@@ -1,0 +1,104 @@
+id: fa:att-verification-attempt:001
+hypothesis_ref: dh:att-verification-attempt:001
+identity_card_ref: ic:att-verification-attempt:001
+referent_grain: >-
+  One fixed version of an attempt-history account, joining only the start, verdict and
+  administrative-boundary assertions actually recorded for its reported invocation. This is
+  recorded occurrence-description content, not the execution process, a reusable command, a lane
+  duration or a run encompassing retries.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    Repair/verify/publish modes describe reusable procedures. This account records purported
+    invocations and results; a not-run entry describes absent reported performance, not a
+    performed plan step.
+  world_vs_information: >-
+    The selected referent is the history account. Dated entries, elapsedMs and outcomes are
+    recorded assertions; duplicate captures do not verify or multiply their occurrences.
+    Administrative recordedAt cannot supply an unobserved execution endpoint.
+  role_vs_bearer: >-
+    The information object is neither an executor, its role, nor a process it may execute. An
+    attempt reference binds recorded content without identifying operational participants.
+  context_reification_needed: >-
+    Retain the reported attempt context so the failure account cannot be joined indiscriminately
+    to another retry. CQ-022 requires actual failure/execution membership and running/cancel-class
+    evidence; CQ-007 and CQ-025 require appropriate duration/decomposition or estimate joins. The
+    journal account alone supplies none of those operational conclusions.
+analysis:
+  identity: >-
+    The same attempt-history information has the same reported invocation subject and bounded
+    assertion content in the same journal context. Start, verdict and termination entries are
+    correlated only by their supplied attempt reference and compatible recorded context; a
+    different reported start/invocation remains a distinct account even within the same run.
+    Copying the excerpt preserves the information content and does not multiply reported attempts.
+    Appending or correcting a boundary creates another account version. Neither attemptId equality
+    nor repeated command/run content proves causal execution continuity.
+  rigidity: >-
+    Rigid for fixed attempt-description content. Success or failure is a recorded outcome, not a
+    new identity-supplying kind, and later correction does not turn the retained old account into
+    an execution.
+  dependence: >-
+    Relational dependence is on the account's represented invocation and reporting context, not on
+    an independently identified executor or causal sequence of operations.
+  temporality: >-
+    The account persists as information; its described interval does not become the account's own
+    lifetime. recordedAt, startedAt, endedAt and retention time have distinct roles. Adding a
+    result changes the account version; copying or relocating a carrier preserves its content. No
+    retention terminal state is observed.
+  category: >-
+    The evidence establishes recorded assertion content at the stated grain, supporting
+    information_object. A record can exist while the operational claim it reports is inaccurate or
+    ineffective. The relator, process or other operational readings remain named, unsupported
+    rivals rather than falsehoods.
+rival_models:
+  - label: >-
+      process: a causally continuous command-invocation execution with performed temporal parts
+    still_viable: true
+    rationale: >-
+      Conceded as unsupported by current evidence, not false. The journal reports starts,
+      component results and outcomes, but does not independently establish their effective
+      execution and causal unity.
+    needed_evidence: >-
+      Observe command initiation, executing participants, actual component activity and cessation
+      in one causal trace joined to the journal account.
+  - label: >-
+      event: the effective invocation treated as an atomic bounded occurrence
+    still_viable: true
+    rationale: >-
+      Retained as a coarser operational model. Observing execution may support the occurrence
+      while leaving internal process composition unnecessary.
+    needed_evidence: >-
+      Observe effective start and end boundaries and determine whether the decision requires
+      independently tracked temporal parts or only a bounded occurrence.
+strongest_counterexample: >-
+  The supplied excerpt records a failed repair with elapsedMs=81605 and a later repair success
+  with elapsedMs=135370. Merging their accounts by command or run would overwrite distinct
+  start/outcome assertions; copying the excerpt creates neither another failure nor another
+  success. The legacy-unowned-start termination notice is recorded long after its associated
+  verify-start report. Treating the notice's recordedAt as an observed execution end would invent
+  activity through the gap. A replayed or mistaken journal account could preserve the same
+  assertions without establishing the claimed process.
+verdict: analyzed
+needed_evidence: >-
+  Observe a command invocation's effective start, participating executors, causally linked
+  component activity and actual cessation, joined to the corresponding start/verdict account
+  independently of attemptId equality. Include a failed invocation and a fresh retry to establish
+  their operational separation, plus the actual cessation time for an administratively reconciled
+  start. For CQ-022 obtain committed-failure and still-running execution membership/cancel-class
+  evidence within that same observed attempt; elapsedMs and journal outcome alone do not provide
+  it.
+analysis_scope: >-
+  The recorded-value category and bounded content criterion are proposed at foundational-analysis
+  authority only. Survival of the hypothesis permits this test; it does not validate the
+  operational discriminator. Remaining operational models and named missing observations are
+  retained without asserting a class equivalence, completing a CQ, or settling broader continuity.
+evidence_refs:
+  - so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  - so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  - CQ-007
+  - CQ-022
+  - CQ-025

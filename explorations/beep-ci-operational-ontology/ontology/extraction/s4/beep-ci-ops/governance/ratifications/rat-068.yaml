@@ -1,0 +1,11 @@
+id: rat:68
+proposal_ref: otp:att-admission-allocation:001
+proposal_sha256: 00ed290a4cab224fa382bc80a500190cc2af5eee9a487ff317cdc4b49414480a
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:att-admission-allocation:001 as the SeatGrant recorded-lease-value reuse
+  under sitting-1 Ruling 2, treating the two heartbeat reports as snapshots of one candidate subject,
+  with effective allocation continuity deferred to run 4 as flagged.

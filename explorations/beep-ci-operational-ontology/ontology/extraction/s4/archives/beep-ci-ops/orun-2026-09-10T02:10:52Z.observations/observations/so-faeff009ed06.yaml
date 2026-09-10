@@ -1,0 +1,284 @@
+{
+  "id": "so:sha256:faeff009ed066ab59b310901f7f127fa174f0b0e2859613529a9ac69673c3230",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect-worktrees%2Fastra-xhigh-agent-routing/chore_astra-xhigh-agent-routing-7491c35440aa/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 96,
+    "content_sha256": "68ba28796468b7f36c3f2be411367cc7b22367dbf5a1156801d738501786eace"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect-worktrees%2Fastra-xhigh-agent-routing/chore_astra-xhigh-agent-routing-7491c35440aa/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=04be8449-a694-43c6-968f-f66fe48af963"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "behindCount=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=chore/astra-xhigh-agent-routing"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-09-09T04:48:41.831Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "diffFingerprint=ae7c57f755f7d8515daa1caf8b0afd83e12fb6bc74945883c0aabc9952114253"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=14504.755917"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1675.329713"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1802.406871"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2706.140528"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=632271.191256"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=1254957"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T04:48:41.831Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=full:00-cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=cd55220834e09ec4dbf595809145b009d4cc1a35"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=advisory:01-fallow-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=commit:01-git-commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:00-cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:01-pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:02-ci-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:02-pr-checks-watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:00-head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:01-git-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:02-pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:03-pr-provenance-stamp"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=commit:git:commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=early-publish:git:push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow-advisory-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:ci-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-checks:watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:pr-provenance-stamp"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mergeBase=d1b4d769fbaffddd55717f3b1ba461897dd545c5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=4909240"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=509248"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=52212"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=early-publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "proofTier=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "resolvedHeadSha=cd55220834e09ec4dbf595809145b009d4cc1a35"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=chore_astra-xhigh-agent-routing-7491c35440aa"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T04:27:46.874Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=not-run"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=chore/astra-xhigh-agent-routing\ncommitted=true\ncreatedAt=2026-09-09T04:48:41.831Z\nfailurePolicy=fail-fast\nhead=cd55220834e09ec4dbf595809145b009d4cc1a35\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1802.406871\npeakRssKb=509248\nexitCode=0\ntier=full\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=2706.140528\npeakRssKb=4909240\nexitCode=0\ntier=full\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=early-publish\nstatus=passed\ndurationMs=14504.755917\nexitCode=0\ntier=full\nid=publish:01-git-push\nlabel=early-publish:git:push\nphase=early-publish\nstatus=passed\ndurationMs=1675.329713\npeakRssKb=52212\nexitCode=0\ntier=full\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=early-publish\nstatus=passed\nexitCode=0\ntier=full\nid=publish:03-pr-provenance-stamp\nlabel=publish:pr-provenance-stamp\nphase=early-publish\nstatus=passed\nexitCode=0\ntier=full\nid=full:00-cheap-gates\nlabel=full:cheap-gates\nphase=full\nstatus=failed\ndurationMs=632271.191256\nexitCode=1\nrepairCommand=Repair the reported tsgo or Vitest alias drift, then rerun the cheap-gates tier.\ntier=full\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=not-run\ntier=full\nid=full:02-ci-parity\nlabel=full:ci-parity\nphase=full\nstatus=not-run\ntier=full\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=not-run\ntier=full\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=not-run\ntier=full\nmessage=yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again.\nmode=publish\noutcome=failure\npushed=true\nrunId=chore_astra-xhigh-agent-routing-7491c35440aa\nattemptId=04be8449-a694-43c6-968f-f66fe48af963\nresolvedHeadSha=cd55220834e09ec4dbf595809145b009d4cc1a35\ndiffFingerprint=ae7c57f755f7d8515daa1caf8b0afd83e12fb6bc74945883c0aabc9952114253\nproofTier=full\nstartedAt=2026-09-09T04:27:46.874Z\nendedAt=2026-09-09T04:48:41.831Z\nelapsedMs=1254957\nindexPath=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing/.beep/yeet/quality-issue-index.json\nbehindCount=0\nmergeBase=d1b4d769fbaffddd55717f3b1ba461897dd545c5\nfailedStepId=full:00-cheap-gates\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

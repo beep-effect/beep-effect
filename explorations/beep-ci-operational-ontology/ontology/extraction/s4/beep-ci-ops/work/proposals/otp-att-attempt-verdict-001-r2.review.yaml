@@ -1,0 +1,97 @@
+target: otp:att-attempt-verdict:001
+target_sha256: 4ff8c05939f2b65a7c0a697fd46e196b781e599b1908d0312aae978418f8c546
+chain_sha256: 6e912a82d6c37729c3b46a697c81bf22eaf5427eb3f32c6c2c616d7e6de99d80
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents. Exact reuse of VerificationResultArtifact creates no subclass
+    edge. Assessment-origin and content-snapshot models remain rival identity grains; no is-a
+    relation among report, execution, failure event and authorization is asserted.
+revision_requests: []
+attacks:
+  - surface: null_discriminator
+    rule: verdict-content-versus-writer-envelope
+    counterexample: >-
+      A replay-only DTO can reproduce the finished-attempt records without re-running checks, so
+      serialization and outcome spelling cannot prove an execution or attained assurance. The
+      current information-object proposal instead denotes an assessment's associated assertions.
+      Record 7 reports a failed full:00-cheap-gates component and a not-run successor; record 19
+      associates ready=true and green check assertions with another attempt. Erasing those
+      associations as mere writer layout changes which attempt the findings concern. That content
+      remains meaningful when copied, false or stale, and the proposal explicitly excludes
+      execution, failure event and evidence-reuse authorization. The discriminator survives at that
+      information grain, without promoting record shape into operational occurrence.
+    outcome: survived
+    evidence:
+      - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+      - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+  - surface: identity
+    rule: assessment-origin-versus-content-token
+    counterexample: >-
+      A fresh assessment could repeat an earlier assessment's findings, while a faithful copy could
+      change its capture location. Full-content equality alone would merge the former under this
+      proposal's selected assessment-origin criterion; token equality would wrongly split the
+      latter. The current IC/FA and definition explicitly require the same originating assessment
+      and unchanged assertions, and make a correction another unit. The two supplied projections
+      preserve the same record content apart from capture aliases, so they do not demonstrate two
+      assessment acts. Occurrence-qualified versus content-only assertion identity remains an
+      explicit joint steward choice, not a hidden equation between rival verdict models.
+    outcome: survived
+    evidence:
+      - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+      - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+  - surface: identity
+    rule: report-versus-current-assurance
+    counterexample: >-
+      Attempt 84b5343b-a759-49b7-aaad-1befc685a8f9 reports failure with elapsedMs=719613 and a
+      695899.047175 ms failed component; later attempt 7f745261-e584-4446-adf4-34be72c70714 reports
+      ready=true in its own monitor context. A latest-green rule would overwrite the older failed
+      assessment, while treating the component duration as the attempt would collapse different
+      scopes. The selected fixed assessment content preserves both accounts and their associations.
+      Staleness or disputed applicability does not make that rigid information object cease being a
+      result artifact, and neither proof-tier selection nor a ready flag establishes current
+      assurance or a failure/cancellation event.
+    outcome: survived
+    evidence:
+      - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+      - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+  - surface: warrant
+    rule: support-necessity-after-withdrawn-target
+    counterexample: >-
+      I reread r1 and the revision_log on the current bytes. The entry from
+      4856f0bf1d368800189dfdade0718aab1c72e039ab4281a92be6b84fdbc87e1f removes the withdrawn
+      wall-time support edge; semantic_support_for now names only otp:att-verification-attempt:001,
+      whose decision warrant is CQ-022. That query needs a failure and running execution joined to
+      the SAME attempt. Retaining each account's failed-step and not-run associations is necessary
+      to interpret result evidence within that scope; a flat collection or later green aggregate
+      would attach findings to the wrong attempt. This supports the actual decision target, not a
+      CQ-as-support target or support chain. The artifact alone does not establish CommittedFailure
+      or RunningExecution. Exact VerificationResultArtifact reuse survives without a
+      WallTimeEvidence class or a revived duration-CQ warrant.
+    outcome: survived
+    evidence:
+      - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+      - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+      - CQ-022
+rival_models_still_viable:
+  - >-
+    Full contextual assertion-content identity, which can identify independently repeated
+    equivalent findings, versus this proposal's selected assessment-origin identity remains a
+    joint steward choice.
+  - >-
+    An enduring report document with corrected states rather than fixed assessment-content units
+    remains a distinct information-object grain.
+  - >-
+    An execution result quality, failure event or evidence-reuse authorization requires
+    observations beyond these assessment assertions.
+evidence:
+  - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+  - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+  - CQ-022

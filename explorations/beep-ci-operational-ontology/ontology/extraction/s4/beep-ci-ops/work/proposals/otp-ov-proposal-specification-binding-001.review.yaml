@@ -1,0 +1,63 @@
+target: otp:ov-proposal-specification-binding:001
+target_sha256: d312687f084faf5ef233a928cb48454ccaaaefcea6a30bb5e3aabb13367769ce
+chain_sha256: 5485889934665bdb3db562c7c91e47afe4f465e24bc12d3366673ee2e9f2392f
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'hasProjectionSpecification asserts parents: []; no is-a edge is proposed. Participant, component,
+    or governing-role relations supply no additional subsumption assertion to test.'
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: semantically-empty-governing-link
+  outcome: survived
+  evidence:
+  - po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36
+  - po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853
+  - po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+  - po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+  - CQ-020
+  counterexample: Keep two typed descriptive targets S1 and S2 but remove the proposal's designation of
+    either. CQ-020 cannot identify which target belongs to the selected prescription. The fixture and
+    emitter record that designation explicitly, which is the proposed assertion content. A carrier-only
+    interpretation that still preserves this proposal-specific designation has retained the candidate's
+    information rather than eliminated it.
+- surface: identity
+  rule: binding-target-grain-collapse
+  outcome: survived
+  evidence:
+  - po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36
+  - po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853
+  - po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+  counterexample: Let a proposal designate an application-context description S1 while a separate document
+    S2 states reusable rules. Treating that edge as an identity between S1 and S2, or as proof of compliance,
+    would fail. This proposal individuates only the recorded designation by represented proposal version,
+    target, and projection context; it explicitly leaves target grain to the specification proposal. Retargeting
+    the designation changes the assertion content, whereas making a copy does not establish a second execution
+    or relator.
+- surface: warrant
+  rule: listing-cq-warrant
+  outcome: survived
+  evidence:
+  - CQ-020
+  - po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853
+  counterexample: Delete hasProjectionSpecification while leaving the current proposal and every independently
+    typed specification. CQ-020 loses its mandatory proposal-to-specification join and its ?spec answer.
+    A generic derivation edge does not satisfy that governing-designation query. The warrant therefore
+    survives for the bounded information relation; the separate specification identity deferral remains
+    open.
+rival_models_still_viable:
+- Direct governing relation to a reusable rule specification, with no separate assertion individual
+- Association to a projection-context record that describes the governing rule application and input binding
+evidence:
+- CQ-020
+- po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+- po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36
+- po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853
+- po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2

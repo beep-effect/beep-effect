@@ -1,0 +1,204 @@
+id: otp:admb-seat-request:001
+hypothesis_ref: dh:admb-seat-request:001
+identity_card_ref: ic:admb-seat-request:001
+foundational_status: analyzed
+term:
+  preferred_label: seat request
+  local_name: SeatRequest
+  proposed_iri: https://oip.law/ontology/ci-ops#SeatRequest
+  owl_entity_kind: class
+definition:
+  text: >-
+    An information object recording one putative capacity request's demand account, preserving
+    only the supplied work kind, priority, requested charge and enqueue, admission, withdrawal
+    or ticket-eviction assertions. The selected unit preserves
+    the particular demand described by an originating account and its asserted content.
+    Faithful copies of that unchanged account preserve the unit; correction or an added
+    boundary creates a different content version. It remains distinct from the resulting grant account and can
+    exist without effective queue registration.
+  source:
+  - CQ-021
+  - CQ-023
+  - so:sha256:329c44ec4fb419e458ef5823689c4c600d6d9937ee653719c6e436f5af2d468b
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+  - so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+  - so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973
+  - so:sha256:670e03a64c95c565c2755411af00c0e22ebe6e110796842e649844ddb889b827
+  - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  - so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+  - so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+  - so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+- from_sha256: 34603a58de94a81997a8d4d6f7e125aa6b1e31d81da57b28d1a1e40566978297
+  addressed:
+  - discriminator-true-of-dto
+- from_sha256: 14fc55c6975ee0d2a4d367def83f4cbf32c820ce232526b18af92e3342b00fc7
+  addressed:
+  - "gate-log-1 definition.source: restrict observations to the proposal's own hypothesis observation_refs"
+  - "gate-log-1 category alignment: derive information_object and its identity account from the repaired IC/FA"
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#SeatRequest
+    compatibility: >-
+      Exact reuse of the local SeatRequest term at recorded-value grain under sitting-1 Ruling
+      2. The inventory's request/grant split, rigid classification, recorded
+      admissionChargeTokens and enqueuedAt, and literal hasOriginKey match the demand
+      account's subject and associated recorded values. The nonce-chain provenance preserves
+      which request each assertion describes without making the nonce an identity axiom. This
+      is a mapping to the existing term, not a new request-record subclass or an assertion
+      that effective registration occurred. Current queue membership and requester identity
+      need separate evidence.
+operational_warrant:
+  competency_questions:
+  - CQ-021
+  - CQ-023
+  semantic_support_for: []
+alternatives_rejected:
+- >-
+  The prior operational null rejection is CONCEDED: diagnostic or replay data can retain both
+  enqueue/withdrawal pairs without inserting a demand into an effective queue. The associated
+  values still carry distinct request information, so informational emptiness alone is
+  rejected. No queue transition is inferred from the truth of an assertion about it.
+- >-
+  Identifying a request account with a submitting process, work specification, resulting grant
+  or entire nonce-linked journal collection conflates distinct subjects and grains. Equal work
+  descriptions, nonces, origins or charges alone are not sufficient sameness criteria.
+open_issues:
+- >-
+  Consolidation: dh:adm-seat-request:001, ic:adm-seat-request:001 and fa:adm-seat-request:001
+  remain incorporated through dh:admb-seat-request:001, ic:admb-seat-request:001 and
+  fa:admb-seat-request:001. Definition sources are restricted to this hypothesis's
+  observation_refs; matched accounts are not independent corroboration. The repaired card
+  now rules information_object for fixed contextual request-assertion content. Registration
+  continuity remains an unsupported operational rival; it does not supply informational sameness.
+- >-
+  Sitting-1 Ruling 2 answers discriminator-true-of-dto by selecting the recorded demand
+  account. The registration-bound relator, effective requesting occurrence and operational
+  queued-role reading are CONCEDED until effective registration/consumer evidence exists. The
+  enduring demand-content model remains an explicit rival: STEWARD CHOICE is required between
+  the originating request account selected here and content-only identity across renewed
+  submissions or independent equal-content accounts. A copy/correction and
+  withdrawal/resubmission trace must settle that choice. Stage A's identity deferral is
+  preserved rather than overruled by a new operational assertion.
+- 'Needed evidence for the bearer choice: a time-aligned registration/ticket trace across at least two
+  queue decisions, an identity-preserving refresh or priority update, withdrawal and resubmission of the
+  same work, and a faithful-copy comparison. Establish whether the same demand survives renewed registration
+  and whether an assertion can exist without effective registration. A further nonce-matching report alone
+  would not decide this. Registration-continuity and copy behavior are proposed tests, not observed cases.'
+- >-
+  Decision warrant retained: CQ-021 requires the typed SeatRequest subject joining requester,
+  work kind, priority, charge and enqueue time; CQ-023 joins that same subject to observed
+  wait, policy and exception context. The exact-reuse mapping retains the request's recorded
+  values and their associations. The supplied histories do not establish requestedBy, present
+  queue membership, a complete observation snapshot, the declared bound or a starvation
+  verdict. Neither a grant account nor a submitting participant can replace the required
+  request subject; no separate submission-event class is needed.
+- 'Queue scope: 46 histories supply explicit enqueue assertions, five admissions retain an earlier enqueue
+  time without an explicit enqueue entry, and two ticket-eviction-only histories leave entry time and
+  requested attributes unknown. Do not manufacture the missing fields or an enqueue occurrence from the
+  retained scalar. A positive withdrawal or ticket eviction concerns request participation; neither releases
+  an allocated charge. Work kind and priority are separate attributes, as the full-proof/publish and merged-preview/verify
+  cases demonstrate.'
+- 'Current-state boundary: use a declared, relevant queue snapshot and its completeness contract for current
+  membership. Historical request descriptions cannot be inserted indiscriminately into the current CQ-021
+  population. No missing admission or termination establishes continued waiting. CQ-023 additionally needs
+  the declared bound, observation instant and exception context; the journals do not establish a starvation
+  verdict or agent identity.'
+- >-
+  Cluster dependency: otp:admb-seat-grant:001 remains a distinct grant account even when a
+  nonce correlates it with this request. Align recorded-value mappings with
+  otp:att-admission-allocation:001 and the separate request/grant choices in
+  otp:bind-admission-request:001 and otp:bind-admission-grant:001 without importing their
+  synthetic observations as corroboration. The request and grant interpretations need
+  compatible joins, not a shared operational identity. Their boundary assertions are retained
+  without dependence on a separate AdmissionJournalEntry class.
+- 'Boundary-model steward choice: dh:adm-enqueue:001 / fa:adm-enqueue:001 and dh:admb-request-enqueue:001
+  / fa:admb-request-enqueue:001; dh:adm-withdrawal:001 / fa:adm-withdrawal:001 and dh:admb-request-withdrawal:001
+  / fa:admb-request-withdrawal:001; dh:adm-ticket-eviction:001 / fa:adm-ticket-eviction:001 and dh:admb-ticket-eviction:001
+  / fa:admb-ticket-eviction:001 receive no separate event proposal in this pass. Their informational-assertion,
+  operational-event and time-qualified participant-boundary models remain viable. The selected representation
+  keeps entry and exit claim content with its target and time without committing to an independently addressable
+  event class. Choose a separate occurrence model only with independently observed effective insertion/removal,
+  replay behavior, and a decision dependency that cannot be met by the qualified request boundary. These
+  omitted event terms cannot be ratified through this proposal.'
+- 'Reuse search: the 38-term TAXONOMY.yaml lists SeatRequest as a rigid class carrying admissionChargeTokens,
+  enqueuedAt and hasOriginKey. The scout report r2-reuse-scan.md supplies only a related OSLC AutomationRequest
+  candidate, with no exact external admission-demand match. The local inventory supplies reuse identity,
+  not evidence that any reported demand existed. No external equivalence, new class hierarchy edge or
+  amendment to a ratified definition is asserted.'
+- >-
+  Evidence consists of supplied observed admission-journal captures; no synthetic observation
+  is used. Capture metadata and pseudonyms establish no submitting participant or demand
+  identity. The selected information object is rigid even when its assertions are stale or
+  false and relationally dependent on its originating assertion context and intended demand
+  subject, not on effective registration. The repaired card rules that information-object
+  grain with rigid/supplies/relational meta-properties; its operational relator, event and role
+  rivals remain unsupported pending their named evidence.
+- >-
+  Nonce-chain identity provenance:
+  so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab and matched
+  so:sha256:cf8f163c919cdad854f3e9aabddf18a7c7589844a69389646492c47ac1f7d8e8 preserve nonce
+  3234b861-792e-4cde-96b6-5ca188435021, enqueue 1788927435322 and withdrawal 1788927676757.
+  so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959 and
+  so:sha256:b4093c2df6b7863d8c90b35246c348aecbbc5201cc8a3968132345e8e29c038e preserve a
+  separate account for nonce 355f5fd7-c1d1-49f9-9801-b9fa3048ea05, enqueue 1788927786743 and
+  withdrawal 1788928062034. Both report merged-preview, publish priority and requested charge
+  5. Same-record attemptId values fff01c8a-4d7f-4651-946e-a703cee128a1 and
+  659656ba-c07d-4120-860b-c6ca95fd4d95 keep the intended invocation associations separate.
+  These are evidence-backed recorded joins, not proof of effective registration or global
+  uniqueness.
+- >-
+  Withdrawal under sitting-1 Ruling 1: otp:admb-journal-entry:001 and its review are removed
+  after conceding support-reification-not-required, which targeted
+  c04e31cfe3b218858090f5fc30913bae5986421dddd0fb5c82f9db87c074e07a. No Must/Should executable
+  CQ in CQ-001 through CQ-026 requires an AdmissionJournalEntry individual: CQ-008/009/010
+  address grants and their qualified values, while CQ-021/023 address requests. The
+  request/grant claims remain expressible as qualified assertions, so the class's warrant
+  cannot be remapped. Named run-4 evidence: an observed decision consumer independently
+  addressing admission-assertion identity, with an executable CQ demonstrating loss of a
+  required answer when generic qualified assertions replace that class, plus
+  append/copy/replay/correction cases distinguishing assertion content from emission tokens.
+  Operational-event identity additionally requires a correlated effective transition. The
+  assertion-content, documentary-token and operational-occurrence alternatives remain recorded
+  in the retained dh:admb-journal-entry:001 / ic:admb-journal-entry:001 /
+  fa:admb-journal-entry:001 chain.
+- >-
+  Unproposed deferred chain retained after the journal-entry withdrawal:
+  dh:admb-admission-history:001 / ic:admb-admission-history:001 /
+  fa:admb-admission-history:001 requires a consumer independently addressing a partial whole,
+  a late/corrected member and a faithful copy, with bounded membership/coverage and observed
+  version behavior. An enduring report, immutable collection, operational lifecycle and
+  extractor grouping remain explicit alternatives; no aggregate class is selected. The 53
+  matched histories contain 125 assertions, not two independently corroborating populations.
+- >-
+  Unproposed null-standing chains retained after the withdrawal:
+  dh:admb-journal-field-projection:001 preserves a file-wide extraction whose flattened facts
+  cross entries and nonces; it needs an independently consumed collection with a
+  scope/completeness boundary. dh:admb-eviction-protocol-switch:001 needs observed governing
+  consumption and adoption-qualified timing. The earlier dh:adm-journal-projection:001 remains
+  an unproposed extraction view. No aggregate, policy or operational-change term follows from
+  those encodings.
+- >-
+  Run-4 evidence for the conceded operational request: observe effective queue
+  insertion/removal and a consuming queue/admission decision bound to the described request,
+  then an identity-preserving update, withdrawal, fresh submission and replay without
+  insertion. The existing bearer-choice trace remains required. Another matching nonce report
+  alone cannot establish a registered demand or whether an enduring content bearer survived
+  renewed registration.
+revision_requests: []
+review:
+  foundational_agent: fa:admb-seat-request:001
+  adversarial_agent: pending
+  steward: pending
+status: proposed

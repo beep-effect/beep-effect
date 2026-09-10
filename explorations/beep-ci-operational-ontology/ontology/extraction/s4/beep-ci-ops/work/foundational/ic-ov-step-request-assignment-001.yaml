@@ -1,0 +1,44 @@
+id: ic:ov-step-request-assignment:001
+hypothesis_ref: dh:ov-step-request-assignment:001
+referent_grain: Recorded prescriptive assignment of a represented request to a step in one projection;
+  separate from the request, its submission, and any executed admission.
+identity:
+  supplies_identity: false
+  identity_criterion: 'Proposed at assignment-assertion grain: sameness requires the same represented
+    step in the same prescription context to target the same represented request. Changing either target
+    or contextual component changes the content. The criterion does not assert that request descriptions
+    in different projections denote the same live request.'
+  reidentification_key:
+  - step subject and schedulesSeatRequest target inside the emitted proposal, for lookup only
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One assertion identifies what request this instruction schedules. Its informational unity is
+    supplied by that directed prescriptive content, not by the target's identifier alone.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a direct prescriptive relation between an instruction and an actual admission demand
+  - request selection represented as a field of a sequence entry without a separate assignment node
+  existential_dependencies:
+  - The represented step, containing prescription context, and represented request are constitutive participants.
+  - The record need not depend on an actual grant or on the existence of a work-unit specification that
+    the source cannot identify.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: 'Hypothetical counterexample: one request is assigned to a first step in an old proposal
+    and a later step in a new proposal. Identifying the assignments by request alone merges distinct prescriptions.
+    Reinterpreting either target as a reusable WorkUnit specification additionally claims an identity
+    which the quoted journal limitation expressly does not supply.'
+evidence_refs:
+- po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a
+- po:sha256:7f9eb7c183ed32fda7d59f429762811cda9842630765794f877ac24984cdbc6e
+- po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+- po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f
+- CQ-020
+status: proposed

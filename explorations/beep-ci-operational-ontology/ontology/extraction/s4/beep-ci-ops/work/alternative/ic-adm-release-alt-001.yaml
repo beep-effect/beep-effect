@@ -1,0 +1,54 @@
+id: "ic:adm-release-alt:001"
+hypothesis_ref: "dh:adm-release:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Same release occurrence iff it is the same punctual ending of one charged
+    holding reported as admission-released at one releasedAtMillis. It is not
+    the grant itself, not a lease eviction, not a withdrawal, not the work
+    execution that occupied the seat, and not the journal entry. memoryPeakBytes
+    is a reported quality of the ended holding, not identity. Nonce is
+    evidential join only. ownerRef and other capture members are never identity
+    criteria.
+  reidentification_key:
+    - "nonce (evidential join only)"
+    - "releasedAtMillis"
+    - "_tag=admission-released"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One dated holding-end transition tagged admission-released; not the whole
+    grant interval and not a mixed involuntary-eviction class.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+  existential_dependencies:
+    - "seat grant whose reported holding this occurrence ends"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - occurred
+counterexamples:
+  - description: >-
+      Identifying release with lease eviction of a different terminal tag.
+      so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+      reports _tag=admission-released at releasedAtMillis=1788927008574 for
+      nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088 (CQ-008);
+      so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+      reports _tag=admission-lease-evicted instead.
+  - description: >-
+      Taking ownerRef on the release block as identity of the grant or of this
+      occurrence. The same chain in
+      so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+      has ownerRef=21a413017368 on enqueue/admit and ownerRef=883946ddf615 on
+      release.
+  - description: >-
+      Treating memoryPeakBytes as the admission charge or as proof of successful
+      work. The release block reports memoryPeakBytes=9904820224 beside
+      weightTokens=5; those are distinct quantities (CQ-010).
+status: proposed

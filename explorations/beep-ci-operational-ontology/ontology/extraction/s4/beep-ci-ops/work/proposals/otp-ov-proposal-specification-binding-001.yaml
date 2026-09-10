@@ -1,0 +1,83 @@
+id: otp:ov-proposal-specification-binding:001
+hypothesis_ref: dh:ov-proposal-specification-binding:001
+identity_card_ref: ic:ov-proposal-specification-binding:001
+foundational_status: analyzed
+term:
+  preferred_label: has projection specification
+  local_name: hasProjectionSpecification
+  proposed_iri: https://oip.law/ontology/ci-ops#hasProjectionSpecification
+  owl_entity_kind: object_property
+definition:
+  text: A governing-description property that records which descriptive target an admission prescription
+    designates as its governing projection specification in the represented context.
+  source:
+  - CQ-020
+  - po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36
+  - po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853
+  - po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+  - po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-020
+  semantic_support_for: []
+alternatives_rejected:
+- 'A link to an execution or a compliance certificate: the emitted target is descriptive information,
+  and the binding itself establishes neither occurrence nor compliance.'
+open_issues:
+- 'Warrant justification: CQ-020 requires the governing description belonging to the selected proposal.
+  A set of typed specifications without this binding cannot distinguish which one governs that proposal''s
+  returned sequence.'
+- 'Identity criterion carried from ic:ov-proposal-specification-binding:001: Proposed at assertion-content
+  grain: the same binding asserts the same association between the same represented proposal version and
+  the same represented descriptive target within the same projection context. A changed target or proposal
+  version changes the binding content. This criterion identifies the represented assertion only; it does
+  not resolve whether the target denotes reusable rules or an input-bound context.'
+- 'Steward choice required before ratification of otp:ov-proposal-specification-binding:001: The steward
+  must choose a direct governing relation to repeatable rules, a designation of an application-context
+  description containing rules and input binding, or a separately represented assertion of that designation.
+  This proposal supplies the contextual recorded association while preserving the target-grain choice.
+  Ratification must be coordinated with AdmissionProjectionSpecification; an analyzed assertion does not
+  decide its target''s deferred identity. Still-viable models retained from fa:ov-proposal-specification-binding:001:
+  Direct governing relation to a reusable rule specification, with no separate assertion individual; Association
+  to a projection-context record that describes the governing rule application and input binding.'
+- 'Cluster dependency: otp:ov-projection-specification:001, otp:ov-schedule-proposal:001. Coordinate ratification
+  or parking where endpoint grain, component identity, or the stated warrant depends on these proposals;
+  no dependent choice is settled by emission spelling.'
+- 'Reuse search: The S5 inventory has no hasProjectionSpecification property. The scout report''s general
+  provenance and plan patterns do not exactly identify this designation relation; neither a generic derivation
+  link nor a plan-execution link supplies its specified participants and meaning.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Representation grain: the proposed property encodes contextual information content without requiring
+  a separate assertion individual. The OntoClean fields are inherited from the joined identity card for
+  that candidate content, not asserted as identity criteria for an RDF literal or for the OWL property
+  universal.'
+- The binding records an asserted governing association. It proves no execution, approval, successful
+  validation, or actual compliance.
+- Retain the proposal version and projection context. A direct property in that context can represent
+  the assertion without inventing a relator with an unsupported lifecycle.
+- 'Strongest counterexample carried from fa:ov-proposal-specification-binding:001: Hypothetical counterexample:
+  a proposal points to a record containing only the policy and input binding, while an independent document
+  states the reusable rules. Reading the edge as proof that its target is that rule specification silently
+  merges two grains. Changing a target while keeping the proposal identifier can also change the asserted
+  binding without establishing any new execution.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

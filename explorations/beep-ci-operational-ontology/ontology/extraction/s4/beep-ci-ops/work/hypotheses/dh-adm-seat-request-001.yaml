@@ -1,0 +1,106 @@
+id: dh:adm-seat-request:001
+observation_refs:
+- so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+- so:sha256:0385cf6e12920c8a96c520a7238b522f923a7c0116cd603fbeff793a7d0e6058
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:05a0dfbb8f434d75b8be6d1bd7d396925b594cb0e9ceb6b72bda31e76e9685d3
+- so:sha256:05fa73f187683c8b5cfb25a3958ed5b6f3d344d1b984cb1ce1cdffe5a9b2674a
+- so:sha256:0775b5fd356eaea7604537054326c7e97598c5f81504c0d815558297ebf0f50e
+- so:sha256:08149709f365cd0031ec1a4a17e6f76e957b70a4507b8c15e077e41ec998abce
+- so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+- so:sha256:0dcfbaeaa65aeeec90c1e9590be8a33c1ffe9438f29ebbe7d8617d09a5e45b08
+- so:sha256:0e50d84bdb1fbc2d463bced37bfe314caf8e1b5a8cc58dd5359978650ab1f53c
+- so:sha256:0e797a3deeedd27cfa75082643ce788d6c73e073bf87a640fe50ce3896a43e2b
+- so:sha256:10f2cebc7b17c5f7b15bd051ed0f0363d355c3e4cb2f927dd2b2852461ad2610
+- so:sha256:126709ea74fec8cb4b03c021d7cf121aac566b19bea91c4ac8a452f33d01a94e
+- so:sha256:146d2b385ef6e3fb892821dbd2df82091184f2dca48f8cd9b9eaa5d01019d942
+- so:sha256:155a7c875acf08bae8c3073be1e54bebd65f2b8d5192697d7687da967e781ae6
+- so:sha256:232151f9f2afc0f8662cbd2c75d368bae594686ce7f0bdbac3e9f7238d6fd062
+- so:sha256:27ba4f5468b662c17e401817a599ad4e45c2091d51423b279d8de9fbe97880b7
+- so:sha256:2e58e1311fcc9f696bc06624bab0b4e23b6597ee1919f68e1516882ab067b53a
+- so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+- so:sha256:4a98ae2d71bc800fd8718d37ccc93288cf66cc48dbffa2eddc2a0c7c3297a7d6
+- so:sha256:4bb535144f06b1e9abc6a8c75f0dcc3fc7d030f9b64214adfd1bed92ca384b08
+- so:sha256:5130545f45659ac9d904152da47d3e52ab06961250b57d626f3d8afc4993fe42
+- so:sha256:522ce0efbf2933dac38a6f574c2ff640dadb305b695e06028dad7a5c0f25d91c
+- so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67
+- so:sha256:6108f04e939048617511e050bbb2421593e88c3658829deaead9b406fcb811d9
+- so:sha256:636db00ceac88a2c4857664e7f2fb863833b68fe94f1e28a111e3451d3dfcbb1
+- so:sha256:65609cedeaf3e99b51031c38b99ab7bc16ea0ef59fa66bea1d446ef3f7bd3333
+- so:sha256:675134527a157d157274937b2f8ad90b036d30b77340d61f1e202483d9ac828e
+- so:sha256:6abcdc65b395bfc82d08b2c5e49d3c9553e97a46bd942343457e68e8da0a85e7
+- so:sha256:6cf1d332ce7ea225c24cf5aea2e2192ab91ec06838463289be284bae7677e60c
+- so:sha256:7627bd8803b5da11524904bb2c7b2fdcd7c320ba034444204852ded9c164cfff
+- so:sha256:7b8493be70e8285a866f898e5691df4cb02c5d51fd808635f508854d1ec5622c
+- so:sha256:7e4e7d3c3f97a3907222c12d770c3f618aa1502dc1fd391f0738fd93f874dbbb
+- so:sha256:7f98fb05e2fa6d6b3b08618e7f5af09ecdefc3ff88752bbf437aff900e73036a
+- so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+- so:sha256:94cda97bb49a7661b4b7bd7ed0cd0f5b8594223ad33ddbf9d9637e464ee5c902
+- so:sha256:997fca9994bcb3a70f034acd490a212d79ae083f17c0a18972bdbc8a924a5346
+- so:sha256:a3d906985080a7bb34c6364829dd3add8d8d0a7235a3b00d027d9e9685e7eb19
+- so:sha256:a4ff1bbe07b6d10ed237650df3bfbe94c9a94240167ba58443ebf37227476301
+- so:sha256:ad5ef0f6bca50e85da674990519818fb3d4a14a1650ccb135b89f2f10d875248
+- so:sha256:b0aa81e61691ffc2b4ef587508eae988e450f03407eefbfc524fb38a82c20cdc
+- so:sha256:b16055eff4bab382b33f0a5629c273a35a659e407651035b9532fb833f1a722c
+- so:sha256:b303cb0ce5ff71bf3353ee50bced00e443bbba7d77e4f3e5cf7e6e8476d054aa
+- so:sha256:b4093c2df6b7863d8c90b35246c348aecbbc5201cc8a3968132345e8e29c038e
+- so:sha256:c19aff86102184c4aafeecb71520216ed5ccf721d1d16cce9a382bdd170d1967
+- so:sha256:c1e15b1c4eaa7eb7c6aa06fd4e88909368ddeac9931936b7d68c2bf857b1bcfa
+- so:sha256:cf8f163c919cdad854f3e9aabddf18a7c7589844a69389646492c47ac1f7d8e8
+- so:sha256:cfb413d38b8e8e1903d6e83b8d2977c5fd102003636ca8403eaa958dc1791b6f
+- so:sha256:d90be1aaa963b3e017130d2add821e59f623ac0540f9563cd9dd1d607cae8ce9
+- so:sha256:dae7bbf3b41b449e027e7be2793340e99e86ffbfbc9e3781a15b2c412919fba3
+- so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+- so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+- so:sha256:f1e3e6b059c258e89fc802148a2976a93bd0ade9c8e5568b6052d81945140f7a
+cq_warrants:
+- CQ-021
+- CQ-023
+proposed_referent:
+  label: seat request
+  description: 'A solicitation for admission of one item of requested work. An instance is the contender
+    whose queue participation begins at the reported enqueue and ends at admission, withdrawal, or ticket
+    eviction; the later grant is a different candidate referent. The cited histories include 46 explicit
+    enqueue chains, five admission chains carrying an enqueue time without a separate enqueue event, and
+    two ticket-eviction reports referring to an earlier queued contender without its enqueue time. Those
+    two reports support only an incompletely described prior request, not invented kind, priority, charge,
+    owner, or waiting duration. Work kind, priority, and token charge qualify a request without supplying
+    new kinds for each value: full-proof can have publish priority, and merged-preview can have verify
+    priority. A history whose queue participation has ended is not a current queued-request answer. These
+    observations supply neither the complete queue census nor the declared starvation threshold and exception
+    context required for the cited decisions. Nonce equality aligns the supplied journal assertions locally;
+    it is not an accepted identity criterion. Capture and resanitization metadata supply no agent identity.'
+representation_status: domain_referent
+alternatives:
+- label: A journal account of a requested admission, with no independently established request bearer.
+    A time-aligned ticket-store observation or an observed queue operation retaining the request boundaries
+    would distinguish that information-only reading from the proposed contender.
+  representation_status: information_artifact
+  plausibility: viable
+- label: Enqueue and queue-exit occurrences with the request represented only as their participant. Evidence
+    that the same solicitation is re-identified across intermediate queue decisions would discriminate
+    a persisting request from an occurrence-centered model.
+  representation_status: domain_referent
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The positive entry and exit assertions concern requested work with a reported admission charge.
+    They support the candidate contender needed to interpret queue membership and waiting, beyond the
+    extraction wrapper's existence. The operational reading is proposed at kind level; the information-artifact
+    reading remains viable because the journal is not independent confirmation of its own assertions.
+    Ticket-eviction-only histories leave the earlier request properties open. No current membership or
+    starvation result is inferred from an absent terminal event.
+  discriminator: 'For nonce=71181c10-f174-45cf-817e-0fdfa07295a8, the config_key_value predicate has these
+    rechecked objects: ''_tag=admission-enqueued'', ''enqueuedAtMillis=1788934640505'', ''kind=merged-preview'',
+    ''weightTokens=5'', ''_tag=admission-withdrawn'', ''withdrawnAtMillis=1788935102826''. For nonce=d7ec57f5-4157-46c1-9fca-b7a7775b75ef,
+    the config_key_value predicate has these rechecked objects: ''_tag=admission-enqueued'', ''enqueuedAtMillis=1788940362521'',
+    ''kind=review-fix'', ''priority=verify'', ''weightTokens=1'', ''_tag=admission-withdrawn'', ''withdrawnAtMillis=1788940437861''.
+    Each same-nonce excerpt binds an entering contender to a later withdrawal. Under the null there is
+    no requested admission whose queue participation can begin and end; that is precisely the operational
+    content these dated pairs assert. This rejects the absence of any operational denotation, while leaving
+    the truth of the reports open to the viable information-only reading.'
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

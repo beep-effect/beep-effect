@@ -1,0 +1,108 @@
+{
+  "id": "so:sha256:0dcfbaeaa65aeeec90c1e9590be8a33c1ffe9438f29ebbe7d8617d09a5e45b08",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 3659,
+    "end_line": 3803,
+    "content_sha256": "162e325901c432134abbb1c00f00cbe0e54255b2f703371ca29312de9ac6d3b2"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/admission/canonical/journal.properties:nonce=d2cf1953-f12e-4851-b3a4-f5f287bf35c4",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-released"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1788940089210"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=3f8f2dac-7c2a-496d-ba65-5ed1d1f10009"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=claude/festive-carson-fc5979"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect5/.claude/worktrees/unruffled-hodgkin-8194a8"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788939873732"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "memoryPeakBytes=14789455872"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=d2cf1953-f12e-4851-b3a4-f5f287bf35c4"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=04116f67b683"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=2698ef2ddd5b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=1788940700330"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 321\nownerRef=2698ef2ddd5b\nownerRefVariant=pid_pair\nattemptId=3f8f2dac-7c2a-496d-ba65-5ed1d1f10009\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect5/.claude/worktrees/unruffled-hodgkin-8194a8\nbranch=claude/festive-carson-fc5979\nenqueuedAtMillis=1788939873732\nnonce=d2cf1953-f12e-4851-b3a4-f5f287bf35c4\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 322\nownerRef=018b3375e72a\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-packet-closeout\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=31f686fb-d951-4f9f-8860-8ccbf161f7dd\nreleasedAtMillis=1788940086049\nmemoryPeakBytes=19802030080\nattemptId=b0b64c46-8e02-4547-b670-47fa8e689c17\n# record 323\nownerRef=2698ef2ddd5b\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=d2cf1953-f12e-4851-b3a4-f5f287bf35c4\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788939873732\nadmittedAtMillis=1788940089210\nattemptId=3f8f2dac-7c2a-496d-ba65-5ed1d1f10009\n# record 324\nownerRef=73cde0279cf7\nownerRefVariant=pid_pair\nattemptId=03e19e3c-fa6f-4123-b858-ded1e5712156\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-packet-closeout\nenqueuedAtMillis=1788940279877\nnonce=9f9cbe1f-3665-4230-b29b-0e850fa2d7b7\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 325\nownerRef=28282cd9d3b6\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/graft-recovery-runbook\nbranch=codex/graft-recovery-runbook\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=a8e2177c-2e80-4b65-8974-d48a78db3476\nreleasedAtMillis=1788940317679\nattemptId=e5e0d681-3a16-4102-9cd1-c23ac0028ccb\n# record 326\nownerRef=76fe473744e0\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=faefa5c5-56fd-4ce4-85f9-cad10496e57e\nkind=review-fix\nweightTokens=1\npriority=verify\nenqueuedAtMillis=1788939895934\nadmittedAtMillis=1788940321617\n# record 327\nownerRef=4297ec134822\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=faefa5c5-56fd-4ce4-85f9-cad10496e57e\nreleasedAtMillis=1788940327756\nmemoryPeakBytes=3111038976\n# record 328\nownerRef=73cde0279cf7\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=9f9cbe1f-3665-4230-b29b-0e850fa2d7b7\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788940279877\nadmittedAtMillis=1788940330018\nattemptId=03e19e3c-fa6f-4123-b858-ded1e5712156\n# record 329\nownerRef=0f99949584ac\nownerRefVariant=pid_pair\nattemptId=d2a767b9-43c5-4756-afb3-f543645f32c2\nkind=review-fix\npriority=verify\ncheckoutRoot=<fleet>/beep-effect2-worktrees/graft-recovery-runbook\nbranch=codex/graft-recovery-runbook\nenqueuedAtMillis=1788940362521\nnonce=d7ec57f5-4157-46c1-9fca-b7a7775b75ef\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=1\n# record 330\nownerRef=0f99949584ac\nownerRefVariant=pid_pair\nattemptId=d2a767b9-43c5-4756-afb3-f543645f32c2\nkind=review-fix\npriority=verify\ncheckoutRoot=<fleet>/beep-effect2-worktrees/graft-recovery-runbook\nbranch=codex/graft-recovery-runbook\nenqueuedAtMillis=1788940362521\nnonce=d7ec57f5-4157-46c1-9fca-b7a7775b75ef\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788940437861\n# record 331\nownerRef=a495cf15df75\nownerRefVariant=pid_pair\nattemptId=07845f58-90bf-41d4-ab6e-a0f5b1d139ee\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/graft-recovery-runbook\nbranch=codex/graft-recovery-runbook\nenqueuedAtMillis=1788940462738\nnonce=8a0f8e7e-0247-48c5-83eb-b007f6ee0af7\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 332\nownerRef=04116f67b683\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect5/.claude/worktrees/unruffled-hodgkin-8194a8\nbranch=claude/festive-carson-fc5979\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=d2cf1953-f12e-4851-b3a4-f5f287bf35c4\nreleasedAtMillis=1788940700330\nmemoryPeakBytes=14789455872\nattemptId=3f8f2dac-7c2a-496d-ba65-5ed1d1f10009\n",
+  "epistemic_status": "parser_derived"
+}

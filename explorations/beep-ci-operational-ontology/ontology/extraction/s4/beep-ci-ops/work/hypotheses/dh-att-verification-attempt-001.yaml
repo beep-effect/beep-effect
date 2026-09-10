@@ -1,0 +1,45 @@
+id: dh:att-verification-attempt:001
+observation_refs:
+- so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+- so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+cq_warrants:
+- CQ-007
+- CQ-022
+- CQ-025
+proposed_referent:
+  label: Dated verification attempt occurrence
+  description: A particular invocation of repair, verification, publication, monitoring, or closeout,
+    evidenced by its journaled start and terminal outcome. Repeated invocations within one run remain
+    separate candidate occurrences; the reusable command, the branch-associated run, the journal file,
+    and an individual lane execution are not identified with the attempt. Attempt elapsed time and
+    lane duration have different grains. The two supplied captures repeat the same journal excerpt
+    and do not establish twice as many occurrences.
+representation_status: domain_referent
+alternatives:
+- label: Journal record describing an attempt, rather than the occurrence it describes
+  representation_status: information_artifact
+  plausibility: viable
+- label: Reusable verification procedure instantiated by the recorded invocations
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The evidence records dated starts, elapsed work, failed and successful terminal outcomes,
+    and which later steps did not run after a failure. These support operational occurrences needed
+    to distinguish a failed attempt from a healthy retry and to account for elapsed work. This conclusion
+    does not promote the schemaVersion string or attemptId field into a kind or identity criterion.
+    The late legacy-unowned-start termination is a recorded reconciliation boundary; its recordedAt
+    does not prove that work ran until that instant. Capture paths and placeholder tokens supply no
+    additional domain referent.
+  discriminator: 'The config_key_value facts include "_tag=attempt-started", "startedAt=2026-08-23T16:59:45.919Z",
+    "endedAt=2026-08-23T17:01:07.524Z", "elapsedMs=81605", "outcome=failure", "failedStepId=prepare:05-docgen",
+    and "failurePolicy=fail-fast". In the supplied source_excerpt these belong to the first start/finish
+    pair: the docgen step has "status=failed" and "exitCode=1", while the later feedback steps have
+    "status=not-run". The record therefore distinguishes a time-bounded failed invocation and work
+    that remained unexecuted; under the no-occurrence reading those operational execution claims would
+    be false, not merely differently named.'
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false

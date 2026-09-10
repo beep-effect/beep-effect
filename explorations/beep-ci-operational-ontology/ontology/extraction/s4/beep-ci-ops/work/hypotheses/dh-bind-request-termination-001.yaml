@@ -1,0 +1,45 @@
+id: "dh:bind-request-termination:001"
+observation_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+cq_warrants: ["CQ-021", "CQ-023"]
+proposed_referent:
+  label: "Reported termination of a queued admission request"
+  description: >-
+    A candidate occurrence ending a request's queue participation, represented here
+    by withdrawal and ticket eviction. These are distinct observed occurrences and
+    reported mechanisms within the candidate family. The hypothesis does not turn
+    each event tag into an ontology subclass or equate queue removal with release
+    of an allocated grant.
+representation_status: domain_referent
+alternatives:
+  - label: "Terminal journal assertions used to reconstruct request state"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Withdrawal and ticket eviction require separate event models"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The provenance: synthetic scenario supplies positive terminal events that matter
+    when deciding whether an earlier request remains queued or continues accruing
+    observed waiting time. Withdrawal has an observed enqueue in the same nonce
+    chain. The evicted ticket has only its terminal event in this supplied record,
+    so its enqueue instant, complete waiting interval, and earlier grant history
+    remain unestablished. The reason is a reported cause, not independent proof of
+    process death. ownerRef and ownerRefVariant, synthetic labels, schema versions,
+    and placeholder paths are capture bookkeeping. The supplied transitions do
+    not establish a complete queue or a starvation violation.
+  discriminator: >-
+    config_key_value reports "_tag=admission-withdrawn" with
+    "withdrawnAtMillis=1788931586715" for nonce
+    "d269a27c-6d0e-4613-8ad3-6adaa4353712", whose enqueue is also recorded.
+    A separate source-excerpt record reports "_tag=admission-ticket-evicted",
+    "nonce=synthetic-dead-ticket", "evictedAtMillis=1788931586729", and
+    "reason=queued-submitter-death". These positive queue-termination reports
+    prevent carrying the affected requests forward as still queued. Ignoring the
+    represented termination would keep a previously enqueued request in that
+    reconstruction after its recorded withdrawal.
+epistemic_status: proposed
+confidence: {value: 0.79, use_for_acceptance: false}

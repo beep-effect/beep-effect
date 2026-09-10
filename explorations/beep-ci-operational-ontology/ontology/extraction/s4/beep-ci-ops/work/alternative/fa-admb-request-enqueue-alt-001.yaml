@@ -1,0 +1,35 @@
+id: "fa:admb-request-enqueue-alt:001"
+hypothesis_ref: "dh:admb-request-enqueue:001"
+identity_card_ref: "ic:admb-request-enqueue-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      event: a queue-registration occurrence distinct from the request that
+      may remain queued
+    still_viable: true
+  - label: >-
+      information_object: the admission-enqueued assertion rather than the
+      registration occurrence (observationally equivalent on journal-only
+      evidence)
+    still_viable: true
+  - label: >-
+      kind/phase: the request's queued condition with no separately reified
+      registration occurrence
+    still_viable: true
+strongest_counterexample: >-
+  Snapshot-is-continuant: treating enqueue as the request itself would make
+  later withdrawal or admission a phase of the event rather than of the
+  demand. CQ-021 asks for queued requests with enqueuedAt, which can be
+  satisfied by the request continuant plus a timestamp; event reification is
+  not forced by that CQ alone.
+verdict: analyzed
+needed_evidence: >-
+  A correlated queue insertion observed independently of enqueue-journal
+  emission would distinguish an occurrence from its assertion. A
+  queue-membership trace immediately before and after that insertion would
+  discriminate the registering occurrence from the resulting queued
+  condition. No continuous waiting interval is observed.

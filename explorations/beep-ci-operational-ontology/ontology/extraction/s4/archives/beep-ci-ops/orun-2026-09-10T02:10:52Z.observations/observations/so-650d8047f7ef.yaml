@@ -1,0 +1,52 @@
+{
+  "id": "so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic/attempts/dead-lease/feat_synthetic-dead-lease-f004a5320ab9/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 8,
+    "content_sha256": "251ca94b4d9c162605ce802869c81395bbd53576a333258bb69ab967bc48339d"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-synthetic/attempts/dead-lease/feat_synthetic-dead-lease-f004a5320ab9/attempts.properties",
+    "lexical_name": "_tag",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=attempt-terminated"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=b4e72342-45a5-4a1b-95db-5ab4ef30a93f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "provenance=synthetic"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=lease-eviction"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-09-09T05:26:26.737Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-attempt-journal/v1"
+    }
+  ],
+  "source_excerpt": "# provenance: synthetic\n# record 0\n_tag=attempt-terminated\nschemaVersion=yeet-attempt-journal/v1\nattemptId=b4e72342-45a5-4a1b-95db-5ab4ef30a93f\nrecordedAt=2026-09-09T05:26:26.737Z\nreason=lease-eviction\nprovenance=synthetic\n",
+  "epistemic_status": "parser_derived"
+}

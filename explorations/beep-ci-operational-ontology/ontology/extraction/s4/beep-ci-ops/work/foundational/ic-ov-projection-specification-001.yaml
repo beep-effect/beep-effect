@@ -1,0 +1,53 @@
+id: ic:ov-projection-specification:001
+hypothesis_ref: dh:ov-projection-specification:001
+referent_grain: Governing-description information object whose exact grain is unresolved between a repeatable
+  projection rule specification and an input-bound application-context record.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: 'unresolved: a repeatable specification would be individuated by its governing rule
+    content and intended version, remaining the same across distinct journal inputs. An application-context
+    record would additionally be individuated by which rule application and input state it describes.
+    The typed target and policy/journal digest carriers do not decide between these criteria; digest equality
+    or change is not by itself an identity criterion.'
+  reidentification_key:
+  - typed specification subject in the emitted representation, for lookup only
+  - policyDigest and journalPrefixDigest as input-binding evidence, never a standalone sameness rule
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: Either a coherent repeatable set of projection constraints or a coherent record of a particular
+    rule-and-input binding. Both unite descriptive content, but they group applications differently.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - repeatable governing specification shared by multiple projection inputs
+  - input-bound description of one projection application context
+  existential_dependencies:
+  - A repeatable specification requires a meaningful body of governing rules, not a particular journal
+    execution.
+  - An application-context record semantically depends on the represented rule/policy and journal-input
+    binding. The evidence does not settle whether that input is constitutive or merely described provenance.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+- description: 'Hypothetical counterexample: the same ordering and admissibility rules are applied to
+    two different journal prefixes. If the specification changes identity solely because journalPrefixDigest
+    changes, input provenance is promoted into rule identity. Conversely, merging all subjects with the
+    same policy digest can collapse application-context records for different inputs. Both interpretations
+    fit the single illustrated target.'
+evidence_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+- po:sha256:2cbe4a487c0ebb475da0d4b4e9833105b7c1d677e942f04484e74049b825ee53
+- po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3
+- po:sha256:9081cf3d4060a87388a3b4285f7ed6165aa24f39dc350fc3b3c3aeffec0e6b26
+- po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+- po:sha256:e9df49623f67f2eac1d565f6ab8811c99128f33a8610358f0944f64ae390aa5e
+- po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- CQ-020
+status: proposed

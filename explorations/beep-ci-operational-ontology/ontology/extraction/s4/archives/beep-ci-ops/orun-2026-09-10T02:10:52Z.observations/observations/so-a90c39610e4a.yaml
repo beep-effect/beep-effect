@@ -1,0 +1,408 @@
+{
+  "id": "so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-checkout-identity/bindings/beep-effect.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 115,
+    "content_sha256": "35240ffe99e5f6d6a46d0b7965ff9b61582b92d52c80a5e0688f3a33dbf34afb"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-checkout-identity/bindings/beep-effect.properties",
+    "lexical_name": "identity_key",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "TURBO_API=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "TURBO_TEAM=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "TURBO_TOKEN=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "binding_probe_at=2026-09-09T03:13:52.201Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "binding_probe_matches_snapshot=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "binding_probe_status=present"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=fix/xstate-effect-diagnostics"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch_sha12=2229b8d69f7a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exit_code=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "file=<fleet>/beep-effect/turbo.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "git_common_dir=<fleet>/beep-effect/.git"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "git_dir=<fleet>/beep-effect/.git"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=fb00597b4bf80fab686f9210d8a88f7145b9113a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "identity_key=<fleet>/beep-effect"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=clone"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "line=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "origin_url=git@github.com:beep-effect/beep-effect.git"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "probe_branch=fix/xstate-effect-diagnostics"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "probe_head=fb00597b4bf80fab686f9210d8a88f7145b9113a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=beep_editor-15abc31b98cb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_deps-update-08-23-26-cadf4f69e957"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_deps-update-09-05-26-64c41f08b79f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_deps-update-7-11-26-637556fb9690"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_deps-update-7-13-26-3a7a4139ea68"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_deps-update-7-24-26-59e4b1246bb9"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_deps-update-effect-beta90-2743ec3db82b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_goal-organization-a2292f00be6a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_goals-housekeeping-9101cdac3f08"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_knowledge-surface-unmerged-followup-c20a7963ded0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_mcp-config-hygiene-838a497effcb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_move-md-to-modeling-201fbcf7f29b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_refresh-bun-lockfile-0f8671787597"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=chore_repo-green-sweep-6551c442cd2c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=coding-agent-effectiveness-evidence-loop-0b12cb9b250e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=dataset-schemas-5a4998a2f732"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=deps-update-7-10-26-5b8b0e3b86be"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=effect-claudecode-b81e25007222"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_agent-pipeline-velocity-f7cd88706539"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_api-docs-lab-1168fe62b395"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_chat-surface-parity-ea0c09d2b2a4"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_desktop-chat-surface-1ede65f235a2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_files-flatten-media-3696b4f5557c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_goals-doctor-c5f14a08435c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_goals-doctor-packet-482e5785e85e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_harness-hygiene-mechanical-11c84a5cd3d3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_image-curation-pipeline-bb5ab6c59928"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_local-models-gguf-7c44160b53ab"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_mcp-kit-04bbd4693c98"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_pglite-inprocess-driver-50bae73c2bfb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_quality-gate-ratchets-df96724b5932"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_recorded-qa-system-f8e7770795e4"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_skillopt-training-pilot-2b400eba1d77"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_tracked-docs-home"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_yeet-pr-closeout-loop"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=fix_codex-security-findings-2026-07-10-a74d3dacf168"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=fix_main-verify-cleanup-7d425b2bfa17"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=fix_professional-desktop-qa-closeout-2899dcbfb452"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=fix_ship-velocity-main-push-parity-d7281d09fe50"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=fix_ui-build-20260727-d6caf6e194d2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=fix_xstate-effect-diagnostics-2229b8d69f7a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=fun-08-13-26-6842bfa6463c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=goals_ship-velocity-cache-auth-evidence-b53815ab30c0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=goals_ship-velocity-final-closeout-4561f2096adb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=goals_ship-velocity-final-evidence-222c48d74f8e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=goals_ship-velocity-observation-closeout-56f1c97a7ee4"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=goals_ship-velocity-observation-week-0fa9eec27135"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=goals_time-to-certainty-kickoff-eb02f5fa5c07"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=goals_yeet-agent-ergonomics"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=gold-implementation-8e4297f08217"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=gold-intake-01f4eda71a6d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=graphify-agents"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=knowledge-surface-automation-beed12b6d491"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=knowledge-surface-p2-grill-decisions-91d22cd16692"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=legal-drivers-35149bd3e531"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=main-0d6e4079e367"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=public-ids-7bf746737181"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=refactor_law-practice-citation-defaults-f7355645f2de"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=research_nightly-routine-p0-docs-e277c865bfb7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=slop_7-11-26-658cdedbc576"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=slop_7-17-26-d3bcdfd4f9cb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=slop_7-29-26-809585e58ef0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=slop_deps-update-7-27-26-377e867d8c95"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_directory_status=present"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "scannedAt=2026-09-09T03:13:49.440Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "snapshot_path=<fleet>/beep-effect"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=present"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_configuration_observed_at=2026-09-09T03:13:52.201Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_configuration_sha256=32a4cf3d89cc2553c80ba68727fb2262e77a6d371ce93a7271b077a76bb42590"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_configuration_status=present"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_entries=36399"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_path=<fleet>/beep-effect/.turbo/cache"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_present=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_remote_cache_configured=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_remote_cache_signature_configured=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "within_fleet_root=true"
+    }
+  ],
+  "source_excerpt": "# record 0\nidentity_key=<fleet>/beep-effect\nscannedAt=2026-09-09T03:13:49.440Z\nsnapshot_path=<fleet>/beep-effect\nwithin_fleet_root=true\norigin_url=git@github.com:beep-effect/beep-effect.git\nkind=clone\nbranch=fix/xstate-effect-diagnostics\nbranch_sha12=2229b8d69f7a\nhead=fb00597b4bf80fab686f9210d8a88f7145b9113a\ngit_dir=<fleet>/beep-effect/.git\ngit_common_dir=<fleet>/beep-effect/.git\ngit_common_dir_role=checkout-binding fact; not a proof cache\nruns_dir_listing=beep_editor-15abc31b98cb\nruns_dir_listing=chore_deps-update-08-23-26-cadf4f69e957\nruns_dir_listing=chore_deps-update-09-05-26-64c41f08b79f\nruns_dir_listing=chore_deps-update-7-11-26-637556fb9690\nruns_dir_listing=chore_deps-update-7-13-26-3a7a4139ea68\nruns_dir_listing=chore_deps-update-7-24-26-59e4b1246bb9\nruns_dir_listing=chore_deps-update-effect-beta90-2743ec3db82b\nruns_dir_listing=chore_goal-organization-a2292f00be6a\nruns_dir_listing=chore_goals-housekeeping-9101cdac3f08\nruns_dir_listing=chore_knowledge-surface-unmerged-followup-c20a7963ded0\nruns_dir_listing=chore_mcp-config-hygiene-838a497effcb\nruns_dir_listing=chore_move-md-to-modeling-201fbcf7f29b\nruns_dir_listing=chore_refresh-bun-lockfile-0f8671787597\nruns_dir_listing=chore_repo-green-sweep-6551c442cd2c\nruns_dir_listing=coding-agent-effectiveness-evidence-loop-0b12cb9b250e\nruns_dir_listing=dataset-schemas-5a4998a2f732\nruns_dir_listing=deps-update-7-10-26-5b8b0e3b86be\nruns_dir_listing=effect-claudecode-b81e25007222\nruns_dir_listing=feat_agent-pipeline-velocity-f7cd88706539\nruns_dir_listing=feat_api-docs-lab-1168fe62b395\nruns_dir_listing=feat_chat-surface-parity-ea0c09d2b2a4\nruns_dir_listing=feat_desktop-chat-surface-1ede65f235a2\nruns_dir_listing=feat_files-flatten-media-3696b4f5557c\nruns_dir_listing=feat_goals-doctor-c5f14a08435c\nruns_dir_listing=feat_goals-doctor-packet-482e5785e85e\nruns_dir_listing=feat_harness-hygiene-mechanical-11c84a5cd3d3\nruns_dir_listing=feat_image-curation-pipeline-bb5ab6c59928\nruns_dir_listing=feat_local-models-gguf-7c44160b53ab\nruns_dir_listing=feat_mcp-kit-04bbd4693c98\nruns_dir_listing=feat_pglite-inprocess-driver-50bae73c2bfb\nruns_dir_listing=feat_quality-gate-ratchets-df96724b5932\nruns_dir_listing=feat_recorded-qa-system-f8e7770795e4\nruns_dir_listing=feat_skillopt-training-pilot-2b400eba1d77\nruns_dir_listing=feat_tracked-docs-home\nruns_dir_listing=feat_yeet-pr-closeout-loop\nruns_dir_listing=fix_codex-security-findings-2026-07-10-a74d3dacf168\nruns_dir_listing=fix_main-verify-cleanup-7d425b2bfa17\nruns_dir_listing=fix_professional-desktop-qa-closeout-2899dcbfb452\nruns_dir_listing=fix_ship-velocity-main-push-parity-d7281d09fe50\nruns_dir_listing=fix_ui-build-20260727-d6caf6e194d2\nruns_dir_listing=fix_xstate-effect-diagnostics-2229b8d69f7a\nruns_dir_listing=fun-08-13-26-6842bfa6463c\nruns_dir_listing=goals_ship-velocity-cache-auth-evidence-b53815ab30c0\nruns_dir_listing=goals_ship-velocity-final-closeout-4561f2096adb\nruns_dir_listing=goals_ship-velocity-final-evidence-222c48d74f8e\nruns_dir_listing=goals_ship-velocity-observation-closeout-56f1c97a7ee4\nruns_dir_listing=goals_ship-velocity-observation-week-0fa9eec27135\nruns_dir_listing=goals_time-to-certainty-kickoff-eb02f5fa5c07\nruns_dir_listing=goals_yeet-agent-ergonomics\nruns_dir_listing=gold-implementation-8e4297f08217\nruns_dir_listing=gold-intake-01f4eda71a6d\nruns_dir_listing=graphify-agents\nruns_dir_listing=knowledge-surface-automation-beed12b6d491\nruns_dir_listing=knowledge-surface-p2-grill-decisions-91d22cd16692\nruns_dir_listing=legal-drivers-35149bd3e531\nruns_dir_listing=main-0d6e4079e367\nruns_dir_listing=public-ids-7bf746737181\nruns_dir_listing=refactor_law-practice-citation-defaults-f7355645f2de\nruns_dir_listing=research_nightly-routine-p0-docs-e277c865bfb7\nruns_dir_listing=slop_7-11-26-658cdedbc576\nruns_dir_listing=slop_7-17-26-d3bcdfd4f9cb\nruns_dir_listing=slop_7-29-26-809585e58ef0\nruns_dir_listing=slop_deps-update-7-27-26-377e867d8c95\nruns_directory_status=present\nbinding_probe_at=2026-09-09T03:13:52.201Z\ncommand=git remote get-url origin\nstatus=present\nexit_code=0\ncommand=git rev-parse --absolute-git-dir\nstatus=present\nexit_code=0\ncommand=git rev-parse --path-format=absolute --git-common-dir\nstatus=present\nexit_code=0\ncommand=git rev-parse HEAD\nstatus=present\nexit_code=0\ncommand=git branch --show-current\nstatus=present\nexit_code=0\nbinding_probe_status=present\nbinding_probe_matches_snapshot=true\nprobe_head=fb00597b4bf80fab686f9210d8a88f7145b9113a\nprobe_branch=fix/xstate-effect-diagnostics\nbinding_temporality=snapshot branch/head at scannedAt; supplementary git/cache probes during capture interval\nturbo_local_cache_path=<fleet>/beep-effect/.turbo/cache\nturbo_local_cache_present=true\nturbo_local_cache_entries=36399\nturbo_local_cache_entries_basis=immediate directory entries; not deduplicated task hashes\nturbo_remote_cache_configured=false\nTURBO_TOKEN=true\nTURBO_TEAM=true\nTURBO_API=true\nturbo_remote_cache_env_scope=generator process; repeated per binding, not per-checkout configuration\nturbo_remote_cache_signature_configured=false\nturbo_configuration_status=present\nturbo_configuration_sha256=32a4cf3d89cc2553c80ba68727fb2262e77a6d371ce93a7271b077a76bb42590\nfile=<fleet>/beep-effect/turbo.json\nline=1\nturbo_configuration_observed_at=2026-09-09T03:13:52.201Z\nturbo_local_cache_complete_within=one immediate directory listing during the binding probe\nproof_cache_caveat=necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required\n",
+  "epistemic_status": "parser_derived"
+}

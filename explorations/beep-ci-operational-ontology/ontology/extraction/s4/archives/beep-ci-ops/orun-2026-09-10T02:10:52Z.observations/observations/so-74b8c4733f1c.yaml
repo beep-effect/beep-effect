@@ -1,0 +1,444 @@
+{
+  "id": "so:sha256:74b8c4733f1c2049ac998444c4905ba5e016d2f0cd6cf310dc5e6fa7cd414af2",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect2-worktrees%2Fdeprecation-purge/chore_deprecation-purge-e40b99504acc/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 167,
+    "content_sha256": "cdb6a978523f6697c3d83ddd64479cca2ff277588d84288ee11c56a40af9c0ee"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect2-worktrees%2Fdeprecation-purge/chore_deprecation-purge-e40b99504acc/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=f3365886-0d6e-4180-9985-59b17798c5b4"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "behindCount=2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=chore/deprecation-purge"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-09-03T07:47:02.598Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=10534.466833"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1334319.112533"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1345676.156239"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1638.991657"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1732.041741"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=316117.765174"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=947.260442"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=3611269"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-03T07:47:02.598Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=full:02-ci-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=advisory:01-fallow-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:allowlist-check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:exploration-atlas"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:goals-doctor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:goals-index"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:schema-first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:test-tsgo"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=cheap-gates:tsgo-rules"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=commit:01-git-commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow:dead-code"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:00-cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:01-pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:02-ci-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:02-pr-checks-watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:00-head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:01-git-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:02-pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:changeset-status"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:bun-audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:changeset-graph"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:fallow-boundaries-config"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:sherif"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:syncpack"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:tsconfig-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:versions"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect2-worktrees/deprecation-purge/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:allowlist-check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:exploration-atlas"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:goals-doctor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:goals-index"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:schema-first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:test-tsgo"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=cheap-gates:tsgo-rules"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=commit:git:commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=early-publish:git:push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow-advisory-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow:dead-code"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:ci-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-checks:watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:changeset-status"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:bun-audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:changeset-graph"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:fallow-boundaries-config"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:sherif"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:syncpack"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:tsconfig-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:versions"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mergeBase=14606ad5d90040ddd7f039a817faea5aee4e7ae5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=18331192"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=18430136"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=51200"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=512752"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=88048"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=early-publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=chore_deprecation-purge-e40b99504acc"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-03T06:46:51.329Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=not-run"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=chore/deprecation-purge\ncommitted=true\ncreatedAt=2026-09-03T07:47:02.598Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1732.041741\npeakRssKb=512752\nexitCode=0\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=947.260442\npeakRssKb=88048\nexitCode=0\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=early-publish\nstatus=passed\ndurationMs=10534.466833\nexitCode=0\nid=publish:01-git-push\nlabel=early-publish:git:push\nphase=early-publish\nstatus=passed\ndurationMs=1638.991657\npeakRssKb=51200\nexitCode=0\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=early-publish\nstatus=passed\nexitCode=0\nid=full:00-cheap-gates\nlabel=full:cheap-gates\nphase=full\nstatus=passed\ndurationMs=316117.765174\npeakRssKb=18430136\nexitCode=0\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=passed\ndurationMs=1334319.112533\npeakRssKb=18331192\nexitCode=0\nid=full:02-ci-parity\nlabel=full:ci-parity\nphase=full\nstatus=failed\ndurationMs=1345676.156239\nexitCode=1\nrepairCommand=Run `bun run beep quality changeset-status --since origin/main`. Write a changeset listing each changed package with `patch`; packages on the changesets config `ignore` list are exempt.\nid=quality:changeset-status\nlabel=quality:changeset-status\nphase=full\nstatus=passed\nid=cheap-gates:goals-index\nlabel=cheap-gates:goals-index\nphase=full\nstatus=passed\nid=cheap-gates:exploration-atlas\nlabel=cheap-gates:exploration-atlas\nphase=full\nstatus=passed\nid=cheap-gates:config-sync\nlabel=cheap-gates:config-sync\nphase=full\nstatus=passed\nid=cheap-gates:tsgo-rules\nlabel=cheap-gates:tsgo-rules\nphase=full\nstatus=passed\nid=cheap-gates:test-tsgo\nlabel=cheap-gates:test-tsgo\nphase=full\nstatus=passed\nid=cheap-gates:effect-imports\nlabel=cheap-gates:effect-imports\nphase=full\nstatus=passed\nid=cheap-gates:schema-first\nlabel=cheap-gates:schema-first\nphase=full\nstatus=passed\nid=cheap-gates:allowlist-check\nlabel=cheap-gates:allowlist-check\nphase=full\nstatus=passed\nid=cheap-gates:goals-doctor\nlabel=cheap-gates:goals-doctor\nphase=full\nstatus=passed\nid=cheap-gates:jsdoc-ratchet\nlabel=cheap-gates:jsdoc-ratchet\nphase=full\nstatus=passed\nid=cheap-gates:knip\nlabel=cheap-gates:knip\nphase=full\nstatus=passed\nid=fallow:audit\nlabel=fallow:audit\nphase=full\nstatus=passed\nid=fallow:dead-code\nlabel=fallow:dead-code\nphase=full\nstatus=passed\nid=repo-sanity:changeset-graph\nlabel=repo-sanity:changeset-graph\nphase=full\nstatus=passed\nid=repo-sanity:tsconfig-sync\nlabel=repo-sanity:tsconfig-sync\nphase=full\nstatus=passed\nid=repo-sanity:fallow-boundaries-config\nlabel=repo-sanity:fallow-boundaries-config\nphase=full\nstatus=passed\nid=repo-sanity:versions\nlabel=repo-sanity:versions\nphase=full\nstatus=passed\nid=repo-sanity:syncpack\nlabel=repo-sanity:syncpack\nphase=full\nstatus=passed\nid=repo-sanity:sherif\nlabel=repo-sanity:sherif\nphase=full\nstatus=passed\nid=repo-sanity:bun-audit\nlabel=repo-sanity:bun-audit\nphase=full\nstatus=passed\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=not-run\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=not-run\nmessage=yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again.\nmode=publish\noutcome=failure\npushed=true\nrunId=chore_deprecation-purge-e40b99504acc\nattemptId=f3365886-0d6e-4180-9985-59b17798c5b4\nstartedAt=2026-09-03T06:46:51.329Z\nendedAt=2026-09-03T07:47:02.598Z\nelapsedMs=3611269\nindexPath=<fleet>/beep-effect2-worktrees/deprecation-purge/.beep/yeet/quality-issue-index.json\nbehindCount=2\nmergeBase=14606ad5d90040ddd7f039a817faea5aee4e7ae5\nfailedStepId=full:02-ci-parity\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

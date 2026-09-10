@@ -1,0 +1,85 @@
+id: "ic:bind-checkout-cache-binding:001"
+hypothesis_ref: "dh:bind-checkout-cache-binding:001"
+evidence_refs:
+  - "so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9"
+  - "so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b"
+  - "CQ-015"
+referent_grain: >-
+  One information-content unit asserting a checkout's Git and local-cache bindings
+  with the reference times of those assertions. The referent is a recorded binding
+  snapshot, not the enduring checkout, a cache instance, an operational binding
+  relator, a probe execution, or an evidence-transfer authorization.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two representations express the same binding information object when they
+    express the same binding assertions about the same denoted checkout, Git
+    administration, and cache location or reported absence, with the same temporal
+    qualifications. Byte copies and serialization changes preserve that content;
+    a changed binding assertion or a different reference time yields different
+    snapshot content. This inherits information-content identity, not identity
+    from a path or file name. The observations do not resolve whether two different
+    path spellings denote one enduring checkout or one underlying cache.
+  reidentification_key:
+    - >-
+      The record's checkout coordinate, asserted Git and cache coordinates, and
+      separate snapshot and supplementary-probe reference times locate these
+      assertions; identity_key is only a coordinate spelling, not an identity law.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One coherent, temporally qualified set of assertions about a single checkout's
+    recorded bindings forms the content unit. The branch/head assertions and
+    supplementary cache probe have distinct reference instants; their conjunction
+    must preserve that distinction instead of inventing one atomic world snapshot.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "relator: an operational binding between a checkout and an accessible cache"
+    - "situation: a checkout's Git and cache configuration at a reference time"
+  existential_dependencies:
+    - >-
+      Recorded information requires some inscription or other information bearer;
+      this is generic bearer dependence, not dependence on this particular
+      serialization, generator, or file path.
+    - >-
+      Checkout, Git directory, and cache coordinates are aboutness targets. The
+      record can persist after those targets change or disappear, and an assertion
+      of local-cache absence does not require an existing cache participant.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+temporality_rationale: >-
+  The information object persists while its content is retained; becoming stale or
+  superseded does not change which content it is. Revising its assertions creates
+  another content version. No retention lifetime or destruction event is observed.
+  Both records refer to branch/head at 2026-09-09T03:13:49.440Z; the supplementary
+  binding probes are at 03:13:52.201Z and 03:13:52.406Z respectively. Matching
+  branch/head checks at those probes do not establish continuous cache availability
+  between them or a single simultaneous binding of both checkouts.
+rigidity_rationale: >-
+  This content remains binding information even when inaccurate or no longer
+  current. Current, verified, and transferable would be context-dependent
+  classifications; they do not turn the content into its checkout or cache bearer.
+counterexamples:
+  - description: >-
+      The two observations share git_common_dir=<fleet>/beep-effect/.git, yet the
+      clone reports a present local cache with 36399 immediate entries and the
+      linked worktree reports an absent local cache at a different path. Identity
+      by common Git directory would merge different binding assertions and wrongly
+      suggest the shared-cache premise of CQ-015.
+  - description: >-
+      Countermodel: the linked worktree's local cache is created after its probe.
+      The earlier absent-cache assertion remains the same information object,
+      although it no longer describes current availability. A timeless operational
+      binding model would confuse persistent information with changing world state.
+  - description: >-
+      A serialization copy or a different generator can preserve all binding
+      assertions. ownerRef*, security_resanitization*, corpus_*, capture_*, and
+      generator_* are provenance rather than identity. Environment-presence flags
+      of the generator cannot establish either checkout's resolved cache posture.
+status: proposed

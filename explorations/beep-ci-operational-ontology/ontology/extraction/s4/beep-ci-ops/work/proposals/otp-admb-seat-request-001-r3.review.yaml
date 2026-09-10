@@ -1,0 +1,100 @@
+target: otp:admb-seat-request:001
+target_sha256: 3c63b61ebc7e98541c8564433d7a42b17ba1f495d761b318295e94f52c9eb5f3
+chain_sha256: f32b1c4fbad5cf6db094a1878a38187307912db40de1637dc0df4d07a196277d
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The current proposal asserts no parents. Exact reuse of SeatRequest does not add an is-a edge.
+    An enduring demand, a pending episode and a request-description information object are retained
+    alternatives, not a role-to-rigid-kind inheritance chain.
+revision_requests: []
+attacks:
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A DTO replay can preserve the enqueue and withdrawal assertions for nonce
+      3234b861-792e-4cde-96b6-5ca188435021 without registering any request. The current repaired
+      IC/FA and proposal admit exactly that possibility: their referent is the fixed request
+      account, not effective queue membership. The associated demand, requested charge and boundary
+      assertions supply the selected information content even in the replay world. Ruling 2's
+      operational concession is explicit. The revision_log names the r1 failed digest
+      34603a58de94a81997a8d4d6f7e125aa6b1e31d81da57b28d1a1e40566978297 and answers this rule; r2's
+      PASS supplies no immunity to this fresh test.
+    outcome: survived
+    evidence:
+      - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+      - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      The requests with enqueue boundaries 1788927435322 and 1788927786743 both report
+      merged-preview/publish and five tokens, but describe separate originating demands and
+      withdrawal histories. Equality of those fields or a shared command cannot identify them. A
+      faithful copy of one unchanged account is the same information unit despite a different
+      capture token; adding its withdrawal boundary creates a different content version. The card's
+      fixed contextual content and the proposal's originating-account qualification meet that test.
+      Whether the underlying demand persists through withdrawal and resubmission remains an explicit
+      rival, not a selected nonce-equality rule.
+    outcome: survived
+    evidence:
+      - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+      - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  - surface: identity
+    rule: recorded-request-versus-queue-membership
+    counterexample: >-
+      The ticket-eviction-only records lack the complete enqueue/owner/charge fields of richer
+      histories; inferring an enqueue, Agent from an ownerRef alias, or an effective grant would
+      manufacture a different account. The current definition preserves only supplied assertions and
+      distinguishes request from resulting grant. The full-proof/publish three-token and
+      merged-preview/verify five-token records also prevent collapsing work kind, priority and
+      charge into one classification. A rigid information object can outlast a withdrawn request
+      without changing category; its existence does not require a currently queued bearer.
+    outcome: survived
+    evidence:
+      - so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+      - so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+      - so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+      - so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973
+  - surface: warrant
+    rule: exact-reuse-and-queue-closure-warrant
+    counterexample: >-
+      An untyped log-envelope replacement cannot preserve CQ-021's typed SeatRequest demand
+      projection or CQ-023's typed request wait/bound comparison. The exact-reuse mapping is
+      therefore warranted. Neither query licenses treating these historical accounts as a complete
+      live queue, supplying requestedBy from capture provenance, or inventing a governing bound and
+      exception. The current proposal keeps those missing joins explicit. Its narrowed
+      definition.source stays inside its own hypothesis observations and CQ-021/CQ-023; the selected
+      request account does not depend on an unsupported AdmissionJournalEntry class.
+    outcome: survived
+    evidence:
+      - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+      - so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+      - so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+      - CQ-021
+      - CQ-023
+rival_models_still_viable:
+  - >-
+    An enduring demand in a contingent queued role, requiring continuity observations across
+    withdrawal and resubmission.
+  - >-
+    A bounded pending-admission episode or a constituting ticket information object, neither
+    established by the historical account alone.
+  - >-
+    Originating-account identity versus full-content equality for independent request descriptions
+    remains a steward choice.
+evidence:
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  - so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+  - so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+  - so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+  - so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973
+  - CQ-021
+  - CQ-023

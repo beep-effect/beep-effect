@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 52,
+    "end_line": 52
+  },
+  "quote": "`${subject} ciops:admissionChargeTokens \"${request.weightTokens}\"^^xsd:integer .`,",
+  "epistemic_status": "quoted_prose"
+}

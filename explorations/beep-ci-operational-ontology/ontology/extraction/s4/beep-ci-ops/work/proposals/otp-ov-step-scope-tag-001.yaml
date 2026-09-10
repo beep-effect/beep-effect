@@ -1,0 +1,91 @@
+id: otp:ov-step-scope-tag:001
+hypothesis_ref: dh:ov-step-scope-tag:001
+identity_card_ref: ic:ov-step-scope-tag:001
+foundational_status: analyzed
+term:
+  preferred_label: has scope tag
+  local_name: hasScopeTag
+  proposed_iri: https://oip.law/ontology/ci-ops#hasScopeTag
+  owl_entity_kind: data_property
+definition:
+  text: A scope-annotation property that records, as a string under the applicable tagging convention,
+    the intended act scope of one instruction in an admission prescription.
+  source:
+  - CQ-020
+  - CQ-019
+  - po:sha256:004887d37eb13319a467b294764093c16a3cb02165cc88ceba6b7bfa4768f77c
+  - po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf
+  - po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-020
+  - CQ-019
+  semantic_support_for: []
+alternatives_rejected:
+- 'Verification package scope or affected computation inferred from the literal: the contract describes
+  the admission act itself and the emitter writes a string.'
+- 'Rejected in fa:ov-step-scope-tag:001: A verification package scope or affected-set computation inferred
+  from the admission literal. The preceding rejection rationale and retained counterexample state the
+  boundary.'
+open_issues:
+- 'Warrant justification: CQ-020 explicitly returns the tag for each step. CQ-019 tests literal-tagged
+  request steps through their proposal membership; treating the value as an object-valued verification
+  Scope would change that constraint''s operand and lose the specified tag answer.'
+- 'Identity criterion carried from ic:ov-step-scope-tag:001: Proposed at contextual annotation grain:
+  sameness requires the same represented step in the same prescription context and the same scope meaning
+  under the applicable tagging convention. Equal admission literals on two steps share an annotation value
+  but do not identify one annotation assignment or one operational scope entity. Literal equality across
+  changed tagging conventions would not by itself establish equal meaning.'
+- 'Steward choice required before ratification of otp:ov-step-scope-tag:001: The steward must choose a
+  controlled annotation literal on the existing contextual step, as proposed here, an informative classification
+  of the prescribed act expressed through a property, or a separately reified annotation assignment. The
+  first two may share a property encoding, but their interpretation must preserve the tagging convention
+  and step context; that shared encoding is not a ratified equivalence between models. Still-viable models
+  retained from fa:ov-step-scope-tag:001: Controlled annotation literal on a contextual step without independently
+  reified tag objects; Classification content about the prescribed act expressed as a property rather
+  than an information individual.'
+- 'Cluster dependency: otp:ov-schedule-step:001, otp:ov-proposal-step-membership:001, otp:ov-step-request-assignment:001,
+  otp:ov-schedule-proposal:001. Coordinate ratification or parking where endpoint grain, component identity,
+  or the stated warrant depends on these proposals; no dependent choice is settled by emission spelling.'
+- 'Reuse search: The S5 inventory has no hasScopeTag property. The scout report relates general Scope
+  to an OSLC parameter pattern, but does not identify an exact admission-act tag. No equivalence with
+  the object property hasScope or a Scope individual is proposed.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Representation grain: the proposed property encodes contextual information content without requiring
+  a separate assertion individual. The OntoClean fields are inherited from the joined identity card for
+  that candidate content, not asserted as identity criteria for an RDF literal or for the OWL property
+  universal.'
+- The synthetic admission literals concern the admission act. They establish no affected-package set,
+  FullRepoScope individual, or affected computation.
+- CQ-019's literal-tag arm is a required decision surface, but missing triples in these selected observations
+  do not establish a provenance violation or compliance. Its closure and ingestion conditions must be
+  supplied independently.
+- A repeated string does not identify one annotation assignment across different steps or establish identical
+  meaning after a tagging-convention change.
+- 'Strongest counterexample carried from fa:ov-step-scope-tag:001: The fixture assigns admission to both
+  steps. Treating the common literal as identity collapses separate annotations, while treating it as
+  FullRepoScope or an affected package set fabricates semantics absent from the act-level tag. Hypothetically,
+  a later tagging convention could reuse the same spelling with a narrower meaning; lexical equality would
+  conceal the change.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

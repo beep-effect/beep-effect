@@ -1,0 +1,69 @@
+id: ic:adm-admission:001
+hypothesis_ref: dh:adm-admission:001
+identity:
+  supplies_identity: false
+  identity_criterion: Two descriptions concern the same admission occurrence only if they concern the
+    same concrete conferral of authorization for one requested work item in one admission decision context.
+    It is the single granting transition that ends that request participation and establishes that authorization.
+    A later regrant after termination is another occurrence even when the work and beneficiary are unchanged.
+    Equal nonces or millisecond values provide a local evidential join, not sufficient identity.
+  reidentification_key:
+  - Local journal nonce together with the matching event block and admittedAtMillis; evidence locator
+    only, neither globally unique nor sufficient for operational identity.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One conferral of authorization unifies the occurrence. Prior waiting and subsequent charged holding
+    have their own intervals; neither is the duration of this granting occurrence.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - An information object asserting admission, with operational granting unconfirmed. An observed successful
+    decision coupled to the resulting lease and its immediately preceding capacity state would discriminate
+    it from a corroborated occurrence.
+  - The initial boundary of a grant relation alone, with no separately reified conferral event. Evidence
+    that the decision itself has independently queried participants or effects would distinguish the event
+    model.
+  existential_dependencies:
+  - The particular requested admission being decided and the admission capacity context in which authorization
+    is conferred.
+  - The resulting particular authorization, if the operational interpretation is correct; that authorization
+    is distinct from its conferral and from any work execution.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: A delayed or duplicated admitted entry can be written after the authorization has already
+    ended, without creating another grant or starting any work. An event counted by append order, present
+    log existence, or a reused nonce would then be misidentified; the history lacking a terminal report
+    especially cannot prove a grant is active now.
+status: proposed
+grain: One particular operational transition, represented by a dated event assertion; not a classification
+  signature, a current binding snapshot, a governing specification, a journal block, or the whole nonce-linked
+  history.
+metaproperty_rationale: Under the operational reading, this particular transition is essentially the occurrence
+  it was, so its event classification is rigid. It carries occurrence identity and does not establish
+  a new independent continuant identity provider. Its relational dependence is on participants at the
+  transition, not their perpetual future existence. The information-object rival is kept separate, not
+  assigned these meta-properties.
+temporality_rationale: The journal supplies a single asserted boundary time, not independently measured
+  start/end times for the operation, so interval duration remains unresolved. At the selected boundary-event
+  grain it does not persist through mutable continuant states. The conferral completes at the granting
+  boundary. Release or lease eviction later ends the grant, not the completed admission occurrence.
+evidence_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+- CQ-007
+- CQ-010
+- CQ-021
+evidence_reading: The first cited history asserts distinct enqueue, admission, and release boundaries.
+  The second asserts enqueue at 1788941626093 and admission at 1788941816511 with weightTokens=5 but supplies
+  no terminal report. Thus a granting assertion can be analyzed without asserting later activity, and
+  charge at the boundary remains different from remaining capacity before it.
+evidence_limits: All cited observations are parser-derived records of the current run3-fleet journal,
+  not synthetic observations. Operational reality is not established by the journal alone. Capture, owner-reference,
+  resanitization, corpus, generator, and record-position metadata are not identity criteria. No missing
+  entry is treated as closed-world evidence.

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/test/fixtures/emission-v2.ttl"
+  },
+  "source_span": {
+    "start_line": 35,
+    "end_line": 35
+  },
+  "quote": "ciops-prov:specification-s7%2Demission%2Fv2-policy%2Ddigest-journal%2Dprefix%2Ddigest-admission ciops-prov:journalPrefixDigest \"journal-prefix-digest\"^^xsd:string .",
+  "epistemic_status": "quoted_prose"
+}

@@ -1,0 +1,48 @@
+id: "dh:bind-checkout-cache-binding:001"
+observation_refs:
+  - "so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9"
+  - "so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b"
+cq_warrants: ["CQ-015"]
+proposed_referent:
+  label: "Recorded checkout and cache binding"
+  description: >-
+    Time-indexed information associating a probed checkout with its Git directories,
+    branch and head, and observed local cache location and availability. The clone
+    and linked-worktree records are instances of this candidate information artifact.
+    Their binding facts bear on whether evidence available in one checkout can be
+    reached from another. They establish neither a transferable proof nor matching
+    task inputs, cache epochs, or a resolved cache posture for an execution.
+representation_status: information_artifact
+alternatives:
+  - label: "The contingent operational relation between a checkout and its accessible cache"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A diagnostic inventory with no independently modeled binding artifact"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    These successful probes carry a concrete distinction needed to assess the
+    shared-cache prerequisite for evidence transfer. Sharing Git administration
+    does not establish sharing the observed local cache. This supports a candidate
+    binding information artifact while leaving a direct relational interpretation
+    viable for later analysis. Snapshot branch/head and supplementary probe instants
+    remain distinct. Directory-entry counts are not task-hash counts, and generator
+    environment booleans do not establish each checkout's remote access or an
+    invocation's resolved posture. Path placeholders and capture annotations supply
+    coordinates and qualifications, not additional domain vocabulary.
+  discriminator: >-
+    Both observations report config_key_value "git_common_dir=<fleet>/beep-effect/.git"
+    and "binding_probe_matches_snapshot=true". The clone reports
+    "turbo_local_cache_present=true", "turbo_local_cache_entries=36399", and
+    "turbo_local_cache_path=<fleet>/beep-effect/.turbo/cache"; the linked worktree
+    reports "turbo_local_cache_present=false", "turbo_local_cache_entries=0", and
+    "turbo_local_cache_path=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup/.turbo/cache".
+    This observed difference prevents treating a common Git directory as evidence
+    of a common available local cache. An implementation-only interpretation that
+    discards the represented binding loses that necessary distinction when deciding
+    whether one checkout's cached evidence licenses another checkout's skip.
+epistemic_status: proposed
+confidence: {value: 0.8, use_for_acceptance: false}

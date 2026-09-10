@@ -1,0 +1,52 @@
+id: "ic:admb-admission-history-alt:001"
+hypothesis_ref: "dh:admb-admission-history:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: missing a collection-boundary and retention contract that would
+    make one nonce-correlated bundle of journal assertions the SAME information
+    object across copies, partial tails, and extractor regroupings. Observed
+    nonce correlation (for example so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+    for nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088 with admission-enqueued,
+    admission-admitted, and admission-released, versus so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+    for nonce=3234b861-792e-4cde-96b6-5ca188435021 with enqueue then withdrawal)
+    is evidence that distinct histories are describable, not the sameness
+    criterion. Nonce, ownerRef, and capture metadata are never the criterion.
+  reidentification_key:
+    - "nonce (correlation of constituent entries only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    unresolved: entries sharing a nonce are jointly interpretable, but no
+    independent whole/part contract distinguishes one history from its
+    constituent entries (CQ-008, CQ-009, CQ-010, CQ-021 consume request/grant
+    facts, not a history individual).
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - process
+    - none
+  existential_dependencies:
+    - "constituent admission journal entries of one request/grant chain"
+    - "a journal collection that bears those entries"
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Treating the history as the grant itself fails on
+      so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929:
+      the same nonce chain includes admission-enqueued before any holding.
+  - description: >-
+      Treating the file-level projection so:sha256:324b4da710ece73d2e9cf1b127faf7f8887213e04ea458ee84dd0657cced3e26
+      as one history would join admittedAtMillis, attemptId, and withdrawnAtMillis
+      across distinct nonce entries and manufacture a lifecycle.
+  - description: >-
+      Dating the information object's retention by enqueuedAtMillis or
+      releasedAtMillis confuses described-event time with record lifetime; no
+      writing or destruction time is observed.
+status: proposed

@@ -1,0 +1,35 @@
+id: "fa:adm-ticket-eviction-alt:001"
+hypothesis_ref: "dh:adm-ticket-eviction:001"
+identity_card_ref: "ic:adm-ticket-eviction-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      Dated journal assertion that a queued ticket was involuntarily ended
+      (information_object). Strongly viable and observationally equivalent on
+      current evidence: only two sparse single-block reports exist, with no
+      enqueue, ticket-store, or independent death observation.
+    still_viable: true
+  - label: >-
+      Request-end temporal boundary without a separately reified occurrence
+      (fold evictedAtMillis into the seat request).
+    still_viable: true
+  - label: same event kind as lease eviction
+    still_viable: false
+  - label: proved queued-submitter-death occurrence
+    still_viable: false
+strongest_counterexample: >-
+  Collapsing ticket eviction with lease eviction, or treating the reason as
+  proved death. so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+  is a lone admission-ticket-evicted block at evictedAtMillis=1788498598672
+  for nonce=acb0011d-82cf-4dfc-a812-72d10dbd566c; that cannot answer CQ-021 as
+  a current queue row and cannot answer CQ-023 as a starvation proof.
+verdict: analyzed
+needed_evidence: >-
+  A matching enqueue or ticket-store observation for the same nonce, plus an
+  independent submitter-liveness observation if the reason is to be treated as
+  more than asserted content, would discriminate this occurrence from a
+  journal-only claim and from lease eviction.

@@ -1,0 +1,27 @@
+id: "ic:ov-step-position-alt:001"
+hypothesis_ref: "dh:ov-step-position:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "The ordinal is the same quality when it is the same 0-based index on the same prescribed step. Distinct integers 0 and 1 on step-0 and step-1 are different positions, not timestamps, durations, or actual grant order (po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020; po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263; CQ-020)."
+  reidentification_key:
+    - "ciops-prov:stepIndex xsd:integer on a ScheduleStep"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: "A single 0-based scalar position within one proposal's admitted sequence; the deferred tail never renumbers it."
+  dependence: relational
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+    - relator
+    - none
+  existential_dependencies:
+    - "a prescribed ScheduleStep in a containing proposal sequence"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Reading stepIndex as Date.now, wall duration, or observed grant order, or as a mutable array offset that deferred requests could shift, contradicts the 0-based admitted-only numbering rule (po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864; po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7)."
+status: proposed

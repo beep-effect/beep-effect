@@ -1,0 +1,46 @@
+id: dh:ov-schedule-proposal:001
+observation_refs:
+- po:sha256:351a4375bf86d6f06e1e558697ef04f2a5e283645a772d4fe5b3e78ac0c722bd
+- po:sha256:3c9d7d9e1165dd56fe1846e5c84f330e75fb8b966dfbd2fcf0e5a4a113b504c5
+- po:sha256:40e7562cb1c7744f4472ab4db2e562024f5554997915678e4ec8c759f11f1852
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:5e660542834fa3d2e917207f5764b6905b0654cfb825a0f34b4ac27bfe96bb02
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- po:sha256:b18d0154d573355ca2ecfcd8a45787237eac6ba6a335c5a69c783c8d0a078f29
+- po:sha256:c92cd59362565eda3098e5d0828c8c377fd934ae4d4546cc190d22b25207fd9a
+cq_warrants:
+- CQ-020
+proposed_referent:
+  label: Admission schedule proposal
+  description: An information object prescribing an ordered admission sequence for an explicit projection
+    input and instant, with pending requests accounted for as prescribed steps or an explicit deferred
+    tail. The fixture is an example of this representation; it does not establish that its prescribed
+    admissions were granted.
+representation_status: information_artifact
+alternatives:
+- label: Transient projection result whose plan content has no independent persistence
+  representation_status: information_artifact
+  plausibility: viable
+- label: Occurrence of actual scheduler admission
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: 'The quoted emitter and fixture serialize a typed proposal, and the contract gives its contents
+    a decision-bearing interpretation: every pending request must be accounted for and every prescribed
+    step must satisfy admission constraints. This supports a schedule-description candidate beyond the
+    implementation object. The same contract reserves real admission writes to the deployed scheduler.
+    Provisional emission is evidence of represented content, without ratifying vocabulary or granting
+    operational authority.'
+  discriminator: The emitter includes "${proposalNode} rdf:type ciops:ScheduleProposal ." and the fixture
+    records both "ciops-prov:defersSeatRequest" and proposal typing. The property-suite quote requires
+    "every pending request appears in the proposal exactly once (admitted step or explicit deferred tail)".
+    Under an implementation-only interpretation with no prescribed schedule content, that complete prescription
+    and deferral partition would have no represented object.
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

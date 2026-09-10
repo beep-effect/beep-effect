@@ -1,0 +1,69 @@
+id: "fa:bind-admission-grant:001"
+hypothesis_ref: "dh:bind-admission-grant:001"
+identity_card_ref: "ic:bind-admission-grant:001"
+provenance: synthetic
+evidence_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+  - "CQ-008"
+  - "CQ-009"
+  - "CQ-010"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    An allocation is neither the repeatable full-proof procedure nor an execution
+    of it. The journal bounds holding by admittedAtMillis and releasedAtMillis;
+    these are not observed execution-start, execution-finish, or success times.
+    CQ-010 asks about the charge at admission, not a physical measurement or a hard
+    duration guarantee.
+  world_vs_information: >-
+    The primary model concerns the allocation represented in the synthetic scenario.
+    Journal entries are information about it. The observation does not prove that
+    a production grant existed or that remaining capacity was sufficient. A lease
+    information-object model remains viable and must remain distinct in synthesis.
+  role_vs_bearer: >-
+    Holder is a temporary role of an allocation participant. The proposed relator
+    is not that participant, its process, checkout, or queued request. Shared nonce
+    correlation does not identify the prior request with the allocation; ownerRef
+    changes cannot establish changes of bearer.
+  context_reification_needed: >-
+    Charge, admitted demand, origin condition, and holding interval belong to one
+    allocation. CQ-008 and CQ-009 require active-at-time reasoning; CQ-010 requires
+    the admission-time context. Independent timeless binary assertions would allow
+    charge or origin facts to drift between different admission decisions.
+rival_models:
+  - label: "Lease information object representing the same candidate allocation"
+    still_viable: true
+    rationale: >-
+      The supplied evidence is a journal. It does not independently settle whether
+      the downstream subject should be the allocation or its recorded assertion.
+      Record identity and allocation identity must remain separate choices.
+  - label: "Holding situation indexed by participants and interval"
+    still_viable: true
+    rationale: >-
+      The observed charge and boundaries can also describe a holding situation.
+      No observed renewal, suspension, or transfer discriminates that model from
+      a persisting allocation relator.
+  - label: "The full-proof execution itself"
+    still_viable: false
+    rationale: >-
+      The observed allocation and release provide no execution boundaries or
+      outcome; equating the two would invent evidence needed by execution queries.
+strongest_counterexample: >-
+  Countermodel: two successive admissions have identical beneficiary, origin,
+  work kind, and charge, separated by release. Attribute equality or nonce reuse
+  would merge their holding intervals. The primary criterion distinguishes their
+  originating admission decisions. The observed chain establishes only one such
+  interval, so renewal, reassignment, and collision handling remain open rather
+  than inferred from the nonce or ownerRef.
+verdict: analyzed
+needed_evidence: ""
+evidence_limits: >-
+  The synthetic observation supplies one complete admitted-to-released interval.
+  The separate evicted lease has no observed admission, charge, or origin. No live
+  fleet closure, capacity remainder, origin-exclusion satisfaction, or execution
+  result can be reconstructed from these records alone. The viable relator,
+  situation, and information-object choices remain proposal-authority analyses.

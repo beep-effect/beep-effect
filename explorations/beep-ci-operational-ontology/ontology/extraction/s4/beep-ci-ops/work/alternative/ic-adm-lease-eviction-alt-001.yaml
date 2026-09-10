@@ -1,0 +1,54 @@
+id: "ic:adm-lease-eviction-alt:001"
+hypothesis_ref: "dh:adm-lease-eviction:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Same lease-eviction occurrence iff it is the same punctual involuntary end
+    of one charged holding, bounded by one admission-lease-evicted block at one
+    evictedAtMillis. It is not the grant's holding interval, not a release, not
+    a ticket eviction, not the reported reason string, and not the journal
+    entry. Nonce is evidential join only. ownerRef, lastHeartbeatAtMillis, and
+    other capture members are never identity criteria.
+  reidentification_key:
+    - "nonce (evidential join only)"
+    - "evictedAtMillis"
+    - "_tag=admission-lease-evicted"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One dated involuntary-end transition of one holding; not the death or reuse
+    of a submitter, and not a mixed ticket-plus-lease eviction class.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+  existential_dependencies:
+    - "seat grant whose reported holding this occurrence ends"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - occurred
+counterexamples:
+  - description: >-
+      Identifying lease eviction with ticket eviction because both carry an
+      eviction timestamp and a reason. so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+      is _tag=admission-lease-evicted for nonce=ab8c8ba0-6132-4e49-9d28-74e2e1873c07
+      after an admission (CQ-008);
+      so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+      is _tag=admission-ticket-evicted with no admission (CQ-021).
+  - description: >-
+      Treating reason=owner-dead-or-reused as a proved death occurrence rather
+      than asserted content of this report.
+      so:sha256:675134527a157d157274937b2f8ad90b036d30b77340d61f1e202483d9ac828e
+      and so:sha256:126709ea74fec8cb4b03c021d7cf121aac566b19bea91c4ac8a452f33d01a94e
+      supply the reason string and lastHeartbeatAtMillis, not an independent
+      death observation (CQ-009).
+  - description: >-
+      Collapsing this occurrence with a voluntary release of a different nonce
+      chain. Release uses _tag=admission-released
+      (so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6).
+status: proposed

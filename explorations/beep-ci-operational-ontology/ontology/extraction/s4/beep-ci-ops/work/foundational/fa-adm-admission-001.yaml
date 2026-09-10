@@ -1,0 +1,51 @@
+id: fa:adm-admission:001
+hypothesis_ref: dh:adm-admission:001
+identity_card_ref: ic:adm-admission:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: An information object asserting admission, with operational granting unconfirmed. An observed
+    successful decision coupled to the resulting lease and its immediately preceding capacity state would
+    discriminate it from a corroborated occurrence.
+  still_viable: true
+- label: The initial boundary of a grant relation alone, with no separately reified conferral event. Evidence
+    that the decision itself has independently queried participants or effects would distinguish the event
+    model.
+  still_viable: true
+strongest_counterexample: A delayed or duplicated admitted entry can be written after the authorization
+  has already ended, without creating another grant or starting any work. An event counted by append order,
+  present log existence, or a reused nonce would then be misidentified; the history lacking a terminal
+  report especially cannot prove a grant is active now.
+verdict: analyzed
+test_rationales:
+  spec_vs_execution: Admission policy and a work specification may govern many grants. This referent is
+    one conferral under a decision context, not the policy, its capacity rule, the authorization interval,
+    or the start of work execution.
+  world_vs_information: An admission journal entry asserts a granting transition. The entry is independently
+    identifiable information, and its presence does not corroborate actual grant creation. The category
+    here applies conditionally to the proposed operational occurrence.
+  role_vs_bearer: A requester or beneficiary bears a role in admission; the conferral is an occurrence
+    involving that bearer. The beneficiary, the resulting grant relation, and the granting occurrence
+    do not share identity merely because a nonce links their reports.
+  context_reification_needed: The particular request, capacity pool, granting boundary, and decision context
+    must be associated. CQ-010 additionally needs remaining capacity immediately before that charge and
+    the work linkage; these observations do not supply that complete context.
+category_rationale: Event is a conditional classification of the proposed admission occurrence, because
+  its grain is one occurrence of a transition. It is not selected from the spelling of a tag. The cited
+  evidence directly establishes recorded assertion content; the linked card states the proposed occurrence
+  criterion, rigid event classification, participant dependence, and unresolved duration. A coherent conditional
+  event shape is available, so analysis can finish while the information-only and boundary-only rivals
+  remain viable. Neither rival is resolved by this seat.
+evidence_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+- CQ-007
+- CQ-010
+- CQ-021
+evidence_reading: The first cited history asserts distinct enqueue, admission, and release boundaries.
+  The second asserts enqueue at 1788941626093 and admission at 1788941816511 with weightTokens=5 but supplies
+  no terminal report. Thus a granting assertion can be analyzed without asserting later activity, and
+  charge at the boundary remains different from remaining capacity before it.

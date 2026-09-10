@@ -1,0 +1,28 @@
+id: "ic:ov-proposal-specification-binding-alt:001"
+hypothesis_ref: "dh:ov-proposal-specification-binding:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "The binding is the same recorded association when it is the same proposal-to-specification edge in the same emission. It does not identify the proposal or the specification, and it does not assert execution, approval, or full validation (po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36; po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853; CQ-020)."
+  reidentification_key:
+    - "ciops-prov:hasProjectionSpecification edge from proposal to specification"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: "A single binary association per emitted proposal; no observed properties of the binding itself that would force a relator individual."
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - relator
+    - information_object
+  existential_dependencies:
+    - "a ScheduleProposal that is governed"
+    - "a typed AdmissionProjectionSpecification (or input-bound context record) as target"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Treating the edge as empty serializer plumbing would remove CQ-020's proposal-specific governing-description answer; treating it as proof the proposal was executed or approved overclaims the emission (po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853; po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6; CQ-020)."
+status: proposed

@@ -1,0 +1,64 @@
+id: fa:ov-projection-specification:001
+hypothesis_ref: dh:ov-projection-specification:001
+identity_card_ref: ic:ov-projection-specification:001
+referent_grain: Governing-description information object whose exact grain is unresolved between a repeatable
+  projection rule specification and an input-bound application-context record.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+analysis:
+  identity_and_category: Both surviving readings concern descriptive information, so information_object
+    is defensible at the coarse category level. The type assertion alone does not establish repeatability,
+    a particular rule-version identity, or the sameness of applications; that identity decision is explicitly
+    deferred.
+  rigidity: Both retained readings describe information. Whether the hypothesized governing-specification
+    classification is essential to that description or is an anti-rigid use of a more general description
+    remains unresolved; the coarse information_object category does not settle governing rigidity.
+  dependence_and_temporality: No execution occurrence is needed for a repeatable rule object to persist.
+    The input-bound rival depends on a represented application context. No two-version or two-input observation
+    establishes which changes preserve the represented individual.
+  spec_vs_execution: Neither a normative description nor an input-context record is the computation that
+    produces a schedule. The remaining ambiguity is specification versus specification application context,
+    not specification versus CPU activity.
+  world_vs_information: The target's descriptive content is separated from actual compliance by a deployed
+    scheduler. In particular, the stated starvation rule is normative contract content, not evidence of
+    a guaranteed observed waiting bound.
+  role_vs_bearer: A description can govern a proposal in a contextual role; that role does not make the
+    description the projection engine or its execution.
+  context_reification: The representation must distinguish reusable rules from the input binding if the
+    latter is recorded. The target may currently carry both; the observations do not license silently
+    merging their identities.
+  evidence_limit: The fixture illustrates a target carrying two digest literals. Neither the example values
+    nor capture/generator provenance supplies an ontological identity criterion.
+rival_models:
+- label: A repeatable projection rule specification whose applications cite different input states
+  still_viable: true
+- label: An application-context information record combining governing rules with a policy and journal-prefix
+    binding
+  still_viable: true
+- label: An occurrence of executing the projection engine
+  still_viable: false
+strongest_counterexample: 'Hypothetical counterexample: the same ordering and admissibility rules are
+  applied to two different journal prefixes. If the specification changes identity solely because journalPrefixDigest
+  changes, input provenance is promoted into rule identity. Conversely, merging all subjects with the
+  same policy digest can collapse application-context records for different inputs. Both interpretations
+  fit the single illustrated target.'
+verdict: explicitly_deferred
+needed_evidence: Observe two emissions under the same governing ordering/admissibility rules with different
+  journal prefixes, together with an observation-backed account of whether their targets denote one reusable
+  rule version or two application contexts. Also observe a rule revision with unchanged input so rule
+  identity can be distinguished from input identity. The comparison must identify rule content and application
+  binding independently of digest strings.
+evidence_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+- po:sha256:2cbe4a487c0ebb475da0d4b4e9833105b7c1d677e942f04484e74049b825ee53
+- po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3
+- po:sha256:9081cf3d4060a87388a3b4285f7ed6165aa24f39dc350fc3b3c3aeffec0e6b26
+- po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+- po:sha256:e9df49623f67f2eac1d565f6ab8811c99128f33a8610358f0944f64ae390aa5e
+- po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- CQ-020

@@ -1,0 +1,37 @@
+id: dh:ov-deferred-tail:001
+observation_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:3c9d7d9e1165dd56fe1846e5c84f330e75fb8b966dfbd2fcf0e5a4a113b504c5
+- po:sha256:40e7562cb1c7744f4472ab4db2e562024f5554997915678e4ec8c759f11f1852
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- po:sha256:f60ddfb04ede510a8ffe6a04a36eac20caeb92175e59245f6b436897c83907b8
+cq_warrants: []
+proposed_referent:
+  label: Candidate explicit deferral assertion in a proposal
+  description: An emitted assertion accounting for a pending request outside the prescribed admitted sequence.
+    The representation is observed; admission of a separate deferral referent remains unresolved because
+    the supplied questions do not directly require querying that tail.
+representation_status: unresolved
+alternatives:
+- label: Information content recording non-selection at a projection instant
+  representation_status: information_artifact
+  plausibility: viable
+- label: Persistent waiting state or refusal event in the live scheduler
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The fixture explicitly records defersSeatRequest for request-2, the emitter writes that edge,
+    and the contract requires a complete admitted-or-deferred partition. These are positive facts about
+    a projection result, not evidence of an actual refusal, starvation episode, or persistent queue state.
+    The current-sequence question can read admitted steps without a separate deferred-tail term; the live-queue
+    question cannot be answered from projection deferral alone. Needed evidence is a concrete decision
+    that requires identifying requests omitted from the prescribed sequence, or an observed mapping that
+    makes this assertion necessary for an existing decision. Until then the null remains standing for
+    a separate ontology referent.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.69
+  use_for_acceptance: false

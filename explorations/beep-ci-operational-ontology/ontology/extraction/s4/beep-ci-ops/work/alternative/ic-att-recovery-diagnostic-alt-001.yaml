@@ -1,0 +1,33 @@
+id: "ic:att-recovery-diagnostic-alt:001"
+hypothesis_ref: "dh:att-recovery-diagnostic:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two individuals are the same recovery-diagnostic record iff they attribute the same policy label, detection instant, lane, and task together with the same pair of measured standalone and lane-rerun durations to the same enclosing attempt. so:sha256:37968f126c464470a069ac2051cb358a0a29720dd49df7256625cb4d17bfa2c6 and so:sha256:928e7ce7acb4292bbd03703746cd347b6fd0aeeb2c144ee33188512f3ff91939 repeat policy=ts2589-no-location, detectedAt=2026-08-08T11:43:52.465Z, laneLabel=quality:build, taskId=@beep/box#build, standaloneDurationMs=1902.713545, laneRerunDurationMs=29802.864398 inside a publish finish with outcome=success. Repeated captures are one evidence item, not two costs. The policy string is a label in the record, not a failure-kind identity criterion."
+  reidentification_key:
+    - policy
+    - detectedAt
+    - taskId
+    - attemptId
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One diagnostic timing document: policy label plus detection instant plus two measured recovery durations for one lane/task in one attempt. The two duration figures are parts of that document's content, not two diagnostic individuals."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - event
+    - quality
+  existential_dependencies:
+    - "the enclosing attempt verdict that carries the payload (here a successful publish finish)"
+    - "a named lane and package task (laneLabel=quality:build, taskId=@beep/box#build)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Elevating policy=ts2589-no-location to a committed FailureSignature or failed-verdict class despite the containing source_excerpt recording outcome=success (CQ-013)."
+  - description: "Double-counting attributed delay because the two observations repeat the same diagnostic facts (CQ-007)."
+  - description: "Adding standaloneDurationMs and laneRerunDurationMs into the enclosing attempt elapsedMs or lane duration as if they were independent extra charges."
+status: proposed

@@ -1,0 +1,47 @@
+id: dh:ov-seat-request:001
+observation_refs:
+- po:sha256:0c5a0ac360560118bda477d323d7b7ae9977d379ec5a282b0184baf5195d43da
+- po:sha256:2bd636283801ce0554f90ccad18d9af687c0492f9206e9428256c3232db5790d
+- po:sha256:3015f93b003a84d5a9e8ee82ac198ebe5bd86db390fd763e0aef039e2ed6c203
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- po:sha256:83ac7ce996c2aacaf072f7c6977c423f511a3ec1d1d3b7f21a6fa64fb31ec86f
+- po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+- po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+- po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+- po:sha256:f456cbb5c883ae06a4246878847ea9d98832618f2e923b54164a79cd2acfe000
+cq_warrants:
+- CQ-020
+- CQ-021
+proposed_referent:
+  label: Request for scheduler admission
+  description: A candidate admission request represented in a projection, distinguishable from a reusable
+    work specification and from an issued grant. The batch shows typed request representations and a nonce
+    carrier, with the pending-set reconstruction described in prose. It does not prove that the fixture
+    requests existed in the live scheduler.
+representation_status: domain_referent
+alternatives:
+- label: Projection-local information object describing a request
+  representation_status: information_artifact
+  plausibility: viable
+- label: Reusable work-unit specification or grant under a different name
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: 'The evidence goes beyond a source type declaration: request subjects are explicitly typed
+    in both an emission template and a fixture, and the contract reconstructs pending requests at admission
+    instants before selecting an actual recorded admission for comparison. This supports a request candidate
+    as what the representation is about. The information-object alternative remains viable because this
+    batch contains no individual lifecycle journal chain and does not establish process ownership or request-to-grant
+    identity.'
+  discriminator: The emitter quote emits "${subject} rdf:type ciops:SeatRequest ." and the fixture types
+    request-0, request-1, and request-2 that way. The replay property reconstructs pending membership
+    with "enqueuedAtMillis <= t < admittedAtMillis" and compares a projected choice with "the event's
+    actual admission". A null denying any request referent would leave that quoted pending-to-admission
+    comparison without its represented subject.
+epistemic_status: proposed
+confidence:
+  value: 0.83
+  use_for_acceptance: false

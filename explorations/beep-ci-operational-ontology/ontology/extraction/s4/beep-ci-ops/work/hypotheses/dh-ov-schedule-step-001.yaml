@@ -1,0 +1,40 @@
+id: dh:ov-schedule-step:001
+observation_refs:
+- po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+- po:sha256:c92cd59362565eda3098e5d0828c8c377fd934ae4d4546cc190d22b25207fd9a
+- po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e
+- po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6
+cq_warrants:
+- CQ-020
+proposed_referent:
+  label: Prescribed admission step
+  description: A represented component of an admission schedule, bearing an ordinal, a request assignment,
+    and a scope tag. Its candidate referent is a component of a prescription; a step occurrence in a running
+    verification is not established by these observations.
+representation_status: information_artifact
+alternatives:
+- label: Position in an ordered prescription without a separately individuated step object
+  representation_status: information_artifact
+  plausibility: viable
+- label: Actual execution or completed admission event
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The emitter and fixture assert step typing in the provisional output, while the contract
+    restricts steps to admitted actions in the prescribed sequence. This is evidence for schedule components
+    whose ordering is queried, rather than an inference from the schema name alone. Fixture steps demonstrate
+    representational shape. The observations leave open whether component identity needs a separate object
+    or can be supplied by the containing sequence.
+  discriminator: The quoted emitter emits "${stepSubject} rdf:type ciops-prov:ScheduleStep ."; the fixture
+    types both step-0 and step-1 accordingly. The determinism rule states "Only admitted actions get steps;
+    the deferred tail never extends or renumbers that sequence". A purely incidental implementation element
+    could not carry that asserted distinction between prescribed positions and deferred requests.
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

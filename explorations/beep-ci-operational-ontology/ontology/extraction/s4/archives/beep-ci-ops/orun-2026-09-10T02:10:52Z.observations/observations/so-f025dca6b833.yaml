@@ -1,0 +1,48 @@
+{
+  "id": "so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 26,
+    "content_sha256": "47e4ff0f1a35ad05c225a5390e46a1f34b8cd62033d652f937c33409b19db6a7"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/verdict.properties",
+    "lexical_name": "failurePolicy",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=83b5a2ea-68cc-45f9-a5a0-1c9ce588c411"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=4456"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-24T01:31:42.503Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-24T01:31:38.047Z"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=@chore/deps-update-08-23-26\ncommitted=false\ncreatedAt=2026-08-24T01:31:42.503Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=closeout:01-pr-context\nlabel=closeout:pr-context\nphase=monitor\nstatus=not-run\nid=closeout:02-review-gates\nlabel=closeout:review-gates\nphase=monitor\nstatus=not-run\nmessage=yeet closeout succeeded.\nmode=closeout\noutcome=success\npushed=false\nrunId=chore_deps-update-08-23-26-cadf4f69e957\nattemptId=83b5a2ea-68cc-45f9-a5a0-1c9ce588c411\nstartedAt=2026-08-24T01:31:38.047Z\nendedAt=2026-08-24T01:31:42.503Z\nelapsedMs=4456\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\n",
+  "epistemic_status": "parser_derived"
+}

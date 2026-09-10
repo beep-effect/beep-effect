@@ -1,0 +1,97 @@
+id: ic:admb-seat-grant:001
+hypothesis_ref: dh:admb-seat-grant:001
+referent_grain: >-
+  One fixed version of a journal account of a reported admission, including its recorded charge
+  and only the same-context boundary assertions actually joined in the evidence. This is recorded
+  grant-description content, not an effective authorization, conferment occurrence, holder, or
+  work execution.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two carriers express the same recorded grant account when they preserve the same reported
+    admission subject, admission assertion, and bounded set of attributed values and boundary
+    assertions in the same journal context. Copying that account does not create another
+    information content. A new admission assertion concerns a different reported subject; adding
+    or correcting a boundary creates a different account version. The criterion is contextual
+    assertion content, not nonce equality, origin, charge, file location, or uninterrupted
+    authorization. Nonce and recorded admission time locate and correlate assertions only.
+  reidentification_key:
+    - >-
+      nonce within the supplied admission-journal context, for assertion correlation only
+    - >-
+      admittedAtMillis and the entry tag, checked against the actual same-nonce record block
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One admission assertion anchors the recorded account. A release or lease-eviction assertion
+    joins only when the supplied record blocks support that correlation; unrelated blocks inside a
+    wide source excerpt are excluded. Common origin or charge does not unify accounts, and a
+    preceding request remains a distinct described subject.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - >-
+      relator: a conferred authorization persisting between effective admission and termination
+    - >-
+      event: the effective grant-conferment occurrence without a separately persisting
+      authorization
+    - >-
+      mode: a holder's authorization with contextual capacity relations
+  existential_dependencies:
+    - >-
+      The account's asserted admission subject and journal reporting context, plus some
+      information carrier; no particular file or capture is essential.
+    - >-
+      An actual holder, effective authorization, capacity reservation, or successful execution is
+      not an existential dependency of this information content. The account can remain available
+      even if its operational claims are mistaken.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      A journal could retain the observed admission and release assertions even if the admission
+      never created an effective holding. That countermodel preserves this information object
+      while defeating the old relator commitment; it is not an observed failure of admission.
+  - description: >-
+      The two admission-only chains have no supplied termination. Their accounts remain valid
+      partial descriptions, but lack of an endpoint cannot establish present activity or a
+      complete concurrent-grant census. Equal origin and five-token charge across other accounts
+      cannot merge their reported admissions.
+status: proposed
+analysis_notes:
+  rigidity: >-
+    Rigid at the selected fixed-content grain: an account remains grant-description information
+    even after a reported release, a correction elsewhere, or discovery that its claim is false.
+    Active holder is not a rigid classification of this object.
+  dependence: >-
+    Relational dependence here is on the assertion's subject binding and reporting context, not on
+    an independently established operational holder or admission authority.
+  temporality: >-
+    The information is available over its retention interval; no retention endpoint is observed.
+    Release and eviction dates are described boundaries, not terminal states of the account.
+    Copying or relocating a carrier preserves content; an added or corrected assertion yields
+    another content version.
+  evidence_limits: >-
+    The cited same-nonce examples report admission with a release, lease eviction or no supplied
+    endpoint. They establish recorded boundary/charge joins only, not continuous effective holding
+    or pre-admission remaining capacity. memoryPeakBytes on a release is separate recorded
+    measurement content.
+  provenance: >-
+    Evidence is from the run's fleet journal, not corpus/run3b-synthetic. ownerRef*,
+    security_resanitization*, corpus_*, capture_*, generator_* and placeholder paths never
+    individuate the account's subject or an operational participant.
+evidence_refs:
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  - so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+  - so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+  - so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+  - so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+  - CQ-008
+  - CQ-009
+  - CQ-010

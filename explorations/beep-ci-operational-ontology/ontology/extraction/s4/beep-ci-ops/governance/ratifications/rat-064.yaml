@@ -1,0 +1,11 @@
+id: rat:64
+proposal_ref: otp:ov-step-scope-tag:001
+proposal_sha256: 89060a995626d415b787de56e97edb923ecb580d81123008df8587e4947787f9
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-step-scope-tag:001 as the hasScopeTag controlled string annotation on
+  a contextual step, with annotation/classification identity retained as flagged and object-valued hasScope/Scope
+  still parked, only with joint ordering-cluster ratification.

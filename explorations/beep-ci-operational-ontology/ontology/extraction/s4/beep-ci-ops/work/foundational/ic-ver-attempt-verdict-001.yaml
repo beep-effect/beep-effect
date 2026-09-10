@@ -1,0 +1,91 @@
+id: "ic:ver-attempt-verdict:001"
+hypothesis_ref: "dh:ver-attempt-verdict:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Proposed at report-content snapshot grain: one bounded set of result assertions
+    about one particular operational attempt. Two representations denote the same
+    snapshot only when they concern the same attempt and preserve the same asserted
+    coverage, aggregate outcome, component-result associations, and publication
+    claims, including distinctions between an omitted result and a reported not-run
+    result. Equivalent serialization or copying preserves this content identity;
+    a different attempt or a correction to the asserted results yields different
+    content. This is a proposed semantic criterion, not an assertion that the
+    deployed report file is immutable or that its complete content is recoverable
+    from flattened facts. An extraction observation and a report are not necessarily
+    in one-to-one correspondence. Equal partial projections do not establish equal
+    reports. Capture provenance supplies no part of this criterion.
+  reidentification_key:
+    - "attemptId when present: evidence of the represented attempt, not a report identity by itself"
+    - "runId and mode: corroborating operational context, with no demonstrated uniqueness guarantee"
+    - "startedAt and endedAt when scoped to the attempt: temporal corroboration, not capture timestamps"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    The assertions form one informational whole by their intended report scope
+    over the same attempt. Aggregate failure can coexist with passed components
+    and a successful push; consistency with an all-steps-failed interpretation is
+    not a unity condition. The report remains result information when later judged
+    inaccurate, obsolete, or inadequate to discharge an obligation.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "An enduring report document whose amended contents are successive states of one document"
+    - "An occurrence-centered model with the result assertions represented as descriptions of an attempt"
+  existential_dependencies:
+    - >-
+      Recorded information requires some information bearer; the observations do
+      not establish dependence on this particular file, encoding, or original
+      storage location. Generic support by a bearer does not establish either
+      intrinsic inherence in that bearer or a specific relational dependence.
+    - >-
+      The represented attempt fixes aboutness, not a requirement that the attempt
+      remain in progress or that every reported result be true. The observations
+      do not settle a specific existential-dependence category, so that
+      meta-property remains unresolved.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: >-
+      so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+      records outcome=failure, committed=true, pushed=true, and
+      failedStepId=full:01-pre-push. In contrast,
+      so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda
+      records outcome=failure, committed=true, pushed=false, and
+      failedStepId=publish:01-git-push. Both contain failureKind=step-exit.
+      Aggregate outcome, a commit flag, or a diagnostic code cannot individuate
+      either the report or a common underlying failure.
+  - description: >-
+      so:sha256:929aa987fb5e550c58968f28fd06947d1bfd2b788815a77376329f06d9ca765a
+      contains a sparse closeout failure report without a parsed attemptId,
+      failureKind, or attempt interval. Requiring those newer fields as necessary
+      conditions would erase meaningful older reports. Their absence limits
+      reidentification; it does not turn reported outcome content into an execution.
+  - description: >-
+      Thought experiment, not an observed transition: a report is copied and then
+      one copy is corrected while retaining the same attempt identifier. The
+      proposed content criterion distinguishes the corrected snapshot from the
+      original; a document-continuant criterion can instead preserve one document
+      through the correction. The supplied observations do not settle that rival.
+evidence_refs:
+  - "so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf"
+  - "so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda"
+  - "so:sha256:929aa987fb5e550c58968f28fd06947d1bfd2b788815a77376329f06d9ca765a"
+  - "so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc"
+  - "CQ-006"
+  - "CQ-013"
+notes: >-
+  Rigid classification and identity supply are proposals for the selected
+  information-content grain, not an accepted kind or a claim of stable file
+  identity. The snapshot persists as information after the described occurrence
+  ends. The permitted state changes concern its storage, accessibility, or use as
+  evidence; changing its asserted outcome changes the selected content identity.
+  No retention duration, deletion rule, or terminal artifact state is observed.
+  The report's possible role as admissible evidence is distinct from the report
+  that bears that role. The rival models remain open for synthesis and review.
+status: proposed

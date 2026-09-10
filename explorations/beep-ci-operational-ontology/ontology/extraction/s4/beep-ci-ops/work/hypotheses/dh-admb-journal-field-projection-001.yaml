@@ -1,0 +1,43 @@
+id: "dh:admb-journal-field-projection:001"
+observation_refs:
+  - "so:sha256:324b4da710ece73d2e9cf1b127faf7f8887213e04ea458ee84dd0657cced3e26"
+cq_warrants: []
+proposed_referent:
+  label: "Journal-wide field projection"
+  description: >-
+    An instance is a file-level extraction that collects field/value occurrences across many
+    admission entries without retaining a single request's field associations in its
+    observed_facts set. This projection has no single enqueue, admission, withdrawal, release,
+    or eviction interval. Each such boundary belongs to its own entry and nonce in the source
+    excerpt. It is distinct from an admission journal entry, a correlated admission-history
+    information object, and the journal collection those representations derive from. No
+    additional operational referent is established for the flattened field combination.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "An admission-journal information collection, if a decision requires this file-level evidence object independently of its entries"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "One request or grant bearing all of the projected fields"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The opened observation lists (config_key_value,
+    "nonce=07df5dce-9165-43a3-80d5-0e50b31fc3b8"), (config_key_value,
+    "admittedAtMillis=1788411628206"), (config_key_value,
+    "attemptId=cc521c01-ee2d-4ffa-9c43-75308c5118b0"), and (config_key_value,
+    "withdrawnAtMillis=1788926326135") in one file-level fact set. Its excerpt places the
+    attempt identifier and withdrawal boundary in different nonce entries from the first
+    admission. Joining these fields would manufacture a lifecycle. The source batch kept the
+    null standing for this projection, and the consolidation does likewise. A separate decision
+    needing the whole journal as an evidence collection, together with preserved entry
+    associations and a collection boundary/retention contract, would discriminate the viable
+    information-artifact interpretation from this extraction-only artifact. A projection
+    containing meaningful source values need not itself supply another referent.
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false

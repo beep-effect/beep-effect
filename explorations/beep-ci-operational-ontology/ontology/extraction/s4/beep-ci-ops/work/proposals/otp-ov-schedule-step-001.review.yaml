@@ -1,0 +1,67 @@
+target: otp:ov-schedule-step:001
+target_sha256: 2abdc78cb8d0646cf27aa787a46dcdad4dcf8440730bfcf081069553f12a437a
+chain_sha256: 4b7da6ae82ee7683a076f80050fd49579d15eaf3b8e3f523cf6be38d055df977
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'ScheduleStep asserts parents: []; no is-a edge is proposed. Participant, component, or governing-role
+    relations supply no additional subsumption assertion to test.'
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: incidental-array-element-as-step
+  outcome: survived
+  evidence:
+  - po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0
+  - po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e
+  - po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  counterexample: Append a deferred request as a third array element and call it a step. The contract
+    expressly limits steps to prescribed admitted actions and prevents the deferred tail from extending
+    or renumbering the sequence. The emitted fixture types the two instruction components separately.
+    This discriminates prescription components from arbitrary array positions; a tuple implementation
+    preserving those instruction semantics remains a viable representation of the same information.
+- surface: identity
+  rule: request-or-ordinal-as-component-identity
+  outcome: survived
+  evidence:
+  - po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e
+  - po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - CQ-020
+  counterexample: Request R can occupy position zero in P and position one in Q, and two different plans
+    can both have position zero. Identity by R or zero would merge different instructions. The card includes
+    the containing fixed prescription, place, request assignment, and scope content, so neither merge
+    follows. Supersession can change whether an instruction is used without changing its fixed component
+    content; this is not a rigid class of live execution steps.
+- surface: warrant
+  rule: support-term-not-decision
+  outcome: survived
+  evidence:
+  - CQ-020
+  - CQ-019
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  counterexample: 'Remove only a ScheduleStep type assertion: CQ-020 still matches, so its required_classes
+    list alone would not warrant a decision class. The actual proposal uses support warrants to four decision
+    properties: stepIndex, schedulesSeatRequest, hasScopeTag, and hasStep. A common contextual component
+    is needed to bind their index/request/tag tuple to the same prescription rather than produce cross-products.
+    Each target has an executable CQ-020 or CQ-019 warrant; no support-to-support chain is used. A tuple
+    representation is retained as a steward choice rather than silently excluded.'
+rival_models_still_viable:
+- Contextual sequence position or tuple without a separately reified component object
+- Persistent editable instruction whose identity survives relocation between plan revisions
+evidence:
+- CQ-019
+- CQ-020
+- po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e
+- po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6

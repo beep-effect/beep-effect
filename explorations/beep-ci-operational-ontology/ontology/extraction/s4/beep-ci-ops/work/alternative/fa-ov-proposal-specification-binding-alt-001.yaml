@@ -1,0 +1,18 @@
+id: "fa:ov-proposal-specification-binding-alt:001"
+hypothesis_ref: "dh:ov-proposal-specification-binding:001"
+identity_card_ref: "ic:ov-proposal-specification-binding-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: unresolved
+rival_models:
+  - label: "Binary governing-description property (no reified relator) (preferred)"
+    still_viable: true
+  - label: "Relator mediating a prescription and a specification, with identity of the binding itself"
+    still_viable: true
+  - label: "Provenance link from a proposal to an input-bound projection-context record"
+    still_viable: true
+strongest_counterexample: "A semantically empty plumbing reading cannot explain why both emitter and fixture type the target as AdmissionProjectionSpecification and why CQ-020 joins proposal to spec via this edge (po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144; po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2; po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: unreified property versus relator versus provenance-to-context. Discriminators: properties of the binding itself (timestamp, validator, weight), or a specification identity test that settles repeatable-spec versus journal-prefix context (po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2)."

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:c864b7623923f2c433680c0ebb2487b1eb949bc2c8ffb91347a3e288560dd4a3",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/test/fixtures/emission-v2.ttl"
+  },
+  "source_span": {
+    "start_line": 24,
+    "end_line": 24
+  },
+  "quote": "ciops-prov:schedule%2Dpolicy%2Ddigest%2Djournal%2Dprefix%2Ddigest%2D1000-request-0 ciops-prov:scheduledUnitRef \"admitted-a\"^^xsd:string .",
+  "epistemic_status": "quoted_prose"
+}

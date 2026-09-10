@@ -1,0 +1,234 @@
+run: orun-2026-09-10T02:10:52Z
+seat: synthesis
+pass: revision
+batch: [bind, ver]
+date: '2026-09-10'
+authority: sitting-1 Rulings 1 and 3 and the launch message's withdrawal authorization
+scope: Proposal revision and withdrawal receipt; no ratification or new review verdict.
+revised_active_proposals:
+- id: otp:bind-admission-grant:001
+  exact_reuse: ciops:SeatGrant
+  from_sha256: 6e9f53a8ddf5d9597897cf9c389940e66e71541f4bddee2df9215bd51e4c35d2
+  addressed: [discriminator-hypothetical-consumer]
+- id: otp:bind-admission-request:001
+  exact_reuse: ciops:SeatRequest
+  from_sha256: 7a7a747a1c90e3f93b15a71eb7f7cc4e4cee919d95083d9ee470500e181f0569
+  addressed: [discriminator-hypothetical-consumer]
+synthetic_writer_witness:
+  manifest: corpus/run3b-synthetic/MANIFEST.yaml
+  manifest_sha256: 8131d233729e5a5d8e0ae3b6b782d4732f9df42c8caadad2d78876261a0f7d3d
+  source: packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts
+  source_commit: 5bdb2d770ff55f6e5f5a73e5d0d405277d84c6e7
+  source_sha256: 0ee8d157ffce4a113ab1b2acc4e1c598a098f491c67850fd6071009dd9c5f983
+  verification: The historical source digest matches the producer recorded by the unchanged synthetic pin.
+  witness: >-
+    READY is recorded present and is written after the captured producer's assertions and exports.
+    The exact producer asserts one admitted lease, a second queued contender whose continuation
+    never runs, queue removal on interruption, acknowledged reaper claims, matching separate
+    dead-ticket/dead-lease attempt-termination rows, and idempotent second reaping with empty final
+    directories. The journal and termination observations corroborate the per-nonce and per-attempt
+    joins. These witnesses support bounded synthetic writer behaviour; they do not establish organic
+    incidence, production closure, a general request identity, or the origin-exclusion invariant.
+  observations:
+  - so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f
+  - so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98
+  - so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f
+withdrawals:
+- id: otp:bind-checkout-cache-binding:001
+  hypothesis: dh:bind-checkout-cache-binding:001
+  term: ciops:CheckoutCacheBindingRecord
+  disposition: CONCEDED
+  submission: WITHDRAWN
+  files: deleted proposal and round-1 review
+  revision_log:
+  - from_sha256: 71b1c42eb5a441da5e3eb4b97aa296cca0d45008b31b696cefecbaf8d1ca67c9
+    addressed: [decision-class-not-required-by-cq]
+  reason: >-
+    CQ-015 already was the warrant. Its complete cachedIn/mountsCache and epoch join addresses
+    proof, checkout and cache, never a binding-record individual. No other current executable CQ
+    requires that extra record identity. Remapping the same class back to CQ-015 or renaming its
+    warrant as support would leave the demonstrated attack intact. C1's binding content survives
+    as qualified source assertions; only the additional class is withdrawn.
+  retained_evidence:
+  - so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9
+  - so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b
+  needed_evidence_name: run4-checkout-cache-binding-identity-consumer
+  needed_evidence: >-
+    Preserve a same-cache accessibility/transfer experiment at task-input-hash and epoch grain,
+    with the two checkout identities and separate probe times, positive access and bounded local
+    absence, and a binding-change or correction trace. Supply an observed consumer and a
+    Must/Should executable CQ that must address the binding information object's identity rather
+    than the existing qualified checkout/cache relation. If direct relations suffice, keep the
+    class withdrawn. Common Git administration, directory-entry counts and environment flags do
+    not establish common cache access or a skip authorization.
+  rivals_preserved:
+  - Qualified binding information without a separate class.
+  - Operational checkout-to-accessible-cache relator, requiring actual accessible-cache participants.
+  - Temporally qualified checkout/cache situation.
+- id: otp:bind-grant-termination:001
+  hypothesis: dh:bind-grant-termination:001
+  term: ciops:AdmissionGrantTermination
+  disposition: CONCEDED
+  submission: WITHDRAWN
+  files: deleted proposal and round-1 review
+  revision_log:
+  - from_sha256: 9c38d5adc56685b2ba9cbe0072eb0958149fee5fc1b3aaae4ac1497a3e0781fa
+    addressed: [discriminator-hypothetical-consumer, support-reification-not-required]
+  reason: >-
+    The original reconstruction discriminator is conceded. The completed synthetic writer
+    provides actual release and reaper effects, but does not make every cleanup of an injected
+    dead lease an effective holding end. Independently, CQ-008/CQ-009 retain their complete
+    holder/conflict answers through qualified grant standing and its boundary; no executable CQ
+    requires an AdmissionGrantTermination individual. A genuine writer effect does not supply
+    the missing class warrant, so the event class is withdrawn under Ruling 1.
+  retained_evidence:
+  - so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f
+  - so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98
+  needed_evidence_name: run4-organic-grant-eviction-boundary-and-consumer
+  needed_evidence: >-
+    Capture an organic lease's admission and effective holding before and after release or
+    eviction, correlated by its admission chain and attempt binding, with claim acknowledgement
+    and the matching attempt-termination write where applicable. Distinguish ending active
+    capacity from later stale-record cleanup; retain a duplicated terminal report as a control.
+    Include an observed decision consumer and a Must/Should executable CQ that must distinguish
+    termination occurrences independently of qualified standing/end values. Synthetic coverage
+    remains writer evidence, not organic incidence; do not invent an admission, charge or origin
+    for the injected dead lease by copying contender A's chain.
+  rivals_preserved:
+  - Terminal lease information object or qualified standing boundary.
+  - An effective holding-end event distinct from its report and resulting state.
+  - Separate release and lease-eviction occurrence models.
+- id: otp:bind-request-termination:001
+  hypothesis: dh:bind-request-termination:001
+  term: ciops:AdmissionRequestTermination
+  disposition: CONCEDED
+  submission: WITHDRAWN
+  files: deleted proposal and round-1 review
+  revision_log:
+  - from_sha256: d058e990960353c28bce911ea7c7543601e52c5aeb99e9131517b265e691ce1c
+    addressed: [discriminator-hypothetical-consumer, support-reification-not-required]
+  reason: >-
+    The original reconstruction discriminator is conceded. The completed synthetic producer
+    observes B's withdrawal and matching reaper writes for a different injected ticket, but
+    neither supports treating every stale-ticket cleanup as the effective end of a pending
+    participation. CQ-021/CQ-023 need pending membership and qualified wait/boundary values;
+    their full answers do not require an independently identified queue-exit event. No other
+    executable CQ supplies that missing warrant, so the additional class is withdrawn.
+  retained_evidence:
+  - so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f
+  - so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f
+  needed_evidence_name: run4-organic-request-eviction-boundary-and-consumer
+  needed_evidence: >-
+    Follow an organically queued request from enqueue through withdrawal or ticket eviction,
+    with before/after effective membership, claim acknowledgement and the matching attempt
+    termination where applicable. Distinguish stale-ticket cleanup from the actual queue exit,
+    duplicate reports from distinct exits, and a later resubmission from the ended participation.
+    Supply a consumer and a Must/Should executable CQ requiring the exit occurrence's identity
+    rather than pending membership and qualified end values. Keep the synthetic dead ticket's
+    missing historical enqueue and full wait unknown; do not infer destruction of an enduring
+    demand or successful work execution from a terminal write.
+  rivals_preserved:
+  - Terminal request-state information or a qualified participation end.
+  - An effective pending-participation end, independent of enduring-demand identity.
+  - Separate withdrawal and ticket-eviction occurrence models.
+- id: otp:ver-wall-time-evidence:001
+  hypothesis: dh:ver-wall-time-evidence:001
+  term: ciops:ExecutionDurationAssertion
+  disposition: CONCEDED
+  submission: WITHDRAWN
+  files: retained withdrawal record and unchanged round-1 review
+  revision_log:
+  - from_sha256: 482217e31c6262e0586286ee0a9bb9d8996daa66686654edd01d6a2d15a84bf6
+    addressed: [decision-class-not-required-by-cq]
+  reason: >-
+    CQ-025 reads actualWallMs directly on the completed execution and the immutable
+    usedCostEstimate's p50Ms/p95Ms. CQ-007/CQ-012 read episode-level materialized durations,
+    whose accounting is not established by the attempt/component reports. None requires a
+    separate assertion individual. The complete answer survives qualified duration literals;
+    adding duration CQ ids would not warrant the submitted class.
+  retained_evidence:
+  - so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446
+  - so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+  - so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc
+  - so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465
+  needed_evidence_name: run4-duration-assertion-correction-consumer
+  needed_evidence: >-
+    Observe repeated measurements or corrections for the same identified execution interval,
+    keeping occurrence, scope, unit, precision/clock convention, both claims and the actual
+    immutable used-estimate binding. Supply a consumer and a Must/Should executable CQ whose
+    complete answer requires independent assertion identity or correction lineage that
+    qualified execution literals cannot preserve. Missing durations are unknown, not zero;
+    repeated lane labels and whole-attempt/component values do not define an additive partition.
+  rivals_preserved:
+  - Scoped literal assertions in an execution result, with occurrence and correction context.
+  - Duration quality with a distinct recorded quantity.
+  - Measurement-result token individuated by the measurement act.
+  - Assertion-content information object if future evidence establishes its necessary identity.
+  retention_dependency:
+    protected_unchanged: otp:ver-attempt-verdict:001
+    other_incoming_support: otp:att-attempt-verdict:001
+    action_needed: >-
+      The steward must retire or redirect these support edges with review before removal of the
+      retained withdrawal record. The former CQ reference is not a renewed decision warrant;
+      file retention discharges no support edge and makes no post-FAIL PASS or gate-ready claim.
+unproposed_chains:
+- id: dh:bind-degraded-checkout-probe:001
+  reason: Unrejected implementation-only null; failed probes supply no confirmed binding/transfer consumer.
+- id: dh:bind-fleet-inventory:001
+  reason: Unrejected implementation-only null; no operational decision requires the census wrapper.
+- id: dh:bind-eviction-protocol-marker:001
+  reason: Unrejected implementation-only null; the setting alone has no separate policy or decision warrant.
+- id: dh:ver-readiness-assessment:001
+  reason: Meaningful recorded flags but no criterion-to-obligation consumer requiring a separate assessment object.
+- id: dh:ver-failure-signature:001
+  reason: Unrejected null; no cross-attempt signature identity/normalization and delay-attribution rule.
+- id: dh:ver-git-comparison-context:001
+  reason: Unrejected null; no comparison-operand binding and comparison-dependent evidence-validity decision.
+- id: dh:ver-head-diff-tier-context:001
+  reason: Unrejected null; no observed accept/reject rule at task-hash, epoch and checkout context.
+- id: dh:ver-failure-policy-token:001
+  reason: Unrejected implementation-only null; no observed enforcement or suppression rule.
+- id: dh:ver-option-encoding:001
+  reason: Unrejected implementation-only null; generic optional-value encoding lacks an operational binding.
+- id: dh:ver-staged-only-marker:001
+  reason: Unrejected implementation-only null; no scope-preservation/restoration consumer for the saved handle.
+open_clusters:
+- >-
+  The revised SeatGrant mapping remains a synthetic allocation-relator proposal with situation
+  and lease-information rivals; coordinate its identity with otp:att-admission-allocation:001
+  and otp:admb-seat-grant:001. A shared IRI does not identify different chains or settle grain.
+- >-
+  The revised SeatRequest mapping remains explicitly deferred among pending-demand, enduring-demand
+  queued-role and ticket-information models. Coordinate with otp:admb-seat-request:001 and
+  otp:ov-seat-request:001; withdrawal/resubmission and ticket-copy evidence remains missing.
+- >-
+  The former bind termination class dependencies are retired in the two revised admission records.
+  Cross-batch historical references remain for their owners to reconcile; no out-of-batch file is edited.
+- >-
+  The two PASSed result-artifact mappings retain their explicit content-snapshot versus
+  assessment-origin identity choice. Duration-class withdrawal does not settle that pair, and
+  their incoming support edges need steward reconciliation as described above.
+rival_pairs_added: []
+protected_pass:
+  id: otp:ver-attempt-verdict:001
+  proposal_sha256: bc7a729824ecd1b6b3e0756d6300c09ff239a4b8c528f3fcfda7be4dbcb243a8
+  treatment: Proposal, review and bound foundational/hypothesis/observation records remain unchanged.
+validation:
+  self_test: PASS; 157 rule families
+  command: >-
+    UV_CACHE_DIR=~/.cache/beep/uv-cache uv run --offline --python 3.12 --with pyyaml
+    python .claude/skills/ontology-foundational-auditor/scripts/validate_artifacts.py
+    explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops
+  bind_ver_proposal_violations: 0
+  remaining_violations: 69
+  remaining_attribution:
+  - 68 prior unresolved observations have no carried row in the current index.
+  - work/dispositions.index.yaml is missing; this seat cannot edit it.
+  revision_checks: PASS; retained revised records name their FAILed target digests and every landed rule.
+  coverage: All 17 bind/ver hypotheses accounted for by active mappings, protected PASS, withdrawals or non-proposals.
+  protected_bytes: Proposal and round-1 review SHA-256 values match the pre-revision inventory.
+  review_handoff: >-
+    The two active mappings require an independent review of their revised bytes. Existing FAIL
+    reviews remain unchanged. Withdrawn classes are not post-FAIL PASS candidates; the retained
+    duration record awaits reconciliation of its incoming support edges. This is synthesis
+    validation, not a ratification or submission-gate verdict.

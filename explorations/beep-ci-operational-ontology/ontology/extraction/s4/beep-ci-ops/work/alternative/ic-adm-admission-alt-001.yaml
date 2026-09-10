@@ -1,0 +1,54 @@
+id: "ic:adm-admission-alt:001"
+hypothesis_ref: "dh:adm-admission:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Same granting occurrence iff it is the same punctual transition from
+    requested admission to authorized holding for one request, dated by one
+    admission-admitted block at one admittedAtMillis. The occurrence is not the
+    grant's subsequent holding, not the enqueue, and not the journal entry that
+    asserts it. Nonce equality is a local evidential join across same-nonce
+    blocks, never the criterion. ownerRef, ownerRefVariant, capture, and
+    resanitization members are never identity criteria.
+  reidentification_key:
+    - "nonce (evidential join only)"
+    - "admittedAtMillis"
+    - "_tag=admission-admitted"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One dated granting transition per request; not the holding interval, not the
+    work execution, not a chain of mixed schemaVersion strings.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+  existential_dependencies:
+    - "seat request whose reported queue participation this occurrence ends"
+    - "seat grant whose reported holding this occurrence begins"
+    - "token charge (weightTokens) available at this boundary"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - occurred
+counterexamples:
+  - description: >-
+      Collapsing this occurrence with the later release or lease eviction of the
+      same nonce. so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+      separates _tag=admission-admitted at admittedAtMillis=1788926595216 from
+      _tag=admission-released at releasedAtMillis=1788927008574 (CQ-007, CQ-008).
+  - description: >-
+      Reading an admission without a terminal report as a currently active grant.
+      so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67
+      and so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+      instantiate reported admission only (CQ-008, CQ-010).
+  - description: >-
+      Taking ownerRef as identity of the granting act.
+      so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+      shows ownerRef=21a413017368 on the admit block and ownerRef=883946ddf615 on
+      the later release block of nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088.
+status: proposed

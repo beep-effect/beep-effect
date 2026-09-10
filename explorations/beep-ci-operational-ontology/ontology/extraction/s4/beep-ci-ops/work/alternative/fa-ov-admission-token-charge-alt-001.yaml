@@ -1,0 +1,18 @@
+id: "fa:ov-admission-token-charge-alt:001"
+hypothesis_ref: "dh:ov-admission-token-charge:001"
+identity_card_ref: "ic:ov-admission-token-charge-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "Quality: policy token charge inhering in a request or grant (preferred)"
+    still_viable: true
+  - label: "Information-object / datatype value only — the xsd:integer literal with no quality individual"
+    still_viable: true
+  - label: "Measured physical resource consumption or P95 wall-time estimate"
+    still_viable: false
+strongest_counterexample: "If the integer were physical memory or a duration estimate, the deployed invariant quoted as activeTokenTotal + weight <= capacityTokens / weightTokens would be a different comparison than CQ-010's admissionChargeTokens versus remaining capacity (po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8; po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99; CQ-010)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: reified quality individual versus literal-only information value. Discriminators would be an in-place revision of weightTokens on a persisting request, a quality structure relating tokens to GiB, or a reified AdmissionCharge individual distinct from the datatype property (po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944)."

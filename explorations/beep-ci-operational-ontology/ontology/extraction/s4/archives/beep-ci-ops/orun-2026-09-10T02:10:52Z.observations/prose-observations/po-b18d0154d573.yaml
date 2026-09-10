@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:b18d0154d573355ca2ecfcd8a45787237eac6ba6a335c5a69c783c8d0a078f29",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 73,
+    "end_line": 73
+  },
+  "quote": "A.append(A.flatMap(requests, requestTriples(proposalNode)), `${proposalNode} rdf:type ciops:ScheduleProposal .`),",
+  "epistemic_status": "quoted_prose"
+}

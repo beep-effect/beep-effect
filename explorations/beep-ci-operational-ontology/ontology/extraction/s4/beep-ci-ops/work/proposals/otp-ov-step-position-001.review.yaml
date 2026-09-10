@@ -1,0 +1,60 @@
+target: otp:ov-step-position:001
+target_sha256: cdd90280d721dfe595422347088ab593320f90758f3e8a51b382357032f95248
+chain_sha256: 54d23b3d73e070cd134fa8b24561a0c1f91ee4c8abbbc25abc5462eea52de408
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'stepIndex asserts parents: []; no is-a edge is proposed. Participant, component, or governing-role
+    relations supply no additional subsumption assertion to test.'
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: incidental-offset-as-order
+  outcome: survived
+  evidence:
+  - po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020
+  - po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263
+  - po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - CQ-020
+  counterexample: Reorder the serialized triples without changing the emitted integers 0 and 1. CQ-020
+    still returns the same prescribed order because it orders by ?idx; line position is irrelevant. Conversely,
+    changing the integers changes the returned order. The explicit zero-based convention and exclusion
+    of deferred-tail renumbering therefore give the values order content beyond incidental storage offsets.
+- surface: identity
+  rule: numeric-value-as-assignment-identity
+  outcome: survived
+  evidence:
+  - po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020
+  - po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  counterexample: Two proposals can each have a first position with integer 0. Those equal numbers are
+    not one ordinal assignment, and moving request R between proposal versions does not preserve its old
+    position assignment merely because R is unchanged. The card identifies the represented step, containing
+    prescription, and prescribed place; it separates that contextual assignment from the abstract integer
+    and from actual grant chronology.
+- surface: warrant
+  rule: listing-cq-warrant
+  outcome: survived
+  evidence:
+  - CQ-020
+  - po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7
+  counterexample: Keep an unordered set of member steps, their requests, and scope tags but delete stepIndex.
+    CQ-020's mandatory ?idx binding and ORDER BY ?idx cannot return its ordered answer. Replacing integers
+    with an unmaterialized precedence relation would require a different query or a derivation step, so
+    the existing executable query warrants this recorded-value property.
+rival_models_still_viable:
+- Precedence relation among prescribed components, with ordinals derived only for presentation
+- Integer data property on a contextual step, without an independently instantiated position object
+evidence:
+- CQ-020
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020
+- po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263
+- po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7

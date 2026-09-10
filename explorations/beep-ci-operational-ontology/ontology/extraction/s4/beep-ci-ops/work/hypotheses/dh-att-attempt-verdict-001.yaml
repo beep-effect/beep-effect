@@ -1,0 +1,47 @@
+id: dh:att-attempt-verdict:001
+observation_refs:
+- so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+- so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+cq_warrants:
+- CQ-005
+- CQ-022
+- CQ-025
+proposed_referent:
+  label: Attempt verdict with execution and checkout context
+  description: A persisted assessment of a particular attempt, carrying its result and, where recorded,
+    lane measurements and merge-readiness findings together with resolved head, working-diff fingerprint,
+    proof tier, environment, and stage. This candidate is the information artifact, not the execution
+    or an enduring correctness guarantee. Head and diff fields identify the asserted applicability
+    context without establishing a cache epoch, transfer rule, or sufficient reuse condition. Values
+    from different journal entries must remain attached to their own attempts rather than being joined
+    solely because they occur in one projection.
+representation_status: information_artifact
+alternatives:
+- label: The execution or gate-assessment occurrence described by the verdict
+  representation_status: domain_referent
+  plausibility: viable
+- label: A certificate sufficient by itself to authorize cached proof reuse
+  representation_status: information_artifact
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The supplied excerpts contain actual failed and successful verdict assertions and measured
+    lane results, which are evidence to be queried about an attempt. The flattened facts also carry
+    resolvedHeadSha, diffFingerprint, proofTier, envProfile, stage, and readiness assessments; these
+    are retained as context and content of the record, not minted individually as terms. ownerRef
+    and ownerRefVariant are capture provenance and warrant no referent, agent identity, or ownership
+    relation. The two captures differ in those aliases while retaining the operational journal content.
+    A verdict can be evidence even when its assessment is incomplete or subsequently stale; no present
+    mergeability or cache admissibility is inferred.
+  discriminator: The config_key_value facts include "requiredChecksGreen=true", "mergeable=true",
+    "greptileScore=5/5", "proofTier=full", and "envProfile=local". The source_excerpt places a finished
+    verify verdict with "outcome=failure", "failedStepId=full:00-cheap-gates", and a failed lane "durationMs=695899.047175"
+    in one attempt; a later finished monitor verdict records "ready=true" and "requiredChecksGreen=true"
+    for its own context. Those are distinct recorded operational findings, whose replacement would
+    change the failure, cost, and readiness evidence available for those attempts. An owner-alias
+    or serialization-only reading cannot preserve these assertions as mere capture metadata.
+epistemic_status: proposed
+confidence:
+  value: 0.93
+  use_for_acceptance: false

@@ -1,0 +1,232 @@
+{
+  "id": "so:sha256:7a639ef29784753fbf47a4860c76a214d945a67c34fe1675915e57253dd3d628",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect12/goals_candor-gate-followups-closeout-08bfb2151c0b/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 75,
+    "content_sha256": "1c266c61723c9a78633c6a6038c9d73bd3bf78d1830843ce1065476ecca1ce7f"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect12/goals_candor-gate-followups-closeout-08bfb2151c0b/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=a758a588-ec97-409e-8bc9-b86881f622b7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=goals/candor-gate-followups-closeout"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-08-14T00:17:05.569Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=11131.315324"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=141239.623341"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=22787.705839"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=24671.354843"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2901.519874"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=323232.231825"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3378.882314"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=55901.030088"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=6963.413155"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=592889"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-14T00:17:05.569Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=feedback:01-build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:01-build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:02-check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:03-lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=feedback:04-test"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=prepare:01-effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=prepare:02-terse-effect"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=prepare:03-config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=prepare:04-lint-fix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=prepare:05-docgen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=feedback:test"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=prepare:config-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=prepare:docgen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=prepare:laws:effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=prepare:laws:terse-effect"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=prepare:lint:fix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=repair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=prepare"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=goals_candor-gate-followups-closeout-08bfb2151c0b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-14T00:07:12.680Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=goals/candor-gate-followups-closeout\ncommitted=false\ncreatedAt=2026-08-14T00:17:05.569Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=prepare:01-effect-imports\nlabel=prepare:laws:effect-imports\nphase=prepare\nstatus=passed\ndurationMs=11131.315324\nexitCode=0\nid=prepare:02-terse-effect\nlabel=prepare:laws:terse-effect\nphase=prepare\nstatus=passed\ndurationMs=24671.354843\nexitCode=0\nid=prepare:03-config-sync\nlabel=prepare:config-sync\nphase=prepare\nstatus=passed\ndurationMs=6963.413155\nexitCode=0\nid=prepare:04-lint-fix\nlabel=prepare:lint:fix\nphase=prepare\nstatus=passed\ndurationMs=3378.882314\nexitCode=0\nid=prepare:05-docgen\nlabel=prepare:docgen\nphase=prepare\nstatus=passed\ndurationMs=2901.519874\nexitCode=0\nid=feedback:01-build\nlabel=feedback:build\nphase=feedback\nstatus=failed\ndurationMs=22787.705839\nexitCode=2\nrepairCommand=Run `bun run docgen:local` for edit loops or `bun run docgen` for the full proof.\nid=feedback:02-check\nlabel=feedback:check\nphase=feedback\nstatus=passed\ndurationMs=55901.030088\nexitCode=0\nid=feedback:03-lint\nlabel=feedback:lint\nphase=feedback\nstatus=passed\ndurationMs=141239.623341\nexitCode=0\nid=feedback:04-test\nlabel=feedback:test\nphase=feedback\nstatus=passed\ndurationMs=323232.231825\nexitCode=0\nmessage=yeet feedback phase failed.\nmode=repair\noutcome=failure\npushed=false\nrunId=goals_candor-gate-followups-closeout-08bfb2151c0b\nattemptId=a758a588-ec97-409e-8bc9-b86881f622b7\nstartedAt=2026-08-14T00:07:12.680Z\nendedAt=2026-08-14T00:17:05.569Z\nelapsedMs=592889\nindexPath=<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json\nfailedStepId=feedback:01-build\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

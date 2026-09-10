@@ -1,0 +1,18 @@
+id: "fa:ov-schedule-proposal-alt:001"
+hypothesis_ref: "dh:ov-schedule-proposal:001"
+identity_card_ref: "ic:ov-schedule-proposal-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "Information object: persisted prescription of an ordered admission sequence (preferred)"
+    still_viable: true
+  - label: "Transient projection result whose plan content has no independent persistence"
+    still_viable: true
+  - label: "Occurrence of actual scheduler admission"
+    still_viable: false
+strongest_counterexample: "An execution/grant reading cannot host both defersSeatRequest and typed proposal content while reserving real admission writes to the deployed scheduler (po:sha256:3c9d7d9e1165dd56fe1846e5c84f330e75fb8b966dfbd2fcf0e5a4a113b504c5; po:sha256:40e7562cb1c7744f4472ab4db2e562024f5554997915678e4ec8c759f11f1852; po:sha256:5e660542834fa3d2e917207f5764b6905b0654cfb825a0f34b4ac27bfe96bb02; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: independently persisting information object versus transient projection result. Discriminator: a later emission or store snapshot that re-identifies the same proposal by content/digests without re-running, versus a pure in-memory result discarded after Turtle write (po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05; po:sha256:c92cd59362565eda3098e5d0828c8c377fd934ae4d4546cc190d22b25207fd9a)."

@@ -1,0 +1,160 @@
+{
+  "id": "so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-checkout-identity/bindings/beep-effect%2F.claude%2Fworktrees%2Fadhd-skill-followup.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 53,
+    "content_sha256": "d4caa0464c5c7d1a6ba5d5bbea34a7c5b16bf6bd4cdbf0eb62398fc9e88e6ba9"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-checkout-identity/bindings/beep-effect%2F.claude%2Fworktrees%2Fadhd-skill-followup.properties",
+    "lexical_name": "identity_key",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "TURBO_API=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "TURBO_TEAM=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "TURBO_TOKEN=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "binding_probe_at=2026-09-09T03:13:52.406Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "binding_probe_matches_snapshot=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "binding_probe_status=present"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/adhd-divergent-ideation-skill"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch_sha12=90d8390364c0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exit_code=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "file=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup/turbo.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "git_common_dir=<fleet>/beep-effect/.git"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "git_dir=<fleet>/beep-effect/.git/worktrees/adhd-skill-followup"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=09156349b75939af1ea4e4927f81c9340637a4ea"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "identity_key=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=linked-worktree"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "line=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "origin_url=git@github.com:beep-effect/beep-effect.git"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "probe_branch=feat/adhd-divergent-ideation-skill"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "probe_head=09156349b75939af1ea4e4927f81c9340637a4ea"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_dir_listing=feat_adhd-divergent-ideation-skill-90d8390364c0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runs_directory_status=present"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "scannedAt=2026-09-09T03:13:49.440Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "snapshot_path=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=present"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_configuration_observed_at=2026-09-09T03:13:52.407Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_configuration_sha256=be17d1d592185e75c7c16d3ed6ebb2d8ce8fad143171132b8e4733fa10217de0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_configuration_status=present"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_entries=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_path=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup/.turbo/cache"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_local_cache_present=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_remote_cache_configured=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "turbo_remote_cache_signature_configured=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "within_fleet_root=true"
+    }
+  ],
+  "source_excerpt": "# record 0\nidentity_key=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup\nscannedAt=2026-09-09T03:13:49.440Z\nsnapshot_path=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup\nwithin_fleet_root=true\norigin_url=git@github.com:beep-effect/beep-effect.git\nkind=linked-worktree\nbranch=feat/adhd-divergent-ideation-skill\nbranch_sha12=90d8390364c0\nhead=09156349b75939af1ea4e4927f81c9340637a4ea\ngit_dir=<fleet>/beep-effect/.git/worktrees/adhd-skill-followup\ngit_common_dir=<fleet>/beep-effect/.git\ngit_common_dir_role=checkout-binding fact; not a proof cache\nruns_dir_listing=feat_adhd-divergent-ideation-skill-90d8390364c0\nruns_directory_status=present\nbinding_probe_at=2026-09-09T03:13:52.406Z\ncommand=git remote get-url origin\nstatus=present\nexit_code=0\ncommand=git rev-parse --absolute-git-dir\nstatus=present\nexit_code=0\ncommand=git rev-parse --path-format=absolute --git-common-dir\nstatus=present\nexit_code=0\ncommand=git rev-parse HEAD\nstatus=present\nexit_code=0\ncommand=git branch --show-current\nstatus=present\nexit_code=0\nbinding_probe_status=present\nbinding_probe_matches_snapshot=true\nprobe_head=09156349b75939af1ea4e4927f81c9340637a4ea\nprobe_branch=feat/adhd-divergent-ideation-skill\nbinding_temporality=snapshot branch/head at scannedAt; supplementary git/cache probes during capture interval\nturbo_local_cache_path=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup/.turbo/cache\nturbo_local_cache_present=false\nturbo_local_cache_entries=0\nturbo_local_cache_entries_basis=immediate directory entries; not deduplicated task hashes\nturbo_remote_cache_configured=false\nTURBO_TOKEN=true\nTURBO_TEAM=true\nTURBO_API=true\nturbo_remote_cache_env_scope=generator process; repeated per binding, not per-checkout configuration\nturbo_remote_cache_signature_configured=false\nturbo_configuration_status=present\nturbo_configuration_sha256=be17d1d592185e75c7c16d3ed6ebb2d8ce8fad143171132b8e4733fa10217de0\nfile=<fleet>/beep-effect/.claude/worktrees/adhd-skill-followup/turbo.json\nline=1\nturbo_configuration_observed_at=2026-09-09T03:13:52.407Z\nturbo_local_cache_complete_within=one immediate directory listing during the binding probe\nproof_cache_caveat=necessary, not sufficient for CQ-015 evidence transfer: task-hash granularity still required\n",
+  "epistemic_status": "parser_derived"
+}

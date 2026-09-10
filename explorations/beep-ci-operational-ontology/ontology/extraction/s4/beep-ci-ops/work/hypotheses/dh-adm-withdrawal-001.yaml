@@ -1,0 +1,72 @@
+id: dh:adm-withdrawal:001
+observation_refs:
+- so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+- so:sha256:0385cf6e12920c8a96c520a7238b522f923a7c0116cd603fbeff793a7d0e6058
+- so:sha256:05fa73f187683c8b5cfb25a3958ed5b6f3d344d1b984cb1ce1cdffe5a9b2674a
+- so:sha256:0775b5fd356eaea7604537054326c7e97598c5f81504c0d815558297ebf0f50e
+- so:sha256:08149709f365cd0031ec1a4a17e6f76e957b70a4507b8c15e077e41ec998abce
+- so:sha256:10f2cebc7b17c5f7b15bd051ed0f0363d355c3e4cb2f927dd2b2852461ad2610
+- so:sha256:146d2b385ef6e3fb892821dbd2df82091184f2dca48f8cd9b9eaa5d01019d942
+- so:sha256:4a98ae2d71bc800fd8718d37ccc93288cf66cc48dbffa2eddc2a0c7c3297a7d6
+- so:sha256:522ce0efbf2933dac38a6f574c2ff640dadb305b695e06028dad7a5c0f25d91c
+- so:sha256:6cf1d332ce7ea225c24cf5aea2e2192ab91ec06838463289be284bae7677e60c
+- so:sha256:7627bd8803b5da11524904bb2c7b2fdcd7c320ba034444204852ded9c164cfff
+- so:sha256:7e4e7d3c3f97a3907222c12d770c3f618aa1502dc1fd391f0738fd93f874dbbb
+- so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+- so:sha256:a3d906985080a7bb34c6364829dd3add8d8d0a7235a3b00d027d9e9685e7eb19
+- so:sha256:b16055eff4bab382b33f0a5629c273a35a659e407651035b9532fb833f1a722c
+- so:sha256:b303cb0ce5ff71bf3353ee50bced00e443bbba7d77e4f3e5cf7e6e8476d054aa
+- so:sha256:b4093c2df6b7863d8c90b35246c348aecbbc5201cc8a3968132345e8e29c038e
+- so:sha256:c19aff86102184c4aafeecb71520216ed5ccf721d1d16cce9a382bdd170d1967
+- so:sha256:c1e15b1c4eaa7eb7c6aa06fd4e88909368ddeac9931936b7d68c2bf857b1bcfa
+- so:sha256:cf8f163c919cdad854f3e9aabddf18a7c7589844a69389646492c47ac1f7d8e8
+- so:sha256:dae7bbf3b41b449e027e7be2793340e99e86ffbfbc9e3781a15b2c412919fba3
+- so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+- so:sha256:f1e3e6b059c258e89fc802148a2976a93bd0ade9c8e5568b6052d81945140f7a
+cq_warrants:
+- CQ-007
+- CQ-021
+- CQ-023
+proposed_referent:
+  label: admission request withdrawal occurrence
+  description: An occurrence of ending a request's queue participation by withdrawal. An instance is bounded
+    by admission-withdrawn at withdrawnAtMillis, with the request's earlier enqueue providing temporal
+    context. It is distinct from the request that participates in it, ticket eviction, lease eviction,
+    and release of an admitted grant. The tag does not establish voluntary intent, a specific cancellation
+    cause, proof failure, or an execution being stopped. The 23 positively withdrawn histories provide
+    recorded queue-exit boundaries; absence of a grant in these histories is not proof that no other grant
+    could ever have existed. Waiting thresholds, exceptions, and a complete snapshot remain necessary
+    for a starvation decision.
+representation_status: domain_referent
+alternatives:
+- label: A journal withdrawal assertion, with occurrence left unconfirmed. A trace of the waiting ticket's
+    withdrawal operation or a time-aligned before/after queue observation would discriminate information
+    about a queue exit from the exit itself.
+  representation_status: information_artifact
+  plausibility: viable
+- label: A terminal boundary of request participation without a separately modeled event. Evidence that
+    the withdrawal's actors, cause, or effects must be distinguished from the request's terminal state
+    would discriminate this domain alternative.
+  representation_status: domain_referent
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The observations positively report a distinct queue-exit mechanism after enqueue. A withdrawal
+    does not remove an already granted holding, and it cannot be merged with either eviction simply because
+    those reports also carry terminal times. A domain occurrence is proposed because the exit changes
+    the reported contender population and closes a reported wait. The information-only reading remains
+    viable, and the cause of withdrawal is not inferred.
+  discriminator: 'For nonce=71181c10-f174-45cf-817e-0fdfa07295a8, the config_key_value predicate has these
+    rechecked objects: ''_tag=admission-enqueued'', ''enqueuedAtMillis=1788934640505'', ''_tag=admission-withdrawn'',
+    ''withdrawnAtMillis=1788935102826''. For nonce=d7ec57f5-4157-46c1-9fca-b7a7775b75ef, the config_key_value
+    predicate has these rechecked objects: ''_tag=admission-enqueued'', ''enqueuedAtMillis=1788940362521'',
+    ''kind=review-fix'', ''_tag=admission-withdrawn'', ''withdrawnAtMillis=1788940437861''. Each matched
+    terminal block asserts withdrawal of the previously enqueued request at its own instant. Under a null
+    with no operational queue exit, that ending of contention would not occur; retaining the request as
+    still waiting after the reported boundary would change queue accounting. This concerns the event asserted,
+    not the effect of editing its journal line.'
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

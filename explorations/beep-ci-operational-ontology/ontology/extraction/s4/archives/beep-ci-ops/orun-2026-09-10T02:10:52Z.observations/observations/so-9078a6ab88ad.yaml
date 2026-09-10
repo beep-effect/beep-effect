@@ -1,0 +1,140 @@
+{
+  "id": "so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect12/codex_security-corpus-redaction-f1c17ed45c3a/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 33,
+    "content_sha256": "43f061f64caf5c280b4598a3d6e814f58aaac8f0d73dbb50e4b445cf457592ab"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect12/codex_security-corpus-redaction-f1c17ed45c3a/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=25d10c21-926c-4916-a981-bbdd9d74d6f7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/security-corpus-redaction"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-09-09T05:51:39.398Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "diffFingerprint=96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=6199"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T05:51:39.398Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=closeout:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=handler-error"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=a8539799cb846642b4ebdb4535ebea85f1d08878"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=closeout:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=closeout:02-review-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=closeout:pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=closeout:review-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=closeout"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "proofTier=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "resolvedHeadSha=a8539799cb846642b4ebdb4535ebea85f1d08878"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=codex_security-corpus-redaction-f1c17ed45c3a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T05:51:33.200Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=not-run"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=codex/security-corpus-redaction\ncommitted=false\ncreatedAt=2026-09-09T05:51:39.398Z\nfailurePolicy=fail-fast\nhead=a8539799cb846642b4ebdb4535ebea85f1d08878\nid=closeout:01-pr-context\nlabel=closeout:pr-context\nphase=monitor\nstatus=not-run\ntier=full\nid=closeout:02-review-gates\nlabel=closeout:review-gates\nphase=monitor\nstatus=not-run\ntier=full\nmessage=yeet PR closeout failed with 3 issue(s).\nmode=closeout\noutcome=failure\npushed=false\nrunId=codex_security-corpus-redaction-f1c17ed45c3a\nattemptId=25d10c21-926c-4916-a981-bbdd9d74d6f7\nresolvedHeadSha=a8539799cb846642b4ebdb4535ebea85f1d08878\ndiffFingerprint=96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7\nproofTier=full\nstartedAt=2026-09-09T05:51:33.200Z\nendedAt=2026-09-09T05:51:39.398Z\nelapsedMs=6199\nindexPath=<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json\nfailedStepId=closeout:01-pr-context\nfailureKind=handler-error\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,113 @@
+id: "dh:admb-seat-request:001"
+observation_refs:
+  - "so:sha256:0c6e04e7f4362f5d469f9c1eedd838e67a7a91caaba5e3ff6dac566b116bfc5a"
+  - "so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929"
+  - "so:sha256:294d794be09e649b5a17377c1360c0f7f573b667acdb9166a05c0a4df705f8fc"
+  - "so:sha256:2a6e186a42b949bfe289a0229aff20380459316332b5def65dce8cc12d748d3c"
+  - "so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0"
+  - "so:sha256:329c44ec4fb419e458ef5823689c4c600d6d9937ee653719c6e436f5af2d468b"
+  - "so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab"
+  - "so:sha256:3538030c5bd0760a9c53c44616055c41629ed75d482ec76bcc06330275f8999d"
+  - "so:sha256:3614eaf94c332c102fe2fe71112d59f710f5f4b0d2a2d2c6cb4e4bdee2c08619"
+  - "so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06"
+  - "so:sha256:38fffd45bcc04ba58312d36f4694ea9b157f7956d67452bb829952f31cf23385"
+  - "so:sha256:3a06414c0178479bb7922a88a9c7808ebdcf6dc04a5751d2880672a3970eacb7"
+  - "so:sha256:3f9618460b3680449834d6a01f7568a99c6954a085a16a60727100a6c1603ba3"
+  - "so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10"
+  - "so:sha256:4cac038f3231d162cf516d669b7bbb2f945ecaff574c8f5bea1bfd6399818e09"
+  - "so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973"
+  - "so:sha256:54999e877e0a6e55e78be44001d34f072da479c0e7bdbed660299b04759ff27b"
+  - "so:sha256:5a469137642420a8f0cbf6de9490c86e6f720de4d587ed336ab8f7173cd1c21a"
+  - "so:sha256:5abf1599e9268fb3190e199440ba2a0975670561acee0566c6805cd150491b12"
+  - "so:sha256:5b072546461a1aff37534b63ce30985da7dd245eba56a888483e95f2eaf0c33f"
+  - "so:sha256:63bf0d5c790dcfdef42e798c3612da479ebb1dcc96cf5ae91bbcc5abbe0a9129"
+  - "so:sha256:640a03f63aa4ff13b48b0368fa9f2054cf42454c1cf81394bb0828315f7b9322"
+  - "so:sha256:670e03a64c95c565c2755411af00c0e22ebe6e110796842e649844ddb889b827"
+  - "so:sha256:6d2b5abe8f8e770dc6c79d5f9c890565d61b30cfef5bf3e6d34123bbf7afb6c8"
+  - "so:sha256:714497e7760c9a963f4b6e998df4bdcd091a050ddcbecffa14d17f676afce38e"
+  - "so:sha256:728a791c0d757d9293790c2acaad9a2c8278eba56866c08cc6c2b2684f8c4584"
+  - "so:sha256:756a2cddd24cfb1cf54e6c3eb42ce81e438a68332463fc6923239babfddb4c0f"
+  - "so:sha256:75f79179af1c07f8cd301b39b2e0a480cff2cab21b6598a4d7198fa223283b4d"
+  - "so:sha256:78222350b0c0ed60ecf756d621e27ce6c664b19d324ab61f8421e3aeb7dbaafb"
+  - "so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959"
+  - "so:sha256:7e5702e0af48bd1ca7edc2d5c6350db34d8453874a5cd4344281607977584a90"
+  - "so:sha256:7e691f4aba31633d245206a65503fe36f855c86f4fd54bca5539692438ab900c"
+  - "so:sha256:8e56503bf451d7edda7047ebe49e71f58f4ee8cf6392773ddcae92e8af59c960"
+  - "so:sha256:8e77a0633f74c347ec357a4ce66dccb1b759c639006fc6251f30c8158344d548"
+  - "so:sha256:95a589bb270ccc20ef0409f27d0e9be297f9d6eb83706769f242be99dc04c6c2"
+  - "so:sha256:9a4d80db41ae3d7cdde49bd308273bbc213364ecbaecae42ae91dc5ba72e8312"
+  - "so:sha256:a03b8e201a23a02a6b82aa0c120aa205b4725195d3985dc468b271c0e4813bca"
+  - "so:sha256:a1f4b4761d924a497c1113cb2b5893bbb6559a8e5c385fdbf0c9c53f8a041b4c"
+  - "so:sha256:ac85cadefefdb5794db9a5111b67dde006ba05251cba3dc49b829b7d89b17665"
+  - "so:sha256:ba574bce897d92ed4d82236afc888a9e97316780aec858d877c64247603edc5d"
+  - "so:sha256:bbf039c9733c9bef609c0b780247a3ac0252404bc8c0708ab5b60b538aadabf2"
+  - "so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b"
+  - "so:sha256:c2dc9c1dc745720dae9ec574e7457be15301687c36071abea1c09b48cbd3ad8d"
+  - "so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a"
+  - "so:sha256:c9dddcabc8c17bd4e94ee006efe37dd3dad3e439c7a0177788f9ae0d3d9593dd"
+  - "so:sha256:cc9730a1b0d5fe267f7c65b2c1017d8e70ae518ee99ffcc01085b027a06767a6"
+  - "so:sha256:d528055a778209ef7ba8c585a447245d9828ec629052779a75a2f65dfc408d40"
+  - "so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb"
+  - "so:sha256:f22157463b8bb35324779e8d53a621bde8ce8b6511babab103a101a08152b3b6"
+  - "so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298"
+  - "so:sha256:f38d666952f2e70a4f3c00bd6d2075a331c99c3ecae5ceaabb73df7b792c9a7f"
+  - "so:sha256:fa16a716b56a1780f96785077dc9274f7a807f38a04770e008febb22d6cad15b"
+  - "so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "Seat request"
+  description: >-
+    An instance is one submitted demand for scheduler capacity for a work invocation. Its
+    recorded queue participation begins at admission-enqueued, or is retrospectively dated by
+    enqueuedAtMillis on an admission record, and ends at an observed admission-admitted,
+    admission-withdrawn, or admission-ticket-evicted boundary. The demand, an act that registers
+    it, a subsequent grant, and the work execution are different candidate referents. All 53
+    nonce chains concern a request; the two ticket-eviction-only chains identify the removed
+    contender but supply no enqueue time, work kind, priority, or charge. The five
+    lease-eviction chains carry an enqueue time on admission without a separate enqueue entry.
+    These gaps do not license invented entries. Requested weightTokens is a demand, not an
+    allocated holding; an origin key on a request does not establish active origin exclusion.
+    Kind and priority remain separate attributes: merged-preview occurs with verify and publish
+    priority, and full-proof also occurs with publish priority. Nonces correlate supplied
+    assertions without establishing an identity criterion. Historical boundaries establish
+    neither present queue membership nor a starvation verdict; the latter would require the
+    declared bound and a relevant complete snapshot.
+representation_status: domain_referent
+alternatives:
+  - label: "Information about a submitted capacity demand, carried by an admission-history record"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "The act of requesting capacity, with the enduring request treated as the act's content"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The proposed referent is the contender described by the positive enqueue, admission,
+    withdrawal, and ticket-eviction assertions. This selects the operational reading for the
+    request kind while retaining the source batches' information-artifact reading as viable. A
+    contemporaneous ticket registration/removal trace independent of journal production would
+    discriminate operational queue participation from an assertion-only account; registration
+    followed by continued queue participation would also distinguish the request from the
+    registration act. The supplied evidence supports a denotation hypothesis, not a ratified
+    identity or complete queue reconstruction. Capture pseudonyms and location placeholders
+    supply no requester identity.
+  discriminator: >-
+    The opened observations contain (config_key_value, "_tag=admission-enqueued"),
+    (config_key_value, "enqueuedAtMillis=1788927435322"), (config_key_value,
+    "nonce=3234b861-792e-4cde-96b6-5ca188435021"), (config_key_value, "kind=merged-preview"),
+    (config_key_value, "priority=publish"), and (config_key_value, "weightTokens=5"), followed
+    for that nonce by (config_key_value, "_tag=admission-withdrawn") and (config_key_value,
+    "withdrawnAtMillis=1788927676757"). The second batch independently supplies the same
+    positive boundary distinction for (config_key_value,
+    "nonce=355f5fd7-c1d1-49f9-9801-b9fa3048ea05"), with (config_key_value,
+    "enqueuedAtMillis=1788927786743") and (config_key_value, "withdrawnAtMillis=1788928062034").
+    The recorded claim is that a particular demand entered contention and was subsequently
+    withdrawn. Under the null that these entries denote no operational contender, that claim
+    would be false. This is evidence about the contender the entries purport to record, not
+    independent verification of every recorded transition.
+epistemic_status: proposed
+confidence:
+  value: 0.79
+  use_for_acceptance: false

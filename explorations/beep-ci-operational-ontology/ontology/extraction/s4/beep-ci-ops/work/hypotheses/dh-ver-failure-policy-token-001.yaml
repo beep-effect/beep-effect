@@ -1,0 +1,45 @@
+id: dh:ver-failure-policy-token:001
+observation_refs:
+- so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda
+- so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465
+- so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+- so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+- so:sha256:74b8c4733f1c2049ac998444c4905ba5e016d2f0cd6cf310dc5e6fa7cd414af2
+- so:sha256:7947484312042fc0ac6c5bd485427b9cc3a28829e3745b39031f6400a9c1a9c8
+- so:sha256:7a639ef29784753fbf47a4860c76a214d945a67c34fe1675915e57253dd3d628
+- so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc
+- so:sha256:a9a0813fdb533325632faeda662b8fa72b08b1e4868c9cfdf66c29939927dac9
+- so:sha256:b24d12302a876d81148174d1247fd84e7d304fababe40bf31e84e37093734224
+- so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1
+- so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446
+- so:sha256:f19da17d5b8f8ff5107a9b96cf4ff9256ebf03da52491e0370413f941f085e5d
+- so:sha256:faeff009ed066ab59b310901f7f127fa174f0b0e2859613529a9ac69673c3230
+cq_warrants: []
+proposed_referent:
+  label: Stored fail-fast policy token
+  description: No independent domain policy is established by the repeated failurePolicy value. The observations
+    record a policy-selection token beside attempt results. Its normative meaning, scope across phases,
+    and enforcement behavior are not supplied as observed rules.
+representation_status: implementation_artifact_only
+alternatives:
+- label: An execution-control specification governing continuation after a failure
+  representation_status: information_artifact
+  plausibility: viable
+- label: A policy obligation binding a verifier to stop under stated conditions
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: Every cited record supplies "failurePolicy=fail-fast", but a stored setting is not evidence
+    that a particular failure suppressed a particular subsequent operation. The coexistence of "status=failed"
+    and "status=passed" in several records does not establish event order, policy scope, or either compliance
+    or violation. The elapsed-time fields in the sparse closeout record likewise establish no stop rule.
+    A quoted enforcement rule or paired continuation/suppression trace would be needed to establish such
+    a policy referent, and no supplied decision CQ specifically requires this token as a term. It is not
+    the scheduler starvation policy merely because both are called policies.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

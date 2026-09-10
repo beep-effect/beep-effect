@@ -1,0 +1,1907 @@
+# Run 3 SECOND PASS: post-ratification index, rat-053 through rat-070.
+# Shared evidence takes proposed/mapped > unresolved > irrelevant.
+# Equal-rank choices prefer named withdrawals, then the narrowest hypothesis,
+# then the proposal/hypothesis id. Sitting-2 carried wording is preserved.
+- observation: po:sha256:004887d37eb13319a467b294764093c16a3cb02165cc88ceba6b7bfa4768f77c
+  outcome: proposed
+  ref: otp:ov-step-scope-tag:001
+- observation: po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0
+  outcome: proposed
+  ref: otp:ov-schedule-step:001
+- observation: po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  outcome: proposed
+  ref: otp:ov-step-position:001
+- observation: po:sha256:0c5a0ac360560118bda477d323d7b7ae9977d379ec5a282b0184baf5195d43da
+  outcome: mapped
+  ref: otp:ov-seat-request:001
+- observation: po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+  outcome: proposed
+  ref: otp:ov-proposal-specification-binding:001
+- observation: po:sha256:0edda9c35fd73ea03c8097d5af03083ac39ed1c36db53c30f75ccff9b37018f7
+  outcome: proposed
+  ref: otp:ov-current-proposal-selection:001
+- observation: po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4
+  outcome: proposed
+  ref: otp:ov-verification-episode:001
+- observation: po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+  outcome: mapped
+  ref: otp:ov-admission-token-charge:001
+- observation: po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a
+  outcome: proposed
+  ref: otp:ov-step-request-assignment:001
+- observation: po:sha256:221c15de00ddaa99cefdedac1df4d97a783e5890ff9b9fc963f21627350fe488
+  outcome: proposed
+  ref: otp:ov-projection-specification:001
+- observation: po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020
+  outcome: proposed
+  ref: otp:ov-step-position:001
+- observation: po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3
+  outcome: proposed
+  ref: otp:ov-verification-episode:001
+- observation: po:sha256:2bd636283801ce0554f90ccad18d9af687c0492f9206e9428256c3232db5790d
+  outcome: mapped
+  ref: otp:ov-seat-request:001
+- observation: po:sha256:2cbe4a487c0ebb475da0d4b4e9833105b7c1d677e942f04484e74049b825ee53
+  outcome: proposed
+  ref: otp:ov-projection-specification:001
+- observation: po:sha256:2cc77ae5391bd35d736242a9fff5ee6d2e64ee35cc18a420060b5a541f947ca6
+  outcome: unresolved
+  needed_evidence: Needed evidence is a concrete decision consuming this comparison record, or a demonstrated
+    dependency making it necessary to identify the governing specification under an existing question.
+  since: '2026-09-10'
+- observation: po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+  outcome: mapped
+  ref: otp:ov-admission-token-charge:001
+- observation: po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf
+  outcome: proposed
+  ref: otp:ov-step-scope-tag:001
+- observation: po:sha256:3015f93b003a84d5a9e8ee82ac198ebe5bd86db390fd763e0aef039e2ed6c203
+  outcome: mapped
+  ref: otp:ov-seat-request:001
+- observation: po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8
+  outcome: mapped
+  ref: otp:ov-admission-token-charge:001
+- observation: po:sha256:351a4375bf86d6f06e1e558697ef04f2a5e283645a772d4fe5b3e78ac0c722bd
+  outcome: mapped
+  ref: otp:ov-schedule-proposal:001
+- observation: po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3
+  outcome: proposed
+  ref: otp:ov-current-proposal-selection:001
+- observation: po:sha256:3c9d7d9e1165dd56fe1846e5c84f330e75fb8b966dfbd2fcf0e5a4a113b504c5
+  outcome: mapped
+  ref: otp:ov-schedule-proposal:001
+- observation: po:sha256:40e7562cb1c7744f4472ab4db2e562024f5554997915678e4ec8c759f11f1852
+  outcome: mapped
+  ref: otp:ov-schedule-proposal:001
+- observation: po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  outcome: proposed
+  ref: otp:ov-step-scope-tag:001
+- observation: po:sha256:4b06f5efe076d7ed81dd9d5b200c268b1d9e42cbe4f8c78086928bdaf65bb41e
+  outcome: proposed
+  ref: otp:ov-proposal-step-membership:001
+- observation: po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7
+  outcome: proposed
+  ref: otp:ov-step-scope-tag:001
+- observation: po:sha256:519764a98f511e5f2137e8eb2d6b072d92d27b62a4417db97040359034bb3282
+  outcome: unresolved
+  needed_evidence: Needed evidence is the corresponding journal chain or an observation-backed liveness/reaping
+    event tying the removed charge to a particular active grant and instant.
+  since: '2026-09-10'
+- observation: po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263
+  outcome: proposed
+  ref: otp:ov-step-position:001
+- observation: po:sha256:5767117862eb6d9a3c039a440a4f016fb59e66016cef58838a3b6577930f0d02
+  outcome: irrelevant
+  reason: A Context.Service heading, S.Class and LiteralKit prescriptions, DTO fields, and named typed
+    errors can all exist without additional operational entities. The quoted non-goals explicitly leave
+    the lane-DAG planner unimplemented and reserve real admissions to the deployed scheduler; a planned
+    seam is no execution occurrence. No supplied decision question requires CiOpsProjection, ProjectionInput,
+    or the listed error wrappers as independent terms. This null applies to implementation scaffolding,
+    without discarding the domain-bearing descriptions elsewhere in the same observations.
+- observation: po:sha256:5e660542834fa3d2e917207f5764b6905b0654cfb825a0f34b4ac27bfe96bb02
+  outcome: mapped
+  ref: otp:ov-schedule-proposal:001
+- observation: po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3
+  outcome: proposed
+  ref: otp:ov-projection-specification:001
+- observation: po:sha256:6015bb00bfc13c38c74674dd34cfb03ed21b85bff50aec615fe80a9f1ca8ad36
+  outcome: proposed
+  ref: otp:ov-proposal-specification-binding:001
+- observation: po:sha256:6077249a3b22962f264de871a3cbf161c6f63d2a581e484eb694797a0ea29854
+  outcome: irrelevant
+  reason: The emitter reads request.nonce, and the fixture literals admitted-a, admitted-b, and deferred-c
+    are example identifiers. The report explicitly says that the journal carries no work-unit-specification
+    identity. A field that serializes an identifier remains compatible with the null for an additional
+    domain referent; no supplied decision question requires the serialization spelling as its own term.
+    The literal values are fixture placeholders, not operational individuals. The evidence may support
+    the request interpretation without promoting the carrier itself.
+- observation: po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+  outcome: mapped
+  ref: otp:ov-admission-token-charge:001
+- observation: po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+  outcome: proposed
+  ref: otp:ov-current-proposal-selection:001
+- observation: po:sha256:7f9eb7c183ed32fda7d59f429762811cda9842630765794f877ac24984cdbc6e
+  outcome: proposed
+  ref: otp:ov-step-request-assignment:001
+- observation: po:sha256:8081b5c15707c6f49878d6d871f17862c72605489c31de3a31d56b12a59c5fc9
+  outcome: proposed
+  ref: otp:ov-proposal-step-membership:001
+- observation: po:sha256:83ac7ce996c2aacaf072f7c6977c423f511a3ec1d1d3b7f21a6fa64fb31ec86f
+  outcome: mapped
+  ref: otp:ov-seat-request:001
+- observation: po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+  outcome: proposed
+  ref: otp:ov-step-scope-tag:001
+- observation: po:sha256:9081cf3d4060a87388a3b4285f7ed6165aa24f39dc350fc3b3c3aeffec0e6b26
+  outcome: proposed
+  ref: otp:ov-projection-specification:001
+- observation: po:sha256:95a467e6ebaab375ff2ad57e62d923b29f7237987d9e83c521704777a9438853
+  outcome: proposed
+  ref: otp:ov-proposal-specification-binding:001
+- observation: po:sha256:a1e5e0d0916deb0cb33ee62f307e85aabb52833a88511c4c1fdc4885ec667857
+  outcome: proposed
+  ref: otp:ov-proposal-step-membership:001
+- observation: po:sha256:a3b740b147b88dd94b092bee660c397cabadbbed2f35ddd14b6347c6ccb2f3fe
+  outcome: unresolved
+  needed_evidence: Needed evidence is the corresponding journal chain or an observation-backed liveness/reaping
+    event tying the removed charge to a particular active grant and instant.
+  since: '2026-09-10'
+- observation: po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+  outcome: proposed
+  ref: otp:ov-proposal-step-membership:001
+- observation: po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+  outcome: mapped
+  ref: otp:ov-admission-token-charge:001
+- observation: po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+  outcome: proposed
+  ref: otp:ov-step-request-assignment:001
+- observation: po:sha256:b18d0154d573355ca2ecfcd8a45787237eac6ba6a335c5a69c783c8d0a078f29
+  outcome: mapped
+  ref: otp:ov-schedule-proposal:001
+- observation: po:sha256:bf5bc16f05f914e33611300f1f942429268653f3a5d67ef5fe437a9a5c9f8d4f
+  outcome: irrelevant
+  reason: The quoted GENERATED banner and producer path describe capture provenance, and the frozen-input
+    SHA-256 identifies evidence bytes. Capture and generator metadata, source paths, and placeholder tokens
+    warrant no domain referents. The event counts can bound the report claim, but they do not transform
+    the generator or digest into an operational entity and do not establish complete request lifecycles.
+    No supplied decision question requires this capture metadata as an independent term.
+- observation: po:sha256:c864b7623923f2c433680c0ebb2487b1eb949bc2c8ffb91347a3e288560dd4a3
+  outcome: irrelevant
+  reason: The emitter reads request.nonce, and the fixture literals admitted-a, admitted-b, and deferred-c
+    are example identifiers. The report explicitly says that the journal carries no work-unit-specification
+    identity. A field that serializes an identifier remains compatible with the null for an additional
+    domain referent; no supplied decision question requires the serialization spelling as its own term.
+    The literal values are fixture placeholders, not operational individuals. The evidence may support
+    the request interpretation without promoting the carrier itself.
+- observation: po:sha256:c92cd59362565eda3098e5d0828c8c377fd934ae4d4546cc190d22b25207fd9a
+  outcome: proposed
+  ref: otp:ov-schedule-step:001
+- observation: po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f
+  outcome: proposed
+  ref: otp:ov-step-request-assignment:001
+- observation: po:sha256:d4f2e09398646bf875ee3cbeeec6471c327a8a7b9d9d82425c754dbebd84c7f9
+  outcome: mapped
+  ref: otp:ov-origin-ordering-key:001
+- observation: po:sha256:d5a14f495e7b2778abacb3727637a629965dec0f85bbefec53d76cba5a7690e3
+  outcome: mapped
+  ref: otp:ov-origin-ordering-key:001
+- observation: po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7
+  outcome: proposed
+  ref: otp:ov-step-position:001
+- observation: po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+  outcome: proposed
+  ref: otp:ov-proposal-specification-binding:001
+- observation: po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e
+  outcome: proposed
+  ref: otp:ov-schedule-step:001
+- observation: po:sha256:e9df49623f67f2eac1d565f6ab8811c99128f33a8610358f0944f64ae390aa5e
+  outcome: proposed
+  ref: otp:ov-projection-specification:001
+- observation: po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d
+  outcome: mapped
+  ref: otp:ov-origin-ordering-key:001
+- observation: po:sha256:f41f8934b51e0e14a0344efa0b46898ea051035f811e3cee5e8de69c1bf43e2a
+  outcome: unresolved
+  needed_evidence: Needed evidence is the corresponding journal chain or an observation-backed liveness/reaping
+    event tying the removed charge to a particular active grant and instant.
+  since: '2026-09-10'
+- observation: po:sha256:f456cbb5c883ae06a4246878847ea9d98832618f2e923b54164a79cd2acfe000
+  outcome: mapped
+  ref: otp:ov-seat-request:001
+- observation: po:sha256:f60ddfb04ede510a8ffe6a04a36eac20caeb92175e59245f6b436897c83907b8
+  outcome: unresolved
+  needed_evidence: Needed evidence is a concrete decision that requires identifying requests omitted from
+    the prescribed sequence, or an observed mapping that makes this assertion necessary for an existing
+    decision.
+  since: '2026-09-10'
+- observation: po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6
+  outcome: proposed
+  ref: otp:ov-schedule-step:001
+- observation: po:sha256:fe4b4d49ef566d86584b1cea395485bf0f230233e91478c746d3a8d23208e05c
+  outcome: mapped
+  ref: otp:ov-origin-ordering-key:001
+- observation: po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305
+  outcome: mapped
+  ref: otp:ov-admission-token-charge:001
+- observation: so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:0385cf6e12920c8a96c520a7238b522f923a7c0116cd603fbeff793a7d0e6058
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:05a0dfbb8f434d75b8be6d1bd7d396925b594cb0e9ceb6b72bda31e76e9685d3
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:05fa73f187683c8b5cfb25a3958ed5b6f3d344d1b984cb1ce1cdffe5a9b2674a
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:0775b5fd356eaea7604537054326c7e97598c5f81504c0d815558297ebf0f50e
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:08149709f365cd0031ec1a4a17e6f76e957b70a4507b8c15e077e41ec998abce
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:0b869db1f6652fd57dc5d94909efaba02e59d036d6c9756836013cc3f9eedf31
+  outcome: proposed
+  ref: otp:att-verification-attempt:001
+- observation: so:sha256:0c6e04e7f4362f5d469f9c1eedd838e67a7a91caaba5e3ff6dac566b116bfc5a
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:0cccdb870b289d7bd47e8a769286e011a63a4c80aede46b7ceb7f8fa9d665774
+  outcome: irrelevant
+  reason: The observation contains only (config_key_value, "eviction=on"); the excerpt additionally carries
+    a serialization-version label. Neither fact connects this switch to a specific admission or eviction
+    decision. The source batch retained the null and the consolidation preserves that result. A supplied
+    observation of the scheduler consuming the switch in a governing decision, together with the conditions
+    it controls, would discriminate policy content from a dormant implementation option. Adoption-qualified
+    timing would additionally be necessary for an operational-change reading. Coexisting eviction histories
+    supply neither binding by themselves.
+- observation: so:sha256:0dcfbaeaa65aeeec90c1e9590be8a33c1ffe9438f29ebbe7d8617d09a5e45b08
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:0e50d84bdb1fbc2d463bced37bfe314caf8e1b5a8cc58dd5359978650ab1f53c
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:0e797a3deeedd27cfa75082643ce788d6c73e073bf87a640fe50ce3896a43e2b
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:10f2cebc7b17c5f7b15bd051ed0f0363d355c3e4cb2f927dd2b2852461ad2610
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:126709ea74fec8cb4b03c021d7cf121aac566b19bea91c4ac8a452f33d01a94e
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:146d2b385ef6e3fb892821dbd2df82091184f2dca48f8cd9b9eaa5d01019d942
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:155a7c875acf08bae8c3073be1e54bebd65f2b8d5192697d7687da967e781ae6
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:1d2662aa5e2f9701d80526c67b0cc29db04038e64bb84781c76616fe78f1e174
+  outcome: irrelevant
+  reason: The observation reports config_key_value "binding_probe_status=degraded", "status=unavailable",
+    and "exit_code=128" for the supplementary Git probes. Its snapshot head and branch do not turn those
+    failed probes into a confirmed binding at the later probe instant. "turbo_local_cache_present=false"
+    and "turbo_configuration_status=absent" are bounded probe results; they do not establish deletion,
+    invalidation, or the absence of every possible cache. No proof applicability decision or operational
+    failure classification consuming this degraded result is supplied. Identity-key spelling, external-path
+    placeholders, timestamps, and the generator's environment flags are capture bookkeeping. A successful
+    binding probe plus evidence at task-hash granularity would be needed to ground a transferability-bearing
+    interpretation.
+- observation: so:sha256:232151f9f2afc0f8662cbd2c75d368bae594686ce7f0bdbac3e9f7238d6fd062
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:27ba4f5468b662c17e401817a599ad4e45c2091d51423b279d8de9fbe97880b7
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f
+  outcome: unresolved
+  needed_evidence: 'Synthetic operational SeatGrant allocation-relator reading; the recorded-value grain
+    governs SeatGrant reuse this run. Needed: organic lease-eviction/renewal/transfer chains in a fleet
+    capture showing effective allocation continuity, joined to an independently identified holder.'
+  since: '2026-09-10'
+- observation: so:sha256:294d794be09e649b5a17377c1360c0f7f573b667acdb9166a05c0a4df705f8fc
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:2a6e186a42b949bfe289a0229aff20380459316332b5def65dce8cc12d748d3c
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:2e58e1311fcc9f696bc06624bab0b4e23b6597ee1919f68e1516882ab067b53a
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:324b4da710ece73d2e9cf1b127faf7f8887213e04ea458ee84dd0657cced3e26
+  outcome: irrelevant
+  reason: The opened observation lists (config_key_value, "nonce=07df5dce-9165-43a3-80d5-0e50b31fc3b8"),
+    (config_key_value, "admittedAtMillis=1788411628206"), (config_key_value, "attemptId=cc521c01-ee2d-4ffa-9c43-75308c5118b0"),
+    and (config_key_value, "withdrawnAtMillis=1788926326135") in one file-level fact set. Its excerpt
+    places the attempt identifier and withdrawal boundary in different nonce entries from the first admission.
+    Joining these fields would manufacture a lifecycle. The source batch kept the null standing for this
+    projection, and the consolidation does likewise. A separate decision needing the whole journal as
+    an evidence collection, together with preserved entry associations and a collection boundary/retention
+    contract, would discriminate the viable information-artifact interpretation from this extraction-only
+    artifact. A projection containing meaningful source values need not itself supply another referent.
+- observation: so:sha256:329c44ec4fb419e458ef5823689c4c600d6d9937ee653719c6e436f5af2d468b
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee
+  outcome: unresolved
+  needed_evidence: To select among the remaining models, observe two assessments of the same explicitly
+    identified PR/head with their operational assessment instants and review/check states preserved, changing
+    a single component between them. Include the observed consumer's criteria and its distinction between
+    checksGreen and requiredChecksGreen, the connection to the CQ-006/CQ-017 obligations, and whether
+    it treats the second assessment as an update to one document or a distinct snapshot. A retained copy
+    after removal of the original record would additionally discriminate the specific-bearer dependence
+    claim.
+  since: '2026-09-10'
+- observation: so:sha256:34a817e0c13cd3492a11ac0d305299dde6a592531cb545f4a72b674fa086c160
+  outcome: irrelevant
+  reason: The only observed fact is config_key_value "overlappingPaths=explorations/ATLAS.md". The containing
+    source_excerpt also reports "behindCount=1", but its actual terminal failure is "failedStepId=monitor:02-pr-checks-watch"
+    with "failureKind=step-exit". Co-location does not show that the overlap caused the failure or changed
+    any affected set or evidence applicability decision. The two supplied captures repeat the same excerpt,
+    not a before/after transition. A demonstrated overlap-to-scope, overlap-to-invalidation, or overlap-to-blocking
+    rule would be needed to give this diagnostic separate decision-bearing standing.
+- observation: so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:3538030c5bd0760a9c53c44616055c41629ed75d482ec76bcc06330275f8999d
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:3579a1da6705f9faca54483a1aa157e5c334fbf6b86590dd28a9fc01e0b360a5
+  outcome: irrelevant
+  reason: Each observation supplies the same config_key_value fact "blockedOnOriginAtMillis=0". Neither
+    provides a nonzero boundary or the rule interpreting zero. The surrounding excerpts have enqueue and
+    heartbeat times, but they do not show when origin blocking began or ended. Consequently this field
+    cannot support the requested wait/lock decomposition or a negative assertion that no contention occurred.
+    A decision rule or a transition with an interpreted nonzero onset would be needed to reject the null.
+    ownerRef, ownerRefVariant, and placeholder paths in the surrounding ticket excerpt are capture provenance
+    and cannot fill that gap.
+- observation: so:sha256:3614eaf94c332c102fe2fe71112d59f710f5f4b0d2a2d2c6cb4e4bdee2c08619
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+  outcome: mapped
+  ref: otp:att-attempt-verdict:001
+- observation: so:sha256:37968f126c464470a069ac2051cb358a0a29720dd49df7256625cb4d17bfa2c6
+  outcome: unresolved
+  needed_evidence: A detection-and-recovery process with standalone and lane-rerun components; this changes
+    the referent to the reported activity and requires independent execution boundaries before deriving
+    a complete duration. Retain the detection, attempt, task, lane, and each measurement target together.
+    CQ-007 cannot be answered by adding these durations to the whole attempt or to each other without
+    interval/overlap evidence. CQ-013 requires an independently supported signature mapping, attributed
+    delay, and lane cost comparisons; this one label and two measurements do not settle them.
+  since: '2026-09-10'
+- observation: so:sha256:38fffd45bcc04ba58312d36f4694ea9b157f7956d67452bb829952f31cf23385
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:3a06414c0178479bb7922a88a9c7808ebdcf6dc04a5751d2880672a3970eacb7
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:3c12eecfeade83fd24add873e6ddc1730a9afe60d0d2ea5d876309a1502a062c
+  outcome: proposed
+  ref: otp:att-verification-attempt:001
+- observation: so:sha256:3f9618460b3680449834d6a01f7568a99c6954a085a16a60727100a6c1603ba3
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  outcome: mapped
+  ref: otp:att-admission-allocation:001
+- observation: so:sha256:4395993ded7a7f02b42edac02bacba738f4f2aa1270db85e098e9d9f62fc9aca
+  outcome: irrelevant
+  reason: The config_key_value facts "checkoutsDiscovered=107", "clonesDiscovered=22", "checkoutsDegraded=1",
+    and "processesScanned=5" characterize the census. "materialized=false", "conflict=unknown", "conflictReason=target-unmaterialized",
+    and "policyMovement=unknown" preserve limitations rather than establish a conflict outcome or authorize
+    a movement. No shared-cache binding, proof applicability result, or admission decision is attached
+    to these aggregate values. A snapshot's liveness labels also do not identify admission owners or prove
+    currently active grants. The fleet-root and path placeholders and scan bookkeeping remain capture
+    coordinates. The supplied decision questions do not independently require a term for this inventory
+    wrapper; evidence of a concrete decision consuming the census would be needed to reject the null for
+    that wrapper.
+- observation: so:sha256:462be5edf92fe7d6a3dc7f4a3a376d9c539106fb88bdbaff0fc539751b4b6a41
+  outcome: irrelevant
+  reason: The observations supply config_key_value "marker=yeet-staged-only/codex_security-findings-2026-09-08-fca6d1290697/2026-09-09T03:15:12.259Z"
+    and "stashSha=b2675def82c2fb2d4d6c81efa6eef38563db102f". Those are recovery locators, not a demonstrated
+    decision relation. The containing verdict reports "failedStepId=publish:02-pr-create" and "failureKind=handler-error";
+    it does not say that saving or restoring the stash caused the failure or changed proof applicability.
+    No saved-content comparison, restoration outcome, or consumer rule is supplied. Such evidence, together
+    with a required operational decision, would be needed for separate domain standing. ownerRef and ownerRefVariant
+    elsewhere in these excerpts are capture provenance; changing those aliases between captures supplies
+    no extra referent.
+- observation: so:sha256:481c254ae671522359b48aef2b15eb43ba0b488cc8c1a5daf093aa47bdf9695f
+  outcome: irrelevant
+  reason: The config_key_value facts pair a marker beginning "yeet-staged-only/" with a stashSha value.
+    They show how a handle is stored, not that a particular scope was isolated, restored, verified, or
+    made admissible by consulting it. A timestamp embedded in a marker and a Git object identifier do
+    not supply identity or an observed recovery transition. No supplied CQ requires the marker as an independent
+    term. Path/host placeholder tokens and capture-provenance members, where present around the record,
+    describe its representation or capture and warrant no domain referent.
+- observation: so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:4a98ae2d71bc800fd8718d37ccc93288cf66cc48dbffa2eddc2a0c7c3297a7d6
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:4bb535144f06b1e9abc6a8c75f0dcc3fc7d030f9b64214adfd1bed92ca384b08
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:4cac038f3231d162cf516d669b7bbb2f945ecaff574c8f5bea1bfd6399818e09
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:5130545f45659ac9d904152da47d3e52ab06961250b57d626f3d8afc4993fe42
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:522ce0efbf2933dac38a6f574c2ff640dadb305b695e06028dad7a5c0f25d91c
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:5385e1093cb89d44a133f10137a19daf0d881f93573386f0b2c1fd3c7809a7a5
+  outcome: irrelevant
+  reason: The observation contains config_key_value objects "_id=Option", "_tag=Some", and "value=c5776ca7-7aae-4e0c-bbc3-20f3657a07c6".
+    These are compatible with a generic wrapper around unrelated values and do not identify an attempt,
+    grant, execution state, or ontology role. The operational result elsewhere in the enclosing excerpt
+    does not make the wrapper a separate referent. Neither a source binding nor a decision requiring this
+    encoding is supplied; the UUID and the wrapper names cannot reject the implementation-only null.
+- observation: so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:54999e877e0a6e55e78be44001d34f072da479c0e7bdbed660299b04759ff27b
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:5a469137642420a8f0cbf6de9490c86e6f720de4d587ed336ab8f7173cd1c21a
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:5abf1599e9268fb3190e199440ba2a0975670561acee0566c6805cd150491b12
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:5b072546461a1aff37534b63ce30985da7dd245eba56a888483e95f2eaf0c33f
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:6108f04e939048617511e050bbb2421593e88c3658829deaead9b406fcb811d9
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:636db00ceac88a2c4857664e7f2fb863833b68fe94f1e28a111e3451d3dfcbb1
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:63bf0d5c790dcfdef42e798c3612da479ebb1dcc96cf5ae91bbcc5abbe0a9129
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:640a03f63aa4ff13b48b0368fa9f2054cf42454c1cf81394bb0828315f7b9322
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98
+  outcome: unresolved
+  needed_evidence: The assertion has an emission/recording boundary and persists as information afterwards.
+    The modeled attempt's boundary, actual work's termination, and record retention are different intervals
+    or instants. Missing starts and admission boundaries prevent elapsed work or queue duration from being
+    computed from these notices alone. Preserve each notice's modeled attempt, terminal reason, and recording
+    instant together, and retain the synthetic qualification on evidence use. CQ-007 and CQ-012 require
+    known boundaries and complete time decomposition; neither recorded notice warrants adding admitted
+    execution time or treating unmeasured waiting time as zero.
+  since: '2026-09-10'
+- observation: so:sha256:65609cedeaf3e99b51031c38b99ab7bc16ea0ef59fa66bea1d446ef3f7bd3333
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:670e03a64c95c565c2755411af00c0e22ebe6e110796842e649844ddb889b827
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:675134527a157d157274937b2f8ad90b036d30b77340d61f1e202483d9ac828e
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f
+  outcome: unresolved
+  needed_evidence: The assertion has an emission/recording boundary and persists as information afterwards.
+    The modeled attempt's boundary, actual work's termination, and record retention are different intervals
+    or instants. Missing starts and admission boundaries prevent elapsed work or queue duration from being
+    computed from these notices alone. Preserve each notice's modeled attempt, terminal reason, and recording
+    instant together, and retain the synthetic qualification on evidence use. CQ-007 and CQ-012 require
+    known boundaries and complete time decomposition; neither recorded notice warrants adding admitted
+    execution time or treating unmeasured waiting time as zero.
+  since: '2026-09-10'
+- observation: so:sha256:6abcdc65b395bfc82d08b2c5e49d3c9553e97a46bd942343457e68e8da0a85e7
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+  outcome: mapped
+  ref: otp:att-attempt-verdict:001
+- observation: so:sha256:6cf1d332ce7ea225c24cf5aea2e2192ab91ec06838463289be284bae7677e60c
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:6d2b5abe8f8e770dc6c79d5f9c890565d61b30cfef5bf3e6d34123bbf7afb6c8
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:714497e7760c9a963f4b6e998df4bdcd091a050ddcbecffa14d17f676afce38e
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:728a791c0d757d9293790c2acaad9a2c8278eba56866c08cc6c2b2684f8c4584
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:74b8c4733f1c2049ac998444c4905ba5e016d2f0cd6cf310dc5e6fa7cd414af2
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:756a2cddd24cfb1cf54e6c3eb42ce81e438a68332463fc6923239babfddb4c0f
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:75f79179af1c07f8cd301b39b2e0a480cff2cab21b6598a4d7198fa223283b4d
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:7627bd8803b5da11524904bb2c7b2fdcd7c320ba034444204852ded9c164cfff
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:78222350b0c0ed60ecf756d621e27ce6c664b19d324ab61f8421e3aeb7dbaafb
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:7947484312042fc0ac6c5bd485427b9cc3a28829e3745b39031f6400a9c1a9c8
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:7a639ef29784753fbf47a4860c76a214d945a67c34fe1675915e57253dd3d628
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:7b8493be70e8285a866f898e5691df4cb02c5d51fd808635f508854d1ec5622c
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:7d6016e9e15f859dd3351646664a0b645b4d942ceea5939989c4972a3259d647
+  outcome: irrelevant
+  reason: 'The provenance: synthetic record supplies config_key_value "schemaVersion=yeet-admission-protocol/v2",
+    "eviction=on", and "provenance=synthetic". The provenance marker labels the fixture; it is never domain
+    vocabulary. A version identifier and an enabled-setting value do not demonstrate a consumer, a changed
+    admission decision, an actual eviction, or the obligations and applicability of a policy. No supplied
+    decision question independently requires this protocol marker to become a referent. Evidence linking
+    a resolved setting to a concrete scheduling decision or a governing policy would be needed to reject
+    the null for the marker itself.'
+- observation: so:sha256:7e4e7d3c3f97a3907222c12d770c3f618aa1502dc1fd391f0738fd93f874dbbb
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:7e5702e0af48bd1ca7edc2d5c6350db34d8453874a5cd4344281607977584a90
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:7e691f4aba31633d245206a65503fe36f855c86f4fd54bca5539692438ab900c
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:7f98fb05e2fa6d6b3b08618e7f5af09ecdefc3ff88752bbf437aff900e73036a
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:8e56503bf451d7edda7047ebe49e71f58f4ee8cf6392773ddcae92e8af59c960
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:8e6e6fa75f2c19d8463d6d851f38ef7935b1a014f7e0e81bcdaa5a3074ea6f92
+  outcome: irrelevant
+  reason: The only observed fact is config_key_value "overlappingPaths=explorations/ATLAS.md". The containing
+    source_excerpt also reports "behindCount=1", but its actual terminal failure is "failedStepId=monitor:02-pr-checks-watch"
+    with "failureKind=step-exit". Co-location does not show that the overlap caused the failure or changed
+    any affected set or evidence applicability decision. The two supplied captures repeat the same excerpt,
+    not a before/after transition. A demonstrated overlap-to-scope, overlap-to-invalidation, or overlap-to-blocking
+    rule would be needed to give this diagnostic separate decision-bearing standing.
+- observation: so:sha256:8e77a0633f74c347ec357a4ce66dccb1b759c639006fc6251f30c8158344d548
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:928e7ce7acb4292bbd03703746cd347b6fd0aeeb2c144ee33188512f3ff91939
+  outcome: unresolved
+  needed_evidence: A detection-and-recovery process with standalone and lane-rerun components; this changes
+    the referent to the reported activity and requires independent execution boundaries before deriving
+    a complete duration. Retain the detection, attempt, task, lane, and each measurement target together.
+    CQ-007 cannot be answered by adding these durations to the whole attempt or to each other without
+    interval/overlap evidence. CQ-013 requires an independently supported signature mapping, attributed
+    delay, and lane cost comparisons; this one label and two measurements do not settle them.
+  since: '2026-09-10'
+- observation: so:sha256:929aa987fb5e550c58968f28fd06947d1bfd2b788815a77376329f06d9ca765a
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:94cda97bb49a7661b4b7bd7ed0cd0f5b8594223ad33ddbf9d9637e464ee5c902
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:95a589bb270ccc20ef0409f27d0e9be297f9d6eb83706769f242be99dc04c6c2
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:997fca9994bcb3a70f034acd490a212d79ae083f17c0a18972bdbc8a924a5346
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:9a4d80db41ae3d7cdde49bd308273bbc213364ecbaecae42ae91dc5ba72e8312
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:a03b8e201a23a02a6b82aa0c120aa205b4725195d3985dc468b271c0e4813bca
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:a1f4b4761d924a497c1113cb2b5893bbb6559a8e5c385fdbf0c9c53f8a041b4c
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:a3d906985080a7bb34c6364829dd3add8d8d0a7235a3b00d027d9e9685e7eb19
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:a4ff1bbe07b6d10ed237650df3bfbe94c9a94240167ba58443ebf37227476301
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9
+  outcome: unresolved
+  needed_evidence: 'run4-checkout-cache-binding-identity-consumer: Preserve a same-cache accessibility/transfer
+    experiment at task-input-hash and epoch grain, with the two checkout identities and separate probe
+    times, positive access and bounded local absence, and a binding-change or correction trace. Supply
+    an observed consumer and a Must/Should executable CQ that must address the binding information object''s
+    identity rather than the existing qualified checkout/cache relation. If direct relations suffice,
+    keep the class withdrawn. Common Git administration, directory-entry counts and environment flags
+    do not establish common cache access or a skip authorization.'
+  since: '2026-09-10'
+- observation: so:sha256:a9a0813fdb533325632faeda662b8fa72b08b1e4868c9cfdf66c29939927dac9
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:abbce590491db2bd6b6e52d239f73f85199da2e23652785f350d9b71f8a10f58
+  outcome: irrelevant
+  reason: Each observation supplies the same config_key_value fact "blockedOnOriginAtMillis=0". Neither
+    provides a nonzero boundary or the rule interpreting zero. The surrounding excerpts have enqueue and
+    heartbeat times, but they do not show when origin blocking began or ended. Consequently this field
+    cannot support the requested wait/lock decomposition or a negative assertion that no contention occurred.
+    A decision rule or a transition with an interpreted nonzero onset would be needed to reject the null.
+    ownerRef, ownerRefVariant, and placeholder paths in the surrounding ticket excerpt are capture provenance
+    and cannot fill that gap.
+- observation: so:sha256:ac85cadefefdb5794db9a5111b67dde006ba05251cba3dc49b829b7d89b17665
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:ad5ef0f6bca50e85da674990519818fb3d4a14a1650ccb135b89f2f10d875248
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:af0e1748d24228e5bcdc90d99c719c2b2f885e68dcb60b31e3805742e4fbbf8f
+  outcome: irrelevant
+  reason: The observations supply config_key_value "marker=yeet-staged-only/codex_security-findings-2026-09-08-fca6d1290697/2026-09-09T03:15:12.259Z"
+    and "stashSha=b2675def82c2fb2d4d6c81efa6eef38563db102f". Those are recovery locators, not a demonstrated
+    decision relation. The containing verdict reports "failedStepId=publish:02-pr-create" and "failureKind=handler-error";
+    it does not say that saving or restoring the stash caused the failure or changed proof applicability.
+    No saved-content comparison, restoration outcome, or consumer rule is supplied. Such evidence, together
+    with a required operational decision, would be needed for separate domain standing. ownerRef and ownerRefVariant
+    elsewhere in these excerpts are capture provenance; changing those aliases between captures supplies
+    no extra referent.
+- observation: so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+  outcome: mapped
+  ref: otp:att-admission-allocation:001
+- observation: so:sha256:b0aa81e61691ffc2b4ef587508eae988e450f03407eefbfc524fb38a82c20cdc
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:b16055eff4bab382b33f0a5629c273a35a659e407651035b9532fb833f1a722c
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:b24d12302a876d81148174d1247fd84e7d304fababe40bf31e84e37093734224
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:b303cb0ce5ff71bf3353ee50bced00e443bbba7d77e4f3e5cf7e6e8476d054aa
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:b4093c2df6b7863d8c90b35246c348aecbbc5201cc8a3968132345e8e29c038e
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:ba574bce897d92ed4d82236afc888a9e97316780aec858d877c64247603edc5d
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:bbf039c9733c9bef609c0b780247a3ac0252404bc8c0708ab5b60b538aadabf2
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:c19aff86102184c4aafeecb71520216ed5ccf721d1d16cce9a382bdd170d1967
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:c1e15b1c4eaa7eb7c6aa06fd4e88909368ddeac9931936b7d68c2bf857b1bcfa
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:c2dc9c1dc745720dae9ec574e7457be15301687c36071abea1c09b48cbd3ad8d
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:c9dddcabc8c17bd4e94ee006efe37dd3dad3e439c7a0177788f9ae0d3d9593dd
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:cc60c14b4729d3547419e11cac333a64e13bf03214ae1b1ef7be6d9a94d25262
+  outcome: irrelevant
+  reason: The re-opened observation's config_key_value facts include 'nonce=07df5dce-9165-43a3-80d5-0e50b31fc3b8'
+    and 'attemptId=cc521c01-ee2d-4ffa-9c43-75308c5118b0'. Its excerpt places the nonce in record 0 and
+    the attempt identifier in record 16 under a different nonce. Those values therefore cannot jointly
+    characterize one admission. Other flat values likewise come from distinct event boundaries. The wrapper
+    contributes no additional operational transition or decision-bearing bearer beyond the separately
+    interpretable entries, and the supplied CQs require no independent collection term. The null stands
+    for this projection; its information-collection alternative remains viable only with the named additional
+    warrant and evidence.
+- observation: so:sha256:cc9730a1b0d5fe267f7c65b2c1017d8e70ae518ee99ffcc01085b027a06767a6
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:cf8f163c919cdad854f3e9aabddf18a7c7589844a69389646492c47ac1f7d8e8
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:cfb413d38b8e8e1903d6e83b8d2977c5fd102003636ca8403eaa958dc1791b6f
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:d528055a778209ef7ba8c585a447245d9828ec629052779a75a2f65dfc408d40
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:d8cf8154d2e1435f81698ec0c8d67ea4bce53283ef275029392ce1a2d2f2f03f
+  outcome: unresolved
+  needed_evidence: Needed evidence is an explicit comparison-operand binding and an observed validity
+    decision that depends on the result.
+  since: '2026-09-10'
+- observation: so:sha256:d90be1aaa963b3e017130d2add821e59f623ac0540f9563cd9dd1d607cae8ce9
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:dae7bbf3b41b449e027e7be2793340e99e86ffbfbc9e3781a15b2c412919fba3
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+  outcome: unresolved
+  needed_evidence: A time-aligned lease-store and admission-accounting trace between a matched admission
+    and release or eviction, showing the same allocation counted in at least two separate decisions for
+    the same independently identified beneficiary, requested work, and capacity pool. Include a heartbeat
+    or lease update and termination followed by reacquisition, so continuity versus a new grant can be
+    observed, together with a captured conferral/termination rule stating whether authorization or only
+    charged occupancy persists. This would discriminate a continuing authorization relator from an allocation
+    mode, an event-derived holding situation, and a journal-only account.
+  since: '2026-09-10'
+- observation: so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30
+  outcome: unresolved
+  needed_evidence: A Must/Should CQ whose executable query requires a separately identified wall-time
+    evidence class (rather than the execution-bound actualWallMs/usedCostEstimate calibration tuples CQ-025
+    already consumes), plus an observed consumer that selects or rejects a verdict on that class.
+  since: '2026-09-10'
+- observation: so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446
+  outcome: unresolved
+  needed_evidence: A Must/Should CQ whose executable query requires a separately identified wall-time
+    evidence class (rather than the execution-bound actualWallMs/usedCostEstimate calibration tuples CQ-025
+    already consumes), plus an observed consumer that selects or rejects a verdict on that class.
+  since: '2026-09-10'
+- observation: so:sha256:f19da17d5b8f8ff5107a9b96cf4ff9256ebf03da52491e0370413f941f085e5d
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:f1e3e6b059c258e89fc802148a2976a93bd0ade9c8e5568b6052d81945140f7a
+  outcome: unresolved
+  needed_evidence: A journal append/copy/replay/correction trace containing two entries with identical
+    semantic event payloads, with independently distinguished emission occurrences and any revision links,
+    plus an observed consumer treatment of those entries as one repeated assertion or two separately accountable
+    assertions. This would discriminate content-object identity from assertion-token identity and establish
+    whether correction preserves an entry or produces a new one. The trace must distinguish asserted event
+    time from record creation time; another file hash or capture label would not resolve the grain.
+  since: '2026-09-10'
+- observation: so:sha256:f22157463b8bb35324779e8d53a621bde8ce8b6511babab103a101a08152b3b6
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:f353b053a061870ff15017fd51401ea9165d54f608052fa1ea8daea981cf5d73
+  outcome: unresolved
+  needed_evidence: Needed evidence is an explicit comparison-operand binding and an observed validity
+    decision that depends on the result.
+  since: '2026-09-10'
+- observation: so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:f38d666952f2e70a4f3c00bd6d2075a331c99c3ecae5ceaabb73df7b792c9a7f
+  outcome: mapped
+  ref: otp:admb-seat-request:001
+- observation: so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b
+  outcome: unresolved
+  needed_evidence: 'run4-checkout-cache-binding-identity-consumer: Preserve a same-cache accessibility/transfer
+    experiment at task-input-hash and epoch grain, with the two checkout identities and separate probe
+    times, positive access and bounded local absence, and a binding-change or correction trace. Supply
+    an observed consumer and a Must/Should executable CQ that must address the binding information object''s
+    identity rather than the existing qualified checkout/cache relation. If direct relations suffice,
+    keep the class withdrawn. Common Git administration, directory-entry counts and environment flags
+    do not establish common cache access or a skip authorization.'
+  since: '2026-09-10'
+- observation: so:sha256:fa16a716b56a1780f96785077dc9274f7a807f38a04770e008febb22d6cad15b
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  outcome: mapped
+  ref: otp:admb-seat-grant:001
+- observation: so:sha256:faeff009ed066ab59b310901f7f127fa174f0b0e2859613529a9ac69673c3230
+  outcome: unresolved
+  needed_evidence: 'Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+    assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content assessments
+    of one attempt whose consumers treat them as distinct or as one result, plus the issuance/correction
+    provenance the proof-ledger writer will carry (time-to-certainty C4).'
+  since: '2026-09-10'
+- observation: so:sha256:0d096342f5ba116307ca177adcbc3fc775b860ae0e5fd62dfd4d090d86c660a3
+  outcome: irrelevant
+  reason: 'Retire the historical FleetCheckout declaration by supersession through otp:bind-checkout-cache-binding:001.
+    Run 3 supplies the timestamped checkout/cache binding required by run-2 sitting 2 and narrowed by
+    run-3 Ruling 5: 107 inventory bindings, with observed clone and linked-worktree examples that share
+    Git administration but differ in local cache availability. Enduring identity across rename and CQ-015
+    proof-transfer authorization remain open in the current proposal; this retirement accepts neither.'
+  carried_from_prior: true
+- observation: so:sha256:b42503da37767cc741db6196fbf13e019bdc59f71166ad4d95318966ca7ae123
+  outcome: unresolved
+  needed_evidence: 'Run 3 now captures root/nonce-scoped enqueue, admission, withdrawal, release and eviction
+    reports, including synthetic attempt-termination joins. The run3-fleet and run3b-fleet manifests exclude
+    lock files and proof-locks directories, and dh:att-overlap-diagnostic:001 still establishes only a
+    logged overlapping path. To decide C2/C3, obtain the run-2 sitting-2 Ruling-3 join for the actual
+    contended resource or proof-lock path: grant/lease and lock ownership identifiers, acquisition and
+    release boundaries, and a waiting/winning/losing outcome in one provenance chain. Identify the rule
+    linking FleetContestedPath to that contention and distinguish admission authorization from proof-lock
+    ownership. Admission counts, a common origin key and worktree overlap cannot supply that missing relation.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278
+  outcome: unresolved
+  needed_evidence: 'Run 3 now captures root/nonce-scoped enqueue, admission, withdrawal, release and eviction
+    reports, including synthetic attempt-termination joins. The run3-fleet and run3b-fleet manifests exclude
+    lock files and proof-locks directories, and dh:att-overlap-diagnostic:001 still establishes only a
+    logged overlapping path. To decide C2/C3, obtain the run-2 sitting-2 Ruling-3 join for the actual
+    contended resource or proof-lock path: grant/lease and lock ownership identifiers, acquisition and
+    release boundaries, and a waiting/winning/losing outcome in one provenance chain. Identify the rule
+    linking FleetContestedPath to that contention and distinguish admission authorization from proof-lock
+    ownership. Admission counts, a common origin key and worktree overlap cannot supply that missing relation.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:c627961a8fcde9dca01027cbf052494763b5e6895805c1c0c50d8bf51ba3a7bb
+  outcome: unresolved
+  needed_evidence: 'Run 3 supplies an organic same-root/nonce enqueue-admit-release history, plus synthetic
+    withdrawal and eviction reports with two attempt-termination joins. The pure lifecycle duty still
+    needs authoritative causal continuity from one request''s submission through grant and release/cancellation,
+    and a Must/Should CQ requiring a lifecycle distinct from its request, grant and boundary reports.
+    The memory rider remains independently parked under Ruling 6: the release now carries memoryPeakBytes,
+    but the resource-using occurrence/process boundary, sampling method and interval, metric/unit, measurement
+    provenance and its relationship to peakRssKb are still missing. Different capture-scoped ownerRef
+    values and an administrative termination notice cannot decide either missing identity.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:d94bf0420d3457158959e6188c50d5949dc4fae4a48d07e7077f8c81df36fcb6
+  outcome: unresolved
+  needed_evidence: Run 3 now provides a same-root/nonce organic enqueue-admit-release chain and explicit
+    synthetic withdrawal, grant-eviction and ticket-eviction boundaries. Synthetic attempt-terminated
+    records match the two eviction attemptIds. What remains is authoritative causal-continuity evidence
+    connecting one submitted request to its grant and release/cancellation, together with a Must/Should
+    decision CQ requiring that composite lifecycle separately from SeatRequest, SeatGrant and their boundary
+    reports. The terminal-only synthetic eviction chains lack their own retained starts, and recordedAt
+    is a reconciliation time rather than proof of actual execution cessation.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:3aadb9c8ae061d71b2e8386d9b8af518d49df5a66abaa0bb0391783833a6eef4
+  outcome: unresolved
+  needed_evidence: Run 3 adds two live lease snapshots with the same nonce, grant instant and charge but
+    different heartbeat instants, organic release/eviction reports, and explicitly synthetic eviction-to-attempt-termination
+    joins. It still lacks one provenance chain that binds a grant's creation, complete heartbeat-rewrite
+    history, release/eviction, actual ledger decrement and carrier lineage. Capture-scoped ownerRef values
+    cannot prove cross-capture owner continuity; a terminal lastHeartbeatAtMillis is not a rewrite history,
+    and the synthetic evicted lease has no retained admission start. A Must/Should CQ must also require
+    this lifecycle separately from SeatGrant. Keep both the provenance and separate-warrant duties open.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:51fa8a9b8fcef0856134c3599ef68eabe588532203230c5b0ac8c892da47c95a
+  outcome: unresolved
+  needed_evidence: Run 3 adds two live lease snapshots with the same nonce, grant instant and charge but
+    different heartbeat instants, organic release/eviction reports, and explicitly synthetic eviction-to-attempt-termination
+    joins. It still lacks one provenance chain that binds a grant's creation, complete heartbeat-rewrite
+    history, release/eviction, actual ledger decrement and carrier lineage. Capture-scoped ownerRef values
+    cannot prove cross-capture owner continuity; a terminal lastHeartbeatAtMillis is not a rewrite history,
+    and the synthetic evicted lease has no retained admission start. A Must/Should CQ must also require
+    this lifecycle separately from SeatGrant. Keep both the provenance and separate-warrant duties open.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:56d67898f9daaa0ff3c1fb34ff05745d9a1f94cf2703726f7721d1f586f89e5f
+  outcome: unresolved
+  needed_evidence: Run 3 adds two live lease snapshots with the same nonce, grant instant and charge but
+    different heartbeat instants, organic release/eviction reports, and explicitly synthetic eviction-to-attempt-termination
+    joins. It still lacks one provenance chain that binds a grant's creation, complete heartbeat-rewrite
+    history, release/eviction, actual ledger decrement and carrier lineage. Capture-scoped ownerRef values
+    cannot prove cross-capture owner continuity; a terminal lastHeartbeatAtMillis is not a rewrite history,
+    and the synthetic evicted lease has no retained admission start. A Must/Should CQ must also require
+    this lifecycle separately from SeatGrant. Keep both the provenance and separate-warrant duties open.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:2d69bdb38dd2c7618a64b60834a6993abe999b6776d721aef8b6eb947c9b2e91
+  outcome: irrelevant
+  reason: Retire the three prior literal/field rows by re-identification as the run-3 observation so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda.
+    It binds an attemptId to failureKind=step-exit, failedStepId=publish:01-git-push and that component's
+    failed result under yeet-verdict/v2. The manifest records 1902 structured tuple occurrences and pins
+    the component vocabulary/serialization sources. Rat-032 already accepted FailureSignature at recorded-classification
+    grain; this is an occurrence-evidence replacement, not another signature ratification. Cross-attempt
+    semantic compatibility, normalization, delay attribution and full execution joins remain explicit
+    in dh:ver-failure-signature:001. Do not infer those from tuple equality or treat every tuple as a
+    completed execution.
+  carried_from_prior: true
+- observation: po:sha256:4ce41ce65957b0594e01c672972fb68722ee30c3df62444b2d323fe6d70e07cf
+  outcome: irrelevant
+  reason: Retire the three prior literal/field rows by re-identification as the run-3 observation so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda.
+    It binds an attemptId to failureKind=step-exit, failedStepId=publish:01-git-push and that component's
+    failed result under yeet-verdict/v2. The manifest records 1902 structured tuple occurrences and pins
+    the component vocabulary/serialization sources. Rat-032 already accepted FailureSignature at recorded-classification
+    grain; this is an occurrence-evidence replacement, not another signature ratification. Cross-attempt
+    semantic compatibility, normalization, delay attribution and full execution joins remain explicit
+    in dh:ver-failure-signature:001. Do not infer those from tuple equality or treat every tuple as a
+    completed execution.
+  carried_from_prior: true
+- observation: po:sha256:4ec767a335e920a2a80204127a6c3146cded1e5eb3d748b11a87dfc4579fc735
+  outcome: irrelevant
+  reason: Retire the three prior literal/field rows by re-identification as the run-3 observation so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda.
+    It binds an attemptId to failureKind=step-exit, failedStepId=publish:01-git-push and that component's
+    failed result under yeet-verdict/v2. The manifest records 1902 structured tuple occurrences and pins
+    the component vocabulary/serialization sources. Rat-032 already accepted FailureSignature at recorded-classification
+    grain; this is an occurrence-evidence replacement, not another signature ratification. Cross-attempt
+    semantic compatibility, normalization, delay attribution and full execution joins remain explicit
+    in dh:ver-failure-signature:001. Do not infer those from tuple equality or treat every tuple as a
+    completed execution.
+  carried_from_prior: true
+- observation: po:sha256:30be9d42308395a759ea42b1706c47b14bf2d995ff5d90eb85161cef24e27b61
+  outcome: unresolved
+  needed_evidence: 'Run 3''s verdict-corpus search is now complete within its captured fields: run3-fleet/MANIFEST.yaml
+    reports pa-cache-plan-resolution rider_evidence=absent with zero structured occurrences. Its source_facts
+    name the resolver domain and the resolver-to-command-arguments site, but the verdict schema has no
+    cache-plan field. Obtain an observed governed resolver result with its applicable domain/version,
+    joined to a particular Turbo execution and the cache posture actually applied. Checkout cache topology,
+    cacheStatus and enablement flags do not supply that execution join. This promoted Ruling-6 rider remains
+    open; the docket authorizes no new capture or runtime change.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:736ad92a1de7991caa17d905c310e2dac02d5a4d9b7cd3b709adfcabd690e4cc
+  outcome: irrelevant
+  reason: Retire the two historical hasStep rows by supersession through otp:ov-proposal-step-membership:001.
+    The current emitter and fixture identify two steps belonging to one proposal, while the contract limits
+    steps to admitted actions and amended CQ-020 requires that membership. The two original contract quotations
+    were superseded by emission v2, so their old observation IDs are preserved only as carried retirements.
+    ScheduleStep identity and the complete cluster's joint ratify-or-park obligation remain with the current
+    proposals.
+  carried_from_prior: true
+- observation: po:sha256:35a69c5bcbf7493cc0aa7f248d138d65f2d5c8beff49e80308ef85b43a0f559d
+  outcome: irrelevant
+  reason: Retire the two historical hasStep rows by supersession through otp:ov-proposal-step-membership:001.
+    The current emitter and fixture identify two steps belonging to one proposal, while the contract limits
+    steps to admitted actions and amended CQ-020 requires that membership. The two original contract quotations
+    were superseded by emission v2, so their old observation IDs are preserved only as carried retirements.
+    ScheduleStep identity and the complete cluster's joint ratify-or-park obligation remain with the current
+    proposals.
+  carried_from_prior: true
+- observation: po:sha256:14e01baa9a4fa23873722680039d098e43c3e0f315d5f6805159154577794e06
+  outcome: irrelevant
+  reason: Retire the two historical stepIndex rows by supersession through otp:ov-step-position:001. Current
+    fixture observations assert integer ordinals 0 and 1, the current contract fixes the zero-based admitted-step
+    convention, and amended CQ-020 orders SeatRequests through those steps. The proposal carries the prior
+    category/representation choice; fixture integers do not adjudicate it. No endpoint or ordering member
+    ratifies independently of the complete cluster.
+  carried_from_prior: true
+- observation: po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2
+  outcome: irrelevant
+  reason: Retire the two historical stepIndex rows by supersession through otp:ov-step-position:001. Current
+    fixture observations assert integer ordinals 0 and 1, the current contract fixes the zero-based admitted-step
+    convention, and amended CQ-020 orders SeatRequests through those steps. The proposal carries the prior
+    category/representation choice; fixture integers do not adjudicate it. No endpoint or ordering member
+    ratifies independently of the complete cluster.
+  carried_from_prior: true
+- observation: po:sha256:0121af7b661484de9197ede12df6eaa5c69240214339b7ea6844a4f09901fea8
+  outcome: irrelevant
+  reason: Retire the prior pa-projection-contract observation by supersession through otp:ov-projection-specification:001.
+    CQ-020 now requires the governing specification and emitted SeatRequest ordering; the current typed-specification,
+    proposal-binding and ordering observations replace the run-2 wording obstacle. The rule-specification
+    versus application-context identity choice stays explicit in fa:ov-projection-specification:001 and
+    the current proposal. The full ordering dependency cluster still ratifies or parks together.
+  carried_from_prior: true
+- observation: po:sha256:6fa9ae087c8d411c0218a0491a20989f722773cb08d8b57d733514a58cc86742
+  outcome: irrelevant
+  reason: Retire the two pb-schedule-projection-specification rows by supersession through otp:ov-projection-specification:001.
+    The amended CQ-020 and current emission-v2 specification type, governing edge and SeatRequest-order
+    facts discharge the former wording obstacle. The current foundational record explicitly defers repeatable-rule
+    versus application-context identity, and the proposal carries that choice for the same ordering sitting.
+    Retirement does not accept either model or split the cluster.
+  carried_from_prior: true
+- observation: po:sha256:88f09e0224cf8cc48710903fe1e017b9369bc5dada8def6024d42f2841f9a654
+  outcome: irrelevant
+  reason: Retire the two pb-schedule-projection-specification rows by supersession through otp:ov-projection-specification:001.
+    The amended CQ-020 and current emission-v2 specification type, governing edge and SeatRequest-order
+    facts discharge the former wording obstacle. The current foundational record explicitly defers repeatable-rule
+    versus application-context identity, and the proposal carries that choice for the same ordering sitting.
+    Retirement does not accept either model or split the cluster.
+  carried_from_prior: true
+- observation: po:sha256:d9e1c6941fe61eb8e8a4f7e40853d6090190ec18523931c3af4551bb2b880c76
+  outcome: irrelevant
+  reason: Retire the two pc-projection-contract rows by supersession through otp:ov-projection-specification:001.
+    Amended CQ-020 now requires the governing specification and the emitted SeatRequest ordering represented
+    in the current contract and fixture observations. The repeatable-specification versus application-context
+    issue survives in the run-3 foundational chain and proposal; the ordering cluster remains one ratify-or-park
+    unit.
+  carried_from_prior: true
+- observation: po:sha256:ed86c2d18b12ff797604eac97a917b36527e390ce417fce35ac583fd829b2709
+  outcome: irrelevant
+  reason: Retire the two pc-projection-contract rows by supersession through otp:ov-projection-specification:001.
+    Amended CQ-020 now requires the governing specification and the emitted SeatRequest ordering represented
+    in the current contract and fixture observations. The repeatable-specification versus application-context
+    issue survives in the run-3 foundational chain and proposal; the ordering cluster remains one ratify-or-park
+    unit.
+  carried_from_prior: true
+- observation: po:sha256:d1f555913267743bc009bfd030c3bafd841e6f7baa081d7a1ecc0704fc2b2d2d
+  outcome: irrelevant
+  reason: Retire the historical target-relation row by supersession through otp:ov-step-request-assignment:001
+    and re-identification of its unchanged implementation-report quotation as po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4.
+    Current fixture/emitter observations bind steps to SeatRequests, and amended CQ-020 explicitly consumes
+    that relation. The current chain preserves the absence of WorkUnitSpecification identity; the full
+    ordering cluster still ratifies or parks together.
+  carried_from_prior: true
+- observation: so:sha256:0a7f99ebe45f22164f484b539becf4d1d57384861db25b0c065fc67cca2574a7
+  outcome: unresolved
+  needed_evidence: Run 3 adds verdict comparison values and timestamped checkout branch/head bindings;
+    dh:ver-git-comparison-context:001 still has no observed validity decision consuming those comparisons.
+    Under Ruling 6, obtain a versioned branch-freshness contract binding each assessment to its branch
+    and base operands, defining merge-base, behind-count and overlap meanings, and showing assessment
+    provenance, recomputation and the decision that changes with the result. A recorded zero or a matching
+    path is insufficient to establish equal trees or evidence validity.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:a4fa5b4f6b8142d813d5867e01c92a245a9a7ee7d64b8841a3e27a068c88e764
+  outcome: unresolved
+  needed_evidence: Run 3 adds verdict comparison values and timestamped checkout branch/head bindings;
+    dh:ver-git-comparison-context:001 still has no observed validity decision consuming those comparisons.
+    Under Ruling 6, obtain a versioned branch-freshness contract binding each assessment to its branch
+    and base operands, defining merge-base, behind-count and overlap meanings, and showing assessment
+    provenance, recomputation and the decision that changes with the result. A recorded zero or a matching
+    path is insufficient to establish equal trees or evidence validity.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:c1e2fd7731b1efe855f70c75df8e7dd0bd99853668c551eca8fb80593a621d06
+  outcome: unresolved
+  needed_evidence: Run 3 adds verdict comparison values and timestamped checkout branch/head bindings;
+    dh:ver-git-comparison-context:001 still has no observed validity decision consuming those comparisons.
+    Under Ruling 6, obtain a versioned branch-freshness contract binding each assessment to its branch
+    and base operands, defining merge-base, behind-count and overlap meanings, and showing assessment
+    provenance, recomputation and the decision that changes with the result. A recorded zero or a matching
+    path is insufficient to establish equal trees or evidence validity.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:12f0a017acb17063246f77ebb5c128271f9df67ea7bc1666268052f2d58873d1
+  outcome: unresolved
+  needed_evidence: Run 3 now records greptileScore=5/5 in a verdict with proofTier=full, but a score spelling
+    does not supply its governed meaning. Under Ruling 6, obtain the scale authority and version, the
+    exact reviewed subject, score-production and revision provenance, and an observed assurance or closeout
+    decision governed by that score. Retain the distinction between a stored readiness assertion and a
+    current eligibility decision.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:258d88bf5d120ca46af4e7964a5c3a5674c5c4984b67c0f84fe8f706e979c3f6
+  outcome: unresolved
+  needed_evidence: Run 3 now records greptileScore=5/5 in a verdict with proofTier=full, but a score spelling
+    does not supply its governed meaning. Under Ruling 6, obtain the scale authority and version, the
+    exact reviewed subject, score-production and revision provenance, and an observed assurance or closeout
+    decision governed by that score. Retain the distinction between a stored readiness assertion and a
+    current eligibility decision.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:a0460c0e2b60f310cb30b9c03ea0aa2e487e02aadaa0450c56bb04cff6b5c8c9
+  outcome: unresolved
+  needed_evidence: Run 3 adds classified failure tuples and component results, which supply concrete reports
+    but not introduced/inherited/unrelated/environment attribution rules. Under Ruling 6, obtain necessary
+    conditions for every attribution member, overlap or precedence rules, and an assessment record binding
+    the change, baseline, environment, assessment provenance and revision history. failureKind and failedStepId
+    classify a report; they cannot by themselves assign responsibility or baseline causation.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:8b0e7ebacbadd3d0a21df787d0070763c9151c438e5ad68ef69454c6bea0aca1
+  outcome: unresolved
+  needed_evidence: Run 3 adds proofTier=full in verdict and lease/request contexts, while result status
+    and attained assurance remain separate. Under Ruling 6, obtain planner authority and version/revision
+    lineage deciding a shared selector scheme versus copied domains or plan-borne classifications, together
+    with a Must/Should CQ whose decision consumes that selector. Repeated strings and the captured priority
+    domain cannot establish the proof-tier governance or its mapping to assurance tiers.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:8d123d2b803018949aa079849fafabb4d38fbde7e7f77a5515d448cdc0a9f195
+  outcome: unresolved
+  needed_evidence: Run 3 adds proofTier=full in verdict and lease/request contexts, while result status
+    and attained assurance remain separate. Under Ruling 6, obtain planner authority and version/revision
+    lineage deciding a shared selector scheme versus copied domains or plan-borne classifications, together
+    with a Must/Should CQ whose decision consumes that selector. Repeated strings and the captured priority
+    domain cannot establish the proof-tier governance or its mapping to assurance tiers.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:922212cafdb03daef5fb111352d661cfda30e1e9f3d3e8c3e6f45a19c6a82a50
+  outcome: unresolved
+  needed_evidence: Run 3 adds proofTier=full in verdict and lease/request contexts, while result status
+    and attained assurance remain separate. Under Ruling 6, obtain planner authority and version/revision
+    lineage deciding a shared selector scheme versus copied domains or plan-borne classifications, together
+    with a Must/Should CQ whose decision consumes that selector. Repeated strings and the captured priority
+    domain cannot establish the proof-tier governance or its mapping to assurance tiers.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:3a8b51a1acc8602b1a583147d6d5e7e253481237fbf5806c9b13833698bc9090
+  outcome: unresolved
+  needed_evidence: Run 3 now has verdicts with a parent attemptId, passed component statuses and component
+    durations, and a separate failed attempt whose planned components are explicitly not-run. Under Ruling
+    6, obtain a passed-step execution record preserving the authoritative parent-attempt join, each repeated
+    execution's identity and its own actual start/end boundaries. Whole-attempt bounds and a repeated
+    lane label do not supply the missing component occurrence boundaries; the passed-step instrumentation
+    was excluded from the v3 scope.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:2092736911a0c68e96ae8d9638b00ec4b6992b4da0677f325e4fd420fb41b2a7
+  outcome: unresolved
+  needed_evidence: 'Run 3 now supplies an identified attempt with startedAt, endedAt and elapsedMs, so
+    the missing-record part of the run-2 request has changed. Under Ruling 6, retain the measured-extent
+    question: establish authoritatively whether each value covers the entire attempt/command or a particular
+    WorkUnit occurrence, preserving target, interval and provenance. fa:ver-wall-time-evidence:001 still
+    asks for nested occurrence bindings, clock/precision conventions and the explanation of a one-millisecond
+    discrepancy. Parent-attempt timestamps cannot be copied to each nested execution, and an assertion-content
+    proposal does not settle what was measured.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:78cf821b0771a1c60ef1f80746484a8da1df72bcf2b1eaa9ebed337144e5a245
+  outcome: unresolved
+  needed_evidence: Run 3 now joins memoryPeakBytes=9904820224 to a particular admission release report
+    through its root and nonce. Under Ruling 6, obtain the measurement's resource-using occurrence and
+    process boundary, sampling method and interval, metric, unit and measurement provenance. Supply an
+    authoritative comparison with peakRssKb that decides whether the two fields measure one family. A
+    release-attached quantity, token charge or owner surrogate does not establish the measured process
+    or sampling semantics.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:2a207d4986630e8590f790457dabe07ffeecdb9b2bfa79cf254c6bce508a2998
+  outcome: unresolved
+  needed_evidence: 'Run 3 adds attempt-scoped elapsedMs, nested durationMs and otp:ver-wall-time-evidence:001,
+    whose assertion-content, quality, token and scoped-literal models remain alternatives. Under Ruling
+    6, the separate RecordedWallDurationMeasurement still needs a Must/Should executable CQ that must
+    traverse that individual instead of qualified values on an episode or execution. The carrier alternative
+    also needs authoritative issuance, custody, copy and correction lineage and a decision CQ that distinguishes
+    equal-content carrier tokens. Ruling 17 keeps the issuance duty open to run 4: the fleet manifests
+    observe zero proof ledgers, so captured verdicts cannot replace the missing writer-issued provenance.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: so:sha256:91988c625516a3fa1516b592a7dc4c6b197b56249390fde1fc1e116867ae1af3
+  outcome: unresolved
+  needed_evidence: 'Run 3 adds bounded attempt durations and a recovery diagnostic with distinct standaloneDurationMs
+    and laneRerunDurationMs inside a successful attempt. Under Ruling 6, retain both duration concessions:
+    a Must/Should CQ requiring a RecordedWallDurationMeasurement individual rather than qualified episode/execution
+    values, and an authoritative issuance/custody/copy/correction chain plus a CQ distinguishing carrier
+    tokens from equal content. The comparison concession additionally needs identities for both compared
+    executions, their measurement assertions, the comparison''s issuance, and a Must/Should decision CQ
+    consuming a distinct comparison record. Ruling 17 keeps issuance open to run 4 because zero proof
+    ledgers were captured. Diagnostic timing alone supplies neither the paired execution identities nor
+    a separately warranted comparison.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:3bf3cf7f37f4e3e046efb12751c4b9650dd3a2a16a0c99a1ec17563fa551048a
+  outcome: unresolved
+  needed_evidence: Run 3 adds an admission projection fixture, property-suite contract and S7 replay result.
+    Those are not a record/extract/judge QA run. Under Ruling 6, obtain one provenance-bearing chain joining
+    all three QA stages to the in-scope Yeet or CI lane, its frozen tree and cache epoch, and the assurance
+    obligation that consumes the evidence. The captured replay's input digest and pass assertion do not
+    supply those QA-stage or assurance joins.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:059c20e6b0972ff269acf52884fea9e75f4fc5144fac7728dbac333221866181
+  outcome: unresolved
+  needed_evidence: 'Run 3 adds emission-v2 contract and property-suite quotations and the bounded S7 differential
+    replay report of 41 matched admissions, but no independently issued conformance package. Under Ruling
+    6, obtain all three remaining chains: a package manifest with independent authority/version joining
+    suite, implementation build, frozen inputs, replay execution, complete results, limitations, issuance
+    and custody; a separately governed/versioned suite specification, distinct from its test-file carrier,
+    and its Must/Should CQ; and identified replay execution/environment plus result issuance, custody,
+    retention/correction lineage and a Must/Should CQ for a separate replay-result artifact. Ruling 17''s
+    zero-ledger census leaves issuance open to run 4; the passing replay assertion is not that missing
+    lineage.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:06dd8aab73f74fd680b9cf55a760da82d4a3420f91fc8ea9d8bdb27c4c000d57
+  outcome: unresolved
+  needed_evidence: 'Run 3 adds emission-v2 contract and property-suite quotations and the bounded S7 differential
+    replay report of 41 matched admissions, but no independently issued conformance package. Under Ruling
+    6, obtain all three remaining chains: a package manifest with independent authority/version joining
+    suite, implementation build, frozen inputs, replay execution, complete results, limitations, issuance
+    and custody; a separately governed/versioned suite specification, distinct from its test-file carrier,
+    and its Must/Should CQ; and identified replay execution/environment plus result issuance, custody,
+    retention/correction lineage and a Must/Should CQ for a separate replay-result artifact. Ruling 17''s
+    zero-ledger census leaves issuance open to run 4; the passing replay assertion is not that missing
+    lineage.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:2338c92205c5fc08e5e18d149e7aabca98b83589cf5984e6b83fa81b2401a98c
+  outcome: unresolved
+  needed_evidence: 'Run 3 adds emission-v2 contract and property-suite quotations and the bounded S7 differential
+    replay report of 41 matched admissions, but no independently issued conformance package. Under Ruling
+    6, obtain all three remaining chains: a package manifest with independent authority/version joining
+    suite, implementation build, frozen inputs, replay execution, complete results, limitations, issuance
+    and custody; a separately governed/versioned suite specification, distinct from its test-file carrier,
+    and its Must/Should CQ; and identified replay execution/environment plus result issuance, custody,
+    retention/correction lineage and a Must/Should CQ for a separate replay-result artifact. Ruling 17''s
+    zero-ledger census leaves issuance open to run 4; the passing replay assertion is not that missing
+    lineage.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:08a398bab03363136254e3e9c3ed49ebb16ffd18fb94b434111d4446cdf50d69
+  outcome: unresolved
+  needed_evidence: Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache
+    facts, plus fleet attempt context. These identify checkout observations, not package continuity. Under
+    Ruling 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move,
+    version change, fork and delete/recreate cases, including whether the candidate is a role or immutable-content
+    object. No new package identity policy was admitted with the binding corpus, and a checkout token
+    or package spelling cannot settle those cases.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:1189ec1eca4fb79695201186157334124e71372bbe906bb6119996f42b9fe842
+  outcome: unresolved
+  needed_evidence: Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache
+    facts, plus fleet attempt context. These identify checkout observations, not package continuity. Under
+    Ruling 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move,
+    version change, fork and delete/recreate cases, including whether the candidate is a role or immutable-content
+    object. No new package identity policy was admitted with the binding corpus, and a checkout token
+    or package spelling cannot settle those cases.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:13b29fc0bebcac4b0914db214f136add0fa739ac50af65649c800b7013ccb67a
+  outcome: unresolved
+  needed_evidence: Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache
+    facts, plus fleet attempt context. These identify checkout observations, not package continuity. Under
+    Ruling 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move,
+    version change, fork and delete/recreate cases, including whether the candidate is a role or immutable-content
+    object. No new package identity policy was admitted with the binding corpus, and a checkout token
+    or package spelling cannot settle those cases.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:1c941c2e1e41a932dfd00e48631a9dd6217c6e51fe9c681369139a8c0402ea84
+  outcome: unresolved
+  needed_evidence: Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache
+    facts, plus fleet attempt context. These identify checkout observations, not package continuity. Under
+    Ruling 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move,
+    version change, fork and delete/recreate cases, including whether the candidate is a role or immutable-content
+    object. No new package identity policy was admitted with the binding corpus, and a checkout token
+    or package spelling cannot settle those cases.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:28e700021c9b4ba707087650a4e39ceed6540863e4d99b02af241b2b0fdbcaf8
+  outcome: unresolved
+  needed_evidence: Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache
+    facts, plus fleet attempt context. These identify checkout observations, not package continuity. Under
+    Ruling 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move,
+    version change, fork and delete/recreate cases, including whether the candidate is a role or immutable-content
+    object. No new package identity policy was admitted with the binding corpus, and a checkout token
+    or package spelling cannot settle those cases.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:2f816bb5f468d1cc4a06de84c4a9bb8e4c9393a070c41e364f53d951cbf172e1
+  outcome: unresolved
+  needed_evidence: Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache
+    facts, plus fleet attempt context. These identify checkout observations, not package continuity. Under
+    Ruling 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move,
+    version change, fork and delete/recreate cases, including whether the candidate is a role or immutable-content
+    object. No new package identity policy was admitted with the binding corpus, and a checkout token
+    or package spelling cannot settle those cases.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:51a827390306ccb0cf37e23d646c653fd4291f3ed346ae04e097e678a5097781
+  outcome: unresolved
+  needed_evidence: Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache
+    facts, plus fleet attempt context. These identify checkout observations, not package continuity. Under
+    Ruling 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move,
+    version change, fork and delete/recreate cases, including whether the candidate is a role or immutable-content
+    object. No new package identity policy was admitted with the binding corpus, and a checkout token
+    or package spelling cannot settle those cases.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:5a59d414027abf00522737e1d86c7976c6837e7dcf88eb47112cc39709b2be1d
+  outcome: unresolved
+  needed_evidence: Run 3 adds checkout bindings and an admission-order fixture whose step positions are
+    0 and 1; those positions do not describe a package graph. Under Ruling 6, obtain the package-report
+    contract defining its numeric positions, ordering algorithm and dependency-edge semantics, identify
+    the producing graph/version, and show the operational verification decision consuming that report.
+    No new TS or package-graph observation was admitted with the journal/inventory capture.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:62ae30cfc28b391c7bf4a87534abeba849a8ca2ebd5f8ebe72cb5af81dcc50eb
+  outcome: unresolved
+  needed_evidence: Run 3 adds checkout bindings and an admission-order fixture whose step positions are
+    0 and 1; those positions do not describe a package graph. Under Ruling 6, obtain the package-report
+    contract defining its numeric positions, ordering algorithm and dependency-edge semantics, identify
+    the producing graph/version, and show the operational verification decision consuming that report.
+    No new TS or package-graph observation was admitted with the journal/inventory capture.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:64463ef1e1f2b77cb50713f8194bb055d35d02288f465e6902e337f9fc5f5edf
+  outcome: unresolved
+  needed_evidence: Run 3 adds checkout bindings and an admission-order fixture whose step positions are
+    0 and 1; those positions do not describe a package graph. Under Ruling 6, obtain the package-report
+    contract defining its numeric positions, ordering algorithm and dependency-edge semantics, identify
+    the producing graph/version, and show the operational verification decision consuming that report.
+    No new TS or package-graph observation was admitted with the journal/inventory capture.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:6e598d379ffd2f0565176b337833e4eedf0293941fa87936078ee572e63748a9
+  outcome: unresolved
+  needed_evidence: Run 3 adds checkout bindings and an admission-order fixture whose step positions are
+    0 and 1; those positions do not describe a package graph. Under Ruling 6, obtain the package-report
+    contract defining its numeric positions, ordering algorithm and dependency-edge semantics, identify
+    the producing graph/version, and show the operational verification decision consuming that report.
+    No new TS or package-graph observation was admitted with the journal/inventory capture.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:89165acdfec28c3a8692c411aead416ca1fd5f13333c0ea5c748e92aeab0cb98
+  outcome: unresolved
+  needed_evidence: Run 3 adds checkout bindings and an admission-order fixture whose step positions are
+    0 and 1; those positions do not describe a package graph. Under Ruling 6, obtain the package-report
+    contract defining its numeric positions, ordering algorithm and dependency-edge semantics, identify
+    the producing graph/version, and show the operational verification decision consuming that report.
+    No new TS or package-graph observation was admitted with the journal/inventory capture.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:90fa083c4887641658c0239762b509fd6c9bacc6f14cf29ee392ce08714572ff
+  outcome: unresolved
+  needed_evidence: Run 3 adds checkout bindings and an admission-order fixture whose step positions are
+    0 and 1; those positions do not describe a package graph. Under Ruling 6, obtain the package-report
+    contract defining its numeric positions, ordering algorithm and dependency-edge semantics, identify
+    the producing graph/version, and show the operational verification decision consuming that report.
+    No new TS or package-graph observation was admitted with the journal/inventory capture.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:795d76d79fdc3ad235d204aee98c96f70dcdb10704c927558f31012749553995
+  outcome: unresolved
+  needed_evidence: 'Run 3 adds checkout branch/head snapshots and verdict applicability fields; it supplies
+    no docgen selection result with a dirty-tree pin. Under Ruling 6, retain both concessions: an observed
+    selection artifact binding base, head, dirty snapshot and selected members, a contract choosing selected
+    extension versus selection rule and a Must/Should specialization CQ; and an independently versioned
+    selection-rule authority, an observed pinned extension showing its application, a rule-versus-result
+    contract and a CQ requiring the specification. Checkout paths and stored diff fingerprints do not
+    supply those selected members or governance.'
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:9cbd50f3655b7ae7102a1be9bfcfe939528b3eaebd0dc33257408365f9402062
+  outcome: unresolved
+  needed_evidence: Run 3 adds stored diff/head/tier context and a deterministic admission-order contract,
+    but neither is a governed affected-task selection run. Under Ruling 6, obtain the normative selection
+    contract explaining how task inputs alter membership and whether failures open or close the selection,
+    an observed selected set under that contract, and the operational verification decision that trusts
+    it. The current applicability hypotheses still lack an observed accept/reject consumer.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:a1f8202d5ff295e75dd7ad3f50f9454dad4bc2d53677e5936a6a0812250c5e43
+  outcome: unresolved
+  needed_evidence: Run 3 adds stored diff/head/tier context and a deterministic admission-order contract,
+    but neither is a governed affected-task selection run. Under Ruling 6, obtain the normative selection
+    contract explaining how task inputs alter membership and whether failures open or close the selection,
+    an observed selected set under that contract, and the operational verification decision that trusts
+    it. The current applicability hypotheses still lack an observed accept/reject consumer.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:3c757a7975b27b8597ccf8c6d886eb72ad2b8b51aaba8eb59cf21cc9a1a7a3c6
+  outcome: unresolved
+  needed_evidence: Run 3 now records requested/granted weightTokens and quotes the projection inequality
+    activeTokenTotal + weightTokens <= capacityMaxTokens. Ruling 9 deliberately omitted capacity stamps.
+    Under Ruling 6, obtain the authoritative capacity computation defining unit conversion, reserve subtraction
+    and hard-floor treatment, and a provenance-preserving join from its computed value to capacityAtAdmissionTokens
+    on an observed admission decision. A policy token charge and reconstructed ledger total cannot stand
+    for measured remaining capacity.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:518aee86882c8b9092469203add3bc23c72acfed1d7139f136a96e8763f0c8c7
+  outcome: unresolved
+  needed_evidence: Run 3 now records requested/granted weightTokens and quotes the projection inequality
+    activeTokenTotal + weightTokens <= capacityMaxTokens. Ruling 9 deliberately omitted capacity stamps.
+    Under Ruling 6, obtain the authoritative capacity computation defining unit conversion, reserve subtraction
+    and hard-floor treatment, and a provenance-preserving join from its computed value to capacityAtAdmissionTokens
+    on an observed admission decision. A policy token charge and reconstructed ledger total cannot stand
+    for measured remaining capacity.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:6b31f817391e66aab8fc9796fed0c0bbdbd8285c9e86438e9172d1ce6bbaef61
+  outcome: unresolved
+  needed_evidence: Run 3 now includes timestamped inventory and queue/lease reports, but Ruling 9 supplied
+    no pre-grant capacity stamps. Under Ruling 6, obtain a Must/Should executable CQ that traverses an
+    AdmissionSnapshot, its capture act and instant, machine and policy scope, and an authoritative correlation
+    to the immediately pre-grant decision that materializes capacityAtAdmissionTokens. A later lease snapshot,
+    a checkout inventory instant and the projection's capacity inequality do not establish that missing
+    pre-grant state.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:8a555d65d66a8d7f44336fdb4ce8816f5a033a6ce448e311dc29615bfd8f41f2
+  outcome: unresolved
+  needed_evidence: Run 3 now includes timestamped inventory and queue/lease reports, but Ruling 9 supplied
+    no pre-grant capacity stamps. Under Ruling 6, obtain a Must/Should executable CQ that traverses an
+    AdmissionSnapshot, its capture act and instant, machine and policy scope, and an authoritative correlation
+    to the immediately pre-grant decision that materializes capacityAtAdmissionTokens. A later lease snapshot,
+    a checkout inventory instant and the projection's capacity inequality do not establish that missing
+    pre-grant state.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:8af3333c97798f24aeecfa40f40faefcf152f96fffb6717f647eabf0f5250a92
+  outcome: unresolved
+  needed_evidence: Run 3 now includes timestamped inventory and queue/lease reports, but Ruling 9 supplied
+    no pre-grant capacity stamps. Under Ruling 6, obtain a Must/Should executable CQ that traverses an
+    AdmissionSnapshot, its capture act and instant, machine and policy scope, and an authoritative correlation
+    to the immediately pre-grant decision that materializes capacityAtAdmissionTokens. A later lease snapshot,
+    a checkout inventory instant and the projection's capacity inequality do not establish that missing
+    pre-grant state.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:95037a7104c1dbd21fc02aeeeb45733f744c10ba07ea4c5db2a94db62d88e95a
+  outcome: unresolved
+  needed_evidence: Run 3 now includes timestamped inventory and queue/lease reports, but Ruling 9 supplied
+    no pre-grant capacity stamps. Under Ruling 6, obtain a Must/Should executable CQ that traverses an
+    AdmissionSnapshot, its capture act and instant, machine and policy scope, and an authoritative correlation
+    to the immediately pre-grant decision that materializes capacityAtAdmissionTokens. A later lease snapshot,
+    a checkout inventory instant and the projection's capacity inequality do not establish that missing
+    pre-grant state.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:95b57e4f4029739dacb78d5caa9b43939b1820fc17d3785a9ff32181d7d0e0b6
+  outcome: unresolved
+  needed_evidence: Run 3 now includes timestamped inventory and queue/lease reports, but Ruling 9 supplied
+    no pre-grant capacity stamps. Under Ruling 6, obtain a Must/Should executable CQ that traverses an
+    AdmissionSnapshot, its capture act and instant, machine and policy scope, and an authoritative correlation
+    to the immediately pre-grant decision that materializes capacityAtAdmissionTokens. A later lease snapshot,
+    a checkout inventory instant and the projection's capacity inequality do not establish that missing
+    pre-grant state.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:79df3741e52f870a9c5d7ac0f3c76fc333a1341bf8f15c7a7720f2b6982e88b3
+  outcome: unresolved
+  needed_evidence: Run 3 now captures a ticket's blockedOnOriginAtMillis=0 and separately records queue,
+    withdrawal and eviction boundaries. dh:att-origin-block-marker:001 leaves the zero's meaning unresolved.
+    Under Ruling 6, obtain the deployed threshold rule, its unit and both true/false consequences, decide
+    grace versus staleness versus retry semantics, and observe a specifically origin-blocked case governed
+    by that rule. A terminal eviction or zero marker does not establish a grace-window application.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:cb78d031658bfe80535beb490352c2086b2b8f629e3819df4fba336fbeb37598
+  outcome: unresolved
+  needed_evidence: Run 3 adds live heartbeat observations and explicit lease eviction reports with lastHeartbeatAtMillis,
+    plus a synthetic termination join. The Stage B heartbeat census checks four organic rows, reports
+    one legacy row without heartbeat and finds no ordering violations; this bounds observations, not owner
+    death. Under Ruling 6, obtain the deployed suspicion threshold and unit, the identified suspected
+    holder, an observed stale-heartbeat case, its operational consequence, and the authority rule separating
+    suspicion from permission to terminate. An eviction reason or last-seen heartbeat is not proof that
+    suspicion alone authorized termination.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:cb9064130b643be08d25e627bcfc5264739ac1397a236d353835b473c2df5734
+  outcome: unresolved
+  needed_evidence: Run 3 adds live heartbeat observations and explicit lease eviction reports with lastHeartbeatAtMillis,
+    plus a synthetic termination join. The Stage B heartbeat census checks four organic rows, reports
+    one legacy row without heartbeat and finds no ordering violations; this bounds observations, not owner
+    death. Under Ruling 6, obtain the deployed suspicion threshold and unit, the identified suspected
+    holder, an observed stale-heartbeat case, its operational consequence, and the authority rule separating
+    suspicion from permission to terminate. An eviction reason or last-seen heartbeat is not proof that
+    suspicion alone authorized termination.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:e362227f9f3d78e8fcb933ddf9f5523b1ef97776a2546ad12c7f702c33fc1cdd
+  outcome: unresolved
+  needed_evidence: Run 3 now supplies a persisted ticket observation containing blockedOnOriginAtMillis=0
+    with enqueue and heartbeat context, and the current null analysis refuses to read zero as either an
+    epoch instant or evidence of no contention. Under Ruling 6, obtain a semantically interpreted origin-block
+    onset/time and unit, the same ticket's observed originBusy wait, the starvation-policy decision using
+    it, and issuance/revision provenance across the relevant ticket transitions. The observed zero and
+    unrelated terminal chains do not establish those joins.
+  since: '2026-09-10'
+  carried_from_prior: true
+- observation: po:sha256:edf38d10efe0552b7de770a0cc24a9596cc4b5141b693889e987465f4174b4bb
+  outcome: unresolved
+  needed_evidence: Run 3 now supplies a persisted ticket observation containing blockedOnOriginAtMillis=0
+    with enqueue and heartbeat context, and the current null analysis refuses to read zero as either an
+    epoch instant or evidence of no contention. Under Ruling 6, obtain a semantically interpreted origin-block
+    onset/time and unit, the same ticket's observed originBusy wait, the starvation-policy decision using
+    it, and issuance/revision provenance across the relevant ticket transitions. The observed zero and
+    unrelated terminal chains do not establish those joins.
+  since: '2026-09-10'
+  carried_from_prior: true
