@@ -292,7 +292,7 @@ export class PackageJsonValidationIssue extends S.Class<PackageJsonValidationIss
  * @category utilities
  * @since 0.0.0
  */
-export const packageJsonJsonSchema = S.toJsonSchemaDocument(PackageJson);
+export const packageJsonJsonSchema = S.toJsonSchemaDocument(PackageJson, { onExcessProperty: "error" });
 
 /**
  * Draft 2020-12 JSON Schema document for the npm-only package.json schema.
@@ -308,7 +308,7 @@ export const packageJsonJsonSchema = S.toJsonSchemaDocument(PackageJson);
  * @category utilities
  * @since 0.0.0
  */
-export const npmPackageJsonJsonSchema = S.toJsonSchemaDocument(NpmPackageJson);
+export const npmPackageJsonJsonSchema = S.toJsonSchemaDocument(NpmPackageJson, { onExcessProperty: "error" });
 
 /**
  * Normalize an unknown package.json value into a canonical encoded object.
