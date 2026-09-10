@@ -3062,6 +3062,7 @@
     },
   },
   "patchedDependencies": {
+    "@effect/platform-node-shared@4.0.0-rc.113": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.113.patch",
     "onnxruntime-node@1.29.0": "patches/onnxruntime-node@1.29.0.patch",
   },
   "overrides": {

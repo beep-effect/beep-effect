@@ -328,7 +328,8 @@
     "knip@6.27.0": "patches/knip@6.27.0.patch",
     "sharp@0.35.0": "patches/sharp@0.35.0.patch",
     "drizzle-orm@1.0.0-rc.4-fb12281": "patches/drizzle-orm@1.0.0-rc.4-fb12281.patch",
-    "onnxruntime-node@1.29.0": "patches/onnxruntime-node@1.29.0.patch"
+    "onnxruntime-node@1.29.0": "patches/onnxruntime-node@1.29.0.patch",
+    "@effect/platform-node-shared@4.0.0-rc.113": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.113.patch"
   },
   "private": true,
   "repository": {
