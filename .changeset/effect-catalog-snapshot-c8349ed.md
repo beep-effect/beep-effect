@@ -121,8 +121,9 @@
 "@beep/xai": patch
 ---
 
-Pin the Effect catalog to the pkg.pr.new snapshot of Effect-TS/effect main
-commit c8349ede1a (ahead of the next v4 RC) and migrate every package to its
+Move the Effect catalog to 4.0.0-rc.113 (initially migrated against the
+pkg.pr.new snapshot of main commit c8349ede1a, which rc.113 includes) and
+migrate every package to its
 breaking changes: PascalCase Config/CLI constructors, SchemaGetter and
 SchemaTransformation `transformEffect` renames, the native
 `effect/unstable/arbitrary/Arbitrary` model replacing the fast-check bridge,

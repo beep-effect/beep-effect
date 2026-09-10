@@ -145,7 +145,7 @@ const providerBatch = Effect.fn("Embedder.providerBatch")(function* (
   inputs: ReadonlyArray<EmbeddingInput>,
   keys: ReadonlyArray<ProviderCacheKey>,
   model: ModelIdentity,
-  provider: EmbeddingModel.Service,
+  provider: EmbeddingModel.EmbeddingModel,
   cache: ProviderCache["Service"]
 ): Effect.fn.Return<ReadonlyArray<Result.Result<EmbeddingVector, DegradedEmbedding>>, never, Crypto.Crypto> {
   const response = yield* provider.embedMany(A.map(inputs, (input) => input.text)).pipe(
@@ -205,7 +205,7 @@ const providerBatch = Effect.fn("Embedder.providerBatch")(function* (
   );
 });
 
-const makeEmbedder = Effect.fn("Embedder.make")(function* (provider: O.Option<EmbeddingModel.Service>) {
+const makeEmbedder = Effect.fn("Embedder.make")(function* (provider: O.Option<EmbeddingModel.EmbeddingModel>) {
   const cache = yield* ProviderCache;
   const crypto = yield* Crypto.Crypto;
   const model = yield* ActiveEmbeddingIdentity;

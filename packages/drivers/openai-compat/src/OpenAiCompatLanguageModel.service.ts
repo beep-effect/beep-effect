@@ -961,8 +961,10 @@ const makeStreamResponse = (
  * @category constructors
  * @since 0.0.0
  */
-export const makeFromProvider: (options: OpenAiCompatLanguageModelOptions) => Effect.Effect<LanguageModel.Service> =
-  Effect.fn("OpenAiCompatLanguageModel.makeFromProvider")(function* (options) {
+export const makeFromProvider: (
+  options: OpenAiCompatLanguageModelOptions
+) => Effect.Effect<LanguageModel.LanguageModel> = Effect.fn("OpenAiCompatLanguageModel.makeFromProvider")(
+  function* (options) {
     const { config = OpenAiCompatLanguageModelConfig.make({}), model, moduleName, provider } = options;
 
     return yield* LanguageModel.make({
@@ -984,7 +986,8 @@ export const makeFromProvider: (options: OpenAiCompatLanguageModelOptions) => Ef
         );
       },
     });
-  });
+  }
+);
 
 /**
  * Builds a layer for an OpenAI-compatible language model from provider callbacks.
@@ -1032,20 +1035,20 @@ export const layerFromProvider = (
  */
 export const make: (
   options: OpenAiCompatLanguageModelClientOptions
-) => Effect.Effect<LanguageModel.Service, never, OpenAiCompatClient> = Effect.fn("OpenAiCompatLanguageModel.make")(
-  function* (options) {
-    const client = yield* OpenAiCompatClient;
-    return yield* makeFromProvider({
-      ...O.getSomesStruct({ config: O.fromUndefinedOr(options.config) }),
-      model: options.model,
-      moduleName: "OpenAiCompatLanguageModel",
-      provider: {
-        createChatCompletion: client.createChatCompletion,
-        streamChatCompletion: client.streamChatCompletion,
-      },
-    });
-  }
-);
+) => Effect.Effect<LanguageModel.LanguageModel, never, OpenAiCompatClient> = Effect.fn(
+  "OpenAiCompatLanguageModel.make"
+)(function* (options) {
+  const client = yield* OpenAiCompatClient;
+  return yield* makeFromProvider({
+    ...O.getSomesStruct({ config: O.fromUndefinedOr(options.config) }),
+    model: options.model,
+    moduleName: "OpenAiCompatLanguageModel",
+    provider: {
+      createChatCompletion: client.createChatCompletion,
+      streamChatCompletion: client.streamChatCompletion,
+    },
+  });
+});
 
 /**
  * Builds a language-model layer backed by {@link OpenAiCompatClient}.
