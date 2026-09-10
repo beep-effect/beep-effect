@@ -806,7 +806,7 @@ const lintDeprecatedApisCommand = Command.make(
   { package: lintPackageFlag, full: lintFullFlag, base: lintBaseFlag },
   Effect.fn("Lint.deprecatedApis")(function* ({ package: directory, full, base }) {
     if (O.isNone(directory)) {
-      const ci = yield* Config.string("CI").pipe(Config.withDefault(""));
+      const ci = yield* Config.String("CI").pipe(Config.withDefault(""));
       return yield* full || ci === "true" ? runDeprecatedApiLint() : runRootDeprecatedApisTask(base);
     }
     const root = yield* findRepoRoot();
