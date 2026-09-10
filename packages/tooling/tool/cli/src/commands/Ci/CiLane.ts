@@ -38,6 +38,7 @@ import {
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
 import { isDoctestSourcePath } from "../../internal/jsdoc/DoctestSource.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
+import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
 import {
   QualityTaskStep,
   runQualityTaskStreamingLaneGroup,
@@ -756,7 +757,6 @@ const jsdocRatchetStep = (repoRoot: string, inventoryPath: string): QualityTaskS
 // not the 32GB beep-ec2-heavy fleet, so they keep the 16GB-survival turbo cap
 // instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
 const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
-const QualityCheckConcurrency = LiteralKit(["2", "3"]);
 const decodeUnknownQualityCheckConcurrencyOption = S.decodeUnknownOption(QualityCheckConcurrency);
 
 const qualityCheckConcurrencyArg = (): string =>
