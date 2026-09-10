@@ -48,7 +48,7 @@ export class LawScanProject extends Context.Service<
  *
  * **Example** (Read the default law globs)
  * ```ts
- * import { LAW_SCAN_INCLUDED_GLOBS } from "@beep/repo-cli/commands/Laws/internal/LawScan"
+ * import { LAW_SCAN_INCLUDED_GLOBS } from "@beep/repo-cli/test/Laws"
  * console.log(LAW_SCAN_INCLUDED_GLOBS.length) // 3
  * ```
  *
@@ -64,7 +64,7 @@ const ECOSYSTEM_MEMBER_SOURCE_PREFIX = "packages/ecosystem/";
  *
  * **Example** (Recognize an ecosystem member path)
  * ```ts
- * import { isEcosystemMemberSourcePath } from "@beep/repo-cli/commands/Laws/internal/LawScan"
+ * import { isEcosystemMemberSourcePath } from "@beep/repo-cli/test/Laws"
  * console.log(isEcosystemMemberSourcePath("packages/ecosystem/demo/src/index.ts")) // true
  * console.log(isEcosystemMemberSourcePath("packages/foundation/demo/src/index.ts")) // false
  * ```
@@ -128,7 +128,7 @@ export type LawScanOptions<Diagnostic> = {
  * **Example** (Select a changed-file scope)
  *
  * ```ts
- * import { lawScanSourcePaths } from "@beep/repo-cli/commands/Laws"
+ * import { lawScanSourcePaths } from "@beep/repo-cli/test/Laws"
  *
  * console.log(lawScanSourcePaths(["packages/demo/src/index.ts"]))
  * ```
@@ -201,7 +201,7 @@ export type LawScanResult<Diagnostic> = {
  *
  * **Example** (Build a scan over the default globs)
  * ```ts
- * import { LAW_SCAN_INCLUDED_GLOBS, runLawScan } from "@beep/repo-cli/commands/Laws/internal/LawScan"
+ * import { LAW_SCAN_INCLUDED_GLOBS, runLawScan } from "@beep/repo-cli/test/Laws"
  * import * as Effect from "effect/Effect"
  * const scan = runLawScan({
  *   sourceFileGlobs: LAW_SCAN_INCLUDED_GLOBS,

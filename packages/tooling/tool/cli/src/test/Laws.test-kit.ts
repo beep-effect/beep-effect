@@ -13,3 +13,4 @@ export * from "@beep/repo-cli/commands/Laws/index";
 export * from "@beep/repo-cli/commands/Laws/NoNativeRuntime";
 export * from "@beep/repo-cli/commands/Laws/SchemaDiagnostics";
 export * from "@beep/repo-cli/commands/Laws/TerseEffect";
+export * from "../commands/Laws/internal/LawScan.ts";
