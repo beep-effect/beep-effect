@@ -124,6 +124,23 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolea
 });
 
 describe("StepExec capture pipe lifecycle", () => {
+  it.live("fails a deadline-hit capture even when the child traps the signal, flushes, and exits zero", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        runCaptured({
+          command: "sh",
+          args: ["-c", 'trap "echo summary; exit 0" TERM INT; while :; do sleep 0.05; done'],
+          timeout: "400 millis",
+          forceKillAfter: "2 seconds",
+        })
+      );
+      expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
+      if (isCaptureCommandTimedOutError(error)) {
+        expect(error.commandLine).toContain("trap");
+      }
+    }).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("collects decoded text and distinguishes zero from nonzero exits", () =>
     Effect.gen(function* () {
       expect(yield* collectText(Stream.make(encoder.encode("a"), encoder.encode("b")))).toBe("ab");

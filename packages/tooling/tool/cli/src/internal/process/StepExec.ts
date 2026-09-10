@@ -1021,24 +1021,37 @@ export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(functi
               )
             )
           );
-      const [captured, exitCode] = yield* P.isUndefined(timeout)
-        ? watchedCapture
-        : watchedCapture.pipe(
-            Effect.timeoutOrElse({
-              duration: timeout,
-              orElse: () =>
-                interruptTimedOutCapture(handle, forceKillAfter).pipe(
-                  Effect.andThen(
-                    Effect.fail(
-                      CaptureCommandTimedOutError.make({
-                        commandLine,
-                        message: `${commandLine}: captured command did not exit within ${Duration.toMillis(timeout)}ms`,
-                      })
+      const [elapsed, [captured, exitCode]] = yield* Effect.timed(
+        P.isUndefined(timeout)
+          ? watchedCapture
+          : watchedCapture.pipe(
+              Effect.timeoutOrElse({
+                duration: timeout,
+                orElse: () =>
+                  interruptTimedOutCapture(handle, forceKillAfter).pipe(
+                    Effect.andThen(
+                      Effect.fail(
+                        CaptureCommandTimedOutError.make({
+                          commandLine,
+                          message: `${commandLine}: captured command did not exit within ${Duration.toMillis(timeout)}ms`,
+                        })
+                      )
                     )
-                  )
-                ),
-            })
-          );
+                  ),
+              })
+            )
+      );
+      // The deadline race interrupts the capture and kills the child, but a child that handles the
+      // signal by flushing a summary and exiting zero inside the kill grace can still deliver a
+      // complete capture through the interrupted fiber (Lint Policy job 102722219371: Turbo exited 0
+      // with 52 of 141 tasks after exactly the 15-minute cap and the step passed). A capture that
+      // only ended once the deadline had elapsed is a timeout, whatever the child reported.
+      if (!P.isUndefined(timeout) && Duration.isGreaterThanOrEqualTo(elapsed, Duration.fromInputUnsafe(timeout))) {
+        return yield* CaptureCommandTimedOutError.make({
+          commandLine,
+          message: `${commandLine}: captured command exited ${exitCode} only after the ${Duration.toMillis(timeout)}ms deadline; tail: ${Str.slice(-2_000)(captured.text)}`,
+        });
+      }
       return CapturedStep.make({
         exitCode,
         output: options.trim === true ? Str.trim(captured.text) : captured.text,

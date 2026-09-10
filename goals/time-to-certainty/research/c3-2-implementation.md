@@ -455,6 +455,27 @@ Cold task-seconds: `lint:deprecated-apis` 140 tasks, 2,387 s (p50 16.8 s, max 55
   the worker's lab tolerance), 135 `lint:jsdoc` owners (the docs profile ignores labs), and the
   root residual for root-owned files.
 
+### Hosted round 1 (PR #1079, head f3132f000f, job 102722219371, beep-ec2-heavy)
+
+- `lint:jsdoc` (135 package tasks + the root residual, concurrency 4): **728 s**, 137/137
+  successful, the fingerprint task already cached from the sibling invocation. Before: 73.9 s.
+- `lint:deprecated-apis` (140 package tasks, concurrency 4): the step's 15-minute capture cap
+  elapsed with **52 of 141 tasks** finished; Turbo received the kill signal, flushed
+  `Tasks: 52 successful, 141 total` and exited 0 inside the kill grace, and the step was
+  recorded as done. Two consequences: the capture helper let a deadline-hit child pass (fixed in
+  this PR, regression test with a real trap-and-exit child), and the hosted cold sweep projects
+  to roughly **40 minutes** at concurrency 4 against 523.5 s for the 28 shards. Per-package typed
+  linting rebuilds the transitive source closure per package (every workspace export resolves to
+  `src`), which the shard runner amortized over 28 programs; the heavy runner's 8 vCPUs also host
+  the concurrent jsdoc workers and the other policy steps.
+- Reading: the reuse mechanism is proven (fingerprint edge, `--affected`, warm replay in under a
+  second) but the cold per-package cost is 4× the shard runner on the hosted runner, and cold
+  recurs whenever the CLI closure changes. This contradicts D6's cost assumption and needs a
+  ruling before the lane can be called good: keep the hosted full-scope sweep on the shard
+  program (D6 amended), or make the per-package typed program cheap (reference-keeping check
+  overlays from #1058 with `^build` declarations instead of the project service's source
+  fallback), or raise the step budget and accept the wall. Options are in the PR thread.
+
 ### Stage D — files
 
 - goals/time-to-certainty/research/c3-2-implementation.md

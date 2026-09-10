@@ -714,3 +714,29 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** the lane brief's verification split naming
   `beep quality fallow audit --check --base origin/main` beside biome and vitest, since Fallow
   judges test files by CRAP and the package handoff does not run it.
+
+## 2026-09-10 — A timed-out step passed because the child flushed and exited zero
+
+- **Doing:** reading the first hosted Lint Policy run of PR #1079 (job 102722219371).
+- **Evidence:** the `lint:deprecated-apis` Turbo step ran 901,364 ms against a 900,000 ms
+  capture cap, Turbo printed `Tasks: 52 successful, 141 total` with no `Failed:` list and exited
+  0 after the kill signal, and the step was recorded as done; only `lint:schema-first` failed the
+  lane. `Effect.timeoutOrElse` races the capture against a sleep; the interrupted capture still
+  completed inside the kill grace and delivered its text and zero exit through the loser's
+  observer. Reproduced with `sh -c 'trap "echo summary; exit 0" TERM INT; ...'` under a 400 ms
+  cap: the old helper returned exit 0.
+- **Would have prevented it:** the capture helper judging a deadline by elapsed time after the
+  capture returns, whatever the child reported (now the case), and the policy lane treating a
+  Turbo summary whose successful count is below its total as a failure even at exit 0.
+
+## 2026-09-10 — Per-package typed eslint is 4× the shard runner cold on the hosted runner
+
+- **Doing:** measuring C3.2's hosted cold cost (same job).
+- **Evidence:** 52 of 140 `lint:deprecated-apis` tasks in 15 minutes at concurrency 4 on
+  `beep-ec2-heavy` (28 shards: 523.5 s); `lint:jsdoc` 728 s for 135 tasks (root invocation:
+  73.9 s). Locally the same sweep took 12 m 50 s for all 277 tasks. Every workspace export
+  resolves to `src`, so the typed project service rebuilds each package's transitive source
+  closure; 28 shards shared that work.
+- **Would have prevented it:** a hosted cold-run measurement of one package family before the
+  fleet-wide task landed (§7.1(4) measured local only), and D6 stating the amortization the
+  shard programs provided so the per-package cost was a design input, not a discovery.
