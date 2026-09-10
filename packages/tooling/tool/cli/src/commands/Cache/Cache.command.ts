@@ -773,29 +773,28 @@ const cachePilotCommand = Command.make(
   Command.provide(MemoryStatsLive)
 );
 
-const makeCacheCommand = <E, R>(qualificationLayer: Layer.Layer<CacheQualificationService, E, R>) =>
-  Command.make("cache", {}, () =>
-    Console.log(
-      "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, dependencies, pilot, warm, probe, dashboard"
-    )
-  ).pipe(
-    Command.withDescription("Turbo cache recovery and evidence operations"),
-    Command.withSubcommands([
-      cacheCensusCommand,
-      cacheAuditCommand.pipe(Command.provide(qualificationLayer)),
-      cacheInspectCommand.pipe(Command.provide(qualificationLayer)),
-      cacheBaselineCommand.pipe(Command.provide(qualificationLayer)),
-      cacheFingerprintCommand.pipe(Command.provide(qualificationLayer)),
-      cacheActivationCommand.pipe(Command.provide(qualificationLayer)),
-      cacheTransitionCommand.pipe(Command.provide(qualificationLayer)),
-      cacheSyntheticCommand,
-      cacheDependenciesCommand,
-      cachePilotCommand.pipe(Command.provide(qualificationLayer)),
-      cacheWarmCommand,
-      cacheProbeCommand,
-      cacheDashboardCommand,
-    ])
-  );
+const cacheCommandDefinition = Command.make("cache", {}, () =>
+  Console.log(
+    "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, dependencies, pilot, warm, probe, dashboard"
+  )
+).pipe(
+  Command.withDescription("Turbo cache recovery and evidence operations"),
+  Command.withSubcommands([
+    cacheCensusCommand,
+    cacheAuditCommand,
+    cacheInspectCommand,
+    cacheBaselineCommand,
+    cacheFingerprintCommand,
+    cacheActivationCommand,
+    cacheTransitionCommand,
+    cacheSyntheticCommand,
+    cacheDependenciesCommand,
+    cachePilotCommand,
+    cacheWarmCommand,
+    cacheProbeCommand,
+    cacheDashboardCommand,
+  ])
+);
 
 /**
  * Turbo cache command group.
@@ -811,7 +810,7 @@ const makeCacheCommand = <E, R>(qualificationLayer: Layer.Layer<CacheQualificati
  * @category commands
  * @since 0.0.0
  */
-export const cacheCommand = makeCacheCommand(CacheQualificationLive);
+export const cacheCommand = cacheCommandDefinition.pipe(Command.provide(CacheQualificationLive));
 
 /**
  * Build the real command tree with an explicit qualification authority for tests.
@@ -826,7 +825,10 @@ export const cacheCommand = makeCacheCommand(CacheQualificationLive);
  * ```
  *
  * @internal
+ * @param qualificationLayer - Qualification authority used by the dispatched handlers.
+ * @returns The cache command tree with the supplied authority.
  * @category testing
  * @since 0.0.0
  */
-export const makeCacheCommandForTesting = makeCacheCommand;
+export const makeCacheCommandForTesting = <E, R>(qualificationLayer: Layer.Layer<CacheQualificationService, E, R>) =>
+  cacheCommandDefinition.pipe(Command.provide(qualificationLayer));

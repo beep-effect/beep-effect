@@ -144,7 +144,7 @@ export const joinCacheCensusPlan = Effect.fn("CacheCensus.joinPlan")(function* (
         return yield* CacheCommandError.new("Dry plan task identity disagrees with its workspace and task.");
       }
       const workspace = yield* A.findFirst(workspaces, (workspace) => workspace.name === node.package).pipe(
-        Effect.fromOption(() => CacheCommandError.new("Dry plan contains an undeclared workspace."))
+        Effect.fromOption(() => CacheCommandError.new(`Dry plan contains an undeclared workspace: ${node.package}.`))
       );
       const command = R.get(workspace.scripts, node.task).pipe(O.filter((value) => Str.isNonEmpty(Str.trim(value))));
       if (O.isSome(command) && command.value !== node.command) {
@@ -253,7 +253,9 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   );
   let tasks = R.keys(rootConfig.tasks);
   let sourcePaths = ["turbo.json", "package.json", "bun.lock", ".bun-version", ".nvmrc"];
-  let workspaceRows = A.empty<CacheCensusWorkspace>();
+  let workspaceRows = [
+    CacheCensusWorkspace.make({ name: "//", directory: ".", scripts: O.getOrElse(rootManifest.scripts, () => ({})) }),
+  ];
   const collectChildConfigurations = Effect.fn("CacheCensus.collectChildConfigurations")(function* (
     name: string,
     directory: string

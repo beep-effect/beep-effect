@@ -756,3 +756,40 @@ controls disable reuse and may still run after this comparison stops reuse.
   have complete statement, branch, function and line coverage.
 - Prevention: keep operational authority injectable and prove adapter behavior
   alongside the domain/service contract when adding commands.
+
+### Include explicit root tasks in the executable census
+
+- Activity: verify the qualification branch after merging PR #1060.
+- Evidence: the cache-policy gate rejects an undeclared `//` workspace. Turbo's
+  package query excludes the root, while its execution plan now includes root
+  lint tasks introduced by the merged configuration.
+- Correction: add the already-read root manifest as the explicit root workspace,
+  retaining rejection of unknown workspaces and mismatched root commands. Review
+  the 277 inherited task additions through the canonical baseline command.
+- Result: the policy audit reports zero blocking findings, with the qualification
+  ledger unchanged and identity/types lint reuse still disabled.
+- Prevention: cover the root task namespace alongside package tasks when joining
+  Turbo queries, manifests and execution plans.
+
+### Preserve static command discovery when injecting a test service
+
+- Activity: run the CLI package audit after adding dispatch coverage.
+- Evidence: command discovery rejects a layer-valued factory argument with
+  `command factory arguments are not bound string literals`; the remaining
+  3457 tests pass.
+- Correction: declare the command tree statically and provide the qualification
+  layer around its dispatcher. The testing facade provides its explicit layer
+  around the same tree, preserving real parser and handler coverage.
+- Prevention: include the static command-surface parity test when changing how
+  command trees are constructed, even when runtime dispatch tests already pass.
+
+### Attribute locationless compiler failures before changing source
+
+- Activity: prove the scanner-policy prerequisite after the Effect upgrade.
+- Evidence: separate aggregate coverage builds report locationless `TS2589`
+  failures in unchanged UI and Box packages. Each package's isolated build exits
+  zero without source edits.
+- Correction: retain the failed aggregate receipts and rerun complete verification
+  after each successful isolation. An isolated build alone is not full proof.
+- Prevention: preserve package and compiler-phase context in aggregate diagnostics
+  so a reproducible source error can be distinguished from an intermittent build.

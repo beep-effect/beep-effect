@@ -1,0 +1,17 @@
+{
+  "previous": "7d7bd0ff3d55ac3fcdc2623ec48d5cc9be7736ac3fc24e4a92e468258e30e462",
+  "review": {
+    "reviewer": "Codex integration review",
+    "reason": "Reconcile the inherited main task population after PR #1060 while retaining the disabled qualification scope.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/effect-rc-baseline-review.md",
+      "sha256": "19ecf16ce5730176e124750fad7725fb0bf122dba7791cdfc7d719a61e54d692"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

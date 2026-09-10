@@ -244,6 +244,33 @@ describe("executable cache census", () => {
   );
 
   it.effect(
+    "joins root tasks only against the explicit root manifest and preserves their dependencies",
+    Effect.fnUntraced(function* () {
+      const rootWorkspace = CacheCensusWorkspace.make({
+        name: "//",
+        directory: ".",
+        scripts: { "lint:policy-fingerprint": "bun run beep lint policy-fingerprint --check" },
+      });
+      const rootTask = {
+        ...node("lint:policy-fingerprint", rootWorkspace.scripts["lint:policy-fingerprint"]),
+        taskId: "//#lint:policy-fingerprint",
+        package: "//",
+      };
+      const lint = { ...node("lint", "biome check ."), dependencies: [rootTask.taskId] };
+      const rows = yield* joinCacheCensusPlan([rootWorkspace, workspace], { tasks: [rootTask, lint] });
+      expect(rows[0]?.workspace).toBe("//");
+      expect(rows[0]?.command).toEqual(O.some(rootTask.command));
+      expect(rows[1]?.dependencies).toEqual([rootTask.taskId]);
+      expect(yield* joinCacheCensusPlan([workspace], { tasks: [rootTask, lint] }).pipe(Effect.isFailure)).toBe(true);
+      expect(
+        yield* joinCacheCensusPlan([rootWorkspace], {
+          tasks: [{ ...rootTask, command: "unreviewed root script" }],
+        }).pipe(Effect.isFailure)
+      ).toBe(true);
+    }, provideCrypto)
+  );
+
+  it.effect(
     "fails closed on phantom workspaces, duplicate identities and changed commands",
     Effect.fnUntraced(function* () {
       const lint = node("lint", "biome check .");

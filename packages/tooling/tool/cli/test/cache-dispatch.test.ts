@@ -27,7 +27,7 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -37,6 +37,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { vi } from "vitest";
 
@@ -119,9 +120,20 @@ const testLayer = Layer.mergeAll(
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 
+const defaultBaselineRequest = CacheBaselineRequest.make({
+  review,
+  scope: baseline.scope,
+  profile: baseline.profile,
+  epoch: baseline.epoch,
+  previous: O.none(),
+});
+
 const consoleText = TestConsole.logLines.pipe(Effect.map(A.filter(P.isString)), Effect.map(A.join("\n")));
 const errorText = TestConsole.errorLines.pipe(Effect.map(A.filter(P.isString)), Effect.map(A.join("\n")));
-const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (report = emptyAudit) {
+const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (
+  report = emptyAudit,
+  baselineRequest = defaultBaselineRequest
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ directory: process.cwd(), prefix: ".cache-dispatch-test-" });
@@ -130,13 +142,6 @@ const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (report = empty
     transition: path.join(root, "transition.json"),
     activation: path.join(root, "activation.json"),
   };
-  const baselineRequest = CacheBaselineRequest.make({
-    review,
-    scope: baseline.scope,
-    profile: baseline.profile,
-    epoch: baseline.epoch,
-    previous: O.none(),
-  });
   const transitionRequest = CacheTransitionRequest.make({ expectedRevision: NonNegativeInt.make(0), entry });
   const activationRequest = CacheActivationRequest.make({
     computation: key.computation,
@@ -191,6 +196,20 @@ const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (report = empty
 });
 
 describe("cache qualification command dispatch", () => {
+  it.effect("preserves arbitrary reviewed baseline requests through file decoding and command dispatch", () =>
+    Arbitrary.checkEffect(
+      Arbitrary.schema(CacheBaselineRequest),
+      (request) =>
+        Effect.gen(function* () {
+          const f = yield* fixture(emptyAudit, request);
+          yield* f.run(["baseline", "--request", f.requests.baseline]);
+          expect(f.calls).toEqual(["baseline"]);
+          return true;
+        }).pipe(provideScopedLayer(testLayer)),
+      fcRuns(40)
+    ).pipe(Effect.map((result) => expect(result._tag).toBe("Passed")))
+  );
+
   it.effect("renders the index, audit formats and explicit ledger through the injected authority", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
