@@ -463,3 +463,25 @@ and packet lifecycle remain untouched. The previously named follow-up remains Fa
 `standards/lint-policy.sweeps.jsonc` key `laws`, and `beep:policy` retires from the two manifests
 and scripts schema after C3.3 and C3.2b land. This lane does not make that switch.
 Stop after Stage C.
+
+## Orchestrator closeout (PR #1082)
+
+Hosted rounds on the C3.3 PR, attributed:
+
+1. Docgen metadata ratchet on the Laws barrel and docs-profile eslint warnings — introduced,
+   fixed by documenting every export line in Biome's order and routing examples through the
+   exported `@beep/repo-cli/test/Laws` kit.
+2. Coverage Regression: seven regressed rows on `Laws.command.ts`, `TSMorph.model.ts` and
+   `TSMorph.service.ts` — introduced. The ratchet measures each package with its own suite, so
+   repo-utils code exercised only by repo-cli tests counts as uncovered, and a guard that runs
+   only inside a spawned CLI child is never instrumented. Fixed by three tests: the
+   `packageSyntax` request path and the explicit-file project pool in the repo-utils suite, the
+   decoded `loadTsconfigFiles` default, and the prefix guard run in-process through
+   `Command.runWith`. Full-suite rows on the branch: model 81.58 / 92.31 / 91.74, service
+   branches 73.28, `Laws.command.ts` 44.44 / 37.73 / 45.45 / 44.44 — every row above its floor.
+3. Local `yeet verify` storybook chunk failures with the hosted Storybook lane green —
+   environment-only.
+
+Five review threads were answered and resolved through `yeet reply`. The follow-up named in
+Stage C (plan switch behind sweeps key `laws`, `beep:policy` retirement) starts after #1082
+and #1083 merge.
