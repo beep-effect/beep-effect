@@ -1,0 +1,68 @@
+{
+  "id": "so:sha256:65609cedeaf3e99b51031c38b99ab7bc16ea0ef59fa66bea1d446ef3f7bd3333",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 2392,
+    "end_line": 2402,
+    "content_sha256": "6642c1bb34908bd69558189af524260056e65975892aa7f982ed03a601e3ae0b"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/admission/canonical/journal.properties:nonce=90006bc5-d7e0-41a4-9224-813ac343ca6c",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-ticket-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=bcafa1c2-8dae-4804-995f-b413d401504c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=chore/wire-graft-agents"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect6"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=1788920302811"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=90006bc5-d7e0-41a4-9224-813ac343ca6c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=23955531be3d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=queued-submitter-death"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 217\nownerRef=23955531be3d\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect6\nbranch=chore/wire-graft-agents\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-ticket-evicted\nnonce=90006bc5-d7e0-41a4-9224-813ac343ca6c\nattemptId=bcafa1c2-8dae-4804-995f-b413d401504c\nevictedAtMillis=1788920302811\nreason=queued-submitter-death\n",
+  "epistemic_status": "parser_derived"
+}

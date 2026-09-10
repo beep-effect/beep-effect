@@ -1,0 +1,39 @@
+id: dh:ov-origin-ordering-key:001
+observation_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:d4f2e09398646bf875ee3cbeeec6471c327a8a7b9d9d82425c754dbebd84c7f9
+- po:sha256:d5a14f495e7b2778abacb3727637a629965dec0f85bbefec53d76cba5a7690e3
+- po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d
+- po:sha256:fe4b4d49ef566d86584b1cea395485bf0f230233e91478c746d3a8d23208e05c
+cq_warrants:
+- CQ-020
+proposed_referent:
+  label: Recorded origin key used in deterministic request ordering
+  description: An information value associating an admission request with an origin grouping used as a
+    tie-break component of canonical projection order. The fixture value origin-test is an example literal.
+    The batch does not establish repository identity, origin normalization, or an active-grant exclusion
+    violation.
+representation_status: information_artifact
+alternatives:
+- label: Domain repository-origin identifier with a separately established sameness criterion
+  representation_status: domain_referent
+  plausibility: viable
+- label: Decorative label with no effect on projection order
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The emitted request.originKey value has a decision-relevant use in the quoted canonical sort
+    tuple, so it is more than a placeholder name in these observations. The request fixture contains repeated
+    origin-test values, but the subjects are requests and the output is a prescription. That repetition
+    supplies no evidence of simultaneous active grants. The ordering warrant is supported here; the grant-exclusion
+    question would additionally need a grant binding and active-state evidence.
+  discriminator: The emitter writes "${subject} ciops:hasOriginKey ${turtleLiteral(request.originKey)}
+    ."; three fixture request subjects carry "ciops:hasOriginKey "origin-test"". The determinism rule
+    requires sorting by "(priority rank, enqueuedAtMillis, originKey, nonce)". Under a null in which this
+    were only a decorative field, originKey could not serve the quoted order-determining role.
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

@@ -1,0 +1,70 @@
+id: "fa:bind-grant-termination:001"
+hypothesis_ref: "dh:bind-grant-termination:001"
+identity_card_ref: "ic:bind-grant-termination:001"
+provenance: synthetic
+evidence_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+  - "CQ-008"
+  - "CQ-009"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    The candidate is a dated occurrence represented by a release or eviction
+    report, not a release procedure or eviction policy. Its mechanism tag does
+    not establish the specification authorizing it, file-deletion mechanics, or
+    a command sent to an execution.
+  world_vs_information: >-
+    The primary model is the represented termination event in the synthetic
+    scenario. A journal assertion is evidence about that event and can be
+    duplicated or mistaken. The correlated release bounds one observed holding;
+    the separate eviction only reports a terminal boundary without its start.
+  role_vs_bearer: >-
+    The event ends the holding relation and therefore a participant's holder role;
+    it is neither the holder, the grant bearer, nor the resulting inactive state.
+    Ending holding does not establish termination of the submitting process or
+    of any work execution.
+  context_reification_needed: >-
+    Attach the occurrence to its particular target allocation, temporal boundary,
+    and reported mechanism. CQ-008 and CQ-009 concern grants active at a relevant
+    time. The evicted lease must not inherit charge, origin, admission time, or
+    beneficiary identity from the other nonce chain.
+rival_models:
+  - label: "Terminal lease information object"
+    still_viable: true
+    rationale: >-
+      Modeling the assertion directly preserves what is actually recorded without
+      treating its reported transition as independently verified world truth.
+  - label: "Release and lease eviction as distinct occurrence models"
+    still_viable: true
+    rationale: >-
+      Eviction may clean up a stale representation after holding has already ended,
+      whereas the correlated release supplies an explicit holding boundary. Before
+      and after allocation-state observations around both mechanisms would decide
+      whether one holding-termination family applies to every reported case.
+  - label: "Inactive phase of an allocation"
+    still_viable: false
+    rationale: >-
+      A resulting allocation state can persist; the hypothesized occurrence is
+      the transition producing or reporting that boundary. The grains cannot be
+      substituted even if both are needed by a later model.
+strongest_counterexample: >-
+  Countermodel: a dead beneficiary's lease has already stopped holding before
+  a reaper records eviction at 1788931586728. That cleanup is not necessarily
+  the actual holding-ending event. Since this lease has no correlated admission
+  or pre-eviction active-state observation, its eviction report cannot establish
+  the effectiveness, exact end time, or prior charge of an allocation. The
+  separate admitted-to-released chain supports a bounded event interpretation
+  without settling the eviction case.
+verdict: analyzed
+needed_evidence: ""
+evidence_limits: >-
+  The event category is proposed for a represented holding-ending transition.
+  Whether the observed eviction actually realizes that transition remains an
+  explicit rival-model issue. A correlated before/after active-allocation trace
+  would distinguish effective termination from stale-record cleanup. Reported
+  reason values are not verified causes, and this evidence establishes neither
+  work completion nor a complete active-grant census.

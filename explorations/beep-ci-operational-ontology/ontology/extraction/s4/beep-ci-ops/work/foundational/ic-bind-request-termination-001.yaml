@@ -1,0 +1,85 @@
+id: "ic:bind-request-termination:001"
+hypothesis_ref: "dh:bind-request-termination:001"
+provenance: synthetic
+evidence_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+  - "CQ-021"
+  - "CQ-023"
+referent_grain: >-
+  One concrete occurrence represented as ending a particular demand's queue
+  participation. The family under examination contains reported withdrawal and
+  ticket eviction, not all possible queue exits. Whether an enduring demand
+  continues afterward is independent of the ending of this queue participation.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two reports concern the same queue-termination event when they refer to the
+    very same causal transition ending the same particular pending participation
+    at its occurrence boundary. A later queue participation has a distinct end
+    even if it expresses the same enduring demand. This specializes occurrence
+    identity and does not depend on settling the demand's identity across
+    withdrawal and resubmission. Record equality and mechanism equality are
+    neither necessary nor sufficient for sameness of the represented transition.
+  reidentification_key:
+    - >-
+      The journal-local request chain and terminal timestamp with its reported
+      mechanism correlate the supplied events; a missing enqueue cannot be
+      manufactured from the nonce or from another chain's fields.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One boundary ending one pending queue participation is the occurrence unit.
+    Withdrawal and ticket eviction report distinct mechanisms; their tags are
+    classifications of occurrences rather than identity providers or automatically
+    admitted subclasses. The event is distinct from its resulting no-longer-queued
+    condition and from the information recording it.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - "information_object: a terminal request-state journal assertion"
+    - "event: withdrawal and ticket eviction as separately modeled occurrence families"
+  existential_dependencies:
+    - >-
+      A termination of queue participation requires that particular pending
+      participation historically. Withdrawal has a correlated enqueue; the
+      evicted ticket has only a terminal report, so its prior participation and
+      enqueue time are not independently observed.
+    - >-
+      No allocated grant, proof execution, or process-death occurrence is required
+      by the correlated withdrawal. The ticket-eviction reason reports submitter
+      death without independently establishing it or identifying the submitter.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+temporality_rationale: >-
+  The occurrence is located at the queue-exit boundary: withdrawal is reported at
+  1788931586715 after enqueue at 1788931586705, while the different ticket's
+  eviction is reported at 1788931586729 without an enqueue. These timestamped
+  boundaries do not measure event duration or establish the eviction's preceding
+  wait. A completed event does not continue accruing queue wait; its assertion
+  may remain available afterward.
+rigidity_rationale: >-
+  A transition that ended this particular pending participation remains that
+  historical event. Later resubmission changes the demand's queued membership,
+  not the event's category. Thus the event can be classified rigidly even while
+  the continuing demand's kind-versus-role analysis remains unresolved.
+counterexamples:
+  - description: >-
+      Countermodel: a stale ticket is evicted after it has already ceased to be
+      eligible or queued. The terminal assertion may describe cleanup, not the
+      actual ending of pending participation. With only a terminal record for
+      synthetic-dead-ticket, its effective queue-exit boundary is unverified.
+  - description: >-
+      Countermodel: a demand is withdrawn and then re-enqueued with the same work
+      content. Its second queue exit is another event whether the enduring demand
+      is one individual or two submissions. Identifying events by demand payload
+      or treating withdrawal as destruction of every possible demand bearer fails.
+  - description: >-
+      A duplicated terminal report does not create another queue exit. ownerRef*,
+      security_resanitization*, corpus_*, capture_*, and generator_* likewise do
+      not individuate an occurrence or prove submitter identity or death.
+status: proposed

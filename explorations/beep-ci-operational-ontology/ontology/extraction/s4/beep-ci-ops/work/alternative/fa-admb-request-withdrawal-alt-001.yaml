@@ -1,0 +1,34 @@
+id: "fa:admb-request-withdrawal-alt:001"
+hypothesis_ref: "dh:admb-request-withdrawal:001"
+identity_card_ref: "ic:admb-request-withdrawal-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      event: a removal occurrence that closes a recorded waiting segment so a
+      historical enqueue is not treated as an ongoing CQ-021 queue candidate
+    still_viable: true
+  - label: >-
+      information_object: an assertion that a request was withdrawn
+      (observationally equivalent on journal-only evidence)
+    still_viable: true
+  - label: >-
+      kind/phase: the request's withdrawn condition without a separately
+      reified removal occurrence
+    still_viable: true
+strongest_counterexample: >-
+  Keeping enqueue content on so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  while discarding withdrawal would leave nonce=3234b861-792e-4cde-96b6-5ca188435021
+  looking like a live contender; that is a current-state timelessness error.
+  The tag still does not disclose cause.
+verdict: analyzed
+needed_evidence: >-
+  A request-removal trace correlated to the withdrawn entry, with the
+  operation's reason or trigger observed independently, would distinguish an
+  occurrence from a report and would test any stronger voluntary/cancellation
+  reading. Event versus withdrawn-condition remains observationally equivalent
+  until a consumer must address the removal independently of the request
+  individual.

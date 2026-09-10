@@ -1,0 +1,87 @@
+id: otp:ov-verification-episode:001
+hypothesis_ref: dh:ov-verification-episode:001
+identity_card_ref: ic:ov-verification-episode:001
+foundational_status: explicitly_deferred
+term:
+  preferred_label: verification episode
+  local_name: VerificationEpisode
+  proposed_iri: https://oip.law/ontology/ci-ops#VerificationEpisode
+  owl_entity_kind: class
+definition:
+  text: A verification occurrence that unites activities pursuing one continuing verification concern
+    and supplies the occurrence context for that concern's current admission prescription.
+  source:
+  - po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4
+  - po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+foundational:
+  ufo_category: unresolved
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: unresolved
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions: []
+  semantic_support_for:
+  - otp:ov-current-proposal-selection:001
+alternatives_rejected:
+- 'One singleton episode for every projection: the contract requires an explicit non-empty caller-supplied
+  occurrence reference and states that no singleton default exists.'
+open_issues:
+- 'Warrant justification: The current-selection decision property requires a coherent episode anchor so
+  a caller''s given context does not merge disconnected histories or split one continuing concern by identifier
+  changes. This proposal supplies the intended anchor semantics. A listed VerificationEpisode class in
+  CQ-020 does not independently require an episode type triple, so the class is warranted as support for
+  the selection decision term.'
+- 'Identity criterion carried from ic:ov-verification-episode:001: unresolved: a verification occurrence
+  needs observed continuity and boundaries that distinguish one episode from separate verification activity,
+  including any grouping of attempts. A correlation-context information object instead has identity through
+  its represented grouping content. The non-empty caller-supplied episodeId and the typed emitted subject
+  do not choose between these criteria or establish episode sameness.'
+- 'Steward choice required before ratification of otp:ov-verification-episode:001: The steward must choose
+  a continuing verification process, a bounded verification event or situation with its own unity conditions,
+  or an information context that merely correlates proposals. This definition states the primary occurrence
+  option without choosing process versus event. If only a correlation record is supported, replace or
+  park this occurrence proposal and revisit hasCurrentProposal''s subject interpretation; do not silently
+  equate the record with a verification process. Still-viable models retained from fa:ov-verification-episode:001:
+  Temporally extended verification process uniting multiple activities under one continuing concern; Bounded
+  verification event or situation with different unity and temporal criteria; Caller-chosen information
+  context that correlates proposals without establishing a single occurrence.'
+- 'Cluster dependency: otp:ov-current-proposal-selection:001, otp:ov-schedule-proposal:001. Coordinate
+  ratification or parking where endpoint grain, component identity, or the stated warrant depends on these
+  proposals; no dependent choice is settled by emission spelling.'
+- 'Reuse search: VerificationEpisode is absent from the 38-term S5 inventory. The scout report offers
+  only a close activity alignment for episodes, not exact reuse, and its activity reading cannot settle
+  this chain''s unresolved occurrence-versus-correlation choice.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Foundational deferral retained from fa:ov-verification-episode:001. Needed evidence: Observe one verification
+  history from an explicit initiating boundary through retries or attempt changes and proposal replacement
+  to closure or abandonment, with an observation-backed rule explaining which activities belong to that
+  same episode. Include a contrasting disconnected history or identifier reassignment so continuity and
+  episode boundaries can be established independently of episodeId equality.'
+- The defensible term shape is a flagged occurrence-context candidate; its category, unity boundaries,
+  identity, and rigidity remain unresolved. Caller-supplied non-empty episodeId is an intended reference,
+  not evidence that the referenced activity exists as one episode.
+- No initiating or terminal boundary, retry/attempt membership, duration, closure, or continuing history
+  is observed. The typed synthetic episode is not evidence of a completed process and cannot warrant episode
+  KPI claims.
+- 'Strongest counterexample carried from fa:ov-verification-episode:001: Hypothetical counterexample:
+  a caller reuses one non-empty episodeId for two disconnected verification histories, or supplies two
+  ids during one continuing history. The emitter can type the corresponding subjects in either case. Treating
+  identifier equality or inequality as occurrence identity therefore creates an unsupported merge or split;
+  a type assertion does not supply start, end, or attempt membership.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

@@ -1,0 +1,72 @@
+id: fa:admb-journal-entry:001
+hypothesis_ref: dh:admb-journal-entry:001
+identity_card_ref: ic:admb-journal-entry:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: A journal entry token individuated by one original append occurrence and its preservation
+    history
+  still_viable: true
+  rationale: >-
+    Identical content can occur in two distinct entry tokens. An append/replay/copy observation is
+    needed to establish whether consumers require that grain.
+- label: The operational occurrence asserted by the entry
+  still_viable: true
+  rationale: >-
+    The event can have several reports, or a report can fail to correspond to a real event; occurrence
+    identity is not assertion-content identity.
+- label: A semantically empty serialization wrapper
+  still_viable: false
+  rationale: >-
+    The supplied entries distinguish enqueue, authorization and removal claims with event-specific
+    content, so informational emptiness does not explain them.
+strongest_counterexample: >-
+  Counterfactual: an identical release assertion is copied into another journal without a second release.
+  The selected content object can be the same while there are two entry tokens and only one asserted
+  occurrence. Conversely, two independent emissions with identical reported fields could concern distinct
+  occurrences that the current tuple cannot distinguish. A consumer counting append operations needs
+  entry-token identity rather than the content identity selected here.
+verdict: analyzed
+needed_evidence: ''
+referent_grain: >-
+  One immutable, event-specific assertion-content unit expressed by a bounded journal entry. This
+  card selects content grain: a physical entry token, an act of writing it, a classified event tag,
+  a complete nonce history, and the asserted operational occurrence are distinct.
+test_rationale:
+  spec_vs_execution: >-
+    An entry describes a particular recorded boundary. The schema version is encoding information,
+    not a governing policy, and replaying the entry is not executing enqueue, grant or release.
+  world_vs_information: >-
+    The assertion-content object is kept separate from the boundary it asserts. Event time dates the
+    asserted occurrence. Neither a release assertion nor a diagnostic reason establishes execution
+    success, actual process death, or operational truth.
+  role_vs_bearer: >-
+    The entry is not a submitter or holder. Being consulted as evidence is a contingent use of the
+    same content, not its identity criterion or a role of the asserted request or grant.
+  context_reification_needed: >-
+    The assertion's target, event tag, event-specific time and field associations must remain together.
+    A nonce chain contains several assertion units; source-span adjacency never supplies missing fields
+    for a neighboring unit.
+analysis_scope: >-
+  Foundational analysis only. The survivor rule admits this hypothesis for testing; it does not ratify
+  its discriminator, identity criterion, category or occurrence truth. CQ citations identify decision
+  context, not a claim that the supplied records satisfy the query or warrant every possible reification.
+evidence_refs:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+- so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+- CQ-008
+- CQ-009
+- CQ-010
+- CQ-021
+open_evidence_questions:
+- >-
+  Identical content can occur in two distinct entry tokens. An append/replay/copy observation is needed
+  to establish whether consumers require that grain.
+- >-
+  The event can have several reports, or a report can fail to correspond to a real event; occurrence
+  identity is not assertion-content identity.

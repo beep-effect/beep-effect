@@ -1,0 +1,37 @@
+id: "fa:admb-lease-eviction-alt:001"
+hypothesis_ref: "dh:admb-lease-eviction:001"
+identity_card_ref: "ic:admb-lease-eviction-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      event: revocation of an admitted lease, distinct from ticket eviction
+      and from admission-released
+    still_viable: true
+  - label: >-
+      information_object: an assertion that an admitted lease was evicted,
+      including an unverified disjunctive reason (observationally equivalent
+      on journal-only evidence)
+    still_viable: true
+  - label: >-
+      relator-boundary: the grant's evicted terminal without a separately
+      reified revocation occurrence
+    still_viable: true
+strongest_counterexample: >-
+  Enum-is-taxonomy / evidence-is-truth: promoting reason=owner-dead-or-reused
+  to a process-death occurrence, or promoting lastHeartbeatAtMillis to an
+  expiry policy, would mint kinds the field does not support. The
+  discriminator is the admission-lease-evicted assertion after a positive
+  admission, not a heartbeat gap.
+verdict: analyzed
+needed_evidence: >-
+  A correlated lease deletion and active-charge change independent of the
+  journal would distinguish the operational endpoint from its assertion.
+  Independently captured process-liveness or identifier-reuse evidence would
+  discriminate the two branches of the recorded reason; that is not required
+  to keep lease eviction distinct from ticket eviction. Event versus
+  grant-terminal remains observationally equivalent until a consumer must
+  address the revocation independently of the grant.

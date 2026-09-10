@@ -1,258 +1,580 @@
 # Carried-row sitting docket
 
-Prepared for ontology-foundational-auditor run 2 (`beep-ci-ops`) over the 149 `carried_from_prior: true` rows in `work/dispositions.index.yaml`.
+Prepared for run 3 (orun-2026-09-10T02:10:52Z) of beep-ci-ops at frozen HEAD 1c7cd98289150f481fd40721efa6b7fe6109e711.
 
-Status: **provisional analyst recommendations only**. The steward decides every retirement or continued deferral. This docket does not edit the dispositions index, proposal files, foundational records, or any ratification surface.
+Status: provisional analyst recommendations for the steward. The recommendation retires an obsolete
+observation identity or records the evidence still needed. A proposal remains subject to its current
+analysis, review and ratification obligations.
 
-Census: **149/149 unique carried IDs resolved from the archived run-1 records** (117 SourceObservations, 32 ProseObservations), assigned exactly once across **15 clusters**. Recommended index actions: **146 retire-irrelevant**, **3 keep-unresolved**.
+**Census: 68/68 prior unresolved IDs, exactly once, across 15 clusters and 33 distinct prior evidence
+requests. Recommended outcomes: 14 irrelevant retirements and 54 unresolved parks; 0 mapped and
+0 proposed.** Every recommended row carries carried_from_prior: true. Every park uses new
+needed_evidence and since: 2026-09-10.
 
-Coverage was assessed against the current run-2 `work/observations/` and `work/prose-observations/` records plus proposal **slugs and preferred labels only**. Because proposals are mid-revision, no recommendation relies on proposal bytes, definitions, reviews, or status fields.
+The prior index was read through git show HEAD:explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/runs/orun-2026-09-03T02:46:18Z.index.yaml.
+Its full SHA-256 is a207a106de68750929b99dea0e8f2b4c74f934508737362510ff3cac21a524b3. The 387 prior rows comprise
+268 irrelevant, 44 mapped, 7 proposed and the 68 unresolved rows covered here.
 
-Interpret `retire-irrelevant` narrowly: it retires the obsolete, parser-version-bound run-1 observation ID. For a covered cluster it does **not** say the vocabulary itself is false or out of domain; the current run-2 surface now carries the evidentiary work.
+Current evidence comprises 152 SourceObservations, 64 ProseObservations, 66 hypotheses, 90
+foundational records and 26 proposals. Reviews were excluded. The machine-readable companion
+[carried-clusters.yaml](carried-clusters.yaml) contains full row IDs, exact index recommendations,
+per-duty prior/new wording, evidence references and the input-file digest census.
 
 ## Cluster table
 
-| Cluster | Rows | What run 1 observed | Run-2 coverage | Recommended disposition |
-| --- | ---: | --- | --- | --- |
-| Elapsed and duration measurements (`elapsed-duration-measurements`) | 2 | The whole-attempt elapsedMs field and the per-lane durationMs field, including the unresolved carrier distinction for CQ-025 actual wall cost. | `covered-by-proposal` — `jv-actual-wall-duration-001` (recorded wall-duration measurement); `jv-actual-wall-duration-002` (wall-duration measurement record) | `retire-irrelevant` — The run-1 measurement evidence identities cannot be emitted at the run-2 pin and are superseded by current journal/verdict observations plus the named wall-duration proposals. Retiring these rows does not reject duration vocabulary. |
-| Verification attempt structure (`verification-attempt-structure`) | 7 | Attempt-started and attempt-finished records, their shared attemptId UUID, the start marker, and the journal-event union that brackets one verification attempt. | `covered-by-proposal` — `jv-verification-attempt-001` (verification attempt) | `retire-irrelevant` — Run 2 re-grounds attempt identity and lifecycle from fleet journal records and carries a verification-attempt proposal. The old parser-bound rows are superseded evidence. |
-| Verification execution structure and state (`verification-execution-structure-and-state`) | 11 | Verdict lanes and executed steps, lane status, the bridge from a planned identifier to an execution, quality-task invocations/results, GitHub lane runs, and repository-step run results. | `covered-by-proposal` — `jv-verification-step-execution-001` (work unit execution); `pa-turbo-task-specification-001` (work unit specification); `pa-turbo-task-specification-002` (verification lane); `pb-planned-lane-status-001` (verification result artifact) | `retire-irrelevant` — The run-2 surface now carries the specification/execution/state split these old declaration rows could not establish. Retire the obsolete run-1 evidence identities rather than duplicate the live vocabulary. |
-| Failure verdicts and diagnostic outcomes (`failure-verdict-and-diagnostics`) | 20 | Yeet failureKind and failedStepId, terminal verdict failure, classified failed jobs, boundary-violation diagnostics, the ts2589 quarantine designation, and repository graph-health result codes. | `covered-by-proposal` — `jv-failure-signature-001` (failure signature); `jv-lane-diagnostic-comparison-001` (lane diagnostic comparison); `pa-fallow-audit-evidence-001` (verification evidence); `pa-fallow-audit-evidence-003` (verification result artifact) | `retire-irrelevant` — The domain-bearing failure and diagnostic vocabulary is re-grounded in run 2. Residual enum wrappers and report codes are implementation representations, so the non-emittable run-1 rows add no separate commitment. |
-| Merge readiness and closeout outcomes (`merge-readiness-and-closeout-outcomes`) | 12 | Hosted-check and Greptile closeout gates, closeout gate/report states, mergeability changes, and merged-or-closed terminal pull-request classifications. | `covered-by-proposal` — `jv-merge-readiness-assessment-001` (verification evidence) | `retire-irrelevant` — Current fleet verdict evidence and the merge-readiness proposal supersede these run-1 gate/report declarations. Transport-specific closeout wrappers need no second ontology commitment. |
-| Admission origin-key field (`admission-origin-key-field`) | 1 | The proof-lock basename used as originKey for origin exclusion, formerly seen only while the handler constructed an admission request. | `covered-by-observation-only` — `so:c627961a8fcd…a7bb`, `po:4a30b60df83c…9021` | `retire-irrelevant` — The old handler-construction observation is superseded by current carrier-level originKey evidence. Retire only the old ID; steward judgment over the current observation remains separate. |
-| Grant-resource contention and contested paths (`grant-resource-contention-and-paths`) | 2 | A proof-lock acquisition callback tentatively read as SeatGrant contention and a FleetContestedPath declaration tentatively read as a path-based contended resource. | `still-uncovered` — Run-2 overlappingPaths fields describe worktree overlap, not a grant-to-resource contention relation, and no current proposal slug or label names that relation. | `keep-unresolved` — Run 3 needs a joinable admission/lock event corpus that records grant or lease identity, resource identity or path, acquisition and release instants, and the contention outcome in the same provenance chain. |
-| Fleet checkout identity (`fleet-checkout-identity`) | 1 | The FleetCheckout declaration as a possible machine-local checkout bearer for CQ-015 evidence-transfer decisions. | `still-uncovered` — Run-2 path partitioning and checkoutRoot fields do not establish a stable checkout identity or its cache-mount relations, and no current proposal slug or label names Checkout. | `keep-unresolved` — Run 3 needs a timestamped fleet-inventory corpus binding a stable checkout identity to checkout root, remote origin, branch or worktree identity, and shared-cache mounts so CQ-015 transferability can discriminate the bearer. |
-| Affected-package and dependency topology (`affected-package-and-dependency-topology`) | 22 | Turbo affected-query records and reasons, workspace package catalogs/metadata, package identity, direct workspace dependency, and the transitive dependency closure used by CQ-004/CQ-019. | `covered-by-proposal` — `pa-package-dependency-closure-001` (depends on transitively); `pb-package-dependency-001` (depends on); `pa-workspace-package-001` (package reference); `pb-docgen-affected-scope-001` (docgen affected scope); `pb-docgen-affected-scope-002` (docgen affected scope specification) | `retire-irrelevant` — Run 2 now names the package, direct-edge, closure, and affected-scope vocabulary. The old parser-bound catalog and declaration rows are superseded or merely DTO representations. |
-| Work-unit and lane specifications (`work-unit-and-lane-specifications`) | 5 | PackageVerify step specs, GitHub-check lane and wave specs, and the storybook/test:property Turbo task keys as possible reusable verification procedures. | `covered-by-proposal` — `pa-turbo-task-specification-001` (work unit specification); `pa-turbo-task-specification-002` (verification lane); `pa-docgen-work-unit-001` (docgen affected work unit) | `retire-irrelevant` — The reusable procedure vocabulary is represented by current run-2 proposals. Old class declarations and bare Turbo keys are redundant evidence, not additional specifications. |
-| Repository-plan control and ordering (`repository-plan-control-and-ordering`) | 14 | Plan-step mutability, phase order, step scope, waves, GitHub-check modes, and the compound Turbo planning snapshot used by repository orchestration. | `covered-by-proposal` — `pa-yeet-verification-workflow-001` (verification plan specification); `ov-has-scope-001` (has scope); `ov-has-step-001` (has step); `ov-schedule-step-001` (schedule step); `ov-step-index-001` (step index); `pb-yeet-proof-tier-001` (Yeet proof-planning tier) | `retire-irrelevant` — Run-2 plan/specification and ordering proposals cover the CQ-bearing semantics. The archived phase/mutability/mode shells are controller encodings and should not remain independent ontology candidates. |
-| Gate-staleness result artifacts (`gate-staleness-result-artifacts`) | 7 | GateStalenessVerdict plus GateFresh, GateStale, GateUnproven, GateArtifactDescriptor, and GateFileWitness schema declarations. | `still-uncovered` — No current run-2 proposal slug or preferred label names these exact result variants, and current observations do not establish their lifecycle as exchanged domain artifacts. | `retire-irrelevant` — These are unwarranted implementation result/DTO variants. The CQ suite asks about verification-evidence validity, not the internal GateStaleness union or its file-witness wrappers. |
-| Watch-stream event artifacts (`watch-stream-event-artifacts`) | 20 | Poll snapshots, diff inputs, normalized check signals/transitions, thread/comment/head events, watch termination reasons, and the versioned JSON event envelope. | `still-uncovered` — No current proposal slug or preferred label names the watch transport/event-record vocabulary; the run-2 fleet corpus captures verdict/attempt facts rather than serialized watch streams. | `retire-irrelevant` — The rows describe polling, diffing, rendering, and transport records with no Must/Should CQ warrant. The underlying verification and merge outcomes are represented elsewhere, so these wrappers are ontology-irrelevant for v1. |
-| Monitor rerun-decision artifacts (`monitor-rerun-decision-artifacts`) | 11 | Planner/controller records for rerun-job, rerun-spent, needs-code-fix, awaiting-log, and awaiting-run actions, including command rendering and application helpers. | `still-uncovered` — Current run-2 observations include flake labels but not persisted monitor-decision records, and no proposal slug or preferred label names this controller decision union. | `retire-irrelevant` — These are orchestration branch/command artifacts without a CQ warrant. Failure signatures and diagnostic evidence are modeled separately; the monitor controller choices need no independent ontology commitment. |
-| Quality report and configuration artifacts (`quality-report-and-config-artifacts`) | 14 | Quality profile config/detection DTOs, PackageVerify reports/documents/workspaces, GitHub-check Fallow matrices/run reports, and TurboConfigProof options/summaries/reports. | `still-uncovered` — No current proposal slug or preferred label covers each of these schema-specific containers, and run-2 observations do not show independent persistence/exchange lifecycles for them. | `retire-irrelevant` — Run 1 never rejected the implementation-only null for these unwarranted DTO/config/report declarations. They are software representations, not additional v1 domain referents. |
+| Cluster | Rows | Recommended outcome | One-line reason |
+| --- | ---: | --- | --- |
+| 1. Checkout and cache binding | 1 | irrelevant | The timestamped binding corpus and named run-3 proposal supersede C1's declaration. |
+| 2. Grant/resource contention and proof-lock paths | 2 | unresolved | Admission histories are present; the actual resource/lock ownership join remains absent. |
+| 3. Request and lease lifecycles, including the memory rider | 5 | unresolved | New boundaries and heartbeat snapshots leave causal/carrier continuity, separate CQs and the memory rider open. |
+| 4. Failure-signature occurrence evidence | 3 | irrelevant | Re-identify the old field rows against a captured failure tuple; preserve the current signature-analysis gaps. |
+| 5. Resolved cache plan applied to an execution | 1 | unresolved | The promoted rider has zero serialized resolver/execution occurrences. |
+| 6. CQ-020 ordering and governing specification | 10 | irrelevant | Current proposals and emission-v2 observations replace the 10 amendment-gated rows; the cluster still rules together. |
+| 7. Freshness, review score, attribution and proof-tier governance | 9 | unresolved | Recorded assessment values do not supply the four governing contracts and decision uses. |
+| 8. Passed-step execution boundaries and elapsed scope | 2 | unresolved | Attempt bounds and component statuses are present; per-execution boundaries and measured-extent authority remain missing. |
+| 9. Memory measurement semantics | 1 | unresolved | A release-attached peak still lacks process, sampling and measurement-family provenance. |
+| 10. Duration individuals, carrier issuance and diagnostic comparison | 2 | unresolved | Duration assertions and recovery timings leave separate-individual CQs and issuance/custody unresolved. |
+| 11. QA workflow and projection conformance evidence | 4 | unresolved | S7 replay evidence supplies neither a QA stage chain nor independently issued conformance artifacts. |
+| 12. Workspace package continuity | 7 | unresolved | Checkout bindings do not establish identity across package rename, move, version, fork or recreation. |
+| 13. Package topology and affected/docgen selection | 9 | unresolved | Admission ordering and stored applicability fields do not supply package-report or selection contracts. |
+| 14. Admission capacity computation and pre-grant snapshot | 7 | unresolved | Token charges and later state do not supply the omitted capacity computation/stamp joins or snapshot CQ. |
+| 15. Origin blocking and heartbeat suspicion | 5 | unresolved | Zero origin markers and eviction reports leave deployed threshold, authority and policy-use joins open. |
 
-## Appendix: carried observation IDs by cluster
+## Evidence limits governing the sitting
 
-### 1. Elapsed and duration measurements (2)
+- Run-2 sitting 2 retired superseded observation IDs and wrappers while keeping C1/C2/C3 open.
+  This docket applies that precedent without promoting evidence replacement into ratification.
+- The checkout manifest has 107 bindings. The two organic manifests each describe 96 captured
+  checkouts. Their capture populations and instants differ; they are not interchangeable censuses.
+- Stage A records 1,902 structured failure tuples and zero cache-plan resolver occurrences.
+  Stage B records 21 wins, 23 withdrawals, 5 lease evictions, 2 ticket evictions, 3 in-flight and
+  112 pre-v3 chains. The canonical/session-tmp/system-tmp roots retain 347/2/0 admission rows.
+  These are reported root/nonce histories, not unique failures, a closed fleet census or current state.
+- Synthetic admission and attempt-termination records stay labeled synthetic. Join each event
+  and time to its own nonce/attempt; do not combine the dead-lease start with another contender.
+  Last heartbeat bounds an observation. Eviction and reconciliation times do not establish death time.
+- Proof-lock files are excluded. Proof-ledger existence is zero in both fleet captures. Ruling 17
+  therefore keeps the issuance/custody duties open to run 4.
+- The original 13 scope-surprise families cover 26 unique prior rows before the two promotions.
+  The promoted riders account for 4 rows: 3 failure rows retire by re-identification and the cache
+  row stays open. Eleven remaining families account for 22 parked rows. A further memory duty
+  remains on the mixed lifecycle row, counted only in cluster 3. The other 24 Ruling-6 rows retain
+  their contract, identity, governance and new-CQ duties.
+- Two historical ordering-contract quotations were superseded by emission v2. The unchanged
+  target-correction quotation reappears as po:add8e23aa967.
+  The ordering cluster still ratifies or parks together; the current specification identity and
+  step representation choices remain explicit. The deferred-tail hypothesis also remains unresolved.
 
-Recommendation: `retire-irrelevant`.
+## Per-cluster detail
 
-- `po:sha256:3d30eb80b619e2b7cf5c9261718d56c4a20637d162845611a655b025482e6325` — ProseObservation quoting “elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509.
-- `po:sha256:7b9e1b59cb9fc7b104034c01453654a7477c36f848673ec924f1c4039fbdb554` — ProseObservation quoting “durationMs: S.optionalKey(S.Finite),” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152.
+### 1. Checkout and cache binding (1)
 
-### 2. Verification attempt structure (7)
+Recommendation: irrelevant. The timestamped binding corpus and named run-3 proposal supersede C1's declaration.
 
-Recommendation: `retire-irrelevant`.
+Primary trace: `otp:bind-checkout-cache-binding:001`.
 
-- `po:sha256:6e6961e95ee4bef3649372773b103fb170b76da19c610a817da19676417eebad` — ProseObservation quoting “export const YeetAttemptJournalEvent = S.Union([YeetAttemptStarted, YeetAttemptFinished]).pipe(” at packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:100-105.
-- `po:sha256:906d0d377522942bb9220bd290bcb71907aa56c1ce497dc2cca550419419d2f8` — ProseObservation quoting “attemptId: UUID,” at packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:42-53.
-- `po:sha256:9a531bd73c66cc707e1fd26fe320212022ca346d0bdcf26d549a103cd3fea88c` — ProseObservation quoting “A durable marker written immediately before a Yeet attempt executes.” at packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:29-29.
-- `po:sha256:de71f16e82547bcd1c61213b48a0db513d48052cf55563ebb1634d1680d59f53` — ProseObservation quoting “attemptId: UUID,” at packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80.
-- `so:sha256:7143eaf354ebb320ca07a95f3274f3aae0cb0323f9e3d1117b88128e4ed6e826` — SourceObservation of YeetAttemptJournalEvent (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:100-105.
-- `so:sha256:7796f616a217b54e8df2f48fbb0f01d5db11232605b3d1b24cb97268fc2a0113` — SourceObservation of YeetAttemptStarted (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:42-57.
-- `so:sha256:8de7e1574f6bb139c82c1a54e58cc377cb9b2425574eb104ef6e6d47a051f173` — SourceObservation of YeetAttemptJournalEvent (type_alias_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:122-122.
+fleet-checkout-identity (1 row).
 
-### 3. Verification execution structure and state (11)
+- `so:sha256:0d096342f5ba116307ca177adcbc3fc775b860ae0e5fd62dfd4d090d86c660a3`
 
-Recommendation: `retire-irrelevant`.
+Retirement reason: Retire the historical FleetCheckout declaration by supersession through otp:bind-checkout-cache-binding:001. Run 3 supplies the timestamped checkout/cache binding required by run-2 sitting 2 and narrowed by run-3 Ruling 5: 107 inventory bindings, with observed clone and linked-worktree examples that share Git administration but differ in local cache availability. Enduring identity across rename and CQ-015 proof-transfer authorization remain open in the current proposal; this retirement accepts neither.
 
-- `po:sha256:88e8e724ffb0967198fa555ab886c8a9ea3e14cf26614dd018b57b409b1c79ef` — ProseObservation quoting “description: "Execution status of one planned yeet lane."” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:48-53.
-- `po:sha256:96adb15e475d44e88cd7f1edd0a0beb3af5c5dac0aea1a42f03a59bd4b84b3d3` — ProseObservation quoting “id: S.String,” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152.
-- `po:sha256:a8757840abf082cf2d3622dc431f79e8a9c66aa38728cafd325c609c3856a27d` — ProseObservation quoting “One planned lane with its execution status and repair command.” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:123-156.
-- `po:sha256:fba9735d9ec0b7c541bbfc2ff30b0a3dd19d8e4b8e37874547ce6a0768b5e4d5` — ProseObservation quoting “status: YeetLaneStatus,” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152.
-- `so:sha256:0fd0abf7cb302f4f763b3a58aa6af6407d41aed5e9405aeb5ac6b97970e90ff4` — SourceObservation of YeetVerdictLane (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-156.
-- `so:sha256:53dfa3562ca91f94710212bf848b73ec946419464d1ed9ce22b9fed4f819bc38` — SourceObservation of RepoStepRunResult (class_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:405-420.
-- `so:sha256:762d3dd11bc844d2df9f208f0ccba2170033d9af6c1a1c9e04e7e8b0f7c764b0` — SourceObservation of YeetLaneStatus (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:48-53.
-- `so:sha256:91279c1adf88d29ca0968f9abc4ff9c2ddbeb57de25df9f432b1a272bb20c983` — SourceObservation of QualityTaskInvocation (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:243-252.
-- `so:sha256:cd7765aadf2af4d0764d33623bd15e44f0052b381e6e235565dab25c0e4c8958` — SourceObservation of YeetExecutedStep (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:572-581.
-- `so:sha256:daa315312a71c12c1825a31e0d63f47f647cee075cb885e1c4a244d626f3e9a3` — SourceObservation of PackageVerifyStepResult (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:148-161.
-- `so:sha256:fe44538eca0527dd216b0f0bf5ef18b5b18f14cfd430fc50540bacb847afe8fe` — SourceObservation of GithubCheckLaneRun (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:930-940.
+Evidence:
 
-### 4. Failure verdicts and diagnostic outcomes (20)
+- [so:a90c39610e4a](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-a90c39610e4a.yaml): Clone binding at scannedAt 2026-09-09T03:13:49.440Z, with later binding_probe_at 03:13:52.201Z: origin, branch/head and Git-directory context; local cache present at <fleet>/beep-effect/.turbo/cache with 36399 immediate entries.
+- [so:f4532e29f3f1](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-f4532e29f3f1.yaml): Linked-worktree binding shares <fleet>/beep-effect/.git as git_common_dir but reports its distinct local cache path absent and zero entries. Its supplementary probe is at 03:13:52.406Z. This demonstrates why Git linkage alone cannot establish shared cache access.
+- [MANIFEST.yaml](../../corpus/run3-checkout-identity/MANIFEST.yaml) (bindings, checkout_counts, cache_mounts, temporal_limit, n_instant_change_evidence): 107 bindings: 22 clones and 85 linked worktrees. Ruling 5 fixes capture-local binding identity; the capture is not an atomic machine freeze. Cache topology is necessary but insufficient for CQ-015 transfer; task hash, epoch and actual access remain separate requirements.
+- `otp:bind-checkout-cache-binding:001`: otp:bind-checkout-cache-binding:001 proposes a temporally qualified binding-content record and explicitly preserves accessible-cache relator and situation alternatives, enduring path/checkout identity gaps, and the remaining CQ-015 prerequisites.
 
-Recommendation: `retire-irrelevant`.
+### 2. Grant/resource contention and proof-lock paths (2)
 
-- `po:sha256:2b64e2142eac08b9cd7f1d655caa43c80b1393910f15ac892f734e341dad3f7f` — ProseObservation quoting “"boundaryViolations": 0” at standards/fallow.pilot.inventory.jsonc:37-47.
-- `po:sha256:6a0fc8a8c0fdc7f387b6300ff3899f9c604c1fbf27a9ece7c5559cfa2fd4cef5` — ProseObservation quoting “LiteralKit(["ts2589-no-location"])” at packages/tooling/tool/cli/src/internal/process/StepExec.ts:191-194.
-- `po:sha256:855501fcce91a1abd40a2ac7a2efc3fabe445e244e19e5f7f670097ea07cb9f0` — ProseObservation quoting “failedStepId: S.optionalKey(S.String),” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509.
-- `po:sha256:86e624235b616a7cec93d1021d31f6e3b7de441af825fd16034e8e7cde6621b0` — ProseObservation quoting “verdict: YeetVerdict,” at packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80.
-- `po:sha256:91dddfd936452b90225013e406a88d962edb7d60f7218fd17b6f3a2a01268981` — ProseObservation quoting “failedStepId: S.optionalKey(S.String),” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:491-506.
-- `po:sha256:a4f64e891a25a6cc469a3659587b1addf85901093769fbbb58ce0529735417c8` — ProseObservation quoting “"boundary-violation": "error"” at .fallowrc.jsonc:426-436.
-- `po:sha256:bde32fa6682e1b0c1117452303772e61fe6b20fc29764c45ffae977106fd9eaf` — ProseObservation quoting “export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:170-179.
-- `po:sha256:cb47b23eada8f8e95a7da272596862e4095ac0255417231c54f95e8f7305baa2` — ProseObservation quoting “failureKind: YeetFailureKind.pipe(S.optionalKey),” at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509.
-- `so:sha256:0016cfe3905b09c22b38a93799cf35fa443f35c6a3f89b192d172679f8c57629` — SourceObservation of YeetFailureKind (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:176-180.
-- `so:sha256:0a2c5f86ed363ec9af7d18b61cde9a0bd8f3332c6e23b7d14371b102026aa2b0` — SourceObservation of YeetMonitorFailedJob (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:299-310.
-- `so:sha256:1481dce51159e820cdd129b4d588a263707a188896aefe6aa3120e1e6c734b59` — SourceObservation of QualityTaskStep (class_declaration) at packages/tooling/tool/cli/src/internal/process/StepExec.ts:232-246.
-- `so:sha256:559894ea743432ee2425956d8fab59a94f1c385317f35dcbb9aa224dbcfc64fb` — SourceObservation of YeetVerdict (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-513.
-- `so:sha256:55c95d54d18f2b82756fa2bd7f23cc3fd7d294e693d77cea47f15b2d0196abfa` — SourceObservation of TurboPlanSnapshot (class_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:239-250.
-- `so:sha256:5ba757a4aac98e0d3609a7d6642729c8acc1805c69aa7768f425fba4c793a2bf` — SourceObservation of StepFlakeQuarantinePolicy (type_alias_declaration) at packages/tooling/tool/cli/src/internal/process/StepExec.ts:203-203.
-- `so:sha256:5ff32d0655a8cc9fbddace495da9b640c2633351caa4759c92235f53782b68e3` — SourceObservation of RepoGraphHealthStatus (variable_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:154-158.
-- `so:sha256:b859fe7dc5c52ac10800e3b365fc4da4e1b6fcad4a91bed38c5c97daec171815` — SourceObservation of GhMonitorRunJobs (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:750-753.
-- `so:sha256:b96ad0207aebf7cdd3bf8767dd9d9e076a79928a1d0bad52c86b25a161260e9f` — SourceObservation of YeetAttemptFinished (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-84.
-- `so:sha256:c1a4b7a8cbcf4d7a688243597fc3b28d6db614cb6d358c6ca0587fbf06420f48` — SourceObservation of StepFlakeQuarantinePolicy (variable_declaration) at packages/tooling/tool/cli/src/internal/process/StepExec.ts:191-195.
-- `so:sha256:c5638e3942dc3becc40f695c02528ee5b1344a8b002a1091cc84e8de9acc0032` — SourceObservation of collectYeetMonitorFailedJobs (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:857-883.
-- `so:sha256:ccb76a5f3fd90747552276360f6623e87a823ed693b6cf9caacb9e15d51b2b6b` — SourceObservation of RepoGraphHealthStatus (type_alias_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:166-166.
+Recommendation: unresolved. Admission histories are present; the actual resource/lock ownership join remains absent.
 
-### 5. Merge readiness and closeout outcomes (12)
+grant-resource-contention-and-paths (2 rows).
 
-Recommendation: `retire-irrelevant`.
+- `so:sha256:b42503da37767cc741db6196fbf13e019bdc59f71166ad4d95318966ca7ae123`
+- `po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278`
 
-- `po:sha256:e0d1f36f373003dc34f8128df7d04a4631493aba04f2675ce52ec57792cbf782` — ProseObservation quoting “LiteralKit(["hosted-checks", "review-threads", "greptile", "coderabbit", "chatgpt"])” at packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63.
-- `so:sha256:01e37039cebeb141034280ea9064d32ad90e9c6042b222c941260520dc67e9aa` — SourceObservation of YeetMergeabilityChanged (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:334-348.
-- `so:sha256:177fb3af96fac344cee73f33ab05cddcce1c695f27838693cca1d14538e26c40` — SourceObservation of YeetMonitorTerminalState (type_alias_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:184-184.
-- `so:sha256:2780de54843e2c073117897235567afa904e090a4ded2c414df0b7b22bd7338f` — SourceObservation of runYeetMonitorUntilMerged (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:1041-1066.
-- `so:sha256:6305419fa96099617bb98162ac43d2718d51c1b66bcee82bc34027b762df7e60` — SourceObservation of PrCloseoutReportJson (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:203-203.
-- `so:sha256:85a0c2546f8dc5cdc9a2d646a896bf5eadb4d39c08240549747c6e281006bf37` — SourceObservation of PrCloseoutGateStatus (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:66-70.
-- `so:sha256:8ee7607038f5041474aaef3747945ec491da23aadf1609c9999cc27d142d093b` — SourceObservation of yeetMonitorTerminalState (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:739-748.
-- `so:sha256:a48630328a1a6c95febb3aecad4e2c6f9dbe75dbcdf2698acc17f0aa024c407a` — SourceObservation of GreptileSummary (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:49-58.
-- `so:sha256:b614803893bb8f68eb1c45fc4d01e226ece696364727c688bd7320b9f6da0266` — SourceObservation of PrCloseoutGateName (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-64.
-- `so:sha256:dac0c567ff454baf98279c698442d3effa8c8ce8da4a9e26251a1234e99e11b8` — SourceObservation of PrCloseoutReport (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:156-180.
-- `so:sha256:e49d7857a2f1d0c247b2bf32b8005aff0f0790bcba3b74dbf5cc27023140a054` — SourceObservation of PrCloseoutGateState (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:92-103.
-- `so:sha256:f8963ec48e961a04e383747bb395792880b08befbcd942fe659fe7fad0da33cb` — SourceObservation of YeetMonitorTerminalState (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:171-176.
+New needed_evidence: Run 3 now captures root/nonce-scoped enqueue, admission, withdrawal, release and eviction reports, including synthetic attempt-termination joins. The run3-fleet and run3b-fleet manifests exclude lock files and proof-locks directories, and dh:att-overlap-diagnostic:001 still establishes only a logged overlapping path. To decide C2/C3, obtain the run-2 sitting-2 Ruling-3 join for the actual contended resource or proof-lock path: grant/lease and lock ownership identifiers, acquisition and release boundaries, and a waiting/winning/losing outcome in one provenance chain. Identify the rule linking FleetContestedPath to that contention and distinguish admission authorization from proof-lock ownership. Admission counts, a common origin key and worktree overlap cannot supply that missing relation.
 
-### 6. Admission origin-key field (1)
+Since: 2026-09-10.
 
-Recommendation: `retire-irrelevant`.
+Evidence:
 
-- `po:sha256:9c89bf17f35f4e9ac5dd3791656461492478cbd1e99258fd1e95b5babec7f0e6` — ProseObservation quoting “originKey: path.basename(lockPath, ".lock")” at packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:313-320.
+- [so:0415a4f15905](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-0415a4f15905.yaml): Organic Stage A canonical-root history for nonce 411b3ba7-f32a-4d07-8a0c-c764dc5b8088: enqueue 1788926595182, admit 1788926595216, release 1788927008574, weightTokens=5, shared attemptId e7a8f546-8ae1-4754-b67b-76184b411fcc. The release carries memoryPeakBytes=9904820224. Only records for that nonce are joined; unrelated intervening records in source_excerpt are excluded.
+- [so:27fc89410ea6](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-27fc89410ea6.yaml): Explicit provenance=synthetic. One nonce has enqueue/admit/release at 1788931586665, 1788931586674 and 1788931586743; another has enqueue/withdrawal at 1788931586705 and 1788931586715. synthetic-dead-lease is evicted at 1788931586728 with lastHeartbeatAtMillis=1788931586718; synthetic-dead-ticket is evicted at 1788931586729. The latter two have no retained starts in this journal. Event-specific timestamps stay with their own nonce.
+- [so:650d8047f7ef](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-650d8047f7ef.yaml): Synthetic attempt-terminated notice for attemptId b4e72342-45a5-4a1b-95db-5ab4ef30a93f matches the dead-lease eviction; reason=lease-eviction and recordedAt=2026-09-09T05:26:26.737Z. recordedAt is notice/reconciliation time, not observed execution cessation.
+- [so:68c2cc4f0ebf](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-68c2cc4f0ebf.yaml): Synthetic attempt-terminated notice for attemptId a2fdba81-945f-4f44-8d93-6f71f706d5cd matches the dead-ticket eviction; reason=queued-submitter-death and recordedAt=2026-09-09T05:26:26.731Z.
+- [MANIFEST.yaml](../../corpus/run3b-fleet/MANIFEST.yaml) (loss_population.chain_counts, loss_population.roots, loss_population.heartbeat_check, loss_population.classification_basis): Organic retained chains: 21 wins, 23 withdrawals, 5 lease evictions, 2 ticket evictions, 3 in-flight and 112 pre-v3; 0 unclassified. Canonical root has 347 rows; session-tmp has 2; system-tmp has 0. Heartbeat check covers 4 rows, records 1 legacy row without heartbeat and 0 violations. These are root/nonce histories within retained windows, not a complete fleet or liveness census.
+- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (excluded_sources): The explicit exclusions include lock files and proof-locks directories. run3b-fleet/MANIFEST.yaml retains the same exclusions; lock ownership cannot be reconstructed from this capture by equating it with admission authorization.
+- [so:34a817e0c13c](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-34a817e0c13c.yaml): The selected observed fact is overlappingPaths=explorations/ATLAS.md. Its attempt-journal context is not a grant-to-resource ownership or causal contention relation.
+- [dh:att-overlap-diagnostic:001](../hypotheses/dh-att-overlap-diagnostic-001.yaml): The implementation-only null remains. The hypothesis requires an observed overlap-to-scope, invalidation or blocking rule; co-located behind-count and terminal failure do not establish causation.
 
-### 7. Grant-resource contention and contested paths (2)
+### 3. Request and lease lifecycles, including the memory rider (5)
 
-Recommendation: `keep-unresolved`.
+Recommendation: unresolved. New boundaries and heartbeat snapshots leave causal/carrier continuity, separate CQs and the memory rider open.
 
-- `po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278` — ProseObservation quoting “tryAcquire: acquireFullProofLockOrObserveAtPath(lockPath, context, proofSteps)” at packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:322-330.
-- `so:sha256:b42503da37767cc741db6196fbf13e019bdc59f71166ad4d95318966ca7ae123` — SourceObservation of FleetContestedPath (class_declaration) at packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:715-723.
+jv-admission-lifecycle with memory rider (1 row).
 
-### 8. Fleet checkout identity (1)
+- `so:sha256:c627961a8fcde9dca01027cbf052494763b5e6895805c1c0c50d8bf51ba3a7bb`
 
-Recommendation: `keep-unresolved`.
+New needed_evidence: Run 3 supplies an organic same-root/nonce enqueue-admit-release history, plus synthetic withdrawal and eviction reports with two attempt-termination joins. The pure lifecycle duty still needs authoritative causal continuity from one request's submission through grant and release/cancellation, and a Must/Should CQ requiring a lifecycle distinct from its request, grant and boundary reports. The memory rider remains independently parked under Ruling 6: the release now carries memoryPeakBytes, but the resource-using occurrence/process boundary, sampling method and interval, metric/unit, measurement provenance and its relationship to peakRssKb are still missing. Different capture-scoped ownerRef values and an administrative termination notice cannot decide either missing identity.
 
-- `so:sha256:0d096342f5ba116307ca177adcbc3fc775b860ae0e5fd62dfd4d090d86c660a3` — SourceObservation of FleetCheckout (class_declaration) at packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:671-694.
+Since: 2026-09-10.
 
-### 9. Affected-package and dependency topology (22)
+jv-admission-lifecycle (1 row).
 
-Recommendation: `retire-irrelevant`.
+- `so:sha256:d94bf0420d3457158959e6188c50d5949dc4fae4a48d07e7077f8c81df36fcb6`
 
-- `po:sha256:3842a52c7caada940ed89a9dd852f272f282f21620fd632dc4e92770ec7c49c1` — ProseObservation quoting “PackageRef,class,CQ-004,"@beep/* workspace package identity"” at explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv:12-12.
-- `po:sha256:47c1ecee6c68dd2abf05cf58cdbdc3944bbad2d1375eccbaa2bd1abea13d3ec9` — ProseObservation quoting “"@beep/identity": "workspace:^",” at packages/drivers/hubspot/package.json:62-62.
-- `po:sha256:648149e8ec61b86770c1c8511b659226c3e8605ab43ac3a0c03439f40b6002fa` — ProseObservation quoting “"@beep/test-utils": "workspace:^",” at packages/drivers/hubspot/package.json:68-68.
-- `po:sha256:7f1b0cc144cf9d58f851e9c6a1857dfd6ffdea2db7c0c4c083d7779b6a5048fd` — ProseObservation quoting “?pkg ciops:dependsOnTransitive ?touched .” at explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml:116-116.
-- `po:sha256:95043bdded97559199ecb0db22c74fb5278abc7814d2c685019f9d1134a81547` — ProseObservation quoting “Arrows point from the importing package to the imported package.” at standards/ARCHITECTURE.md:189-194.
-- `po:sha256:a790b3398403b1be2e7ced74bd8a5ef6b741760df1667416c0fa1410f18fbde9` — ProseObservation quoting “dependsOnTransitive,property,CQ-004,"Datalog fixpoint over dependsOn (rule-compiled)"” at explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv:54-54.
-- `po:sha256:c9742edfc85a5c11f0217252b9961631a94a3b86c634c01f2cff9c08508d0533` — ProseObservation quoting “turbo query affected” at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:254-262.
-- `po:sha256:e1b16485ec1f3285d03674eb6bb8d3da10dad7235a569391e48bbd00697a9e16` — ProseObservation quoting “dependsOn,property,CQ-004,"direct workspace dependency edge; semantic-support (two-kind law): supports=dependsOnTransitive — the fixpoint's base relation (round-3 I-03/H-09 licensing fix)"” at explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv:55-55.
-- `so:sha256:0ce3a84de808ba01f895a7dcba0ff39a6d37daae78abd3eef57fa9e37a554808` — SourceObservation of TurboQueryPackage (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:91-99.
-- `so:sha256:19f1e38081aee7b60aecde18430abd809861b1cf6eb9ebf7065e34305b7275be` — SourceObservation of name (config_document) at packages/drivers/hubspot/package.json:1-72.
-- `so:sha256:21fd15adfc632d3c13e0b52ed7a7b241aa285daf9e695b7a4f91880efd71422e` — SourceObservation of TurboQueryAffectedReason (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:31-38.
-- `so:sha256:29b24028f0dfacf53ea6e68e56831a4a30aedbe593714f54fc38a7ff1ffcf755` — SourceObservation of TurboQueryAffectedTaskConnection (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:61-71.
-- `so:sha256:308d8cf8a291855a224ef1088b124e39afc4b15550f72bb003ec4966b40acce8` — SourceObservation of TurboQueryAffectedData (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:73-80.
-- `so:sha256:324517ded376b6dfcf6932e4ac2f2ddefd53a76bfb56b19e6fe9de926ea19990` — SourceObservation of TurboWorkspacePackage (class_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:214-222.
-- `so:sha256:34992167c59b76a419b1c6851c319edceb48b1c97ca392c2dbedc5ae0b01303f` — SourceObservation of PackageJsonWorkspacesDocument (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:269-278.
-- `so:sha256:39221ec0124c17dffbcbed38afe8367929660e07f7f5decf79df8cb8bfb4dc7d` — SourceObservation of TurboQueryAffectedTask (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:49-59.
-- `so:sha256:4a64226d4f4e79c645be3905c847727726f5d1d1488e204b446f2d31bf100854` — SourceObservation of PackageVerifyWorkspace (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:85-94.
-- `so:sha256:61c1bf9440b68549825b36c8f21f161d4eb7214e2703a59c3b8bf34020a06e86` — SourceObservation of TurboQueryLsDocument (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:111-119.
-- `so:sha256:6bc0f2e3af7672616e5fe40dacbc6a0a54ae24399ddd632e6448319c30bf7510` — SourceObservation of TurboQueryAffectedDocument (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:82-89.
-- `so:sha256:d80b78a8b525a1d9d3429688e5907aaa7a926b965d94a29efb3fb9dd1080795f` — SourceObservation of decodeTurboPlanTasksFromQueryJsonForTesting (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:284-284.
-- `so:sha256:e132249931623c34727a29cb5696b1e031836c6c5106e4e46cd145d2c2650593` — SourceObservation of TurboQueryPackageConnection (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:101-109.
-- `so:sha256:fe1dbd4ba4f52a6957d7a51e6e130fa5ce90e9eb74deab72b30589aaf6973759` — SourceObservation of TurboQueryAffectedPackageRef (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:40-47.
+New needed_evidence: Run 3 now provides a same-root/nonce organic enqueue-admit-release chain and explicit synthetic withdrawal, grant-eviction and ticket-eviction boundaries. Synthetic attempt-terminated records match the two eviction attemptIds. What remains is authoritative causal-continuity evidence connecting one submitted request to its grant and release/cancellation, together with a Must/Should decision CQ requiring that composite lifecycle separately from SeatRequest, SeatGrant and their boundary reports. The terminal-only synthetic eviction chains lack their own retained starts, and recordedAt is a reconciliation time rather than proof of actual execution cessation.
 
-### 10. Work-unit and lane specifications (5)
+Since: 2026-09-10.
 
-Recommendation: `retire-irrelevant`.
+pa-admission-lease-lifecycle (3 rows).
 
-- `po:sha256:aac8ce7affe0bdd25e59ca5492726e91fb9a3b936009ebef512981bcfdc1c9b4` — ProseObservation quoting “"storybook": {” at turbo.json:241-241.
-- `po:sha256:cd039ccfee27376edd08a5ec9157acfddc84b5004ffa125174bfc5ff2f7fbf6a` — ProseObservation quoting “"test:property": {” at turbo.json:111-111.
-- `so:sha256:1cb8d4e2b4635df071ce9f58a6465718c1536825bf45fc3927bce758959976a1` — SourceObservation of PackageVerifyStepSpec (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:114-122.
-- `so:sha256:67507f3d087ad2239cc47ee9f7622df86e6f79e03730f63cb0ee6ebd0e4c7320` — SourceObservation of GithubCheckLaneWaveSpec (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:871-879.
-- `so:sha256:acf8fc7875146dbe623d9a6d11a4eeeea04d59adf74dc7ecf2fb4a868c7b27c7` — SourceObservation of GithubCheckLaneSpec (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:843-854.
+- `po:sha256:3aadb9c8ae061d71b2e8386d9b8af518d49df5a66abaa0bb0391783833a6eef4`
+- `po:sha256:51fa8a9b8fcef0856134c3599ef68eabe588532203230c5b0ac8c892da47c95a`
+- `po:sha256:56d67898f9daaa0ff3c1fb34ff05745d9a1f94cf2703726f7721d1f586f89e5f`
 
-### 11. Repository-plan control and ordering (14)
+New needed_evidence: Run 3 adds two live lease snapshots with the same nonce, grant instant and charge but different heartbeat instants, organic release/eviction reports, and explicitly synthetic eviction-to-attempt-termination joins. It still lacks one provenance chain that binds a grant's creation, complete heartbeat-rewrite history, release/eviction, actual ledger decrement and carrier lineage. Capture-scoped ownerRef values cannot prove cross-capture owner continuity; a terminal lastHeartbeatAtMillis is not a rewrite history, and the synthetic evicted lease has no retained admission start. A Must/Should CQ must also require this lifecycle separately from SeatGrant. Keep both the provenance and separate-warrant duties open.
 
-Recommendation: `retire-irrelevant`.
+Since: 2026-09-10.
 
-- `po:sha256:64d90805ebfbc6afee58171bc8f40cc34294e5a165e1e68ee59c3941f5878eea` — ProseObservation quoting “LiteralKit(["readonly", "write", "publish"])” at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73.
-- `so:sha256:193bdccb773affb34025f7d4b136568a01d2a47582a8f3f44e1381a3038fa092` — SourceObservation of RepoPlanStepMutability (type_alias_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:82-82.
-- `so:sha256:704700c3569c97c04ce6698d167bf38c6ee95850d1a68bd3c0d8a3732107994f` — SourceObservation of GithubCheckMode (variable_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:46-50.
-- `so:sha256:8e80633e942a2d17018c25156dff9f4303f22db8437f15e2c754abb1a9e6bcfe` — SourceObservation of RepoPlanPhase (type_alias_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:54-54.
-- `so:sha256:906f9d719b7531f4c878c535e72c3cdae60b54bd8ef3ea349d1887b118f54cc9` — SourceObservation of enforceConservativeResume (variable_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:530-536.
-- `so:sha256:a64dc174173ded5009d4e8d1b7c7f0e8aa1ab75aa53e55eddbf0ab021e440325` — SourceObservation of RepoPlanStepScope (type_alias_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:110-110.
-- `so:sha256:a6ad40a935472aecb313008c29de7fd676155defa4706d1d7f8b1808a84ac3eb` — SourceObservation of isConservativeResumeCandidate (variable_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:519-520.
-- `so:sha256:b78c10638ffab60de01ad1bc57cc639ce379fb6e46a3e589c8b9e38329d10828` — SourceObservation of RepoPlanWave (class_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:307-315.
-- `so:sha256:cffc9352dab29999a8fea11c29898375fb9f5d0140582e5b325a5e361eafdf5a` — SourceObservation of GithubCheckMode (type_alias_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:58-58.
-- `so:sha256:dd4ce73b5f90b6a2cc48a40c200e4ab2a0f7353fbfbd20f5e53251a0d390ee71` — SourceObservation of GITHUB_CHECK_MODE_VALUES (variable_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:28-38.
-- `so:sha256:f71b168a6c2ae3db3894064c6c52de3f29b7464bb4e6d6d6194a7b6ad5e99155` — SourceObservation of RepoPlanPhase (variable_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:34-46.
-- `so:sha256:f9ff896ab85e892800a541b68651b2f1827025998e2acf58e3c18b7bd73d9c5d` — SourceObservation of RepoRunContext (class_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:276-290.
-- `so:sha256:fc13da4a27d636493bf0caed7e01a55c91e31a45fe97c80ad34f40e7d9948b43` — SourceObservation of RepoPlanStepMutability (variable_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-74.
-- `so:sha256:fd30915e1d17659297436b33480b65b1417ff9b0274b7beafa8b70cd814d4596` — SourceObservation of RepoPlanStepScope (variable_declaration) at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:98-102.
+Evidence:
 
-### 12. Gate-staleness result artifacts (7)
+- [so:0415a4f15905](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-0415a4f15905.yaml): Organic Stage A canonical-root history for nonce 411b3ba7-f32a-4d07-8a0c-c764dc5b8088: enqueue 1788926595182, admit 1788926595216, release 1788927008574, weightTokens=5, shared attemptId e7a8f546-8ae1-4754-b67b-76184b411fcc. The release carries memoryPeakBytes=9904820224. Only records for that nonce are joined; unrelated intervening records in source_excerpt are excluded.
+- [so:27fc89410ea6](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-27fc89410ea6.yaml): Explicit provenance=synthetic. One nonce has enqueue/admit/release at 1788931586665, 1788931586674 and 1788931586743; another has enqueue/withdrawal at 1788931586705 and 1788931586715. synthetic-dead-lease is evicted at 1788931586728 with lastHeartbeatAtMillis=1788931586718; synthetic-dead-ticket is evicted at 1788931586729. The latter two have no retained starts in this journal. Event-specific timestamps stay with their own nonce.
+- [so:650d8047f7ef](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-650d8047f7ef.yaml): Synthetic attempt-terminated notice for attemptId b4e72342-45a5-4a1b-95db-5ab4ef30a93f matches the dead-lease eviction; reason=lease-eviction and recordedAt=2026-09-09T05:26:26.737Z. recordedAt is notice/reconciliation time, not observed execution cessation.
+- [so:68c2cc4f0ebf](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-68c2cc4f0ebf.yaml): Synthetic attempt-terminated notice for attemptId a2fdba81-945f-4f44-8d93-6f71f706d5cd matches the dead-ticket eviction; reason=queued-submitter-death and recordedAt=2026-09-09T05:26:26.731Z.
+- [MANIFEST.yaml](../../corpus/run3b-synthetic/MANIFEST.yaml) (provenance, termination_join, loss_population.chain_counts): Synthetic provenance is explicit. Both termination_join entries have attemptId_match=true. Retained chains are one win, one withdrawal, one lease eviction and one ticket eviction; they are not organic fleet outcomes.
+- [so:afd98d3ec307](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-afd98d3ec307.yaml): Stage A live canonical lease: nonce 012163b8-ef66-4fb4-aba5-0d4af4072512, admittedAtMillis=1788941816511, weightTokens=5, heartbeatAtMillis=1788941946764. This is one capture of a lease carrier, not its complete rewrite or decrement history.
+- [so:430e175a6bdb](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-430e175a6bdb.yaml): Stage B live canonical lease preserves the same nonce, grant instant and charge but reports heartbeatAtMillis=1788942001857. The capture-scoped ownerRef differs; comparing the snapshots does not establish uninterrupted owner/carrier continuity.
+- [fa:adm-admission:001](../foundational/fa-adm-admission-001.yaml): The foundational analysis separates conferral, grant holding and journal assertion, and retains information-only and grant-boundary rivals. Its evidence reading identifies a joined enqueue/admit/release history and a second history lacking a terminal report. This does not supply a separately warranted composite lifecycle.
 
-Recommendation: `retire-irrelevant`.
+### 4. Failure-signature occurrence evidence (3)
 
-- `so:sha256:1b632257febcbb643a3ab96bf64a1196964c1bf6edc0376b50cabea2bac2098d` — SourceObservation of GateUnproven (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:235-244.
-- `so:sha256:2c69da902821ace2904ede4845d9193e0358eb571e5d563d0aaaf080dcfe161a` — SourceObservation of GateStalenessVerdict (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:266-271.
-- `so:sha256:505c45f1b6b21cea941e3727724c4453c62fc6afc248ae88a8f3a817372b9afb` — SourceObservation of GateStalenessVerdict (type_alias_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:279-279.
-- `so:sha256:9425d788587d694dee636b406feb6512298532c3795a7dc770bdfc7f4dd7487c` — SourceObservation of GateFileWitness (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:139-147.
-- `so:sha256:a4a2bc6f88d7c94e877af69ce8c4e42f68cf4125076460fb0b59cabf1abf866a` — SourceObservation of GateFresh (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:190-198.
-- `so:sha256:ab9b40285e051d72072bcdf5cbda763df48c9df2f6d8bf3f0d1660078dc956a9` — SourceObservation of GateStale (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:206-220.
-- `so:sha256:d5e1b188a11d80b9489f3616a3b705634c3b4fdecee69ef7180d463c7f2dee85` — SourceObservation of GateArtifactDescriptor (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:170-181.
+Recommendation: irrelevant. Re-identify the old field rows against a captured failure tuple; preserve the current signature-analysis gaps.
 
-### 13. Watch-stream event artifacts (20)
+Primary trace: [so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml).
 
-Recommendation: `retire-irrelevant`.
+pa-failure-signature (3 rows).
 
-- `so:sha256:01ebe52998854e6382ed57cfc9052b2f4fbb29e735679f51e8911afd85469ded` — SourceObservation of YeetWatchEndReason (type_alias_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:529-529.
-- `so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350` — SourceObservation of renderYeetWatchEventLine (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:617-618.
-- `so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c` — SourceObservation of diffYeetWatchSnapshots (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:694-740.
-- `so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f` — SourceObservation of YeetWatchEvent (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:565-578.
-- `so:sha256:1e993a781d8287c7d8eaef6ac56a139bd3849cf1fc650a91d7db9ac29c4f5fef` — SourceObservation of YeetWatchEvent (type_alias_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:586-586.
-- `so:sha256:357936bd5c10475bb683a73ef496a31521cdf91e52e444875205b73303f7ab1b` — SourceObservation of YEET_WATCH_SCHEMA_VERSION (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:60-60.
-- `so:sha256:475cea15f30764a8045bd4d652dbc2c3c65b2cbde1b708f31800facdf6a2fbb1` — SourceObservation of YeetWatchDiffInput (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:632-641.
-- `so:sha256:47b1a59826ab332b9eb041001164f4b492dccb445629cf6fa858330701f649ff` — SourceObservation of YeetCheckTransition (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:289-304.
-- `so:sha256:53871c1d8d3f62889042f3a5d4388e6e993dc3ef0478c837fbe383b75b912edd` — SourceObservation of yeetWatchEndReason (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:777-788.
-- `so:sha256:72751a9073713f96a4c3bf12a592db87e3b0b3364ab929e8d5fca792681f5ac4` — SourceObservation of YeetWatchSnapshot (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:242-254.
-- `so:sha256:985f8eabadd1ff4531d7bdf639ae2da797f9b2ef8124751b0452456d3551bea6` — SourceObservation of YeetWatchEnded (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:537-551.
-- `so:sha256:98cbdf1184f9cba51246aa80f650640311ce755674f478e3faac85f89074ecda` — SourceObservation of yeetWatchCommentEvent (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:459-494.
-- `so:sha256:9a050882c859fbe6a493e1313f31f1062c204cb96663c81dfcac83bef8f5d917` — SourceObservation of YeetWatchThread (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:201-209.
-- `so:sha256:a7c6ae0d10535713f109acc2252a5ec84ab4500696ac752d7782c3625caa5747` — SourceObservation of YeetWatchCheck (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:180-193.
-- `so:sha256:b870d15f88a575353b6b0228cd405f21da494b88735fc82c49042a272e0095ab` — SourceObservation of YeetCheckSignal (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:114-122.
-- `so:sha256:be1853aae0f018d491da8f4e61a6144f1a4e2667aee6d3772e8a68897842cc5f` — SourceObservation of YeetThreadTransition (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:312-326.
-- `so:sha256:c30acf2ce6e721bb586765a46dc7f4aa0760f5c25dea64f91deac21f76228ed3` — SourceObservation of countYeetWatchFailures (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:815-816.
-- `so:sha256:e931fc8b69e9c72f2f382ba6835ae50ed773594333b915a075f1510603035efc` — SourceObservation of YeetCommentPosted (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:403-423.
-- `so:sha256:f44344e14a671f9e5f86859eef0dccb723949c53750e0b7e5ec4c33dd473bf7b` — SourceObservation of YeetWatchEndReason (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:516-521.
-- `so:sha256:f45109a7f280b3b010b8766d51c4c09c8e315cb04beb5d1ff38b45ad70c7ab86` — SourceObservation of YeetHeadChanged (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:356-369.
+- `po:sha256:2d69bdb38dd2c7618a64b60834a6993abe999b6776d721aef8b6eb947c9b2e91`
+- `po:sha256:4ce41ce65957b0594e01c672972fb68722ee30c3df62444b2d323fe6d70e07cf`
+- `po:sha256:4ec767a335e920a2a80204127a6c3146cded1e5eb3d748b11a87dfc4579fc735`
 
-### 14. Monitor rerun-decision artifacts (11)
+Retirement reason: Retire the three prior literal/field rows by re-identification as the run-3 observation so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda. It binds an attemptId to failureKind=step-exit, failedStepId=publish:01-git-push and that component's failed result under yeet-verdict/v2. The manifest records 1902 structured tuple occurrences and pins the component vocabulary/serialization sources. Rat-032 already accepted FailureSignature at recorded-classification grain; this is an occurrence-evidence replacement, not another signature ratification. Cross-attempt semantic compatibility, normalization, delay attribution and full execution joins remain explicit in dh:ver-failure-signature:001. Do not infer those from tuple equality or treat every tuple as a completed execution.
 
-Recommendation: `retire-irrelevant`.
+Evidence:
 
-- `so:sha256:0e23613c08bd8703273959a5bf2dc75dd4fdea088a0aed2f5cd6a7684c30a06c` — SourceObservation of YeetMonitorJobDecision (type_alias_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:479-479.
-- `so:sha256:2be3b248a3b888f63aa21e0598782e2efec976842e70e3d18420d1051487f9ef` — SourceObservation of planYeetMonitorReruns (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:614-673.
-- `so:sha256:3c67cece44cdfc67ae4bbc448bf87d837a9d92f55e59ff82135d00f2baec589e` — SourceObservation of yeetMonitorRerunCommand (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:567-567.
-- `so:sha256:538ac118dd5cd92616c9fe8d60133d6795e073e9433a44f749cce9951f291f2e` — SourceObservation of renderYeetMonitorJobDecision (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:707-720.
-- `so:sha256:7d81fca784579f2d5bf1d2bed62d836c001fedda5a774dbed3b94280174af3f0` — SourceObservation of YeetMonitorRerunJob (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:318-329.
-- `so:sha256:a1c22fb0769c94f71dfe06a5f79cc81acad12d7b6ef289ddec66ee71291a695e` — SourceObservation of YeetMonitorJobDecision (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:460-471.
-- `so:sha256:a2352db33ca14ce4c1da0bf89decf6bc399e46f050d701ba267129ce31cda2e2` — SourceObservation of applyYeetMonitorJobDecision (variable_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:924-933.
-- `so:sha256:ade05d26b085f9b2d69b9583ce1f0b4dcb97e42de7725390b49801e6f2b9c533` — SourceObservation of YeetMonitorAwaitingLog (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:397-406.
-- `so:sha256:b05fb409eaff217c8757f9310dedb0581462cc68b81bcc55feaa2e41312a75f9` — SourceObservation of YeetMonitorRerunSpent (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:345-355.
-- `so:sha256:ee1ece20418d730e54254ad7e2e33c3fe0193b1ee493d97e4cacb3717b4a0a4d` — SourceObservation of YeetMonitorAwaitingRun (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:429-438.
-- `so:sha256:fc1a7afac87552a779a76bd632d960cf8a72272ed79d6187cfb88fd040cec99b` — SourceObservation of YeetMonitorNeedsCodeFix (class_declaration) at packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:363-372.
+- [so:05bdfd88fe02](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml): One yeet-verdict/v2 record has attemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47, failedStepId=publish:01-git-push, failureKind=step-exit and the matching component id with status=failed, exitCode=1, durationMs=935.026968. Parent attempt startedAt=2026-08-06T09:13:49.279Z, endedAt=2026-08-06T09:27:58.609Z and elapsedMs=849330. Passed components have durations but no per-component start/end instants.
+- [so:18fe73166f5b](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-18fe73166f5b.yaml): A separate identified yeet-verdict/v2 attempt records failureKind=handler-error and failedStepId=publish:00-head-install-preflight while planned components are status=not-run. The parent attempt has 11ms elapsed time. A tuple or planned component therefore cannot be assumed to identify a completed component execution.
+- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (rider_evidence.pa-failure-signature): rider_evidence=present; structured_occurrences=1902. These are retained tuple occurrences across verdict and embedded-verdict sources, not a count of unique failures or signatures. The optional attemptId must be checked per record.
+- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (source_facts.verdict_schema, source_facts.failure_signature_domain, source_facts.failure_signature_serialization, source_facts.failed_step_serialization): The manifest cites yeet-verdict/v2 and the step-exit/handler-error domain, plus failureKind and failedStepId serialization, to Verdict.ts source bytes c05da661e2bb3c60bfbdc071b6e1eac0b25406a5b3ff693c158ffdd0569388d7. These bound source meanings do not establish vocabulary compatibility for all historical tuples.
+- [rat-032.yaml](../../../archives/beep-ci-ops/orun-2026-09-03T02:46:18Z.governance/ratifications/rat-032.yaml): rat:32 accepts otp:jv-failure-signature:001 at failedStepId/failureKind recorded-classification grain, explicitly separating signature from occurrence. The archived proposal retains the governed-coordinate meaning/version caveat.
+- [dh:ver-failure-signature:001](../hypotheses/dh-ver-failure-signature-001.yaml): The current candidate remains unresolved with the null unrejected: different failed steps share failureKind, and the same failedStepId occurs under different failure kinds. Normalization/identity, same-versus-different examples and attributed-delay/consumer joins remain required. Retiring the old field observations does not discharge this current chain.
 
-### 15. Quality report and configuration artifacts (14)
+### 5. Resolved cache plan applied to an execution (1)
 
-Recommendation: `retire-irrelevant`.
+Recommendation: unresolved. The promoted rider has zero serialized resolver/execution occurrences.
 
-- `so:sha256:174bc1e94d345376660ef5fa87113a49198ca33bcb34da61b934af64724b4ace` — SourceObservation of QualityProfileConfig (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:386-398.
-- `so:sha256:3e296553a20a27503388bc986394099c7c5581a8666a9fdd199ce051bdf89b3f` — SourceObservation of PackageVerifyReport (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:183-193.
-- `so:sha256:50b72ba5de1b4f4faa716b9b6d2b8ed6d678cb4950580f0ae8f85dad06eadddd` — SourceObservation of QualityProfileDetectionInput (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:454-465.
-- `so:sha256:61cc360f5e99072fd1fd7b63748a43f8d39a921c4fce5c655e4937f1bfec4169` — SourceObservation of PackageTaskProfile (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:213-222.
-- `so:sha256:814e752549f0f43ad157a175616e3eb5549db881fc1fd9216c46b0faa12575c0` — SourceObservation of TurboConfigProofReport (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:194-207.
-- `so:sha256:8bbc8fc68d7ff8865048928f754aea654b620b9ffbaae0064f8f4f1e9253f8b1` — SourceObservation of TurboConfigProofCountSummary (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:153-166.
-- `so:sha256:957c9ffbcf7ab4c0dd90e7566dfc5080ffcbab33a8a2981a57facc8c571aecdb` — SourceObservation of GithubChecksFallowFeatureMatrixRow (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:666-677.
-- `so:sha256:a86ebcb3d399835d6fe9c78128b16394d23254111ea17aa6e6e6b42ccca24ddc` — SourceObservation of TurboConfigProofOptions (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:215-225.
-- `so:sha256:a99d68de5fb72eb7f8c94c29b881cf9799c47fd386471042b810a019bb4493a1` — SourceObservation of GithubChecksFallowFeatureMatrix (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:694-703.
-- `so:sha256:dcc8e45291ae54f9a3c4762ead3efdc29081b62bda5af6761c676a84f148ba60` — SourceObservation of GithubCheckRunReport (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:961-970.
-- `so:sha256:e34825fda95ce3050968b41d1d89037c85ab81e7f0cbab58d9ea1a2d907163fa` — SourceObservation of QualityProfileDetection (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:427-437.
-- `so:sha256:e78b1a951729f59c449331ce1b39c87d1775a6c55e16f9c27cfcf70d97544f90` — SourceObservation of PackageJsonDocument (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:295-304.
-- `so:sha256:f484833e6327058feb6e879ca5f7ac16995b5cc267ae52ce7cbd7f48c8258285` — SourceObservation of TurboConfigProofDryRunSummary (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:174-186.
-- `so:sha256:f8da674d8c16b9380e097c523f483e16748d4eb10287d3fe570ea4b9bb2986c1` — SourceObservation of PackageVerifyPackageJson (class_declaration) at packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:195-203.
+pa-cache-plan-resolution (1 row).
 
+- `po:sha256:30be9d42308395a759ea42b1706c47b14bf2d995ff5d90eb85161cef24e27b61`
+
+New needed_evidence: Run 3's verdict-corpus search is now complete within its captured fields: run3-fleet/MANIFEST.yaml reports pa-cache-plan-resolution rider_evidence=absent with zero structured occurrences. Its source_facts name the resolver domain and the resolver-to-command-arguments site, but the verdict schema has no cache-plan field. Obtain an observed governed resolver result with its applicable domain/version, joined to a particular Turbo execution and the cache posture actually applied. Checkout cache topology, cacheStatus and enablement flags do not supply that execution join. This promoted Ruling-6 rider remains open; the docket authorizes no new capture or runtime change.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (rider_evidence.pa-cache-plan-resolution): rider_evidence=absent; structured_occurrences=0; occurrences is empty. The bounded search explicitly distinguishes a resolver/execution join from cacheStatus or cache flags.
+- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (source_facts.cache_plan_domain, source_facts.cache_plan_execution): Source receipts identify caller-controlled/local-only/remote-read and the resolver result feeding command arguments. They explicitly record that the verdict schema has no cache-plan field; source routing does not create a captured execution result.
+- [so:f4532e29f3f1](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-f4532e29f3f1.yaml): Linked-worktree binding shares <fleet>/beep-effect/.git as git_common_dir but reports its distinct local cache path absent and zero entries. Its supplementary probe is at 03:13:52.406Z. This demonstrates why Git linkage alone cannot establish shared cache access.
+
+### 6. CQ-020 ordering and governing specification (10)
+
+Recommendation: irrelevant. Current proposals and emission-v2 observations replace the 10 amendment-gated rows; the cluster still rules together.
+
+Primary trace: [otp:ov-schedule-proposal:001](../proposals/otp-ov-schedule-proposal-001.yaml).
+
+sitting-3 hasStep (2 rows).
+
+- `po:sha256:736ad92a1de7991caa17d905c310e2dac02d5a4d9b7cd3b709adfcabd690e4cc`
+- `po:sha256:35a69c5bcbf7493cc0aa7f248d138d65f2d5c8beff49e80308ef85b43a0f559d`
+
+Retirement reason: Retire the two historical hasStep rows by supersession through otp:ov-proposal-step-membership:001. The current emitter and fixture identify two steps belonging to one proposal, while the contract limits steps to admitted actions and amended CQ-020 requires that membership. The two original contract quotations were superseded by emission v2, so their old observation IDs are preserved only as carried retirements. ScheduleStep identity and the complete cluster's joint ratify-or-park obligation remain with the current proposals.
+
+Row trace: [otp:ov-proposal-step-membership:001](../proposals/otp-ov-proposal-step-membership-001.yaml).
+
+sitting-3 stepIndex (2 rows).
+
+- `po:sha256:14e01baa9a4fa23873722680039d098e43c3e0f315d5f6805159154577794e06`
+- `po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2`
+
+Retirement reason: Retire the two historical stepIndex rows by supersession through otp:ov-step-position:001. Current fixture observations assert integer ordinals 0 and 1, the current contract fixes the zero-based admitted-step convention, and amended CQ-020 orders SeatRequests through those steps. The proposal carries the prior category/representation choice; fixture integers do not adjudicate it. No endpoint or ordering member ratifies independently of the complete cluster.
+
+Row trace: [otp:ov-step-position:001](../proposals/otp-ov-step-position-001.yaml).
+
+pa-projection-contract (1 row).
+
+- `po:sha256:0121af7b661484de9197ede12df6eaa5c69240214339b7ea6844a4f09901fea8`
+
+Retirement reason: Retire the prior pa-projection-contract observation by supersession through otp:ov-projection-specification:001. CQ-020 now requires the governing specification and emitted SeatRequest ordering; the current typed-specification, proposal-binding and ordering observations replace the run-2 wording obstacle. The rule-specification versus application-context identity choice stays explicit in fa:ov-projection-specification:001 and the current proposal. The full ordering dependency cluster still ratifies or parks together.
+
+Row trace: [otp:ov-projection-specification:001](../proposals/otp-ov-projection-specification-001.yaml).
+
+pb-schedule-projection-specification (2 rows).
+
+- `po:sha256:6fa9ae087c8d411c0218a0491a20989f722773cb08d8b57d733514a58cc86742`
+- `po:sha256:88f09e0224cf8cc48710903fe1e017b9369bc5dada8def6024d42f2841f9a654`
+
+Retirement reason: Retire the two pb-schedule-projection-specification rows by supersession through otp:ov-projection-specification:001. The amended CQ-020 and current emission-v2 specification type, governing edge and SeatRequest-order facts discharge the former wording obstacle. The current foundational record explicitly defers repeatable-rule versus application-context identity, and the proposal carries that choice for the same ordering sitting. Retirement does not accept either model or split the cluster.
+
+Row trace: [otp:ov-projection-specification:001](../proposals/otp-ov-projection-specification-001.yaml).
+
+pc-projection-contract (2 rows).
+
+- `po:sha256:d9e1c6941fe61eb8e8a4f7e40853d6090190ec18523931c3af4551bb2b880c76`
+- `po:sha256:ed86c2d18b12ff797604eac97a917b36527e390ce417fce35ac583fd829b2709`
+
+Retirement reason: Retire the two pc-projection-contract rows by supersession through otp:ov-projection-specification:001. Amended CQ-020 now requires the governing specification and the emitted SeatRequest ordering represented in the current contract and fixture observations. The repeatable-specification versus application-context issue survives in the run-3 foundational chain and proposal; the ordering cluster remains one ratify-or-park unit.
+
+Row trace: [otp:ov-projection-specification:001](../proposals/otp-ov-projection-specification-001.yaml).
+
+ov-schedules-seat-request (1 row).
+
+- `po:sha256:d1f555913267743bc009bfd030c3bafd841e6f7baa081d7a1ecc0704fc2b2d2d`
+
+Retirement reason: Retire the historical target-relation row by supersession through otp:ov-step-request-assignment:001 and re-identification of its unchanged implementation-report quotation as po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4. Current fixture/emitter observations bind steps to SeatRequests, and amended CQ-020 explicitly consumes that relation. The current chain preserves the absence of WorkUnitSpecification identity; the full ordering cluster still ratifies or parks together.
+
+Row trace: [otp:ov-step-request-assignment:001](../proposals/otp-ov-step-request-assignment-001.yaml).
+
+Evidence:
+
+- [CQ-020](../../../../../docs/competency-questions.yaml): The Must CQ now joins an episode's current proposal to its governing typed specification, member steps, zero-based order values, SeatRequest targets and literal scope tags, with ORDER BY ?idx. Its amendment removes the run-2 WorkUnit-target wording obstacle; reading this query is not an execution or ratification claim.
+- [po:4b06f5efe076](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-4b06f5efe076.yaml): Emission-v2 fixture asserts proposal hasStep step-0.
+- [po:a1e5e0d0916d](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-a1e5e0d0916d.yaml): The same fixture proposal asserts hasStep step-1.
+- [po:25344c6969c1](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-25344c6969c1.yaml): Fixture step-0 has stepIndex 0 typed as xsd:integer.
+- [po:56dab857ecc5](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-56dab857ecc5.yaml): Fixture step-1 has stepIndex 1 typed as xsd:integer.
+- [po:0a705ee8990d](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-0a705ee8990d.yaml): Current S7 determinism rule fixes canonical order, zero-based stepIndex and steps only for admitted actions; the deferred tail neither extends nor renumbers the sequence. Its Graph.topo statement concerns the projection seam, not a package-report contract.
+- [po:d7595abca114](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-d7595abca114.yaml): The emission-v2 fixture types its governing target as ciops-prov:AdmissionProjectionSpecification.
+- [po:95a467e6ebaa](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-95a467e6ebaa.yaml): The emission-v2 fixture connects the proposal to that target with hasProjectionSpecification.
+- [po:7f9eb7c183ed](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-7f9eb7c183ed.yaml): Fixture step-0 schedulesSeatRequest request-0; the emitter and matching second-step observation preserve request targeting.
+- [po:add8e23aa967](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-add8e23aa967.yaml): The unchanged S7 implementation-report quotation is re-emitted at the run-3 pin. It records the SeatRequest/WorkUnitSpecification split and the absence of work-unit-specification identity in journal evidence.
+- [fa:ov-projection-specification:001](../foundational/fa-ov-projection-specification-001.yaml): explicitly_deferred: compare emissions with fixed rules/different journal prefixes and revised rules/fixed input to distinguish repeatable specification identity from application-context identity. otp:ov-projection-specification:001 carries that choice.
+- [otp:ov-step-position:001](../proposals/otp-ov-step-position-001.yaml): The current proposal treats stepIndex as a contextual ordinal-value property, preserving its alternative representation models and ScheduleStep/ScheduleProposal dependencies. Zero-based fixture values do not settle the prior category issue.
+
+### 7. Freshness, review score, attribution and proof-tier governance (9)
+
+Recommendation: unresolved. Recorded assessment values do not supply the four governing contracts and decision uses.
+
+jv-base-freshness (3 rows).
+
+- `so:sha256:0a7f99ebe45f22164f484b539becf4d1d57384861db25b0c065fc67cca2574a7`
+- `so:sha256:a4fa5b4f6b8142d813d5867e01c92a245a9a7ee7d64b8841a3e27a068c88e764`
+- `so:sha256:c1e2fd7731b1efe855f70c75df8e7dd0bd99853668c551eca8fb80593a621d06`
+
+New needed_evidence: Run 3 adds verdict comparison values and timestamped checkout branch/head bindings; dh:ver-git-comparison-context:001 still has no observed validity decision consuming those comparisons. Under Ruling 6, obtain a versioned branch-freshness contract binding each assessment to its branch and base operands, defining merge-base, behind-count and overlap meanings, and showing assessment provenance, recomputation and the decision that changes with the result. A recorded zero or a matching path is insufficient to establish equal trees or evidence validity.
+
+Since: 2026-09-10.
+
+jv-greptile-score (2 rows).
+
+- `so:sha256:12f0a017acb17063246f77ebb5c128271f9df67ea7bc1666268052f2d58873d1`
+- `so:sha256:258d88bf5d120ca46af4e7964a5c3a5674c5c4984b67c0f84fe8f706e979c3f6`
+
+New needed_evidence: Run 3 now records greptileScore=5/5 in a verdict with proofTier=full, but a score spelling does not supply its governed meaning. Under Ruling 6, obtain the scale authority and version, the exact reviewed subject, score-production and revision provenance, and an observed assurance or closeout decision governed by that score. Retain the distinction between a stored readiness assertion and a current eligibility decision.
+
+Since: 2026-09-10.
+
+pb-failure-attribution-category (1 row).
+
+- `po:sha256:a0460c0e2b60f310cb30b9c03ea0aa2e487e02aadaa0450c56bb04cff6b5c8c9`
+
+New needed_evidence: Run 3 adds classified failure tuples and component results, which supply concrete reports but not introduced/inherited/unrelated/environment attribution rules. Under Ruling 6, obtain necessary conditions for every attribution member, overlap or precedence rules, and an assessment record binding the change, baseline, environment, assessment provenance and revision history. failureKind and failedStepId classify a report; they cannot by themselves assign responsibility or baseline causation.
+
+Since: 2026-09-10.
+
+pb-yeet-proof-tier (3 rows).
+
+- `po:sha256:8b0e7ebacbadd3d0a21df787d0070763c9151c438e5ad68ef69454c6bea0aca1`
+- `po:sha256:8d123d2b803018949aa079849fafabb4d38fbde7e7f77a5515d448cdc0a9f195`
+- `po:sha256:922212cafdb03daef5fb111352d661cfda30e1e9f3d3e8c3e6f45a19c6a82a50`
+
+New needed_evidence: Run 3 adds proofTier=full in verdict and lease/request contexts, while result status and attained assurance remain separate. Under Ruling 6, obtain planner authority and version/revision lineage deciding a shared selector scheme versus copied domains or plan-borne classifications, together with a Must/Should CQ whose decision consumes that selector. Repeated strings and the captured priority domain cannot establish the proof-tier governance or its mapping to assurance tiers.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [so:05bdfd88fe02](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml): One yeet-verdict/v2 record has attemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47, failedStepId=publish:01-git-push, failureKind=step-exit and the matching component id with status=failed, exitCode=1, durationMs=935.026968. Parent attempt startedAt=2026-08-06T09:13:49.279Z, endedAt=2026-08-06T09:27:58.609Z and elapsedMs=849330. Passed components have durations but no per-component start/end instants.
+- [so:ebe4cdcf6e9e](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-ebe4cdcf6e9e.yaml): The verdict projection includes greptileScore=5/5, proofTier=full and durationMs=435.282685. These are stored report values; they do not provide scale-governance or selector-lineage contracts.
+- [dh:ver-git-comparison-context:001](../hypotheses/dh-ver-git-comparison-context-001.yaml): The current null analysis still lacks explicit comparison-operand binding and an observed validity decision dependent on the recorded behind-count, merge-base or overlap result.
+- [dh:ver-head-diff-tier-context:001](../hypotheses/dh-ver-head-diff-tier-context-001.yaml): resolvedHeadSha, diffFingerprint and proofTier remain descriptive context without an observed accept/reject consumer or task-hash/epoch applicability rule.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+
+### 8. Passed-step execution boundaries and elapsed scope (2)
+
+Recommendation: unresolved. Attempt bounds and component statuses are present; per-execution boundaries and measured-extent authority remain missing.
+
+jv-verification-step-execution (1 row).
+
+- `so:sha256:3a8b51a1acc8602b1a583147d6d5e7e253481237fbf5806c9b13833698bc9090`
+
+New needed_evidence: Run 3 now has verdicts with a parent attemptId, passed component statuses and component durations, and a separate failed attempt whose planned components are explicitly not-run. Under Ruling 6, obtain a passed-step execution record preserving the authoritative parent-attempt join, each repeated execution's identity and its own actual start/end boundaries. Whole-attempt bounds and a repeated lane label do not supply the missing component occurrence boundaries; the passed-step instrumentation was excluded from the v3 scope.
+
+Since: 2026-09-10.
+
+pa-elapsed-ms-field (1 row).
+
+- `po:sha256:2092736911a0c68e96ae8d9638b00ec4b6992b4da0677f325e4fd420fb41b2a7`
+
+New needed_evidence: Run 3 now supplies an identified attempt with startedAt, endedAt and elapsedMs, so the missing-record part of the run-2 request has changed. Under Ruling 6, retain the measured-extent question: establish authoritatively whether each value covers the entire attempt/command or a particular WorkUnit occurrence, preserving target, interval and provenance. fa:ver-wall-time-evidence:001 still asks for nested occurrence bindings, clock/precision conventions and the explanation of a one-millisecond discrepancy. Parent-attempt timestamps cannot be copied to each nested execution, and an assertion-content proposal does not settle what was measured.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [so:05bdfd88fe02](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml): One yeet-verdict/v2 record has attemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47, failedStepId=publish:01-git-push, failureKind=step-exit and the matching component id with status=failed, exitCode=1, durationMs=935.026968. Parent attempt startedAt=2026-08-06T09:13:49.279Z, endedAt=2026-08-06T09:27:58.609Z and elapsedMs=849330. Passed components have durations but no per-component start/end instants.
+- [so:18fe73166f5b](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-18fe73166f5b.yaml): A separate identified yeet-verdict/v2 attempt records failureKind=handler-error and failedStepId=publish:00-head-install-preflight while planned components are status=not-run. The parent attempt has 11ms elapsed time. A tuple or planned component therefore cannot be assumed to identify a completed component execution.
+- [fa:ver-wall-time-evidence:001](../foundational/fa-ver-wall-time-evidence-001.yaml): The analysis still requires nested attempt/lane/interval associations, clock and precision rules, and repeated measurement/correction evidence. Its proposal otp:ver-wall-time-evidence:001 preserves assertion-content, quality, measurement-token and scoped-literal alternatives, plus estimate and episode-join gaps.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+
+### 9. Memory measurement semantics (1)
+
+Recommendation: unresolved. A release-attached peak still lacks process, sampling and measurement-family provenance.
+
+jv-memory-peak-measurement (1 row).
+
+- `so:sha256:78cf821b0771a1c60ef1f80746484a8da1df72bcf2b1eaa9ebed337144e5a245`
+
+New needed_evidence: Run 3 now joins memoryPeakBytes=9904820224 to a particular admission release report through its root and nonce. Under Ruling 6, obtain the measurement's resource-using occurrence and process boundary, sampling method and interval, metric, unit and measurement provenance. Supply an authoritative comparison with peakRssKb that decides whether the two fields measure one family. A release-attached quantity, token charge or owner surrogate does not establish the measured process or sampling semantics.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [so:0415a4f15905](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-0415a4f15905.yaml): Organic Stage A canonical-root history for nonce 411b3ba7-f32a-4d07-8a0c-c764dc5b8088: enqueue 1788926595182, admit 1788926595216, release 1788927008574, weightTokens=5, shared attemptId e7a8f546-8ae1-4754-b67b-76184b411fcc. The release carries memoryPeakBytes=9904820224. Only records for that nonce are joined; unrelated intervening records in source_excerpt are excluded.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+
+### 10. Duration individuals, carrier issuance and diagnostic comparison (2)
+
+Recommendation: unresolved. Duration assertions and recovery timings leave separate-individual CQs and issuance/custody unresolved.
+
+jv-actual-wall-duration (1 row).
+
+- `so:sha256:2a207d4986630e8590f790457dabe07ffeecdb9b2bfa79cf254c6bce508a2998`
+
+New needed_evidence: Run 3 adds attempt-scoped elapsedMs, nested durationMs and otp:ver-wall-time-evidence:001, whose assertion-content, quality, token and scoped-literal models remain alternatives. Under Ruling 6, the separate RecordedWallDurationMeasurement still needs a Must/Should executable CQ that must traverse that individual instead of qualified values on an episode or execution. The carrier alternative also needs authoritative issuance, custody, copy and correction lineage and a decision CQ that distinguishes equal-content carrier tokens. Ruling 17 keeps the issuance duty open to run 4: the fleet manifests observe zero proof ledgers, so captured verdicts cannot replace the missing writer-issued provenance.
+
+Since: 2026-09-10.
+
+jv-actual-wall-duration and jv-lane-diagnostic-comparison (1 row).
+
+- `so:sha256:91988c625516a3fa1516b592a7dc4c6b197b56249390fde1fc1e116867ae1af3`
+
+New needed_evidence: Run 3 adds bounded attempt durations and a recovery diagnostic with distinct standaloneDurationMs and laneRerunDurationMs inside a successful attempt. Under Ruling 6, retain both duration concessions: a Must/Should CQ requiring a RecordedWallDurationMeasurement individual rather than qualified episode/execution values, and an authoritative issuance/custody/copy/correction chain plus a CQ distinguishing carrier tokens from equal content. The comparison concession additionally needs identities for both compared executions, their measurement assertions, the comparison's issuance, and a Must/Should decision CQ consuming a distinct comparison record. Ruling 17 keeps issuance open to run 4 because zero proof ledgers were captured. Diagnostic timing alone supplies neither the paired execution identities nor a separately warranted comparison.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [so:05bdfd88fe02](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml): One yeet-verdict/v2 record has attemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47, failedStepId=publish:01-git-push, failureKind=step-exit and the matching component id with status=failed, exitCode=1, durationMs=935.026968. Parent attempt startedAt=2026-08-06T09:13:49.279Z, endedAt=2026-08-06T09:27:58.609Z and elapsedMs=849330. Passed components have durations but no per-component start/end instants.
+- [so:37968f126c46](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-37968f126c46.yaml): The recovery diagnostic records detectedAt=2026-08-08T11:43:52.465Z, standaloneDurationMs=1902.713545 and laneRerunDurationMs=29802.864398. dh:att-recovery-diagnostic:001 identifies a successful enclosing publish verdict and leaves attribution and compound-account necessity open.
+- [fa:ver-wall-time-evidence:001](../foundational/fa-ver-wall-time-evidence-001.yaml): The analysis still requires nested attempt/lane/interval associations, clock and precision rules, and repeated measurement/correction evidence. Its proposal otp:ver-wall-time-evidence:001 preserves assertion-content, quality, measurement-token and scoped-literal alternatives, plus estimate and episode-join gaps.
+- [MANIFEST.yaml](../../corpus/run3b-fleet/MANIFEST.yaml) (proof_ledger): status=re-parked to run 4; ruling=17; checkouts_with_ledger=0. The cited time-to-certainty PLAN C2 says the service is not wired into a lane. This is a file-existence census; no proof-ledger contents were read or emitted. Stage A also records zero ledgers.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-08 Stage B capture grill, Ruling 17): Proof-ledger issuance duties re-park to run 4 until the time-to-certainty writer materializes provenance. Synthetic ledger seeding was rejected; narrower attempt/embedded-verdict joins may proceed.
+
+### 11. QA workflow and projection conformance evidence (4)
+
+Recommendation: unresolved. S7 replay evidence supplies neither a QA stage chain nor independently issued conformance artifacts.
+
+pa-qa-evidence-workflow (1 row).
+
+- `po:sha256:3bf3cf7f37f4e3e046efb12751c4b9650dd3a2a16a0c99a1ec17563fa551048a`
+
+New needed_evidence: Run 3 adds an admission projection fixture, property-suite contract and S7 replay result. Those are not a record/extract/judge QA run. Under Ruling 6, obtain one provenance-bearing chain joining all three QA stages to the in-scope Yeet or CI lane, its frozen tree and cache epoch, and the assurance obligation that consumes the evidence. The captured replay's input digest and pass assertion do not supply those QA-stage or assurance joins.
+
+Since: 2026-09-10.
+
+pa-projection-conformance-evidence (3 rows).
+
+- `po:sha256:059c20e6b0972ff269acf52884fea9e75f4fc5144fac7728dbac333221866181`
+- `po:sha256:06dd8aab73f74fd680b9cf55a760da82d4a3420f91fc8ea9d8bdb27c4c000d57`
+- `po:sha256:2338c92205c5fc08e5e18d149e7aabca98b83589cf5984e6b83fa81b2401a98c`
+
+New needed_evidence: Run 3 adds emission-v2 contract and property-suite quotations and the bounded S7 differential replay report of 41 matched admissions, but no independently issued conformance package. Under Ruling 6, obtain all three remaining chains: a package manifest with independent authority/version joining suite, implementation build, frozen inputs, replay execution, complete results, limitations, issuance and custody; a separately governed/versioned suite specification, distinct from its test-file carrier, and its Must/Should CQ; and identified replay execution/environment plus result issuance, custody, retention/correction lineage and a Must/Should CQ for a separate replay-result artifact. Ruling 17's zero-ledger census leaves issuance open to run 4; the passing replay assertion is not that missing lineage.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [po:a8408e04e6bb](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-a8408e04e6bb.yaml): The S7 property-suite quotation states determinism, admissibility, totality, priority/aging and differential replay obligations; it does not assert independent package/suite/result issuance or custody.
+- [po:a3b740b147b8](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-a3b740b147b8.yaml): The S7 report asserts that all 41 admitted events matched the projection's first prescribed admission. This is a bounded replay assertion, not proof of production correctness or an independently issued conformance package.
+- [po:f41f8934b51e](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-f41f8934b51e.yaml): The S7 replay report pins a journal digest and 79 events, comprising 41 admitted and 38 released. It does not establish all lifecycle boundaries or a QA record/extract/judge chain.
+- [dh:ov-replay-comparison-result:001](../hypotheses/dh-ov-replay-comparison-result-001.yaml): The null remains unrejected pending a concrete decision consuming the comparison record or a demonstrated necessary dependency under an existing CQ.
+- [MANIFEST.yaml](../../corpus/run3b-fleet/MANIFEST.yaml) (proof_ledger): status=re-parked to run 4; ruling=17; checkouts_with_ledger=0. The cited time-to-certainty PLAN C2 says the service is not wired into a lane. This is a file-existence census; no proof-ledger contents were read or emitted. Stage A also records zero ledgers.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-08 Stage B capture grill, Ruling 17): Proof-ledger issuance duties re-park to run 4 until the time-to-certainty writer materializes provenance. Synthetic ledger seeding was rejected; narrower attempt/embedded-verdict joins may proceed.
+
+### 12. Workspace package continuity (7)
+
+Recommendation: unresolved. Checkout bindings do not establish identity across package rename, move, version, fork or recreation.
+
+pa-workspace-package (7 rows).
+
+- `po:sha256:08a398bab03363136254e3e9c3ed49ebb16ffd18fb94b434111d4446cdf50d69`
+- `po:sha256:1189ec1eca4fb79695201186157334124e71372bbe906bb6119996f42b9fe842`
+- `po:sha256:13b29fc0bebcac4b0914db214f136add0fa739ac50af65649c800b7013ccb67a`
+- `po:sha256:1c941c2e1e41a932dfd00e48631a9dd6217c6e51fe9c681369139a8c0402ea84`
+- `po:sha256:28e700021c9b4ba707087650a4e39ceed6540863e4d99b02af241b2b0fdbcaf8`
+- `po:sha256:2f816bb5f468d1cc4a06de84c4a9bb8e4c9393a070c41e364f53d951cbf172e1`
+- `po:sha256:51a827390306ccb0cf37e23d646c653fd4291f3ed346ae04e097e678a5097781`
+
+New needed_evidence: Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache facts, plus fleet attempt context. These identify checkout observations, not package continuity. Under Ruling 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move, version change, fork and delete/recreate cases, including whether the candidate is a role or immutable-content object. No new package identity policy was admitted with the binding corpus, and a checkout token or package spelling cannot settle those cases.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [MANIFEST.yaml](../../corpus/run3-checkout-identity/MANIFEST.yaml) (bindings, checkout_counts, cache_mounts, temporal_limit, n_instant_change_evidence): 107 bindings: 22 clones and 85 linked worktrees. Ruling 5 fixes capture-local binding identity; the capture is not an atomic machine freeze. Cache topology is necessary but insufficient for CQ-015 transfer; task hash, epoch and actual access remain separate requirements.
+- [so:a90c39610e4a](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-a90c39610e4a.yaml): Clone binding at scannedAt 2026-09-09T03:13:49.440Z, with later binding_probe_at 03:13:52.201Z: origin, branch/head and Git-directory context; local cache present at <fleet>/beep-effect/.turbo/cache with 36399 immediate entries.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+
+### 13. Package topology and affected/docgen selection (9)
+
+Recommendation: unresolved. Admission ordering and stored applicability fields do not supply package-report or selection contracts.
+
+pb-topological-package-report (6 rows).
+
+- `po:sha256:5a59d414027abf00522737e1d86c7976c6837e7dcf88eb47112cc39709b2be1d`
+- `po:sha256:62ae30cfc28b391c7bf4a87534abeba849a8ca2ebd5f8ebe72cb5af81dcc50eb`
+- `po:sha256:64463ef1e1f2b77cb50713f8194bb055d35d02288f465e6902e337f9fc5f5edf`
+- `po:sha256:6e598d379ffd2f0565176b337833e4eedf0293941fa87936078ee572e63748a9`
+- `po:sha256:89165acdfec28c3a8692c411aead416ca1fd5f13333c0ea5c748e92aeab0cb98`
+- `po:sha256:90fa083c4887641658c0239762b509fd6c9bacc6f14cf29ee392ce08714572ff`
+
+New needed_evidence: Run 3 adds checkout bindings and an admission-order fixture whose step positions are 0 and 1; those positions do not describe a package graph. Under Ruling 6, obtain the package-report contract defining its numeric positions, ordering algorithm and dependency-edge semantics, identify the producing graph/version, and show the operational verification decision consuming that report. No new TS or package-graph observation was admitted with the journal/inventory capture.
+
+Since: 2026-09-10.
+
+pb-docgen-affected-scope (1 row).
+
+- `po:sha256:795d76d79fdc3ad235d204aee98c96f70dcdb10704c927558f31012749553995`
+
+New needed_evidence: Run 3 adds checkout branch/head snapshots and verdict applicability fields; it supplies no docgen selection result with a dirty-tree pin. Under Ruling 6, retain both concessions: an observed selection artifact binding base, head, dirty snapshot and selected members, a contract choosing selected extension versus selection rule and a Must/Should specialization CQ; and an independently versioned selection-rule authority, an observed pinned extension showing its application, a rule-versus-result contract and a CQ requiring the specification. Checkout paths and stored diff fingerprints do not supply those selected members or governance.
+
+Since: 2026-09-10.
+
+pb-affected-task-input-mode (2 rows).
+
+- `po:sha256:9cbd50f3655b7ae7102a1be9bfcfe939528b3eaebd0dc33257408365f9402062`
+- `po:sha256:a1f8202d5ff295e75dd7ad3f50f9454dad4bc2d53677e5936a6a0812250c5e43`
+
+New needed_evidence: Run 3 adds stored diff/head/tier context and a deterministic admission-order contract, but neither is a governed affected-task selection run. Under Ruling 6, obtain the normative selection contract explaining how task inputs alter membership and whether failures open or close the selection, an observed selected set under that contract, and the operational verification decision that trusts it. The current applicability hypotheses still lack an observed accept/reject consumer.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [po:0a705ee8990d](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-0a705ee8990d.yaml): Current S7 determinism rule fixes canonical order, zero-based stepIndex and steps only for admitted actions; the deferred tail neither extends nor renumbers the sequence. Its Graph.topo statement concerns the projection seam, not a package-report contract.
+- [MANIFEST.yaml](../../corpus/run3-checkout-identity/MANIFEST.yaml) (bindings, checkout_counts, cache_mounts, temporal_limit, n_instant_change_evidence): 107 bindings: 22 clones and 85 linked worktrees. Ruling 5 fixes capture-local binding identity; the capture is not an atomic machine freeze. Cache topology is necessary but insufficient for CQ-015 transfer; task hash, epoch and actual access remain separate requirements.
+- [dh:ver-head-diff-tier-context:001](../hypotheses/dh-ver-head-diff-tier-context-001.yaml): resolvedHeadSha, diffFingerprint and proofTier remain descriptive context without an observed accept/reject consumer or task-hash/epoch applicability rule.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+
+### 14. Admission capacity computation and pre-grant snapshot (7)
+
+Recommendation: unresolved. Token charges and later state do not supply the omitted capacity computation/stamp joins or snapshot CQ.
+
+pa-admission-capacity-expression (2 rows).
+
+- `po:sha256:3c757a7975b27b8597ccf8c6d886eb72ad2b8b51aaba8eb59cf21cc9a1a7a3c6`
+- `po:sha256:518aee86882c8b9092469203add3bc23c72acfed1d7139f136a96e8763f0c8c7`
+
+New needed_evidence: Run 3 now records requested/granted weightTokens and quotes the projection inequality activeTokenTotal + weightTokens <= capacityMaxTokens. Ruling 9 deliberately omitted capacity stamps. Under Ruling 6, obtain the authoritative capacity computation defining unit conversion, reserve subtraction and hard-floor treatment, and a provenance-preserving join from its computed value to capacityAtAdmissionTokens on an observed admission decision. A policy token charge and reconstructed ledger total cannot stand for measured remaining capacity.
+
+Since: 2026-09-10.
+
+pb-admission-capacity-state (5 rows).
+
+- `po:sha256:6b31f817391e66aab8fc9796fed0c0bbdbd8285c9e86438e9172d1ce6bbaef61`
+- `po:sha256:8a555d65d66a8d7f44336fdb4ce8816f5a033a6ce448e311dc29615bfd8f41f2`
+- `po:sha256:8af3333c97798f24aeecfa40f40faefcf152f96fffb6717f647eabf0f5250a92`
+- `po:sha256:95037a7104c1dbd21fc02aeeeb45733f744c10ba07ea4c5db2a94db62d88e95a`
+- `po:sha256:95b57e4f4029739dacb78d5caa9b43939b1820fc17d3785a9ff32181d7d0e0b6`
+
+New needed_evidence: Run 3 now includes timestamped inventory and queue/lease reports, but Ruling 9 supplied no pre-grant capacity stamps. Under Ruling 6, obtain a Must/Should executable CQ that traverses an AdmissionSnapshot, its capture act and instant, machine and policy scope, and an authoritative correlation to the immediately pre-grant decision that materializes capacityAtAdmissionTokens. A later lease snapshot, a checkout inventory instant and the projection's capacity inequality do not establish that missing pre-grant state.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [so:afd98d3ec307](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-afd98d3ec307.yaml): Stage A live canonical lease: nonce 012163b8-ef66-4fb4-aba5-0d4af4072512, admittedAtMillis=1788941816511, weightTokens=5, heartbeatAtMillis=1788941946764. This is one capture of a lease carrier, not its complete rewrite or decrement history.
+- [so:430e175a6bdb](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-430e175a6bdb.yaml): Stage B live canonical lease preserves the same nonce, grant instant and charge but reports heartbeatAtMillis=1788942001857. The capture-scoped ownerRef differs; comparing the snapshots does not establish uninterrupted owner/carrier continuity.
+- [po:a8c7221f4f29](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-a8c7221f4f29.yaml): The S7 contract quotes activeTokenTotal + weightTokens <= capacityMaxTokens and priority/aging constraints. This governs the projection; it does not supply a machine capacity computation, pre-grant stamp or operational starvation observation.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Ruling 9): The additive v3 event set omits capacity stamps because that family remains parked under Ruling 6.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+
+### 15. Origin blocking and heartbeat suspicion (5)
+
+Recommendation: unresolved. Zero origin markers and eviction reports leave deployed threshold, authority and policy-use joins open.
+
+pb-origin-block-grace-window (1 row).
+
+- `po:sha256:79df3741e52f870a9c5d7ac0f3c76fc333a1341bf8f15c7a7720f2b6982e88b3`
+
+New needed_evidence: Run 3 now captures a ticket's blockedOnOriginAtMillis=0 and separately records queue, withdrawal and eviction boundaries. dh:att-origin-block-marker:001 leaves the zero's meaning unresolved. Under Ruling 6, obtain the deployed threshold rule, its unit and both true/false consequences, decide grace versus staleness versus retry semantics, and observe a specifically origin-blocked case governed by that rule. A terminal eviction or zero marker does not establish a grace-window application.
+
+Since: 2026-09-10.
+
+pc-heartbeat-suspicion-policy (2 rows).
+
+- `po:sha256:cb78d031658bfe80535beb490352c2086b2b8f629e3819df4fba336fbeb37598`
+- `po:sha256:cb9064130b643be08d25e627bcfc5264739ac1397a236d353835b473c2df5734`
+
+New needed_evidence: Run 3 adds live heartbeat observations and explicit lease eviction reports with lastHeartbeatAtMillis, plus a synthetic termination join. The Stage B heartbeat census checks four organic rows, reports one legacy row without heartbeat and finds no ordering violations; this bounds observations, not owner death. Under Ruling 6, obtain the deployed suspicion threshold and unit, the identified suspected holder, an observed stale-heartbeat case, its operational consequence, and the authority rule separating suspicion from permission to terminate. An eviction reason or last-seen heartbeat is not proof that suspicion alone authorized termination.
+
+Since: 2026-09-10.
+
+pc-origin-blocked-timestamp (2 rows).
+
+- `po:sha256:e362227f9f3d78e8fcb933ddf9f5523b1ef97776a2546ad12c7f702c33fc1cdd`
+- `po:sha256:edf38d10efe0552b7de770a0cc24a9596cc4b5141b693889e987465f4174b4bb`
+
+New needed_evidence: Run 3 now supplies a persisted ticket observation containing blockedOnOriginAtMillis=0 with enqueue and heartbeat context, and the current null analysis refuses to read zero as either an epoch instant or evidence of no contention. Under Ruling 6, obtain a semantically interpreted origin-block onset/time and unit, the same ticket's observed originBusy wait, the starvation-policy decision using it, and issuance/revision provenance across the relevant ticket transitions. The observed zero and unrelated terminal chains do not establish those joins.
+
+Since: 2026-09-10.
+
+Evidence:
+
+- [so:3579a1da6705](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-3579a1da6705.yaml): The selected observed fact is blockedOnOriginAtMillis=0; source_excerpt preserves its ticket, enqueue and heartbeat context. The zero does not decide onset, duration or absence of origin contention.
+- [dh:att-origin-block-marker:001](../hypotheses/dh-att-origin-block-marker-001.yaml): The implementation-only null remains because the observed zero lacks an interpreting rule or a nonzero boundary transition.
+- [so:27fc89410ea6](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-27fc89410ea6.yaml): Explicit provenance=synthetic. One nonce has enqueue/admit/release at 1788931586665, 1788931586674 and 1788931586743; another has enqueue/withdrawal at 1788931586705 and 1788931586715. synthetic-dead-lease is evicted at 1788931586728 with lastHeartbeatAtMillis=1788931586718; synthetic-dead-ticket is evicted at 1788931586729. The latter two have no retained starts in this journal. Event-specific timestamps stay with their own nonce.
+- [MANIFEST.yaml](../../corpus/run3b-fleet/MANIFEST.yaml) (loss_population.chain_counts, loss_population.roots, loss_population.heartbeat_check, loss_population.classification_basis): Organic retained chains: 21 wins, 23 withdrawals, 5 lease evictions, 2 ticket evictions, 3 in-flight and 112 pre-v3; 0 unclassified. Canonical root has 347 rows; session-tmp has 2; system-tmp has 0. Heartbeat check covers 4 rows, records 1 legacy row without heartbeat and 0 violations. These are root/nonce histories within retained windows, not a complete fleet or liveness census.
+- [so:afd98d3ec307](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-afd98d3ec307.yaml): Stage A live canonical lease: nonce 012163b8-ef66-4fb4-aba5-0d4af4072512, admittedAtMillis=1788941816511, weightTokens=5, heartbeatAtMillis=1788941946764. This is one capture of a lease carrier, not its complete rewrite or decrement history.
+- [so:430e175a6bdb](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-430e175a6bdb.yaml): Stage B live canonical lease preserves the same nonce, grant instant and charge but reports heartbeatAtMillis=1788942001857. The capture-scoped ownerRef differs; comparing the snapshots does not establish uninterrupted owner/carrier continuity.
+- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+
+## Totals by recommended outcome
+
+| Recommended outcome | Rows |
+| --- | ---: |
+| irrelevant | 14 |
+| mapped | 0 |
+| proposed | 0 |
+| unresolved | 54 |
+| Total | 68 |
+
+Queue cross-check: C(i) contributes 4 retirements and 8 parks; C(ii) contributes 10 retirements;
+C(iii) contributes 46 parks; C(iv) is empty. All 68 IDs agree exactly with Queue C and the
+committed prior index. Every one of the 33 prior needed_evidence variants has a run-3 fact,
+a specific remaining evidence requirement, or both. Unmatched prior rows: none.
+
+The two remaining run-2 sitting-2 contention rows stay open, with explicit lock/resource joins.
+C1 retires through the timestamped binding proposal. The three failure retirements preserve
+current signature-analysis gaps, and all 10 ordering retirements preserve the joint sitting.
+
+This is a docket consistency result. The orchestration lane must project the steward-approved
+recommendations into work/dispositions.index.yaml; this lane has not changed that index.
+A full run gate and its unresolved-fraction calculation belong to the completed run artifacts.

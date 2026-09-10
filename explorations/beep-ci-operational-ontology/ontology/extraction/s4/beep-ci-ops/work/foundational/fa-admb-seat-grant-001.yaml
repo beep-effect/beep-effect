@@ -1,0 +1,115 @@
+id: fa:admb-seat-grant:001
+hypothesis_ref: dh:admb-seat-grant:001
+identity_card_ref: ic:admb-seat-grant:001
+referent_grain: >-
+  One fixed version of a journal account of a reported admission, including its recorded charge
+  and only the same-context boundary assertions actually joined in the evidence. This is recorded
+  grant-description content, not an effective authorization, conferment occurrence, holder, or
+  work execution.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    The record describes a particular reported admission. The reusable admission policy, its
+    application, any resulting authorization and the intended work execution remain separate.
+  world_vs_information: >-
+    Only the recorded assertions are established. Same-nonce admission/release or eviction
+    correlation does not independently prove that the ledger changed, that a holder existed
+    continuously, or that an execution started.
+  role_vs_bearer: >-
+    Holder is an operational participant role; its bearer and the authorization that could ground
+    it are distinct from this recorded grant account. No owner is derived from sanitized aliases.
+  context_reification_needed: >-
+    Keep the assertion's admission context, attributed charge/origin and reported boundaries
+    together. CQ-008/CQ-009 additionally need observed active-grant/resource context; CQ-010 needs
+    the WorkUnit/grant and pre-grant remaining-capacity joins. None is supplied by account
+    identity.
+analysis:
+  identity: >-
+    Two carriers express the same recorded grant account when they preserve the same reported
+    admission subject, admission assertion, and bounded set of attributed values and boundary
+    assertions in the same journal context. Copying that account does not create another
+    information content. A new admission assertion concerns a different reported subject; adding
+    or correcting a boundary creates a different account version. The criterion is contextual
+    assertion content, not nonce equality, origin, charge, file location, or uninterrupted
+    authorization. Nonce and recorded admission time locate and correlate assertions only.
+  rigidity: >-
+    Rigid at the selected fixed-content grain: an account remains grant-description information
+    even after a reported release, a correction elsewhere, or discovery that its claim is false.
+    Active holder is not a rigid classification of this object.
+  dependence: >-
+    Relational dependence here is on the assertion's subject binding and reporting context, not on
+    an independently established operational holder or admission authority.
+  temporality: >-
+    The information is available over its retention interval; no retention endpoint is observed.
+    Release and eviction dates are described boundaries, not terminal states of the account.
+    Copying or relocating a carrier preserves content; an added or corrected assertion yields
+    another content version.
+  category: >-
+    The evidence establishes recorded assertion content at the stated grain, supporting
+    information_object. A record can exist while the operational claim it reports is inaccurate or
+    ineffective. The relator, process or other operational readings remain named, unsupported
+    rivals rather than falsehoods.
+rival_models:
+  - label: >-
+      relator: a conferred authorization persisting between effective admission and termination
+    still_viable: true
+    rationale: >-
+      Conceded as unsupported by current evidence, not false. Journal assertions alone cannot
+      distinguish an effective holding from a reported one.
+    needed_evidence: >-
+      Observe conferment taking effect in the admission ledger, a correlated holder/capacity
+      binding between boundaries, and its actual removal at release or eviction.
+  - label: >-
+      event: the effective grant-conferment occurrence without a separately persisting
+      authorization
+    still_viable: true
+    rationale: >-
+      Still possible, but a dated admission assertion does not establish the occurrence or decide
+      whether an authorization persists afterward.
+    needed_evidence: >-
+      Observe the effective conferment and inspect subsequent authorization checks between
+      conferment and termination.
+  - label: >-
+      mode: a holder's authorization with contextual capacity relations
+    still_viable: true
+    rationale: >-
+      Retained as an alternative operational model to a separately individuated multi-participant
+      relator; the journal cannot choose between them.
+    needed_evidence: >-
+      Follow an independently identified holder and admission relation through renewal,
+      termination and re-grant, showing what the system reidentifies.
+strongest_counterexample: >-
+  A journal could retain the observed admission and release assertions even if the admission never
+  created an effective holding. That countermodel preserves this information object while
+  defeating the old relator commitment; it is not an observed failure of admission. The two
+  admission-only chains have no supplied termination. Their accounts remain valid partial
+  descriptions, but lack of an endpoint cannot establish present activity or a complete
+  concurrent-grant census. Equal origin and five-token charge across other accounts cannot merge
+  their reported admissions.
+verdict: analyzed
+needed_evidence: >-
+  Observe a single admission taking effect in the scheduler ledger, its independently identified
+  holder and capacity/origin binding across ordinary renewal, and an effective release or eviction
+  followed by a new conferment. Preserve the join from each operation to the journal assertion and
+  distinguish one continuing authorization from re-grant or replay. Include a contemporaneous
+  active-grant/resource census and pre-admission remaining-capacity observation before using the
+  account for CQ-008, CQ-009 or CQ-010.
+analysis_scope: >-
+  The recorded-value category and bounded content criterion are proposed at foundational-analysis
+  authority only. Survival of the hypothesis permits this test; it does not validate the
+  operational discriminator. Remaining operational models and named missing observations are
+  retained without asserting a class equivalence, completing a CQ, or settling broader continuity.
+evidence_refs:
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  - so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+  - so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+  - so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+  - so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+  - CQ-008
+  - CQ-009
+  - CQ-010

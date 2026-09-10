@@ -1,25 +1,18 @@
-id: fa:ov-schedule-step-alt:001
-hypothesis_ref: dh:ov-schedule-step:001
-identity_card_ref: ic:ov-schedule-step-alt:001
+id: "fa:ov-schedule-step-alt:001"
+hypothesis_ref: "dh:ov-schedule-step:001"
+identity_card_ref: "ic:ov-schedule-step-alt:001"
 tests:
   spec_vs_execution: separated
   world_vs_information: separated
-  role_vs_bearer: separated
+  role_vs_bearer: not_applicable
   context_reification_needed: false
 rival_models:
-- label: relator mediating a ScheduleProposal and a SeatRequest, with index and scope as its properties
-  still_viable: true
-- label: admission-act event / occurrence itself
-  still_viable: false
-- label: S.Class or provisional RDF node with no schedule content
-  still_viable: false
-strongest_counterexample: 'The parenthetical "v1: the admission act itself" attaches
-  to the scope tag / scheduled-unit slot, not to the step as an occurrent. Combined
-  with the deferred tail and with the proposal existing as a whole at one projection
-  instant, the event reading fails. Relator versus information object remain observationally
-  equivalent: the step both records a scheduling and is the natural reification of
-  that scheduling.'
+  - label: "Information-object component of a prescription (typed ScheduleStep) (preferred as category, identity open)"
+    still_viable: true
+  - label: "Position in an ordered prescription without a separately individuated step object"
+    still_viable: true
+  - label: "Actual execution or completed admission event"
+    still_viable: false
+strongest_counterexample: "An execution reading cannot carry the asserted distinction that only admitted actions get steps and the deferred tail never extends or renumbers that sequence (po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0; po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864; CQ-020)."
 verdict: analyzed
-needed_evidence: 'An observation that attributes a property to a step during an interval
-  independently of the proposal record (forcing a world relator), or that counts deferred-tail
-  rows as ScheduleStep individuals versus as a non-step appendix of the proposal.'
+needed_evidence: "Observationally equivalent on current evidence: individuated step object versus (proposal, stepIndex) position. Discriminator: a step subject reused across proposals, a step whose index changes while the subject persists, or a query that must mention the step individual independently of index (po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6; po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e)."

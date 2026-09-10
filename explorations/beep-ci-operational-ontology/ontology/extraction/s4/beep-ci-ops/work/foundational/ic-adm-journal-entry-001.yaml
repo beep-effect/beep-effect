@@ -1,0 +1,78 @@
+id: ic:adm-journal-entry:001
+hypothesis_ref: dh:adm-journal-entry:001
+identity:
+  supplies_identity: unresolved
+  identity_criterion: unresolved between content and assertion-token grain. A content criterion would
+    identify the same structured assertion about the same particular admission occurrence, with the same
+    claimed transition, event time, target, and reported qualifications across carrier copies. An assertion-token
+    criterion would instead track the continuity of one documentary assertion instance, allowing separate
+    instances to carry identical content. The supplied bounded event blocks establish assertions but no
+    copying, correction, or duplicate-emission behavior that decides between these criteria. Technical
+    hashes and positions locate representations rather than settle informational identity.
+  reidentification_key:
+  - Observation id plus the matching bounded event block, local nonce, and event-specific timestamp locate
+    the cited assertion. They are neither an accepted assertion identity nor an inferred record-creation
+    time.
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: One bounded claim about one particular transition unifies the entry candidate. The journal collection,
+    the whole nonce-linked history, and the extraction projection contain different units. Whether unity
+    follows content sameness or one documentary token remains open.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - 'An assertion-content information object: identical operational aboutness and the same asserted propositions
+    can be realized in several copied or serialized blocks. Copies need not create new content objects.'
+  - 'An assertion-token information object: two separate assertion instances may carry identical content,
+    while one copied token retains its documentary lineage. Independent append and revision behavior is
+    needed to individuate these tokens.'
+  - 'The operational event described by an entry as another referent of the representation. It can coexist
+    with the information object, but cannot replace it: false or replayed assertions remain information
+    even when no corresponding new event occurs.'
+  existential_dependencies:
+  - Some realization is needed for the recorded assertion. Which realization and lineage conditions individuate
+    it remain unresolved between content and token readings.
+  - Its content is about a putative admission occurrence and participants. Their actual existence or the
+    truth of the reported reason is not required for the information assertion to exist.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+- description: Two journal blocks can carry byte-identical claims about the same release because one is
+    a copy or replay; they could realize one assertion content or two distinct documentary assertion instances.
+    Conversely, a corrected reason can change the asserted content while preserving a record lineage.
+    The cited event times are not append times, and a record ordinal, nonce, hash, or capture annotation
+    does not decide which identity persists. Treating any of these entries as the operational event also
+    fails when its assertion is false.
+status: proposed
+grain: A recorded assertion about one event boundary. Content object versus documentary assertion token
+  is explicitly unresolved. It is not the recorded occurrence, a classification signature, a current holder
+  binding, a governing specification, or the file-level projection.
+metaproperty_rationale: Under either surviving informational reading the candidate is essentially an information
+  object, so that broad classification is rigid. It can cease being trusted without ceasing to be information.
+  Identity supply, identity carriage, and the precise dependence category are left open until content
+  and token identity are distinguished. Aboutness does not create existential dependence on the asserted
+  event actually occurring.
+temporality_rationale: The recorded assertion can be retained and copied after the putative event has
+  ended, so its informational persistence is interval-like. No interval endpoints for record existence
+  are supplied. Admitted, withdrawn, released, or evicted describe asserted events or their participants,
+  not terminal states of the entry. Whether a correction changes the same entry or creates new content
+  is unresolved.
+evidence_refs:
+- so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+- so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+- CQ-007
+- CQ-008
+- CQ-021
+evidence_reading: The first observation contains separately bounded matched enqueue, admission, and release
+  blocks; the second contains one ticket-eviction assertion with a stated cause. Thus one nonce chain
+  is not one entry, and semantic claim content is present regardless of independent event corroboration.
+  CQ-007, CQ-008, and CQ-021 make evidential timing and interpretation relevant but do not by themselves
+  settle an entry identity convention or warrant a new collection class.
+evidence_limits: All evidence is current-run observed journal content; no synthetic record is used. Capture
+  and security metadata, ownerRef values, record positions, and hashes are not identity criteria. Event
+  time is kept distinct from the unobserved append time.

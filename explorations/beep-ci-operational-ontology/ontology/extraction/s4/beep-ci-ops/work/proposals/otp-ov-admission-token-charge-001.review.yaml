@@ -1,0 +1,80 @@
+target: otp:ov-admission-token-charge:001
+target_sha256: b7448957287c97fb577140515c6a74de385a55e866da89e315be5100b61bd332
+chain_sha256: e3da4f338e522ec85119bc9eba6e16de8a18a3d604c17e602ebdc45d5bb492b1
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: A paired observation of one independently reidentified admission request before and after
+  a policy repricing, recording the effective policy, assessment instant, both token values, and whether
+  the charge assignment persists or is replaced. If the intended subject is only recorded charge content,
+  an observation-backed account must distinguish successive assertions from that continuing burden. A
+  subsequent grant assessment is also needed before any request/grant charge continuity can be asserted.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'admissionChargeTokens asserts parents: []; no is-a edge is proposed. Participant, component,
+    or governing-role relations supply no additional subsumption assertion to test. The exact-reuse mapping
+    retains the same IRI and asserts no new subclass edge.'
+revision_requests:
+- Use the paired assessment observation to align the term's recorded-value grain and its IdentityCard.
+  A new synthesis may retain the scalar property with an analysis of contextual charge assertions, or
+  retain a deferred burden candidate; it must not use the existing unresolved burden criterion as an accepted
+  criterion for either charge assertions or grant charges.
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  outcome: survived
+  evidence:
+  - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+  - po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8
+  - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+  - CQ-010
+  - CQ-021
+  counterexample: 'Try a DTO with a decorative weight of 5 while active tokens are 6 and capacity is 10.
+    The cited contract instead uses activeTokenTotal + weightTokens <= capacityMaxTokens: weight 5 fails
+    that comparison while weight 4 satisfies it. The emitted integer therefore records a policy quantity
+    with an admission consequence, even without an independent charge individual. This defeats the decorative-field
+    null at the recorded-value grain; neither this hypothetical arithmetic case nor the synthetic fixture
+    proves an actual admission.'
+- surface: identity
+  rule: charge-assignment-versus-record-identity
+  outcome: survived
+  evidence:
+  - po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+  - po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+  - po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305
+  - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+  counterexample: 'Three fixture requests each carry 5; equating the charges by integer value would merge
+    their distinct bearers. Now let one request be reassessed from 5 to 4 without resubmission: one persisting
+    burden, two policy assignments, and two recorded assertions have different counts. The proposal expressly
+    disclaims the first merge and carries an unresolved IdentityCard for the remaining choice, so no positive
+    sameness assertion is falsified. Its scalar definition does not by itself resolve that joined card''s
+    burden-versus-record grain; the named paired assessment observation is missing.'
+- surface: warrant
+  rule: listing-cq-warrant
+  outcome: survived
+  evidence:
+  - CQ-010
+  - CQ-021
+  - po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+  - po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8
+  counterexample: 'Replace the emitted charge by P95 duration or delete admissionChargeTokens: CQ-021
+    loses its required charge binding and CQ-010 cannot perform its grant-charge comparison. Both executable
+    queries require this property, which is exact reuse rather than an optional charge subclass. CQ-010''s
+    pre-admission grant assessment is a distinct context from the request assertion shown here; the proposal
+    explicitly preserves that distinction and does not claim the fixture answers the whole CQ.'
+rival_models_still_viable:
+- Administrative quality whose value can change while the same request persists
+- Policy-specific assignment or relational mode replaced on a new charging decision
+- Contextual information assertion with a numeric value and no separately reified charge individual
+evidence:
+- CQ-010
+- CQ-021
+- po:sha256:16fb809acb88accc8782ac305315721aa1cebc3d2027d6ff011e61530bbf534e
+- po:sha256:2e21ce839f96febdf894e032e2ca261e4c23bf370efc690bf6693c8c5ecad944
+- po:sha256:311749b614c23138639131cb71b425997e745ddd05e189c7f2891f032756d4b8
+- po:sha256:760f0329ca9cf07de6e0cee5cca9b529339ab28b7effd47602ece8c562d36215
+- po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+- po:sha256:ff30f28f0d1ca00f581157144cf6feeb9215e8249adf58e942b7989096c4f305

@@ -1,0 +1,97 @@
+id: otp:ov-projection-specification:001
+hypothesis_ref: dh:ov-projection-specification:001
+identity_card_ref: ic:ov-projection-specification:001
+foundational_status: explicitly_deferred
+term:
+  preferred_label: admission projection specification
+  local_name: AdmissionProjectionSpecification
+  proposed_iri: https://oip.law/ontology/ci-ops#AdmissionProjectionSpecification
+  owl_entity_kind: class
+definition:
+  text: An information object that states repeatable ordering and admissibility rules governing the formation
+    of an admission prescription.
+  source:
+  - CQ-020
+  - po:sha256:0e020e7ef4275a1870aa1bbe2dfd7c7dc9a43ac917734524b196108f57af6144
+  - po:sha256:d7595abca1140723e1528dde7dc55311dd8ccaf15fecf1539a16050265e0eaf2
+  - po:sha256:2cbe4a487c0ebb475da0d4b4e9833105b7c1d677e942f04484e74049b825ee53
+  - po:sha256:5fca51afd41b867323153c04a130b17cb4e394197487d89eb56a2eeb40ea42d3
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - po:sha256:a8c7221f4f2922f07fd3d1050fedcbc6619b8f517f520a04d74bcb428bd48f99
+  - po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: unresolved
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-020
+  semantic_support_for: []
+alternatives_rejected:
+- 'Execution of the projection engine: the candidate is descriptive information; its applications and
+  their compliance require separate occurrence evidence.'
+- 'Rejected in fa:ov-projection-specification:001: An occurrence of executing the projection engine. The
+  preceding rejection rationale and retained counterexample state the boundary.'
+open_issues:
+- 'Warrant justification: CQ-020 requires the governing specification for the current prescription and
+  checks its specification type. Without a distinguished governing description, a returned input record
+  or engine occurrence could be mistaken for the rules under which the sequence is prescribed.'
+- 'Identity criterion carried from ic:ov-projection-specification:001: unresolved: a repeatable specification
+  would be individuated by its governing rule content and intended version, remaining the same across
+  distinct journal inputs. An application-context record would additionally be individuated by which rule
+  application and input state it describes. The typed target and policy/journal digest carriers do not
+  decide between these criteria; digest equality or change is not by itself an identity criterion.'
+- 'Steward choice required before ratification of otp:ov-projection-specification:001: The steward must
+  choose the repeatable rule specification proposed by this definition versus the still-viable application-context
+  information record combining rules with a particular policy and journal-input binding. The current emitted
+  target may mix those grains. If it is an application context, this definition must be replaced or the
+  reusable rules and application binding separated before ratification; they must not be silently declared
+  one individual. Decide this with the proposal-to-specification binding. Still-viable models retained
+  from fa:ov-projection-specification:001: A repeatable projection rule specification whose applications
+  cite different input states; An application-context information record combining governing rules with
+  a policy and journal-prefix binding.'
+- 'Cluster dependency: otp:ov-proposal-specification-binding:001, otp:ov-schedule-proposal:001, otp:ov-origin-ordering-key:001,
+  otp:ov-admission-token-charge:001. Coordinate ratification or parking where endpoint grain, component
+  identity, or the stated warrant depends on these proposals; no dependent choice is settled by emission
+  spelling.'
+- 'Reuse search: The S5 inventory contains AdmissionPolicy and VerificationPlanSpecification but no AdmissionProjectionSpecification.
+  A charging policy or a verification work plan is not exactly a rule description for forming admission
+  prescriptions. PROV-O and P-Plan plan patterns in the scout report are broader; no exact external reuse
+  is established.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- 'Foundational deferral retained from fa:ov-projection-specification:001. Needed evidence: Observe two
+  emissions under the same governing ordering/admissibility rules with different journal prefixes, together
+  with an observation-backed account of whether their targets denote one reusable rule version or two
+  application contexts. Also observe a rule revision with unchanged input so rule identity can be distinguished
+  from input identity. The comparison must identify rule content and application binding independently
+  of digest strings.'
+- This definition states only the primary repeatable-description option. The explicitly_deferred verdict,
+  unresolved identity and rigidity, and input-context rival remain binding; the definition does not settle
+  them.
+- The policy and journal-prefix digest fields are observed operational input-binding carriers. Neither
+  their placeholder values nor equality of their strings supplies specification identity. No separate
+  digest term is proposed.
+- The contract's starvation requirement is normative description. It does not establish a deployed waiting-time
+  guarantee or turn a finite differential replay result into universal correctness.
+- 'Strongest counterexample carried from fa:ov-projection-specification:001: Hypothetical counterexample:
+  the same ordering and admissibility rules are applied to two different journal prefixes. If the specification
+  changes identity solely because journalPrefixDigest changes, input provenance is promoted into rule
+  identity. Conversely, merging all subjects with the same policy digest can collapse application-context
+  records for different inputs. Both interpretations fit the single illustrated target.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

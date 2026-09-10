@@ -2,6 +2,22 @@
 useDefault = true
 
 [[allowlists]]
+description = "Qualification runtime-key evidence stores public SHA-256 computation digests, not credentials. Restrict the exception to the three digest fields in the four reviewed receipts."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "match"
+regexes = ['''^runtimeKey(?:Digest|Value|ObservationSha256)"\s*:\s*"[0-9a-f]{64}"$''']
+paths = ['''^(?:/repo/)?goals/turborepo-task-qualification/research/(?:runtime-key-checkpoint|runtime-keyed-invalidation-observation|pilot-runtime-key-v5-stable|pilot-runtime-key-v5-canary)\.json$''']
+
+[[allowlists]]
+description = "Exact public synthetic canary used to verify cache capture rejection; never an operator credential."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^QUALIFICATION_SYNTHETIC_SECRET_629a94d2$''']
+paths = ['''^(?:/repo/)?packages/tooling/tool/cli/src/commands/Cache/Cache\.experiment\.ts$''']
+
+[[allowlists]]
 description = "Vendored subtrees (openclaw, effect) contain upstream docs and test fixtures with placeholder secrets"
 paths = [
   '''^\.repos/openclaw/.*$''',
@@ -55,6 +71,22 @@ paths = [
 
 [[rules]]
 id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "beep-ci-ops auditor run records (hypotheses, analyses, proposals, reviews, dockets, the archived dispositions index) quote validator config facts verbatim; the config_key_value predicate name trips this rule's keyword prefilter on admission journal fields already committed in the corpus pins (nonce and attemptId UUIDs, _tag=admission-<event>, <event>AtMillis epoch stamps). The records are digest-bound (review chain_sha256) and cannot be reworded. Scoped to this rule and these trees, and only to findings whose matched secret is exactly one of those field shapes; any other secret on the same line still fires, and every other detector still scans the trees."
+condition = "AND"
+regexTarget = "secret"
+paths = [
+  '''^(?:/repo/)?explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/(?:hypotheses|foundational|alternative|proposals|sittings|review-audit|denotation-batches)/[^/]+$''',
+  '''^(?:/repo/)?explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work-run3/impl-report\.md$''',
+  '''^(?:/repo/)?explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/runs/orun-[^/]+\.(?:index|manifest)\.yaml$''',
+  '''^(?:/repo/)?explorations/beep-ci-operational-ontology/ontology/extraction/s4/archives/beep-ci-ops/orun-[^/]+\.(?:observations|work)/.*$''',
+]
+regexes = [
+  '''^(?:nonce|attemptId)=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$''',
+  '''^_tag=admission-[a-z-]+$''',
+  '''^[A-Za-z]+AtMillis=[0-9]{13}$''',
+]
 
 [[rules.allowlists]]
 description = "Verified immutable Boolean-creep digest false positives; exact path and line only."

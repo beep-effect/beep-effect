@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:3579a1da6705f9faca54483a1aa157e5c334fbf6b86590dd28a9fc01e0b360a5",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/live/canonical/queue/state-0000.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 21,
+    "content_sha256": "1846fcbcd46713332fc2819207560f3ecc31ab9bcfa5375cc2e314970a68eaf0"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/live/canonical/queue/state-0000.properties",
+    "lexical_name": "blockedOnOriginAtMillis",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "blockedOnOriginAtMillis=0"
+    }
+  ],
+  "source_excerpt": "# record 0\nownerRef=204efd09411d\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-ticket/v1\nattemptId=0c03b4d0-6cc8-4896-b4f3-ba7c8bba231e\nresolvedHeadSha=ad667f57d5a9d49d9bdb206a9b4e90d839054185\ndiffFingerprint=ce78ad53cf5a13babc3179d0b9cdb5f7f43cafd08f625d14fb949e9b1276841e\nproofTier=full\nenvProfile=local\nstage=pre-push\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect5/.claude/worktrees/vigilant-khorana-0c8658\nbranch=claude/awesome-chaplygin-edaab9\ncoordinationProtocol=scheduler-origin-concurrency/v1\nenqueuedAtMillis=1788941781015\nheartbeatAtMillis=1788941946371\nblockedOnOriginAtMillis=0\nnonce=856625ef-83ed-4b05-bc15-1d3f0ea8ef8d\n",
+  "epistemic_status": "parser_derived"
+}

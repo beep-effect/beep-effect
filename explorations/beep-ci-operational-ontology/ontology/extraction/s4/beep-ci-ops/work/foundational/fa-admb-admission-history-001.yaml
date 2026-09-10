@@ -1,0 +1,93 @@
+id: fa:admb-admission-history:001
+hypothesis_ref: dh:admb-admission-history:001
+identity_card_ref: ic:admb-admission-history:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: An enduring report whose identity survives appended or corrected member assertions
+  still_viable: true
+  rationale: >-
+    The report and its successive informational states would be distinct grains; no report-maintenance
+    observation decides this.
+- label: An immutable assertion collection version identified by its associated contents and coverage
+  still_viable: true
+  rationale: >-
+    Appending a late entry creates a new version, while faithful copies preserve the version; the
+    corpus supplies no consumer or revision contract selecting this criterion.
+- label: The operational admission lifecycle described by the collection
+  still_viable: true
+  rationale: >-
+    A temporally unfolding lifecycle has request, grant and transitions as participants or parts;
+    its occurrence time is independent of the information collection's retention.
+- label: An extractor grouping with no separately addressable collection beyond the member assertions
+  still_viable: true
+  rationale: >-
+    Positive informational content does not itself establish a new aggregate referent. A consumer
+    requiring the correlated whole must still be observed.
+strongest_counterexample: >-
+  Counterfactual consistent with the observations: a consumer receives the admitted-only collection
+  for nonce 012163b8-ef66-4fb4-aba5-0d4af4072512, then later receives a release entry for that same
+  demand. Is this the same enriched history or a distinct immutable history version? Nonce equality
+  says nothing about that choice. Treating either the current partial collection as a complete lifecycle
+  or each observation span as a unique history would manufacture an identity rule.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Observe an admission-history consumer retrieving a correlated partial history, then retrieving it
+  after a late or corrected entry, together with the consumer's actual identity/version behavior and
+  a faithful-copy comparison. The observation must show whether the whole is independently addressed,
+  how entry membership and coverage are bounded, and whether augmentation preserves one report or
+  creates a new collection version. This would discriminate enduring report, immutable collection,
+  and extractor-only grouping; operational correlation evidence is separately needed before identifying
+  the information with a real lifecycle.
+referent_grain: >-
+  A correlated information collection about one submitted demand and any resulting authorization,
+  with its constituent assertions kept separate. It is neither a single journal entry, an operational
+  lifecycle, nor a request-grant continuant.
+test_rationale:
+  spec_vs_execution: >-
+    The correlated history reports particular boundaries; it is not a governing admission specification.
+    Its operational-lifecycle rival would be a dated process, still distinct from both the report
+    and any procedure that governs admission.
+  world_vs_information: >-
+    Enqueue, conferment and release are reported together for nonce 0ff912cf-d69b-4cd8-bf68-27293f6c0cce;
+    enqueue and withdrawal are reported for nonce 3234b861-792e-4cde-96b6-5ca188435021. These associated
+    contents support an informational reading without proving either lifecycle complete or operationally
+    corroborated.
+  role_vs_bearer: >-
+    The collection is neither the requester nor a grant holder. Being used as evidence can be a contingent
+    role of a report; use does not create or identify the reported demand, grant or transition.
+  context_reification_needed: >-
+    Context is needed to associate each assertion with its own subject, boundary and known coverage.
+    This does not settle whether to reify a persistent report, a fixed collection version, or only
+    the entries.
+analysis_scope: >-
+  Foundational analysis only. The survivor rule admits this hypothesis for testing; it does not ratify
+  its discriminator, identity criterion, category or occurrence truth. CQ citations identify decision
+  context, not a claim that the supplied records satisfy the query or warrant every possible reification.
+evidence_refs:
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+- so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+- so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+- so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+- so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+- CQ-008
+- CQ-009
+- CQ-010
+- CQ-021
+open_evidence_questions:
+- >-
+  The report and its successive informational states would be distinct grains; no report-maintenance
+  observation decides this.
+- >-
+  Appending a late entry creates a new version, while faithful copies preserve the version; the corpus
+  supplies no consumer or revision contract selecting this criterion.
+- >-
+  A temporally unfolding lifecycle has request, grant and transitions as participants or parts; its
+  occurrence time is independent of the information collection's retention.
+- >-
+  Positive informational content does not itself establish a new aggregate referent. A consumer requiring
+  the correlated whole must still be observed.

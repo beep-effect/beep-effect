@@ -1,0 +1,43 @@
+id: dh:att-recovery-diagnostic:001
+observation_refs:
+- so:sha256:37968f126c464470a069ac2051cb358a0a29720dd49df7256625cb4d17bfa2c6
+- so:sha256:928e7ce7acb4292bbd03703746cd347b6fd0aeeb2c144ee33188512f3ff91939
+cq_warrants:
+- CQ-007
+- CQ-013
+proposed_referent:
+  label: Recovery diagnostic and rerun timing evidence
+  description: A record attributing a detected build diagnostic and two measured recovery durations
+    to a particular lane and package task. It preserves the diagnostic label and the standalone-versus-lane-rerun
+    timing distinction for investigating delay. It is evidence about detection and recovery activity,
+    not a recovery-policy specification, an accepted failure-signature taxonomy, or a failed attempt
+    verdict. The repeated captures describe the same diagnostic evidence and must not double its attributed
+    cost.
+representation_status: information_artifact
+alternatives:
+- label: A diagnostic detection and recovery occurrence described by the record
+  representation_status: domain_referent
+  plausibility: viable
+- label: A reusable recovery policy whose name alone establishes a failure kind
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The policy string is accompanied by a detection instant, an identified build task, and
+    distinct measured standalone and lane-rerun durations. This supports a diagnostic timing artifact
+    relevant to explaining delayed certainty. The source_excerpt places it inside a successful publish
+    verdict; recovered diagnostic evidence must therefore remain distinct from a committed failed
+    attempt. No full failure signature, statistical estimate, causal attribution model, or exhaustive
+    episode decomposition is supplied. The policy label is not elevated to an obligation or kind,
+    and the measured intervals must not be blindly added to enclosing attempt or lane costs.
+  discriminator: The config_key_value facts are "policy=ts2589-no-location", "detectedAt=2026-08-08T11:43:52.465Z",
+    "laneLabel=quality:build", "taskId=@beep/box#build", "standaloneDurationMs=1902.713545", and "laneRerunDurationMs=29802.864398".
+    Their containing source_excerpt records "outcome=success". Thus the observation records a time-stamped
+    diagnostic with two concrete rerun costs despite a successful enclosing verdict. Under a mere
+    policy-name reading there would be no occurrence-specific recovery timing evidence; treating the
+    label as a failed-verdict class would also misstate the recorded outcome.
+epistemic_status: proposed
+confidence:
+  value: 0.92
+  use_for_acceptance: false

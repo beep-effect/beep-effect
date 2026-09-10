@@ -1,0 +1,67 @@
+id: "ic:admb-seat-request-alt:001"
+hypothesis_ref: "dh:admb-seat-request:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two seat requests are the same when they are the same submitted demand for
+    scheduler capacity for one work invocation: the contender that enters
+    recorded queue participation at enqueue (or is retrospectively dated by
+    enqueuedAtMillis on an admission record) and leaves at admit, withdrawal,
+    or ticket eviction. The demand is not the enqueue act, not a later grant,
+    and not the requester. so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+    records nonce=3234b861-792e-4cde-96b6-5ca188435021 as kind=merged-preview,
+    priority=publish, weightTokens=5 from admission-enqueued
+    (enqueuedAtMillis=1788927435322) to admission-withdrawn
+    (withdrawnAtMillis=1788927676757). so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+    identifies a removed contender (admission-ticket-evicted) with no enqueue
+    time, kind, priority, or charge; those attributes are not invented. Nonce
+    correlates assertions; ownerRef is never identity.
+  reidentification_key:
+    - "nonce (journal correlation only)"
+    - "enqueuedAtMillis (opening-boundary evidence when present)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One demand as a whole; kind and priority are attributes of that demand
+    (merged-preview occurs with publish priority on the 3234b861 chain), not
+    extra individuals, and not a grant.
+  dependence: relational
+ufo_analysis:
+  candidate_category: kind
+  alternatives:
+    - relator
+    - information_object
+    - event
+    - role
+  existential_dependencies:
+    - "a submitting agent/work invocation, never identified by ownerRef"
+    - "an admission contention regime (CQ-021)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "admitted (succeeded by a distinct grant; request does not become the grant)"
+    - "withdrawn"
+    - "ticket-evicted"
+counterexamples:
+  - description: >-
+      Taking nonce as identity criterion would treat a correlation key as
+      sameness; two assertions sharing a nonce are about one demand only if
+      independently the same submission, and ownerRef must not be substituted
+      (BRIEF capture-provenance ban).
+  - description: >-
+      Reading originKey on a request as active origin exclusion (CQ-009)
+      treats a demand attribute as an ActiveGrant constraint; exclusion is
+      about grants, not queued tickets.
+  - description: >-
+      Filling so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+      or so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+      with kind/priority/charge borrowed from neighboring records invents
+      CQ-021 fields the ticket-eviction-only chains do not supply.
+  - description: >-
+      Treating historical enqueue as present queue membership, or as a
+      starvation verdict, requires a declared bound and a complete snapshot
+      that these chains do not supply (CQ-023 is not warranted here).
+status: proposed

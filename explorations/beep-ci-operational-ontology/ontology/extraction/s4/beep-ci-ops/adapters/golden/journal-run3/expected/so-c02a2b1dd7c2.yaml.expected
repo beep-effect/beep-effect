@@ -1,0 +1,64 @@
+{
+  "id": "so:sha256:c02a2b1dd7c2e80b83872c396f0a8ceb642bac121e5aaedcfef77506757ff7fe",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-fleet/verdicts/a/c/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 10,
+    "content_sha256": "f3d0dfe22a9521f77cb5055896d8d72679974d9f5c21dc46e37048c04b437ed7"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/a/c/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "cachePlanTag=remote-read"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=test"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=passed-before-failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=test"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=fixture-c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v1\nrunId=fixture-c\nfailureKind=step-exit\nfailedStepId=test\nid=passed-before-failure\nstatus=passed\nid=test\nstatus=failed\ncachePlanTag=remote-read\n",
+  "epistemic_status": "parser_derived"
+}

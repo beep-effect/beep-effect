@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 82,
+    "end_line": 82
+  },
+  "quote": "`${stepSubject} ciops-prov:hasScopeTag ${turtleLiteral(step.scope)}^^xsd:string .`,",
+  "epistemic_status": "quoted_prose"
+}

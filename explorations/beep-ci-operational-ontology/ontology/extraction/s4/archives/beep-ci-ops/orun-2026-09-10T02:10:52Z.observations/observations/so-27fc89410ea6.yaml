@@ -1,0 +1,196 @@
+{
+  "id": "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic/admission/synthetic/journal.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 96,
+    "content_sha256": "a96cbe660da7c30d0954ee3fd556bb9a233ccfcd75ab0a15260ae93f0e6121e2"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-synthetic/admission/synthetic/journal.properties",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-lease-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-released"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-ticket-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1788931586674"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=04f4425f-864e-474f-b50b-fe3d30b60793"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=a2fdba81-945f-4f44-8d93-6f71f706d5cd"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=b4e72342-45a5-4a1b-95db-5ab4ef30a93f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=c2ce1552-bd71-4525-8f56-3d25f2830cfb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/synthetic-contender-a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/synthetic-contender-b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/synthetic-dead-lease"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/synthetic-dead-ticket"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<synthetic-checkout:contender-a>"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<synthetic-checkout:contender-b>"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<synthetic-checkout:dead-lease>"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<synthetic-checkout:dead-ticket>"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788931586665"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788931586705"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=1788931586728"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=1788931586729"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=full-proof"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "lastHeartbeatAtMillis=1788931586718"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=9e91a4e8-cf97-44b4-9b5c-da780e47720e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=d269a27c-6d0e-4613-8ad3-6adaa4353712"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=synthetic-dead-lease"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=synthetic-dead-ticket"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=synthetic-admission-origin"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=9ee6618545e4"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=d47f93b8a97b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=verify"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "provenance=synthetic"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=owner-dead-or-reused"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=queued-submitter-death"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=1788931586743"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1788931586715"
+    }
+  ],
+  "source_excerpt": "# provenance: synthetic\n# record 0\nownerRef=9ee6618545e4\nownerRefVariant=pid_pair\nattemptId=c2ce1552-bd71-4525-8f56-3d25f2830cfb\nkind=full-proof\npriority=verify\noriginKey=synthetic-admission-origin\ncheckoutRoot=<synthetic-checkout:contender-a>\nbranch=feat/synthetic-contender-a\nenqueuedAtMillis=1788931586665\nnonce=9e91a4e8-cf97-44b4-9b5c-da780e47720e\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=3\nprovenance=synthetic\n# record 1\nownerRef=9ee6618545e4\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=9e91a4e8-cf97-44b4-9b5c-da780e47720e\nkind=full-proof\nweightTokens=3\npriority=verify\noriginKey=synthetic-admission-origin\nenqueuedAtMillis=1788931586665\nadmittedAtMillis=1788931586674\nattemptId=c2ce1552-bd71-4525-8f56-3d25f2830cfb\nprovenance=synthetic\n# record 2\nownerRef=9ee6618545e4\nownerRefVariant=pid_pair\nattemptId=04f4425f-864e-474f-b50b-fe3d30b60793\nkind=full-proof\npriority=verify\noriginKey=synthetic-admission-origin\ncheckoutRoot=<synthetic-checkout:contender-b>\nbranch=feat/synthetic-contender-b\nenqueuedAtMillis=1788931586705\nnonce=d269a27c-6d0e-4613-8ad3-6adaa4353712\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=3\nprovenance=synthetic\n# record 3\nownerRef=9ee6618545e4\nownerRefVariant=pid_pair\nattemptId=04f4425f-864e-474f-b50b-fe3d30b60793\nkind=full-proof\npriority=verify\noriginKey=synthetic-admission-origin\ncheckoutRoot=<synthetic-checkout:contender-b>\nbranch=feat/synthetic-contender-b\nenqueuedAtMillis=1788931586705\nnonce=d269a27c-6d0e-4613-8ad3-6adaa4353712\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788931586715\nprovenance=synthetic\n# record 4\nownerRef=d47f93b8a97b\nownerRefVariant=pid_pair\ncheckoutRoot=<synthetic-checkout:dead-ticket>\nbranch=feat/synthetic-dead-ticket\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-ticket-evicted\nnonce=synthetic-dead-ticket\nattemptId=a2fdba81-945f-4f44-8d93-6f71f706d5cd\nevictedAtMillis=1788931586729\nreason=queued-submitter-death\nprovenance=synthetic\n# record 5\nownerRef=d47f93b8a97b\nownerRefVariant=pid_pair\ncheckoutRoot=<synthetic-checkout:dead-lease>\nbranch=feat/synthetic-dead-lease\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=synthetic-dead-lease\nattemptId=b4e72342-45a5-4a1b-95db-5ab4ef30a93f\nevictedAtMillis=1788931586728\nreason=owner-dead-or-reused\nlastHeartbeatAtMillis=1788931586718\nprovenance=synthetic\n# record 6\nownerRef=d47f93b8a97b\nownerRefVariant=pid_pair\ncheckoutRoot=<synthetic-checkout:contender-a>\nbranch=feat/synthetic-contender-a\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=9e91a4e8-cf97-44b4-9b5c-da780e47720e\nreleasedAtMillis=1788931586743\nattemptId=c2ce1552-bd71-4525-8f56-3d25f2830cfb\nprovenance=synthetic\n",
+  "epistemic_status": "parser_derived"
+}

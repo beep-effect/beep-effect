@@ -1,0 +1,88 @@
+{
+  "id": "so:sha256:7627bd8803b5da11524904bb2c7b2fdcd7c320ba034444204852ded9c164cfff",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 2331,
+    "end_line": 2442,
+    "content_sha256": "715d3e5d58f8d936b2009f2b02a75434a4e279a7f42ac2bc81d00b630806ee55"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/admission/canonical/journal.properties:nonce=fc9668e5-e89d-47fe-bd8f-dd3f783f28f3",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=f08a87d6-8b94-4c7e-b365-12b23733cfcc"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=chore/astra-xhigh-agent-routing"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788927168643"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=fc9668e5-e89d-47fe-bd8f-dd3f783f28f3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=471ca79587b6"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1788927391458"
+    }
+  ],
+  "source_excerpt": "# record 212\nownerRef=471ca79587b6\nownerRefVariant=pid_pair\nattemptId=f08a87d6-8b94-4c7e-b365-12b23733cfcc\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927168643\nnonce=fc9668e5-e89d-47fe-bd8f-dd3f783f28f3\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 213\nownerRef=d0ff0b242a3b\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect11\nbranch=codex/complexity-ceiling-burn-down-p0\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=baf4bcd5-e877-43fd-9d6d-8d45534b264a\nattemptId=eed0cec2-cb64-4897-986b-aa09dafee759\nevictedAtMillis=1788498598671\nreason=owner-dead-or-reused\nlastHeartbeatAtMillis=1788497734696\n# record 214\nownerRef=62572ca9a6b0\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-compile-hard-error\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-ticket-evicted\nnonce=acb0011d-82cf-4dfc-a812-72d10dbd566c\nattemptId=1f52aba4-52ea-4ae0-b737-f9ac47b43917\nevictedAtMillis=1788498598672\nreason=queued-submitter-death\n# record 215\nownerRef=0facbb429711\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect-worktrees/pr-992-closeout\nbranch=codex/evidence-loop-p1-fleet-rollout\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=ab8c8ba0-6132-4e49-9d28-74e2e1873c07\nattemptId=e86134e8-586d-4846-984f-d7862488f82d\nevictedAtMillis=1788498598670\nreason=owner-dead-or-reused\nlastHeartbeatAtMillis=1788497733794\n# record 216\nownerRef=c70847873a28\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect7\nbranch=codex/astra-agent-guidance\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=39193b80-5f90-4e70-a432-fc259b3d994c\nattemptId=e5c045e3-b151-4fab-b87e-8419d2cd98d7\nevictedAtMillis=1788920302809\nreason=owner-dead-or-reused\nlastHeartbeatAtMillis=1788919833142\n# record 217\nownerRef=23955531be3d\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect6\nbranch=chore/wire-graft-agents\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-ticket-evicted\nnonce=90006bc5-d7e0-41a4-9224-813ac343ca6c\nattemptId=bcafa1c2-8dae-4804-995f-b413d401504c\nevictedAtMillis=1788920302811\nreason=queued-submitter-death\n# record 218\nownerRef=293b21c58de5\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect\nbranch=fix/xstate-effect-diagnostics\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=9a399d1a-ddd1-4d44-b647-0518265add92\nattemptId=c76d8e55-e955-48d0-9099-0420032cbb33\nevictedAtMillis=1788920735615\nreason=owner-dead-or-reused\nlastHeartbeatAtMillis=1788920403030\n# record 219\nownerRef=231351b247ba\nownerRefVariant=pid_pair\nattemptId=19eee2ff-fe74-45f8-87e0-432fe8dfe9fd\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-findings-2026-09-08\nenqueuedAtMillis=1788927211337\nnonce=36e534bf-4ab9-4c24-811e-345a3ccf7477\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 220\nownerRef=471ca79587b6\nownerRefVariant=pid_pair\nattemptId=f08a87d6-8b94-4c7e-b365-12b23733cfcc\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927168643\nnonce=fc9668e5-e89d-47fe-bd8f-dd3f783f28f3\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788927391458\n",
+  "epistemic_status": "parser_derived"
+}

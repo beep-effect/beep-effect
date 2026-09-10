@@ -1,0 +1,80 @@
+{
+  "id": "so:sha256:e05802e29bf923f636f18180457c6517b37d09e78e9051122033c9600cf08d42",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 109,
+    "content_sha256": "0d6a4988545361d29343d6e95b493eee969c64e92851171d80cf7b17cf02692a"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/admission/canonical/journal.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=120"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=attempt-winner"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fixture>/alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=100"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=150"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "lastHeartbeatAtMillis=145"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=winner"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=fixture-owner"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=140"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=130"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=winner\nenqueuedAtMillis=100\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-winner\nownerRef=fixture-owner\n# record 1\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=loser\nenqueuedAtMillis=110\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-loser\nownerRef=fixture-owner\n# record 2\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-admitted\nnonce=winner\nadmittedAtMillis=120\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-winner\nownerRef=fixture-owner\n# record 3\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nnonce=loser\nwithdrawnAtMillis=130\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-loser\nownerRef=fixture-owner\n# record 4\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=winner\nreleasedAtMillis=140\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-winner\nownerRef=fixture-owner\n# record 5\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=dead-lease\nevictedAtMillis=150\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-dead-lease\nownerRef=fixture-owner\nlastHeartbeatAtMillis=145\n# record 6\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-ticket-evicted\nnonce=dead-ticket\nevictedAtMillis=160\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-dead-ticket\nownerRef=fixture-owner\n# record 7\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=pending\nenqueuedAtMillis=170\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-pending\nownerRef=fixture-owner\n# record 8\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=pending-again\nenqueuedAtMillis=180\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-pending-again\nownerRef=fixture-owner\n# record 9\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=release-only\nreleasedAtMillis=190\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-release-only\nownerRef=fixture-owner\n# record 10\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nnonce=reverse-order\nwithdrawnAtMillis=500\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-reverse\nownerRef=fixture-owner\n# record 11\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=reverse-order\nenqueuedAtMillis=510\ncheckoutRoot=<fixture>/alpha\nbranch=feat/alpha\nattemptId=attempt-reverse\nownerRef=fixture-owner\n",
+  "epistemic_status": "parser_derived"
+}

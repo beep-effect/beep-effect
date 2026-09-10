@@ -1,0 +1,150 @@
+id: otp:att-admission-allocation:001
+hypothesis_ref: dh:att-admission-allocation:001
+identity_card_ref: ic:att-admission-allocation:001
+foundational_status: explicitly_deferred
+term:
+  preferred_label: seat grant
+  local_name: SeatGrant
+  proposed_iri: https://oip.law/ontology/ci-ops#SeatGrant
+  owl_entity_kind: class
+definition:
+  text: >-
+    An information object recording a putative grant's admission, charge and origin context at
+    a lease-report boundary, with the associated enqueue, heartbeat and attachment assertions.
+    The two supplied records describe the same candidate allocation under matching recorded
+    admission context and different heartbeat values. They are two informational snapshots,
+    not two established capacity allocations. Copying one snapshot preserves its content;
+    changing its heartbeat gives a distinct recorded value. Their subject's effective standing and
+    continuity across release or renewed admission remain explicitly deferred; the records can
+    exist without any effective allocation.
+  source:
+  - CQ-008
+  - CQ-009
+  - CQ-010
+  - so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72
+  - so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+- from_sha256: faf65695aed53601da83c0765c89e1e18846c6905b9b3dd5989aa911c11efd6d
+  addressed:
+  - discriminator-true-of-dto
+- from_sha256: ee516320a6d2ad29fbce9ac7f9933aec38f0574fbd88771881a25f586d02de2e
+  addressed:
+  - "gate-log-1 category alignment: derive information_object and its identity account from the repaired IC/FA"
+  - "GATE OntoClean alignment: supplies identity for fixed lease snapshots; effective allocation continuity remains explicitly_deferred"
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#SeatGrant
+    compatibility: >-
+      Exact reuse of the local SeatGrant term at recorded-value grain under sitting-1 Ruling
+      2. The inventory's recorded admissionChargeTokens and literal hasOriginKey match the
+      putative grant subject and charge/origin assertions in these leases, distinct from
+      requested capacity on a SeatRequest. Nonce and recorded admission context preserve the
+      evidence association; the two report snapshots are not counted as two grants and are not
+      equated with an operational relator. The mapping retains explicitly_deferred operational
+      continuity and does not infer uninterrupted allocation, active capacity or liveness. It adds no
+      lease-record subclass and supplies no external equivalence.
+operational_warrant:
+  competency_questions:
+  - CQ-008
+  - CQ-009
+  - CQ-010
+  semantic_support_for: []
+alternatives_rejected:
+- >-
+  A still-queued request description alone cannot replace the recorded admittedAtMillis,
+  assigned charge and attachment claims. This is a difference in information content, not
+  evidence that an allocation actually became effective.
+- >-
+  The lease snapshots and attached-scope assertions are informational evidence about a
+  putative grant. Neither is an additional effective grant or a complete liveness census.
+- An admission charge is neither a physical memory measurement nor a duration prediction or hard execution
+  bound.
+open_issues:
+- >-
+  Decision warrant retained: CQ-008 and CQ-009 need the existing SeatGrant subject with
+  current active holding and origin context, and CQ-010 joins that subject to its recorded
+  charge and remaining capacity immediately before admission. This exact-reuse mapping
+  preserves the admission/charge/origin associations that can inform those decisions. The two
+  lease reports establish none of the required complete active population, effective
+  contendsFor relation, admittedBy link or pre-admission capacity. Reading both snapshots as
+  separate active grants would duplicate the candidate five-token charge.
+- >-
+  Sitting-1 Ruling 2 selects the already viable lease-information-object model in answer to
+  discriminator-true-of-dto. The continuing allocation relator and instant-indexed effective
+  admission situation are CONCEDED pending independent effective-operation evidence. STEWARD
+  CHOICE remains explicit for the alternative of one continuing lease-information object
+  with successive states. The repaired card selects fixed lease-description snapshots and
+  supplies their contextual content identity; different heartbeat assertions give distinct
+  values. The IC/FA's explicitly_deferred verdict concerns effective allocation continuity,
+  which neither matching admission fields nor the snapshot identity criterion establishes.
+- 'Deferred evidence required: observe a single admission lifecycle through initial allocation, ordinary
+  heartbeat renewal, release or eviction, and subsequent re-admission, together with the scheduler''s
+  observed rule for preserving or replacing the grant across those transitions. The trace must discriminate
+  continued institution from replay or renewed admission of an equal lease body; nonce equality alone
+  cannot do so.'
+- >-
+  Joint consideration with otp:admb-seat-grant:001 and otp:bind-admission-grant:001 is
+  required because all map to ciops:SeatGrant. Align the recorded grant subject and
+  source-account associations while preserving this chain's explicitly_deferred continuity.
+  The bounded synthetic admission-to-release example in the bind chain cannot establish an
+  unobserved release, continuity or second allocation in these observed fleet lease reports.
+- >-
+  otp:bind-grant-termination:001 depends on the chosen grant grain here and in
+  otp:bind-admission-grant:001. Any retained termination relation must distinguish a reported
+  terminal claim from effective charge removal and must honor that proposal's sitting-1
+  warrant/null disposition. These two lease records contain no release or eviction boundary to
+  join; no endpoint or execution termination may be imported into their putative grant.
+- >-
+  The recorded sameness of admission/enqueue context with two heartbeat values supports a
+  common putative grant subject. It proves neither continuous institution nor a release-free
+  interval, and support=active describes the attachment assertion only. Origin is a recorded
+  restriction context, not a grant identifier. No actual work start, execution result, owner
+  liveness or current grant state follows from the attachment assertion.
+- >-
+  Reuse search retains the local SeatGrant mapping. The scout report's generic PROV entities,
+  automation-request vocabulary and invalidation pattern do not fix this local grant-account
+  grain or its snapshot continuity. No external equivalence or inheritance edge is asserted.
+- >-
+  Nonce-chain identity provenance:
+  so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d and
+  so:sha256:430e175a6bdb8aab1de9861e04c6cb1d1c2da64029b5bbf10f3a7a74a43b7f72 both record nonce
+  012163b8-ef66-4fb4-aba5-0d4af4072512, attemptId aab20cd5-d72d-4430-b199-c8143dec079c,
+  enqueue 1788941626093, admission 1788941816511, charge 5, origin 4cc31eeb4dec and attachedAt
+  2026-09-09T08:16:56.539Z. The first has heartbeatAtMillis 1788941946764 and the second
+  1788942001857. Preserve these values within each report and correlate the subject
+  conditionally; nonce equality is neither global uniqueness nor proof that no termination
+  intervened. A changing heartbeat gives two reported values, not an independently observed
+  renewal operation.
+- >-
+  Revised information-grain discriminator: the two observed report bodies retain matching
+  admission/charge/context assertions and different heartbeat assertions. A null-world
+  serializer without capacity allocation can preserve those facts, so the operational null is
+  expressly conceded. The serializer still produces distinguishable, subject-qualified
+  admission information; only informational emptiness is rejected. Rigid information
+  classification and relational dependence concern the report's originating context and
+  intended subject, without requiring an actually admitted execution. The repaired card's
+  supplied identity applies only to fixed snapshot content; operational continuity remains deferred.
+- >-
+  Named run-4 evidence: retain the FA's lifecycle requirement of initial effective allocation,
+  ordinary renewal, release/eviction and renewed admission, with an observed scheduler rule
+  reidentifying or replacing the grant independently of nonce/body equality. Add before/after
+  charged-capacity or consuming-admission observations tied to the recorded subject, plus
+  copy/correction/replay handling that distinguishes two report versions from two effective
+  grants. No synthetic example from another chain substitutes for that evidence. All cases
+  selected by this proposal are observed lease reports, not synthetic fixtures.
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

@@ -1,0 +1,1468 @@
+{
+  "id": "so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/verdicts/beep-effect3/fix_goals-index-parity-untracked-projection-32e22df61af2/verdict.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 652,
+    "content_sha256": "058e805bf25c3f74daa16a28a5fb4afef2ec7663d25086ad9bd021d2c3eff47f"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/verdicts/beep-effect3/fix_goals-index-parity-untracked-projection-32e22df61af2/verdict.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=f343beea-8ae7-4655-9887-e8e7af3fa430"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "behindCount=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=fix/goals-index-parity-untracked-projection"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "committed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-09-09T06:02:10.825Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-09-09T07:18:50.678Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "diffFingerprint=a7c554edab1ac3e7920ab07695fb158873db52fef0dc638213702dc9ff4b82b6"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=10192.554088"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=12246.413529"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1234.341461"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1262.276846"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=12830.949442"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=137.652629"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1388839.90415"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1389.004641"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1545.936536"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=15502.764704"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1629.423663"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1644.278426"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1737.879164"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1743.932036"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1794.555198"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=183396.515529"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=1937.170524"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=19777.849787"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=20507.884866"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2055.087736"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=23.493374"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2490969.085218"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2497.103471"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=255199.428964"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=260215.575791"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2707.05889"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=275817.308579"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2984.870497"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2995.384011"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=2999.283159"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3106.491157"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3448.464947"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=358343.780724"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=368.770715"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3688.1344"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3689.345686"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3700.507671"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=3803.060866"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=38143.072796"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=4003.846658"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=4081.429953"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=4107.66513"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=427558.893359"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=4470.874224"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=4476.556648"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=4597.63602"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=471017.498357"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=4725.218848"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=5079.77749"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=514520.67805"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=5174.914743"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=5393.383032"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=539704.361699"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=55292.044588"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=5605.103942"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=592.153238"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=5927.229996"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=59445.964588"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=6173.270403"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=6393.563113"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=643666.290452"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=6648.132441"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=6691.220635"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=7046.157276"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=74249.61832"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=7443.231329"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=8722.223997"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=879.286036"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=99086.208042"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=4602023"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:13:34.980Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:13:41.224Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:13:48.835Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:13:54.911Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:13:58.771Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:14:20.962Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:14:29.740Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:14:33.915Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:14:39.337Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:14:47.658Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:14:55.704Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:15:00.043Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:15:09.980Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:15:14.207Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:15:18.380Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:15:20.933Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:15:23.410Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:15:30.930Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:15:40.068Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:20:02.822Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:29:05.320Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:29:11.524Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:29:18.393Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:30:16.110Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:33:21.973Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:41:15.434Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:41:21.033Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:47:22.000Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:54:32.702Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:54:49.727Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:55:32.763Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:55:51.761Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:56:12.282Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:56:27.787Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:56:32.516Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:56:36.223Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:56:36.610Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:56:41.085Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T06:56:47.030Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:01:02.235Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:01:05.931Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:09:40.455Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:09:46.637Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:09:58.885Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:14:34.704Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:14:38.787Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:14:42.793Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:14:48.191Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:15:26.336Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:15:29.044Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:15:36.092Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:16:35.539Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:16:40.138Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:16:41.685Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:16:42.921Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:16:44.185Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:16:46.684Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:16:53.376Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:18:32.464Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:18:35.465Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-09-09T07:18:50.678Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=publish:03-pr-provenance-stamp"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=e7b66eb31fdfd750ed7a55d702d33a838d7cafab"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=advisory:01-fallow-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=codegen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=commit:01-git-commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=commitlint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=coverage"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=desktop-ipc"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=docgen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=doctest"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=ecosystem"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow:dead-code"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=fallow:health"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:00-cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:01-pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=full:02-ci-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=labs"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=lint-policy"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:01-pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=monitor:02-pr-checks-watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=nix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=pre-push:nix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=pre-push:sast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=pre-push:secrets"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=pre-push:security"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=property"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:00-head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:01-git-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:02-pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=publish:03-pr-provenance-stamp"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:changeset-status"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:check:tsgo-smoke"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:check:tsgo-tests"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:codegen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:commitlint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:coverage"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:desktop-ipc"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:docgen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:lint-policy"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:test-integration"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=quality:test-unit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:bun-audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:changeset-graph"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:fallow-boundaries-config"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:sherif"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:syncpack"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:tsconfig-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=repo-sanity:versions"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=sast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=secrets"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=security"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=test-integration"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=test-unit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:codegen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:commitlint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:coverage"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:desktop-ipc"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:docgen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:doctest"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:ecosystem"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:fallow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:labs"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:lint-policy"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:nix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:property"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:repo-sanity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:sast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:secrets"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:security"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:test-integration"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=ci:local:test-unit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=commit:git:commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=early-publish:git:push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow-advisory-feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow:dead-code"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=fallow:health"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:cheap-gates"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:ci-parity"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=full:pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-checks:watch"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=monitor:pr-context"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=pre-push:nix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=pre-push:sast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=pre-push:secrets"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=pre-push:security"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:head-install-preflight"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:pr-create"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=publish:pr-provenance-stamp"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:changeset-status"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:check"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:check:tsgo-smoke"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:check:tsgo-tests"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:codegen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:commitlint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:coverage"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:desktop-ipc"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:docgen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:knip"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:lint-policy"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:test-integration"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=quality:test-unit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:bun-audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:changeset-graph"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:fallow-boundaries-config"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:sherif"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:syncpack"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:tsconfig-sync"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=repo-sanity:versions"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "marker=yeet-staged-only/fix_goals-index-parity-untracked-projection-32e22df61af2/2026-09-09T06:02:10.825Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mergeBase=e7b66eb31fdfd750ed7a55d702d33a838d7cafab"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=10745640"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=17660452"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=18505560"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=5068520"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=507388"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=52352"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "peakRssKb=56552"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=commit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=early-publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=feedback"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=monitor"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "proofTier=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "resolvedHeadSha=e7b66eb31fdfd750ed7a55d702d33a838d7cafab"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=fix_goals-index-parity-untracked-projection-32e22df61af2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-verdict/v2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:02:08.655Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:13:24.787Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:13:37.420Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:13:43.660Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:13:51.222Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:13:57.382Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:14:01.184Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:14:23.346Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:14:32.177Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:14:36.353Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:14:41.731Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:14:50.099Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:14:58.106Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:15:02.537Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:15:12.412Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:15:16.636Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:15:20.795Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:15:23.386Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:15:25.850Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:15:33.420Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:15:42.606Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:20:05.615Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:29:08.417Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:29:13.916Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:29:20.818Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:30:18.577Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:33:24.416Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:41:18.978Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:41:23.656Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:47:25.143Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:54:41.005Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:55:29.315Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:55:32.780Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:55:47.653Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:55:51.774Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:56:12.285Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:56:27.790Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:56:32.522Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:56:36.241Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:56:36.614Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T06:56:47.035Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:01:02.242Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:01:05.934Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:09:40.463Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:09:46.639Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:09:58.887Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:14:34.705Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:14:38.789Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:14:42.797Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:14:48.192Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:15:26.337Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:15:29.046Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:15:36.093Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:16:35.541Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:16:40.139Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:16:41.686Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:16:42.923Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:16:44.186Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:16:46.685Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:16:53.378Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T07:18:32.466Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stashSha=1479592b91c4cae81770a73c052bb79eef86f770"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=fix/goals-index-parity-untracked-projection\ncommitted=true\ncreatedAt=2026-09-09T07:18:50.678Z\nfailurePolicy=fail-fast\nhead=e7b66eb31fdfd750ed7a55d702d33a838d7cafab\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1644.278426\npeakRssKb=507388\nexitCode=0\ntier=full\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=2995.384011\npeakRssKb=5068520\nexitCode=0\ntier=full\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=early-publish\nstatus=passed\ndurationMs=12830.949442\nexitCode=0\ntier=full\nid=publish:01-git-push\nlabel=early-publish:git:push\nphase=early-publish\nstatus=passed\ndurationMs=1629.423663\npeakRssKb=52352\nexitCode=0\ntier=full\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=early-publish\nstatus=passed\nexitCode=0\ntier=full\nid=publish:03-pr-provenance-stamp\nlabel=publish:pr-provenance-stamp\nphase=early-publish\nstatus=failed\nexitCode=1\nrepairCommand=gh pr edit '<number>' --body-file '<run-artifacts>/pr-provenance-body.md'\ntier=full\nid=full:00-cheap-gates\nlabel=full:cheap-gates\nphase=full\nstatus=passed\ndurationMs=643666.290452\npeakRssKb=17660452\nexitCode=0\ntier=full\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=passed\ndurationMs=2490969.085218\npeakRssKb=18505560\nexitCode=0\ntier=full\nid=full:02-ci-parity\nlabel=full:ci-parity\nphase=full\nstatus=passed\ndurationMs=1388839.90415\npeakRssKb=10745640\nexitCode=0\ntier=full\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=passed\ndurationMs=592.153238\npeakRssKb=56552\nexitCode=0\ntier=full\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=failed\ndurationMs=879.286036\nexitCode=1\nrepairCommand=Rerun `bun run beep quality github-checks nix` and inspect the Nix error.\ntier=full\nid=fallow:audit\nlabel=fallow:audit\nphase=full\nstatus=passed\ndurationMs=10192.554088\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:13:24.787Z\nendedAt=2026-09-09T06:13:34.980Z\nid=fallow:dead-code\nlabel=fallow:dead-code\nphase=full\nstatus=passed\ndurationMs=3803.060866\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:13:37.420Z\nendedAt=2026-09-09T06:13:41.224Z\nid=pre-push:security\nlabel=pre-push:security\nphase=full\nstatus=passed\ndurationMs=5174.914743\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:13:43.660Z\nendedAt=2026-09-09T06:13:48.835Z\nid=pre-push:secrets\nlabel=pre-push:secrets\nphase=full\nstatus=passed\ndurationMs=3688.1344\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:13:51.222Z\nendedAt=2026-09-09T06:13:54.911Z\nid=quality:commitlint\nlabel=quality:commitlint\nphase=full\nstatus=passed\ndurationMs=1389.004641\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:13:57.382Z\nendedAt=2026-09-09T06:13:58.771Z\nid=quality:knip\nlabel=quality:knip\nphase=full\nstatus=passed\ndurationMs=19777.849787\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:14:01.184Z\nendedAt=2026-09-09T06:14:20.962Z\nid=pre-push:sast\nlabel=pre-push:sast\nphase=full\nstatus=passed\ndurationMs=6393.563113\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:14:23.346Z\nendedAt=2026-09-09T06:14:29.740Z\nid=quality:changeset-status\nlabel=quality:changeset-status\nphase=full\nstatus=passed\ndurationMs=1737.879164\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:14:32.177Z\nendedAt=2026-09-09T06:14:33.915Z\nid=pre-push:nix\nlabel=pre-push:nix\nphase=full\nstatus=passed\ndurationMs=2984.870497\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:14:36.353Z\nendedAt=2026-09-09T06:14:39.337Z\nid=quality:codegen\nlabel=quality:codegen\nphase=full\nstatus=passed\ndurationMs=5927.229996\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:14:41.731Z\nendedAt=2026-09-09T06:14:47.658Z\nid=repo-sanity:fallow-boundaries-config\nlabel=repo-sanity:fallow-boundaries-config\nphase=full\nstatus=passed\ndurationMs=5605.103942\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:14:50.099Z\nendedAt=2026-09-09T06:14:55.704Z\nid=repo-sanity:bun-audit\nlabel=repo-sanity:bun-audit\nphase=full\nstatus=passed\ndurationMs=1937.170524\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:14:58.106Z\nendedAt=2026-09-09T06:15:00.043Z\nid=repo-sanity:tsconfig-sync\nlabel=repo-sanity:tsconfig-sync\nphase=full\nstatus=passed\ndurationMs=7443.231329\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:15:02.537Z\nendedAt=2026-09-09T06:15:09.980Z\nid=repo-sanity:changeset-graph\nlabel=repo-sanity:changeset-graph\nphase=full\nstatus=passed\ndurationMs=1794.555198\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:15:12.412Z\nendedAt=2026-09-09T06:15:14.207Z\nid=repo-sanity:versions\nlabel=repo-sanity:versions\nphase=full\nstatus=passed\ndurationMs=1743.932036\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:15:16.636Z\nendedAt=2026-09-09T06:15:18.380Z\nid=repo-sanity:syncpack\nlabel=repo-sanity:syncpack\nphase=full\nstatus=passed\ndurationMs=137.652629\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:15:20.795Z\nendedAt=2026-09-09T06:15:20.933Z\nid=repo-sanity:sherif\nlabel=repo-sanity:sherif\nphase=full\nstatus=passed\ndurationMs=23.493374\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:15:23.386Z\nendedAt=2026-09-09T06:15:23.410Z\nid=quality:build\nlabel=quality:build\nphase=full\nstatus=passed\ndurationMs=5079.77749\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:15:25.850Z\nendedAt=2026-09-09T06:15:30.930Z\nid=quality:desktop-ipc\nlabel=quality:desktop-ipc\nphase=full\nstatus=passed\ndurationMs=6648.132441\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:15:33.420Z\nendedAt=2026-09-09T06:15:40.068Z\nid=quality:jsdoc-ratchet\nlabel=quality:jsdoc-ratchet\nphase=full\nstatus=passed\ndurationMs=260215.575791\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:15:42.606Z\nendedAt=2026-09-09T06:20:02.822Z\nid=quality:check:tsgo-tests\nlabel=quality:check:tsgo-tests\nphase=full\nstatus=passed\ndurationMs=539704.361699\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:20:05.615Z\nendedAt=2026-09-09T06:29:05.320Z\nid=quality:docgen\nlabel=quality:docgen\nphase=full\nstatus=passed\ndurationMs=3106.491157\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:29:08.417Z\nendedAt=2026-09-09T06:29:11.524Z\nid=quality:test-integration\nlabel=quality:test-integration\nphase=full\nstatus=passed\ndurationMs=4476.556648\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:29:13.916Z\nendedAt=2026-09-09T06:29:18.393Z\nid=quality:lint\nlabel=quality:lint\nphase=full\nstatus=passed\ndurationMs=55292.044588\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:29:20.818Z\nendedAt=2026-09-09T06:30:16.110Z\nid=quality:lint-policy\nlabel=quality:lint-policy\nphase=full\nstatus=passed\ndurationMs=183396.515529\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:30:18.577Z\nendedAt=2026-09-09T06:33:21.973Z\nid=quality:check\nlabel=quality:check\nphase=full\nstatus=passed\ndurationMs=471017.498357\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:33:24.416Z\nendedAt=2026-09-09T06:41:15.434Z\nid=quality:check:tsgo-smoke\nlabel=quality:check:tsgo-smoke\nphase=full\nstatus=passed\ndurationMs=2055.087736\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:41:18.978Z\nendedAt=2026-09-09T06:41:21.033Z\nid=quality:test-unit\nlabel=quality:test-unit\nphase=full\nstatus=passed\ndurationMs=358343.780724\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:41:23.656Z\nendedAt=2026-09-09T06:47:22.000Z\nid=quality:coverage\nlabel=quality:coverage\nphase=full\nstatus=passed\ndurationMs=427558.893359\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:47:25.143Z\nendedAt=2026-09-09T06:54:32.702Z\nid=fallow:health\nlabel=fallow:health\nphase=full\nstatus=passed\ndurationMs=8722.223997\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:54:41.005Z\nendedAt=2026-09-09T06:54:49.727Z\nid=commitlint\nlabel=ci:local:commitlint\nphase=full\nstatus=passed\ndurationMs=3448.464947\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:55:29.315Z\nendedAt=2026-09-09T06:55:32.763Z\nid=repo-sanity:changeset-graph\nlabel=repo-sanity:changeset-graph\nphase=full\nstatus=passed\ndurationMs=4107.66513\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:55:47.653Z\nendedAt=2026-09-09T06:55:51.761Z\nid=repo-sanity:tsconfig-sync\nlabel=repo-sanity:tsconfig-sync\nphase=full\nstatus=passed\ndurationMs=20507.884866\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:55:51.774Z\nendedAt=2026-09-09T06:56:12.282Z\nid=repo-sanity:fallow-boundaries-config\nlabel=repo-sanity:fallow-boundaries-config\nphase=full\nstatus=passed\ndurationMs=15502.764704\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:56:12.285Z\nendedAt=2026-09-09T06:56:27.787Z\nid=repo-sanity:versions\nlabel=repo-sanity:versions\nphase=full\nstatus=passed\ndurationMs=4725.218848\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:56:27.790Z\nendedAt=2026-09-09T06:56:32.516Z\nid=repo-sanity:syncpack\nlabel=repo-sanity:syncpack\nphase=full\nstatus=passed\ndurationMs=3700.507671\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:56:32.522Z\nendedAt=2026-09-09T06:56:36.223Z\nid=repo-sanity:sherif\nlabel=repo-sanity:sherif\nphase=full\nstatus=passed\ndurationMs=368.770715\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:56:36.241Z\nendedAt=2026-09-09T06:56:36.610Z\nid=repo-sanity:bun-audit\nlabel=repo-sanity:bun-audit\nphase=full\nstatus=passed\ndurationMs=4470.874224\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:56:36.614Z\nendedAt=2026-09-09T06:56:41.085Z\nid=repo-sanity\nlabel=ci:local:repo-sanity\nphase=full\nstatus=passed\ndurationMs=74249.61832\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:55:32.780Z\nendedAt=2026-09-09T06:56:47.030Z\nid=lint-policy\nlabel=ci:local:lint-policy\nphase=full\nstatus=passed\ndurationMs=255199.428964\nexitCode=0\ntier=full\nstartedAt=2026-09-09T06:56:47.035Z\nendedAt=2026-09-09T07:01:02.235Z\nid=lint\nlabel=ci:local:lint\nphase=full\nstatus=passed\ndurationMs=3689.345686\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:01:02.242Z\nendedAt=2026-09-09T07:01:05.931Z\nid=check\nlabel=ci:local:check\nphase=full\nstatus=passed\ndurationMs=514520.67805\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:01:05.934Z\nendedAt=2026-09-09T07:09:40.455Z\nid=codegen\nlabel=ci:local:codegen\nphase=full\nstatus=passed\ndurationMs=6173.270403\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:09:40.463Z\nendedAt=2026-09-09T07:09:46.637Z\nid=knip\nlabel=ci:local:knip\nphase=full\nstatus=passed\ndurationMs=12246.413529\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:09:46.639Z\nendedAt=2026-09-09T07:09:58.885Z\nid=jsdoc-ratchet\nlabel=ci:local:jsdoc-ratchet\nphase=full\nstatus=passed\ndurationMs=275817.308579\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:09:58.887Z\nendedAt=2026-09-09T07:14:34.704Z\nid=secrets\nlabel=ci:local:secrets\nphase=full\nstatus=passed\ndurationMs=4081.429953\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:14:34.705Z\nendedAt=2026-09-09T07:14:38.787Z\nid=sast\nlabel=ci:local:sast\nphase=full\nstatus=passed\ndurationMs=4003.846658\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:14:38.789Z\nendedAt=2026-09-09T07:14:42.793Z\nid=security\nlabel=ci:local:security\nphase=full\nstatus=passed\ndurationMs=5393.383032\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:14:42.797Z\nendedAt=2026-09-09T07:14:48.191Z\nid=build\nlabel=ci:local:build\nphase=full\nstatus=passed\ndurationMs=38143.072796\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:14:48.192Z\nendedAt=2026-09-09T07:15:26.336Z\nid=test-unit\nlabel=ci:local:test-unit\nphase=full\nstatus=passed\ndurationMs=2707.05889\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:15:26.337Z\nendedAt=2026-09-09T07:15:29.044Z\nid=ecosystem\nlabel=ci:local:ecosystem\nphase=full\nstatus=passed\ndurationMs=7046.157276\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:15:29.046Z\nendedAt=2026-09-09T07:15:36.092Z\nid=labs\nlabel=ci:local:labs\nphase=full\nstatus=passed\ndurationMs=59445.964588\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:15:36.093Z\nendedAt=2026-09-09T07:16:35.539Z\nid=test-integration\nlabel=ci:local:test-integration\nphase=full\nstatus=passed\ndurationMs=4597.63602\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:16:35.541Z\nendedAt=2026-09-09T07:16:40.138Z\nid=property\nlabel=ci:local:property\nphase=full\nstatus=passed\ndurationMs=1545.936536\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:16:40.139Z\nendedAt=2026-09-09T07:16:41.685Z\nid=docgen\nlabel=ci:local:docgen\nphase=full\nstatus=passed\ndurationMs=1234.341461\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:16:41.686Z\nendedAt=2026-09-09T07:16:42.921Z\nid=doctest\nlabel=ci:local:doctest\nphase=full\nstatus=passed\ndurationMs=1262.276846\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:16:42.923Z\nendedAt=2026-09-09T07:16:44.185Z\nid=coverage\nlabel=ci:local:coverage\nphase=full\nstatus=passed\ndurationMs=2497.103471\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:16:44.186Z\nendedAt=2026-09-09T07:16:46.684Z\nid=desktop-ipc\nlabel=ci:local:desktop-ipc\nphase=full\nstatus=passed\ndurationMs=6691.220635\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:16:46.685Z\nendedAt=2026-09-09T07:16:53.376Z\nid=fallow\nlabel=ci:local:fallow\nphase=full\nstatus=passed\ndurationMs=99086.208042\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:16:53.378Z\nendedAt=2026-09-09T07:18:32.464Z\nid=nix\nlabel=ci:local:nix\nphase=full\nstatus=passed\ndurationMs=2999.283159\nexitCode=0\ntier=full\nstartedAt=2026-09-09T07:18:32.466Z\nendedAt=2026-09-09T07:18:35.465Z\nmessage=yeet publish monitor phase failed.\nmode=publish\noutcome=failure\npushed=true\nrunId=fix_goals-index-parity-untracked-projection-32e22df61af2\nattemptId=f343beea-8ae7-4655-9887-e8e7af3fa430\nresolvedHeadSha=e7b66eb31fdfd750ed7a55d702d33a838d7cafab\ndiffFingerprint=a7c554edab1ac3e7920ab07695fb158873db52fef0dc638213702dc9ff4b82b6\nproofTier=full\nstartedAt=2026-09-09T06:02:08.655Z\nendedAt=2026-09-09T07:18:50.678Z\nelapsedMs=4602023\nindexPath=<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json\nbehindCount=0\nmergeBase=e7b66eb31fdfd750ed7a55d702d33a838d7cafab\ncreatedAt=2026-09-09T06:02:10.825Z\nmarker=yeet-staged-only/fix_goals-index-parity-untracked-projection-32e22df61af2/2026-09-09T06:02:10.825Z\nstashSha=1479592b91c4cae81770a73c052bb79eef86f770\nfailedStepId=publish:03-pr-provenance-stamp\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

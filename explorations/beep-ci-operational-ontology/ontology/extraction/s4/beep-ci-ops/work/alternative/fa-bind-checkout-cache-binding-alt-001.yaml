@@ -1,0 +1,50 @@
+id: "fa:bind-checkout-cache-binding-alt:001"
+hypothesis_ref: "dh:bind-checkout-cache-binding:001"
+identity_card_ref: "ic:bind-checkout-cache-binding-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Information object: the time-indexed probe record associating a checkout
+      with Git directories and observed local cache location/availability.
+      Preferred for THIS hypothesis because the observations are successful
+      probe projections (so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9
+      and so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b),
+      explicitly time-sliced (scannedAt vs binding_probe_at), and sufficient
+      to keep clone-vs-worktree cache presence distinct for CQ-015's shared-cache
+      prerequisite without claiming the world relation itself.
+    still_viable: true
+  - label: >-
+      Domain relator: the contingent operational relation 'this checkout has
+      available this local cache at t' (CQ-015 mountsCache). Still viable: the
+      probe facts are exactly what that relation would look like if recorded.
+      Observationally equivalent on current evidence until an execution's
+      skip/transfer is seen to depend on the mount independently of these files.
+    still_viable: true
+  - label: >-
+      Quality/mode of the checkout (cache-availability inhering in the checkout
+      bearer). Weaker: availability is reported at a path that differs from
+      git_common_dir, and a later probe with different presence would be a new
+      snapshot rather than a quality change of one binding record. Still viable
+      for the checkout bearer, not for this recorded-binding referent.
+    still_viable: true
+strongest_counterexample: >-
+  Collapsing the two checkouts into one cache-binding because they share
+  git_common_dir. That merge would license treating the worktree as having the
+  clone's 36399-entry local cache and would overclaim CQ-015 transferability.
+  An implementation-only reading that discards the represented binding loses
+  the same distinction.
+verdict: analyzed
+needed_evidence: >-
+  Discriminate information object from domain relator: a WorkUnitExecution
+  whose skip or remote-hit behavior tracks the mount relation after these
+  probe files are absent or stale, plus task-hash-granularity cache contents
+  and a CacheEpoch (CQ-015 notes same-epoch + shared-cache is necessary, not
+  sufficient). Discriminate from quality: the same checkout individual gaining
+  or losing local-cache availability across probes while remaining that
+  checkout, with the quality inhering rather than a new recorded association.
+  Generator-process TURBO_* flags must not be reused as per-checkout remote
+  posture (CQ-024 lives on executions, not on these snapshots).

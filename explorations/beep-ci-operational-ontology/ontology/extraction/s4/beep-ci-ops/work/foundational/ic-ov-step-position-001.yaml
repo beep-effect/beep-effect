@@ -1,0 +1,43 @@
+id: ic:ov-step-position:001
+hypothesis_ref: dh:ov-step-position:001
+referent_grain: Recorded ordinal assignment to a represented step within one fixed prescription; distinct
+  from the abstract integer shared by many assignments and from actual execution order.
+identity:
+  supplies_identity: false
+  identity_criterion: 'Proposed at order-assignment grain: sameness requires the same represented step
+    within the same prescription content occupying the same prescribed place in that order. The integer
+    represents that place under the zero-based convention. Numeric equality across different prescriptions
+    or steps is equality of values, not identity of ordinal assignments.'
+  reidentification_key:
+  - step subject and stepIndex within its containing proposal, for lookup only
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One assertion gives one contextual step its prescribed ordinal. The containing sequence supplies
+    the order against which the integer is meaningful.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a precedence relation between prescribed steps instead of explicit ordinals
+  - a scalar integer data property on contextual step components without separate ordinal-assignment individuals
+  existential_dependencies:
+  - The represented step and containing prescription sequence are constitutive semantic participants.
+  - The zero-based convention fixes how the ordinal is encoded; no actual execution is required.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: 'Hypothetical counterexample: two unrelated prescriptions each have stepIndex 0. Treating
+    the number as the identity of a position collapses their first steps. A scheduler could also execute
+    a different order, leaving the recorded prescribed ordinals unchanged; the fixture''s 0 and 1 therefore
+    do not establish observed grant chronology.'
+evidence_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020
+- po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263
+- po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7
+- CQ-020
+status: proposed

@@ -1,0 +1,31 @@
+id: dh:ov-report-capture-provenance:001
+observation_refs:
+- po:sha256:bf5bc16f05f914e33611300f1f942429268653f3a5d67ef5fe437a9a5c9f8d4f
+- po:sha256:f41f8934b51e0e14a0344efa0b46898ea051035f811e3cee5e8de69c1bf43e2a
+cq_warrants: []
+proposed_referent:
+  label: Replay report generation and capture provenance without a domain referent
+  description: The generated-report banner, producer path, frozen-input path, and content digest identify
+    how the supplied evidence was produced and which input it names. They do not establish additional
+    operational entities.
+representation_status: implementation_artifact_only
+alternatives:
+- label: Metadata for maintaining a particular evidence document
+  representation_status: information_artifact
+  plausibility: viable
+- label: A generator label or captured path promoted to operational vocabulary
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The quoted GENERATED banner and producer path describe capture provenance, and the frozen-input
+    SHA-256 identifies evidence bytes. Capture and generator metadata, source paths, and placeholder tokens
+    warrant no domain referents. The event counts can bound the report claim, but they do not transform
+    the generator or digest into an operational entity and do not establish complete request lifecycles.
+    No supplied decision question requires this capture metadata as an independent term.
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

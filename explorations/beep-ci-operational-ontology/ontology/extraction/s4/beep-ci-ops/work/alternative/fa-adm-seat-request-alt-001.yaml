@@ -1,0 +1,37 @@
+id: "fa:adm-seat-request-alt:001"
+hypothesis_ref: "dh:adm-seat-request:001"
+identity_card_ref: "ic:adm-seat-request-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Journal reconstruction of a queued ticket (information_object).
+      Observationally equivalent on current evidence: no ticket-store snapshot
+      is supplied.
+    still_viable: true
+  - label: >-
+      Event-centered account with no persisting request (only enqueue plus a
+      later end occurrence).
+    still_viable: true
+  - label: role of the requester (the requester is the role-player, not the ticket)
+    still_viable: false
+  - label: the later seat grant under the same nonce
+    still_viable: false
+  - label: currently-queued snapshot entity (ended chain = now waiting)
+    still_viable: false
+strongest_counterexample: >-
+  Merging request and grant, or answering CQ-021 from ended histories.
+  so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+  reconstructs a request from enqueue at 1788928587012 to withdrawal at
+  1788928909789 for nonce=c334ff81-360e-4683-a084-8bf4bf0ed20f, never a grant;
+  so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+  is a sparse ticket-eviction end without an observed begin (CQ-021, CQ-023).
+verdict: analyzed
+needed_evidence: >-
+  A contemporaneous ticket-store snapshot at a query instant would discriminate
+  a persisting request from a journal reconstruction and would answer CQ-021.
+  CQ-023 further needs a declared starvation bound, a snapshot instant, and any
+  HardFloorException; these reports do not supply policy or snapshot.

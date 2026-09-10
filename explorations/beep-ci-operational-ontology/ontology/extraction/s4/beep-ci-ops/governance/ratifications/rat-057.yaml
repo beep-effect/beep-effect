@@ -1,0 +1,11 @@
+id: rat:57
+proposal_ref: otp:ov-proposal-specification-binding:001
+proposal_sha256: d312687f084faf5ef233a928cb48454ccaaaefcea6a30bb5e3aabb13367769ce
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:ov-proposal-specification-binding:001 as the contextual hasProjectionSpecification
+  object property, with AdmissionProjectionSpecification's rule-versus-application identity flag retained,
+  only with joint ordering-cluster ratification.

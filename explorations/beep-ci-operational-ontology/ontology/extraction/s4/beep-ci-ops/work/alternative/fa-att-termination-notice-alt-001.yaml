@@ -1,0 +1,20 @@
+id: "fa:att-termination-notice-alt:001"
+hypothesis_ref: "dh:att-termination-notice:001"
+identity_card_ref: "ic:att-termination-notice-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Information object: synthetic attempt-terminated journal notice bounding a modeled scenario lifecycle"
+    still_viable: true
+  - label: "Event: the termination occurrence described by the notice, still confined to the synthetic scenarios"
+    still_viable: true
+  - label: "Fixture-only tag with no modeled lifecycle meaning"
+    still_viable: false
+  - label: "Production OS-kill or lease-release occurrence"
+    still_viable: false
+strongest_counterexample: "Treating either synthetic notice as production incidence or as completed work: so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98 and so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f are provenance: synthetic, carry no start/elapsed/outcome of executed work, and the queued-submitter-death reason must not count as admitted execution. The information-object and occurrence-event models remain observationally equivalent on current evidence within that synthetic bound; only the notices are observed."
+verdict: analyzed
+needed_evidence: "A non-synthetic attempt-terminated observation, a demonstrated scheduler consumption of these notices, or process-table evidence of a kill or lease release at recordedAt would discriminate notice from occurrence and synthetic lifecycle bound from production. Until then these records bound only the synthetic dead-lease and dead-ticket scenarios and must not enter CQ-007/CQ-012 production episode-time shares."

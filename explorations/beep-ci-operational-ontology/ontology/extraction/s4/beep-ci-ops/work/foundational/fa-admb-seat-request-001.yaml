@@ -1,0 +1,116 @@
+id: fa:admb-seat-request:001
+hypothesis_ref: dh:admb-seat-request:001
+identity_card_ref: ic:admb-seat-request:001
+referent_grain: >-
+  One fixed version of a recorded request account: the supplied assertion of a submitted capacity
+  demand and only its explicitly correlated queue/admission/termination reports. Historical
+  request-description content is distinct from an effective registered demand, a current
+  queue-member binding, a submission act, a requester and a grant.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    Kind, priority and requested charge are recorded attributes of a reported demand. They do not
+    identify a reusable work specification or an execution. Submission, admission and the
+    resulting grant are separate subjects.
+  world_vs_information: >-
+    Positive enqueue, withdrawal and eviction assertions establish request reporting. They
+    establish neither continuous effective waiting nor current queue membership. The operational
+    contender reading is retained as unsupported, not refuted.
+  role_vs_bearer: >-
+    The account is not the submitting process, its requester role or an actually queued demand. A
+    current queue-membership claim needs an independently observed bearer and instant; sanitized
+    owner aliases do not supply either.
+  context_reification_needed: >-
+    Preserve the subject, available requested values and each reported boundary in their own
+    context. CQ-021 requires current queued-request ownership and attributes; historical
+    correlation alone supplies neither that snapshot nor a starvation decision.
+analysis:
+  identity: >-
+    The same information object has the same reported demand subject, reporting context, and
+    bounded request-assertion content, including only the attributes and boundary assertions
+    actually present. Re-encoding or copying that account preserves its content; changing its
+    subject, adding a boundary or correcting an attributed value yields another account version.
+    Distinct reported submissions remain distinct even with equal intended work, kind, priority
+    and charge. Nonce and enqueue time support local correlation, not operational demand
+    continuity or a universal sameness rule.
+  rigidity: >-
+    Rigid for fixed request-description content. Its historical subject does not become a grant
+    merely because an admission report is later associated with it. Queued membership would be a
+    separate contingent classification of an independently established bearer.
+  dependence: >-
+    The asserted subject and reporting context bind the information; an effective
+    submitter/service relation is the unsupported operational rival, not an existential commitment
+    of this card.
+  temporality: >-
+    The account's retention lifetime differs from the queue interval it describes. Its content
+    does not unfold as a submission act. An admission, withdrawal or eviction assertion is not the
+    information object's terminal state; no retention endpoint is supplied.
+  category: >-
+    The evidence establishes recorded assertion content at the stated grain, supporting
+    information_object. A record can exist while the operational claim it reports is inaccurate or
+    ineffective. The relator, process or other operational readings remain named, unsupported
+    rivals rather than falsehoods.
+rival_models:
+  - label: >-
+      relator: a registered demand connecting a submitter, intended invocation and admission
+      service
+    still_viable: true
+    rationale: >-
+      Conceded as unsupported by current evidence, not false. The reports describe registration
+      without independently observing its effective queue participation.
+    needed_evidence: >-
+      Observe ticket registration and actual queue participation independently of journal
+      production, then its removal at admission, withdrawal or eviction.
+  - label: >-
+      event: the effective act of requesting capacity
+    still_viable: true
+    rationale: >-
+      Retained without equating an enqueue report to an observed submission act or to an enduring
+      demand.
+    needed_evidence: >-
+      Observe a submission act and subsequent continued handling of its independently identified
+      demand.
+  - label: >-
+      role: queued participation borne by an enduring demand, potentially expressed by request
+      information
+    still_viable: true
+    rationale: >-
+      The prior enduring-demand/information-content rival remains viable if a demand survives
+      withdrawal and resubmission. The selected fixed account does not decide that continuation.
+    needed_evidence: >-
+      Track the same independently identified demand through withdrawal and resubmission, with a
+      distinct second submission and a copy/replacement case for comparison.
+strongest_counterexample: >-
+  A withdrawal followed by another submission for identical work could describe two operational
+  demands or continued handling of one enduring demand. The reports alone cannot decide that
+  identity. Their distinct contextual assertions can still be retained without merging them by
+  work content or declaring nonce equality sufficient. The two ticket-eviction-only accounts lack
+  enqueue time, kind, priority and charge. Treating a historical request account as a fully
+  populated currently queued ticket would invent those values and current membership.
+verdict: analyzed
+needed_evidence: >-
+  Observe one independently identified submitted demand being registered, remaining in an actual
+  queue across two observations, and being admitted or removed. Join the effective operations to
+  the journal reports and preserve requester/handling participants independently of ownerRef
+  aliases. Include withdrawal followed by resubmission of the same intended work and a copied or
+  replaced ticket, so a continuing demand, a fresh registration and a mere representation copy can
+  be distinguished. CQ-021 additionally needs the current queue/owner observation.
+analysis_scope: >-
+  The recorded-value category and bounded content criterion are proposed at foundational-analysis
+  authority only. Survival of the hypothesis permits this test; it does not validate the
+  operational discriminator. Remaining operational models and named missing observations are
+  retained without asserting a class equivalence, completing a CQ, or settling broader continuity.
+evidence_refs:
+  - CQ-021
+  - so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+  - so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+  - so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10
+  - so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+  - so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+  - so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+  - so:sha256:c172763fdd33d19ff88f00216028de800fb8247ea143740e4f4c8f7d7957ee6b
+  - so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973

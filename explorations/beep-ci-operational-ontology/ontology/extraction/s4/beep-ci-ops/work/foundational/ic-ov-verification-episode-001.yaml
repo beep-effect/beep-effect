@@ -1,0 +1,50 @@
+id: ic:ov-verification-episode:001
+hypothesis_ref: dh:ov-verification-episode:001
+referent_grain: Candidate verification occurrence spanning an as-yet unbounded concern or history, distinguished
+  from the caller-chosen correlation description used to attach a proposal.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: 'unresolved: a verification occurrence needs observed continuity and boundaries
+    that distinguish one episode from separate verification activity, including any grouping of attempts.
+    A correlation-context information object instead has identity through its represented grouping content.
+    The non-empty caller-supplied episodeId and the typed emitted subject do not choose between these
+    criteria or establish episode sameness.'
+  reidentification_key:
+  - caller-supplied episodeId and emitted episode subject as correlation lookup carriers only
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: A verification occurrence might unite activity around one continuing verification concern; a
+    correlation record might merely group proposals. The observations do not show what starts, sustains,
+    closes, or splits that unity.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+  - 'process: continuing verification activity with multiple temporal parts'
+  - 'event: a bounded verification occurrence'
+  - 'situation: a contextual configuration of verification activity and proposals'
+  - 'information_object: a caller-chosen correlation context'
+  existential_dependencies:
+  - An occurrence model would depend on participating verification activities and their shared operational
+    concern.
+  - An information-context model depends on a represented grouping or caller correlation assignment; the
+    batch does not identify the actual activities or establish their existential dependence.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+- description: 'Hypothetical counterexample: a caller reuses one non-empty episodeId for two disconnected
+    verification histories, or supplies two ids during one continuing history. The emitter can type the
+    corresponding subjects in either case. Treating identifier equality or inequality as occurrence identity
+    therefore creates an unsupported merge or split; a type assertion does not supply start, end, or attempt
+    membership.'
+evidence_refs:
+- po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4
+- po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:793aeb58197f9924d61bfea309e8bdcf7c5a72b12d18f14a1c8aa42192631bd6
+- CQ-020
+status: proposed

@@ -1,0 +1,40 @@
+{
+  "id": "so:sha256:7d6016e9e15f859dd3351646664a0b645b4d942ceea5939989c4972a3259d647",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic/admission/synthetic/protocol.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 5,
+    "content_sha256": "1ddcac06bebf1e07087c949a9d706cde77e107d6770b01323381ba1474c3d19f"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-synthetic/admission/synthetic/protocol.properties",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "eviction=on"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "provenance=synthetic"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-protocol/v2"
+    }
+  ],
+  "source_excerpt": "# provenance: synthetic\n# record 0\nschemaVersion=yeet-admission-protocol/v2\neviction=on\nprovenance=synthetic\n",
+  "epistemic_status": "parser_derived"
+}

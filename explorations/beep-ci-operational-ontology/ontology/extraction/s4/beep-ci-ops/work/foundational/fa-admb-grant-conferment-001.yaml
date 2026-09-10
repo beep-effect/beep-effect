@@ -1,0 +1,64 @@
+id: fa:admb-grant-conferment:001
+hypothesis_ref: dh:admb-grant-conferment:001
+identity_card_ref: ic:admb-grant-conferment:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: The information assertion of admission without separately corroborated operational conferment
+  still_viable: true
+  rationale: >-
+    An assertion can be copied or fail to correspond to an effective transition. The observations
+    establish reported content, not independent operational corroboration.
+- label: The resulting grant's beginning boundary without a separately addressable conferment event
+  still_viable: true
+  rationale: >-
+    Time-qualified participant boundaries may serve the cited decisions without a separately addressable
+    event. Consumer behavior and operational transition evidence must decide that modeling choice.
+strongest_counterexample: >-
+  The same weightTokens is present as requested charge at enqueue and as reported conferred charge
+  at admission. Identifying conferment by that quantity would already confer capacity while the request
+  is still waiting. A duplicate admitted entry could also report one conferment twice, or an assertion
+  could be written without effective charge allocation. No independent active-charge trace settles
+  these possibilities.
+verdict: analyzed
+needed_evidence: ''
+referent_grain: >-
+  One occurrence conferring a particular charged authorization. It is the founding transition, not
+  the resulting persisting grant, the pre-admission request, an instantaneous holder snapshot or the
+  admission assertion.
+test_rationale:
+  spec_vs_execution: >-
+    The occurrence applies an admission mechanism to one demand; it is neither the governing capacity
+    policy nor the later execution. Repeatable admission code or rule content cannot share this dated
+    occurrence's identity.
+  world_vs_information: >-
+    Twenty-eight chains have explicit admission assertions. The records for the cited five-token and
+    three-token examples associate their charge with admittedAtMillis, but a logged admission does
+    not by itself prove capacity allocation or uninterrupted subsequent standing.
+  role_vs_bearer: >-
+    The event is neither a new role of the requester nor the holder. It establishes a distinct authorization
+    in virtue of which a participant may hold capacity; the event ends while that relation may continue.
+  context_reification_needed: >-
+    The particular target, transition type and occurrence time must remain associated within their
+    admission context. A context-free binary relation or a nonce alone would collapse repeated transitions,
+    target conditions or reports. This contextual requirement does not by itself warrant a separate
+    event term.
+analysis_scope: >-
+  Foundational analysis only. The survivor rule admits this hypothesis for testing; it does not ratify
+  its discriminator, identity criterion, category or occurrence truth. CQ citations identify decision
+  context, not a claim that the supplied records satisfy the query or warrant every possible reification.
+evidence_refs:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:7e5702e0af48bd1ca7edc2d5c6350db34d8453874a5cd4344281607977584a90
+- so:sha256:db75bb64c38cf770dac538b28e28ec5f535d00e02c35526e7d13686e68fb74cb
+- CQ-008
+- CQ-010
+open_evidence_questions:
+- >-
+  Observe the demand-to-authorization transition together with the effective active-charge change
+  independently of journal production. Observe whether a consumer addresses the transition separately
+  from the grant boundary; a pre-conferment remaining-capacity snapshot is additionally required for
+  legality.

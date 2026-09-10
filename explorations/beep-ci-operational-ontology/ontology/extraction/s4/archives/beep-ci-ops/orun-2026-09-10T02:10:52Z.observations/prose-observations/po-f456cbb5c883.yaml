@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:f456cbb5c883ae06a4246878847ea9d98832618f2e923b54164a79cd2acfe000",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 91,
+    "end_line": 91
+  },
+  "quote": "`${proposalNode}-request-${index} ciops-prov:scheduledUnitRef ${turtleLiteral(request.nonce)}^^xsd:string .`",
+  "epistemic_status": "quoted_prose"
+}

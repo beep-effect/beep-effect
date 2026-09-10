@@ -1,0 +1,65 @@
+target: otp:ov-step-request-assignment:001
+target_sha256: 23210dde3e5ecc61b30ed3855ed18adef5772b096b18e130d0d1dccd9c2c84fc
+chain_sha256: 0ecfb0ee94794c1f009764d0867fab62c5cc19f50bde4bfa8aa64d5ab2cd590c
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'schedulesSeatRequest asserts parents: []; no is-a edge is proposed. Participant, component,
+    or governing-role relations supply no additional subsumption assertion to test.'
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: uninterpreted-pointer-as-request-assignment
+  outcome: survived
+  evidence:
+  - po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a
+  - po:sha256:7f9eb7c183ed32fda7d59f429762811cda9842630765794f877ac24984cdbc6e
+  - po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f
+  - po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+  - CQ-020
+  counterexample: Keep step indexes and tags but treat the target pointer as an arbitrary work-specification
+    label. The fixture explicitly assigns each of its two instructions to a distinct request subject,
+    and the report excludes work-specification identity from journal evidence. CQ-020 reads those request
+    targets. This supports the directed assignment content while leaving actual request continuity to
+    the SeatRequest analysis.
+- surface: identity
+  rule: assignment-bearer-or-execution-collapse
+  outcome: survived
+  evidence:
+  - po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a
+  - po:sha256:7f9eb7c183ed32fda7d59f429762811cda9842630765794f877ac24984cdbc6e
+  - po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f
+  - po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+  counterexample: The same represented request can be assigned in P and Q, or two instructions can select
+    equal-looking request descriptions. Equating assignments by target alone would merge their different
+    prescriptive contexts. The card includes the step and containing prescription and declines cross-projection
+    request sameness from matching strings. Thus the relation records a choice; it identifies neither
+    a WorkUnitSpecification, an executed grant, nor an independently persisting assignment relator.
+- surface: warrant
+  rule: listing-cq-warrant
+  outcome: survived
+  evidence:
+  - CQ-020
+  - CQ-019
+  - po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f
+  counterexample: Delete schedulesSeatRequest while keeping the step's index and literal scope tag. CQ-020
+    loses the scheduled request and CQ-019's literal-tag arm loses its required request-target pattern.
+    Both cited queries actually traverse this relation. No WorkUnit target or actual execution can replace
+    the missing binding without changing the query's meaning.
+rival_models_still_viable:
+- Direct prescriptive relation to an operational request, once that request's denotation and continuity
+  are established
+- Request-valued field of a contextual ordered instruction, with no separate assignment individual
+evidence:
+- CQ-019
+- CQ-020
+- po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a
+- po:sha256:7f9eb7c183ed32fda7d59f429762811cda9842630765794f877ac24984cdbc6e
+- po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+- po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f

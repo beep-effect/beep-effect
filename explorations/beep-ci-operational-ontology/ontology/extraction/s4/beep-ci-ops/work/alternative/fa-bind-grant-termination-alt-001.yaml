@@ -1,0 +1,54 @@
+id: "fa:bind-grant-termination-alt:001"
+hypothesis_ref: "dh:bind-grant-termination:001"
+identity_card_ref: "ic:bind-grant-termination-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Event (preferred): a perdurant ending an allocation's active holding.
+      CQ-008/CQ-009 reconstructions change depending on whether the grant is
+      still carried as ActiveGrant after the recorded boundary. The synthetic
+      journal positively reports those boundaries.
+    still_viable: true
+  - label: >-
+      Two event kinds rather than one family: release versus lease-eviction
+      remain separate mechanisms (different tags, reasons, heartbeat, and
+      missing admit on the evicted lease). Observationally favored as a split
+      and still compatible with classifying both as events. A single family
+      sortal is still viable if later evidence shows one identity criterion
+      covering both mechanisms.
+    still_viable: true
+  - label: >-
+      Information object: terminal journal assertions used to reconstruct
+      active allocations. Observationally equivalent on current evidence:
+      only the synthetic journal is observed; no scheduler state independent
+      of those records.
+    still_viable: true
+  - label: >-
+      Phase change only (ActiveGrant ends without a distinct event). Weaker:
+      CQ-008 needs a dated boundary to drop a holder; the journal reifies
+      that boundary as tagged occurrences. Still viable if ActiveGrant is
+      modeled as a phase whose end is not itself an individual.
+    still_viable: true
+strongest_counterexample: >-
+  Carrying the positively admitted synthetic allocation
+  (nonce 9e91a4e8-cf97-44b4-9b5c-da780e47720e, admittedAtMillis=1788931586674)
+  as an active holder after releasedAtMillis=1788931586743, or merging that
+  release with the unrelated lease-eviction of synthetic-dead-lease. Either
+  move changes CQ-008/CQ-009 active-holder and origin-exclusion answers.
+verdict: analyzed
+needed_evidence: >-
+  Discriminate event from information object: a production scheduler that
+  stops charging capacity / applying origin exclusion at the terminal instant
+  even if the journal file is rewritten, versus a store in which deleting the
+  lease file is the termination. Discriminate family versus split: a correlated
+  admission for nonce=synthetic-dead-lease (start, charge, origin), or a
+  consumer that treats release and eviction as interchangeable holders-ended
+  signals versus distinct obligations (e.g. heartbeat/owner-death handling).
+  Do not treat reason=owner-dead-or-reused as independent proof of process
+  death. Call the journal synthetic; it bounds these terminals and does not
+  show file-deletion mechanics, signaling an execution, or a subsequent
+  admission.

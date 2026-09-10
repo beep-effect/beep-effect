@@ -1,0 +1,28 @@
+id: "ic:ov-origin-ordering-key-alt:001"
+hypothesis_ref: "dh:ov-origin-ordering-key:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "The recorded origin key is a sort-key value on a request representation. Identical literals (fixture origin-test) do not identify requests or repositories; the string is evidence of a grouping used in canonical order, never the sameness criterion of an origin kind (po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d; po:sha256:d5a14f495e7b2778abacb3727637a629965dec0f85bbefec53d76cba5a7690e3; CQ-020)."
+  reidentification_key:
+    - "ciops:hasOriginKey literal on a SeatRequest subject"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: "A single literal grouping token per request representation; not a mereological origin object."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - quality
+    - kind
+  existential_dependencies:
+    - "a SeatRequest representation that carries the key"
+    - "the canonical sort tuple (priority rank, enqueuedAtMillis, originKey, nonce)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+  - description: "Promoting origin-test to a domain repository individual, or treating repeated fixture keys as CQ-009 active-grant exclusion violations, reads identifier-as-identity and grant-state into a projection-order literal (po:sha256:d4f2e09398646bf875ee3cbeeec6471c327a8a7b9d9d82425c754dbebd84c7f9; po:sha256:fe4b4d49ef566d86584b1cea395485bf0f230233e91478c746d3a8d23208e05c; CQ-009)."
+status: proposed

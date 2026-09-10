@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:400f043b8fc7a56a37124fd8f222174217719d262ab77f462c8ad9b3cf22d38a",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-checkout-identity/fleet-snapshot.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "d5d8833d3dac8fac3a265a78da9bbda7d3cad1d66f02c55dbb603d702add9512"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-checkout-identity/fleet-snapshot.properties",
+    "lexical_name": "snapshotVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "kind=clone"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "snapshotVersion=fixture/v1"
+    }
+  ],
+  "source_excerpt": "snapshotVersion=fixture/v1\nkind=clone\n",
+  "epistemic_status": "parser_derived"
+}

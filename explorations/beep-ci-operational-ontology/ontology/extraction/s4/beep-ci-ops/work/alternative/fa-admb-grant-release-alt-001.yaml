@@ -1,0 +1,35 @@
+id: "fa:admb-grant-release-alt:001"
+hypothesis_ref: "dh:admb-grant-release:001"
+identity_card_ref: "ic:admb-grant-release-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      event: a relinquishment occurrence that ends a grant's standing as a
+      CQ-008 holder
+    still_viable: true
+  - label: >-
+      information_object: an assertion that a grant was released, distinct
+      from the occurrence (observationally equivalent on journal-only evidence)
+    still_viable: true
+  - label: >-
+      relator-boundary: the grant's released end without a separately reified
+      termination occurrence
+    still_viable: true
+strongest_counterexample: >-
+  Evidence-is-truth: keeping the admission assertion on
+  so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  while extending holding past releasedAtMillis=1788927008574 contradicts the
+  release content, but the release tag still does not prove work success,
+  failure, or voluntary intent, and does not by itself prove a lease file was
+  deleted.
+verdict: analyzed
+needed_evidence: >-
+  An independently correlated lease relinquishment and charge-removal receipt
+  would distinguish occurrence from assertion. A separately linked execution
+  verdict would be required to say what happened to the work. Event reification
+  versus grant-end-boundary remains observationally equivalent until a consumer
+  must address the termination independently of the grant individual.

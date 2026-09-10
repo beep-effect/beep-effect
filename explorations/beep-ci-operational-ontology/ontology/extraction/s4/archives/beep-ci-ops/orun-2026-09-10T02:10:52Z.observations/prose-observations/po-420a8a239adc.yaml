@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 62,
+    "end_line": 87
+  },
+  "quote": "## 3. Architecture (design order is law: schema → service → impl)\n\n### 3.1 Schemas (all `S.Class` / LiteralKit; no hand-rolled unions)\n\n- `AdmissionPolicyParams` — the seven ratified parameters + four weights +\n  priority order, decoded from `graphs/abox.ttl` (rdflib-free: a small\n  Turtle reader is NOT the job — parse via a checked extraction of the\n  known-shape file, or embed the `ABOX.yaml` decode; either way the values\n  are read from the ratified artifact bytes, never retyped by hand).\n- `PendingRequest` — the projection's request view (nonce, kind, priority,\n  weightTokens, originKey, enqueuedAtMillis) — derived from\n  `AdmissionJournalAdmitted` for replay and shaped to accept live\n  `AdmissionRequest` later.\n- `TokenLedgerState` — active grants (nonce → weight) + derived\n  `activeTokenTotal`; reconstructed from admitted/released deltas.\n- `ScheduleStep` — stepIndex, scheduled unit ref, scope tag (v1: the\n  admission act itself; the planner seam widens this in v2).\n- `ScheduleProposal` — proposal id, projection instant, ordered steps,\n  deferred tail, required episode id, and input digests (policy digest +\n  journal-prefix digest) for provenance.\n- `ProjectionInput` — the explicit policy, pending requests, token ledger,\n  projection instant, provenance digests, and required non-empty `episodeId`.\n  The caller supplies the occurrence identity; there is no singleton default.\n- `ProjectionMismatch` / typed errors — `S.TaggedError` family\n  (`CyclicPlanError` reserved for the planner seam, `PolicyDecodeError`,\n  `ReplayMismatchError`).",
+  "epistemic_status": "quoted_prose"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s7/work-s7/impl-report.md"
+  },
+  "source_span": {
+    "start_line": 113,
+    "end_line": 120
+  },
+  "quote": "- **SeatRequest / WorkUnitSpecification split.** Request nodes are typed\n  `ciops:SeatRequest` only; the double-typing collapsed two ratified\n  identity criteria. The provisional edge was renamed\n  `ciops-prov:schedulesSeatRequest` because the journal carries no\n  work-unit-specification identity — `schedulesWorkUnit` joins the same\n  run-2 finding class as `admittedBy` (unusable from journal bytes). The\n  run-2 re-proposal queue tracks the renamed edge in place of ruling 2's\n  original `schedulesWorkUnit` spelling.",
+  "epistemic_status": "quoted_prose"
+}

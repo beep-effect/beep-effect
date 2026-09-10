@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:a3b740b147b88dd94b092bee660c397cabadbbed2f35ddd14b6347c6ccb2f3fe",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/research/s7-replay-evidence.md"
+  },
+  "source_span": {
+    "start_line": 11,
+    "end_line": 13
+  },
+  "quote": "## Differential verdict\n\nPASS — all 41 admitted events matched the projection's first prescribed admission.",
+  "epistemic_status": "quoted_prose"
+}

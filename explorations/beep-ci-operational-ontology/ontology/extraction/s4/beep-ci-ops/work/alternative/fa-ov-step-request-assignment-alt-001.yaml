@@ -1,0 +1,20 @@
+id: "fa:ov-step-request-assignment-alt:001"
+hypothesis_ref: "dh:ov-step-request-assignment:001"
+identity_card_ref: "ic:ov-step-request-assignment-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "Binary prescriptive property from step to SeatRequest (preferred)"
+    still_viable: true
+  - label: "Relator of scheduling between a plan component and a domain request"
+    still_viable: true
+  - label: "Assignment to a projection-local request description only"
+    still_viable: true
+  - label: "Scheduling a reusable WorkUnitSpecification"
+    still_viable: false
+strongest_counterexample: "Erasing assignment meaning would drop CQ-020's ?req; retargeting it at a work specification would contradict the renamed schedulesSeatRequest edge and the journal limitation (po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f; po:sha256:7f9eb7c183ed32fda7d59f429762811cda9842630765794f877ac24984cdbc6e; po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4; CQ-020)."
+verdict: analyzed
+needed_evidence: "Observationally equivalent on current evidence: unreified property versus scheduling relator, and domain request versus projection-local description as target. Discriminator: a journal-backed identity correspondence for the scheduled subject, or properties of the assignment itself (po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a)."

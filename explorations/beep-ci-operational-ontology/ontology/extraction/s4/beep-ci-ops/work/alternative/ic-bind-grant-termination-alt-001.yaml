@@ -1,0 +1,64 @@
+id: "ic:bind-grant-termination-alt:001"
+hypothesis_ref: "dh:bind-grant-termination:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two grant-termination occurrences are the same individual iff they are the
+    same ending of the same allocation by the same reported mechanism at the
+    same instant. The synthetic journal
+    (corpus/run3b-synthetic/admission/synthetic/journal.properties;
+    so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f)
+    records two distinct terminals: _tag=admission-released on nonce
+    9e91a4e8-cf97-44b4-9b5c-da780e47720e at releasedAtMillis=1788931586743
+    (this nonce has a correlated admission-admitted), and
+    _tag=admission-lease-evicted on nonce=synthetic-dead-lease at
+    evictedAtMillis=1788931586728 with lastHeartbeatAtMillis=1788931586718 and
+    reason=owner-dead-or-reused (no correlated admission in this supplied
+    record). Nonce plus terminal tag plus timestamp reidentify; they are not
+    the criterion. ownerRef/ownerRefVariant remain capture sanitization.
+    Start time, charge, and origin of the evicted lease must not be copied
+    from the other nonce chain.
+  reidentification_key:
+    - "nonce 9e91a4e8-cf97-44b4-9b5c-da780e47720e + _tag=admission-released + releasedAtMillis=1788931586743"
+    - "nonce=synthetic-dead-lease + _tag=admission-lease-evicted + evictedAtMillis=1788931586728"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    Each terminal is one bounded happening. Release of the admitted synthetic
+    allocation is not the same unity as lease-eviction of synthetic-dead-lease;
+    different nonces, tags, timestamps, and presence/absence of a correlated
+    admit.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - phase
+  existential_dependencies:
+    - "the allocation whose active holding is ended (present for the released nonce; unestablished start for synthetic-dead-lease)"
+    - "for lease-eviction, a reported owner-liveness condition (reason=owner-dead-or-reused is a reported cause, not independent proof of process death)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Identify release with work completion, execution cancellation, or
+      termination of a queued request. The synthetic release carries
+      releasedAtMillis and the admitted nonce only; it does not record
+      execution finish, and request withdrawal is a different tag on a
+      different nonce (admission-withdrawn / d269a27c-6d0e-4613-8ad3-6adaa4353712).
+  - description: >-
+      Treat admission-released and admission-lease-evicted as one individual
+      or as subclasses forced by tag spelling. They differ in nonce, mechanism
+      tag, timestamp, reason/heartbeat fields, and whether an admit is
+      correlated.
+  - description: >-
+      Copy weightTokens, originKey, or admittedAtMillis from nonce
+      9e91a4e8-cf97-44b4-9b5c-da780e47720e onto nonce=synthetic-dead-lease.
+  - description: >-
+      Read ownerRef differences or provenance=synthetic as domain owner-change
+      or as a production eviction census.
+status: proposed

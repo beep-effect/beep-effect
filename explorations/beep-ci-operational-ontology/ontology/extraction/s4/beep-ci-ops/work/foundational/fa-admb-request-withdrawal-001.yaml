@@ -1,0 +1,62 @@
+id: fa:admb-request-withdrawal:001
+hypothesis_ref: dh:admb-request-withdrawal:001
+identity_card_ref: ic:admb-request-withdrawal:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: An information assertion that a demand was withdrawn
+  still_viable: true
+  rationale: >-
+    An assertion can be copied or fail to correspond to an effective transition. The observations
+    establish reported content, not independent operational corroboration.
+- label: The request's withdrawn condition or queue-participation endpoint without a distinct removal
+    event
+  still_viable: true
+  rationale: >-
+    Time-qualified participant boundaries may serve the cited decisions without a separately addressable
+    event. Consumer behavior and operational transition evidence must decide that modeling choice.
+strongest_counterexample: >-
+  Both supplied enqueue/withdrawal examples have the same work kind, priority and requested charge,
+  yet concern different demands and withdrawal boundaries. Their withdrawal entries say nothing about
+  whether a person cancelled, a process was interrupted or another cause triggered removal. Treating
+  withdrawal as voluntary cancellation would add a cause; treating the absence of an admission entry
+  as proof of an exhaustive prior history would add closure.
+verdict: analyzed
+needed_evidence: ''
+referent_grain: >-
+  One removal transition closing a particular demand's admission registration through withdrawal.
+  It is distinct from a withdrawn condition, the demand itself, a ticket eviction, a grant release
+  and the assertion of withdrawal.
+test_rationale:
+  spec_vs_execution: >-
+    Withdrawal is a particular removal occurrence, not a cancellation policy or a work-execution failure.
+    Its registering enqueue and its lasting result must not be mistaken for the duration of withdrawal.
+  world_vs_information: >-
+    Twenty-three chains contain explicit enqueue and withdrawal assertions. They report a positive
+    closing boundary, but neither their truth nor the trigger is independently established. They do
+    not provide a current queue census or a complete prior history.
+  role_vs_bearer: >-
+    The affected demand and its submitter are participants, not the removal event. A requester role
+    can cease without identifying the withdrawal with the bearer, and the event is not a phase of
+    that process.
+  context_reification_needed: >-
+    The particular target, transition type and occurrence time must remain associated within their
+    admission context. A context-free binary relation or a nonce alone would collapse repeated transitions,
+    target conditions or reports. This contextual requirement does not by itself warrant a separate
+    event term.
+analysis_scope: >-
+  Foundational analysis only. The survivor rule admits this hypothesis for testing; it does not ratify
+  its discriminator, identity criterion, category or occurrence truth. CQ citations identify decision
+  context, not a claim that the supplied records satisfy the query or warrant every possible reification.
+evidence_refs:
+- so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab
+- so:sha256:7ac3b5cb1ac099826f2b25a84c8accb975c476ddd0e528b779051cb733beb959
+- CQ-021
+open_evidence_questions:
+- >-
+  Observe a registered demand's effective removal correlated with its withdrawn entry, including the
+  operation's trigger and duplicate/retry behavior. Continued demand identity after removal would
+  discriminate an endpoint-only condition model from this registration-ending occurrence.

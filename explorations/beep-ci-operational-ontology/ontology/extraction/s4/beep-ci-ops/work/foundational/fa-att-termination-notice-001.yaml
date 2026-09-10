@@ -1,0 +1,86 @@
+id: fa:att-termination-notice:001
+hypothesis_ref: dh:att-termination-notice:001
+identity_card_ref: ic:att-termination-notice:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      The modeled attempt-termination event in each synthetic scenario, with a
+      separate information object representing the emitted notice. This does
+      not entail a corresponding production event or execution death.
+    still_viable: true
+  - label: >-
+      An assertion-content object that merges identical independent notice
+      emissions, instead of preserving emission-bound notice identity.
+    still_viable: true
+  - label: >-
+      A terminal phase of an admitted execution or an operating-system kill
+      event proven by the presence of an attempt-terminated notice.
+    still_viable: false
+strongest_counterexample: >-
+  provenance: synthetic. The queued-submitter-death record contains a terminal
+  assertion at 2026-09-09T05:26:26.731Z but supplies no admission or start of the
+  corresponding execution. It can therefore bound the modeled attempt lifecycle
+  without proving that admitted work ran, failed verification, or was killed at
+  recordedAt. Equating the notice with execution death invents those facts.
+  The lease-eviction notice at 05:26:26.737Z concerns another attempt and cannot
+  be joined as a second observation of the same termination.
+verdict: analyzed
+provenance: synthetic
+evidence_refs:
+  - so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98
+  - so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f
+  - CQ-007
+  - CQ-012
+analysis:
+  identity: >-
+    The originating notice emission and its terminal assertion about a
+    particular modeled attempt individuate the information unit. attemptId,
+    recordedAt, and reason support matching but are not demonstrated collision-
+    free identifiers. Different modeled attempts keep the supplied notices
+    distinct; the shared form and synthetic provenance supply no sameness rule.
+  rigidity: >-
+    Rigid as an emitted terminal-notice information object, regardless of
+    whether a later consumer trusts or uses it. Acceptance as boundary evidence
+    is a contingent role and does not supply the record's identity.
+  dependence: >-
+    Generic dependence on a concretization and a notice-emission context, with
+    aboutness directed to a modeled attempt and terminal boundary. This is not
+    specific existential dependence on a living submitter or real execution:
+    synthetic scenario content can exist without a corresponding production
+    event. It is not an intrinsic quality of the subject attempt.
+  temporality: >-
+    The assertion has an emission/recording boundary and persists as information
+    afterwards. The modeled attempt's boundary, actual work's termination, and
+    record retention are different intervals or instants. Missing starts and
+    admission boundaries prevent elapsed work or queue duration from being
+    computed from these notices alone.
+  category: >-
+    Information object at recorded-occurrence grain. The two records provide
+    explicit scenario terminal assertions and not merely absent finish events.
+    A modeled termination event remains a viable alternative referent, but its
+    real-world occurrence is outside what these synthetic observations establish.
+  spec_vs_execution: >-
+    The reason labels describe why the emitted notices assert termination;
+    they do not define an eviction or cancellation specification. The notice is
+    also not an execution of such a rule. No scheduler consumer behavior or
+    successful cleanup follows from the record's emission.
+  world_vs_information: >-
+    provenance: synthetic. The evidence establishes the emitted information
+    and scenario boundary assertions, not production incidence, process death,
+    capacity release, started work, a normal completion verdict, or a committed
+    verification failure. recordedAt is preserved as the recorded instant.
+  role_vs_bearer: >-
+    A modeled queued submitter and a modeled lease holder can be participants
+    in different termination scenarios. Their notices are not those participants
+    or their roles. A notice's use as lifecycle evidence is also distinct from
+    its identity as an information object.
+  context_reification: >-
+    Preserve each notice's modeled attempt, terminal reason, and recording
+    instant together, and retain the synthetic qualification on evidence use.
+    CQ-007 and CQ-012 require known boundaries and complete time decomposition;
+    neither recorded notice warrants adding admitted execution time or
+    treating unmeasured waiting time as zero.

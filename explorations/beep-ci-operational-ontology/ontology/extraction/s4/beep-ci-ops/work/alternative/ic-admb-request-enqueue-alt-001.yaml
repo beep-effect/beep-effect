@@ -1,0 +1,52 @@
+id: "ic:admb-request-enqueue-alt:001"
+hypothesis_ref: "dh:admb-request-enqueue:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two enqueue occurrences are the same when they are the same dated
+    registration of a particular request into admission contention. so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+    records admission-enqueued (enqueuedAtMillis=1788926595182) as distinct
+    from admission-admitted (admittedAtMillis=1788926595216) for
+    nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088. The occurrence is the opening
+    boundary of the request's recorded waiting segment, not the waiting
+    duration, not conferment, and not work-execution start. An admitted record
+    that merely retains enqueuedAtMillis without a separately tagged
+    admission-enqueued entry is not a separately observed enqueue occurrence.
+    ownerRef is not identity.
+  reidentification_key:
+    - "enqueuedAtMillis (boundary evidence)"
+    - "nonce (chain correlation only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "one atomic dated queue-registration transition"
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - kind
+    - phase
+  existential_dependencies:
+    - "the seat request being registered (CQ-021)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "completed (the registration has occurred)"
+counterexamples:
+  - description: >-
+      Treating conferment as enqueue fails on the 411b3ba7 pair of tags and
+      timestamps; po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+      treats the open interval between those instants as pending, not granted.
+  - description: >-
+      Counting an admission-admitted record's retained enqueuedAtMillis as a
+      separately observed enqueue occurrence would mint events the tagged
+      enqueue entry did not supply (the hypothesis's five such chains).
+  - description: >-
+      Ticket-eviction-only records so:sha256:37556df811790ceed8c174c904a5bd979cf31fca012c98885bf9c56bd2408e06
+      and so:sha256:f364ad47c5c000ec5a00d9b4403a8fd063bf93b1ff867c9235994cbef982b298
+      provide no opening boundary; inventing enqueue from neighbors is
+      identifier-is-identity adjacent error.
+status: proposed

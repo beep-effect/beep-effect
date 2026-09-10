@@ -1,0 +1,85 @@
+id: otp:ov-schedule-step:001
+hypothesis_ref: dh:ov-schedule-step:001
+identity_card_ref: ic:ov-schedule-step:001
+foundational_status: analyzed
+term:
+  preferred_label: schedule step
+  local_name: ScheduleStep
+  proposed_iri: https://oip.law/ontology/ci-ops#ScheduleStep
+  owl_entity_kind: class
+definition:
+  text: An information component that specifies one admission instruction at a particular ordered place
+    in one fixed schedule prescription, combining a represented request assignment with a scope annotation.
+  source:
+  - po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0
+  - po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e
+  - po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6
+  - po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+foundational:
+  ufo_category: information_object
+  gufo_alignment: unresolved
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions: []
+  semantic_support_for:
+  - otp:ov-step-position:001
+  - otp:ov-step-request-assignment:001
+  - otp:ov-step-scope-tag:001
+  - otp:ov-proposal-step-membership:001
+alternatives_rejected:
+- 'Actual execution or completed admission event: the fixture and emitter describe prescription components
+  and supply no realization event.'
+- 'Rejected in fa:ov-schedule-step:001: Actual execution or completed admission event. The preceding rejection
+  rationale and retained counterexample state the boundary.'
+open_issues:
+- 'Warrant justification: The named decision properties require one common contextual component to bind
+  ordinal, scheduled request, scope tag, and containing proposal without cross-proposal joins. This class
+  supplies that component interpretation and its unity constraint. CQ-020 does not query a ScheduleStep
+  type assertion, so its required_classes listing is not used as a direct decision warrant for this class.'
+- 'Identity criterion carried from ic:ov-schedule-step:001: Proposed at immutable-component grain: the
+  same step is the same constitutive instruction in the same containing prescription content, occupying
+  the same place in its prescribed order with the same request assignment and scope content. A corresponding
+  instruction in a different prescription is a different contextual component even when it targets the
+  same request. The source step subject and integer index only help locate it.'
+- 'Steward choice required before ratification of otp:ov-schedule-step:001: The steward must choose the
+  immutable component class proposed here, a contextual sequence tuple with no separately reified component,
+  or an editable instruction that survives movement between plan revisions. A tuple choice changes the
+  representation of all four decision properties this class serves; an editable-instruction choice requires
+  new continuity evidence and revised component identity. Ratify or park that connected choice together.
+  Still-viable models retained from fa:ov-schedule-step:001: Contextual sequence position or tuple without
+  a separately reified component object; Persistent editable instruction whose identity survives relocation
+  between plan revisions.'
+- 'Cluster dependency: otp:ov-schedule-proposal:001, otp:ov-proposal-step-membership:001, otp:ov-step-position:001,
+  otp:ov-step-request-assignment:001, otp:ov-step-scope-tag:001, otp:ov-seat-request:001. Coordinate ratification
+  or parking where endpoint grain, component identity, or the stated warrant depends on these proposals;
+  no dependent choice is settled by emission spelling.'
+- 'Reuse search: The S5 inventory has no ScheduleStep term. The scout report identifies P-Plan step and
+  plan-part patterns, but does not establish exact identity with an immutable admission-prescription component.
+  No external equivalence, import, or parent edge is proposed.'
+- 'Evidence boundary: the concrete emission-v2 instances cited here are synthetic. The quoted emitter
+  sites show represented content, and the cited S7 prose describes its contract. They do not establish
+  that the example requests, selections, steps, or admissions occurred in the live scheduler.'
+- Only prescribed admitted choices constitute steps. A deferred request does not extend or renumber the
+  zero-based instruction sequence, and a matching request or ordinal in another proposal does not identify
+  the same component.
+- 'Strongest counterexample carried from fa:ov-schedule-step:001: Hypothetical counterexample: the same
+  request is first in one proposal and second in a later proposal after priorities change. Identity by
+  request alone merges two different contextual instructions; identity by the raw number zero merges first
+  steps from unrelated proposals. Neither a type assertion nor a step-0 suffix establishes the same execution
+  occurrence.'
+revision_requests: []
+review:
+  foundational_agent: pending
+  adversarial_agent: pending
+  steward: pending
+status: proposed

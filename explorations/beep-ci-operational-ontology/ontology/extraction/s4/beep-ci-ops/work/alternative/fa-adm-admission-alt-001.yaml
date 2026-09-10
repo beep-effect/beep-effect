@@ -1,0 +1,33 @@
+id: "fa:adm-admission-alt:001"
+hypothesis_ref: "dh:adm-admission:001"
+identity_card_ref: "ic:adm-admission-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      Dated journal assertion that admission was granted (information_object).
+      Observationally equivalent on current evidence: every cited fact is a
+      journal properties block, not an independent lease-store or scheduler act.
+    still_viable: true
+  - label: >-
+      Grant-begin temporal boundary without a separately reified occurrence
+      (fold admittedAtMillis into the seat grant).
+    still_viable: true
+  - label: implementation or serialization artifact only
+    still_viable: false
+strongest_counterexample: >-
+  Treating the admission report as present holder activity, or as the grant's
+  whole duration. so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6
+  pairs a distinct enqueue block, admit block, and later release block for
+  nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088; so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17
+  reports admission for nonce=012163b8-ef66-4fb4-aba5-0d4af4072512 with no
+  terminal, which cannot answer CQ-008.
+verdict: analyzed
+needed_evidence: >-
+  A time-aligned observation of ticket deletion plus lease creation at
+  admittedAtMillis, independent of the journal append, would discriminate the
+  granting occurrence from its journal account. Remaining pre-admission
+  capacity (CQ-010) is not supplied by these reports alone.

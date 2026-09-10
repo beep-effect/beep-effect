@@ -1,0 +1,29 @@
+id: "ic:ov-verification-episode-alt:001"
+hypothesis_ref: "dh:ov-verification-episode:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "unresolved: caller-supplied occurrence identity (non-empty episodeId, no singleton default) without temporal boundaries, attempt membership, or sameness conditions beyond the typed episode subject. The fixture IRI is a technical key, not the criterion (po:sha256:12f6a94e569b6eb3233e6561f4813f1adf0323d5d48aec26096316c5d0f3b5f4; po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3; po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f; CQ-020)"
+  reidentification_key:
+    - "rdf:type ciops-prov:VerificationEpisode subject"
+    - "caller-supplied episodeId on ProjectionInput"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: unresolved
+  unity: "unresolved: episode grain versus attempt grain; no attempt-membership or interval bounds observed in this batch"
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - situation
+  existential_dependencies:
+    - "a caller who supplies non-empty episode identity (contract; no singleton default)"
+    - "the schedule proposal for which the episode is occurrence context"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Inferring KPI-ready start/end times or attempt membership from fixture typing, or treating the episode as a singleton default of the projection engine, contradicts the required caller-supplied identity and the absence of timing data (po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05; po:sha256:25ea7f9c17a93501c966554db90ec78cde44eebd8ea9084f831f9cd2d97d96b3; CQ-007)."
+status: proposed

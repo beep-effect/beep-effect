@@ -1,0 +1,35 @@
+id: "fa:admb-ticket-eviction-alt:001"
+hypothesis_ref: "dh:admb-ticket-eviction:001"
+identity_card_ref: "ic:admb-ticket-eviction-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      event: ticket-specific removal of a queued contender, distinct from
+      withdrawal and from lease eviction
+    still_viable: true
+  - label: >-
+      information_object: a record asserting ticket eviction and its
+      diagnostic reason (observationally equivalent on journal-only evidence)
+    still_viable: true
+  - label: >-
+      kind/phase: the affected request's terminal queue condition without a
+      separately reified eviction occurrence
+    still_viable: true
+strongest_counterexample: >-
+  Relator collapse / target mix-up: reading these two chains as lease
+  termination would revoke a charge CQ-008/CQ-009 never saw granted. The
+  ticket target, not an inferred empty queue and not ownerRef, distinguishes
+  the claim from lease eviction.
+verdict: analyzed
+needed_evidence: >-
+  An independently correlated queued-ticket deletion or reaper receipt would
+  discriminate actual removal from an assertion. An observed process-liveness
+  check would be required to assess queued-submitter-death; that is a separate
+  question from the removal kind. A lease-deletion trace would support a
+  different target kind and must not silently convert this record into lease
+  eviction. Event versus terminal-condition remains observationally equivalent
+  until a consumer must address the eviction independently of the request.

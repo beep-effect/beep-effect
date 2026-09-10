@@ -1,0 +1,108 @@
+{
+  "id": "so:sha256:3614eaf94c332c102fe2fe71112d59f710f5f4b0d2a2d2c6cb4e4bdee2c08619",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 3605,
+    "end_line": 3683,
+    "content_sha256": "e5a851045730786962a2ea1e160665805440d72cb5c63511f400571df6c94c0e"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/journal.properties:nonce=31f686fb-d951-4f9f-8860-8ccbf161f7dd",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-released"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1788939548690"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=b0b64c46-8e02-4547-b670-47fa8e689c17"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/inline-schema-packet-closeout"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect13"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788939548677"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "memoryPeakBytes=19802030080"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=31f686fb-d951-4f9f-8860-8ccbf161f7dd"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=c7015e24974d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=e65779a4b7f8"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=1788940086049"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 317\nownerRef=c7015e24974d\nownerRefVariant=pid_pair\nattemptId=b0b64c46-8e02-4547-b670-47fa8e689c17\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-packet-closeout\nenqueuedAtMillis=1788939548677\nnonce=31f686fb-d951-4f9f-8860-8ccbf161f7dd\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 318\nownerRef=c7015e24974d\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=31f686fb-d951-4f9f-8860-8ccbf161f7dd\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788939548677\nadmittedAtMillis=1788939548690\nattemptId=b0b64c46-8e02-4547-b670-47fa8e689c17\n# record 319\nownerRef=1a7f2d41e184\nownerRefVariant=pid_pair\nattemptId=e5e0d681-3a16-4102-9cd1-c23ac0028ccb\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/graft-recovery-runbook\nbranch=codex/graft-recovery-runbook\nenqueuedAtMillis=1788939767138\nnonce=a8e2177c-2e80-4b65-8974-d48a78db3476\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 320\nownerRef=1a7f2d41e184\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=a8e2177c-2e80-4b65-8974-d48a78db3476\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788939767138\nadmittedAtMillis=1788939767153\nattemptId=e5e0d681-3a16-4102-9cd1-c23ac0028ccb\n# record 321\nownerRef=8c7cefd3aa92\nownerRefVariant=pid_pair\nattemptId=3f8f2dac-7c2a-496d-ba65-5ed1d1f10009\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect5/.claude/worktrees/unruffled-hodgkin-8194a8\nbranch=claude/festive-carson-fc5979\nenqueuedAtMillis=1788939873732\nnonce=d2cf1953-f12e-4851-b3a4-f5f287bf35c4\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 322\nownerRef=e65779a4b7f8\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-packet-closeout\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=31f686fb-d951-4f9f-8860-8ccbf161f7dd\nreleasedAtMillis=1788940086049\nmemoryPeakBytes=19802030080\nattemptId=b0b64c46-8e02-4547-b670-47fa8e689c17\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,28 @@
+id: "ic:ov-step-request-assignment-alt:001"
+hypothesis_ref: "dh:ov-step-request-assignment:001"
+identity:
+  supplies_identity: false
+  identity_criterion: "The assignment is the same recorded prescription when the same step subject schedulesSeatRequest the same request subject. It points at request identity only at emission precision; it is not assignment of a reusable work-unit specification (po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f; po:sha256:7f9eb7c183ed32fda7d59f429762811cda9842630765794f877ac24984cdbc6e; po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4; CQ-020)."
+  reidentification_key:
+    - "ciops-prov:schedulesSeatRequest edge from step to request"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: "One assignment per observed step (step-0→request-0, step-1→request-1); no further properties of the assignment observed."
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - relator
+    - information_object
+  existential_dependencies:
+    - "a prescribed ScheduleStep"
+    - "a SeatRequest (domain ticket or projection-local description) as target"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Reinterpreting schedulesSeatRequest as schedulesWorkUnit, or as an actual grant event, contradicts the quoted target limitation that the journal carries no work-unit-specification identity (po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a; po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4)."
+status: proposed

@@ -1,0 +1,96 @@
+target: otp:admb-seat-grant:001
+target_sha256: 367fc9670007fb173bb1d31e604cdfe0e9e950cd93f27610f26b3eac381a6ab4
+chain_sha256: a7d647084f1d83df2e7289ee55bbf37e97c21f4eaf49879195cdddbd0db3eea7
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: parents is empty. The SeatGrant exact-reuse mapping asserts no subsumption. There is
+    no proposed edge to a holder role, admission occurrence, information bearer or execution; no
+    valid subsumption relation is required by this revision.
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  counterexample: 'Replay the admitted/released assertions for nonce 411b3ba7 without conferring
+    any capacity. This still defeats the original DH''s operational discriminator, and the revision
+    expressly concedes that reading. Under sitting-1 Ruling 2 the selected referent is the grant
+    account with its associated claims: the replay still contains a five-token admission claim dated
+    1788926595216 and its own release claim dated 1788927008574. It therefore preserves the selected
+    informational content even if the holding never existed. The revised definition, reuse compatibility
+    and operational-evidence deferral answer the landed rule by recasting, rather than claiming that
+    the old assertion became an effective allocation observation. The revision_log names the failed
+    r1 digest and this rule.'
+  outcome: survived
+  evidence:
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  - CQ-008
+  - CQ-010
+- surface: identity
+  rule: identifier-is-identity
+  counterexample: Compare a faithful copy of the 411b3ba7 account with the separate 0ff912cf account,
+    which also reports a five-token charge and the same origin. Origin/charge equality would merge
+    them; capture-local owner aliases could split the copies. The revised criterion instead selects
+    originating account plus asserted content and preserves the associated boundaries. Neither nonce
+    nor source ordinal supplies global identity. Correction changes the selected content version.
+    The IC's authorization-continuity criterion is explicitly retained only as the conceded operational
+    model; it is not silently used as informational sameness. Independent equal-content accounts
+    remain a named steward choice with copy/correction evidence outstanding.
+  outcome: survived
+  evidence:
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- surface: identity
+  rule: recorded-standing-versus-current-holding
+  counterexample: Treat the two admission-only histories as currently active grants, or let the grant
+    account cease to be information when its reported release occurs. Neither follows from the observations.
+    The revision keeps absent endpoints unknown and permits account content to outlive, or misdescribe,
+    the intended holding. Its rigid classification concerns that information unit; relational dependence
+    concerns its originating assertion context and intended subject, without requiring a live operational
+    holder. The retained account is distinct from both an active-at-instant classification and the
+    physical journal token.
+  outcome: survived
+  evidence:
+  - so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+  - so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - CQ-008
+  - CQ-009
+- surface: warrant
+  rule: exact-reuse-decision-warrant
+  counterexample: Replace the grant subject by a queued demand or by an unqualified five-token literal.
+    CQ-008 and CQ-009 then lose their typed SeatGrant/ActiveGrant subjects and origin comparison,
+    and CQ-010 loses the subject that joins admittedBy to charge and pre-admission capacity. The
+    permitted S5 inventory already contains SeatGrant with recorded admissionChargeTokens and literal
+    hasOriginKey; this is exact reuse, not an optional new subclass. The revised mapping supplies
+    only the record-backed account associations. It expressly withholds current ActiveGrant, resource/admittedBy
+    links and pre-admission capacity where absent, so historical reports do not substitute for the
+    queries' evaluation population.
+  outcome: survived
+  evidence:
+  - so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  - so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+  - CQ-008
+  - CQ-009
+  - CQ-010
+rival_models_still_viable:
+- Originating grant account with fixed asserted content versus content-only identity across independent
+  equal-content accounts; the proposal names the copy, independent emission and correction trace
+  that would discriminate them.
+- Operational authorization relator, holder authorization mode, holding situation and conferment/termination
+  models remain conceded pending the named effective-capacity and continuity trace; this PASS accepts
+  none of those operational identities.
+evidence:
+- so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+- so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732
+- CQ-008
+- CQ-010
+- so:sha256:2d8248aa5f752505a2e05771121da52124703fc12f9b5e7e93f7b0b9c19d31f0
+- so:sha256:c3e1661cf03110ab9ce93f8d312819fd42aaffb02151349fd866ff276585f51a
+- CQ-009

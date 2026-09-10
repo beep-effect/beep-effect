@@ -1,0 +1,36 @@
+id: dh:ov-step-request-assignment:001
+observation_refs:
+- po:sha256:1ff63941e76bc9a539ee52972344b2f05135c4fe2121f4f7d4bc6508cdb8805a
+- po:sha256:7f9eb7c183ed32fda7d59f429762811cda9842630765794f877ac24984cdbc6e
+- po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4
+- po:sha256:cd67bb659368f2dec0b98390be1ed591ffc116f2c9233962bfb97ac28365b66f
+cq_warrants:
+- CQ-020
+proposed_referent:
+  label: Recorded assignment of an admission request to a step
+  description: The assertion identifying which represented admission request a prescribed step schedules.
+    It points to request identity at the precision supported by the emission and quoted journal limitation.
+representation_status: information_artifact
+alternatives:
+- label: Prescriptive relation from a plan component to an actual admission request
+  representation_status: domain_referent
+  plausibility: viable
+- label: Scheduling a reusable work-unit specification
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The fixture assigns its first two steps to distinct request subjects and the emitter constructs
+    that request-target edge. The quoted implementation report explicitly limits the target to SeatRequest
+    because the journal lacks work-unit-specification identity. This supports assignment content while
+    preserving uncertainty about how a projection-local request description connects to a real request
+    occurrence.
+  discriminator: The emitter states "${stepSubject} ciops-prov:schedulesSeatRequest ${proposalNode}-request-${index}
+    ."; the fixture links step-0 to request-0 and step-1 to request-1 on that predicate. The report says
+    "the journal carries no work-unit-specification identity". The null would erase the observed request
+    assignment; reinterpreting it as a work specification would contradict the quoted target limitation.
+epistemic_status: proposed
+confidence:
+  value: 0.92
+  use_for_acceptance: false

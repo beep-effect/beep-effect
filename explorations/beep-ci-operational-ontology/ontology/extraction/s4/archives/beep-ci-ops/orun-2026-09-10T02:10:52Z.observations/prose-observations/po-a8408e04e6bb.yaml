@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 218,
+    "end_line": 236
+  },
+  "quote": "## 4. Property suite (all gate; @effect/vitest + schema-derived Arbitraries)\n\n1. **Determinism** — same `ProjectionInput` twice → structurally equal\n   proposal AND byte-equal emitted Turtle.\n2. **Admissibility** — every prescribed step satisfies charge-vs-capacity at\n   its position in the ledger fold; no step ever exceeds\n   `capacityMaxTokens`.\n3. **Totality** — every pending request appears in the proposal exactly once\n   (admitted step or explicit deferred tail); nothing invented, nothing\n   dropped.\n4. **Priority/aging** — a `verify` request never precedes an eligible\n   `publish` request older than the aging bound; class caps honored.\n5. **Differential replay (Must, gating)** — decode the pinned golden journal,\n   reconstruct the pending set at each admitted event's instant\n   (`enqueuedAtMillis <= t < admittedAtMillis`), project, and require the\n   projection's first admitted choice to equal the event's actual admission,\n   ledger folded forward by admitted/released deltas. Frozen bytes → no\n   flake. Any mismatch fails the suite and is recorded as run-2 evidence in\n   the packet.",
+  "epistemic_status": "quoted_prose"
+}

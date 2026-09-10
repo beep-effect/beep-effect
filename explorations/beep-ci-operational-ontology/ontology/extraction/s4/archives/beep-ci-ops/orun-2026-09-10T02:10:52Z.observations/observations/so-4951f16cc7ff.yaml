@@ -1,0 +1,108 @@
+{
+  "id": "so:sha256:4951f16cc7ffc8077ac5010b700e5e8352600a08b698306b20309ca104a51b10",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 1771,
+    "end_line": 2391,
+    "content_sha256": "d8720972bef5c47b9637f5a4c4a7e08e9c1d65b6add537291b1ce1a722760a74"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3b-fleet/admission/canonical/journal.properties:nonce=39193b80-5f90-4e70-a432-fc259b3d994c",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-lease-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1788917803122"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=e5c045e3-b151-4fab-b87e-8419d2cd98d7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/astra-agent-guidance"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788917803106"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=1788920302809"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "lastHeartbeatAtMillis=1788919833142"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=39193b80-5f90-4e70-a432-fc259b3d994c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=1a750acad15d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=8f1f1f1c6807"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=owner-dead-or-reused"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 164\nownerRef=8f1f1f1c6807\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=39193b80-5f90-4e70-a432-fc259b3d994c\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788917803106\nadmittedAtMillis=1788917803122\nattemptId=e5c045e3-b151-4fab-b87e-8419d2cd98d7\n# record 165\nownerRef=b24941d10036\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=54acf905-05fd-4907-9d43-07913a27bf41\nreleasedAtMillis=1788918045449\nmemoryPeakBytes=32114245632\nattemptId=b746ea91-0b5a-46e7-995a-2dab0d3a768d\n# record 166\nownerRef=61e8096c3d60\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=0c804785-85a7-42f5-944f-f5c90f81fd9f\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788917860730\nadmittedAtMillis=1788918047255\nattemptId=b5424785-dab7-4580-82c1-97526505c5c4\n# record 167\nownerRef=7c0dccb51f29\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=0c804785-85a7-42f5-944f-f5c90f81fd9f\nreleasedAtMillis=1788918114829\nmemoryPeakBytes=3573936128\nattemptId=b5424785-dab7-4580-82c1-97526505c5c4\n# record 168\nownerRef=1fc5f89ec383\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=83668baa-5c77-4f60-b189-504153679940\nkind=full-proof\nweightTokens=3\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788918083369\nadmittedAtMillis=1788918119383\nattemptId=02caa69b-a022-4a2c-8d1e-53503ecd7721\n# record 169\nownerRef=c2241360817a\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=83668baa-5c77-4f60-b189-504153679940\nreleasedAtMillis=1788918121748\nmemoryPeakBytes=258920448\nattemptId=02caa69b-a022-4a2c-8d1e-53503ecd7721\n# record 170\nownerRef=a8d81141170f\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=d4891734-555b-4ee6-9d13-8ee0d6cdf5cf\nkind=full-proof\nweightTokens=3\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788918453718\nadmittedAtMillis=1788918453735\nattemptId=ae351882-6391-4d98-af6d-02f7b11ea372\n# record 171\nownerRef=c18213ef0ef7\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=d4891734-555b-4ee6-9d13-8ee0d6cdf5cf\nreleasedAtMillis=1788920069497\nmemoryPeakBytes=27517308928\nattemptId=ae351882-6391-4d98-af6d-02f7b11ea372\n# record 172\nownerRef=7eefd5616a64\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=9a399d1a-ddd1-4d44-b647-0518265add92\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788920302806\nadmittedAtMillis=1788920302832\nattemptId=c76d8e55-e955-48d0-9099-0420032cbb33\n# record 173\nownerRef=d293b6d817e7\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=42ca66f2-cfcc-4aba-b857-0836f59ea51b\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788920735611\nadmittedAtMillis=1788920735641\nattemptId=20b09770-a6e8-4692-aa4b-8d07920a3961\n# record 174\nownerRef=7fc479e65822\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=42ca66f2-cfcc-4aba-b857-0836f59ea51b\nreleasedAtMillis=1788920737988\nmemoryPeakBytes=475664384\nattemptId=20b09770-a6e8-4692-aa4b-8d07920a3961\n# record 175\nownerRef=951d28baacf9\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=7be22255-1239-4f9f-aa28-d74ba79dcbb2\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788920810908\nadmittedAtMillis=1788920810930\nattemptId=ecdd59e8-b1d3-4c40-bf5e-da2215994e0b\n# record 176\nownerRef=0d35076b944b\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=375f393c-e32b-47c3-a6e6-89720f2e1996\nkind=merged-preview\nweightTokens=5\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788920816305\nadmittedAtMillis=1788920816326\nattemptId=42901925-dc4f-408c-83c7-ae0eef8c1fc9\n# record 177\nownerRef=6933a94a7309\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=7be22255-1239-4f9f-aa28-d74ba79dcbb2\nreleasedAtMillis=1788921827138\nmemoryPeakBytes=19694956544\nattemptId=ecdd59e8-b1d3-4c40-bf5e-da2215994e0b\n# record 178\nownerRef=53b09197d704\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=fd947bdd-c679-4b9d-b1d0-d46e384b353d\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788920856188\nadmittedAtMillis=1788921831926\nattemptId=1eb63921-997f-4325-90f4-2621b784d0e2\n# record 179\nownerRef=ab4894240415\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=fd947bdd-c679-4b9d-b1d0-d46e384b353d\nreleasedAtMillis=1788922431973\nmemoryPeakBytes=19646128128\nattemptId=1eb63921-997f-4325-90f4-2621b784d0e2\n# record 180\nownerRef=770b2d0ee672\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=29c26ccf-51ea-41a2-931d-d02aa3df6228\nkind=full-proof\nweightTokens=3\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788922812944\nadmittedAtMillis=1788922812967\nattemptId=c8968d82-c833-4e64-93c4-3dee1feeacf5\n# record 181\nownerRef=8bd90d203b27\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=29c26ccf-51ea-41a2-931d-d02aa3df6228\nreleasedAtMillis=1788922825962\nmemoryPeakBytes=1034403840\nattemptId=c8968d82-c833-4e64-93c4-3dee1feeacf5\n# record 182\nownerRef=012c1ff54faf\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=38d1a4cb-8c3f-46c4-94b4-5dd9772ea1e5\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788922814204\nadmittedAtMillis=1788922829306\nattemptId=c59609c7-09ab-4256-8c23-96335c339b80\n# record 183\nownerRef=601f567bb1ea\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=38d1a4cb-8c3f-46c4-94b4-5dd9772ea1e5\nreleasedAtMillis=1788922840897\nmemoryPeakBytes=1212370944\nattemptId=c59609c7-09ab-4256-8c23-96335c339b80\n# record 184\nownerRef=53dce67e20cf\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=48e3d1bc-602a-4f9f-8713-65029c9524f5\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788923184394\nadmittedAtMillis=1788923184416\nattemptId=f38566cf-fdb7-456b-be8f-c87c4b30a7ab\n# record 185\nownerRef=397870a7164d\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=48e3d1bc-602a-4f9f-8713-65029c9524f5\nreleasedAtMillis=1788923342532\nmemoryPeakBytes=5505409024\nattemptId=f38566cf-fdb7-456b-be8f-c87c4b30a7ab\n# record 186\nownerRef=bf47a5b80a10\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=375f393c-e32b-47c3-a6e6-89720f2e1996\nreleasedAtMillis=1788923437897\nmemoryPeakBytes=32951803904\nattemptId=42901925-dc4f-408c-83c7-ae0eef8c1fc9\n# record 187\nownerRef=dd8d764db5ac\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=e7aeecec-4c2e-45a1-bf15-3198d69db2f0\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788923670998\nadmittedAtMillis=1788923671017\nattemptId=59ae2d0d-1e47-492b-a576-177ca249c099\n# record 188\nownerRef=794cb2a3b657\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=e7aeecec-4c2e-45a1-bf15-3198d69db2f0\nreleasedAtMillis=1788923703373\nmemoryPeakBytes=2038423552\nattemptId=59ae2d0d-1e47-492b-a576-177ca249c099\n# record 189\nownerRef=ac65af07f0ed\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=21aacac7-128f-4582-b50a-fe8f3cb498a6\nkind=full-proof\nweightTokens=3\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788923905570\nadmittedAtMillis=1788923905594\nattemptId=0bfba4bf-61a1-43c4-84af-bbd4cd638d75\n# record 190\nownerRef=566123cf7d3f\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=31e2d081-9468-49b9-bae1-9750c6405548\nkind=merged-preview\nweightTokens=5\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788924006573\nadmittedAtMillis=1788924006612\nattemptId=d961eb48-65e0-4e5a-a338-7d84142e6216\n# record 191\nownerRef=32bcee7e0c57\nownerRefVariant=pid_pair\nattemptId=e892d99c-3330-4027-a887-5797355e387f\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect3-worktrees/ttc-c3-1\nbranch=ttc/c3-1-package-scripts\nenqueuedAtMillis=1788925122673\nnonce=44353c7a-d87f-4f08-b593-e30107379fbb\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 192\nownerRef=f610cd6c326c\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=31e2d081-9468-49b9-bae1-9750c6405548\nreleasedAtMillis=1788925129966\nmemoryPeakBytes=11824144384\nattemptId=d961eb48-65e0-4e5a-a338-7d84142e6216\n# record 193\nownerRef=76ca8e32d465\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=783a3f58-aa16-4f17-934a-df9caa79495f\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788924696816\nadmittedAtMillis=1788925133810\nattemptId=17586612-9ebf-47e4-97a8-f62211d0690e\n# record 194\nownerRef=c497965c76a4\nownerRefVariant=pid_pair\nkind=full-proof\npriority=verify\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-closeout\nenqueuedAtMillis=1788925295116\nnonce=c4246da1-8606-49ef-a9d7-b957c6972a8f\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=3\n# record 195\nownerRef=f1e4ab427879\nownerRefVariant=pid_pair\nattemptId=04c5450b-eaeb-4493-a497-97834d8639d2\nkind=merged-preview\npriority=verify\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-closeout\nenqueuedAtMillis=1788925299817\nnonce=fe8a685d-5b73-4f88-ae2e-c776af84fbb2\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 196\nownerRef=7c7617974fc1\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=783a3f58-aa16-4f17-934a-df9caa79495f\nreleasedAtMillis=1788925638317\nmemoryPeakBytes=20050178048\nattemptId=17586612-9ebf-47e4-97a8-f62211d0690e\n# record 197\nownerRef=32bcee7e0c57\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=44353c7a-d87f-4f08-b593-e30107379fbb\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788925122673\nadmittedAtMillis=1788925640272\nattemptId=e892d99c-3330-4027-a887-5797355e387f\n# record 198\nownerRef=22f4eedfba55\nownerRefVariant=pid_pair\nattemptId=dd70fa43-8c0b-4b5c-838a-f734057f12cb\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-findings-2026-09-08\nenqueuedAtMillis=1788926070761\nnonce=dee4a988-1f36-4228-88ea-d5bb50d07c9b\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 199\nownerRef=d8731f1462e8\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect3-worktrees/ttc-c3-1\nbranch=ttc/c3-1-package-scripts\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=44353c7a-d87f-4f08-b593-e30107379fbb\nreleasedAtMillis=1788926267344\nmemoryPeakBytes=15565742080\nattemptId=e892d99c-3330-4027-a887-5797355e387f\n# record 200\nownerRef=c497965c76a4\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=c4246da1-8606-49ef-a9d7-b957c6972a8f\nkind=full-proof\nweightTokens=3\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788925295116\nadmittedAtMillis=1788926269487\n# record 201\nownerRef=22f4eedfba55\nownerRefVariant=pid_pair\nattemptId=dd70fa43-8c0b-4b5c-838a-f734057f12cb\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-findings-2026-09-08\nenqueuedAtMillis=1788926070761\nnonce=dee4a988-1f36-4228-88ea-d5bb50d07c9b\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788926326135\n# record 202\nownerRef=c6d694a55428\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-released\nnonce=21aacac7-128f-4582-b50a-fe8f3cb498a6\nreleasedAtMillis=1788926420674\nattemptId=0bfba4bf-61a1-43c4-84af-bbd4cd638d75\n# record 203\nownerRef=bcc8818e8ad6\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-closeout\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=c4246da1-8606-49ef-a9d7-b957c6972a8f\nreleasedAtMillis=1788926450285\nmemoryPeakBytes=6054998016\n# record 204\nownerRef=f1e4ab427879\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=fe8a685d-5b73-4f88-ae2e-c776af84fbb2\nkind=merged-preview\nweightTokens=5\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788925299817\nadmittedAtMillis=1788926455356\nattemptId=04c5450b-eaeb-4493-a497-97834d8639d2\n# record 205\nownerRef=94e0f7d0c8a3\nownerRefVariant=pid_pair\nattemptId=e7a8f546-8ae1-4754-b67b-76184b411fcc\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-findings-2026-09-08\nenqueuedAtMillis=1788926595182\nnonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 206\nownerRef=94e0f7d0c8a3\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788926595182\nadmittedAtMillis=1788926595216\nattemptId=e7a8f546-8ae1-4754-b67b-76184b411fcc\n# record 207\nownerRef=97be2ecf1b67\nownerRefVariant=pid_pair\nkind=full-proof\npriority=verify\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/inline-schema-package-proof-v2\nenqueuedAtMillis=1788926689378\nnonce=9f2a6538-9bf5-4615-ae15-1585c13a02a4\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=3\n# record 208\nownerRef=201212539a2d\nownerRefVariant=pid_pair\nattemptId=3bfb9c85-f4c0-4f19-835e-619b135e8034\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788926691515\nnonce=e9ec7ade-1289-434c-90c0-cc80a7e0ce8a\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 209\nownerRef=201212539a2d\nownerRefVariant=pid_pair\nattemptId=3bfb9c85-f4c0-4f19-835e-619b135e8034\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788926691515\nnonce=e9ec7ade-1289-434c-90c0-cc80a7e0ce8a\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1788926846925\n# record 210\nownerRef=f967f84e3ca6\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect12\nbranch=codex/security-findings-2026-09-08\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088\nreleasedAtMillis=1788927008574\nmemoryPeakBytes=9904820224\nattemptId=e7a8f546-8ae1-4754-b67b-76184b411fcc\n# record 211\nownerRef=97be2ecf1b67\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=9f2a6538-9bf5-4615-ae15-1585c13a02a4\nkind=full-proof\nweightTokens=3\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788926689378\nadmittedAtMillis=1788927010734\n# record 212\nownerRef=84373cae5304\nownerRefVariant=pid_pair\nattemptId=f08a87d6-8b94-4c7e-b365-12b23733cfcc\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect-worktrees/astra-xhigh-agent-routing\nbranch=chore/astra-xhigh-agent-routing\nenqueuedAtMillis=1788927168643\nnonce=fc9668e5-e89d-47fe-bd8f-dd3f783f28f3\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 213\nownerRef=8129db965f41\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect11\nbranch=codex/complexity-ceiling-burn-down-p0\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=baf4bcd5-e877-43fd-9d6d-8d45534b264a\nattemptId=eed0cec2-cb64-4897-986b-aa09dafee759\nevictedAtMillis=1788498598671\nreason=owner-dead-or-reused\nlastHeartbeatAtMillis=1788497734696\n# record 214\nownerRef=0495ba51b730\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-compile-hard-error\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-ticket-evicted\nnonce=acb0011d-82cf-4dfc-a812-72d10dbd566c\nattemptId=1f52aba4-52ea-4ae0-b737-f9ac47b43917\nevictedAtMillis=1788498598672\nreason=queued-submitter-death\n# record 215\nownerRef=29b15d20f79f\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect-worktrees/pr-992-closeout\nbranch=codex/evidence-loop-p1-fleet-rollout\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=ab8c8ba0-6132-4e49-9d28-74e2e1873c07\nattemptId=e86134e8-586d-4846-984f-d7862488f82d\nevictedAtMillis=1788498598670\nreason=owner-dead-or-reused\nlastHeartbeatAtMillis=1788497733794\n# record 216\nownerRef=1a750acad15d\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect7\nbranch=codex/astra-agent-guidance\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=39193b80-5f90-4e70-a432-fc259b3d994c\nattemptId=e5c045e3-b151-4fab-b87e-8419d2cd98d7\nevictedAtMillis=1788920302809\nreason=owner-dead-or-reused\nlastHeartbeatAtMillis=1788919833142\n",
+  "epistemic_status": "parser_derived"
+}

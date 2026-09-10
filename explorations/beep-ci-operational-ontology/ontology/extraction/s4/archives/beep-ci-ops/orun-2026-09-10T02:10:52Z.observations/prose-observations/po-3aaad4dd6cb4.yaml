@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:3aaad4dd6cb4ece15e0f3a57541ab2f4c6c43628046d086b4ed44da86e14ecf3",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "apps/labs/ciops/src/projection/Turtle.ts"
+  },
+  "source_span": {
+    "start_line": 99,
+    "end_line": 99
+  },
+  "quote": "`${episodeNode} ciops-prov:hasCurrentProposal ${proposalNode} .`,",
+  "epistemic_status": "quoted_prose"
+}

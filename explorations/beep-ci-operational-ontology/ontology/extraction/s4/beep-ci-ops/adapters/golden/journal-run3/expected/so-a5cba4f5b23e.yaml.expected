@@ -1,0 +1,56 @@
+{
+  "id": "so:sha256:a5cba4f5b23e2c1ab83a31ed0e2d7e22e529f490ede5fa8889faebe25e62c656",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run3/input/run3-fleet/live/grammar.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 17,
+    "content_sha256": "85057435047493e7bee1f562d2bb8795fd8e495b3e1e797321a6612c26a6dedf"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/live/grammar.properties",
+    "lexical_name": "quotes",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "alpha=bare"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "half=\"safe"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "inline=safe;strict!payload#hash"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "last=verbatim"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "next=line"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "quotes=\"safe\"#prod"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "url=https://example.invalid/fixture"
+    }
+  ],
+  "source_excerpt": "﻿\f# commented=ghost\r!also=ghost\ralpha=bare\r\nquotes=\"safe\"#prod\ninline=safe;strict!payload#hash\nurl=https://example.invalid/fixture\nhalf=\"safe\nspaces=two words\nempty=\ntrailing=value \ncontinuation=refused\n\n next=line\nseparator\n=unpaired\nlast=verbatim\n",
+  "epistemic_status": "parser_derived"
+}

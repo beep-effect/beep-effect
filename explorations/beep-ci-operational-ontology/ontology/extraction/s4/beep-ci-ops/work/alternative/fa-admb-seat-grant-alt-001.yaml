@@ -1,0 +1,46 @@
+id: "fa:admb-seat-grant-alt:001"
+hypothesis_ref: "dh:admb-seat-grant:001"
+identity_card_ref: "ic:admb-seat-grant-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      relator: a rigid charged-holding mediation of holder and contended
+      capacity, born at conferment and ceasing at release or lease eviction
+    still_viable: true
+  - label: >-
+      kind: an enduring authorization/lease object that supplies identity
+      independently of being framed as a mediation
+    still_viable: true
+  - label: >-
+      information_object: journal assertions of a holding and its boundaries,
+      without a demonstrated operational lease (observationally equivalent
+      until an independent lease/active-charge trace exists)
+    still_viable: true
+  - label: >-
+      event: only the conferment occurrence, with no persisting authorization
+    still_viable: true
+  - label: >-
+      role: Holder as an anti-rigid role of an agent; rejected for this
+      referent because charge and originKey qualify the holding, not the agent,
+      and ownerRef is unstable
+    still_viable: false
+strongest_counterexample: >-
+  Role-as-kind: reading ownerRef as the grant's identity on
+  so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929
+  would split one charged holding into two individuals. Kind versus relator
+  remains open; both can answer CQ-008/CQ-009/CQ-010 if role/bearer stay split.
+verdict: analyzed
+needed_evidence: >-
+  A contemporaneous lease or active-token trace correlated to admission and
+  termination, independent of journal production, would discriminate operational
+  relator/kind from information-only assertion. Evidence that authorization
+  persists after conferment (heartbeat or charge remaining outstanding) would
+  discriminate the persisting holding from a conferment-only event. po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+  describes TokenLedgerState reconstructed from admitted/released deltas, which
+  is a designed consumer of holdings, not independent occurrence proof. No
+  remaining-capacity snapshot is supplied, so CQ-010 legality is not settled
+  by these chains.

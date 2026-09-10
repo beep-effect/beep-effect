@@ -1,0 +1,69 @@
+id: ic:adm-lease-eviction:001
+hypothesis_ref: dh:adm-lease-eviction:001
+identity:
+  supplies_identity: false
+  identity_criterion: Two descriptions concern the same lease eviction only if they concern the same removal
+    by eviction of one particular admitted holding in its admission context. Identity follows that removal
+    transition and its target grant, not the shared reason text, the last heartbeat, the owner label,
+    or a journal append. A repeated scan or repeated assertion after removal does not create another eviction
+    of that holding.
+  reidentification_key:
+  - Local journal nonce together with the matching event block and evictedAtMillis; evidence locator only,
+    neither globally unique nor sufficient for operational identity.
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One removal of an admitted lease unifies the occurrence and ends that holding. Owner death, process
+    reuse, heartbeat activity, reaper scanning, and stopping work are separate possible occurrences, not
+    inferred parts of this event.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - An information object asserting lease eviction and a disjunctive reason. Time-aligned lease-store
+    removal and holder-accounting evidence would distinguish the operational occurrence; separate liveness
+    evidence would be needed for the cause.
+  - The grant's terminal condition labeled evicted, with no separate removal-event individual. A trace
+    or decision needing the removal act's participants and effects would distinguish the event model.
+  existential_dependencies:
+  - The particular acquired authorization targeted by the lease removal and the admission context whose
+    holding changes.
+  - 'The removal transition itself. Neither actual owner death nor process reuse is an established existential
+    dependency: the report states their disjunction as a reason.'
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: A stale lease can be evicted because a process identifier was reused while a log still
+    reports owner-dead-or-reused. Classifying the event as owner death would choose one disjunct without
+    evidence. Conversely, observing an old heartbeat or repeatedly scanning a missing lease does not itself
+    instantiate another eviction.
+status: proposed
+grain: One particular operational transition, represented by a dated event assertion; not a classification
+  signature, a current binding snapshot, a governing specification, a journal block, or the whole nonce-linked
+  history.
+metaproperty_rationale: Under the operational reading, this particular transition is essentially the occurrence
+  it was, so its event classification is rigid. It carries occurrence identity and does not establish
+  a new independent continuant identity provider. Its relational dependence is on participants at the
+  transition, not their perpetual future existence. The information-object rival is kept separate, not
+  assigned these meta-properties.
+temporality_rationale: The journal supplies a single asserted boundary time, not independently measured
+  start/end times for the operation, so interval duration remains unresolved. At the selected boundary-event
+  grain it does not persist through mutable continuant states. Eviction completes at the removal boundary
+  and ends the grant's holding. The earlier heartbeat and later history are not states or extensions of
+  the eviction event.
+evidence_refs:
+- so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af
+- so:sha256:675134527a157d157274937b2f8ad90b036d30b77340d61f1e202483d9ac828e
+- CQ-008
+- CQ-009
+evidence_reading: The two matched histories each assert admission and later admission-lease-evicted with
+  reason=owner-dead-or-reused. The first includes admittedAtMillis=1788492468990, evictedAtMillis=1788498598670,
+  and lastHeartbeatAtMillis=1788497733794. Interleaved entries in the wide source span belong to other
+  nonces and supply no additional properties of this removal.
+evidence_limits: All cited observations are parser-derived records of the current run3-fleet journal,
+  not synthetic observations. Operational reality is not established by the journal alone. Capture, owner-reference,
+  resanitization, corpus, generator, and record-position metadata are not identity criteria. No missing
+  entry is treated as closed-world evidence.

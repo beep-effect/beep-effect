@@ -1,0 +1,76 @@
+id: "fa:bind-admission-request:001"
+hypothesis_ref: "dh:bind-admission-request:001"
+identity_card_ref: "ic:bind-admission-request:001"
+provenance: synthetic
+evidence_refs:
+  - "so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f"
+  - "CQ-021"
+  - "CQ-023"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: unresolved
+  context_reification_needed: true
+test_rationale:
+  spec_vs_execution: >-
+    Full-proof describes the requested work. A particular enqueue is an occurrence,
+    while the pending demand lasts through the observed waiting interval. Neither
+    the work description nor the demand establishes an execution or allocation.
+  world_vs_information: >-
+    The journal is information about a synthetic queue lifecycle. It does not
+    discriminate a separately existing directed demand from a submitted ticket
+    whose information token constitutes the request. Choosing either interpretation
+    from record spelling would silently settle the unresolved identity question.
+  role_vs_bearer: >-
+    A submitting agent is distinct from its demand. The remaining question is
+    whether queued request is a temporary role of a demand that persists after
+    withdrawal, or the pending-demand entity itself. The observed terminal boundary
+    does not establish what persists outside the queue.
+  context_reification_needed: >-
+    CQ-021's queued-at-time question and CQ-023's waiting-time question require each
+    demand's enqueue and queue participation context. A historical enqueue must
+    not be treated as a timeless assertion that its demand remains queued. The
+    journal does not provide the policy bound or complete queue required for a
+    starvation verdict.
+rival_models:
+  - label: "Pending-demand relator individuated by one submission episode"
+    still_viable: true
+    rationale: >-
+      The observed enqueue and terminal boundaries can delimit a relational entity
+      that ceases when that submission is no longer pending.
+  - label: "Queued role of an enduring directed demand"
+    still_viable: true
+    rationale: >-
+      The same demand could persist after withdrawal while losing queued membership.
+      No supplied observation follows that demand beyond its terminal boundary.
+  - label: "Submitted ticket information object"
+    still_viable: true
+    rationale: >-
+      A submitted ticket could constitute the demand, with queue status tracked
+      separately. The journal supplies no record-copy or replacement experiment
+      that distinguishes ticket identity from demand identity.
+  - label: "Queued phase of an already allocated grant"
+    still_viable: false
+    rationale: >-
+      The observed withdrawal chain records a demand without an observed admission;
+      treating every pending demand as an allocation would invent an active holder.
+strongest_counterexample: >-
+  Countermodel: the withdrawn demand is later submitted again with unchanged work
+  content but a replacement ticket. Queue-episode identity counts a new request;
+  enduring-demand identity counts the same bearer entering a new queued role.
+  The observed enqueue at 1788931586705 and withdrawal at 1788931586715 fit both
+  models, so neither nonce correlation nor equal payload settles the category.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A run-scoped observation of the withdrawn demand through resubmission, with an
+  independently tracked demand referent and the old and replacement ticket records,
+  must show whether admission handling preserves one demand across the gap or
+  creates a new request. Include a ticket-copy or replacement case showing whether
+  a second record duplicates one demand or creates another queue participant.
+  This would discriminate a pending-demand relator, a queued role of an enduring
+  demand, and an information-object request; ownerRef or capture metadata cannot
+  supply the missing continuity evidence.
+handoff_constraint: >-
+  The open identity and category question must remain explicit at synthesis or
+  disposition. The observed queue boundaries remain usable as bounded synthetic
+  evidence without silently selecting any of the three still-viable models.

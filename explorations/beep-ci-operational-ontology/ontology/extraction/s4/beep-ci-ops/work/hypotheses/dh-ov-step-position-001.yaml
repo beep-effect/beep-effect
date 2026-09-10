@@ -1,0 +1,37 @@
+id: dh:ov-step-position:001
+observation_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:25344c6969c1319b1e2f0a07a78cb2430df3673a4bfbd7ffdb464a08045d9020
+- po:sha256:56dab857ecc5817302e6b956bc84d4d34dd0cfec80900f2fb02c28cde6b4c263
+- po:sha256:d712ca4caf1a7c10a0e008b0bf1d8ce078bf587c34a2d0b65e2c9f834ca2d0f7
+cq_warrants:
+- CQ-020
+proposed_referent:
+  label: Ordinal position in an admission prescription
+  description: A zero-based order value on a represented admission step within its proposal. It is a prescribed
+    sequence position; these observations do not identify it with a timestamp, duration, or actual grant
+    order.
+representation_status: information_artifact
+alternatives:
+- label: Order relation among prescribed steps instead of separately modeled ordinal values
+  representation_status: domain_referent
+  plausibility: viable
+- label: Incidental array offset
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The fixture exposes distinct typed integer positions and the emitter preserves the step value
+    in output. The contract explicitly fixes the zero-based convention and keeps deferred requests from
+    renumbering the admitted sequence. That use supports a queryable order-value candidate. The exact
+    numbers are fixture examples, and any claim about actual execution ordering would require separate
+    event evidence.
+  discriminator: The fixture asserts "ciops-prov:stepIndex "0"^^xsd:integer" on step-0 and "ciops-prov:stepIndex
+    "1"^^xsd:integer" on step-1; the emitter writes "${step.stepIndex}" on that predicate. The quoted
+    rule says "stepIndex stays **0-based**" and the deferred tail never renumbers the sequence. The null
+    would deny the represented order those values explicitly express.
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

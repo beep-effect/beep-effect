@@ -1,0 +1,34 @@
+id: "fa:adm-withdrawal-alt:001"
+hypothesis_ref: "dh:adm-withdrawal:001"
+identity_card_ref: "ic:adm-withdrawal-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      Dated journal assertion that a queued request was withdrawn
+      (information_object). Observationally equivalent on current evidence
+      until a ticket-store deletion or scheduler withdraw operation is observed
+      independently of the report.
+    still_viable: true
+  - label: >-
+      Request-end temporal boundary without a separately reified occurrence
+      (fold withdrawnAtMillis into the seat request).
+    still_viable: true
+  - label: same event kind as ticket eviction, lease eviction, or grant release
+    still_viable: false
+strongest_counterexample: >-
+  Collapsing withdrawal with eviction or with grant release.
+  so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a
+  pairs enqueue at 1788928587012 with admission-withdrawn at 1788928909789 for
+  nonce=c334ff81-360e-4683-a084-8bf4bf0ed20f, never admitted (CQ-007, CQ-021);
+  so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+  is the same shape for nonce=71181c10-f174-45cf-817e-0fdfa07295a8 (CQ-023).
+verdict: analyzed
+needed_evidence: >-
+  A contemporaneous observation of ticket-store deletion aligned to
+  withdrawnAtMillis, independent of the journal append, would discriminate the
+  occurrence from the claim. Queue-wait decomposition (CQ-007, CQ-023) still
+  needs episode linkage from enqueue to this end.

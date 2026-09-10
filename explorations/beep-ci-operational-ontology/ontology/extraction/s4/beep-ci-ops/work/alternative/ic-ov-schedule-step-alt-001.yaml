@@ -1,43 +1,29 @@
-id: ic:ov-schedule-step-alt:001
-hypothesis_ref: dh:ov-schedule-step:001
+id: "ic:ov-schedule-step-alt:001"
+hypothesis_ref: "dh:ov-schedule-step:001"
 identity:
-  supplies_identity: true
-  identity_criterion: 'Two schedule-step information objects are the same iff they
-    are the same ordered content component of the same ScheduleProposal — the same
-    projection-instant proposal with the same policy and journal-prefix digests —
-    prescribing the same scheduled target and scope at the same ordinal place. The
-    S.Class record and the provisional RDF node are encodings of that content, never
-    the criterion. A later projection over the same journal is a different proposal
-    and therefore different steps.'
+  supplies_identity: unresolved
+  identity_criterion: "unresolved: whether a step is an independently individuated prescription component or is the same as the pair (containing proposal, 0-based stepIndex). Typed subjects step-0 and step-1 demonstrate representational shape, not a settled identity provider (po:sha256:06c80d2d5ac506caeb4cb1ce68b4c468f3649ae03073a76c76820d9f276208d0; po:sha256:fd09509eefc4bbf65ba4644d947b832ebcab35cdbd460bc3e14ec93f7c2a95b6; po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864; CQ-020)"
   reidentification_key:
-  - stepIndex field (evidence of place)
-  - scheduled unit ref (evidence of target)
-  - scope tag (evidence of content kind)
-  - proposal id / projection instant / input digests (evidence of the whole)
+    - "rdf:type ciops-prov:ScheduleStep subject IRI"
+    - "containing proposal plus ciops-prov:stepIndex"
 ontoclean:
   rigidity: rigid
   carries_identity: true
-  supplies_identity: true
-  unity: one ordered prescription of one scheduled target at one place in one proposal
+  supplies_identity: unresolved
+  unity: "One prescribed slot: ordinal, request assignment, and scope tag; deferred requests are excluded from this sequence and do not extend it."
   dependence: relational
 ufo_analysis:
   candidate_category: information_object
   alternatives:
-  - relator
-  - event
+    - none
+    - event
   existential_dependencies:
-  - the ScheduleProposal of which the step is ordered content
-  - the SeatRequest or other scheduled target the step designates
+    - "a containing ScheduleProposal of which the step is a member"
+    - "the SeatRequest the step schedules"
 temporality:
   exists_during_interval: true
   may_change_state_without_losing_identity: false
   terminal_states: []
 counterexamples:
-- description: 'Totality requires every pending request to appear exactly once as
-    an admitted step or an explicit deferred tail. A deferred-tail placement is still
-    proposal content; classifying every ScheduleStep as an admission-act event would
-    mint occurrents that did not unfold.'
-- description: 'Same ProjectionInput twice yields a structurally equal proposal. If
-    steps were dated admission occurrences, a second projection would be a second
-    unfolding rather than a repeatable information structure.'
+  - description: "Treating a ScheduleStep as a completed admission or running verification occurrence merges specification with execution; the contract restricts steps to admitted actions in the prescribed sequence, not grant events (po:sha256:ddf53db309cbc347c227b14717939a8ef20e13dd4e5dc71cfaf9c6079719846e; po:sha256:c92cd59362565eda3098e5d0828c8c377fd934ae4d4546cc190d22b25207fd9a; po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f)."
 status: proposed

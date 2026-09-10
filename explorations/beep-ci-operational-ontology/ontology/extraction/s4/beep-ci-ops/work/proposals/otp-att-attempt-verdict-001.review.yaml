@@ -1,0 +1,67 @@
+target: otp:att-attempt-verdict:001
+target_sha256: 4856f0bf1d368800189dfdade0718aab1c72e039ab4281a92be6b84fdbc87e1f
+chain_sha256: 70c318afd4346dbb544cb5a914b158e2ad219cdd1341a23fbf7200c1a3fcca18
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: parents is empty. Exact reuse of VerificationResultArtifact asserts no subsumption to an execution,
+    evidence role, or assessment event.
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: assessment-content-versus-empty-envelope
+  counterexample: 'Countermodel: retain or copy the failed verify report while a later monitor reports
+    readiness for a different attempt and head. The two source excerpts preserve a failed full:00-cheap-gates
+    result with duration 695899.047175 and a later ready=true finding in separate records. A DTO that
+    preserves these claims still carries the selected assessment information; calling the DTO implementation-only
+    does not erase that content. No actual readiness, allocation, execution truth or evidence-transfer
+    authorization is inferred. The discriminator is adequate for report denotation at this information
+    grain.'
+  outcome: survived
+  evidence:
+  - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+  - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+- surface: identity
+  rule: assessment-origin-versus-content
+  counterexample: 'Countermodel: two independent assessments of the same attempt issue identical assertions,
+    followed by a faithful copy of the first. This card counts two originating assessment units and does
+    not count the copy as a third. The content-snapshot model in otp:ver-attempt-verdict:001 can instead
+    merge the two equal contents. That is a viable rival, but the proposal expressly requires a common
+    identity choice before simultaneous reuse of VerificationResultArtifact; it does not assert that the
+    two criteria are already equivalent. The failed verify and later monitor in so:3763576ed697 are kept
+    separate. No capture alias supplies assessment origin.'
+  outcome: survived
+  evidence:
+  - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+  - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+- surface: warrant
+  rule: exact-reuse-support-targets
+  counterexample: 'Counterexample attempt: let the projection''s later monitor result overwrite its earlier
+    failed verification, or attach the whole-attempt 719613 ms value to the failed lane measured at 695899.047175
+    ms. This breaks the own-attempt failure association required by CQ-022 and the occurrence/scope distinction
+    needed for CQ-025. The two named targets are actual proposals in this run with decision CQs, not support-chain
+    or self references. VerificationResultArtifact is exact reuse from S5 rather than an additional result
+    subclass. A generic qualified-assertion model remains possible, but optional new-class proliferation
+    is not a landed attack on this exact reuse; acceptance is conditional on the explicit cluster and
+    identity choices.'
+  outcome: survived
+  evidence:
+  - so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+  - so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+  - CQ-022
+  - CQ-025
+rival_models_still_viable:
+- Dated assessment occurrence with a distinct informational result.
+- Assertion-content object merging equal assertions from independent assessments; explicitly paired with
+  otp:ver-attempt-verdict:001.
+evidence:
+- so:sha256:3763576ed6977fcfbfc792faf096892f5e34923a008d37d2020de5f2d6aee198
+- so:sha256:6bbb475abc365a8e1141fc2866a2068a16537948a20181b17bb9f5e14c83665f
+- CQ-022
+- CQ-025

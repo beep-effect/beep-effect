@@ -1,0 +1,92 @@
+{
+  "id": "so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 3904,
+    "end_line": 3930,
+    "content_sha256": "3c98669699a9671a3773a34cf161f0395cbd303b93607bf984f33942e1b8c604"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/admission/canonical/journal.properties:nonce=66dc6593-0c13-4872-b177-903b5182271f",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1788941289062"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=eed0a0d3-b190-4e8a-99e5-e5b29c649765"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=fix/scheduler-reap-claim-settlement"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect3-worktrees/scheduler-reap-settlement"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788941289048"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=66dc6593-0c13-4872-b177-903b5182271f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=1e9533910465"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 341\nownerRef=1e9533910465\nownerRefVariant=pid_pair\nattemptId=eed0a0d3-b190-4e8a-99e5-e5b29c649765\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect3-worktrees/scheduler-reap-settlement\nbranch=fix/scheduler-reap-claim-settlement\nenqueuedAtMillis=1788941289048\nnonce=66dc6593-0c13-4872-b177-903b5182271f\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 342\nownerRef=1e9533910465\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=66dc6593-0c13-4872-b177-903b5182271f\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1788941289048\nadmittedAtMillis=1788941289062\nattemptId=eed0a0d3-b190-4e8a-99e5-e5b29c649765\n",
+  "epistemic_status": "parser_derived"
+}

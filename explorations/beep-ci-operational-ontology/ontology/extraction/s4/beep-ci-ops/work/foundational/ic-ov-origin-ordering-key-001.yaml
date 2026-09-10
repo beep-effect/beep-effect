@@ -1,0 +1,46 @@
+id: ic:ov-origin-ordering-key:001
+hypothesis_ref: dh:ov-origin-ordering-key:001
+referent_grain: Recorded origin-key assignment used as a request's comparison value in a particular projection
+  input; distinct from the raw literal shared by assignments and from a repository origin.
+identity:
+  supplies_identity: false
+  identity_criterion: 'Proposed at contextual value-assignment grain: sameness requires the same represented
+    request in the same projection input with the same origin-key comparison value under that input''s
+    ordering convention. Equal literals on different requests are equal comparison values, not the same
+    request assignment or proof of the same repository. No repository-origin identity criterion is supplied.'
+  reidentification_key:
+  - request subject and hasOriginKey literal within the projection representation, for lookup only
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One origin comparison value attributed to one represented request in the canonical ordering context.
+    Identity is carried by contextual information content, while the underlying value can be shared.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a scalar comparison value with contextual attribution represented directly as a data property
+  - an identifier denoting a repository-origin domain entity once origin normalization and sameness are
+    established
+  existential_dependencies:
+  - The represented request and projection input determine which assignment is being recorded.
+  - The declared comparison convention gives the value its ordering use; existence or identity of a real
+    repository is not required by this bounded record interpretation.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: The fixture repeats origin-test on three distinct requests. Treating the common literal
+    as request identity merges all three; treating it as evidence of simultaneous active grants manufactures
+    a grant-exclusion violation. Hypothetically, two spellings for one repository could also sort differently
+    unless normalization is independently specified.
+evidence_refs:
+- po:sha256:0a705ee8990d0a77dc4f0056df8e60b331a8185ea2683459ea00998a977cb864
+- po:sha256:d4f2e09398646bf875ee3cbeeec6471c327a8a7b9d9d82425c754dbebd84c7f9
+- po:sha256:d5a14f495e7b2778abacb3727637a629965dec0f85bbefec53d76cba5a7690e3
+- po:sha256:fe4b4d49ef566d86584b1cea395485bf0f230233e91478c746d3a8d23208e05c
+- po:sha256:f21cd34ba9f97d991f2367f331b58ec556fb670642b2d02f434b141a1a69e78d
+- CQ-020
+status: proposed

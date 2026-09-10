@@ -1,0 +1,63 @@
+target: otp:ov-step-scope-tag:001
+target_sha256: 89060a995626d415b787de56e97edb923ecb580d81123008df8587e4947787f9
+chain_sha256: 6508cd0072a044c01407abb2de3832b9bd4dbb41a726329e22ae437fd9cf2295
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: 'hasScopeTag asserts parents: []; no is-a edge is proposed. Participant, component, or governing-role
+    relations supply no additional subsumption assertion to test.'
+revision_requests: []
+attacks:
+- surface: null_discriminator
+  rule: decorative-label-as-scope-content
+  outcome: survived
+  evidence:
+  - po:sha256:004887d37eb13319a467b294764093c16a3cb02165cc88ceba6b7bfa4768f77c
+  - po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf
+  - po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  - CQ-020
+  counterexample: Retain a string solely as a UI caption and deny it any act-scope meaning. The emitter
+    carries step.scope, the two fixture instructions both record admission, and the contract identifies
+    this version's scope as the admission act itself. CQ-020 requests that per-step meaning. These combined
+    facts defeat the decorative-caption interpretation without turning the literal into an independently
+    existing Scope individual.
+- surface: identity
+  rule: tag-value-as-scope-individual-identity
+  outcome: survived
+  evidence:
+  - po:sha256:004887d37eb13319a467b294764093c16a3cb02165cc88ceba6b7bfa4768f77c
+  - po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf
+  - po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+  counterexample: The identical admission literal occurs on two different steps. It does not identify
+    one annotation assignment, and it supplies no FullRepoScope or affected-package set. Reuse of that
+    spelling after a tagging-convention change would also not prove equal meaning. The card includes the
+    contextual step and convention-dependent scope meaning, and the proposal expressly separates the literal
+    data property from object-valued hasScope.
+- surface: warrant
+  rule: listing-cq-warrant
+  outcome: survived
+  evidence:
+  - CQ-020
+  - CQ-019
+  - po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7
+  counterexample: Replace the literal tag with an object-valued Scope edge or omit it. CQ-020 no longer
+    binds its required ?scope value, and CQ-019's hasScopeTag/isLiteral arm no longer matches that instruction.
+    The data property is therefore required by both queries. This warrants the tag surface, not a conclusion
+    that the selected observations satisfy or violate scope provenance under an unstated closure.
+rival_models_still_viable:
+- Controlled annotation literal on a contextual step without independently reified tag objects
+- Classification content about the prescribed act expressed as a property rather than an information individual
+evidence:
+- CQ-019
+- CQ-020
+- po:sha256:004887d37eb13319a467b294764093c16a3cb02165cc88ceba6b7bfa4768f77c
+- po:sha256:2f321cd61b02333d2a2d195f7ea7b1e6b0b6af9b7f5f0057ad31897d51dadbcf
+- po:sha256:420a8a239adca76ab424a92d99109409c629f18f044eecd35bad7102254f4a05
+- po:sha256:4f04e3e271c8c0235d57fc4d8e275238ef1cb7f0cba9dbe0a05ffc90ac2aa7b7

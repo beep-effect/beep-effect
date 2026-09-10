@@ -1,0 +1,71 @@
+id: "dh:admb-grant-release:001"
+observation_refs:
+  - "so:sha256:0c6e04e7f4362f5d469f9c1eedd838e67a7a91caaba5e3ff6dac566b116bfc5a"
+  - "so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929"
+  - "so:sha256:294d794be09e649b5a17377c1360c0f7f573b667acdb9166a05c0a4df705f8fc"
+  - "so:sha256:2a6e186a42b949bfe289a0229aff20380459316332b5def65dce8cc12d748d3c"
+  - "so:sha256:3614eaf94c332c102fe2fe71112d59f710f5f4b0d2a2d2c6cb4e4bdee2c08619"
+  - "so:sha256:38fffd45bcc04ba58312d36f4694ea9b157f7956d67452bb829952f31cf23385"
+  - "so:sha256:3f9618460b3680449834d6a01f7568a99c6954a085a16a60727100a6c1603ba3"
+  - "so:sha256:53a0cccc831c1b1a79553dd940a05f9dffd030177bddb3179c798aab17c4b973"
+  - "so:sha256:54999e877e0a6e55e78be44001d34f072da479c0e7bdbed660299b04759ff27b"
+  - "so:sha256:640a03f63aa4ff13b48b0368fa9f2054cf42454c1cf81394bb0828315f7b9322"
+  - "so:sha256:728a791c0d757d9293790c2acaad9a2c8278eba56866c08cc6c2b2684f8c4584"
+  - "so:sha256:78222350b0c0ed60ecf756d621e27ce6c664b19d324ab61f8421e3aeb7dbaafb"
+  - "so:sha256:7e5702e0af48bd1ca7edc2d5c6350db34d8453874a5cd4344281607977584a90"
+  - "so:sha256:7e691f4aba31633d245206a65503fe36f855c86f4fd54bca5539692438ab900c"
+  - "so:sha256:a1f4b4761d924a497c1113cb2b5893bbb6559a8e5c385fdbf0c9c53f8a041b4c"
+  - "so:sha256:ac85cadefefdb5794db9a5111b67dde006ba05251cba3dc49b829b7d89b17665"
+  - "so:sha256:bbf039c9733c9bef609c0b780247a3ac0252404bc8c0708ab5b60b538aadabf2"
+  - "so:sha256:c2dc9c1dc745720dae9ec574e7457be15301687c36071abea1c09b48cbd3ad8d"
+  - "so:sha256:c9dddcabc8c17bd4e94ee006efe37dd3dad3e439c7a0177788f9ae0d3d9593dd"
+  - "so:sha256:d528055a778209ef7ba8c585a447245d9828ec629052779a75a2f65dfc408d40"
+  - "so:sha256:fa3b258421f3351e59071c2e155362cfecf3f26f91deb6077508331c112a5732"
+cq_warrants: ["CQ-008","CQ-009"]
+proposed_referent:
+  label: "Grant release occurrence"
+  description: >-
+    An instance is one relinquishment/termination of an admitted grant recorded by
+    admission-released and releasedAtMillis. It supplies an endpoint for that grant's recorded
+    holding, whose beginning is the admission-admitted boundary. Twenty-one chains positively
+    pair admission and release. The occurrence is distinct from the holding itself, the
+    admission that confers it, withdrawal of a request, and lease eviction. A release record
+    does not say whether work succeeded, failed, or completed any particular lane; release also
+    does not prove voluntary intent. Optional memoryPeakBytes is reported measurement content,
+    not the token charge, a physical memory limit, a per-lane wall duration, or a reusable cost
+    estimate. No uninterrupted interval is inferred between the two recorded boundaries.
+representation_status: domain_referent
+alternatives:
+  - label: "Information asserting that a grant was released, distinct from the release occurrence"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "The grant's released condition or end boundary, without a separate termination occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    The primary reading denotes the release that changes whether a grant can be treated as a
+    holder. The first batch's operational grant histories and second batch's information
+    histories disagree at this boundary; the information reading remains viable. An
+    independently correlated lease relinquishment and charge-removal receipt would distinguish
+    occurrence from assertion, while a separately linked execution verdict would be required to
+    say what happened to the work. No success inference or resource quantity is supplied by the
+    release tag alone.
+  discriminator: >-
+    The verified observation for (config_key_value,
+    "nonce=411b3ba7-f32a-4d07-8a0c-c764dc5b8088") pairs (config_key_value,
+    "_tag=admission-admitted") and (config_key_value, "admittedAtMillis=1788926595216") with
+    (config_key_value, "_tag=admission-released") and (config_key_value,
+    "releasedAtMillis=1788927008574"). In the second batch, (config_key_value,
+    "nonce=0ff912cf-d69b-4cd8-bf68-27293f6c0cce") has (config_key_value,
+    "releasedAtMillis=1788930321941") with the release tag after its positive admission. The
+    asserted release endpoint would be false if no release occurrence were denoted. Retaining
+    the admission assertion while extending its holding past the asserted release would
+    contradict the release content. Neither current state nor a verification outcome is the
+    discriminator.
+epistemic_status: proposed
+confidence:
+  value: 0.8
+  use_for_acceptance: false

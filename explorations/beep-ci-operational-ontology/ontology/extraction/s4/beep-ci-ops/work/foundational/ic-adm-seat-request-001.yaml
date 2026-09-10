@@ -1,0 +1,83 @@
+id: ic:adm-seat-request:001
+hypothesis_ref: dh:adm-seat-request:001
+identity:
+  supplies_identity: unresolved
+  identity_criterion: 'unresolved: the candidate is one solicitation for one requested admission, not
+    its requester or a later grant. A persisting-bearer criterion would require continuity of that particular
+    solicitation across queue evaluations and a distinction between changing its attributes and initiating
+    a fresh solicitation. A queue-relation criterion would instead be tied to one establishment of contention.
+    The cited journal entries do not show whether the underlying solicitation survives queue exit or whether
+    resubmission preserves it. Nonce equality correlates assertions locally and does not decide this sameness
+    question.'
+  reidentification_key:
+  - Local nonce and event-specific timestamps used only to align matched journal assertions; no globally
+    valid or cross-grain identity key is established.
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: The proposed unit is one solicitation concerning one item of requested work. Whether its unity
+    is that of an enduring content bearer or a bounded requester/admission relation remains unresolved;
+    a nonce-linked history is only an evidence grouping.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+  - A request relator mediating a particular solicitation between a requester and an admission authority
+    for specified work. Its existence would be tied to that solicitation relation, with queue participation
+    a temporally qualified condition. Intermediate ticket and decision observations are needed to show
+    this continuing relation.
+  - An information object containing a solicitation, bearing a queued-request role only while the scheduler
+    treats it as pending. The same content bearer could survive withdrawal; observing its identity outside
+    queue participation would distinguish it from a relation that ends at queue exit.
+  - An occurrence-centered model of enqueue and exit, with a minimally identified participant and no independently
+    reidentified continuing request. The journal alone does not exclude it.
+  - Only a journal information account of requested admission, leaving the operational contender uncorroborated.
+    A before/after ticket-store trace would distinguish it from an established solicitation.
+  existential_dependencies:
+  - Under a relator reading, the requester, particular requested work, and admission authority are constitutive
+    participants.
+  - Under an information-object reading, the solicitation needs an information realization, while actual
+    queue participation depends on the admission context and can end without erasing the content.
+  - The observations do not establish requester identity from capture owner labels or decide between those
+    dependence conditions.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+  - Queue participation ended by admission.
+  - Queue participation ended by withdrawal.
+  - Queue participation ended by ticket eviction.
+counterexamples:
+- description: A withdrawn solicitation can remain as the same archived request content while no longer
+    being queued, and identical work can later be resubmitted as a new operational request. The cited
+    merged-preview and review-fix enqueue/withdrawal pairs do not show which bearer survives either boundary.
+    Identifying the request by its nonce, requested work, requester, or waiting interval would choose
+    among those models without evidence; the ticket-eviction-only record does not even supply its entry
+    time.
+status: proposed
+grain: One proposed solicitation bearer. It is distinct from a queue-membership binding at an instant,
+  a request-making or queue-exit occurrence, a work specification, and the journal content describing
+  them. Which bearer underlies the solicitation is not settled.
+metaproperty_rationale: Queued membership can end while the requester persists; that makes queued-requester
+  a role candidate, not a new requester kind. Whether SeatRequest itself is rigid cannot be decided until
+  its bearer is fixed. A relator and a content object carrying an anti-rigid queued role have different
+  identity and dependence commitments. The word kind in source work classifications and the existence
+  of a nonce supply neither commitment.
+temporality_rationale: The matched pairs describe positive intervals of queue participation, not observed
+  continuity of an independently identified solicitation. The listed endpoints terminate participation
+  only; they do not settle whether the request bearer ceases or persists. No current membership follows
+  from a missing terminal report.
+evidence_refs:
+- so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a
+- so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964
+- so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+- CQ-021
+- CQ-023
+evidence_reading: The first two cited observations assert enqueue followed by withdrawal for merged-preview
+  and review-fix respectively; work kind and priority are attributes, not requester or request identities.
+  The third asserts only ticket eviction and leaves prior timing and work attributes absent. CQ-021 requires
+  queued requests and their owners; CQ-023 requires snapshot-based waiting under an explicit policy and
+  exception context. Those requirements do not establish a request sortal or supply missing owner identity.
+evidence_limits: Current-run observed journal evidence only; no synthetic evidence is used. Capture provenance,
+  including owner-reference and resanitization values, never individuates the requester or solicitation.

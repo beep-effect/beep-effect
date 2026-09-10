@@ -1,0 +1,49 @@
+id: "fa:admb-seat-request-alt:001"
+hypothesis_ref: "dh:admb-seat-request:001"
+identity_card_ref: "ic:admb-seat-request-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      kind: a rigid demand/ticket sortal that exists while queued and ceases
+      at admit, withdrawal, or ticket eviction rather than becoming a grant
+    still_viable: true
+  - label: >-
+      relator: the requesting-relation mediating submitter and contended
+      capacity, still viable if the demand is framed as a mediation rather
+      than a ticket object
+    still_viable: true
+  - label: >-
+      information_object: journal information about a submitted demand
+      (observationally equivalent until a ticket registration/removal trace
+      independent of journal production exists)
+    still_viable: true
+  - label: >-
+      event: only the act of requesting, with no enduring contender
+    still_viable: true
+  - label: >-
+      role: Requester as an anti-rigid role of an agent; rejected for this
+      referent because kind, priority, and requested charge qualify the
+      demand, and CQ-021 queries the request not the agent-as-role
+    still_viable: false
+strongest_counterexample: >-
+  Phase-as-kind: treating admission as a phase of the same individual as the
+  grant would identify the 3234b861 withdrawn demand
+  (so:sha256:32c61047477e38037e83f1ea36f043d374648bec64c0322c760e28b1e186a1ab)
+  with holdings such as 411b3ba7
+  (so:sha256:0cb159aa5cd447c7b42d80f0dcd792382db039de48f6cedab98b7fa24eefd929).
+  Ticket and grant are successor individuals correlated by nonce, not phases
+  of one continuant. po:sha256:8ffdf831953d081fe724d40a6987fadfce6675d74f1b7d2cb5274d1750c1b41f
+  and po:sha256:a8408e04e6bb8f46e4ff90294a80b9ca6d03d3ad48e77577e11b887e0f56733a
+  reconstruct a pending set in the interval enqueuedAtMillis <= t < admittedAtMillis,
+  which is a designed consumer of the demand as a continuant, not occurrence proof.
+verdict: analyzed
+needed_evidence: >-
+  A contemporaneous ticket registration/removal trace independent of journal
+  emission would discriminate operational queue participation from assertion
+  only. Continued queue membership after registration would discriminate the
+  enduring request from the enqueue act. Capture pseudonyms do not supply
+  requester identity.

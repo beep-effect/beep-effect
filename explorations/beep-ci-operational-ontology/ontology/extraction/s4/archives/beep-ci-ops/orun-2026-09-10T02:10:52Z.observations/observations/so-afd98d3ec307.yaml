@@ -1,0 +1,124 @@
+{
+  "id": "so:sha256:afd98d3ec3075c1f779cfdc91884602818d783a17fe96a90a89c76333f773f3d",
+  "schema_version": 1,
+  "repository": {
+    "commit": "1c7cd98289150f481fd40721efa6b7fe6109e711",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/live/canonical/leases/state-0000.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 28,
+    "content_sha256": "ed8b45b7aae731b03e2fad01010d2fe4f9f96475178ce504e822ed0ed887784c"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.1.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run3.py"
+  },
+  "symbol": {
+    "qualified_name": "run3-fleet/live/canonical/leases/state-0000.properties",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1788941816511"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attachedAt=2026-09-09T08:16:56.539Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=aab20cd5-d72d-4430-b199-c8143dec079c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/inline-schema-packet-closeout"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect13"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "coordinationProtocol=scheduler-origin-concurrency/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "diffFingerprint=9335762b0ecc98f6fc62172073675a4374ed1b573d1765e1dfe5ae00832b96ca"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1788941626093"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "heartbeatAtMillis=1788941946764"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=012163b8-ef66-4fb4-aba5-0d4af4072512"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=630d0163ac0b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "proofTier=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "resolvedHeadSha=6bd41dd036353bc1d51c48fb25625857fe5171fb"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-lease/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-09T08:16:56.511Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "support=active"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "unitName=agent-run-012163b8-ef66-4fb4-aba5-0d4af4072512.scope"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 0\nownerRef=630d0163ac0b\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-lease/v1\nattemptId=aab20cd5-d72d-4430-b199-c8143dec079c\nresolvedHeadSha=6bd41dd036353bc1d51c48fb25625857fe5171fb\ndiffFingerprint=9335762b0ecc98f6fc62172073675a4374ed1b573d1765e1dfe5ae00832b96ca\nproofTier=full\nenvProfile=local\nstage=pre-push\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect13\nbranch=codex/inline-schema-packet-closeout\ncoordinationProtocol=scheduler-origin-concurrency/v1\ncommand=bun run beep quality github-checks cheap-gates --collect-all && bun run beep quality github-checks pre-push && bun run beep ci local --affected --base origin/main\nstartedAt=2026-09-09T08:16:56.511Z\nadmittedAtMillis=1788941816511\nheartbeatAtMillis=1788941946764\nenqueuedAtMillis=1788941626093\nnonce=012163b8-ef66-4fb4-aba5-0d4af4072512\nownerRef=b980977aeafc\nownerRefVariant=attachedpid\nunitName=agent-run-012163b8-ef66-4fb4-aba5-0d4af4072512.scope\nsupport=active\nattachedAt=2026-09-09T08:16:56.539Z\n",
+  "epistemic_status": "parser_derived"
+}

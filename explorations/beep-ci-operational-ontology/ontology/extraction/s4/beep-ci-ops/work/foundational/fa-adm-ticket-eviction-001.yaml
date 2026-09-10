@@ -1,0 +1,49 @@
+id: fa:adm-ticket-eviction:001
+hypothesis_ref: dh:adm-ticket-eviction:001
+identity_card_ref: ic:adm-ticket-eviction:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: An information object asserting ticket eviction, especially plausible because both histories
+    consist only of that assertion. A before/after ticket-store trace linked to the reported removal would
+    discriminate actual eviction; death needs separate evidence.
+  still_viable: true
+- label: A queue participation's evicted terminal boundary without a separately reified act. Evidence
+    making removal-specific participants or effects independently decision-relevant would discriminate
+    the event reading.
+  still_viable: true
+strongest_counterexample: An orphaned, duplicated, or delayed ticket-eviction report could assert queued-submitter-death
+  even when no live ticket was removed at its append time. The same report would still be an information
+  object; inferring a grant release, a known requester identity, a measured wait, or a death occurrence
+  would invent missing evidence.
+verdict: analyzed
+test_rationales:
+  spec_vs_execution: A queue cleanup or eviction procedure can be repeated. This candidate is a particular
+    dated removal, not such a procedure, an admission policy, the requested work, or an execution cancellation.
+  world_vs_information: The sparse reports directly establish information asserting ticket eviction. The
+    operational event remains a viable proposed referent, not a corroborated occurrence. The stated submitter-death
+    reason is not independent evidence that anyone or any process died.
+  role_vs_bearer: The submitter bears a requester role, and the solicitation participates in the queue.
+    The submitter, that request, and the exit occurrence are distinct even though the report does not
+    independently identify the bearer.
+  context_reification_needed: The particular prior queue participation and removal instant are needed
+    to individuate the exit. Missing entry timing prevents a prior wait calculation; CQ-021 and CQ-023
+    additionally require a complete current queue observation and policy context.
+category_rationale: Event is a conditional classification of the proposed admission ticket eviction occurrence,
+  because its grain is one occurrence of a transition. It is not selected from the spelling of a tag.
+  The cited evidence directly establishes recorded assertion content; the linked card states the proposed
+  occurrence criterion, rigid event classification, participant dependence, and unresolved duration. A
+  coherent conditional event shape is available, so analysis can finish while the information-only and
+  boundary-only rivals remain viable. Neither rival is resolved by this seat.
+evidence_refs:
+- so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059
+- so:sha256:65609cedeaf3e99b51031c38b99ab7bc16ea0ef59fa66bea1d446ef3f7bd3333
+- CQ-021
+- CQ-023
+evidence_reading: The two cited observations each contain a single matching admission-ticket-evicted block,
+  at 1788498598672 and 1788920302811 respectively, with reason=queued-submitter-death. They supply no
+  matching enqueue time, work kind, priority, charge, or preceding admission. This permits analysis of
+  the narrow asserted exit, not reconstruction of the missing history.

@@ -1,0 +1,11 @@
+id: rat:70
+proposal_ref: otp:att-attempt-verdict:001
+proposal_sha256: 4ff8c05939f2b65a7c0a697fd46e196b781e599b1908d0312aae978418f8c546
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-10T07:59:14Z'
+verbatim_decision: Accept otp:att-attempt-verdict:001 as the assessment-origin VerificationResultArtifact
+  reuse supporting the recorded VerificationAttempt account, with equal-content assessment, copy/correction
+  and issuance identity deferred to run 4 as flagged.

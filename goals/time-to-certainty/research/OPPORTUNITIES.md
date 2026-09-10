@@ -806,3 +806,52 @@ subprocess diagnostics would make inventory stalls attributable.
 - **Would have prevented it:** the ratchet contract stating "own-package suite, in-process
   execution" next to the per-file rows, and a local `beep-cli coverage --filter` delta that
   names which package's suite each regressed row is measured from.
+
+## 2026-09-10 — C3.2b Stage A: required configuration exposes implicit fixture roots
+
+- **Doing:** adding the required sweep-file boundary and running the prescribed command tests.
+- **Evidence:** four shard command fixtures failed with `QualityTaskConfigurationError` because
+  their temporary directories had no repository marker; two worker fixtures mocked every
+  filesystem `exists` call as true, making root discovery stop at the CLI package.
+- **Attribution and repair:** introduced fixture integration failures, not production defaults.
+  Command fixtures now write an empty `bun.lock` root marker and the required sweep file;
+  worker mocks preserve real absolute-path existence checks. No git fixture writes are needed.
+- **Would have prevented it:** fixtures declaring the same root marker and required config as
+  the CLI boundary before adding root-dependent behavior.
+
+## 2026-09-10 — C3.2b Stage B: required test overlays are not fleet-wide
+
+- **Doing:** implementing the brief's exact `tsconfig.check.json,tsconfig.test.json` worker
+  contract and measuring identity, schema, and repo-cli after upstream Turbo builds.
+- **Evidence:** `packages/tooling/tool/cli/tsconfig.test.json` and
+  `apps/labs/ciops/tsconfig.test.json` are absent; the CLI instead owns `test/tsconfig.json`.
+  The new worker reports the required missing path before spawning ESLint, as specified.
+- **Would have prevented it:** a fleet overlay-presence census in the design gate, including
+  tool and lab kinds. Keep the required failure; choosing alternative test configs or
+  generating new overlays needs an explicit contract change, not a silent fallback.
+
+## 2026-09-10 — C3.2b Stage B: build outputs are also declared lint inputs
+
+- **Doing:** comparing the completed cold and unchanged warm fleet summaries.
+- **Evidence:** 82 of 140 lint task hashes changed; all 3,103 differing input entries are
+  under the owning package's `dist/`. No build-task or fingerprint hash changed. For identity,
+  the sole difference is `dist/packages.js`; UI has 270 changed declaration/JavaScript inputs.
+  The existing broad lint input glob includes those files even though ESLint ignores them.
+- **Would have prevented it:** an output-exclusion hash fixture before adding `^build` to this
+  task. Stage B explicitly requires unchanged inputs, so this lane records the conflict instead
+  of silently changing the input contract. Cache permissions explain same-hash misses but do
+  not explain these 82 changed hashes.
+
+## 2026-09-10 — C3.2b Stage B: parser CLI programs do not forward project references
+
+- **Doing:** attributing the typed-program measurement after both timed fleet runs finished.
+- **Evidence:** the installed typescript-eslint CLI path calls `createProgramFromConfigFile`,
+  whose `ts.createProgram(parsed.fileNames, parsed.options, host)` omits `parsed.projectReferences`.
+  An executable census of that helper returns zero program references for both check overlays:
+  identity's config has 1 reference but loads 5 upstream source files and 0 upstream dist files;
+  schema's config has 5 references but loads 65 upstream source files and 0 upstream dist files.
+  The reference-free test overlays load 5 and 74 upstream source files respectively.
+- **Would have prevented it:** a parser-program census, not just a compiler-overlay census,
+  at the design gate. Producing upstream declarations with `^build` does not make this CLI
+  helper consume them. The brief requires `parserOptions.project`; a custom reference-aware
+  `programs` implementation is a contract change and was not substituted by this lane.
