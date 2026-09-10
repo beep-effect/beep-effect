@@ -1,0 +1,27 @@
+{
+  "kind": "boolean-creep-post-r31-main-a203-impact",
+  "recordedAt": "2026-09-09T15:58:50.065913+00:00",
+  "previousRemoteMain": "702e815971a4030806cdbd9e8f6aa9260d0d3b62",
+  "observedRemoteMain": "a2030c8bd9124d1f0de8ae03a1eebbf5f1fa621f",
+  "upstreamCommit": "fix(repo-cli): print atlas check evidence before the silent reported exit (#1057)",
+  "changedFiles": [
+    "explorations/README.md",
+    "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
+    "packages/tooling/tool/cli/test/explore-atlas.test.ts"
+  ],
+  "changedIncludedCensusFiles": [
+    "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts"
+  ],
+  "existingInventoryOwnersInChangedFiles": [],
+  "qualifiedDesignTextReferences": [
+    "goals/boolean-creep/designs/family-cli-mode-flags.md"
+  ],
+  "rootHeadUnchanged": "4509872869eb87071250c67717769260f850bcf5",
+  "rootOriginMainUnchanged": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "rootForwardMergePerformed": false,
+  "scannerHead": "04cc73e733758e39a4e15ec294f86ef74ecc66c5",
+  "scannerPublishedPr": 1059,
+  "scannerOriginMainFetched": "a2030c8bd9124d1f0de8ae03a1eebbf5f1fa621f",
+  "scannerNewMergeOrVerificationPerformed": false,
+  "note": "Main advanced after scanner publication and while its hosted checks were running. Historical proof702 and exact PR head remain preserved. Root R31 terminal evidence remains pinned to d68. Freshness/mode proposal source changes from702 are unaffected by this three-file Atlas change; a fresh full corpus is still required after eventual root forward merge."
+}

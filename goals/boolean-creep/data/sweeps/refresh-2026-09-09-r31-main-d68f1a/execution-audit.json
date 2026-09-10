@@ -1,0 +1,250 @@
+{
+  "kind": "boolean-creep-r31-execution-terminal-audit",
+  "recordedAt": "2026-09-09T15:54:40.935301+00:00",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "originMainSha": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "controllerExitCode": 0,
+  "executionComplete": true,
+  "sourceStable": true,
+  "includedFiles": 3051,
+  "completedLanes": 27,
+  "parentCompletionFootersRead": 27,
+  "frozenInputCount": 3838,
+  "frozenInputDrift": [],
+  "rawOccurrences": 36,
+  "rawQualifiedCandidates": 8,
+  "parentSemanticReconciliationComplete": false,
+  "qualifiedAdmissions": 0,
+  "roundDryCredit": false,
+  "note": "All execution/validator receipts pass and every full footer has been read. Raw qualification counts are unadjudicated model proposals; parent findings and unresolved citation contracts still prevent final reconciliation and dry credit.",
+  "bindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/execution-summary.json",
+      "sha256": "365fed9bda401eac78866481d3d4fdaafdbb4e93940296e5214450868b68dc6e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/frozen-inputs.json",
+      "sha256": "c43581be13a6ddf12d6a75ff4e36a95693f32c1c3283d54e5a89f9b88c00cf96"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/lane-map.json",
+      "sha256": "097b43d8d4160894439329111625e9161160690f1332150750f43836f4889464"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-agents-workspace.execution.json",
+      "sha256": "c3bfdab2fc37de5694797ac7f6d1aa066cd13bb1dcc483c814738e5738df1b68"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-apps.execution.json",
+      "sha256": "690f610de114ea1a4616b8c6129b3759fe0d060b849a05e24fc3859b8ada3251"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-architecture-ecosystem-internal.execution.json",
+      "sha256": "4beee29f78184f9d90548d522780747d8975d2c2384e65fc31e56b8ca1c968e5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-a-c.execution.json",
+      "sha256": "a7ffdfc96feecacc52be3f96c36d7404344013bb8bbe8d67bc6293c562749326"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-d-k.execution.json",
+      "sha256": "713530bdac66a4ad218b83c0da8aedb55474806f17ff9fd70551fd2e862cd84b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-l-q.execution.json",
+      "sha256": "a6d3f8514871dad5c9c6a39de4e93a0c6f57296f6e7281510b682e708493044e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-r-z.execution.json",
+      "sha256": "a186d98733df239a22d4e8dffb4374babca53ec328720735c1339e9cf27c7400"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-internal-root.execution.json",
+      "sha256": "8ed777eaddf6b87d7dbb03347d040d061e2fa7300bb8db8a8fd895759fdbd97e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-yeet.execution.json",
+      "sha256": "f8f10b6a93d9184cb186a25bd033f73469eff3cc2211bd08faea1f51c3ed2442"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-drivers-a-f.execution.json",
+      "sha256": "f73765715c5c5362d9819792e9322c7049dd060c65c91939b24981d4fcca7251"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-drivers-g-m.execution.json",
+      "sha256": "46fe03a9af122f92d010dc31924f5a8dd36ba0dbe23e4c609b8698ba014342da"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-drivers-n-r.execution.json",
+      "sha256": "c7791f3326421398c9566b85a066fc2df9afda6fc2f4ee663b92dfb322da4ce5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-drivers-s-z.execution.json",
+      "sha256": "99033be2be61a4ae0b13c8cd16dd443ed855d6b823ba5949a7a0ecb08f2bbfce"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-epistemic-ontology.execution.json",
+      "sha256": "5a4b50a34aba40979cd9cfb004f734a63b9a350aece1ba02abcbb18cc4feefc1"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-capability.execution.json",
+      "sha256": "2b3b7bbbd4d1ee2dacb60bbe9816d41f30a16b49981cdf701e77ffe63fc2a8d5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-modeling-rest.execution.json",
+      "sha256": "f72bdb8607cc66056680aabd82ccf73b9ad359252b1697e93136a3e75aad10e8"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-primitive.execution.json",
+      "sha256": "5dbc0a8a4e24b43369524bd2a075d92429925f866c181fe0cd31d7fe4a4c5d95"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-schema-a-m.execution.json",
+      "sha256": "3d68b73924650e29aad83f6e0dea41999f2c730eb3c3353008b41999b9da664a"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-schema-n-z.execution.json",
+      "sha256": "eef7a033118e3b9aeb2e111dc3bcc5e471b96d0263e91438da4f8d2654cc3aa9"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-ui.execution.json",
+      "sha256": "292f8e5199a220f5a26cdd91a3cd407bd326dd108ce8738a9a92fc3000fb278b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-law-practice-domain.execution.json",
+      "sha256": "0e6da7c94cc13f3661baceba294d16320e750128650801aeebd9d9371665614c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-law-practice-runtime.execution.json",
+      "sha256": "b6b3afd70dbe68daa093d24091525ba5beb2d9126b20280a812549e004a644c7"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-shared-documents.execution.json",
+      "sha256": "5e78657e4c2b056f6736ac38c356ed2e7feb05ff440aa0decb6807b61e150ff0"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-tool-docgen.execution.json",
+      "sha256": "f674e21590bde7a5eb7fd2ce55957a610edd0f6a85bad0fb899f67414ef029b6"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-tooling-library-observability.execution.json",
+      "sha256": "25672b19bdf74998249948a2023fd946b5431c9c278350c79a7d3cf45b2e9f3f"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-tooling-library-support.execution.json",
+      "sha256": "479decbb21cd1f09d8cb8a846538bc0d80da86fff77e76759b4bf3153b46a659"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-tooling-policy.execution.json",
+      "sha256": "6d6a583d5fb79d1ca2b2f555dadef26e66ce95d4f3e5829bd9b926b350eddf64"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-agents-workspace.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-apps.jsonl",
+      "sha256": "d6b7ab06ab545106517654fa0d2f6c65331e5653e5edbe08c7ed44c4a7a3135b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-architecture-ecosystem-internal.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-a-c.jsonl",
+      "sha256": "ec68866a848b78b14373a45107a1ba01beffb219f3250349f95d1b333aaa904e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-d-k.jsonl",
+      "sha256": "ed9ff2bbbd4cc80862a652cdd71bf41241ee5edc3ba41c186819bf90c606d162"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-l-q.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-commands-r-z.jsonl",
+      "sha256": "72a015dcf07cd8c7cc85a37501f798b4b87d3d2dd42608645616b1425428596e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-internal-root.jsonl",
+      "sha256": "d56c34bc9d16b578da226e8f8b513189af20bd80d01bc1e17b42e679ef8d56ce"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-cli-yeet.jsonl",
+      "sha256": "ae92ed245a315a7463d7d17cfbbed9e9b41b9319b3c8b3018085d9093d76d0a3"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-drivers-a-f.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-drivers-g-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-drivers-n-r.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-drivers-s-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-epistemic-ontology.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-capability.jsonl",
+      "sha256": "4fd1b9bef72731b157a57f8bafd82a0f4f684d6056cd374a344ca0d29a17e5e2"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-modeling-rest.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-primitive.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-schema-a-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-schema-n-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-ui.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-law-practice-domain.jsonl",
+      "sha256": "999128da976a500e7ed555ac08dc791f7fd7f0b3150c7aa396b566a45395db48"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-law-practice-runtime.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-shared-documents.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-tool-docgen.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-tooling-library-observability.jsonl",
+      "sha256": "4e9c682852d875ed705c07ff34b7a50b0bef85bc5ddf222ceb77c596cd943ab5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-tooling-library-support.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-tooling-policy.jsonl",
+      "sha256": "6fd3df395b2b6114b6e1de0827feed4042bae419d4d28232717b4223f2c98da5"
+    }
+  ]
+}

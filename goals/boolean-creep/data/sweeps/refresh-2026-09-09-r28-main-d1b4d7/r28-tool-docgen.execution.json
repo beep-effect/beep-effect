@@ -1,0 +1,22 @@
+{
+  "lane": "r28-tool-docgen",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T05:14:37.787426+00:00",
+  "finished": "2026-09-09T05:22:11.917072+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tool-docgen.jsonl`\n\nCounts: 0 confirmed, 2 disqualified (both seed corrections). Validator: OK.\n\nCoverage: every assigned root under `packages/tooling/tool/docgen/src` was inspected (13 files, including `internal/JsonFile.ts` and `markdown-toc.d.ts`).\n\nSeed drift / withdrawals (not re-recorded):\n- `ConfigurationShape`: line 213 \u2192 209 (first Boolean member); D1 unchanged.\n- `r25-tool-docgen-cli-config-toggles`: Flag.boolean consts at 53 are command handles; surviving carrier is the Command.make `options` bag (line 122 / make at 156); D1 unchanged.\n- Withdrawn as ineligible: `isTypeCheckableFenceMatch.fenceGates` and `Parser.nodeDocGates` (callable/invented carriers); `checkEntry.options` (function flag parameters).\n- Withdrawn as non-Boolean: `r26-tool-docgen-cli-parse-compiler-options-source` and `r26-tool-docgen-cli-examples-compiler-options-source` (`Option<string>` overlays; seed line 155 is now JSDoc, `Command.make` is 156).\n- Unchanged, not duplicated: `ConfigurationSchema`, `LoadArgs`, `defaultCompilerOptions`, `examplesCompilerOptions`, `cleanupExamples.removeOptions`, `writeFileToOutDir` `[exists, isOverwritable]`, designed `DocgenProofManifestVerification`.\n\nNo unresolved source question.\n\n\ud83c\udf31 graft saved ~9,900 tokens this turn (1 call)",
+  "transcriptSha256": "56f90776822fc1ebd40954e2ea2c37049e8eef4301c87f41e26cbbac7366cc7a",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 2 records, 2 unique ids\n"
+}

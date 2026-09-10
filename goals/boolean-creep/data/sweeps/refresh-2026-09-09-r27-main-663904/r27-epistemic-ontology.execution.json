@@ -1,0 +1,17 @@
+{
+  "lane": "r27-epistemic-ontology",
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "started": "2026-09-09T02:22:09.276033+00:00",
+  "finished": "2026-09-09T02:35:51.651523+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r27-main-663904/r27-epistemic-ontology.jsonl` \u2014 confirmed 1, disqualified 1. All assigned epistemic/ontology `src` roots covered. Seed declarations still present; no member-list drift.",
+  "transcriptSha256": "51236e45cb86c4a9604d3f4170af84129fbcc7b94b7204c43ceed2946e3fe1b8",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "569b1d743ab597cf0379b68e254cc772ff386d09a6cc200ecdaec1a93bf16998"
+}

@@ -1,0 +1,30 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 847,
+  "afterCount": 842,
+  "beforeInventorySha256": "8012d8134e12cda1ebe15221757286e9928fe0613c03d32d328e5036b8e91bf6",
+  "afterInventorySha256": "2458df9bafdc5877090ad52780bece29ef2a9b613a539c5dd16f643ecb7c63fd",
+  "withdrawnIds": [
+    "r3-domains-court-reporter-vocab-drift-probes",
+    "r3-domains-hohfeld-orbit-guards",
+    "r3-domains-act-frame-shape-probes",
+    "r3-domains-patent-normalizer-shape-guards",
+    "r25-law-practice-runtime-email-walk-file-kind-guards",
+    "r25-law-practice-runtime-effective-dispositions"
+  ],
+  "addedIds": ["r28-shared-documents-vault-sync-status-cursor-position"],
+  "rowArchive": "history/inventory/2026-09-09-r28-law-shared-before.jsonl",
+  "rowArchiveSha256": "b8fe17478ccfe83d198339275c3644a354241b8c0a424819145ffae44395fda7",
+  "audit": "data/design-refresh-2026-09-09-r28-law-shared-census.md",
+  "auditSha256": "18873369c4406ecd9aaa4bf89ebe85553523f5f0ee49d4f9701851a43cbe8a85",
+  "independentEvidenceSha256": {
+    "r28-law-practice-domain.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "r28-law-practice-domain.execution.json": "8649e416db47f8a91af3c8b56e93f93cb9a573fa0d96d765cb79d51994911395",
+    "r28-law-practice-runtime.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "r28-law-practice-runtime.execution.json": "14147a3e1aa6bfe85fb2f6295ea89dfcd122303be5d509c21d221c45a7f2230c",
+    "r28-shared-documents.jsonl": "7d5496868c9a031ce6ce9114f3c95b45d817745ade80de59f96db72c0a4a85ea",
+    "r28-shared-documents.execution.json": "a57f2a055b92ac23f8c6bc65474ac0ae5dba22dce5f3725857dcffd54bddc11e"
+  },
+  "note": "Six non-Boolean/callable owners withdrawn, one actual independent cursor-presence D1 added. No qualified designs/status affected; no source, P3 or dry credit."
+}

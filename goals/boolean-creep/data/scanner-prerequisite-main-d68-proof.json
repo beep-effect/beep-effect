@@ -1,0 +1,58 @@
+{
+  "kind": "scanner-prerequisite-main-d68-proof",
+  "previousPublication": {
+    "head": "fbfe71b77de2c49f6523c4899ba8e3c2c1db3166",
+    "preview": "45dfb1e98aaf8e310727a7b0e159349e3d3c3c49",
+    "previewMain": "bed30c6adf3beed7de8538209fbdc84d26a3b8ce",
+    "outcome": "failure",
+    "pushed": false,
+    "failedLane": "ci:local:coverage",
+    "coverageFailures": [
+      "  - @beep/repo-cli (packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts) functions: 83.33 < 84.61",
+      "  - @beep/repo-cli (packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts) lines: 90.07 < 90.83",
+      "  - @beep/repo-cli (packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts) statements: 90.51 < 91.24"
+    ],
+    "attribution": "Inherited Planner.ts coverage gap on old bed30 source. Source and floors unchanged between bed30 and d68; main d68 adds direct yeetPlanPhases behavior tests. Merge current main and rerun full proof. This is distinct from prior moving-baseline failure.",
+    "evidence": "~/.cache/beep/boolean-creep/scanner-pr-20260909/publish-scheduler-repair-bed30-failure-attribution/receipt.json"
+  },
+  "currentHead": "12cd15340dd99d052f99951ed80718556ed13d12",
+  "originMainSha": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "frozenInstallExitCode": 0,
+  "configSha256": "15c9ed8e120de2ee89f759b66010e3d2a1bcf44f960678f958da6b9565711873",
+  "schedulerTestSha256": "6fe705fb7c854116a5e83ce3334451f9c12f569ae4d60b733a7c630d9b427299",
+  "currentVerification": {
+    "command": ["bun", "run", "beep", "yeet", "verify"],
+    "startedAt": "2026-09-09T14:25:42.354535+00:00",
+    "status": "success",
+    "evidence": "~/.cache/beep/boolean-creep/scanner-pr-20260909/verify-d68-full-result/receipt.json",
+    "exitCode": 0,
+    "finishedAt": "2026-09-09T14:52:51.725693+00:00",
+    "passedSteps": 35,
+    "proofTier": "full",
+    "verdictSha256": "912733acb8f960864d10623fe468b281a646c4e25f4d5bc47c29da774dec2fee"
+  },
+  "fullProofComplete": true,
+  "hostedProofComplete": false,
+  "merged": false,
+  "currentPublication": {
+    "command": [
+      "bun",
+      "run",
+      "beep",
+      "yeet",
+      "publish",
+      "--push-only",
+      "--reuse-verified",
+      "--pr"
+    ],
+    "startedAt": "2026-09-09T14:58:29.713553+00:00",
+    "status": "failure",
+    "proofReuseAccepted": true,
+    "evidence": "~/.cache/beep/boolean-creep/scanner-pr-20260909/publish-d68-pr-create-failure/receipt.json",
+    "exitCode": 1,
+    "finishedAt": "2026-09-09T15:08:32.372921+00:00",
+    "pushed": true,
+    "prCreated": false,
+    "attribution": "Push succeeded; gh pr create failed to identify the pushed branch. An explicit repository/head fallback is required. Remote main also advanced separately to702e815971."
+  }
+}

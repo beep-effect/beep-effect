@@ -1,0 +1,17 @@
+{
+  "lane": "r25-drivers-n-r",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T21:54:11.981345+00:00",
+  "finished": "2026-09-08T22:04:40.730896+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 6,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-drivers-n-r.jsonl` \u2014 confirmed 0, disqualified 6. All 15 assigned `src` trees covered (`runpod` `_generated` excluded). Skip-list file+symbol seeds all still present; no missing declarations. Minor line drift only (e.g. `EngineProfile` first boolean now 56, `StreamState` 229, `ObsRecordStatus` 1129, `PhoenixPromptReadResult` 827, `OpenclawChannelAccountStatus` 682).",
+  "transcriptSha256": "8fc822481312de29e5ab12fde9cfb08fa4d2b02c9888a575a8140443d93794e2",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

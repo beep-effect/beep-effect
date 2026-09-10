@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "scratchpad-draft-archive/v1",
+  "sourceCommit": "b7850fbfceddf40ac0975f5913885eeaa5df8acf",
+  "files": [
+    {
+      "originalPath": "scratchpad/yeet-effect/HookKernel.ts",
+      "archivePath": "scratchpad/yeet-effect/drafts/HookKernel.ts.txt",
+      "sha256": "be4e27e2e6227e064033c2c59e49410f6062203febd068a159c02083abe21e86",
+      "bytes": 18354
+    },
+    {
+      "originalPath": "scratchpad/yeet-effect/InboxState.ts",
+      "archivePath": "scratchpad/yeet-effect/drafts/InboxState.ts.txt",
+      "sha256": "7d94fc7ffca6474670d11618f8a8b18cb0c4951ee9345544bc8b304bfb616981",
+      "bytes": 3625
+    },
+    {
+      "originalPath": "scratchpad/yeet-effect/Processes.ts",
+      "archivePath": "scratchpad/yeet-effect/drafts/Processes.ts.txt",
+      "sha256": "08569216fb2977b3dcd8b4f4a57896621bb5bc15e90d183db41d164bface609a",
+      "bytes": 6712
+    },
+    {
+      "originalPath": "scratchpad/yeet-effect/WatcherKernel.ts",
+      "archivePath": "scratchpad/yeet-effect/drafts/WatcherKernel.ts.txt",
+      "sha256": "08569216fb2977b3dcd8b4f4a57896621bb5bc15e90d183db41d164bface609a",
+      "bytes": 6712
+    }
+  ],
+  "status": "unfinished-design-text",
+  "reason": "These saved prototypes have no incoming imports, reference a missing Domain.ts, and include duplicate Processes/WatcherKernel drafts. Preserve exact bytes without presenting the incomplete port as executable workspace code."
+}

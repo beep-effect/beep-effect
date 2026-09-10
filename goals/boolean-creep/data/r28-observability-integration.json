@@ -1,0 +1,132 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 802,
+  "afterCount": 771,
+  "beforeInventorySha256": "acad72f3f654d83efb3cb9a20b41b949eb031a4c9b2f31cb69db55a233c1474b",
+  "afterInventorySha256": "6f85ac96f91152a7c04668e51114cbe388f3143b6ae782087d9d2de20cae508c",
+  "correctedIds": [
+    "r3-tooling-jsdoc-worker-section-flags",
+    "docgen-tool-configuration-toggles"
+  ],
+  "addedIds": [
+    "r28-tooling-library-observability-mechanical-terminal-consistency",
+    "r28-tooling-library-observability-deployment-remote-fields",
+    "r28-tooling-library-observability-witness-resolved-config"
+  ],
+  "newQualifiedIds": [
+    "r28-tooling-library-observability-deployment-remote-fields"
+  ],
+  "withdrawnIds": [
+    "r3-tooling-forwarder-file-windows",
+    "r3-tooling-source-discovery-file-windows",
+    "r3-tooling-phoenix-http-status-gates",
+    "r3-tooling-config-snapshot-path-kind-gates",
+    "r3-tooling-phoenix-dataset-not-found-gates",
+    "r3-tooling-identity-registry-path-error-gates",
+    "r3-tooling-docgen-fence-typecheck-gates",
+    "r3-tooling-docgen-parser-node-doc-gates",
+    "r3-tooling-docgen-checker-enforce-options",
+    "r26-tool-docgen-cli-parse-compiler-options-source",
+    "r26-tool-docgen-cli-examples-compiler-options-source",
+    "r25-tooling-library-policy-test-phoenix-graphql-project-stats",
+    "r25-tooling-library-policy-test-phoenix-project-has-traces",
+    "r25-tooling-library-policy-test-phoenix-sync-input-gates",
+    "agent-effectiveness-phoenix-sync-new-options",
+    "r25-tooling-library-policy-test-source-discovery-include-all",
+    "r25-tooling-library-policy-test-forwarder-include-all",
+    "r25-tooling-library-policy-test-source-discovery-result-include-all",
+    "r25-tooling-library-policy-test-discovered-source-maxfiles",
+    "r25-tooling-library-policy-test-forwarder-source-coverage-maxfiles",
+    "r25-tooling-library-policy-test-benchmark-run-quality-gate",
+    "ai-metrics-benchmark-run-input-passed-quality-gate",
+    "r25-tooling-library-policy-test-scorecard-completion-ready",
+    "r25-tooling-library-policy-test-scorecard-summary-completion-ready",
+    "r25-tooling-library-policy-test-mirror-p6-proof-preserved",
+    "docgen-proof-manifest-verification-reason",
+    "ai-metrics-mirror-privacy-proof",
+    "ai-metrics-redaction-safety",
+    "ai-metrics-phoenix-sync-policy",
+    "hook-pulse-v1-owned-fields",
+    "ai-metrics-source-attribution-thread-spawn",
+    "ai-metrics-discovered-transcript-file-thread-spawn",
+    "ai-metrics-otlp-turn-export-row-thread-spawn",
+    "ai-metrics-sanitized-transcript-thread-spawn"
+  ],
+  "withdrawnQualifiedIds": [
+    "docgen-proof-manifest-verification-reason",
+    "ai-metrics-mirror-privacy-proof",
+    "ai-metrics-redaction-safety",
+    "ai-metrics-phoenix-sync-policy",
+    "hook-pulse-v1-owned-fields",
+    "ai-metrics-source-attribution-thread-spawn",
+    "ai-metrics-discovered-transcript-file-thread-spawn",
+    "ai-metrics-otlp-turn-export-row-thread-spawn",
+    "ai-metrics-sanitized-transcript-thread-spawn"
+  ],
+  "rejectedRawIds": [
+    "r28-tooling-library-observability-phoenix-section-storage-status",
+    "hook-pulse-raw-event-owned-fields"
+  ],
+  "deferredMetadataIds": ["r25-tool-docgen-cli-config-toggles"],
+  "rowArchive": "history/inventory/2026-09-09-r28-observability-before.jsonl",
+  "rowArchiveSha256": "eacb41f08f3ae4dea77bbbb707d013aed9c43f8b99505107b70ab614ed8a955a",
+  "designArchive": "history/designs/2026-09-09-r28-observability",
+  "archivedDesignSha256": {
+    "docgen-proof-manifest-verification-reason": "ee3a7ae359f974d95d03eb5351193227d48a10458c6087fb4d3fb4617c9ad446",
+    "ai-metrics-mirror-privacy-proof": "ebc35447fe48ff5a3533b32bf7d49ee75a3ee77317eec968b95587a69dd87e5b",
+    "ai-metrics-redaction-safety": "11e3a7d63ea1c4aa0b8007b6abea8ce60d369e62d3738060a67c38f706b01584",
+    "ai-metrics-phoenix-sync-policy": "73f1ed8eb819b92bbc0434f9c7b490e307e701bcbafb635287e6743894df7c47",
+    "hook-pulse-v1-owned-fields": "10e5ba7dcc2980a7176406c9cc543d79db4446ac41ee2e52415fbecffffa8352",
+    "ai-metrics-source-attribution-thread-spawn": "912220c2170989862b74633fee2c494f0da6680e905ad88b276cf6d7273b392d",
+    "ai-metrics-discovered-transcript-file-thread-spawn": "9081202849f3bfebdf1e4d77b10ba6277bcd3419b524733f4c1832002839d4be",
+    "ai-metrics-otlp-turn-export-row-thread-spawn": "dd4152aab9fcc25eaaa425e574983eb3b881d78fa53c728146ba4ebbc0d53ffb",
+    "ai-metrics-sanitized-transcript-thread-spawn": "9a271e857b6f7d1512d8b7b2d9d215e3507a6e353b32c8fe10ec1f1f790cdfbe"
+  },
+  "currentDesignSha256": {
+    "r28-tooling-library-observability-deployment-remote-fields": "8f5f55e1c20964415224a797a39e693dfd248dfd259db7cff312861b6c38855d"
+  },
+  "inputSha256": {
+    "data/design-refresh-2026-09-09-r28-observability-docgen.md": "7d861e0f6370c5010e68a464828b16b725eb18f276eeb6e1eb5e444c27626aa7",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-observability-contract-correction1.execution.json": "e1545e19dd02db1e07852c99c4073ce69922463751a1c6dde7dfe4b886365dfb",
+    "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-observability-contract-correction1.jsonl": "522aad7489b929d65246a33f28b03948f1873c2e6c62b36a066d160ffcb81e68",
+    "data/provisional-r28-tooling-library-observability-deployment-remote-fields.md": "768e162582dae629313476a24d58757d537e39c0912b70342845311f56895d3f"
+  },
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts": "693da6ec2a00c1343fa0f800ac29d2fff7d287b829a920ae76275015eae2af3c",
+    "packages/tooling/library/ai-metrics/src/flight-record.ts": "76f051706f3700709345d5732e2982e7a7fc8c3ff8aaa0760e5b0fdbab537aeb",
+    "packages/tooling/library/ai-metrics/src/install.ts": "44b64a332e439e3ad094b89a46aaf52edd75f4936c1cac869da63f67d50a9c66",
+    "packages/tooling/library/ai-metrics/src/hook-pulse.ts": "f5570157d86bd3a6bddd9216cb3b1d2dfa8c14dbfdb81015bc164dd8178f69d9",
+    "packages/tooling/library/ai-metrics/src/telemetry-v2.ts": "c137d000bef96755ea660eb39dbe1f33ab4c777afedf63bad3180f0479d32703",
+    "packages/tooling/library/ai-metrics/src/models.ts": "a186077d04d219482ff73fe317b37a0b850c437739d30ef86b55c1fe0e2a02fb",
+    "packages/tooling/library/ai-metrics/src/forwarder.ts": "4ad6495f60c09c0927e2e4dfd3e1e7f098415a496218808df6df61daab68c32e",
+    "packages/tooling/library/ai-metrics/src/source-discovery.ts": "9287dc3f18528df35ae8b42510908c748cc1b7d68fb7c12491a998e126cdfefd",
+    "packages/tooling/library/ai-metrics/src/config-snapshot.ts": "0057374003fceeb5e829a70be77dfb9356c7490f9bc49e22f20e9152f6eba3ba",
+    "packages/tooling/library/ai-metrics/src/identity-registry.ts": "447f65d89bcfbaa40161b3bdcde38000a1509b0410e323161b56085677a4529f",
+    "packages/tooling/library/ai-metrics/src/privacy.ts": "3d62be1b591ff3e8217f98aa718bf1888cd0847b62d041f64357106ea5c2c51e",
+    "packages/tooling/library/ai-metrics/src/mirror.ts": "076a962201291fba6b2e8534bb7a4471bbb23d5e8959eea2d626b47a1ac2c73f",
+    "packages/tooling/library/ai-metrics/src/scorecard.ts": "9858b8bfcfd4e3583ee2726e50b5fbb11e8633feda8c8fec947be13107fbe5b4",
+    "packages/tooling/library/ai-sync/src/validation.ts": "a87fe5285364124fe8c7d6d12849f2e2f9737e58b1b5da2a7709c4c45dcf0660",
+    "packages/tooling/library/qa-capture/src/witness/witness.iife.ts": "255fbc4caf28e3cf88d76b3b672e6ca408136b6cfa2952e005152a7c89268f84",
+    "packages/tooling/tool/docgen/src/CLI.ts": "bdbee0f4068afecb084396dd491f665a8264c0de1f2cda06e1d786c02a89507a",
+    "packages/tooling/tool/docgen/src/Configuration.ts": "ac1a676711a1eb1d4837403d642469e2ecb72e8af984892959605293b450e1fd",
+    "packages/tooling/tool/docgen/src/Core.ts": "d6ba58abb574a4f37b789772d4bbbe253eb36628d7a9a8470b0b22628a9becca",
+    "packages/tooling/tool/docgen/src/Parser.ts": "8076a7d7cc2d24f6c7df3c534f2b87f12ed2f2bfafbe01c71690c0c4ea7f81d1",
+    "packages/tooling/tool/docgen/src/Checker.ts": "b180f70055ff7ca72984fd83ff145f1bcf1400f7d94afcb36437c972c7e9cbc0",
+    "packages/tooling/tool/docgen/src/ProofManifest.ts": "9d090321c360d7af5dbb32ee0d4f7cbbf8a4ba62b003756c5d32bbe3cb94d1ff",
+    "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts": "281c45bedcfb4e5ac06a95416a1143d6b169332f395166eb1a3df1559d8392f4",
+    "packages/tooling/library/ai-metrics/test/install.test.ts": "6abf47ba2adcd68de061eaec4572959589b7567d16b4a9d227d3abcd30636366",
+    "packages/tooling/library/ai-metrics/test/telemetry-v2.test.ts": "c2297cf48defbbc983af0b2373ef3e1f6c72db3bb6d80fcac32293015a01f442",
+    "packages/tooling/library/ai-metrics/test/fixtures/telemetry-v2/flight-record.json": "f366671fc8a041f513bd7da83cb2ea83bc7312f78d79ae928603c35d2aefadf0",
+    "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts": "eca53b5cb4bb822b55b812cb6e2aee95732929e6c0f2ee7bf77c297bbe654ad6"
+  },
+  "formalIndependentReview": false,
+  "currentDryCredit": 0,
+  "notes": [
+    "Observability source findings are bound to its one successful same-conversation independent correction. Docgen-specific owner withdrawals and resolved-configuration anchor are native source adjudications, not an additional Grok correction.",
+    "The actual Configuration.load argument object needs a separate docgen CLI metadata correction; the audit suggestion to anchor only at Command.make156 is not adopted.",
+    "The mechanical validator supports all eight observations; its six rejection outcomes are retained. The separate post-filter non-Boolean model is not admitted.",
+    "Deployment reuses the existing local/dankserver LiteralKit and preserves all broader plan-step false/true combinations and encoded keys/defaults.",
+    "All nine withdrawn qualified rows and exact current designs are archived. No historical review supplies current P3 approval."
+  ]
+}

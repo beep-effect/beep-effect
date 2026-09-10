@@ -1,0 +1,17 @@
+{
+  "lane": "r25-epistemic-ontology",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:04:40.732528+00:00",
+  "finished": "2026-09-08T22:16:57.274017+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 7,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-epistemic-ontology.jsonl` \u2014 confirmed 1, disqualified 6. Covered all 13 assigned areas. All 44 seed file+symbol pairs still exist. Line drift vs inventory: OntologyInspectorFormState 393\u2192399, ToolbarState opening 63\u219275, documentToolbarState openBusy 74\u219281, OntologyDocumentRegion dirty 105\u2192120.",
+  "transcriptSha256": "3f30215b8e3e8db14ba1614668e60232afe7561a01ca4c51eb2844849e50cb85",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

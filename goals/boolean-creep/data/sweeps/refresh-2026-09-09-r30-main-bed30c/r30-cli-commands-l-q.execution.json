@@ -1,0 +1,22 @@
+{
+  "lane": "r30-cli-commands-l-q",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T13:36:47.691216+00:00",
+  "finished": "2026-09-09T13:45:25.747884+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 6,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-cli-commands-l-q.jsonl`\n\nCounts: **1 confirmed**, **5 disqualified**. Validator: `inventory OK: 6 records, 6 unique ids`.\n\nCoverage: every assigned root was scanned (Labs, Laws, Lint, Purge, Qa, Quality), including unindexed source via file inventory plus targeted Boolean searches. Labs had no eligible cluster (only a `json` Flag/handler parameter).\n\nSeed revalidation: all listed seed owners, members, and classifications still hold on current source. No seed withdrawals and no locator drift that required a correction record. Unchanged qualified/disqualified seeds were not duplicated.\n\nNo unresolved source question.",
+  "transcriptSha256": "aa2be160366d4b58cf683be0874f0ee61855ec1d82077b2f4f90b9877e5c5713",
+  "runnerSha256": "a4d7f7629866b91b6d007f21235d50d699b49dd3a39d3b60864a91f799bbb355",
+  "seedSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 6 records, 6 unique ids\n"
+}

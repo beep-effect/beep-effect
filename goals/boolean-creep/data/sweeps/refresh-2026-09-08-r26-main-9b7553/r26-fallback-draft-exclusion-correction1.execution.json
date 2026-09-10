@@ -1,0 +1,13 @@
+{
+  "lane": "r26-fallback-draft-exclusion-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-09T01:00:58.871095+00:00",
+  "finished": "2026-09-09T01:03:01.781841+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "transcriptSha256": "ee86dbda8e9a6b035dbcbe2b128224699e1f55519289646620ace7bc0cfaf3e1",
+  "supersedesReport": "r26-agents-workspace.jsonl"
+}

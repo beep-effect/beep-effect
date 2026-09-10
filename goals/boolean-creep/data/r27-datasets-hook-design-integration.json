@@ -1,0 +1,25 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "advancedIds": [
+    "r27-tooling-library-observability-outcomes-dataset-scorecard-presence",
+    "r27-tooling-library-observability-config-snapshots-dataset-presence",
+    "hook-pulse-v1-owned-fields"
+  ],
+  "transition": "confirmed -> designed",
+  "inventoryBeforeSha256": "1ac0b4454801a600ed65fd5a5ae214c6f8a816f6012610d8c6f3de27297c76fe",
+  "inventoryAfterSha256": "68f071f10ae29e273a508cf8aec1bd639b874d12692594548ee40874bb83f021",
+  "designSha256": {
+    "designs/r27-tooling-library-observability-outcomes-dataset-scorecard-presence.md": "ce529592a4a378fdbc4224f0d6a59ea6bec16eff51605e9d1a9b36c2e3d26ead",
+    "designs/r27-tooling-library-observability-config-snapshots-dataset-presence.md": "f7ae29d4ff81796dd0dc6fa9bfa6f36826ff962f122eccea21653590762ac4ee",
+    "designs/hook-pulse-v1-owned-fields.md": "10e5ba7dcc2980a7176406c9cc543d79db4446ac41ee2e52415fbecffffa8352"
+  },
+  "archive": "history/inventory/2026-09-09-r27-datasets-hook-design-advancement.jsonl",
+  "independentCensus": "data/sweeps/refresh-2026-09-09-r27-main-663904/r27-observability-contract-correction1.execution.json",
+  "formalIndependentReview": false,
+  "implementationProofPending": [
+    "HookPulse optional-Never codecs and exact diagnostics",
+    "complete dataset Phoenix create/append argument parity",
+    "HookPulse raw/canonical/legacy/writer/replay compatibility"
+  ]
+}

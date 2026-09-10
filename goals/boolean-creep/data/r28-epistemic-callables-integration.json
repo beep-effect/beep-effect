@@ -1,0 +1,31 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 842,
+  "afterCount": 829,
+  "beforeInventorySha256": "2458df9bafdc5877090ad52780bece29ef2a9b613a539c5dd16f643ecb7c63fd",
+  "afterInventorySha256": "4f1db0cacb616281fe14ed3fc15ee00c097673109596182189df58e1dbc3b4ea",
+  "withdrawnIds": [
+    "r3-domains-contradiction-repo-interval-probes",
+    "r3-domains-ontology-tool-delta-shape-probes",
+    "r3-domains-session-graph-partition-probes",
+    "r3-domains-shacl-violation-equality-probes",
+    "r3-domains-visualizer-relationship-probes",
+    "r3-domains-session-quad-membership-probes",
+    "r3-domains-contradiction-evidence-set-probes",
+    "r3-domains-contradiction-proposal-id-probes",
+    "r3-domains-execution-record-hash-probes",
+    "r3-domains-evidence-span-consistency-probes",
+    "r3-domains-contradiction-repo-applicability-probes",
+    "r3-domains-sparql-limit-probes",
+    "r3-domains-contradiction-repo-anchor-sql-probes"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-epistemic-callables.jsonl",
+  "rowArchiveSha256": "e4e234c79673c2a000bbe9fa7d18087564f82d7602d523d3ff797cee754c693d",
+  "audit": "data/design-refresh-2026-09-09-r28-graph-worker-retry.md",
+  "auditSha256": "31b29976b29134032ed381f37441b830381c084b0878fd64a7ae3dc79123bfb9",
+  "independentReportSha256": "26e59dc806c61db3dc2a67c45a21d6637b55950740cd4e6657c1c2ee005c50bd",
+  "independentReceiptSha256": "a2dbf027a8742673ecf5655ab44a3aba051baeacdee57c9ab092e83c601e0798",
+  "pendingQualifiedId": "r2-domains-ontology-graph-worker-requeue-latches",
+  "note": "Twelve callable seeds and one synthetic SQL-expression owner withdrawn. Raw graph retry6/5 is not admitted; declared five-command Option requires independently correcting it to12/5 before design integration. Native draft only, no P3/applied/dry credit."
+}

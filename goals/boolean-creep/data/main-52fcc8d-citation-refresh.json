@@ -1,0 +1,1088 @@
+{
+  "sourceHead": "3330f9881a50c96d3f2ec0fcad76f0f7a09027e4",
+  "oldCorpus": "9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1",
+  "newCorpus": "52fcc8d1353db9481ef9edb6cc9619500f95568d",
+  "method": "Applied independently audited unchanged-line identity map; qualification and design semantics remain separately reviewed.",
+  "updatedCitations": 154,
+  "updatedRecords": 122,
+  "updates": [
+    {
+      "id": "runners-bake-freshness",
+      "role": "E4",
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+      "old": 780,
+      "new": 785
+    },
+    {
+      "id": "drivers-migration-journal-shape-row",
+      "role": "P",
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "old": 348,
+      "new": 349
+    },
+    {
+      "id": "drivers-migration-journal-shape-row",
+      "role": "E2",
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "old": 469,
+      "new": 473
+    },
+    {
+      "id": "drivers-migration-journal-shape-row",
+      "role": "E4",
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "old": 472,
+      "new": 476
+    },
+    {
+      "id": "drivers-acp-protocol-logging-options",
+      "role": "P",
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "old": 278,
+      "new": 280
+    },
+    {
+      "id": "drivers-corpus-stats-params",
+      "role": "P",
+      "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
+      "old": 78,
+      "new": 80
+    },
+    {
+      "id": "chat-composer-props-gates",
+      "role": "P",
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "old": 147,
+      "new": 151
+    },
+    {
+      "id": "composer-footer-feature-gates",
+      "role": "P",
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "old": 190,
+      "new": 194
+    },
+    {
+      "id": "composer-surface-props-gates",
+      "role": "P",
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "old": 295,
+      "new": 299
+    },
+    {
+      "id": "composer-body-props-gates",
+      "role": "P",
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "old": 359,
+      "new": 363
+    },
+    {
+      "id": "use-number-input-options",
+      "role": "P",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "old": 652,
+      "new": 653
+    },
+    {
+      "id": "number-input-modifier-keys",
+      "role": "P",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "old": 62,
+      "new": 63
+    },
+    {
+      "id": "number-input-step-modifiers",
+      "role": "P",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "old": 67,
+      "new": 68
+    },
+    {
+      "id": "create-package-template-type-flags",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "old": 728,
+      "new": 732
+    },
+    {
+      "id": "create-package-template-type-flags",
+      "role": "E1",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "old": 1483,
+      "new": 1487
+    },
+    {
+      "id": "create-package-template-app-kind-flags",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "old": 728,
+      "new": 732
+    },
+    {
+      "id": "create-package-template-app-kind-flags",
+      "role": "E1",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "old": 1486,
+      "new": 1490
+    },
+    {
+      "id": "create-package-template-app-kind-flags",
+      "role": "E4",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "old": 1491,
+      "new": 1495
+    },
+    {
+      "id": "create-package-template-lab-ecosystem",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "old": 719,
+      "new": 723
+    },
+    {
+      "id": "create-package-scaffold-shape",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "old": 473,
+      "new": 477
+    },
+    {
+      "id": "yeet-command-shared-options",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "old": 467,
+      "new": 468
+    },
+    {
+      "id": "yeet-handler-test-plan-options",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "old": 1950,
+      "new": 1953
+    },
+    {
+      "id": "runners-aws-ebs-block-device",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+      "old": 75,
+      "new": 80
+    },
+    {
+      "id": "delete-package-handler-options",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+      "old": 553,
+      "new": 555
+    },
+    {
+      "id": "ci-local-options",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "old": 2324,
+      "new": 2326
+    },
+    {
+      "id": "ci-local-step-plan",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "old": 2389,
+      "new": 2391
+    },
+    {
+      "id": "quality-test-lane-selection",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 232,
+      "new": 233
+    },
+    {
+      "id": "quality-coverage-task-options",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 249,
+      "new": 250
+    },
+    {
+      "id": "venice-sse-done-payload",
+      "role": "P",
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "old": 648,
+      "new": 649
+    },
+    {
+      "id": "venice-sse-done-payload",
+      "role": "E3",
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "old": 1899,
+      "new": 1900
+    },
+    {
+      "id": "r3-foundation-img-responsive-presence",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1061,
+      "new": 1065
+    },
+    {
+      "id": "r3-foundation-link-responsive-presence",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1107,
+      "new": 1111
+    },
+    {
+      "id": "r3-foundation-glob-entry-facts",
+      "role": "P",
+      "file": "packages/foundation/modeling/utils/src/Glob.ts",
+      "old": 398,
+      "new": 399
+    },
+    {
+      "id": "corpus-organize-category-flags",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
+      "old": 2246,
+      "new": 2250
+    },
+    {
+      "id": "corpus-legacy-word-terminal",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "old": 3277,
+      "new": 3283
+    },
+    {
+      "id": "corpus-legacy-word-terminal",
+      "role": "E1",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "old": 1351,
+      "new": 1357
+    },
+    {
+      "id": "goals-repair-fork-mode",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts",
+      "old": 103,
+      "new": 105
+    },
+    {
+      "id": "goals-repair-fork-mode",
+      "role": "E2",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts",
+      "old": 57,
+      "new": 59
+    },
+    {
+      "id": "goals-migrate-conventions-mode",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts",
+      "old": 617,
+      "new": 619
+    },
+    {
+      "id": "goals-migrate-conventions-mode",
+      "role": "E2",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts",
+      "old": 644,
+      "new": 646
+    },
+    {
+      "id": "html-picture-source-sizes-auto",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1056,
+      "new": 1060
+    },
+    {
+      "id": "identity-property-descriptor-flags",
+      "role": "P",
+      "file": "packages/foundation/modeling/identity/src/Id.ts",
+      "old": 1986,
+      "new": 1989
+    },
+    {
+      "id": "goals-adopt-plan-json",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Adopt.ts",
+      "old": 505,
+      "new": 507
+    },
+    {
+      "id": "goals-bootstrap-plan-json",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
+      "old": 883,
+      "new": 886
+    },
+    {
+      "id": "quality-tmpfs-reap-apply-json",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "old": 3482,
+      "new": 3486
+    },
+    {
+      "id": "create-package-command-flags",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "old": 1117,
+      "new": 1121
+    },
+    {
+      "id": "yeet-monitor-command-route",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "old": 502,
+      "new": 503
+    },
+    {
+      "id": "r2-foundation-html-audio-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 875,
+      "new": 859
+    },
+    {
+      "id": "r2-foundation-html-button-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 1618,
+      "new": 1590
+    },
+    {
+      "id": "r2-foundation-html-form-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 3133,
+      "new": 3079
+    },
+    {
+      "id": "r2-foundation-html-img-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 4131,
+      "new": 4061
+    },
+    {
+      "id": "r2-foundation-html-input-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 4258,
+      "new": 4187
+    },
+    {
+      "id": "r2-foundation-html-marquee-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 5222,
+      "new": 5138
+    },
+    {
+      "id": "r2-foundation-html-object-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 5914,
+      "new": 5818
+    },
+    {
+      "id": "r2-foundation-html-ol-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 6020,
+      "new": 5923
+    },
+    {
+      "id": "r2-foundation-html-option-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 6142,
+      "new": 6043
+    },
+    {
+      "id": "r2-foundation-html-script-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 7016,
+      "new": 6901
+    },
+    {
+      "id": "r2-foundation-html-select-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 7227,
+      "new": 7109
+    },
+    {
+      "id": "r2-foundation-html-template-shadowroot-flags",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 8213,
+      "new": 8069
+    },
+    {
+      "id": "r2-foundation-html-textarea-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 8290,
+      "new": 8145
+    },
+    {
+      "id": "r2-foundation-html-video-boolean-attrs",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.model.ts",
+      "old": 9051,
+      "new": 8884
+    },
+    {
+      "id": "html-select-child-grammar",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1912,
+      "new": 1916
+    },
+    {
+      "id": "html-select-child-grammar",
+      "role": "E1",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1912,
+      "new": 1916
+    },
+    {
+      "id": "html-dl-child-grammar",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1787,
+      "new": 1791
+    },
+    {
+      "id": "html-dl-child-grammar",
+      "role": "E1",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1787,
+      "new": 1791
+    },
+    {
+      "id": "r2-foundation-retry1-number-input-spin-disabled",
+      "role": "P",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "old": 967,
+      "new": 968
+    },
+    {
+      "id": "r2-foundation-retry1-cause-redaction-truncation",
+      "role": "P",
+      "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+      "old": 350,
+      "new": 352
+    },
+    {
+      "id": "html-datalist-child-grammar",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1876,
+      "new": 1880
+    },
+    {
+      "id": "html-media-child-grammar",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1839,
+      "new": 1843
+    },
+    {
+      "id": "r3-tooling-packet-mutation-restore-presence",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+      "old": 255,
+      "new": 257
+    },
+    {
+      "id": "r3-tooling-packet-mutation-repair-root-residue",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+      "old": 293,
+      "new": 295
+    },
+    {
+      "id": "r2-foundation-html-foreign-entry-flags",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 2011,
+      "new": 2015
+    },
+    {
+      "id": "chat-timeline-refresh-latch",
+      "role": "P",
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "old": 959,
+      "new": 961
+    },
+    {
+      "id": "wink-token-punctuation-word-like",
+      "role": "P",
+      "file": "packages/drivers/wink/src/WinkTools.service.ts",
+      "old": 49,
+      "new": 51
+    },
+    {
+      "id": "wink-token-to-ai-flags",
+      "role": "P",
+      "file": "packages/drivers/wink/src/WinkTools.service.ts",
+      "old": 121,
+      "new": 123
+    },
+    {
+      "id": "venice-response-content-type-classifiers",
+      "role": "P",
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "old": 1523,
+      "new": 1524
+    },
+    {
+      "id": "rdf-canonize-budget-failure-heuristics",
+      "role": "P",
+      "file": "packages/drivers/rdf-canonize/src/adapters/canonicalization.ts",
+      "old": 168,
+      "new": 170
+    },
+    {
+      "id": "r3-foundation-attribute-requirement-gates",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1315,
+      "new": 1319
+    },
+    {
+      "id": "with-codec-statics-install-on-owned-schema",
+      "role": "P",
+      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
+      "old": 351,
+      "new": 352
+    },
+    {
+      "id": "struct-from-entries-property-descriptor-flags",
+      "role": "P",
+      "file": "packages/foundation/modeling/utils/src/Struct.ts",
+      "old": 697,
+      "new": 698
+    },
+    {
+      "id": "acp-client-protocol-capabilities",
+      "role": "P",
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "old": 853,
+      "new": 855
+    },
+    {
+      "id": "acp-server-protocol-capabilities",
+      "role": "P",
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "old": 870,
+      "new": 872
+    },
+    {
+      "id": "r3-domains-ontology-tool-delta-shape-probes",
+      "role": "P",
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolService.ts",
+      "old": 185,
+      "new": 187
+    },
+    {
+      "id": "r3-tooling-quality-repo-wide-step-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 780,
+      "new": 781
+    },
+    {
+      "id": "r3-tooling-quality-repo-wide-step-gates",
+      "role": "E4",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 781,
+      "new": 782
+    },
+    {
+      "id": "r3-tooling-qa-extract-event-kind-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Extract.ts",
+      "old": 80,
+      "new": 85
+    },
+    {
+      "id": "r3-tooling-coverage-owned-arg-kinds",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 614,
+      "new": 615
+    },
+    {
+      "id": "r3-tooling-delete-package-collision-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+      "old": 566,
+      "new": 568
+    },
+    {
+      "id": "r3-domains-patent-normalizer-shape-guards",
+      "role": "P",
+      "file": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
+      "old": 32,
+      "new": 35
+    },
+    {
+      "id": "r3-tooling-test-tsgo-collect-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "old": 1294,
+      "new": 1298
+    },
+    {
+      "id": "r3-tooling-quality-law-path-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 2283,
+      "new": 2286
+    },
+    {
+      "id": "r3-apps-contradiction-qa-mkdir-recursive",
+      "role": "P",
+      "file": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
+      "old": 905,
+      "new": 907
+    },
+    {
+      "id": "r3-domains-chat-turn-active-receipt-uncertain",
+      "role": "P",
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "old": 812,
+      "new": 814
+    },
+    {
+      "id": "r3-tooling-inline-schema-compile-arg-kind",
+      "role": "P",
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/no-inline-schema-compile.ts",
+      "old": 61,
+      "new": 62
+    },
+    {
+      "id": "r3-tooling-inline-schema-compile-arg-kind",
+      "role": "E2",
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/no-inline-schema-compile.ts",
+      "old": 158,
+      "new": 168
+    },
+    {
+      "id": "r3-tooling-quality-root-audit-head-kind",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 281,
+      "new": 282
+    },
+    {
+      "id": "r3-tooling-quality-root-audit-head-kind",
+      "role": "E2",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 330,
+      "new": 331
+    },
+    {
+      "id": "r3-tooling-model-store-retry-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.model-store.ts",
+      "old": 161,
+      "new": 162
+    },
+    {
+      "id": "r3-tooling-quality-tsconfig-profile-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "old": 1860,
+      "new": 1864
+    },
+    {
+      "id": "r3-drivers-arch-box-applier-blocker-predicates",
+      "role": "P",
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningApplier.ts",
+      "old": 527,
+      "new": 530
+    },
+    {
+      "id": "r3-drivers-arch-pcl-failure-classifiers",
+      "role": "P",
+      "file": "packages/drivers/pacer/src/PclClient.service.ts",
+      "old": 97,
+      "new": 100
+    },
+    {
+      "id": "r3-tooling-quality-tasks-env-arg-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 772,
+      "new": 773
+    },
+    {
+      "id": "r3-tooling-tsconfig-sync-plan-export-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
+      "old": 490,
+      "new": 492
+    },
+    {
+      "id": "r3-tooling-judge-pack-green-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Qa/JudgePack.ts",
+      "old": 374,
+      "new": 376
+    },
+    {
+      "id": "r3-tooling-coverage-selected-steps-options",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 2723,
+      "new": 2726
+    },
+    {
+      "id": "r3-drivers-arch-venice-content-type-probes",
+      "role": "P",
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "old": 1528,
+      "new": 1529
+    },
+    {
+      "id": "r3-drivers-arch-m365-path-extension-probes",
+      "role": "P",
+      "file": "packages/drivers/m365/src/M365.service.ts",
+      "old": 121,
+      "new": 124
+    },
+    {
+      "id": "r3-tooling-ci-lane-docgen-input-kind",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "old": 1570,
+      "new": 1572
+    },
+    {
+      "id": "r3-tooling-goals-adopt-path-kinds",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Adopt.ts",
+      "old": 57,
+      "new": 59
+    },
+    {
+      "id": "r24-foundation-modeling-rest-link-sizes-issue-flags",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1031,
+      "new": 1035
+    },
+    {
+      "id": "html-img-sizes-disposition",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 983,
+      "new": 987
+    },
+    {
+      "id": "html-img-sizes-disposition",
+      "role": "E4",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 990,
+      "new": 994
+    },
+    {
+      "id": "html-img-sizes-disposition",
+      "role": "E4",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 986,
+      "new": 990
+    },
+    {
+      "id": "r25-foundation-modeling-rest-img-lazy-auto-sizes",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 985,
+      "new": 989
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "role": "P",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1029,
+      "new": 1033
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "role": "E4",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1031,
+      "new": 1035
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "role": "E4",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "old": 1040,
+      "new": 1044
+    },
+    {
+      "id": "r25-drivers-a-f-box-applier-destructive-blocked",
+      "role": "P",
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningApplier.ts",
+      "old": 524,
+      "new": 527
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "role": "E2",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "old": 1834,
+      "new": 1851
+    },
+    {
+      "id": "r25-cli-internal-root-residue-reap-name-brands",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
+      "old": 61,
+      "new": 64
+    },
+    {
+      "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 251,
+      "new": 252
+    },
+    {
+      "id": "r25-cli-commands-l-q-github-checks-failure-policy",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "old": 2869,
+      "new": 2873
+    },
+    {
+      "id": "r25-cli-commands-l-q-residue-reap-apply-json",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "old": 3620,
+      "new": 3624
+    },
+    {
+      "id": "r25-cli-commands-r-z-worktree-reap-apply-json",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.command.ts",
+      "old": 102,
+      "new": 104
+    },
+    {
+      "id": "r25-cli-yeet-shared-options-ci-parity-no-fail-fast",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "old": 471,
+      "new": 472
+    },
+    {
+      "id": "scheduler-protocol-eviction-mode",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "old": 3407,
+      "new": 3411
+    },
+    {
+      "id": "scheduler-protocol-eviction-mode",
+      "role": "E2",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "old": 3417,
+      "new": 3421
+    },
+    {
+      "id": "scheduler-protocol-eviction-mode",
+      "role": "E1",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "old": 3424,
+      "new": 3428
+    },
+    {
+      "id": "coverage-baseline-write-mode",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 251,
+      "new": 252
+    },
+    {
+      "id": "coverage-baseline-write-mode",
+      "role": "E4",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 663,
+      "new": 664
+    },
+    {
+      "id": "yeet-prepared-publish-commit",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "old": 757,
+      "new": 760
+    },
+    {
+      "id": "yeet-prepared-publish-commit",
+      "role": "E1",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "old": 776,
+      "new": 779
+    },
+    {
+      "id": "yeet-prepared-publish-commit",
+      "role": "E4",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "old": 807,
+      "new": 810
+    },
+    {
+      "id": "citation-blank-page",
+      "role": "E1",
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "old": 571,
+      "new": 626
+    },
+    {
+      "id": "corpus-pst-terminal",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "old": 1362,
+      "new": 1368
+    },
+    {
+      "id": "corpus-pst-terminal",
+      "role": "E1",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "old": 1351,
+      "new": 1357
+    },
+    {
+      "id": "ci-lane-timings-render-mode",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+      "old": 2289,
+      "new": 2291
+    },
+    {
+      "id": "ci-lane-timings-render-mode",
+      "role": "E2",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+      "old": 2304,
+      "new": 2306
+    },
+    {
+      "id": "goals-packet-snapshot-presence",
+      "role": "E4",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Adopt.ts",
+      "old": 172,
+      "new": 174
+    },
+    {
+      "id": "worktree-idle-reading",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "old": 88,
+      "new": 90
+    },
+    {
+      "id": "worktree-idle-reading",
+      "role": "E3",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "old": 211,
+      "new": 213
+    },
+    {
+      "id": "worktree-idle-reading",
+      "role": "E2",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "old": 363,
+      "new": 365
+    },
+    {
+      "id": "worktree-pr-classification",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "old": 81,
+      "new": 83
+    },
+    {
+      "id": "worktree-pr-classification",
+      "role": "E1",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "old": 159,
+      "new": 161
+    },
+    {
+      "id": "worktree-pr-classification",
+      "role": "E3",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "old": 336,
+      "new": 338
+    },
+    {
+      "id": "worktree-reap-candidate-retirement",
+      "role": "E4",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "old": 493,
+      "new": 495
+    },
+    {
+      "id": "worktree-reap-candidate-retirement",
+      "role": "E1",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "old": 406,
+      "new": 408
+    },
+    {
+      "id": "agents-chat-turn-surface",
+      "role": "P",
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "old": 508,
+      "new": 510
+    },
+    {
+      "id": "r26-cli-commands-a-c-validate-pst-export-acceptance-gates",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "old": 1243,
+      "new": 1249
+    },
+    {
+      "id": "r26-cli-commands-d-k-seed-snapshot-prior-presence",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts",
+      "old": 326,
+      "new": 328
+    },
+    {
+      "id": "receipt-fallback-draft-occupancy",
+      "role": "P",
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "old": 1017,
+      "new": 1019
+    },
+    {
+      "id": "receipt-fallback-draft-occupancy",
+      "role": "E1",
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "old": 1030,
+      "new": 1032
+    },
+    {
+      "id": "receipt-fallback-draft-occupancy",
+      "role": "E4",
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "old": 1017,
+      "new": 1019
+    },
+    {
+      "id": "r26-cli-commands-l-q-coverage-replace-all-skip",
+      "role": "P",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": 251,
+      "new": 252
+    }
+  ]
+}

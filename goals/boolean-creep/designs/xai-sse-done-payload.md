@@ -6,7 +6,7 @@
 - members: `done`, `data`
 - evidence classes:
   - E3 at `packages/drivers/xai/src/XAi.service.ts:591` — `[DONE]` writes `done=true` with no data; JSON writes data plus `done=false`. `done` restates payload absence.
-  - E2 at `packages/drivers/xai/src/XAiLanguageModel.service.ts:211` — reader treats done as terminal empty stream and otherwise parses event data; no done+data arm.
+  - E2 at `packages/drivers/xai/src/XAiLanguageModel.service.ts:210` — reader treats done as terminal empty stream and otherwise parses event data; no done+data arm.
 
 # Current shape
 
@@ -91,12 +91,12 @@ Repository-wide search finds no other source or test read/write of this event mo
 
 - `packages/drivers/xai/src/XAi.service.ts:591-596` — delete paired `done` writes whose value must agree with data absence/presence; case constructors make disagreement unrepresentable.
 - `packages/drivers/xai/src/XAiLanguageModel.service.ts:202-203` — delete the implicit assumption that optional `event.data` exists whenever parsing is called; the data arm carries it as required.
-- `packages/drivers/xai/src/XAiLanguageModel.service.ts:211` — delete `event.done === true ? ... : ...`, which otherwise enters the parse branch even for an incoherent false-without-data object; exhaustive union matching replaces it.
+- `packages/drivers/xai/src/XAiLanguageModel.service.ts:210` — delete `event.done === true ? ... : ...`, which otherwise enters the parse branch even for an incoherent false-without-data object; exhaustive union matching replaces it.
 - `packages/drivers/xai/src/XAi.models.ts:387-396` — delete the comment-only invariant connecting `done` and optional `data`.
 
 # Encoded-side impact
 
-none (internal)
+The schema encoding changes from `{ done, data?, index }` to `{ kind, data?, index }`, with `data` required only in the data member. This is an internal parsed-event codec, not xAI's SSE wire: `parseSseData` consumes the provider's `data:` text and the driver never serializes this model back to xAI. `@beep/xai` is private and repository search finds only the in-package language-model consumer and codec fixtures named above, so the decoded TypeScript and internal encoded shape migrate atomically. No compatibility codec is needed for persisted or external data.
 
 # Test impact
 
@@ -106,4 +106,4 @@ none (internal)
 
 # Risk & sequencing
 
-This exported schema is Tier 1 because it is an internal parsed-stream model, not the provider wire JSON. Still, its structural TypeScript/codec shape changes, so land model, parser, language-model consumer, docs, and tests together. Keep this design synchronized with the Venice twin's `kind: "data" | "done"` pattern to avoid provider adapters drifting into different conventions.
+This exported schema is Tier 1 because it is an internal parsed-stream model in a private package, not the provider wire JSON. Its structural TypeScript/codec shape changes, so land model, parser, language-model consumer, docs, and tests together. Keep this design synchronized with the Venice twin's `kind: "data" | "done"` pattern to avoid provider adapters drifting into different conventions.

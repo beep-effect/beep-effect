@@ -1,0 +1,22 @@
+{
+  "lane": "r29-foundation-ui",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:18:54.092976+00:00",
+  "finished": "2026-09-09T10:33:00.844306+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 3,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-foundation-ui.jsonl`\n\nConfirmed: 3. Disqualified: 0. Validator: OK.\n\nEvery assigned root was covered (`brand`, `dock`, `dock-react`, `editor`, `ui`). All listed seeds still exist with the claimed owners, members, and classifications; no withdrawals. No unresolved source question.\n\nResidue: three derived boolean/literal aliases (`NotificationCard` isUnread/status, `ToolbarToggleGroup` multiple/type, `ResizableHandle` isVertical/orientation). Calendar still reads inherited `showWeekNumber` via rest props. Overlapping `CalendarEventCard` hasAction/variant was not duplicated onto the existing D1 presence cluster.\n\n\ud83c\udf31 graft saved ~206,720 tokens this turn (2 calls)",
+  "transcriptSha256": "eb87381ededdb5e32ea80169aad686f67fe7e9d40564ea823fb648c83afec7cf",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 3 records, 3 unique ids\n"
+}

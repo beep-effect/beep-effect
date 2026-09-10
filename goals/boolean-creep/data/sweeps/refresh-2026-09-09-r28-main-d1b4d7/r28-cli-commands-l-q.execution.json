@@ -1,0 +1,22 @@
+{
+  "lane": "r28-cli-commands-l-q",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T05:22:11.920955+00:00",
+  "finished": "2026-09-09T05:34:21.966921+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 8,
+  "qualifiedCandidates": 4,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-cli-commands-l-q.jsonl`\n\nCounts: **4 confirmed**, **4 disqualified**. Validator: `inventory OK: 8 records, 8 unique ids`.\n\nCoverage: all six assigned roots were inspected (Labs, Laws, Lint, Purge, Qa, Quality). Labs and Purge have no eligible two-or-more Boolean carriers (single `json`/`lock` flags; `LabsListRow` is Option payloads).\n\nSeed drift / withdrawals (not re-recorded): Flag/callback owners already archived by the r28 quality-scheduler integration (`scheduler-protocol-eviction-mode`, `quality-tmpfs-reap-apply-json`, github-checks/residue-reap apply-json, coverage owned-arg / env-arg / selected-steps options). Remaining `*Gates` seeds that are still callable predicates or `S.is` guards, including `flake-quarantine-step-kind` (now two functions, not sibling state) and the SchemaCatalog/SchemaFirst write-echo pairs (request vs summary, two owners). `analyzeRootPolicy.customTags` still D1 with line drift 1276\u21921370; unchanged classification omitted.\n\nUnresolved source question: none. Named `CoverageTaskOptions` leftover pairs and the resolved four-boolean return are reported as distinct owners for parent reconciliation.",
+  "transcriptSha256": "009d1653cac7eb128f43cc8ececb24cf8ce3e48f229ed8e24266adb26a682f6a",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 8 records, 8 unique ids\n"
+}

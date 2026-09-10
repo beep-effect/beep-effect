@@ -1,0 +1,104 @@
+{
+  "kind": "boolean-creep-r29-sweep-neighbor-integration/v1",
+  "installed": true,
+  "sourceSha": "1c07c15495aaa42f521b887b01e943e68804606c",
+  "sourceMainSha": "3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee",
+  "observedOriginMainSha": "c12c6ae651a3facc3f6e6a5190fd84670ef8a014",
+  "beforeInventorySha256": "96140e7bb2874da2dbe86344c08cf34d4ba3360d0a846660eb5065930c000e84",
+  "inventorySha256": "88733c9dfe96f2cd531589206cab65daeecc87507f4534138f87b548b95a11e8",
+  "inventoryBefore": "goals/boolean-creep/history/inventory/2026-09-09-r29-neighbor-before.jsonl",
+  "inventoryAfter": "goals/boolean-creep/history/inventory/2026-09-09-r29-neighbor-after.jsonl",
+  "addedId": "r29-yeet-sweep-worktree-probe-address",
+  "design": "goals/boolean-creep/designs/r29-yeet-sweep-worktree-probe-address.md",
+  "designSha256": "34632b0e4887a6ddf8ba44db994358a189808c7ca940dfe848717463fbfc75da",
+  "counts": {
+    "records": 698,
+    "qualified": 141,
+    "disqualified": 557,
+    "tier1": 111,
+    "tier2": 30,
+    "reviewedHistorical": 23,
+    "designed": 118,
+    "applied": 0
+  },
+  "priorRowsByteIdentical": 697,
+  "priorDesignsUnchanged": 140,
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "startSha256": "6ca599a6b7334fb956e4b0b089e5364a062e4bb9281d6295a422e5257173488e",
+      "endSha256": "6ca599a6b7334fb956e4b0b089e5364a062e4bb9281d6295a422e5257173488e",
+      "unchanged": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "startSha256": "9e298f08057953cb950bd1e3ac1dda7da8d69fdc857b40d541490a4644d25418",
+      "endSha256": "9e298f08057953cb950bd1e3ac1dda7da8d69fdc857b40d541490a4644d25418",
+      "unchanged": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.schemas.ts",
+      "startSha256": "144a32a95cc11183dd97fb13af33ad08b4b23090fde0c3923a46805c070991a8",
+      "endSha256": "144a32a95cc11183dd97fb13af33ad08b4b23090fde0c3923a46805c070991a8",
+      "unchanged": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/test/Yeet.test-kit.ts",
+      "startSha256": "752bc6cb82abf3fef6fb98324cf371d4a315eda3e21f8f784ce92c88584f8a90",
+      "endSha256": "752bc6cb82abf3fef6fb98324cf371d4a315eda3e21f8f784ce92c88584f8a90",
+      "unchanged": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/package.json",
+      "startSha256": "5ed96d77de203949878f319238078633506324ab7c38060065b735041f2b2a69",
+      "endSha256": "5ed96d77de203949878f319238078633506324ab7c38060065b735041f2b2a69",
+      "unchanged": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "startSha256": "f1eabcd1a1544e1022fa8e1a4a49781252a2cc8b2c17e3587101c589d8d4b9d2",
+      "endSha256": "f1eabcd1a1544e1022fa8e1a4a49781252a2cc8b2c17e3587101c589d8d4b9d2",
+      "unchanged": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Merge.ts",
+      "startSha256": "0275b69577fcdc34dd01b79e35067ddba6a551ae7b27601be6969eaec30a8942",
+      "endSha256": "0275b69577fcdc34dd01b79e35067ddba6a551ae7b27601be6969eaec30a8942",
+      "unchanged": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "startSha256": "f3e27eecd4ddbc64429db3d09ffced2aa71d2c0cb1eefb842ce019d1e6d62d9a",
+      "endSha256": "f3e27eecd4ddbc64429db3d09ffced2aa71d2c0cb1eefb842ce019d1e6d62d9a",
+      "unchanged": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+      "startSha256": "1e847870f55068d9eb41bec98d156a9698b4216d5ac7965ed9221027d03596bb",
+      "endSha256": "1e847870f55068d9eb41bec98d156a9698b4216d5ac7965ed9221027d03596bb",
+      "unchanged": true
+    }
+  ],
+  "sourceBundleManifestSha256": "64cc531698ede39b0b858344066d5c462c40bae46fcd32a0464ce2d6cc3deb4c",
+  "sourceProposedRowSha256": "d48e2fe255bf94643c0ab26c38a6109e081c0fcf1a085214c83134c7ed9da6ae",
+  "sourceProposedDesignSha256": "9a62be280c190ee1d70a06eb691fe542f7fc4e47485198c61c4075ad93b440c9",
+  "validation": [
+    {
+      "command": ["bun", "validate-inventory.ts", "prepared-inventory.jsonl"],
+      "exitCode": 0,
+      "stdout": "inventory OK: 698 records, 698 unique ids\n",
+      "stderr": ""
+    },
+    {
+      "command": ["bun", "validate-designs.ts"],
+      "exitCode": 0,
+      "stdout": "design coverage OK: 141 qualified ids\n",
+      "stderr": ""
+    }
+  ],
+  "ancestryDisposition": "not-admitted-insufficient-class-wide-contract-evidence; no D1 or all-tuples-legitimate claim",
+  "unresolvedOwnerQuestions": [],
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "productTestsRun": false
+}

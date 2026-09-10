@@ -1,0 +1,14 @@
+{
+  "kind": "frozen-verdict-format-drift",
+  "round": 28,
+  "verdict": "data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/round-verdict.json",
+  "originalSha256": "061f994530345b53e464eea645d6433c4d24731ad7e228ac9b9dcf772402d176",
+  "observedSha256": "0caa92d9ffedbeb609615d06529ed56acc5e8d64e46d1c87f07a691592c5d71a",
+  "originalBytes": 541152,
+  "observedBytes": 541144,
+  "parsedValueUnchanged": true,
+  "exactOriginalReconstruction": "Python json.dumps(json.loads(observed_bytes), indent=2) plus one LF reproduces originalSha256 exactly.",
+  "onlyDifference": "The one-element renderedPromptExceptions array is collapsed to one line.",
+  "timingEvidence": "Observed bytes already exist in the pre-forward-merge packet and index backups and the later pre-commit working snapshot; this drift predates both operations.",
+  "disposition": "Keep the observed verdict bytes, preserve both hashes, and repair only the mutable reconciliation pointer. No source, classification, execution, dry-round or independent-review result changes."
+}

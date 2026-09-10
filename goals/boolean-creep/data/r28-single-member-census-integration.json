@@ -1,0 +1,38 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 818,
+  "afterCount": 813,
+  "beforeInventorySha256": "f624c993565b28a38fe714765c01ca5b340a5a13f2d63bf8f299e98922ed30b6",
+  "afterInventorySha256": "5374608f7a7b71412236a54780daac9aec2c6650c0649f7d8b8aa88c0675e450",
+  "correctedIds": [
+    "neutral-citation-unpublished",
+    "statute-citation-has-et-seq",
+    "regulation-citation-has-et-seq"
+  ],
+  "addedIds": [],
+  "withdrawnIds": [
+    "table-block-header-row",
+    "evidence-source-panel-loading",
+    "vault-sync-status-input-force-probe",
+    "get-vault-sync-status-payload-force-probe",
+    "validate-ontology-request-include-inferred"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-single-member-census-before.jsonl",
+  "rowArchiveSha256": "fbe36ca6bfbca0962dc4097bf843980025d1558f50e1070941faabaeedd09b4e",
+  "audit": "data/design-refresh-2026-09-09-r28-single-member-seeds.md",
+  "auditSha256": "b5bcc22596ad0b1d86cb2d187788658ba515f47eceac30c30202d1947eaba15d",
+  "qualifiedRecordsUnchanged": true,
+  "qualifiedCount": 164,
+  "disqualifiedCounts": {
+    "D2": 160,
+    "D1": 489
+  },
+  "pendingIds": [
+    "named-graph-partition-excluded",
+    "durable-locator-options-full-span",
+    "ontology-sparql-query-request-include-inferred"
+  ],
+  "formalIndependentReview": false,
+  "note": "Three citation D1 owners repaired to include inherited inFootnote Option<boolean>, preserving all six independent marker/detection constructor cases and distinguishing inspected fixtures from unexecuted combinations. Five actual single-Boolean owners withdrawn rather than fabricating required-payload or nested-child axes. Three Boolean-plus-literal cases remain pending the bounded eligibility adjudication; no automatic campaign scope expansion. Qualified rows/designs unchanged; no P3/dry/applied credit."
+}

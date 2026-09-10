@@ -1,0 +1,22 @@
+{
+  "lane": "r29-cli-commands-a-c",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:59:34.828380+00:00",
+  "finished": "2026-09-09T11:10:55.236613+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 4,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-cli-commands-a-c.jsonl`  \nValidator: `inventory OK: 4 records`. Confirmed 0, disqualified 4.\n\nEvery assigned root was covered (AIMetrics, AgentEffectiveness, Architecture, Cache, Ci, Codegen, Codex, Corpus, CreatePackage).\n\nSeed drift: three D1 line corrections (`aimetrics-forwarder-timer-options` 1818\u21921835, `aimetrics-benchmark-run-options` 2029\u21922046, `aimetrics-label-add-options` 2190\u21922214). New D2: distinct `writePacket` staging `fs.remove` bag at Findings.write.ts:339 (seeded 329 still owns the backup-dir bag). Remaining seeds still exist with the same members and classification. `codex-findings-ingest-command-options` canonical line 104 still sits inside the type on `from`; first boolean of that cluster is 110 \u2014 not re-recorded. No unresolved source question. No eligible-seed withdrawals.\n\nOut of net: Command.make Flag descriptors and handler aliases (LaneTimings `tsv`/`window`/`markdown`, CiLane `list`, CreatePackage/AIMetrics/AgentEffectiveness/Architecture/Codegen/Corpus/Codex flag handles); anonymous function-flag parameters (`writePacket` options, `validateCodexFindingsIngestModes`, `organizeCategoryFor` helper, `publish`, `exists`/`allowTerminalSymlink` params); callable predicates; single-boolean owners (`tracked`, `infraFailure`, `breached`, `idempotent`, ledger `approved`, `engineReported`); inspect `{exists, currentTarget}` (one Boolean); trim-only or recursive-only spawn/fs bags. Overlapping constructed `{refresh, force}` copy at Findings.command.ts:409 was not re-clustered.\n\n\ud83c\udf31 graft saved ~658,671 tokens this turn (14 calls)",
+  "transcriptSha256": "aa1f57fc5602357b91d20a450f0a0b96effea270ed91d5f99b06e15ef2a51755",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 4 records, 4 unique ids\n"
+}

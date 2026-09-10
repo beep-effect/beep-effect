@@ -1,0 +1,22 @@
+{
+  "lane": "r28-drivers-n-r",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:40:31.806566+00:00",
+  "finished": "2026-09-09T04:50:15.835002+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-n-r.jsonl`  \nConfirmed: 0. Disqualified: 0.  \nEvery assigned root was covered (`n3`, `nlp-mcp`, `obs`, `onepassword-cli`, `openai`, `openai-compat`, `openclaw`, `oxigraph`, `pacer`, `pglite`, `phoenix`, `postgres`, `pretext`, `rdf-canonize`, `runpod` authored `src`; `_generated` excluded). No new or changed eligible clusters; unchanged qualified/D1/D2 seeds were not re-recorded. Validator: `inventory OK: 0 records`.\n\nSeed drift: several class-declaration lines sit 1\u20132 off the first Boolean member (`OpenclawChannelHealth` 595\u2192594, `OpenAiCompatChatCompletionRequest` 852\u2192850); owners, members, and classifications still match live writers/readers. Callable-predicate seeds are out of net and should be withdrawn, not kept as D1: `openclaw-live-acceptance-predicates`, `rdf-canonize-budget-failure-heuristics`, `openclaw-schema-placeholder-predicates`, `r3-drivers-arch-dataset-loader-host-probes`, `r3-drivers-arch-postgres-error-extractors`, `r3-drivers-arch-postgres-diagnostics-probes`, `r3-drivers-arch-pcl-failure-classifiers`, `r3-drivers-arch-postgres-diagnostic-guards`, `r3-drivers-arch-dataset-loader-url-ssrf`. Bound `detectEngineProfile.engineFamily` locals remain an eligible unchanged D1. No unresolved source question.\n\n\ud83c\udf31 graft saved ~210,000 tokens this session (~25 calls).",
+  "transcriptSha256": "e3455a89990c98cb7de930dbec9df4bda42513256bb2db470d30e55882b80e37",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

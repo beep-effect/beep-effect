@@ -1,0 +1,14 @@
+{
+  "lane": "r24-drivers-g-m",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "started": "2026-09-08T20:10:46.089817+00:00",
+  "finished": "2026-09-08T20:17:34.022481+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "transcriptSha256": "82ee5faff94c7a64c06a5ae0909f34c6af784a2a26d0c8fc10a283a9152eea63",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-drivers-g-m.jsonl` \u2014 confirmed 0, disqualified 1. All assigned areas covered. Seeds present; GraphMessage first boolean is 572 (inventory 575), GraphEvent 609 (inventory 612)."
+}

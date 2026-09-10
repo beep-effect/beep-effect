@@ -1,0 +1,22 @@
+{
+  "lane": "r30-foundation-primitive",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T12:40:02.552466+00:00",
+  "finished": "2026-09-09T12:44:04.447835+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-primitive.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nCoverage: both assigned roots (`packages/foundation/primitive/data/src`, `packages/foundation/primitive/types/src`) were scanned. Generated `data/src/generated/*` files were excluded by codegen headers; they also have no Boolean members. No seeds in this lane, so no seed drift.\n\nOut-of-net residue (not recorded): type-level `true`/`false` in `TString.IsDotPropertyNameRest`; MIME `lookup` `false | MimeType` sentinel; single `inittedMaps` latch; standalone `shouldKeep*` / `hasTypeForExtension` predicates. No unresolved source question.\n\n\ud83c\udf31 graft saved ~28,964 tokens this turn (4 calls)",
+  "transcriptSha256": "249bfc867f350152c348738f40a3b48c159ee947d2064ea4574b38d03884ba92",
+  "runnerSha256": "a4d7f7629866b91b6d007f21235d50d699b49dd3a39d3b60864a91f799bbb355",
+  "seedSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

@@ -1,0 +1,17 @@
+{
+  "lane": "r25-law-practice-runtime",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:12:01.352843+00:00",
+  "finished": "2026-09-08T22:20:18.343567+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-law-practice-runtime.jsonl` \u2014 confirmed 0, disqualified 3. Covered `packages/law-practice/{server,tables,use-cases}/src`. Seeds still present; drift: `closedWorldReadOnlyHints` declaration 629 (seed 630), `candidateFor` now 132 (seed 90 still first member).",
+  "transcriptSha256": "bde230aff4794446e5ecda49f107bd2a76d4d6e1622aa6181a77c725b7fee66b",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

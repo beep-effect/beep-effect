@@ -1,0 +1,22 @@
+{
+  "lane": "r29-drivers-a-f",
+  "sourceSha": "115b761d533684c5abf4ab9de83d970243c79dfc",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T10:19:14.804041+00:00",
+  "finished": "2026-09-09T10:28:51.172252+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r29-main-5fc065/r29-drivers-a-f.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records, 0 unique ids`.\n\nEvery assigned root was covered (`packages/drivers/acp/src` through `packages/drivers/freshbooks/src`). All scoped seeds still exist on the claimed owners with the same members and classifications; no seed correction or withdrawal. No unresolved source question.\n\nOut-of-net (not recorded): `_generated` Box/eCFR/ACP surfaces; anonymous cosmos.gl `Graph` constructor config; `GraphologyOptions` (only `multi`); `CosmosCapabilityProbe` (one boolean + required `reason`); Firecrawl failure bags (`success: false` + required `error`); inherited ACP client/agent logging interfaces; callable predicates; single latches; function-parameter flags.\n\n\ud83c\udf31 graft saved ~568,694 tokens this turn (8 calls)",
+  "transcriptSha256": "2f7b2200c9bd18af7c30010e8466751c1799e8e034ed0762492c86999a806f30",
+  "runnerSha256": "5553c5d3bd7e2a689a4219b4aa133524d2c7c27505d8c7a9da3b720947bf9fe7",
+  "seedSha256": "5700ee53292787d2f80f3ef622513414495376c2b9eaa3aa163f2fee88ce85a3",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

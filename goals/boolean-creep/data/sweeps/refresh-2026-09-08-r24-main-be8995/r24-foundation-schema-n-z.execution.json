@@ -1,0 +1,14 @@
+{
+  "lane": "r24-foundation-schema-n-z",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "started": "2026-09-08T20:03:47.595506+00:00",
+  "finished": "2026-09-08T20:10:46.088479+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "transcriptSha256": "51d4d039f2c14f6cdf0cad9627d29c633f13c64e04464f6b78c3095f7607b4f9",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-foundation-schema-n-z.jsonl` \u2014 confirmed 0, disqualified 1. All assigned N\u2013Z paths covered. Seeds still present; ParserOptions first stored flag is line 139 (canonical 140), other four seeds unchanged."
+}

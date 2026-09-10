@@ -1,0 +1,22 @@
+{
+  "lane": "r30-foundation-schema-a-m",
+  "sourceSha": "e7b1e907726421c7d2a2e1cdd140280df47f2353",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T12:40:02.552875+00:00",
+  "finished": "2026-09-09T12:50:36.790509+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r30-main-bed30c/r30-foundation-schema-a-m.jsonl`\n\nConfirmed: 0. Disqualified: 1. Validator: OK.\n\nEvery assigned root was covered. All 12 seeds still exist at the claimed owners/members/lines; classifications unchanged (CsvCodecOptions trim/ltrim/rtrim remains D1: parser precedence over free combinations, not a masked union). No seed drift or withdrawals.\n\nOut of net (not recorded): function-flag parameters (`mutable`, `excludeSimilarTypes`, `strictColumnHandling`, `reportOnly`); single booleans (`isDark`, `enforce`, `reportOnly`, `excludeSimilarTypes`, `unsigned`); callable predicates; false-or-object sentinels (CSP/Expect-CT/HSTS/FrameGuard); `Sandbox` true|token kit; `SubSchema` boolean|Node; `$vocabulary` record.\n\nUnresolved source question: none.\n\n\ud83c\udf31 graft saved ~195,395 tokens this turn (3 calls)",
+  "transcriptSha256": "c6c8eccfabb2fe3e1abb3cccb1f1b692b6b99018749ee1bfda569d0cf258b604",
+  "runnerSha256": "a4d7f7629866b91b6d007f21235d50d699b49dd3a39d3b60864a91f799bbb355",
+  "seedSha256": "5e0eaffd2584e0d81b780622111bd71862691b4ecd1cdd4038c6e634e5a7da4d",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

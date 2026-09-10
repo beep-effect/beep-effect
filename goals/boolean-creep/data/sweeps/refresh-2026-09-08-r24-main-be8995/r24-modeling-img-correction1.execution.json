@@ -1,0 +1,12 @@
+{
+  "lane": "r24-modeling-img-correction1",
+  "sourceSha": "05405bf322da0ca7eb88b8bb402145081e8fded6",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "transcriptSha256": "cd65e929033358d24ffe0005ef3dd3cf6cd30b4ad92b1e2364b6f290731c59a0",
+  "supersedesDecision": "r24-foundation-modeling-rest-img-sizes-issue-flags",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r24-main-be8995/r24-modeling-img-correction1.jsonl` \u2014 confirmed 1, disqualified 0. Assigned files covered."
+}

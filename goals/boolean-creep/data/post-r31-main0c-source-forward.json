@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "boolean-creep-source-forward/v1",
+  "date": "2026-09-09",
+  "status": "merged-audits-paused",
+  "comparisonMain": "e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b",
+  "priorPacketCommit": "7f2e40254c753f1b8309695085f7170de5463022",
+  "mergedMain": "0c975f970b4ac4b101d7c1b11957a799d481af35",
+  "headAfterMerge": "8d4580ae820726732784562c1b6c1c913e5bba00",
+  "merges": [
+    {
+      "commit": "d3a553db8ec4e88f0b26cc3f187ed5d80a52f623",
+      "main": "8d507287b7bd01445a663bfdb0b333c585a7d764"
+    },
+    {
+      "commit": "8d4580ae820726732784562c1b6c1c913e5bba00",
+      "main": "0c975f970b4ac4b101d7c1b11957a799d481af35"
+    }
+  ],
+  "preservation": {
+    "committedPacketFileCount": 1469,
+    "allCapturedHashesMatchCommittedHead": true,
+    "packetDiffAcrossEachMerge": [],
+    "postMergeAuthoredChanges": "The OPPORTUNITIES.md orchestration-failure entry was appended after the second merge. This receipt compares committed blobs, not the subsequently edited working tree."
+  },
+  "inventory": {
+    "records": 753,
+    "qualified": 145,
+    "disqualified": 608,
+    "tier1": 113,
+    "tier2": 32,
+    "applied": 0,
+    "sha256": "ed743923428ac9b8d8973a48dcf5f8011526881d64436a0779658a4159f42426"
+  },
+  "changedSourceFiles": [
+    "packages/foundation/modeling/utils/src/Data.ts",
+    "packages/tooling/test-kit/test-utils/src/ConformanceLedger/index.ts",
+    "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/index.ts",
+    "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts"
+  ],
+  "auditDisposition": "All three source-forward audits were paused on the user save-PR request. Partial observations do not establish completed owner, consumer, test, or design verification.",
+  "dependencyOrLockfileChanges": false,
+  "newCensusLaunched": false,
+  "newIndependentReviewLaunched": false,
+  "dryRoundCredit": 0,
+  "gate2Passed": false,
+  "resumeHandoff": "goals/boolean-creep/PAUSE.md"
+}

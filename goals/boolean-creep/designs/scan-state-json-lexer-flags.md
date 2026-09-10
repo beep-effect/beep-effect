@@ -1,181 +1,157 @@
-## 1. Instance
+# Instance
 
 - id: `scan-state-json-lexer-flags`
+- source: `05405bf322da0ca7eb88b8bb402145081e8fded6`
 - file:line: `packages/agents/server/src/AssistantTurn/ScanState.ts:48`
 - symbol: `ScanState`
 - members: `escaped`, `inBlocksArray`, `inString`
-- evidence classes:
-  - E4 at `packages/agents/server/src/AssistantTurn/ScanState.ts:145` — escaped is only set true inside if (inString) (line 147); leaving the string (inString=false) happens only in the else of if (escaped), so escaped=>inString. inBlocksArray is a one-way latch on the first [.
+- evidence: E4 at `ScanState.ts:143-151` — `escaped` is set only while
+  `inString` is true, and the scanner cannot leave the string while processing
+  an escaped character. Therefore `escaped => inString`. `inBlocksArray` is an
+  independent one-way latch set on the first outside-string `[`.
 
-## 2. Current shape
+# Current shape
 
-Live schema declaration at `packages/agents/server/src/AssistantTurn/ScanState.ts:40`:
+`ScanState`, `ScanChunkInput`, and `ScanChunkResult` are exported `S.Class`
+schemas. The scanner stores `escaped`, `inString`, and `inBlocksArray` across
+chunks. Inside the character fold, a nested `if (inString) / if (escaped)`
+chain reconstructs three exclusive JSON string phases. Structural bracket and
+brace handling runs only outside strings, while `inBlocksArray` independently
+records whether the outer blocks array has begun.
 
-```ts
-export class ScanState extends S.Class<ScanState>($I`ScanState`)(
-  {
-    current: S.String.pipe(SchemaUtils.withKeyDefaults("")).annotateKey({
-      description: "Current JSON object slice being accumulated while scanner depth is positive.",
-    }),
-    depth: NonNegativeScanDepth.pipe(SchemaUtils.withKeyDefaults(0)).annotateKey({
-      description: "Current non-negative JSON nesting depth inside the blocks array.",
-    }),
-    escaped: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
-      description: "Whether the previous character was an escape marker inside a JSON string.",
-    }),
-    inBlocksArray: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
-      description: "Whether the scanner has entered the top-level blocks array.",
-    }),
-    inString: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
-      description: "Whether the scanner is currently inside a JSON string literal.",
-    }),
-  },
-  $I.annote("ScanState", {
-    description: "The carry state of the incremental block extractor between chunks.",
-  })
-) {}
-```
+`scanChunkResult` constructs a schema-backed `ScanChunkResult`. The public
+dual `scanChunk` wrapper then copies its state fields into a plain object for
+the returned tuple. `AnthropicTurnKernel` and the package test seed pass the
+state opaquely; exact encoded and returned shapes are asserted in the schema
+parity test.
 
-The coherence-sensitive branch at `packages/agents/server/src/AssistantTurn/ScanState.ts:145` is:
+# Cardinality gap
 
-```ts
-if (inString) {
-  if (escaped) escaped = false;
-  else if (char === "\\") escaped = true;
-  else if (char === '"') inString = false;
-  continue;
-}
-```
+The three booleans represent eight combinations. Six are legal because the
+independent `inBlocksArray` latch combines with three JSON string phases:
 
-## 3. Cardinality gap
-
-The three booleans represent eight combinations. Six are legal because the independent `inBlocksArray` latch combines with three JSON string phases:
-
-- `outside` × before/inside blocks array.
-- `in-string` × before/inside blocks array.
+- `outside` × before/inside blocks array;
+- `in-string` × before/inside blocks array;
 - `escaped` × before/inside blocks array.
 
-The two illegal combinations are `escaped && !inString`, one for each latch value. `inBlocksArray` is not part of the exclusivity defect and remains a boolean latch.
+The two illegal combinations are `escaped && !inString`, one for each latch
+value. `inBlocksArray` is not part of the exclusivity defect and remains a
+boolean latch.
 
-## 4. Target schema
+# Target schema
 
-Add `LiteralKit` to the existing `@beep/schema` import. Name the new kit and type `ScanStringPhase`; replace only `escaped` and `inString`, retaining `inBlocksArray`:
+Add `LiteralKit` to the existing `@beep/schema` import. Define and annotate the
+exported `ScanStringPhase` kit with `outside`, `in-string`, and `escaped`, plus
+its same-name derived type. `ScanState` replaces `escaped` and `inString` with
+`stringPhase: ScanStringPhase`, whose constructor/key default is
+`ScanStringPhase.Enum.outside`; retain the existing field-level descriptions
+and describe the phase as carry state across chunks.
 
-```ts
-import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+Fold each character by `ScanStringPhase.$match`:
 
-export const ScanStringPhase = LiteralKit(["outside", "in-string", "escaped"]).pipe(
-  $I.annoteSchema("ScanStringPhase", {
-    description: "Exclusive JSON string and escape phase of the incremental block scanner.",
-  })
-);
+- `escaped` always advances to `in-string` and performs no structural action;
+- `in-string` advances to `escaped` on `\\`, to `outside` on `"`, and
+  otherwise remains `in-string`;
+- `outside` enters `in-string` on `"` and otherwise runs the existing exact
+  `[`, `{`, `}`, and `]` structural logic.
 
-export type ScanStringPhase = typeof ScanStringPhase.Type;
+Keep the existing `if (depth > 0) current += char` before phase dispatch so
+the emitted slice remains byte-identical. Keep `inBlocksArray` mutations only
+in the `outside` arm. Construct the next `ScanState` with `stringPhase`, and
+keep the public `scanChunk` wrapper's field-by-field plain-object copy while
+replacing its two old fields with `stringPhase`.
 
-export class ScanState extends S.Class<ScanState>($I`ScanState`)(
-  {
-    current: S.String.pipe(SchemaUtils.withKeyDefaults("")),
-    depth: NonNegativeScanDepth.pipe(SchemaUtils.withKeyDefaults(0)),
-    inBlocksArray: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    stringPhase: ScanStringPhase.pipe(
-      SchemaUtils.withKeyDefaults(ScanStringPhase.Enum.outside)
-    ),
-  },
-  $I.annote("ScanState", {
-    description: "The carry state of the incremental block extractor between chunks.",
-  })
-) {}
-```
+# Migration inventory
 
-Retain the existing field annotations in the applied code. Fold characters exhaustively by the literal phase, keeping the blocks-array latch logic in the `outside` arm:
+- `packages/agents/server/src/AssistantTurn/ScanState.ts:8-14` — add
+  `LiteralKit` to the existing `@beep/schema` import; reuse `$I`, `Match`, and
+  the current schema imports.
+- `ScanState.ts:18-22` — retain `NonNegativeScanDepth` unchanged.
+- `ScanState.ts:24-63` — add the annotated exported `ScanStringPhase` owner and
+  derived type near `ScanState`; replace fields at lines 48 and 54 with one
+  defaulted/annotated `stringPhase` field. Keep `current`, `depth`,
+  `inBlocksArray`, `ScanState.encodeResult`, and class annotation.
+- `ScanState.ts:80-115` — `ScanChunkInput` and `ScanChunkResult` continue to
+  compose `ScanState`; no separate field migration is needed.
+- `ScanState.ts:117-131` — update example prose from flags to phase/latch if
+  mentioned; keep `initialScanState = ScanState.make()` and its
+  `inBlocksArray` example.
+- `ScanState.ts:142-192` — destructure `stringPhase`, replace the nested string
+  boolean chain with exhaustive phase matching, and construct the next state
+  with the literal field. Preserve character accumulation, bracket/brace
+  depth behavior, completed-slice order, and mutable completed-array behavior.
+- `ScanState.ts:194-230` — update the state-machine comment and the plain-object
+  tuple return to copy `stringPhase`; do not replace the copy with
+  `result.state`, because that could change the existing plain-object runtime
+  result into an `S.Class` instance.
+- `packages/agents/server/src/AssistantTurn/AnthropicTurnKernel.ts:202` — no
+  field migration; it carries `initialScanState` and `scanChunk` opaquely
+  through `Stream.mapAccum`.
+- `packages/agents/server/src/AssistantTurn/index.ts:97`,
+  `packages/agents/server/src/index.ts:17-19`, and
+  `packages/agents/server/src/test.ts:9-27` — barrels/examples remain valid;
+  the test seed aliases the initial state opaquely.
+- `packages/agents/server/test/AssistantTurn.schema-parity.test.ts:26-80` —
+  replace exact `escaped`/`inString` fixtures with
+  `stringPhase: "outside"` in both initial encoded state and returned state;
+  retain all three scanner schemas in the arbitrary round-trip list.
+- `packages/agents/server/test/scanChunk.test.ts:13-62` — retain the envelope ×
+  chunking property and single-character test; add focused phase-transition
+  cases at chunk boundaries.
 
-```ts
-let { current, depth, inBlocksArray, stringPhase } = state;
+Live source/test/barrel search found no other field reader or writer. Public
+consumers import the state and scanner through `AssistantTurn`, but repository
+runtime consumers treat the state opaquely.
 
-for (const char of text) {
-  if (depth > 0) current += char;
-  ScanStringPhase.$match(stringPhase, {
-    escaped: () => {
-      stringPhase = ScanStringPhase.Enum["in-string"];
-    },
-    "in-string": () => {
-      if (char === "\\") stringPhase = ScanStringPhase.Enum.escaped;
-      else if (char === '"') stringPhase = ScanStringPhase.Enum.outside;
-    },
-    outside: () => {
-      Match.value(char).pipe(
-        Match.when(`"`, () => (stringPhase = ScanStringPhase.Enum["in-string"])),
-        Match.when("[", () => {
-          if (!inBlocksArray) {
-            inBlocksArray = true;
-          } else if (depth > 0) {
-            depth++;
-          }
-        }),
-        Match.when("{", () => {
-          if (inBlocksArray) {
-            if (depth === 0) {
-              current = "{";
-            }
-            depth++;
-          }
-        }),
-        Match.whenOr("}", "]", () => {
-          if (depth > 0) {
-            depth--;
-            if (depth === 0) {
-              completed.push(current);
-              current = "";
-            }
-          }
-        }),
-        Match.orElse(() => {})
-      );
-    },
-  });
-}
-```
+# Guard-deletion accounting
 
-Construct `ScanState` with `stringPhase` and return `result.state` directly from `scanChunk` rather than rebuilding a plain object field by field.
+Delete the outer `if (inString)` guard, nested `if (escaped)` guard, their
+`continue`, and all separate `inString`/`escaped` reads and writes in the fold,
+next-state construction, and tuple-state copy. The exhaustive literal match
+becomes the only string-phase transition owner, making
+`escaped && !inString` unrepresentable.
 
-## 5. Migration inventory
+Retain `if (!inBlocksArray)` and `if (inBlocksArray)`: they govern the
+independent one-way latch. Retain depth guards and the public wrapper's manual
+copy because neither enforces the removed boolean invariant. There is no
+legacy-input normalizer or mutual-exclusion error to delete.
 
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:48` — replace `escaped` with `stringPhase: ScanStringPhase`; retain `inBlocksArray` and remove `inString` at line 54.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:118` — update the “state flags” example prose to the phase/latch model; the line-123 `inBlocksArray` example remains valid.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:141` — destructure `stringPhase` instead of `escaped` and `inString`.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:145` — replace the nested boolean chain with exhaustive `ScanStringPhase.$match` arms.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:152` — entering a quote writes `ScanStringPhase.Enum["in-string"]`.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:154` and `:161` — keep both `inBlocksArray` latch reads unchanged; this flag is independent.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:181` — construct the next state with `stringPhase` instead of the two booleans.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:220` — return `result.state` directly; delete the plain-object reads of `inString` and `escaped` at lines 223-224 while preserving all state fields through the class value.
-- `packages/agents/server/src/AssistantTurn/AnthropicTurnKernel.ts:202` — no field migration; it passes `initialScanState` and `scanChunk` opaquely through `Stream.mapAccum`.
-- `packages/agents/server/src/test.ts:27` — no field migration; the exported test seed aliases `initialScanState` opaquely.
-- `packages/agents/server/test/AssistantTurn.schema-parity.test.ts:28` — replace encoded `escaped`/`inString` fixtures with `stringPhase: "outside"` in both expected states.
-- `packages/agents/server/test/scanChunk.test.ts:15` — no field migration; the property test carries `ScanState` opaquely.
+# Encoded-side impact
 
-No other live source or test reads or writes these members.
+The internal encoded schema changes from separate `escaped` and `inString`
+keys to `stringPhase: "outside" | "in-string" | "escaped"`. Update the exact
+schema-parity fixture atomically. No compatibility transform is required under
+the inventory's `internal` exposure: repository search found no persisted,
+wire, JSON-file, database, or request/response consumer.
 
-## 6. Guard-deletion accounting
+The source API is exported through `@beep/agents-server/AssistantTurn`, so
+compile-time consumers see the field migration and the new phase owner. The
+`scanChunk` call signatures, tuple order, completed JSON-slice bytes, initial
+semantics, and opaque `Stream.mapAccum` use remain unchanged. Include the
+required patch changeset.
 
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:145` — delete `if (inString) { if (escaped) ... else if ... }`, the nested coherence chain that assumes `escaped => inString`; exhaustive phase matching makes the illegal combination unrepresentable.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:148` — delete the coupled write that clears `inString` while relying on `escaped` already being false.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:220` — delete the manual five-field normalizing copy, including separate `inString`/`escaped` reads, by returning the already-schema-constructed state.
-- `packages/agents/server/src/AssistantTurn/ScanState.ts:209` — update the comment-only description from brace/string/escape booleans to the explicit phase machine.
+# Test impact
 
-The `if (!inBlocksArray)` check at line 154 and `if (inBlocksArray)` check at line 161 are intentionally not deleted: they govern the independent one-way latch and were not the cardinality defect. There is no legacy input normalizer or mutual-exclusion error.
+- Update the exact encoded and returned state objects in
+  `AssistantTurn.schema-parity.test.ts` and retain schema-derived arbitrary
+  round trips for `ScanState`, `ScanChunkInput`, and `ScanChunkResult`.
+- Retain the existing 200-run envelope/chunking property and single-character
+  chunking test as the behavioral proof for braces, brackets, quotes,
+  backslashes, newlines, and Unicode inside JSON strings.
+- Add direct transitions that end a chunk immediately after a backslash
+  (`escaped`), consume an escaped quote in the next chunk (`in-string`), and
+  consume an unescaped closing quote (`outside`). Also cover those phases both
+  before and after the blocks-array latch is set.
 
-## 7. Encoded-side impact
+Run the focused scanner/schema-parity tests and full
+`@beep/agents-server` package verification with the required patch changeset
+when this design is applied.
 
-none (internal)
+# Risk and sequencing
 
-The campaign inventory classifies `ScanState` as internal. Its schema encoding does change from `{ escaped, inString }` to `{ stringPhase }`, and `packages/agents/server/test/AssistantTurn.schema-parity.test.ts:28` deliberately snapshots that internal encoded form; update that fixture in the same landing. No persisted or wire consumer was found.
-
-## 8. Test impact
-
-- `packages/agents/server/test/AssistantTurn.schema-parity.test.ts:28` — update both exact encoded/state shapes and keep `ScanState` in the schema-derived arbitrary round-trip list at line 68.
-- `packages/agents/server/test/scanChunk.test.ts:37` — retain the envelope/chunking property test unchanged; its nasty strings and single-character chunking are the behavioral proof that the phase rewrite preserves escape handling.
-- Add direct transition cases spanning chunk boundaries after a backslash and after a closing quote, asserting `ScanStringPhase` values rather than boolean pairs.
-
-## 9. Risk & sequencing
-
-This is the only batch item in `packages/agents/server` and has the highest behavioral risk because it touches the incremental lexer loop. Land the schema, scanner transition, exact-shape fixture, and phase-boundary tests atomically. The public `ScanState` export means compile-time consumers see a field rename even though runtime use outside the module is opaque; repository-wide search found no such field consumer.
+This is the only batch item in `packages/agents/server` and has the highest
+behavioral risk because it changes the incremental lexer carry state. Land the
+schema, transition fold, tuple copy, exact-shape fixture, phase-boundary tests,
+and changeset atomically. Preserve the exact ordering of accumulation and
+phase/structure handling; a one-character ordering change can corrupt slices
+only at chunk boundaries.

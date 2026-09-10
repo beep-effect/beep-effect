@@ -1,0 +1,17 @@
+{
+  "lane": "r25-foundation-schema-a-m",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T21:41:19.861044+00:00",
+  "finished": "2026-09-08T21:50:47.773918+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-foundation-schema-a-m.jsonl` \u2014 confirmed 0, disqualified 0. Assigned A\u2013M schema paths covered (186 non-test files). Seed declarations still present; no material drift.",
+  "transcriptSha256": "68f57d015613017d3fb6d4625792ea7733d30c96738deea74ab3bb86f9d192f2",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

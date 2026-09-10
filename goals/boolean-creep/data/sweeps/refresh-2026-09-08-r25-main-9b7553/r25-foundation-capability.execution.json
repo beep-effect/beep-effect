@@ -1,0 +1,17 @@
+{
+  "lane": "r25-foundation-capability",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T21:41:19.860698+00:00",
+  "finished": "2026-09-08T21:51:48.735868+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-foundation-capability.jsonl` \u2014 confirmed 0, disqualified 0. All nine assigned areas covered. Seeds still present; line drift: BackendCapabilities 251\u2192250, AnnotationOptions 319\u2192318, ShaclValidationResult first boolean 285\u2192287.",
+  "transcriptSha256": "4a02ff31b90e8277ba273a774e20e9d6e0283235dc6dca4ba0bd6d153e3b66cf",
+  "runnerSha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796",
+  "seedSha256": "2a31741a76a3c1796a251684e238e3cf154ed5f74ce38a56994fb046dde972ea"
+}

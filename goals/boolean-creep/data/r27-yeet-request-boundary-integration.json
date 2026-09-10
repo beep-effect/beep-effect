@@ -1,0 +1,26 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "correctedDisqualifiedIds": [
+    "yeet-run-options-flags",
+    "yeet-command-shared-options"
+  ],
+  "disposition": "Retain D1 for documented raw request boundaries, including specified refusal outcomes; successful-operation independence is explicitly not claimed.",
+  "sourceAudit": "data/design-refresh-2026-09-09-r27-yeet-request-boundary.md",
+  "sourceAuditSha256": "d28504b5a5ac43175e3b1cd6ad687eed662334c13a32e78d39204bf36b4c6a47",
+  "inventoryBeforeSha256": "b114ccfda3f504ea7d0c46b6a22cb55e27edeb25644c7cd4141e5f35dff0eb79",
+  "inventoryAfterSha256": "342ff1926309b1dfe1d065213577b4bcc68fe57262d52c157664780e8ef6e8a9",
+  "archive": "history/inventory/2026-09-09-r27-yeet-request-boundary-corrections.jsonl",
+  "archiveSha256": "c023603dc8eb14b382d44c6a11062d18176d0d864129a84f74d7285f0ba66d35",
+  "sharedOptionsCoverage": "17 plus disjoint 2; no duplicate full-owner row",
+  "preservedIds": [
+    "r25-cli-yeet-shared-options-ci-parity-no-fail-fast",
+    "yeet-monitor-command-route"
+  ],
+  "independentCorrection": "data/sweeps/refresh-2026-09-09-r27-main-663904/r27-cli-yeet-contract-correction1.execution.json",
+  "independentCorrectionStillRecordsUnresolved": true,
+  "secondIndependentCorrectionRun": false,
+  "parentSourceAdjudication": true,
+  "formalIndependentReview": false,
+  "futureRequirement": "Revalidate both scoped seeds in the next full census; no raw-request exemption for other CLI models."
+}

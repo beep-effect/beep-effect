@@ -1,0 +1,52 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "remoteMainVerifiedAt": "2026-09-09T04:26:25.938094+00:00",
+  "remoteMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "runtime": "Bun1.4.2",
+  "inventoryRecords": 921,
+  "qualifiedDesigns": 165,
+  "inventorySha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "round27VerdictSha256": "25c55ce145359f562b9ac09857d149c2a48923d679f982794d585f4d1a7ea919",
+  "checks": [
+    {
+      "command": "mise exec bun@1.4.2 -- bun goals/boolean-creep/ops/validate-inventory.ts",
+      "exitCode": 0,
+      "summary": "inventory OK: 921 records, 921 unique ids"
+    },
+    {
+      "command": "mise exec bun@1.4.2 -- bun goals/boolean-creep/ops/validate-designs.ts",
+      "exitCode": 0,
+      "summary": "design coverage OK: 165 qualified ids"
+    },
+    {
+      "command": "git diff --check HEAD -- goals/boolean-creep",
+      "exitCode": 0,
+      "summary": ""
+    },
+    {
+      "command": "git merge-base --is-ancestor origin/main HEAD",
+      "exitCode": 0,
+      "summary": ""
+    },
+    {
+      "command": "git diff --quiet origin/main HEAD -- packages apps",
+      "exitCode": 0,
+      "summary": ""
+    },
+    {
+      "command": "git diff --quiet HEAD -- packages apps package.json bun.lock",
+      "exitCode": 0,
+      "summary": ""
+    },
+    {
+      "command": "GOAL character budget and manifest parse",
+      "exitCode": 0
+    },
+    {
+      "command": "mise exec bun@1.4.2 -- bun install --frozen-lockfile",
+      "exitCode": 0
+    }
+  ],
+  "note": "Structural packet/source preflight only. Main-impact native audits are pending; six qualified Laws/Skills rows and three D rows already withdrawn with archives. No fresh P3, dryness or Gate2 approval is claimed."
+}

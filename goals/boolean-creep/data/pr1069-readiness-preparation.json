@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "boolean-creep-pr-readiness-preparation/v1",
+  "date": "2026-09-09",
+  "pr": 1069,
+  "userInstruction": "See the PR to a mergeable state, keeping it in draft. Campaign execution remains paused.",
+  "merge": {
+    "commit": "1965ed1a5145677dad7db44248a825bb78775e51",
+    "main": "c5b5a6c1e2d970dd424dbe5ae940cecc5292511e",
+    "campaignAndPrototypeCommittedDiff": []
+  },
+  "prototypeDisposition": {
+    "manifest": "scratchpad/yeet-effect/drafts/manifest.json",
+    "allFourArchivesByteIdentical": true,
+    "missingDomainImplementationNotCreated": true
+  },
+  "reviewConfiguration": {
+    "fileChangeLimitBefore": 1200,
+    "fileChangeLimitAfter": 2000,
+    "ignorePatternsUnchanged": true,
+    "actualHostedReviewPending": true
+  },
+  "inventorySha256": "ed743923428ac9b8d8973a48dcf5f8011526881d64436a0779658a4159f42426",
+  "inventoryRecords": 753,
+  "qualifiedDesigns": 145,
+  "applied": 0,
+  "campaignAdmissionCredit": false,
+  "qualityProof": "Pending a fresh full proof after this preparation commit."
+}

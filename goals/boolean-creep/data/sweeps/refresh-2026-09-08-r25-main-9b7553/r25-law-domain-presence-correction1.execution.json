@@ -1,0 +1,18 @@
+{
+  "lane": "r25-law-domain-presence-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:30:10.950463+00:00",
+  "finished": "2026-09-08T22:34:33.548548+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 3,
+  "transcriptSha256": "2728c030763edd821a3cb43d3104c219c460a471bf89192d4d9986a1040d16f2",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-law-domain-presence-correction1.jsonl` \u2014 confirmed 3, disqualified 0. Prior `r25-law-practice-domain.jsonl` left unchanged. All three assigned files covered.",
+  "supersedesDecisions": [
+    "r25-law-practice-domain-ids-statement-present-type",
+    "r25-law-practice-domain-full-case-blank-page",
+    "r25-law-practice-domain-pincite-info-range-ends"
+  ]
+}

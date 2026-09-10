@@ -1,0 +1,22 @@
+{
+  "lane": "r31-foundation-capability",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-09T14:34:40.574779+00:00",
+  "finished": "2026-09-09T14:46:09.772619+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/r31-foundation-capability.jsonl`\n\nConfirmed: 0. Disqualified: 1. Validator: OK.\n\nEvery assigned root was covered (`api-transport`, `chalk`, `colors`, `file-processing`, `langextract`, `mcp-kit`, `nlp-processing`, `observability`, `semantic-web`).\n\nSeed drift: none. All 20 scoped seeds still exist with the claimed owner, members, and classification; D1 claims still match current writers/readers. No unresolved source question.\n\nOut-of-net (not recorded): function-flag parameters, callable predicates/schema guards, single-boolean models, `ColorInfo` false-or-object sentinel, `includeStack`-only SDK options, JSDoc-only example objects.\n\n\ud83c\udf31 graft saved ~194,241 tokens this turn (6 calls)",
+  "transcriptSha256": "c594fa4986256e1c49bd0583ed24d0f0501e745edb4d32be5ea9d5472113fef4",
+  "runnerSha256": "3e988b6d2fd507b733b37bd9afe8f87eedf9fea22d151d75e386c850b98f2119",
+  "seedSha256": "1739679baffd27a2416adb0853b411992fbfd3a1dc19623d5bf1bb0e67f243d4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

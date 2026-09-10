@@ -1,0 +1,22 @@
+{
+  "lane": "r28-drivers-a-f",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:37:26.763652+00:00",
+  "finished": "2026-09-09T04:46:01.143473+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 4,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-drivers-a-f.jsonl`\n\nConfirmed: 0. Disqualified: 4. Validator: `inventory OK: 4 records, 4 unique ids`.\n\nEvery assigned root was covered (`packages/drivers/acp/src` through `packages/drivers/freshbooks/src`). All scoped seeds still exist on the claimed owners with the same members and classifications; no seed correction or withdrawal. No unresolved source question.\n\n\ud83c\udf31 graft saved ~3,562 tokens this turn (1 call)",
+  "transcriptSha256": "c172b6ae0203037ceed43004714947324cd551dff4c5edcd44002df7da07c441",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 4 records, 4 unique ids\n"
+}

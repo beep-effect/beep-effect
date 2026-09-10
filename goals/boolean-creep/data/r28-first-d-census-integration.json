@@ -1,0 +1,51 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 853,
+  "afterCount": 847,
+  "beforeInventorySha256": "d2387f768a80363ca3911c89856d8c8b3e6f6d3ca071f39f022aff5868a9c7ec",
+  "afterInventorySha256": "8012d8134e12cda1ebe15221757286e9928fe0613c03d32d328e5036b8e91bf6",
+  "correctedIds": [
+    "drivers-openclaw-channel-health",
+    "drivers-openai-compat-chat-completion-request",
+    "r3-foundation-todo-item-presence",
+    "todo-item-due-tone"
+  ],
+  "addedIds": [
+    "r28-drivers-a-f-exiftool-write-tags-core-remove-options",
+    "r28-drivers-a-f-ffmpeg-with-staging-directory-remove-options",
+    "r28-drivers-a-f-ffmpeg-extract-frames-remove-options",
+    "r28-drivers-a-f-box-runtime-prune-undefined-descriptor"
+  ],
+  "withdrawnIds": [
+    "openclaw-live-acceptance-predicates",
+    "rdf-canonize-budget-failure-heuristics",
+    "openclaw-schema-placeholder-predicates",
+    "r3-drivers-arch-dataset-loader-host-probes",
+    "r3-drivers-arch-postgres-error-extractors",
+    "r3-drivers-arch-postgres-diagnostics-probes",
+    "r3-drivers-arch-pcl-failure-classifiers",
+    "r3-drivers-arch-postgres-diagnostic-guards",
+    "r3-drivers-arch-dataset-loader-url-ssrf",
+    "r25-foundation-schema-n-z-slug-hyphen-edge-checks"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-first-d-census-before.jsonl",
+  "rowArchiveSha256": "703b7b475e5b7761f2b0ba97a226e1a7b08a2b9d3e00ce2e26991f5f701cc8bc",
+  "designArchive": "history/designs/2026-09-09-r28-todo-citations",
+  "archivedDesignSha256": {
+    "r3-foundation-todo-item-presence": "590bcd851ae7f3bdeabea47a5353e9735bfb40f87552207c354c7f612fbd6812",
+    "todo-item-due-tone": "4a5291c9d8c731e299df4741ddcc5e71f9fb501bb3d207098c59c1ede1be9fe0"
+  },
+  "refreshedDesignSha256": {
+    "r3-foundation-todo-item-presence": "59019a38bdcb6891722ede838c54202b220d4002ed3c1ecf5e8e57b41971069a",
+    "todo-item-due-tone": "7decf6802eaf1173a4eef184350cb11436c471f7c632442f362bc67658605dd5"
+  },
+  "audit": "data/design-refresh-2026-09-09-r28-first-d-census.md",
+  "auditSha256": "838c5f88a53a7cedb88ccccc2731a998bea7cb43c359cce89ce2148f90919caa",
+  "pendingChartIds": [
+    "r28-foundation-ui-chart-tooltip-indicator-flags",
+    "r28-foundation-ui-chart-tooltip-default-item-flags",
+    "r28-foundation-ui-chart-tooltip-item-flags"
+  ],
+  "note": "Four actual D bags added, ten callable records withdrawn, two D anchors and two qualified Todo citations repaired. Todo source bytes match its original design pin. Three chart qualifications and full UI coverage await one independent correction; no P3/applied/dry credit."
+}

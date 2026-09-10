@@ -1,0 +1,31 @@
+{
+  "sourceSha": "8f266b878445ca8a7f751f9248da428a4dde39a1",
+  "originMainSha": "663904610cce2a38c06b0619a8c414646b69361c",
+  "recordsBefore": 915,
+  "recordsAfter": 923,
+  "inventoryBeforeSha256": "b3ffc5e5f4b15359ecc44dee266f19d39b2ec8bcb457233b1c5032f5c0220c2d",
+  "inventoryAfterSha256": "c6377e8ccbbd83ee40b36b231b5937233c80b878ddf68a10857489fd758b44f3",
+  "addedDisqualifiedIds": [
+    "r27-cli-commands-a-c-findings-manifest-capability-flags",
+    "r27-cli-commands-a-c-findings-manifest-completion-gate",
+    "r27-cli-commands-a-c-findings-manifest-sanitation",
+    "r27-cli-commands-a-c-ecosystem-package-json-flags",
+    "r27-cli-commands-l-q-fallow-ci-workflow-facts",
+    "r27-cli-commands-l-q-effect-tsgo-readme-parser",
+    "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+    "r27-cli-commands-r-z-sync-data-target-selection-auth"
+  ],
+  "correctedIds": ["test-tsgo-synthetic-compiler-options"],
+  "rawQualificationCorrectedToD1": "r27-cli-commands-a-c-findings-manifest-sanitation",
+  "qualifiedRecordsUnchanged": true,
+  "qualifiedCount": 160,
+  "disqualifiedCounts": {
+    "D2": 166,
+    "D1": 597
+  },
+  "archives": {
+    "history/inventory/2026-09-09-r27-cli-d-corrections.jsonl": "04d5a9816bc176f52ccc2a8ff646d0fb1a4bfdfcd852610ccfe8ad2c2c534b81"
+  },
+  "audit": "data/design-refresh-2026-09-09-r27-cli-carrier-checkpoint.md",
+  "formalIndependentReview": false
+}

@@ -1,0 +1,27 @@
+{
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "originMainSha": "d1b4d769fbaffddd55717f3b1ba461897dd545c5",
+  "beforeCount": 916,
+  "afterCount": 904,
+  "beforeInventorySha256": "85655c13cbe0204634a2bd7a5aac6c8a5cd4d977e330214a140861eaa1bd8d2c",
+  "afterInventorySha256": "342864dfbdadcfbffec61faf6440dfac5c301672b2b091ecfde2468e71060814",
+  "withdrawnDisqualifiedIds": [
+    "r3-tooling-aisync-claude-permission-gates",
+    "r3-tooling-ci-lane-docgen-input-kind",
+    "r3-tooling-no-native-runtime-typeof-gates",
+    "r3-tooling-schema-first-file-gates",
+    "r3-tooling-schema-topology-export-key-gates",
+    "r3-tooling-schema-topology-export-target-gates",
+    "r3-tooling-terse-effect-matcher-receiver-gates",
+    "r3-tooling-terse-effect-nested-matcher-gates",
+    "r3-tooling-terse-effect-object-thunk-gates",
+    "r3-tooling-terse-effect-optional-spread-gates",
+    "r3-tooling-tsconfig-sync-plan-export-gates",
+    "r3-tooling-tsmorph-path-error-gates"
+  ],
+  "rowArchive": "history/inventory/2026-09-09-r28-tooling-callable-withdrawals.jsonl",
+  "rowArchiveSha256": "11653345eaa4023eac3d3be0c8b353934129a0103550656a688c22e81cfb96c4",
+  "audit": "data/design-refresh-2026-09-09-r28-tooling-callable-withdrawals.md",
+  "auditSha256": "9fb8111f9739aee23d2d663607d6febb27ec188726c97824a9a3faf72c06b840",
+  "note": "Eleven callable/synthetic rows and one removed local pair. No qualification/status/design changes; frozen R27 and R28 seed unchanged."
+}

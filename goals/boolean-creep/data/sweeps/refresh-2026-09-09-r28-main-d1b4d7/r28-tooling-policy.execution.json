@@ -1,0 +1,22 @@
+{
+  "lane": "r28-tooling-policy",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T05:05:45.285885+00:00",
+  "finished": "2026-09-09T05:14:37.781999+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-tooling-policy.jsonl` \u2014 confirmed 0, disqualified 2. Validator: inventory OK (2 records, 2 unique ids).\n\nCovered both assigned roots (`packages/tooling/policy-pack/lint-rules/src`, `packages/tooling/policy-pack/repo-configs/src`); generated snapshot excluded. Every listed seed declaration still exists.\n\nSeed drift: `tooling-rest-next-config` expanded with omitted `reactCompiler`. Five invented callable-gate seeds (`isGlobalProcessObject.spellingGates`, `no-js-extension-imports.importGates`, `isExportedNode.exportGates`, `isOpaqueCallee.receiverGates`, `NoNativeRuntimeHotspots.pathGates`) remain predicates, not Boolean carriers \u2014 ineligible, not re-recorded. Other seeds unchanged. No unresolved source question.\n\n\ud83c\udf31 graft saved ~89,697 tokens this turn (29 calls)",
+  "transcriptSha256": "cd376bdf9d74054d4d2b936e8677cfaaa7927407d73abcc595eafa337c8b6b40",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 2 records, 2 unique ids\n"
+}

@@ -1,0 +1,18 @@
+{
+  "lane": "r25-epistemic-scope-implication-correction1",
+  "sourceSha": "7440cb8c4302ce64b87860069a464bafbf65f576",
+  "started": "2026-09-08T22:21:48.085677+00:00",
+  "finished": "2026-09-08T22:24:22.636344+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "transcriptSha256": "175a858786f77e486dbc2702e749c83cb238336316dae99b7284c68e87092d3a",
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-08-r25-main-9b7553/r25-epistemic-scope-implication-correction1.jsonl` \u2014 confirmed 1, disqualified 0. Covered the three assigned files. Withdraw `r25-epistemic-ontology-document-toolbar-save-badge`: `documentToolbarState` / `documentBadge` are function parameter bags (prompt line 44); public callers are the UI bag-assembly plus tests, none is an in-scope stored/derived carrier, so omitted (no D1). Withdraw `r25-epistemic-ontology-sparql-inject-limit-complement`: `queryHasLimit` is a module function and `injected` is the sole boolean on the return object \u2014 not two boolean members in one scope. Consolidate seed `epistemic-review-dialog-reason-gates` to confirmed `[reasonMissing, reasonTooLong, reasonInvalid, confirmDisabled]` (16/4); supersession kept out. Original `r25-epistemic-ontology.jsonl` left unchanged.",
+  "supersedesDecisions": [
+    "r25-epistemic-ontology-document-toolbar-save-badge",
+    "r25-epistemic-ontology-review-dialog-confirm-gates",
+    "r25-epistemic-ontology-sparql-inject-limit-complement"
+  ]
+}

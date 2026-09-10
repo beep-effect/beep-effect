@@ -1,0 +1,22 @@
+{
+  "lane": "r28-architecture-ecosystem-internal",
+  "sourceSha": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "5b92193de1ceb09051959239b35bee57d6b727f8dcba4e4d1c332ac2e5fcb19b",
+  "started": "2026-09-09T04:46:04.387487+00:00",
+  "finished": "2026-09-09T04:55:24.572989+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-09-r28-main-d1b4d7/r28-architecture-ecosystem-internal.jsonl`\n\nConfirmed: 0. Disqualified: 0. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (`architecture-lab` client/config/domain/server/tables/ui/use-cases, `effect-drizzle`, `_internal/db-admin`). No new eligible clusters; no seed line/member drift on surviving owners.\n\nUnchanged (not re-recorded): `WorkItemPublicConfig` D1, `readWorkItemConfig.envFlags` D1, `Meta` `[hasDefault, primaryKey, unique, version]` D1, `SpecDefinition.timestamp` `[ident, withTimezone]` still supported as designed.\n\nIneligible seed withdrawals (callable guards/predicates, not Boolean carriers): `WorkItem.statusPredicates`; pg/sqlite `isNode.probes`; `isPositiveInteger/isPgNumericScale`; `isIdentityKind/isNumberInteger`; `isStringTypeAst/isStringTypeSchema`; `isIntegerIdent/isSpec`; `isStructuralJson/isNullable`; `isRectangular/everyArrayElement`; `isNonEmptyString/isEntityIdLike`; `isFkAction/isReferences`; pg/sqlite `Spec.guards`.\n\nNo unresolved source question.",
+  "transcriptSha256": "0a1a874af29ed58234e863cd2545c2734d3c5dc1e002a5e55827178b691b19f8",
+  "runnerSha256": "0f3070ded9e9f0a1a905d7e6d43bf3d8631d85c657afa47d87312bc5349106bc",
+  "seedSha256": "bf82e9656a66c738c413567734ae05bfad31e79c4cb7ab3c086307dd28185f24",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}
