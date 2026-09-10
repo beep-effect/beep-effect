@@ -290,6 +290,12 @@ describe("package scripts policy", () => {
         const fs = yield* FileSystem.FileSystem;
         const first = yield* policyToolsFingerprint(root);
         expect(first.inputs).toContain("packages/nested/src/**");
+        expect(first.inputs).toContain("packages/nested/package.json");
+        expect(first.inputs).toContain("packages/cli/package.json");
+        expect(first.inputs).toContain("packages/helper/package.json");
+        expect(first.inputs).toContain("package.json");
+        expect(first.inputs).not.toContain("**/package.json");
+        expect(first.inputs).not.toContain("packages/unrelated/package.json");
         expect(first.inputs).not.toContain("packages/unrelated/src/**");
         expect(yield* policyToolsFingerprint(root)).toEqual(first);
         yield* fs.writeFileString(`${root}/packages/unrelated/src/index.ts`, "unrelated edit");

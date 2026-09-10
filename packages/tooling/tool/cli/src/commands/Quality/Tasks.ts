@@ -5,7 +5,9 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
+import { LiteralKit } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -101,6 +103,7 @@ import {
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
   QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
+  QualityCheckConcurrency,
   QualityTaskBypassArgName,
   QualityTaskInvocation,
   QualityTaskLaneRun,
@@ -2537,13 +2540,56 @@ const scopedLawStep = (
 ): ReadonlyArray<QualityTaskStep> =>
   scopedRepoCliStep(repoRoot, label, ["laws", command, ...args], isLawSourcePath, files);
 
-const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> =>
+// Policy lint retains Check's accepted overrides and adds its four-worker budget.
+const PolicyLintConcurrency = LiteralKit([...QualityCheckConcurrency.Options, "4"]).pipe(
+  $RepoCliId.create("commands/Quality/Tasks").annoteSchema("PolicyLintConcurrency", {
+    description: "Bounded policy lint workers, defaulting to four with Check lane overrides.",
+  })
+);
+const decodePolicyLintConcurrencyOption = S.decodeUnknownOption(PolicyLintConcurrency);
+
+const policyLintTurboStep = (
+  repoRoot: string,
+  label: string,
+  tasks: ReadonlyArray<string>,
+  base?: string
+): QualityTaskStep => {
+  const concurrency = pipe(
+    // biome-ignore lint/suspicious/noUndeclaredEnvVars: Same declared boundary as the hosted Check lane.
+    decodePolicyLintConcurrencyOption(Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY),
+    O.getOrElse(() => "4")
+  );
+  // Scope is the caller's decision: a base means a scoped local run, no base means full scope
+  // (the policy task folds CI into full scope before building the plan).
+  const affected = !P.isUndefined(base);
+  const step = turboStep(repoRoot, label, tasks, [
+    `--concurrency=${concurrency}`,
+    "--continue=dependencies-successful",
+    "--summarize",
+    ...(affected ? ["--affected"] : []),
+  ]);
+  return QualityTaskStep.make({
+    ...step,
+    ...(affected ? { env: { ...step.env, TURBO_SCM_BASE: base } } : {}),
+  });
+};
+
+const deprecatedApisTurboStep = (repoRoot: string, base?: string): QualityTaskStep =>
+  policyLintTurboStep(repoRoot, "lint:deprecated-apis", ["lint:deprecated-apis"], base);
+
+const rootRepoLintPolicySteps = (
+  repoRoot: string,
+  files?: ReadonlyArray<string>,
+  base?: string
+): ReadonlyArray<QualityTaskStep> =>
   A.map(
     [
       // Static LPT order from research/00-evidence-brief.md (run 31683014887):
       // deprecated-apis 975199ms, semantic-delta 78127ms,
       // schema-first 51162ms, then every remaining step in descending measured duration.
-      repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis"]),
+      P.isUndefined(base)
+        ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
+        : deprecatedApisTurboStep(repoRoot, base),
       // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
       // introduced by this branch and lets the corpus keep its inherited ones.
       repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
@@ -2552,7 +2598,9 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
       repoCliStep(repoRoot, "knowledge:refs-check", ["knowledge", "refs", "--check"]),
       repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
       ...scopedLawStep(repoRoot, "lint:terse-effect", "terse-effect", ["--check", "--advisory"], files),
-      bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"]),
+      P.isUndefined(base)
+        ? bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"])
+        : policyLintTurboStep(repoRoot, "lint:jsdoc", ["lint:jsdoc", "//#lint:jsdoc:root"], base),
       ...scopedLawStep(repoRoot, "lint:native-runtime", "native-runtime", ["--check"], files),
       repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
       ...scopedLawStep(repoRoot, "lint:frozen-grant-set", "frozen-grant-set", ["--check"], files),
@@ -2624,17 +2672,18 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
  *
  * @param repoRoot - Repository root directory.
  * @param files - Optional changed-file scope for naturally file-scoped policy steps.
+ * @param base - Caller base for affected Turbo tasks; omitted for full scope.
  * @returns Planned subprocess steps for policy-only lint verification.
  * @category utilities
  * @since 0.0.0
  */
 export const rootLintPolicyStepsForTesting: {
-  (files?: ReadonlyArray<string>): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
-  (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep>;
+  (files?: ReadonlyArray<string>, base?: string): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+  (repoRoot: string, files?: ReadonlyArray<string>, base?: string): ReadonlyArray<QualityTaskStep>;
 } = dual(
   (args: IArguments) => P.isString(args[0]),
-  (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> =>
-    rootRepoLintPolicySteps(repoRoot, files)
+  (repoRoot: string, files?: ReadonlyArray<string>, base?: string): ReadonlyArray<QualityTaskStep> =>
+    rootRepoLintPolicySteps(repoRoot, files, base)
 );
 
 /**
@@ -2644,7 +2693,7 @@ export const rootLintPolicyStepsForTesting: {
  *
  * ```ts
  * import { runRootLintPolicyTask } from "@beep/repo-cli/commands/Quality"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = runRootLintPolicyTask(false)
  * console.log(Effect.isEffect(program)) // true
@@ -2654,7 +2703,8 @@ export const rootLintPolicyStepsForTesting: {
  * @since 0.0.0
  */
 const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyTask")(function* (
-  full: boolean
+  full: boolean,
+  base: string
 ): Effect.fn.Return<void, QualityTaskError, QualityTaskEnvironment> {
   const path = yield* Path.Path;
   const cwd = path.resolve(process.cwd());
@@ -2662,7 +2712,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
   const runFull = full || isCi();
   let files: ReadonlyArray<string> | undefined;
   if (!runFull) {
-    files = yield* collectChangedFiles(repoRoot, "origin/main", "HEAD");
+    files = yield* collectChangedFiles(repoRoot, base, "HEAD");
   }
   const changedFileCount = pipe(
     O.fromUndefinedOr(files),
@@ -2672,9 +2722,13 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
   yield* Console.log(
-    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, tsconfig-overlay, reflection-artifacts, roadmap-refs, goals, schema-first, deprecated-apis, jsdoc, jsdoc-module-tags, docgen, circular, typos, oxlint"
+    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, tsconfig-overlay, reflection-artifacts, roadmap-refs, goals, schema-first, jsdoc-module-tags, docgen, circular, typos, oxlint"
   );
-  yield* runStepGroup("lint:policy", rootRepoLintPolicySteps(repoRoot, files), LINT_POLICY_STEP_CONCURRENCY);
+  yield* runStepGroup(
+    "lint:policy",
+    rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base),
+    LINT_POLICY_STEP_CONCURRENCY
+  );
 });
 
 /**
@@ -2684,18 +2738,46 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
  *
  * ```ts
  * import { runRootLintPolicyTask } from "@beep/repo-cli/commands/Quality"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = runRootLintPolicyTask(false)
  * console.log(Effect.isEffect(program))
  * ```
  *
  * @param full - Run the full-repo sweep instead of the changed-scope default.
+ * @param base - Caller base for changed files and affected Turbo tasks.
  * @returns The lint policy battery effect.
  * @category tasks
  * @since 0.0.0
  */
-export const runRootLintPolicyTask = (full = false) => runRootLintPolicyTaskInternal(full);
+export const runRootLintPolicyTask: {
+  (full?: boolean): Effect.Effect<void, QualityTaskError, QualityTaskEnvironment>;
+  (full: boolean, base: string): Effect.Effect<void, QualityTaskError, QualityTaskEnvironment>;
+  (base: string): (full: boolean) => Effect.Effect<void, QualityTaskError, QualityTaskEnvironment>;
+} = dual(
+  (args: IArguments) => !P.isString(args[0]),
+  (full = false, base = "origin/main") => runRootLintPolicyTaskInternal(full, base)
+);
+
+/**
+ * Run the same bounded deprecated-API Turbo step used by the policy plan.
+ *
+ * **Example** (Build an affected deprecated-API check)
+ *
+ * ```ts
+ * import { runRootDeprecatedApisTask } from "@beep/repo-cli/commands/Quality"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(runRootDeprecatedApisTask("origin/main"))) // true
+ * ```
+ *
+ * @param base - Caller base for local affected selection.
+ * @category tasks
+ * @since 0.0.0
+ */
+export const runRootDeprecatedApisTask = Effect.fn("QualityTasks.runRootDeprecatedApisTask")(function* (base: string) {
+  const repoRoot = yield* findRepoRoot();
+  yield* runStep(deprecatedApisTurboStep(repoRoot, base));
+});
 
 const rootLintPolicySteps = (
   repoRoot: string,
