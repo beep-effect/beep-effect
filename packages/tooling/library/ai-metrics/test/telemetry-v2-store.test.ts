@@ -2,6 +2,7 @@ import * as NodeURL from "node:url";
 import {
   FlightRecord,
   FlightRecordCompositionInput,
+  FlightRecordCompositionInputArbitrary,
   FlightRecordWriteEvent,
   IngestEnumeration,
   IngestManifest,
@@ -16,7 +17,7 @@ import { expect, layer } from "@effect/vitest";
 import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { TelemetryV2StoreShape } from "@beep/repo-ai-metrics";
 
 const decodeFlightRecordWriteEvent = S.decodeEffect(FlightRecordWriteEvent);
@@ -61,13 +62,20 @@ const compositionInputFrom = (record: FlightRecord): FlightRecordCompositionInpu
 
 layer(NodeServices.layer)("telemetry-v2 store", (it) => {
   it("keeps record-wide evidence tier and OIP taint out of generated composition inputs", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(FlightRecordCompositionInput)(fc), (input) => {
-        expect("evidenceTier" in input).toBe(false);
-        expect("oipTaint" in input).toBe(false);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([FlightRecordCompositionInputArbitrary]),
+          ([input]) => {
+            expect("evidenceTier" in input).toBe(false);
+            expect("oipTaint" in input).toBe(false);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect("commits the enumeration before source reading and the linked manifest afterward", () =>

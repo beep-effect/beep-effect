@@ -24,7 +24,6 @@ const MigrationTargetName = S.NonEmptyString.check(
 ).pipe(
   $I.annoteSchema("MigrationTargetName", {
     description: "Lowercase kebab-case identifier for a db-admin migration target.",
-    toArbitrary: () => (fc) => fc.stringMatching(MigrationTargetNamePattern),
   })
 );
 
@@ -35,7 +34,6 @@ const PostgresSchemaName = S.NonEmptyString.check(
 ).pipe(
   $I.annoteSchema("PostgresSchemaName", {
     description: "Lowercase PostgreSQL schema identifier used by a migration target.",
-    toArbitrary: () => (fc) => fc.stringMatching(PostgresIdentifierPattern),
   })
 );
 
@@ -46,14 +44,12 @@ const MigrationTableName = S.NonEmptyString.check(
 ).pipe(
   $I.annoteSchema("MigrationTableName", {
     description: "Lowercase PostgreSQL table identifier included in a migration target.",
-    toArbitrary: () => (fc) => fc.stringMatching(PostgresIdentifierPattern),
   })
 );
 
 const DrizzleMigrationSchema = S.Unknown.pipe(
   $I.annoteSchema("DrizzleMigrationSchema", {
     description: "Opaque imported Drizzle table-schema object used only for migration generation.",
-    toArbitrary: () => (fc) => fc.constant({}),
   })
 );
 

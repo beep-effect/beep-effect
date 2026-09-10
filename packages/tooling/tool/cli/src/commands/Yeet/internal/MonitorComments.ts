@@ -520,12 +520,16 @@ const excerpt = (body: string): string => yeetCommentExcerpt(body, commentExcerp
  */
 export const renderYeetMonitorComment = (comment: YeetMonitorComment): string =>
   Match.value(comment).pipe(
-    Match.tags({
-      review: (review) =>
-        `[yeet] new PR review comment: ${stripTerminalControlSequences(review.author)} @ ${stripTerminalControlSequences(review.path)}:${reviewLine(review.line)}\n  ${excerpt(review.body)}\n  ${stripTerminalControlSequences(review.url)}`,
-      issue: (issue) =>
-        `[yeet] new PR issue comment: ${stripTerminalControlSequences(issue.author)}\n  ${excerpt(issue.body)}\n  ${stripTerminalControlSequences(issue.url)}`,
-    }),
+    Match.tag(
+      "review",
+      (review) =>
+        `[yeet] new PR review comment: ${stripTerminalControlSequences(review.author)} @ ${stripTerminalControlSequences(review.path)}:${reviewLine(review.line)}\n  ${excerpt(review.body)}\n  ${stripTerminalControlSequences(review.url)}`
+    ),
+    Match.tag(
+      "issue",
+      (issue) =>
+        `[yeet] new PR issue comment: ${stripTerminalControlSequences(issue.author)}\n  ${excerpt(issue.body)}\n  ${stripTerminalControlSequences(issue.url)}`
+    ),
     Match.exhaustive
   );
 

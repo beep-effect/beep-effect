@@ -117,8 +117,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SchemaAST from "effect/SchemaAST";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBlankNodeSync = S.decodeSync(BlankNode);
 const decodeCurieSync = S.decodeSync(Curie);
@@ -168,14 +167,21 @@ const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & 
   schema: Schema,
   runs = 25
 ): void => {
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      const encoded = Effect.runSync(S.encodeEffect(schema)(value));
-      const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
-      expect(Equal.equals(decoded, value)).toBe(true);
-    }),
-    { numRuns: runs }
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          const encoded = Effect.runSync(S.encodeEffect(schema)(value));
+          const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
+          expect(Equal.equals(decoded, value)).toBe(true);
+
+          return true;
+        },
+        { runs: runs }
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const assertDecodeEncodeDecodeStable = <
@@ -184,16 +190,23 @@ const assertDecodeEncodeDecodeStable = <
   schema: Schema,
   runs = 25
 ): void => {
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (input) => {
-      const firstEncoded = Effect.runSync(S.encodeEffect(schema)(input));
-      const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(firstEncoded));
-      const encoded = Effect.runSync(S.encodeEffect(schema)(decoded));
-      const decodedAgain = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
-      expect(Equal.equals(decodedAgain, decoded)).toBe(true);
-    }),
-    { numRuns: runs }
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([input]) => {
+          const firstEncoded = Effect.runSync(S.encodeEffect(schema)(input));
+          const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(firstEncoded));
+          const encoded = Effect.runSync(S.encodeEffect(schema)(decoded));
+          const decodedAgain = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
+          expect(Equal.equals(decodedAgain, decoded)).toBe(true);
+
+          return true;
+        },
+        { runs: runs }
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const canParseWithNativeUrl = (value: string): boolean => {
@@ -381,7 +394,9 @@ describe("@beep/rdf IRI schemas", () => {
       expect(decodeRelativeIriReference(value)).toBe(value);
     }
 
-    expect(fc.sample(S.toArbitrary(RelativeIRIReference)(fc), 1)).toHaveLength(1);
+    expect(Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(RelativeIRIReference), { count: 1 }))).toHaveLength(
+      1
+    );
 
     expect(decodeIriReference("folder:child/leaf")).toBe("folder:child/leaf");
     expect(decodeRelativeIriReference("folder/child:leaf")).toBe("folder/child:leaf");
@@ -421,8 +436,9 @@ describe("@beep/rdf IRI schemas", () => {
 
 describe("@beep/rdf URI schemas and helpers", () => {
   it("publishes a canonical arbitrary for URI values", () => {
-    expect(SchemaAST.resolve(URI.ast)?.toArbitrary).toBeDefined();
-    expect(fc.sample(S.toArbitrary(URI)(fc), { numRuns: 20, seed: 0x5eed }).every(URI.is)).toBe(true);
+    expect(
+      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(URI), { count: 20, seed: 0x5eed })).every(URI.is)
+    ).toBe(true);
   });
 
   it("accepts representative absolute and relative URI forms", () => {
@@ -683,13 +699,20 @@ describe("@beep/rdf semantic metadata", () => {
   });
 
   it("round-trips decode/encode for metadata derived from the source schema", () => {
-    const arbitrary = S.toArbitrary(SemanticSchemaMetadata)(fc);
-    fc.assert(
-      fc.property(arbitrary, (metadata) => {
-        expect(decodeSemanticSchemaMetadataSync(encodeSemanticSchemaMetadataSync(metadata))).toEqual(metadata);
-      }),
-      fcRuns(50)
-    );
+    const arbitrary = Arbitrary.schema(SemanticSchemaMetadata);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([metadata]) => {
+            expect(decodeSemanticSchemaMetadataSync(encodeSemanticSchemaMetadataSync(metadata))).toEqual(metadata);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });
 

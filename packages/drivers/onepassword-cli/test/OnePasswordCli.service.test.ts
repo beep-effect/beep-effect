@@ -17,7 +17,7 @@ import { Effect, Redacted, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeOnePasswordCliAccountResult = S.decodeResult(OnePasswordCliAccount);
 const decodeOnePasswordCliDiagnosticTextResult = S.decodeResult(OnePasswordCliDiagnosticText);
@@ -36,16 +36,16 @@ const encodeOnePasswordCliProcessResultResult = S.encodeResult(OnePasswordCliPro
 const encodeOnePasswordReferenceProbeResult = S.encodeResult(OnePasswordReferenceProbe);
 const encodeOnePasswordReferenceProbeStatusResult = S.encodeResult(OnePasswordReferenceProbeStatus);
 
-const ProbeStatusArbitrary = S.toArbitrary(OnePasswordReferenceProbeStatus)(fc);
-const ExitCodeArbitrary = S.toArbitrary(OnePasswordCliExitCode)(fc);
-const DiagnosticTextArbitrary = S.toArbitrary(OnePasswordCliDiagnosticText)(fc);
-const ProcessResultArbitrary = S.toArbitrary(OnePasswordCliProcessResult)(fc);
-const AccountArbitrary = S.toArbitrary(OnePasswordCliAccount)(fc);
-const ReferenceProbeArbitrary = S.toArbitrary(OnePasswordReferenceProbe)(fc);
-const ErrorOptionsArbitrary = S.toArbitrary(OnePasswordCliErrorOptions)(fc).filter((options) =>
-  O.isNone(options.cause)
+const ProbeStatusArbitrary = Arbitrary.schema(OnePasswordReferenceProbeStatus);
+const ExitCodeArbitrary = Arbitrary.schema(OnePasswordCliExitCode);
+const DiagnosticTextArbitrary = Arbitrary.schema(OnePasswordCliDiagnosticText);
+const ProcessResultArbitrary = Arbitrary.schema(OnePasswordCliProcessResult);
+const AccountArbitrary = Arbitrary.schema(OnePasswordCliAccount);
+const ReferenceProbeArbitrary = Arbitrary.schema(OnePasswordReferenceProbe);
+const ErrorOptionsArbitrary = Arbitrary.schema(OnePasswordCliErrorOptions).pipe(
+  Arbitrary.filter((options) => O.isNone(options.cause))
 );
-const ErrorArbitrary = S.toArbitrary(OnePasswordCliError)(fc).filter((error) => O.isNone(error.cause));
+const ErrorArbitrary = Arbitrary.schema(OnePasswordCliError).pipe(Arbitrary.filter((error) => O.isNone(error.cause)));
 
 const sameProcessResult = S.toEquivalence(OnePasswordCliProcessResult);
 const sameAccount = S.toEquivalence(OnePasswordCliAccount);
@@ -140,85 +140,83 @@ describe("@beep/onepassword-cli", () => {
     expect(Result.getOrThrow(decodeOnePasswordCliDiagnosticTextResult(" secret not found\n"))).toBe("secret not found");
   });
 
-  it("round-trips schema-derived 1Password CLI payloads", () =>
-    fc.assert(
-      fc.property(
-        ProbeStatusArbitrary,
-        ExitCodeArbitrary,
-        DiagnosticTextArbitrary,
-        ProcessResultArbitrary,
-        AccountArbitrary,
-        ReferenceProbeArbitrary,
-        ErrorOptionsArbitrary,
-        ErrorArbitrary,
-        (status, exitCode, diagnosticText, processResult, account, probe, errorOptions, error) => {
-          expect(
-            Result.getOrThrow(
-              decodeOnePasswordReferenceProbeStatusResult(
-                Result.getOrThrow(encodeOnePasswordReferenceProbeStatusResult(status))
-              )
+  it.prop(
+    "round-trips schema-derived 1Password CLI payloads",
+    [
+      ProbeStatusArbitrary,
+      ExitCodeArbitrary,
+      DiagnosticTextArbitrary,
+      ProcessResultArbitrary,
+      AccountArbitrary,
+      ReferenceProbeArbitrary,
+      ErrorOptionsArbitrary,
+      ErrorArbitrary,
+    ],
+    ([status, exitCode, diagnosticText, processResult, account, probe, errorOptions, error]) => {
+      expect(
+        Result.getOrThrow(
+          decodeOnePasswordReferenceProbeStatusResult(
+            Result.getOrThrow(encodeOnePasswordReferenceProbeStatusResult(status))
+          )
+        )
+      ).toBe(status);
+      expect(
+        Result.getOrThrow(
+          decodeOnePasswordCliExitCodeResult(Result.getOrThrow(encodeOnePasswordCliExitCodeResult(exitCode)))
+        )
+      ).toBe(exitCode);
+      expect(
+        Result.getOrThrow(
+          decodeOnePasswordCliDiagnosticTextResult(
+            Result.getOrThrow(encodeOnePasswordCliDiagnosticTextResult(diagnosticText))
+          )
+        )
+      ).toBe(diagnosticText);
+      expect(
+        sameProcessResult(
+          Result.getOrThrow(
+            decodeOnePasswordCliProcessResultResult(
+              Result.getOrThrow(encodeOnePasswordCliProcessResultResult(processResult))
             )
-          ).toBe(status);
-          expect(
-            Result.getOrThrow(
-              decodeOnePasswordCliExitCodeResult(Result.getOrThrow(encodeOnePasswordCliExitCodeResult(exitCode)))
+          ),
+          processResult
+        )
+      ).toBe(true);
+      expect(
+        sameAccount(
+          Result.getOrThrow(
+            decodeOnePasswordCliAccountResult(Result.getOrThrow(encodeOnePasswordCliAccountResult(account)))
+          ),
+          account
+        )
+      ).toBe(true);
+      expect(
+        sameReferenceProbe(
+          Result.getOrThrow(
+            decodeOnePasswordReferenceProbeResult(Result.getOrThrow(encodeOnePasswordReferenceProbeResult(probe)))
+          ),
+          probe
+        )
+      ).toBe(true);
+      expect(
+        sameErrorOptions(
+          Result.getOrThrow(
+            decodeOnePasswordCliErrorOptionsResult(
+              Result.getOrThrow(encodeOnePasswordCliErrorOptionsResult(errorOptions))
             )
-          ).toBe(exitCode);
-          expect(
-            Result.getOrThrow(
-              decodeOnePasswordCliDiagnosticTextResult(
-                Result.getOrThrow(encodeOnePasswordCliDiagnosticTextResult(diagnosticText))
-              )
-            )
-          ).toBe(diagnosticText);
-          expect(
-            sameProcessResult(
-              Result.getOrThrow(
-                decodeOnePasswordCliProcessResultResult(
-                  Result.getOrThrow(encodeOnePasswordCliProcessResultResult(processResult))
-                )
-              ),
-              processResult
-            )
-          ).toBe(true);
-          expect(
-            sameAccount(
-              Result.getOrThrow(
-                decodeOnePasswordCliAccountResult(Result.getOrThrow(encodeOnePasswordCliAccountResult(account)))
-              ),
-              account
-            )
-          ).toBe(true);
-          expect(
-            sameReferenceProbe(
-              Result.getOrThrow(
-                decodeOnePasswordReferenceProbeResult(Result.getOrThrow(encodeOnePasswordReferenceProbeResult(probe)))
-              ),
-              probe
-            )
-          ).toBe(true);
-          expect(
-            sameErrorOptions(
-              Result.getOrThrow(
-                decodeOnePasswordCliErrorOptionsResult(
-                  Result.getOrThrow(encodeOnePasswordCliErrorOptionsResult(errorOptions))
-                )
-              ),
-              errorOptions
-            )
-          ).toBe(true);
-          expect(
-            sameError(
-              Result.getOrThrow(
-                decodeOnePasswordCliErrorResult(Result.getOrThrow(encodeOnePasswordCliErrorResult(error)))
-              ),
-              error
-            )
-          ).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+          ),
+          errorOptions
+        )
+      ).toBe(true);
+      expect(
+        sameError(
+          Result.getOrThrow(decodeOnePasswordCliErrorResult(Result.getOrThrow(encodeOnePasswordCliErrorResult(error)))),
+          error
+        )
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   layer(OnePasswordCli.makeLayerFromRunner(successRunner))((it) => {
     it.effect(

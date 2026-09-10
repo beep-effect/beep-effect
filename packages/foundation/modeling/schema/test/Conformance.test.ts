@@ -15,11 +15,11 @@ import {
 } from "@beep/schema/Conformance";
 import { URLStr } from "@beep/schema/URL";
 import { describe, expect, it } from "@effect/vitest";
-import { pipe, Result } from "effect";
+import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeAnnotationResult = S.decodeResult(Annotation);
 const decodeEnforcementResult = S.decodeResult(Enforcement);
@@ -35,9 +35,9 @@ const encodePolicyResult = S.encodeResult(Policy);
 const encodeReportResult = S.encodeResult(Report);
 const encodeRevisionResult = S.encodeResult(Revision);
 
-const InvariantEnforcementArbitrary = S.toArbitrary(Enforcement)(fc);
-const ConformancePolicyArbitrary = S.toArbitrary(Policy)(fc);
-const SpecificationRevisionArbitrary = S.toArbitrary(Revision)(fc);
+const InvariantEnforcementArbitrary = Arbitrary.schema(Enforcement);
+const ConformancePolicyArbitrary = Arbitrary.schema(Policy);
+const SpecificationRevisionArbitrary = Arbitrary.schema(Revision);
 
 const annotationInput = {
   sources: [
@@ -398,28 +398,30 @@ describe("Conformance", () => {
       checkedInvariantIds: ["example.rule"],
     });
 
-    fc.assert(
-      fc.property(
-        InvariantEnforcementArbitrary,
-        ConformancePolicyArbitrary,
-        SpecificationRevisionArbitrary,
-        (enforcement, policy, revision) => {
-          expect(pipe(encodeEnforcementResult(enforcement), Result.flatMap(decodeUnknownEnforcementResult))).toEqual(
-            Result.succeed(enforcement)
-          );
-          expect(pipe(encodePolicyResult(policy), Result.flatMap(decodeUnknownPolicyResult))).toEqual(
-            Result.succeed(policy)
-          );
-          expect(pipe(encodeReportResult(report), Result.flatMap(decodeUnknownReportResult))).toEqual(
-            Result.succeed(report)
-          );
-          expect(pipe(encodeRevisionResult(revision), Result.flatMap(decodeUnknownRevisionResult))).toEqual(
-            Result.succeed(revision)
-          );
-        }
-      ),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([InvariantEnforcementArbitrary, ConformancePolicyArbitrary, SpecificationRevisionArbitrary]),
+          ([enforcement, policy, revision]) => {
+            expect(pipe(encodeEnforcementResult(enforcement), Result.flatMap(decodeUnknownEnforcementResult))).toEqual(
+              Result.succeed(enforcement)
+            );
+            expect(pipe(encodePolicyResult(policy), Result.flatMap(decodeUnknownPolicyResult))).toEqual(
+              Result.succeed(policy)
+            );
+            expect(pipe(encodeReportResult(report), Result.flatMap(decodeUnknownReportResult))).toEqual(
+              Result.succeed(report)
+            );
+            expect(pipe(encodeRevisionResult(revision), Result.flatMap(decodeUnknownRevisionResult))).toEqual(
+              Result.succeed(revision)
+            );
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("requires issues for non-conforming reports", () => {

@@ -32,7 +32,7 @@ const liveMarker = "hello live tika corpus";
 
 // Snapshot the opt-in lane key once, treating absent and blank values as "not
 // configured" so the whole suite no-ops instead of dialing a phantom server.
-const liveTikaUrl = Config.string(BEEP_TEST_TIKA_URL_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
+const liveTikaUrl = Config.String(BEEP_TEST_TIKA_URL_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
 
 const provideLive = provideScopedLayer(Layer.merge(FetchHttpClient.layer, NodeServices.layer));
 

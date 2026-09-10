@@ -167,7 +167,7 @@ describe("@beep/infra OipWeb", () => {
   });
 
   it("round-trips OIP config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(OipWebPulumiConfigValues, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(OipWebPulumiConfigValues, { runs: 25 });
     expectSchemaRoundTrip(OipWebPulumiConfigValues);
     expectSchemaRoundTrip(OipDnsConfig);
     expectSchemaRoundTrip(OipVercelProjectConfig);

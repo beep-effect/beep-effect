@@ -50,118 +50,118 @@ import {
   makeWeeklyReportProgram,
 } from "./internal/Scorecard.ts";
 
-const inputFlag = Flag.string("input").pipe(
+const inputFlag = Flag.String("input").pipe(
   Flag.withAlias("i"),
   Flag.withDescription("Transcript JSONL file to ingest")
 );
-const targetFlag = Flag.choiceWithValue("target", [
+const targetFlag = Flag.ChoiceWithValue("target", [
   ["local", AiMetricsDeployTarget.Enum.local],
   ["dankserver", AiMetricsDeployTarget.Enum.dankserver],
 ]).pipe(Flag.withDefault(AiMetricsDeployTarget.Enum.local), Flag.withDescription("Install or forwarder target"));
 const mirrorTargetFlag = pipe(
-  Flag.choiceWithValue("target", [
+  Flag.ChoiceWithValue("target", [
     ["local", AiMetricsDeployTarget.Enum.local],
     ["dankserver", AiMetricsDeployTarget.Enum.dankserver],
   ]),
   Flag.withDefault(AiMetricsDeployTarget.Enum.dankserver),
   Flag.withDescription("Mirror bundle target")
 );
-const sourceFlag = Flag.choiceWithValue("source", [
+const sourceFlag = Flag.ChoiceWithValue("source", [
   ["codex", AiMetricsTranscriptSource.Enum.codex],
   ["claude", AiMetricsTranscriptSource.Enum.claude],
   ["openclaw", AiMetricsTranscriptSource.Enum.openclaw],
 ]).pipe(Flag.withDescription("Transcript source kind"));
-const toolFlag = Flag.choiceWithValue("tool", [
+const toolFlag = Flag.ChoiceWithValue("tool", [
   ["langfuse", AiMetricsTool.Enum.langfuse],
   ["phoenix", AiMetricsTool.Enum.phoenix],
   ["opik", AiMetricsTool.Enum.opik],
   ["posthog", AiMetricsTool.Enum.posthog],
 ]).pipe(Flag.withDefault(AiMetricsTool.Enum.phoenix), Flag.withDescription("Default observability tool"));
-const caseFlag = Flag.string("case").pipe(Flag.withDescription("Benchmark case identifier"));
-const configFlag = Flag.string("config").pipe(Flag.withDescription("Config snapshot identifier"));
-const taskFlag = Flag.string("task").pipe(Flag.withDescription("AI metrics agent task identifier"));
-const titleFlag = Flag.string("title").pipe(Flag.withDescription("Human-readable benchmark case title"));
-const promptHashFlag = Flag.string("prompt-hash").pipe(Flag.withDescription("Hash of benchmark prompt content"));
-const promptRefFlag = Flag.string("prompt-ref").pipe(
+const caseFlag = Flag.String("case").pipe(Flag.withDescription("Benchmark case identifier"));
+const configFlag = Flag.String("config").pipe(Flag.withDescription("Config snapshot identifier"));
+const taskFlag = Flag.String("task").pipe(Flag.withDescription("AI metrics agent task identifier"));
+const titleFlag = Flag.String("title").pipe(Flag.withDescription("Human-readable benchmark case title"));
+const promptHashFlag = Flag.String("prompt-hash").pipe(Flag.withDescription("Hash of benchmark prompt content"));
+const promptRefFlag = Flag.String("prompt-ref").pipe(
   Flag.withDescription("Optional reference to benchmark prompt content"),
   Flag.optional
 );
-const checksFlag = Flag.string("checks").pipe(
+const checksFlag = Flag.String("checks").pipe(
   Flag.withDefault(""),
   Flag.withDescription("Comma-separated benchmark quality checks")
 );
-const ratingFlag = Flag.integer("rating").pipe(Flag.withDescription("Human rating from 1 to 5"));
-const interventionsFlag = Flag.integer("interventions").pipe(
+const ratingFlag = Flag.Int("rating").pipe(Flag.withDescription("Human rating from 1 to 5"));
+const interventionsFlag = Flag.Int("interventions").pipe(
   Flag.withDefault(0),
   Flag.withDescription("Human intervention count")
 );
-const elapsedMsFlag = Flag.integer("elapsed-ms").pipe(Flag.withDescription("Benchmark elapsed milliseconds"));
-const limitFlag = Flag.integer("limit").pipe(Flag.withDefault(20), Flag.withDescription("Maximum rows to return"));
-const intervalMinutesFlag = Flag.integer("interval-minutes").pipe(
+const elapsedMsFlag = Flag.Int("elapsed-ms").pipe(Flag.withDescription("Benchmark elapsed milliseconds"));
+const limitFlag = Flag.Int("limit").pipe(Flag.withDefault(20), Flag.withDescription("Maximum rows to return"));
+const intervalMinutesFlag = Flag.Int("interval-minutes").pipe(
   Flag.withDefault(30),
   Flag.withDescription("Minutes between scheduled forwarder runs")
 );
-const passedValueFlag = Flag.choiceWithValue("passed", [
+const passedValueFlag = Flag.ChoiceWithValue("passed", [
   ["true", true],
   ["false", false],
 ]).pipe(Flag.withDescription("Whether the task or benchmark passed"));
-const followUpFixValueFlag = Flag.choiceWithValue("follow-up-fix", [
+const followUpFixValueFlag = Flag.ChoiceWithValue("follow-up-fix", [
   ["true", true],
   ["false", false],
 ]).pipe(Flag.withDefault(false), Flag.withDescription("Whether a follow-up fix or revert was needed"));
-const qualityGateFlag = Flag.choiceWithValue("quality-gate", [
+const qualityGateFlag = Flag.ChoiceWithValue("quality-gate", [
   ["passed", AiMetricsQualityGateStatus.Enum.passed],
   ["failed", AiMetricsQualityGateStatus.Enum.failed],
   ["not_run", AiMetricsQualityGateStatus.Enum.not_run],
   ["unknown", AiMetricsQualityGateStatus.Enum.unknown],
 ]).pipe(Flag.withDefault(AiMetricsQualityGateStatus.Enum.unknown), Flag.withDescription("Quality-gate outcome"));
 
-const noteFlag = Flag.string("note").pipe(Flag.withDescription("Optional redacted human note"), Flag.optional);
+const noteFlag = Flag.String("note").pipe(Flag.withDescription("Optional redacted human note"), Flag.optional);
 
-const repoRootFlag = Flag.string("repo-root").pipe(Flag.withDescription("Repository root path"), Flag.optional);
+const repoRootFlag = Flag.String("repo-root").pipe(Flag.withDescription("Repository root path"), Flag.optional);
 
-const homeDirFlag = Flag.string("home-dir").pipe(Flag.withDescription("Home directory to scan"), Flag.optional);
+const homeDirFlag = Flag.String("home-dir").pipe(Flag.withDescription("Home directory to scan"), Flag.optional);
 
-const sinceFlag = Flag.string("since").pipe(
+const sinceFlag = Flag.String("since").pipe(
   Flag.withDescription("Only include files modified since this ISO timestamp or epoch milliseconds"),
   Flag.optional
 );
 
-const untilFlag = Flag.string("until").pipe(
+const untilFlag = Flag.String("until").pipe(
   Flag.withDescription("Only include records before this ISO timestamp or epoch milliseconds"),
   Flag.optional
 );
 
-const beforeFlag = Flag.string("before").pipe(
+const beforeFlag = Flag.String("before").pipe(
   Flag.withDescription("Retention upper-bound ISO timestamp or epoch milliseconds"),
   Flag.optional
 );
 
-const allFlag = Flag.boolean("all").pipe(
+const allFlag = Flag.Boolean("all").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Scan all matching source files instead of the default 7 days")
 );
 
-const maxFilesFlag = Flag.integer("max-files").pipe(
+const maxFilesFlag = Flag.Int("max-files").pipe(
   Flag.withDefault(200),
   Flag.withDescription("Maximum files to report per transcript source")
 );
 
-const maxFileBytesFlag = Flag.integer("max-file-bytes").pipe(
+const maxFileBytesFlag = Flag.Int("max-file-bytes").pipe(
   Flag.withDescription("Skip transcript source files larger than this byte count"),
   Flag.optional
 );
 
-const timerMaxFilesFlag = Flag.integer("max-files").pipe(
+const timerMaxFilesFlag = Flag.Int("max-files").pipe(
   Flag.withDefault(5),
   Flag.withDescription("Maximum files per transcript source for each scheduled forwarder run")
 );
 
-const timerMaxFileBytesFlag = Flag.integer("max-file-bytes").pipe(
+const timerMaxFileBytesFlag = Flag.Int("max-file-bytes").pipe(
   Flag.withDefault(8_388_608),
   Flag.withDescription("Maximum source-file byte size for each scheduled forwarder run")
 );
-const parquetExportModeFlag = Flag.choiceWithValue("parquet-mode", [
+const parquetExportModeFlag = Flag.ChoiceWithValue("parquet-mode", [
   ["none", AiMetricsParquetExportMode.Enum.none],
   ["latest", AiMetricsParquetExportMode.Enum.latest],
   ["snapshot", AiMetricsParquetExportMode.Enum.snapshot],
@@ -169,7 +169,7 @@ const parquetExportModeFlag = Flag.choiceWithValue("parquet-mode", [
   Flag.withDefault(AiMetricsParquetExportMode.Enum.snapshot),
   Flag.withDescription("Parquet export mode for this forwarder run")
 );
-const timerParquetExportModeFlag = Flag.choiceWithValue("parquet-mode", [
+const timerParquetExportModeFlag = Flag.ChoiceWithValue("parquet-mode", [
   ["none", AiMetricsParquetExportMode.Enum.none],
   ["latest", AiMetricsParquetExportMode.Enum.latest],
   ["snapshot", AiMetricsParquetExportMode.Enum.snapshot],
@@ -177,15 +177,15 @@ const timerParquetExportModeFlag = Flag.choiceWithValue("parquet-mode", [
   Flag.withDefault(AiMetricsParquetExportMode.Enum.none),
   Flag.withDescription("Parquet export mode embedded in the rendered forwarder timer command")
 );
-const retentionEnforceFlag = Flag.boolean("retention-enforce").pipe(
+const retentionEnforceFlag = Flag.Boolean("retention-enforce").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Remove old per-run Parquet snapshots after a successful forwarder run")
 );
-const maxSnapshotExportsFlag = Flag.integer("max-snapshot-exports").pipe(
+const maxSnapshotExportsFlag = Flag.Int("max-snapshot-exports").pipe(
   Flag.withDefault(0),
   Flag.withDescription("Number of per-run Parquet snapshot exports to preserve during retention enforcement")
 );
-const forwarderRunMaxSnapshotExportsFlag = Flag.integer("max-snapshot-exports").pipe(
+const forwarderRunMaxSnapshotExportsFlag = Flag.Int("max-snapshot-exports").pipe(
   Flag.withDefault(5),
   Flag.withDescription(
     "Per-run Parquet snapshot exports to keep; older snapshots are pruned automatically after each forwarder run"
@@ -194,61 +194,61 @@ const forwarderRunMaxSnapshotExportsFlag = Flag.integer("max-snapshot-exports").
 // Accepted but inert: `forwarder run` now always enforces snapshot retention. Retained so that
 // already-installed systemd timer units (and any timer-rendered command) that still pass
 // --retention-enforce continue to parse instead of failing with an unrecognized-flag error.
-const forwarderRunRetentionEnforceCompatFlag = Flag.boolean("retention-enforce").pipe(
+const forwarderRunRetentionEnforceCompatFlag = Flag.Boolean("retention-enforce").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
     "Deprecated no-op: forwarder run always prunes old per-run Parquet snapshots; kept for backward compatibility"
   )
 );
-const hashSaltFlag = Flag.string("hash-salt").pipe(
+const hashSaltFlag = Flag.String("hash-salt").pipe(
   Flag.withDescription("Salt for hashing private paths and session identifiers"),
   Flag.optional
 );
-const hashSaltSecretRefFlag = Flag.string("hash-salt-secret-ref").pipe(
+const hashSaltSecretRefFlag = Flag.String("hash-salt-secret-ref").pipe(
   Flag.withDescription("Secret reference that resolves BEEP_AI_METRICS_HASH_SALT for non-local install targets"),
   Flag.optional
 );
-const rawArchiveKeySecretRefFlag = Flag.string("raw-archive-key-secret-ref").pipe(
+const rawArchiveKeySecretRefFlag = Flag.String("raw-archive-key-secret-ref").pipe(
   Flag.withDescription("Secret reference that resolves BEEP_AI_METRICS_RAW_ARCHIVE_KEY for non-local install targets"),
   Flag.optional
 );
-const remoteRootFlag = Flag.string("remote-root").pipe(
+const remoteRootFlag = Flag.String("remote-root").pipe(
   Flag.withDefault(defaultP7MirrorRemoteRoot),
   Flag.withDescription("Remote AI metrics mirror root")
 );
-const bundleFlag = Flag.string("bundle").pipe(
+const bundleFlag = Flag.String("bundle").pipe(
   Flag.withDefault("latest"),
   Flag.withDescription("Mirror bundle directory, or latest")
 );
-const hostFlag = Flag.string("host").pipe(
+const hostFlag = Flag.String("host").pipe(
   Flag.withDefault(defaultP7MirrorSshHost),
   Flag.withDescription("SSH host used for P7 mirror sync and status")
 );
-const confirmFlag = Flag.string("confirm").pipe(
+const confirmFlag = Flag.String("confirm").pipe(
   Flag.withDescription("Confirmation token required for real P7 mirror or retention writes"),
   Flag.optional
 );
-const restoreRootFlag = Flag.string("restore-root").pipe(Flag.withDescription("Disposable restore drill data root"));
-const maxObjectsFlag = Flag.integer("max-objects").pipe(
+const restoreRootFlag = Flag.String("restore-root").pipe(Flag.withDescription("Disposable restore drill data root"));
+const maxObjectsFlag = Flag.Int("max-objects").pipe(
   Flag.withDefault(1),
   Flag.withDescription("Maximum retained archive objects to restore during a drill")
 );
-const openClawUnitFlag = Flag.string("openclaw-unit").pipe(
+const openClawUnitFlag = Flag.String("openclaw-unit").pipe(
   Flag.withDescription("OpenClaw user systemd unit path"),
   Flag.optional
 );
 
-const otlpFlag = Flag.boolean("otlp").pipe(
+const otlpFlag = Flag.Boolean("otlp").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Enable explicit OTLP trace export for this command")
 );
 
-const dryRunFlag = Flag.boolean("dry-run").pipe(
+const dryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Preview install apply steps without changing local or remote state")
 );
 
-const otlpBaseUrlFlag = Flag.string("otlp-base-url").pipe(
+const otlpBaseUrlFlag = Flag.String("otlp-base-url").pipe(
   Flag.withDescription("Override the install spec OTLP base URL"),
   Flag.optional
 );

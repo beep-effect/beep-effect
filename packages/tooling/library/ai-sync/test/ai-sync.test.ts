@@ -21,6 +21,7 @@ import {
   codexMcpServersToClaudeMcpJson,
   junieMcpJsonToClaudeMcpJson,
   NormalizedAgentInstructionDocument,
+  NormalizedAgentInstructionDocumentArbitrary,
   normalizeAgentSkillFrontmatter,
   normalizeInstructionDocument,
   UnknownNativeSchemaCell,
@@ -41,7 +42,7 @@ import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import type { TUnsafe } from "@beep/types";
 import type { Layer } from "effect";
@@ -98,23 +99,40 @@ const repoSafeClaudePermissions = {
 };
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
-const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      expect(Equal.equals(S.decodeUnknownSync(schema)(S.encodeSync(schema)(value)), value)).toBe(true);
-    }),
-    fcRuns(25)
-  );
+const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(
+  schema: Schema,
+  arbitrary = Arbitrary.schema(schema)
+): void => {
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expect(Equal.equals(S.decodeUnknownSync(schema)(S.encodeSync(schema)(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      const encoded = S.encodeSync(schema)(value);
-      expect(S.encodeSync(schema)(S.decodeUnknownSync(schema)(encoded))).toEqual(encoded);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          const encoded = S.encodeSync(schema)(value);
+          expect(S.encodeSync(schema)(S.decodeUnknownSync(schema)(encoded))).toEqual(encoded);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
@@ -298,7 +316,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       expectSchemaRoundTrip(AgentCommandMetadata);
       expectSchemaRoundTrip(AgentPluginManifestMetadata);
       expectSchemaRoundTrip(UnknownNativeSchemaCell);
-      expectSchemaRoundTrip(NormalizedAgentInstructionDocument);
+      expectSchemaRoundTrip(NormalizedAgentInstructionDocument, NormalizedAgentInstructionDocumentArbitrary);
     })
   );
 

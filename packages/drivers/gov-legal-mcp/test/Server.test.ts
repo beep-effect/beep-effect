@@ -56,9 +56,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
-import { FastCheck as fc } from "effect/testing";
 import * as McpSchema from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
@@ -586,7 +586,7 @@ describe("gov-legal MCP frozen contract", () => {
   );
 });
 
-const ToolNameCandidateArbitrary = S.toArbitrary(ToolNameCandidate)(fc);
+const ToolNameCandidateArbitrary = Arbitrary.schema(ToolNameCandidate);
 
 const encodeThrowing = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
@@ -608,31 +608,32 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 };
 
 describe("tool-name report determinism", () => {
-  it("projects arbitrary candidates deterministically under the frozen cap and digest contract", () =>
-    fc.assert(
-      fc.property(ToolNameCandidateArbitrary, (candidate) => {
-        expectRoundTrip(ToolNameCandidate, candidate);
+  it.prop(
+    "projects arbitrary candidates deterministically under the frozen cap and digest contract",
+    [ToolNameCandidateArbitrary],
+    ([candidate]) => {
+      expectRoundTrip(ToolNameCandidate, candidate);
 
-        const first = projectToolNameCandidate(candidate);
-        const second = projectToolNameCandidate(candidate);
-        assert.deepEqual(second, first);
-        if (Result.isFailure(first)) {
-          return;
-        }
+      const first = projectToolNameCandidate(candidate);
+      const second = projectToolNameCandidate(candidate);
+      assert.deepEqual(second, first);
+      if (Result.isFailure(first)) {
+        return;
+      }
 
-        const row = Result.getOrThrow(first);
-        expectRoundTrip(ToolNameCollisionRow, row);
-        assert.isAtMost(Str.length(row.finalWireName), 64);
-        if (row.truncated) {
-          assert.strictEqual(Str.length(row.finalWireName), 64);
-          assert.isTrue(P.isNotNull(row.digest));
-        } else {
-          assert.strictEqual(row.finalWireName, row.normalized);
-          assert.isTrue(P.isNull(row.digest));
-        }
-      }),
-      fcRuns(50)
-    ));
+      const row = Result.getOrThrow(first);
+      expectRoundTrip(ToolNameCollisionRow, row);
+      assert.isAtMost(Str.length(row.finalWireName), 64);
+      if (row.truncated) {
+        assert.strictEqual(Str.length(row.finalWireName), 64);
+        assert.isTrue(P.isNotNull(row.digest));
+      } else {
+        assert.strictEqual(row.finalWireName, row.normalized);
+        assert.isTrue(P.isNull(row.digest));
+      }
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   layer(NodeServices.layer)("with platform filesystem services", (it) => {
     it.effect(

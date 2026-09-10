@@ -33,10 +33,9 @@ import { unified } from "unified";
 import { TypeDocProjectReflection } from "../domain/ApiReference.ts";
 import * as CodeSnippet from "./CodeSnippet.ts";
 import { CodeSnippetLanguage } from "./CodeSnippet.ts";
-import {OptionFromOptionalStrWithNoneDefault} from "@beep/schema";
+import { OptionFromOptionalStrWithNoneDefault } from "@beep/schema";
 
 const $I = $ScratchpadId.create("beep-docs/api-reference/ApiReference");
-
 
 const OptionalSemver = SemverFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
 const OptionalUrl = S.URLFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
@@ -269,7 +268,8 @@ export class ApiCodeExample extends S.Class<ApiCodeExample>($I`ApiCodeExample`)(
     title: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("ApiCodeExample", {
-    description: "A fenced code example with the reflection that owns it and its optional title, version, and source link.",
+    description:
+      "A fenced code example with the reflection that owns it and its optional title, version, and source link.",
   })
 ) {}
 
@@ -367,7 +367,8 @@ export class ApiModule extends S.Class<ApiModule>($I`ApiModule`)(
     sourceUrl: OptionalUrl,
   },
   $I.annote("ApiModule", {
-    description: "A module page: rendered module comment, grouped declarations, earliest `@since`, and first source link.",
+    description:
+      "A module page: rendered module comment, grouped declarations, earliest `@since`, and first source link.",
   })
 ) {}
 
@@ -434,17 +435,10 @@ const renderContext = (
 });
 
 const orEmpty = <T>(value: ReadonlyArray<T> | undefined): ReadonlyArray<T> =>
-  pipe(
-    O.fromNullishOr(value),
-    O.getOrElse(A.empty<T>)
-  );
+  pipe(O.fromNullishOr(value), O.getOrElse(A.empty<T>));
 
 const optionalText = <T>(value: T | undefined, render: (value: T) => string): string =>
-  pipe(
-    O.fromNullishOr(value),
-    O.map(render),
-    O.getOrElse(thunkEmptyStr)
-  );
+  pipe(O.fromNullishOr(value), O.map(render), O.getOrElse(thunkEmptyStr));
 
 const decodeSemver = S.decodeOption(SemverFromString);
 const decodeUrl = S.decodeOption(S.URLFromString);
@@ -455,12 +449,7 @@ const declarationOrder: Order.Order<ApiDeclaration> = pipe(
   Order.mapInput(localeOrder, (declaration: ApiDeclaration) => declaration.name),
   Order.combine(Order.mapInput(Order.Boolean, (declaration: ApiDeclaration) => O.isSome(declaration.typeKind))),
   Order.combine(
-    Order.mapInput(localeOrder, (declaration: ApiDeclaration) =>
-      pipe(
-        declaration.typeKind,
-        O.getOrElse(thunkEmptyStr)
-      )
-    )
+    Order.mapInput(localeOrder, (declaration: ApiDeclaration) => pipe(declaration.typeKind, O.getOrElse(thunkEmptyStr)))
   ),
   Order.combine(Order.mapInput(Order.Number, (declaration: ApiDeclaration) => declaration.id))
 );
@@ -577,8 +566,7 @@ export const moduleView: {
   const groups = pipe(
     A.groupBy(declarations, (declaration) => declaration.category),
     R.toEntries,
-    A.map(
-      ([category, grouped]) =>
+      A.map(([category, grouped]) =>
         ApiDeclarationGroup.make({
           declarations: A.sort(grouped, declarationOrder),
           name: titleCase(category),
@@ -677,8 +665,7 @@ const commentHtml = (comment: O.Option<JSONOutput.Comment>, context: RenderConte
       );
       return A.match(see, {
         onEmpty: () => body,
-        onNonEmpty: (items) =>
-          `${body}<h4>See</h4>${renderMarkdown(A.join(A.map(items, seeListItem), "\n"), context)}`,
+        onNonEmpty: (items) => `${body}<h4>See</h4>${renderMarkdown(A.join(A.map(items, seeListItem), "\n"), context)}`,
       });
     })
   );
@@ -813,9 +800,8 @@ const parseModuleReference = (value: string): O.Option<ModuleReference> =>
     )
   );
 
-const declarationSignature: (declaration: JSONOutput.DeclarationReflection) => O.Option<string> = Match.type<
-  JSONOutput.DeclarationReflection
->().pipe(
+const declarationSignature: (declaration: JSONOutput.DeclarationReflection) => O.Option<string> =
+  Match.type<JSONOutput.DeclarationReflection>().pipe(
   Match.when({ kind: ReflectionKind.Function }, (declaration) =>
     pipe(
       O.fromNullishOr(declaration.signatures),
@@ -899,7 +885,11 @@ const formatHeritageClause = (
 ): string =>
   A.match(orEmpty(types), {
     onEmpty: thunkEmptyStr,
-    onNonEmpty: (present) => ` ${keyword} ${A.join(A.map(present, (type) => formatType(type)), ", ")}`,
+    onNonEmpty: (present) =>
+      ` ${keyword} ${A.join(
+        A.map(present, (type) => formatType(type)),
+        ", "
+      )}`,
   });
 
 const maxTypeDepth = 12;
@@ -911,7 +901,7 @@ const formatObjectBody = (declaration: JSONOutput.DeclarationReflection, depth =
     A.appendAll(
       pipe(
         orEmpty(declaration.children),
-        A.filter(({flags}) => flags.isInherited !== true),
+        A.filter(({ flags }) => flags.isInherited !== true),
         A.flatMap(formatMember)
       )
     )
@@ -988,29 +978,37 @@ const formatKnownType = (depth: number): ((value: JSONOutput.SomeType) => string
   const nested = (value: JSONOutput.SomeType | undefined): string => formatTypeOrUnknown(value, depth + 1);
   const joinTypes = (types: ReadonlyArray<JSONOutput.SomeType>, separator: string): string =>
     A.join(A.map(types, nested), separator);
-  return Match.type<JSONOutput.SomeType>().pipe(
-    Match.discriminatorsExhaustive("type")({
-      intrinsic: (value) => value.name,
-      unknown: (value) => value.name,
-      reference: (value) =>
+  return Match.type<JSONOutput.SomeType>()
+    .pipe(
+      Match.discriminator("type")("intrinsic", (value) => value.name),
+      Match.discriminator("type")("unknown", (value) => value.name),
+      Match.discriminator("type")("reference", (value) =>
         A.match(orEmpty(value.typeArguments), {
           onEmpty: () => value.name,
           onNonEmpty: (typeArguments) => `${value.name}<${joinTypes(typeArguments, ", ")}>`,
-        }),
-      union: (value) => joinTypes(value.types, " | "),
-      intersection: (value) => joinTypes(value.types, " & "),
-      array: (value) => `Array<${nested(value.elementType)}>`,
-      tuple: (value) => `[${joinTypes(orEmpty(value.elements), ", ")}]`,
-      namedTupleMember: (value) => `${value.name}${value.isOptional ? "?" : ""}: ${nested(value.element)}`,
-      literal: (value) =>
+        })
+      ),
+      Match.discriminator("type")("union", (value) => joinTypes(value.types, " | ")),
+      Match.discriminator("type")("intersection", (value) => joinTypes(value.types, " & ")),
+      Match.discriminator("type")("array", (value) => `Array<${nested(value.elementType)}>`),
+      Match.discriminator("type")("tuple", (value) => `[${joinTypes(orEmpty(value.elements), ", ")}]`),
+      Match.discriminator("type")(
+        "namedTupleMember",
+        (value) => `${value.name}${value.isOptional ? "?" : ""}: ${nested(value.element)}`
+      ),
+      Match.discriminator("type")("literal", (value) =>
         pipe(
           encodeJsonValue(value.value),
           O.getOrElse(() => "undefined")
+        )
         ),
-      typeOperator: (value) => `${value.operator} ${nested(value.target)}`,
-      indexedAccess: (value) => `${nested(value.objectType)}[${nested(value.indexType)}]`,
-      query: (value) => `typeof ${nested(value.queryType)}`,
-      reflection: (value) => {
+      Match.discriminator("type")("typeOperator", (value) => `${value.operator} ${nested(value.target)}`),
+      Match.discriminator("type")(
+        "indexedAccess",
+        (value) => `${nested(value.objectType)}[${nested(value.indexType)}]`
+      ),
+      Match.discriminator("type")("query", (value) => `typeof ${nested(value.queryType)}`),
+      Match.discriminator("type")("reflection", (value) => {
         const signatures = orEmpty(value.declaration.signatures);
         const soleSignature =
           A.isReadonlyArrayEmpty(orEmpty(value.declaration.children)) &&
@@ -1023,28 +1021,44 @@ const formatKnownType = (depth: number): ((value: JSONOutput.SomeType) => string
           O.map(formatFunctionType),
           O.getOrElse(() => formatObjectBody(value.declaration, depth + 1))
         );
-      },
-      optional: (value) => `${nested(value.elementType)}?`,
-      rest: (value) => `...${nested(value.elementType)}`,
-      conditional: (value) =>
+      }),
+      Match.discriminator("type")("optional", (value) => `${nested(value.elementType)}?`),
+      Match.discriminator("type")("rest", (value) => `...${nested(value.elementType)}`)
+    )
+    .pipe(
+      Match.discriminator("type")(
+        "conditional",
+        (value) =>
         `${nested(value.checkType)} extends ${nested(value.extendsType)} ? ${nested(value.trueType)} : ${nested(
           value.falseType
-        )}`,
-      inferred: (value) =>
-        `infer ${value.name}${optionalText(value.constraint, (constraint) => ` extends ${nested(constraint)}`)}`,
-      predicate: (value) =>
+          )}`
+      ),
+      Match.discriminator("type")(
+        "inferred",
+        (value) =>
+          `infer ${value.name}${optionalText(value.constraint, (constraint) => ` extends ${nested(constraint)}`)}`
+      ),
+      Match.discriminator("type")(
+        "predicate",
+        (value) =>
         `${value.asserts ? "asserts " : ""}${value.name}${optionalText(
           value.targetType,
           (targetType) => ` is ${nested(targetType)}`
-        )}`,
-      templateLiteral: (value) =>
+          )}`
+      ),
+      Match.discriminator("type")(
+        "templateLiteral",
+        (value) =>
         `\`${value.head}${A.join(
           A.map(value.tail, ([type, text]) => `\${${nested(type)}}${text}`),
           ""
-        )}\``,
-      mapped: (value) =>
-        `{ [${value.parameter} in ${nested(value.parameterType)}]: ${nested(value.templateType)} }`,
-    })
+          )}\``
+      ),
+      Match.discriminator("type")(
+        "mapped",
+        (value) => `{ [${value.parameter} in ${nested(value.parameterType)}]: ${nested(value.templateType)} }`
+      ),
+      Match.exhaustive
   );
 };
 

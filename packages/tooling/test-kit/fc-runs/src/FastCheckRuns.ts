@@ -1,9 +1,7 @@
 /**
- * Env-max fast-check run-count helpers (one-round-loop P1).
+ * Env-max Effect Arbitrary run-count helpers (one-round-loop P1).
  *
- * Inline `numRuns` values override `fc.configureGlobal`, so a global
- * floor alone cannot raise property-law depth across the repo. These
- * helpers make every migrated site env-raisable: the effective run
+ * These helpers make every migrated site env-raisable: the effective run
  * count is `max(inline ?? default, BEEP_FC_NUM_RUNS)` — inline values
  * are floors and can never be lowered by the environment.
  *
@@ -20,9 +18,10 @@
 
 import { Config, Effect, pipe } from "effect";
 import * as O from "effect/Option";
+import type * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 /**
- * fast-check's own default run count, used when a site passes no inline value.
+ * The historical default run count, used when a site passes no inline value.
  *
  * **Example** (Default run count value)
  *
@@ -74,7 +73,40 @@ const parsePositiveInteger = (raw: string): O.Option<number> => {
 // Effect's default ConfigProvider snapshots the environment at process
 // boot — exactly the lane semantics (CI exports BEEP_FC_NUM_RUNS before
 // vitest starts). Runtime mutation is deliberately NOT observed.
-const fcNumRunsConfig = Config.option(Config.string("BEEP_FC_NUM_RUNS"));
+const fcNumRunsConfig = Config.option(Config.String("BEEP_FC_NUM_RUNS"));
+
+const fcSeedConfig = Config.option(Config.String("BEEP_FC_SEED"));
+
+const parseInteger = (raw: string): O.Option<number> => {
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) ? O.some(parsed) : O.none();
+};
+
+/**
+ * Read the `BEEP_FC_SEED` environment seed pin.
+ *
+ * **Details**
+ *
+ * The seed-pin lane exports `BEEP_FC_SEED` so a rerun tests identical
+ * inputs and a local green predicts a CI green. Ordinary runs leave it
+ * unset and rotate seeds for breadth. Non-integer values collapse to
+ * `O.none()`.
+ *
+ * **Example** (Read environment seed pin)
+ *
+ * ```ts
+ * import { envFcSeed } from "@beep/fc-runs"
+ * import * as O from "effect/Option"
+ *
+ * const seed = envFcSeed()
+ * console.log(O.isOption(seed)) // true
+ * ```
+ *
+ * @returns The pinned integer seed, or none when absent or invalid.
+ * @category testing
+ * @since 0.0.0
+ */
+export const envFcSeed = (): O.Option<number> => pipe(Effect.runSync(fcSeedConfig), O.flatMap(parseInteger));
 
 /**
  * Read the `BEEP_FC_NUM_RUNS` environment floor.
@@ -101,7 +133,7 @@ export const envFcNumRunsFloor = (): number =>
   pipe(Effect.runSync(fcNumRunsConfig), O.getOrUndefined, parseFcNumRunsFloor);
 
 /**
- * Build fast-check run options whose effective `numRuns` is
+ * Build Effect Arbitrary run options whose effective `runs` is
  * `max(inline ?? DEFAULT_FC_NUM_RUNS, BEEP_FC_NUM_RUNS)`.
  *
  * **Details**
@@ -109,22 +141,28 @@ export const envFcNumRunsFloor = (): number =>
  * Inline values are floors: the environment can raise the run count for
  * a deep sweep (the nightly property lane runs with
  * `BEEP_FC_NUM_RUNS=1000`), but can never lower a site below the value
- * it declares (one-round-loop fence 3).
+ * it declares (one-round-loop fence 3). When `BEEP_FC_SEED` pins an
+ * integer seed, the options carry it so reruns test identical inputs;
+ * an explicit inline `seed` spread over these options still wins.
  *
- * **Example** (Build maxed numRuns options)
+ * **Example** (Build maxed runs options)
  *
  * ```ts
  * import { fcRuns } from "@beep/fc-runs"
  *
  * const options = fcRuns(40)
- * console.log(options.numRuns >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
+ * console.log(options.runs >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
  * ```
  *
- * @param inline - The site's own run count; defaults to fast-check's 100.
- * @returns Options bag spreadable into `fc.assert` parameters.
+ * @param inline - The site's own run count; defaults to 100.
+ * @returns Check options for `Arbitrary.checkEffect`; pass `{ arbitrary: fcRuns(n) }` to `it.prop`.
  * @category testing
  * @since 0.0.0
  */
-export const fcRuns = (inline?: number): { readonly numRuns: number } => ({
-  numRuns: Math.max(inline ?? DEFAULT_FC_NUM_RUNS, envFcNumRunsFloor()),
+export const fcRuns = (inline?: number): Arbitrary.CheckOptions & { readonly runs: number } => ({
+  runs: Math.max(inline ?? DEFAULT_FC_NUM_RUNS, envFcNumRunsFloor()),
+  ...O.match(envFcSeed(), {
+    onNone: () => ({}),
+    onSome: (seed) => ({ seed }),
+  }),
 });

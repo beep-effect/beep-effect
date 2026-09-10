@@ -5,10 +5,10 @@ import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Exit, Layer, Result, Scope } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 
-const PgliteErrorArbitrary = S.toArbitrary(PgliteError)(fc).filter((error) => O.isNone(error.cause));
+const PgliteErrorArbitrary = Arbitrary.schema(PgliteError).pipe(Arbitrary.filter((error) => O.isNone(error.cause)));
 const encodePgliteError = S.encodeUnknownResult(PgliteError);
 const decodePgliteError = S.decodeUnknownResult(PgliteError);
 
@@ -22,16 +22,17 @@ describe("PgliteError", () => {
     expect(O.getOrNull(error.message)).toBe("boom");
   });
 
-  it("round-trips schema-derived driver errors through their encoded shape", () =>
-    fc.assert(
-      fc.property(PgliteErrorArbitrary, (error) => {
-        const encoded = Result.getOrThrow(encodePgliteError(error));
-        const decoded = Result.getOrThrow(decodePgliteError(encoded));
+  it.prop(
+    "round-trips schema-derived driver errors through their encoded shape",
+    [PgliteErrorArbitrary],
+    ([error]) => {
+      const encoded = Result.getOrThrow(encodePgliteError(error));
+      const decoded = Result.getOrThrow(decodePgliteError(encoded));
 
-        expect(decoded).toEqual(error);
-      }),
-      fcRuns(50)
-    ));
+      expect(decoded).toEqual(error);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 describe("PgliteClient layer lifecycle", () => {

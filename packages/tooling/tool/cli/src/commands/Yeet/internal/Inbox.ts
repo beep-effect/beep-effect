@@ -669,13 +669,11 @@ export const yeetLocalShardFailedRowId = (
  */
 export const yeetInboxExpectedRowId = (row: YeetInboxRow): string =>
   Match.value(row).pipe(
-    Match.discriminators("kind")({
-      "check-failed": (subject) => yeetInboxRowId(subject.capsule),
-      "sibling-collision": (subject) => yeetSiblingCollisionRowId(subject.capsule),
-      "review-thread": (subject) => yeetReviewThreadRowId(subject.capsule),
-      "base-drift": (subject) => yeetBaseDriftRowId(subject.capsule),
-      "local-shard-failed": (subject) => yeetLocalShardFailedRowId(subject.capsule),
-    }),
+    Match.discriminator("kind")("check-failed", (subject) => yeetInboxRowId(subject.capsule)),
+    Match.discriminator("kind")("sibling-collision", (subject) => yeetSiblingCollisionRowId(subject.capsule)),
+    Match.discriminator("kind")("review-thread", (subject) => yeetReviewThreadRowId(subject.capsule)),
+    Match.discriminator("kind")("base-drift", (subject) => yeetBaseDriftRowId(subject.capsule)),
+    Match.discriminator("kind")("local-shard-failed", (subject) => yeetLocalShardFailedRowId(subject.capsule)),
     Match.exhaustive
   );
 
@@ -704,18 +702,27 @@ export const yeetInboxExpectedRowId = (row: YeetInboxRow): string =>
  */
 export const describeYeetInboxRow = (row: YeetInboxRow): string =>
   Match.value(row).pipe(
-    Match.discriminators("kind")({
-      "check-failed": ({ capsule }) =>
-        `${capsule.lane} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`,
-      "sibling-collision": ({ capsule }) =>
-        `sibling collision with ${capsule.siblingCheckout} (${capsule.contendedPaths.length} path(s))`,
-      "review-thread": ({ capsule }) =>
-        `review thread ${capsule.threadId} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`,
-      "base-drift": ({ capsule }) =>
-        `base drift from ${capsule.base} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`,
-      "local-shard-failed": ({ capsule }) =>
-        `local shard ${capsule.shard} exited ${capsule.exitCode} @ ${Str.slice(0, 7)(capsule.headSha)}`,
-    }),
+    Match.discriminator("kind")(
+      "check-failed",
+      ({ capsule }) => `${capsule.lane} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`
+    ),
+    Match.discriminator("kind")(
+      "sibling-collision",
+      ({ capsule }) => `sibling collision with ${capsule.siblingCheckout} (${capsule.contendedPaths.length} path(s))`
+    ),
+    Match.discriminator("kind")(
+      "review-thread",
+      ({ capsule }) =>
+        `review thread ${capsule.threadId} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`
+    ),
+    Match.discriminator("kind")(
+      "base-drift",
+      ({ capsule }) => `base drift from ${capsule.base} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`
+    ),
+    Match.discriminator("kind")(
+      "local-shard-failed",
+      ({ capsule }) => `local shard ${capsule.shard} exited ${capsule.exitCode} @ ${Str.slice(0, 7)(capsule.headSha)}`
+    ),
     Match.exhaustive
   );
 

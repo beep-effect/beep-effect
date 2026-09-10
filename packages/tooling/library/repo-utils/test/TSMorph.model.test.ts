@@ -58,7 +58,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Option as O } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Project } from "ts-morph";
 
 const decodeContentHashFromSourceText = S.decodeEffect(ContentHashFromSourceText);
@@ -236,29 +236,43 @@ describe("TSMorph model taxonomy", () => {
     });
 
     it("round-trips schema-derived project identity parts through the encoded wire shape", () => {
-      fc.assert(
-        fc.property(S.toArbitrary(ProjectIdentityParts)(fc), (value) => {
-          const encoded = encodeProjectIdentityPartsSync(value);
-          const decoded = decodeProjectIdentityPartsSync(encoded);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(ProjectIdentityParts)]),
+            ([value]) => {
+              const encoded = encodeProjectIdentityPartsSync(value);
+              const decoded = decodeProjectIdentityPartsSync(encoded);
 
-          expect(decoded).toEqual(value);
-          expect(decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
-        }),
-        { numRuns: 20 }
-      );
+              expect(decoded).toEqual(value);
+              expect(decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
+
+              return true;
+            },
+            { runs: 20 }
+          )
+        )._tag
+      ).toBe("Passed");
     });
 
     it("round-trips schema-derived symbol identity parts through the encoded wire shape", () => {
-      fc.assert(
-        fc.property(S.toArbitrary(SymbolIdentityParts)(fc), (value) => {
-          const encoded = encodeSymbolIdentityPartsSync(value);
-          const decoded = decodeSymbolIdentityPartsSync(encoded);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(SymbolIdentityParts)]),
+            ([value]) => {
+              const encoded = encodeSymbolIdentityPartsSync(value);
+              const decoded = decodeSymbolIdentityPartsSync(encoded);
 
-          expect(decoded).toEqual(value);
-          expect(decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
-        }),
-        { numRuns: 20 }
-      );
+              expect(decoded).toEqual(value);
+              expect(decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
+
+              return true;
+            },
+            { runs: 20 }
+          )
+        )._tag
+      ).toBe("Passed");
     });
   });
 
@@ -303,15 +317,22 @@ describe("TSMorph model taxonomy", () => {
     });
 
     it("decodes every schema-derived SymbolId and round-trips it identically", () => {
-      const arbitrary = S.toArbitrary(SymbolId)(fc);
-      fc.assert(
-        fc.property(arbitrary, (symbolId) => {
-          const decoded = decodeSymbolId(symbolId);
-          expect(decoded).toBe(symbolId);
-          expect(decodeSymbolIdParts(symbolId)).toEqual([...decodeSymbolIdParts(decoded)]);
-        }),
-        fcRuns(50)
-      );
+      const arbitrary = Arbitrary.schema(SymbolId);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([arbitrary]),
+            ([symbolId]) => {
+              const decoded = decodeSymbolId(symbolId);
+              expect(decoded).toBe(symbolId);
+              expect(decodeSymbolIdParts(symbolId)).toEqual([...decodeSymbolIdParts(decoded)]);
+
+              return true;
+            },
+            fcRuns(50)
+          )
+        )._tag
+      ).toBe("Passed");
     });
 
     it("builds normalized symbols with derived ids and categories", () => {

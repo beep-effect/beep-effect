@@ -956,7 +956,7 @@ export const createContentSecurityPolicyOptionHeaderValue = (
 export const ContentSecurityPolicyHeader = S.Union([ContentSecurityPolicyOption, S.Undefined]).pipe(
   S.decodeTo(
     ContentSecurityPolicyResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: decodeContentSecurityPolicyHeader,
       encode: internal.makeHeaderEncodeForbidden("ContentSecurityPolicyHeader"),
     })

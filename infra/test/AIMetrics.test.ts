@@ -177,7 +177,7 @@ describe("@beep/infra AIMetrics", () => {
 
   it("round-trips AI metrics config schemas through encoded wire values", () => {
     assertSchemaArbitraryDecodesToSelf(AIMetricsPulumiConfigValues, {
-      numRuns: 25,
+      runs: 25,
     });
     expectSchemaRoundTrip(AIMetricsPulumiConfigValues);
     expectSchemaRoundTrip(AIMetricsRemoteSshConfig);

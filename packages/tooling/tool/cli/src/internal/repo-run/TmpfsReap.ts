@@ -14,7 +14,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { BigInt, Clock, Config, DateTime, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
+import { ByteSize, Clock, Config, DateTime, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -40,7 +40,7 @@ const GIT_WORKTREE_MARKER = "/.git/worktrees/";
 const VitestForksChild = LiteralKit(["ssr", "client"]);
 const PROC_ROOT = "/proc";
 const PROC_LOCKS = "/proc/locks";
-const DANGLING_GIT_FILE_BYTE_LIMIT = FileSystem.Size(4096);
+const DANGLING_GIT_FILE_BYTE_LIMIT = ByteSize.bytes(4096);
 
 const ProcPidName = S.String.pipe(
   S.check(S.isPattern(/^[0-9]+$/u)),
@@ -210,7 +210,7 @@ const gitDirForCandidate = Effect.fnUntraced(function* (
     gitFileInfo,
     O.filter(
       (info) =>
-        Str.Equivalence(info.type, "File") && BigInt.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
+        Str.Equivalence(info.type, "File") && ByteSize.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
     ),
     O.match({
       onNone: () => Effect.succeed(O.none<string>()),
@@ -262,7 +262,7 @@ const danglingStubContentsAreExact = Effect.fnUntraced(function* (
     yield* fs.stat(gitFile).pipe(Effect.option),
     O.exists(
       (info) =>
-        Str.Equivalence(info.type, "File") && BigInt.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
+        Str.Equivalence(info.type, "File") && ByteSize.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
     )
   );
 });
@@ -1059,21 +1059,21 @@ export const resolveBeepCacheRoot = Effect.fn("TmpfsReap.resolveBeepCacheRoot")(
   if (O.isSome(explicit)) {
     return pathService.resolve(explicit.value);
   }
-  const configured = yield* Config.option(Config.string("XDG_CACHE_HOME"));
+  const configured = yield* Config.option(Config.String("XDG_CACHE_HOME"));
   const cacheRoot = O.filter(configured, Str.isNonEmpty);
   if (O.isSome(cacheRoot)) {
     return pathService.resolve(cacheRoot.value);
   }
-  const home = O.filter(yield* Config.option(Config.string("HOME")), Str.isNonEmpty);
+  const home = O.filter(yield* Config.option(Config.String("HOME")), Str.isNonEmpty);
   if (O.isSome(home)) {
     return pathService.join(pathService.resolve(home.value), ".cache");
   }
-  const tmpFallback = yield* Config.string("TMPDIR").pipe(Config.withDefault("/tmp"));
+  const tmpFallback = yield* Config.String("TMPDIR").pipe(Config.withDefault("/tmp"));
   return pathService.resolve(tmpFallback);
 });
 
 const configuredPath = (name: string) =>
-  Config.option(Config.string(name)).pipe(
+  Config.option(Config.String(name)).pipe(
     Effect.orElseSucceed(() => O.none()),
     Effect.map(O.filter(Str.isNonEmpty))
   );

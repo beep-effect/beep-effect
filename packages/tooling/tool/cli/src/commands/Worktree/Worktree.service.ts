@@ -500,7 +500,7 @@ const residueBaseRoot = Effect.fn("WorktreeRemovalService.residueBaseRoot")(func
   targetPath: string
 ): Effect.fn.Return<string, WorktreePreservationError, Path.Path> {
   const path = yield* Path.Path;
-  const configured = yield* Config.option(Config.string(RESIDUE_ROOT_ENV)).pipe(
+  const configured = yield* Config.option(Config.String(RESIDUE_ROOT_ENV)).pipe(
     Effect.mapError((cause) =>
       WorktreePreservationError.new("resolve-residue-root", `Could not read ${RESIDUE_ROOT_ENV}.`, { cause })
     )
@@ -510,7 +510,7 @@ const residueBaseRoot = Effect.fn("WorktreeRemovalService.residueBaseRoot")(func
   if (O.isSome(explicit)) {
     root = path.resolve(explicit.value);
   } else {
-    const configuredHome = yield* Config.option(Config.string("HOME")).pipe(
+    const configuredHome = yield* Config.option(Config.String("HOME")).pipe(
       Effect.mapError((cause) =>
         WorktreePreservationError.new("resolve-residue-root", "HOME is required for the default residue root.", {
           cause,

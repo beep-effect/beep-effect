@@ -133,13 +133,12 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     // -------------------------------------------------------------------------
 
     const curationActionHandler = Match.type<CurationAction>().pipe(
-      Match.tagsExhaustive({
-        CorrectTripleAction: (value) => (now: DateTime.Utc) => handleCorrectTriple(value, now),
-        MarkAsWrongAction: (value) => (now: DateTime.Utc) => handleMarkAsWrong(value, now),
-        AddAliasAction: (value) => (now: DateTime.Utc) => handleAddAlias(value, now),
-        PromoteToPreferredAction: (value) => (now: DateTime.Utc) => handlePromoteToPreferred(value, now),
-        LinkToWikidataAction: (value) => (now: DateTime.Utc) => handleLinkToWikidata(value, now),
-      })
+      Match.tag("CorrectTripleAction", (value) => (now: DateTime.Utc) => handleCorrectTriple(value, now)),
+      Match.tag("MarkAsWrongAction", (value) => (now: DateTime.Utc) => handleMarkAsWrong(value, now)),
+      Match.tag("AddAliasAction", (value) => (now: DateTime.Utc) => handleAddAlias(value, now)),
+      Match.tag("PromoteToPreferredAction", (value) => (now: DateTime.Utc) => handlePromoteToPreferred(value, now)),
+      Match.tag("LinkToWikidataAction", (value) => (now: DateTime.Utc) => handleLinkToWikidata(value, now)),
+      Match.exhaustive
     );
 
     /**

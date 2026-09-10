@@ -341,15 +341,14 @@ const printNamespace: {
 );
 
 const printBlocks = Match.type<Printable>().pipe(
-  Match.tagsExhaustive({
-    Class: printClass,
-    Constant: printConstant,
-    Export: printExport,
-    Function: printFunction,
-    Interface: printInterface(0),
-    TypeAlias: printTypeAlias(0),
-    Namespace: printNamespace(0),
-  })
+  Match.tag("Class", printClass),
+  Match.tag("Constant", printConstant),
+  Match.tag("Export", printExport),
+  Match.tag("Function", printFunction),
+  Match.tag("Interface", printInterface(0)),
+  Match.tag("TypeAlias", printTypeAlias(0)),
+  Match.tag("Namespace", printNamespace(0)),
+  Match.exhaustive
 );
 
 /**

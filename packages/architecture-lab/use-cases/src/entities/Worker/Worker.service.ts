@@ -55,11 +55,14 @@ import type { WorkerUseCasesShape } from "./Worker.use-cases.ts";
  */
 export const toWorkerActionError: (error: WorkerRepositoryError) => WorkerActionError =
   Match.type<WorkerRepositoryError>().pipe(
-    Match.tagsExhaustive({
-      WorkerRepositoryNotFound: (error) => WorkerNotFound.make({ workerId: error.workerId }),
-      WorkerRepositoryConflict: (error) => WorkerConflict.make({ workerId: error.workerId, reason: error.reason }),
-      WorkerRepositoryUnavailable: () => WorkerActionFailed.make({ reason: WORKER_ACTION_UNAVAILABLE_REASON }),
-    })
+    Match.tag("WorkerRepositoryNotFound", (error) => WorkerNotFound.make({ workerId: error.workerId })),
+    Match.tag("WorkerRepositoryConflict", (error) =>
+      WorkerConflict.make({ workerId: error.workerId, reason: error.reason })
+    ),
+    Match.tag("WorkerRepositoryUnavailable", () =>
+      WorkerActionFailed.make({ reason: WORKER_ACTION_UNAVAILABLE_REASON })
+    ),
+    Match.exhaustive
   );
 
 /**

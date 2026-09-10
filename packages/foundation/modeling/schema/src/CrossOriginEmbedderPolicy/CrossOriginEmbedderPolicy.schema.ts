@@ -158,7 +158,7 @@ type COEPResponseHeaderEncoded = typeof COEPResponseHeader.Encoded;
 export const CrossOriginEmbedderPolicyHeader = S.Union([CrossOriginEmbedderPolicyOption, S.Undefined]).pipe(
   S.decodeTo(
     COEPResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input): Effect.Effect<COEPResponseHeaderEncoded, SchemaIssue.Issue> =>
         Effect.succeed({
           name: headerName,

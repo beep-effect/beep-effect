@@ -45,8 +45,8 @@ describe("WorkItem server", () => {
   );
 
   it("round-trips schema-derived HTTP values", () => {
-    assertSchemaArbitraryDecodesToSelf(WorkItemHttpStatus, { numRuns: 25 });
-    assertSchemaArbitraryDecodesToSelf(WorkItemHttpResponse, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(WorkItemHttpStatus, { runs: 25 });
+    assertSchemaArbitraryDecodesToSelf(WorkItemHttpResponse, { runs: 25 });
   });
 
   it.effect(

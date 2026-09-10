@@ -15,7 +15,7 @@
  */
 
 import { $UtilsId } from "@beep/identity/packages";
-import { Effect, FileSystem, Option, Path, PlatformError, pipe, Stream } from "effect";
+import { ByteSize, Effect, FileSystem, Option, Path, PlatformError, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -235,8 +235,8 @@ const toFileInfo = (stats: NodeStats): FileSystem.File.Info => ({
   nlink: Option.fromNullishOr(stats.nlink),
   uid: Option.fromNullishOr(stats.uid),
   gid: Option.fromNullishOr(stats.gid),
-  size: FileSystem.Size(stats.size),
-  blksize: pipe(Option.fromUndefinedOr(stats.blksize), Option.map(FileSystem.Size)),
+  size: ByteSize.bytes(stats.size),
+  blksize: pipe(Option.fromUndefinedOr(stats.blksize), Option.map(ByteSize.bytes)),
   blocks: Option.fromNullishOr(stats.blocks),
 });
 

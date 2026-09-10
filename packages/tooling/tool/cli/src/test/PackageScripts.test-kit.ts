@@ -3,6 +3,7 @@
 export {
   lintPackageScriptsCommand,
   lintPolicyFingerprintCommand,
+  PolicyFingerprintTurboConfiguration,
   PolicyToolsFingerprint,
   policyToolsFingerprint,
 } from "../commands/Lint/Lint.command.ts";

@@ -91,16 +91,16 @@ const printForkPlan = Effect.fn("Goals.printForkPlan")(function* (
   );
 });
 
-const repairSlugArgument = Argument.string("slug").pipe(
+const repairSlugArgument = Argument.String("slug").pipe(
   Argument.withDescription("Packet slug under the selected root"),
   Argument.optional
 );
-const repairRootFlag = Flag.choice("root", PacketRoot.Options).pipe(
+const repairRootFlag = Flag.Literals("root", PacketRoot.Options).pipe(
   Flag.withDefault(PacketRoot.Enum.goals),
   Flag.withDescription("Packet root containing the stream")
 );
-const previewFlag = Flag.boolean("preview").pipe(Flag.withDefault(false), Flag.withDescription("Plan without writing"));
-const applyFlag = Flag.boolean("apply").pipe(Flag.withDefault(false), Flag.withDescription("Apply the verified plan"));
+const previewFlag = Flag.Boolean("preview").pipe(Flag.withDefault(false), Flag.withDescription("Plan without writing"));
+const applyFlag = Flag.Boolean("apply").pipe(Flag.withDefault(false), Flag.withDescription("Apply the verified plan"));
 
 type RepairForkCommandInput = {
   readonly slug: O.Option<string>;
@@ -607,11 +607,11 @@ const postApplyProof = (report: TranslationReport): string => `
 - fleet findings: ${A.length(report.fleetFindings)}
 `;
 
-const atFlag = Flag.string("at").pipe(
+const atFlag = Flag.String("at").pipe(
   Flag.optional,
   Flag.withDescription("Explicit ISO adoption timestamp for deterministic genesis events; defaults to now")
 );
-const reportFlag = Flag.string("report").pipe(
+const reportFlag = Flag.String("report").pipe(
   Flag.withDefault(PACKET_CONVENTION_REPORT_PATH),
   Flag.withDescription("Markdown report path beneath goals/packet-convention-migration/history")
 );

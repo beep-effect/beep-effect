@@ -28,11 +28,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolution")
  * @category schemas
  * @since 0.0.0
  */
-export const ResolutionMethod = LiteralKit(["exact", "similarity", "containment", "neighbor"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("exact", "similarity", "containment", "neighbor"),
-  })
-  .annotate(
+export const ResolutionMethod = LiteralKit(["exact", "similarity", "containment", "neighbor"]).annotate(
     $I.annote("ResolutionMethod", {
       description: "Closed set of evidence strategies used by entity resolution.",
     })
@@ -186,7 +182,6 @@ const ERNodeDefinition = S.Union([MentionRecord, ResolvedEntity]).pipe(S.toTagge
 export const ERNode = ERNodeDefinition.pipe(
   $I.annoteSchema("ERNode", {
     description: "Mention-record or canonical-entity node in the two-tier resolution graph.",
-    toArbitrary: () => S.toArbitrary(ERNodeDefinition),
   })
 );
 
@@ -293,7 +288,6 @@ const EREdgeDefinition = S.Union([ResolutionEdge, RelationEdge]).pipe(S.toTagged
 export const EREdge = EREdgeDefinition.pipe(
   $I.annoteSchema("EREdge", {
     description: "Resolution or ontology-relation edge in the two-tier entity-resolution graph.",
-    toArbitrary: () => S.toArbitrary(EREdgeDefinition),
   })
 );
 

@@ -22,7 +22,7 @@ import { Effect, Ref, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { PromotionGateRequest } from "@beep/shared-use-cases/PromotionGate";
 
 const lawFixture: RuntimeFixtureInput = {
@@ -335,10 +335,18 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
     ];
 
     for (const schema of schemas) {
-      fc.assert(
-        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
-        fcRuns(10)
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(schema)]),
+            ([value]) => {
+              roundTrip(schema, value);
+              return true;
+            },
+            fcRuns(10)
+          )
+        )._tag
+      ).toBe("Passed");
     }
     // Explicit generous cap: 2,400 schema round-trips at the deep-sweep floor
     // can approach the shared 300s testTimeout on a loaded runner even running

@@ -244,29 +244,28 @@ const phantomGrantNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashS
         events,
         (event, eventIndex): O.Option<string> =>
           Match.value(event).pipe(
-            Match.tagsExhaustive({
-              "admission-admitted": (admitted) =>
-                A.some(
-                  A.drop(events, eventIndex + 1),
-                  Match.type<AdmissionJournalEvent>().pipe(
-                    Match.tagsExhaustive({
-                      "admission-admitted": () => false,
-                      "admission-released": (released) => Eq.equals(released.nonce, admitted.nonce),
-                      "admission-lease-evicted": (evicted) => Eq.equals(evicted.nonce, admitted.nonce),
-                      "admission-ticket-evicted": () => false,
-                      "admission-enqueued": () => false,
-                      "admission-withdrawn": () => false,
-                    })
-                  )
+            Match.tag("admission-admitted", (admitted) =>
+              A.some(
+                A.drop(events, eventIndex + 1),
+                Match.type<AdmissionJournalEvent>().pipe(
+                  Match.tag("admission-admitted", () => false),
+                  Match.tag("admission-released", (released) => Eq.equals(released.nonce, admitted.nonce)),
+                  Match.tag("admission-lease-evicted", (evicted) => Eq.equals(evicted.nonce, admitted.nonce)),
+                  Match.tag("admission-ticket-evicted", () => false),
+                  Match.tag("admission-enqueued", () => false),
+                  Match.tag("admission-withdrawn", () => false),
+                  Match.exhaustive
                 )
-                  ? O.none<string>()
-                  : O.some(admitted.nonce),
-              "admission-released": O.none<string>,
-              "admission-lease-evicted": O.none<string>,
-              "admission-ticket-evicted": O.none<string>,
-              "admission-enqueued": O.none<string>,
-              "admission-withdrawn": O.none<string>,
-            })
+              )
+                ? O.none<string>()
+                : O.some(admitted.nonce)
+            ),
+            Match.tag("admission-released", O.none<string>),
+            Match.tag("admission-lease-evicted", O.none<string>),
+            Match.tag("admission-ticket-evicted", O.none<string>),
+            Match.tag("admission-enqueued", O.none<string>),
+            Match.tag("admission-withdrawn", O.none<string>),
+            Match.exhaustive
           )
       )
     )
@@ -359,14 +358,13 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
       events,
       (event): O.Option<AdmissionJournalAdmitted> =>
         Match.value(event).pipe(
-          Match.tagsExhaustive({
-            "admission-admitted": (admitted) => O.some(admitted),
-            "admission-released": O.none<AdmissionJournalAdmitted>,
-            "admission-lease-evicted": O.none<AdmissionJournalAdmitted>,
-            "admission-ticket-evicted": O.none<AdmissionJournalAdmitted>,
-            "admission-enqueued": O.none<AdmissionJournalAdmitted>,
-            "admission-withdrawn": O.none<AdmissionJournalAdmitted>,
-          })
+          Match.tag("admission-admitted", (admitted) => O.some(admitted)),
+          Match.tag("admission-released", O.none<AdmissionJournalAdmitted>),
+          Match.tag("admission-lease-evicted", O.none<AdmissionJournalAdmitted>),
+          Match.tag("admission-ticket-evicted", O.none<AdmissionJournalAdmitted>),
+          Match.tag("admission-enqueued", O.none<AdmissionJournalAdmitted>),
+          Match.tag("admission-withdrawn", O.none<AdmissionJournalAdmitted>),
+          Match.exhaustive
         )
     )
   );
@@ -492,14 +490,13 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
 
   for (const event of events) {
     yield* Match.value(event).pipe(
-      Match.tagsExhaustive({
-        "admission-admitted": replayAdmitted,
-        "admission-released": replayReleased,
-        "admission-lease-evicted": replayLeaseEvicted,
-        "admission-ticket-evicted": () => Effect.void,
-        "admission-enqueued": () => Effect.void,
-        "admission-withdrawn": () => Effect.void,
-      })
+      Match.tag("admission-admitted", replayAdmitted),
+      Match.tag("admission-released", replayReleased),
+      Match.tag("admission-lease-evicted", replayLeaseEvicted),
+      Match.tag("admission-ticket-evicted", () => Effect.void),
+      Match.tag("admission-enqueued", () => Effect.void),
+      Match.tag("admission-withdrawn", () => Effect.void),
+      Match.exhaustive
     );
     // Every decoded row counts, including ledger-neutral queue transitions.
     // This remains the zero-based source-event index used by episode provenance.

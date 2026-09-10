@@ -25,7 +25,7 @@ import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -64,16 +64,18 @@ type GovinfoTestHttpShape = {
 
 class GovinfoTestHttp extends Context.Service<GovinfoTestHttp, GovinfoTestHttpShape>()($TestI`GovinfoTestHttp`) {}
 
-const GovinfoConfigInputArbitrary = S.toArbitrary(GovinfoConfigInput)(fc).map((config) =>
-  GovinfoConfigInput.make({ apiUrl: config.apiUrl })
+const GovinfoConfigInputArbitrary = Arbitrary.schema(GovinfoConfigInput).pipe(
+  Arbitrary.map((config) => GovinfoConfigInput.make({ apiUrl: config.apiUrl }))
 );
-const GovinfoErrorOptionsArbitrary = S.toArbitrary(GovinfoErrorOptions)(fc).map((options) =>
-  GovinfoErrorOptions.make({ status: options.status })
+const GovinfoErrorOptionsArbitrary = Arbitrary.schema(GovinfoErrorOptions).pipe(
+  Arbitrary.map((options) => GovinfoErrorOptions.make({ status: options.status }))
 );
-const GovinfoErrorArbitrary = S.toArbitrary(GovinfoError)(fc).map((error) =>
-  GovinfoError.of(error.reason, GovinfoErrorOptions.make({ status: error.status }))
+const GovinfoErrorArbitrary = Arbitrary.schema(GovinfoError).pipe(
+  Arbitrary.map((error) => GovinfoError.of(error.reason, GovinfoErrorOptions.make({ status: error.status })))
 );
-const SearchFailureArbitrary = S.toArbitrary(Search.Failure)(fc).filter((failure) => O.isNone(failure.cause));
+const SearchFailureArbitrary = Arbitrary.schema(Search.Failure).pipe(
+  Arbitrary.filter((failure) => O.isNone(failure.cause))
+);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -92,14 +94,21 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
-  arbitrary = S.toArbitrary(schema)(fc)
+  arbitrary = Arbitrary.schema(schema)
 ): void => {
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expectRoundTrip(schema, value);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expectRoundTrip(schema, value);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 const searchBodyEncoded = {
@@ -293,12 +302,19 @@ describe("@beep/govinfo", () => {
   });
 
   it("round-trips hand-authored schema-derived values through encoded form", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(GovinfoHttpStatus)(fc), (status) => {
-        expectRoundTrip(GovinfoHttpStatus, status);
-      }),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(GovinfoHttpStatus)]),
+          ([status]) => {
+            expectRoundTrip(GovinfoHttpStatus, status);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
 
     assertSchemaRoundTrip(GovinfoConfigInput, GovinfoConfigInputArbitrary);
     assertSchemaRoundTrip(GovinfoErrorReason);

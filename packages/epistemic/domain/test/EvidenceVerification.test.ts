@@ -15,8 +15,9 @@ import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownEvidenceVerificationResult = S.decodeUnknownResult(EvidenceVerification);
 const decodeUnknownEvidenceVerificationManifestationResult = S.decodeUnknownResult(EvidenceVerificationManifestation);
@@ -53,19 +54,25 @@ describe("EvidenceVerification", () => {
   it("round-trips schema-derived manifestations", () => {
     const equivalent = S.toEquivalence(EvidenceVerificationManifestation);
 
-    fc.assert(
-      fc.property(S.toArbitrary(EvidenceVerificationManifestation)(fc), (value) =>
-        equivalent(
-          Result.getOrThrow(
-            decodeUnknownEvidenceVerificationManifestationResult(
-              Result.getOrThrow(encodeEvidenceVerificationManifestationResult(value))
-            )
-          ),
-          value
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(EvidenceVerificationManifestation)]),
+          ([value]) => {
+            const result = equivalent(
+              Result.getOrThrow(
+                decodeUnknownEvidenceVerificationManifestationResult(
+                  Result.getOrThrow(encodeEvidenceVerificationManifestationResult(value))
+                )
+              ),
+              value
+            );
+            return result;
+          },
+          fcRuns(25)
         )
-      ),
-      fcRuns(25)
-    );
+      )._tag
+    ).toBe("Passed");
   });
 
   it("uses the consolidated product identity", () => {

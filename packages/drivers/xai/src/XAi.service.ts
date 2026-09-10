@@ -1068,13 +1068,13 @@ export class XAi extends Context.Service<XAi, XAiShape>()($I`XAi`) {
   static readonly layer: Layer.Layer<XAi, XAiError> = Layer.effect(
     XAi,
     Effect.gen(function* () {
-      const apiKey = yield* Config.redacted("XAI_API_KEY").pipe(Config.option);
-      const managementApiKey = yield* Config.redacted("XAI_MANAGEMENT_API_KEY").pipe(Config.option);
-      const apiUrl = yield* Config.string("XAI_API_URL").pipe(Config.withDefault(XAI_API_URL));
-      const managementApiUrl = yield* Config.string("XAI_MANAGEMENT_API_URL").pipe(
+      const apiKey = yield* Config.Redacted("XAI_API_KEY").pipe(Config.option);
+      const managementApiKey = yield* Config.Redacted("XAI_MANAGEMENT_API_KEY").pipe(Config.option);
+      const apiUrl = yield* Config.String("XAI_API_URL").pipe(Config.withDefault(XAI_API_URL));
+      const managementApiUrl = yield* Config.String("XAI_MANAGEMENT_API_URL").pipe(
         Config.withDefault(XAI_MANAGEMENT_API_URL)
       );
-      const websocketUrlValue = yield* Config.string("XAI_WEBSOCKET_URL").pipe(Config.withDefault(XAI_WEBSOCKET_URL));
+      const websocketUrlValue = yield* Config.String("XAI_WEBSOCKET_URL").pipe(Config.withDefault(XAI_WEBSOCKET_URL));
       const client = yield* HttpClient.HttpClient;
       const config = XAiConfigInput.make({
         apiKey,

@@ -129,8 +129,8 @@ export const ClusterShardingConfigFromEnv = (options?: Parameters<typeof Shardin
  */
 export const ClusterSqliteLiveFromEnv = Layer.unwrap(
   Effect.gen(function* () {
-    const filename = yield* Config.string("CLUSTER_DB_FILE").pipe(Config.withDefault("output/cluster.db"));
-    const runnerStorageRaw = yield* Config.string("CLUSTER_RUNNER_STORAGE").pipe(Config.withDefault("durable"));
+    const filename = yield* Config.String("CLUSTER_DB_FILE").pipe(Config.withDefault("output/cluster.db"));
+    const runnerStorageRaw = yield* Config.String("CLUSTER_RUNNER_STORAGE").pipe(Config.withDefault("durable"));
     const runnerStorage = runnerStorageRaw === "memory" ? "memory" : undefined;
     return ClusterSqliteLive({ filename, ...(P.isNotUndefined(runnerStorage) ? { runnerStorage } : {}) });
   })
@@ -170,8 +170,8 @@ export const ClusterSqliteLiveFromEnv = Layer.unwrap(
  */
 export const ClusterAutoLiveFromEnv = Layer.unwrap(
   Effect.gen(function* () {
-    const dbUrlOpt = yield* Config.string("CLUSTER_DB_URL").pipe(Config.option);
-    const runnerStorageRaw = yield* Config.string("CLUSTER_RUNNER_STORAGE").pipe(Config.withDefault("durable"));
+    const dbUrlOpt = yield* Config.String("CLUSTER_DB_URL").pipe(Config.option);
+    const runnerStorageRaw = yield* Config.String("CLUSTER_RUNNER_STORAGE").pipe(Config.withDefault("durable"));
     const runnerStorage = runnerStorageRaw === "memory" ? "memory" : undefined;
     const dbUrl = O.getOrUndefined(dbUrlOpt);
 
@@ -184,7 +184,7 @@ export const ClusterAutoLiveFromEnv = Layer.unwrap(
       }
     }
 
-    const filename = yield* Config.string("CLUSTER_DB_FILE").pipe(Config.withDefault("output/cluster.db"));
+    const filename = yield* Config.String("CLUSTER_DB_FILE").pipe(Config.withDefault("output/cluster.db"));
     return ClusterSqliteLive({ filename, ...(P.isNotUndefined(runnerStorage) ? { runnerStorage } : {}) });
   })
 );

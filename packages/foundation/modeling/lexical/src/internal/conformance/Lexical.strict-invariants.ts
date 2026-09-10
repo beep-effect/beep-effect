@@ -110,41 +110,57 @@ const hasStrictListChildren = (node: ListNode.Type): boolean =>
   );
 
 const strictNodeChildren: (node: LexicalNode.Type) => boolean = Match.type<LexicalNode.Type>().pipe(
-  Match.discriminatorsExhaustive("type")({
-    text: () => true,
-    tab: () => true,
-    linebreak: () => true,
-    "artifact-ref": () => true,
-    youtube: () => true,
-    root: (node) =>
+  Match.discriminator("type")("text", () => true),
+  Match.discriminator("type")("tab", () => true),
+  Match.discriminator("type")("linebreak", () => true),
+  Match.discriminator("type")("artifact-ref", () => true),
+  Match.discriminator("type")("youtube", () => true),
+  Match.discriminator("type")(
+    "root",
+    (node) =>
       A.isReadonlyArrayNonEmpty(node.children) &&
-      A.every(node.children, (child) => isStrictRootChildType(child.type) && hasStrictNodeChildren(child)),
-    paragraph: (node) =>
-      A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)),
-    heading: (node) =>
-      A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)),
-    quote: (node) =>
-      A.every(node.children, (child) =>
-        O.contains(node.shadowRoot, true)
-          ? isStrictRootChildType(child.type) && hasStrictNodeChildren(child)
-          : isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)
-      ),
-    link: (node) =>
+      A.every(node.children, (child) => isStrictRootChildType(child.type) && hasStrictNodeChildren(child))
+  ),
+  Match.discriminator("type")("paragraph", (node) =>
+    A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child))
+  ),
+  Match.discriminator("type")("heading", (node) =>
+    A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child))
+  ),
+  Match.discriminator("type")("quote", (node) =>
+    A.every(node.children, (child) =>
+      O.contains(node.shadowRoot, true)
+        ? isStrictRootChildType(child.type) && hasStrictNodeChildren(child)
+        : isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)
+    )
+  ),
+  Match.discriminator("type")(
+    "link",
+    (node) =>
       A.isReadonlyArrayNonEmpty(node.children) &&
-      A.every(node.children, (child) => isStrictLeafInlineChildType(child.type) && hasStrictNodeChildren(child)),
-    code: (node) =>
-      A.every(node.children, (child) => isStrictLeafInlineChildType(child.type) && hasStrictNodeChildren(child)),
-    list: hasStrictListChildren,
-    listitem: (node) =>
-      A.every(node.children, (child) => isStrictListItemChildType(child.type) && hasStrictNodeChildren(child)),
-    table: hasStrictTableChildren,
-    tablerow: (node) =>
+      A.every(node.children, (child) => isStrictLeafInlineChildType(child.type) && hasStrictNodeChildren(child))
+  ),
+  Match.discriminator("type")("code", (node) =>
+    A.every(node.children, (child) => isStrictLeafInlineChildType(child.type) && hasStrictNodeChildren(child))
+  ),
+  Match.discriminator("type")("list", hasStrictListChildren),
+  Match.discriminator("type")("listitem", (node) =>
+    A.every(node.children, (child) => isStrictListItemChildType(child.type) && hasStrictNodeChildren(child))
+  ),
+  Match.discriminator("type")("table", hasStrictTableChildren),
+  Match.discriminator("type")(
+    "tablerow",
+    (node) =>
       A.isReadonlyArrayNonEmpty(node.children) &&
-      A.every(node.children, (child) => child.type === "tablecell" && hasStrictNodeChildren(child)),
-    tablecell: (node) =>
+      A.every(node.children, (child) => child.type === "tablecell" && hasStrictNodeChildren(child))
+  ),
+  Match.discriminator("type")(
+    "tablecell",
+    (node) =>
       A.isReadonlyArrayNonEmpty(node.children) &&
-      A.every(node.children, (child) => isStrictRootChildType(child.type) && hasStrictNodeChildren(child)),
-  })
+      A.every(node.children, (child) => isStrictRootChildType(child.type) && hasStrictNodeChildren(child))
+  ),
+  Match.exhaustive
 );
 
 /**

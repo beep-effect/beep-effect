@@ -10,7 +10,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it as effectIt } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
@@ -202,10 +202,18 @@ const bootstrapWorkspace = Effect.fn(function* (
 
 describe("tsconfig-sync", () => {
   it("round-trips arbitrary tsconfig reference documents", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(TsconfigReferences)(fc), (value) => expectTsconfigReferencesRoundTrip(value)),
-      { numRuns: 25 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(TsconfigReferences)]),
+          ([value]) => {
+            expectTsconfigReferencesRoundTrip(value);
+            return true;
+          },
+          { runs: 25 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it(

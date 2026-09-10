@@ -72,7 +72,7 @@ const $I = $ProfessionalDesktopId.create("runtime/Pglite");
  * @category configuration
  * @since 0.0.0
  */
-const ChatDbDataDir = Config.string("CHAT_DB_PATH").pipe(
+const ChatDbDataDir = Config.String("CHAT_DB_PATH").pipe(
   Config.withDefault(NodeURL.fileURLToPath(new URL("../../../../.beep/professional-desktop/chat-db", import.meta.url)))
 );
 

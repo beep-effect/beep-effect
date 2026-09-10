@@ -49,11 +49,12 @@ import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
 import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
 import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
 import type * as Redacted from "effect/Redacted";
+import type { ServeError } from "effect/unstable/http/HttpServerError";
 import type { DesktopStartupError } from "@/runtime/Layer";
 
 // Loopback rpc port; defaults to 3939 (the desktop chat surface's sidecar
 // port). Configurable via CHAT_SIDECAR_PORT for tests/dev that need a free port.
-const PORT = Effect.runSync(Config.port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
+const PORT = Effect.runSync(Config.Port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
 const RPC_SESSION_TOKEN = Effect.runSync(DesktopRpcSessionToken);
 
 // The full desktop group includes write-capable workspace vault, document
@@ -68,7 +69,7 @@ const ChatOnlyRpcServer = RpcServer.layer(ChatRpcs).pipe(Layer.provide(RuntimeLi
 
 // HTTP transport (default): one HttpRouter carries the rpc protocol and the CORS
 // middleware via layer memoization, served by HttpRouter.serve.
-const httpMain = (): Layer.Layer<never, DesktopStartupError> => {
+const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
   const RpcCors = HttpRouter.middleware(
     HttpMiddleware.cors({
       allowedOrigins: ["*"],

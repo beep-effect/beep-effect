@@ -1,34 +1,32 @@
-/**
- * Proofs for the pluggable NLP backend contract: capability detection, the
- * failure constructors, and the schema-decodability of each tagged error.
- *
- * Effect v4 + `@effect/vitest` coverage for backend design.
- * Errors are `S.TaggedError` instances, so they round-trip through schema
- * decode/encode like any other `@beep/schema` model.
- */
-
 import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBackendBackendNotSupported = S.decodeEffect(Backend.BackendNotSupported);
 const encodeBackendBackendNotSupported = S.encodeEffect(Backend.BackendNotSupported);
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expect(equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expect(equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const capabilities: Backend.BackendCapabilities = {

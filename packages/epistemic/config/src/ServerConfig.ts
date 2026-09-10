@@ -68,8 +68,8 @@ export const defaultPolicyRevision = PolicyRevision.decodeUnknownSync("1.0.0");
  * @category configuration
  * @since 0.0.0
  */
-export const EpistemicDestinationAllowlistConfig = Config.schema(
-  Config.Array(SinkDestination),
+export const EpistemicDestinationAllowlistConfig = Config.Array(
+  SinkDestination,
   "EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST"
 ).pipe(Config.withDefault<ReadonlyArray<SinkDestination>>([]));
 

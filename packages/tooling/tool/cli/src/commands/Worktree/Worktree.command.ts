@@ -861,10 +861,10 @@ const runWorktreeDoctor = Effect.fn("Worktree.runWorktreeDoctor")(function* (): 
 const worktreeNewCommand = Command.make(
   "new",
   {
-    name: Argument.string("name").pipe(
+    name: Argument.String("name").pipe(
       Argument.withDescription("Worktree name (directory under the worktrees root and default branch suffix)")
     ),
-    branch: Flag.string("branch").pipe(
+    branch: Flag.String("branch").pipe(
       Flag.withAlias("b"),
       Flag.withDescription("Branch to create for the new worktree (default: feat/<name>)"),
       Flag.optional
@@ -891,12 +891,12 @@ const worktreeNewCommand = Command.make(
 const worktreeRemoveCommand = Command.make(
   "remove",
   {
-    name: Argument.string("name").pipe(Argument.withDescription("Worktree name under the worktrees root")),
-    archive: Flag.boolean("archive").pipe(
+    name: Argument.String("name").pipe(Argument.withDescription("Worktree name under the worktrees root")),
+    archive: Flag.Boolean("archive").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Preserve dirty files and unpushed commits before removing the worktree")
     ),
-    deleteBranch: Flag.boolean("delete-branch").pipe(
+    deleteBranch: Flag.Boolean("delete-branch").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Delete the local branch after archive retirement (requires --archive)")
     ),

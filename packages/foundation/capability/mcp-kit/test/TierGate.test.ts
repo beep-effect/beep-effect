@@ -1,12 +1,3 @@
-/**
- * Fixture proof: the tier-gate dispatch wrapper refuses fail-closed as a
- * value for an unapproved write-tool call and produces a sanitized audit
- * record matching the kit's audit schema. Every gated call — approved or
- * refused — produces an audit record (Q7); an unannotated tool is refused
- * fail-closed as a value, never a throw.
- *
- * @since 0.0.0
- */
 import {
   dispatchWithTierGate,
   fromApprovedToolsPolicy,
@@ -17,12 +8,12 @@ import {
   TierGateVerdict,
 } from "@beep/mcp-kit";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Fiber, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import { Tool } from "effect/unstable/ai";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeTierGateAuditRecordSync = S.decodeSync(TierGateAuditRecord);
 
@@ -34,17 +25,24 @@ const nonReadOnlyWriteTool = Tool.make("write_cache", { success: S.String }).ann
 const unannotatedTool = Tool.make("unannotated_tool", { success: S.String });
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      assert.isTrue(equals(decode(encode(value)), value));
-    }),
-    fcRuns(50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          assert.isTrue(equals(decode(encode(value)), value));
+
+          return true;
+        },
+        fcRuns(50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("dispatchWithTierGate", () => {

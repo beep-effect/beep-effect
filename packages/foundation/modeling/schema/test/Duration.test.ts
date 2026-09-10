@@ -1,10 +1,11 @@
 import { fcRuns } from "@beep/fc-runs";
 import * as Duration from "@beep/schema/Duration";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as D from "effect/Duration";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownDurationFromInputSync = S.decodeUnknownSync(Duration.FromInput);
 const decodeUnknownDurationInputSync = S.decodeUnknownSync(Duration.Input);
@@ -87,10 +88,15 @@ describe("DurationFromInput", () => {
   });
 
   it("derives Duration values from the schema arbitrary that re-validate as durations", () => {
-    const arbitrary = S.toArbitrary(Duration.FromInput)(fc);
-    fc.assert(
-      fc.property(arbitrary, (value) => D.isDuration(value) && isDurationSchema(value)),
-      fcRuns(50)
-    );
+    const arbitrary = Arbitrary.schema(Duration.FromInput);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => D.isDuration(value) && isDurationSchema(value),
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

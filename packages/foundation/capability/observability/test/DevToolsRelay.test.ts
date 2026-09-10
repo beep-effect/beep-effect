@@ -1,6 +1,7 @@
 import { DevToolsRelayService, makeDevToolsRelayService } from "@beep/observability/experimental/server";
 import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as NetAddress from "effect/unstable/net/NetAddress";
 import * as SocketServer from "effect/unstable/socket/SocketServer";
 import { describe, expect, it } from "vitest";
 import type * as Socket from "effect/unstable/socket/Socket";
@@ -10,11 +11,7 @@ const fakeSocketServerRun = Effect.fn("DevToolsRelayTest.fakeSocketServerRun")(
 );
 
 const fakeSocketServer = SocketServer.SocketServer.of({
-  address: {
-    _tag: "TcpAddress",
-    hostname: "127.0.0.1",
-    port: 3437,
-  },
+  address: NetAddress.inetAddressFromIpStringUnsafe("127.0.0.1", 3437),
   run: fakeSocketServerRun,
 });
 

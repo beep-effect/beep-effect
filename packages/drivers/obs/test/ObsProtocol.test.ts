@@ -20,7 +20,7 @@ import {
 } from "@beep/obs";
 import { A, O, P, pipe, Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, Fiber, PubSub, Queue, Redacted, Ref, Stream } from "effect";
+import { Deferred, Effect, Fiber, PubSub, Queue, Redacted, Ref } from "effect";
 import { Socket } from "effect/unstable/socket";
 import type { ObsIdentify, ObsIncomingMessage, ObsRequestEnvelope } from "@beep/obs";
 import type { UnknownRecord } from "@beep/schema";
@@ -91,32 +91,30 @@ const makeFakeObsServer = Effect.fnUntraced(function* (options?: FakeObsServerOp
       Effect.orDie
     );
 
+  const write: Socket.Writer["write"] = (chunk) => {
+    if (Socket.isCloseEvent(chunk)) {
+      return Queue.end(incoming).pipe(Effect.asVoid);
+    }
+    const text = P.isString(chunk) ? chunk : textDecoder.decode(chunk);
+    return Ref.update(sentFrames, A.append(text)).pipe(Effect.andThen(handleClientFrame(text)));
+  };
   const socket = Socket.make({
-    runRaw: (handler, opts) =>
-      Effect.suspend(() => opts?.onOpen ?? Effect.void).pipe(
-        Effect.andThen(emitMessage(ObsHelloMessage.make({ d: hello }))),
-        Effect.andThen(
-          Stream.fromQueue(incoming).pipe(
-            Stream.runForEach((frame) => {
-              const result = handler(frame);
-              return Effect.isEffect(result) ? Effect.asVoid(result) : Effect.void;
-            })
-          )
-        ),
-        Effect.andThen(
-          Effect.fail(
+    reader: emitMessage(ObsHelloMessage.make({ d: hello })).pipe(
+      Effect.as({
+        pull: Queue.take(incoming).pipe(
+          Effect.map((frame): readonly [string] => [frame]),
+          Effect.mapError(() =>
             Socket.SocketError.make({
               reason: Socket.SocketCloseError.make({ code: options?.rejectIdentifyWithCloseCode ?? 1006 }),
             })
           )
-        )
-      ),
-    writer: Effect.succeed((chunk) => {
-      if (Socket.isCloseEvent(chunk)) {
-        return Queue.end(incoming).pipe(Effect.asVoid);
-      }
-      const text = P.isString(chunk) ? chunk : textDecoder.decode(chunk);
-      return Ref.update(sentFrames, A.append(text)).pipe(Effect.andThen(handleClientFrame(text)));
+        ),
+        upgrade: Socket.SocketUpgradeError.unsupported,
+      })
+    ),
+    writer: Effect.succeed({
+      write,
+      writeAll: (chunks) => Effect.forEach(chunks, write, { discard: true }),
     }),
   });
 

@@ -36,7 +36,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -84,11 +85,11 @@ const DRIVE_ID = "b!drive";
 const ITEM_ID = "01ABC";
 const DOWNLOAD_URL = "https://download.example.test/memo.docx";
 const METADATA_URL = `${GRAPH_BASE_URL}/drives/${DRIVE_ID}/items/${ITEM_ID}?$select=id%2Cname%2Csize%2Cfile%2Cfolder%2C%40microsoft.graph.downloadUrl`;
-const M365ConfigInputArbitrary = S.toArbitrary(M365ConfigInput)(fc);
-const M365ErrorArbitrary = S.toArbitrary(M365Error)(fc);
-const GraphDriveItemArbitrary = S.toArbitrary(GraphDriveItem)(fc);
-const M365ListMessagesRequestArbitrary = S.toArbitrary(M365ListMessagesRequest)(fc);
-const M365DriveItemDownloadArbitrary = S.toArbitrary(M365DriveItemDownload)(fc);
+const M365ConfigInputArbitrary = Arbitrary.schema(M365ConfigInput);
+const M365ErrorArbitrary = Arbitrary.schema(M365Error);
+const GraphDriveItemArbitrary = Arbitrary.schema(GraphDriveItem);
+const M365ListMessagesRequestArbitrary = Arbitrary.schema(M365ListMessagesRequest);
+const M365DriveItemDownloadArbitrary = Arbitrary.schema(M365DriveItemDownload);
 const sameM365Error = S.toEquivalence(M365Error);
 const sameGraphDriveItem = S.toEquivalence(GraphDriveItem);
 const sameM365ListMessagesRequest = S.toEquivalence(M365ListMessagesRequest);
@@ -373,28 +374,28 @@ describe("@beep/m365 service", () => {
     });
   });
 
-  it("round-trips schema-derived m365 models through their encoded shape", () =>
-    fc.assert(
-      fc.property(
-        M365ConfigInputArbitrary,
-        M365ErrorArbitrary,
-        GraphDriveItemArbitrary,
-        M365ListMessagesRequestArbitrary,
-        M365DriveItemDownloadArbitrary,
-        (config, error, item, request, download) => {
-          expectEncodedRoundTripStable(M365ConfigInput, config);
-          expect(sameM365Error(expectEncodedRoundTripStable(M365Error, error), error)).toBe(true);
-          expect(sameGraphDriveItem(expectEncodedRoundTripStable(GraphDriveItem, item), item)).toBe(true);
-          expect(
-            sameM365ListMessagesRequest(expectEncodedRoundTripStable(M365ListMessagesRequest, request), request)
-          ).toBe(true);
-          expect(
-            sameM365DriveItemDownload(expectEncodedRoundTripStable(M365DriveItemDownload, download), download)
-          ).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+  it.prop(
+    "round-trips schema-derived m365 models through their encoded shape",
+    [
+      M365ConfigInputArbitrary,
+      M365ErrorArbitrary,
+      GraphDriveItemArbitrary,
+      M365ListMessagesRequestArbitrary,
+      M365DriveItemDownloadArbitrary,
+    ],
+    ([config, error, item, request, download]) => {
+      expectEncodedRoundTripStable(M365ConfigInput, config);
+      expect(sameM365Error(expectEncodedRoundTripStable(M365Error, error), error)).toBe(true);
+      expect(sameGraphDriveItem(expectEncodedRoundTripStable(GraphDriveItem, item), item)).toBe(true);
+      expect(sameM365ListMessagesRequest(expectEncodedRoundTripStable(M365ListMessagesRequest, request), request)).toBe(
+        true
+      );
+      expect(sameM365DriveItemDownload(expectEncodedRoundTripStable(M365DriveItemDownload, download), download)).toBe(
+        true
+      );
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   layer(makeTestLayer())((it) => {
     it.effect(

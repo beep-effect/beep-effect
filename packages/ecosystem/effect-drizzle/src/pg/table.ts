@@ -23,7 +23,7 @@ import { isArray, reduce } from "effect/Array";
 import { pipe } from "effect/Function";
 import {
   exhaustive,
-  tags as matchTags,
+  tag as matchTag,
   type as matchType,
   value as matchValue,
   when as matchWhen,
@@ -326,29 +326,25 @@ const buildColumn = (
     onNone: () => withUnique,
     onSome: matchType<Meta.Default>().pipe(
       withReturnType<PgColumn.DrizzleBuilder>(),
-      matchTags({
-        value: ({ value }) => withUnique.default(value),
-        sqlExpr: ({ expression }) => {
-          assertSchemaExpression(expression, `PostgreSQL default expression for '${key}'`);
-          return withUnique.default(expression);
-        },
-        now: () => withUnique.default(sql`now()`),
-        unsafeSql: ({ sql: statement }) => withUnique.default(sql.raw(statement)),
+      matchTag("value", ({ value }) => withUnique.default(value)),
+      matchTag("sqlExpr", ({ expression }) => {
+        assertSchemaExpression(expression, `PostgreSQL default expression for '${key}'`);
+        return withUnique.default(expression);
       }),
+      matchTag("now", () => withUnique.default(sql`now()`)),
+      matchTag("unsafeSql", ({ sql: statement }) => withUnique.default(sql.raw(statement))),
       exhaustive
     ),
   });
   return matchValue(meta.generated).pipe(
     withReturnType<PgColumn.DrizzleBuilder>(),
     matchWhen(false, () => withDefault),
-    matchTags({
-      identityAlways: () => withDefault,
-      sqlExpr: ({ expression }) => {
-        assertSchemaExpression(expression, `PostgreSQL generated expression for '${key}'`);
-        return withDefault.generatedAlwaysAs(expression);
-      },
-      unsafeSql: ({ sql: statement }) => withDefault.generatedAlwaysAs(sql.raw(statement)),
+    matchTag("identityAlways", () => withDefault),
+    matchTag("sqlExpr", ({ expression }) => {
+      assertSchemaExpression(expression, `PostgreSQL generated expression for '${key}'`);
+      return withDefault.generatedAlwaysAs(expression);
     }),
+    matchTag("unsafeSql", ({ sql: statement }) => withDefault.generatedAlwaysAs(sql.raw(statement))),
     exhaustive
   );
 };

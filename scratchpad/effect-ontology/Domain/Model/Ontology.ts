@@ -149,11 +149,7 @@ const SkosFields = {
  * @category schemas
  * @since 0.0.0
  */
-export const PropertyRangeKind = LiteralKit(["object", "datatype"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("object", "datatype"),
-  })
-  .annotate(
+export const PropertyRangeKind = LiteralKit(["object", "datatype"]).annotate(
     $I.annote("PropertyRangeKind", {
       description: "Closed property-range taxonomy distinguishing resource links from literal values.",
     })
@@ -380,10 +376,7 @@ class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinit
  * @category models
  * @since 0.0.0
  */
-export const ClassDefinition = ClassDefinitionModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ClassDefinitionFields))(fc).map((fields) => ClassDefinitionModel.make(fields)),
-}).pipe(
+export const ClassDefinition = ClassDefinitionModel.pipe(
   $I.annoteSchema("ClassDefinition", {
     description: "OWL or RDFS class metadata normalized for lookup and semantic search.",
   }),
@@ -554,10 +547,7 @@ const semanticDocumentLines = (definition: ClassDefinitionModel | PropertyDefini
  * @category models
  * @since 0.0.0
  */
-export const PropertyDefinition = PropertyDefinitionModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(PropertyDefinitionFields))(fc).map((fields) => PropertyDefinitionModel.make(fields)),
-}).pipe(
+export const PropertyDefinition = PropertyDefinitionModel.pipe(
   $I.annoteSchema("PropertyDefinition", {
     description: "RDF or OWL property metadata normalized for validation and semantic search.",
   })
@@ -645,18 +635,8 @@ const IriRecordKey = S.String.check(
     title: "IRI Record Key",
     description: "A string record key accepted by the canonical RDF IRI schema.",
     message: "Ontology hierarchy keys must be valid IRIs.",
-    arbitrary: {
-      candidate: {
-        weight: 10,
-        make: (fc) => fc.webUrl().map(IRI.decodeUnknownSync),
-      },
-    },
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.webUrl().map(IRI.decodeUnknownSync),
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("IriRecordKey", {
       description: "Canonical RDF IRI represented by a string-compatible record-key schema.",
     })

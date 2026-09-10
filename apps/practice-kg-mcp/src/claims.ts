@@ -15,8 +15,8 @@ import { Command, Flag } from "effect/unstable/cli";
 import { runEntrypoint } from "./entrypoint.ts";
 import { makePracticeKgPgliteLayer } from "./runtime/index.ts";
 
-const inputs = Flag.directory("inputs", { mustExist: true });
-const bundleOut = Flag.directory("bundle-out", { mustExist: true });
+const inputs = Flag.Directory("inputs", { mustExist: true });
+const bundleOut = Flag.Directory("bundle-out", { mustExist: true });
 
 const claimsCommand = Command.make(
   "claims",

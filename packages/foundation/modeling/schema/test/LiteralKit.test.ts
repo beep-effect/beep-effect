@@ -9,10 +9,11 @@ import {
 } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as Eq from "effect/Equal";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const createRuntimeLiteralKit = (
   literals: ReadonlyArray<unknown>,
@@ -49,14 +50,21 @@ describe("LiteralKit", () => {
   });
 
   it("round-trips schema-derived literal samples", () => {
-    const arbitrary = S.toArbitrary(Status)(fc);
-    fc.assert(
-      fc.property(arbitrary, (literal) => {
-        expect(Status.Options).toContain(literal);
-        expect(decodeUnknownStatusSync(encodeStatusSync(literal))).toBe(literal);
-      }),
-      fcRuns(25)
-    );
+    const arbitrary = Arbitrary.schema(Status);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([literal]) => {
+            expect(Status.Options).toContain(literal);
+            expect(decodeUnknownStatusSync(encodeStatusSync(literal))).toBe(literal);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("creates an Enum map with LiteralToKey keys", () => {

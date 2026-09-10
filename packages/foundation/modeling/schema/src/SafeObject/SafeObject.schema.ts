@@ -93,7 +93,7 @@ export type SafeObject = typeof SafeObject.Type;
 export const SafeObjectFromObjectKeyword = S.ObjectKeyword.pipe(
   S.decodeTo(
     SafeObject,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input) =>
         Effect.try({
           try: () => ({ ...input }),

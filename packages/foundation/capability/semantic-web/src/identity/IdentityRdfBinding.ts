@@ -16,7 +16,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { Dataset, Quad } from "@beep/rdf/Rdf";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $SemanticWebId.create("identity/IdentityRdfBinding");
 
@@ -96,6 +98,23 @@ export class IdentityRdfBinding extends S.Class<IdentityRdfBinding>($I`IdentityR
   CheckedIdentityRdfBindingFields,
   $I.annote("IdentityRdfBinding", {
     description: "Explicit RDF predicates for identity registry fields and named string fibers.",
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<IdentityRdfBinding>()(
+        S.Array(S.String).check(S.isMaxLength(10)),
+        SchemaTransformation.transform({
+          decode: (fibers) =>
+            IdentityRdfBinding.make({
+              identifierPath: makeNamedNode(identifierPathIri),
+              curiePath: makeNamedNode(curiePathIri),
+              fiberPaths: pipe(
+                fibers,
+                A.map((fiber, index) => Tuple.make(fiber, makeNamedNode(`https://example.org/fiber/${index}`))),
+                R.fromEntries
+              ),
+            }),
+          encode: (binding) => R.keys(binding.fiberPaths),
+        })
+      ),
   })
 ) {}
 

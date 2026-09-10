@@ -24,7 +24,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess } from "effect/unstable/process";
 import type { SequenceBreakNotificationStage } from "@beep/repo-ai-metrics";
 
@@ -368,26 +369,29 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
     const notificationEquivalent = S.toEquivalence(SequenceBreakNotificationV1);
     const dampingEquivalent = S.toEquivalence(SequenceBreakDampingV1);
 
-    fc.assert(
-      fc.property(
-        S.toArbitrary(SequenceBreakNotificationV1)(fc),
-        S.toArbitrary(SequenceBreakDampingV1)(fc),
-        (notification, damping) => {
-          const decodedNotification = Result.getOrThrow(
-            decodeUnknownSequenceBreakNotificationV1Result(
-              Result.getOrThrow(encodeSequenceBreakNotificationV1Result(notification))
-            )
-          );
-          const decodedDamping = Result.getOrThrow(
-            decodeUnknownSequenceBreakDampingV1Result(Result.getOrThrow(encodeSequenceBreakDampingV1Result(damping)))
-          );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(SequenceBreakNotificationV1), Arbitrary.schema(SequenceBreakDampingV1)]),
+          ([notification, damping]) => {
+            const decodedNotification = Result.getOrThrow(
+              decodeUnknownSequenceBreakNotificationV1Result(
+                Result.getOrThrow(encodeSequenceBreakNotificationV1Result(notification))
+              )
+            );
+            const decodedDamping = Result.getOrThrow(
+              decodeUnknownSequenceBreakDampingV1Result(Result.getOrThrow(encodeSequenceBreakDampingV1Result(damping)))
+            );
 
-          expect(notificationEquivalent(decodedNotification, notification)).toBe(true);
-          expect(dampingEquivalent(decodedDamping, damping)).toBe(true);
-        }
-      ),
-      fcRuns(25)
-    );
+            expect(notificationEquivalent(decodedNotification, notification)).toBe(true);
+            expect(dampingEquivalent(decodedDamping, damping)).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect("sends one desktop stage, damps its duplicate, and stops after exact bracket resolution", () =>

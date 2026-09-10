@@ -13,13 +13,13 @@ import { TikaError, TikaErrorOptions, TikaErrorReason, TikaFileProcessingEngine 
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact)(fc);
-const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation)(fc);
-const TikaErrorReasonArbitrary = S.toArbitrary(TikaErrorReason)(fc);
-const TikaErrorOptionsArbitrary = S.toArbitrary(TikaErrorOptions)(fc);
-const TikaErrorArbitrary = S.toArbitrary(TikaError)(fc);
+const SourceArtifactArbitrary = Arbitrary.schema(SourceArtifact);
+const ExtractFileOperationArbitrary = Arbitrary.schema(ExtractFileOperation);
+const TikaErrorReasonArbitrary = Arbitrary.schema(TikaErrorReason);
+const TikaErrorOptionsArbitrary = Arbitrary.schema(TikaErrorOptions);
+const TikaErrorArbitrary = Arbitrary.schema(TikaError);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExtractFileOperation = S.encodeEffect(ExtractFileOperation);
@@ -96,30 +96,30 @@ describe("@beep/tika", () => {
     });
   });
 
-  it("round-trips schema-derived extraction operation data through file-processing schemas", () =>
-    fc.assert(
-      fc.property(
-        SourceArtifactArbitrary,
-        ExtractFileOperationArbitrary,
-        TikaErrorReasonArbitrary,
-        TikaErrorOptionsArbitrary,
-        TikaErrorArbitrary,
-        (sourceArtifact, extractOperation, errorReason, errorOptions, error) => {
-          const encodedSourceArtifact = Effect.runSync(encodeSourceArtifact(sourceArtifact));
-          const decodedSourceArtifact = Effect.runSync(decodeSourceArtifact(encodedSourceArtifact));
-          expect(Effect.runSync(encodeSourceArtifact(decodedSourceArtifact))).toEqual(encodedSourceArtifact);
+  it.prop(
+    "round-trips schema-derived extraction operation data through file-processing schemas",
+    [
+      SourceArtifactArbitrary,
+      ExtractFileOperationArbitrary,
+      TikaErrorReasonArbitrary,
+      TikaErrorOptionsArbitrary,
+      TikaErrorArbitrary,
+    ],
+    ([sourceArtifact, extractOperation, errorReason, errorOptions, error]) => {
+      const encodedSourceArtifact = Effect.runSync(encodeSourceArtifact(sourceArtifact));
+      const decodedSourceArtifact = Effect.runSync(decodeSourceArtifact(encodedSourceArtifact));
+      expect(Effect.runSync(encodeSourceArtifact(decodedSourceArtifact))).toEqual(encodedSourceArtifact);
 
-          const encodedExtractOperation = Effect.runSync(encodeExtractFileOperation(extractOperation));
-          const decodedExtractOperation = Effect.runSync(decodeExtractFileOperation(encodedExtractOperation));
-          expect(Effect.runSync(encodeExtractFileOperation(decodedExtractOperation))).toEqual(encodedExtractOperation);
+      const encodedExtractOperation = Effect.runSync(encodeExtractFileOperation(extractOperation));
+      const decodedExtractOperation = Effect.runSync(decodeExtractFileOperation(encodedExtractOperation));
+      expect(Effect.runSync(encodeExtractFileOperation(decodedExtractOperation))).toEqual(encodedExtractOperation);
 
-          expectRoundTrip(TikaErrorReason, errorReason);
-          expectRoundTrip(TikaErrorOptions, errorOptions);
-          expectRoundTrip(TikaError, error);
-        }
-      ),
-      fcRuns(25)
-    ));
+      expectRoundTrip(TikaErrorReason, errorReason);
+      expectRoundTrip(TikaErrorOptions, errorOptions);
+      expectRoundTrip(TikaError, error);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect(
     "extracts text for a P1 text fixture",

@@ -288,7 +288,7 @@ const decodeDurationInput = (input: DurationInput): Effect.Effect<D.Duration, Sc
  */
 export const DurationFromInput = DurationInput.pipe(
   S.decodeTo(S.Duration, {
-    decode: SchemaGetter.transformOrFail(decodeDurationInput),
+    decode: SchemaGetter.transformEffect(decodeDurationInput),
     encode: SchemaGetter.forbidden(
       () => "Encoding DurationFromInput results back to the original duration input is not supported"
     ),

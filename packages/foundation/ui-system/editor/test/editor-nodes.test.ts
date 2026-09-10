@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 // @vitest-environment jsdom
 
 import { ArtifactRefNode } from "@beep/editor/artifact-ref-node";
@@ -18,7 +19,6 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 
 const decodeUnknownSerializedEditorStateResult = S.decodeUnknownResult(SerializedEditorState);
 const decodeUnknownSerializedEditorStateSync = S.decodeUnknownSync(SerializedEditorState);
@@ -83,13 +83,22 @@ describe("@beep/editor node registration", () => {
       },
     });
 
-    fc.assert(
-      fc.property(S.toArbitrary(SerializedEditorState)(fc), (state) => {
-        editor.setEditorState(editor.parseEditorState(encodeEditorStateFromJsonSync(state)));
-        expect(Result.isSuccess(decodeUnknownSerializedEditorStateResult(editor.getEditorState().toJSON()))).toBe(true);
-      }),
-      { numRuns: 25 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(SerializedEditorState)]),
+          ([state]) => {
+            editor.setEditorState(editor.parseEditorState(encodeEditorStateFromJsonSync(state)));
+            expect(Result.isSuccess(decodeUnknownSerializedEditorStateResult(editor.getEditorState().toJSON()))).toBe(
+              true
+            );
+
+            return true;
+          },
+          { runs: 25 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("imports a codec-built editor state and re-exports schema-conformant wire state", () => {

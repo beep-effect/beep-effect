@@ -388,24 +388,28 @@ const hasAllowedProtocol: {
   (protocol: string): (policy: UrlPolicySpec) => boolean;
 } = dual(2, (policy: UrlPolicySpec, protocol: string): boolean =>
   Match.value(policy).pipe(
-    Match.tagsExhaustive({
-      Compatibility: () => true,
-      AllowList: P.Struct({
+    Match.tag("Compatibility", () => true),
+    Match.tag(
+      "AllowList",
+      P.Struct({
         schemes: A.contains(protocol),
-      }),
-    })
+      })
+    ),
+    Match.exhaustive
   )
 );
 
 const isAllowedRelativeDestination = (policy: UrlPolicySpec, destination: string): boolean =>
   Match.value(policy).pipe(
-    Match.tagsExhaustive({
-      Compatibility: () => true,
-      AllowList: ({ allowBackslashRelative, allowProtocolRelative, allowRelative }) =>
+    Match.tag("Compatibility", () => true),
+    Match.tag(
+      "AllowList",
+      ({ allowBackslashRelative, allowProtocolRelative, allowRelative }) =>
         allowRelative &&
         (allowProtocolRelative || !Str.startsWith("//")(destination)) &&
-        (allowBackslashRelative || !Str.includes("\\")(destination)),
-    })
+        (allowBackslashRelative || !Str.includes("\\")(destination))
+    ),
+    Match.exhaustive
   );
 
 const isAllowedByPolicy = (policy: UrlPolicySpec, destination: string): boolean => {

@@ -99,8 +99,8 @@ const encodeUsptoApplicationNumberToText = (value: string): Effect.Effect<string
  */
 export const UsptoApplicationNumberFromText = S.String.pipe(
   S.decodeTo(UsptoApplicationNumber, {
-    decode: SchemaGetter.transformOrFail(decodeUsptoApplicationNumberFromText),
-    encode: SchemaGetter.transformOrFail(encodeUsptoApplicationNumberToText),
+    decode: SchemaGetter.transformEffect(decodeUsptoApplicationNumberFromText),
+    encode: SchemaGetter.transformEffect(encodeUsptoApplicationNumberToText),
   }),
   $I.annoteSchema("UsptoApplicationNumberFromText", {
     description: "Codec that normalizes free-text USPTO application numbers into the eight-digit domain form.",
@@ -210,8 +210,8 @@ const encodeUsptoPatentNumberToText = (value: string): Effect.Effect<string> => 
  */
 export const UsptoPatentNumberFromText = S.String.pipe(
   S.decodeTo(UsptoPatentNumber, {
-    decode: SchemaGetter.transformOrFail(decodeUsptoPatentNumberFromText),
-    encode: SchemaGetter.transformOrFail(encodeUsptoPatentNumberToText),
+    decode: SchemaGetter.transformEffect(decodeUsptoPatentNumberFromText),
+    encode: SchemaGetter.transformEffect(encodeUsptoPatentNumberToText),
   }),
   $I.annoteSchema("UsptoPatentNumberFromText", {
     description: "Codec that normalizes free-text USPTO patent numbers into the domain form.",

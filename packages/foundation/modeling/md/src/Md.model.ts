@@ -30,11 +30,7 @@ const MarkdownArbitraryArraySizeHint = S.makeFilter<ReadonlyArray<unknown>>(() =
   identifier: $I`MarkdownArbitraryArraySizeHint`,
   title: "Markdown arbitrary array size hint",
   description: "Caps derived arbitrary child arrays at two elements without constraining decoded Markdown documents.",
-  arbitrary: {
-    constraint: {
-      maxLength: 2,
-    },
-  },
+  arbitraryConstraint: { maxLength: 2 },
 });
 
 /**

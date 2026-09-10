@@ -15,11 +15,9 @@ import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 
 const decodeUnknownDomainSyncItemSyncItemSync = S.decodeUnknownSync(DomainSyncItem.SyncItem);
 
-const SyncItemArbitrary = S.toArbitrary(DomainSyncItem.SyncItem)(fc);
 const SyncItemEquivalence = S.toEquivalence(DomainSyncItem.SyncItem);
 
 const indexConfigNamed = (name: string) =>
@@ -124,25 +122,26 @@ describe("SyncItem table", () => {
     expect(SyncItemEquivalence(roundTripped, syncItem)).toBe(true);
   });
 
-  it("round-trips schema-derived SyncItems through the row converters", () =>
-    fc.assert(
-      fc.property(SyncItemArbitrary, (syncItem) => {
-        const insert = toSyncItemInsert(syncItem);
-        const decoded = fromSyncItemRow({
-          ...insert,
-          id: syncItem.id,
-          contentDigest: insert.contentDigest ?? null,
-          contentSizeBytes: insert.contentSizeBytes ?? null,
-          lastError: insert.lastError ?? null,
-          lastPushedDigest: insert.lastPushedDigest ?? null,
-          lastPushedGeneration: insert.lastPushedGeneration ?? null,
-          remoteId: insert.remoteId ?? null,
-          remoteName: insert.remoteName ?? null,
-          remoteParentId: insert.remoteParentId ?? null,
-        });
+  it.prop(
+    "round-trips schema-derived SyncItems through the row converters",
+    [S.toType(DomainSyncItem.SyncItem)],
+    ([syncItem]) => {
+      const insert = toSyncItemInsert(syncItem);
+      const decoded = fromSyncItemRow({
+        ...insert,
+        id: syncItem.id,
+        contentDigest: insert.contentDigest ?? null,
+        contentSizeBytes: insert.contentSizeBytes ?? null,
+        lastError: insert.lastError ?? null,
+        lastPushedDigest: insert.lastPushedDigest ?? null,
+        lastPushedGeneration: insert.lastPushedGeneration ?? null,
+        remoteId: insert.remoteId ?? null,
+        remoteName: insert.remoteName ?? null,
+        remoteParentId: insert.remoteParentId ?? null,
+      });
 
-        expect(SyncItemEquivalence(decoded, syncItem)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+      expect(SyncItemEquivalence(decoded, syncItem)).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

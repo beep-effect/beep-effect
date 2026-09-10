@@ -7,7 +7,7 @@ import { ConfigProvider, Crypto, Effect, Encoding, Equal, Exit, FileSystem, Hash
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand } from "@/canary/Command";
@@ -195,10 +195,13 @@ describe("W1 corpus manifest", () => {
 
 describe("F1 fixtures", () => {
   it("generates only media types accepted by the source schema", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(FixtureMediaType)(fc), (mediaType) => isFixtureMediaType(mediaType)),
-      { numRuns: 12 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.schema(FixtureMediaType), (mediaType) => isFixtureMediaType(mediaType), {
+          runs: 12,
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("exposes schema-backed guards and typed catalog failures", () => {

@@ -1,3 +1,5 @@
+import * as Effect from "effect/Effect";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 // @vitest-environment jsdom
 
 import { ContradictionCandidate, ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
@@ -15,7 +17,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as RpcClientError from "effect/unstable/rpc/RpcClientError";
 import { act } from "react";
@@ -416,15 +417,20 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
   it("round-trips schema-derived queue queries", () => {
     const equivalent = S.toEquivalence(ContradictionTriage.ContradictionListPayload);
 
-    fc.assert(
-      fc.property(S.toArbitrary(ContradictionTriage.ContradictionListPayload)(fc), (query) => {
-        const encoded = Result.getOrThrow(encodeContradictionTriageContradictionListPayloadResult(query));
-        const decoded = Result.getOrThrow(decodeUnknownContradictionTriageContradictionListPayloadResult(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(ContradictionTriage.ContradictionListPayload)]),
+          ([query]) => {
+            const encoded = Result.getOrThrow(encodeContradictionTriageContradictionListPayloadResult(query));
+            const decoded = Result.getOrThrow(decodeUnknownContradictionTriageContradictionListPayloadResult(encoded));
 
-        return equivalent(decoded, query);
-      }),
-      fcRuns(25)
-    );
+            return equivalent(decoded, query);
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   beforeAll(() => {

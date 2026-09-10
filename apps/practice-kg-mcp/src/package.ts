@@ -77,8 +77,8 @@ const TargetSpecs = {
   },
 } as const satisfies Record<Exclude<PackageTarget, "all">, Record<string, string>>;
 
-const target = Flag.choice("target", PackageTarget.literals).pipe(Flag.withDefault("all" satisfies PackageTarget));
-const output = Flag.directory("output").pipe(Flag.withDefault("apps/practice-kg-mcp/dist/mcpb"));
+const target = Flag.Literals("target", PackageTarget.literals).pipe(Flag.withDefault("all" satisfies PackageTarget));
+const output = Flag.Directory("output").pipe(Flag.withDefault("apps/practice-kg-mcp/dist/mcpb"));
 
 const run = Effect.fn("PracticeKgPackage.run")(function* (
   command: ReadonlyArray<string>,

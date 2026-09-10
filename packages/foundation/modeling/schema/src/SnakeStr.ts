@@ -31,18 +31,12 @@ export const SnakeCaseStr = NonEmptyTrimmedStr.pipe(
     S.isPattern(/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/, {
       message: "Must be SnakeCase format",
     })
-  )
-)
-  .annotate({
-    toArbitrary: () => (fc) =>
-      fc.stringMatching(/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/).map((value) => value as NonEmptyTrimmedStr),
+  ),
+  S.brand("SnakeCaseStr"),
+  $I.annoteSchema("SnakeCaseStr", {
+    description: "A branded snake_case string.",
   })
-  .pipe(
-    S.brand("SnakeCaseStr"),
-    $I.annoteSchema("SnakeCaseStr", {
-      description: "A branded snake_case string.",
-    })
-  );
+);
 
 /**
  * Type for {@link SnakeCaseStr}.

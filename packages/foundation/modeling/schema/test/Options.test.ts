@@ -1,9 +1,10 @@
 import { fcRuns } from "@beep/fc-runs";
 import { OptionFromOptionalNullishKey } from "@beep/schema/Options";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const NicknamePayload = S.Struct({
   nickname: OptionFromOptionalNullishKey(S.String),
@@ -14,7 +15,7 @@ const HomepagePayload = S.Struct({
   homepage: OptionFromOptionalNullishKey({ schema: S.URLFromString, onNoneEncoding: null }),
 });
 const encodeHomepagePayloadSync = S.encodeSync(HomepagePayload);
-const NicknamePayloadArbitrary = S.toArbitrary(NicknamePayload)(fc);
+const NicknamePayloadArbitrary = Arbitrary.schema(NicknamePayload);
 
 describe("OptionFromOptionalNullishKey", () => {
   it("decodes omitted, null, and undefined keys as None", () => {
@@ -39,11 +40,18 @@ describe("OptionFromOptionalNullishKey", () => {
   });
 
   it("round-trips Option values derived from the source schema", () => {
-    fc.assert(
-      fc.property(NicknamePayloadArbitrary, (payload) => {
-        expect(decodeUnknownNicknamePayloadSync(encodeNicknamePayloadSync(payload))).toEqual(payload);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([NicknamePayloadArbitrary]),
+          ([payload]) => {
+            expect(decodeUnknownNicknamePayloadSync(encodeNicknamePayloadSync(payload))).toEqual(payload);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

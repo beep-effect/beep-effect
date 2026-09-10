@@ -18,7 +18,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePackageJson2 = S.decodeEffect(PackageJson);
 const decodeNpmPackageJsonFieldsPeerDependenciesMetaSync = S.decodeSync(NpmPackageJson.fields.peerDependenciesMeta);
@@ -33,72 +33,100 @@ const isPackageJson = S.is(PackageJson);
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
 const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll("~1", "/").replaceAll("~0", "~");
-const PackageJsonNameArbitrary = S.toArbitrary(PackageJson.fields.name)(fc);
-const PackageJsonDependenciesArbitrary = S.toArbitrary(PackageJson.fields.dependencies)(fc);
-const NpmPackageJsonPeerDependenciesMetaArbitrary = S.toArbitrary(NpmPackageJson.fields.peerDependenciesMeta)(fc);
+const PackageJsonNameArbitrary = Arbitrary.schema(PackageJson.fields.name);
+const PackageJsonDependenciesArbitrary = Arbitrary.schema(PackageJson.fields.dependencies);
+const NpmPackageJsonPeerDependenciesMetaArbitrary = Arbitrary.schema(NpmPackageJson.fields.peerDependenciesMeta);
 // `PublishConfig`'s `exports` field is a recursive suspend()-based schema
 // without a finite arbitrary generation path (pre-existing, unrelated to the
 // `PublishConfigBase` field-literal conversion below); this arbitrary covers
 // PublishConfigBase's non-recursive fields to exercise the StructWithRest
 // composition round-trip.
-const PublishConfigCoreArbitrary = S.toArbitrary(
+const PublishConfigCoreArbitrary = Arbitrary.schema(
   S.Struct({
     access: S.optionalKey(S.Literals(["public", "restricted"] as const)),
     tag: S.optionalKey(S.String),
     registry: S.optionalKey(S.String),
     provenance: S.optionalKey(S.Boolean),
   })
-)(fc);
+);
 
 describe("PackageJson schema", () => {
   describe("valid structures", () => {
     it("derives repo package names from the production field schema arbitrary", () => {
-      fc.assert(
-        fc.property(PackageJsonNameArbitrary, (name) => {
-          const decoded = decodePackageJson({ name });
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([PackageJsonNameArbitrary]),
+            ([name]) => {
+              const decoded = decodePackageJson({ name });
 
-          expect(isPackageJson(decoded)).toBe(true);
-          expect(decoded.name).toBe(name);
-        }),
-        fcRuns(20)
-      );
+              expect(isPackageJson(decoded)).toBe(true);
+              expect(decoded.name).toBe(name);
+
+              return true;
+            },
+            fcRuns(20)
+          )
+        )._tag
+      ).toBe("Passed");
     });
 
     it("round-trips schema-derived package.json dependency maps through the encoded wire shape", () => {
-      fc.assert(
-        fc.property(PackageJsonDependenciesArbitrary.filter(O.isSome), (value) => {
-          const encoded = encodePackageJsonFieldsDependenciesSync(value);
-          const decoded = decodePackageJsonFieldsDependenciesSync(encoded);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.filter(PackageJsonDependenciesArbitrary, O.isSome)]),
+            ([value]) => {
+              const encoded = encodePackageJsonFieldsDependenciesSync(value);
+              const decoded = decodePackageJsonFieldsDependenciesSync(encoded);
 
-          expect(decoded).toEqual(value);
-        }),
-        fcRuns(20)
-      );
+              expect(decoded).toEqual(value);
+
+              return true;
+            },
+            fcRuns(20)
+          )
+        )._tag
+      ).toBe("Passed");
     });
 
     it("round-trips schema-derived npm peer dependency metadata through the encoded wire shape", () => {
-      fc.assert(
-        fc.property(NpmPackageJsonPeerDependenciesMetaArbitrary.filter(O.isSome), (value) => {
-          const encoded = encodeNpmPackageJsonFieldsPeerDependenciesMetaSync(value);
-          const decoded = decodeNpmPackageJsonFieldsPeerDependenciesMetaSync(encoded);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.filter(NpmPackageJsonPeerDependenciesMetaArbitrary, O.isSome)]),
+            ([value]) => {
+              const encoded = encodeNpmPackageJsonFieldsPeerDependenciesMetaSync(value);
+              const decoded = decodeNpmPackageJsonFieldsPeerDependenciesMetaSync(encoded);
 
-          expect(decoded).toEqual(value);
-        }),
-        fcRuns(20)
-      );
+              expect(decoded).toEqual(value);
+
+              return true;
+            },
+            fcRuns(20)
+          )
+        )._tag
+      ).toBe("Passed");
     });
 
     it("round-trips schema-derived package.json publishConfig through the encoded wire shape", () => {
-      fc.assert(
-        fc.property(PublishConfigCoreArbitrary, (core) => {
-          const value = O.some(core);
-          const encoded = encodePackageJsonFieldsPublishConfigSync(value);
-          const decoded = decodePackageJsonFieldsPublishConfigSync(encoded);
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([PublishConfigCoreArbitrary]),
+            ([core]) => {
+              const value = O.some(core);
+              const encoded = encodePackageJsonFieldsPublishConfigSync(value);
+              const decoded = decodePackageJsonFieldsPublishConfigSync(encoded);
 
-          expect(decoded).toEqual(value);
-        }),
-        { numRuns: 20 }
-      );
+              expect(decoded).toEqual(value);
+
+              return true;
+            },
+            { runs: 20 }
+          )
+        )._tag
+      ).toBe("Passed");
     });
 
     it("decodes minimal package.json (name only)", () => {

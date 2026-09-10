@@ -40,12 +40,11 @@ const isHttpsNoQueryRedirect = (value: unknown): value is string => {
 const FreshbooksRedirectUri = S.NonEmptyString.check(
   S.makeFilter(isHttpsNoQueryRedirect, {
     message: "FreshBooks redirect URI must be an exact-match HTTPS URL with no query string or fragment.",
+    arbitraryConstraint: { patterns: [{ source: "^https://[a-z]{1,12}\\.example(?:/[a-z0-9]{1,12})?$", flags: "" }] },
   })
 ).pipe(
   $I.annoteSchema("FreshbooksRedirectUri", {
     description: "Exact-match HTTPS redirect URI (no query or fragment) registered for the OAuth application.",
-    toArbitrary: () => (fc) =>
-      fc.constantFrom("https://localhost:8443/callback", "https://app.example.com/oauth/callback"),
   })
 );
 
@@ -100,11 +99,11 @@ export const FRESHBOOKS_AUTH_URL = "https://auth.freshbooks.com";
 export const FreshbooksUrl = S.NonEmptyString.check(
   S.makeFilter(isFreshbooksUrl, {
     message: "FreshBooks URL must be an absolute URL string.",
+    arbitraryConstraint: { patterns: [{ source: "^https?://[a-z]{1,12}\\.example(?:/[a-z0-9]{1,12})?$", flags: "" }] },
   })
 ).pipe(
   $I.annoteSchema("FreshbooksUrl", {
     description: "Absolute URL string accepted by the FreshBooks driver.",
-    toArbitrary: () => (fc) => fc.webUrl(),
   })
 );
 
@@ -151,7 +150,6 @@ export const FreshbooksBaseUrl = S.String.pipe(
   ),
   $I.annoteSchema("FreshbooksBaseUrl", {
     description: "FreshBooks API base URL normalized without trailing slashes.",
-    toArbitrary: () => (fc) => fc.webUrl().map(normalizeFreshbooksBaseUrl),
   })
 );
 

@@ -262,6 +262,7 @@ const isSafeImageUrlAttribute = isSafeUrlAttributeWith(hasAllowedImageScheme);
  */
 export const SafeUrlAttribute = S.String.check(
   S.makeFilter(isSafeUrlAttribute, {
+    arbitraryConstraint: { patterns: [/^(https:\/\/example\.test)?\/[a-z0-9]{1,30}$/] },
     identifier: $I`SafeUrlAttributeCheck`,
     title: "Safe HTML URL Attribute",
     description: "Checks the conservative browser-output URL policy.",
@@ -311,6 +312,7 @@ export type SafeUrlAttribute = typeof SafeUrlAttribute.Type;
  */
 export const SafeImageUrlAttribute = S.String.check(
   S.makeFilter(isSafeImageUrlAttribute, {
+    arbitraryConstraint: { patterns: [/^(https:\/\/example\.test)?\/[a-z0-9]{1,30}\.png$/] },
     identifier: $I`SafeImageUrlAttributeCheck`,
     title: "Safe HTML Image URL Attribute",
     description: "Checks the conservative image-source URL policy.",

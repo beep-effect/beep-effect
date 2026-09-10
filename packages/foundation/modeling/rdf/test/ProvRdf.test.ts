@@ -30,7 +30,7 @@ import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { Literal } from "@beep/rdf/Rdf";
 
 const decodeProvBundleResult = S.decodeResult(ProvBundle);
@@ -178,33 +178,39 @@ describe("ProvRdf", () => {
   );
 
   it("round-trips schema-derived supported PROV records without RDF loss", () => {
-    const encodableBundle = S.toArbitrary(RoundTripEntitySeed)(fc).map(({ index, value }) =>
-      ProvBundle.make({
-        records: [
-          Entity.make({
-            id: O.some(ObjectRef.make(`urn:beep:prov-property:${index}`)),
-            value: O.some(value),
-          }),
-        ],
-      })
+    const encodableBundle = Arbitrary.schema(RoundTripEntitySeed).pipe(
+      Arbitrary.map(({ index, value }) =>
+        ProvBundle.make({
+          records: [
+            Entity.make({
+              id: O.some(ObjectRef.make(`urn:beep:prov-property:${index}`)),
+              value: O.some(value),
+            }),
+          ],
+        })
+      )
     );
-    fc.assert(
-      fc.property(encodableBundle, (bundle) =>
-        Result.match(provBundleToDataset(bundle), {
-          onFailure: () => false,
-          onSuccess: (dataset) =>
-            Result.match(datasetToProvBundle(dataset), {
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([encodableBundle]),
+          ([bundle]) =>
+            Result.match(provBundleToDataset(bundle), {
               onFailure: () => false,
-              onSuccess: (decoded) =>
-                Result.match(provBundleToDataset(decoded), {
+              onSuccess: (dataset) =>
+                Result.match(datasetToProvBundle(dataset), {
                   onFailure: () => false,
-                  onSuccess: (reencoded) => areDatasetsEquivalent(dataset, reencoded),
+                  onSuccess: (decoded) =>
+                    Result.match(provBundleToDataset(decoded), {
+                      onFailure: () => false,
+                      onSuccess: (reencoded) => areDatasetsEquivalent(dataset, reencoded),
+                    }),
                 }),
             }),
-        })
-      ),
-      { numRuns: 100 }
-    );
+          { runs: 100 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(

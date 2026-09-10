@@ -528,7 +528,7 @@ const normalizeSubdivisions = Effect.fn("SyncDataToTs.Iso3166.normalizeSubdivisi
 });
 
 const readRequiredRedactedConfig = (key: string): Effect.Effect<Redacted.Redacted<string>, SyncDataToTsError> =>
-  Config.redacted(key).pipe(
+  Config.Redacted(key).pipe(
     Effect.mapError((cause) =>
       SyncDataToTsError.make({
         message: `${key} is required for the authenticated ISO 3166 sync target.`,
@@ -561,7 +561,7 @@ const parseAuthHeader = (value: string): O.Option<readonly [string, string]> => 
 };
 
 const authHeadersFromConfig = Effect.fn("SyncDataToTs.Iso3166.authHeadersFromConfig")(function* () {
-  const authHeader = yield* Config.redacted(ISO3166_AUTH_HEADER_ENV).pipe(
+  const authHeader = yield* Config.Redacted(ISO3166_AUTH_HEADER_ENV).pipe(
     Config.option,
     Effect.mapError((cause) =>
       SyncDataToTsError.make({

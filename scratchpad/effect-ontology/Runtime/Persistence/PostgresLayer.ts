@@ -86,9 +86,9 @@ export const PostgresConfig = S.Struct({
  */
 export type PostgresConfig = typeof PostgresConfig.Type;
 
-const PostgresPortConfig = Config.number("POSTGRES_PORT").pipe(
+const PostgresPortConfig = Config.Number("POSTGRES_PORT").pipe(
   Config.withDefault(5432),
-  Config.mapOrFail(
+  Config.mapEffect(
     flow(Port.decodeEffect, Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );
@@ -138,14 +138,14 @@ const PostgresPortConfig = Config.number("POSTGRES_PORT").pipe(
  * @since 0.0.0
  */
 export const PostgresConfigFromEnv = Config.all({
-  host: Config.string("POSTGRES_HOST").pipe(Config.withDefault("localhost")),
+  host: Config.String("POSTGRES_HOST").pipe(Config.withDefault("localhost")),
   port: PostgresPortConfig,
-  database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
-  username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
-  password: Config.redacted("POSTGRES_PASSWORD"),
-  ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
+  database: Config.String("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
+  username: Config.String("POSTGRES_USER").pipe(Config.withDefault("workflow")),
+  password: Config.Redacted("POSTGRES_PASSWORD"),
+  ssl: Config.Boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
 }).pipe(
-  Config.mapOrFail(
+  Config.mapEffect(
     flow(PostgresConfig.decodeEffect, Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );

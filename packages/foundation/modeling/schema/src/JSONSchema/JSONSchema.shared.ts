@@ -5,7 +5,7 @@
  * Everything here is dialect-locked to draft-2020-12: leaf constraints carry
  * the spec-MUST invariants (non-negative counts, positive `multipleOf`, anchor
  * grammar, URI-reference syntax) so that invalid keyword values are
- * unrepresentable, and every constrained leaf ships a `toArbitrary` annotation
+ * unrepresentable, and constrained leaves carry native arbitrary generation constraints
  * so schema-derived generation always satisfies its own checks.
  *
  * @packageDocumentation
@@ -17,8 +17,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LiteralKit } from "../LiteralKit/index.ts";
-
-const decodeUnknownJsonOption = S.decodeUnknownOption(S.Json);
 
 /**
  * Identity composer for every schema in the JSONSchema module.
@@ -312,7 +310,6 @@ const NonNegativeCountCheck = S.isGreaterThanOrEqualTo(0, {
 export const NonNegativeCount = S.Int.check(NonNegativeCountCheck).pipe(
   $I.annoteSchema("NonNegativeCount", {
     description: "Non-negative integer count bound.",
-    toArbitrary: () => (fc) => fc.integer({ min: 0, max: 1000 }),
   })
 );
 
@@ -360,7 +357,6 @@ const PositiveNumberCheck = S.isGreaterThan(0, {
 export const PositiveNumber = S.Finite.check(PositiveNumberCheck).pipe(
   $I.annoteSchema("PositiveNumber", {
     description: "Finite number strictly greater than zero.",
-    toArbitrary: () => (fc) => fc.oneof(fc.integer({ min: 1, max: 1000 }), fc.constantFrom(0.5, 0.25, 1.5, 10)),
   })
 );
 
@@ -399,6 +395,7 @@ const RegexCompilesCheck = S.makeFilter<string>(
   (value) => compilesAsRegExp(value) || "must be a valid ECMA-262 regular expression",
   {
     identifier: $I`RegexCompilesCheck`,
+    arbitraryConstraint: { patterns: [{ source: "^[a-zA-Z0-9._-]*$", flags: "" }] },
     title: "Valid ECMA-262 regular expression",
     description: "The `pattern` keyword and `patternProperties` keys should hold compilable regular expressions.",
   }
@@ -447,17 +444,6 @@ export const RegexKeysCheck = S.makeFilter<{ readonly [key: string]: unknown }>(
   }
 );
 
-const safeRegexSources = [
-  "^$",
-  ".*",
-  "^[a-z]+$",
-  "^[0-9]{1,3}$",
-  "^[A-Za-z_][A-Za-z0-9_]*$",
-  "^x-",
-  "a|b",
-  "^\\d+(\\.\\d+)?$",
-];
-
 /**
  * A string that compiles as an ECMA-262 regular expression — the value space
  * of `pattern` and the key space of `patternProperties`. Kept as a string
@@ -479,7 +465,6 @@ const safeRegexSources = [
 export const RegexPatternString = S.String.check(RegexCompilesCheck).pipe(
   $I.annoteSchema("RegexPatternString", {
     description: "ECMA-262-compilable regular expression source.",
-    toArbitrary: () => (fc) => fc.constantFrom(...safeRegexSources),
   })
 );
 
@@ -529,7 +514,6 @@ const AnchorNameCheck = S.isPattern(anchorNamePattern, {
 export const AnchorName = S.String.check(AnchorNameCheck).pipe(
   $I.annoteSchema("AnchorName", {
     description: "Draft-2020-12 anchor name.",
-    toArbitrary: () => (fc) => fc.constantFrom("a", "node", "_anchor", "A-1.b_c", "Z9"),
   })
 );
 
@@ -660,6 +644,7 @@ const parseUriReference = (value: string): UriReferenceParts | undefined => {
 
 const UriReferenceCheck = S.makeFilter<string>((value) => parseUriReference(value) !== undefined, {
   identifier: $I`UriReferenceCheck`,
+  arbitraryConstraint: { patterns: [{ source: "^[A-Za-z0-9/._~-]*$", flags: "" }] },
   title: "URI-Reference",
   description: "RFC 3986 URI-Reference syntax with valid ASCII characters, percent encoding, and structure.",
   message: "must be a valid RFC 3986 URI-Reference",
@@ -687,16 +672,6 @@ const UriReferenceCheck = S.makeFilter<string>((value) => parseUriReference(valu
 export const UriReferenceString = S.String.check(UriReferenceCheck).pipe(
   $I.annoteSchema("UriReferenceString", {
     description: "RFC 3986 URI-Reference.",
-    toArbitrary: () => (fc) =>
-      fc.constantFrom(
-        "#/$defs/User",
-        "#/$defs/Item",
-        "#/$defs/A1",
-        "#",
-        "https://example.com/schema.json",
-        "other.json#/$defs/T",
-        "urn:example:schema"
-      ),
   })
 );
 
@@ -748,6 +723,7 @@ const isNormalizedAbsoluteUri = (value: string): boolean => {
 
 const AbsoluteUriCheck = S.makeFilter<string>(isNormalizedAbsoluteUri, {
   identifier: $I`AbsoluteUriCheck`,
+  arbitraryConstraint: { patterns: [{ source: "^https://[a-z]{1,12}\\.example(?:/[a-z]{0,12})?$", flags: "" }] },
   title: "Normalized absolute URI",
   description: "Normalized absolute RFC 3986 URI with a scheme.",
   message: "must be a valid normalized absolute URI",
@@ -769,15 +745,9 @@ const AbsoluteUriCheck = S.makeFilter<string>(isNormalizedAbsoluteUri, {
  * @category models
  * @since 0.0.0
  */
-export const AbsoluteUriString = UriReferenceString.check(AbsoluteUriCheck).pipe(
+export const AbsoluteUriString = S.String.check(AbsoluteUriCheck).pipe(
   $I.annoteSchema("AbsoluteUriString", {
     description: "Normalized absolute RFC 3986 URI.",
-    toArbitrary: () => (fc) =>
-      fc.constantFrom(
-        "https://json-schema.org/draft/2020-12/schema",
-        "https://json-schema.org/draft/2020-12/vocab/core",
-        "urn:example:vocabulary"
-      ),
   })
 );
 
@@ -800,6 +770,7 @@ export type AbsoluteUriString = typeof AbsoluteUriString.Type;
 
 const IdUriReferenceCheck = S.isPattern(/^[^#]*#?$/, {
   identifier: $I`IdUriReferenceCheck`,
+  arbitraryConstraint: { patterns: [{ source: "^[A-Za-z0-9/._~-]*$", flags: "" }] },
   title: "$id URI-Reference",
   description: "Draft-2020-12 `$id` URI-Reference without a non-empty fragment.",
   message: "must not contain a non-empty fragment",
@@ -826,8 +797,6 @@ const IdUriReferenceCheck = S.isPattern(/^[^#]*#?$/, {
 export const IdUriReferenceString = UriReferenceString.check(IdUriReferenceCheck).pipe(
   $I.annoteSchema("IdUriReferenceString", {
     description: "Draft-2020-12 `$id` URI-Reference without a non-empty fragment.",
-    toArbitrary: () => (fc) =>
-      fc.constantFrom("", "#", "schema.json", "https://example.com/schema.json", "urn:example:schema"),
   })
 );
 
@@ -879,7 +848,6 @@ const NotCanonicalKeywordCheck = S.makeFilter<string>(
 export const ExtensionKey = S.String.check(NotCanonicalKeywordCheck).pipe(
   $I.annoteSchema("ExtensionKey", {
     description: "Extension keyword name (any string that is not a canonical keyword).",
-    toArbitrary: () => (fc) => fc.constantFrom("x-a", "x-vendor", "x-beep", "x-note", "x-flag", "x-meta"),
   })
 );
 
@@ -921,7 +889,6 @@ export type ExtensionKey = typeof ExtensionKey.Type;
 export const JsonValue = S.Json.pipe(
   $I.annoteSchema("JsonValue", {
     description: "Any JSON value (depth-bounded generation).",
-    toArbitrary: () => (fc) => fc.jsonValue({ maxDepth: 2 }).map(decodeUnknownJsonOption).map(O.getOrNull),
   })
 );
 
@@ -985,14 +952,6 @@ export const ExtensionsBag = S.Record(S.String, S.Unknown)
   .pipe(
     $I.annoteSchema("ExtensionsBag", {
       description: "Preserved non-canonical keywords, keyed by extension name.",
-      toArbitrary: () => (fc) =>
-        fc.dictionary(
-          fc.constantFrom("x-a", "x-vendor", "x-beep", "x-note", "x-flag", "x-meta"),
-          fc.jsonValue({ maxDepth: 2 }),
-          {
-            maxKeys: 3,
-          }
-        ),
     })
   );
 

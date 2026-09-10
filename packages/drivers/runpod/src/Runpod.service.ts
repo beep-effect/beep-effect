@@ -843,8 +843,8 @@ const makeRunpodFromConfig = Effect.fn("Runpod.makeRunpodFromConfig")(function* 
 });
 
 const makeRunpodFromEnvironment = Effect.fn("Runpod.makeRunpodFromEnvironment")(function* () {
-  const apiKey = yield* Config.redacted("RUNPOD_API_KEY").pipe(Config.option);
-  const apiUrl = yield* Config.string("RUNPOD_API_URL").pipe(Config.withDefault(RUNPOD_API_URL));
+  const apiKey = yield* Config.Redacted("RUNPOD_API_KEY").pipe(Config.option);
+  const apiUrl = yield* Config.String("RUNPOD_API_URL").pipe(Config.withDefault(RUNPOD_API_URL));
 
   return yield* makeRunpodFromConfig(
     resolveConfig(

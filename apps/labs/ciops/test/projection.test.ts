@@ -11,7 +11,7 @@ import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy";
 import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection";
 import { admissionWeightFor, projectSchedule } from "@/projection/Engine";
@@ -56,7 +56,7 @@ const readPolicy = Effect.fn("CiOpsProjectionTest.readPolicy")(function* (): Eff
   return yield* decodeAdmissionPolicyParams(source);
 });
 
-const PendingRequestArbitrary = S.toArbitrary(PendingRequest)(fc);
+const PendingRequestArbitrary = Arbitrary.schema(PendingRequest);
 const proposalEquivalent = S.toEquivalence(ScheduleProposal);
 
 const normalizePending = (
@@ -72,7 +72,9 @@ const normalizePending = (
   );
 
 const pendingArbitrary = (policy: AdmissionPolicyParams) =>
-  fc.array(PendingRequestArbitrary, { maxLength: 12 }).map((requests) => normalizePending(policy, requests));
+  Arbitrary.schema(S.Array(PendingRequest).check(S.isMaxLength(12))).pipe(
+    Arbitrary.map((requests) => normalizePending(policy, requests))
+  );
 
 const admittedLine = (nonce: string, kind: AdmissionWorkKind, weightTokens: number, admittedAtMillis: number): string =>
   JSON.stringify({
@@ -139,21 +141,26 @@ describe("@beep/ciops S7 projection", () => {
       const context = yield* Effect.context<never>();
       const runSync = Effect.runSyncWith(context);
 
-      fc.assert(
-        fc.property(pendingArbitrary(policy), (pending) => {
-          const input = inputFor(policy, pending);
-          const first = runSync(projectSchedule(input));
-          const second = runSync(projectSchedule(input));
-          const firstDocument = runSync(emitScheduleAbox(first));
-          const secondDocument = runSync(emitScheduleAbox(second));
+      expect(
+        (yield* Arbitrary.checkEffect(
+          pendingArbitrary(policy),
+          (pending) => {
+            const input = inputFor(policy, pending);
+            const first = runSync(projectSchedule(input));
+            const second = runSync(projectSchedule(input));
+            const firstDocument = runSync(emitScheduleAbox(first));
+            const secondDocument = runSync(emitScheduleAbox(second));
 
-          expect(proposalEquivalent(first, second)).toBe(true);
-          expect(firstDocument.content).toBe(secondDocument.content);
-          expect(firstDocument.content).toContain("@prefix ciops: <https://oip.law/ontology/ci-ops#> .");
-          expect(firstDocument.content).toContain("@prefix ciops-prov: <https://oip.law/ontology/ci-ops-prov#> .");
-        }),
-        fcRuns(64)
-      );
+            expect(proposalEquivalent(first, second)).toBe(true);
+            expect(firstDocument.content).toBe(secondDocument.content);
+            expect(firstDocument.content).toContain("@prefix ciops: <https://oip.law/ontology/ci-ops#> .");
+            expect(firstDocument.content).toContain("@prefix ciops-prov: <https://oip.law/ontology/ci-ops-prov#> .");
+
+            return true;
+          },
+          fcRuns(64)
+        ))._tag
+      ).toBe("Passed");
     }).pipe(provideScopedLayer(BunFileSystem.layer))
   );
 
@@ -163,20 +170,25 @@ describe("@beep/ciops S7 projection", () => {
       const context = yield* Effect.context<never>();
       const runSync = Effect.runSyncWith(context);
 
-      fc.assert(
-        fc.property(pendingArbitrary(policy), (pending) => {
-          const proposal = runSync(projectSchedule(inputFor(policy, pending)));
-          let active = 0;
-          for (const step of proposal.steps) {
-            const scope: ScheduleScope = step.scope;
-            expect(ScheduleScope.is.admission(scope)).toBe(true);
-            active += step.request.weightTokens;
-            expect(step.activeTokenTotalAfter).toBe(active);
-            expect(active).toBeLessThanOrEqual(policy.capacityMaxTokens);
-          }
-        }),
-        fcRuns(64)
-      );
+      expect(
+        (yield* Arbitrary.checkEffect(
+          pendingArbitrary(policy),
+          (pending) => {
+            const proposal = runSync(projectSchedule(inputFor(policy, pending)));
+            let active = 0;
+            for (const step of proposal.steps) {
+              const scope: ScheduleScope = step.scope;
+              expect(ScheduleScope.is.admission(scope)).toBe(true);
+              active += step.request.weightTokens;
+              expect(step.activeTokenTotalAfter).toBe(active);
+              expect(active).toBeLessThanOrEqual(policy.capacityMaxTokens);
+            }
+
+            return true;
+          },
+          fcRuns(64)
+        ))._tag
+      ).toBe("Passed");
     }).pipe(provideScopedLayer(BunFileSystem.layer))
   );
 
@@ -186,24 +198,29 @@ describe("@beep/ciops S7 projection", () => {
       const context = yield* Effect.context<never>();
       const runSync = Effect.runSyncWith(context);
 
-      fc.assert(
-        fc.property(pendingArbitrary(policy), (pending) => {
-          const proposal = runSync(projectSchedule(inputFor(policy, pending)));
-          const expected = HashSet.fromIterable(A.map(pending, (request) => request.nonce));
-          const projected = HashSet.fromIterable(
-            A.appendAll(
-              A.map(proposal.steps, (step) => step.request.nonce),
-              A.map(proposal.deferredTail, (request) => request.nonce)
-            )
-          );
+      expect(
+        (yield* Arbitrary.checkEffect(
+          pendingArbitrary(policy),
+          (pending) => {
+            const proposal = runSync(projectSchedule(inputFor(policy, pending)));
+            const expected = HashSet.fromIterable(A.map(pending, (request) => request.nonce));
+            const projected = HashSet.fromIterable(
+              A.appendAll(
+                A.map(proposal.steps, (step) => step.request.nonce),
+                A.map(proposal.deferredTail, (request) => request.nonce)
+              )
+            );
 
-          expect(HashSet.size(projected)).toBe(A.length(pending));
-          expect(HashSet.size(expected)).toBe(A.length(pending));
-          expect(HashSet.isSubset(projected, expected)).toBe(true);
-          expect(HashSet.isSubset(expected, projected)).toBe(true);
-        }),
-        fcRuns(64)
-      );
+            expect(HashSet.size(projected)).toBe(A.length(pending));
+            expect(HashSet.size(expected)).toBe(A.length(pending));
+            expect(HashSet.isSubset(projected, expected)).toBe(true);
+            expect(HashSet.isSubset(expected, projected)).toBe(true);
+
+            return true;
+          },
+          fcRuns(64)
+        ))._tag
+      ).toBe("Passed");
     }).pipe(provideScopedLayer(BunFileSystem.layer))
   );
 
@@ -213,12 +230,14 @@ describe("@beep/ciops S7 projection", () => {
       const context = yield* Effect.context<never>();
       const runSync = Effect.runSyncWith(context);
 
-      fc.assert(
-        fc.property(
-          PendingRequestArbitrary,
-          PendingRequestArbitrary,
-          fc.integer({ min: 0, max: 1_000_000 }),
-          (publishSeed, verifySeed, enqueuedAtMillis) => {
+      expect(
+        (yield* Arbitrary.checkEffect(
+          Arbitrary.all([
+            PendingRequestArbitrary,
+            PendingRequestArbitrary,
+            Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 1_000_000 }))),
+          ]),
+          ([publishSeed, verifySeed, enqueuedAtMillis]) => {
             const publish = PendingRequest.make({
               ...publishSeed,
               nonce: "publish-request",
@@ -239,10 +258,12 @@ describe("@beep/ciops S7 projection", () => {
             const proposal = runSync(projectSchedule(inputFor(policy, [verify, publish], emptyTokenLedger, instant)));
 
             expect(pipeHeadNonce(proposal)).toBe(publish.nonce);
-          }
-        ),
-        fcRuns(48)
-      );
+
+            return true;
+          },
+          fcRuns(48)
+        ))._tag
+      ).toBe("Passed");
 
       const saturatedLedger = TokenLedgerState.make({
         activeGrants: HashMap.make(

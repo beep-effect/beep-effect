@@ -3,11 +3,11 @@ import { Did } from "@beep/schema/Did";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isDid2 = S.is(Did);
 
-const DidArbitrary = S.toArbitrary(Did)(fc);
+const DidArbitrary = Arbitrary.schema(Did);
 const decodeDid = S.decodeUnknownEffect(Did);
 
 const invalidDidExamples = [
@@ -55,13 +55,20 @@ describe("Did", () => {
   );
 
   it("derives schema arbitrary values that remain valid DID Core identifiers", () => {
-    fc.assert(
-      fc.property(DidArbitrary, (did) => {
-        expect(isDid2(did)).toBe(true);
-        expect(did).toMatch(/^did:[a-z0-9]+:/u);
-        expect(did).not.toMatch(/[/?#\s]/u);
-      }),
-      fcRuns(100)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([DidArbitrary]),
+          ([did]) => {
+            expect(isDid2(did)).toBe(true);
+            expect(did).toMatch(/^did:[a-z0-9]+:/u);
+            expect(did).not.toMatch(/[/?#\s]/u);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
