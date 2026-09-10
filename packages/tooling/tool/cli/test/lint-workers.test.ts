@@ -34,8 +34,24 @@ const runShardCommand = Effect.fnUntraced(function* (args: ReadonlyArray<string>
   yield* run(args, env).pipe(
     Effect.provideService(FileSystem.FileSystem, {
       ...fs,
-      exists: () => Effect.succeed(true),
+      exists: (file) => (Str.startsWith("/")(file) ? fs.exists(file) : Effect.succeed(true)),
       makeDirectory: () => Effect.void,
+    })
+  );
+});
+const runSweepCommand = Effect.fnUntraced(function* (
+  args: ReadonlyArray<string>,
+  content: string,
+  env: Record<string, string> = {}
+) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* run(args, env).pipe(
+    Effect.provideService(FileSystem.FileSystem, {
+      ...fs,
+      readFileString: (file, ...options) =>
+        Str.endsWith("standards/lint-policy.sweeps.jsonc")(file)
+          ? Effect.succeed(content)
+          : fs.readFileString(file, ...options),
     })
   );
 });
@@ -81,6 +97,7 @@ describe("thin lint workers", { concurrent: false }, () => {
         yield* run(["policy-fingerprint", "--write"]);
         const file = `${root}/standards/policy-tools.fingerprint.json`;
         const declaration = yield* fs.readFileString(file);
+        expect(declaration).toContain("standards/lint-policy.sweeps.jsonc");
         const turbo = yield* fs.readFileString(turboFile);
         expect(turbo).toContain('"untouched": { "inputs": ["keep/**"] }');
         expect(Str.replace(/"inputs": \[[\s\S]*?\]/, '"inputs": []')(turbo)).toBe(turboBefore);
@@ -193,6 +210,27 @@ describe("thin lint workers", { concurrent: false }, () => {
       expect(execution.mock.calls[0]?.[0].command).toBe("./node_modules/.bin/eslint");
       expect(execution.mock.calls[0]?.[0].env?.BEEP_ESLINT_PROFILE).toBe("deprecated-apis");
       expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
+    }, providePlatform)
+  );
+  it.effect(
+    "runs full and hosted standalone deprecated sweeps through unfiltered Turbo",
+    Effect.fnUntraced(function* () {
+      const content = '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"turbo"}';
+      yield* runSweepCommand(["deprecated-apis", "--full"], content);
+      expect(execution.mock.calls[0]?.[0].args).toContain("turbo");
+      expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
+      execution.mockClear();
+      yield* runSweepCommand(["deprecated-apis"], content, { CI: "true" });
+      expect(execution.mock.calls[0]?.[0].args).toContain("turbo");
+      expect(execution.mock.calls[0]?.[0].env?.TURBO_SCM_BASE).toBeUndefined();
+    }, providePlatform)
+  );
+  it.effect(
+    "fails the standalone deprecated sweep before execution on malformed configuration",
+    Effect.fnUntraced(function* () {
+      const error = yield* runSweepCommand(["deprecated-apis", "--full"], "{}").pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "QualityTaskConfigurationError" });
+      expect(execution).not.toHaveBeenCalled();
     }, providePlatform)
   );
   it.effect(

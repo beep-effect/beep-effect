@@ -70,6 +70,7 @@
     "packages/tooling/tool/cli/src/**",
     "packages/tooling/tool/docgen/package.json",
     "packages/tooling/tool/docgen/src/**",
+    "standards/lint-policy.sweeps.jsonc",
     "standards/policy-tools.fingerprint.json",
     "tsconfig.base.json",
     "tsconfig.json",

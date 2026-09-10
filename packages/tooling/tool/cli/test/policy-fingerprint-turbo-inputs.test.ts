@@ -227,6 +227,7 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
       expect(fingerprint.inputs).not.toContain("**/package.json");
       expect(fingerprint.inputs).toContain("package.json");
       expect(fingerprint.inputs).toContain("standards/policy-tools.fingerprint.json");
+      expect(fingerprint.inputs).toContain("standards/lint-policy.sweeps.jsonc");
       const contract = yield* decodeContract(text);
       expect(contract.tasks["//#lint:policy-fingerprint"]).toEqual({ cache: true, outputs: [] });
       const manifest = yield* decodeScripts(yield* fs.readFileString(`${root}/package.json`));
@@ -264,6 +265,10 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
       yield* writeFile(root, "packages/helper/src/index.ts", "export const helper = 1;\n");
       yield* writeFile(root, "packages/consumer/src/index.ts", "export const consumer = 1;\n");
       yield* writeFile(root, "packages/unrelated/src/index.ts", "export const unrelated = 1;\n");
+      yield* writeJson(root, "standards/lint-policy.sweeps.jsonc", {
+        schemaVersion: "lint-policy-sweeps/v1",
+        deprecatedApis: "shards",
+      });
       const fingerprint = yield* policyToolsFingerprint(root);
       yield* writeJson(root, "standards/policy-tools.fingerprint.json", fingerprint);
       yield* writeJson(root, "turbo.json", {
@@ -279,6 +284,16 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
         },
       });
       const baseline = yield* packageHash(root, binary);
+      yield* writeJson(root, "standards/lint-policy.sweeps.jsonc", {
+        schemaVersion: "lint-policy-sweeps/v1",
+        deprecatedApis: "turbo",
+      });
+      expect(yield* packageHash(root, binary)).not.toBe(baseline);
+      yield* writeJson(root, "standards/lint-policy.sweeps.jsonc", {
+        schemaVersion: "lint-policy-sweeps/v1",
+        deprecatedApis: "shards",
+      });
+      expect(yield* packageHash(root, binary)).toBe(baseline);
       yield* writeFile(root, "packages/unrelated/src/index.ts", "export const unrelated = 2;\n");
       expect(yield* packageHash(root, binary)).toBe(baseline);
       yield* writeJson(root, "packages/unrelated/package.json", { name: "@fixture/unrelated", private: false });
