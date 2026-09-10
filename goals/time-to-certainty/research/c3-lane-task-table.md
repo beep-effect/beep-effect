@@ -1,11 +1,11 @@
 # C3 lane-to-task table — design gate
 
-Status: REVISION 6, 2026-09-10 (D6 hosted sweep, see the revision 6 paragraph; revision 5 = D15 mechanism), after one adversarial Codex review
+Status: REVISION 7, 2026-09-10 (row 2b rejected, see the revision 7 paragraph; revision 6 = D6 hosted sweep; revision 5 = D15 mechanism), after one adversarial Codex review
 (`research/c3-lane-task-table.review.md`, disposition appended there), two Greptile P1s and
 twelve Codex threads on PR #1018 (all folded; see the thread replies). Ratified by the merge of #1018 (ruling 26);
 revision 5 amends D15 and revision 6 amends D6; both are ratified by the merge of the C3.2 PR
 (rulings 29 and 30). Owner: Fable orchestrator. Rulings in
-force: 5, 6, 10, 19–30 (`research/decisions.md`). Evidence: `research/c3-turbo-facts.md` (Grok,
+force: 5, 6, 10, 19–31 (`research/decisions.md`). Evidence: `research/c3-turbo-facts.md` (Grok,
 15 Turbo 2.10 facts against the docs, plus the live-probe amendment), `research/c3-sublane-inputs.md`
 (Codex, per-lane input census with Q1/Q2), and the live probes in §0.2 (turbo 2.10.12,
 `futureFlags` on).
@@ -23,6 +23,11 @@ computed closure as its `inputs`, `lint policy-fingerprint --write` materializes
 `turbo.json`, every CLI-backed policy task depends on the root task, and `**/package.json` leaves
 the closure in favour of the closure members' manifests. The legend, §2.1, §2.2, §4, §7.2 and Q7
 follow. Ruling 28 (lane identity) supersedes the legend's lane-id sentence.
+
+Revision 7 changes (2026-09-10, after C3.2b Stage B): row 2b is measured and rejected; D6 keeps the
+shard program and the root `eslint .` for hosted full scope until a reference-aware typed program
+exists (ruling 31). The sweep switch from C3.2b Stage A is the mechanism for every later hosted
+measurement.
 
 Revision 6 changes (2026-09-10, after PR #1079's first hosted round): the hosted full-scope and
 `--full` sweeps keep their shard programs (D6; ruling 30). Per-package typed eslint costs about
@@ -753,7 +758,7 @@ governs in-file concurrency only; Turbo's process fan-out is measured, not assum
 | 0 | rulings + this table | publish `ttc/c3-package-tasks-grill` with `c3-turbo-facts.md`, `c3-sublane-inputs.md`, this file and its review | 6 |
 | 1 | C3.1 | schema + service + `lint package-scripts` + `lint policy-fingerprint` + fingerprint file + three writers + thin workers (D16) + mode branch + fleet `--write` (docgen convergence, four new keys, codegen placeholders, `beep:policy` optional until C3.3) + `codegen` split + two root gates registered + `AGENTS.md` law line | ~190 (142 manifests) |
 | 2 | C3.2 | D15 revision 5 first (`//#lint:policy-fingerprint` root task, materialized inputs, dependency edge); `lint:deprecated-apis` + `lint:jsdoc` tasks and `//#lint:jsdoc:root`; the typed invocation for local `--affected` runs; hosted full scope keeps the shard program and the root `eslint .` (revision 6); `turbo-config-proof` tasks; fixtures; before/after | ~25 |
-| 2b | C3.2b | cheap per-package typed programs: lint against the reference-keeping check overlays with `^build` declarations, hosted cold measurement of one family first; then the shard runner, its eslint cache and the root `eslint .` retire | ~15 |
+| 2b | C3.2b | **measured and rejected (revision 7)**: typescript-eslint's project mode builds programs without project references, the residual project-service pass costs the root corpus again, and 13 packages lack test overlays; landed only the versioned sweep switch (`standards/lint-policy.sweeps.jsonc`) and the record (`c3-2b-implementation.md`). Any retry must change the parser's program factory (reference-aware or a shared typed server) and exclude `dist/**` from lint inputs before a `^build` edge | ~5 |
 | 3 | C3.3 | package-local law scanner; `lint:laws` task; `//#lint:native-runtime:roots`; `scopedLawStep` retires; `beep:policy` retires from fleet (manifest touch: 2 files) and schema | ~30 |
 | 4 | C3.4 | `doctest` task, conditional package overrides (11 configs), `vitest.docs.ts` and resolver retire, `heavy.yml`, tests | ~40 |
 | 5 | C3.5 | `//#` root tasks, D9 root scripts, three-invocation plan in `lint policy` and `beep:preflight`, GithubChecks routes, knip/fallow/jsdoc-ratchet lanes on Turbo, `standards/turbo-remote-cache.md` | ~35 |
