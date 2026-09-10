@@ -417,3 +417,45 @@ by the dry runs, and no secret operation was needed for these checks.
 The results file and its named paths are the handoff. Temporary worker source fixtures were
 cleaned by their scopes; no untracked files remain. No Git writes, workspace manifest rewrite,
 protected-path edits, PLAN/packet-state flips, or Stage D work occurred. Stop after Stage C.
+
+## Stage D
+
+Orchestrator-owned (no lane): before/after accounting per §7.1(4), the PLAN ticks, and the
+publish. Measured on 2026-09-09/10 with Turbo 2.10.12.
+
+### Before (hosted, shard runner)
+
+`Heavy / Lint Policy` on `main` pushes, last five green runs before this PR: 598, 598, 610, 620,
+629 s wall (p50 610 s). Inside job 102712770178 (620 s): `lint:deprecated-apis` (28 shards,
+concurrency 4) **523.5 s**; `lint:jsdoc` (`eslint . --max-warnings=0`) **73.9 s**.
+
+### After (local worktree, concurrency 4, `--cache=local:rw`, 16-core workstation)
+
+| Run | Tasks | Cached | Wall |
+| --- | ---: | ---: | ---: |
+| cold `turbo run lint:deprecated-apis lint:jsdoc //#lint:jsdoc:root` | 277 | 0 | 12 m 50 s |
+| warm, same command, unchanged tree | 277 | 277 | 0.455 s |
+
+Cold task-seconds: `lint:deprecated-apis` 140 tasks, 2,387 s (p50 16.8 s, max 55.4 s for
+`@beep/repo-cli`); `lint:jsdoc` 135 tasks, 677 s (p50 4.9 s, max 10.4 s); `//#lint:jsdoc:root`
+1.9 s; `//#lint:policy-fingerprint` 1.9 s; 3,068 task-seconds in total, 277/277 successful.
+
+### Reading
+
+- The cold per-package typed sweep costs more wall than the 28-shard runner at the same
+  concurrency (770 s local versus 523 s hosted, on different machines): every package pays the
+  typescript-eslint project-service start instead of 28 shards sharing it. C3.6 measures this
+  on the hosted runner; the honest expectation is a slower first cold run after merge.
+- The win is reuse, which the shard runner never had: an unchanged tree replays all 277 tasks in
+  under a second, a local `beep lint policy` selects only affected packages through `--affected`,
+  and a checker or config edit reruns exactly the tasks whose inputs or fingerprint edge changed
+  (Stage A/B fixtures). Hosted PR runs read the remote cache; the per-task hit ratio on the first
+  and second hosted runs after merge is C3.6's number, not claimed here.
+- Coverage of the sweep is unchanged: 140 `lint:deprecated-apis` owners (labs included through
+  the worker's lab tolerance), 135 `lint:jsdoc` owners (the docs profile ignores labs), and the
+  root residual for root-owned files.
+
+### Stage D — files
+
+- goals/time-to-certainty/research/c3-2-implementation.md
+- goals/time-to-certainty/PLAN.md (C3.1 and C3.2 ticked)
