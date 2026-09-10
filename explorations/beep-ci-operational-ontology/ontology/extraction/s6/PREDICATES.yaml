@@ -10,7 +10,7 @@ scan:
   - does not expand variable predicates or property paths
   - does not inspect SERVICE clauses or runtime-generated query text
   - matches direct triple heads and semicolon predicate continuations only
-predicate_count: 86
+predicate_count: 87
 coverage_count: 25
 predicates:
 - predicate: ciops-prov:dependsOnWorkspace
@@ -143,14 +143,24 @@ predicates:
   used_by:
   - CQ-008
   - tests/fixtures/seed.ttl
+- predicate: ciops:dependsOn
+  status: ratified
+  term_ref: TAXONOMY.yaml#dependsOn
+  domain: importing workspace package (in one pinned repository dependency graph)
+  range: imported workspace package (connected by a direct dependency edge in that graph)
+  closure: open
+  used_by:
+  - TAXONOMY.yaml
 - predicate: ciops:dependsOnTransitive
-  status: parked-run-2
-  term_ref: DISPOSITIONS.yaml#candidate-seq-41
-  domain: unknown
-  range: unknown
+  status: ratified
+  term_ref: TAXONOMY.yaml#dependsOnTransitive
+  domain: workspace package (in one pinned graph)
+  range: workspace package (reachable by the declared Datalog fixpoint over direct dependency edges in
+    that graph)
   closure: open
   used_by:
   - CQ-004
+  - TAXONOMY.yaml
   - tests/fixtures/seed.ttl
 - predicate: ciops:dischargesObligation
   status: seed-only
@@ -296,13 +306,14 @@ predicates:
   - CQ-014
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasCurrentProposal
-  status: seed-only
-  term_ref: null
-  domain: unknown
-  range: unknown
+  status: ratified
+  term_ref: TAXONOMY.yaml#hasCurrentProposal
+  domain: VerificationEpisode (at the reference instant of a versioned projection context)
+  range: ScheduleProposal
   closure: open
   used_by:
   - CQ-020
+  - TAXONOMY.yaml
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasExecutionState
   status: parked-run-2
@@ -364,13 +375,14 @@ predicates:
   - CQ-021
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasProjectionSpecification
-  status: seed-only
-  term_ref: null
-  domain: unknown
-  range: unknown
+  status: ratified
+  term_ref: TAXONOMY.yaml#hasProjectionSpecification
+  domain: ScheduleProposal (in the represented context)
+  range: AdmissionProjectionSpecification
   closure: open
   used_by:
   - CQ-020
+  - TAXONOMY.yaml
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasScope
   status: seed-only
@@ -382,14 +394,15 @@ predicates:
   - CQ-019
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasScopeTag
-  status: seed-only
-  term_ref: null
-  domain: unknown
-  range: unknown
+  status: ratified
+  term_ref: TAXONOMY.yaml#hasScopeTag
+  domain: ScheduleStep (under the applicable tagging convention)
+  range: xsd:string
   closure: open
   used_by:
   - CQ-019
   - CQ-020
+  - TAXONOMY.yaml
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasStarvationException
   status: parked-run-2
@@ -402,14 +415,15 @@ predicates:
   - closed-world.yaml
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasStep
-  status: seed-only
-  term_ref: null
-  domain: unknown
-  range: unknown
+  status: ratified
+  term_ref: TAXONOMY.yaml#hasStep
+  domain: ScheduleProposal (fixed prescription content)
+  range: ScheduleStep
   closure: open
   used_by:
   - CQ-019
   - CQ-020
+  - TAXONOMY.yaml
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasWorkKind
   status: parked-run-2
@@ -635,14 +649,15 @@ predicates:
   - POLICY.yaml
   - graphs/abox.ttl
 - predicate: ciops:schedulesSeatRequest
-  status: seed-only
-  term_ref: null
-  domain: unknown
-  range: unknown
+  status: ratified
+  term_ref: TAXONOMY.yaml#schedulesSeatRequest
+  domain: ScheduleStep (within its containing prescription)
+  range: SeatRequest
   closure: open
   used_by:
   - CQ-019
   - CQ-020
+  - TAXONOMY.yaml
   - tests/fixtures/seed.ttl
 - predicate: ciops:schedulesWorkUnit
   status: seed-only
@@ -690,13 +705,14 @@ predicates:
   - CQ-023
   - tests/fixtures/seed.ttl
 - predicate: ciops:stepIndex
-  status: seed-only
-  term_ref: null
-  domain: unknown
-  range: unknown
+  status: ratified
+  term_ref: TAXONOMY.yaml#stepIndex
+  domain: ScheduleStep (within its containing fixed prescription; zero-based)
+  range: xsd:integer
   closure: open
   used_by:
   - CQ-020
+  - TAXONOMY.yaml
   - tests/fixtures/seed.ttl
 - predicate: ciops:surfacedByLane
   status: seed-only
@@ -893,14 +909,12 @@ coverage:
     status: seed-only
 - cq: CQ-004
   predicate_count: 2
-  ratified_count: 0
+  ratified_count: 1
   full_predicate_set_ratified: false
   predicates:
   - ciops:dependsOnTransitive
   - ciops:touchesPackage
   unratified:
-  - predicate: ciops:dependsOnTransitive
-    status: parked-run-2
   - predicate: ciops:touchesPackage
     status: seed-only
 - cq: CQ-005
@@ -1116,7 +1130,7 @@ coverage:
     status: seed-only
 - cq: CQ-019
   predicate_count: 8
-  ratified_count: 1
+  ratified_count: 4
   full_predicate_set_ratified: false
   predicates:
   - ciops:hasAffectedOutcome
@@ -1132,20 +1146,14 @@ coverage:
     status: seed-only
   - predicate: ciops:hasScope
     status: seed-only
-  - predicate: ciops:hasScopeTag
-    status: seed-only
-  - predicate: ciops:hasStep
-    status: seed-only
-  - predicate: ciops:schedulesSeatRequest
-    status: seed-only
   - predicate: ciops:schedulesWorkUnit
     status: seed-only
   - predicate: ciops:scopedByComputation
     status: seed-only
 - cq: CQ-020
   predicate_count: 7
-  ratified_count: 1
-  full_predicate_set_ratified: false
+  ratified_count: 7
+  full_predicate_set_ratified: true
   predicates:
   - ciops:hasCurrentProposal
   - ciops:hasProjectionSpecification
@@ -1154,19 +1162,7 @@ coverage:
   - ciops:schedulesSeatRequest
   - ciops:stepIndex
   - rdf:type
-  unratified:
-  - predicate: ciops:hasCurrentProposal
-    status: seed-only
-  - predicate: ciops:hasProjectionSpecification
-    status: seed-only
-  - predicate: ciops:hasScopeTag
-    status: seed-only
-  - predicate: ciops:hasStep
-    status: seed-only
-  - predicate: ciops:schedulesSeatRequest
-    status: seed-only
-  - predicate: ciops:stepIndex
-    status: seed-only
+  unratified: []
 - cq: CQ-021
   predicate_count: 6
   ratified_count: 3

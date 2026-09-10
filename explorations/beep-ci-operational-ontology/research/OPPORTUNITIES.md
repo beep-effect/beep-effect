@@ -725,3 +725,15 @@
   derives from the ratifications on disk and in the archive shelters and a candidate
   row may carry one join_ref per accepting run; then project run 2 and run 3 in one
   verified pass.
+
+## 2026-09-10: S5 amendment proof found an inherited validator typo
+
+- **Work:** running Typos on the files touched by the S5 gate amendment and
+  run-2/run-3 projection.
+- **Evidence:** Typos exited 2 on `research/scripts/validate_packet.py:10`,
+  suggesting `required` or `requires` for the docstring's misspelled plural.
+  The wording predates this lane.
+- **Handling:** changed the docstring to `required-field/query drift`; the
+  validator's rules and messages are unaffected by this spelling repair.
+- **Prevention:** include the packet's Python validators in the same touched-file
+  spelling check used for contract amendments.
