@@ -324,3 +324,142 @@ hosted lane. Repo-utils is untouched in Stage B; its Stage A acceptance remains 
 No new source module or coverage baseline was created. No Git writes, protected-path edits,
 workspace script rewrite, policy-plan edits, packet-state changes, or later-stage work occurred.
 Stop after Stage B.
+
+## Stage C
+
+Implemented only Amendment 2026-09-10 (2) on `ttc/c3-3-laws-task`, starting from the clean,
+committed Stage A/B worktree. The root residual's unsupported-flag blocker is resolved: its
+actual root script and registered Turbo task now pass, and the same-tree warm task replays.
+No git writes or graft commands ran.
+
+### Decisions and rejected alternatives
+
+1. Added `includePrefix` to `NoNativeRuntimeCommandOptions`, with constructor/decoding default
+   `""`, and wired `includePrefix: includePrefixFlag` beside `include`. Parsing uses the exact
+   `parseExcludePaths` helper already used by effect-imports, preserving comma splitting,
+   trimming, and empty-token removal. Added defaulted `includePrefixes` to the existing runtime
+   options schema before implementing its consumer. Rejected another parser or new source module.
+2. Expanded each directory prefix to `<prefix>/**/*.{ts,tsx}`, removing trailing slashes, then
+   unioned and deduplicated those globs with explicit `--include` files. The absent scope keeps
+   the existing default globs. An empty directory prefix means a supplied directory with no
+   matching sources; it scans zero files, rather than falling back to the default corpus.
+   The default empty prefix string remains an absent prefix scope, matching effect-imports.
+   Rejected treating `--include` files as directory prefixes or making prefixes select the
+   full root corpus.
+3. Reused native-runtime's existing `sourceFileGlobs` project path and diagnostic exclusions.
+   The project factory reads root compiler options by value and adds only matched files, so
+   no tsconfig corpus preload is introduced. Existing artifact, declaration, test, ecosystem,
+   and caller exclusions remain; the docs-negative glob also applies to scoped scans. No
+   detector, allowlist, shared package-project behavior, or project-factory rewrite was needed.
+4. Added four real CLI fixture tests in a separate runtime-agnostic test file. They cover
+   whitespace/comma parsing, multiple prefixes, trailing slashes, TSX, an outside clean file,
+   an outside violation and neighboring-prefix sentinel, artifact/declaration/test/docs
+   exclusions, an overlapping file/prefix union, an empty directory, explicit-file scope, and
+   caller exclusion. Scanned-file counts prove the broad fixture tsconfig did not preload
+   outside sources; overlapping scopes report each source once. Fixtures use NodeServices,
+   scoped temporary directories, and StepExec child cwd, without ambient cwd/CI mutation,
+   Bun globals, mocks of scanning, or Git-writing setup.
+5. Regenerated the structure-only fingerprint after the CLI edits. The declaration and
+   `turbo.json` remain byte-identical to the committed Stage B versions. Rejected a content
+   digest or handwritten hash/config update. Used a fresh lane-local writable Turbo cache
+   for the isolated cold/warm pair, with remote caching disabled and no concurrent checks.
+6. An extra legacy regression run exposed its existing thread-pool incompatibility:
+   `native-runtime.test.ts` changes cwd. Recorded the failure in `OPPORTUNITIES.md`, then
+   verified all nine cases with Node forks. Bun forks failed to start a worker; the new
+   command tests pass under the brief's required Node and Bun thread pools. Rejected changing
+   the unrelated legacy helper or calling the failed worker start a passing test run.
+
+### Stage C — files
+
+- goals/time-to-certainty/research/c3-3-implementation.md
+- goals/time-to-certainty/research/OPPORTUNITIES.md
+- packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts
+- packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts
+- packages/tooling/tool/cli/test/native-runtime-prefix.test.ts
+
+### Verification commands and exit codes
+
+Vitest commands run from `packages/tooling/tool/cli`; other commands run from the worktree root.
+`<touched TS>` is the two source files and new test listed above. `<prefix + package tests>`
+means `test/native-runtime-prefix.test.ts test/laws-package.test.ts`. Ephemeral logs use
+`/tmp/c3-3-c-*.log`; outcomes and Turbo summary identities are retained here.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `bunx biome check --write <touched TS>` | 0 | Formatted the scanner and new fixture. |
+| `bunx biome check <touched TS>` | 0 | Three files, no fixes, 973 ms. |
+| `bunx oxlint --quiet --disable-nested-config <touched TS>` | 0 | No diagnostics. |
+| `bunx --no-install vitest run --pool=threads <prefix + package tests> test/native-runtime.test.ts` | 1 | 13 pass; nine legacy tests fail before scanning because `process.chdir()` is unsupported in workers. |
+| `bunx --bun vitest run --pool=threads <prefix + package tests> test/native-runtime.test.ts` | 1 | Same attribution: 13 pass, nine legacy cwd failures. |
+| `bunx --no-install vitest run --pool=threads <prefix + package tests>` | 0 | Node: 13/13, 18.57 s. |
+| `bunx --bun vitest run --pool=threads <prefix + package tests>` | 0 | Bun: 13/13, 14.59 s. |
+| `bunx --no-install vitest run --pool=forks test/native-runtime.test.ts` | 0 | Legacy Node regressions: 9/9, 6.33 s. |
+| `bunx --bun vitest run --pool=forks test/native-runtime.test.ts` | 1 | Optional legacy check: no tests executed; worker-start timeout, 60.02 s. |
+| `bunx --bun --no-install tsgo -p /tmp/c3-3-c-focused.json --pretty false` | 0 | Source-resolving check over new/related tests and touched source; no diagnostics. |
+| `bun run beep lint schema-first` | 0 | No missing/stale entries, candidates, or advisories. |
+| `bun run beep quality fallow audit --check --base origin/main --quiet` | 0 | Saved `exitStatus: 0`, zero introduced, nine inherited-adjacent findings. |
+| `bun run beep quality fallow health --check --base origin/main --quiet` | 0 | Saved `exitStatus: 0`, zero findings. |
+| `bun run beep lint policy-fingerprint --write` | 0 | Regenerated; declaration and Turbo materialization unchanged. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Current. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, zero drifting, zero written. |
+| `bun run lint:native-runtime:roots` | 0 | 482 scanned files, zero touched, warnings, or errors; two allowlisted violations. |
+| `bunx turbo run //#lint:native-runtime:roots --summarize --cache=local:rw` with writable cache | 0 | Cold: 2/2 successful, 0/2 cached, 4.830 s. |
+| Same Turbo command and tree | 0 | Warm: 2/2 successful by replay, 2/2 cached, 0.061 s. |
+| `git --no-optional-locks diff --check` | 0 | Read-only whitespace verification. |
+
+The focused tsgo config extends the real CLI config with source/test includes, no project
+references, no emit/composite/incremental output, repository rootDir, and local Node/Bun type
+roots. It is supporting proof, not package verification. Test runs overlapped each other and
+some static checks; their durations are functional evidence, not performance comparisons.
+
+### Measurements
+
+The direct root script, wrapped by `/usr/bin/time -f 'wall=%e maxRSS=%M exit=%x'`, took **3.81 s**
+and **1,153,392 KiB** maximum RSS, exit 0. It reported 482 scanned files, zero warnings/errors,
+two allowlisted violations, and 27 unused allowlist entries (informational for this subset).
+
+Both isolated Turbo invocations used:
+
+```sh
+TURBO_CACHE_DIR="$PWD/.beep/c3-3-stage-c-cache" bunx turbo run //#lint:native-runtime:roots --summarize --cache=local:rw
+```
+
+“Cold” means an empty task cache, not a cold machine; the direct scan already warmed filesystem
+and module caches. Turbo 2.10.12 reported remote caching disabled, with no cache-write warnings.
+
+| Run | Tasks successful or replayed | Cached | Turbo wall | Residual task | Fingerprint task | Total task-seconds |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Task-cache cold | 2/2 | 0/2 | 4.830 s | 3.018 s | 1.753 s | 4.771 s |
+| Same-tree warm | 2/2 | 2/2 | 0.061 s | 0.000 s | 0.001 s | 0.001 s |
+
+| Invocation | Summary relative to this checkout |
+| --- | --- |
+| Cold | `.turbo/runs/3J85TELuQ9Vvx2Ayx6D14oINJ3j.json` |
+| Warm | `.turbo/runs/3J85V6xN6RUN8WffgkL45kohR8b.json` |
+
+Both summaries have the same residual hash `fd5771d31da9885e` and fingerprint hash
+`50e1822197e4de32`. Cold tasks have execution exit zero and `MISS`; warm tasks have `HIT`.
+Warm durations measure replay bookkeeping. These are local residual-only measurements,
+not a new fleet, hosted, or whole-proof speedup claim.
+
+### Blockers, coverage handoff, and verification split
+
+No Stage C implementation blocker remains. The previously unsupported residual flag now
+executes successfully in the actual registered command. Required sandbox checks pass. The
+optional legacy Bun forks check remains an attributed environment/worker-start limitation;
+Node ran that suite successfully, and both required runtimes ran the new prefix tests.
+
+Fable owns `bun run beep quality package-verify @beep/repo-cli`, Node coverage/ratchet, docgen
+acceptance, and the hosted lane. Repo-utils is untouched in Stage C. No new source module or
+coverage baseline row was introduced; the existing `Laws.command.ts` and `NoNativeRuntime.ts`
+rows need Fable's coverage evaluation, including the new prefix/default/union branches. The
+missing worktree-local Effect reference symlink was handled by reading the parent checkout's
+canonical reference, without installing or rewiring it.
+
+`Quality/Tasks.ts`, deprecated-API code, eslint configs, workspace manifests, Turbo declarations,
+and packet lifecycle remain untouched. The previously named follow-up remains Fable-owned:
+`rootRepoLintPolicySteps` replaces the five `scopedLawStep`s with
+`turbo run lint:laws //#lint:native-runtime:roots` (affected locally, full hosted), behind
+`standards/lint-policy.sweeps.jsonc` key `laws`, and `beep:policy` retires from the two manifests
+and scripts schema after C3.3 and C3.2b land. This lane does not make that switch.
+Stop after Stage C.

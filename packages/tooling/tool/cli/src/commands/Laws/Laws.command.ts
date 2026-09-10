@@ -176,6 +176,10 @@ class NoNativeRuntimeCommandOptions extends S.Class<NoNativeRuntimeCommandOption
     ),
     exclude: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
     include: S.String.pipe(S.withConstructorDefault(Effect.succeed("*")), S.withDecodingDefault(Effect.succeed("*"))),
+    includePrefix: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefault(Effect.succeed(""))
+    ),
   },
   $I.annote("NoNativeRuntimeCommandOptions", {
     description: "CLI options for native runtime parity checks.",
@@ -559,14 +563,16 @@ const lawsNativeRuntimeCommand = Command.make(
       Flag.withDefault("")
     ),
     include: includeFlag,
+    includePrefix: includePrefixFlag,
   },
-  Effect.fn(function* ({ check, exclude, include }) {
-    const options = NoNativeRuntimeCommandOptions.make({ check, exclude, include });
+  Effect.fn(function* ({ check, exclude, include, includePrefix }) {
+    const options = NoNativeRuntimeCommandOptions.make({ check, exclude, include, includePrefix });
     const summary = yield* runNoNativeRuntimeRules(
       NoNativeRuntimeRulesOptions.make({
         strictCheck: options.check,
         excludePaths: parseExcludePaths(options.exclude),
         ...includePathsOption(options.include),
+        includePrefixes: parseExcludePaths(options.includePrefix),
       })
     );
 

@@ -17,7 +17,7 @@ import {
 } from "@beep/repo-configs/eslint/NoNativeRuntimeHotspots";
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { LiteralKit } from "@beep/schema";
-import { A } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { Effect, HashSet, Inspectable, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -115,6 +115,10 @@ export class NoNativeRuntimeRulesOptions extends S.Class<NoNativeRuntimeRulesOpt
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
     includePaths: S.Array(S.String).pipe(S.optionalKey),
+    includePrefixes: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<string>())),
+      S.withDecodingDefault(Effect.succeed(A.empty<string>()))
+    ),
   },
   $I.annote("NoNativeRuntimeRulesOptions", {
     description: "Runtime options for repo-local native runtime checks.",
@@ -588,11 +592,21 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
   const isExcludedFile = (filePath: string): boolean =>
     isEcosystemMemberSourcePath(filePath) || isExcludedLawScanPath(options.excludePaths, filePath);
 
+  const sourceFileGlobs =
+    P.isUndefined(options.includePaths) && A.isReadonlyArrayEmpty(options.includePrefixes)
+      ? SOURCE_FILE_GLOBS
+      : pipe(
+          options.includePaths ?? A.empty<string>(),
+          A.appendAll(A.map(options.includePrefixes, (prefix) => `${Str.replace(/\/+$/u, "")(prefix)}/**/*.{ts,tsx}`)),
+          A.dedupe,
+          A.append("!**/docs/**")
+        );
+
   const project = O.isSome(shared)
     ? shared.value.project
     : createRepoTsMorphProject({
         tsConfigFilePath: path.join(cwd, "tsconfig.json"),
-        sourceFileGlobs: options.includePaths ?? SOURCE_FILE_GLOBS,
+        sourceFileGlobs,
       });
 
   let sourceFiles = A.empty<ScannedSourceFile>();

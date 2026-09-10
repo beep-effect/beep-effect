@@ -780,3 +780,14 @@ subprocess diagnostics would make inventory stalls attributable.
   substituting a wider sweep.
 - **Would have prevented it:** executing a prescribed residual command once while drafting the
   table row, and a table convention that every root-task command is copied from a green run.
+
+## 2026-09-10 — C3.3 Stage C: legacy native-runtime tests require a process pool
+
+- **Doing:** running the new prefix command fixtures and existing native-runtime regression
+  tests with the brief's prescribed Vitest thread pool on Node and Bun.
+- **Evidence:** the four new executed-command fixtures and nine package-law tests pass on both
+  runtimes; all nine existing `native-runtime.test.ts` cases fail before scanning in
+  `support/CommandTest.ts` with `process.chdir() is not supported in workers`.
+- **Would have prevented it:** declaring the legacy suite's process-pool requirement or moving
+  its cwd-dependent fixtures to child processes (the new prefix fixtures spawn the CLI with a
+  child cwd and run on both runtimes' thread pools; the legacy suite passes on Node forks).
