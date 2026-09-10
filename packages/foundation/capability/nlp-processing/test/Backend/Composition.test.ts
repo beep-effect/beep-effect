@@ -1,11 +1,3 @@
-/**
- * Proofs for backend composition: withFallback (secondary used when primary
- * fails, union of capabilities), withCaching (memoized lookups), and
- * selectByCapability (first supporting backend).
- *
- * Uses lightweight stub backends so the laws are checked without loading a model.
- */
-
 import * as Composition from "@beep/nlp-processing/Backend/Composition";
 import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
 import { PosInt } from "@beep/schema";
@@ -15,20 +7,27 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expect(equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expect(equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const baseCapabilities: Backend.BackendCapabilities = {

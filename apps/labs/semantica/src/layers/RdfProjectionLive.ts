@@ -120,20 +120,23 @@ const makeRdfProjection = Effect.fn("RdfProjection.make")(function* () {
               Effect.mapError(() => failed("Oxigraph could not execute the C1 projection query."))
             );
           return yield* Match.value(result).pipe(
-            Match.discriminatorsExhaustive("profile")({
-              ask: () => Effect.fail(failed("Oxigraph returned ASK output for a SELECT projection query.")),
-              construct: () => Effect.fail(failed("Oxigraph returned CONSTRUCT output for a SELECT projection query.")),
-              select: ({ rows }) => {
-                const canonical = canonicalRows(rows);
-                return Effect.succeed(
-                  SparqlResultWitness.make({
-                    count: NonNegativeInt.make(A.length(canonical)),
-                    id: expectation.id,
-                    rows: canonical,
-                  })
-                );
-              },
-            })
+            Match.discriminator("profile")("ask", () =>
+              Effect.fail(failed("Oxigraph returned ASK output for a SELECT projection query."))
+            ),
+            Match.discriminator("profile")("construct", () =>
+              Effect.fail(failed("Oxigraph returned CONSTRUCT output for a SELECT projection query."))
+            ),
+            Match.discriminator("profile")("select", ({ rows }) => {
+              const canonical = canonicalRows(rows);
+              return Effect.succeed(
+                SparqlResultWitness.make({
+                  count: NonNegativeInt.make(A.length(canonical)),
+                  id: expectation.id,
+                  rows: canonical,
+                })
+              );
+            }),
+            Match.exhaustive
           );
         }),
         { concurrency: 1 }

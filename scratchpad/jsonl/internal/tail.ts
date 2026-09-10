@@ -256,7 +256,7 @@ export const readTail: {
       const logicalSize = physicalSize - bomBytes;
       const from = Math.max(bomBytes, physicalSize - window);
       const file = yield* fs.open(path, { flag: "r" });
-      yield* file.seek(from, "start");
+      yield* file.seek(BigInt(from), "start");
       const read = yield* file.readAlloc(physicalSize - from);
       const bytes = Option.getOrElse(read, () => new Uint8Array(0));
 
@@ -424,7 +424,7 @@ export const readRangeText: {
         return "";
       }
       const file = yield* fs.open(path, { flag: "r" });
-      yield* file.seek(from, "start");
+      yield* file.seek(BigInt(from), "start");
       const decoder = new TextDecoder();
       let text = "";
       let remaining = length;

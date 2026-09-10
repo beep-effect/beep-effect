@@ -64,20 +64,21 @@ const annotateCollection = <Collection extends { readonly value: ReadonlyArray<u
 const annotateDownload = (download: M365DriveItemDownloadType): Effect.Effect<M365DriveItemDownloadType> =>
   Match.type<M365DriveItemDownloadType>().pipe(
     Match.withReturnType<Effect.Effect<M365DriveItemDownloadType>>(),
-    Match.tagsExhaustive({
-      M365DownloadedContent: (result) =>
-        Effect.annotateCurrentSpan({
-          m365_mcp_download_size_bytes: result.bytes.byteLength,
-          m365_mcp_item_size_bytes: pipe(result.item.size, O.getOrUndefined),
-          m365_mcp_resource: "drive_item_content",
-        }).pipe(Effect.as(download)),
-      M365SkippedEncryptedItem: (result) =>
-        Effect.annotateCurrentSpan({
-          m365_mcp_download_skipped: "encrypted item",
-          m365_mcp_item_size_bytes: pipe(result.item.size, O.getOrUndefined),
-          m365_mcp_resource: "drive_item_content",
-        }).pipe(Effect.as(download)),
-    })
+    Match.tag("M365DownloadedContent", (result) =>
+      Effect.annotateCurrentSpan({
+        m365_mcp_download_size_bytes: result.bytes.byteLength,
+        m365_mcp_item_size_bytes: pipe(result.item.size, O.getOrUndefined),
+        m365_mcp_resource: "drive_item_content",
+      }).pipe(Effect.as(download))
+    ),
+    Match.tag("M365SkippedEncryptedItem", (result) =>
+      Effect.annotateCurrentSpan({
+        m365_mcp_download_skipped: "encrypted item",
+        m365_mcp_item_size_bytes: pipe(result.item.size, O.getOrUndefined),
+        m365_mcp_resource: "drive_item_content",
+      }).pipe(Effect.as(download))
+    ),
+    Match.exhaustive
   )(download);
 
 /**

@@ -21,9 +21,10 @@ import {
   WorkspaceVaultRootPath,
 } from "@beep/workspace-domain";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeMessageRoleSync = S.decodeSync(MessageRole);
 const decodeUnknownEmailArtifactSync = S.decodeUnknownSync(EmailArtifact);
@@ -39,7 +40,7 @@ const encodeTurnSync = S.encodeSync(Turn);
 const encodeWorkspaceEntitySync = S.encodeSync(WorkspaceEntity);
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
-const MessageRoleArbitrary = S.toArbitrary(MessageRole)(fc);
+
 const publicIdFor = (entityType: string, id: number) =>
   `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
 const schemaLawCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [
@@ -75,17 +76,23 @@ const baseEntityInput = (entityType: string, id: number) => ({
 });
 
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expect(equivalent(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(10)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.schema(schema),
+        (value) => {
+          expect(equivalent(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(10)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("@beep/workspace-domain", () => {
@@ -95,17 +102,18 @@ describe("@beep/workspace-domain", () => {
     expect(MessageRole.is.assistant("assistant")).toBe(true);
   });
 
-  it("round-trips schema-derived message roles", () =>
-    fc.assert(
-      fc.property(MessageRoleArbitrary, (role) => {
-        const decoded = decodeMessageRoleSync(role);
-        const encoded = encodeMessageRoleSync(decoded);
+  it.prop(
+    "round-trips schema-derived message roles",
+    [MessageRole],
+    ([role]) => {
+      const decoded = decodeMessageRoleSync(role);
+      const encoded = encodeMessageRoleSync(decoded);
 
-        expect(encoded).toBe(role);
-        expect(["system", "user", "assistant", "agent", "tool"].includes(decoded)).toBe(true);
-      }),
-      fcRuns(25)
-    ));
+      expect(encoded).toBe(role);
+      expect(["system", "user", "assistant", "agent", "tool"].includes(decoded)).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("wires Workspace to the workspace ProductEntity identity", () => {
     expect(WorkspaceEntity.sql.tableName).toBe(WorkspaceIdentity.WorkspaceId.tableName);

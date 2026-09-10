@@ -25,6 +25,7 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { flow, HashSet, pipe } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -85,6 +86,9 @@ const FileNameChecks = S.makeFilterGroup(
     }),
     S.makeFilter(flow(fileNameExtension, isFileExtension), {
       identifier: $I`FileNameKnownExtensionCheck`,
+      arbitraryConstraint: {
+        patterns: [{ source: `^[a-zA-Z0-9_-]{1,16}\\.(?:${A.join(FileExtension.Options, "|")})$`, flags: "" }],
+      },
       title: "File Name Known Extension",
       description: "A file name whose final extension segment is a known file extension.",
       message: "File names must end with a known file extension",
@@ -123,13 +127,6 @@ const FileNameChecks = S.makeFilterGroup(
  * @since 0.0.0
  */
 const FileNameSchema = S.String.check(FileNameChecks).pipe(
-  (schema) =>
-    schema.annotate({
-      toArbitrary: () => (fc) =>
-        fc
-          .tuple(fc.stringMatching(/^[^ /\\.]+(?:\.[^ /\\.]+)*$/), fc.constantFrom(...FileExtension.Options))
-          .map(([stem, ext]) => `${stem}.${ext}` as `${string}.${FileExtension}`),
-    }),
   $I.annoteSchema("FileName", {
     description: "A portable file name in the format basename.ext.",
     documentation:

@@ -32,22 +32,22 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 // Command Options
 // =============================================================================
 
-const batchIdOption = Flag.string("batch-id").pipe(Flag.withAlias("b"), Flag.withDescription("Batch ID to analyze"));
+const batchIdOption = Flag.String("batch-id").pipe(Flag.withAlias("b"), Flag.withDescription("Batch ID to analyze"));
 const TypeCountOrder = Order.mapInput(Order.flip(Order.Number), (entry: readonly [string, number]) => entry[1]);
 
-const manifestOption = Flag.file("manifest").pipe(
+const manifestOption = Flag.File("manifest").pipe(
   Flag.withAlias("m"),
   Flag.optional,
   Flag.withDescription("Path to batch manifest JSON (alternative to batch-id)")
 );
 
-const thresholdOption = Flag.float("threshold").pipe(
+const thresholdOption = Flag.Finite("threshold").pipe(
   Flag.withAlias("t"),
   Flag.withDefault(0.8),
   Flag.withDescription("Similarity threshold for duplicate detection (0-1)")
 );
 
-const verboseOption = Flag.boolean("verbose").pipe(
+const verboseOption = Flag.Boolean("verbose").pipe(
   Flag.withAlias("v"),
   Flag.withDefault(false),
   Flag.withDescription("Show detailed entity information")

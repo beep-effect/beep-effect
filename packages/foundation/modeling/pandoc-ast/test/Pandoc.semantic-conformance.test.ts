@@ -7,7 +7,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodePandocConformanceResult = S.encodeEffect(PandocConformanceResult);
 const isPandocColumnWidth = S.is(PandocColumnWidth);
@@ -144,12 +144,15 @@ describe("Pandoc current constructor semantic conformance", () => {
   });
 
   it("accepts every finite generated ColWidth payload", () => {
-    fc.assert(
-      fc.property(fc.double({ noDefaultInfinity: true, noNaN: true }), (width) =>
-        isPandocColumnWidth({ c: width, t: "ColWidth" })
-      ),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.Finite)]),
+          ([width]) => isPandocColumnWidth({ c: width, t: "ColWidth" }),
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("classifies every newly modeled Markdown projection as lossy or unsupported", () => {

@@ -390,23 +390,23 @@ export class AppConfig extends S.Class<AppConfig>($I`AppConfig`)(
 export const DEFAULT_CONFIG = AppConfig.make({});
 
 const RetryPolicyConfig = Config.all({
-  attemptTimeout: Config.duration("ATTEMPT_TIMEOUT").pipe(
+  attemptTimeout: Config.Duration("ATTEMPT_TIMEOUT").pipe(
     Config.withDefault(DEFAULT_CONFIG.llm.retryPolicy.attemptTimeout)
   ),
-  overallTimeout: Config.duration("OVERALL_TIMEOUT").pipe(
+  overallTimeout: Config.Duration("OVERALL_TIMEOUT").pipe(
     Config.withDefault(DEFAULT_CONFIG.llm.retryPolicy.overallTimeout)
   ),
-  initialDelay: Config.duration("RETRY_INITIAL_DELAY").pipe(
+  initialDelay: Config.Duration("RETRY_INITIAL_DELAY").pipe(
     Config.withDefault(DEFAULT_CONFIG.llm.retryPolicy.initialDelay)
   ),
-  maxDelay: Config.duration("RETRY_MAX_DELAY").pipe(Config.withDefault(DEFAULT_CONFIG.llm.retryPolicy.maxDelay)),
+  maxDelay: Config.Duration("RETRY_MAX_DELAY").pipe(Config.withDefault(DEFAULT_CONFIG.llm.retryPolicy.maxDelay)),
   maxAttempts: Config.schema(PosInt, "RETRY_MAX_ATTEMPTS").pipe(
     Config.withDefault(DEFAULT_CONFIG.llm.retryPolicy.maxAttempts)
   ),
   serviceName: Config.succeed(DEFAULT_CONFIG.llm.retryPolicy.serviceName),
-  jitter: Config.boolean("RETRY_JITTER").pipe(Config.withDefault(DEFAULT_CONFIG.llm.retryPolicy.jitter)),
+  jitter: Config.Boolean("RETRY_JITTER").pipe(Config.withDefault(DEFAULT_CONFIG.llm.retryPolicy.jitter)),
 }).pipe(
-  Config.mapOrFail((input) =>
+  Config.mapEffect((input) =>
     RetryPolicy.decodeEffect(input).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );
@@ -414,12 +414,12 @@ const RetryPolicyConfig = Config.all({
 const LlmConfig = Config.nested("LLM")(
   Config.all({
     provider: Config.schema(LlmProvider, "PROVIDER").pipe(Config.withDefault(DEFAULT_CONFIG.llm.provider)),
-    model: Config.nonEmptyString("MODEL").pipe(Config.withDefault(DEFAULT_CONFIG.llm.model)),
-    apiKey: Config.redacted("API_KEY").pipe(Config.withDefault(DEFAULT_CONFIG.llm.apiKey)),
+    model: Config.NonEmptyString("MODEL").pipe(Config.withDefault(DEFAULT_CONFIG.llm.model)),
+    apiKey: Config.Redacted("API_KEY").pipe(Config.withDefault(DEFAULT_CONFIG.llm.apiKey)),
     retryPolicy: RetryPolicyConfig,
     maxTokens: Config.schema(PosInt, "MAX_TOKENS").pipe(Config.withDefault(DEFAULT_CONFIG.llm.maxTokens)),
     temperature: Config.schema(UnitInterval, "TEMPERATURE").pipe(Config.withDefault(DEFAULT_CONFIG.llm.temperature)),
-    enablePromptCaching: Config.boolean("ENABLE_PROMPT_CACHING").pipe(
+    enablePromptCaching: Config.Boolean("ENABLE_PROMPT_CACHING").pipe(
       Config.withDefault(DEFAULT_CONFIG.llm.enablePromptCaching)
     ),
   })
@@ -428,21 +428,21 @@ const LlmConfig = Config.nested("LLM")(
 const StorageConfig = Config.nested("STORAGE")(
   Config.all({
     type: Config.schema(StorageType, "TYPE").pipe(Config.withDefault(DEFAULT_CONFIG.storage.type)),
-    bucket: Config.option(Config.string("BUCKET")),
-    localPath: Config.option(Config.string("LOCAL_PATH")),
-    prefix: Config.string("PREFIX").pipe(Config.withDefault(DEFAULT_CONFIG.storage.prefix)),
+    bucket: Config.option(Config.String("BUCKET")),
+    localPath: Config.option(Config.String("LOCAL_PATH")),
+    prefix: Config.String("PREFIX").pipe(Config.withDefault(DEFAULT_CONFIG.storage.prefix)),
   })
 );
 
 const OntologyConfig = Config.nested("ONTOLOGY")(
   Config.all({
-    path: Config.nonEmptyString("PATH").pipe(Config.withDefault(DEFAULT_CONFIG.ontology.path)),
-    externalVocabsPath: Config.nonEmptyString("EXTERNAL_VOCABS_PATH").pipe(
+    path: Config.NonEmptyString("PATH").pipe(Config.withDefault(DEFAULT_CONFIG.ontology.path)),
+    externalVocabsPath: Config.NonEmptyString("EXTERNAL_VOCABS_PATH").pipe(
       Config.withDefault(DEFAULT_CONFIG.ontology.externalVocabsPath)
     ),
-    registryPath: Config.option(Config.string("REGISTRY_PATH")),
-    cacheTtl: Config.duration("CACHE_TTL").pipe(Config.withDefault(DEFAULT_CONFIG.ontology.cacheTtl)),
-    strictValidation: Config.boolean("STRICT_VALIDATION").pipe(
+    registryPath: Config.option(Config.String("REGISTRY_PATH")),
+    cacheTtl: Config.Duration("CACHE_TTL").pipe(Config.withDefault(DEFAULT_CONFIG.ontology.cacheTtl)),
+    strictValidation: Config.Boolean("STRICT_VALIDATION").pipe(
       Config.withDefault(DEFAULT_CONFIG.ontology.strictValidation)
     ),
   })
@@ -454,13 +454,13 @@ const RuntimeConfig = Config.nested("RUNTIME")(
     llmConcurrencyLimit: Config.schema(PosInt, "LLM_CONCURRENCY").pipe(
       Config.withDefault(DEFAULT_CONFIG.runtime.llmConcurrencyLimit)
     ),
-    enableTracing: Config.boolean("ENABLE_TRACING").pipe(Config.withDefault(DEFAULT_CONFIG.runtime.enableTracing)),
+    enableTracing: Config.Boolean("ENABLE_TRACING").pipe(Config.withDefault(DEFAULT_CONFIG.runtime.enableTracing)),
   })
 );
 
 const GrounderConfig = Config.nested("GROUNDER")(
   Config.all({
-    enabled: Config.boolean("ENABLED").pipe(Config.withDefault(DEFAULT_CONFIG.grounder.enabled)),
+    enabled: Config.Boolean("ENABLED").pipe(Config.withDefault(DEFAULT_CONFIG.grounder.enabled)),
     confidenceThreshold: Config.schema(UnitInterval, "THRESHOLD").pipe(
       Config.withDefault(DEFAULT_CONFIG.grounder.confidenceThreshold)
     ),
@@ -471,33 +471,33 @@ const GrounderConfig = Config.nested("GROUNDER")(
 const EmbeddingConfig = Config.nested("EMBEDDING")(
   Config.all({
     provider: Config.schema(EmbeddingProvider, "PROVIDER").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.provider)),
-    model: Config.nonEmptyString("MODEL").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.model)),
+    model: Config.NonEmptyString("MODEL").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.model)),
     dimension: Config.schema(PosInt, "DIMENSION").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.dimension)),
-    transformersModelId: Config.nonEmptyString("TRANSFORMERS_MODEL_ID").pipe(
+    transformersModelId: Config.NonEmptyString("TRANSFORMERS_MODEL_ID").pipe(
       Config.withDefault(DEFAULT_CONFIG.embedding.transformersModelId)
     ),
-    voyageApiKey: Config.option(Config.redacted("VOYAGE_API_KEY")),
-    voyageModel: Config.nonEmptyString("VOYAGE_MODEL").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.voyageModel)),
-    timeout: Config.duration("TIMEOUT").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.timeout)),
+    voyageApiKey: Config.option(Config.Redacted("VOYAGE_API_KEY")),
+    voyageModel: Config.NonEmptyString("VOYAGE_MODEL").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.voyageModel)),
+    timeout: Config.Duration("TIMEOUT").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.timeout)),
     rateLimitRpm: Config.schema(PosInt, "RATE_LIMIT_RPM").pipe(
       Config.withDefault(DEFAULT_CONFIG.embedding.rateLimitRpm)
     ),
     maxConcurrent: Config.schema(PosInt, "MAX_CONCURRENT").pipe(
       Config.withDefault(DEFAULT_CONFIG.embedding.maxConcurrent)
     ),
-    cachePath: Config.option(Config.string("CACHE_PATH")),
-    cacheTtl: Config.duration("CACHE_TTL").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.cacheTtl)),
+    cachePath: Config.option(Config.String("CACHE_PATH")),
+    cacheTtl: Config.Duration("CACHE_TTL").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.cacheTtl)),
     cacheMaxEntries: Config.schema(PosInt, "CACHE_MAX_ENTRIES").pipe(
       Config.withDefault(DEFAULT_CONFIG.embedding.cacheMaxEntries)
     ),
-    entityIndexPath: Config.option(Config.string("ENTITY_INDEX_PATH")),
+    entityIndexPath: Config.option(Config.String("ENTITY_INDEX_PATH")),
   })
 );
 
 const ExtractionConfig = Config.nested("EXTRACTION")(
   Config.all({
-    runsDir: Config.nonEmptyString("RUNS_DIR").pipe(Config.withDefault(DEFAULT_CONFIG.extraction.runsDir)),
-    strictPersistence: Config.boolean("STRICT_PERSISTENCE").pipe(
+    runsDir: Config.NonEmptyString("RUNS_DIR").pipe(Config.withDefault(DEFAULT_CONFIG.extraction.runsDir)),
+    strictPersistence: Config.Boolean("STRICT_PERSISTENCE").pipe(
       Config.withDefault(DEFAULT_CONFIG.extraction.strictPersistence)
     ),
   })
@@ -505,7 +505,7 @@ const ExtractionConfig = Config.nested("EXTRACTION")(
 
 const EntityRegistryConfig = Config.nested("ENTITY_REGISTRY")(
   Config.all({
-    enabled: Config.boolean("ENABLED").pipe(Config.withDefault(DEFAULT_CONFIG.entityRegistry.enabled)),
+    enabled: Config.Boolean("ENABLED").pipe(Config.withDefault(DEFAULT_CONFIG.entityRegistry.enabled)),
     candidateThreshold: Config.schema(UnitInterval, "CANDIDATE_THRESHOLD").pipe(
       Config.withDefault(DEFAULT_CONFIG.entityRegistry.candidateThreshold)
     ),
@@ -518,7 +518,7 @@ const EntityRegistryConfig = Config.nested("ENTITY_REGISTRY")(
     maxBlockingCandidates: Config.schema(PosInt, "MAX_BLOCKING").pipe(
       Config.withDefault(DEFAULT_CONFIG.entityRegistry.maxBlockingCandidates)
     ),
-    canonicalNamespace: Config.nonEmptyString("CANONICAL_NAMESPACE").pipe(
+    canonicalNamespace: Config.NonEmptyString("CANONICAL_NAMESPACE").pipe(
       Config.withDefault(DEFAULT_CONFIG.entityRegistry.canonicalNamespace)
     ),
   })
@@ -526,25 +526,25 @@ const EntityRegistryConfig = Config.nested("ENTITY_REGISTRY")(
 
 const InferenceConfig = Config.nested("INFERENCE")(
   Config.all({
-    enabled: Config.boolean("ENABLED").pipe(Config.withDefault(DEFAULT_CONFIG.inference.enabled)),
+    enabled: Config.Boolean("ENABLED").pipe(Config.withDefault(DEFAULT_CONFIG.inference.enabled)),
     profile: Config.schema(InferenceProfile, "PROFILE").pipe(Config.withDefault(DEFAULT_CONFIG.inference.profile)),
-    persistDerived: Config.boolean("PERSIST_DERIVED").pipe(Config.withDefault(DEFAULT_CONFIG.inference.persistDerived)),
+    persistDerived: Config.Boolean("PERSIST_DERIVED").pipe(Config.withDefault(DEFAULT_CONFIG.inference.persistDerived)),
   })
 );
 
 const ValidationConfig = Config.nested("VALIDATION")(
   Config.all({
-    logOnly: Config.boolean("LOG_ONLY").pipe(Config.withDefault(DEFAULT_CONFIG.validation.logOnly)),
-    failOnViolation: Config.boolean("FAIL_ON_VIOLATION").pipe(
+    logOnly: Config.Boolean("LOG_ONLY").pipe(Config.withDefault(DEFAULT_CONFIG.validation.logOnly)),
+    failOnViolation: Config.Boolean("FAIL_ON_VIOLATION").pipe(
       Config.withDefault(DEFAULT_CONFIG.validation.failOnViolation)
     ),
-    failOnWarning: Config.boolean("FAIL_ON_WARNING").pipe(Config.withDefault(DEFAULT_CONFIG.validation.failOnWarning)),
+    failOnWarning: Config.Boolean("FAIL_ON_WARNING").pipe(Config.withDefault(DEFAULT_CONFIG.validation.failOnWarning)),
   })
 );
 
 const RdfConfig = Config.nested("RDF")(
   Config.all({
-    baseNamespace: Config.nonEmptyString("BASE_NAMESPACE").pipe(Config.withDefault(DEFAULT_CONFIG.rdf.baseNamespace)),
+    baseNamespace: Config.NonEmptyString("BASE_NAMESPACE").pipe(Config.withDefault(DEFAULT_CONFIG.rdf.baseNamespace)),
     outputFormat: Config.schema(RdfOutputFormat, "OUTPUT_FORMAT").pipe(
       Config.withDefault(DEFAULT_CONFIG.rdf.outputFormat)
     ),
@@ -554,18 +554,18 @@ const RdfConfig = Config.nested("RDF")(
 
 const ApiConfig = Config.nested("API")(
   Config.all({
-    keys: Config.option(Config.redacted("KEYS")),
-    requireAuth: Config.boolean("REQUIRE_AUTH").pipe(Config.withDefault(DEFAULT_CONFIG.api.requireAuth)),
+    keys: Config.option(Config.Redacted("KEYS")),
+    requireAuth: Config.Boolean("REQUIRE_AUTH").pipe(Config.withDefault(DEFAULT_CONFIG.api.requireAuth)),
   })
 );
 
 const JinaConfig = Config.nested("JINA")(
   Config.all({
-    apiKey: Config.option(Config.redacted("API_KEY")),
+    apiKey: Config.option(Config.Redacted("API_KEY")),
     rateLimitRpm: Config.schema(PosInt, "RATE_LIMIT_RPM").pipe(Config.withDefault(DEFAULT_CONFIG.jina.rateLimitRpm)),
-    timeout: Config.duration("TIMEOUT").pipe(Config.withDefault(DEFAULT_CONFIG.jina.timeout)),
+    timeout: Config.Duration("TIMEOUT").pipe(Config.withDefault(DEFAULT_CONFIG.jina.timeout)),
     maxConcurrent: Config.schema(PosInt, "MAX_CONCURRENT").pipe(Config.withDefault(DEFAULT_CONFIG.jina.maxConcurrent)),
-    baseUrl: Config.nonEmptyString("BASE_URL").pipe(Config.withDefault(DEFAULT_CONFIG.jina.baseUrl)),
+    baseUrl: Config.NonEmptyString("BASE_URL").pipe(Config.withDefault(DEFAULT_CONFIG.jina.baseUrl)),
   })
 );
 

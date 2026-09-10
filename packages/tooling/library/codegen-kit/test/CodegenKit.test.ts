@@ -292,6 +292,30 @@ layer(CodegenKitRefreshTestLayer)("@beep/codegen-kit source pins", (it) => {
 });
 
 layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
+  it.effect("preserves boolean union members while distributing object siblings", () =>
+    Effect.gen(function* () {
+      const kit = yield* CodegenKit;
+      const output = yield* kit.generate(
+        {
+          $defs: {
+            BooleanUnion: {
+              anyOf: [false, { type: "object", properties: { value: { type: "string" } } }],
+              properties: { label: { type: "string" } },
+              required: ["label"],
+            },
+            Open: { type: "object", additionalProperties: true },
+            Typed: { type: "object", additionalProperties: { type: "string" } },
+          },
+        },
+        GenerateConfig.make({ ...config("boolean.gen.ts"), transforms: ["distributeUnionSiblings", "openObjects"] })
+      );
+      expect(output).toContain("Schema.Never");
+      expect(output).toContain('"label": Schema.String');
+      expect(output).toContain('"value": Schema.optionalKey(Schema.String)');
+      expect(output).toContain("export const Typed");
+    })
+  );
+
   it.effect("repairs ACP ContentBlock and SessionUpdate variant schemas", () =>
     Effect.gen(function* () {
       const kit = yield* CodegenKit;

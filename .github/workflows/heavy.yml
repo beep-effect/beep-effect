@@ -38,6 +38,8 @@ jobs:
             timeout_minutes: 80
             uses_turbo: "true"
             install_typos: "false"
+            # Node 24.19/24.20 and 26.8 corrupt escaped JSON keys in native round trips.
+            node_version: "22.22.3"
           - id: docgen
             name: Docgen
             timeout_minutes: 60
@@ -140,6 +142,7 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
+          node-version: ${{ matrix.node_version || '' }}
           cache-turbo: ${{ matrix.uses_turbo }}
           cache-write: "false"
           turbo-cache-key-suffix: -${{ matrix.id }}
@@ -158,6 +161,18 @@ jobs:
           better-auth-url: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
+
+      - name: Verify coverage runtime features
+        if: steps.lane-gate.outputs.should_run == 'true' && matrix.id == 'coverage'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Node 22 gates Float16Array behind --js-float16array. The flag must
+          # NOT be granted job-wide (a wrapped node leaks it into Next.js build
+          # workers via NODE_OPTIONS, which V8 rejects); vitest.shared.ts scopes
+          # it to forked test workers instead. This step only proves the pinned
+          # runtime supports the flag the workers will request.
+          node --js-float16array -p "'Node ' + process.versions.node + ', ' + Float16Array.name"
 
       # PRs may restore the post-main local fallback without saving it. Same-
       # repository PRs can also read the remote cache; forks remain tokenless.
@@ -196,7 +211,15 @@ jobs:
           # session and reap the entire process group once the lane process
           # finishes, success and failure alike.
           run_lane() {
-            setsid bun run beep "$@" < /dev/null &
+            local -a lane_command=(bun run beep "$@")
+            # The reusable workflow runs from main, but older PR checkouts
+            # may not contain the optional measurement helper yet.
+            if [[ -f scripts/ci-runner-resources.sh ]]; then
+              lane_command=(bash scripts/ci-runner-resources.sh "${{ matrix.id }}" "${lane_command[@]}")
+            else
+              echo '::notice::Runner resource helper unavailable in this checkout; running the requested lane.'
+            fi
+            setsid "${lane_command[@]}" < /dev/null &
             local pgid=$!
             local status=0
             wait "$pgid" || status=$?

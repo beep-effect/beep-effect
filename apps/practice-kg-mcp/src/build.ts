@@ -16,12 +16,12 @@ import * as O from "effect/Option";
 import { Command, Flag } from "effect/unstable/cli";
 import { makePracticeKgBuildLayer } from "./runtime/index.ts";
 
-const corpusRoot = Flag.directory("corpus-root", { mustExist: true });
-const bundleOut = Flag.directory("bundle-out").pipe(Flag.optional);
-const includeRefresh = Flag.boolean("include-refresh").pipe(Flag.withDefault(false));
-const skipEmails = Flag.boolean("skip-emails").pipe(Flag.withDefault(false));
-const maxTextBytes = Flag.integer("max-text-bytes").pipe(Flag.optional);
-const overwrite = Flag.boolean("overwrite").pipe(Flag.withDefault(false));
+const corpusRoot = Flag.Directory("corpus-root", { mustExist: true });
+const bundleOut = Flag.Directory("bundle-out").pipe(Flag.optional);
+const includeRefresh = Flag.Boolean("include-refresh").pipe(Flag.withDefault(false));
+const skipEmails = Flag.Boolean("skip-emails").pipe(Flag.withDefault(false));
+const maxTextBytes = Flag.Int("max-text-bytes").pipe(Flag.optional);
+const overwrite = Flag.Boolean("overwrite").pipe(Flag.withDefault(false));
 
 const buildCommand = Command.make(
   "build",

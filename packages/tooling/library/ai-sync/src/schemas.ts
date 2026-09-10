@@ -11,6 +11,7 @@ import { flow, identity, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   ClaudeMcpJson,
   ClaudeSettings,
@@ -95,7 +96,6 @@ export const NormalizedAgentInstructionDocument = S.String.pipe(
   ),
   $I.annoteSchema("NormalizedAgentInstructionDocument", {
     description: "Markdown instruction document normalized by trimming trailing line whitespace and outer whitespace.",
-    toArbitrary: () => (fc) => fc.constant("# Rules"),
   }),
   SchemaUtils.withStatics((schema) => ({
     decodeEffect: S.decodeUnknownEffect(schema),
@@ -241,3 +241,22 @@ export class AgentPluginManifestMetadata extends S.Class<AgentPluginManifestMeta
  * @since 0.0.0
  */
 export { ClaudeMcpJson, ClaudeSettings, CodexConfig, CodexMcpServer, CodexSkillEntry, CodexSkills, McpJsonServer };
+
+/**
+ * Generates non-empty instruction documents in their normalized form.
+ *
+ * **Example** (Generate normalized instructions)
+ *
+ * ```ts
+ * import { NormalizedAgentInstructionDocumentArbitrary } from "@beep/ai-sync"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * const samples = Arbitrary.sampleEffect(NormalizedAgentInstructionDocumentArbitrary)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const NormalizedAgentInstructionDocumentArbitrary = Arbitrary.schema(AgentInstructionDocument).pipe(
+  Arbitrary.map(normalizeInstructionText),
+  Arbitrary.filter(S.is(AgentInstructionDocument))
+);

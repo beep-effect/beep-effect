@@ -23,7 +23,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { TableCellHeaderState } from "@beep/lexical-schema";
 
 const decodeLexicalNodeResult = S.decodeResult(LexicalNode);
@@ -35,9 +35,9 @@ const decodeSerializedEditorStateSync = S.decodeSync(SerializedEditorState);
 const encodeArtifactUriSync = S.encodeSync(ArtifactUri);
 const encodeMdModelDocumentSync = S.encodeSync(MdModel.Document);
 
-const StateArbitrary = S.toArbitrary(SerializedEditorState)(fc);
-const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri)(fc);
-const DocumentArbitrary = S.toArbitrary(MdModel.Document)(fc);
+const StateArbitrary = Arbitrary.schema(SerializedEditorState);
+const ArtifactUriArbitrary = Arbitrary.schema(ArtifactUri);
+const DocumentArbitrary = Arbitrary.schema(MdModel.Document);
 
 const mdText = (value: string) => MdModel.Text.make({ value });
 
@@ -360,13 +360,20 @@ describe("Lexical.codec", { concurrent: false }, () => {
   });
 
   it("round-trips schema-derived artifact URIs without grammar drift", () => {
-    fc.assert(
-      fc.property(ArtifactUriArbitrary, (uri) => {
-        expect(ArtifactUri.is(uri)).toBe(true);
-        expect(decodeArtifactUriSync(encodeArtifactUriSync(uri))).toBe(uri);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([ArtifactUriArbitrary]),
+          ([uri]) => {
+            expect(ArtifactUri.is(uri)).toBe(true);
+            expect(decodeArtifactUriSync(encodeArtifactUriSync(uri))).toBe(uri);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("keeps malformed artifact:// links as normal Markdown links", () => {
@@ -639,20 +646,24 @@ describe("Lexical.codec", { concurrent: false }, () => {
   });
 
   it("projects schema-derived arbitrary editor states onto valid Md documents (totality)", () => {
-    fc.assert(
-      fc.property(StateArbitrary, (state) => {
-        const document = editorStateToDocument(state);
-        // Validate via the encode -> decode round-trip: Pre.language is a codec
-        // field (OptionFromNullOr), so the projected instance differs from its
-        // encoded form. Decoding the instance directly would reject its real
-        // Option; decoding the encoded form confirms the projection is valid.
-        expect(decodeMdModelDocumentSync(encodeMdModelDocumentSync(document))).toEqual(document);
-      }),
-      // Pinned at the original 50. Nightly `BEEP_FC_NUM_RUNS=1000` times out at
-      // 300s on unbounded SerializedEditorState trees (#663). Hard `numRuns`
-      // is the one-round-loop seed-exclude form: the env floor cannot raise it.
-      { numRuns: 50 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([StateArbitrary]),
+          ([state]) => {
+            const document = editorStateToDocument(state);
+            // Validate via the encode -> decode round-trip: Pre.language is a codec
+            // field (OptionFromNullOr), so the projected instance differs from its
+            // encoded form. Decoding the instance directly would reject its real
+            // Option; decoding the encoded form confirms the projection is valid.
+            expect(decodeMdModelDocumentSync(encodeMdModelDocumentSync(document))).toEqual(document);
+
+            return true;
+          },
+          { runs: 50 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("wraps a loose text node in a Markdown paragraph", () => {
@@ -672,18 +683,25 @@ describe("Lexical.codec", { concurrent: false }, () => {
   });
 
   it("stabilizes after one Md → Lexical → Md pass (lossy codec idempotent on its stable image)", () => {
-    fc.assert(
-      fc.property(DocumentArbitrary, (document) => {
-        // The codec is intentionally lossy (Lexical-only presentation state drops on
-        // the way to Md), so `roundTrip` is NOT identity on arbitrary documents.
-        // But one pass lands the document in the md-core stable subalgebra, after
-        // which further passes are identity: `roundTrip` is idempotent. This is the
-        // documented lossiness profile stated as a law.
-        const once = roundTrip(document);
-        expect(roundTrip(once)).toEqual(once);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([DocumentArbitrary]),
+          ([document]) => {
+            // The codec is intentionally lossy (Lexical-only presentation state drops on
+            // the way to Md), so `roundTrip` is NOT identity on arbitrary documents.
+            // But one pass lands the document in the md-core stable subalgebra, after
+            // which further passes are identity: `roundTrip` is idempotent. This is the
+            // documented lossiness profile stated as a law.
+            const once = roundTrip(document);
+            expect(roundTrip(once)).toEqual(once);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("normalizes multi-block quotes into a single linebreak-separated paragraph", () => {

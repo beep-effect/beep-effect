@@ -189,7 +189,7 @@ const encodeInstallSpecCommandJson = flow(
 const readOptionalConfigString: (key: string) => Effect.Effect<O.Option<string>, AiMetricsCommandError> = Effect.fn(
   "AIMetrics.readOptionalConfigString"
 )((key) =>
-  ConfigProvider.ConfigProvider.use(pipe(Config.string(key), Config.option).parse).pipe(
+  ConfigProvider.ConfigProvider.use(pipe(Config.String(key), Config.option).parse).pipe(
     Effect.mapError((cause) =>
       AiMetricsCommandError.make({ cause, message: `Failed to read ${key} from the Effect config provider.` })
     )
@@ -201,7 +201,7 @@ const readOptionalRedactedConfigString: (
 ) => Effect.Effect<O.Option<Redacted.Redacted>, AiMetricsCommandError> = Effect.fn(
   "AIMetrics.readOptionalRedactedConfigString"
 )((key) =>
-  ConfigProvider.ConfigProvider.use(pipe(key, Config.redacted, Config.option).parse).pipe(
+  ConfigProvider.ConfigProvider.use(pipe(key, Config.Redacted, Config.option).parse).pipe(
     Effect.mapError((cause) =>
       AiMetricsCommandError.make({ cause, message: `Failed to read ${key} from the Effect config provider.` })
     )
@@ -216,7 +216,7 @@ const resolveHomeDir = Effect.fn("AIMetrics.resolveHomeDir")(function* (homeDir:
     return supplied.value;
   }
 
-  // `Config.string` accepts an exported-but-empty variable, so a blank `HOME`
+  // `Config.String` accepts an exported-but-empty variable, so a blank `HOME`
   // has to be rejected here; letting it through resolves the canonical store to
   // `/.local/state/beep/ai-metrics`, which is absolute and therefore invisible
   // to every downstream absolute-path guard.

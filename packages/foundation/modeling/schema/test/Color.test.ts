@@ -1,8 +1,9 @@
 import { fcRuns } from "@beep/fc-runs";
 import * as Color from "@beep/schema/Color";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeColorDarkenSync = S.decodeSync(Color.Darken);
 const decodeColorGenerateAlphaScaleSync = S.decodeSync(Color.GenerateAlphaScale);
@@ -66,26 +67,40 @@ describe("Color", () => {
   });
 
   it("canonical hex colors round-trip losslessly through RGB", () => {
-    const hexArbitrary = S.toArbitrary(Color.HexColor)(fc);
-    fc.assert(
-      fc.property(hexArbitrary, (hex) => {
-        expect(hex).toMatch(/^#[0-9a-f]{6}$/);
-        const rgb = decodeUnknownColorHexToRgbSync(hex);
-        expect(decodeUnknownColorRgbToHexSync({ r: rgb.r, g: rgb.g, b: rgb.b })).toBe(hex);
-      }),
-      fcRuns(50)
-    );
+    const hexArbitrary = Arbitrary.schema(Color.HexColor);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([hexArbitrary]),
+          ([hex]) => {
+            expect(hex).toMatch(/^#[0-9a-f]{6}$/);
+            const rgb = decodeUnknownColorHexToRgbSync(hex);
+            expect(decodeUnknownColorRgbToHexSync({ r: rgb.r, g: rgb.g, b: rgb.b })).toBe(hex);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("derives only bounded color amounts from the source schema", () => {
-    const amountArbitrary = S.toArbitrary(Color.ColorAmount)(fc);
-    fc.assert(
-      fc.property(amountArbitrary, (amount) => {
-        expect(amount).toBeGreaterThanOrEqual(0);
-        expect(amount).toBeLessThanOrEqual(1);
-        expect(decodeUnknownColorColorAmountSync(encodeColorColorAmountSync(amount))).toBe(amount);
-      }),
-      fcRuns(25)
-    );
+    const amountArbitrary = Arbitrary.schema(Color.ColorAmount);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([amountArbitrary]),
+          ([amount]) => {
+            expect(amount).toBeGreaterThanOrEqual(0);
+            expect(amount).toBeLessThanOrEqual(1);
+            expect(decodeUnknownColorColorAmountSync(encodeColorColorAmountSync(amount))).toBe(amount);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

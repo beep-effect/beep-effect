@@ -298,22 +298,22 @@ const remoteSkillSourcesByName: Readonly<Record<string, RemoteSkillSource>> = pi
   R.fromEntries
 );
 
-const checkFlag = Flag.boolean("check").pipe(
+const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Report skill drift without writing files and exit non-zero when changes are needed")
 );
-const dryRunFlag = Flag.boolean("dry-run").pipe(
+const dryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Preview skill updates without writing files or failing on drift")
 );
-const skillFlag = Flag.string("skill").pipe(
+const skillFlag = Flag.String("skill").pipe(
   Flag.withDescription("Update or check one known GitHub-backed skill"),
   Flag.optional
 );
-const provenanceSkillArgument = Argument.string("skill").pipe(
+const provenanceSkillArgument = Argument.String("skill").pipe(
   Argument.withDescription("Installed skill to resolve; the P1 pilot supports shadcn")
 );
-const provenanceJsonFlag = Flag.boolean("json").pipe(
+const provenanceJsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Render the would-be skills-lock/v2 entry as JSON")
 );

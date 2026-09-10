@@ -1,15 +1,16 @@
 import { fcRuns } from "@beep/fc-runs";
 import { KebabCaseStr, PascalCaseStr, SnakeCaseStr } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownKebabCaseStrSync = S.decodeUnknownSync(KebabCaseStr);
 const decodeUnknownPascalCaseStrSync = S.decodeUnknownSync(PascalCaseStr);
 const decodeUnknownSnakeCaseStrSync = S.decodeUnknownSync(SnakeCaseStr);
 
 describe("KebabCaseStr", () => {
-  const arbitrary = S.toArbitrary(KebabCaseStr)(fc);
+  const arbitrary = Arbitrary.schema(KebabCaseStr);
 
   it("accepts lowercase kebab-case values that start with a letter", () => {
     expect(decodeUnknownKebabCaseStrSync("command")).toBe("command");
@@ -24,18 +25,25 @@ describe("KebabCaseStr", () => {
   });
 
   it("derives valid values from the source schema and round-trips", () => {
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        expect(decodeUnknownKebabCaseStrSync(value)).toBe(value);
-        expect(value).toMatch(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            expect(decodeUnknownKebabCaseStrSync(value)).toBe(value);
+            expect(value).toMatch(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
 describe("PascalCaseStr", () => {
-  const arbitrary = S.toArbitrary(PascalCaseStr)(fc);
+  const arbitrary = Arbitrary.schema(PascalCaseStr);
 
   it("accepts PascalCase values", () => {
     expect(decodeUnknownPascalCaseStrSync("WorkflowStatus")).toBe("WorkflowStatus");
@@ -50,18 +58,25 @@ describe("PascalCaseStr", () => {
   });
 
   it("derives valid values from the source schema and round-trips", () => {
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        expect(decodeUnknownPascalCaseStrSync(value)).toBe(value);
-        expect(value).toMatch(/^[A-Z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$/);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            expect(decodeUnknownPascalCaseStrSync(value)).toBe(value);
+            expect(value).toMatch(/^[A-Z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$/);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });
 
 describe("SnakeCaseStr", () => {
-  const arbitrary = S.toArbitrary(SnakeCaseStr)(fc);
+  const arbitrary = Arbitrary.schema(SnakeCaseStr);
 
   it("accepts lowercase snake_case values", () => {
     expect(decodeUnknownSnakeCaseStrSync("workflow_status")).toBe("workflow_status");
@@ -74,12 +89,19 @@ describe("SnakeCaseStr", () => {
   });
 
   it("derives valid values from the source schema and round-trips", () => {
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        expect(decodeUnknownSnakeCaseStrSync(value)).toBe(value);
-        expect(value).toMatch(/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([value]) => {
+            expect(decodeUnknownSnakeCaseStrSync(value)).toBe(value);
+            expect(value).toMatch(/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

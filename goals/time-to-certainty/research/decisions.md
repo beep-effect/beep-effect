@@ -294,3 +294,45 @@ recorded beside lane ids, but the lane ids themselves converge on the command na
 keeping tier-prefixed ids and de-duplicating in the ledger by command digest alone (the hints and
 the seed would still fork on spelling). Consequence accepted: ProofLedger and GateStaleness entries
 keyed on the old spellings are non-reusable for exactly one run after the rename.
+
+## 2026-09-09 — C3.2 fingerprint mechanism, round 9 (one ruling, proposed by the orchestrator, ratified by merge of the C3.2 PR)
+
+Inputs: PR #1029's hosted Lint Policy red on `lint:policy-fingerprint` (a committed content digest
+cannot be current on a merge ref once main moves the closure; receipt in
+`research/OPPORTUNITIES.md`, 2026-09-09), Stage E4's structure-only fingerprint (declared inputs,
+no digest), `research/c3-turbo-facts.md` (a task hash includes its dependency task hashes; a
+package task may depend on a `//#` root task), and D15 of `research/c3-lane-task-table.md`.
+
+**Ruling 29 — the policy-tool fingerprint is a root task's hash, never a committed digest.**
+`//#lint:policy-fingerprint` (`beep-cli lint policy-fingerprint --check`, cached) declares the
+computed checker closure as its Turbo `inputs`: the `src/**` and `package.json` of `@beep/repo-cli`
+and its transitive workspace `dependencies`, the root `package.json`, the root tool configs the
+checkers read, and `standards/policy-tools.fingerprint.json`. Every CLI-backed policy task lists the
+root task in `dependsOn`, so Turbo hashes the closure's real content at run time and the digest
+reaches each policy task through the dependency-hash edge. The committed file stays structure-only
+(the declared input list) and is the source `--write` materializes into `turbo.json`; `--check`
+fails when the file or the materialized list drifts from the computation. `**/package.json` leaves
+the closure in favour of the members' manifests. Rejected: a committed content digest (never current
+on a merge ref); copying the closure globs into every policy task (N copies of one list); broad
+static globs such as `packages/**/src/**` (no reuse at all). Consequence accepted: a `turbo.json`
+materialization change misses every task once through the global hash, which happens only when the
+CLI's workspace dependency set changes. Amends D15 (table revision 5).
+
+## 2026-09-10 — C3.2 hosted sweep, round 10 (one ruling, steward: Benjamin, "I agree continue" on the PR #1079 options)
+
+Inputs: PR #1079's first hosted Lint Policy run (job 102722219371: `lint:jsdoc` 728 s for 137
+package tasks against 73.9 s; `lint:deprecated-apis` 52 of 141 tasks at the 15-minute cap against
+523.5 s for 28 shards), the local measurements (12 m 50 s cold, 0.455 s warm, 277 tasks), the
+export shape (every workspace export resolves to `src`), and the options posted on the PR.
+
+**Ruling 30 — hosted full-scope eslint sweeps keep their shard programs until per-package typed
+programs are cheap.** The package tasks `lint:deprecated-apis` and `lint:jsdoc`, the root residual
+`//#lint:jsdoc:root`, and the `//#lint:policy-fingerprint` edge stay registered and serve local
+non-full runs through `--affected`, where they pay only for touched packages and replay the rest.
+The hosted Lint Policy lane and `--full` run the 28-shard deprecated-apis program and the root
+`eslint . --max-warnings=0`, whose per-run cost the shards amortize across packages. The shard
+runner and the root invocation retire in C3.2b, after a hosted cold measurement shows per-package
+typed programs (reference-keeping check overlays plus `^build` declarations) within the shard
+budget. Rejected: raising the step budget to fit a ~40-minute sweep (breaks the Lint Policy budget
+for every closure-touching PR); switching the typed program in this PR (its own measurement).
+Amends D6 (table revision 6).

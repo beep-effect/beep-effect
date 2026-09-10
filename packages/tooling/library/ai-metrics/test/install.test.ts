@@ -16,7 +16,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isAiMetricsInstallPlanStep = S.is(AiMetricsInstallPlanStep);
 
@@ -26,7 +26,15 @@ const decodeInstallPlanJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsIn
 
 describe("@beep/repo-ai-metrics install contracts", () => {
   it("generates plan steps accepted by their domain schema", () =>
-    fc.assert(fc.property(S.toArbitrary(AiMetricsInstallPlanStep)(fc), isAiMetricsInstallPlanStep), fcRuns(25)));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(AiMetricsInstallPlanStep)]),
+          (values) => isAiMetricsInstallPlanStep(...values),
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it.effect("applies plan-step and doctor metadata defaults during construction and decoding", () =>
     Effect.gen(function* () {

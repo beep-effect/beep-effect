@@ -28,9 +28,6 @@ const $I = $ProvenanceId.create("SourceTextIdentity");
  * @since 0.0.0
  */
 export const SourceTextDigest = S.TemplateLiteral(["sha256:", Sha256Hex]).pipe(
-  S.annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(/^[0-9a-f]{64}$/).map((hex): `sha256:${string}` => `sha256:${hex}`),
-  }),
   S.brand("SourceTextDigest"),
   $I.annoteSchema("SourceTextDigest", {
     description: "A canonical SHA-256 digest using the sha256:<lowercase hex> representation.",

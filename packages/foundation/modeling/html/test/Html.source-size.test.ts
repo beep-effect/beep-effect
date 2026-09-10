@@ -1,10 +1,10 @@
 import { inspectSourceSizeList, SourceSizeAnalysis, SourceSizeIssue } from "@beep/html/Html.source-size";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isSourceSizeAnalysis = S.is(SourceSizeAnalysis);
 const isSourceSizeIssue = S.is(SourceSizeIssue);
@@ -310,31 +310,58 @@ describe("@beep/html source-size author conformance", () => {
   });
 
   it("accepts generated nonnegative literal lengths", () =>
-    fc.assert(
-      fc.property(fc.integer({ min: 0, max: 1_000_000 }), fc.constantFrom("px", "rem", "vw", "cqw"), (value, unit) => {
-        expectValid(`${value}${unit}`);
-      }),
-      fcRuns(100)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1_000_000))),
+            Arbitrary.schema(S.Literals(["px", "rem", "vw", "cqw"])),
+          ]),
+          ([value, unit]) => {
+            expectValid(`${value}${unit}`);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("rejects generated negative literal lengths", () =>
-    fc.assert(
-      fc.property(fc.integer({ min: 1, max: 1_000_000 }), fc.constantFrom("px", "rem", "vw"), (value, unit) => {
-        expectInvalid(`-${value}${unit}`, "invalidSourceSize");
-      }),
-      fcRuns(100)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(1_000_000))),
+            Arbitrary.schema(S.Literals(["px", "rem", "vw"])),
+          ]),
+          ([value, unit]) => {
+            expectInvalid(`-${value}${unit}`, "invalidSourceSize");
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("is deterministic and total for arbitrary Unicode and UTF-16 input", () =>
-    fc.assert(
-      fc.property(fc.string({ unit: "binary", maxLength: 256 }), (input) => {
-        const first = inspectSourceSizeList(input);
-        const second = inspectSourceSizeList(input);
-        expect(Result.isSuccess(first)).toBe(Result.isSuccess(second));
-        if (Result.isFailure(first) && Result.isFailure(second)) {
-          expect(first.failure[0]?.code).toBe(second.failure[0]?.code);
-        }
-      }),
-      fcRuns(250)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.String.check(S.isMaxLength(256)))]),
+          ([input]) => {
+            const first = inspectSourceSizeList(input);
+            const second = inspectSourceSizeList(input);
+            expect(Result.isSuccess(first)).toBe(Result.isSuccess(second));
+            if (Result.isFailure(first) && Result.isFailure(second)) {
+              expect(first.failure[0]?.code).toBe(second.failure[0]?.code);
+            }
+
+            return true;
+          },
+          fcRuns(250)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

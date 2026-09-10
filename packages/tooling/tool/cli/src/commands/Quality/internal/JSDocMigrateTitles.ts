@@ -40,7 +40,7 @@ const migrateTitlesError = (message: string): QualityScriptCommandError =>
     exitCode: 1,
   });
 
-const resolveProxyAuthToken: Effect.Effect<O.Option<Redacted.Redacted<string>>> = Config.redacted(
+const resolveProxyAuthToken: Effect.Effect<O.Option<Redacted.Redacted<string>>> = Config.Redacted(
   "CLI_PROXY_API_KEY"
 ).pipe(Config.option, Effect.orDie, Effect.map(O.filter((value) => Str.isNonEmpty(Redacted.value(value)))));
 

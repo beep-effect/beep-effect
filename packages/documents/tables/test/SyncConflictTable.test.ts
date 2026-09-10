@@ -14,11 +14,9 @@ import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 
 const decodeUnknownDomainSyncConflictSyncConflictSync = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
 
-const SyncConflictArbitrary = S.toArbitrary(DomainSyncConflict.SyncConflict)(fc);
 const SyncConflictEquivalence = S.toEquivalence(DomainSyncConflict.SyncConflict);
 
 const indexConfigNamed = (name: string) =>
@@ -106,21 +104,22 @@ describe("SyncConflict table", () => {
     expect(SyncConflictEquivalence(roundTripped, syncConflict)).toBe(true);
   });
 
-  it("round-trips schema-derived SyncConflicts through the row converters", () =>
-    fc.assert(
-      fc.property(SyncConflictArbitrary, (syncConflict) => {
-        const insert = toSyncConflictInsert(syncConflict);
-        const decoded = fromSyncConflictRow({
-          ...insert,
-          id: syncConflict.id,
-          localRelPath: insert.localRelPath ?? null,
-          remoteEventId: insert.remoteEventId ?? null,
-          remoteId: insert.remoteId ?? null,
-          syncItemId: insert.syncItemId ?? null,
-        });
+  it.prop(
+    "round-trips schema-derived SyncConflicts through the row converters",
+    [S.toType(DomainSyncConflict.SyncConflict)],
+    ([syncConflict]) => {
+      const insert = toSyncConflictInsert(syncConflict);
+      const decoded = fromSyncConflictRow({
+        ...insert,
+        id: syncConflict.id,
+        localRelPath: insert.localRelPath ?? null,
+        remoteEventId: insert.remoteEventId ?? null,
+        remoteId: insert.remoteId ?? null,
+        syncItemId: insert.syncItemId ?? null,
+      });
 
-        expect(SyncConflictEquivalence(decoded, syncConflict)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+      expect(SyncConflictEquivalence(decoded, syncConflict)).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

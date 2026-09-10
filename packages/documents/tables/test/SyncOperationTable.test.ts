@@ -14,11 +14,9 @@ import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 
 const decodeUnknownDomainSyncOperationSyncOperationSync = S.decodeUnknownSync(DomainSyncOperation.SyncOperation);
 
-const SyncOperationArbitrary = S.toArbitrary(DomainSyncOperation.SyncOperation)(fc);
 const SyncOperationEquivalence = S.toEquivalence(DomainSyncOperation.SyncOperation);
 
 const indexConfigNamed = (name: string) =>
@@ -111,20 +109,21 @@ describe("SyncOperation table", () => {
     expect(SyncOperationEquivalence(roundTripped, syncOperation)).toBe(true);
   });
 
-  it("round-trips schema-derived SyncOperations through the row converters", () =>
-    fc.assert(
-      fc.property(SyncOperationArbitrary, (syncOperation) => {
-        const insert = toSyncOperationInsert(syncOperation);
-        const decoded = fromSyncOperationRow({
-          ...insert,
-          id: syncOperation.id,
-          inputContentDigest: insert.inputContentDigest ?? null,
-          lastError: insert.lastError ?? null,
-          targetParentRelPath: insert.targetParentRelPath ?? null,
-        });
+  it.prop(
+    "round-trips schema-derived SyncOperations through the row converters",
+    [S.toType(DomainSyncOperation.SyncOperation)],
+    ([syncOperation]) => {
+      const insert = toSyncOperationInsert(syncOperation);
+      const decoded = fromSyncOperationRow({
+        ...insert,
+        id: syncOperation.id,
+        inputContentDigest: insert.inputContentDigest ?? null,
+        lastError: insert.lastError ?? null,
+        targetParentRelPath: insert.targetParentRelPath ?? null,
+      });
 
-        expect(SyncOperationEquivalence(decoded, syncOperation)).toBe(true);
-      }),
-      fcRuns(50)
-    ));
+      expect(SyncOperationEquivalence(decoded, syncOperation)).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

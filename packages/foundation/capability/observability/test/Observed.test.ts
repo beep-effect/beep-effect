@@ -1,8 +1,8 @@
 import { ObservedCause, ObservedExit } from "@beep/observability";
 import { fcRuns } from "@beep/test-utils";
-import { Cause, Exit } from "effect";
+import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeToCodecJsonObservedCauseSync = S.decodeSync(S.toCodecJson(ObservedCause));
@@ -56,24 +56,38 @@ describe("Observed", () => {
   });
 
   it("schema-derived arbitrary values are members of ObservedCause", () => {
-    const arbitrary = S.toArbitrary(ObservedCause)(fc);
+    const arbitrary = Arbitrary.schema(ObservedCause);
 
-    fc.assert(
-      fc.property(arbitrary, (cause) => {
-        expect(ObservedCause.is(cause)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([cause]) => {
+            expect(ObservedCause.is(cause)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("schema-derived arbitrary values are members of ObservedExit", () => {
-    const arbitrary = S.toArbitrary(ObservedExit)(fc);
+    const arbitrary = Arbitrary.schema(ObservedExit);
 
-    fc.assert(
-      fc.property(arbitrary, (exit) => {
-        expect(ObservedExit.is(exit)).toBe(true);
-      }),
-      fcRuns(50)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([exit]) => {
+            expect(ObservedExit.is(exit)).toBe(true);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

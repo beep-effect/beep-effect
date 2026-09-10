@@ -323,7 +323,7 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
 export const SpanFromMatch = MatchedText.pipe(
   S.decodeTo(Contract.Span, {
     decode: SchemaGetter.transform(spanFromMatch),
-    encode: SchemaGetter.transformOrFail((span: Contract.Span.Encoded, options) =>
+    encode: SchemaGetter.transformEffect((span: Contract.Span.Encoded, options) =>
       CurrentAlignmentSource.use((source) => {
         if (span.end > Str.length(source.sourceText)) {
           return Effect.fail(
@@ -461,7 +461,7 @@ export const GroundedExtractionFromCandidate: S.Codec<
   CurrentAlignmentSource
 > = ExtractionCandidate.pipe(
   S.decodeTo(S.toType(GroundedExtraction), {
-    decode: SchemaGetter.transformOrFail((candidate: ExtractionCandidate) =>
+    decode: SchemaGetter.transformEffect((candidate: ExtractionCandidate) =>
       CurrentAlignmentSource.useSync((source) => alignCandidate(candidate, source))
     ),
     encode: SchemaGetter.transform(candidateFromGrounded),
@@ -503,7 +503,7 @@ export const GroundedExtractionsFromCandidates: S.Codec<
   CurrentAlignmentSource
 > = S.Array(ExtractionCandidate).pipe(
   S.decodeTo(GroundedExtraction.pipe(S.Array, S.toType), {
-    decode: SchemaGetter.transformOrFail((candidates: ReadonlyArray<ExtractionCandidate>) =>
+    decode: SchemaGetter.transformEffect((candidates: ReadonlyArray<ExtractionCandidate>) =>
       CurrentAlignmentSource.useSync((source) => alignCandidates(candidates, source))
     ),
     encode: SchemaGetter.transform(A.map(candidateFromGrounded)),

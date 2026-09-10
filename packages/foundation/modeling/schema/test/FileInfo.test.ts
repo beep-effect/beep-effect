@@ -1,11 +1,13 @@
 import { fcRuns } from "@beep/fc-runs";
 import { FileInfo, FileInfoType } from "@beep/schema/FileInfo";
 import { describe, expect, it } from "@effect/vitest";
-import { FileSystem } from "effect";
+import { Effect } from "effect";
+import * as ByteSize from "effect/ByteSize";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import type { FileSystem } from "effect";
 
 const decodeFileInfoSync = S.decodeSync(FileInfo);
 const decodeUnknownFileInfoSync = S.decodeUnknownSync(FileInfo);
@@ -30,7 +32,7 @@ describe("FileInfo", () => {
     const info: FileSystem.File.Info = FileInfo.cases.File.make({
       dev: 1,
       mode: 0o644,
-      size: FileSystem.Size(12n),
+      size: ByteSize.bytes(12n),
     });
 
     expect(info.type).toBe("File");
@@ -42,7 +44,7 @@ describe("FileInfo", () => {
 
   it("constructs every entry kind with a matching type", () => {
     for (const kind of FileInfoType.Options) {
-      const info = FileInfo.cases[kind].make({ dev: 1, mode: 0o600, size: FileSystem.Size(0n) });
+      const info = FileInfo.cases[kind].make({ dev: 1, mode: 0o600, size: ByteSize.bytes(0n) });
       expect(info.type).toBe(kind);
     }
   });
@@ -52,7 +54,7 @@ describe("FileInfo", () => {
       type: "Directory",
       dev: 2,
       mode: 0o755,
-      size: 0n,
+      size: ByteSize.bytes(0n),
     });
 
     expect(info.type).toBe("Directory");
@@ -66,7 +68,7 @@ describe("FileInfo", () => {
       type: "File",
       dev: 1,
       mode: 0o644,
-      size: 42n,
+      size: ByteSize.bytes(42n),
       mtime,
       ino: 7,
     });
@@ -77,7 +79,7 @@ describe("FileInfo", () => {
   });
 
   it("round-trips through encode and decode", () => {
-    const info = FileInfo.cases.SymbolicLink.make({ dev: 3, mode: 0o777, size: FileSystem.Size(8n) });
+    const info = FileInfo.cases.SymbolicLink.make({ dev: 3, mode: 0o777, size: ByteSize.bytes(8n) });
     const encoded = encodeFileInfoSync(info);
     const decoded = decodeFileInfoSync(encoded);
 
@@ -90,19 +92,26 @@ describe("FileInfo", () => {
         type: "Device",
         dev: 1,
         mode: 0o600,
-        size: 0n,
+        size: ByteSize.bytes(0n),
       })
     ).toThrow();
   });
 
   it("round-trips schema-derived arbitrary values", () => {
-    const arbitrary = S.toArbitrary(FileInfo)(fc);
-    fc.assert(
-      fc.property(arbitrary, (info) => {
-        expect(isFileInfo2(info)).toBe(true);
-        expect(decodeFileInfoSync(encodeFileInfoSync(info))).toEqual(info);
-      }),
-      fcRuns(50)
-    );
+    const arbitrary = Arbitrary.schema(FileInfo);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([arbitrary]),
+          ([info]) => {
+            expect(isFileInfo2(info)).toBe(true);
+            expect(decodeFileInfoSync(encodeFileInfoSync(info))).toEqual(info);
+
+            return true;
+          },
+          fcRuns(50)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 });

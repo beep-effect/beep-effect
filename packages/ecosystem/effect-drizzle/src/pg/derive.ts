@@ -39,9 +39,9 @@ import {
 } from "effect/Array";
 import { equals } from "effect/Equal";
 import { dual, flow } from "effect/Function";
-import { orElse as matchOrElse, tags as matchTags, type as matchType, withReturnType } from "effect/Match";
+import { orElse as matchOrElse, tag as matchTag, type as matchType, withReturnType } from "effect/Match";
 import { fromUndefinedOr, getOrElse, map as mapOption, none, some as someOption } from "effect/Option";
-import { hasProperty, isNumber, isString, isTagged, not } from "effect/Predicate";
+import { hasProperty, isBigInt, isBoolean, isNumber, isString, isTagged, not } from "effect/Predicate";
 import { isSchema } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
 import { get as getStruct } from "effect/Struct";
@@ -272,37 +272,32 @@ const encodedAST = flow(selectSchemaOf, flow(getStruct("ast"), toEncoded));
 const atomicCarrierTag = (node: AST): PgColumn.CarrierTag =>
   matchType<AST>().pipe(
     withReturnType<PgColumn.CarrierTag>(),
-    matchTags({
-      String: () => "string",
-      TemplateLiteral: () => "string",
-      Number: () => "number",
-      BigInt: () => "bigint",
-      Boolean: () => "boolean",
-      Objects: () => "object",
-      Arrays: () => "object",
-      Enum: ({ enums }) =>
-        every(enums, ([, value]) => isString(value))
-          ? "string"
-          : fail("(unknown)", node._tag, "Encoded enum is not string-valued."),
-      Literal: ({ literal }) =>
-        isString(literal)
-          ? "string"
-          : isNumber(literal)
-            ? "number"
-            : typeof literal === "bigint"
-              ? "bigint"
-              : typeof literal === "boolean"
-                ? "boolean"
-                : fail("(unknown)", node._tag, "Encoded literal has no SQL carrier."),
-      Declaration: (declaration) =>
-        hasProperty(declaration.annotations?.representation, "id") &&
-        declaration.annotations.representation.id === "effect/schema/Date"
-          ? "date"
-          : hasProperty(declaration.annotations?.representation, "id") &&
-              declaration.annotations.representation.id === "effect/schema/Uint8Array"
-            ? "bytes"
-            : fail("(unknown)", node._tag, "Encoded declaration has no SQL carrier."),
-    }),
+    matchTag("String", () => "string"),
+    matchTag("TemplateLiteral", () => "string"),
+    matchTag("Number", () => "number"),
+    matchTag("BigInt", () => "bigint"),
+    matchTag("Boolean", () => "boolean"),
+    matchTag("Objects", () => "object"),
+    matchTag("Arrays", () => "object"),
+    matchTag("Enum", ({ enums }) =>
+      every(enums, ([, value]) => isString(value))
+        ? "string"
+        : fail("(unknown)", node._tag, "Encoded enum is not string-valued.")
+    ),
+    matchTag("Literal", ({ literal }) =>
+      isString(literal) || isNumber(literal) || isBigInt(literal) || isBoolean(literal)
+        ? (typeof literal as "string" | "number" | "bigint" | "boolean")
+        : fail("(unknown)", node._tag, "Encoded literal has no SQL carrier.")
+    ),
+    matchTag("Declaration", (declaration) =>
+      hasProperty(declaration.annotations?.representation, "id") &&
+      declaration.annotations.representation.id === "effect/schema/Date"
+        ? "date"
+        : hasProperty(declaration.annotations?.representation, "id") &&
+            declaration.annotations.representation.id === "effect/schema/Uint8Array"
+          ? "bytes"
+          : fail("(unknown)", node._tag, "Encoded declaration has no SQL carrier.")
+    ),
     matchOrElse(() => fail("(unknown)", node._tag, "Encoded AST has no SQL carrier."))
   )(node);
 
@@ -397,11 +392,9 @@ const collectMaxLengths: {
   );
   const nested = matchType<AST>().pipe(
     withReturnType<ReadonlyArray<number>>(),
-    matchTags({
-      Union: ({ types }) => flatMap(types, collectNested),
-      Suspend: (suspend) => collectNested(suspend.thunk()),
-      Declaration: ({ typeParameters }) => flatMap(typeParameters, collectNested),
-    }),
+    matchTag("Union", ({ types }) => flatMap(types, collectNested)),
+    matchTag("Suspend", (suspend) => collectNested(suspend.thunk())),
+    matchTag("Declaration", ({ typeParameters }) => flatMap(typeParameters, collectNested)),
     matchOrElse(empty<number>)
   )(node);
   return appendAll(appendAll(checks, encodings), nested);
@@ -444,11 +437,9 @@ const collectExactLengths: {
   );
   const nested = matchType<AST>().pipe(
     withReturnType<ReadonlyArray<number>>(),
-    matchTags({
-      Union: ({ types }) => flatMap(types, collectNested),
-      Suspend: (suspend) => collectNested(suspend.thunk()),
-      Declaration: ({ typeParameters }) => flatMap(typeParameters, collectNested),
-    }),
+    matchTag("Union", ({ types }) => flatMap(types, collectNested)),
+    matchTag("Suspend", (suspend) => collectNested(suspend.thunk())),
+    matchTag("Declaration", ({ typeParameters }) => flatMap(typeParameters, collectNested)),
     matchOrElse(empty<number>)
   )(node);
   return appendAll(appendAll(checks, encodings), nested);

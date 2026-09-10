@@ -158,22 +158,20 @@ const textLeaf: {
 
 const lineBreak = () => asSchemaError(LineBreakNode.makeEffect({}));
 
-const mdInlineText = Match.type<Md.Inline>().pipe(
-  Match.tagsExhaustive({
-    text: (node) => node.value,
-    rawMarkdown: (node) => node.value,
-    rawHtml: (node) => node.value,
-    strong: (node) => mdInlinesText(node.children),
-    em: (node) => mdInlinesText(node.children),
-    del: (node) => mdInlinesText(node.children),
-    code: (node) => node.value,
-    a: (node) => mdInlinesText(node.children),
-    img: (node) => node.alt,
-    br: () => "\n",
-    inlineMath: (node) => node.value,
-    footnoteReference: (node) => node.identifier,
-  })
-);
+const mdInlineText = Match.typeTags<Md.Inline>()({
+  text: (node) => node.value,
+  rawMarkdown: (node) => node.value,
+  rawHtml: (node) => node.value,
+  strong: (node) => mdInlinesText(node.children),
+  em: (node) => mdInlinesText(node.children),
+  del: (node) => mdInlinesText(node.children),
+  code: (node) => node.value,
+  a: (node) => mdInlinesText(node.children),
+  img: (node) => node.alt,
+  br: () => "\n",
+  inlineMath: (node) => node.value,
+  footnoteReference: (node) => node.identifier,
+});
 
 const mdInlinesText: (inlines: ReadonlyArray<Md.Inline>) => string = flow(A.map(mdInlineText), A.join(""));
 
@@ -194,35 +192,39 @@ const mdListItemsText: (items: ReadonlyArray<{ readonly children: ReadonlyArray<
 
 const mdBlockText = (block: Md.Block): string =>
   Match.value(block).pipe(
-    Match.tagsExhaustive({
-      heading: (node) => mdInlinesText(node.children),
-      p: (node) => mdInlinesText(node.children),
-      blockquote: (node) => A.join(A.map(node.children, mdBlockText), "\n"),
-      pre: (node) => node.value,
-      ul: (node) => mdListItemsText(node.children),
-      ol: (node) => mdListItemsText(node.children),
-      taskList: (node) => mdListItemsText(node.children),
-      table: (node) =>
-        A.join(
-          A.map(node.children, (row) =>
-            A.join(
-              A.map(row.children, (cell) => mdInlinesText(cell.children)),
-              "\t"
-            )
-          ),
-          "\n"
+    Match.tag("heading", (node) => mdInlinesText(node.children)),
+    Match.tag("p", (node) => mdInlinesText(node.children)),
+    Match.tag("blockquote", (node) => A.join(A.map(node.children, mdBlockText), "\n")),
+    Match.tag("pre", (node) => node.value),
+    Match.tag("ul", (node) => mdListItemsText(node.children)),
+    Match.tag("ol", (node) => mdListItemsText(node.children)),
+    Match.tag("taskList", (node) => mdListItemsText(node.children)),
+    Match.tag("table", (node) =>
+      A.join(
+        A.map(node.children, (row) =>
+          A.join(
+            A.map(row.children, (cell) => mdInlinesText(cell.children)),
+            "\t"
+          )
         ),
-      youtube: (node) => `https://www.youtube.com/watch?v=${node.videoId}`,
-      mathBlock: (node) => node.value,
-      footnoteDefinition: (node) => `[^${node.identifier}]: ${A.join(A.map(node.children, mdBlockText), "\n")}`,
-      admonition: (node) => A.join(A.map(node.children, mdBlockText), "\n"),
-      embed: (node) =>
-        pipe(
-          node.title,
-          O.getOrElse(() => node.src)
-        ),
-      hr: () => "---",
-    })
+        "\n"
+      )
+    ),
+    Match.tag("youtube", (node) => `https://www.youtube.com/watch?v=${node.videoId}`),
+    Match.tag("mathBlock", (node) => node.value),
+    Match.tag(
+      "footnoteDefinition",
+      (node) => `[^${node.identifier}]: ${A.join(A.map(node.children, mdBlockText), "\n")}`
+    ),
+    Match.tag("admonition", (node) => A.join(A.map(node.children, mdBlockText), "\n")),
+    Match.tag("embed", (node) =>
+      pipe(
+        node.title,
+        O.getOrElse(() => node.src)
+      )
+    ),
+    Match.tag("hr", () => "---"),
+    Match.exhaustive
   );
 
 const inlinesToLexical = (
@@ -250,45 +252,50 @@ const inlineToLexical = (
   insideLink = false
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Match.value(inline).pipe(
-    Match.tagsExhaustive({
-      // Trusted raw runs have no Lexical equivalent; they degrade to plain text
-      // runs (README "Lossiness profile").
-      text: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
-      rawMarkdown: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
-      rawHtml: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
-      strong: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.bold), insideLink),
-      em: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.italic), insideLink),
-      del: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.strikethrough), insideLink),
-      code: (node) => Effect.map(textLeaf(node.value, withTextFormat(format, TextFormatBits.code)), A.of<LexicalNode>),
-      a: (node) =>
-        insideLink
-          ? inlinesToLexical(node.children, format, true)
-          : Effect.gen(function* () {
-              const children = yield* inlinesToLexical(node.children, format, true);
-              const runtimeChildren = yield* ensureLinkChildren(children, node.href, format);
-              const url = yield* decodeSafeUrl(node.href);
-              const link = yield* asSchemaError(
-                LinkNode.makeEffect({ url, children: runtimeChildren, title: node.title })
-              );
-              return A.of<LexicalNode>(link);
-            }),
-      // Images normally degrade to links so the destination survives. Inside
-      // an outer link, only the alt-text run is representable (README).
-      img: (node) =>
-        insideLink
-          ? Effect.map(textLeaf(node.alt, format), A.of<LexicalNode>)
-          : Effect.flatMap(textLeaf(node.alt, format), (alt) =>
-              Effect.flatMap(decodeSafeUrl(node.src), (url) =>
-                Effect.map(
-                  asSchemaError(LinkNode.makeEffect({ url, children: [alt], title: node.title })),
-                  A.of<LexicalNode>
-                )
+    Match.tag("text", (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>)),
+    Match.tag("rawMarkdown", (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>)),
+    Match.tag("rawHtml", (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>)),
+    Match.tag("strong", (node) =>
+      inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.bold), insideLink)
+    ),
+    Match.tag("em", (node) =>
+      inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.italic), insideLink)
+    ),
+    Match.tag("del", (node) =>
+      inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.strikethrough), insideLink)
+    ),
+    Match.tag("code", (node) =>
+      Effect.map(textLeaf(node.value, withTextFormat(format, TextFormatBits.code)), A.of<LexicalNode>)
+    ),
+    Match.tag("a", (node) =>
+      insideLink
+        ? inlinesToLexical(node.children, format, true)
+        : Effect.gen(function* () {
+            const children = yield* inlinesToLexical(node.children, format, true);
+            const runtimeChildren = yield* ensureLinkChildren(children, node.href, format);
+            const url = yield* decodeSafeUrl(node.href);
+            const link = yield* asSchemaError(
+              LinkNode.makeEffect({ url, children: runtimeChildren, title: node.title })
+            );
+            return A.of<LexicalNode>(link);
+          })
+    ),
+    Match.tag("img", (node) =>
+      insideLink
+        ? Effect.map(textLeaf(node.alt, format), A.of<LexicalNode>)
+        : Effect.flatMap(textLeaf(node.alt, format), (alt) =>
+            Effect.flatMap(decodeSafeUrl(node.src), (url) =>
+              Effect.map(
+                asSchemaError(LinkNode.makeEffect({ url, children: [alt], title: node.title })),
+                A.of<LexicalNode>
               )
-            ),
-      br: () => Effect.map(lineBreak(), A.of<LexicalNode>),
-      inlineMath: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
-      footnoteReference: (node) => Effect.map(textLeaf(`[^${node.identifier}]`, format), A.of<LexicalNode>),
-    })
+            )
+          )
+    ),
+    Match.tag("br", () => Effect.map(lineBreak(), A.of<LexicalNode>)),
+    Match.tag("inlineMath", (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>)),
+    Match.tag("footnoteReference", (node) => Effect.map(textLeaf(`[^${node.identifier}]`, format), A.of<LexicalNode>)),
+    Match.exhaustive
   );
 
 const listItemsToLexical = (
@@ -391,92 +398,87 @@ const paragraphArtifactRef = (block: Md.P): O.Option<ArtifactRef> =>
  * @category combinators
  * @since 0.0.0
  */
-export const blockToLexical = Match.type<Md.Block>().pipe(
-  Match.tagsExhaustive({
-    heading: (node) =>
-      Effect.flatMap(inlinesToLexical(node.children, emptyTextFormat), (children) =>
-        HeadingNode.makeEffect({ tag: HeadingLevelTag.To.Enum[`number${node.level}`], children })
-      ),
-    p: (node) =>
-      O.match(paragraphArtifactRef(node), {
-        onNone: () =>
-          Effect.flatMap(inlinesToLexical(node.children, emptyTextFormat), (children) =>
-            ParagraphNode.makeEffect({ children })
+export const blockToLexical = Match.typeTags<Md.Block>()({
+  heading: (node) =>
+    Effect.flatMap(inlinesToLexical(node.children, emptyTextFormat), (children) =>
+      HeadingNode.makeEffect({ tag: HeadingLevelTag.To.Enum[`number${node.level}`], children })
+    ),
+  p: (node) =>
+    O.match(paragraphArtifactRef(node), {
+      onNone: () =>
+        Effect.flatMap(inlinesToLexical(node.children, emptyTextFormat), (children) =>
+          ParagraphNode.makeEffect({ children })
+        ),
+      onSome: (ref) => ArtifactRefNode.makeEffect({ artifactId: ref.artifactId, label: ref.label }),
+    }),
+  blockquote: Effect.fn(function* (node: Md.BlockQuote) {
+    const runs = yield* Effect.forEach(node.children, quoteChildToInlines);
+    const brk = yield* lineBreak();
+    return yield* QuoteNode.makeEffect({ children: A.flatten(A.intersperse(runs, [brk])) });
+  }),
+  pre: Effect.fn(function* (node: Md.Pre) {
+    const texts = yield* Effect.forEach(Str.split(node.value, "\n"), (line) => textLeaf(line, emptyTextFormat));
+    const brk = yield* lineBreak();
+    return yield* CodeNode.makeEffect({
+      language: O.flatMap(node.language, Md.CodeFenceLanguage.decodeOption),
+      children: A.intersperse(texts, brk),
+    });
+  }),
+  table: Effect.fn("Lexical.codec.blockToLexical.table")(function* (node: Md.Table) {
+    const sourceColumnCount = A.reduce(node.children, 0, (maximum, row) => N.max(maximum, A.length(row.children)));
+    const runtimeColumnCount = N.max(1, sourceColumnCount);
+    const sourceRows = A.isReadonlyArrayNonEmpty(node.children) ? node.children : [Md.TableRow.make({ children: [] })];
+    const rows = yield* Effect.forEach(
+      sourceRows,
+      Effect.fnUntraced(function* (row: Md.TableRow, rowIndex) {
+        const cells = yield* Effect.forEach(
+          A.makeBy(runtimeColumnCount, (columnIndex) =>
+            pipe(
+              A.get(row.children, columnIndex),
+              O.getOrElse(() => Md.TableCell.make({ children: [] }))
+            )
           ),
-        onSome: (ref) => ArtifactRefNode.makeEffect({ artifactId: ref.artifactId, label: ref.label }),
-      }),
-    blockquote: Effect.fn(function* (node: Md.BlockQuote) {
-      const runs = yield* Effect.forEach(node.children, quoteChildToInlines);
-      const brk = yield* lineBreak();
-      return yield* QuoteNode.makeEffect({ children: A.flatten(A.intersperse(runs, [brk])) });
-    }),
-    pre: Effect.fn(function* (node: Md.Pre) {
-      const texts = yield* Effect.forEach(Str.split(node.value, "\n"), (line) => textLeaf(line, emptyTextFormat));
-      const brk = yield* lineBreak();
-      return yield* CodeNode.makeEffect({
-        language: O.flatMap(node.language, Md.CodeFenceLanguage.decodeOption),
-        children: A.intersperse(texts, brk),
-      });
-    }),
-    table: Effect.fn("Lexical.codec.blockToLexical.table")(function* (node: Md.Table) {
-      const sourceColumnCount = A.reduce(node.children, 0, (maximum, row) => N.max(maximum, A.length(row.children)));
-      const runtimeColumnCount = N.max(1, sourceColumnCount);
-      const sourceRows = A.isReadonlyArrayNonEmpty(node.children)
-        ? node.children
-        : [Md.TableRow.make({ children: [] })];
-      const rows = yield* Effect.forEach(
-        sourceRows,
-        Effect.fnUntraced(function* (row: Md.TableRow, rowIndex) {
-          const cells = yield* Effect.forEach(
-            A.makeBy(runtimeColumnCount, (columnIndex) =>
-              pipe(
-                A.get(row.children, columnIndex),
-                O.getOrElse(() => Md.TableCell.make({ children: [] }))
-              )
-            ),
-            Effect.fnUntraced(function* (cell: Md.TableCell) {
-              const inlines = yield* inlinesToLexical(cell.children, emptyTextFormat);
-              const paragraph = yield* ParagraphNode.makeEffect({ children: inlines });
-              return yield* TableCellNode.makeEffect({
-                headerState:
-                  sourceColumnCount > 0 && node.headerRow && rowIndex === 0 ? rowTableCellHeader : noTableCellHeader,
-                children: [paragraph],
-              });
-            })
-          );
+          Effect.fnUntraced(function* (cell: Md.TableCell) {
+            const inlines = yield* inlinesToLexical(cell.children, emptyTextFormat);
+            const paragraph = yield* ParagraphNode.makeEffect({ children: inlines });
+            return yield* TableCellNode.makeEffect({
+              headerState:
+                sourceColumnCount > 0 && node.headerRow && rowIndex === 0 ? rowTableCellHeader : noTableCellHeader,
+              children: [paragraph],
+            });
+          })
+        );
 
-          return yield* TableRowNode.makeEffect({ children: cells });
-        })
-      );
+        return yield* TableRowNode.makeEffect({ children: cells });
+      })
+    );
 
-      return yield* TableNode.makeEffect({ children: rows });
-    }),
-    youtube: (node) => YouTubeNode.makeEffect({ videoID: node.videoId }),
-    ul: (node) =>
-      Effect.flatMap(listItemsToLexical(node.children), (children) =>
-        ListNode.makeEffect(ListNodeValue.cases.bullet.make({ start: firstOrdinal, children }))
-      ),
-    ol: (node) => {
-      const start = runtimeListStart(node.start);
-      return Effect.flatMap(listItemsToLexical(node.children, start), (children) =>
-        ListNode.makeEffect(ListNodeValue.cases.number.make({ start, children }))
-      );
-    },
-    taskList: (node) =>
-      Effect.flatMap(
-        listItemsToLexical(A.map(node.children, (item) => ({ children: item.children, checked: item.checked }))),
-        (children) => ListNode.makeEffect(ListNodeValue.cases.check.make({ start: firstOrdinal, children }))
-      ),
-    // Thematic breaks are outside the v1 node scope; they degrade to a literal
-    // "---" paragraph (README "Lossiness profile").
-    hr: () =>
-      Effect.flatMap(textLeaf("---", emptyTextFormat), (text) => ParagraphNode.makeEffect({ children: [text] })),
-    mathBlock: blockTextParagraph,
-    footnoteDefinition: blockTextParagraph,
-    admonition: blockTextParagraph,
-    embed: blockTextParagraph,
-  })
-);
+    return yield* TableNode.makeEffect({ children: rows });
+  }),
+  youtube: (node) => YouTubeNode.makeEffect({ videoID: node.videoId }),
+  ul: (node) =>
+    Effect.flatMap(listItemsToLexical(node.children), (children) =>
+      ListNode.makeEffect(ListNodeValue.cases.bullet.make({ start: firstOrdinal, children }))
+    ),
+  ol: (node) => {
+    const start = runtimeListStart(node.start);
+    return Effect.flatMap(listItemsToLexical(node.children, start), (children) =>
+      ListNode.makeEffect(ListNodeValue.cases.number.make({ start, children }))
+    );
+  },
+  taskList: (node) =>
+    Effect.flatMap(
+      listItemsToLexical(A.map(node.children, (item) => ({ children: item.children, checked: item.checked }))),
+      (children) => ListNode.makeEffect(ListNodeValue.cases.check.make({ start: firstOrdinal, children }))
+    ),
+  // Thematic breaks are outside the v1 node scope; they degrade to a literal
+  // "---" paragraph (README "Lossiness profile").
+  hr: () => Effect.flatMap(textLeaf("---", emptyTextFormat), (text) => ParagraphNode.makeEffect({ children: [text] })),
+  mathBlock: blockTextParagraph,
+  footnoteDefinition: blockTextParagraph,
+  admonition: blockTextParagraph,
+  embed: blockTextParagraph,
+});
 
 /**
  * Lift a full Md document into a serialized Lexical editor state.

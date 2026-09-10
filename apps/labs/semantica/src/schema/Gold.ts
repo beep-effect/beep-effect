@@ -292,7 +292,7 @@ class EncodedGoldStructureLabel extends S.Class<EncodedGoldStructureLabel>($I`En
 
 const GoldStructureLabelFromEncoded = EncodedGoldStructureLabel.pipe(
   S.decodeTo(GoldStructureLabel, {
-    decode: SchemaGetter.transformOrFail<GoldStructureLabel, EncodedGoldStructureLabel, CurrentGoldDocumentText>(
+    decode: SchemaGetter.transformEffect<GoldStructureLabel, EncodedGoldStructureLabel, CurrentGoldDocumentText>(
       (label, options) =>
         CurrentGoldDocumentText.use((text) =>
           sliceForDigest(text, label.startChar, label.endChar, label.quoteSha256, label, options, "quote").pipe(
@@ -339,7 +339,7 @@ class EncodedGoldEntityLabel extends S.Class<EncodedGoldEntityLabel>($I`EncodedG
 
 const GoldEntityLabelFromEncoded = EncodedGoldEntityLabel.pipe(
   S.decodeTo(GoldEntityLabel, {
-    decode: SchemaGetter.transformOrFail<GoldEntityLabel, EncodedGoldEntityLabel, CurrentGoldDocumentText>(
+    decode: SchemaGetter.transformEffect<GoldEntityLabel, EncodedGoldEntityLabel, CurrentGoldDocumentText>(
       (label, options) =>
         CurrentGoldDocumentText.use((text) => {
           const quote = sliceForDigest(
@@ -410,7 +410,7 @@ class EncodedGoldRelationLabel extends S.Class<EncodedGoldRelationLabel>($I`Enco
 
 const GoldRelationLabelFromEncoded = EncodedGoldRelationLabel.pipe(
   S.decodeTo(GoldRelationLabel, {
-    decode: SchemaGetter.transformOrFail<GoldRelationLabel, EncodedGoldRelationLabel, CurrentGoldDocumentText>(
+    decode: SchemaGetter.transformEffect<GoldRelationLabel, EncodedGoldRelationLabel, CurrentGoldDocumentText>(
       (label, options) =>
         CurrentGoldDocumentText.use((text) =>
           Effect.all({

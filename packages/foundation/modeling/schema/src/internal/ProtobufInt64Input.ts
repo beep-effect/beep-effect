@@ -162,6 +162,6 @@ export const ProtobufInt64Input = S.declare<ProtobufInt64Input>(isProtobufInt64I
  * @since 0.0.0
  */
 export const decodeProtobufInt64InputTransformation = {
-  decode: SchemaGetter.transformOrFail(decodeProtobufInt64Input),
+  decode: SchemaGetter.transformEffect(decodeProtobufInt64Input),
   encode: SchemaGetter.transform((value: bigint): ProtobufInt64Input => value),
 };

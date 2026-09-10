@@ -9,9 +9,9 @@ import * as O from "effect/Option";
 const sessionId = "mock-session-1";
 
 const program = Effect.gen(function* () {
-  const malformedOutput = yield* Config.option(Config.string("ACP_MOCK_MALFORMED_OUTPUT"));
+  const malformedOutput = yield* Config.option(Config.String("ACP_MOCK_MALFORMED_OUTPUT"));
   if (O.isSome(malformedOutput) && malformedOutput.value === "1") {
-    const exitCode = yield* Config.string("ACP_MOCK_MALFORMED_OUTPUT_EXIT_CODE").pipe(Config.withDefault("0"));
+    const exitCode = yield* Config.String("ACP_MOCK_MALFORMED_OUTPUT_EXIT_CODE").pipe(Config.withDefault("0"));
 
     return yield* Effect.sync(() => {
       process.stdout.write("{not-json}\n");
@@ -19,14 +19,14 @@ const program = Effect.gen(function* () {
     });
   }
 
-  const immediateExitCode = yield* Config.option(Config.string("ACP_MOCK_EXIT_IMMEDIATELY_CODE"));
+  const immediateExitCode = yield* Config.option(Config.String("ACP_MOCK_EXIT_IMMEDIATELY_CODE"));
   if (O.isSome(immediateExitCode)) {
     return yield* Effect.sync(() => {
       process.exit(Number(immediateExitCode.value));
     });
   }
 
-  const badTypedRequest = yield* Config.option(Config.string("ACP_MOCK_BAD_TYPED_REQUEST"));
+  const badTypedRequest = yield* Config.option(Config.String("ACP_MOCK_BAD_TYPED_REQUEST"));
   const agent = yield* AcpAgent.AcpAgent;
 
   yield* agent.handleInitialize(() =>

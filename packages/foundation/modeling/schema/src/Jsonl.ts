@@ -106,8 +106,8 @@ const decodeJsonlUnknown = Effect.fn("Jsonl.decodeJsonlUnknown")(function* (cont
  */
 export const JsonlTextToUnknown = S.String.pipe(
   S.decodeTo(JsonlValues, {
-    decode: SchemaGetter.transformOrFail(decodeJsonlUnknown),
-    encode: SchemaGetter.transformOrFail(encodeUnsupported),
+    decode: SchemaGetter.transformEffect(decodeJsonlUnknown),
+    encode: SchemaGetter.transformEffect(encodeUnsupported),
   }),
   SchemaUtils.withStatics((schema) => ({
     decodeUnknownEffect: S.decodeUnknownEffect(schema),

@@ -28,11 +28,11 @@ import { Effect, Layer, pipe, Redacted, Ref, Result, Stream } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as Prompt from "effect/unstable/ai/Prompt";
 import * as Tool from "effect/unstable/ai/Tool";
 import * as Toolkit from "effect/unstable/ai/Toolkit";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { TUnsafe } from "@beep/types";
@@ -40,13 +40,13 @@ import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 
-const ClientOptionsArbitrary = S.toArbitrary(OpenAiCompatClientOptions)(fc);
-const LanguageModelConfigArbitrary = S.toArbitrary(OpenAiCompatLanguageModelConfig)(fc);
-const ChatMessageArbitrary = S.toArbitrary(OpenAiCompatChatMessage)(fc);
-const ResponseFormatArbitrary = S.toArbitrary(OpenAiCompatResponseFormat)(fc);
-const RequestArbitrary = S.toArbitrary(OpenAiCompatChatCompletionRequest)(fc);
-const ResponseArbitrary = S.toArbitrary(OpenAiCompatChatCompletionResponse)(fc);
-const ChunkArbitrary = S.toArbitrary(OpenAiCompatChatCompletionChunk)(fc);
+const ClientOptionsArbitrary = Arbitrary.schema(OpenAiCompatClientOptions);
+const LanguageModelConfigArbitrary = Arbitrary.schema(OpenAiCompatLanguageModelConfig);
+const ChatMessageArbitrary = Arbitrary.schema(OpenAiCompatChatMessage);
+const ResponseFormatArbitrary = Arbitrary.schema(OpenAiCompatResponseFormat);
+const RequestArbitrary = Arbitrary.schema(OpenAiCompatChatCompletionRequest);
+const ResponseArbitrary = Arbitrary.schema(OpenAiCompatChatCompletionResponse);
+const ChunkArbitrary = Arbitrary.schema(OpenAiCompatChatCompletionChunk);
 
 const encodeClientOptions = S.encodeResult(OpenAiCompatClientOptions);
 const decodeClientOptions = S.decodeUnknownResult(OpenAiCompatClientOptions);
@@ -227,29 +227,29 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
     });
   });
 
-  it("round-trips schema-derived OpenAI-compatible payloads through encoded form", () =>
-    fc.assert(
-      fc.property(
-        ClientOptionsArbitrary,
-        LanguageModelConfigArbitrary,
-        ChatMessageArbitrary,
-        ResponseFormatArbitrary,
-        RequestArbitrary,
-        ResponseArbitrary,
-        ChunkArbitrary,
-        (clientOptions, config, message, responseFormat, request, response, chunk) => {
-          expect(request.messages.length).toBeGreaterThan(0);
-          assertRoundTrip(encodeClientOptions, decodeClientOptions, clientOptions);
-          assertRoundTrip(encodeLanguageModelConfig, decodeLanguageModelConfig, config);
-          assertRoundTrip(encodeChatMessage, decodeChatMessage, message);
-          assertRoundTrip(encodeResponseFormat, decodeResponseFormat, responseFormat);
-          assertRoundTrip(encodeRequest, decodeRequest, request);
-          assertRoundTrip(encodeResponse, decodeResponse, response);
-          assertRoundTrip(encodeChunk, decodeChunk, chunk);
-        }
-      ),
-      fcRuns(25)
-    ));
+  it.prop(
+    "round-trips schema-derived OpenAI-compatible payloads through encoded form",
+    [
+      ClientOptionsArbitrary,
+      LanguageModelConfigArbitrary,
+      ChatMessageArbitrary,
+      ResponseFormatArbitrary,
+      RequestArbitrary,
+      ResponseArbitrary,
+      ChunkArbitrary,
+    ],
+    ([clientOptions, config, message, responseFormat, request, response, chunk]) => {
+      expect(request.messages.length).toBeGreaterThan(0);
+      assertRoundTrip(encodeClientOptions, decodeClientOptions, clientOptions);
+      assertRoundTrip(encodeLanguageModelConfig, decodeLanguageModelConfig, config);
+      assertRoundTrip(encodeChatMessage, decodeChatMessage, message);
+      assertRoundTrip(encodeResponseFormat, decodeResponseFormat, responseFormat);
+      assertRoundTrip(encodeRequest, decodeRequest, request);
+      assertRoundTrip(encodeResponse, decodeResponse, response);
+      assertRoundTrip(encodeChunk, decodeChunk, chunk);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect(
     "translates Effect prompts into chat completion requests",

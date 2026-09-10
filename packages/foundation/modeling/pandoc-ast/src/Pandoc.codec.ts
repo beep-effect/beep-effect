@@ -1077,156 +1077,150 @@ const encodeCaption = (caption: PandocCaption.Type): S.Json => [
   encodeBlocks(caption.blocks),
 ];
 
-const encodeInline: (inline: PandocInline.Type) => S.Json = Match.type<PandocInline.Type>().pipe(
-  Match.tagsExhaustive({
-    str: (inline) => ({
-      c: inline.text,
-      t: "Str",
-    }),
-    space: () => ({ t: "Space" }),
-    softbreak: () => ({ t: "SoftBreak" }),
-    linebreak: () => ({ t: "LineBreak" }),
-    emph: (inline) => ({
-      c: encodeInlines(inline.children),
-      t: "Emph",
-    }),
-    underline: (inline) => ({
-      c: encodeInlines(inline.children),
-      t: "Underline",
-    }),
-    strong: (inline) => ({
-      c: encodeInlines(inline.children),
-      t: "Strong",
-    }),
-    strikeout: (inline) => ({
-      c: encodeInlines(inline.children),
-      t: "Strikeout",
-    }),
-    superscript: (inline) => ({
-      c: encodeInlines(inline.children),
-      t: "Superscript",
-    }),
-    subscript: (inline) => ({
-      c: encodeInlines(inline.children),
-      t: "Subscript",
-    }),
-    smallCaps: (inline) => ({
-      c: encodeInlines(inline.children),
-      t: "SmallCaps",
-    }),
-    quoted: (inline) => ({
-      c: [{ t: inline.quoteType }, encodeInlines(inline.children)],
-      t: "Quoted",
-    }),
-    cite: (inline) => ({
-      c: [A.map(inline.citations, encodeCitation), encodeInlines(inline.children)],
-      t: "Cite",
-    }),
-    code: (inline) => ({
-      c: [encodeAttr(inline.attr), inline.text],
-      t: "Code",
-    }),
-    link: (inline) => ({
-      c: [encodeAttr(inline.attr), encodeInlines(inline.children), encodeTarget(inline.target)],
-      t: "Link",
-    }),
-    image: (inline) => ({
-      c: [encodeAttr(inline.attr), encodeInlines(inline.children), encodeTarget(inline.target)],
-      t: "Image",
-    }),
-    span: (inline) => ({
-      c: [encodeAttr(inline.attr), encodeInlines(inline.children)],
-      t: "Span",
-    }),
-    note: (inline) => ({
-      c: encodeBlocks(inline.blocks),
-      t: "Note",
-    }),
-    math: (inline) => ({
-      c: [{ t: inline.mathType }, inline.text],
-      t: "Math",
-    }),
-    rawInline: (inline) => ({
-      c: [inline.format, inline.text],
-      t: "RawInline",
-    }),
-    unknownInline: (inline) => inline.wire,
-  })
-);
+const encodeInline: (inline: PandocInline.Type) => S.Json = Match.typeTags<PandocInline.Type>()({
+  str: (inline) => ({
+    c: inline.text,
+    t: "Str",
+  }),
+  space: () => ({ t: "Space" }),
+  softbreak: () => ({ t: "SoftBreak" }),
+  linebreak: () => ({ t: "LineBreak" }),
+  emph: (inline) => ({
+    c: encodeInlines(inline.children),
+    t: "Emph",
+  }),
+  underline: (inline) => ({
+    c: encodeInlines(inline.children),
+    t: "Underline",
+  }),
+  strong: (inline) => ({
+    c: encodeInlines(inline.children),
+    t: "Strong",
+  }),
+  strikeout: (inline) => ({
+    c: encodeInlines(inline.children),
+    t: "Strikeout",
+  }),
+  superscript: (inline) => ({
+    c: encodeInlines(inline.children),
+    t: "Superscript",
+  }),
+  subscript: (inline) => ({
+    c: encodeInlines(inline.children),
+    t: "Subscript",
+  }),
+  smallCaps: (inline) => ({
+    c: encodeInlines(inline.children),
+    t: "SmallCaps",
+  }),
+  quoted: (inline) => ({
+    c: [{ t: inline.quoteType }, encodeInlines(inline.children)],
+    t: "Quoted",
+  }),
+  cite: (inline) => ({
+    c: [A.map(inline.citations, encodeCitation), encodeInlines(inline.children)],
+    t: "Cite",
+  }),
+  code: (inline) => ({
+    c: [encodeAttr(inline.attr), inline.text],
+    t: "Code",
+  }),
+  link: (inline) => ({
+    c: [encodeAttr(inline.attr), encodeInlines(inline.children), encodeTarget(inline.target)],
+    t: "Link",
+  }),
+  image: (inline) => ({
+    c: [encodeAttr(inline.attr), encodeInlines(inline.children), encodeTarget(inline.target)],
+    t: "Image",
+  }),
+  span: (inline) => ({
+    c: [encodeAttr(inline.attr), encodeInlines(inline.children)],
+    t: "Span",
+  }),
+  note: (inline) => ({
+    c: encodeBlocks(inline.blocks),
+    t: "Note",
+  }),
+  math: (inline) => ({
+    c: [{ t: inline.mathType }, inline.text],
+    t: "Math",
+  }),
+  rawInline: (inline) => ({
+    c: [inline.format, inline.text],
+    t: "RawInline",
+  }),
+  unknownInline: (inline) => inline.wire,
+});
 
-const encodeBlock: (block: PandocBlock.Type) => S.Json = Match.type<PandocBlock.Type>().pipe(
-  Match.tagsExhaustive({
-    plain: (block) => ({
-      c: encodeInlines(block.children),
-      t: "Plain",
-    }),
-    para: (block) => ({
-      c: encodeInlines(block.children),
-      t: "Para",
-    }),
-    lineBlock: (block) => ({
-      c: A.map(block.lines, encodeInlines),
-      t: "LineBlock",
-    }),
-    header: (block) => ({
-      c: [block.level, encodeAttr(block.attr), encodeInlines(block.children)],
-      t: "Header",
-    }),
-    blockquote: (block) => ({
-      c: encodeBlocks(block.children),
-      t: "BlockQuote",
-    }),
-    codeblock: (block) => ({
-      c: [encodeAttr(block.attr), block.text],
-      t: "CodeBlock",
-    }),
-    rawBlock: (block) => ({
-      c: [block.format, block.text],
-      t: "RawBlock",
-    }),
-    bulletlist: (block) => ({
-      c: encodeBlockItems(block.items),
-      t: "BulletList",
-    }),
-    orderedlist: (block) => ({
-      c: [[block.start, { t: block.style }, { t: block.delimiter }], encodeBlockItems(block.items)],
-      t: "OrderedList",
-    }),
-    definitionList: (block) => ({
-      c: A.map(block.items, ([term, definitions]) => [encodeInlines(term), A.map(definitions, encodeBlocks)]),
-      t: "DefinitionList",
-    }),
-    horizontalrule: () => ({ t: "HorizontalRule" }),
-    div: (block) => ({
-      c: [encodeAttr(block.attr), encodeBlocks(block.children)],
-      t: "Div",
-    }),
-    table: (block) => ({
-      c: S.Json.make(block.payload),
-      t: "Table",
-    }),
-    figure: (block) => ({
-      c: [encodeAttr(block.attr), encodeCaption(block.caption), encodeBlocks(block.children)],
-      t: "Figure",
-    }),
-    unknownBlock: (block) => block.wire,
-  })
-);
+const encodeBlock: (block: PandocBlock.Type) => S.Json = Match.typeTags<PandocBlock.Type>()({
+  plain: (block) => ({
+    c: encodeInlines(block.children),
+    t: "Plain",
+  }),
+  para: (block) => ({
+    c: encodeInlines(block.children),
+    t: "Para",
+  }),
+  lineBlock: (block) => ({
+    c: A.map(block.lines, encodeInlines),
+    t: "LineBlock",
+  }),
+  header: (block) => ({
+    c: [block.level, encodeAttr(block.attr), encodeInlines(block.children)],
+    t: "Header",
+  }),
+  blockquote: (block) => ({
+    c: encodeBlocks(block.children),
+    t: "BlockQuote",
+  }),
+  codeblock: (block) => ({
+    c: [encodeAttr(block.attr), block.text],
+    t: "CodeBlock",
+  }),
+  rawBlock: (block) => ({
+    c: [block.format, block.text],
+    t: "RawBlock",
+  }),
+  bulletlist: (block) => ({
+    c: encodeBlockItems(block.items),
+    t: "BulletList",
+  }),
+  orderedlist: (block) => ({
+    c: [[block.start, { t: block.style }, { t: block.delimiter }], encodeBlockItems(block.items)],
+    t: "OrderedList",
+  }),
+  definitionList: (block) => ({
+    c: A.map(block.items, ([term, definitions]) => [encodeInlines(term), A.map(definitions, encodeBlocks)]),
+    t: "DefinitionList",
+  }),
+  horizontalrule: () => ({ t: "HorizontalRule" }),
+  div: (block) => ({
+    c: [encodeAttr(block.attr), encodeBlocks(block.children)],
+    t: "Div",
+  }),
+  table: (block) => ({
+    c: S.Json.make(block.payload),
+    t: "Table",
+  }),
+  figure: (block) => ({
+    c: [encodeAttr(block.attr), encodeCaption(block.caption), encodeBlocks(block.children)],
+    t: "Figure",
+  }),
+  unknownBlock: (block) => block.wire,
+});
 
-const encodeMetaValue: (value: PandocMetaValue) => S.Json = Match.type<PandocMetaValue>().pipe(
-  Match.tagsExhaustive({
-    metaBool: (value) => ({ c: value.value, t: "MetaBool" }),
-    metaString: (value) => ({ c: value.value, t: "MetaString" }),
-    metaInlines: (value) => ({ c: encodeInlines(value.children), t: "MetaInlines" }),
-    metaBlocks: (value) => ({ c: encodeBlocks(value.children), t: "MetaBlocks" }),
-    metaList: (value) => ({ c: A.map(value.values, encodeMetaValue), t: "MetaList" }),
-    metaMap: (value) => ({
-      c: R.fromEntries(A.map(Struct.entries(value.entries), ([key, entry]) => [key, encodeMetaValue(entry)] as const)),
-      t: "MetaMap",
-    }),
-    unknownMeta: (value) => value.wire,
-  })
-);
+const encodeMetaValue: (value: PandocMetaValue) => S.Json = Match.typeTags<PandocMetaValue>()({
+  metaBool: (value) => ({ c: value.value, t: "MetaBool" }),
+  metaString: (value) => ({ c: value.value, t: "MetaString" }),
+  metaInlines: (value) => ({ c: encodeInlines(value.children), t: "MetaInlines" }),
+  metaBlocks: (value) => ({ c: encodeBlocks(value.children), t: "MetaBlocks" }),
+  metaList: (value) => ({ c: A.map(value.values, encodeMetaValue), t: "MetaList" }),
+  metaMap: (value) => ({
+    c: R.fromEntries(A.map(Struct.entries(value.entries), ([key, entry]) => [key, encodeMetaValue(entry)] as const)),
+    t: "MetaMap",
+  }),
+  unknownMeta: (value) => value.wire,
+});
 
 const encodeMeta = (meta: PandocMeta): Readonly<Record<string, S.Json>> =>
   R.fromEntries(A.map(Struct.entries(meta), ([key, value]) => [key, encodeMetaValue(value)] as const));

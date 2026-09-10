@@ -97,8 +97,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
-import { FastCheck as fc, TestClock } from "effect/testing";
+import { TestClock } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 
 const decodeUUID = S.decodeEffect(UUID);
@@ -894,19 +895,26 @@ describe("quality-scheduler", () => {
     });
 
     it("never exceeds the cap and never goes negative", () => {
-      fc.assert(
-        fc.property(fc.double({ min: 0, max: 4096, noNaN: true }), (availableGib) => {
-          const config = AdmissionConfig.make({});
-          const capacity = admissionCapacityTokensFor(availableGib, config);
-          expect(capacity).toBeGreaterThanOrEqual(0);
-          expect(capacity).toBeLessThanOrEqual(config.capacityMaxTokens);
-          expect(Number.isInteger(capacity)).toBe(true);
-          if (availableGib < config.hardFloorGib) {
-            expect(capacity).toBe(0);
-          }
-        }),
-        fcRuns()
-      );
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(S.Finite.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(4096)))]),
+            ([availableGib]) => {
+              const config = AdmissionConfig.make({});
+              const capacity = admissionCapacityTokensFor(availableGib, config);
+              expect(capacity).toBeGreaterThanOrEqual(0);
+              expect(capacity).toBeLessThanOrEqual(config.capacityMaxTokens);
+              expect(Number.isInteger(capacity)).toBe(true);
+              if (availableGib < config.hardFloorGib) {
+                expect(capacity).toBe(0);
+              }
+
+              return true;
+            },
+            fcRuns()
+          )
+        )._tag
+      ).toBe("Passed");
     });
   });
 
@@ -1926,6 +1934,137 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  // The hosted ordering behind the "expected 2 to be 1" red on PR #1072: the
+  // follower's adopter listing completes before the leader renames its claim,
+  // but the follower's claim link runs after that rename freed the claim name.
+  // The follower recreates the claim from the still-dead lock and adopts a
+  // second time unless the election re-checks after the link.
+  it("keeps the adopter election exclusive when a contender links its claim after the winner's rename", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const replacementSeedPath = path.join(tempRoot.root, "replacement-seed.lock");
+            const replacementToken = `${process.pid}:replacement-writer`;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            expect(yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1)).toBe(true);
+            const replacementGeneration = yield* fs.readFileString(replacementSeedPath);
+            yield* releaseAdmissionJournalLockForTesting(replacementSeedPath, replacementToken);
+            yield* fs.writeFileString(lockPath, `${DEAD_PID}:abandoned-generation`);
+
+            const stageLinks = yield* Ref.make(0);
+            const bothContendersReady = yield* Deferred.make<void>();
+            const followerListed = yield* Deferred.make<void>();
+            const leaderAdopted = yield* Deferred.make<void>();
+            const followerLinked = yield* Deferred.make<void>();
+            const followerDone = yield* Deferred.make<void>();
+            const lockTombstones = yield* Ref.make(0);
+            const isClaimLink = (existingPath: string, newPath: string): boolean =>
+              Str.Equivalence(existingPath, lockPath) &&
+              Str.includes(".reap-")(newPath) &&
+              !Str.includes(".adopt-")(newPath);
+            const isTombstoneRename = (oldPath: string, newPath: string): boolean =>
+              Str.Equivalence(oldPath, lockPath) && Str.includes(".tombstone-")(newPath);
+            const rendezvousStageLink = Effect.fn("rendezvousStageLink")(function* (
+              existingPath: string,
+              newPath: string
+            ) {
+              if (Str.includes(".stage-")(existingPath) && Str.Equivalence(newPath, lockPath)) {
+                const count = yield* Ref.updateAndGet(stageLinks, (value) => value + 1);
+                if (count === 2) {
+                  yield* Deferred.succeed(bothContendersReady, undefined);
+                }
+                yield* Deferred.await(bothContendersReady);
+              }
+            });
+            const publishReplacementBeforeTombstone = Effect.fn("publishReplacementBeforeTombstone")(function* (
+              oldPath: string,
+              newPath: string
+            ) {
+              if (isTombstoneRename(oldPath, newPath)) {
+                yield* Ref.update(lockTombstones, (value) => value + 1);
+                yield* fs.remove(lockPath, { force: true });
+                yield* fs.writeFileString(lockPath, replacementGeneration);
+              }
+            });
+            const leaderFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              link: Effect.fn("leader.link")(function* (existingPath, newPath) {
+                yield* rendezvousStageLink(existingPath, newPath);
+                if (isClaimLink(existingPath, newPath)) {
+                  yield* Deferred.await(followerListed);
+                }
+                return yield* fs.link(existingPath, newPath);
+              }),
+              rename: Effect.fn("leader.rename")(function* (oldPath, newPath) {
+                if (isTombstoneRename(oldPath, newPath)) {
+                  yield* Deferred.await(followerLinked);
+                }
+                yield* publishReplacementBeforeTombstone(oldPath, newPath);
+                yield* fs.rename(oldPath, newPath);
+                if (Str.includes(".adopt-")(newPath)) {
+                  yield* Deferred.succeed(leaderAdopted, undefined);
+                }
+              }),
+              remove: Effect.fn("leader.remove")(function* (target, options) {
+                if (Str.includes(".adopt-")(target)) {
+                  yield* Deferred.await(followerDone);
+                }
+                return yield* fs.remove(target, options);
+              }),
+            });
+            const followerFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readDirectory: Effect.fn("follower.readDirectory")(function* (directory, options) {
+                const entries = yield* fs.readDirectory(directory, options);
+                if (yield* Deferred.isDone(bothContendersReady)) {
+                  yield* Deferred.succeed(followerListed, undefined);
+                }
+                return entries;
+              }),
+              link: Effect.fn("follower.link")(function* (existingPath, newPath) {
+                yield* rendezvousStageLink(existingPath, newPath);
+                if (isClaimLink(existingPath, newPath)) {
+                  yield* Deferred.await(leaderAdopted);
+                }
+                yield* fs.link(existingPath, newPath);
+                if (isClaimLink(existingPath, newPath)) {
+                  yield* Deferred.succeed(followerLinked, undefined);
+                }
+              }),
+              rename: Effect.fn("follower.rename")(function* (oldPath, newPath) {
+                yield* publishReplacementBeforeTombstone(oldPath, newPath);
+                yield* fs.rename(oldPath, newPath);
+              }),
+            });
+
+            const acquired = yield* Effect.all(
+              [
+                acquireJournalFileLock(lockPath, `${process.pid}:leader`, 1).pipe(
+                  Effect.provideService(FileSystem.FileSystem, leaderFileSystem)
+                ),
+                acquireJournalFileLock(lockPath, `${process.pid}:follower`, 1).pipe(
+                  Effect.provideService(FileSystem.FileSystem, followerFileSystem),
+                  Effect.ensuring(Deferred.succeed(followerDone, undefined))
+                ),
+              ],
+              { concurrency: "unbounded" }
+            );
+
+            expect(acquired).toStrictEqual([false, false]);
+            expect(yield* Ref.get(lockTombstones)).toBe(1);
+            expect(yield* fs.readFileString(lockPath)).toBe(replacementGeneration);
+            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".reap-"))).toStrictEqual([]);
+            yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
+          })
+        );
+      })
+    ));
+
   it("retains a displaced generation when a third writer wins and fences its stale publish", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -2925,19 +3064,26 @@ describe("quality-scheduler", () => {
     ));
 
   it("property: admission journal events round-trip through the NDJSON codec", () => {
-    const EventArbitrary = S.toArbitrary(AdmissionJournalEvent)(fc);
-    fc.assert(
-      fc.property(EventArbitrary, (event) => {
-        const encoded = encodeAdmissionJournalEventJsonSync(event);
-        const decoded = decodeAdmissionJournalEventJsonSync(encoded);
-        expect(decoded._tag).toBe(event._tag);
-        expect(decoded.nonce).toBe(event.nonce);
-        // JSON drops the sign of -0, so the codec law is encode-stability
-        // rather than Object.is identity on numeric fields.
-        expect(encodeAdmissionJournalEventJsonSync(decoded)).toBe(encoded);
-      }),
-      fcRuns(32)
-    );
+    const EventArbitrary = Arbitrary.schema(AdmissionJournalEvent);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([EventArbitrary]),
+          ([event]) => {
+            const encoded = encodeAdmissionJournalEventJsonSync(event);
+            const decoded = decodeAdmissionJournalEventJsonSync(encoded);
+            expect(decoded._tag).toBe(event._tag);
+            expect(decoded.nonce).toBe(event.nonce);
+            // JSON drops the sign of -0, so the codec law is encode-stability
+            // rather than Object.is identity on numeric fields.
+            expect(encodeAdmissionJournalEventJsonSync(decoded)).toBe(encoded);
+
+            return true;
+          },
+          fcRuns(32)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("queues while tokens are held and admits when the holder releases", () =>

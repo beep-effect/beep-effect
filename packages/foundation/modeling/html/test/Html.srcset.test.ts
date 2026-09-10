@@ -1,11 +1,12 @@
 import { inspectSrcset } from "@beep/html/Html.srcset";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { isValidURLString, parseURL } from "whatwg-url";
 
 const acceptUrl = Str.isNonEmpty;
@@ -112,20 +113,37 @@ describe("@beep/html srcset author conformance", () => {
   });
 
   it("accepts generated positive width lists", () =>
-    fc.assert(
-      fc.property(fc.integer({ min: 1, max: 10_000 }), fc.integer({ min: 10_001, max: 20_000 }), (small, large) => {
-        expect(profileOf(`small.png ${small}w, large.png ${large}w`)).toBe("width");
-      }),
-      fcRuns(100)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(10_000))),
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(10_001), S.isLessThanOrEqualTo(20_000))),
+          ]),
+          ([small, large]) => {
+            expect(profileOf(`small.png ${small}w, large.png ${large}w`)).toBe("width");
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("rejects generated numerically duplicate width spellings", () =>
-    fc.assert(
-      fc.property(fc.integer({ min: 1, max: 20_000 }), (width) => {
-        expect(O.isNone(inspectSrcset(`a.png ${width}w, b.png 0${width}w`, acceptUrl))).toBe(true);
-      }),
-      fcRuns(100)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(20_000)))]),
+          ([width]) => {
+            expect(O.isNone(inspectSrcset(`a.png ${width}w, b.png 0${width}w`, acceptUrl))).toBe(true);
+
+            return true;
+          },
+          fcRuns(100)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it("handles a large unique candidate list with one URL validation per candidate", () => {
     const candidateCount = 4_096;
@@ -145,10 +163,17 @@ describe("@beep/html srcset author conformance", () => {
   });
 
   it("is total for arbitrary Unicode and UTF-16 input", () =>
-    fc.assert(
-      fc.property(fc.string({ unit: "binary", maxLength: 256 }), (input) => {
-        expect(O.isOption(inspectSrcset(input, acceptUrl))).toBe(true);
-      }),
-      fcRuns(250)
-    ));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(S.String.check(S.isMaxLength(256)))]),
+          ([input]) => {
+            expect(O.isOption(inspectSrcset(input, acceptUrl))).toBe(true);
+
+            return true;
+          },
+          fcRuns(250)
+        )
+      )._tag
+    ).toBe("Passed"));
 });

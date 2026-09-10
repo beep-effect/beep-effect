@@ -7,7 +7,7 @@ import { Effect, Equal } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   Entity,
   EntityObservation,
@@ -263,10 +263,13 @@ describe("grounding provenance", () => {
 
   it("satisfies identity, commutativity, and associativity for schema-derived graphs", () => {
     const empty = KnowledgeGraph.make({});
-    const canonicalGraph = S.toArbitrary(KnowledgeGraph)(fc).map((graph) => mergeGraphs(empty, graph));
+    const canonicalGraph = Arbitrary.map(Arbitrary.schema(KnowledgeGraph), (graph) => mergeGraphs(empty, graph));
 
-    fc.assert(
-      fc.property(canonicalGraph, canonicalGraph, canonicalGraph, (first, second, third) => {
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([canonicalGraph, canonicalGraph, canonicalGraph]),
+          ([first, second, third]) => {
         const leftIdentity = mergeGraphs(empty, first);
         const rightIdentity = mergeGraphs(first, empty);
         const leftAssociated = mergeGraphs(mergeGraphs(first, second), third);
@@ -278,8 +281,10 @@ describe("grounding provenance", () => {
           Equal.equals(mergeGraphs(first, second), mergeGraphs(second, first)) &&
           Equal.equals(leftAssociated, rightAssociated)
         );
-      }),
-      { numRuns: 100 }
-    );
+          },
+          { runs: 100 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

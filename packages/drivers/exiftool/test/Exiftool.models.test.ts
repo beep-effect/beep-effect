@@ -27,9 +27,10 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Equal, pipe } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSafeTagNameOption = S.decodeUnknownOption(SafeTagName);
 const decodeUnknownExiftoolErrorFromUnknownOptionsSync = S.decodeUnknownSync(ExiftoolErrorFromUnknownOptions);
@@ -41,12 +42,19 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
   const encode = S.encodeSync(schema);
   const decode = S.decodeUnknownSync(schema);
 
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      expect(Equal.equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 const fullProvenance = BeepQaProvenance.make({
@@ -75,20 +83,28 @@ describe("@beep/exiftool models", () => {
     assertRoundTrip(BeepQaProvenance);
     assertRoundTrip(WriteXmpPacketRequest);
     assertRoundTrip(ExiftoolErrorContext);
-    fc.assert(
-      fc.property(
-        S.toArbitrary(ExiftoolErrorFromUnknownOptions)(fc).filter((options) => O.isNone(options.cause)),
-        (options) => {
-          expect(
-            Equal.equals(
-              decodeUnknownExiftoolErrorFromUnknownOptionsSync(encodeExiftoolErrorFromUnknownOptionsSync(options)),
-              options
-            )
-          ).toBe(true);
-        }
-      ),
-      fcRuns(25)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            Arbitrary.schema(ExiftoolErrorFromUnknownOptions).pipe(
+              Arbitrary.filter((options) => O.isNone(options.cause))
+            ),
+          ]),
+          ([options]) => {
+            expect(
+              Equal.equals(
+                decodeUnknownExiftoolErrorFromUnknownOptionsSync(encodeExiftoolErrorFromUnknownOptionsSync(options)),
+                options
+              )
+            ).toBe(true);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )
+    ).toMatchObject({ _tag: "Passed" });
   });
 
   it("keeps Option-modeled optional metadata encoded as omitted keys", () => {

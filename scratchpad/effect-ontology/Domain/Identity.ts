@@ -1,3 +1,5 @@
+import * as SchemaAST from "effect/SchemaAST";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 /**
  * Branded storage identifiers used by the effect-ontology experiment.
  *
@@ -34,7 +36,6 @@ const utf8Encoder = new TextEncoder();
 const isNotGcsIpv4Address = P.not((value: string) => gcsIpv4AddressPattern.test(value));
 const isNotGcsReservedPrefix = P.not(Str.startsWith("goog"));
 const isNotGcsReservedSpelling = P.every([P.not(Str.includes("google")), P.not(Str.includes("g00gle"))]);
-const isGcsBucketArbitraryCandidate = P.every([isNotGcsIpv4Address, isNotGcsReservedPrefix, isNotGcsReservedSpelling]);
 
 const GcsBucketChecks = S.makeFilterGroup(
   [
@@ -77,6 +78,7 @@ const GcsObjectName = S.String.check(
     [
       S.isPattern(gcsObjectNamePattern, {
         identifier: $I`GcsObjectNameSyntaxCheck`,
+        arbitraryConstraint: { patterns: [{ source: "^[a-z][a-z0-9._-]{0,20}$", flags: "" }] },
         title: "GCS Object Name Syntax",
         description:
           "A non-empty GCS object name without carriage returns, line feeds, the reserved ACME challenge prefix, or a dot-only name.",
@@ -96,11 +98,7 @@ const GcsObjectName = S.String.check(
       description: "Google Cloud Storage flat-namespace object-name checks.",
     }
   )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._/-]{0,63}$/),
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("GcsObjectName", {
       description:
         "Google Cloud Storage flat-namespace object name constrained to the provider's general syntax and 1,024-byte UTF-8 limit.",
@@ -135,11 +133,7 @@ export const LegacyContentHashPrefix = S.String.check(
     description: "A legacy 16-character lowercase hexadecimal prefix of a SHA-256 digest.",
     message: "Legacy content hash prefix must contain exactly 16 lowercase hexadecimal characters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(legacyContentHashPrefixPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("LegacyContentHashPrefix"),
     $I.annoteSchema("LegacyContentHashPrefix", {
       description:
@@ -193,9 +187,7 @@ export type LegacyContentHashPrefix = typeof LegacyContentHashPrefix.Type;
  * @category identifiers
  * @since 0.0.0
  */
-export const ContentHash = Sha256Hex.annotate({
-  toArbitrary: () => S.toArbitrary(Sha256Hex),
-}).pipe(
+export const ContentHash = Sha256Hex.pipe(
   S.brand("ContentHash"),
   $I.annoteSchema("ContentHash", {
     description: "Canonical content identity represented by a complete lowercase SHA-256 digest.",
@@ -278,9 +270,7 @@ export const withContentHashIdStatics =
  * @category validation
  * @since 0.0.0
  */
-export const IdempotencyKey = Sha256Hex.annotate({
-  toArbitrary: () => S.toArbitrary(Sha256Hex),
-}).pipe(
+export const IdempotencyKey = Sha256Hex.pipe(
   S.brand("IdempotencyKey"),
   $I.annoteSchema("IdempotencyKey", {
     description:
@@ -338,11 +328,13 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  * @category validation
  * @since 0.0.0
  */
-const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(S.brand("GcsBucket"), SchemaUtils.withCodecStatics(["is"]));
+const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(
+  S.brand("GcsBucket"),
+  SchemaUtils.withCodecStatics(["is"])
+);
 
 const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => GcsBucketEncoded.is(input)).annotate({
-  toArbitrary: () => (fc) =>
-    fc.stringMatching(gcsBucketNamePattern).filter(isGcsBucketArbitraryCandidate).map(GcsBucketEncoded.make),
+  toCodecArbitrary: () => new SchemaAST.Link(S.toType(GcsBucketEncoded).ast, SchemaTransformation.passthrough()),
 });
 
 /**
@@ -424,16 +416,13 @@ export type GcsBucket = typeof GcsBucket.Type;
  * @category validation
  * @since 0.0.0
  */
-const GcsUriEncoded = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]).pipe(
+const GcsUriEncoded = S.TemplateLiteral(["gs://", GcsBucketEncoded, "/", GcsObjectName]).pipe(
   S.brand("GcsUri"),
   SchemaUtils.withCodecStatics(["is"])
 );
 
 const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => GcsUriEncoded.is(input)).annotate({
-  toArbitrary: () => (fc) =>
-    fc
-      .tuple(S.toArbitrary(GcsBucket)(fc), S.toArbitrary(GcsObjectName)(fc))
-      .map(([bucket, objectName]) => GcsUriEncoded.make(`gs://${bucket}/${objectName}`)),
+  toCodecArbitrary: () => new SchemaAST.Link(S.toType(GcsUriEncoded).ast, SchemaTransformation.passthrough()),
 });
 
 /**
@@ -507,7 +496,6 @@ export const GcsUri = GcsUriEncoded.pipe(
 export type GcsUri = typeof GcsUri.Type;
 
 const gcsObjectPathPattern = /^[^/](?:[\s\S]*[^/])?$/u;
-const gcsObjectArbitraryPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,31}(?:\/[A-Za-z0-9][A-Za-z0-9._-]{0,31})*$/;
 const namespacePattern = /^[a-z][a-z0-9-]*$/;
 const ontologyNamePattern = /^[a-z][a-z0-9_-]*$/;
 const documentIdPattern = /^doc-[0-9a-f]{12}$/;
@@ -560,10 +548,13 @@ const GcsObjectChecks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"), SchemaUtils.withCodecStatics(["is"]));
+const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(
+  S.brand("GcsObject"),
+  SchemaUtils.withCodecStatics(["is"])
+);
 
 const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => GcsObjectEncoded.is(input)).annotate({
-  toArbitrary: () => (fc) => fc.stringMatching(gcsObjectArbitraryPattern).map(GcsObjectEncoded.make),
+  toCodecArbitrary: () => new SchemaAST.Link(S.toType(GcsObjectEncoded).ast, SchemaTransformation.passthrough()),
 });
 
 /**
@@ -643,11 +634,7 @@ export const Namespace = S.String.check(
     message:
       "Ontology namespace must begin with a lowercase letter and contain only lowercase letters, digits, or hyphens.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(namespacePattern),
-  })
-  .pipe(
+).pipe(
     S.brand("Namespace"),
     $I.annoteSchema("Namespace", {
       description:
@@ -697,11 +684,7 @@ export const OntologyName = S.String.check(
     message:
       "Ontology name must begin with a lowercase letter and contain only lowercase letters, digits, hyphens, or underscores.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(ontologyNamePattern),
-  })
-  .pipe(
+).pipe(
     S.brand("OntologyName"),
     $I.annoteSchema("OntologyName", {
       description:
@@ -752,12 +735,6 @@ export type OntologyName = typeof OntologyName.Type;
  * @since 0.0.0
  */
 export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, "@", ContentHash]).pipe(
-  S.annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(S.toArbitrary(Namespace)(fc), S.toArbitrary(OntologyName)(fc), S.toArbitrary(ContentHash)(fc))
-        .map(([namespace, name, hash]): `${string}/${string}@${string}` => `${namespace}/${name}@${hash}`),
-  }),
   S.brand("OntologyVersion"),
   $I.annoteSchema("OntologyVersion", {
     description:
@@ -795,11 +772,7 @@ const DocumentIdSchema = S.String.check(
     description: "A deterministic document identifier with a doc- prefix and 12 lowercase hexadecimal characters.",
     message: "Document ID must use the doc- prefix followed by exactly 12 lowercase hexadecimal characters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(documentIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("DocumentId"),
     $I.annoteSchema("DocumentId", {
       description: "Deterministic document identifier derived from the first 12 characters of a content hash.",
@@ -874,11 +847,7 @@ export const ChunkId = S.String.check(
     description: "A document-derived chunk identifier with a canonical non-negative decimal chunk index.",
     message: "Chunk ID must use doc-<12-lowercase-hex>-chunk-<canonical-non-negative-index> form.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(chunkIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("ChunkId"),
     $I.annoteSchema("ChunkId", {
       description:
@@ -927,9 +896,7 @@ export type ChunkId = typeof ChunkId.Type;
  * @category validation
  * @since 0.0.0
  */
-export const ExtractionRunId = DocumentIdSchema.annotate({
-  toArbitrary: () => S.toArbitrary(DocumentId),
-}).pipe(
+export const ExtractionRunId = DocumentIdSchema.pipe(
   $I.annoteSchema("ExtractionRunId", {
     description: "Document identifier reused as the correlation identifier for its extraction run.",
   }),
@@ -975,11 +942,7 @@ export const BatchId = S.String.check(
     description: "A deterministic batch identifier with a batch- prefix and 12 lowercase hexadecimal characters.",
     message: "Batch ID must use the batch- prefix followed by exactly 12 lowercase hexadecimal characters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(batchIdPattern),
-  })
-  .pipe(
+).pipe(
     S.brand("BatchId"),
     $I.annoteSchema("BatchId", {
       description: "Deterministic batch identifier represented by a batch- prefix and 12-character fingerprint.",

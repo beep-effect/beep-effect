@@ -898,7 +898,7 @@ const submitCandidate = Effect.fn("ContradictionQaSeed.submitCandidate")(functio
 const prepareCanonicalSource = Effect.fn("ContradictionQaSeed.prepareCanonicalSource")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const configuredRoot = yield* Config.string(CONTRADICTION_QA_VAULT_ROOT_ENV);
+  const configuredRoot = yield* Config.String(CONTRADICTION_QA_VAULT_ROOT_ENV);
   const decodedRoot = yield* decodeWorkspaceVaultRootPath(configuredRoot).pipe(
     Effect.mapError(() =>
       seedError("vault-root-conflict", "The contradiction QA vault root must be an absolute filesystem path.")
@@ -1032,7 +1032,7 @@ const prepareCanonicalSource = Effect.fn("ContradictionQaSeed.prepareCanonicalSo
  * @since 0.0.0
  */
 export const seedContradictionQaFixtures = Effect.fn("ContradictionQaSeed.seed")(function* () {
-  const enabled = yield* Config.option(Config.string(CONTRADICTION_QA_SEED_ENV));
+  const enabled = yield* Config.option(Config.String(CONTRADICTION_QA_SEED_ENV));
   if (!O.contains(enabled, "1")) {
     return;
   }

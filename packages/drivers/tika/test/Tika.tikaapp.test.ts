@@ -9,7 +9,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Logger, Path, References, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
 const decodePosixPath = S.decodeEffect(PosixPath);
@@ -18,8 +18,8 @@ const decodeTikaAppEngineConfigResult = S.decodeResult(TikaAppEngineConfig);
 const testLayer = NodeServices.layer;
 
 const provideTestLayer = provideScopedLayer(testLayer);
-const TikaAppEngineConfigArbitrary = S.toArbitrary(TikaAppEngineConfig)(fc);
-const TikaContentTextArbitrary = S.toArbitrary(TikaContentText)(fc);
+const TikaAppEngineConfigArbitrary = Arbitrary.schema(TikaAppEngineConfig);
+const TikaContentTextArbitrary = Arbitrary.schema(TikaContentText);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -99,14 +99,15 @@ describe("makeTikaAppFileProcessingEngine", () => {
     expect(TikaContentText.decodeUnknownSync("\n  hello corpus world\n\n")).toBe("hello corpus world");
   });
 
-  it("round-trips schema-derived tika-app schemas through encoded form", () =>
-    fc.assert(
-      fc.property(TikaAppEngineConfigArbitrary, TikaContentTextArbitrary, (config, contentText) => {
-        expectRoundTrip(TikaAppEngineConfig, config);
-        expectRoundTrip(TikaContentText, contentText);
-      }),
-      fcRuns(25)
-    ));
+  it.prop(
+    "round-trips schema-derived tika-app schemas through encoded form",
+    [TikaAppEngineConfigArbitrary, TikaContentTextArbitrary],
+    ([config, contentText]) => {
+      expectRoundTrip(TikaAppEngineConfig, config);
+      expectRoundTrip(TikaContentText, contentText);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect(
     "refuses extraction when the caller omits source bytes",

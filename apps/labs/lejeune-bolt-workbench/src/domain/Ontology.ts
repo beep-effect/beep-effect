@@ -56,6 +56,9 @@ const ValidIsoDateCheck = S.makeFilter((value: string) => O.isSome(decodeLocalDa
   title: "Valid ISO Calendar Date",
   description: "Checks that an ISO date names a real calendar day.",
   message: "Expected a valid calendar date.",
+  arbitraryConstraint: {
+    patterns: [{ source: "^20[2-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])$", flags: "" }],
+  },
 });
 
 /**
@@ -76,6 +79,12 @@ const ValidIsoDateCheck = S.makeFilter((value: string) => O.isSome(decodeLocalDa
 export const IsoDate = S.String.check(
   S.isPattern(/^\d{4}-\d{2}-\d{2}$/u, {
     identifier: $I`IsoDatePatternCheck`,
+    // Generation-only shape: the calendar-validity filter cannot construct, so
+    // candidates stay inside always-valid month/day ranges (validation keeps
+    // the loose pattern plus the calendar check for real dates like the 31st).
+    arbitraryConstraint: {
+      patterns: [{ source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])$", flags: "" }],
+    },
     title: "ISO Calendar Date",
     description: "Checks the YYYY-MM-DD date representation frozen by the demo bundle.",
     message: "Expected a YYYY-MM-DD calendar date.",
@@ -105,6 +114,15 @@ const ValidIsoTimestampCheck = S.makeFilter(
     title: "Valid ISO UTC Timestamp",
     description: "Safely reuses the shared ISO timestamp schema to reject impossible instants.",
     message: "Expected a valid ISO UTC timestamp.",
+    arbitraryConstraint: {
+      patterns: [
+        {
+          source:
+            "^20[2-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])T(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]\\.[0-9]{3}Z$",
+          flags: "",
+        },
+      ],
+    },
   }
 );
 
@@ -126,6 +144,15 @@ const ValidIsoTimestampCheck = S.makeFilter(
 export const IsoTimestamp = S.String.check(
   S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u, {
     identifier: $I`IsoTimestampPatternCheck`,
+    // Generation-only shape mirroring IsoDate's constraint with valid clock ranges.
+    arbitraryConstraint: {
+      patterns: [
+        {
+          source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
+          flags: "",
+        },
+      ],
+    },
     title: "ISO UTC Timestamp",
     description: "Checks the millisecond-precision UTC timestamps frozen by the demo bundle.",
     message: "Expected a millisecond-precision UTC timestamp ending in Z.",

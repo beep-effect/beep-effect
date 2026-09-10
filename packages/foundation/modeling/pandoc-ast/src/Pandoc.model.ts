@@ -8,6 +8,8 @@
 import { $PandocAstId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   isPandocKnownConstructorName,
   PandocCitationMode,
@@ -19,9 +21,9 @@ import {
 } from "./internal/Pandoc.registry.ts";
 import { makeTableCaptionPlainTextFromPayload } from "./internal/Pandoc.table-caption.ts";
 import type { O } from "@beep/utils";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $PandocAstId.create("Pandoc.model");
-type ArbitraryFastCheck = Parameters<S.Annotations.ToArbitrary.Candidate["make"]>[0];
 
 /**
  * Pandoc API version tuple carried by Pandoc JSON.
@@ -126,8 +128,6 @@ export const PandocUnknownConstructorWire = S.StructWithRest(
  */
 export type PandocUnknownConstructorWire = typeof PandocUnknownConstructorWire.Type;
 
-const makePandocFutureConstructorArbitrary = (fc: ArbitraryFastCheck) =>
-  fc.string().map((suffix) => PandocUnknownConstructorWire.make({ t: `Future${suffix}` }));
 const PandocFutureConstructorWire = PandocUnknownConstructorWire.pipe(
   S.check(
     S.makeFilter((wire) => !isPandocKnownConstructorName(wire.t), {
@@ -135,17 +135,10 @@ const PandocFutureConstructorWire = PandocUnknownConstructorWire.pipe(
       title: "Future Pandoc constructor",
       description: "An opaque Pandoc constructor whose name is absent from every known constructor registry.",
       message: "Expected a future Pandoc constructor name that is not already known.",
-      arbitrary: {
-        candidate: {
-          weight: 32,
-          make: makePandocFutureConstructorArbitrary,
-        },
-      },
     })
   ),
   $I.annoteSchema("PandocFutureConstructorWire", {
     description: "Exact opaque JSON object whose constructor name is absent from every known registry.",
-    toArbitrary: () => makePandocFutureConstructorArbitrary,
   })
 );
 
@@ -3237,15 +3230,6 @@ const PandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() =>
   ])
 );
 const isPandocSemanticTablePayload = S.is(PandocSemanticTablePayloadWire);
-const EmptyPandocTablePayload = PandocTablePayloadShape.make([
-  ["", [], []],
-  [null, []],
-  [],
-  [["", [], []], []],
-  [],
-  [["", [], []], []],
-]);
-const makePandocTablePayloadArbitrary = (fc: ArbitraryFastCheck) => fc.constant(EmptyPandocTablePayload);
 class PandocConstructorJson extends S.Class<PandocConstructorJson>($I`PandocConstructorJson`)(
   {
     c: S.optionalKey(S.Json),
@@ -3297,17 +3281,10 @@ export const PandocTablePayload = PandocTablePayloadShape.pipe(
       title: "Semantically valid Pandoc table payload",
       description: "A six-field Pandoc table payload accepted by the strict recursive constructor grammar.",
       message: "Expected a Pandoc table payload whose nested constructors are valid in their semantic contexts.",
-      arbitrary: {
-        candidate: {
-          weight: 32,
-          make: makePandocTablePayloadArbitrary,
-        },
-      },
     })
   ),
   $I.annoteSchema("PandocTablePayload", {
     description: "Canonical validated six-field Pandoc table payload retained without duplicate semantic fields.",
-    toArbitrary: () => makePandocTablePayloadArbitrary,
   })
 );
 
@@ -3339,6 +3316,32 @@ export const PandocTablePayload = PandocTablePayloadShape.pipe(
  * @since 0.0.0
  */
 export type PandocTablePayload = typeof PandocTablePayload.Type;
+
+const EmptyPandocTablePayload = PandocTablePayload.make([
+  ["", [], []],
+  [null, []],
+  [],
+  [["", [], []], []],
+  [],
+  [["", [], []], []],
+]);
+
+/**
+ * Generates the canonical empty semantic table payload.
+ *
+ * **Example** (Sample a table payload)
+ *
+ * ```ts
+ * import { PandocTablePayloadArbitrary } from "@beep/pandoc-ast/Pandoc.model"
+ * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * const sample = Arbitrary.sampleEffect(PandocTablePayloadArbitrary, { count: 1 })
+ * console.log(sample)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const PandocTablePayloadArbitrary = Arbitrary.Constant(EmptyPandocTablePayload);
 
 const tableCaptionPlainTextFromPayload = makeTableCaptionPlainTextFromPayload({
   decodeConstructorOption: decodePandocConstructorOption,
@@ -3372,6 +3375,14 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
     }),
   },
   $I.annote("Table", {
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<Table>()(
+        S.Struct({}),
+        SchemaTransformation.transform({
+          decode: () => Table.make({ payload: EmptyPandocTablePayload }),
+          encode: () => ({}),
+        })
+      ),
     description: "Pandoc table block captured as an explicit gap node.",
   })
 ) {

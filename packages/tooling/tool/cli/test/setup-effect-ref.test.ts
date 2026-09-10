@@ -30,7 +30,7 @@ describe("setup-effect-ref", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const ambientPath = yield* Config.string("PATH");
+        const ambientPath = yield* Config.String("PATH");
         const setupScriptPath = yield* path.fromFileUrl(
           new URL("../../../../../scripts/setup-effect-ref.sh", import.meta.url)
         );
@@ -91,7 +91,7 @@ describe("setup-effect-ref", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const ambientPath = yield* Config.string("PATH");
+        const ambientPath = yield* Config.String("PATH");
         const setupScriptPath = yield* path.fromFileUrl(
           new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
         );
@@ -152,7 +152,7 @@ describe("setup-effect-ref", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const ambientPath = yield* Config.string("PATH");
+        const ambientPath = yield* Config.String("PATH");
         const setupScriptPath = yield* path.fromFileUrl(
           new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
         );
@@ -211,7 +211,7 @@ describe("setup-effect-ref", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const ambientPath = yield* Config.string("PATH");
+        const ambientPath = yield* Config.String("PATH");
         const setupScriptPath = yield* path.fromFileUrl(
           new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
         );
@@ -270,7 +270,7 @@ describe("setup-effect-ref", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const ambientPath = yield* Config.string("PATH");
+        const ambientPath = yield* Config.String("PATH");
         const setupScriptPath = yield* path.fromFileUrl(
           new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
         );
@@ -323,7 +323,7 @@ describe("setup-effect-ref", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const ambientPath = yield* Config.string("PATH");
+        const ambientPath = yield* Config.String("PATH");
         const setupScriptPath = yield* path.fromFileUrl(
           new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
         );

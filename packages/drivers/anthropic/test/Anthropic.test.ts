@@ -14,11 +14,11 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const ApproximatePriceArbitrary = S.toArbitrary(AnthropicApproximatePrice)(fc);
-const LanguageModelOptionsArbitrary = S.toArbitrary(AnthropicLanguageModelOptions)(fc);
-const RepairErrorArbitrary = S.toArbitrary(RepairError)(fc);
+const ApproximatePriceArbitrary = Arbitrary.schema(AnthropicApproximatePrice);
+const LanguageModelOptionsArbitrary = Arbitrary.schema(AnthropicLanguageModelOptions);
+const RepairErrorArbitrary = Arbitrary.schema(RepairError);
 
 const encodeApproximatePrice = S.encodeResult(AnthropicApproximatePrice);
 const decodeApproximatePrice = S.decodeUnknownResult(AnthropicApproximatePrice);
@@ -79,36 +79,32 @@ describe("@beep/anthropic", () => {
     });
   });
 
-  it("round-trips schema-derived Anthropic payloads through encoded form", () =>
-    fc.assert(
-      fc.property(
-        ApproximatePriceArbitrary,
-        LanguageModelOptionsArbitrary,
-        RepairErrorArbitrary,
-        (price, options, error) => {
-          expect(price.inputPerMillionTokensUsd).toBeGreaterThanOrEqual(0);
-          expect(price.outputPerMillionTokensUsd).toBeGreaterThanOrEqual(0);
-          expect(options.maxTokens).toBeGreaterThan(0);
-          expect(error.message.length).toBeGreaterThan(0);
-          expect(error.operation.length).toBeGreaterThan(0);
+  it.prop(
+    "round-trips schema-derived Anthropic payloads through encoded form",
+    [ApproximatePriceArbitrary, LanguageModelOptionsArbitrary, RepairErrorArbitrary],
+    ([price, options, error]) => {
+      expect(price.inputPerMillionTokensUsd).toBeGreaterThanOrEqual(0);
+      expect(price.outputPerMillionTokensUsd).toBeGreaterThanOrEqual(0);
+      expect(options.maxTokens).toBeGreaterThan(0);
+      expect(error.message.length).toBeGreaterThan(0);
+      expect(error.operation.length).toBeGreaterThan(0);
 
-          expect(
-            sameApproximatePrice(
-              Result.getOrThrow(decodeApproximatePrice(Result.getOrThrow(encodeApproximatePrice(price)))),
-              price
-            )
-          ).toBe(true);
-          expect(
-            sameLanguageModelOptions(
-              Result.getOrThrow(decodeLanguageModelOptions(Result.getOrThrow(encodeLanguageModelOptions(options)))),
-              options
-            )
-          ).toBe(true);
-          expect(
-            sameRepairError(Result.getOrThrow(decodeRepairError(Result.getOrThrow(encodeRepairError(error)))), error)
-          ).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+      expect(
+        sameApproximatePrice(
+          Result.getOrThrow(decodeApproximatePrice(Result.getOrThrow(encodeApproximatePrice(price)))),
+          price
+        )
+      ).toBe(true);
+      expect(
+        sameLanguageModelOptions(
+          Result.getOrThrow(decodeLanguageModelOptions(Result.getOrThrow(encodeLanguageModelOptions(options)))),
+          options
+        )
+      ).toBe(true);
+      expect(
+        sameRepairError(Result.getOrThrow(decodeRepairError(Result.getOrThrow(encodeRepairError(error)))), error)
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

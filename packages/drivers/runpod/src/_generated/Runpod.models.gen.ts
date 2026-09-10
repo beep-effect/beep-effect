@@ -13,9 +13,9 @@ import * as S from "effect/Schema";
 const $I = $RunpodId.create("Runpod.generated");
 
 /**
- * Generated RUNPOD class schema for `ContainerRegistryAuth`.
+ * Generated RUNPOD schema for `ContainerRegistryAuth`.
  *
- * **Example** (Inspect ContainerRegistryAuth)
+ * **Example** (Inspect the ContainerRegistryAuth schema)
  *
  * ```ts
  * import { ContainerRegistryAuth } from "@beep/runpod"
@@ -26,10 +26,8 @@ const $I = $RunpodId.create("Runpod.generated");
  * @category schemas
  * @since 0.0.0
  */
-export class ContainerRegistryAuth extends S.Class<ContainerRegistryAuth>(
-  $I`ContainerRegistryAuth`,
-)(
-  {
+export const ContainerRegistryAuth = S.StructWithRest(
+  S.Struct({
     id: S.optionalKey(
       S.String.annotateKey({
         description:
@@ -42,19 +40,35 @@ export class ContainerRegistryAuth extends S.Class<ContainerRegistryAuth>(
           "A user-defined name for a container registry authentication. The name must be unique.",
       }),
     ),
-  },
-  $I.annote("ContainerRegistryAuth", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("ContainerRegistryAuth", {
     description: "Generated RUNPOD schema for ContainerRegistryAuth.",
     identifier: "ContainerRegistryAuth",
   }),
-) {
-  static readonly is = S.is(ContainerRegistryAuth);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `Template`.
+ * Type for {@link ContainerRegistryAuth}.
  *
- * **Example** (Inspect Template)
+ * **Example** (Reference the ContainerRegistryAuth type)
+ *
+ * ```ts
+ * import type { ContainerRegistryAuth } from "@beep/runpod"
+ *
+ * type ContainerRegistryAuthValue = ContainerRegistryAuth
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ContainerRegistryAuth = typeof ContainerRegistryAuth.Type;
+
+/**
+ * Generated RUNPOD schema for `Template`.
+ *
+ * **Example** (Inspect the Template schema)
  *
  * ```ts
  * import { Template } from "@beep/runpod"
@@ -65,8 +79,8 @@ export class ContainerRegistryAuth extends S.Class<ContainerRegistryAuth>(
  * @category schemas
  * @since 0.0.0
  */
-export class Template extends S.Class<Template>($I`Template`)(
-  {
+export const Template = S.StructWithRest(
+  S.Struct({
     category: S.optionalKey(
       S.String.annotateKey({
         description:
@@ -161,19 +175,35 @@ export class Template extends S.Class<Template>($I`Template`)(
           "If a local network volume or network volume is attached to a Pod or worker, the absolute path where the network volume is mounted in the filesystem.",
       }),
     ),
-  },
-  $I.annote("Template", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("Template", {
     description: "Generated RUNPOD schema for Template.",
     identifier: "Template",
   }),
-) {
-  static readonly is = S.is(Template);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `SavingsPlan`.
+ * Type for {@link Template}.
  *
- * **Example** (Inspect SavingsPlan)
+ * **Example** (Reference the Template type)
+ *
+ * ```ts
+ * import type { Template } from "@beep/runpod"
+ *
+ * type TemplateValue = Template
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Template = typeof Template.Type;
+
+/**
+ * Generated RUNPOD schema for `SavingsPlan`.
+ *
+ * **Example** (Inspect the SavingsPlan schema)
  *
  * ```ts
  * import { SavingsPlan } from "@beep/runpod"
@@ -184,8 +214,8 @@ export class Template extends S.Class<Template>($I`Template`)(
  * @category schemas
  * @since 0.0.0
  */
-export class SavingsPlan extends S.Class<SavingsPlan>($I`SavingsPlan`)(
-  {
+export const SavingsPlan = S.StructWithRest(
+  S.Struct({
     costPerHr: S.optionalKey(
       S.Finite.check(S.isFinite().annotate({ expected: "a finite number" })),
     ),
@@ -194,19 +224,35 @@ export class SavingsPlan extends S.Class<SavingsPlan>($I`SavingsPlan`)(
     id: S.optionalKey(S.String),
     podId: S.optionalKey(S.String),
     startTime: S.optionalKey(S.String),
-  },
-  $I.annote("SavingsPlan", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("SavingsPlan", {
     description: "Generated RUNPOD schema for SavingsPlan.",
     identifier: "SavingsPlan",
   }),
-) {
-  static readonly is = S.is(SavingsPlan);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `Pod`.
+ * Type for {@link SavingsPlan}.
  *
- * **Example** (Inspect Pod)
+ * **Example** (Reference the SavingsPlan type)
+ *
+ * ```ts
+ * import type { SavingsPlan } from "@beep/runpod"
+ *
+ * type SavingsPlanValue = SavingsPlan
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SavingsPlan = typeof SavingsPlan.Type;
+
+/**
+ * Generated RUNPOD schema for `Pod`.
+ *
+ * **Example** (Inspect the Pod schema)
  *
  * ```ts
  * import { Pod } from "@beep/runpod"
@@ -217,8 +263,8 @@ export class SavingsPlan extends S.Class<SavingsPlan>($I`SavingsPlan`)(
  * @category schemas
  * @since 0.0.0
  */
-export class Pod extends S.Class<Pod>($I`Pod`)(
-  {
+export const Pod = S.StructWithRest(
+  S.Struct({
     adjustedCostPerHr: S.optionalKey(
       S.Finite.annotateKey({
         description:
@@ -288,55 +334,58 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
       S.Record(S.String, S.String).annotateKey({ default: {} }),
     ),
     gpu: S.optionalKey(
-      S.Struct({
-        id: S.optionalKey(S.String),
-        count: S.optionalKey(
-          S.Int.annotateKey({
-            description: "The number of GPUs attached to a Pod.",
-          }),
-        ),
-        displayName: S.optionalKey(S.String),
-        securePrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+      S.StructWithRest(
+        S.Struct({
+          id: S.optionalKey(S.String),
+          count: S.optionalKey(
+            S.Int.annotateKey({
+              description: "The number of GPUs attached to a Pod.",
+            }),
           ),
-        ),
-        communityPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          displayName: S.optionalKey(S.String),
+          securePrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        oneMonthPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          communityPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        threeMonthPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          oneMonthPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        sixMonthPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          threeMonthPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        oneWeekPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          sixMonthPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        communitySpotPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          oneWeekPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        secureSpotPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          communitySpotPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-      }),
+          secureSpotPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
+          ),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ),
     ),
     id: S.optionalKey(
       S.String.annotateKey({
@@ -372,103 +421,112 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
       }),
     ),
     machine: S.optionalKey(
-      S.Struct({
-        minPodGpuCount: S.optionalKey(S.Int),
-        gpuTypeId: S.optionalKey(S.String),
-        gpuType: S.optionalKey(
-          S.Struct({
-            id: S.optionalKey(S.String),
-            count: S.optionalKey(
-              S.Int.annotateKey({
-                description: "The number of GPUs attached to a Pod.",
+      S.StructWithRest(
+        S.Struct({
+          minPodGpuCount: S.optionalKey(S.Int),
+          gpuTypeId: S.optionalKey(S.String),
+          gpuType: S.optionalKey(
+            S.StructWithRest(
+              S.Struct({
+                id: S.optionalKey(S.String),
+                count: S.optionalKey(
+                  S.Int.annotateKey({
+                    description: "The number of GPUs attached to a Pod.",
+                  }),
+                ),
+                displayName: S.optionalKey(S.String),
+                securePrice: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
+                communityPrice: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
+                oneMonthPrice: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
+                threeMonthPrice: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
+                sixMonthPrice: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
+                oneWeekPrice: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
+                communitySpotPrice: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
+                secureSpotPrice: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
               }),
+              [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
             ),
-            displayName: S.optionalKey(S.String),
-            securePrice: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-            communityPrice: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-            oneMonthPrice: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-            threeMonthPrice: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-            sixMonthPrice: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-            oneWeekPrice: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-            communitySpotPrice: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-            secureSpotPrice: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-          }),
-        ),
-        cpuCount: S.optionalKey(S.Int),
-        cpuTypeId: S.optionalKey(S.String),
-        cpuType: S.optionalKey(
-          S.Struct({
-            id: S.optionalKey(S.String),
-            displayName: S.optionalKey(S.String),
-            cores: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-            threadsPerCore: S.optionalKey(
-              S.Finite.check(
-                S.isFinite().annotate({ expected: "a finite number" }),
-              ),
-            ),
-            groupId: S.optionalKey(S.String),
-          }),
-        ),
-        location: S.optionalKey(S.String),
-        dataCenterId: S.optionalKey(S.String),
-        diskThroughputMBps: S.optionalKey(S.Int),
-        maxDownloadSpeedMbps: S.optionalKey(S.Int),
-        maxUploadSpeedMbps: S.optionalKey(S.Int),
-        supportPublicIp: S.optionalKey(S.Boolean),
-        secureCloud: S.optionalKey(S.Boolean),
-        maintenanceStart: S.optionalKey(S.String),
-        maintenanceEnd: S.optionalKey(S.String),
-        maintenanceNote: S.optionalKey(S.String),
-        note: S.optionalKey(S.String),
-        costPerHr: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
           ),
-        ),
-        currentPricePerGpu: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          cpuCount: S.optionalKey(S.Int),
+          cpuTypeId: S.optionalKey(S.String),
+          cpuType: S.optionalKey(
+            S.StructWithRest(
+              S.Struct({
+                id: S.optionalKey(S.String),
+                displayName: S.optionalKey(S.String),
+                cores: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
+                threadsPerCore: S.optionalKey(
+                  S.Finite.check(
+                    S.isFinite().annotate({ expected: "a finite number" }),
+                  ),
+                ),
+                groupId: S.optionalKey(S.String),
+              }),
+              [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+            ),
           ),
-        ),
-        gpuAvailable: S.optionalKey(S.Int),
-        gpuDisplayName: S.optionalKey(S.String),
-      }).annotateKey({
+          location: S.optionalKey(S.String),
+          dataCenterId: S.optionalKey(S.String),
+          diskThroughputMBps: S.optionalKey(S.Int),
+          maxDownloadSpeedMbps: S.optionalKey(S.Int),
+          maxUploadSpeedMbps: S.optionalKey(S.Int),
+          supportPublicIp: S.optionalKey(S.Boolean),
+          secureCloud: S.optionalKey(S.Boolean),
+          maintenanceStart: S.optionalKey(S.String),
+          maintenanceEnd: S.optionalKey(S.String),
+          maintenanceNote: S.optionalKey(S.String),
+          note: S.optionalKey(S.String),
+          costPerHr: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
+          ),
+          currentPricePerGpu: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
+          ),
+          gpuAvailable: S.optionalKey(S.Int),
+          gpuDisplayName: S.optionalKey(S.String),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ).annotateKey({
         description:
           "Information about the machine a Pod is running on (see [Machine](#/components/schemas/Machine)).",
       }),
@@ -495,31 +553,34 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
       ),
     ),
     networkVolume: S.optionalKey(
-      S.Struct({
-        id: S.optionalKey(
-          S.String.annotateKey({
-            description: "A unique string identifying a network volume.",
-          }),
-        ),
-        name: S.optionalKey(
-          S.String.annotateKey({
-            description:
-              "A user-defined name for a network volume. The name does not need to be unique.",
-          }),
-        ),
-        size: S.optionalKey(
-          S.Int.annotateKey({
-            description:
-              "The amount of disk space, in gigabytes (GB), allocated to a network volume.",
-          }),
-        ),
-        dataCenterId: S.optionalKey(
-          S.String.annotateKey({
-            description:
-              "The Runpod data center ID where a network volume is located.",
-          }),
-        ),
-      }).annotateKey({
+      S.StructWithRest(
+        S.Struct({
+          id: S.optionalKey(
+            S.String.annotateKey({
+              description: "A unique string identifying a network volume.",
+            }),
+          ),
+          name: S.optionalKey(
+            S.String.annotateKey({
+              description:
+                "A user-defined name for a network volume. The name does not need to be unique.",
+            }),
+          ),
+          size: S.optionalKey(
+            S.Int.annotateKey({
+              description:
+                "The amount of disk space, in gigabytes (GB), allocated to a network volume.",
+            }),
+          ),
+          dataCenterId: S.optionalKey(
+            S.String.annotateKey({
+              description:
+                "The Runpod data center ID where a network volume is located.",
+            }),
+          ),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ).annotateKey({
         description:
           "If a network volume is attached to a Pod, information about the network volume (see [network volume schema](#/components/schemas/NetworkVolume)).",
       }),
@@ -587,19 +648,35 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
           "If either a Pod volume or a network volume is attached to a Pod, the absolute path where the network volume is mounted in the filesystem.",
       }),
     ),
-  },
-  $I.annote("Pod", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("Pod", {
     description: "Generated RUNPOD schema for Pod.",
     identifier: "Pod",
   }),
-) {
-  static readonly is = S.is(Pod);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `Endpoint`.
+ * Type for {@link Pod}.
  *
- * **Example** (Inspect Endpoint)
+ * **Example** (Reference the Pod type)
+ *
+ * ```ts
+ * import type { Pod } from "@beep/runpod"
+ *
+ * type PodValue = Pod
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Pod = typeof Pod.Type;
+
+/**
+ * Generated RUNPOD schema for `Endpoint`.
+ *
+ * **Example** (Inspect the Endpoint schema)
  *
  * ```ts
  * import { Endpoint } from "@beep/runpod"
@@ -610,8 +687,8 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
  * @category schemas
  * @since 0.0.0
  */
-export class Endpoint extends S.Class<Endpoint>($I`Endpoint`)(
-  {
+export const Endpoint = S.StructWithRest(
+  S.Struct({
     allowedCudaVersions: S.optionalKey(
       S.Array(S.String).annotateKey({
         description:
@@ -775,19 +852,35 @@ export class Endpoint extends S.Class<Endpoint>($I`Endpoint`)(
           "The minimum number of workers that will run at the same time on a Serverless endpoint. This number of workers will always stay running for the endpoint, and will be charged even if no requests are being processed, but they are charged at a lower rate than running autoscaling workers.",
       }),
     ),
-  },
-  $I.annote("Endpoint", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("Endpoint", {
     description: "Generated RUNPOD schema for Endpoint.",
     identifier: "Endpoint",
   }),
-) {
-  static readonly is = S.is(Endpoint);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `BillingRecord`.
+ * Type for {@link Endpoint}.
  *
- * **Example** (Inspect BillingRecord)
+ * **Example** (Reference the Endpoint type)
+ *
+ * ```ts
+ * import type { Endpoint } from "@beep/runpod"
+ *
+ * type EndpointValue = Endpoint
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Endpoint = typeof Endpoint.Type;
+
+/**
+ * Generated RUNPOD schema for `BillingRecord`.
+ *
+ * **Example** (Inspect the BillingRecord schema)
  *
  * ```ts
  * import { BillingRecord } from "@beep/runpod"
@@ -798,73 +891,7 @@ export class Endpoint extends S.Class<Endpoint>($I`Endpoint`)(
  * @category schemas
  * @since 0.0.0
  */
-export class BillingRecord extends S.Class<BillingRecord>($I`BillingRecord`)(
-  {
-    amount: S.optionalKey(
-      S.Finite.annotateKey({
-        description:
-          "The amount charged for the group for the billing period, in USD.",
-      }).check(S.isFinite().annotate({ expected: "a finite number" })),
-    ),
-    diskSpaceBilledGb: S.optionalKey(
-      S.Int.annotateKey({
-        description:
-          "The amount of disk space billed for the billing period, in gigabytes (GB). Does not apply to all resource types.",
-      }),
-    ),
-    endpointId: S.optionalKey(
-      S.String.annotateKey({
-        description:
-          "If grouping by endpoint ID, the endpoint ID of the group.",
-      }),
-    ),
-    gpuTypeId: S.optionalKey(
-      S.String.annotateKey({
-        description:
-          "If grouping by GPU type ID, the GPU type ID of the group.",
-      }),
-    ),
-    podId: S.optionalKey(
-      S.String.annotateKey({
-        description: "If grouping by Pod ID, the Pod ID of the group.",
-      }),
-    ),
-    time: S.optionalKey(
-      S.String.annotateKey({
-        description:
-          "The start of the period for which the billing record applies.",
-        format: "date-time",
-      }),
-    ),
-    timeBilledMs: S.optionalKey(
-      S.Int.annotateKey({
-        description:
-          "The total time billed for the billing period, in milliseconds. Does not apply to all resource types.",
-      }),
-    ),
-  },
-  $I.annote("BillingRecord", {
-    description: "Generated RUNPOD schema for BillingRecord.",
-  }),
-) {
-  static readonly is = S.is(BillingRecord);
-}
-
-/**
- * Generated RUNPOD schema for `BillingRecords`.
- *
- * **Example** (Inspect the BillingRecords schema)
- *
- * ```ts
- * import { BillingRecords } from "@beep/runpod"
- *
- * console.log(BillingRecords.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const BillingRecords = S.Array(
+export const BillingRecord = S.StructWithRest(
   S.Struct({
     amount: S.optionalKey(
       S.Finite.annotateKey({
@@ -909,6 +936,91 @@ export const BillingRecords = S.Array(
       }),
     ),
   }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("BillingRecord", {
+    description: "Generated RUNPOD schema for BillingRecord.",
+  }),
+);
+
+/**
+ * Type for {@link BillingRecord}.
+ *
+ * **Example** (Reference the BillingRecord type)
+ *
+ * ```ts
+ * import type { BillingRecord } from "@beep/runpod"
+ *
+ * type BillingRecordValue = BillingRecord
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BillingRecord = typeof BillingRecord.Type;
+
+/**
+ * Generated RUNPOD schema for `BillingRecords`.
+ *
+ * **Example** (Inspect the BillingRecords schema)
+ *
+ * ```ts
+ * import { BillingRecords } from "@beep/runpod"
+ *
+ * console.log(BillingRecords.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BillingRecords = S.Array(
+  S.StructWithRest(
+    S.Struct({
+      amount: S.optionalKey(
+        S.Finite.annotateKey({
+          description:
+            "The amount charged for the group for the billing period, in USD.",
+        }).check(S.isFinite().annotate({ expected: "a finite number" })),
+      ),
+      diskSpaceBilledGb: S.optionalKey(
+        S.Int.annotateKey({
+          description:
+            "The amount of disk space billed for the billing period, in gigabytes (GB). Does not apply to all resource types.",
+        }),
+      ),
+      endpointId: S.optionalKey(
+        S.String.annotateKey({
+          description:
+            "If grouping by endpoint ID, the endpoint ID of the group.",
+        }),
+      ),
+      gpuTypeId: S.optionalKey(
+        S.String.annotateKey({
+          description:
+            "If grouping by GPU type ID, the GPU type ID of the group.",
+        }),
+      ),
+      podId: S.optionalKey(
+        S.String.annotateKey({
+          description: "If grouping by Pod ID, the Pod ID of the group.",
+        }),
+      ),
+      time: S.optionalKey(
+        S.String.annotateKey({
+          description:
+            "The start of the period for which the billing record applies.",
+          format: "date-time",
+        }),
+      ),
+      timeBilledMs: S.optionalKey(
+        S.Int.annotateKey({
+          description:
+            "The total time billed for the billing period, in milliseconds. Does not apply to all resource types.",
+        }),
+      ),
+    }),
+    [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+  ),
 ).pipe(
   $I.annoteSchema("BillingRecords", {
     description: "Generated RUNPOD schema for BillingRecords.",
@@ -932,9 +1044,9 @@ export const BillingRecords = S.Array(
 export type BillingRecords = typeof BillingRecords.Type;
 
 /**
- * Generated RUNPOD class schema for `ContainerRegistryAuthCreateInput`.
+ * Generated RUNPOD schema for `ContainerRegistryAuthCreateInput`.
  *
- * **Example** (Inspect ContainerRegistryAuthCreateInput)
+ * **Example** (Inspect the ContainerRegistryAuthCreateInput schema)
  *
  * ```ts
  * import { ContainerRegistryAuthCreateInput } from "@beep/runpod"
@@ -945,10 +1057,8 @@ export type BillingRecords = typeof BillingRecords.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class ContainerRegistryAuthCreateInput extends S.Class<ContainerRegistryAuthCreateInput>(
-  $I`ContainerRegistryAuthCreateInput`,
-)(
-  {
+export const ContainerRegistryAuthCreateInput = S.StructWithRest(
+  S.Struct({
     name: S.String.annotateKey({
       description:
         "A user-defined name for a container registry authentication. The name must be unique.",
@@ -959,14 +1069,31 @@ export class ContainerRegistryAuthCreateInput extends S.Class<ContainerRegistryA
     username: S.String.annotateKey({
       description: "The username for the container registry.",
     }),
-  },
-  $I.annote("ContainerRegistryAuthCreateInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("ContainerRegistryAuthCreateInput", {
     description:
       "Generated RUNPOD schema for ContainerRegistryAuthCreateInput.",
   }),
-) {
-  static readonly is = S.is(ContainerRegistryAuthCreateInput);
-}
+);
+
+/**
+ * Type for {@link ContainerRegistryAuthCreateInput}.
+ *
+ * **Example** (Reference the ContainerRegistryAuthCreateInput type)
+ *
+ * ```ts
+ * import type { ContainerRegistryAuthCreateInput } from "@beep/runpod"
+ *
+ * type ContainerRegistryAuthCreateInputValue = ContainerRegistryAuthCreateInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ContainerRegistryAuthCreateInput =
+  typeof ContainerRegistryAuthCreateInput.Type;
 
 /**
  * Generated RUNPOD schema for `ContainerRegistryAuths`.
@@ -1041,9 +1168,9 @@ export const CudaVersions = S.String.pipe(
 export type CudaVersions = typeof CudaVersions.Type;
 
 /**
- * Generated RUNPOD class schema for `DataCenter`.
+ * Generated RUNPOD schema for `DataCenter`.
  *
- * **Example** (Inspect DataCenter)
+ * **Example** (Inspect the DataCenter schema)
  *
  * ```ts
  * import { DataCenter } from "@beep/runpod"
@@ -1054,19 +1181,35 @@ export type CudaVersions = typeof CudaVersions.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class DataCenter extends S.Class<DataCenter>($I`DataCenter`)(
-  { id: S.optionalKey(S.String) },
-  $I.annote("DataCenter", {
+export const DataCenter = S.StructWithRest(
+  S.Struct({ id: S.optionalKey(S.String) }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("DataCenter", {
     description: "Generated RUNPOD schema for DataCenter.",
   }),
-) {
-  static readonly is = S.is(DataCenter);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `EndpointCreateInput`.
+ * Type for {@link DataCenter}.
  *
- * **Example** (Inspect EndpointCreateInput)
+ * **Example** (Reference the DataCenter type)
+ *
+ * ```ts
+ * import type { DataCenter } from "@beep/runpod"
+ *
+ * type DataCenterValue = DataCenter
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DataCenter = typeof DataCenter.Type;
+
+/**
+ * Generated RUNPOD schema for `EndpointCreateInput`.
+ *
+ * **Example** (Inspect the EndpointCreateInput schema)
  *
  * ```ts
  * import { EndpointCreateInput } from "@beep/runpod"
@@ -1077,10 +1220,8 @@ export class DataCenter extends S.Class<DataCenter>($I`DataCenter`)(
  * @category schemas
  * @since 0.0.0
  */
-export class EndpointCreateInput extends S.Class<EndpointCreateInput>(
-  $I`EndpointCreateInput`,
-)(
-  {
+export const EndpointCreateInput = S.StructWithRest(
+  S.Struct({
     allowedCudaVersions: S.optionalKey(
       S.Array(S.String).annotateKey({
         description:
@@ -1257,18 +1398,34 @@ export class EndpointCreateInput extends S.Class<EndpointCreateInput>(
         }),
       ),
     ),
-  },
-  $I.annote("EndpointCreateInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("EndpointCreateInput", {
     description: "Generated RUNPOD schema for EndpointCreateInput.",
   }),
-) {
-  static readonly is = S.is(EndpointCreateInput);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `EndpointUpdateInPlaceInput`.
+ * Type for {@link EndpointCreateInput}.
  *
- * **Example** (Inspect EndpointUpdateInPlaceInput)
+ * **Example** (Reference the EndpointCreateInput type)
+ *
+ * ```ts
+ * import type { EndpointCreateInput } from "@beep/runpod"
+ *
+ * type EndpointCreateInputValue = EndpointCreateInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EndpointCreateInput = typeof EndpointCreateInput.Type;
+
+/**
+ * Generated RUNPOD schema for `EndpointUpdateInPlaceInput`.
+ *
+ * **Example** (Inspect the EndpointUpdateInPlaceInput schema)
  *
  * ```ts
  * import { EndpointUpdateInPlaceInput } from "@beep/runpod"
@@ -1279,10 +1436,8 @@ export class EndpointCreateInput extends S.Class<EndpointCreateInput>(
  * @category schemas
  * @since 0.0.0
  */
-export class EndpointUpdateInPlaceInput extends S.Class<EndpointUpdateInPlaceInput>(
-  $I`EndpointUpdateInPlaceInput`,
-)(
-  {
+export const EndpointUpdateInPlaceInput = S.StructWithRest(
+  S.Struct({
     executionTimeoutMs: S.optionalKey(
       S.Int.annotateKey({
         description:
@@ -1356,18 +1511,34 @@ export class EndpointUpdateInPlaceInput extends S.Class<EndpointUpdateInPlaceInp
         }),
       ),
     ),
-  },
-  $I.annote("EndpointUpdateInPlaceInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("EndpointUpdateInPlaceInput", {
     description: "Generated RUNPOD schema for EndpointUpdateInPlaceInput.",
   }),
-) {
-  static readonly is = S.is(EndpointUpdateInPlaceInput);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `EndpointUpdateInput`.
+ * Type for {@link EndpointUpdateInPlaceInput}.
  *
- * **Example** (Inspect EndpointUpdateInput)
+ * **Example** (Reference the EndpointUpdateInPlaceInput type)
+ *
+ * ```ts
+ * import type { EndpointUpdateInPlaceInput } from "@beep/runpod"
+ *
+ * type EndpointUpdateInPlaceInputValue = EndpointUpdateInPlaceInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EndpointUpdateInPlaceInput = typeof EndpointUpdateInPlaceInput.Type;
+
+/**
+ * Generated RUNPOD schema for `EndpointUpdateInput`.
+ *
+ * **Example** (Inspect the EndpointUpdateInput schema)
  *
  * ```ts
  * import { EndpointUpdateInput } from "@beep/runpod"
@@ -1378,10 +1549,8 @@ export class EndpointUpdateInPlaceInput extends S.Class<EndpointUpdateInPlaceInp
  * @category schemas
  * @since 0.0.0
  */
-export class EndpointUpdateInput extends S.Class<EndpointUpdateInput>(
-  $I`EndpointUpdateInput`,
-)(
-  {
+export const EndpointUpdateInput = S.StructWithRest(
+  S.Struct({
     allowedCudaVersions: S.optionalKey(
       S.Array(S.String).annotateKey({
         description:
@@ -1553,15 +1722,31 @@ export class EndpointUpdateInput extends S.Class<EndpointUpdateInput>(
         }),
       ),
     ),
-  },
-  $I.annote("EndpointUpdateInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("EndpointUpdateInput", {
     description: "Generated RUNPOD schema for EndpointUpdateInput.",
     documentation:
       "Input for updating an endpoint which will trigger a rolling release on the endpoint.",
   }),
-) {
-  static readonly is = S.is(EndpointUpdateInput);
-}
+);
+
+/**
+ * Type for {@link EndpointUpdateInput}.
+ *
+ * **Example** (Reference the EndpointUpdateInput type)
+ *
+ * ```ts
+ * import type { EndpointUpdateInput } from "@beep/runpod"
+ *
+ * type EndpointUpdateInputValue = EndpointUpdateInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EndpointUpdateInput = typeof EndpointUpdateInput.Type;
 
 /**
  * Generated RUNPOD schema for `Endpoints`.
@@ -1636,9 +1821,9 @@ export const GPUTypeId = S.String.pipe(
 export type GPUTypeId = typeof GPUTypeId.Type;
 
 /**
- * Generated RUNPOD class schema for `Machine`.
+ * Generated RUNPOD schema for `Machine`.
  *
- * **Example** (Inspect Machine)
+ * **Example** (Inspect the Machine schema)
  *
  * ```ts
  * import { Machine } from "@beep/runpod"
@@ -1649,28 +1834,31 @@ export type GPUTypeId = typeof GPUTypeId.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class Machine extends S.Class<Machine>($I`Machine`)(
-  {
+export const Machine = S.StructWithRest(
+  S.Struct({
     costPerHr: S.optionalKey(
       S.Finite.check(S.isFinite().annotate({ expected: "a finite number" })),
     ),
     cpuCount: S.optionalKey(S.Int),
     cpuType: S.optionalKey(
-      S.Struct({
-        id: S.optionalKey(S.String),
-        displayName: S.optionalKey(S.String),
-        cores: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+      S.StructWithRest(
+        S.Struct({
+          id: S.optionalKey(S.String),
+          displayName: S.optionalKey(S.String),
+          cores: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        threadsPerCore: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          threadsPerCore: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        groupId: S.optionalKey(S.String),
-      }),
+          groupId: S.optionalKey(S.String),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ),
     ),
     cpuTypeId: S.optionalKey(S.String),
     currentPricePerGpu: S.optionalKey(
@@ -1681,55 +1869,58 @@ export class Machine extends S.Class<Machine>($I`Machine`)(
     gpuAvailable: S.optionalKey(S.Int),
     gpuDisplayName: S.optionalKey(S.String),
     gpuType: S.optionalKey(
-      S.Struct({
-        id: S.optionalKey(S.String),
-        count: S.optionalKey(
-          S.Int.annotateKey({
-            description: "The number of GPUs attached to a Pod.",
-          }),
-        ),
-        displayName: S.optionalKey(S.String),
-        securePrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+      S.StructWithRest(
+        S.Struct({
+          id: S.optionalKey(S.String),
+          count: S.optionalKey(
+            S.Int.annotateKey({
+              description: "The number of GPUs attached to a Pod.",
+            }),
           ),
-        ),
-        communityPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          displayName: S.optionalKey(S.String),
+          securePrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        oneMonthPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          communityPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        threeMonthPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          oneMonthPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        sixMonthPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          threeMonthPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        oneWeekPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          sixMonthPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        communitySpotPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          oneWeekPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-        secureSpotPrice: S.optionalKey(
-          S.Finite.check(
-            S.isFinite().annotate({ expected: "a finite number" }),
+          communitySpotPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
           ),
-        ),
-      }),
+          secureSpotPrice: S.optionalKey(
+            S.Finite.check(
+              S.isFinite().annotate({ expected: "a finite number" }),
+            ),
+          ),
+        }),
+        [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+      ),
     ),
     gpuTypeId: S.optionalKey(S.String),
     location: S.optionalKey(S.String),
@@ -1742,18 +1933,34 @@ export class Machine extends S.Class<Machine>($I`Machine`)(
     note: S.optionalKey(S.String),
     secureCloud: S.optionalKey(S.Boolean),
     supportPublicIp: S.optionalKey(S.Boolean),
-  },
-  $I.annote("Machine", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("Machine", {
     description: "Generated RUNPOD schema for Machine.",
   }),
-) {
-  static readonly is = S.is(Machine);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `NetworkVolume`.
+ * Type for {@link Machine}.
  *
- * **Example** (Inspect NetworkVolume)
+ * **Example** (Reference the Machine type)
+ *
+ * ```ts
+ * import type { Machine } from "@beep/runpod"
+ *
+ * type MachineValue = Machine
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Machine = typeof Machine.Type;
+
+/**
+ * Generated RUNPOD schema for `NetworkVolume`.
+ *
+ * **Example** (Inspect the NetworkVolume schema)
  *
  * ```ts
  * import { NetworkVolume } from "@beep/runpod"
@@ -1764,8 +1971,8 @@ export class Machine extends S.Class<Machine>($I`Machine`)(
  * @category schemas
  * @since 0.0.0
  */
-export class NetworkVolume extends S.Class<NetworkVolume>($I`NetworkVolume`)(
-  {
+export const NetworkVolume = S.StructWithRest(
+  S.Struct({
     dataCenterId: S.optionalKey(
       S.String.annotateKey({
         description:
@@ -1789,18 +1996,34 @@ export class NetworkVolume extends S.Class<NetworkVolume>($I`NetworkVolume`)(
           "The amount of disk space, in gigabytes (GB), allocated to a network volume.",
       }),
     ),
-  },
-  $I.annote("NetworkVolume", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("NetworkVolume", {
     description: "Generated RUNPOD schema for NetworkVolume.",
   }),
-) {
-  static readonly is = S.is(NetworkVolume);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `NetworkVolumeBillingRecord`.
+ * Type for {@link NetworkVolume}.
  *
- * **Example** (Inspect NetworkVolumeBillingRecord)
+ * **Example** (Reference the NetworkVolume type)
+ *
+ * ```ts
+ * import type { NetworkVolume } from "@beep/runpod"
+ *
+ * type NetworkVolumeValue = NetworkVolume
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NetworkVolume = typeof NetworkVolume.Type;
+
+/**
+ * Generated RUNPOD schema for `NetworkVolumeBillingRecord`.
+ *
+ * **Example** (Inspect the NetworkVolumeBillingRecord schema)
  *
  * ```ts
  * import { NetworkVolumeBillingRecord } from "@beep/runpod"
@@ -1811,64 +2034,7 @@ export class NetworkVolume extends S.Class<NetworkVolume>($I`NetworkVolume`)(
  * @category schemas
  * @since 0.0.0
  */
-export class NetworkVolumeBillingRecord extends S.Class<NetworkVolumeBillingRecord>(
-  $I`NetworkVolumeBillingRecord`,
-)(
-  {
-    amount: S.optionalKey(
-      S.Finite.annotateKey({
-        description:
-          "The amount charged for the group for the billing period, in USD.",
-      }).check(S.isFinite().annotate({ expected: "a finite number" })),
-    ),
-    diskSpaceBilledGb: S.optionalKey(
-      S.Int.annotateKey({
-        description:
-          "The amount of disk space billed for the billing period, in gigabytes (GB). Does not apply to all resource types.",
-      }),
-    ),
-    highPerformanceStorageAmount: S.optionalKey(
-      S.Finite.annotateKey({
-        description:
-          "The amount charged for high performance storage for the billing period, in USD.",
-      }).check(S.isFinite().annotate({ expected: "a finite number" })),
-    ),
-    highPerformanceStorageDiskSpaceBilledGb: S.optionalKey(
-      S.Int.annotateKey({
-        description:
-          "The amount of high performance storage disk space billed for the billing period, in gigabytes (GB).",
-      }),
-    ),
-    time: S.optionalKey(
-      S.String.annotateKey({
-        description:
-          "The start of the period for which the billing record applies.",
-        format: "date-time",
-      }),
-    ),
-  },
-  $I.annote("NetworkVolumeBillingRecord", {
-    description: "Generated RUNPOD schema for NetworkVolumeBillingRecord.",
-  }),
-) {
-  static readonly is = S.is(NetworkVolumeBillingRecord);
-}
-
-/**
- * Generated RUNPOD schema for `NetworkVolumeBillingRecords`.
- *
- * **Example** (Inspect the NetworkVolumeBillingRecords schema)
- *
- * ```ts
- * import { NetworkVolumeBillingRecords } from "@beep/runpod"
- *
- * console.log(NetworkVolumeBillingRecords.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const NetworkVolumeBillingRecords = S.Array(
+export const NetworkVolumeBillingRecord = S.StructWithRest(
   S.Struct({
     amount: S.optionalKey(
       S.Finite.annotateKey({
@@ -1902,6 +2068,80 @@ export const NetworkVolumeBillingRecords = S.Array(
       }),
     ),
   }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("NetworkVolumeBillingRecord", {
+    description: "Generated RUNPOD schema for NetworkVolumeBillingRecord.",
+  }),
+);
+
+/**
+ * Type for {@link NetworkVolumeBillingRecord}.
+ *
+ * **Example** (Reference the NetworkVolumeBillingRecord type)
+ *
+ * ```ts
+ * import type { NetworkVolumeBillingRecord } from "@beep/runpod"
+ *
+ * type NetworkVolumeBillingRecordValue = NetworkVolumeBillingRecord
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NetworkVolumeBillingRecord = typeof NetworkVolumeBillingRecord.Type;
+
+/**
+ * Generated RUNPOD schema for `NetworkVolumeBillingRecords`.
+ *
+ * **Example** (Inspect the NetworkVolumeBillingRecords schema)
+ *
+ * ```ts
+ * import { NetworkVolumeBillingRecords } from "@beep/runpod"
+ *
+ * console.log(NetworkVolumeBillingRecords.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NetworkVolumeBillingRecords = S.Array(
+  S.StructWithRest(
+    S.Struct({
+      amount: S.optionalKey(
+        S.Finite.annotateKey({
+          description:
+            "The amount charged for the group for the billing period, in USD.",
+        }).check(S.isFinite().annotate({ expected: "a finite number" })),
+      ),
+      diskSpaceBilledGb: S.optionalKey(
+        S.Int.annotateKey({
+          description:
+            "The amount of disk space billed for the billing period, in gigabytes (GB). Does not apply to all resource types.",
+        }),
+      ),
+      highPerformanceStorageAmount: S.optionalKey(
+        S.Finite.annotateKey({
+          description:
+            "The amount charged for high performance storage for the billing period, in USD.",
+        }).check(S.isFinite().annotate({ expected: "a finite number" })),
+      ),
+      highPerformanceStorageDiskSpaceBilledGb: S.optionalKey(
+        S.Int.annotateKey({
+          description:
+            "The amount of high performance storage disk space billed for the billing period, in gigabytes (GB).",
+        }),
+      ),
+      time: S.optionalKey(
+        S.String.annotateKey({
+          description:
+            "The start of the period for which the billing record applies.",
+          format: "date-time",
+        }),
+      ),
+    }),
+    [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+  ),
 ).pipe(
   $I.annoteSchema("NetworkVolumeBillingRecords", {
     description: "Generated RUNPOD schema for NetworkVolumeBillingRecords.",
@@ -1926,9 +2166,9 @@ export type NetworkVolumeBillingRecords =
   typeof NetworkVolumeBillingRecords.Type;
 
 /**
- * Generated RUNPOD class schema for `NetworkVolumeCreateInput`.
+ * Generated RUNPOD schema for `NetworkVolumeCreateInput`.
  *
- * **Example** (Inspect NetworkVolumeCreateInput)
+ * **Example** (Inspect the NetworkVolumeCreateInput schema)
  *
  * ```ts
  * import { NetworkVolumeCreateInput } from "@beep/runpod"
@@ -1939,10 +2179,8 @@ export type NetworkVolumeBillingRecords =
  * @category schemas
  * @since 0.0.0
  */
-export class NetworkVolumeCreateInput extends S.Class<NetworkVolumeCreateInput>(
-  $I`NetworkVolumeCreateInput`,
-)(
-  {
+export const NetworkVolumeCreateInput = S.StructWithRest(
+  S.Struct({
     dataCenterId: S.String.annotateKey({
       description:
         "The Runpod data center ID where the created network volume is located.",
@@ -1965,18 +2203,34 @@ export class NetworkVolumeCreateInput extends S.Class<NetworkVolumeCreateInput>(
           expected: "a value less than or equal to 4000",
         }),
       ),
-  },
-  $I.annote("NetworkVolumeCreateInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("NetworkVolumeCreateInput", {
     description: "Generated RUNPOD schema for NetworkVolumeCreateInput.",
   }),
-) {
-  static readonly is = S.is(NetworkVolumeCreateInput);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `NetworkVolumeUpdateInput`.
+ * Type for {@link NetworkVolumeCreateInput}.
  *
- * **Example** (Inspect NetworkVolumeUpdateInput)
+ * **Example** (Reference the NetworkVolumeCreateInput type)
+ *
+ * ```ts
+ * import type { NetworkVolumeCreateInput } from "@beep/runpod"
+ *
+ * type NetworkVolumeCreateInputValue = NetworkVolumeCreateInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NetworkVolumeCreateInput = typeof NetworkVolumeCreateInput.Type;
+
+/**
+ * Generated RUNPOD schema for `NetworkVolumeUpdateInput`.
+ *
+ * **Example** (Inspect the NetworkVolumeUpdateInput schema)
  *
  * ```ts
  * import { NetworkVolumeUpdateInput } from "@beep/runpod"
@@ -1987,10 +2241,8 @@ export class NetworkVolumeCreateInput extends S.Class<NetworkVolumeCreateInput>(
  * @category schemas
  * @since 0.0.0
  */
-export class NetworkVolumeUpdateInput extends S.Class<NetworkVolumeUpdateInput>(
-  $I`NetworkVolumeUpdateInput`,
-)(
-  {
+export const NetworkVolumeUpdateInput = S.StructWithRest(
+  S.Struct({
     name: S.optionalKey(
       S.String.annotateKey({
         description:
@@ -2013,13 +2265,29 @@ export class NetworkVolumeUpdateInput extends S.Class<NetworkVolumeUpdateInput>(
           }),
         ),
     ),
-  },
-  $I.annote("NetworkVolumeUpdateInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("NetworkVolumeUpdateInput", {
     description: "Generated RUNPOD schema for NetworkVolumeUpdateInput.",
   }),
-) {
-  static readonly is = S.is(NetworkVolumeUpdateInput);
-}
+);
+
+/**
+ * Type for {@link NetworkVolumeUpdateInput}.
+ *
+ * **Example** (Reference the NetworkVolumeUpdateInput type)
+ *
+ * ```ts
+ * import type { NetworkVolumeUpdateInput } from "@beep/runpod"
+ *
+ * type NetworkVolumeUpdateInputValue = NetworkVolumeUpdateInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NetworkVolumeUpdateInput = typeof NetworkVolumeUpdateInput.Type;
 
 /**
  * Generated RUNPOD schema for `NetworkVolumes`.
@@ -2036,31 +2304,34 @@ export class NetworkVolumeUpdateInput extends S.Class<NetworkVolumeUpdateInput>(
  * @since 0.0.0
  */
 export const NetworkVolumes = S.Array(
-  S.Struct({
-    id: S.optionalKey(
-      S.String.annotateKey({
-        description: "A unique string identifying a network volume.",
-      }),
-    ),
-    name: S.optionalKey(
-      S.String.annotateKey({
-        description:
-          "A user-defined name for a network volume. The name does not need to be unique.",
-      }),
-    ),
-    size: S.optionalKey(
-      S.Int.annotateKey({
-        description:
-          "The amount of disk space, in gigabytes (GB), allocated to a network volume.",
-      }),
-    ),
-    dataCenterId: S.optionalKey(
-      S.String.annotateKey({
-        description:
-          "The Runpod data center ID where a network volume is located.",
-      }),
-    ),
-  }),
+  S.StructWithRest(
+    S.Struct({
+      id: S.optionalKey(
+        S.String.annotateKey({
+          description: "A unique string identifying a network volume.",
+        }),
+      ),
+      name: S.optionalKey(
+        S.String.annotateKey({
+          description:
+            "A user-defined name for a network volume. The name does not need to be unique.",
+        }),
+      ),
+      size: S.optionalKey(
+        S.Int.annotateKey({
+          description:
+            "The amount of disk space, in gigabytes (GB), allocated to a network volume.",
+        }),
+      ),
+      dataCenterId: S.optionalKey(
+        S.String.annotateKey({
+          description:
+            "The Runpod data center ID where a network volume is located.",
+        }),
+      ),
+    }),
+    [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+  ),
 ).pipe(
   $I.annoteSchema("NetworkVolumes", {
     description: "Generated RUNPOD schema for NetworkVolumes.",
@@ -2084,9 +2355,9 @@ export const NetworkVolumes = S.Array(
 export type NetworkVolumes = typeof NetworkVolumes.Type;
 
 /**
- * Generated RUNPOD class schema for `PodCreateInput`.
+ * Generated RUNPOD schema for `PodCreateInput`.
  *
- * **Example** (Inspect PodCreateInput)
+ * **Example** (Inspect the PodCreateInput schema)
  *
  * ```ts
  * import { PodCreateInput } from "@beep/runpod"
@@ -2097,8 +2368,8 @@ export type NetworkVolumes = typeof NetworkVolumes.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class PodCreateInput extends S.Class<PodCreateInput>($I`PodCreateInput`)(
-  {
+export const PodCreateInput = S.StructWithRest(
+  S.Struct({
     allowedCudaVersions: S.optionalKey(
       S.Array(S.String).annotateKey({
         description:
@@ -2344,18 +2615,34 @@ export class PodCreateInput extends S.Class<PodCreateInput>($I`PodCreateInput`)(
         default: "/workspace",
       }),
     ),
-  },
-  $I.annote("PodCreateInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("PodCreateInput", {
     description: "Generated RUNPOD schema for PodCreateInput.",
   }),
-) {
-  static readonly is = S.is(PodCreateInput);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `PodUpdateInPlaceInput`.
+ * Type for {@link PodCreateInput}.
  *
- * **Example** (Inspect PodUpdateInPlaceInput)
+ * **Example** (Reference the PodCreateInput type)
+ *
+ * ```ts
+ * import type { PodCreateInput } from "@beep/runpod"
+ *
+ * type PodCreateInputValue = PodCreateInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PodCreateInput = typeof PodCreateInput.Type;
+
+/**
+ * Generated RUNPOD schema for `PodUpdateInPlaceInput`.
+ *
+ * **Example** (Inspect the PodUpdateInPlaceInput schema)
  *
  * ```ts
  * import { PodUpdateInPlaceInput } from "@beep/runpod"
@@ -2366,10 +2653,8 @@ export class PodCreateInput extends S.Class<PodCreateInput>($I`PodCreateInput`)(
  * @category schemas
  * @since 0.0.0
  */
-export class PodUpdateInPlaceInput extends S.Class<PodUpdateInPlaceInput>(
-  $I`PodUpdateInPlaceInput`,
-)(
-  {
+export const PodUpdateInPlaceInput = S.StructWithRest(
+  S.Struct({
     locked: S.optionalKey(
       S.Boolean.annotateKey({
         description:
@@ -2388,18 +2673,34 @@ export class PodUpdateInPlaceInput extends S.Class<PodUpdateInPlaceInput>(
         }),
       ),
     ),
-  },
-  $I.annote("PodUpdateInPlaceInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("PodUpdateInPlaceInput", {
     description: "Generated RUNPOD schema for PodUpdateInPlaceInput.",
   }),
-) {
-  static readonly is = S.is(PodUpdateInPlaceInput);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `PodUpdateInput`.
+ * Type for {@link PodUpdateInPlaceInput}.
  *
- * **Example** (Inspect PodUpdateInput)
+ * **Example** (Reference the PodUpdateInPlaceInput type)
+ *
+ * ```ts
+ * import type { PodUpdateInPlaceInput } from "@beep/runpod"
+ *
+ * type PodUpdateInPlaceInputValue = PodUpdateInPlaceInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PodUpdateInPlaceInput = typeof PodUpdateInPlaceInput.Type;
+
+/**
+ * Generated RUNPOD schema for `PodUpdateInput`.
+ *
+ * **Example** (Inspect the PodUpdateInput schema)
  *
  * ```ts
  * import { PodUpdateInput } from "@beep/runpod"
@@ -2410,8 +2711,8 @@ export class PodUpdateInPlaceInput extends S.Class<PodUpdateInPlaceInput>(
  * @category schemas
  * @since 0.0.0
  */
-export class PodUpdateInput extends S.Class<PodUpdateInput>($I`PodUpdateInput`)(
-  {
+export const PodUpdateInput = S.StructWithRest(
+  S.Struct({
     containerDiskInGb: S.optionalKey(
       S.Union([S.Int, S.Null]).annotateKey({
         description:
@@ -2489,14 +2790,30 @@ export class PodUpdateInput extends S.Class<PodUpdateInput>($I`PodUpdateInput`)(
         default: "/workspace",
       }),
     ),
-  },
-  $I.annote("PodUpdateInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("PodUpdateInput", {
     description: "Generated RUNPOD schema for PodUpdateInput.",
     documentation: "Input for updating a Pod which will trigger a reset.",
   }),
-) {
-  static readonly is = S.is(PodUpdateInput);
-}
+);
+
+/**
+ * Type for {@link PodUpdateInput}.
+ *
+ * **Example** (Reference the PodUpdateInput type)
+ *
+ * ```ts
+ * import type { PodUpdateInput } from "@beep/runpod"
+ *
+ * type PodUpdateInputValue = PodUpdateInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PodUpdateInput = typeof PodUpdateInput.Type;
 
 /**
  * Generated RUNPOD schema for `Pods`.
@@ -2535,9 +2852,9 @@ export const Pods = S.Array(Pod).pipe(
 export type Pods = typeof Pods.Type;
 
 /**
- * Generated RUNPOD class schema for `TemplateCreateInput`.
+ * Generated RUNPOD schema for `TemplateCreateInput`.
  *
- * **Example** (Inspect TemplateCreateInput)
+ * **Example** (Inspect the TemplateCreateInput schema)
  *
  * ```ts
  * import { TemplateCreateInput } from "@beep/runpod"
@@ -2548,10 +2865,8 @@ export type Pods = typeof Pods.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class TemplateCreateInput extends S.Class<TemplateCreateInput>(
-  $I`TemplateCreateInput`,
-)(
-  {
+export const TemplateCreateInput = S.StructWithRest(
+  S.Struct({
     category: S.optionalKey(
       S.Literals(["NVIDIA", "AMD", "CPU"]).annotateKey({
         description:
@@ -2631,18 +2946,34 @@ export class TemplateCreateInput extends S.Class<TemplateCreateInput>(
         default: "/workspace",
       }),
     ),
-  },
-  $I.annote("TemplateCreateInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("TemplateCreateInput", {
     description: "Generated RUNPOD schema for TemplateCreateInput.",
   }),
-) {
-  static readonly is = S.is(TemplateCreateInput);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `TemplateUpdateInPlaceInput`.
+ * Type for {@link TemplateCreateInput}.
  *
- * **Example** (Inspect TemplateUpdateInPlaceInput)
+ * **Example** (Reference the TemplateCreateInput type)
+ *
+ * ```ts
+ * import type { TemplateCreateInput } from "@beep/runpod"
+ *
+ * type TemplateCreateInputValue = TemplateCreateInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TemplateCreateInput = typeof TemplateCreateInput.Type;
+
+/**
+ * Generated RUNPOD schema for `TemplateUpdateInPlaceInput`.
+ *
+ * **Example** (Inspect the TemplateUpdateInPlaceInput schema)
  *
  * ```ts
  * import { TemplateUpdateInPlaceInput } from "@beep/runpod"
@@ -2653,10 +2984,8 @@ export class TemplateCreateInput extends S.Class<TemplateCreateInput>(
  * @category schemas
  * @since 0.0.0
  */
-export class TemplateUpdateInPlaceInput extends S.Class<TemplateUpdateInPlaceInput>(
-  $I`TemplateUpdateInPlaceInput`,
-)(
-  {
+export const TemplateUpdateInPlaceInput = S.StructWithRest(
+  S.Struct({
     isPublic: S.optionalKey(
       S.Boolean.annotateKey({
         description:
@@ -2687,18 +3016,34 @@ export class TemplateUpdateInPlaceInput extends S.Class<TemplateUpdateInPlaceInp
         default: "/workspace",
       }),
     ),
-  },
-  $I.annote("TemplateUpdateInPlaceInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("TemplateUpdateInPlaceInput", {
     description: "Generated RUNPOD schema for TemplateUpdateInPlaceInput.",
   }),
-) {
-  static readonly is = S.is(TemplateUpdateInPlaceInput);
-}
+);
 
 /**
- * Generated RUNPOD class schema for `TemplateUpdateInput`.
+ * Type for {@link TemplateUpdateInPlaceInput}.
  *
- * **Example** (Inspect TemplateUpdateInput)
+ * **Example** (Reference the TemplateUpdateInPlaceInput type)
+ *
+ * ```ts
+ * import type { TemplateUpdateInPlaceInput } from "@beep/runpod"
+ *
+ * type TemplateUpdateInPlaceInputValue = TemplateUpdateInPlaceInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TemplateUpdateInPlaceInput = typeof TemplateUpdateInPlaceInput.Type;
+
+/**
+ * Generated RUNPOD schema for `TemplateUpdateInput`.
+ *
+ * **Example** (Inspect the TemplateUpdateInput schema)
  *
  * ```ts
  * import { TemplateUpdateInput } from "@beep/runpod"
@@ -2709,10 +3054,8 @@ export class TemplateUpdateInPlaceInput extends S.Class<TemplateUpdateInPlaceInp
  * @category schemas
  * @since 0.0.0
  */
-export class TemplateUpdateInput extends S.Class<TemplateUpdateInput>(
-  $I`TemplateUpdateInput`,
-)(
-  {
+export const TemplateUpdateInput = S.StructWithRest(
+  S.Struct({
     containerDiskInGb: S.optionalKey(
       S.Int.annotateKey({
         description:
@@ -2782,15 +3125,31 @@ export class TemplateUpdateInput extends S.Class<TemplateUpdateInput>(
         default: "/workspace",
       }),
     ),
-  },
-  $I.annote("TemplateUpdateInput", {
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("TemplateUpdateInput", {
     description: "Generated RUNPOD schema for TemplateUpdateInput.",
     documentation:
       "Input for updating a Template which will trigger a rolling release for any associated endpoints.",
   }),
-) {
-  static readonly is = S.is(TemplateUpdateInput);
-}
+);
+
+/**
+ * Type for {@link TemplateUpdateInput}.
+ *
+ * **Example** (Reference the TemplateUpdateInput type)
+ *
+ * ```ts
+ * import type { TemplateUpdateInput } from "@beep/runpod"
+ *
+ * type TemplateUpdateInputValue = TemplateUpdateInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TemplateUpdateInput = typeof TemplateUpdateInput.Type;
 
 /**
  * Generated RUNPOD schema for `Templates`.
@@ -2829,9 +3188,9 @@ export const Templates = S.Array(Template).pipe(
 export type Templates = typeof Templates.Type;
 
 /**
- * Generated RUNPOD class schema for `UnauthorizedError`.
+ * Generated RUNPOD schema for `UnauthorizedError`.
  *
- * **Example** (Inspect UnauthorizedError)
+ * **Example** (Inspect the UnauthorizedError schema)
  *
  * ```ts
  * import { UnauthorizedError } from "@beep/runpod"
@@ -2842,16 +3201,30 @@ export type Templates = typeof Templates.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class UnauthorizedError extends S.Class<UnauthorizedError>(
-  $I`UnauthorizedError`,
-)(
-  { message: S.optionalKey(S.String) },
-  $I.annote("UnauthorizedError", {
+export const UnauthorizedError = S.StructWithRest(
+  S.Struct({ message: S.optionalKey(S.String) }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).pipe(
+  $I.annoteSchema("UnauthorizedError", {
     description: "Generated RUNPOD schema for UnauthorizedError.",
   }),
-) {
-  static readonly is = S.is(UnauthorizedError);
-}
+);
+
+/**
+ * Type for {@link UnauthorizedError}.
+ *
+ * **Example** (Reference the UnauthorizedError type)
+ *
+ * ```ts
+ * import type { UnauthorizedError } from "@beep/runpod"
+ *
+ * type UnauthorizedErrorValue = UnauthorizedError
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UnauthorizedError = typeof UnauthorizedError.Type;
 
 /**
  * Generated RUNPOD schema for `User`.

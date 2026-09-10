@@ -487,16 +487,16 @@ const missingTemplateRow = (
   };
 };
 
-const slugArgument = Argument.string("slug").pipe(Argument.withDescription("Goal packet slug under goals/"));
-const towardFlag = Flag.choice("toward", PhaseArchetype.Options).pipe(
+const slugArgument = Argument.String("slug").pipe(Argument.withDescription("Goal packet slug under goals/"));
+const towardFlag = Flag.Literals("toward", PhaseArchetype.Options).pipe(
   Flag.optional,
   Flag.withDescription("Archetype to measure against; defaults to inference from the packet's phase shape")
 );
-const planFlag = Flag.boolean("plan").pipe(
+const planFlag = Flag.Boolean("plan").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Compile and print the adoption plan (the only mode this slice ships)")
 );
-const jsonFlag = Flag.boolean("json").pipe(
+const jsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the plan as canonical JSON")
 );

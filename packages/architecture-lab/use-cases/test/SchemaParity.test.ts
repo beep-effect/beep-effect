@@ -6,9 +6,10 @@ import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/Architect
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeUseCaseServerWorkItemWorkItemRepositoryErrorResult = S.encodeResult(
   UseCaseServer.WorkItem.WorkItemRepositoryError
@@ -49,15 +50,22 @@ describe("@beep/architecture-lab-use-cases schema parity", () => {
       const decode = S.decodeUnknownResult(schema);
       const equivalent = S.toEquivalence(schema);
 
-      fc.assert(
-        fc.property(S.toArbitrary(schema)(fc), (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
+      expect(
+        Effect.runSync(
+          Arbitrary.checkEffect(
+            Arbitrary.all([Arbitrary.schema(schema)]),
+            ([value]) => {
+              const encoded = Result.getOrThrow(encode(value));
+              const decoded = Result.getOrThrow(decode(encoded));
 
-          expect(equivalent(decoded, value)).toBe(true);
-        }),
-        fcRuns(10)
-      );
+              expect(equivalent(decoded, value)).toBe(true);
+
+              return true;
+            },
+            fcRuns(10)
+          )
+        )._tag
+      ).toBe("Passed");
     }
   });
 

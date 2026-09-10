@@ -13,7 +13,7 @@ import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 
 const decodeAiProviderCliAuthProbeResult = S.decodeResult(AiProviderCliAuthProbe);
@@ -29,12 +29,12 @@ const encodeAiProviderCliExitCodeResult = S.encodeResult(AiProviderCliExitCode);
 const encodeAiProviderCliProcessResultResult = S.encodeResult(AiProviderCliProcessResult);
 const encodeAiProviderCliProviderResult = S.encodeResult(AiProviderCliProvider);
 
-const ProviderArbitrary = S.toArbitrary(AiProviderCliProvider)(fc);
-const AuthStatusArbitrary = S.toArbitrary(AiProviderCliAuthStatus)(fc);
-const ExitCodeArbitrary = S.toArbitrary(AiProviderCliExitCode)(fc);
-const ProcessResultArbitrary = S.toArbitrary(AiProviderCliProcessResult)(fc);
-const AuthProbeArbitrary = S.toArbitrary(AiProviderCliAuthProbe)(fc);
-const ErrorArbitrary = S.toArbitrary(AiProviderCliError)(fc);
+const ProviderArbitrary = Arbitrary.schema(AiProviderCliProvider);
+const AuthStatusArbitrary = Arbitrary.schema(AiProviderCliAuthStatus);
+const ExitCodeArbitrary = Arbitrary.schema(AiProviderCliExitCode);
+const ProcessResultArbitrary = Arbitrary.schema(AiProviderCliProcessResult);
+const AuthProbeArbitrary = Arbitrary.schema(AiProviderCliAuthProbe);
+const ErrorArbitrary = Arbitrary.schema(AiProviderCliError);
 
 const sameProcessResult = S.toEquivalence(AiProviderCliProcessResult);
 const sameAuthProbe = S.toEquivalence(AiProviderCliAuthProbe);
@@ -104,61 +104,59 @@ describe("@beep/ai-provider-cli", () => {
     });
   });
 
-  it("round-trips schema-derived provider CLI payloads", () =>
-    fc.assert(
-      fc.property(
-        ProviderArbitrary,
-        AuthStatusArbitrary,
-        ExitCodeArbitrary,
-        ProcessResultArbitrary,
-        AuthProbeArbitrary,
-        ErrorArbitrary,
-        (provider, status, exitCode, processResult, authProbe, error) => {
-          expect(
-            Result.getOrThrow(
-              decodeAiProviderCliProviderResult(Result.getOrThrow(encodeAiProviderCliProviderResult(provider)))
+  it.prop(
+    "round-trips schema-derived provider CLI payloads",
+    [
+      ProviderArbitrary,
+      AuthStatusArbitrary,
+      ExitCodeArbitrary,
+      ProcessResultArbitrary,
+      AuthProbeArbitrary,
+      ErrorArbitrary,
+    ],
+    ([provider, status, exitCode, processResult, authProbe, error]) => {
+      expect(
+        Result.getOrThrow(
+          decodeAiProviderCliProviderResult(Result.getOrThrow(encodeAiProviderCliProviderResult(provider)))
+        )
+      ).toBe(provider);
+      expect(
+        Result.getOrThrow(
+          decodeAiProviderCliAuthStatusResult(Result.getOrThrow(encodeAiProviderCliAuthStatusResult(status)))
+        )
+      ).toBe(status);
+      expect(
+        Result.getOrThrow(
+          decodeAiProviderCliExitCodeResult(Result.getOrThrow(encodeAiProviderCliExitCodeResult(exitCode)))
+        )
+      ).toBe(exitCode);
+      expect(
+        sameProcessResult(
+          Result.getOrThrow(
+            decodeAiProviderCliProcessResultResult(
+              Result.getOrThrow(encodeAiProviderCliProcessResultResult(processResult))
             )
-          ).toBe(provider);
-          expect(
-            Result.getOrThrow(
-              decodeAiProviderCliAuthStatusResult(Result.getOrThrow(encodeAiProviderCliAuthStatusResult(status)))
-            )
-          ).toBe(status);
-          expect(
-            Result.getOrThrow(
-              decodeAiProviderCliExitCodeResult(Result.getOrThrow(encodeAiProviderCliExitCodeResult(exitCode)))
-            )
-          ).toBe(exitCode);
-          expect(
-            sameProcessResult(
-              Result.getOrThrow(
-                decodeAiProviderCliProcessResultResult(
-                  Result.getOrThrow(encodeAiProviderCliProcessResultResult(processResult))
-                )
-              ),
-              processResult
-            )
-          ).toBe(true);
-          expect(
-            sameAuthProbe(
-              Result.getOrThrow(
-                decodeAiProviderCliAuthProbeResult(Result.getOrThrow(encodeAiProviderCliAuthProbeResult(authProbe)))
-              ),
-              authProbe
-            )
-          ).toBe(true);
-          expect(
-            sameError(
-              Result.getOrThrow(
-                decodeAiProviderCliErrorResult(Result.getOrThrow(encodeAiProviderCliErrorResult(error)))
-              ),
-              error
-            )
-          ).toBe(true);
-        }
-      ),
-      fcRuns(50)
-    ));
+          ),
+          processResult
+        )
+      ).toBe(true);
+      expect(
+        sameAuthProbe(
+          Result.getOrThrow(
+            decodeAiProviderCliAuthProbeResult(Result.getOrThrow(encodeAiProviderCliAuthProbeResult(authProbe)))
+          ),
+          authProbe
+        )
+      ).toBe(true);
+      expect(
+        sameError(
+          Result.getOrThrow(decodeAiProviderCliErrorResult(Result.getOrThrow(encodeAiProviderCliErrorResult(error)))),
+          error
+        )
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   layer(AiProviderCli.makeLayerFromRunner(runner))((it) => {
     it.effect(

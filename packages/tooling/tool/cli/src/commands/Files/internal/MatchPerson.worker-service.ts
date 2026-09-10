@@ -226,7 +226,7 @@ const {
 } = MatchPersonError;
 
 const readOptionalConfig = (name: string): Effect.Effect<O.Option<string>, MatchPersonConfigError> =>
-  Config.option(Config.string(name)).pipe(
+  Config.option(Config.String(name)).pipe(
     Effect.map(flow(O.map(Str.trim), O.filter(Str.isNonEmpty))),
     Effect.mapError((cause) => configError(`Failed to read optional person-match configuration ${name}.`, cause))
   );

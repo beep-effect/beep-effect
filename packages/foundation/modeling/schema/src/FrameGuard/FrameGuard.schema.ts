@@ -243,7 +243,7 @@ const formatFrameGuardValue = Effect.fn("FrameGuard.formatFrameGuardValue")(func
 export const FrameGuardHeader = S.Union([FrameGuardOption, S.Undefined]).pipe(
   S.decodeTo(
     FrameGuardResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: Effect.fn("FrameGuard.decode")(function* (input): Effect.fn.Return<
         FrameGuardResponseHeaderEncoded,
         SchemaIssue.Issue

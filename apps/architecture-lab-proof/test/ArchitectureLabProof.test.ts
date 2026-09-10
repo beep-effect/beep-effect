@@ -5,7 +5,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeArchitectureLabProofResultSync = S.decodeSync(ArchitectureLabProofResult);
 const encodeArchitectureLabProofResultSync = S.encodeSync(ArchitectureLabProofResult);
@@ -42,13 +42,20 @@ describe("architecture lab proof app", () => {
   );
 
   it("round-trips the proof result schema with schema-derived arbitraries", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(ArchitectureLabProofResult)(fc), (value) => {
-        expect(
-          Equal.equals(decodeArchitectureLabProofResultSync(encodeArchitectureLabProofResultSync(value)), value)
-        ).toBe(true);
-      }),
-      fcRuns(20)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(ArchitectureLabProofResult),
+          (value) => {
+            expect(
+              Equal.equals(decodeArchitectureLabProofResultSync(encodeArchitectureLabProofResultSync(value)), value)
+            ).toBe(true);
+
+            return true;
+          },
+          fcRuns(20)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

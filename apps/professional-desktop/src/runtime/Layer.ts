@@ -157,7 +157,7 @@ export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandl
  * @category layers
  * @since 0.0.0
  */
-const chatAgentMode = Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
+const chatAgentMode = Config.Literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
   Config.withDefault("anthropic" as const)
 );
 
@@ -208,7 +208,7 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = selectByChatAgent(
 const DocumentsFilingLive = selectByChatAgent(
   DocumentsServerLive,
   Effect.gen(function* () {
-    const model = yield* Config.nonEmptyString(FILING_DECISION_MODEL_ENV).pipe(
+    const model = yield* Config.NonEmptyString(FILING_DECISION_MODEL_ENV).pipe(
       Config.withDefault(FILING_DECISION_DEFAULT_MODEL)
     );
     return DocumentsServerLlmLive.pipe(
@@ -259,10 +259,10 @@ const ContradictionRequestContextLive = Layer.merge(
 const boxAuthLayer = Effect.gen(function* () {
   const ccg = yield* Config.option(
     Config.all({
-      clientId: Config.nonEmptyString("DMS_BOX_CLIENT_ID"),
-      clientSecret: Config.redacted("DMS_BOX_CLIENT_SECRET"),
-      enterpriseId: Config.option(Config.nonEmptyString("DMS_BOX_ENTERPRISE_ID")),
-      userId: Config.option(Config.nonEmptyString("DMS_BOX_USER_ID")),
+      clientId: Config.NonEmptyString("DMS_BOX_CLIENT_ID"),
+      clientSecret: Config.Redacted("DMS_BOX_CLIENT_SECRET"),
+      enterpriseId: Config.option(Config.NonEmptyString("DMS_BOX_ENTERPRISE_ID")),
+      userId: Config.option(Config.NonEmptyString("DMS_BOX_USER_ID")),
     })
   );
   if (O.isSome(ccg)) {
@@ -282,7 +282,7 @@ const boxAuthLayer = Effect.gen(function* () {
       "DMS_BOX_CLIENT_ID/DMS_BOX_CLIENT_SECRET are set without DMS_BOX_ENTERPRISE_ID or DMS_BOX_USER_ID; ignoring the CCG config"
     );
   }
-  const token = yield* Config.option(Config.redacted("CLOUD_BOX_TOKEN"));
+  const token = yield* Config.option(Config.Redacted("CLOUD_BOX_TOKEN"));
   if (O.isSome(token)) {
     yield* Effect.logInfo("Box auth: developer token (CLOUD_BOX_TOKEN)").pipe(
       Effect.annotateLogs({ "box.auth.mode": "developer-token" })

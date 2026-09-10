@@ -2068,9 +2068,17 @@ export class Interpreter<R> {
       onFailure: (cause) =>
         cause.reasons.some(Cause.isInterruptReason)
           ? Effect.failCause(cause)
-          : Effect.filterOrElse(this.evaluateStatement(finalizer), final => isAbrupt(final), final => Effect.failCause(cause)),
+          : Effect.filterOrElse(
+              this.evaluateStatement(finalizer),
+              (final) => isAbrupt(final),
+              (_final) => Effect.failCause(cause)
+            ),
       onSuccess: (result) =>
-        Effect.filterOrElse(this.evaluateStatement(finalizer), final => isAbrupt(final), final => Effect.succeed(result)),
+        Effect.filterOrElse(
+          this.evaluateStatement(finalizer),
+          (final) => isAbrupt(final),
+          (_final) => Effect.succeed(result)
+        ),
     });
   }
 
@@ -3941,7 +3949,10 @@ export class Interpreter<R> {
           state.active = O.some(yield* invocation.takeGeneratorRequest(state));
           const exit = yield* Effect.exit(
             run.pipe(
-              Effect.filterOrElse(result => !asynchronous, result => invocation.awaitValue(result)),
+              Effect.filterOrElse(
+                (_result) => !asynchronous,
+                (result) => invocation.awaitValue(result)
+              ),
               Effect.catch((error) =>
                 InterpreterFailure.guards.GeneratorReturn(error)
                   ? asynchronous

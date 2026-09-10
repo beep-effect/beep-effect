@@ -795,11 +795,11 @@ export const checkExplorationAtlas = Effect.fn("Explore.checkExplorationAtlas")(
   yield* Console.log(`${ATLAS_LOG_PREFIX} OK: D3 Atlas and README projections are current.`);
 });
 
-const writeFlag = Flag.boolean("write").pipe(
+const writeFlag = Flag.Boolean("write").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Write the local Atlas and generated README status regions")
 );
-const checkFlag = Flag.boolean("check").pipe(
+const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Fail on underivable state or Atlas/README projection drift")
 );

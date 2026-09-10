@@ -390,22 +390,29 @@ const greenScreenshots = (manifest: O.Option<typeof LegacyManifest.Type>): Reado
 const eventLine = (event: ActionEvent, toVideo: (epochMs: number) => number): string => {
   const seconds = toVideo(event.tEpochMs).toFixed(3);
   const detail = Match.value(event).pipe(
-    Match.discriminators("kind")({
-      animation: (value) => `${value.phase} ${value.selectorPath}`,
-      beacon: (value) => `flip ${value.flipIndex} ${value.isWhite ? "white" : "black"}`,
-      "focus-in": (value) => value.selectorPath,
-      "focus-out": (value) => value.selectorPath,
-      "key-down": (value) => value.key,
-      marker: (value) => value.label,
-      "pointer-cancel": (value) => `${value.selectorPath} @${Math.round(value.x)},${Math.round(value.y)}`,
-      "pointer-down": (value) => `${value.selectorPath} @${Math.round(value.x)},${Math.round(value.y)}`,
-      "pointer-enter": (value) => value.selectorPath,
-      "pointer-leave": (value) => value.selectorPath,
-      "pointer-move": (value) => `@${Math.round(value.x)},${Math.round(value.y)}`,
-      "pointer-up": (value) => `${value.selectorPath} @${Math.round(value.x)},${Math.round(value.y)}`,
-      scroll: (value) => value.selectorPath,
-      transition: (value) => `${value.phase} ${value.selectorPath}`,
-    }),
+    Match.discriminator("kind")("animation", (value) => `${value.phase} ${value.selectorPath}`),
+    Match.discriminator("kind")("beacon", (value) => `flip ${value.flipIndex} ${value.isWhite ? "white" : "black"}`),
+    Match.discriminator("kind")("focus-in", (value) => value.selectorPath),
+    Match.discriminator("kind")("focus-out", (value) => value.selectorPath),
+    Match.discriminator("kind")("key-down", (value) => value.key),
+    Match.discriminator("kind")("marker", (value) => value.label),
+    Match.discriminator("kind")(
+      "pointer-cancel",
+      (value) => `${value.selectorPath} @${Math.round(value.x)},${Math.round(value.y)}`
+    ),
+    Match.discriminator("kind")(
+      "pointer-down",
+      (value) => `${value.selectorPath} @${Math.round(value.x)},${Math.round(value.y)}`
+    ),
+    Match.discriminator("kind")("pointer-enter", (value) => value.selectorPath),
+    Match.discriminator("kind")("pointer-leave", (value) => value.selectorPath),
+    Match.discriminator("kind")("pointer-move", (value) => `@${Math.round(value.x)},${Math.round(value.y)}`),
+    Match.discriminator("kind")(
+      "pointer-up",
+      (value) => `${value.selectorPath} @${Math.round(value.x)},${Math.round(value.y)}`
+    ),
+    Match.discriminator("kind")("scroll", (value) => value.selectorPath),
+    Match.discriminator("kind")("transition", (value) => `${value.phase} ${value.selectorPath}`),
     Match.exhaustive
   );
   return `- t=${seconds} seq=${event.seq} ${event.kind} ${detail}`;

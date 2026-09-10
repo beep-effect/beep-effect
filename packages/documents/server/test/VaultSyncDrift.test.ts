@@ -64,6 +64,42 @@ const findTrackedItem = (relPath: string) =>
 
 describe("@beep/documents-server VaultSyncEngine drift detection", () => {
   it.effect(
+    "classifies unattributed remote delete, move, rename and unknown events inside the mirror",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const root = yield* makeVaultRoot();
+      yield* engine.syncOnce(syncInput(root));
+      const eventTypes: ReadonlyArray<"deleted" | "moved" | "renamed" | "unknown"> = [
+        "deleted",
+        "moved",
+        "renamed",
+        "unknown",
+      ];
+      for (const eventType of eventTypes) {
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({
+            eventId: `foreign-${eventType}`,
+            eventType,
+            itemKind: O.some("file"),
+            name: O.some(`${eventType}.txt`),
+            parentRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID),
+            remoteId: O.some(RemoteItemId.make(`untracked-${eventType}`)),
+            payload: { origin: "foreign" },
+          })
+        );
+      }
+      const status = yield* engine.syncOnce(syncInput(root));
+      const conflicts = yield* engine.listOpenConflicts(listConflictsInput);
+      expect(status.openConflicts).toBe(4);
+      expect(A.map(conflicts, (conflict) => [O.getOrNull(conflict.remoteEventId), conflict.conflictKind])).toEqual(
+        expect.arrayContaining(A.map(eventTypes, (eventType) => [`foreign-${eventType}`, "remoteUnknown"]))
+      );
+      expect(A.length(conflicts)).toBe(4);
+    }, provideScopedLayer(SyncDriftTestLayer))
+  );
+
+  it.effect(
     "classifies foreign remote events, ignores echoes, and dedupes across polls",
     Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;

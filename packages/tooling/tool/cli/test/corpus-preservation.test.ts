@@ -41,7 +41,7 @@ import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import { ByteSize, DateTime, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -831,7 +831,7 @@ describe("T7 corpus preservation", () => {
               sourceStatCount += 1;
               if (sourceStatCount !== sourceStatTrigger) return info;
               if (race !== "changed") return yield* fs.stat(path.join(root, "missing-settle-source.bin"));
-              return { ...info, size: FileSystem.Size(info.size + 1n) };
+              return { ...info, size: ByteSize.sum(info.size, ByteSize.bytes(1)) };
             }),
           });
           const racingContext = yield* Layer.build(makeArchiveWriterLive()).pipe(

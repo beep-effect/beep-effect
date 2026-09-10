@@ -34,7 +34,7 @@ import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Result } 
 import * as Eq from "effect/Equal";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { Dataset } from "@beep/rdf/Rdf";
 
 const decodeOntologyFilePath = S.decodeEffect(OntologyFilePath);
@@ -528,15 +528,22 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
   const encode = S.encodeResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(S.toArbitrary(schema)(fc), (value) => {
-      const encoded = Result.getOrThrow(encode(value));
-      const decoded = Result.getOrThrow(decode(encoded));
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          const encoded = Result.getOrThrow(encode(value));
+          const decoded = Result.getOrThrow(decode(encoded));
 
-      expect(equivalent(decoded, value)).toBe(true);
-    }),
-    fcRuns(10)
-  );
+          expect(equivalent(decoded, value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(10)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 describe("Session server schema round-trips", () => {

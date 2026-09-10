@@ -56,220 +56,220 @@ const decodeRestorationRecycleOptions = S.decodeEffect(RestorationRecycleOptions
 const decodeRestorationVerifyOptions = S.decodeEffect(RestorationVerifyOptions);
 
 /** @since 0.0.0 */
-const corpusRootFlag = Flag.directory("corpus-root", { mustExist: true }).pipe(
-  Flag.withFallbackConfig(Config.string("BEEP_OPPOLD_CORPUS_ROOT")),
+const corpusRootFlag = Flag.Directory("corpus-root", { mustExist: true }).pipe(
+  Flag.withFallbackConfig(Config.String("BEEP_OPPOLD_CORPUS_ROOT")),
   Flag.withDescription(
     "Salvaged corpus root containing raw/provenance.jsonl; outputs land under <corpus-root>/catalog and <corpus-root>/staging"
   )
 );
 /** @since 0.0.0 */
-const tikaJarFlag = Flag.file("tika-jar", { mustExist: true }).pipe(
+const tikaJarFlag = Flag.File("tika-jar", { mustExist: true }).pipe(
   Flag.withDescription("Apache tika-app jar used for text and metadata extraction")
 );
 /** @since 0.0.0 */
-const pffexportFlag = Flag.string("pffexport").pipe(
+const pffexportFlag = Flag.String("pffexport").pipe(
   Flag.withDescription("pffexport binary used for PST archive export"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const javaFlag = Flag.string("java").pipe(
+const javaFlag = Flag.String("java").pipe(
   Flag.withDescription("java binary used to run the tika-app jar"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const exportChildrenFlag = Flag.boolean("export-children").pipe(
+const exportChildrenFlag = Flag.Boolean("export-children").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Export per-message child artifacts and attachments from PST archives")
 );
 /** @since 0.0.0 */
-const includeDuplicatesFlag = Flag.boolean("include-duplicates").pipe(
+const includeDuplicatesFlag = Flag.Boolean("include-duplicates").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Process every manifest record instead of one representative per content digest")
 );
 /** @since 0.0.0 */
-const sourceLabelFlag = Flag.string("source").pipe(
+const sourceLabelFlag = Flag.String("source").pipe(
   Flag.withDescription("Restrict extraction to one salvage source label"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const extractOutLabelFlag = Flag.string("out-label").pipe(
+const extractOutLabelFlag = Flag.String("out-label").pipe(
   Flag.withDescription(
     "Write extraction output under staging/<out-label> instead of staging/extract; must be one directory name"
   ),
   Flag.optional
 );
 /** @since 0.0.0 */
-const extractConcurrencyFlag = Flag.integer("concurrency").pipe(
+const extractConcurrencyFlag = Flag.Int("concurrency").pipe(
   Flag.withDefault(4),
   Flag.withDescription("Bounded number of concurrent extraction subprocesses")
 );
 /** @since 0.0.0 */
-const maxFilesFlag = Flag.integer("max-files").pipe(
+const maxFilesFlag = Flag.Int("max-files").pipe(
   Flag.withDescription("Process at most this many sources (smoke runs)"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const extractOverwriteFlag = Flag.boolean("overwrite").pipe(
+const extractOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Replace an existing staging/extract output tree")
 );
 /** @since 0.0.0 */
-const sampleStrideFlag = Flag.integer("sample-stride").pipe(
+const sampleStrideFlag = Flag.Int("sample-stride").pipe(
   Flag.withDescription("Verify every Nth provenance record instead of all records"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const salvageRunLabelFlag = Flag.string("run-label").pipe(
+const salvageRunLabelFlag = Flag.String("run-label").pipe(
   Flag.withDescription("Write copied files and provenance under raw/<run-label>/"),
   Flag.optional
 );
 /** @since 0.0.0 */
-const salvageDedupeFlag = Flag.boolean("dedupe").pipe(
+const salvageDedupeFlag = Flag.Boolean("dedupe").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Hash each origin before copy and write provenance-only rows for already-known digests")
 );
 /** @since 0.0.0 */
-const salvageSourceFlag = Flag.string("source").pipe(
+const salvageSourceFlag = Flag.String("source").pipe(
   Flag.withDescription("Generic salvage source mapping in source-a=/path form; repeat for source-b, source-c, ..."),
   Flag.atMost(Number.MAX_SAFE_INTEGER)
 );
 /** @since 0.0.0 */
-const archiveMoveSourceFlag = Flag.path("source", { mustExist: true, pathType: "either" }).pipe(
+const archiveMoveSourceFlag = Flag.Path("source", { mustExist: true, pathType: "either" }).pipe(
   Flag.withDescription("Source directory or file to archive after provenance verification; repeat for each source"),
   Flag.atLeast(1)
 );
 /** @since 0.0.0 */
-const archiveRootFlag = Flag.directory("archive-root").pipe(
+const archiveRootFlag = Flag.Directory("archive-root").pipe(
   Flag.withDescription("Archive root that will receive <source-basename> destinations")
 );
 /** @since 0.0.0 */
-const archiveMoveProvenanceFlag = Flag.file("provenance", { mustExist: true }).pipe(
+const archiveMoveProvenanceFlag = Flag.File("provenance", { mustExist: true }).pipe(
   Flag.withDescription("Run provenance.jsonl used to prove every source file before moving; repeat if needed"),
   Flag.atLeast(1)
 );
 /** @since 0.0.0 */
-const t7RootFlag = Flag.directory("t7-root", { mustExist: true }).pipe(
-  Flag.withFallbackConfig(Config.string("BEEP_T7_ROOT")),
+const t7RootFlag = Flag.Directory("t7-root", { mustExist: true }).pipe(
+  Flag.withFallbackConfig(Config.String("BEEP_T7_ROOT")),
   Flag.withDescription("Mounted T7 root containing the salvage tree and the separate root archive object")
 );
 /** @since 0.0.0 */
-const preservationCeilingFlag = Flag.integer("ceiling-bytes").pipe(
+const preservationCeilingFlag = Flag.Int("ceiling-bytes").pipe(
   Flag.withDescription("Operator-approved maximum bytes for the measured preservation scope")
 );
 /** @since 0.0.0 */
-const preservationApproverFlag = Flag.string("approved-by").pipe(
+const preservationApproverFlag = Flag.String("approved-by").pipe(
   Flag.withDescription("Non-secret operator label approving the measured byte ceiling")
 );
 
-const restorationSourceRootFlag = Flag.directory("source-root", { mustExist: true }).pipe(
+const restorationSourceRootFlag = Flag.Directory("source-root", { mustExist: true }).pipe(
   Flag.withDescription("Current source tree to preserve without transformation")
 );
-const restorationRootArchiveFlag = Flag.file("root-archive", { mustExist: true }).pipe(
+const restorationRootArchiveFlag = Flag.File("root-archive", { mustExist: true }).pipe(
   Flag.withDescription("Separately addressable verbatim root archive object")
 );
-const restorationCollectorManifestFlag = Flag.file("collector-manifest", { mustExist: true }).pipe(
+const restorationCollectorManifestFlag = Flag.File("collector-manifest", { mustExist: true }).pipe(
   Flag.withDescription("Inherited collector JSONL ledger reconciled row by row before preservation")
 );
-const restorationAbsentTreeFlag = Flag.string("absent-recycle-tree").pipe(
+const restorationAbsentTreeFlag = Flag.String("absent-recycle-tree").pipe(
   Flag.withDescription("Recorded absent recycle-tree path that must remain absent during opening reconciliation")
 );
-const restorationCapacityCeilingFlag = Flag.integer("capacity-ceiling-bytes").pipe(
+const restorationCapacityCeilingFlag = Flag.Int("capacity-ceiling-bytes").pipe(
   Flag.withDescription("Operator-approved maximum preserved payload bytes; required and checked before payload writes")
 );
-const restorationMinimumFreeFlag = Flag.integer("minimum-free-after-bytes").pipe(
+const restorationMinimumFreeFlag = Flag.Int("minimum-free-after-bytes").pipe(
   Flag.withDescription("Operator-approved free-space floor retained after the full required payload")
 );
-const restorationCollectorRowsFlag = Flag.integer("expected-collector-rows").pipe(
+const restorationCollectorRowsFlag = Flag.Int("expected-collector-rows").pipe(
   Flag.withDefault(28_508),
   Flag.withDescription("Frozen inherited collector row denominator")
 );
-const restorationMissingRecycleFlag = Flag.integer("expected-missing-recycle-payloads").pipe(
+const restorationMissingRecycleFlag = Flag.Int("expected-missing-recycle-payloads").pipe(
   Flag.withDefault(13),
   Flag.withDescription("Ratified missing recycle-payload opening balance")
 );
-const restorationMutatedDestinationFlag = Flag.integer("expected-mutated-destinations").pipe(
+const restorationMutatedDestinationFlag = Flag.Int("expected-mutated-destinations").pipe(
   Flag.withDefault(1_021),
   Flag.withDescription("Ratified post-staging destination-mutation denominator")
 );
-const restorationRootArchiveBytesFlag = Flag.integer("expected-root-archive-bytes").pipe(
+const restorationRootArchiveBytesFlag = Flag.Int("expected-root-archive-bytes").pipe(
   Flag.withDefault(147_731_138_560),
   Flag.withDescription("Frozen byte denominator for the separately preserved root archive")
 );
-const restorationSourceDirectoriesFlag = Flag.integer("expected-source-directories").pipe(
+const restorationSourceDirectoriesFlag = Flag.Int("expected-source-directories").pipe(
   Flag.withDefault(755),
   Flag.withDescription("Frozen current-source directory denominator")
 );
-const restorationSourceFilesFlag = Flag.integer("expected-source-files").pipe(
+const restorationSourceFilesFlag = Flag.Int("expected-source-files").pipe(
   Flag.withDefault(12_156),
   Flag.withDescription("Frozen current-source file denominator")
 );
-const restorationSourceTreeBytesFlag = Flag.integer("expected-source-tree-bytes").pipe(
+const restorationSourceTreeBytesFlag = Flag.Int("expected-source-tree-bytes").pipe(
   Flag.withDefault(207_772_579_526),
   Flag.withDescription("Frozen current-source file-byte denominator")
 );
-const restorationChunkSizeFlag = Flag.integer("chunk-size-bytes").pipe(
+const restorationChunkSizeFlag = Flag.Int("chunk-size-bytes").pipe(
   Flag.withDefault(8 * 1024 * 1024),
   Flag.withDescription("Bounded streaming copy and hashing chunk size")
 );
-const restorationRunLabelFlag = Flag.string("run-label").pipe(
+const restorationRunLabelFlag = Flag.String("run-label").pipe(
   Flag.withDefault("t7-salvage-2026-08-10"),
   Flag.withDescription("Immutable destination label under corpus raw storage")
 );
-const restorationCrashPointFlag = Flag.choiceWithValue("crash-point", [
+const restorationCrashPointFlag = Flag.ChoiceWithValue("crash-point", [
   ["none", "none"],
   ["after-payload-sync", "after-payload-sync"],
   ["after-rename", "after-rename"],
   ["before-pass", "before-pass"],
 ]).pipe(Flag.withDefault("none"), Flag.withDescription("Synthetic interruption boundary for recovery proofs"));
-const restorationMailScopeFlag = Flag.choiceWithValue("scope", [
+const restorationMailScopeFlag = Flag.ChoiceWithValue("scope", [
   ["slice", "slice"],
   ["full", "full"],
 ]).pipe(Flag.withDefault("slice"), Flag.withDescription("One metadata-selected PST or the complete mail estate"));
-const restorationExpectedStoresFlag = Flag.integer("expected-stores").pipe(
+const restorationExpectedStoresFlag = Flag.Int("expected-stores").pipe(
   Flag.withDescription("Frozen terminal mail-store denominator for the selected scope")
 );
-const restorationMaxAmplificationFlag = Flag.float("max-amplification-ratio").pipe(
+const restorationMaxAmplificationFlag = Flag.Finite("max-amplification-ratio").pipe(
   Flag.withDescription("Approved maximum output-bytes to input-bytes ratio for each PST attempt")
 );
-const restorationMaxElapsedFlag = Flag.integer("max-elapsed-millis").pipe(
+const restorationMaxElapsedFlag = Flag.Int("max-elapsed-millis").pipe(
   Flag.withDescription("Approved maximum elapsed milliseconds for each individual transformation attempt")
 );
-const restorationMaxTotalOutputFlag = Flag.integer("max-total-output-bytes").pipe(
+const restorationMaxTotalOutputFlag = Flag.Int("max-total-output-bytes").pipe(
   Flag.withDescription("Approved cumulative retained-output byte ceiling for the selected restoration family")
 );
-const restorationMaxTotalElapsedFlag = Flag.integer("max-total-elapsed-millis").pipe(
+const restorationMaxTotalElapsedFlag = Flag.Int("max-total-elapsed-millis").pipe(
   Flag.withDescription("Approved cumulative elapsed-time ceiling for the selected restoration family")
 );
-const restorationExpectedRecycleSurfacesFlag = Flag.integer("expected-surfaces").pipe(
+const restorationExpectedRecycleSurfacesFlag = Flag.Int("expected-surfaces").pipe(
   Flag.withDefault(3),
   Flag.withDescription("Frozen recycle-surface denominator")
 );
-const restorationConverterFlag = Flag.string("converter").pipe(
+const restorationConverterFlag = Flag.String("converter").pipe(
   Flag.withDescription("Absolute pinned LibreOffice converter path")
 );
-const restorationExpectedConverterVersionFlag = Flag.string("expected-converter-version").pipe(
+const restorationExpectedConverterVersionFlag = Flag.String("expected-converter-version").pipe(
   Flag.withDescription("Exact approved output of the pinned converter --version probe")
 );
-const restorationExpectedLegacyWordOccurrencesFlag = Flag.integer("expected-occurrences").pipe(
+const restorationExpectedLegacyWordOccurrencesFlag = Flag.Int("expected-occurrences").pipe(
   Flag.withDefault(564),
   Flag.withDescription("Frozen legacy .doc occurrence denominator before distinct-digest grouping")
 );
-const restorationMaxVisualRmseFlag = Flag.float("max-visual-rmse").pipe(
+const restorationMaxVisualRmseFlag = Flag.Finite("max-visual-rmse").pipe(
   Flag.withDescription("Approved maximum normalized rendered-page RMSE")
 );
-const restorationBwrapFlag = Flag.string("bwrap").pipe(
+const restorationBwrapFlag = Flag.String("bwrap").pipe(
   Flag.withDefault("bwrap"),
   Flag.withDescription("bubblewrap binary used to isolate transformation subprocesses")
 );
-const restorationCompareFlag = Flag.string("compare").pipe(
+const restorationCompareFlag = Flag.String("compare").pipe(
   Flag.withDefault("compare"),
   Flag.withDescription("ImageMagick compare binary used for rendered-page fidelity measurements")
 );
-const restorationPdfinfoFlag = Flag.string("pdfinfo").pipe(
+const restorationPdfinfoFlag = Flag.String("pdfinfo").pipe(
   Flag.withDefault("pdfinfo"),
   Flag.withDescription("Poppler pdfinfo binary used to count converted PDF pages")
 );
-const restorationPdftoppmFlag = Flag.string("pdftoppm").pipe(
+const restorationPdftoppmFlag = Flag.String("pdftoppm").pipe(
   Flag.withDefault("pdftoppm"),
   Flag.withDescription("Poppler pdftoppm binary used to render fidelity-check pages")
 );
@@ -358,11 +358,11 @@ const corpusExtractCommand = Command.make(
   Command.provide(CorpusCommandServiceLive)
 );
 
-const clientMapFlag = Flag.file("client-map", { mustExist: true }).pipe(
+const clientMapFlag = Flag.File("client-map", { mustExist: true }).pipe(
   Flag.withDescription("JSON file mapping salvage source labels to client slugs"),
   Flag.optional
 );
-const organizeOverwriteFlag = Flag.boolean("overwrite").pipe(
+const organizeOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Rebuild a non-empty organized/ tree")
 );
@@ -388,11 +388,11 @@ const corpusOrganizeCommand = Command.make(
   Command.provide(CorpusCommandServiceLive)
 );
 
-const maxLookupsFlag = Flag.integer("max-lookups").pipe(
+const maxLookupsFlag = Flag.Int("max-lookups").pipe(
   Flag.withDescription("Resolve at most this many identifier candidates against USPTO"),
   Flag.optional
 );
-const lookupDelayFlag = Flag.integer("lookup-delay-millis").pipe(
+const lookupDelayFlag = Flag.Int("lookup-delay-millis").pipe(
   Flag.withDefault(400),
   Flag.withDescription("Delay between USPTO lookups to respect rate limits")
 );

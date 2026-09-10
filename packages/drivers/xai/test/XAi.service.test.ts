@@ -32,7 +32,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -90,20 +90,20 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
   expect(encode(schema, decoded)).toEqual(encoded);
 };
 
-const ConfigInputArbitrary = S.toArbitrary(XAiConfigInput)(fc);
-const EndpointArbitrary = S.toArbitrary(XAiEndpoint)(fc);
-const ErrorOptionsArbitrary = S.toArbitrary(XAiErrorOptions)(fc);
-const ErrorArbitrary = S.toArbitrary(XAiError)(fc);
-const HttpBaseUrlArbitrary = S.toArbitrary(XAiHttpBaseUrl)(fc);
-const HttpStatusCodeArbitrary = S.toArbitrary(XAiHttpStatusCode)(fc);
-const LanguageModelOptionsArbitrary = S.toArbitrary(XAiLanguageModel.XAiLanguageModelOptions)(fc);
-const ModelNameArbitrary = S.toArbitrary(XAiLanguageModel.XAiModelName)(fc);
-const QueryScalarArbitrary = S.toArbitrary(XAiQueryScalar)(fc);
-const QueryValueArbitrary = S.toArbitrary(XAiQueryValue)(fc);
-const ResponseArbitrary = S.toArbitrary(XAiResponse)(fc);
-const ServerSentEventArbitrary = S.toArbitrary(XAiServerSentEvent)(fc);
-const WebSocketBaseUrlArbitrary = S.toArbitrary(XAiWebSocketBaseUrl)(fc);
-const WebSocketEventArbitrary = S.toArbitrary(XAiWebSocketEvent)(fc);
+const ConfigInputArbitrary = Arbitrary.schema(XAiConfigInput);
+const EndpointArbitrary = Arbitrary.schema(XAiEndpoint);
+const ErrorOptionsArbitrary = Arbitrary.schema(XAiErrorOptions);
+const ErrorArbitrary = Arbitrary.schema(XAiError);
+const HttpBaseUrlArbitrary = Arbitrary.schema(XAiHttpBaseUrl);
+const HttpStatusCodeArbitrary = Arbitrary.schema(XAiHttpStatusCode);
+const LanguageModelOptionsArbitrary = Arbitrary.schema(XAiLanguageModel.XAiLanguageModelOptions);
+const ModelNameArbitrary = Arbitrary.schema(XAiLanguageModel.XAiModelName);
+const QueryScalarArbitrary = Arbitrary.schema(XAiQueryScalar);
+const QueryValueArbitrary = Arbitrary.schema(XAiQueryValue);
+const ResponseArbitrary = Arbitrary.schema(XAiResponse);
+const ServerSentEventArbitrary = Arbitrary.schema(XAiServerSentEvent);
+const WebSocketBaseUrlArbitrary = Arbitrary.schema(XAiWebSocketBaseUrl);
+const WebSocketEventArbitrary = Arbitrary.schema(XAiWebSocketEvent);
 
 const endpointIds = () => sortStrings(A.map(XAI_ENDPOINTS, (descriptor) => descriptor.id));
 
@@ -197,10 +197,14 @@ const makeXAiUnitLayer = (): Layer.Layer<XAi | XAiTestHttp> =>
 
 const makeInvalidWebSocketUrlLayer = (): Layer.Layer<XAi | XAiTestHttp> =>
   XAi.makeLayer(
-    XAiConfigInput.make({
-      apiKey: O.some(Redacted.make("api-test-key")),
-      websocketUrl: "not a url",
-    })
+    XAiConfigInput.make(
+      {
+        apiKey: O.some(Redacted.make("api-test-key")),
+        websocketUrl: "not a url",
+      },
+      // Deliberately bypass schema validation to exercise the service's defensive error path.
+      { disableChecks: true }
+    )
   ).pipe(Layer.provide(TestHttpClientLayer), Layer.provideMerge(XAiTestHttpLayer));
 
 const pathParamsFor = (path: string): Readonly<Record<string, string>> =>
@@ -380,58 +384,57 @@ describe("@beep/xai", () => {
     expect(Result.isFailure(decodeXAiLanguageModelXAiModelNameResult(""))).toBe(true);
   });
 
-  it("round-trips crispened xAI schemas through their encoded form", () => {
-    fc.assert(
-      fc.property(
-        ConfigInputArbitrary,
-        EndpointArbitrary,
-        ErrorOptionsArbitrary,
-        ErrorArbitrary,
-        HttpBaseUrlArbitrary,
-        HttpStatusCodeArbitrary,
-        LanguageModelOptionsArbitrary,
-        ModelNameArbitrary,
-        QueryScalarArbitrary,
-        QueryValueArbitrary,
-        ResponseArbitrary,
-        ServerSentEventArbitrary,
-        WebSocketBaseUrlArbitrary,
-        WebSocketEventArbitrary,
-        (
-          config,
-          endpoint,
-          errorOptions,
-          error,
-          httpBaseUrl,
-          httpStatusCode,
-          languageModelOptions,
-          modelName,
-          queryScalar,
-          queryValue,
-          response,
-          serverSentEvent,
-          websocketBaseUrl,
-          websocketEvent
-        ) => {
-          expectRoundTrip(XAiConfigInput, config);
-          expectRoundTrip(XAiEndpoint, endpoint);
-          expectRoundTrip(XAiErrorOptions, errorOptions);
-          expectRoundTrip(XAiError, error);
-          expectRoundTrip(XAiHttpBaseUrl, httpBaseUrl);
-          expectRoundTrip(XAiHttpStatusCode, httpStatusCode);
-          expectRoundTrip(XAiLanguageModel.XAiLanguageModelOptions, languageModelOptions);
-          expectRoundTrip(XAiLanguageModel.XAiModelName, modelName);
-          expectRoundTrip(XAiQueryScalar, queryScalar);
-          expectRoundTrip(XAiQueryValue, queryValue);
-          expectRoundTrip(XAiResponse, response);
-          expectRoundTrip(XAiServerSentEvent, serverSentEvent);
-          expectRoundTrip(XAiWebSocketBaseUrl, websocketBaseUrl);
-          expectRoundTrip(XAiWebSocketEvent, websocketEvent);
-        }
-      ),
-      fcRuns(25)
-    );
-  });
+  it.prop(
+    "round-trips crispened xAI schemas through their encoded form",
+    [
+      ConfigInputArbitrary,
+      EndpointArbitrary,
+      ErrorOptionsArbitrary,
+      ErrorArbitrary,
+      HttpBaseUrlArbitrary,
+      HttpStatusCodeArbitrary,
+      LanguageModelOptionsArbitrary,
+      ModelNameArbitrary,
+      QueryScalarArbitrary,
+      QueryValueArbitrary,
+      ResponseArbitrary,
+      ServerSentEventArbitrary,
+      WebSocketBaseUrlArbitrary,
+      WebSocketEventArbitrary,
+    ],
+    ([
+      config,
+      endpoint,
+      errorOptions,
+      error,
+      httpBaseUrl,
+      httpStatusCode,
+      languageModelOptions,
+      modelName,
+      queryScalar,
+      queryValue,
+      response,
+      serverSentEvent,
+      websocketBaseUrl,
+      websocketEvent,
+    ]) => {
+      expectRoundTrip(XAiConfigInput, config);
+      expectRoundTrip(XAiEndpoint, endpoint);
+      expectRoundTrip(XAiErrorOptions, errorOptions);
+      expectRoundTrip(XAiError, error);
+      expectRoundTrip(XAiHttpBaseUrl, httpBaseUrl);
+      expectRoundTrip(XAiHttpStatusCode, httpStatusCode);
+      expectRoundTrip(XAiLanguageModel.XAiLanguageModelOptions, languageModelOptions);
+      expectRoundTrip(XAiLanguageModel.XAiModelName, modelName);
+      expectRoundTrip(XAiQueryScalar, queryScalar);
+      expectRoundTrip(XAiQueryValue, queryValue);
+      expectRoundTrip(XAiResponse, response);
+      expectRoundTrip(XAiServerSentEvent, serverSentEvent);
+      expectRoundTrip(XAiWebSocketBaseUrl, websocketBaseUrl);
+      expectRoundTrip(XAiWebSocketEvent, websocketEvent);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   layer(makeXAiUnitLayer())((it) =>
     it.effect(

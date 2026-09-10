@@ -239,19 +239,21 @@ const streamChatCompletion = (
  */
 export const make: (
   options: VeniceAiLanguageModelOptionsInput
-) => Effect.Effect<LanguageModel.Service, never, VeniceAI> = Effect.fn("VeniceAiLanguageModel.make")(function* (input) {
-  const options = normalizeLanguageModelOptions(input);
-  const venice = yield* VeniceAI;
-  return yield* makeFromProvider({
-    ...O.getSomesStruct({ config: options.config }),
-    model: options.model,
-    moduleName,
-    provider: {
-      createChatCompletion: (request) => createChatCompletion(venice, request),
-      streamChatCompletion: (request) => streamChatCompletion(venice, request),
-    },
-  });
-});
+) => Effect.Effect<LanguageModel.LanguageModel, never, VeniceAI> = Effect.fn("VeniceAiLanguageModel.make")(
+  function* (input) {
+    const options = normalizeLanguageModelOptions(input);
+    const venice = yield* VeniceAI;
+    return yield* makeFromProvider({
+      ...O.getSomesStruct({ config: options.config }),
+      model: options.model,
+      moduleName,
+      provider: {
+        createChatCompletion: (request) => createChatCompletion(venice, request),
+        streamChatCompletion: (request) => streamChatCompletion(venice, request),
+      },
+    });
+  }
+);
 
 /**
  * Builds a Venice Effect AI language-model layer.

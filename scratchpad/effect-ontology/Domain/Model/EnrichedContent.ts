@@ -20,11 +20,7 @@ const LanguageCode = S.String.check(
     description: "A lowercase two-letter ISO 639-1 language code.",
     message: "Language code must contain exactly two lowercase ASCII letters.",
   })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(/^[a-z]{2}$/),
-  })
-  .pipe(
+).pipe(
     $I.annoteSchema("LanguageCode", {
       description: "Lowercase two-letter language code used for enriched content.",
     })
@@ -44,11 +40,7 @@ const LanguageCode = S.String.check(
  * @category schemas
  * @since 0.0.0
  */
-export const SourceType = LiteralKit(["news", "blog", "press_release", "official", "academic", "unknown"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("news", "blog", "press_release", "official", "academic", "unknown"),
-  })
-  .annotate(
+export const SourceType = LiteralKit(["news", "blog", "press_release", "official", "academic", "unknown"]).annotate(
     $I.annote("SourceType", {
       description: "Closed classification of source kinds recognized by content enrichment.",
     })
@@ -333,5 +325,5 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
     return O.getOrElse(this.length, () => Str.length(this.content));
   }
 
-  static readonly decodeEffect = S.decodeEffect(JinaContent)
+  static readonly decodeEffect = S.decodeEffect(JinaContent);
 }

@@ -21,14 +21,14 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact)(fc);
-const ExportArchiveOperationArbitrary = S.toArbitrary(ExportArchiveOperation)(fc);
-const PffexportEngineConfigArbitrary = S.toArbitrary(PffexportEngineConfig)(fc);
-const LibpffFileProcessingEngineOptionsArbitrary = S.toArbitrary(LibpffFileProcessingEngineOptions)(fc);
-const LibpffErrorArbitrary = S.toArbitrary(LibpffError)(fc);
-const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord)(fc);
+const SourceArtifactArbitrary = Arbitrary.schema(SourceArtifact);
+const ExportArchiveOperationArbitrary = Arbitrary.schema(ExportArchiveOperation);
+const PffexportEngineConfigArbitrary = Arbitrary.schema(PffexportEngineConfig);
+const LibpffFileProcessingEngineOptionsArbitrary = Arbitrary.schema(LibpffFileProcessingEngineOptions);
+const LibpffErrorArbitrary = Arbitrary.schema(LibpffError);
+const PffexportMessageRecordArbitrary = Arbitrary.schema(PffexportMessageRecord);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExportArchiveOperation = S.encodeEffect(ExportArchiveOperation);
@@ -86,47 +86,48 @@ const operation = Effect.fn("LibpffTest.operation")(function* (ids: FixtureIds) 
 });
 
 describe("@beep/libpff", () => {
-  it("round-trips schema-derived archive operation data through file-processing schemas", () =>
-    fc.assert(
-      fc.property(SourceArtifactArbitrary, ExportArchiveOperationArbitrary, (sourceArtifact, exportOperation) => {
-        const encodedSourceArtifact = Effect.runSync(encodeSourceArtifact(sourceArtifact));
-        const decodedSourceArtifact = Effect.runSync(decodeSourceArtifact(encodedSourceArtifact));
-        expect(Effect.runSync(encodeSourceArtifact(decodedSourceArtifact))).toEqual(encodedSourceArtifact);
+  it.prop(
+    "round-trips schema-derived archive operation data through file-processing schemas",
+    [SourceArtifactArbitrary, ExportArchiveOperationArbitrary],
+    ([sourceArtifact, exportOperation]) => {
+      const encodedSourceArtifact = Effect.runSync(encodeSourceArtifact(sourceArtifact));
+      const decodedSourceArtifact = Effect.runSync(decodeSourceArtifact(encodedSourceArtifact));
+      expect(Effect.runSync(encodeSourceArtifact(decodedSourceArtifact))).toEqual(encodedSourceArtifact);
 
-        const encodedExportOperation = Effect.runSync(encodeExportArchiveOperation(exportOperation));
-        const decodedExportOperation = Effect.runSync(decodeExportArchiveOperation(encodedExportOperation));
-        expect(Effect.runSync(encodeExportArchiveOperation(decodedExportOperation))).toEqual(encodedExportOperation);
-      }),
-      fcRuns(25)
-    ));
+      const encodedExportOperation = Effect.runSync(encodeExportArchiveOperation(exportOperation));
+      const decodedExportOperation = Effect.runSync(decodeExportArchiveOperation(encodedExportOperation));
+      expect(Effect.runSync(encodeExportArchiveOperation(decodedExportOperation))).toEqual(encodedExportOperation);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-  it("round-trips libpff-owned schema-derived data through encoded shapes", () =>
-    fc.assert(
-      fc.property(
-        PffexportEngineConfigArbitrary,
-        LibpffFileProcessingEngineOptionsArbitrary,
-        LibpffErrorArbitrary,
-        PffexportMessageRecordArbitrary,
-        (config, options, error, record) => {
-          const encodedConfig = Effect.runSync(encodePffexportEngineConfig(config));
-          const decodedConfig = Effect.runSync(decodePffexportEngineConfig(encodedConfig));
-          expect(Effect.runSync(encodePffexportEngineConfig(decodedConfig))).toEqual(encodedConfig);
+  it.prop(
+    "round-trips libpff-owned schema-derived data through encoded shapes",
+    [
+      PffexportEngineConfigArbitrary,
+      LibpffFileProcessingEngineOptionsArbitrary,
+      LibpffErrorArbitrary,
+      PffexportMessageRecordArbitrary,
+    ],
+    ([config, options, error, record]) => {
+      const encodedConfig = Effect.runSync(encodePffexportEngineConfig(config));
+      const decodedConfig = Effect.runSync(decodePffexportEngineConfig(encodedConfig));
+      expect(Effect.runSync(encodePffexportEngineConfig(decodedConfig))).toEqual(encodedConfig);
 
-          const encodedOptions = Effect.runSync(encodeLibpffFileProcessingEngineOptions(options));
-          const decodedOptions = Effect.runSync(decodeLibpffFileProcessingEngineOptions(encodedOptions));
-          expect(Effect.runSync(encodeLibpffFileProcessingEngineOptions(decodedOptions))).toEqual(encodedOptions);
+      const encodedOptions = Effect.runSync(encodeLibpffFileProcessingEngineOptions(options));
+      const decodedOptions = Effect.runSync(decodeLibpffFileProcessingEngineOptions(encodedOptions));
+      expect(Effect.runSync(encodeLibpffFileProcessingEngineOptions(decodedOptions))).toEqual(encodedOptions);
 
-          const encodedError = Effect.runSync(encodeLibpffError(error));
-          const decodedError = Effect.runSync(decodeLibpffError(encodedError));
-          expect(Effect.runSync(encodeLibpffError(decodedError))).toEqual(encodedError);
+      const encodedError = Effect.runSync(encodeLibpffError(error));
+      const decodedError = Effect.runSync(decodeLibpffError(encodedError));
+      expect(Effect.runSync(encodeLibpffError(decodedError))).toEqual(encodedError);
 
-          const encodedRecord = Effect.runSync(encodePffexportMessageRecord(record));
-          const decodedRecord = Effect.runSync(decodePffexportMessageRecord(encodedRecord));
-          expect(Effect.runSync(encodePffexportMessageRecord(decodedRecord))).toEqual(encodedRecord);
-        }
-      ),
-      fcRuns(25)
-    ));
+      const encodedRecord = Effect.runSync(encodePffexportMessageRecord(record));
+      const decodedRecord = Effect.runSync(decodePffexportMessageRecord(encodedRecord));
+      expect(Effect.runSync(encodePffexportMessageRecord(decodedRecord))).toEqual(encodedRecord);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("preserves encoded libpff shapes for schema-owned defaults and option fields", () => {
     const config = PffexportEngineConfig.make({ exportRoot: "/tmp/pst-out" });

@@ -24,7 +24,7 @@ import {
 } from "@beep/wink";
 import { Cause, Effect, Equal, Exit, Layer, Schema, Stream } from "effect";
 import * as O from "effect/Option";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeBowCosineSimilaritySuccessSchemaSync = Schema.decodeSync(BowCosineSimilarity.successSchema);
@@ -52,12 +52,19 @@ const assertRoundTrip = <SchemaT extends Schema.ConstraintCodec<unknown, unknown
   const decode = Schema.decodeUnknownSync(schema);
   const encode = Schema.encodeSync(schema);
 
-  fc.assert(
-    fc.property(Schema.toArbitrary(schema)(fc), (value) => {
-      expect(Equal.equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(25)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(schema)]),
+        ([value]) => {
+          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(25)
+      )
+    )
+  ).toMatchObject({ _tag: "Passed" });
 };
 
 describe("Tool validation", () => {

@@ -278,11 +278,11 @@ export const loadPacerConfig = Effect.fn("Pacer.loadPacerConfig")((rawOptions: P
     const options = yield* decodePacerConfigLoadOptions(rawOptions).pipe(
       Effect.mapError((cause) => PacerConfigError.make_(unknownCauseMessage(cause)))
     );
-    const loginId = yield* Config.redacted(PACER_ENV.username);
-    const password = yield* Config.redacted(PACER_ENV.password);
-    const clientCode = yield* Config.string(PACER_ENV.clientCode).pipe(Config.option);
-    const otpFromEnv = yield* Config.redacted(PACER_ENV.otp).pipe(Config.option);
-    const isFiler = yield* Config.boolean(PACER_ENV.isFiler).pipe(Config.option);
+    const loginId = yield* Config.Redacted(PACER_ENV.username);
+    const password = yield* Config.Redacted(PACER_ENV.password);
+    const clientCode = yield* Config.String(PACER_ENV.clientCode).pipe(Config.option);
+    const otpFromEnv = yield* Config.Redacted(PACER_ENV.otp).pipe(Config.option);
+    const isFiler = yield* Config.Boolean(PACER_ENV.isFiler).pipe(Config.option);
     return PacerConfig.make({
       environment: options.environment,
       authBaseUrl: PACER_AUTH_BASE_URL[options.environment],

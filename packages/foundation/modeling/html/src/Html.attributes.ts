@@ -94,7 +94,7 @@ export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly
   return Input.pipe(
     S.decodeTo(
       Canonical,
-      SchemaTransformation.transformOrFail({
+      SchemaTransformation.transformEffect({
         decode: flow(
           findCanonical,
           O.match({

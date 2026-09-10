@@ -106,8 +106,8 @@ const ambientProcess = (executable: string, args: ReadonlyArray<string>): ChildP
 
 const resolveCacheRoot = Effect.gen(function* () {
   const path = yield* Path.Path;
-  const home = yield* Config.string("HOME");
-  return O.getOrElse(yield* Config.option(Config.string("BEEP_OPENCLAW_IT_CACHE")), () =>
+  const home = yield* Config.String("HOME");
+  return O.getOrElse(yield* Config.option(Config.String("BEEP_OPENCLAW_IT_CACHE")), () =>
     path.join(home, ".cache", "beep-openclaw-driver")
   );
 });
@@ -226,17 +226,17 @@ const ensurePinnedNodeStaged = Effect.gen(function* () {
  */
 const resolveNodeBinDirectory = Effect.gen(function* () {
   const path = yield* Path.Path;
-  const override = yield* Config.option(Config.string("BEEP_OPENCLAW_IT_NODE_BIN"));
+  const override = yield* Config.option(Config.String("BEEP_OPENCLAW_IT_NODE_BIN"));
   if (O.isSome(override)) {
     return override;
   }
-  const home = yield* Config.string("HOME");
+  const home = yield* Config.String("HOME");
   const miseNodeBin = path.join(home, ".local", "share", "mise", "installs", "node", "24", "bin");
   if (yield* isUsableNodeDirectory(miseNodeBin)) {
     return O.some(miseNodeBin);
   }
   const pathEntries = pipe(
-    yield* Config.option(Config.string("PATH")),
+    yield* Config.option(Config.String("PATH")),
     O.map((value) => Str.split(value, ":")),
     O.getOrElse(() => [] as ReadonlyArray<string>)
   );

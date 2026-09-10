@@ -124,7 +124,7 @@ export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback"
 >(
   options: GenerateWithFeedbackOptions<StructuredOutputSchema>
 ): Effect.fn.Return<
-  LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"]>,
+  LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"], "opaque">,
   AiError.AiError | Cause.TimeoutError | S.SchemaError,
   LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"]
 > {

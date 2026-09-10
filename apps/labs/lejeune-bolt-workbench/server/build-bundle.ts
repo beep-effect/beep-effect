@@ -644,16 +644,16 @@ export const buildBundle = Effect.fn("LeJeuneBundle.build")(function* (input: Bu
 });
 
 const configuredBuild = Effect.gen(function* () {
-  const bundleRoot = yield* Config.nonEmptyString("LEJEUNE_BUNDLE_ROOT").pipe(
+  const bundleRoot = yield* Config.NonEmptyString("LEJEUNE_BUNDLE_ROOT").pipe(
     Config.withDefault(".beep/lejeune-demo-publication/bundle"),
     Effect.mapError((cause) => bundleBuildErrorWithCause("configuration", "The bundle root is invalid.", cause))
   );
-  const mutableRoot = yield* Config.nonEmptyString("LEJEUNE_MUTABLE_ROOT").pipe(
+  const mutableRoot = yield* Config.NonEmptyString("LEJEUNE_MUTABLE_ROOT").pipe(
     Config.withDefault(".beep/lejeune-demo-publication/review"),
     Effect.mapError((cause) => bundleBuildErrorWithCause("configuration", "The mutable root is invalid.", cause))
   );
   const retentionAuthorizationPath = yield* Config.option(
-    Config.nonEmptyString("LEJEUNE_RETENTION_AUTHORIZATION")
+    Config.NonEmptyString("LEJEUNE_RETENTION_AUTHORIZATION")
   ).pipe(
     Effect.mapError((cause) =>
       bundleBuildErrorWithCause("configuration", "The retention authorization path is invalid.", cause)

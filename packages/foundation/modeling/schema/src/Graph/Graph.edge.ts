@@ -178,7 +178,7 @@ export const EdgeTransform = <Data extends S.Top>(data: Data): EdgeTransform<Dat
   const schema = EdgeEncoded(data).pipe(
     S.decodeTo(
       data.pipe(S.toType, EdgeFromSelf),
-      SchemaTransformation.transformOrFail({
+      SchemaTransformation.transformEffect({
         decode: (encoded): Effect.Effect<Graph_.Edge<Data["Type"]>> =>
           Effect.succeed({
             source: encoded.source,

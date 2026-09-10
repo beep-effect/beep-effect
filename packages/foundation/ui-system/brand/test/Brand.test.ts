@@ -18,7 +18,7 @@ import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBrandIdentity = S.decodeEffect(BrandIdentity);
 const decodePrintableTextResult = S.decodeResult(PrintableText);
@@ -141,11 +141,14 @@ describe("BrandIdentity properties", () => {
   it("round-trips arbitrary identities through encode and decode", () => {
     const equivalent = S.toEquivalence(BrandIdentity);
 
-    fc.assert(
-      fc.property(S.toArbitrary(BrandIdentity)(fc), (identity) =>
-        equivalent(decodeUnknownBrandIdentitySync(encodeBrandIdentitySync(identity)), identity)
-      ),
-      fcRuns(5)
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(BrandIdentity)]),
+          ([identity]) => equivalent(decodeUnknownBrandIdentitySync(encodeBrandIdentitySync(identity)), identity),
+          fcRuns(5)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

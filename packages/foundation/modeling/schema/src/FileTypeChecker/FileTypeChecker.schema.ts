@@ -5,7 +5,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Number as Num, Order } from "effect";
+import { Number as Num, Order, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -14,6 +14,7 @@ import { FileExtension } from "../FileExtension.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { MimeType } from "../MimeType.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
+import type { SchemaAST } from "effect";
 
 const $I = $SchemaId.create("FileTypeChecker/FileTypeChecker.schema");
 
@@ -356,6 +357,22 @@ export class FileSignature extends S.Class<FileSignature>($I`FileSignature`)(
   $I.annote("FileSignature", {
     description:
       "A non-empty byte sequence, absolute file offset, valid skipped positions, and optional compatibility metadata.",
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<FileSignature>()(
+        FileSignatureStruct,
+        SchemaTransformation.transform({
+          decode: (value) =>
+            FileSignature.make({
+              ...value,
+              skippedBytes: A.sort(
+                A.dedupe(A.filter(value.skippedBytes, (position) => position < value.sequence.length)),
+                Order.Number
+              ),
+              compatibleExtensions: A.sort(A.dedupe(value.compatibleExtensions), Order.String),
+            }),
+          encode: (value) => value,
+        })
+      ),
   })
 ) {}
 
@@ -468,12 +485,7 @@ const DetectedFileInfoSignatureCheck = S.makeFilter<typeof DetectedFileInfoStruc
   }
 );
 
-const DetectedFileInfoModel = DetectedFileInfoStruct.check(DetectedFileInfoSignatureCheck).annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(FileTypeInfo)(fc).chain((info) =>
-      fc.constantFrom(...info.signatures).map((signature) => ({ info, signature }))
-    ),
-});
+const DetectedFileInfoModel = DetectedFileInfoStruct.check(DetectedFileInfoSignatureCheck);
 
 /**
  * Canonical file-type metadata paired with the signature that matched it.
@@ -508,6 +520,14 @@ export class DetectedFileInfo extends S.Class<DetectedFileInfo>($I`DetectedFileI
   DetectedFileInfoModel,
   $I.annote("DetectedFileInfo", {
     description: "Canonical file-type metadata paired with one of its signatures that matched content.",
+    toCodecArbitrary: (): SchemaAST.Link =>
+      S.link<DetectedFileInfo>()(
+        FileTypeInfo,
+        SchemaTransformation.transform({
+          decode: (info) => DetectedFileInfo.make({ info, signature: info.signatures[0] }),
+          encode: (detected) => detected.info,
+        })
+      ),
   })
 ) {
   get extension(): FileType {

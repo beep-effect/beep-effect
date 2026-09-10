@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { IdentityEntry, IdentityRegistry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
 import { makeNamedNode, NamedNode } from "@beep/rdf/Rdf";
@@ -25,8 +26,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ShaclNodeShape } from "@beep/semantic-web/services/shacl-validation";
 
 const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);
@@ -132,26 +134,40 @@ describe("identity RDF binding", () => {
   });
 
   it("derives only pairwise-distinct predicate bindings", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(IdentityRdfBinding)(fc), (generated) => {
-        const predicates = bindingPredicateValues(generated);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(IdentityRdfBinding)]),
+          ([generated]) => {
+            const predicates = bindingPredicateValues(generated);
 
-        assert.strictEqual(HashSet.size(HashSet.fromIterable(predicates)), A.length(predicates));
-      }),
-      { numRuns: 40 }
-    );
+            assert.strictEqual(HashSet.size(HashSet.fromIterable(predicates)), A.length(predicates));
+
+            return true;
+          },
+          { runs: 40 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("derives only unique required-fiber policies", () => {
-    fc.assert(
-      fc.property(S.toArbitrary(IdentityShapePolicy)(fc), (generated) => {
-        assert.strictEqual(
-          HashSet.size(HashSet.fromIterable(generated.requiredFibers)),
-          A.length(generated.requiredFibers)
-        );
-      }),
-      { numRuns: 40 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(IdentityShapePolicy)]),
+          ([generated]) => {
+            assert.strictEqual(
+              HashSet.size(HashSet.fromIterable(generated.requiredFibers)),
+              A.length(generated.requiredFibers)
+            );
+
+            return true;
+          },
+          { runs: 40 }
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it.effect(
@@ -179,7 +195,7 @@ describe("identity RDF binding", () => {
 
       assert.deepStrictEqual(decoded, [generated]);
     }),
-    { fastCheck: { numRuns: 40 } }
+    { arbitrary: { runs: 40 } }
   );
 
   it.effect(
@@ -295,3 +311,29 @@ describe("identity RDF binding", () => {
     })
   );
 });
+
+// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
+it.effect("encodes IdentityRdfBinding through its generation link", () =>
+  Effect.gen(function* () {
+    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+      IdentityRdfBinding.ast
+    ).annotations;
+    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+    if (link === undefined || link.transformation._tag !== "Transformation")
+      throw new Error("Missing generation transformation");
+    const codec = S.make<S.Codec<IdentityRdfBinding, unknown>>(
+      SchemaAST.decodeTo(link.to, SchemaAST.toType(IdentityRdfBinding.ast), link.transformation)
+    );
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(IdentityRdfBinding),
+      (value) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(codec)(value);
+          expect(encoded).toEqual(Object.keys(value.fiberPaths));
+          return true;
+        }),
+      fcRuns(50)
+    );
+    expect(result._tag).toBe("Passed");
+  })
+);

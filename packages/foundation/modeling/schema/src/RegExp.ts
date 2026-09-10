@@ -108,7 +108,7 @@ const encodeRegExpStrForbidden = (): Effect.Effect<RegExpStr, SchemaIssue.Issue>
 export const RegExpFromStr = RegExpStr.pipe(
   S.decodeTo(
     S.RegExp,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: decodeRegExp,
       encode: encodeRegExpStrForbidden,
     })

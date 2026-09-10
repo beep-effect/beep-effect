@@ -19,68 +19,68 @@ import * as Domain from "./Domain.ts";
 
 const decodeCompilerOptions = S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(TSConfigCompilerOptions)));
 
-const configFile = Flag.file("config-file", { mustExist: true }).pipe(
+const configFile = Flag.File("config-file", { mustExist: true }).pipe(
   Flag.withDescription("Package-relative path to an alternate docgen configuration file"),
   Flag.optional
 );
-const parseTsconfigFile = Flag.file("parse-tsconfig-file", { mustExist: true }).pipe(Flag.optional);
-const parseCompilerOptionsText = Flag.string("parse-compiler-options").pipe(Flag.optional);
-const examplesTsconfigFile = Flag.file("examples-tsconfig-file", { mustExist: true }).pipe(Flag.optional);
-const examplesCompilerOptionsText = Flag.string("examples-compiler-options").pipe(Flag.optional);
+const parseTsconfigFile = Flag.File("parse-tsconfig-file", { mustExist: true }).pipe(Flag.optional);
+const parseCompilerOptionsText = Flag.String("parse-compiler-options").pipe(Flag.optional);
+const examplesTsconfigFile = Flag.File("examples-tsconfig-file", { mustExist: true }).pipe(Flag.optional);
+const examplesCompilerOptionsText = Flag.String("examples-compiler-options").pipe(Flag.optional);
 
-const projectHomepage = Flag.string("homepage").pipe(
+const projectHomepage = Flag.String("homepage").pipe(
   Flag.withDescription("The link to the project homepage shown in the generated documentation"),
   Flag.optional
 );
 
-const srcLink = Flag.string("srcLink").pipe(Flag.withDescription("The link to the project source code"), Flag.optional);
+const srcLink = Flag.String("srcLink").pipe(Flag.withDescription("The link to the project source code"), Flag.optional);
 
-const srcDir = Flag.directory("src").pipe(
+const srcDir = Flag.Directory("src").pipe(
   Flag.withDescription("The directory in which docgen will search for TypeScript files to parse"),
   Flag.optional
 );
 
-const outDir = Flag.directory("out").pipe(
+const outDir = Flag.Directory("out").pipe(
   Flag.withDescription("The directory to which docgen will write markdown files"),
   Flag.optional
 );
 
-const theme = Flag.string("theme").pipe(
+const theme = Flag.String("theme").pipe(
   Flag.withDescription("The Jekyll theme that should be used for the generated documentation"),
   Flag.optional
 );
 
-const enableSearch = Flag.boolean("enable-search").pipe(
+const enableSearch = Flag.Boolean("enable-search").pipe(
   Flag.withDescription("Whether search should be enabled in the generated documentation"),
   Flag.optional
 );
 
-const enforceDescriptions = Flag.boolean("enforce-descriptions").pipe(
+const enforceDescriptions = Flag.Boolean("enforce-descriptions").pipe(
   Flag.withDescription("Whether a description for each module export should be required"),
   Flag.optional
 );
 
-const enforceExamples = Flag.boolean("enforce-examples").pipe(
+const enforceExamples = Flag.Boolean("enforce-examples").pipe(
   Flag.withDescription("Whether @example tags for each module export should be required"),
   Flag.optional
 );
 
-const enforceVersion = Flag.boolean("enforce-version").pipe(
+const enforceVersion = Flag.Boolean("enforce-version").pipe(
   Flag.withDescription("Whether @since tags for each module export should be required"),
   Flag.optional
 );
 
-const include = Flag.string("include").pipe(
+const include = Flag.String("include").pipe(
   Flag.withDescription("Comma-separated package-relative or srcDir-relative file globs to include"),
   Flag.optional
 );
 
-const exclude = Flag.string("exclude").pipe(
+const exclude = Flag.String("exclude").pipe(
   Flag.withDescription("A glob pattern specifying files that should be excluded from the generated documentation"),
   Flag.optional
 );
 
-const tscExecutable = Flag.string("tscExecutable").pipe(
+const tscExecutable = Flag.String("tscExecutable").pipe(
   Flag.withDescription("The TypeScript compiler executable to use for example type checking"),
   Flag.optional
 );

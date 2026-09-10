@@ -4,7 +4,7 @@ import { Effect, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeAllowedDevOriginResult = S.decodeResult(AllowedDevOrigin);
@@ -37,6 +37,17 @@ describe("AllowedDevOrigin", () => {
   });
 
   it("round-trips schema-derived allowed origins", () => {
-    fc.assert(fc.property(S.toArbitrary(AllowedDevOrigin)(fc), expectRoundTrip), fcRuns(25));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(AllowedDevOrigin)]),
+          (values) => {
+            expectRoundTrip(...values);
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 });

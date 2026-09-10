@@ -863,8 +863,7 @@ const resolveModification = (
 
 const materializeModificationError = (text: string) =>
   Match.type<ModificationResolutionError>().pipe(
-    Match.tagsExhaustive({
-      ModifyFailure: (failure) =>
+    Match.tag("ModifyFailure", (failure) =>
         TomlModificationError.make({
           diagnostic: TomlDiagnostic.fromRaw(text, {
             code: failure.code,
@@ -872,10 +871,12 @@ const materializeModificationError = (text: string) =>
             offset: failure.offset,
             length: failure.len,
           }),
-        }),
-      RawTomlError: (failure) =>
-        TomlModificationError.make({ diagnostic: TomlDiagnostic.fromRaw(text, failure.diagnostic) }),
-      GuardExceeded: (failure) =>
+      })
+    ),
+    Match.tag("RawTomlError", (failure) =>
+      TomlModificationError.make({ diagnostic: TomlDiagnostic.fromRaw(text, failure.diagnostic) })
+    ),
+    Match.tag("GuardExceeded", (failure) =>
         TomlModificationError.make({
           diagnostic: TomlDiagnostic.fromRaw(text, {
             code: "NestingDepthExceeded",
@@ -883,8 +884,9 @@ const materializeModificationError = (text: string) =>
             offset: failure.offset,
             length: 0,
           }),
-        }),
     })
+    ),
+    Match.exhaustive
   );
 
 /**

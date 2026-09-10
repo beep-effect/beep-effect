@@ -12,8 +12,8 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, pipe, Result, Runtime } from "effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 
 const runAgentEffectivenessCommand = Command.runWith(agentEffectivenessCommand, { version: "0.0.0" });
@@ -35,10 +35,10 @@ const encodeAnnotationCheckReportResult = S.encodeUnknownResult(
 );
 const encodePhoenixSyncResultResult = S.encodeUnknownResult(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
 const encodePromptBundleResult = S.encodeUnknownResult(S.fromJsonString(AgentEffectivenessPromptBundle));
-const DoctorReportArbitrary = S.toArbitrary(AgentEffectivenessDoctorReport)(fc);
-const AnnotationCheckReportArbitrary = S.toArbitrary(AgentEffectivenessAnnotationCheckReport)(fc);
-const PhoenixSyncResultArbitrary = S.toArbitrary(AgentEffectivenessPhoenixSyncResult)(fc);
-const PromptBundleArbitrary = S.toArbitrary(AgentEffectivenessPromptBundle)(fc);
+const DoctorReportArbitrary = Arbitrary.schema(AgentEffectivenessDoctorReport);
+const AnnotationCheckReportArbitrary = Arbitrary.schema(AgentEffectivenessAnnotationCheckReport);
+const PhoenixSyncResultArbitrary = Arbitrary.schema(AgentEffectivenessPhoenixSyncResult);
+const PromptBundleArbitrary = Arbitrary.schema(AgentEffectivenessPromptBundle);
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
   expect(Exit.isFailure(exit)).toBe(true);
@@ -116,40 +116,46 @@ const lastLoggedLine = Effect.fn("AgentEffectivenessCommandTest.lastLoggedLine")
 
 describe("agent-effectiveness command", () => {
   it("round-trips schema-derived report data through JSON command boundaries", () =>
-    fc.assert(
-      fc.property(
-        DoctorReportArbitrary,
-        AnnotationCheckReportArbitrary,
-        PhoenixSyncResultArbitrary,
-        PromptBundleArbitrary,
-        (doctorReport, annotationCheckReport, phoenixSyncResult, promptBundle) => {
-          const encodedDoctorReport = Result.getOrThrow(encodeDoctorReportResult(doctorReport));
-          const decodedDoctorReport = Result.getOrThrow(decodeDoctorReportResult(encodedDoctorReport));
-          expect(Result.getOrThrow(encodeDoctorReportResult(decodedDoctorReport))).toBe(encodedDoctorReport);
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([
+            DoctorReportArbitrary,
+            AnnotationCheckReportArbitrary,
+            PhoenixSyncResultArbitrary,
+            PromptBundleArbitrary,
+          ]),
+          ([doctorReport, annotationCheckReport, phoenixSyncResult, promptBundle]) => {
+            const encodedDoctorReport = Result.getOrThrow(encodeDoctorReportResult(doctorReport));
+            const decodedDoctorReport = Result.getOrThrow(decodeDoctorReportResult(encodedDoctorReport));
+            expect(Result.getOrThrow(encodeDoctorReportResult(decodedDoctorReport))).toBe(encodedDoctorReport);
 
-          const encodedAnnotationCheckReport = Result.getOrThrow(
-            encodeAnnotationCheckReportResult(annotationCheckReport)
-          );
-          const decodedAnnotationCheckReport = Result.getOrThrow(
-            decodeAnnotationCheckReportResult(encodedAnnotationCheckReport)
-          );
-          expect(Result.getOrThrow(encodeAnnotationCheckReportResult(decodedAnnotationCheckReport))).toBe(
-            encodedAnnotationCheckReport
-          );
+            const encodedAnnotationCheckReport = Result.getOrThrow(
+              encodeAnnotationCheckReportResult(annotationCheckReport)
+            );
+            const decodedAnnotationCheckReport = Result.getOrThrow(
+              decodeAnnotationCheckReportResult(encodedAnnotationCheckReport)
+            );
+            expect(Result.getOrThrow(encodeAnnotationCheckReportResult(decodedAnnotationCheckReport))).toBe(
+              encodedAnnotationCheckReport
+            );
 
-          const encodedPhoenixSyncResult = Result.getOrThrow(encodePhoenixSyncResultResult(phoenixSyncResult));
-          const decodedPhoenixSyncResult = Result.getOrThrow(decodePhoenixSyncResultResult(encodedPhoenixSyncResult));
-          expect(Result.getOrThrow(encodePhoenixSyncResultResult(decodedPhoenixSyncResult))).toBe(
-            encodedPhoenixSyncResult
-          );
+            const encodedPhoenixSyncResult = Result.getOrThrow(encodePhoenixSyncResultResult(phoenixSyncResult));
+            const decodedPhoenixSyncResult = Result.getOrThrow(decodePhoenixSyncResultResult(encodedPhoenixSyncResult));
+            expect(Result.getOrThrow(encodePhoenixSyncResultResult(decodedPhoenixSyncResult))).toBe(
+              encodedPhoenixSyncResult
+            );
 
-          const encodedPromptBundle = Result.getOrThrow(encodePromptBundleResult(promptBundle));
-          const decodedPromptBundle = Result.getOrThrow(decodePromptBundleResult(encodedPromptBundle));
-          expect(Result.getOrThrow(encodePromptBundleResult(decodedPromptBundle))).toBe(encodedPromptBundle);
-        }
-      ),
-      fcRuns(25)
-    ));
+            const encodedPromptBundle = Result.getOrThrow(encodePromptBundleResult(promptBundle));
+            const decodedPromptBundle = Result.getOrThrow(decodePromptBundleResult(encodedPromptBundle));
+            expect(Result.getOrThrow(encodePromptBundleResult(decodedPromptBundle))).toBe(encodedPromptBundle);
+
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
 
   it.effect("emits report-only doctor JSON with offline Phoenix", () =>
     withTempDirectory(

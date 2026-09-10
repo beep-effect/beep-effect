@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Proof for the five legal position row converters.
  *
@@ -46,7 +47,6 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
 
 // The id every fixture carries. Reattaching exactly this one to an insert is
 // what lets the return leg be compared to the entity the loop started from.
@@ -541,17 +541,21 @@ describe("converter round trips over the whole schema", () => {
     toInsert: (entity: Schema["Type"]) => Result.Result<Insert, S.SchemaError>,
     fromRow: (row: unknown) => Result.Result<Schema["Type"], S.SchemaError>
   ): void => {
-    const arbitrary = S.toArbitrary(schema)(fc);
     const equivalent = S.toEquivalence(schema);
 
-    fc.assert(
-      fc.property(arbitrary, (entity) => {
-        const insert = Result.getOrThrow(toInsert(entity));
-        const returned = Result.getOrThrow(fromRow({ ...insert, id: entity.id }));
-        return equivalent(returned, entity);
-      }),
-      { numRuns: 10 }
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.schema(schema),
+          (entity) => {
+            const insert = Result.getOrThrow(toInsert(entity));
+            const returned = Result.getOrThrow(fromRow({ ...insert, id: entity.id }));
+            return equivalent(returned, entity);
+          },
+          { runs: 10 }
+        )
+      )._tag
+    ).toBe("Passed");
   };
 
   it("round-trips arbitrary stored relations", () => {

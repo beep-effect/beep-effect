@@ -53,15 +53,15 @@ const isLocalDevToolsUrl = (url: string): boolean =>
 
 const ObservabilityConfigLive: Layer.Layer<never> = Layer.unwrap(
   Effect.gen(function* () {
-    const endpoint = yield* Config.option(Config.string("OTEL_EXPORTER_OTLP_ENDPOINT"));
-    const minLogLevel = yield* Config.logLevel("APP_LOG_LEVEL").pipe(Config.withDefault("Info"));
-    const environment = yield* Config.string("BEEP_DEPLOYMENT_ENVIRONMENT").pipe(Config.withDefault("qa"));
-    const launchId = yield* Config.option(Config.string("BEEP_LAUNCH_ID"));
-    const qaSessionId = yield* Config.option(Config.string("BEEP_QA_SESSION_ID"));
-    const buildCommit = yield* Config.option(Config.string("BEEP_BUILD_COMMIT"));
-    const transport = yield* Config.option(Config.string("CHAT_TRANSPORT"));
-    const devtoolsRequested = yield* Config.boolean("DEVTOOLS").pipe(Config.withDefault(false));
-    const devtoolsUrl = yield* Config.string("DEVTOOLS_URL").pipe(Config.withDefault("ws://localhost:34437"));
+    const endpoint = yield* Config.option(Config.String("OTEL_EXPORTER_OTLP_ENDPOINT"));
+    const minLogLevel = yield* Config.LogLevel("APP_LOG_LEVEL").pipe(Config.withDefault("Info"));
+    const environment = yield* Config.String("BEEP_DEPLOYMENT_ENVIRONMENT").pipe(Config.withDefault("qa"));
+    const launchId = yield* Config.option(Config.String("BEEP_LAUNCH_ID"));
+    const qaSessionId = yield* Config.option(Config.String("BEEP_QA_SESSION_ID"));
+    const buildCommit = yield* Config.option(Config.String("BEEP_BUILD_COMMIT"));
+    const transport = yield* Config.option(Config.String("CHAT_TRANSPORT"));
+    const devtoolsRequested = yield* Config.Boolean("DEVTOOLS").pipe(Config.withDefault(false));
+    const devtoolsUrl = yield* Config.String("DEVTOOLS_URL").pipe(Config.withDefault("ws://localhost:34437"));
     const devtoolsAllowed = !devtoolsRequested || isLocalDevToolsUrl(devtoolsUrl);
 
     if (!devtoolsAllowed) {

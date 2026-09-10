@@ -46,7 +46,6 @@ const BudgetDurationCheck = S.makeFilter(
 export const BudgetDuration = S.DurationFromMillis.check(BudgetDurationCheck).pipe(
   $I.annoteSchema("BudgetDuration", {
     description: "Finite non-negative recovery budget duration encoded as milliseconds.",
-    toArbitrary: () => (fc) => fc.nat({ max: 86_400_000 }).map(Duration.millis),
   })
 );
 

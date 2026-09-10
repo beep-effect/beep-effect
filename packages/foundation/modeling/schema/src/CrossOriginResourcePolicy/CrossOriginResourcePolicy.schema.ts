@@ -154,7 +154,7 @@ type CrossOriginResourcePolicyResponseHeaderEncoded = typeof CrossOriginResource
 export const CrossOriginResourcePolicyHeader = S.Union([CrossOriginResourcePolicyOption, S.Undefined]).pipe(
   S.decodeTo(
     CrossOriginResourcePolicyResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: (input): Effect.Effect<CrossOriginResourcePolicyResponseHeaderEncoded> =>
         Effect.succeed({
           name: headerName,

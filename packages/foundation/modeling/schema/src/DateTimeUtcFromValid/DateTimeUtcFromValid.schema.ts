@@ -483,7 +483,7 @@ const encodeDateTimeInput = (value: DateTime.Utc): Effect.Effect<DateTimeInput> 
 export const DateTimeUtcFromValid = DateTimeInput.pipe(
   S.decodeTo(
     S.DateTimeUtc,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: decodeDateTimeInput,
       encode: encodeDateTimeInput,
     })

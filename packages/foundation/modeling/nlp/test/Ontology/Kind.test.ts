@@ -1,16 +1,8 @@
-/**
- * Property-based tests ("proofs") for the Ontology/Kind containment poset and
- * the typed-text smart constructors.
- *
- * Effect v4 coverage for Kind design (no dedicated v3 test existed);
- * uses Effect v4's `effect/testing/FastCheck`.
- */
-
 import * as Kind from "@beep/nlp/Ontology/Kind";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeKindKindContainment = S.decodeEffect(Kind.KindContainment);
 const encodeKindKindContainment = S.encodeEffect(Kind.KindContainment);
@@ -30,8 +22,8 @@ const allKinds: ReadonlyArray<Kind.TextKind> = [
   "Embedding",
 ];
 
-const kindArbitrary = fc.constantFrom(...allKinds);
-const KindContainmentArbitrary = S.toArbitrary(Kind.KindContainment)(fc);
+const kindArbitrary = Arbitrary.schema(S.Literals([...allKinds]));
+const KindContainmentArbitrary = Arbitrary.schema(Kind.KindContainment);
 
 describe("TextKind schema", () => {
   it("accepts every declared kind", () => {
@@ -43,16 +35,20 @@ describe("TextKind schema", () => {
 
 describe("Containment poset", () => {
   it("canContain agrees with getValidChildren", () => {
-    fc.assert(
-      fc.property(kindArbitrary, kindArbitrary, (parent, child) => {
-        const valid = Kind.getValidChildren(parent);
-        return Kind.canContain(parent, child) === valid.includes(child);
-      })
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([kindArbitrary, kindArbitrary]), ([parent, child]) => {
+          const valid = Kind.getValidChildren(parent);
+          return Kind.canContain(parent, child) === valid.includes(child);
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("is irreflexive (no kind contains itself)", () => {
-    fc.assert(fc.property(kindArbitrary, (k) => !Kind.canContain(k, k)));
+    expect(
+      Effect.runSync(Arbitrary.checkEffect(Arbitrary.all([kindArbitrary]), ([k]) => !Kind.canContain(k, k)))._tag
+    ).toBe("Passed");
   });
 
   it("leaf kinds contain nothing", () => {
@@ -72,14 +68,18 @@ describe("Containment poset", () => {
   });
 
   it("round-trips schema-derived containment records", () => {
-    fc.assert(
-      fc.property(KindContainmentArbitrary, (containment) => {
-        const encoded = Effect.runSync(encodeKindKindContainment(containment));
-        const decoded = Effect.runSync(decodeKindKindContainment(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([KindContainmentArbitrary]), ([containment]) => {
+          const encoded = Effect.runSync(encodeKindKindContainment(containment));
+          const decoded = Effect.runSync(decodeKindKindContainment(encoded));
 
-        expect(decoded).toEqual(containment);
-      })
-    );
+          expect(decoded).toEqual(Kind.KindContainment.make({ ...containment }));
+
+          return true;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 });
 
@@ -92,21 +92,25 @@ describe("Smart constructors & utilities", () => {
   });
 
   it("kindOf and content are inverse projections", () => {
-    fc.assert(
-      fc.property(fc.string(), (s) => {
-        const doc = Kind.Document(s);
-        return Kind.kindOf(doc) === "Document" && Kind.content(doc) === s;
-      })
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(S.String)]), ([s]) => {
+          const doc = Kind.Document(s);
+          return Kind.kindOf(doc) === "Document" && Kind.content(doc) === s;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("mapContent preserves kind", () => {
-    fc.assert(
-      fc.property(fc.string(), (s) => {
-        const mapped = Kind.mapContent(Kind.Token(s), (x) => `${x}!`);
-        return mapped.kind === "Token" && mapped.content === `${s}!`;
-      })
-    );
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(S.String)]), ([s]) => {
+          const mapped = Kind.mapContent(Kind.Token(s), (x) => `${x}!`);
+          return mapped.kind === "Token" && mapped.content === `${s}!`;
+        })
+      )._tag
+    ).toBe("Passed");
   });
 
   it("withMetadata merges metadata", () => {

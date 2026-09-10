@@ -1,11 +1,12 @@
 import { ContradictionReviewDecision } from "@beep/epistemic-use-cases/public";
-import { SubmitContradictionCandidate } from "@beep/epistemic-use-cases/server";
+import { SubmitContradictionCandidate, SubmitContradictionCandidateArbitrary } from "@beep/epistemic-use-cases/server";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeSubmitContradictionCandidateResult = S.encodeResult(SubmitContradictionCandidate);
 
@@ -22,19 +23,26 @@ describe("Contradiction review commands", () => {
   it("round-trips schema-derived candidate submissions", () => {
     const equivalent = S.toEquivalence(SubmitContradictionCandidate);
 
-    fc.assert(
-      fc.property(S.toArbitrary(SubmitContradictionCandidate)(fc), (submission) => {
-        const encoded = Result.getOrThrow(encodeSubmitContradictionCandidateResult(submission));
-        const decoded = Result.getOrThrow(decodeSubmission(encoded));
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          Arbitrary.all([SubmitContradictionCandidateArbitrary]),
+          ([submission]) => {
+            const encoded = Result.getOrThrow(encodeSubmitContradictionCandidateResult(submission));
+            const decoded = Result.getOrThrow(decodeSubmission(encoded));
 
-        return equivalent(decoded, submission);
-      }),
-      fcRuns(50)
-    );
+            return equivalent(decoded, submission);
+          },
+          fcRuns(50)
+        )
+      )._tag
+    ).toBe("Passed");
   });
 
   it("rejects empty or reversed candidate validity intervals", () => {
-    const [submission] = fc.sample(S.toArbitrary(SubmitContradictionCandidate)(fc), { numRuns: 1, seed: 520 });
+    const [submission] = Effect.runSync(
+      Arbitrary.sampleEffect(SubmitContradictionCandidateArbitrary, { count: 1, seed: 520 })
+    );
     const encoded = Result.getOrThrow(encodeSubmitContradictionCandidateResult(submission));
 
     expect(Result.isFailure(decodeSubmission({ ...encoded, validFrom: 1_000, validTo: 1_000 }))).toBe(true);

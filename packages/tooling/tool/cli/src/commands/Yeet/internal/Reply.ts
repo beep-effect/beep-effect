@@ -633,27 +633,28 @@ export const replyResolveRetryCommand = (threadId: string): string =>
 
 const replyGhFailure = (failure: GhCommandFailure): YeetCommandError =>
   Match.value(failure).pipe(
-    Match.tags({
-      spawn: (spawnFailure) =>
-        YeetCommandError.make({
-          cause: spawnFailure.cause,
-          command: spawnFailure.command,
-          exitCode: 1,
-          message: `${spawnFailure.label} could not be started; check that the GitHub CLI is installed and authenticated.`,
-        }),
-      "nonzero-exit": (exitFailure) =>
-        YeetCommandError.make({
-          command: exitFailure.command,
-          exitCode: exitFailure.exitCode,
-          message: `${exitFailure.label} failed with exit code ${exitFailure.exitCode}: ${excerpt(exitFailure.output)}`,
-        }),
-      truncated: (truncatedFailure) =>
-        YeetCommandError.make({
-          command: truncatedFailure.command,
-          exitCode: 1,
-          message: `${truncatedFailure.label} output exceeded the repo-run capture limit.`,
-        }),
-    }),
+    Match.tag("spawn", (spawnFailure) =>
+      YeetCommandError.make({
+        cause: spawnFailure.cause,
+        command: spawnFailure.command,
+        exitCode: 1,
+        message: `${spawnFailure.label} could not be started; check that the GitHub CLI is installed and authenticated.`,
+      })
+    ),
+    Match.tag("nonzero-exit", (exitFailure) =>
+      YeetCommandError.make({
+        command: exitFailure.command,
+        exitCode: exitFailure.exitCode,
+        message: `${exitFailure.label} failed with exit code ${exitFailure.exitCode}: ${excerpt(exitFailure.output)}`,
+      })
+    ),
+    Match.tag("truncated", (truncatedFailure) =>
+      YeetCommandError.make({
+        command: truncatedFailure.command,
+        exitCode: 1,
+        message: `${truncatedFailure.label} output exceeded the repo-run capture limit.`,
+      })
+    ),
     Match.exhaustive
   );
 
@@ -873,10 +874,8 @@ const executeReplyAction = (
   action: ReplyAction
 ): Effect.Effect<ReplyDraftOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
   Match.value(action).pipe(
-    Match.tags({
-      post: (post) => performReplyPost(context, post),
-      settled: (settled) => Effect.succeed(settled.outcome),
-    }),
+    Match.tag("post", (post) => performReplyPost(context, post)),
+    Match.tag("settled", (settled) => Effect.succeed(settled.outcome)),
     Match.exhaustive
   );
 

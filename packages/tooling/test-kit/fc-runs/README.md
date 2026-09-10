@@ -1,6 +1,6 @@
 # @beep/fc-runs
 
-Env-max fast-check run-count helpers (property-law lane floor)
+Env-max Effect Arbitrary run-count helpers (property-law lane floor)
 
 ## Installation
 
@@ -14,8 +14,25 @@ bun add @beep/fc-runs
 import { fcRuns } from "@beep/fc-runs"
 
 // Inline value is a floor; BEEP_FC_NUM_RUNS can only raise it, never lower it.
-const options = fcRuns(40) // { numRuns: max(40, BEEP_FC_NUM_RUNS) }
+const options = fcRuns(40) // { runs: max(40, BEEP_FC_NUM_RUNS) }
 ```
+
+For snapshot `@effect/vitest` property tests, put the check options under `arbitrary`:
+
+```ts
+import { fcRuns } from "@beep/fc-runs"
+import { it, expect } from "@effect/vitest"
+import * as S from "effect/Schema"
+
+it.prop("generates the literal", [S.Literal("ready")], ([value]) => {
+  expect(value).toBe("ready")
+}, { arbitrary: fcRuns(40) })
+```
+
+`fcRuns` returns `Arbitrary.CheckOptions & { readonly runs: number }`.
+It no longer returns `numRuns`. For `Arbitrary.checkEffect`, pass `fcRuns(40)`
+directly as its third argument and assert that the returned result has `_tag: "Passed"`.
+The names and `BEEP_FC_NUM_RUNS` environment contract are retained.
 
 ## Development
 

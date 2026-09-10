@@ -1,13 +1,3 @@
-/**
- * Proofs for the AnnotatedTextGraph: annotated construction over a stub
- * NLPBackend, the idempotence of each annotation pass, the node-kind type
- * guards, and the count/filter queries.
- *
- * Effect v4 + `@effect/vitest` coverage for AnnotatedTextGraph. A deterministic
- * stub backend stands in for wink so the proofs assert structure, not
- * linguistic accuracy.
- */
-
 import { EntityNode, LemmaNode, POSNode } from "@beep/nlp/Graph/Schema";
 import { NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend";
 import * as ATG from "@beep/nlp-processing/Graph/AnnotatedTextGraph";
@@ -16,20 +6,27 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema)(fc);
+  const arbitrary = Arbitrary.schema(schema);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
 
-  fc.assert(
-    fc.property(arbitrary, (value) => {
-      expect(equals(decode(encode(value)), value)).toBe(true);
-    }),
-    fcRuns(50)
-  );
+  expect(
+    Effect.runSync(
+      Arbitrary.checkEffect(
+        Arbitrary.all([arbitrary]),
+        ([value]) => {
+          expect(equals(decode(encode(value)), value)).toBe(true);
+
+          return true;
+        },
+        fcRuns(50)
+      )
+    )._tag
+  ).toBe("Passed");
 };
 
 const words = (text: string): ReadonlyArray<string> => text.split(/\s+/).filter((w) => w.length > 0);

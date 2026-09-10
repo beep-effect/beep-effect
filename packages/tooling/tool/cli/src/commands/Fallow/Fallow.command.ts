@@ -460,16 +460,16 @@ const checkBoundaryConfig = Effect.fn("Fallow.checkBoundaryConfig")(function* (
 const boundariesCommand = Command.make(
   "boundaries",
   {
-    output: Flag.string("output").pipe(
+    output: Flag.String("output").pipe(
       Flag.withAlias("o"),
       Flag.withDefault(DEFAULT_BOUNDARY_CONFIG_PATH),
       Flag.withDescription("Generated Fallow boundary config path")
     ),
-    write: Flag.boolean("write").pipe(
+    write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Write the generated boundary config")
     ),
-    check: Flag.boolean("check").pipe(
+    check: Flag.Boolean("check").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Fail when the generated boundary config is stale")
     ),

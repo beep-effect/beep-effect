@@ -8,7 +8,7 @@ import { ApiLive } from "./runtime/Layer.ts";
 // keeps the PORTLESS=0 diagnostic bypass usable.
 // fallow-ignore-next-line code-duplication -- labs scaffold bootstrap intentionally identical to apps/labs/api-docs; a shared launcher is graduation-time work, not lab-landing work
 const main = Effect.fnUntraced(function* () {
-  const port = yield* Config.port("PORT").pipe(Config.withDefault(8787));
+  const port = yield* Config.Port("PORT").pipe(Config.withDefault(8787));
   // `return yield*` keeps a definitive generator exit point: `Layer.launch`
   // never succeeds, and the effect-LSP requires the explicit return for
   // narrowing (TS377006 missingReturnYieldStar).

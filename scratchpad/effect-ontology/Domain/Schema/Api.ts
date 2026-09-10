@@ -61,7 +61,6 @@ const SubmitJobSourceDefinition = S.TaggedUnion({
 export const SubmitJobSource = SubmitJobSourceDefinition.pipe(
   $I.annoteSchema("SubmitJobSource", {
     description: "Discriminated inline-text or remote-HTTPS content source for an extraction job.",
-    toArbitrary: () => S.toArbitrary(SubmitJobSourceDefinition),
   })
 );
 
@@ -155,11 +154,7 @@ export class SubmitJobRequest extends S.Class<SubmitJobRequest>($I`SubmitJobRequ
  * @category schemas
  * @since 0.0.0
  */
-export const JobStatus = LiteralKit(["pending", "running", "completed", "failed", "cancelled"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("pending", "running", "completed", "failed", "cancelled"),
-  })
-  .annotate(
+export const JobStatus = LiteralKit(["pending", "running", "completed", "failed", "cancelled"]).annotate(
     $I.annote("JobStatus", {
       description: "Closed lifecycle states reported by the extraction API.",
     })
@@ -194,11 +189,7 @@ export type JobStatus = typeof JobStatus.Type;
  * @category errors
  * @since 0.0.0
  */
-export const JobErrorType = LiteralKit(["expected", "defect", "interrupted", "timeout", "unknown"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("expected", "defect", "interrupted", "timeout", "unknown"),
-  })
-  .annotate(
+export const JobErrorType = LiteralKit(["expected", "defect", "interrupted", "timeout", "unknown"]).annotate(
     $I.annote("JobErrorType", {
       description: "Closed coarse categories for terminal extraction-job failures.",
     })
@@ -338,7 +329,6 @@ const JobStatusResponseDefinition = S.Union([
 export const JobStatusResponse = JobStatusResponseDefinition.pipe(
   $I.annoteSchema("JobStatusResponse", {
     description: "Lifecycle-discriminated extraction response with state-specific terminal data.",
-    toArbitrary: () => S.toArbitrary(JobStatusResponseDefinition),
   })
 );
 

@@ -232,7 +232,7 @@ const decodeExpectCTValue = Effect.fn("ExpectCT.decodeExpectCTValue")(function* 
 export const ExpectCTHeader = S.Union([ExpectCTOption, S.Undefined]).pipe(
   S.decodeTo(
     ExpectCTResponseHeader,
-    SchemaTransformation.transformOrFail({
+    SchemaTransformation.transformEffect({
       decode: decodeExpectCTValue,
       encode: internal.makeHeaderEncodeForbidden("ExpectCTHeader"),
     })

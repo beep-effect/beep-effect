@@ -18,14 +18,7 @@ import * as HttpClientError from "effect/unstable/http/HttpClientError";
 const $I = $M365Id.create("M365.errors");
 
 const M365HttpStatusArbitraryValues = HttpStatus.To.Options as readonly [number, ...ReadonlyArray<number>];
-const M365HttpStatus = S.Finite.check(
-  S.makeFilter((status): status is number => pipe(M365HttpStatusArbitraryValues, A.contains(status)), {
-    expected: "known HTTP status code",
-  })
-).pipe(
-  S.annotate({
-    toArbitrary: () => (fc) => fc.constantFrom(...M365HttpStatusArbitraryValues),
-  }),
+const M365HttpStatus = S.Literals(M365HttpStatusArbitraryValues).pipe(
   $I.annoteSchema("M365HttpStatus", {
     description: "Numeric HTTP status code carried by Microsoft 365 driver errors.",
   })
