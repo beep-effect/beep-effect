@@ -875,3 +875,15 @@ controls disable reuse and may still run after this comparison stops reuse.
   census, service and dependency-path test debt.
 - Prevention: inspect both package totals and per-file identity witnesses before
   treating an aggregate improvement as sufficient ratchet evidence.
+
+### Verify scanner configuration with the pinned CI binary
+
+- Activity: publish the integrated draft after the bounded evidence policy landed.
+- Evidence: hosted Secret Scanning reported the same 21 historical false positives
+  while local scanning passed. The hosted image was Gitleaks 8.24.3; the local
+  package was 8.30.1. Global `[[allowlists]]` and `targetRules` require 8.25.0.
+- Correction: pin the verified 8.30.1 container digest in CI. The exact image
+  scans the 36-commit PR history with zero findings and retains all six fixture
+  negative controls. Keep the base-branch config and ignore-file enforcement.
+- Prevention: run policy fixtures with the actual hosted scanner image; a local
+  binary pass does not establish configuration compatibility in CI.

@@ -66,7 +66,7 @@ paths = [
 
 # Immutable Boolean-creep evidence: independently reproduced SHA-256 values
 # and one ordinary-prose match. Require exact path AND complete known line.
-# Per-rule syntax also supports the pinned CI scanner (Gitleaks 8.24.3).
+# Per-rule syntax also supports Gitleaks 8.24.3.
 # These three entries extend default rules without replacing their detectors.
 
 [[rules]]
