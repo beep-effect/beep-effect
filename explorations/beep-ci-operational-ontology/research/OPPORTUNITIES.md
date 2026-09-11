@@ -759,7 +759,7 @@
 
 - **Work:** removing `.claude/skills/ontology-foundational-auditor/scripts/__pycache__/validate_artifacts.cpython-312.pyc`
   from the index in the same PR that bumps the validator to v15, since the
-  root ignore rule already excludes `**/__pycache__/` and a v14 bytecode file
+  root ignore rule already excludes `**/__pycache__/` and a stale v13 bytecode file
   beside v15 source is misleading provenance.
 - **Evidence:** `bun run beep yeet publish --start-pr-early --monitor --pr`
   re-adds every staged path with `git add -- <paths>` before committing; for

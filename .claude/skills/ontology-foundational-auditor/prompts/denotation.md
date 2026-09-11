@@ -8,7 +8,10 @@ For every observation:
 
 1. State zero or more candidate real/domain referents.
 2. Emit one hypothesis per candidate referent kind, grouping the individual chains that
-   instantiate it and stating what individuates an instance.
+   instantiate it and stating what individuates an instance. An observation whose
+   candidate set is empty still emits one hypothesis carrying only the null hypothesis
+   (representation_status implementation_artifact_only or unresolved), so every
+   observation is cited.
 3. State at least one plausible alternative interpretation when possible.
 4. ALWAYS evaluate the null hypothesis: "This is only an implementation/
    representation artifact and deserves no domain-ontology referent."

@@ -21,30 +21,30 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
-PR #1040's URI-authority and escaped-quote follow-ups are complete locally in
-both generators. All three pins were recaptured once after both fixes; the
-84-test generator suite and corpus/packet checks pass. Fable reviews and
-publishes the committed handoff before run 3 proper. Ruling 22 and the accepted
-live-count convention still apply. See the
-[URI-authority report](./research/run3-lanes/reconcile-1037-report.md#uri-authorities-greptile-round-2).
-Ruling 23 repairs the ratified run-2 fleet pin in place: 29 raw files now use
-`<host>` and `uid-<uid>` placeholders, with capture history and the original
-security receipt preserved. Reconciliation with PR #1037 retains both CSF-013
-updates and appends the Ruling 23 receipt after them. PR #1041 review fixes make replay
-host-independent and idempotent, bind the extra transformations to Ruling 23, and align
-UID scanning with preserved structural JSON keys. All payloads and security receipts
-remain unchanged by these review fixes. The implementation and evidence are in the
-[run-2 repair report](./research/run3-lanes/run2-residue-repair-report.md).
-Fable owns review and publication after #1040; run 3 remains the next ontology step.
+Auditor run 3 is closed and projected; run-4 pre-work is in flight. What is open:
 
-CSF-012 in [PR #1032](https://github.com/beep-effect/beep-effect/pull/1032)
-corrects PID redaction in the saved run-2 and run-3 corpus pins. The security
-repair preserves captured history and prior-manifest digests; it does not
-recapture sources or rerun ontology ratification. Stage B is now pinned; the next
-step is run 3 proper, as described below.
+1. **PR #1092** (`chore/auditor-skill-seat-effort`): auditor skill v15 — required
+   per-seat `effort` provenance on the run-manifest contract with its own self-test
+   family (158 families), and the kind-level denotation-grain sentence with a
+   null-record clause. Lane brief and report:
+   [research/run4-lanes/](./research/run4-lanes/). The steward merges.
+2. **Run-4 intake docket** (`research/auditor-run4-intake.md`, the next PR, written
+   as a pre-pin draft): the 84 run-3 unresolved rows and 54 carried parks with fresh
+   evidence duties, the flagged accepts' deferrals (TAXONOMY `flags`), the eight
+   withdrawn proposals awaiting organic lease/ticket-eviction evidence, the
+   VerificationResultArtifact content-snapshot rival, CQ-019/CQ-020 leftovers,
+   `corpus_tree`/`corpus_base` for S6 POLICY, and the engine follow-ups queued for a
+   later pin (NDJSON configuration support, historical archive-path handling, index
+   rows that can reference more than one proposal per observation).
+3. **Run 4 proper** waits on time-to-certainty C4 (the proof-ledger writer): the
+   Ruling-17 issuance and custody flags (rat-047/048/051/052) cannot discharge before
+   it. Choreography is run 3's: pin commit → evidence tag → frozen run in a detached
+   worktree at the tag → seats → gate → sittings → one PR, with gate fixes pushed the
+   moment they appear.
 
-Routing for future token-heavy Codex work is settled: `gpt-6-astra` with
-`medium` reasoning ([decision update](./DECISIONS.md)). The next step remains:
+Routing for token-heavy Codex work stays `gpt-6-astra` at `medium`
+([decision update](./DECISIONS.md)); auditor seats keep the packet's 2026-08-27
+directive (`max`). Completed stages, kept for the trail:
 
 **§4b NORMALIZATION GATE IS COMPLETE AND RATIFIED** (2026-08-29; PR #889). The
 `ontology-foundational-auditor` skill ran as written over the S4 harvest: 1,112
@@ -83,7 +83,16 @@ question now asks for the SeatRequest sequence under its governing
 `AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
 data property — the no-punning ruling keeps `hasScope` an object property), and the S6
 predicate registry regenerated to track it.
-**NEXT: Fable reviews and publishes the URI-authority and escaped-quote handoff before run 3 proper.**
+**AUDITOR RUN 3 IS COMPLETE AND RATIFIED** (2026-09-10, `orun-2026-09-10T02:10:52Z`,
+gate `ARTIFACTS VALID — GATE PASSED` at pin `1c7cd98289`, PR #1078): 18 flagged
+ratifications `rat-053..rat-070` (the thirteen-member ordering cluster plus five
+recorded-value reuse mappings), 8 withdrawals with named run-4 evidence, the 68 carried
+run-2 rows adjudicated (14 retired, 54 re-parked), unresolved 84/198 = 42%, no waiver.
+The S5 gate amendment and the run-2/run-3 projection landed in PR #1089 (TAXONOMY
+38 → 52 terms carrying `ratification`/`flags`, the superset S6 tripwire,
+`later_ratifications` on DISPOSITIONS rows). Run report:
+[`work-run3/impl-report.md`](./ontology/extraction/s4/beep-ci-ops/work-run3/impl-report.md).
+Stage A and Stage B capture history follows.
 Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
 existing admission journals, fleet attempts/verdicts, live granted/queued work,
 and one timestamped checkout inventory. The latest Ruling 22 fleet refresh covers 97 checkouts; the
@@ -170,6 +179,18 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-11: Run-4 pre-work PR #1092 opened: auditor skill v15 (required per-seat
+  `effort` on the run-manifest contract with a self-test family, the kind-level
+  denotation-grain sentence with its null-record clause, `EFFORT` on the SKILL.md seat
+  launches, REVIEW-HISTORY v15). Greptile's index-grammar question and Codex's
+  session-surface, null-record, and bytecode-version findings were answered in the PR;
+  the index-grammar, NDJSON, and archive-path engine follow-ups go to the run-4 intake
+  docket. Manifest, Next Open Question, and this trail brought current.
+- 2026-09-10: Auditor run 3 closed and merged (PR #1078, pin `1c7cd98289`,
+  `orun-2026-09-10T02:10:52Z`): rat-053..070, 8 withdrawals, 68 carried rows
+  adjudicated, gate PASSED with no waiver; gitleaks allowlist for the run-record trees
+  (PR #1084); S5 gate amendment and run-2/run-3 projection (PR #1089, TAXONOMY
+  38 → 52). Run 4 waits on time-to-certainty C4.
 - 2026-09-09: Committed the URI boundary fix and merged #1037. All three live
   refreshes pass pin verification, exact corruption restoration, and residue
   scans; packet validation and the CQ suite pass. Final re-pin handoff awaits
