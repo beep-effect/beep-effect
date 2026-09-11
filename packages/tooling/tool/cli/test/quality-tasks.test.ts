@@ -2974,14 +2974,10 @@ describe("quality task adapter", () => {
       "knowledge:semantic-delta",
       "knowledge:refs-check",
       "lint:schema-first",
-      "lint:terse-effect",
+      "lint:laws",
       "lint:jsdoc",
-      "lint:native-runtime",
       "lint:identity-registry",
-      "lint:frozen-grant-set",
       "lint:circular",
-      "lint:effect-fn",
-      "lint:package-test-imports",
       "lint:effect-imports",
       "lint:effect-imports-markdown",
       "lint:package-test-typecheck",
@@ -3013,14 +3009,10 @@ describe("quality task adapter", () => {
       "knowledge:semantic-delta",
       "knowledge:refs-check",
       "lint:schema-first",
-      "lint:terse-effect",
+      "lint:laws",
       "lint:jsdoc",
-      "lint:native-runtime",
       "lint:identity-registry",
-      "lint:frozen-grant-set",
       "lint:circular",
-      "lint:effect-fn",
-      "lint:package-test-imports",
       "lint:effect-imports",
       "lint:effect-imports-markdown",
       "lint:package-test-typecheck",
@@ -3047,10 +3039,6 @@ describe("quality task adapter", () => {
     );
     expect(policyTurboStep("lint:jsdoc").args).toEqual(["eslint", ".", "--max-warnings=0"]);
     expect(policyTurboStep("lint:deprecated-apis").args).toEqual(repoCliEntryArgs("lint", "deprecated-apis", "--full"));
-    expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
-    expect(steps.find((step) => step.label === "lint:native-runtime")?.args).toEqual(
-      repoCliEntryArgs("laws", "native-runtime", "--check")
-    );
     expect(steps.find((step) => step.label === "lint:effect-imports-markdown")?.args).toEqual(
       repoCliEntryArgs("laws", "effect-imports", "--mode", "markdown", "--check")
     );
@@ -3070,6 +3058,42 @@ describe("quality task adapter", () => {
       expect(full.args).not.toContain("turbo");
       expect(policyTurboScmBase(full)).toBeUndefined();
     }
+  });
+
+  it("hard-switches policy laws to Turbo in both scopes without a sweep selector", () => {
+    withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () => {
+      for (const base of [undefined, "refs/heads/review-base"]) {
+        const step = policyTurboStep("lint:laws", base);
+        const flags = [
+          "--concurrency=4",
+          "--continue=dependencies-successful",
+          "--summarize",
+          ...(base === undefined ? [] : ["--affected"]),
+        ];
+        expect(step.command).toBe("bunx");
+        expect(step.args).toEqual([
+          "turbo",
+          "run",
+          "lint:laws",
+          "//#lint:native-runtime:roots",
+          ...expectedTurboCacheArgs(flags),
+          ...flags,
+        ]);
+        expect(policyTurboScmBase(step)).toBe(base);
+        expect(step.args).not.toContain(LABS_EXCLUDE_FILTER);
+        expect(policyTurboStep("lint:laws", base, "turbo")).toEqual(step);
+        const labels = A.map(rootLintPolicyStepsForTesting("/repo", undefined, base), (entry) => entry.label);
+        for (const retired of [
+          "lint:terse-effect",
+          "lint:native-runtime",
+          "lint:frozen-grant-set",
+          "lint:effect-fn",
+          "lint:package-test-imports",
+        ]) {
+          expect(labels).not.toContain(retired);
+        }
+      }
+    });
   });
 
   it("selects the full deprecated sweep without changing affected policy Turbo scope", () => {
@@ -3117,7 +3141,7 @@ describe("quality task adapter", () => {
     }
   });
 
-  it("passes changed TypeScript files to file-oriented policy laws", () => {
+  it("passes changed TypeScript files to the remaining scoped policy checks", () => {
     const files = [
       "packages/demo/src/index.ts",
       "packages/demo/test/Example.test.ts",
@@ -3126,21 +3150,17 @@ describe("quality task adapter", () => {
     ];
     const steps = rootLintPolicyStepsForTesting("/repo", files);
 
-    expect(steps.find((step) => step.label === "lint:effect-fn")?.args).toEqual(
+    expect(steps.find((step) => step.label === "lint:effect-imports")?.args).toEqual(
       repoCliEntryArgs(
         "laws",
-        "effect-fn",
+        "effect-imports",
         "--check",
         "--include",
         "packages/demo/src/index.ts,packages/demo/test/Example.test.ts,packages/ecosystem/demo/src/index.ts"
       )
     );
-    expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
     expect(steps.find((step) => step.label === "lint:allowlist")?.args).toEqual(
       repoCliEntryArgs("laws", "allowlist-check")
-    );
-    expect(steps.find((step) => step.label === "lint:package-test-imports")?.args).toContain(
-      "packages/demo/test/Example.test.ts"
     );
     expect(steps.find((step) => step.label === "lint:ecosystem-polarity")?.args).toEqual(
       repoCliEntryArgs("lint", "ecosystem-polarity", "--include", "packages/ecosystem/demo/src/index.ts")
@@ -3153,6 +3173,7 @@ describe("quality task adapter", () => {
 
     expect(labels).not.toContain("lint:effect-imports");
     expect(labels).toContain("lint:effect-imports-markdown");
+    expect(labels).toContain("lint:laws");
     expect(labels).not.toContain("lint:terse-effect");
     expect(labels).not.toContain("lint:effect-fn");
     expect(labels).not.toContain("lint:frozen-grant-set");

@@ -855,3 +855,28 @@ subprocess diagnostics would make inventory stalls attributable.
   at the design gate. Producing upstream declarations with `^build` does not make this CLI
   helper consume them. The brief requires `parserOptions.project`; a custom reference-aware
   `programs` implementation is a contract change and was not substituted by this lane.
+
+## 2026-09-11 — C3.456 Stage A contract versus live consumers
+
+- Doing: retire the scoped laws and `beep:policy` under the Stage A brief.
+- Evidence: `Quality/Tasks.ts` also routes `lint:ecosystem-polarity` through
+  `scopedRepoCliStep`; preserving every other step requires retaining that consumer until
+  Stage D. `beep:policy` is already absent from schema key lists, but four audit defaults
+  still invoke it. The two live manifests carry it as a free-tier extra; the generator
+  deliberately preserves extras and existing `beep:audit` values.
+- Would have prevented it: derive the brief's retirement list from current consumers and
+  distinguish generated strict-tier keys from package-owned audit chains. Retain ecosystem
+  scoping, replace the retired audit hop with `lint:laws`, remove the two extras explicitly,
+  then run the canonical generator/check.
+
+## 2026-09-11 — C3.456 Stage A verification boundaries
+
+- Doing: verify the laws-plan and scaffold changes in the Bun-only, no-git-write lane.
+- Evidence: `quality-tasks.test.ts` contains git init/add/commit fixtures;
+  `create-package.test.ts` contains `process.chdir()` fixtures incompatible with threads.
+  Ran the affected pure tests by name, plus the full architecture suite and existing laws
+  hash fixtures. The parent Effect reference reports rc.112 while installed Effect is rc.113;
+  checked installed declarations too, without changing the reference checkout.
+- Would have prevented it: isolate pure policy/scaffold tests from repository-mutating
+  fixtures and refresh the sanctioned reference when the dependency pin changes. Fable's
+  Node/package verification remains the explicit handoff gate.

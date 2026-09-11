@@ -806,7 +806,11 @@ const lintPolicyCommand = Command.make(
     base: lintBaseFlag,
   },
   ({ full, base }) => runRootLintPolicyTask(full, base)
-).pipe(Command.withDescription("Run repo-wide lint policy checks"));
+).pipe(
+  Command.withDescription(
+    "Run repo-wide lint policy checks; laws use affected Turbo tasks locally and full scope with --full or CI"
+  )
+);
 
 /**
  * Lint alias for the goals doctor (the CLI has no command-alias mechanism, so

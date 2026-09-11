@@ -2508,15 +2508,6 @@ const isEcosystemPolarityPath = (filePath: string): boolean => {
   );
 };
 
-const isPackageTestImportPath = (filePath: string): boolean =>
-  Str.startsWith("packages/")(filePath) &&
-  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
-  pipe(
-    Str.split(filePath, "/test/"),
-    A.head,
-    O.exists((prefix) => !Str.equivalence(filePath)(prefix) && !Str.includes("/src/")(prefix))
-  );
-
 const scopedRepoCliStep = (
   repoRoot: string,
   label: string,
@@ -2534,15 +2525,6 @@ const scopedRepoCliStep = (
       A.of(repoCliStep(repoRoot, label, [...args, "--include", A.join(relevantFiles, ",")])),
   });
 };
-
-const scopedLawStep = (
-  repoRoot: string,
-  label: string,
-  command: string,
-  args: ReadonlyArray<string>,
-  files?: ReadonlyArray<string>
-): ReadonlyArray<QualityTaskStep> =>
-  scopedRepoCliStep(repoRoot, label, ["laws", command, ...args], isLawSourcePath, files);
 
 // Policy lint retains Check's accepted overrides and adds its four-worker budget.
 const PolicyLintConcurrency = LiteralKit([...QualityCheckConcurrency.Options, "4"]).pipe(
@@ -2632,23 +2614,19 @@ const rootRepoLintPolicySteps = (
       // because any tracked document can introduce a machine-local reference.
       repoCliStep(repoRoot, "knowledge:refs-check", ["knowledge", "refs", "--check"]),
       repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
-      ...scopedLawStep(repoRoot, "lint:terse-effect", "terse-effect", ["--check", "--advisory"], files),
+      policyLintTurboStep(repoRoot, "lint:laws", ["lint:laws", "//#lint:native-runtime:roots"], base),
       P.isUndefined(base)
         ? bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"])
         : policyLintTurboStep(repoRoot, "lint:jsdoc", ["lint:jsdoc", "//#lint:jsdoc:root"], base),
-      ...scopedLawStep(repoRoot, "lint:native-runtime", "native-runtime", ["--check"], files),
       repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
-      ...scopedLawStep(repoRoot, "lint:frozen-grant-set", "frozen-grant-set", ["--check"], files),
       repoCliStep(repoRoot, "lint:circular", ["lint", "circular"]),
-      ...scopedLawStep(repoRoot, "lint:effect-fn", "effect-fn", ["--check"], files),
       ...scopedRepoCliStep(
         repoRoot,
-        "lint:package-test-imports",
-        ["lint", "package-test-imports"],
-        isPackageTestImportPath,
+        "lint:effect-imports",
+        ["laws", "effect-imports", "--check"],
+        isLawSourcePath,
         files
       ),
-      ...scopedLawStep(repoRoot, "lint:effect-imports", "effect-imports", ["--check"], files),
       // Standalone Markdown is invisible to Biome and the JSDoc inventory. Keep this
       // full authored-corpus pass advisory until the final per-module import flip.
       repoCliStep(repoRoot, "lint:effect-imports-markdown", [
