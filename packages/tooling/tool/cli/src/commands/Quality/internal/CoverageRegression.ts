@@ -659,6 +659,11 @@ class CoverageRaisedRowFailure extends S.TaggedClass<CoverageRaisedRowFailure>($
     ...CoverageComparisonFailureFields,
     base: Percentage,
     proposed: Percentage,
+    // A row can be stricter by count alone (same percentage, fewer uncovered
+    // units), so the counts travel with the percentages for the diagnostic.
+    baseUncovered: NonNegativeInt,
+    proposedUncovered: NonNegativeInt,
+    actualUncovered: NonNegativeInt,
   },
   $I.annote("CoverageRaisedRowFailure", {
     description:
@@ -764,10 +769,22 @@ export class CoverageComparisonResult extends S.Class<CoverageComparisonResult>(
  * **Example** (Base-only comparison input)
  *
  * ```ts
- * import { CoverageComparisonBaselines, type CoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
+ * import { CoverageComparisonBaselines, CoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
+ * import { Percentage } from "@beep/schema/Percentage"
  * import * as O from "effect/Option"
  *
- * declare const baseline: CoverageRegressionBaseline
+ * const zero = Percentage.make(0)
+ * const baseline = CoverageRegressionBaseline.make({
+ *   schema_version: 2,
+ *   generated_at: "2026-09-11T00:00:00.000Z",
+ *   git_sha: "example",
+ *   command: "bun run coverage:baseline:write",
+ *   epsilon: 0.001,
+ *   minimum: { lines: zero, statements: zero, branches: zero, functions: zero },
+ *   exemptions: {},
+ *   follow_ups: {},
+ *   packages: {},
+ * })
  * const baselines = CoverageComparisonBaselines.make({ baseline, proposed: O.none() })
  * console.log(O.isNone(baselines.proposed)) // true
  * ```
@@ -2357,6 +2374,12 @@ const belowMinimumMetrics = (
  * its first push against the merged document while the pull request was judged
  * against the base rows. Lowered and unchanged rows stay governed by the base
  * comparison, so a floor-lowering fix proposes nothing this check can reject.
+ *
+ * @param metric - Metric being compared.
+ * @param base - Row from the base revision's document.
+ * @param proposed - Row from the pull request's own document.
+ * @param epsilon - Percentage-point tolerance for floating-point noise.
+ * @returns `true` when the proposed row is the stricter floor for the metric.
  */
 const rowRaised = (
   metric: CoverageMetricName,
@@ -2390,6 +2413,9 @@ const raisedFileRowJudgements = (
               base: base[metric],
               proposed: proposed[metric],
               actual: actual[metric],
+              baseUncovered: base.uncovered[metric],
+              proposedUncovered: proposed.uncovered[metric],
+              actualUncovered: actual.uncovered[metric],
             })
           )
         : O.none()
@@ -2417,6 +2443,45 @@ const raisedPackageRowJudgements = (
               base: base[metric],
               proposed: proposed[metric],
               actual: actual[metric],
+              baseUncovered: base.uncovered[metric],
+              proposedUncovered: proposed.uncovered[metric],
+              actualUncovered: actual.uncovered[metric],
+            })
+          )
+        : O.none()
+    )
+  );
+
+// A raised file row the run did not measure at all: main applies the vanished-
+// path rule to the merged document, so every raised metric with a positive
+// proposed percentage fails there. The base comparison only reports vanished
+// metrics whose base value is positive, so a row raised from zero would
+// otherwise slip through. Absent measurements read as zero, like that rule.
+const raisedVanishedFileRowJudgements = (
+  packageName: string,
+  packagePath: string,
+  filePath: string,
+  base: CoverageFileBaseline,
+  proposed: CoverageFileBaseline,
+  epsilon: number
+): ReadonlyArray<O.Option<CoverageComparisonFailure>> =>
+  pipe(
+    metricNames,
+    A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
+    A.map((metric) =>
+      proposed[metric] > ZERO_PERCENTAGE
+        ? O.some(
+            CoverageRaisedRowFailure.make({
+              packageName,
+              packagePath,
+              filePath: O.some(filePath),
+              metric,
+              base: base[metric],
+              proposed: proposed[metric],
+              actual: ZERO_PERCENTAGE,
+              baseUncovered: base.uncovered[metric],
+              proposedUncovered: proposed.uncovered[metric],
+              actualUncovered: NonNegativeInt.make(0),
             })
           )
         : O.none()
@@ -2424,9 +2489,10 @@ const raisedPackageRowJudgements = (
   );
 
 // Judge every row the branch raised above the base floors against the branch's
-// own value. Only rows with both a base row and a measurement are candidates:
+// own value. Only rows with a base row in a measured package are candidates:
 // new files already carry the branch row in `baseline`, so they are never
-// stricter than it, and unmeasured packages have nothing to judge.
+// stricter than it, and unmeasured packages have nothing to judge. A raised
+// file row missing from the package measurement is judged as vanished.
 const judgeRaisedRows = (
   baseline: CoverageRegressionBaseline,
   proposed: CoverageRegressionBaseline,
@@ -2445,17 +2511,29 @@ const judgeRaisedRows = (
               A.sort(coverageFileByPathOrder),
               A.flatMap(([filePath, proposedFile]) =>
                 pipe(
-                  O.all([R.get(basePackage.files, filePath), R.get(actual.baseline.files, filePath)]),
-                  O.map(([baseFile, actualFile]) =>
-                    raisedFileRowJudgements(
-                      packageName,
-                      proposedPackage.path,
-                      filePath,
-                      baseFile,
-                      proposedFile,
-                      actualFile,
-                      baseline.epsilon
-                    )
+                  R.get(basePackage.files, filePath),
+                  O.map((baseFile) =>
+                    O.match(R.get(actual.baseline.files, filePath), {
+                      onNone: () =>
+                        raisedVanishedFileRowJudgements(
+                          packageName,
+                          proposedPackage.path,
+                          filePath,
+                          baseFile,
+                          proposedFile,
+                          baseline.epsilon
+                        ),
+                      onSome: (actualFile) =>
+                        raisedFileRowJudgements(
+                          packageName,
+                          proposedPackage.path,
+                          filePath,
+                          baseFile,
+                          proposedFile,
+                          actualFile,
+                          baseline.epsilon
+                        ),
+                    })
                   ),
                   O.getOrElse(A.empty<O.Option<CoverageComparisonFailure>>)
                 )
@@ -2555,26 +2633,35 @@ export const compareCoverageRegressionSnapshotsForTesting: {
  * Pure comparison that also judges the rows a pull request raised against its
  * own proposed values, exposed for package-local tests.
  *
- * **Example** (Judge a raised row)
+ * **Example** (Judge a branch that proposes the base document unchanged)
  *
  * ```ts
  * import {
  *   CoverageComparisonBaselines,
- *   compareCoverageRegressionSnapshotsWithProposedForTesting,
- *   type CoverageRegressionBaseline,
- *   type CoverageSnapshotEntry
+ *   CoverageRegressionBaseline,
+ *   compareCoverageRegressionSnapshotsWithProposedForTesting
  * } from "@beep/repo-cli/test/Quality"
+ * import { Percentage } from "@beep/schema/Percentage"
  * import * as O from "effect/Option"
  *
- * declare const baseline: CoverageRegressionBaseline
- * declare const proposed: CoverageRegressionBaseline
- * declare const actuals: ReadonlyArray<CoverageSnapshotEntry>
+ * const zero = Percentage.make(0)
+ * const baseline = CoverageRegressionBaseline.make({
+ *   schema_version: 2,
+ *   generated_at: "2026-09-11T00:00:00.000Z",
+ *   git_sha: "example",
+ *   command: "bun run coverage:baseline:write",
+ *   epsilon: 0.001,
+ *   minimum: { lines: zero, statements: zero, branches: zero, functions: zero },
+ *   exemptions: {},
+ *   follow_ups: {},
+ *   packages: {},
+ * })
  * const result = compareCoverageRegressionSnapshotsWithProposedForTesting(
- *   CoverageComparisonBaselines.make({ baseline, proposed: O.some(proposed) }),
- *   actuals,
+ *   CoverageComparisonBaselines.make({ baseline, proposed: O.some(baseline) }),
+ *   [],
  *   false
  * )
- * console.log(result.raisedRowsJudged)
+ * console.log(result.raisedRowsJudged) // 0
  * ```
  *
  * @param baselines - Base floors plus the branch's own document.
@@ -2674,7 +2761,7 @@ const renderCoverageFailure = (failure: CoverageComparisonFailure): string =>
     Match.tag(
       "row-raised-beyond-reach",
       (raised) =>
-        `  - ${coverageDiagnosticFragment(raised.packageName)} (${coverageFailureLocation(raised)}) ${raised.metric}: row raised beyond hosted reach: this pull request raised the row from ${raised.base} to ${raised.proposed} but the lane measured ${raised.actual}`
+        `  - ${coverageDiagnosticFragment(raised.packageName)} (${coverageFailureLocation(raised)}) ${raised.metric}: row raised beyond hosted reach: this pull request raised the row from ${raised.base} (${raised.baseUncovered} uncovered) to ${raised.proposed} (${raised.proposedUncovered} uncovered) but the lane measured ${raised.actual} (${raised.actualUncovered} uncovered)`
     ),
     Match.exhaustive
   );

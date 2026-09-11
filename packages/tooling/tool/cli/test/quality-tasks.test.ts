@@ -4682,7 +4682,7 @@ describe("quality task adapter", () => {
         );
         expect(A.map(result.raisedRowFailures, (failure) => failure.metric)).toEqual(allMetrics);
         expect(renderCoverageFailuresForTesting(result.raisedRowFailures)[0]).toBe(
-          `  - @beep/existing (${filePath}) branches: row raised beyond hosted reach: this pull request raised the row from 80 to 90 but the lane measured 85`
+          `  - @beep/existing (${filePath}) branches: row raised beyond hosted reach: this pull request raised the row from 80 (20 uncovered) to 90 (10 uncovered) but the lane measured 85 (15 uncovered)`
         );
         const remediation = A.join(renderCoverageRemediation(result), "\n");
         expect(remediation).toContain(
@@ -4726,6 +4726,31 @@ describe("quality task adapter", () => {
         // Against the proposed row (18 uncovered) main would fail on its first push.
         expect(result.raisedRowsJudged).toBe(4);
         expect(A.map(result.raisedRowFailures, (failure) => failure.metric)).toEqual(allMetrics);
+        // The counts name the stricter floor that actually failed, not just equal percentages.
+        expect(renderCoverageFailuresForTesting(result.raisedRowFailures)[0]).toBe(
+          `  - @beep/existing (${filePath}) branches: row raised beyond hosted reach: this pull request raised the row from 80 (20 uncovered) to 80 (18 uncovered) but the lane measured 79.5 (19 uncovered)`
+        );
+      });
+
+      it("fails raised rows whose file the lane did not measure", () => {
+        const vanished = compareCoverageRegressionSnapshotsWithProposedForTesting(
+          CoverageComparisonBaselines.make({
+            baseline: withRows({
+              "@beep/existing": packageRow(80, 20, { [filePath]: coverageFileBaseline(0, 5) }),
+            }),
+            proposed: proposing(packageRow(80, 20, { [filePath]: coverageFileBaseline(50, 2) })),
+          }),
+          [{ packageName: "@beep/existing", baseline: packageRow(80, 20, {}) }],
+          false
+        );
+
+        // The base row is 0%, so the vanished-path rule in the base comparison stays silent.
+        expect(vanished.failures).toEqual([]);
+        expect(vanished.raisedRowsJudged).toBe(4);
+        expect(A.map(vanished.raisedRowFailures, (failure) => failure.actual)).toEqual([0, 0, 0, 0]);
+        expect(renderCoverageFailuresForTesting(vanished.raisedRowFailures)[0]).toBe(
+          `  - @beep/existing (${filePath}) branches: row raised beyond hosted reach: this pull request raised the row from 0 (5 uncovered) to 50 (2 uncovered) but the lane measured 0 (0 uncovered)`
+        );
       });
 
       it("judges raised package totals with the package-level rule", () => {
@@ -4743,7 +4768,7 @@ describe("quality task adapter", () => {
           true,
         ]);
         expect(renderCoverageFailuresForTesting(result.raisedRowFailures)[0]).toBe(
-          "  - @beep/existing (packages/existing) branches: row raised beyond hosted reach: this pull request raised the row from 80 to 90 but the lane measured 85"
+          "  - @beep/existing (packages/existing) branches: row raised beyond hosted reach: this pull request raised the row from 80 (20 uncovered) to 90 (10 uncovered) but the lane measured 85 (15 uncovered)"
         );
       });
 
