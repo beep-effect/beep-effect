@@ -219,3 +219,33 @@ results file and in a receipt.
    a whole-proof denominator.
 3. Do **not** edit `PLAN.md`, `decisions.md`, or the lane task table: Fable writes the checkmarks,
    revision 8 and the rulings.
+
+## Amendment 1 (2026-09-11, after Stage B) — Stage B2: marker-literal parity
+
+Vitest selects an `includeSource` file by the literal `import.meta.vitest` anywhere in its text.
+Five repo-cli sources contain the literal without a marked fence (`Docgen/Doctest.schemas.ts`
+documentation example; `Docgen/internal/Doctest.ts` marker detection and fence generation;
+`internal/package-scripts/PackageScriptsPolicy.ts` derivation grep;
+`CreatePackage/internal/IdentityExportBlock.ts` and `SyncDataToTs/targets/VocabTerms.ts`
+generated-file templates), so the strict fleet task reds repo-cli with "no test suite". Ruling:
+keep vitest's selection as the selector and `passWithNoTests: false`; sources that must *name*
+the marker compose it at runtime.
+
+1. `internal/jsdoc/DoctestSource.ts` exports one named constant for the in-source test marker,
+   composed at runtime (never the literal), and one helper that renders the fence info string
+   for a named example (`ts <marker> name="<name>"`). JSDoc: **Details** stating why it is
+   composed (vitest's `includeSource` grep), a **Gotchas** line ("a source that spells the marker
+   verbatim becomes a test file"), an example whose printed output does not itself spell the
+   literal.
+2. The five files use the constant/helper; no `src/**` file in `@beep/repo-cli` spells the literal
+   unless it carries a marked fence. `Doctest.schemas.ts`'s example refers to the helper.
+3. Parity test (repo-cli, in-process, both runtimes): for every doctest owner in the live
+   workspace, every `src/**/*.{ts,tsx}` file whose text contains the literal also contains at
+   least one marked fence; and a synthetic fixture proves (a) a template file that composes the
+   marker is **not** selected by vitest's `resolveConfig` + marker predicate, (b) a file with a
+   marked fence is. Keep the Stage B discovery test; extend it rather than duplicating it.
+4. Rerun the exact Stage B cold/warm pair (same commands, fresh `TURBO_CACHE_DIR`): require
+   27/27 successful cold and 27/27 `HIT` warm; record wall, p50/max lifetime, and the two slowest
+   packages. Report the schema thread-shutdown warning text verbatim (one line) and whether it
+   changes the exit code.
+5. Lane split unchanged (Bun-only checks; Fable runs package-verify, docgen:local, coverage).

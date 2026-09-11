@@ -880,3 +880,80 @@ subprocess diagnostics would make inventory stalls attributable.
 - Would have prevented it: isolate pure policy/scaffold tests from repository-mutating
   fixtures and refresh the sanctioned reference when the dependency pin changes. Fable's
   Node/package verification remains the explicit handoff gate.
+
+## 2026-09-11 — C3.4 Stage B: main-owned hosted workflow compatibility
+
+- Doing: migrate Doctest to a full-scope Turbo package task.
+- Evidence: the lane contract admits `heavy.yml@main` only; main still invokes
+  `ci lane doctest --mode <affected|full>` during this PR. Removing the flag now
+  would reject the hosted invocation before the new plan can run.
+- Resolution: retain `--mode` as a documented no-op for Doctest, for every legacy
+  value; remove the workflow's mode gate and argument in this PR for post-merge use.
+- Prevention: treat the admitted main workflow's argv as the compatibility contract
+  when migrating a PR-owned CLI consumer.
+
+## 2026-09-11 — C3.4 Stage B: config discovery needs fresh startup state
+
+- Doing: verify ordinary and doctest selectors with Vitest config resolution.
+- Evidence: changing env inside a long-lived test worker retained the ordinary
+  include for `apps/todox` (`mode=true: expected false to be true`).
+- Resolution: resolve each config in a fresh Bun process with the flag supplied
+  before startup, matching the package script; no tests execute during discovery.
+- Prevention: isolate boot-snapshot configuration probes instead of mutating env
+  after the Vite/Effect runtime has loaded.
+
+## 2026-09-11 — C3.4 Stage B: inherited CI test requires a process cwd
+
+- Doing: run the complete `ci-lane.test.ts` suite with the lane-required thread pool.
+- Evidence: 64 tests passed; the untouched unreadable-workspace inventory case
+  failed with `process.chdir() is not supported in workers`.
+- Resolution: retain that test for Fable's process-isolated suite; the implementer
+  verifies the other cases under threads and reports the exact filtered result.
+- Prevention: inject fixture cwd into the partition boundary instead of changing
+  process-global cwd from a test worker.
+
+## 2026-09-11 — C3.4 Stage B: Bun fork workers block the exact package task
+
+- Doing: isolated task-cache-cold `turbo run doctest --concurrency=4 --summarize`.
+- Evidence: exit 1 in 60.58 seconds, zero successful tasks; Vitest reports
+  `Failed to start forks worker` and `Timeout waiting for worker to respond`
+  before any assertion runs in the first four owners.
+- Resolution: choose `pool: "threads"` only in the shared doctest branch;
+  the package script and ordinary test pool remain unchanged. Rerun the exact
+  fleet task from an empty cache and retain this failed attempt separately.
+- Prevention: smoke the exact package script without fixture-only pool overrides
+  before collecting the fleet measurement.
+
+## 2026-09-11 — C3.4 Stage B: strict discovery exposes literal-marker false positives
+
+- Doing: run the full doctest package fleet with `passWithNoTests: false`.
+- Evidence: the thread-pool cold run exits 1 in 37.58 seconds, 26/27 tasks
+  successful. Repo-cli reports `No test suite found in file` for five sources:
+  `src/commands/Docgen/Doctest.schemas.ts`,
+  `src/commands/Docgen/internal/Doctest.ts`,
+  `src/internal/package-scripts/PackageScriptsPolicy.ts`,
+  `src/commands/CreatePackage/internal/IdentityExportBlock.ts`, and
+  `src/commands/SyncDataToTs/targets/VocabTerms.ts`.
+  The package's six actual doctest files pass all 14 assertions.
+- Cause: Vitest's in-source marker check also selects strings/templates used by
+  the doctest tooling itself; nonempty discovery per owner cannot prove that every
+  selected file defines a test. The retired root config tolerated empty suites.
+- Boundary: retain the specified selector and strict no-tests setting. Do not
+  suppress these files, stamp empty tests, change domain examples, or silently
+  replace the ratified selector during this task-registration stage.
+- Prevention/residual: Fable must choose and authorize a shared semantic discovery
+  rule for the worker and package-script derivation (with literal/template negative
+  fixtures), or fund real executable examples for the five files, before activation.
+
+## 2026-09-11 — C3.4 Stage B: inspect the package test-typecheck verdict artifact
+
+- Doing: validate the changed discovery test through the prescribed Turbo tasks.
+- Evidence: Turbo returned exit 0 and reported 126 successful tasks while repo-cli's
+  `.turbo/package-test-typecheck-result.json` held exit 1 and introduced test diagnostics.
+  This task records diagnostics for the aggregate consumer instead of failing itself.
+- Resolution: repaired the discovery test, reran the CLI tasks, and read the stored
+  verdicts for all 12 touched workspaces: exit 0 and empty output for every package.
+- Prevention: inspect the stored test-typecheck verdict in lane handoffs; a green
+  Turbo process is not sufficient evidence for this collecting task. A direct
+  legacy `test/tsconfig.json` probe also hits inherited TS6059 rootDir errors;
+  use the canonical synthetic-config task and its artifact instead.

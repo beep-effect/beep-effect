@@ -12,16 +12,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import {
-  decodePackageJsonEffect,
-  findRepoRoot,
-  jsonStringifyPretty,
-  readPackageJsonFile,
-  resolveWorkspacePackages,
-} from "@beep/repo-utils";
+import { findRepoRoot, jsonStringifyPretty, resolveWorkspacePackages } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { A, Str, thunkFalse } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, FileSystem, HashMap, HashSet, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -36,7 +29,6 @@ import {
   LABS_TURBO_SELECT_FILTER,
 } from "../../internal/cli/Labs/index.ts";
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
-import { isDoctestSourcePath } from "../../internal/jsdoc/DoctestSource.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
 import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
 import {
@@ -451,7 +443,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "workflow-gated",
     replay: "exact",
     flags: ["--mode", "--base", "--head"],
-    notes: "Lane-gate mode computation stays in the workflow and arrives as --mode.",
+    notes: "Always runs the full Turbo doctest fleet. Deprecated --mode is accepted and ignored.",
   }),
   // This visible family context lands non-required; promotion is a later
   // branch-ruleset action after it establishes a stable green history.
@@ -1177,54 +1169,16 @@ const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyA
     full: () => [rootScriptStep(repoRoot, "ci:docgen", "docgen", A.empty<string>())],
   });
 
-/**
- * Build the exact Vitest step for the Doctest lane.
- *
- * **When to use**
- *
- * Use to prove the hosted lane's final argv in focused tests and after
- * affected-file resolution, without performing Git I/O.
- *
- * **Example** (Build the full Doctest step)
- *
- * ```ts
- * import { doctestStepForTesting } from "@beep/repo-cli/commands/Ci"
- *
- * const steps = doctestStepForTesting("/repo", undefined)
- * console.log(steps[0]?.args)
- * ```
- *
- * @param repoRoot - Repository root used as the subprocess working directory.
- * @param files - Sorted affected source paths, or undefined for the full corpus.
- * @returns No step for an empty affected set; otherwise one exact Vitest step.
- * @category testing
- * @since 0.0.0
- */
-export const doctestStepForTesting: {
-  (files: ReadonlyArray<string> | undefined): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
-  (repoRoot: string, files: ReadonlyArray<string> | undefined): ReadonlyArray<QualityTaskStep>;
-} = dual(
-  2,
-  (repoRoot: string, files: ReadonlyArray<string> | undefined): ReadonlyArray<QualityTaskStep> =>
-    files !== undefined && A.isReadonlyArrayEmpty(files)
-      ? A.empty<QualityTaskStep>()
-      : [
-          QualityTaskStep.make({
-            label: "ci:doctest",
-            command: "bunx",
-            args: ["vitest", "run", "--config", "vitest.docs.ts", ...(files ?? A.empty<string>())],
-            cwd: repoRoot,
-          }),
-        ]
-);
-
-const doctestLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
-  DocgenLaneMode.$match(options.mode, {
-    auto: A.empty<QualityTaskStep>,
-    none: A.empty<QualityTaskStep>,
-    affected: A.empty<QualityTaskStep>,
-    full: () => doctestStepForTesting(repoRoot, undefined),
-  });
+// heavy.yml@main still passes --mode on PRs. All legacy modes intentionally
+// resolve to the same full-scope task plan until the workflow edit reaches main.
+const doctestLaneSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> => [
+  QualityTaskStep.make({
+    label: "ci:doctest",
+    command: "bunx",
+    args: directTurboArgs(["doctest"], [CI_LANE_TURBO_CONCURRENCY_ARG, "--summarize"]),
+    cwd: repoRoot,
+  }),
+];
 
 const CODEGEN_DRIVER_PACKAGE_DIRS = LiteralKit([
   "packages/drivers/acp",
@@ -1395,7 +1349,7 @@ export const ciLaneStepsForTesting: {
         }),
       ],
       docgen: () => docgenLaneSteps(repoRoot, options),
-      doctest: () => doctestLaneSteps(repoRoot, options),
+      doctest: () => doctestLaneSteps(repoRoot),
       // Target the first ecosystem member explicitly. Generalize member
       // discovery only when a second ecosystem member exists.
       ecosystem: () => [
@@ -1791,228 +1745,8 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   yield* runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
 });
 
-const DOCTEST_WORKSPACE_PATHS = [
-  ":(glob)packages/**/package.json",
-  ":(glob)apps/**/package.json",
-  ":(glob)packages/**/src/**/*.ts",
-  ":(glob)packages/**/src/**/*.tsx",
-  ":(glob)apps/**/src/**/*.ts",
-  ":(glob)apps/**/src/**/*.tsx",
-] as const;
-
-const isDoctestPackageInput = (packageDir: string, file: string): boolean => {
-  const prefix = `${packageDir}/`;
-  if (!Str.startsWith(prefix)(file)) return false;
-  const relativePath = Str.slice(Str.length(prefix))(file);
-  return (
-    Str.startsWith("src/")(relativePath) ||
-    relativePath === "package.json" ||
-    relativePath === "docgen.json" ||
-    O.isSome(Str.match(/^tsconfig(?:\..*)?\.json$/u)(relativePath))
-  );
-};
-
-const packageDependencies = (manifest: {
-  readonly dependencies: O.Option<Readonly<Record<string, string>>>;
-  readonly devDependencies: O.Option<Readonly<Record<string, string>>>;
-  readonly peerDependencies: O.Option<Readonly<Record<string, string>>>;
-}): ReadonlyArray<string> =>
-  pipe(
-    [manifest.dependencies, manifest.devDependencies, manifest.peerDependencies],
-    A.flatMap(O.match({ onNone: A.empty<string>, onSome: R.keys })),
-    A.filter(Str.startsWith("@beep/")),
-    A.dedupe
-  );
-
-const expandDoctestDependents = (
-  changedPackageNames: HashSet.HashSet<string>,
-  workspaces: ReadonlyArray<readonly [name: string, dir: string, dependencies: ReadonlyArray<string>]>
-): HashSet.HashSet<string> => {
-  let affected = changedPackageNames;
-  let priorSize = -1;
-  while (HashSet.size(affected) !== priorSize) {
-    priorSize = HashSet.size(affected);
-    affected = A.reduce(workspaces, affected, (selected, [name, , dependencies]) =>
-      A.some(dependencies, (dependency) => HashSet.has(selected, dependency)) ? HashSet.add(selected, name) : selected
-    );
-  }
-  return affected;
-};
-
-const byDoctestWorkspaceDirLengthDescending: Order.Order<
-  readonly [name: string, dir: string, dependencies: ReadonlyArray<string>]
-> = Order.mapInput(Order.Number, ([, dir]) => -Str.length(dir));
-
-const resolveDeletedDoctestManifestRevision = Effect.fn("CiLane.resolveDeletedDoctestManifestRevision")(function* (
-  repoRoot: string,
-  base: string
-): Effect.fn.Return<string, never, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runCaptured({
-    command: "git",
-    args: ["merge-base", base, "HEAD"],
-    cwd: repoRoot,
-    source: "stdout",
-    trim: true,
-  }).pipe(
-    Effect.map((result) =>
-      pipe(
-        result.output,
-        O.liftPredicate(Str.isNonEmpty),
-        O.filter(() => result.exitCode === 0),
-        O.getOrElse(() => base)
-      )
-    ),
-    Effect.orElseSucceed(() => base)
-  );
-});
-
-const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFiles")(function* (
-  repoRoot: string,
-  base: string,
-  head: string
-): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, CiLaneEnvironment> {
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["diff", "--name-only", `${base}...${head}`, "--", "packages", "apps"],
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(CiCommandError.mapError("Failed to resolve affected Doctest source files."));
-  if (result.exitCode !== 0) {
-    return yield* CiCommandError.make({ message: `git diff for Doctest failed with exit code ${result.exitCode}.` });
-  }
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const changedPaths = normalizedOutputPaths(result.output);
-  if (A.isReadonlyArrayEmpty(changedPaths)) return A.empty<string>();
-
-  const trackedResult = yield* runCaptured({
-    command: "git",
-    args: ["ls-files", "--", ...DOCTEST_WORKSPACE_PATHS],
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(CiCommandError.mapError("Failed to resolve Doctest workspace files."));
-  if (trackedResult.exitCode !== 0) {
-    return yield* CiCommandError.make({
-      message: `git ls-files for Doctest failed with exit code ${trackedResult.exitCode}.`,
-    });
-  }
-  const trackedPaths = normalizedOutputPaths(trackedResult.output);
-  const manifestPaths = A.filter(trackedPaths, Str.endsWith("/package.json"));
-  const workspaces = yield* Effect.forEach(manifestPaths, (manifestPath) =>
-    readPackageJsonFile(path.join(repoRoot, manifestPath)).pipe(
-      Effect.map(
-        (manifest) =>
-          [manifest.name, normalizeSlashes(path.dirname(manifestPath)), packageDependencies(manifest)] as const
-      ),
-      CiCommandError.mapError(`Failed to read Doctest workspace manifest ${manifestPath}.`)
-    )
-  );
-  const orderedWorkspaces = A.sort(workspaces, byDoctestWorkspaceDirLengthDescending);
-  const changedManifestPaths = A.filter(changedPaths, Str.endsWith("/package.json"));
-  const deletedPackageDirs = A.map(changedManifestPaths, path.dirname);
-  const deletedManifestPaths = A.filter(
-    changedManifestPaths,
-    (manifestPath) => !A.contains(manifestPaths, manifestPath)
-  );
-  const deletedManifestRevision = yield* pipe(
-    deletedManifestPaths,
-    A.match({
-      onEmpty: () => Effect.succeed(base),
-      onNonEmpty: () => resolveDeletedDoctestManifestRevision(repoRoot, base),
-    })
-  );
-  const deletedPackageNames = yield* Effect.forEach(deletedManifestPaths, (manifestPath) =>
-    runCaptured({
-      command: "git",
-      args: ["show", `${deletedManifestRevision}:${manifestPath}`],
-      cwd: repoRoot,
-      source: "stdout",
-    }).pipe(
-      CiCommandError.mapError(`Failed to read deleted Doctest workspace manifest ${manifestPath}.`),
-      Effect.flatMap((baseManifestResult) => {
-        if (baseManifestResult.exitCode !== 0) {
-          return Console.log(
-            `[ci] doctest: skipped deleted workspace manifest ${manifestPath} (git show exited ${baseManifestResult.exitCode})`
-          ).pipe(Effect.as(O.none<string>()));
-        }
-        return UnknownFromJsonString.decodeUnknownEffect(baseManifestResult.output).pipe(
-          Effect.flatMap(decodePackageJsonEffect),
-          Effect.map((manifest) => O.some(manifest.name)),
-          Effect.catch(() =>
-            Console.log(
-              `[ci] doctest: skipped deleted workspace manifest ${manifestPath} (base content did not decode)`
-            ).pipe(Effect.as(O.none<string>()))
-          )
-        );
-      })
-    )
-  ).pipe(Effect.map(A.getSomes));
-  const changedPackageNames = HashSet.fromIterable(
-    A.appendAll(
-      A.flatMap(changedPaths, (file) => {
-        const directOwner = A.findFirst(orderedWorkspaces, ([, packageDir]) => isDoctestPackageInput(packageDir, file));
-        const deletedPackageOwner = pipe(
-          orderedWorkspaces,
-          A.findFirst(([, packageDir]) => Str.startsWith(`${packageDir}/`)(file)),
-          O.filter(() =>
-            A.some(
-              deletedPackageDirs,
-              (deletedPackageDir) =>
-                file === `${deletedPackageDir}/package.json` || Str.startsWith(`${deletedPackageDir}/`)(file)
-            )
-          )
-        );
-        return pipe(
-          directOwner,
-          O.orElse(() => deletedPackageOwner),
-          O.match({ onNone: A.empty<string>, onSome: ([name]) => [name] })
-        );
-      }),
-      deletedPackageNames
-    )
-  );
-  const affectedPackageNames = expandDoctestDependents(changedPackageNames, workspaces);
-  const affectedPackageDirs = pipe(
-    workspaces,
-    A.filter(([name]) => HashSet.has(affectedPackageNames, name)),
-    A.map(([, packageDir]) => packageDir)
-  );
-  const directlyChangedSources = A.filter(changedPaths, isDoctestSourcePath);
-  const packageSources = pipe(
-    trackedPaths,
-    A.filter(isDoctestSourcePath),
-    A.filter((file) => A.some(affectedPackageDirs, (packageDir) => Str.startsWith(`${packageDir}/src/`)(file)))
-  );
-  const candidates = pipe(A.appendAll(directlyChangedSources, packageSources), A.dedupe, A.sort(Order.String));
-  const existingCandidates = yield* Effect.filter(candidates, (file) =>
-    fs
-      .exists(path.join(repoRoot, file))
-      .pipe(CiCommandError.mapError(`Failed to inspect affected Doctest path ${file}.`))
-  );
-  return yield* Effect.filter(existingCandidates, (file) =>
-    fs
-      .readFileString(path.join(repoRoot, file))
-      .pipe(Effect.map(Str.includes("import.meta.vitest")), Effect.orElseSucceed(thunkFalse))
-  );
-});
-
-const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (
-  repoRoot: string,
-  options: CiLaneRunOptions
-): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
-  const files = yield* DocgenLaneMode.$match(options.mode, {
-    auto: () => Effect.asSome(resolveAffectedDoctestFiles(repoRoot, options.base, options.head)),
-    none: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
-    affected: () => Effect.asSome(resolveAffectedDoctestFiles(repoRoot, options.base, options.head)),
-    full: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
-  });
-  const steps =
-    options.mode === "none" ? A.empty<QualityTaskStep>() : doctestStepForTesting(repoRoot, O.getOrUndefined(files));
-  if (A.isReadonlyArrayEmpty(steps)) {
-    yield* Console.log("[ci] doctest: no marked affected source files (skipped)");
-    return;
-  }
-  yield* runQualityTaskStreamingStepGroup("ci:doctest", steps);
+const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (repoRoot: string) {
+  yield* runQualityTaskStreamingStepGroup("ci:doctest", doctestLaneSteps(repoRoot));
 });
 
 type PartitionedLaneRequest = {
@@ -2257,7 +1991,7 @@ export const runCiLane = Effect.fn("CiLane.runCiLane")(function* (
       onNone: () =>
         pipe(
           Match.value(laneId),
-          Match.when("doctest", () => runCiDoctestLane(repoRoot, options)),
+          Match.when("doctest", () => runCiDoctestLane(repoRoot)),
           Match.when("fallow", () => runCiFallowLane(repoRoot, options)),
           Match.orElse((stepLaneId) => runCiStepLane(repoRoot, stepLaneId, options))
         ),
@@ -2326,7 +2060,9 @@ export const ciLaneCommand = Command.make(
     ),
     mode: Flag.ChoiceWithValue("mode", docgenModeFlagChoices).pipe(
       Flag.withDefault("auto"),
-      Flag.withDescription("Docgen lane mode; auto derives none/affected/full from --base...--head")
+      Flag.withDescription(
+        "Docgen lane mode; auto derives none/affected/full from --base...--head. Deprecated for doctest: accepted and ignored."
+      )
     ),
     from: Flag.String("from").pipe(Flag.withDescription("Commitlint range start (defaults to --base)"), Flag.optional),
     to: Flag.String("to").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Commitlint range end")),
@@ -2558,7 +2294,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     coverage: () => turboShapeFlags,
     "desktop-ipc": A.empty<string>,
     docgen: () => ["--mode", plan.affected ? "auto" : "full", "--base", plan.base],
-    doctest: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
+    doctest: A.empty<string>,
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,

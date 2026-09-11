@@ -23,9 +23,9 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
 
-const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;
+const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen", "doctest"] as const;
 const TURBO_CONFIG_PROOF_SELECTOR_VALUES = ["affected", "filter-range"] as const;
-const defaultProofTasks: ReadonlyArray<TurboConfigProofTaskName> = ["lint", "check", "test", "docgen"];
+const defaultProofTasks: ReadonlyArray<TurboConfigProofTaskName> = ["lint", "check", "test", "docgen", "doctest"];
 
 /**
  * Turbo task names supported by the scoped-config proof harness.

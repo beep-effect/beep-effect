@@ -197,6 +197,10 @@ describe("package scripts policy", () => {
           name: "doctest",
           reason: "Marked sources use a vitest config that bypasses vitest.shared.ts",
         });
+        const fs = yield* FileSystem.FileSystem;
+        const storybook = yield* fs.readFileString(`${root}/apps/storybook/package.json`);
+        expect(storybook).not.toContain('"doctest":');
+        expect(storybook).not.toContain('"beep:doctest":');
       })
     )
   );

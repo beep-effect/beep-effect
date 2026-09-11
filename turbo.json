@@ -55,6 +55,25 @@
     ]
   },
   "tasks": {
+    "doctest": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["^transit"],
+      "env": ["BEEP_VITEST_DOCTEST"],
+      "inputs": [
+        "src/**",
+        "test/**",
+        "package.json",
+        "tsconfig*.json",
+        "vitest*.config.ts",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
+        "$TURBO_ROOT$/packages/foundation/modeling/utils/src/**",
+        "!node_modules/**",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/test/global-cleanup.ts"
+      ]
+    },
     "lint:deprecated-apis": {
       "cache": true,
       "outputs": [],

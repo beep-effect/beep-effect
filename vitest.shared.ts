@@ -44,7 +44,20 @@ const configStringEqualsSync = (name: string, expected: string): boolean =>
     Effect.runSync(Config.option(Config.String(name))),
     O.exists((value) => value === expected)
   );
-const vitestDoctestActive = configStringEqualsSync("BEEP_VITEST_DOCTEST", "1");
+/**
+ * Selects package-local in-source tests without ordinary test includes.
+ *
+ * **Example** (Preserve the doctest selector in a package config)
+ *
+ * ```ts
+ * import { vitestDoctestActive } from "./vitest.shared.ts"
+ * const include = vitestDoctestActive ? [] : ["test/example.test.ts"]
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const vitestDoctestActive = configStringEqualsSync("BEEP_VITEST_DOCTEST", "1");
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
 // Env flags do not survive every spawn chain (root script -> turbo ->
 // package script -> vitest); the vitest process's own argv is authoritative.
@@ -207,6 +220,9 @@ const config: ViteUserConfig = {
     sequence: {
       concurrent: !vitestDoctestActive,
     },
+    // Package doctests run on Bun; its fork workers cannot complete Vitest's
+    // startup handshake. Keep the ordinary pool default and use threads here.
+    ...(vitestDoctestActive ? { pool: "threads" } : {}),
     include: vitestDoctestActive ? [] : fcDeepSweepActive ? [...propertySweepInclude] : ["test/**/*.test.{ts,tsx}"],
     includeSource: vitestDoctestActive ? ["src/**/*.{ts,tsx}"] : [],
     coverage: {

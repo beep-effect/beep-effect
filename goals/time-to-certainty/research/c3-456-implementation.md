@@ -249,3 +249,246 @@ package task and discovery, migrate the owner include overrides, retain the comp
 fixture, and measure cold/warm fleet behavior. No part of that work was started here.
 Stage D still owns final root-task routing, both remaining scoped-helper consumers, and
 `LINT_POLICY_STEP_CONCURRENCY` retirement. Stop after Stage A.
+
+## Stage B
+
+Implemented only C3.4, on the Stage A branch at HEAD
+`8fd301387c1881ba2f848dac3aeb349961f2f021`. The checkout was clean at entry.
+No git writes, graft commands, Node verification launches, network operations, or
+Stages C–E work ran. **Stage B is not activation-ready:** the strict fleet task
+exposes five literal-marker false positives in repo-cli. Static verification and
+the migrated regression tests pass; a passing cold fleet and all-HIT warm fleet
+remain blocked as detailed below.
+
+### Decisions and rejected alternatives
+
+1. Registered `doctest` with the ten §2.1 inputs verbatim and in their prescribed
+   order, plus `$TURBO_ROOT$/packages/tooling/tool/cli/test/global-cleanup.ts`.
+   The extra file is a resolved `globalSetup`, rather than `setupFiles`, but is
+   just as much a runtime input. The current owners otherwise inherit root
+   `vitest.setup.ts`. The discovery test checks each owner's resolved setup and
+   global setup paths against **that task's** expanded Turbo input map. The task
+   has `dependsOn: ["^transit"]`, `env: ["BEEP_VITEST_DOCTEST"]`, `cache: true`,
+   and `outputs: []`. No fingerprint edge is added to this non-CLI worker.
+2. Live census is **27 owners**, not the brief's estimated 28. A root dry run has
+   253 graph nodes, including transit and non-executable task nodes, but exactly
+   27 executable doctest commands. Package presence stays generated and unchanged;
+   the gate reports 142 manifests and zero drift. The fixture already had both
+   `doctest` and `beep:doctest` scripts, so it needed no manifest edit.
+3. Exported `vitestDoctestActive` and made the ten named package include overrides
+   conditional, plus the additional inheriting `infra` override. Coverage include
+   lists are a different selector and remain intact. Scratchpad's nested
+   effect-ontology config has no package manifest; packet codemod configs are not
+   workspace owners. Storybook's bypassing config remains untouched. Strengthened
+   the existing policy fixture to prove that a marked Storybook bypass emits a
+   derivation conflict and stamps neither doctest script.
+4. Reused `directTurboArgs` and `runQualityTaskStreamingStepGroup`, which wraps
+   Turbo steps in the existing remote-cache secret session. The unchanged label
+   is `ci:doctest`; argv is `turbo run doctest <cache posture> --concurrency=4
+   --summarize`. No affected, caller filter, labs exclusion, or SCM-base env is
+   forwarded. Every legacy mode, including `none`, has exactly this plan. Deleted
+   the bespoke file/dependent/deleted-manifest resolver and exported Vitest-step
+   helper, and retired resolver-only test/mock machinery. Docgen/Fallow execution
+   tests keep their shared mock, renamed to reflect its remaining role.
+5. **Main-workflow compatibility:** the runner group admits `heavy.yml@main`, so
+   the current PR will still receive `ci lane doctest --mode affected|full` from
+   main. The flag remains accepted and is ignored for doctest, with a one-line
+   deprecation note in help and descriptor notes. The workflow loses its entire
+   doctest mode/input gate and doctest mode arguments, and marks Doctest as using
+   Turbo for cache setup. The workflow edit takes effect after merge. The existing
+   goals-only gate and Docgen's mode behavior remain. The local replay also stops
+   manufacturing obsolete doctest mode/base flags. Rejected deleting the CLI flag
+   now, applying affected selection, or retaining two doctest implementations.
+6. Removed root `vitest.docs.ts`, its root script, and the fixture's duplicate
+   config/reference. Kept `@effect/doctest` as a root devDependency. The fixture
+   executes its real package script, without a pool override, and passes both
+   assertions. Added `doctest` to the existing Turbo proof task domain and default
+   proof list. No new production source module, service, schema family, or coverage
+   baseline row was introduced.
+7. The discovery fixture uses Vitest's public `resolveConfig` in a fresh Bun
+   process per config, then the resolved includeSource/exclude lists and marker
+   predicate; it does not execute owner tests. An initial in-worker env mutation
+   retained a startup snapshot. Fresh processes match package startup and pass for
+   all owners, including strict no-tests behavior under the coverage-report flag.
+   The eleven override configs also resolve correctly in ordinary and doctest mode.
+   Test code uses runtime-neutral platform services and no new `Bun.*` APIs.
+8. **Necessary runtime adjustment discovered by the exact command:** the first
+   cold run failed before assertions with Bun's fork-worker startup handshake
+   timeout. Selected `pool: "threads"` only in the shared doctest branch; ordinary
+   test pool defaults remain. This is covered by config resolution and the real
+   package-script fixture. Rejected a fixture-only pool workaround, a manifest
+   fleet rewrite, a Node substitution forbidden by this lane, or an increased
+   timeout. Thread-worker shutdown warnings remain observable on schema's cold
+   run; schema nevertheless passes all 120 files and 363 assertions with exit 0.
+9. The real hash fixture consumes the production task and transit declarations in
+   a synthetic non-git workspace. It proves source, test, setup, package config,
+   tsconfig, shared config/setup/aliases, shared utils source, global cleanup, and
+   upstream transit-source mutations change the consumer hash; root/package docs
+   and unrelated package source edits leave it stable. Every restoration returns
+   the original hash, and changing the declared doctest env changes it. No git
+   fixture setup or affected-selection probe ran.
+10. The strict fleet discovers five repo-cli files containing marker strings or
+    generated-template text but no executable test suite. This is a real red,
+    not an environment failure. Nonempty owner discovery passes yet cannot prove
+    that every selected file contains an assertion. Kept the ratified selector and
+    `passWithNoTests: false`; rejected silent exclusions, vacuous tests, enabling
+    pass-with-no-tests, or unrelated domain/example edits. The decision needed to
+    resolve that selector/strictness conflict is listed under blockers.
+
+### Stage B — files
+
+Modified:
+
+- `.github/workflows/heavy.yml`
+- `apps/labs/api-docs/vitest.config.ts`
+- `apps/labs/ciops/vitest.config.ts`
+- `apps/labs/lejeune-bolt-workbench/vitest.config.ts`
+- `apps/labs/semantica/vitest.config.ts`
+- `apps/labs/trustgraph-workbench/vitest.config.ts`
+- `apps/oip-web/vitest.config.ts`
+- `apps/practice-kg-mcp/vitest.config.ts`
+- `apps/professional-desktop/vitest.config.ts`
+- `apps/todox/vitest.config.ts`
+- `infra/vitest.config.ts`
+- `package.json`
+- `packages/drivers/duckdb/vitest.config.ts`
+- `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts`
+- `packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts`
+- `packages/tooling/tool/cli/test/ci-lane.test.ts`
+- `packages/tooling/tool/cli/test/ci-runner-security.test.ts`
+- `packages/tooling/tool/cli/test/doctest-lane.test.ts`
+- `packages/tooling/tool/cli/test/fixtures/doctest-lane/package/tsconfig.json`
+- `packages/tooling/tool/cli/test/package-scripts.policy.test.ts`
+- `turbo.json`
+- `vitest.shared.ts`
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+- `goals/time-to-certainty/research/c3-456-implementation.md`
+
+Created:
+
+- `packages/tooling/tool/cli/test/doctest-turbo-inputs.test.ts`
+
+Deleted:
+
+- `vitest.docs.ts`
+- `packages/tooling/tool/cli/test/fixtures/doctest-lane/package/vitest.docs.ts`
+
+The fingerprint writer also rewrote byte-identical
+`standards/policy-tools.fingerprint.json`; it has no diff. No workspace manifest
+changed. Disposable, untracked verification material is under `/tmp/ttc-stage-b/`
+(`edit.py`, `tests.py`, `measure.py`, `verify-artifacts.py`, `measurements.json`,
+`dry-run.json`, `dry-run.stderr`, and the named `.log` files below). Generated
+build/typecheck artifacts, `.turbo/runs/` summaries, and caches under
+`.beep/c3-456-stage-b-cache`, `.beep/c3-456-stage-b-doctest-cache`,
+`.beep/c3-456-stage-b-doctest-threads-cache`, and the default local Turbo cache
+are not source handoff files and must not be staged.
+
+### Verification commands and exit codes
+
+Commands ran from the repo root unless marked **CLI cwd**
+(`packages/tooling/tool/cli`). `--bun` selects the authorized Bun launcher.
+Pipes inside test-name regexes below are Markdown-escaped only; the actual shell
+regex used plain pipes. Log redirection went to `/tmp/ttc-stage-b/<name>.log`.
+
+| Exact command | Exit | Result |
+| --- | ---: | --- |
+| `bun run beep lint policy-fingerprint --write` | 0 | Ran after CLI changes and again at finalization; fingerprint inputs unchanged. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Current, including final rerun. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, zero drift; no scripts-schema change required `--write`. |
+| `bunx --bun biome check --write vitest.shared.ts turbo.json package.json apps/{todox,professional-desktop,practice-kg-mcp,oip-web}/vitest.config.ts apps/labs/{trustgraph-workbench,semantica,lejeune-bolt-workbench,ciops,api-docs}/vitest.config.ts infra/vitest.config.ts packages/drivers/duckdb/vitest.config.ts packages/tooling/tool/cli/src/commands/Ci/CiLane.ts packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts packages/tooling/tool/cli/test/{ci-lane,ci-runner-security,doctest-lane,doctest-turbo-inputs,package-scripts.policy}.test.ts packages/tooling/tool/cli/test/fixtures/doctest-lane/package/tsconfig.json` | 0 final; 1 during edits | Final `format-clean.log`: 22 files, one formatting fix. Earlier passes caught introduced unused imports and a JSDoc glob terminating its comment; all repaired. |
+| `bunx --bun eslint --no-warn-ignored --max-warnings=0 --config eslint.config.mjs packages/tooling/tool/cli/src/commands/Ci/CiLane.ts packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts` | 0 | Zero diagnostics, final rerun included. |
+| `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b-cache" bunx --bun turbo run check package-test-typecheck --filter=@beep/repo-cli --cache=local:rw` | 0 | Initial 34/34 task execution proof, 11.468 s. |
+| `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b-cache" bunx --bun turbo run check package-test-typecheck --filter=@beep/repo-cli --filter=@beep/duckdb --filter=@beep/infra --filter=@beep/todox --filter=@beep/professional-desktop --filter=@beep/practice-kg-mcp --filter=@beep/oip-web --filter=@beep/trustgraph-workbench --filter=@beep/semantica --filter=@beep/lejeune-bolt-workbench --filter=@beep/ciops --filter=@beep/api-docs --cache=local:rw` | 0 | 126 tasks, 32 cached, 19.768 s. At this point the collecting CLI test-typecheck artifact still contained introduced test errors; outer success did not prove those tests typechecked. |
+| `bunx --bun turbo run check package-test-typecheck --filter=@beep/repo-cli --cache=local:rw` | 0 | After repairing test diagnostics: 34/34, 11.387 s, CLI stored verdict exit 0 and empty output. |
+| `python3 /tmp/ttc-stage-b/verify-artifacts.py` | 0 | Read back all 12 touched workspaces' stored test-typecheck artifacts: exit 0, empty diagnostics for every one. |
+| `bunx --bun tsgo -p tsconfig.configs.json --noEmit` | 0 | Root config typecheck, including the shared and package configs. |
+| `bunx --bun tsgo -p packages/tooling/tool/cli/test/tsconfig.json --noEmit` | 2 | Diagnostic detour: inherited TS6059 from test config's source-only rootDir. Canonical synthetic-config worker plus artifact read-back above is green. |
+| `bunx --bun vitest run test/ci-lane.test.ts --pool=threads` (**CLI cwd**) | 1 | 64 passed; one untouched unreadable-inventory test calls `process.chdir()`, unsupported in a thread worker. |
+| `bunx --bun vitest run test/ci-lane.test.ts --pool=threads -t '^(?!.*maps an unreadable workspace inventory)'` (**CLI cwd**) | 0 | 64 pass, one inherited process-cwd case skipped. |
+| `bunx --bun vitest run test/ci-runner-security.test.ts --pool=threads -t 'runs full Doctest\|retires the root Doctest\|preserves the requested PR lane'` (**CLI cwd**) | 0 | Three pass; 17 unselected. Avoids the suite's unrelated git-writing fixtures. |
+| `bunx --bun vitest run test/doctest-lane.test.ts test/doctest-turbo-inputs.test.ts test/package-scripts.policy.test.ts --pool=threads` (**CLI cwd**) | 1 | Initial iteration: ten pass, two discovery failures (workspace row shape and stale in-worker config snapshot), both repaired. Hash and policy suites pass. |
+| `bunx --bun vitest run test/doctest-lane.test.ts test/doctest-turbo-inputs.test.ts test/package-scripts.policy.test.ts test/ci-lane.test.ts test/ci-runner-security.test.ts --pool=threads -t '^(?!.*maps an unreadable workspace inventory)(?!.*CI runner security).*\|runs full Doctest\|retires the root Doctest\|preserves the requested PR lane'` (**CLI cwd**) | 1 | 78 pass, 18 skipped; introduced missing variable while strengthening input-map assertion failed discovery. Repaired and rerun below. |
+| `bunx --bun vitest run test/doctest-lane.test.ts --pool=threads` (**CLI cwd**) | 0 final | Final strengthened suite: 3/3, 67.69 s. Resolves all owners and both modes for all eleven overrides; runs the real fixture package script. Earlier fresh-process version also passed 3/3 in 118.10 s. Together with the preceding unaffected suite results, 79 distinct selected tests pass. |
+| `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b-cache" bunx --bun turbo run doctest --dry-run=json --cache=local:rw` | 0 | Final production graph: 27 executable owner tasks, 253 total graph nodes. |
+| `bun run beep ci lane doctest --help` | 0 | Accepts all four legacy modes and documents the doctest no-op. |
+| `python3 /tmp/ttc-stage-b/measure.py` | 0 | Validates cold/warm summary data and matching hashes for all 27 owners; 26 warm HITs have exit 0. |
+| `git --no-optional-locks diff --check` | 0 | Read-only whitespace check. |
+
+The very first root-cwd `bunx --bun vitest run test/doctest-lane.test.ts --pool=threads`
+ran from the wrong cwd and exited 1; the first CLI-cwd attempt also exited 1,
+with the introduced JSDoc parse error. These are failed setup attempts, not passing tests. No separate Node suites, coverage,
+package-verify, or docgen claim is made. Those remain Fable-owned by the lane split.
+
+### R1 measurements
+
+Each attempt uses the exact fleet task at concurrency four, with remote cache
+access disabled. Cold means an empty **Turbo task cache**, not a cold machine;
+prior config/fixture checks warmed filesystem/module caches. No other verification
+command ran concurrently with the successful-execution cold/warm pair. The two
+attempts used identical task inputs; all 27 hashes match across their summaries.
+Later strengthening of the regression tests changes repo-cli's test input hash;
+this pair is attempt-specific evidence, not a claim of a final all-green proof.
+
+| Exact command | Exit | Wall | Turbo wall | Successful / tasks | Hits |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b-doctest-cache" /usr/bin/time -f 'wall=%e maxRSS=%M exit=%x' bunx --bun turbo run doctest --concurrency=4 --summarize --cache=local:rw` | 1 | 60.58 s | 60.524 s | 0 / 5 attempted | 0 |
+| `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b-doctest-threads-cache" /usr/bin/time -f 'wall=%e maxRSS=%M exit=%x' bunx --bun turbo run doctest --concurrency=4 --summarize --cache=local:rw` (cold) | 1 | 37.58 s | 37.534 s | 26 / 27 | 0 |
+| Same exact command and cache (warm) | 1 | 9.42 s | 9.374 s | 26 / 27, including replays | 26 / 27 |
+
+First attempt: default forks never reached assertions. Thread-pool cold attempt:
+2,570 assertions pass across the fleet, but repo-cli's five empty suites make the
+lane red. Warm: every previous success is a HIT with exit 0; repo-cli is a MISS
+with exit 1, never cached as success. **The required all-HIT warm result is not met.**
+
+Per-package boot/run **lifetime** (Turbo execution start through exit), over all
+27 cold attempts: **p50 3.382 s, max 34.490 s**. A separate startup/teardown proxy,
+task lifetime minus Vitest's reported duration, has **p50 0.390 s, max 2.394 s**.
+That residual includes process launch, config loading and final cleanup; it is not
+an independently instrumented pure-boot latency. Warm cached task execution
+intervals are zero in the summaries; the sole re-executed repo-cli task is 9.297 s.
+
+The two slowest packages are **@beep/schema, 34.490 s** (Vitest 34.13 s, exit 0)
+and **@beep/nlp-processing, 12.954 s** (Vitest 10.56 s, exit 0). Repo-cli is third
+at 10.902 s, exit 1. GNU time maximum RSS is 11,258,324 KiB cold and 1,460,740 KiB
+warm; these are the timed process-tree maximum measurements, not summed worker RSS.
+No hosted improvement or whole-proof denominator is claimed against the historical
+82-second affected-lane baseline.
+
+Attempt summaries:
+
+- Fork-startup failure: `.turbo/runs/3JCfluFzOqXPAfezvhNHoOkwPzR.json`.
+- Cold thread fleet: `.turbo/runs/3JCfu4ManKQjf5VArwBvVZhK3x6.json`.
+- Warm thread fleet: `.turbo/runs/3JCg3F08gq6ufyx5IVnHLZnSHQL.json`.
+
+### Blockers and precise residual for Stage C
+
+**Do not activate or describe this as a passing migration yet.** Repo-cli's six
+real doctest files pass all 14 assertions, but these five marker-bearing sources
+have no suite under the required strict setting:
+
+- `packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts`
+- `packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts`
+- `packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts`
+- `packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityExportBlock.ts`
+- `packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/VocabTerms.ts`
+
+Fable must resolve the contract conflict before activation: authorize a shared
+semantic selector for the worker and scripts derivation, with literal/template
+negative fixtures, or authorize real executable doctest examples in those files.
+Then rerun the exact cold/warm pair and require all 27 successful/all HIT. Retaining
+strictness and reporting the blocker is intentional; a discovery smoke alone is
+not proof of an executable suite. Also assess the observed schema thread-shutdown
+warnings on the actual hosted runtime.
+
+Fable retains full `CI=true TMPDIR=/tmp bun run beep quality package-verify
+@beep/repo-cli`, `bun run docgen:local`, scoped Node coverage, the process-isolated
+CI test, and hosted Doctest with main's still-present mode argument. Run applicable
+package handoff checks for the eleven config-only workspaces as well; the lane's
+filtered check/test-typecheck run and config proof are supporting evidence.
+
+Stage C remains only the root-task registration work in the brief: register the
+remaining table rows, extend root-task proofs and input/affected fixtures, and
+write the Turbo hash documentation. This lane made no Stage C registrations or
+Stage D consumer changes. Keep doctest's compatibility flag until the admitted
+main workflow no longer needs it; do not remove it as incidental Stage C cleanup.
+Stop after Stage B.
