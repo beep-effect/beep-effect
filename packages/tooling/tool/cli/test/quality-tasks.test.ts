@@ -144,7 +144,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import {
   Cause,
   ConfigProvider,
@@ -4586,7 +4586,10 @@ describe("quality task adapter", () => {
             expect(selected.baseline.packages["@beep/a"]?.files["packages/a/src/Existing.ts"]?.lines).toBe(80);
             expect(selected.baseline.packages["@beep/a"]?.files["packages/a/src/New.ts"]?.lines).toBe(65);
             // The branch's own document rides along so rows it raised can be judged against it.
-            expect(O.map(selected.proposed, (proposed) => proposed.generated_at)).toEqual(O.some("branch-relaxation"));
+            assertSome(
+              O.map(selected.proposed, (proposed) => proposed.generated_at),
+              "branch-relaxation"
+            );
           })
         )
       ));
