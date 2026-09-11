@@ -100,7 +100,8 @@ each names its provenance and ships with self-test families.
   cryptographically bind. (2) *Denotation grain*: emit one hypothesis per
   candidate referent kind, grouping its individual chains and stating what
   individuates an instance; an observation with no candidate kind still emits
-  one null-only hypothesis so it stays cited. 158 families; self-test green on CPython
+  one hypothesis whose null stands (representation_status
+  implementation_artifact_only or unresolved) so it stays cited. 158 families; self-test green on CPython
   3.12/3.13; v14→v15 output byte-identical over the live post-rotation tree
   (both exit 1 with the same 904 pre-existing violations; no live manifest
   singleton). Archived run manifests, reports, and receipts keep their bytes.
