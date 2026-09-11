@@ -90,3 +90,16 @@ each names its provenance and ships with self-test families.
   merely-missing tails. 157 families; self-test green on CPython
   3.12/3.13/3.14; v13→v14 output byte-identical over run 2's live
   post-rotation tree.
+- **v15** (2026-09-11, auditor run 3 field defects recorded in the
+  beep-ci-operational-ontology run-3 impl-report and settled by the
+  2026-09-11 steward ruling): two amendments. (1) *Structured seat effort*:
+  every manifest seat requires a non-blank string naming its launched
+  reasoning-effort setting, with `default` for a model without an effort
+  control. The launch recipe passes the recorded effort to every Codex
+  seat; like model identity, this is recorded provenance the harness cannot
+  cryptographically bind. (2) *Denotation grain*: emit one hypothesis per
+  candidate referent kind, grouping its individual chains and stating what
+  individuates an instance. 158 families; self-test green on CPython
+  3.12/3.13; v14→v15 output byte-identical over the live post-rotation tree
+  (both exit 1 with the same 904 pre-existing violations; no live manifest
+  singleton). Archived run manifests, reports, and receipts keep their bytes.

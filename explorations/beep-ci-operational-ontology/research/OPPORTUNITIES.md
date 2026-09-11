@@ -737,3 +737,38 @@
   validator's rules and messages are unaffected by this spelling repair.
 - **Prevention:** include the packet's Python validators in the same touched-file
   spelling check used for contract amendments.
+
+## 2026-09-11: the cheap-gates packet named the wrong red lane
+
+- **Work:** running `bun run beep yeet repair` on the auditor-skill follow-up
+  branch (five skill files plus two research documents) before its first commit.
+- **Evidence:** the feedback phase failed and the quality packet's only issue read
+  `feedback:cheap-gates failed in tsconfig-sync with exit code 1`, while the same
+  run's `beep-quality-task-lane-run` JSON recorded `repo-sanity:tsconfig-sync`
+  as `passed` and `lint:effect-vitest` as the first red (`8228 findings`,
+  `90 new finding(s)`). The identical verdict reproduced on a clean checkout of
+  main `662823dd96`, and main's hosted cheap-gates lanes were green.
+- **Handling:** attributed the red as inherited and local-only, acked the P0
+  inbox row as wontfix with that reason, and continued to commit and publish;
+  the hosted checks are the proof.
+- **Prevention:** read the lane-run JSON's `firstRed`, never the packet's
+  issue label, before attributing a cheap-gates red; the packet's route label
+  is the last lane the coordinator reported on, not the failing one.
+
+## 2026-09-11: publish cannot stage the removal of a tracked ignored file
+
+- **Work:** removing `.claude/skills/ontology-foundational-auditor/scripts/__pycache__/validate_artifacts.cpython-312.pyc`
+  from the index in the same PR that bumps the validator to v15, since the
+  root ignore rule already excludes `**/__pycache__/` and a v14 bytecode file
+  beside v15 source is misleading provenance.
+- **Evidence:** `bun run beep yeet publish --start-pr-early --monitor --pr`
+  re-adds every staged path with `git add -- <paths>` before committing; for
+  the staged deletion that step exited 1 with `The following paths are ignored
+  by one of your .gitignore files`, and with the working-tree file removed it
+  exited with `pathspec ... did not match any files`.
+- **Handling:** restored the index entry and the file, published the seven
+  intended paths, and left the tracked bytecode file for a separate change.
+- **Prevention:** publish's re-add step should stage removals with
+  `git rm --cached` (or skip paths already deleted in the index) so a PR can
+  retire a tracked file that the ignore rules already exclude; until then,
+  land such removals in their own commit outside the Yeet publish path.
