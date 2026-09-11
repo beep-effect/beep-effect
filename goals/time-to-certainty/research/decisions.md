@@ -351,3 +351,27 @@ residual project-service pass required for coverage parity costs the root corpus
 record. A retry needs a different program factory (reference-aware, or one typed server shared
 across packages), `dist/**` excluded from lint inputs before any `^build` edge, and a fleet
 overlay census; it is not scheduled. Amends row 2b (table revision 7); D6 unchanged.
+
+## 2026-09-11 — C3.3 follow-up through C3.6 in one PR, round 12 (two rulings, proposed by the orchestrator at Benjamin's request "all of these done in 1PR", ratified by merge of that PR)
+
+Inputs: `research/c3-3-implementation.md` Stage B measurements (fleet `lint:laws` +
+`//#lint:native-runtime:roots` cold 141/141 in 86 s at concurrency 4 against the five hosted
+scoped steps at 109 s; warm 0.4 s), ruling 30's reason for keeping a legacy program (the
+per-package program cost more than the sweep), the runner-group admission fact that pull
+requests run `heavy.yml@main`, and §7.2 rows 3–6 of `research/c3-lane-task-table.md`.
+
+**Ruling 32 — the laws plan switch is a hard switch, not a sweeps key.** `rootRepoLintPolicySteps`
+replaces the four `scopedLawStep`s and the `lint:package-test-imports` step with one
+`turbo run lint:laws //#lint:native-runtime:roots` invocation (affected locally, full hosted), and
+`scopedLawStep` retires. Ruling 30 kept a legacy program only because the Turbo program cost more
+on the hosted runner; the laws program costs less cold and nothing warm, so
+`standards/lint-policy.sweeps.jsonc` gains no `laws` key. `lint:effect-imports` stays a scoped step
+(A1) until C3.5 registers `//#lint:effect-imports`.
+
+**Ruling 33 — rows 3 (follow-up), 4, 5 and 6 of the PR train land as one PR, staged one Codex
+lane per stage on one branch.** Each stage is proven with the lane split of `c3-456-brief.md`
+before the next launches; hosted proof is the whole PR. Because a pull request runs
+`heavy.yml@main`, the Doctest lane on the PR still passes `--mode`; `ci lane doctest` keeps
+accepting the flag as a no-op until the `heavy.yml` edit in the same PR reaches `main`, after
+which a janitor PR removes the flag. Post-merge accounting (§7.1.4: first cold run, second run's
+per-lane hit ratio) is recorded in a closeout receipt, not claimed in the PR.
