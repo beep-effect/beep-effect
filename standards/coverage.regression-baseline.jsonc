@@ -24211,7 +24211,7 @@
           "lines": 73.92,
           "statements": 72.89,
           "branches": 56.02,
-          "functions": 68.18,
+          "functions": 68.65,
           "uncovered": {
             "lines": 92,
             "statements": 101,
