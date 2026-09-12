@@ -182,7 +182,12 @@ const refusalNote = (refusals: number): string =>
 const rebuildNote = (failures: number): string =>
   failures > 0 ? `${failures} sibling rebuild(s) exited non-zero` : "";
 
-/** Verdict and operator note for a run that reached its final phase. */
+/**
+ * Verdict and operator note for a run that reached its final phase.
+ *
+ * @param input - Coverage, the target ratio, sibling rebuild results, seed refusals, and whether the build log was truncated.
+ * @returns The outcome literal plus an optional note explaining a degraded verdict.
+ */
 const decideOutcome = (input: {
   readonly coverage: O.Option<GraftDeepCoverage>;
   readonly minCoverage: number;
