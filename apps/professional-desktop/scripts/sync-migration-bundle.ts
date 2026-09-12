@@ -19,26 +19,16 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import type { Equivalence } from "effect/Equivalence";
 
 const mode = Match.value(Bun.argv.includes("--check")).pipe(
   Match.when(true, () => "check" as const),
   Match.orElse(() => "write" as const)
 );
 
-// Effect calls the hook with the declared struct equivalence; narrowing it from `never` to `Self`
-// is the contravariant direction (`Self` extends the struct type), so the assertion is sound.
-const declaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivalence<never>]): Equivalence<Self> =>
-  typeParameters[0] as Equivalence<Self>;
-
-class StaleMigrationBundle extends S.TaggedError<StaleMigrationBundle>()(
-  "StaleMigrationBundle",
-  {
-    message: S.String,
-    command: S.String,
-  },
-  { toEquivalence: (typeParameters) => declaredFieldsEquivalence<StaleMigrationBundle>(typeParameters) }
-) {}
+class StaleMigrationBundle extends S.TaggedError<StaleMigrationBundle>()("StaleMigrationBundle", {
+  message: S.String,
+  command: S.String,
+}) {}
 
 const quoteTemplateLiteral = (value: string): string =>
   `\`${value.replaceAll("\\", "\\\\").replaceAll("`", "\\`").replaceAll("${", "\\${")}\``;

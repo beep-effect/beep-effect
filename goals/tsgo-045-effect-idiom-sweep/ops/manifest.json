@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "tsgo-045-effect-idiom-sweep",
+    "title": "tsgo 0.45 Effect idiom sweep",
+    "status": "active",
+    "created": "2026-09-12",
+    "updated": "2026-09-12",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/tsgo-045-effect-idiom-sweep",
+  "lifecycle": "active",
+  "mission": "Bump @effect/tsgo to 0.45.0 with every rule at error, widen the directive gate to two declared exemptions, retire the redundant TaggedError equivalence hook, and restore idiomatic Match combinators repo-wide.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Complete only when the final ratchet PR is merge-ready with tsgo 0.45.0 installed, every installed rule and config key verified by beep quality tsgo-rules, exactly two declared directive exemptions, the Match shape law green, the annoteError equivalence proof green, and same-PR reflection/state closeout. Benjamin authorizes merges.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "goals/tsgo-045-effect-idiom-sweep/README.md",
+    "goals/tsgo-045-effect-idiom-sweep/SPEC.md",
+    "goals/tsgo-045-effect-idiom-sweep/PLAN.md",
+    "goals/tsgo-045-effect-idiom-sweep/GOAL.md",
+    "goals/tsgo-045-effect-idiom-sweep/DECISIONS.md",
+    "goals/tsgo-045-effect-idiom-sweep/research/SOURCES.md",
+    "goals/tsgo-045-effect-idiom-sweep/ops/prompts/00-orchestrator.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/2026-09-12-grounding.md",
+    "research/origin-prompt-2026-09-12.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/tsgo-045-effect-idiom-sweep/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Grill and packet",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Foundations PR at 0.39.1",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Rule cards and shard inventory",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Remediation lanes",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Ratchet PR to 0.45.0",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "bun run beep goals doctor",
+    "bun run beep goals index --check",
+    "wc -m goals/tsgo-045-effect-idiom-sweep/GOAL.md",
+    "git diff --check -- goals/tsgo-045-effect-idiom-sweep",
+    "bun run beep quality tsgo-rules",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Never merge without explicit user authorization.",
+    "Lanes never run git; the orchestrator owns staging, commits, and publication.",
+    "No new @effect-diagnostics directive anywhere; the two declared exemptions are the complete allowlist.",
+    "No severity below error for any installed tsgo rule; no parking of violations.",
+    "Never delete tests or weaken schemas to satisfy a diagnostic.",
+    "Do not change the effect RC pin in this packet; consume whatever main pins."
+  ],
+  "statusNote": "P0 complete on 2026-09-12: grill locked D1-D13, worktree tsgo-045-effect-idiom-sweep on feat/tsgo-045-effect-idiom-sweep off main 23f3919. P1 in progress 2026-09-12: hook deleted (identity + effect-drizzle copies), SFV4-tagged-error-equivalence inverted, two-entry directive allowlist and plugin option parity in tsgo-rules, doc-text proof 0/24,000, Cursor lane smoke test green; scanned-root widening deferred to the S01 PR."
+}

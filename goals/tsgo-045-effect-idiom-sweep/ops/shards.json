@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "tsgo-045-shards/v1",
+  "note": "Site counts are rough rg counts from research/2026-09-12-grounding.md (schemaSync src+test). Refresh in P2 with the worktree-local 0.45 diagnostics run; the inventory JSON per shard lands in ops/inventory/<id>.json. One writer per shard; paths are exclusive.",
+  "rulesEverywhere": [
+    "schemaSync",
+    "matchEffectToMatch",
+    "matchEffectToMapBoth",
+    "catchAllTagDispatchToCatchTag",
+    "catchIfTagToCatchTag",
+    "flatMapIgnoredParamToAndThen",
+    "provideLayerSucceedToProvideService",
+    "raceFirstWithSleepToTimeout",
+    "runOfExitToRunExit",
+    "timeoutCatchTagToTimeoutOrElse",
+    "nodeBuiltinImport",
+    "importFromBarrel",
+    "obsoleteMatchImport",
+    "obsoleteSchemaImport"
+  ],
+  "shards": [
+    {
+      "id": "L01-schema",
+      "paths": ["packages/foundation/modeling/schema"],
+      "approxSites": 714,
+      "note": "Split into sub-shards by top-level src dir if a single lane exceeds ~150 sites; @beep/schema's own decode helpers may be the idiom source for others, so this shard runs first."
+    },
+    {
+      "id": "L02-modeling-rest",
+      "paths": [
+        "packages/foundation/modeling/rdf",
+        "packages/foundation/modeling/html",
+        "packages/foundation/modeling/lexical",
+        "packages/foundation/modeling/nlp",
+        "packages/foundation/modeling/identity",
+        "packages/foundation/modeling/pandoc-ast",
+        "packages/foundation/modeling/ontology",
+        "packages/foundation/modeling/md"
+      ],
+      "approxSites": 195
+    },
+    {
+      "id": "L03-capability",
+      "paths": ["packages/foundation/capability"],
+      "approxSites": 178
+    },
+    {
+      "id": "L04-ui-system",
+      "paths": ["packages/foundation/ui-system"],
+      "approxSites": 0,
+      "note": "Few schemaSync sites; expect matchEffect/flatMap/provide shapes."
+    },
+    {
+      "id": "L05-tooling-library",
+      "paths": ["packages/tooling/library"],
+      "approxSites": 161
+    },
+    {
+      "id": "L06-repo-cli",
+      "paths": ["packages/tooling/tool"],
+      "approxSites": 142,
+      "note": "Ships alone. Coordinate with PR A and the match-shapes law so repo-cli PRs do not overlap."
+    },
+    {
+      "id": "L07-tooling-rest",
+      "paths": ["packages/tooling/policy-pack", "packages/tooling/test-kit"],
+      "approxSites": 40
+    },
+    {
+      "id": "L08-law-shared",
+      "paths": ["packages/law-practice", "packages/shared"],
+      "approxSites": 153
+    },
+    {
+      "id": "L09-epistemic",
+      "paths": ["packages/epistemic"],
+      "approxSites": 149
+    },
+    {
+      "id": "L10-documents",
+      "paths": ["packages/documents"],
+      "approxSites": 164
+    },
+    { "id": "L11-drivers", "paths": ["packages/drivers"], "approxSites": 90 },
+    {
+      "id": "L12-agents-ontology-lab",
+      "paths": [
+        "packages/agents",
+        "packages/ontology",
+        "packages/architecture-lab",
+        "packages/workspace",
+        "packages/ecosystem",
+        "packages/_internal"
+      ],
+      "approxSites": 190
+    },
+    { "id": "L13-apps", "paths": ["apps"], "approxSites": 40 },
+    {
+      "id": "S01-scratchpad",
+      "paths": ["scratchpad", "vitest.shared.ts"],
+      "approxSites": 276,
+      "note": "Also owns the 78 scratchpad directives (missingPipeableSignature 60, strictEffectProvide 16, schemaNumber 2) and the two nodeBuiltinImport lines in vitest.shared.ts."
+    },
+    {
+      "id": "M01-match",
+      "paths": ["**"],
+      "approxSites": 66,
+      "note": "Read-everywhere, write-only-Match-sites lane; runs before the L shards and lands with the match-shapes law. Coordinate: L shards do not touch Match combinators."
+    }
+  ],
+  "inSession": [
+    {
+      "id": "A01-annote-error",
+      "paths": [
+        "packages/foundation/modeling/identity/src/Id.ts",
+        "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts",
+        "packages/drivers/doc-text/test"
+      ],
+      "note": "PR A. Fable does this directly."
+    },
+    {
+      "id": "A02-gate",
+      "paths": [
+        "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+        "tsconfig.base.json"
+      ],
+      "note": "PR A (allowlist, roots, key parity at 0.39.1) and PR Z (bump, 13 ids, remaining keys)."
+    }
+  ]
+}

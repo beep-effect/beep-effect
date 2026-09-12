@@ -342,6 +342,9 @@ const effectDiagnosticsDirectiveIgnoredDirectoryNames = ["node_modules", "dist",
 const tsgoProfileScannedRoots = ["apps", "packages", "infra", "scratchpad"] as const;
 const effectTsgoDiagnosticsTableStartMarker = "<!-- diagnostics-table:start -->";
 const effectTsgoDiagnosticsTableEndMarker = "<!-- diagnostics-table:end -->";
+const effectTsgoExampleConfigStartMarker = "<!-- example-config:start -->";
+const effectTsgoExampleConfigEndMarker = "<!-- example-config:end -->";
+const effectTsgoExampleConfigFencePattern = /```jsonc\n([\s\S]*?)\n```/u;
 const effectDiagnosticsDirectivePrefix = "@effect-diagnostics";
 const effectDiagnosticsDirectivePattern = new RegExp(
   `^\\s*(?:/\\*\\*?|//)\\s*${effectDiagnosticsDirectivePrefix}(?:-next-line)?\\b`,
@@ -380,16 +383,122 @@ const effectTsgoReadmeParser = new XMLParser({
 export const isEffectDiagnosticsDirectiveForTesting = (line: string): boolean =>
   effectDiagnosticsDirectivePattern.test(line);
 
+const EffectDiagnosticsExemptPath = LiteralKit([
+  "vitest.setup.ts",
+  "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
+]);
+const EffectDiagnosticsExemptRule = LiteralKit([
+  "asyncFunction",
+  "globalRandom",
+  "globalTimers",
+  "newPromise",
+  "nodeBuiltinImport",
+  "processEnv",
+  "strictEffectProvide",
+]);
+
+/**
+ * One declared directive exemption: a repository path and the skip-file rules it may carry.
+ *
+ * **Details**
+ *
+ * The path domain and the rule domain are closed literal sets, so a new exemption is a
+ * schema change reviewed in this file, never a string that happens to match. Each rule maps to
+ * exactly one admitted line, `// @effect-diagnostics <rule>:skip-file`, compared without
+ * trimming; reasons live in the comment above the directive, not on the directive line.
+ *
+ * **Example** (Declare a single-rule exemption)
+ *
+ * ```ts
+ * import { EffectDiagnosticsDirectiveExemption } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const exemption = EffectDiagnosticsDirectiveExemption.make({
+ *   path: "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
+ *   rules: ["strictEffectProvide"],
+ *   reason: "The conformance entrypoint provides the filesystem layer under test.",
+ * })
+ * console.log(exemption.rules.length) // => 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EffectDiagnosticsDirectiveExemption extends S.Class<EffectDiagnosticsDirectiveExemption>(
+  $I`EffectDiagnosticsDirectiveExemption`
+)(
+  {
+    path: EffectDiagnosticsExemptPath,
+    rules: S.NonEmptyArray(EffectDiagnosticsExemptRule),
+    reason: S.NonEmptyString,
+  },
+  $I.annote("EffectDiagnosticsDirectiveExemption", {
+    description: "A repository path and the exact Effect diagnostics skip-file rules the quality gate admits there.",
+  })
+) {}
+
+/**
+ * The complete allowlist of Effect diagnostics directives (goals/tsgo-045-effect-idiom-sweep, D1).
+ *
+ * **Details**
+ *
+ * Exactly two entries exist and the tuple type keeps it that way: the root Bun-compat shim,
+ * which implements `Bun.*` over node builtins before any Effect runtime exists, and the
+ * effect-vitest-canon D14 conformance entrypoint. Every other `@effect-diagnostics` directive in
+ * a scanned root fails `beep quality tsgo-rules`; a lane that wants a third entry has found a
+ * rule-card gap, not a reason to grow this list.
+ *
+ * **Example** (Read the admitted paths)
+ *
+ * ```ts
+ * import { effectDiagnosticsDirectiveExemptions } from "@beep/repo-cli/commands/Quality/Quality.command"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.map(effectDiagnosticsDirectiveExemptions, (exemption) => exemption.path))
+ * // => ["vitest.setup.ts", "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts"]
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const effectDiagnosticsDirectiveExemptions: readonly [
+  EffectDiagnosticsDirectiveExemption,
+  EffectDiagnosticsDirectiveExemption,
+] = [
+  EffectDiagnosticsDirectiveExemption.make({
+    path: "vitest.setup.ts",
+    rules: ["nodeBuiltinImport", "asyncFunction", "newPromise", "processEnv", "globalTimers", "globalRandom"],
+    reason:
+      "Root Bun-compat shim for Node-based vitest runs: it implements Bun.spawn/file/serve over node builtins before any Effect runtime exists.",
+  }),
+  EffectDiagnosticsDirectiveExemption.make({
+    path: "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
+    rules: ["strictEffectProvide"],
+    reason:
+      "effect-vitest-canon D14: the shared conformance entrypoint provides the filesystem layer under test in each registration.",
+  }),
+];
+
+const skipFileDirectiveLine = (rule: typeof EffectDiagnosticsExemptRule.Type): string =>
+  `// ${effectDiagnosticsDirectivePrefix} ${rule}:skip-file`;
+
+const isExemptEffectDiagnosticsDirective = (line: string, normalizedRepoRelativePath: string): boolean =>
+  A.some(
+    effectDiagnosticsDirectiveExemptions,
+    (exemption) =>
+      exemption.path === normalizedRepoRelativePath &&
+      A.some(exemption.rules, (rule) => line === skipFileDirectiveLine(rule))
+  );
+
 /**
  * Decide whether Quality rejects a directive at its normalized repository-relative path.
  *
  * **Details**
  *
- * The D14 conformance exception permits only the exact file-local strictEffectProvide
- * skip-file directive in the shared FileSystemConformance registration module, where
- * each test provides the filesystem layer under test. All other recognized directives
- * remain rejected. Paths and directive lines are compared exactly, without trimming.
- * The production collector uses this same predicate after normalizing its paths.
+ * A directive is admitted only when {@link effectDiagnosticsDirectiveExemptions} declares its
+ * exact path and rule as a skip-file exemption. All other recognized directives are rejected,
+ * including admitted rules at other paths, `-next-line` forms, and admitted lines carrying
+ * trailing text. Paths and directive lines are compared exactly, without trimming. The
+ * production collector uses this same predicate after normalizing its paths.
  *
  * **Example** (Keep the conformance exception local)
  *
@@ -416,10 +525,7 @@ export const isRejectedEffectDiagnosticsDirectiveForTesting: {
   2,
   (line: string, normalizedRepoRelativePath: string): boolean =>
     isEffectDiagnosticsDirectiveForTesting(line) &&
-    !(
-      normalizedRepoRelativePath === "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts" &&
-      line === `// ${effectDiagnosticsDirectivePrefix} strictEffectProvide:skip-file`
-    )
+    !isExemptEffectDiagnosticsDirective(line, normalizedRepoRelativePath)
 );
 
 class EffectTsgoRuleCell extends S.Class<EffectTsgoRuleCell>($I`EffectTsgoRuleCell`)(
@@ -1943,6 +2049,120 @@ const extractEffectTsgoReadmeRuleNames = flow(
   O.getOrElse(A.empty<string>)
 );
 
+const extractEffectTsgoExampleConfigFragment = (readme: string): O.Option<string> => {
+  const start = readme.indexOf(effectTsgoExampleConfigStartMarker);
+  const end = readme.indexOf(effectTsgoExampleConfigEndMarker);
+
+  return start === -1 || end === -1 || end <= start
+    ? O.none()
+    : O.some(Str.slice(start + effectTsgoExampleConfigStartMarker.length, end)(readme));
+};
+
+/**
+ * Discover the plugin option names the installed Effect tsgo README documents.
+ *
+ * **Details**
+ *
+ * The README carries one `jsonc` example config between `example-config` markers that lists
+ * every option the plugin reads, each with its default. The names of that example's
+ * `@effect/language-service` entry, minus `name`, are the option set the repository must set
+ * explicitly. Reading the installed README, not a checked-in list, means a compiler bump
+ * surfaces new options as gate drift instead of running them at a silently changed default.
+ *
+ * **Example** (Read option names from a README fragment)
+ *
+ * ```ts
+ * import { extractEffectTsgoReadmePluginOptionNamesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const readme = [
+ *   "<!-- example-config:start -->",
+ *   "```jsonc",
+ *   '{ "compilerOptions": { "plugins": [ { "name": "@effect/language-service", "refactors": true, "diagnosticSeverity": {} } ] } }',
+ *   "```",
+ *   "<!-- example-config:end -->",
+ * ].join("\\n")
+ * console.log(extractEffectTsgoReadmePluginOptionNamesForTesting(readme)) // => ["diagnosticSeverity", "refactors"]
+ * ```
+ *
+ * @param readme - Text of the installed `@effect/tsgo` README.
+ * @returns Sorted option names, or an empty array when the example config cannot be read.
+ * @category testing
+ * @since 0.0.0
+ */
+export const extractEffectTsgoReadmePluginOptionNamesForTesting = (readme: string): ReadonlyArray<string> =>
+  pipe(
+    extractEffectTsgoExampleConfigFragment(readme),
+    O.flatMap((fragment) => O.fromUndefinedOr(effectTsgoExampleConfigFencePattern.exec(fragment)?.[1])),
+    O.map((jsonc) => parse(jsonc, [], { allowTrailingComma: true, disallowComments: false })),
+    O.flatMap((config) => A.head(findEffectLanguageServicePlugins(config))),
+    O.map((plugin) =>
+      pipe(
+        unknownRecordKeys(plugin),
+        A.filter((key) => key !== "name"),
+        A.sort(Order.String)
+      )
+    ),
+    O.getOrElse(A.empty<string>)
+  );
+
+interface TsgoPluginOptionParityDiagnosticsInput {
+  readonly documentedOptionNames: ReadonlyArray<string>;
+  readonly plugin: Readonly<Record<string, unknown>>;
+}
+
+const collectPluginOptionParityDiagnostics = (
+  documentedOptionNames: ReadonlyArray<string>,
+  plugin: Readonly<Record<string, unknown>>
+): ReadonlyArray<string> => {
+  const configuredOptionNames = pipe(
+    unknownRecordKeys(plugin),
+    A.filter((key) => key !== "name"),
+    A.sort(Order.String)
+  );
+  return A.appendAll(
+    pipe(
+      documentedOptionNames,
+      A.filter((key) => !A.contains(configuredOptionNames, key)),
+      A.map((key) => `${key}: documented by the installed @effect/tsgo but not set in tsconfig.base.json`)
+    ),
+    pipe(
+      configuredOptionNames,
+      A.filter((key) => !A.contains(documentedOptionNames, key)),
+      A.map((key) => `${key}: set in tsconfig.base.json but not documented by the installed @effect/tsgo`)
+    )
+  );
+};
+
+/**
+ * Compare the root plugin's option set with the options the installed compiler documents.
+ *
+ * **Details**
+ *
+ * Every documented option must be set and every set option must be documented; `name` is the
+ * plugin identifier and is not an option. An unset option runs at whatever the installed
+ * release decides, which is the same silent drift the severity map guards against.
+ *
+ * **Example** (Report an unset option)
+ *
+ * ```ts
+ * import { collectTsgoPluginOptionParityDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const diagnostics = collectTsgoPluginOptionParityDiagnosticsForTesting({
+ *   documentedOptionNames: ["diagnosticSeverity", "refactors"],
+ *   plugin: { name: "@effect/language-service", diagnosticSeverity: {} },
+ * })
+ * console.log(diagnostics) // => ["refactors: documented by the installed @effect/tsgo but not set in tsconfig.base.json"]
+ * ```
+ *
+ * @param input - Option names read from the installed README and the root `@effect/language-service` plugin record.
+ * @returns Human-readable parity diagnostics; empty when the sets match.
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectTsgoPluginOptionParityDiagnosticsForTesting = (
+  input: TsgoPluginOptionParityDiagnosticsInput
+): ReadonlyArray<string> => collectPluginOptionParityDiagnostics(input.documentedOptionNames, input.plugin);
+
 const findConfiguredPlugins = (config: unknown): O.Option<ReadonlyArray<unknown>> =>
   pipe(
     unknownRecordProperty(config, "compilerOptions"),
@@ -2439,6 +2659,7 @@ const assembleTsgoRuleDiagnostics = (
   extraRuleNames: ReadonlyArray<string>,
   nonErrorSeverities: ReadonlyArray<string>,
   disabledSeverityEntries: ReadonlyArray<string>,
+  pluginOptionDiagnostics: ReadonlyArray<string>,
   pluginProfileDiagnostics: ReadonlyArray<string>,
   generatedAliasDiagnostics: ReadonlyArray<string>,
   disabledDirectives: ReadonlyArray<string>
@@ -2447,6 +2668,7 @@ const assembleTsgoRuleDiagnostics = (
   ...renderTsgoRuleDiagnostics("unexpected configured rules", extraRuleNames),
   ...renderTsgoRuleDiagnostics("rules not configured as error", nonErrorSeverities),
   ...renderTsgoRuleDiagnostics("diagnosticSeverity entries set to off", disabledSeverityEntries),
+  ...renderTsgoRuleDiagnostics("plugin options out of parity with the installed compiler", pluginOptionDiagnostics),
   ...renderTsgoRuleDiagnostics("invalid workspace Effect language-service profiles", pluginProfileDiagnostics),
   ...renderTsgoRuleDiagnostics("generated Vitest alias drift", generatedAliasDiagnostics),
   ...renderTsgoRuleDiagnostics("disabled Effect diagnostic directives", disabledDirectives),
@@ -2480,10 +2702,17 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     .readFileString(readmePath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${readmePath}.`));
   const installedRuleNames = extractEffectTsgoReadmeRuleNames(readmeText);
+  const documentedOptionNames = extractEffectTsgoReadmePluginOptionNamesForTesting(readmeText);
 
   if (A.isReadonlyArrayEmpty(installedRuleNames)) {
     return yield* QualityScriptCommandError.make({
       message: "Failed to discover @effect/tsgo diagnostic rules from the installed README.",
+      exitCode: 1,
+    });
+  }
+  if (A.isReadonlyArrayEmpty(documentedOptionNames)) {
+    return yield* QualityScriptCommandError.make({
+      message: "Failed to discover @effect/tsgo plugin options from the installed README example config.",
       exitCode: 1,
     });
   }
@@ -2581,6 +2810,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     "plugins",
     "@effect/language-service",
   ]);
+  const pluginOptionDiagnostics = collectPluginOptionParityDiagnostics(documentedOptionNames, plugin.value);
   const pluginProfileDiagnostics = yield* collectWorkspaceTsconfigProfileDiagnostics(repoRoot, plugin.value);
   const disabledDirectives = yield* collectDisabledEffectDiagnosticDirectives(repoRoot);
   const diagnostics = assembleTsgoRuleDiagnostics(
@@ -2588,6 +2818,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     extraRuleNames,
     nonErrorSeverities,
     disabledSeverityEntries,
+    pluginOptionDiagnostics,
     pluginProfileDiagnostics,
     generatedAliasDiagnostics,
     disabledDirectives
@@ -2603,7 +2834,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   }
 
   yield* Console.log(
-    `[lint:tsgo-rules] verified ${A.length(installedRuleNames)} installed @effect/tsgo rule(s) are configured as error`
+    `[lint:tsgo-rules] verified ${A.length(installedRuleNames)} installed @effect/tsgo rule(s) are configured as error and ${A.length(documentedOptionNames)} documented plugin option(s) are set explicitly`
   );
 });
 

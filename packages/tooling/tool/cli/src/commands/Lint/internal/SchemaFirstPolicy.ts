@@ -30,7 +30,7 @@ const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
   "SFV4-equivalence":
     "Derive comparison from S.toEquivalence(schema) or SchemaUtils.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ.",
   "SFV4-tagged-error-equivalence":
-    "Annotate the class with $I.annoteError<Self>(...) so it adopts the declared struct equivalence; opaque causes use Defect from @beep/schema, which declares its own always-equal equivalence.",
+    "Remove the class-level toEquivalence hook; Effect derives Schema class equivalence from the declared fields by construction. Opaque causes use Defect from @beep/schema, which declares its own always-equal equivalence.",
   "SFV4-precision-audit":
     "Replace broad email S.String fields with @beep/schema Email or a local precise email schema; inventory only external protocol fields that intentionally allow non-email strings.",
   "SFV4-arbitrary-tests":

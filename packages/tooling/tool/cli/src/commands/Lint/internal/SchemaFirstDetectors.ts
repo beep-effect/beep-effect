@@ -5,9 +5,11 @@
  * @since 0.0.0
  */
 
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { flow, pipe } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
 import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
 import type { ClassDeclaration, InterfaceDeclaration, Type, TypeAliasDeclaration, TypeElementTypes } from "ts-morph";
@@ -34,8 +36,8 @@ const DEFAULTS_SCHEMA_SIGNAL_PATTERN =
   /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError)|[A-Za-z_$][\w$]*Entity\.Entity|withConstructorDefault|withDecodingDefault|SchemaUtils\.withKeyDefaults)\b/;
 const EQUIVALENCE_SCHEMA_SIGNAL_PATTERN =
   /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError|toEquivalence|overrideToEquivalence)|[A-Za-z_$][\w$]*Entity\.Entity|SchemaUtils\.toEquivalence)\b/;
-const TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:(?:S|Schema)\.)?TaggedError\b/;
-const NAMESPACED_TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:S|Schema)\.TaggedError\b/;
+const TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:(?:S|Schema)\.)?(?:Class|Error|TaggedClass|TaggedError)\b/;
+const NAMESPACED_TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:S|Schema)\.(?:Class|Error|TaggedClass|TaggedError)\b/;
 const FN_CALL_SIGNAL_PATTERN = /\bFn\s*\(/;
 const NORMALIZATION_METHOD_NAMES = ["trim", "toUpperCase", "toLowerCase"] as const;
 const NORMALIZATION_CALL_SIGNAL_PATTERN = /\.(?:trim|toUpperCase|toLowerCase)\(/;
@@ -1068,15 +1070,39 @@ const sourceHasTaggedErrorSignal = (sourceFile: import("ts-morph").SourceFile): 
   );
 };
 
-const isNamespacedTaggedErrorFactory = (factory: Node): boolean =>
+// Every Schema class factory (`makeClass` upstream) derives `toEquivalence` from the declared
+// field struct by construction since effect@4.0.0-rc.113, so a class-level hook is redundant on
+// all four. The annotations argument follows the fields for `Class`/`Error` and follows the tag
+// and fields for the tagged variants.
+const SchemaClassFactoryName = LiteralKit(["Class", "Error", "TaggedClass", "TaggedError"]);
+const isSchemaClassFactoryName = S.is(SchemaClassFactoryName);
+const schemaClassAnnotationArgumentIndex = SchemaClassFactoryName.$match({
+  Class: () => 1,
+  Error: () => 1,
+  TaggedClass: () => 2,
+  TaggedError: () => 2,
+});
+
+const namespacedSchemaClassFactoryName = (factory: Node): O.Option<typeof SchemaClassFactoryName.Type> =>
   Node.isPropertyAccessExpression(factory) &&
-  factory.getName() === "TaggedError" &&
-  (factory.getExpression().getText() === "S" || factory.getExpression().getText() === "Schema");
+  (factory.getExpression().getText() === "S" || factory.getExpression().getText() === "Schema")
+    ? pipe(factory.getName(), O.liftPredicate(isSchemaClassFactoryName))
+    : O.none();
 
-const isNamedImportTaggedErrorFactory = (factory: Node, sourceFile: import("ts-morph").SourceFile): boolean =>
-  Node.isIdentifier(factory) && factory.getText() === "TaggedError" && sourceImportsNamedTaggedError(sourceFile);
+const namedImportTaggedErrorFactoryName = (
+  factory: Node,
+  sourceFile: import("ts-morph").SourceFile
+): O.Option<typeof SchemaClassFactoryName.Type> =>
+  Node.isIdentifier(factory) && factory.getText() === "TaggedError" && sourceImportsNamedTaggedError(sourceFile)
+    ? O.some("TaggedError")
+    : O.none();
 
-const taggedErrorDeclarationCall = (declaration: ClassDeclaration): O.Option<import("ts-morph").CallExpression> => {
+interface SchemaClassDeclarationCall {
+  readonly annotation: O.Option<Node>;
+  readonly factoryName: typeof SchemaClassFactoryName.Type;
+}
+
+const schemaClassDeclarationCall = (declaration: ClassDeclaration): O.Option<SchemaClassDeclarationCall> => {
   const outerCall = declaration.getExtends()?.getExpression();
   if (!Node.isCallExpression(outerCall)) {
     return O.none();
@@ -1088,26 +1114,22 @@ const taggedErrorDeclarationCall = (declaration: ClassDeclaration): O.Option<imp
   }
 
   const factory = factoryCall.getExpression();
-  return isNamespacedTaggedErrorFactory(factory) ||
-    isNamedImportTaggedErrorFactory(factory, declaration.getSourceFile())
-    ? O.some(outerCall)
-    : O.none();
+  return pipe(
+    namespacedSchemaClassFactoryName(factory),
+    O.orElse(() => namedImportTaggedErrorFactoryName(factory, declaration.getSourceFile())),
+    O.map((factoryName) => ({
+      factoryName,
+      annotation: A.get(outerCall.getArguments(), schemaClassAnnotationArgumentIndex(factoryName)),
+    }))
+  );
 };
 
 const isToEquivalenceAnnotationProperty = (node: Node): boolean =>
   (Node.isPropertyAssignment(node) || Node.isShorthandPropertyAssignment(node) || Node.isMethodDeclaration(node)) &&
   node.getName() === "toEquivalence";
 
-const isErrorAnnotationCall = (node: Node): boolean => {
-  if (!Node.isCallExpression(node)) {
-    return false;
-  }
-  const callee = node.getExpression();
-  return Node.isPropertyAccessExpression(callee) && callee.getName() === "annoteError";
-};
-
 const annotationCarriesToEquivalence = (annotation: Node, depth = 0): boolean => {
-  if (isErrorAnnotationCall(annotation) || A.some(annotation.getDescendants(), isToEquivalenceAnnotationProperty)) {
+  if (A.some(annotation.getDescendants(), isToEquivalenceAnnotationProperty)) {
     return true;
   }
   if (depth >= 3) {
@@ -1131,12 +1153,9 @@ const taggedErrorEquivalenceEntryFromClassDeclaration = (
   owner: string
 ): O.Option<SchemaFirstInventoryEntry> =>
   pipe(
-    taggedErrorDeclarationCall(declaration),
-    O.filter((call) => {
-      const annotation = call.getArguments()[2];
-      return annotation === undefined || !annotationCarriesToEquivalence(annotation);
-    }),
-    O.map(() => {
+    schemaClassDeclarationCall(declaration),
+    O.filter((call) => O.exists(call.annotation, (annotation) => annotationCarriesToEquivalence(annotation))),
+    O.map((call) => {
       const symbol = declarationSymbol(declaration, declaration.getName());
       return SchemaFirstInventoryEntry.make({
         file,
@@ -1146,7 +1165,7 @@ const taggedErrorEquivalenceEntryFromClassDeclaration = (
         ruleId: "SFV4-tagged-error-equivalence",
         line: declaration.getSourceFile().getLineAndColumnAtPos(declaration.getStart()).line,
         owner,
-        reason: `S.TaggedError declaration "${symbol}" must declare fields-only equivalence at the class declaration: pass $I.annoteError<${symbol}>(...) as its annotations (or a toEquivalence hook that adopts the declared struct equivalence). Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.`,
+        reason: `S.${call.factoryName} declaration "${symbol}" declares a toEquivalence hook at the class. Effect derives a Schema class's equivalence from its declared field struct by construction (effect@4.0.0-rc.113 and later), so the hook is redundant and hides the derived law. Remove it; a field that must not take part in identity declares an always-equal equivalence on its own schema (Defect from @beep/schema).`,
       });
     })
   );
