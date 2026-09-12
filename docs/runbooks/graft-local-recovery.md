@@ -190,6 +190,126 @@ runs, and a report with copied, removed, skipped, refused, and byte counts for
 writes. The command runs neither Git nor Graft. A dangling or unreadable
 sibling entry is skipped by `--siblings` rather than aborting discovery.
 
+## Refresh the meaning tier nightly (operator only)
+
+`beep graft deep refresh` is the scheduled form of the two sections above: it
+pins one owner clone to `origin/main`, rebuilds the meaning tier there, seeds
+the siblings, and runs a structural `graft build` in each seeded clone. It
+spends model quota, so it is an operator job like the build itself. Agents
+never run `refresh` or `install-timer`.
+
+The owner clone exists only for this job; nobody works in it, so the refresh
+can assume a clean checkout on `main` and pin it without asking. Bootstrap it
+once against an existing clone's object store:
+
+```sh
+git clone --reference "$HOME/YeeBois/projects/beep-effect" \
+  https://github.com/beep-effect/beep-effect.git "$HOME/YeeBois/projects/beep-effect0"
+cd "$HOME/YeeBois/projects/beep-effect0" && bun install --frozen-lockfile && graft build
+mise trust "$HOME/YeeBois/projects/beep-effect0/mise.toml"
+bun run beep graft cache sync --from "$HOME/YeeBois/projects/beep-effect" --to "$HOME/YeeBois/projects/beep-effect0"
+```
+
+The HTTPS remote is load-bearing, not a preference. The systemd user manager
+carries no `SSH_AUTH_SOCK`, so a nightly `git fetch` over an SSH remote has no
+agent to answer for the key and fails; the repo is public, so an HTTPS remote
+fetches with no credentials at all. Both `refresh` and `install-timer` read
+`git remote get-url origin` in preflight and refuse anything that is not
+`https://`. An owner clone that already exists over SSH is re-pointed in place:
+
+```sh
+git -C "$HOME/YeeBois/projects/beep-effect0" remote set-url origin \
+  https://github.com/beep-effect/beep-effect.git
+```
+
+The `mise trust` line is not optional either: the timer resolves `graft`
+through the mise node shim, and an untrusted config makes that shim refuse to
+run. `install-timer` runs `mise trust --show` in the owner and fails closed on
+every answer but a clean one, so a mise that is missing, broken, or reporting an
+untrusted config refuses the install instead of leaving a unit that fails every
+night. The first seed is what saves the first night's full build: the refresh
+re-summarizes only changed files, so the owner starts from a meaning tier rather
+than from nothing.
+
+The provider keys live in `$HOME/.config/beep-graft/env`, which systemd reads as
+the unit's `EnvironmentFile`. It holds the same keys as the deep-build
+environment files below (`GRAFT_PROVIDER`, `GRAFT_BASE_URL`, `GRAFT_API_KEY`,
+`GRAFT_MODEL`, `GRAFT_LLM_RETRIES`). Nothing reads or prints it except systemd;
+the CLI only checks that it exists, and the rendered unit references it without
+a leading `-`, so a missing file fails the unit loudly instead of starting a
+build with no key.
+
+Copy an existing deep-build environment file rather than starting from an
+empty one, then set the model the nightly job should spend:
+
+```sh
+install -m 600 "$HOME/.cache/beep/graft-deep-grok.env" "$HOME/.config/beep-graft/env"
+${EDITOR:-nano} "$HOME/.config/beep-graft/env"   # set GRAFT_MODEL=
+bun run beep graft deep install-timer --owner "$HOME/YeeBois/projects/beep-effect0"
+```
+
+The nightly job on this workstation runs `GRAFT_MODEL=claude-opus-5` through
+the local proxy; `grok-4.6` and `gpt-6-astra` remain valid values, and the
+effort suffixes in the build section below apply here too.
+
+That renders `beep-graft-deep-refresh.service` and
+`beep-graft-deep-refresh.timer` into `$HOME/.config/systemd/user/`, reloads the
+user manager, and enables the timer for `*-*-* 02:30:00` with a ten-minute
+randomized delay. The service carries its own `PATH` (the mise shims, then
+`$HOME/.local/bin` and `$HOME/.bun/bin`) because a user unit otherwise starts with
+almost none, and `CI=true` so the repo CLI never waits on a prompt. Pass
+`--on-calendar` for a different schedule and `--uninstall` to disable and
+remove both units.
+
+Two `ExecStartPre` lines pull the owner clone and reinstall its dependencies
+before the CLI boots, so each night runs main's current `beep graft deep
+refresh` rather than whatever the clone held the day the timer was installed.
+That is also why the first scheduled run after this lands needs no manual pull:
+the unit updates the clone itself. The CLI repeats both steps once it starts;
+on an already-current clone they are no-ops.
+
+`TimeoutStartSec=8h` bounds the run above the sum of its own phase timeouts
+(a five-hour build plus fetch, install, and per-clone rebuilds).
+`KillMode=mixed` with `TimeoutStopSec=90` is what makes a stop legible:
+`systemctl --user stop` sends `SIGTERM` to the CLI alone, the runtime turns
+that into a fiber interrupt, and the run has time to write `outcome: failed`
+with an `interrupted` message and release its lock before systemd escalates.
+
+Read the last run back with:
+
+```sh
+bun run beep graft deep status            # human summary
+bun run beep graft deep status --json     # the schema-encoded status document
+```
+
+State lives under `$HOME/.local/state/beep-graft`: `status.json` is rewritten
+atomically at every phase transition, `refresh.lock` fences concurrent runs,
+and `runs/<timestamp>.log` holds the captured output of every command that run
+executed, including the deep build. Because the status file is written on entry
+to each phase, `status` shows an in-flight run as `phase: build` with no
+outcome; a lock held by a live process refuses a second run and leaves the
+first run's status untouched.
+
+The outcome is the part worth reading. `ok` means the build finished at or
+above the coverage target and the seed applied with no refusals. `degraded`
+means the night is usable but imperfect: coverage below `--min-coverage`
+(0.95 by default), a seed the sync refused, or a sibling whose structural
+rebuild exited non-zero. `degraded` exits zero on purpose, so a 94% night does
+not page anyone. `failed` means a step refused or exited non-zero; the run
+exits non-zero and sends a critical desktop notification naming the failure.
+
+Run it by hand the same way the timer does, which is also how to test a change
+to the schedule before trusting it overnight:
+
+```sh
+bun run beep graft deep refresh --owner "$HOME/YeeBois/projects/beep-effect0" --jobs 16
+bun run beep graft deep refresh --owner "$HOME/YeeBois/projects/beep-effect0" --no-seed --no-rebuild
+```
+
+`--model` overrides `GRAFT_MODEL` for the build; leaving it off keeps the
+environment file in charge. `--no-seed` stops after the build, and
+`--no-rebuild` seeds without spending time on each clone's structural pass.
+
 ## Build the meaning tier (operator only)
 
 The meaning tier (`graft build --deep`) adds the concept map and the per-symbol

@@ -1,25 +1,25 @@
 /**
- * Repo-owned command group for seeding Graft meaning artifacts.
+ * Repo-owned command group for seeding and refreshing Graft meaning artifacts.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 /**
- * Graft command group root.
+ * Graft command group root and its testable deep-refresh handlers.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export { graftCommand } from "./Graft.command.ts";
+export { graftCommand, runDeepInstallTimer, runDeepRefresh, runDeepStatus } from "./Graft.command.ts";
 /**
- * Typed source, target, and I/O failures.
+ * Typed source, target, I/O, lock, preflight, and step failures.
  *
  * @category errors
  * @since 0.0.0
  */
 export * from "./Graft.errors.ts";
 /**
- * Artifact domains, sync plans, and copy receipts.
+ * Artifact domains, sync plans, copy receipts, and refresh status.
  *
  * @category schemas
  * @since 0.0.0
@@ -33,9 +33,35 @@ export * from "./Graft.schemas.ts";
  */
 export { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
 /**
+ * Nightly meaning-tier refresh service, subprocess runner, and unit rendering.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export {
+  GraftDeepRefresh,
+  GraftDeepRefreshLayer,
+  GraftDeepRefreshLive,
+  GraftDeepRefreshProgress,
+  GraftDeepRunner,
+  GraftDeepRunnerLive,
+  renderGraftDeepRefreshUnits,
+} from "./GraftDeep.service.ts";
+/**
  * Cache sync service contract.
  *
  * @category type-level
  * @since 0.0.0
  */
 export type { GraftCacheSyncShape } from "./Graft.service.ts";
+/**
+ * Refresh service, runner, and failure contracts.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type {
+  GraftDeepRefreshFailure,
+  GraftDeepRefreshShape,
+  GraftDeepRunnerShape,
+} from "./GraftDeep.service.ts";

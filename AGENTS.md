@@ -221,6 +221,7 @@ memory layer; decision log 2026-09-08). Before grepping or opening source, run
 (exhaustive), `graft callers <symbol> [--depth N]` (edges), `graft skeleton
 <file>` (API surface), or `graft map` (orientation); the `graft` skill has the
 routing rules and caveats. Refresh with the exact `graft build` (structural,
-no key). Never run `graft init`, `uninstall`, `upgrade`, or `build --deep`
-from an agent: they rewrite tracked wiring or spend model quota.
+no key). Never run `graft init`, `uninstall`, `upgrade`, `build --deep`, `beep
+graft deep refresh`, or `beep graft deep install-timer` from an agent: they
+rewrite tracked wiring, spend model quota, or schedule a job that does.
 <!-- graft:end -->
