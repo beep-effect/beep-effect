@@ -203,11 +203,11 @@ can assume a clean checkout on `main` and pin it without asking. Bootstrap it
 once against an existing clone's object store:
 
 ```sh
-git clone --reference ~/YeeBois/projects/beep-effect \
-  https://github.com/beep-effect/beep-effect.git ~/YeeBois/projects/beep-effect0
-cd ~/YeeBois/projects/beep-effect0 && bun install --frozen-lockfile && graft build
-mise trust ~/YeeBois/projects/beep-effect0/mise.toml
-bun run beep graft cache sync --from ~/YeeBois/projects/beep-effect --to ~/YeeBois/projects/beep-effect0
+git clone --reference $HOME/YeeBois/projects/beep-effect \
+  https://github.com/beep-effect/beep-effect.git $HOME/YeeBois/projects/beep-effect0
+cd $HOME/YeeBois/projects/beep-effect0 && bun install --frozen-lockfile && graft build
+mise trust $HOME/YeeBois/projects/beep-effect0/mise.toml
+bun run beep graft cache sync --from $HOME/YeeBois/projects/beep-effect --to $HOME/YeeBois/projects/beep-effect0
 ```
 
 The HTTPS remote is load-bearing, not a preference. The systemd user manager
@@ -218,7 +218,7 @@ fetches with no credentials at all. Both `refresh` and `install-timer` read
 `https://`. An owner clone that already exists over SSH is re-pointed in place:
 
 ```sh
-git -C ~/YeeBois/projects/beep-effect0 remote set-url origin \
+git -C $HOME/YeeBois/projects/beep-effect0 remote set-url origin \
   https://github.com/beep-effect/beep-effect.git
 ```
 
@@ -231,7 +231,7 @@ night. The first seed is what saves the first night's full build: the refresh
 re-summarizes only changed files, so the owner starts from a meaning tier rather
 than from nothing.
 
-The provider keys live in `~/.config/beep-graft/env`, which systemd reads as
+The provider keys live in `$HOME/.config/beep-graft/env`, which systemd reads as
 the unit's `EnvironmentFile`. It holds the same keys as the deep-build
 environment files below (`GRAFT_PROVIDER`, `GRAFT_BASE_URL`, `GRAFT_API_KEY`,
 `GRAFT_MODEL`, `GRAFT_LLM_RETRIES`). Nothing reads or prints it except systemd;
@@ -243,9 +243,9 @@ Copy an existing deep-build environment file rather than starting from an
 empty one, then set the model the nightly job should spend:
 
 ```sh
-install -m 600 ~/.cache/beep/graft-deep-grok.env ~/.config/beep-graft/env
-${EDITOR:-nano} ~/.config/beep-graft/env   # set GRAFT_MODEL=
-bun run beep graft deep install-timer --owner ~/YeeBois/projects/beep-effect0
+install -m 600 $HOME/.cache/beep/graft-deep-grok.env $HOME/.config/beep-graft/env
+${EDITOR:-nano} $HOME/.config/beep-graft/env   # set GRAFT_MODEL=
+bun run beep graft deep install-timer --owner $HOME/YeeBois/projects/beep-effect0
 ```
 
 The nightly job on this workstation runs `GRAFT_MODEL=claude-opus-5` through
@@ -253,10 +253,10 @@ the local proxy; `grok-4.6` and `gpt-6-astra` remain valid values, and the
 effort suffixes in the build section below apply here too.
 
 That renders `beep-graft-deep-refresh.service` and
-`beep-graft-deep-refresh.timer` into `~/.config/systemd/user/`, reloads the
+`beep-graft-deep-refresh.timer` into `$HOME/.config/systemd/user/`, reloads the
 user manager, and enables the timer for `*-*-* 02:30:00` with a ten-minute
 randomized delay. The service carries its own `PATH` (the mise shims, then
-`~/.local/bin` and `~/.bun/bin`) because a user unit otherwise starts with
+`$HOME/.local/bin` and `$HOME/.bun/bin`) because a user unit otherwise starts with
 almost none, and `CI=true` so the repo CLI never waits on a prompt. Pass
 `--on-calendar` for a different schedule and `--uninstall` to disable and
 remove both units.
@@ -282,7 +282,7 @@ bun run beep graft deep status            # human summary
 bun run beep graft deep status --json     # the schema-encoded status document
 ```
 
-State lives under `~/.local/state/beep-graft`: `status.json` is rewritten
+State lives under `$HOME/.local/state/beep-graft`: `status.json` is rewritten
 atomically at every phase transition, `refresh.lock` fences concurrent runs,
 and `runs/<timestamp>.log` holds the captured output of every command that run
 executed, including the deep build. Because the status file is written on entry
@@ -302,8 +302,8 @@ Run it by hand the same way the timer does, which is also how to test a change
 to the schedule before trusting it overnight:
 
 ```sh
-bun run beep graft deep refresh --owner ~/YeeBois/projects/beep-effect0 --jobs 16
-bun run beep graft deep refresh --owner ~/YeeBois/projects/beep-effect0 --no-seed --no-rebuild
+bun run beep graft deep refresh --owner $HOME/YeeBois/projects/beep-effect0 --jobs 16
+bun run beep graft deep refresh --owner $HOME/YeeBois/projects/beep-effect0 --no-seed --no-rebuild
 ```
 
 `--model` overrides `GRAFT_MODEL` for the build; leaving it off keeps the
