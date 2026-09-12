@@ -256,7 +256,7 @@ const writeFlag = Flag.Boolean("write").pipe(
 );
 const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Prove generation and report a stale git-ignored local goals/INDEX.md copy as an advisory")
+  Flag.withDescription("Prove generation and refresh a stale git-ignored local goals/INDEX.md copy in place")
 );
 
 const checkPortfolioIndex = Effect.fn("Goals.checkPortfolioIndex")(function* (content: string) {
@@ -264,12 +264,15 @@ const checkPortfolioIndex = Effect.fn("Goals.checkPortfolioIndex")(function* (co
   const existing = yield* fs
     .readFileString(PORTFOLIO_INDEX_PATH)
     .pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
-  // The projection is git-ignored workstation state: a fast-forward that lands a manifest change
-  // leaves the local copy stale, and no hosted lane ever carries the file. Staleness is therefore
-  // an advisory, never a red that only local runs can hit.
+  // The projection is git-ignored workstation state that may carry no authored content: a
+  // fast-forward that lands a manifest change leaves the local copy stale, and no hosted lane ever
+  // carries the file. A stale copy is therefore rewritten from the projection instead of failing a
+  // check that only local runs could ever hit (decision log 2026-09-12). Tracked files are never
+  // written here.
   if (O.isSome(existing) && existing.value !== content) {
+    yield* writeContainedFileString(".", PORTFOLIO_INDEX_PATH, content);
     yield* Console.log(
-      `[goals:index] advisory: local ${PORTFOLIO_INDEX_PATH} is stale against goals/*/ops/manifest.json (git-ignored projection); run \`bun run beep goals index --write\`.`
+      `[goals:index] refreshed stale git-ignored ${PORTFOLIO_INDEX_PATH} from goals/*/ops/manifest.json.`
     );
     return;
   }
@@ -308,8 +311,9 @@ const runGoalsIndex = Effect.fn("Goals.runGoalsIndex")(function* (options: {
  *
  * Without `--write` the command prints the expected index. With `--check`, it
  * proves generation and compares an existing local copy: the file's absence is
- * accepted and a stale copy is reported as an advisory, because the projection
- * is git-ignored workstation state that no hosted lane carries.
+ * accepted and a stale copy is rewritten from the projection, because the file
+ * is git-ignored workstation state that no hosted lane carries and that may
+ * never hold authored content. `--check` writes nothing tracked.
  *
  * **Example** (Read the subcommand identity)
  *

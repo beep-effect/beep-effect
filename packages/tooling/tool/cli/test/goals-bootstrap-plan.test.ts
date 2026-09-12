@@ -21,11 +21,14 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { assertExitSuccess, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
@@ -95,7 +98,10 @@ const expectGolden = Effect.fn("expectGolden")(function* (name: string, plan: Ma
 const run = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>
   Effect.runPromise(effect.pipe(provideScopedLayer(NodeServices.layer)));
 
-const commandTestLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer));
+const commandTestLayer = Layer.mergeAll(
+  PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
+  TestConsole.layer
+);
 
 describe("goals bootstrap --plan golden fixtures", () => {
   it("round-trips arbitrary goal slugs through the schema codec", () => {
@@ -436,22 +442,28 @@ describe("goals adopt --plan index parity", () => {
 describe("goals index command", () => {
   const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 
-  it("accepts an absent or matching local projection and reports a stale copy as an advisory", () =>
+  it("accepts an absent or matching local projection and refreshes a stale copy in place", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.makeDirectory("goals", { recursive: true });
 
-          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])))).toBe(true);
-          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--write"])))).toBe(true);
-          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])))).toBe(true);
+          assertExitSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])), undefined);
+          assertExitSuccess(yield* Effect.exit(runGoalsCommand(["index", "--write"])), undefined);
+          assertExitSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])), undefined);
 
           // A stale copy is git-ignored workstation state (left behind by any pull that lands a
-          // manifest change) that no hosted lane carries, so it must not fail the check.
+          // manifest change) that no hosted lane carries: the check rewrites it instead of failing.
           yield* fs.writeFileString(PORTFOLIO_INDEX_PATH, "# stale local projection\n");
-          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])))).toBe(true);
-          expect(yield* fs.readFileString(PORTFOLIO_INDEX_PATH)).toBe("# stale local projection\n");
+          assertExitSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])), undefined);
+          strictEqual(yield* fs.readFileString(PORTFOLIO_INDEX_PATH), yield* buildPortfolioIndexContent());
+          deepStrictEqual(A.filter(yield* TestConsole.logLines, P.isString), [
+            "[goals:index] OK: projection generated successfully.",
+            "[goals:index] wrote goals/INDEX.md.",
+            "[goals:index] OK: projection generated successfully and the local copy matches.",
+            "[goals:index] refreshed stale git-ignored goals/INDEX.md from goals/*/ops/manifest.json.",
+          ]);
         })
       ).pipe(provideScopedLayer(commandTestLayer))
     ));
