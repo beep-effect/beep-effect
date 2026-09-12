@@ -16,6 +16,18 @@
         "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"],
         "createdAt": "2026-09-03T02:46:13.049Z",
         "reason": "Codex security remediation: this validator contains intentional HTML conformance diagnostic strings, not rendered image markup"
+      },
+      {
+        "rule": "overused-font",
+        "value": "fraunces",
+        "createdAt": "2026-09-12T02:09:12.555Z",
+        "reason": "user confirmed: Benjamin approved the rendered hero (\"looks great\", 2026-09-11) with Fraunces as the display face"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-09-12T02:09:12.561Z",
+        "reason": "user confirmed: Benjamin approved the rendered hero (\"looks great\", 2026-09-11) with Geist as the body face"
       }
     ]
   }

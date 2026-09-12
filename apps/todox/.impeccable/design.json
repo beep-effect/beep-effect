@@ -1,0 +1,559 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T00:00:00Z",
+  "title": "Design System: Todox",
+  "extensions": {
+    "colorMeta": {
+      "parchment": {
+        "role": "neutral",
+        "displayName": "Parchment",
+        "canonical": "#f4ecdc",
+        "tonalRamp": [
+          "oklch(20% 0.02 85)",
+          "oklch(32% 0.03 85)",
+          "oklch(45% 0.04 85)",
+          "oklch(58% 0.05 85)",
+          "oklch(70% 0.05 85)",
+          "oklch(82% 0.04 85)",
+          "oklch(90% 0.03 85)",
+          "oklch(96% 0.02 85)"
+        ]
+      },
+      "parchment-deep": {
+        "role": "neutral",
+        "displayName": "Parchment, Deep",
+        "canonical": "#eadfc7",
+        "tonalRamp": [
+          "oklch(20% 0.02 85)",
+          "oklch(32% 0.03 85)",
+          "oklch(45% 0.04 85)",
+          "oklch(58% 0.05 85)",
+          "oklch(70% 0.05 85)",
+          "oklch(82% 0.04 85)",
+          "oklch(90% 0.03 85)",
+          "oklch(96% 0.02 85)"
+        ]
+      },
+      "parchment-line": {
+        "role": "neutral",
+        "displayName": "Ink Line",
+        "canonical": "rgb(16 40 31 / 0.14)",
+        "tonalRamp": [
+          "oklch(15% 0.03 165)",
+          "oklch(25% 0.04 165)",
+          "oklch(36% 0.05 165)",
+          "oklch(48% 0.06 165)",
+          "oklch(60% 0.06 165)",
+          "oklch(72% 0.05 165)",
+          "oklch(84% 0.04 165)",
+          "oklch(95% 0.02 165)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#10281f",
+        "tonalRamp": [
+          "oklch(15% 0.03 165)",
+          "oklch(25% 0.04 165)",
+          "oklch(36% 0.05 165)",
+          "oklch(48% 0.06 165)",
+          "oklch(60% 0.06 165)",
+          "oklch(72% 0.05 165)",
+          "oklch(84% 0.04 165)",
+          "oklch(95% 0.02 165)"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Ink, Soft",
+        "canonical": "#3f5a4d",
+        "tonalRamp": [
+          "oklch(15% 0.03 165)",
+          "oklch(25% 0.04 165)",
+          "oklch(36% 0.05 165)",
+          "oklch(48% 0.06 165)",
+          "oklch(60% 0.06 165)",
+          "oklch(72% 0.05 165)",
+          "oklch(84% 0.04 165)",
+          "oklch(95% 0.02 165)"
+        ]
+      },
+      "ink-mute": {
+        "role": "neutral",
+        "displayName": "Ink, Mute",
+        "canonical": "#4f6358",
+        "tonalRamp": [
+          "oklch(15% 0.03 165)",
+          "oklch(25% 0.04 165)",
+          "oklch(36% 0.05 165)",
+          "oklch(48% 0.06 165)",
+          "oklch(60% 0.06 165)",
+          "oklch(72% 0.05 165)",
+          "oklch(84% 0.04 165)",
+          "oklch(95% 0.02 165)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Ledger Green",
+        "canonical": "#1e7a55",
+        "tonalRamp": [
+          "oklch(15% 0.05 160)",
+          "oklch(26% 0.08 160)",
+          "oklch(38% 0.10 160)",
+          "oklch(51% 0.11 160)",
+          "oklch(63% 0.12 160)",
+          "oklch(75% 0.12 160)",
+          "oklch(86% 0.10 160)",
+          "oklch(95% 0.04 160)"
+        ]
+      },
+      "accent-strong": {
+        "role": "primary",
+        "displayName": "Ledger Green, Pressed",
+        "canonical": "#145c40",
+        "tonalRamp": [
+          "oklch(15% 0.05 160)",
+          "oklch(26% 0.08 160)",
+          "oklch(38% 0.10 160)",
+          "oklch(51% 0.11 160)",
+          "oklch(63% 0.12 160)",
+          "oklch(75% 0.12 160)",
+          "oklch(86% 0.10 160)",
+          "oklch(95% 0.04 160)"
+        ]
+      },
+      "accent-wash": {
+        "role": "primary",
+        "displayName": "Green Wash",
+        "canonical": "rgb(30 122 85 / 0.1)",
+        "tonalRamp": [
+          "oklch(15% 0.05 160)",
+          "oklch(26% 0.08 160)",
+          "oklch(38% 0.10 160)",
+          "oklch(51% 0.11 160)",
+          "oklch(63% 0.12 160)",
+          "oklch(75% 0.12 160)",
+          "oklch(86% 0.10 160)",
+          "oklch(95% 0.04 160)"
+        ]
+      },
+      "forest": {
+        "role": "neutral",
+        "displayName": "Forest",
+        "canonical": "#0d221a",
+        "tonalRamp": [
+          "oklch(15% 0.03 165)",
+          "oklch(23% 0.04 165)",
+          "oklch(33% 0.05 165)",
+          "oklch(45% 0.06 165)",
+          "oklch(57% 0.06 165)",
+          "oklch(70% 0.05 165)",
+          "oklch(83% 0.04 165)",
+          "oklch(95% 0.02 165)"
+        ]
+      },
+      "forest-raised": {
+        "role": "neutral",
+        "displayName": "Forest, Raised",
+        "canonical": "#123126",
+        "tonalRamp": [
+          "oklch(15% 0.03 165)",
+          "oklch(23% 0.04 165)",
+          "oklch(33% 0.05 165)",
+          "oklch(45% 0.06 165)",
+          "oklch(57% 0.06 165)",
+          "oklch(70% 0.05 165)",
+          "oklch(83% 0.04 165)",
+          "oklch(95% 0.02 165)"
+        ]
+      },
+      "forest-line": {
+        "role": "secondary",
+        "displayName": "Mint Line",
+        "canonical": "rgb(111 240 182 / 0.2)",
+        "tonalRamp": [
+          "oklch(18% 0.05 160)",
+          "oklch(30% 0.08 160)",
+          "oklch(42% 0.11 160)",
+          "oklch(55% 0.13 160)",
+          "oklch(68% 0.15 160)",
+          "oklch(80% 0.15 160)",
+          "oklch(88% 0.14 160)",
+          "oklch(96% 0.05 160)"
+        ]
+      },
+      "glow": {
+        "role": "secondary",
+        "displayName": "Mint Glow",
+        "canonical": "#6ff0b6",
+        "tonalRamp": [
+          "oklch(18% 0.05 160)",
+          "oklch(30% 0.08 160)",
+          "oklch(42% 0.11 160)",
+          "oklch(55% 0.13 160)",
+          "oklch(68% 0.15 160)",
+          "oklch(80% 0.15 160)",
+          "oklch(88% 0.14 160)",
+          "oklch(96% 0.05 160)"
+        ]
+      },
+      "glow-mid": {
+        "role": "secondary",
+        "displayName": "Mint, Mid",
+        "canonical": "rgb(111 240 182 / 0.78)",
+        "tonalRamp": [
+          "oklch(18% 0.05 160)",
+          "oklch(30% 0.08 160)",
+          "oklch(42% 0.11 160)",
+          "oklch(55% 0.13 160)",
+          "oklch(68% 0.15 160)",
+          "oklch(80% 0.15 160)",
+          "oklch(88% 0.14 160)",
+          "oklch(96% 0.05 160)"
+        ]
+      },
+      "glow-ghost": {
+        "role": "secondary",
+        "displayName": "Mint, Ghost",
+        "canonical": "rgb(111 240 182 / 0.6)",
+        "tonalRamp": [
+          "oklch(18% 0.05 160)",
+          "oklch(30% 0.08 160)",
+          "oklch(42% 0.11 160)",
+          "oklch(55% 0.13 160)",
+          "oklch(68% 0.15 160)",
+          "oklch(80% 0.15 160)",
+          "oklch(88% 0.14 160)",
+          "oklch(96% 0.05 160)"
+        ]
+      },
+      "glow-wash": {
+        "role": "secondary",
+        "displayName": "Mint Wash",
+        "canonical": "rgb(111 240 182 / 0.1)",
+        "tonalRamp": [
+          "oklch(18% 0.05 160)",
+          "oklch(30% 0.08 160)",
+          "oklch(42% 0.11 160)",
+          "oklch(55% 0.13 160)",
+          "oklch(68% 0.15 160)",
+          "oklch(80% 0.15 160)",
+          "oklch(88% 0.14 160)",
+          "oklch(96% 0.05 160)"
+        ]
+      },
+      "on-forest": {
+        "role": "neutral",
+        "displayName": "On Forest",
+        "canonical": "#f2f7f2",
+        "tonalRamp": [
+          "oklch(15% 0.01 160)",
+          "oklch(27% 0.01 160)",
+          "oklch(40% 0.01 160)",
+          "oklch(53% 0.01 160)",
+          "oklch(66% 0.01 160)",
+          "oklch(79% 0.01 160)",
+          "oklch(90% 0.01 160)",
+          "oklch(97% 0.01 160)"
+        ]
+      },
+      "on-accent": {
+        "role": "neutral",
+        "displayName": "On Accent",
+        "canonical": "#f7f3ea",
+        "tonalRamp": [
+          "oklch(20% 0.02 85)",
+          "oklch(32% 0.03 85)",
+          "oklch(45% 0.04 85)",
+          "oklch(58% 0.05 85)",
+          "oklch(70% 0.05 85)",
+          "oklch(82% 0.04 85)",
+          "oklch(90% 0.03 85)",
+          "oklch(96% 0.02 85)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The hero headline only; Fraunces at opsz 144, balanced."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section heads inside the 44rem head block; Fraunces at opsz 96."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Pillar headings and the wordmark; Fraunces at opsz 36 to 48."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "The paragraph under the hero and section heads, in ink-soft or on-forest .82."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All reading in Geist, 62ch measure; pillar paragraphs capped at 40ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase mono labels inside console, table, and code surfaces only; never above a heading."
+      },
+      "records": {
+        "displayName": "Records",
+        "purpose": "The session console body; identifiers at wdth 112.5 / wght 700."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "The skills code block on the forest surface."
+      }
+    },
+    "shadows": [
+      {
+        "name": "button-rest",
+        "value": "0 1px 0 rgb(16 40 31 / 0.2), 0 8px 20px -12px rgb(16 40 31 / 0.5)",
+        "purpose": "The primary pill on parchment at rest."
+      },
+      {
+        "name": "button-hover",
+        "value": "0 1px 0 rgb(16 40 31 / 0.25), 0 14px 28px -14px rgb(16 40 31 / 0.55)",
+        "purpose": "The primary pill on hover, with a -1px lift."
+      },
+      {
+        "name": "button-glow",
+        "value": "0 10px 30px -12px rgb(111 240 182 / 0.7)",
+        "purpose": "The mint pill on forest."
+      },
+      {
+        "name": "surface-drop",
+        "value": "0 30px 60px -40px rgb(16 40 31 / 0.6)",
+        "purpose": "The code block; the form uses -45px spread at 0.5 alpha."
+      },
+      {
+        "name": "console-drop",
+        "value": "0 1px 0 rgb(111 240 182 / 0.08) inset, 0 30px 60px -40px rgb(0 0 0 / 0.8)",
+        "purpose": "The session console: an inset mint line plus the deep drop."
+      },
+      {
+        "name": "field-focus-ring",
+        "value": "0 0 0 3px rgb(30 122 85 / 0.1)",
+        "purpose": "Inputs on focus-visible, with the border turned to accent."
+      },
+      {
+        "name": "wordmark-dot",
+        "value": "0 0 0 3px rgb(30 122 85 / 0.1)",
+        "purpose": "The ring around the wordmark dot on parchment; on forest it is 0 0 12px 2px rgb(111 240 182 / 0.45)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-ledger",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The only easing: state transitions, the graph draw-in, the core pulse, and the FAQ chevron."
+      },
+      {
+        "name": "duration-color",
+        "value": "160ms",
+        "purpose": "Background, color, border, stroke transitions."
+      },
+      {
+        "name": "duration-move",
+        "value": "200ms",
+        "purpose": "Transform, box-shadow, and the FAQ chevron rotation."
+      },
+      {
+        "name": "graph-draw",
+        "value": "1400ms ease-ledger 300ms forwards (stroke-dashoffset 600 to 0)",
+        "purpose": "The one authored moment: live graph edges draw in on load; collapsed under prefers-reduced-motion."
+      },
+      {
+        "name": "core-pulse",
+        "value": "3.2s ease-ledger 1600ms infinite (brightness 1 to 1.25)",
+        "purpose": "The core evidence node breathes after the edges land; collapsed under prefers-reduced-motion."
+      },
+      {
+        "name": "cursor-blink",
+        "value": "1.1s steps(1, end) infinite",
+        "purpose": "The focused record row's cursor mark; stopped under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "form-row",
+        "value": "40rem"
+      },
+      {
+        "name": "graph-labels",
+        "value": "48rem"
+      },
+      {
+        "name": "columns",
+        "value": "56rem"
+      },
+      {
+        "name": "bands",
+        "value": "64rem"
+      },
+      {
+        "name": "record-rows-container",
+        "value": "62ch (container query on the record pane)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The action pill on parchment: nav CTA and form submit.",
+      "html": "<a class=\"ds-btn-primary\" href=\"#\">Request a demo</a>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.35rem; border-radius: 999px; border: 1px solid transparent; background: var(--accent, #1e7a55); color: #f7f3ea; font-family: var(--font-body, Geist, sans-serif); font-weight: 560; letter-spacing: -0.005em; line-height: 1.2; text-decoration: none; cursor: pointer; box-shadow: 0 1px 0 rgb(16 40 31 / 0.2), 0 8px 20px -12px rgb(16 40 31 / 0.5); transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { background: var(--accent-strong, #145c40); transform: translateY(-1px); box-shadow: 0 1px 0 rgb(16 40 31 / 0.25), 0 14px 28px -14px rgb(16 40 31 / 0.55); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #1e7a55); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "The quiet pill on parchment: hairline border, wash on hover.",
+      "html": "<a class=\"ds-btn-ghost\" href=\"#\">See how it works</a>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.35rem; border-radius: 999px; border: 1px solid var(--parchment-line, rgb(16 40 31 / 0.14)); background: transparent; color: var(--ink, #10281f); font-family: var(--font-body, Geist, sans-serif); font-weight: 560; letter-spacing: -0.005em; line-height: 1.2; text-decoration: none; cursor: pointer; transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), border-color 160ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-ghost:hover { background: var(--accent-wash, rgb(30 122 85 / 0.1)); border-color: var(--accent, #1e7a55); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--accent, #1e7a55); outline-offset: 3px; }"
+    },
+    {
+      "name": "Glow Button",
+      "kind": "button",
+      "refersTo": "button-glow",
+      "description": "The hero's primary action on forest: mint fill, forest text, mint shadow.",
+      "html": "<div class=\"ds-forest\"><a class=\"ds-btn-glow\" href=\"#\">Request a demo <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 8h9M8.5 4.5 12 8l-3.5 3.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></a></div>",
+      "css": ".ds-forest { background: var(--forest, #0d221a); padding: 1.5rem; } .ds-btn-glow { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.35rem; border-radius: 999px; border: 1px solid transparent; background: var(--glow, #6ff0b6); color: var(--forest, #0d221a); font-family: var(--font-body, Geist, sans-serif); font-weight: 560; letter-spacing: -0.005em; line-height: 1.2; text-decoration: none; cursor: pointer; box-shadow: 0 10px 30px -12px rgb(111 240 182 / 0.7); transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-glow svg { width: 1em; height: 1em; } .ds-btn-glow:hover { background: #8cf6c7; transform: translateY(-1px); } .ds-btn-glow:focus-visible { outline: 2px solid var(--glow, #6ff0b6); outline-offset: 3px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "The hero's secondary action on forest: mint text, mint hairline.",
+      "html": "<div class=\"ds-forest\"><a class=\"ds-btn-outline\" href=\"#\">See how it works</a></div>",
+      "css": ".ds-forest { background: var(--forest, #0d221a); padding: 1.5rem; } .ds-btn-outline { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.35rem; border-radius: 999px; border: 1px solid var(--forest-line, rgb(111 240 182 / 0.2)); background: transparent; color: var(--glow, #6ff0b6); font-family: var(--font-body, Geist, sans-serif); font-weight: 560; letter-spacing: -0.005em; line-height: 1.2; text-decoration: none; cursor: pointer; transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), border-color 160ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-outline:hover { border-color: var(--glow, #6ff0b6); background: var(--glow-wash, rgb(111 240 182 / 0.1)); } .ds-btn-outline:focus-visible { outline: 2px solid var(--glow, #6ff0b6); outline-offset: 3px; }"
+    },
+    {
+      "name": "Site Navigation",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Sticky translucent parchment bar: Fraunces wordmark with the green dot, Geist links with an accent underline on hover, the primary pill right.",
+      "html": "<header class=\"ds-nav\"><a class=\"ds-nav__mark\" href=\"#\">Todox<span class=\"ds-nav__dot\"></span></a><nav class=\"ds-nav__links\"><a href=\"#\">Product</a><a href=\"#\">How it works</a><a href=\"#\">Skills</a><a href=\"#\">Why Todox</a><a href=\"#\">FAQ</a></nav><a class=\"ds-nav__cta\" href=\"#\">Request a demo</a></header>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 2rem; min-height: 4.25rem; padding-inline: 1.5rem; background: rgb(244 236 220 / 0.86); backdrop-filter: blur(14px) saturate(1.2); border-bottom: 1px solid var(--parchment-line, rgb(16 40 31 / 0.14)); font-family: var(--font-body, Geist, sans-serif); } .ds-nav__mark { display: inline-flex; align-items: baseline; gap: 0.35rem; font-family: var(--font-display, Fraunces, Georgia, serif); font-variation-settings: 'opsz' 48, 'wght' 600, 'SOFT' 40, 'WONK' 0; font-size: 1.45rem; letter-spacing: -0.02em; color: var(--ink, #10281f); text-decoration: none; } .ds-nav__dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--accent, #1e7a55); box-shadow: 0 0 0 3px var(--accent-wash, rgb(30 122 85 / 0.1)); transform: translateY(-0.05rem); } .ds-nav__links { display: flex; gap: 1.75rem; margin-left: auto; font-size: 0.95rem; font-weight: 500; color: var(--ink-soft, #3f5a4d); } .ds-nav__links a { color: inherit; text-decoration: none; padding-block: 0.25rem; border-bottom: 1px solid transparent; transition: color 160ms, border-color 160ms; } .ds-nav__links a:hover { color: var(--ink, #10281f); border-color: var(--accent, #1e7a55); } .ds-nav__links a:focus-visible { outline: 2px solid var(--accent, #1e7a55); outline-offset: 3px; } .ds-nav__cta { display: inline-flex; align-items: center; padding: 0.8rem 1.35rem; border-radius: 999px; border: 1px solid transparent; background: var(--accent, #1e7a55); color: #f7f3ea; font-weight: 560; letter-spacing: -0.005em; line-height: 1.2; text-decoration: none; box-shadow: 0 1px 0 rgb(16 40 31 / 0.2), 0 8px 20px -12px rgb(16 40 31 / 0.5); transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-nav__cta:hover { background: var(--accent-strong, #145c40); transform: translateY(-1px); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Labeled input on the form surface: hairline stroke, warm fill, accent ring on focus.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-firm\">Firm</label><input id=\"ds-firm\" type=\"text\" placeholder=\"Your firm\"></div>",
+      "css": ".ds-field { display: grid; gap: 0.35rem; font-family: var(--font-body, Geist, sans-serif); color: var(--ink, #10281f); } .ds-field label { font-size: 0.9rem; font-weight: 600; } .ds-field input { width: 100%; padding: 0.75rem 0.9rem; border-radius: 10px; border: 1px solid var(--parchment-line, rgb(16 40 31 / 0.14)); background: #fffdf8; color: var(--ink, #10281f); font: inherit; transition: border-color 160ms, box-shadow 160ms; } .ds-field input::placeholder { color: var(--ink-mute, #4f6358); } .ds-field input:focus-visible { outline: none; border-color: var(--accent, #1e7a55); box-shadow: 0 0 0 3px var(--accent-wash, rgb(30 122 85 / 0.1)); }"
+    },
+    {
+      "name": "Form Surface",
+      "kind": "card",
+      "refersTo": "form-surface",
+      "description": "One of the two card exceptions on parchment: the demo-request form on the parchment-deep contact band.",
+      "html": "<div class=\"ds-contact\"><form class=\"ds-form\"><div class=\"ds-form__field\"><label for=\"ds-email\">Work email</label><input id=\"ds-email\" type=\"email\"></div><div class=\"ds-form__foot\"><button class=\"ds-form__submit\" type=\"button\">Request a demo</button><p class=\"ds-form__note\">Nothing is sent or stored yet.</p></div></form></div>",
+      "css": ".ds-contact { background: var(--parchment-deep, #eadfc7); padding: 1.5rem; font-family: var(--font-body, Geist, sans-serif); color: var(--ink, #10281f); } .ds-form { display: grid; gap: 1rem; padding: 1.5rem; border-radius: 16px; background: rgb(255 252 246 / 0.8); border: 1px solid var(--parchment-line, rgb(16 40 31 / 0.14)); box-shadow: 0 30px 60px -45px rgb(16 40 31 / 0.5); } .ds-form__field { display: grid; gap: 0.35rem; } .ds-form__field label { font-size: 0.9rem; font-weight: 600; } .ds-form__field input { width: 100%; padding: 0.75rem 0.9rem; border-radius: 10px; border: 1px solid var(--parchment-line, rgb(16 40 31 / 0.14)); background: #fffdf8; font: inherit; color: inherit; } .ds-form__field input:focus-visible { outline: none; border-color: var(--accent, #1e7a55); box-shadow: 0 0 0 3px var(--accent-wash, rgb(30 122 85 / 0.1)); } .ds-form__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding-top: 0.25rem; } .ds-form__submit { display: inline-flex; padding: 0.8rem 1.35rem; border-radius: 999px; border: 1px solid transparent; background: var(--accent, #1e7a55); color: #f7f3ea; font: inherit; font-weight: 560; line-height: 1.2; cursor: pointer; box-shadow: 0 1px 0 rgb(16 40 31 / 0.2), 0 8px 20px -12px rgb(16 40 31 / 0.5); } .ds-form__submit:hover { background: var(--accent-strong, #145c40); } .ds-form__note { margin: 0; font-size: 0.85rem; color: var(--ink-mute, #4f6358); }"
+    },
+    {
+      "name": "Hairline List",
+      "kind": "custom",
+      "refersTo": "pillar",
+      "description": "The system's default container: items separated by hairlines, no fills, no radius. Pillars, tiers, trust rows, and FAQ share it.",
+      "html": "<ul class=\"ds-list\"><li class=\"ds-list__item\"><h3>Control</h3><p>Your firm decides which models run, on what context, and what actions they may take.</p></li><li class=\"ds-list__item\"><h3>Evidence</h3><p>Every claim points to the source span that supports it.</p></li></ul>",
+      "css": ".ds-list { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--parchment-line, rgb(16 40 31 / 0.14)); font-family: var(--font-body, Geist, sans-serif); color: var(--ink, #10281f); } .ds-list__item { display: grid; gap: 0.6rem; padding: 1.75rem 0; border-bottom: 1px solid var(--parchment-line, rgb(16 40 31 / 0.14)); } .ds-list__item h3 { margin: 0; font-family: var(--font-display, Fraunces, Georgia, serif); font-variation-settings: 'opsz' 36, 'wght' 580, 'SOFT' 30, 'WONK' 0; font-weight: 580; font-size: 1.45rem; letter-spacing: -0.01em; line-height: 1.2; } .ds-list__item p { margin: 0; color: var(--ink-soft, #3f5a4d); max-width: 40ch; }"
+    },
+    {
+      "name": "Session Console Row",
+      "kind": "custom",
+      "refersTo": "console",
+      "description": "The signature record row on the forest console: mono identifier at wdth 112.5 / wght 700, state in mint, timestamp at .5, hairline rules, cursor mark, mint wash when expanded.",
+      "html": "<div class=\"ds-console\"><div class=\"ds-console__bar\"><span class=\"ds-console__label\">SYNTHETIC SESSION</span><span>2026-04-14 10:02</span><span>NO CLIENT DATA · NO LIVE MODEL</span></div><div class=\"ds-console__body\"><div class=\"ds-rows\"><button class=\"ds-row\" type=\"button\" data-cursor><span class=\"ds-row__no\">CLM 0101</span><span class=\"ds-row__text\">The Park household needs about $150,000 available by June 3, 2026.</span><span class=\"ds-row__state ds-row__state--accepted\">ACCEPTED (SCOPED)</span><span class=\"ds-row__time\">04-14 10:02</span></button><button class=\"ds-row\" type=\"button\" aria-expanded=\"true\"><span class=\"ds-row__no\">TSK 0202</span><span class=\"ds-row__text\">Confirm Friday 2026-04-17 call with Mira</span><span class=\"ds-row__state ds-row__state--accepted\">ACCEPTED (SCOPED)</span><span class=\"ds-row__time\">04-14 10:02</span></button><button class=\"ds-row\" type=\"button\" data-state=\"SUPERSEDED\"><span class=\"ds-row__no\">CLM 0099</span><span class=\"ds-row__text\">Fund the renovation deposit from taxable ····4421.</span><span class=\"ds-row__state\">SUPERSEDED</span><span class=\"ds-row__time\">03-06 14:20</span></button></div></div></div>",
+      "css": ".ds-console { border: 1px solid var(--forest-line, rgb(111 240 182 / 0.2)); border-radius: 14px; background: var(--forest, #0d221a); color: #f2f7f2; box-shadow: 0 1px 0 rgb(111 240 182 / 0.08) inset, 0 30px 60px -40px rgb(0 0 0 / 0.8); overflow: clip; font-family: var(--font-mono, 'Martian Mono', ui-monospace, monospace); } .ds-console__bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; padding: 0.7rem 1.1rem; border-bottom: 1px solid var(--forest-line, rgb(111 240 182 / 0.2)); font-size: 0.75rem; letter-spacing: 0.04em; color: rgb(242 247 242 / 0.6); background: rgb(18 49 38 / 0.55); } .ds-console__label { color: var(--glow, #6ff0b6); font-variation-settings: 'wdth' 112.5, 'wght' 700; } .ds-console__body { padding: 1.25rem 1.1rem 1.5rem; font-size: 0.85rem; line-height: 1.55; color: var(--glow-mid, rgb(111 240 182 / 0.78)); background: rgb(18 49 38 / 0.55); } .ds-rows { display: grid; border-top: 1px solid var(--forest-line, rgb(111 240 182 / 0.2)); } .ds-row { display: grid; grid-template-columns: 10ch minmax(0, 1fr) 18ch 12ch; column-gap: 1.5ch; width: 100%; padding: 0.6rem 0; border: 0; border-bottom: 1px solid var(--forest-line, rgb(111 240 182 / 0.2)); border-radius: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; } .ds-row__no { color: #f2f7f2; font-variation-settings: 'wdth' 112.5, 'wght' 700; white-space: nowrap; } .ds-row[data-cursor] .ds-row__no::after { content: '▮'; margin-left: 0.5ch; color: var(--glow-mid, rgb(111 240 182 / 0.78)); } .ds-row__text { color: #f2f7f2; overflow-wrap: anywhere; } .ds-row__state { color: var(--glow-mid, rgb(111 240 182 / 0.78)); letter-spacing: 0.02em; white-space: nowrap; } .ds-row__state--accepted { color: var(--glow, #6ff0b6); } .ds-row__time { color: rgb(242 247 242 / 0.5); text-align: right; white-space: nowrap; } .ds-row[data-state='SUPERSEDED'] .ds-row__no, .ds-row[data-state='SUPERSEDED'] .ds-row__text, .ds-row[data-state='SUPERSEDED'] .ds-row__state { color: rgb(242 247 242 / 0.5); } .ds-row[data-state='SUPERSEDED'] .ds-row__text { text-decoration: line-through; text-decoration-color: var(--forest-line, rgb(111 240 182 / 0.2)); } .ds-row[aria-expanded='true'] { background: var(--glow-wash, rgb(111 240 182 / 0.1)); } .ds-row:hover .ds-row__no { text-decoration: underline; text-underline-offset: 0.2em; } .ds-row:focus-visible { outline: none; } .ds-row:focus-visible .ds-row__no { background: var(--glow, #6ff0b6); color: var(--forest, #0d221a); box-shadow: 0 0 0 0.25ch var(--glow, #6ff0b6); border-radius: 2px; }"
+    },
+    {
+      "name": "Graph Detail Panel",
+      "kind": "card",
+      "refersTo": "graph-detail",
+      "description": "The aria-live panel under the evidence graph: the selected record's id in mint, its state, body, meta, and a link into the session.",
+      "html": "<div class=\"ds-forest\"><div class=\"ds-detail\"><p class=\"ds-detail__id\"><strong>CLM 0101 · CLIENT CASH NEED</strong><span>ACCEPTED (SCOPED)</span></p><p class=\"ds-detail__body\">The Park household needs about $150,000 available by June 3, 2026.</p><p class=\"ds-detail__meta\">Evidence SRC 0001·S2 · reviewer TIA ROWAN · 2026-04-14 10:02</p><a class=\"ds-detail__link\" href=\"#\">Open the full session</a></div></div>",
+      "css": ".ds-forest { background: var(--forest, #0d221a); padding: 1.5rem; } .ds-detail { display: grid; gap: 0.35rem; padding: 0.9rem 1.1rem; border: 1px solid var(--forest-line, rgb(111 240 182 / 0.2)); border-radius: 12px; background: rgb(18 49 38 / 0.55); color: #f2f7f2; font-family: var(--font-body, Geist, sans-serif); font-size: 0.92rem; line-height: 1.5; min-height: 7.5rem; } .ds-detail p { margin: 0; } .ds-detail__id { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.9rem; font-family: var(--font-mono, 'Martian Mono', ui-monospace, monospace); font-size: 0.75rem; letter-spacing: 0.04em; color: rgb(242 247 242 / 0.6); } .ds-detail__id strong { color: var(--glow, #6ff0b6); font-weight: inherit; font-variation-settings: 'wdth' 112.5, 'wght' 700; } .ds-detail__meta { font-size: 0.8rem; color: rgb(242 247 242 / 0.6); } .ds-detail__link { justify-self: start; font-size: 0.85rem; font-weight: 560; color: var(--glow, #6ff0b6); text-decoration: none; border-bottom: 1px solid var(--forest-line, rgb(111 240 182 / 0.2)); padding-bottom: 0.1rem; } .ds-detail__link:hover { border-color: var(--glow, #6ff0b6); } .ds-detail__link:focus-visible { outline: 2px solid var(--glow, #6ff0b6); outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Evergreen Ledger",
+    "overview": "Todox is a standard product site for an advisor runtime, set in the firm's own palette rather than the category's. The ground is parchment with deep-green ink; where the product runs (the hero and the \"how it works\" band) the page turns forest-dark and a single mint glow lights the records. The site reads like a well-kept ledger: hairline rules separate rows, a serif display face carries the argument, a sans carries the reading, and a monospace carries every record, label, and receipt. Nothing is a card unless it needs a physical boundary.\n\nDensity is editorial, not dashboard. Sections are generous (clamped block padding of 3.5–6.5rem), text sits in a 62ch measure, and the only illustration is one evidence graph, bound to the same synthetic session the console below it replays. Confirmed rejections carried from the direction contract and PRODUCT.md: no neon-AI gradients, no chat mockups, no hero metrics, no particle fields or orbiting brains, no wealth-lifestyle photography, no third-party logos. Every demonstration on the page is labeled synthetic in the interface itself.",
+    "keyCharacteristics": [
+      "Parchment ground with green ink; forest bands carry the mint glow and the product.",
+      "Three self-hosted OFL faces with distinct jobs: Fraunces (display), Geist (body), Martian Mono (records, labels, code).",
+      "Hairline rules instead of cards; two bordered surfaces only (the demo form and the comparison table), each for a functional boundary.",
+      "Pill buttons in four variants, two per ground.",
+      "One evidence graph, one authored motion moment, one call to action."
+    ],
+    "rules": [
+      {
+        "name": "The Two Grounds Rule",
+        "body": "Parchment carries reading and `accent` carries action on it; forest carries the product and `glow` carries action on it. `glow` never appears on parchment, `accent` never appears on forest; the only crossings are the 35% `accent` radial in the hero's upper-left and the 10% wash.",
+        "section": "colors"
+      },
+      {
+        "name": "The Alpha Ladder Rule",
+        "body": "Secondary text on forest is `on-forest` at .82 / .72 / .6 / .5, never a second gray. The lowest step (.5) is reserved for labels, timestamps, and records the ledger has retired (SUPERSEDED, REJECTED).",
+        "section": "colors"
+      },
+      {
+        "name": "The One Glow Rule",
+        "body": "The mint glow is emitted, never painted: two radial washes behind the hero, one behind the demo band's foot, the core node's SVG filter, and the glow button's shadow. No mint gradients on text, no glowing borders.",
+        "section": "colors"
+      },
+      {
+        "name": "The Number in the Heading Rule",
+        "body": "Ordinals live inline in the heading's first grid column (the step counter), never as an eyebrow above it. Pillar indices were removed for the same reason; there are no kickers or eyebrows anywhere in the system.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight-Is-Width Rule",
+        "body": "Emphasis in the mono ledger is carried by Martian Mono's `wdth` and `wght` axes (112.5 / 700 for identifiers and producers), not by color or a second face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Long Soft Drop Rule",
+        "body": "Every surface shadow is a single long, negative-spread drop (30/60/-40 family) in ink or black. No hard offsets, no layered elevation tiers, no shadows on hairlined lists.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Hairline Is the Edge Rule",
+        "body": "Depth between rows and sections is a 1px line at 14% ink or 20% mint. If a boundary can be a rule, it is a rule.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Card Exception Rule",
+        "body": "Hairline rules instead of cards, with exactly two exceptions on parchment: the demo-request form (a form needs a field boundary) and the comparison table (a scroll container needs a visible edge). Do not add a third without a functional boundary to justify it.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do keep the two grounds distinct: `accent` acts on parchment, `glow` acts on forest, and secondary text on forest is `on-forest` at .82 / .72 / .6 / .5.",
+      "Do separate list items with 1px hairlines (`parchment-line` on parchment, `forest-line` on forest) and reserve bordered, rounded surfaces for the form, the comparison scroller, and the forest console.",
+      "Do set every record, label, receipt, and code path in Martian Mono, carrying emphasis through `wdth` 112.5 / `wght` 700 rather than color.",
+      "Do put ordinals inline in the heading's first column (the step counter pattern) and share baselines with a subgrid.",
+      "Do use the pill (999px) for every button, with a transparent border on filled variants so hover does not shift the box.",
+      "Do switch record-row layout on the pane's own width (`@container rows (min-width: 62ch)`), not the viewport.",
+      "Do keep scroll as cuts with `scroll-padding-top: calc(4.25rem + 1px)` so anchors clear the sticky nav.",
+      "Do label every demonstration synthetic in the surface itself (console bar, producer literal, hero proof line, footer qualification)."
+    ],
+    "donts": [
+      "Don't add kickers, eyebrows, or uppercase section labels above headings; mono uppercase labels belong only inside console, table, and code surfaces.",
+      "Don't paint the mint glow onto parchment, put `accent` text on forest, or introduce a second gray or a gradient on text.",
+      "Don't add a third bordered card on parchment without a functional boundary (field or scroll edge) to justify it.",
+      "Don't use hard-offset shadows, stacked elevation tiers, or shadows on hairlined lists; the only drops are the long soft 30/60/-40 family and the button rest shadow.",
+      "Don't add a second illustration, chart, or metric to the hero; the evidence graph is the one figure and it binds to real session records.",
+      "Don't add a second authored motion moment or smooth scrolling; the graph draw-in and core pulse are the motion budget, and reduced motion collapses them.",
+      "Don't use system display faces, glyph icons, or icon fonts; the arrow, the check, and the chevron are inline strokes.",
+      "Don't lower `ink-mute` below #4f6358 or use on-forest below .5 for running text."
+    ]
+  }
+}
