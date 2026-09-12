@@ -18,10 +18,12 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Email } from "@beep/schema";
 import { Config, Effect, Redacted } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { ResearchCommandError } from "../Research.errors.ts";
@@ -92,6 +94,59 @@ export const COGNEE_CREDENTIALS_MISSING = `no Cognee credentials configured; set
 export const COGNEE_SETTINGS_INVALID = `Cognee settings failed validation; check ${COGNEE_ENV.apiUrl}, ${COGNEE_ENV.email}, and ${COGNEE_ENV.password} in ${RESEARCH_ENV_FILE_HINT}.`;
 
 /**
+ * Message used when `COGNEE_API_URL` would carry the login credentials in
+ * cleartext: only `https://`, or `http://` on a loopback host, is accepted.
+ *
+ * **Example** (Insecure URL message names the variable)
+ *
+ * ```ts
+ * import { COGNEE_API_URL_INSECURE } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
+ *
+ * console.log(COGNEE_API_URL_INSECURE.includes("COGNEE_API_URL")) // true
+ * console.log(COGNEE_API_URL_INSECURE.includes("https://")) // true
+ * ```
+ *
+ * @internal
+ * @category utilities
+ */
+export const COGNEE_API_URL_INSECURE = `${COGNEE_ENV.apiUrl} must use https:// (http:// is accepted only on a loopback host such as 127.0.0.1 or localhost) so the Cognee login credentials are never sent in cleartext.`;
+
+const LOOPBACK_HOSTS: ReadonlyArray<string> = ["localhost", "127.0.0.1", "[::1]"];
+const decodeUnknownURLOption = S.decodeUnknownOption(S.URLFromString);
+const isLoopbackHost = (hostname: string): boolean =>
+  A.contains(LOOPBACK_HOSTS, hostname) || Str.endsWith(".localhost")(hostname) || Str.startsWith("127.")(hostname);
+const isCogneeApiUrl = (input: unknown): input is string =>
+  O.exists(
+    decodeUnknownURLOption(input),
+    (url) => url.protocol === "https:" || (url.protocol === "http:" && isLoopbackHost(url.hostname))
+  );
+const filterCogneeApiUrl = S.makeFilter(isCogneeApiUrl, {
+  message: "Cognee API URL must use https, or http on a loopback host",
+  arbitraryConstraint: { patterns: [{ source: "^https://[a-z]{1,12}\\.example(?::[0-9]{2,4})?$", flags: "" }] },
+});
+
+/**
+ * Cognee API URL that never carries the login credentials in cleartext:
+ * `https://` anywhere, or `http://` only on a loopback host.
+ *
+ * **Example** (Loopback http is accepted, remote http is not)
+ *
+ * ```ts
+ * import { CogneeApiUrl } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CogneeApiUrl)("http://127.0.0.1:8010")) // true
+ * console.log(S.is(CogneeApiUrl)("https://cognee.example.com")) // true
+ * console.log(S.is(CogneeApiUrl)("http://cognee.example.com")) // false
+ * ```
+ *
+ * @internal
+ * @category validation
+ */
+export const CogneeApiUrl = S.String.check(filterCogneeApiUrl);
+const decodeCogneeApiUrl = S.decodeUnknownEffect(CogneeApiUrl);
+
+/**
  * One markdown card queued for a Cognee dataset.
  *
  * @internal
@@ -133,7 +188,7 @@ export class CogneeCardUpload extends S.Class<CogneeCardUpload>($I`CogneeCardUpl
  */
 export class CogneeSettings extends S.Class<CogneeSettings>($I`CogneeSettings`)(
   {
-    apiUrl: S.String,
+    apiUrl: CogneeApiUrl,
     email: Email,
     password: S.Redacted(S.String),
   },
@@ -169,11 +224,47 @@ class LoginResponse extends S.Class<LoginResponse>($I`LoginResponse`)(
 ) {}
 const decodeLoginResponse = S.decodeUnknownEffect(LoginResponse);
 
+class CogneeRawSettings extends S.Class<CogneeRawSettings>($I`CogneeRawSettings`)(
+  {
+    apiUrl: S.String,
+    email: Email,
+    password: S.Redacted(S.String),
+  },
+  $I.annote("CogneeRawSettings", {
+    description: "Cognee environment values as read, before the API URL transport check.",
+  })
+) {}
+
+const readRawCogneeSettings: Effect.Effect<O.Option<CogneeRawSettings>, ResearchCommandError> = Effect.gen(
+  function* () {
+    const apiUrl = (yield* Config.String(COGNEE_ENV.apiUrl).pipe(Config.option)).pipe(
+      O.map(Str.trim),
+      O.filter(Str.isNonEmpty)
+    );
+    if (O.isNone(apiUrl)) {
+      return O.none();
+    }
+    const email = yield* Config.schema(Email, COGNEE_ENV.email).pipe(Config.withDefault(DEFAULT_COGNEE_EMAIL));
+    const password = yield* Config.Redacted(COGNEE_ENV.password).pipe(
+      Config.withDefault(Redacted.make(DEFAULT_COGNEE_PASSWORD))
+    );
+    return O.some(CogneeRawSettings.make({ apiUrl: apiUrl.value, email, password }));
+  }
+).pipe(ResearchCommandError.mapError(COGNEE_SETTINGS_INVALID));
+
+const secureCogneeSettings = (raw: CogneeRawSettings): Effect.Effect<CogneeSettings, ResearchCommandError> =>
+  decodeCogneeApiUrl(raw.apiUrl).pipe(
+    ResearchCommandError.mapError(COGNEE_API_URL_INSECURE),
+    Effect.map((apiUrl) => CogneeSettings.make({ apiUrl, email: raw.email, password: raw.password }))
+  );
+
 /**
  * Read the Cognee connection settings from the environment.
  *
  * `None` when `COGNEE_API_URL` is unset or blank; the caller decides whether
  * that skips cognify (the daily pipeline) or fails it (an explicit cognify).
+ * A URL that would send the credentials in cleartext fails with
+ * {@link COGNEE_API_URL_INSECURE}.
  *
  * **Example** (No URL configured resolves to None)
  *
@@ -191,22 +282,18 @@ const decodeLoginResponse = S.decodeUnknownEffect(LoginResponse);
  * @internal
  * @category utilities
  */
-export const readCogneeSettings: Effect.Effect<O.Option<CogneeSettings>, ResearchCommandError> = Effect.gen(
-  function* () {
-    const apiUrl = (yield* Config.String(COGNEE_ENV.apiUrl).pipe(Config.option)).pipe(
-      O.map(Str.trim),
-      O.filter(Str.isNonEmpty)
-    );
-    if (O.isNone(apiUrl)) {
-      return O.none();
-    }
-    const email = yield* Config.schema(Email, COGNEE_ENV.email).pipe(Config.withDefault(DEFAULT_COGNEE_EMAIL));
-    const password = yield* Config.Redacted(COGNEE_ENV.password).pipe(
-      Config.withDefault(Redacted.make(DEFAULT_COGNEE_PASSWORD))
-    );
-    return O.some(CogneeSettings.make({ apiUrl: apiUrl.value, email, password }));
-  }
-).pipe(ResearchCommandError.mapError(COGNEE_SETTINGS_INVALID), Effect.withSpan("CogneeClient.readCogneeSettings"));
+export const readCogneeSettings: Effect.Effect<
+  O.Option<CogneeSettings>,
+  ResearchCommandError
+> = readRawCogneeSettings.pipe(
+  Effect.flatMap(
+    O.match({
+      onNone: () => Effect.succeed(O.none<CogneeSettings>()),
+      onSome: (raw) => Effect.map(secureCogneeSettings(raw), O.some),
+    })
+  ),
+  Effect.withSpan("CogneeClient.readCogneeSettings")
+);
 
 const describeCause = (cause: unknown, depth: number): string => {
   if (!(cause instanceof Error)) {
@@ -279,7 +366,20 @@ export const cogneeLogin = Effect.fn("CogneeClient.cogneeLogin")(function* (
       username: Redacted.value(settings.email),
     })
   );
-  const response = yield* client.execute(request).pipe(Effect.mapError(requestFailed("login", settings.apiUrl)));
+  // The credentials go to the configured origin only: a redirect is surfaced
+  // instead of followed, so a downgrade to another host or to http never
+  // resends them.
+  const response = yield* client
+    .execute(request)
+    .pipe(
+      Effect.provideService(FetchHttpClient.RequestInit, { redirect: "manual" }),
+      Effect.mapError(requestFailed("login", settings.apiUrl))
+    );
+  if (response.status === 0 || (response.status >= 300 && response.status < 400)) {
+    return yield* ResearchCommandError.make({
+      message: `Cognee login at ${settings.apiUrl} answered with a redirect (${response.status}); refusing to resend credentials to another location.`,
+    });
+  }
   if (response.status >= 400) {
     const text = yield* response.text.pipe(Effect.orElseSucceed(() => ""));
     return yield* failStatus("login", response.status, text);

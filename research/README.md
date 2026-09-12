@@ -49,7 +49,8 @@ front end) and from the private out-of-repo knowledge vault managed by the
 `bun run beep research install-timers` installs the systemd user units
 `beep-research-daily` (nightly `research daily --commit`) and
 `beep-research-repo-card` (weekly). Both declare
-`EnvironmentFile=-$HOME/.config/beep-research/env`; the unit runs without it,
+`EnvironmentFile=-%h/.config/beep-research/env` (rendered with the absolute
+home directory, since systemd expands `%h` but never `$HOME`); the unit runs without it,
 but every step that needs a secret then skips or fails. The file is plain
 `KEY=value` lines read by systemd itself, so `op://` references do not resolve
 there: keep it mode `0600` and render it from 1Password (for example `op

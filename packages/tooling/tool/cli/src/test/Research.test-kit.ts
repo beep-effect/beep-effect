@@ -6,10 +6,13 @@
  */
 
 export {
+  COGNEE_API_URL_INSECURE,
   COGNEE_CREDENTIALS_MISSING,
   COGNEE_ENV,
   COGNEE_SETTINGS_INVALID,
+  CogneeApiUrl,
   CogneeSettings,
+  cogneeLogin,
   readCogneeSettings,
 } from "../commands/Research/internal/CogneeClient.ts";
 export { cognifyImpl } from "../commands/Research/internal/Cognify.ts";
