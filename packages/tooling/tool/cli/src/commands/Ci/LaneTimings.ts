@@ -1205,6 +1205,16 @@ export class CiLaneTimingPickupStat extends S.Class<CiLaneTimingPickupStat>($I`C
   })
 ) {}
 
+class CiRulesetHistoryVersion extends S.Class<CiRulesetHistoryVersion>($I`CiRulesetHistoryVersion`)(
+  {
+    version_id: S.Int.check(S.isGreaterThan(0)),
+    updated_at: S.DateTimeUtcFromString,
+  },
+  $I.annote("CiRulesetHistoryVersion", {
+    description: "Ruleset history version and its effective instant, normalized from the API UTC offset.",
+  })
+) {}
+
 /**
  * Reproducible admission-census report over one bounded UTC window.
  *
@@ -1235,12 +1245,14 @@ export class CiLaneTimingWindowReport extends S.Class<CiLaneTimingWindowReport>(
     laneStats: S.Array(CiLaneTimingWindowStat),
     pickup: CiLaneTimingPickupStat,
     requiredContexts: S.Array(S.NonEmptyString),
+    rulesetVersion: S.Option(CiRulesetHistoryVersion),
     rows: S.Array(CiLaneTimingWindowRow),
     runCount: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     schemaVersion: S.Literal("ci-lane-timing-window/v1"),
   },
   $I.annote("CiLaneTimingWindowReport", {
-    description: "Derived rows and aggregates for a bounded admission census over the live required-context set.",
+    description:
+      "Derived rows and aggregates for a bounded admission census over the required-context set effective at the exclusive window end.",
   })
 ) {}
 
@@ -1307,6 +1319,31 @@ class CiBranchRule extends S.Class<CiBranchRule>($I`CiBranchRule`)(
     description: "Effective GitHub branch rule carrying its source ruleset identifier and optional parameters.",
   })
 ) {}
+
+class CiRulesetSnapshotRule extends S.Class<CiRulesetSnapshotRule>($I`CiRulesetSnapshotRule`)(
+  {
+    type: S.Literal("required_status_checks"),
+    parameters: CiBranchRuleParameters,
+  },
+  $I.annote("CiRulesetSnapshotRule", {
+    description: "Required-status-check rule selected from a historical ruleset snapshot.",
+  })
+) {}
+
+class CiRulesetSnapshotState extends S.Class<CiRulesetSnapshotState>($I`CiRulesetSnapshotState`)(
+  { rules: S.Array(CiRulesetSnapshotRule) },
+  $I.annote("CiRulesetSnapshotState", {
+    description: "Historical ruleset state projected to required-status-check rules.",
+  })
+) {}
+
+class CiRulesetSnapshot extends S.Class<CiRulesetSnapshot>($I`CiRulesetSnapshot`)(
+  { state: CiRulesetSnapshotState },
+  $I.annote("CiRulesetSnapshot", { description: "Versioned GitHub ruleset snapshot containing its historical state." })
+) {}
+
+const decodeCiRulesetHistory = S.decodeUnknownEffect(S.fromJsonString(S.Array(CiRulesetHistoryVersion)));
+const decodeCiRulesetSnapshot = S.decodeUnknownEffect(S.fromJsonString(CiRulesetSnapshot));
 
 const decodeCiWorkflowWindowRunsPage = S.decodeUnknownEffect(S.fromJsonString(CiWorkflowWindowRunsPage));
 const decodeCiBranchRules = S.decodeUnknownEffect(S.fromJsonString(S.Array(CiBranchRule)));
@@ -1484,9 +1521,24 @@ const fetchCiWorkflowWindowJobsPage = Effect.fn("Ci.fetchCiWorkflowWindowJobsPag
 });
 
 const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(function* (
-  repoRoot: string
+  repoRoot: string,
+  version: O.Option<CiRulesetHistoryVersion> = O.none()
 ): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, CiLaneTimingGithubClient> {
   const github = yield* CiLaneTimingGithubClient;
+  if (O.isSome(version)) {
+    const endpoint = `repos/{owner}/{repo}/rulesets/${CI_LANE_TIMING_RULESET_ID}/history/${version.value.version_id}`;
+    const json = yield* github.getJson(
+      repoRoot,
+      endpoint,
+      O.some('{state:{rules:[.state.rules[]|select(.type=="required_status_checks")]}}')
+    );
+    const snapshot = yield* decodeCiRulesetSnapshot(json).pipe(
+      CiCommandError.mapError(`Failed to decode the ruleset snapshot returned by ${endpoint}.`)
+    );
+    return A.flatMap(snapshot.state.rules, (rule) =>
+      A.map(rule.parameters.required_status_checks, (check) => check.context)
+    );
+  }
   const endpoint = "repos/{owner}/{repo}/rules/branches/main";
   const json = yield* github.getJson(repoRoot, endpoint, O.some(CI_BRANCH_RULES_JQ));
   const rules = yield* decodeCiBranchRules(json).pipe(
@@ -1504,6 +1556,46 @@ const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(function
       })
     )
   );
+});
+
+class CiWindowPopulation extends S.Class<CiWindowPopulation>($I`CiWindowPopulation`)(
+  {
+    requiredContextSet: S.HashSet(S.NonEmptyString),
+    version: CiRulesetHistoryVersion,
+  },
+  $I.annote("CiWindowPopulation", {
+    description: "Normalized required contexts and the historical ruleset version selected for the window end.",
+  })
+) {}
+
+const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (
+  repoRoot: string,
+  until: DateTime.Utc
+) {
+  const github = yield* CiLaneTimingGithubClient;
+  const endpoint = `repos/{owner}/{repo}/rulesets/${CI_LANE_TIMING_RULESET_ID}/history`;
+  const json = yield* github.getJson(repoRoot, endpoint, O.some("[.[]|{version_id,updated_at}]"));
+  const history = yield* decodeCiRulesetHistory(json).pipe(
+    CiCommandError.mapError(`Failed to decode the ruleset history returned by ${endpoint}.`)
+  );
+  const version = yield* pipe(
+    history,
+    A.filter((entry) => DateTime.toEpochMillis(entry.updated_at) < DateTime.toEpochMillis(until)),
+    A.sort(Order.mapInput(Order.Number, (entry: CiRulesetHistoryVersion) => DateTime.toEpochMillis(entry.updated_at))),
+    A.last,
+    O.match({
+      onNone: () =>
+        CiCommandError.make({
+          message: `Ruleset ${CI_LANE_TIMING_RULESET_ID} has no history version strictly before ${DateTime.formatIso(until)}.`,
+        }),
+      onSome: Effect.succeed,
+    })
+  );
+  const contexts = yield* collectRequiredContexts(repoRoot, O.some(version));
+  return CiWindowPopulation.make({
+    requiredContextSet: HashSet.fromIterable(A.map(contexts, normalizeRequiredLaneName)),
+    version,
+  });
 });
 
 const actionConclusion = (job: CiWorkflowJob): string => O.getOrElse(O.fromNullishOr(job.conclusion), () => job.status);
@@ -1847,7 +1939,8 @@ const assertRequiredContextCount = (requiredContexts: HashSet.HashSet<string>): 
 const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* (
   requiredContextSet: HashSet.HashSet<string>,
   runCount: number,
-  rows: ReadonlyArray<CiLaneTimingWindowRow>
+  rows: ReadonlyArray<CiLaneTimingWindowRow>,
+  rulesetVersion: O.Option<CiRulesetHistoryVersion> = O.none()
 ): Effect.fn.Return<CiLaneTimingWindowReport, CiCommandError> {
   yield* assertRequiredContextCount(requiredContextSet);
   const requiredContexts = A.sort(A.fromIterable(requiredContextSet), Order.String);
@@ -1860,6 +1953,7 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
     laneStats: A.map(requiredContexts, (lane) => timingWindowStat(durationRows, lane)),
     pickup: timingPickupStat(pickupRows),
     requiredContexts,
+    rulesetVersion,
     rows,
     runCount,
     schemaVersion: "ci-lane-timing-window/v1",
@@ -1886,7 +1980,7 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  * console.log(Effect.isEffect(report))
  * ```
  *
- * @param requiredContexts - Live contexts read from ruleset `10240248`.
+ * @param requiredContexts - Selected contexts read from ruleset `10240248`.
  * @param runs - Ordered workflow runs paired with isolated paginated job buffers.
  * @returns The schema-classified census report, or a fail-closed cardinality error.
  * @category mapping
@@ -1909,8 +2003,7 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
   if (DateTime.toEpochMillis(options.since) >= DateTime.toEpochMillis(options.until)) {
     return yield* CiCommandError.make({ message: "--since must be earlier than --until." });
   }
-  const requiredContexts = yield* collectRequiredContexts(repoRoot);
-  const requiredContextSet = HashSet.fromIterable(A.map(requiredContexts, normalizeRequiredLaneName));
+  const { requiredContextSet, version } = yield* resolveWindowPopulation(repoRoot, options.until);
   yield* assertRequiredContextCount(requiredContextSet);
   const runs = yield* collectCiWorkflowWindowRuns(repoRoot, options);
   const rows = yield* pipe(
@@ -1926,7 +2019,7 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
       A.appendAll(collected, rowsForRun(requiredContextSet, runJobs))
     )
   );
-  return yield* reportFromRows(requiredContextSet, A.length(runs), rows);
+  return yield* reportFromRows(requiredContextSet, A.length(runs), rows, O.some(version));
 });
 
 /**
@@ -1934,7 +2027,7 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
  *
  * **Details**
  *
- * The live ruleset is checked before workflow runs are fetched. Run pages are
+ * The latest ruleset version strictly before the window end is checked before workflow runs are fetched. Run pages are
  * de-duplicated and ordered, then each run's paginated jobs are fetched with
  * bounded concurrency into an isolated buffer. Ordered stream reduction keeps
  * concurrent writers away from shared output while retaining derived row
@@ -1989,6 +2082,16 @@ const renderMarkdownP95 = (stat: CiLaneTimingWindowStat): string => {
 
 const renderMarkdownState = (state: CiLaneTimingWindowStat["state"]): string =>
   Str.equivalence(state, "Breach") ? "**Breach**" : state;
+
+const renderRequiredPopulation = (report: CiLaneTimingWindowReport): string =>
+  `- required contexts: ${report.contextCount} (expected ${CI_LANE_TIMING_REQUIRED_CONTEXT_COUNT}${O.match(
+    report.rulesetVersion,
+    {
+      onNone: () => "",
+      onSome: (version) =>
+        `; ruleset ${CI_LANE_TIMING_RULESET_ID} version ${version.version_id} effective ${DateTime.formatIso(version.updated_at)}`,
+    }
+  )})`;
 
 const renderSuccessfulDurationsMarkdown = (report: CiLaneTimingWindowReport): ReadonlyArray<string> => [
   "## Successful attempt-one durations",
@@ -2060,6 +2163,8 @@ const renderQueueTripwire = (pickup: CiLaneTimingPickupStat): string =>
 export const renderCiLaneTimingWindowMarkdown = (report: CiLaneTimingWindowReport): string =>
   A.join(
     [
+      renderRequiredPopulation(report),
+      "",
       ...renderSuccessfulDurationsMarkdown(report),
       "",
       ...renderAttemptOneAttributionMarkdown(report),
@@ -2094,7 +2199,7 @@ export const renderCiLaneTimingWindowSummary = (report: CiLaneTimingWindowReport
     [
       "ci lane timing window",
       `- runs: ${report.runCount}`,
-      `- required contexts: ${report.contextCount} (expected ${CI_LANE_TIMING_REQUIRED_CONTEXT_COUNT})`,
+      renderRequiredPopulation(report),
       `- successful attempt-one lane rows: ${A.length(A.filter(report.rows, isDurationWindowRow))}`,
       `- attributed rows: ${A.length(A.filter(report.rows, isAttributionWindowRow))}`,
       `- ${renderQueueTripwire(report.pickup)}`,

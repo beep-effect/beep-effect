@@ -13,6 +13,14 @@ Status: `active`
 
 ## Notes
 
+- Operator ruling (2026-09-12): `Heavy / Coverage Regression` was removed
+  after the admission window at 2026-09-12T01:46:53.354Z (ruleset `10240248`,
+  version `49479116`), reducing the live population to 17. Version `48600030`,
+  effective 2026-09-03T17:12:53.589Z, supplies the window's ratified 18 contexts.
+  A windowed census resolves the latest history version strictly before its
+  exclusive `--until`; recent-runs reporting retains live behavior. The
+  census command is unchanged.
+
 - Prior baseline (pre-cache, hosted): Lint ~43.6m, Test Unit ~23m, Property
   Laws ~22.4m. Treat as historical only.
 - ci-fleet-endgame P6 (its final close) fires when this packet delivers the
