@@ -28,6 +28,7 @@ import {
   baselineEntriesLostByReplacement,
   CoverageBaselineChangeSet,
   CoverageBaselineRowDelta,
+  CoverageBaselineWriteOptions,
   CoverageComparisonBaselines,
   CoverageComparisonFailure,
   CoverageFileBaseline,
@@ -5032,7 +5033,12 @@ describe("quality task adapter", () => {
         );
 
         expect(result.loweredFloors).toEqual([]);
-        expect(A.map(result.failures, (failure) => failure.baseline)).toEqual([80, 80, 80, 80]);
+        expect(
+          A.map(
+            result.failures,
+            CoverageComparisonFailure.matchOrElse({ "baseline-drop": (drop) => drop.baseline }, (other) => other._tag)
+          )
+        ).toEqual([80, 80, 80, 80]);
         expect(renderCoverageFailuresForTesting(result.failures)[0]).toBe(
           `  - @beep/existing (${filePath}) branches: 75 < 80`
         );
@@ -5237,7 +5243,7 @@ describe("quality task adapter", () => {
               );
               assertSome(
                 O.map(baselines.mergeBase, (document) => document.packages["@beep/touched"]?.lines),
-                80
+                Percentage.make(80)
               );
               assertSome(
                 O.map(baselines.selfJudge, (scope) => scope.packageExclusions["@beep/touched"]?._tag),
@@ -6084,7 +6090,7 @@ describe("quality task adapter", () => {
         { packageName: "@beep/held", baseline: measuredHeld },
       ],
       changeSet,
-      { replaceAll: false }
+      CoverageBaselineWriteOptions.make({ replaceAll: false })
     );
 
     expect(plan.dispositions).toEqual({
@@ -6133,7 +6139,7 @@ describe("quality task adapter", () => {
         packageNames: ["@beep/changed"],
         fullReasons: [],
       }),
-      { replaceAll: false }
+      CoverageBaselineWriteOptions.make({ replaceAll: false })
     );
 
     expect(plan.dispositions).toEqual({
@@ -6165,7 +6171,7 @@ describe("quality task adapter", () => {
         packageNames: [],
         fullReasons: [],
       }),
-      { replaceAll: false }
+      CoverageBaselineWriteOptions.make({ replaceAll: false })
     );
 
     expect(plan.dispositions).toEqual({ "@beep/a": "held", "@beep/b": "held" });
@@ -6185,7 +6191,7 @@ describe("quality task adapter", () => {
         packageNames: [],
         fullReasons: [],
       }),
-      { replaceAll: true }
+      CoverageBaselineWriteOptions.make({ replaceAll: true })
     );
 
     expect(plan.dispositions).toEqual({
@@ -6227,10 +6233,12 @@ describe("quality task adapter", () => {
       fullReasons: [],
     });
 
-    const plan = planCoverageBaselineWrite(previous, entries, changeSet, {
-      replaceAll: false,
-      carryUnmeasured: true,
-    });
+    const plan = planCoverageBaselineWrite(
+      previous,
+      entries,
+      changeSet,
+      CoverageBaselineWriteOptions.make({ replaceAll: false, carryUnmeasured: true })
+    );
 
     // The package the change set named is adopted whole; the other measured
     // package keeps its committed row, and the unmeasured row is carried.
@@ -6270,12 +6278,20 @@ describe("quality task adapter", () => {
     // A scoped write measured the dependent on purpose, so holding its row would
     // commit a floor the next hosted run cannot reach.
     expect(
-      planCoverageBaselineWrite(previous, entries, changeSet, { replaceAll: false, carryUnmeasured: true }).dispositions
+      planCoverageBaselineWrite(
+        previous,
+        entries,
+        changeSet,
+        CoverageBaselineWriteOptions.make({ replaceAll: false, carryUnmeasured: true })
+      ).dispositions
     ).toEqual({ "@beep/changed": "replaced", "@beep/dependent": "replaced" });
 
     // An unscoped regeneration keeps the 2026-08-24 direct-owners rule: one
     // foundation edit closes over most of the workspace.
-    expect(planCoverageBaselineWrite(previous, entries, changeSet, { replaceAll: false }).dispositions).toEqual({
+    expect(
+      planCoverageBaselineWrite(previous, entries, changeSet, CoverageBaselineWriteOptions.make({ replaceAll: false }))
+        .dispositions
+    ).toEqual({
       "@beep/changed": "replaced",
       "@beep/dependent": "held",
     });
@@ -6290,7 +6306,7 @@ describe("quality task adapter", () => {
       previous,
       [{ packageName: "@beep/held", baseline: coveragePackageBaseline("packages/held", 93) }],
       CoverageBaselineChangeSet.make({ baseDescription: "dirty worktree only", packageNames: [], fullReasons: [] }),
-      { replaceAll: true, carryUnmeasured: true }
+      CoverageBaselineWriteOptions.make({ replaceAll: true, carryUnmeasured: true })
     );
 
     expect(plan.dispositions).toEqual({ "@beep/held": "replaced" });
@@ -6304,7 +6320,7 @@ describe("quality task adapter", () => {
       previous,
       [{ packageName: "@beep/held", baseline: coveragePackageBaseline("packages/held", 93) }],
       CoverageBaselineChangeSet.make({ baseDescription: "dirty worktree only", packageNames: [], fullReasons: [] }),
-      { replaceAll: false, carryUnmeasured: true }
+      CoverageBaselineWriteOptions.make({ replaceAll: false, carryUnmeasured: true })
     );
     const report = coverageBaselineWriteReport(plan, previous);
 

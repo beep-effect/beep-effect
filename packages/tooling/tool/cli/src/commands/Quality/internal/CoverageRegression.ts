@@ -1352,6 +1352,47 @@ const coverageDispositionByNameOrder = Order.mapInput(
   (entry: readonly [string, CoverageBaselineRowDisposition]) => entry[0]
 );
 
+// Only a scoped write (`carryUnmeasured`) adopts dependents; an unscoped
+// regeneration stays on the changed files' direct owners.
+const coverageAdoptedPackageNames = (
+  changeSet: CoverageBaselineChangeSet,
+  carryUnmeasured: boolean
+): ReadonlyArray<string> =>
+  Bool.match(carryUnmeasured, {
+    onTrue: () => A.union(changeSet.packageNames, changeSet.dependentPackageNames),
+    onFalse: () => changeSet.packageNames,
+  });
+
+// A measured package is adopted at the run's own row when the write replaces
+// it, added when the committed document has no row for it, and otherwise held
+// at the committed row this run must not move.
+const coverageMeasuredWriteRow = (
+  previousPackages: Record<string, CoveragePackageBaseline>,
+  entry: CoverageSnapshotEntry,
+  replace: boolean
+): readonly [CoveragePackageBaseline, CoverageBaselineRowDisposition] =>
+  Bool.match(replace, {
+    onTrue: () => Tuple.make(entry.baseline, CoverageBaselineRowDisposition.Enum.replaced),
+    onFalse: () =>
+      O.match(R.get(previousPackages, entry.packageName), {
+        onNone: () => Tuple.make(entry.baseline, CoverageBaselineRowDisposition.Enum.added),
+        onSome: (committed) => Tuple.make(committed, CoverageBaselineRowDisposition.Enum.held),
+      }),
+  });
+
+// Committed rows this run produced no summary for, in package-name order so a
+// write that prunes two packages produces a two-package diff.
+const coverageUnmeasuredPackageNames = (
+  previousPackages: Record<string, CoveragePackageBaseline>,
+  entries: ReadonlyArray<CoverageSnapshotEntry>
+): ReadonlyArray<string> => {
+  const measuredNames = HashSet.fromIterable(A.map(entries, (entry) => entry.packageName));
+  return pipe(
+    A.sort(R.keys(previousPackages), Order.String),
+    A.filter((packageName) => !HashSet.has(measuredNames, packageName))
+  );
+};
+
 /**
  * How one coverage baseline write treats measured and unmeasured rows.
  *
@@ -1359,24 +1400,32 @@ const coverageDispositionByNameOrder = Order.mapInput(
  *
  * `replaceAll` adopts every package the run measured. `carryUnmeasured` marks a
  * scoped run, where committed rows the run never measured are carried through
- * instead of pruned.
+ * instead of pruned; it defaults to `false`, so an unscoped write need not name
+ * it.
  *
  * **Example** (A scoped write that adopts only changed owners)
  *
  * ```ts
- * import type { CoverageBaselineWriteOptions } from "@beep/repo-cli/test/Quality"
+ * import { CoverageBaselineWriteOptions } from "@beep/repo-cli/test/Quality"
  *
- * const options: CoverageBaselineWriteOptions = { replaceAll: false, carryUnmeasured: true }
+ * const options = CoverageBaselineWriteOptions.make({ replaceAll: false, carryUnmeasured: true })
  * console.log(options.carryUnmeasured) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type CoverageBaselineWriteOptions = {
-  readonly carryUnmeasured?: boolean;
-  readonly replaceAll: boolean;
-};
+export class CoverageBaselineWriteOptions extends S.Class<CoverageBaselineWriteOptions>(
+  $I`CoverageBaselineWriteOptions`
+)(
+  {
+    carryUnmeasured: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
+    replaceAll: S.Boolean,
+  },
+  $I.annote("CoverageBaselineWriteOptions", {
+    description: "How one coverage baseline write treats measured rows and committed rows it never measured.",
+  })
+) {}
 
 /**
  * Plan a coverage baseline write without reading files or running Git.
@@ -1460,47 +1509,24 @@ export const planCoverageBaselineWrite: {
     changeSet: CoverageBaselineChangeSet,
     options: CoverageBaselineWriteOptions
   ): CoverageBaselineWritePlan => {
-    const measuredNames = HashSet.fromIterable(A.map(entries, (entry) => entry.packageName));
-    // Only a scoped write (`carryUnmeasured`) adopts dependents; an unscoped
-    // regeneration stays on the changed files' direct owners.
-    const adoptedNames =
-      options.carryUnmeasured === true
-        ? A.union(changeSet.packageNames, changeSet.dependentPackageNames)
-        : changeSet.packageNames;
-    const shouldReplace = replaceMeasuredPackage(adoptedNames, options.replaceAll);
+    const shouldReplace = replaceMeasuredPackage(
+      coverageAdoptedPackageNames(changeSet, options.carryUnmeasured),
+      options.replaceAll
+    );
     const packages = R.empty<string, CoveragePackageBaseline>();
     const dispositions = R.empty<string, CoverageBaselineRowDisposition>();
 
     for (const entry of A.sort(entries, packageByNameOrder)) {
-      if (shouldReplace(entry.packageName)) {
-        R.assignProperty(packages, entry.packageName, entry.baseline);
-        R.assignProperty(dispositions, entry.packageName, CoverageBaselineRowDisposition.Enum.replaced);
-        continue;
-      }
-
-      pipe(
-        R.get(previousPackages, entry.packageName),
-        O.match({
-          onNone: () => {
-            R.assignProperty(packages, entry.packageName, entry.baseline);
-            R.assignProperty(dispositions, entry.packageName, CoverageBaselineRowDisposition.Enum.added);
-          },
-          onSome: (committed) => {
-            R.assignProperty(packages, entry.packageName, committed);
-            R.assignProperty(dispositions, entry.packageName, CoverageBaselineRowDisposition.Enum.held);
-          },
-        })
-      );
+      const [row, disposition] = coverageMeasuredWriteRow(previousPackages, entry, shouldReplace(entry.packageName));
+      R.assignProperty(packages, entry.packageName, row);
+      R.assignProperty(dispositions, entry.packageName, disposition);
     }
 
-    for (const packageName of A.sort(R.keys(previousPackages), Order.String)) {
-      if (HashSet.has(measuredNames, packageName)) {
-        continue;
-      }
+    for (const packageName of coverageUnmeasuredPackageNames(previousPackages, entries)) {
       // A scoped run measured a handful of packages; every other committed row
       // is carried through untouched rather than pruned, because "not measured"
       // and "no longer exists" are different answers.
-      if (options.carryUnmeasured === true) {
+      if (options.carryUnmeasured) {
         pipe(
           R.get(previousPackages, packageName),
           O.map((committed) => R.assignProperty(packages, packageName, committed))
@@ -2438,7 +2464,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
             currentPrevious.value.packages,
             entries,
             yield* collectCoverageBaselineChangeSet(repoRoot),
-            { replaceAll, carryUnmeasured: scoped }
+            CoverageBaselineWriteOptions.make({ replaceAll, carryUnmeasured: scoped })
           )
         )
       : O.none<CoverageBaselineWritePlan>();
@@ -3018,6 +3044,190 @@ const loweredRowFields = (
   }),
 });
 
+// Everything one floor pass accumulates across packages: the documents it
+// judges against, and the two sinks a per-package judgement writes into.
+type CoverageFloorSession = {
+  readonly baselines: CoverageComparisonBaselines;
+  readonly epsilon: number;
+  readonly lowered: Array<CoverageLoweredFloor>;
+  readonly withheld: MutableHashMap.MutableHashMap<string, CoverageWithheldLowering>;
+};
+
+// The session narrowed to one package, so a row-level helper never re-derives
+// the package's self-judge verdict.
+type CoverageLoweringContext = CoverageFloorSession & {
+  readonly basePath: CoveragePackageBaseline["path"];
+  readonly exclusion: O.Option<CoverageSelfJudgeExclusion>;
+  readonly packageName: string;
+  readonly selfJudgeable: boolean;
+};
+
+type CoveragePackageJudgement = {
+  readonly exclusion: O.Option<CoverageSelfJudgeExclusion>;
+  readonly selfJudgeable: boolean;
+};
+
+type CoveragePackageFloorPlan = {
+  readonly eligible: boolean;
+  readonly removal: O.Option<CoveragePackageRowRemovedFailure>;
+  readonly row: CoveragePackageBaseline;
+};
+
+// Self-judging is on only when a scope exists and does not exclude this
+// package. The exclusion witness travels with the verdict so a lowering the
+// scope withheld can name what withheld it.
+const coveragePackageJudgement = (
+  selfJudge: O.Option<CoverageSelfJudgeScope>,
+  packageName: string
+): CoveragePackageJudgement => {
+  const exclusion = O.flatMap(selfJudge, (scope) => coverageSelfJudgeExclusion(scope, packageName));
+  return { exclusion, selfJudgeable: O.isSome(selfJudge) && O.isNone(exclusion) };
+};
+
+// A measured package whose own document no longer carries the row: the pull
+// request removed a baseline row without deleting the package.
+const coveragePackageRowRemoval = (
+  context: CoverageLoweringContext,
+  measured: O.Option<CoverageSnapshotEntry>,
+  proposedPackage: O.Option<CoveragePackageBaseline>
+): O.Option<CoveragePackageRowRemovedFailure> =>
+  O.isSome(context.baselines.proposed) && O.isSome(measured) && O.isNone(proposedPackage)
+    ? O.some(CoveragePackageRowRemovedFailure.make({ packageName: context.packageName, packagePath: context.basePath }))
+    : O.none();
+
+// A lowered metric is either a floor this run judges — the package judges
+// itself — or a withheld lowering that decorates the failure with the exclusion
+// which withheld it.
+const recordLoweredMetrics = (
+  context: CoverageLoweringContext,
+  filePath: O.Option<string>,
+  baseRow: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
+  proposedRow: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
+  actualRow: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
+  metrics: ReadonlyArray<CoverageMetricName>
+): void => {
+  for (const metric of metrics) {
+    if (context.selfJudgeable) {
+      context.lowered.push(
+        CoverageLoweredFloor.make({
+          packageName: context.packageName,
+          packagePath: context.basePath,
+          filePath,
+          metric,
+          base: baseRow[metric],
+          lowered: proposedRow[metric],
+          actual: actualRow[metric],
+          tighten: actualRow[metric] > proposedRow[metric] + context.epsilon,
+        })
+      );
+      continue;
+    }
+    pipe(
+      context.exclusion,
+      O.map((witness) =>
+        MutableHashMap.set(context.withheld, coverageRowKey(context.packageName, filePath, metric), {
+          exclusion: witness,
+          lowered: proposedRow[metric],
+        })
+      )
+    );
+  }
+};
+
+// The floor one file keeps, recording every metric this pull request lowered on
+// the way: the base row when the run did not measure the path or the pull
+// request lowered nothing, and the lowered row only when the package judges
+// itself.
+const judgeFileFloor = (
+  context: CoverageLoweringContext,
+  filePath: string,
+  baseFile: CoverageFileBaseline,
+  proposedRow: CoveragePackageBaseline,
+  mergeBaseRow: CoveragePackageBaseline,
+  actualPackage: CoveragePackageBaseline
+): CoverageFileBaseline => {
+  // A path the run did not measure stays governed by the vanished-file rule at
+  // the base floor: lowering a row cannot make a disappearance benign.
+  const fileRows = O.all([
+    R.get(proposedRow.files, filePath),
+    R.get(mergeBaseRow.files, filePath),
+    R.get(actualPackage.files, filePath),
+  ]);
+  if (O.isNone(fileRows)) {
+    return baseFile;
+  }
+  const [proposedFile, mergeBaseFile, actualFile] = fileRows.value;
+  const metrics = loweredRowMetrics(baseFile, mergeBaseFile, proposedFile, context.epsilon);
+  if (A.isReadonlyArrayEmpty(metrics)) {
+    return baseFile;
+  }
+  recordLoweredMetrics(context, O.some(filePath), baseFile, proposedFile, actualFile, metrics);
+  return context.selfJudgeable
+    ? CoverageFileBaseline.make(loweredRowFields(baseFile, proposedFile, metrics))
+    : baseFile;
+};
+
+// The package row this run writes: every base file row replaced by its judged
+// floor, and the package total lowered only when the package judges itself and
+// the pull request lowered at least one package metric.
+const judgePackageFloorRow = (
+  context: CoverageLoweringContext,
+  basePackage: CoveragePackageBaseline,
+  proposedRow: CoveragePackageBaseline,
+  mergeBaseRow: CoveragePackageBaseline,
+  actualPackage: CoveragePackageBaseline
+): CoveragePackageBaseline => {
+  const files = R.empty<string, CoverageFileBaseline>();
+  for (const [filePath, baseFile] of A.sort(R.toEntries(basePackage.files), coverageFileByPathOrder)) {
+    R.assignProperty(
+      files,
+      filePath,
+      judgeFileFloor(context, filePath, baseFile, proposedRow, mergeBaseRow, actualPackage)
+    );
+  }
+
+  const packageMetrics = loweredRowMetrics(basePackage, mergeBaseRow, proposedRow, context.epsilon);
+  recordLoweredMetrics(context, O.none(), basePackage, proposedRow, actualPackage, packageMetrics);
+  return CoveragePackageBaseline.make({
+    ...basePackage,
+    ...(context.selfJudgeable && A.isReadonlyArrayNonEmpty(packageMetrics)
+      ? loweredRowFields(basePackage, proposedRow, packageMetrics)
+      : {}),
+    files,
+  });
+};
+
+// One package's three answers: the row to write, whether the package may judge
+// itself, and whether the pull request removed its row. A package the pull
+// request, the merge base, or the run has no row for keeps its base floor.
+const judgePackageFloor = (
+  session: CoverageFloorSession,
+  packageName: string,
+  basePackage: CoveragePackageBaseline,
+  measured: O.Option<CoverageSnapshotEntry>
+): CoveragePackageFloorPlan => {
+  const baselines = session.baselines;
+  const proposedPackage = O.flatMap(baselines.proposed, (document) => R.get(document.packages, packageName));
+  const mergeBasePackage = O.flatMap(baselines.mergeBase, (document) => R.get(document.packages, packageName));
+  const context: CoverageLoweringContext = {
+    ...session,
+    ...coveragePackageJudgement(baselines.selfJudge, packageName),
+    basePath: basePackage.path,
+    packageName,
+  };
+  const removal = coveragePackageRowRemoval(context, measured, proposedPackage);
+  const eligible = context.selfJudgeable && O.isSome(measured);
+
+  return O.match(O.all([proposedPackage, mergeBasePackage, measured]), {
+    onNone: () => ({ eligible, removal, row: basePackage }),
+    onSome: ([proposedRow, mergeBaseRow, actualEntry]) => ({
+      eligible,
+      removal,
+      row: judgePackageFloorRow(context, basePackage, proposedRow, mergeBaseRow, actualEntry.baseline),
+    }),
+  });
+};
+
 // One pass over the base floors that answers three questions at once: which
 // rows this pull request lowered on packages it could not have moved (those
 // become the floors), which lowered rows were withheld and why (those decorate
@@ -3026,121 +3236,34 @@ const planCoverageFloors = (
   baselines: CoverageComparisonBaselines,
   actualsByName: Record<string, CoverageSnapshotEntry>
 ): CoverageFloorPlan => {
-  const baseline = baselines.baseline;
-  const epsilon = baseline.epsilon;
+  const session: CoverageFloorSession = {
+    baselines,
+    epsilon: baselines.baseline.epsilon,
+    lowered: [],
+    withheld: MutableHashMap.empty<string, CoverageWithheldLowering>(),
+  };
   const packages = R.empty<string, CoveragePackageBaseline>();
-  const withheld = MutableHashMap.empty<string, CoverageWithheldLowering>();
-  const lowered: Array<CoverageLoweredFloor> = [];
   const eligiblePackageNames: Array<string> = [];
   const packageRowRemovals: Array<CoveragePackageRowRemovedFailure> = [];
 
-  for (const [packageName, basePackage] of A.sort(R.toEntries(baseline.packages), packageEntryByNameOrder)) {
-    const measured = R.get(actualsByName, packageName);
-    const proposedPackage = O.flatMap(baselines.proposed, (document) => R.get(document.packages, packageName));
-    const mergeBasePackage = O.flatMap(baselines.mergeBase, (document) => R.get(document.packages, packageName));
-    const selfJudgeable = O.isSome(baselines.selfJudge)
-      ? O.isNone(coverageSelfJudgeExclusion(baselines.selfJudge.value, packageName))
-      : false;
-    const exclusion = O.flatMap(baselines.selfJudge, (scope) => coverageSelfJudgeExclusion(scope, packageName));
-
-    if (O.isSome(baselines.proposed) && O.isSome(measured) && O.isNone(proposedPackage)) {
-      packageRowRemovals.push(CoveragePackageRowRemovedFailure.make({ packageName, packagePath: basePackage.path }));
-    }
-    if (selfJudgeable && O.isSome(measured)) {
+  for (const [packageName, basePackage] of A.sort(R.toEntries(baselines.baseline.packages), packageEntryByNameOrder)) {
+    const plan = judgePackageFloor(session, packageName, basePackage, R.get(actualsByName, packageName));
+    R.assignProperty(packages, packageName, plan.row);
+    if (plan.eligible) {
       eligiblePackageNames.push(packageName);
     }
-
-    const authored = O.all([proposedPackage, mergeBasePackage, measured]);
-    if (O.isNone(authored)) {
-      R.assignProperty(packages, packageName, basePackage);
-      continue;
-    }
-
-    const [proposedRow, mergeBaseRow, actualEntry] = authored.value;
-    const actualPackage = actualEntry.baseline;
-    const recordMetrics = (
-      filePath: O.Option<string>,
-      baseRow: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
-      proposedFileRow: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
-      actualRow: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
-      metrics: ReadonlyArray<CoverageMetricName>
-    ): void => {
-      for (const metric of metrics) {
-        if (selfJudgeable) {
-          lowered.push(
-            CoverageLoweredFloor.make({
-              packageName,
-              packagePath: basePackage.path,
-              filePath,
-              metric,
-              base: baseRow[metric],
-              lowered: proposedFileRow[metric],
-              actual: actualRow[metric],
-              tighten: actualRow[metric] > proposedFileRow[metric] + epsilon,
-            })
-          );
-          continue;
-        }
-        pipe(
-          exclusion,
-          O.map((witness) =>
-            MutableHashMap.set(withheld, coverageRowKey(packageName, filePath, metric), {
-              exclusion: witness,
-              lowered: proposedFileRow[metric],
-            })
-          )
-        );
-      }
-    };
-
-    const files = R.empty<string, CoverageFileBaseline>();
-    for (const [filePath, baseFile] of A.sort(R.toEntries(basePackage.files), coverageFileByPathOrder)) {
-      // A path the run did not measure stays governed by the vanished-file rule
-      // at the base floor: lowering a row cannot make a disappearance benign.
-      const fileRows = O.all([
-        R.get(proposedRow.files, filePath),
-        R.get(mergeBaseRow.files, filePath),
-        R.get(actualPackage.files, filePath),
-      ]);
-      if (O.isNone(fileRows)) {
-        R.assignProperty(files, filePath, baseFile);
-        continue;
-      }
-      const [proposedFile, mergeBaseFile, actualFile] = fileRows.value;
-      const metrics = loweredRowMetrics(baseFile, mergeBaseFile, proposedFile, epsilon);
-      if (A.isReadonlyArrayEmpty(metrics)) {
-        R.assignProperty(files, filePath, baseFile);
-        continue;
-      }
-      recordMetrics(O.some(filePath), baseFile, proposedFile, actualFile, metrics);
-      R.assignProperty(
-        files,
-        filePath,
-        selfJudgeable ? CoverageFileBaseline.make(loweredRowFields(baseFile, proposedFile, metrics)) : baseFile
-      );
-    }
-
-    const packageMetrics = loweredRowMetrics(basePackage, mergeBaseRow, proposedRow, epsilon);
-    recordMetrics(O.none(), basePackage, proposedRow, actualPackage, packageMetrics);
-    R.assignProperty(
-      packages,
-      packageName,
-      CoveragePackageBaseline.make({
-        ...basePackage,
-        ...(selfJudgeable && A.isReadonlyArrayNonEmpty(packageMetrics)
-          ? loweredRowFields(basePackage, proposedRow, packageMetrics)
-          : {}),
-        files,
-      })
+    pipe(
+      plan.removal,
+      O.map((removal) => packageRowRemovals.push(removal))
     );
   }
 
   return {
     eligiblePackageNames: A.sort(eligiblePackageNames, Order.String),
-    lowered,
+    lowered: session.lowered,
     packageRowRemovals,
     packages,
-    withheld,
+    withheld: session.withheld,
   };
 };
 
