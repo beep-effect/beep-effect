@@ -6,7 +6,25 @@ This spec back-links the exploration's artifacts instead of copying them; when
 a linked artifact and this file disagree, fix the disagreement rather than
 silently preferring either.
 
-## Objective
+## Direction change (2026-09-11)
+
+Benjamin rejected the Terminal of Record build on sight and pinned a standard
+product site in his own palette (deep green + parchment, "Evergreen Ledger")
+carrying the Todox Notion positioning: local-first, transparent and swappable
+models, bring-your-own subscriptions, advisor-authored skills, evidence +
+provenance + supersession. That decision supersedes the Objective, Design
+Inputs, and the five binding raises below; they remain as provenance. What
+still binds: the claim gate's forbidden list (no certification, no absolutes
+such as "nothing leaves the device", no named firms or competitors on the
+public page), synthetic labels on every demonstration, the qualification
+footer, WCAG AA, keyboard access, reduced motion, no-JS readability, 360px+,
+portless-only dev servers, and the Impeccable discipline (contract, detector,
+finish review, DESIGN.md, raster provenance). Current sources of truth:
+`apps/todox/PRODUCT.md` (updated the same day), `apps/todox/DESIGN.md`, and
+the redesign evidence in [`PLAN.md`](./PLAN.md). The CTA is a demo-request
+form held on the page until its request path is connected.
+
+## Objective (superseded 2026-09-11, kept as provenance)
 
 `apps/todox` serves one responsive public marketing homepage for Todox (site
 todox.ai) in the human-locked **Terminal of Record** direction: amber-phosphor

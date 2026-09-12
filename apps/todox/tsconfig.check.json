@@ -1,7 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
-  "references": [],
+  "references": [
+    {
+      "path": "../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/schema/tsconfig.json"
+    }
+  ],
   "compilerOptions": {
     "composite": false,
     "declaration": false,
