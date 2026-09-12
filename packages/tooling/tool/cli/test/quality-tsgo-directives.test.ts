@@ -1,14 +1,51 @@
 import {
+  effectDiagnosticsDirectiveExemptions,
   isEffectDiagnosticsDirectiveForTesting,
   isRejectedEffectDiagnosticsDirectiveForTesting,
 } from "@beep/repo-cli/commands/Quality/Quality.command";
 import { pipe } from "effect";
+import * as A from "effect/Array";
 import { describe, expect, it } from "vitest";
 
 describe("Effect diagnostics directive policy", () => {
   const directive = ["@effect", "diagnostics"].join("-");
   const conformancePath = "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts";
   const conformanceDirective = `// ${directive} strictEffectProvide:skip-file`;
+  const shimPath = "vitest.setup.ts";
+  const shimRules = ["nodeBuiltinImport", "asyncFunction", "newPromise", "processEnv", "globalTimers", "globalRandom"];
+
+  it("declares exactly two exemptions: the root Bun shim and the D14 conformance entrypoint", () => {
+    expect(A.map(effectDiagnosticsDirectiveExemptions, (exemption) => exemption.path)).toEqual([
+      shimPath,
+      conformancePath,
+    ]);
+    expect(A.map(effectDiagnosticsDirectiveExemptions, (exemption) => [...exemption.rules])).toEqual([
+      shimRules,
+      ["strictEffectProvide"],
+    ]);
+  });
+
+  it.each(shimRules)("admits the exact %s skip-file line at the root Bun shim only", (rule) => {
+    const line = `// ${directive} ${rule}:skip-file`;
+    expect(isEffectDiagnosticsDirectiveForTesting(line)).toBe(true);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(line, shimPath)).toBe(false);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(line, conformancePath)).toBe(true);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(line, "packages/example/src/main.ts")).toBe(true);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(`${line} -- reason`, shimPath)).toBe(true);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(`// ${directive}-next-line ${rule}:off`, shimPath)).toBe(
+      true
+    );
+  });
+
+  it("rejects the conformance rule at the shim path and unrelated rules at both exempt paths", () => {
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(conformanceDirective, shimPath)).toBe(true);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(`// ${directive} schemaNumber:skip-file`, shimPath)).toBe(
+      true
+    );
+    expect(
+      isRejectedEffectDiagnosticsDirectiveForTesting(`// ${directive} schemaNumber:skip-file`, conformancePath)
+    ).toBe(true);
+  });
 
   it.each([
     `// ${directive} strictEffectProvide:off`,

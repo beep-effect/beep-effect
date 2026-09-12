@@ -27,7 +27,13 @@ export * from "../commands/Docgen/internal/Operations.ts";
 export * from "../commands/Docgen/internal/Quality.ts";
 export * from "../commands/Docgen/internal/QualityWorkerEval.ts";
 export * from "../commands/Docgen/internal/QualityWorkerRunpodEval.ts";
-export { isDoctestSourcePath } from "../internal/jsdoc/DoctestSource.ts";
+/**
+ * Shared source marker and fence rendering helpers for documentation tests.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "../internal/jsdoc/DoctestSource.ts";
 export {
   fencedLineState,
   JSDocSection,

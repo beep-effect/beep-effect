@@ -6240,18 +6240,6 @@
             "functions": 2
           }
         },
-        "packages/ecosystem/effect-drizzle/src/core/declaredFieldsEquivalence.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/ecosystem/effect-drizzle/src/core/entity-id.ts": {
           "lines": 100,
           "statements": 100,
@@ -25203,6 +25191,18 @@
             "functions": 23
           }
         },
+        "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts": {
+          "lines": 97.05,
+          "statements": 97.14,
+          "branches": 90,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Research/Research.command.ts": {
           "lines": 55.76,
           "statements": 54.71,
@@ -25429,6 +25429,18 @@
             "statements": 63,
             "branches": 24,
             "functions": 18
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/internal/ResearchEnv.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Research/internal/Status.ts": {
@@ -27171,6 +27183,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/internal/cli/Stdout.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts": {
           "lines": 100,
           "statements": 100,
@@ -28240,6 +28264,18 @@
           }
         },
         "packages/tooling/tool/cli/src/test/RepoRun.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/test/Research.test-kit.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

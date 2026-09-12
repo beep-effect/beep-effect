@@ -269,8 +269,7 @@ describe("CI runner security", () => {
       const workflow = parsedDocument(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml")));
       const run = pipe(
         stepRun(jobSteps(workflowJobs(workflow), "verify"), "Run verification lane"),
-        Str.replaceAll("${{ matrix.id }}", "check"),
-        Str.replaceAll("${{ steps.lane-gate.outputs.doctest_mode }}", "full")
+        Str.replaceAll("${{ matrix.id }}", "check")
       );
       const fakeBun = path.join(tempRoot, "bun");
       yield* fs.writeFileString(fakeBun, '#!/usr/bin/env bash\nprintf "<%s>\\n" "$@"\nexit 7\n');
@@ -1026,43 +1025,30 @@ describe("CI runner security", () => {
   );
 
   it.effect(
-    "forces full Doctest runs for lane tooling changes and gates affected package inputs",
+    "runs full Doctest through the CLI without a workflow mode gate",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
       const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml"));
-
-      assert.include(workflowText, "doctest_mode=full");
-      assert.include(workflowText, "^vitest\\.docs\\.ts$");
-      assert.include(workflowText, "^vitest\\.shared\\.ts$");
-      assert.include(workflowText, "^package\\.json$");
-      assert.include(workflowText, "^bun\\.lock$");
-      assert.include(workflowText, "^\\.github/workflows/heavy\\.yml$");
-      assert.include(workflowText, "^packages/tooling/tool/cli/src/commands/Docgen/");
-      assert.include(workflowText, "^packages/tooling/tool/cli/src/internal/jsdoc/");
-      assert.include(workflowText, "^packages/tooling/tool/cli/src/commands/Ci/CiLane\\.ts$");
-      assert.include(workflowText, "packages/**/src/**/*.tsx");
-      assert.include(workflowText, "apps/**/src/**/*.tsx");
-      assert.include(workflowText, "packages/**/package.json");
-      assert.include(workflowText, "packages/**/docgen.json");
-      assert.include(workflowText, "packages/**/tsconfig*.json");
-      assert.include(workflowText, "apps/**/package.json");
-      assert.notInclude(workflowText, "grep -l -F 'import.meta.vitest'");
-      assert.notInclude(workflowText, '[[ -f "$file" ]]');
-      assert.include(workflowText, "The CLI owns package-graph expansion, existence filtering,");
+      assert.notInclude(workflowText, "doctest_mode");
+      assert.notInclude(workflowText, "vitest.docs");
+      assert.include(workflowText, "run_lane ci lane doctest\n");
+      assert.notInclude(workflowText, "run_lane ci lane doctest --mode");
     }, provideScopedLayer(NodeServices.layer))
   );
 
   it.effect(
-    "keeps the root Doctest script in one-shot mode",
+    "retires the root Doctest script and keeps the plugin dependency",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
       const packageJson = yield* fs.readFileString(path.join(repoRoot, "package.json"));
 
-      assert.include(packageJson, '"doctest": "vitest run --config vitest.docs.ts"');
+      assert.notInclude(packageJson, '"doctest":');
+      assert.include(packageJson, '"@effect/doctest": "catalog:"');
+      assert.isFalse(yield* fs.exists(path.join(repoRoot, "vitest.docs.ts")));
     }, provideScopedLayer(NodeServices.layer))
   );
 });

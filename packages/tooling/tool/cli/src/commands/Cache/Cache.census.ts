@@ -85,6 +85,8 @@ export const resolveCacheTurboBinary = Effect.fn("Cache.resolveTurboBinary")(fun
   return yield* CacheCommandError.new("Native Turbo is not installed; discovery will not install or emulate a client.");
 }, CacheCommandError.mapError("Cannot resolve the installed native Turbo client."));
 
+const CENSUS_CAPTURE_MAX_CHARS = 512 * 1024 * 1024;
+
 const capture = Effect.fn("CacheCensus.capture")(function* (
   root: string,
   command: string,
@@ -95,8 +97,10 @@ const capture = Effect.fn("CacheCensus.capture")(function* (
     args,
     cwd: root,
     source: "stdout",
-    bound: OutputBound.make({ maxChars: 64 * 1024 * 1024, truncatedNotice: "[census output truncated]" }),
-    timeout: Duration.seconds(60),
+    // Whole-tree root tasks list every matched file in the dry run, so the JSON is far larger
+    // than the package-only graph the bound was sized for (C3.5).
+    bound: OutputBound.make({ maxChars: CENSUS_CAPTURE_MAX_CHARS, truncatedNotice: "[census output truncated]" }),
+    timeout: Duration.seconds(180),
     env: {
       TURBO_TOKEN: "",
       TURBO_TEAM: "",
@@ -108,7 +112,7 @@ const capture = Effect.fn("CacheCensus.capture")(function* (
     extendEnv: true,
   }).pipe(CacheCommandError.mapError("Unable to collect census subprocess output."));
   if (result.exitCode !== 0 || result.truncated) {
-    return yield* CacheCommandError.new("Census subprocess failed or exceeded its 64 MiB capture bound.");
+    return yield* CacheCommandError.new("Census subprocess failed or exceeded its 512 MiB capture bound.");
   }
   return result.output;
 });

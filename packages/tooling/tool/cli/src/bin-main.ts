@@ -90,7 +90,8 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
-const { Cause, Effect, Exit, Layer, Runtime } = await import("effect");
+const { Cause, Console, Effect, Exit, Layer, Runtime } = await import("effect");
+const { drainProcessStreams, streamConsole } = await import("./internal/cli/Stdout.ts");
 const O = await import("effect/Option");
 const P = await import("effect/Predicate");
 
@@ -166,7 +167,7 @@ const restoreSharedTerminal = (): void => {
 };
 
 const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
-  BunRuntime.runMain(effect, {
+  BunRuntime.runMain(Effect.provideService(effect, Console.Console, streamConsole), {
     disableErrorReporting: true,
     // The runner's onExit only hard-exits on a signal or nonzero code; a clean
     // success is left to event-loop drain, so any handle a child leaves behind
@@ -178,8 +179,11 @@ const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
       renderCliFailure(exit);
       restoreSharedTerminal();
       Runtime.defaultTeardown(exit, (code) => {
-        onExit(code);
-        process.exit(code);
+        // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
+        drainProcessStreams(() => {
+          onExit(code);
+          process.exit(code);
+        });
       });
     },
   });

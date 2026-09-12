@@ -23,9 +23,60 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
 
-const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;
+const TURBO_CONFIG_PROOF_TASK_VALUES = [
+  "build",
+  "check",
+  "lint",
+  "test",
+  "docgen",
+  "doctest",
+  "lint:deprecated-apis",
+  "lint:jsdoc",
+  "lint:laws",
+  "//#lint:jsdoc:root",
+  "//#lint:policy-fingerprint",
+  "//#lint:native-runtime:roots",
+  "//#lint:package-scripts",
+  "//#knowledge:semantic-delta",
+  "//#knowledge:refs-check",
+  "//#lint:schema-first",
+  "//#lint:identity-registry",
+  "//#lint:effect-imports",
+  "//#lint:tsgo-rules",
+  "//#lint:oxlint",
+  "//#lint:allowlist",
+  "//#lint:jsdoc-module-tags",
+  "//#goals:doctor",
+  "//#lint:roadmap-refs",
+  "//#lint:judge-rubric",
+  "//#lint:typos",
+  "//#knip:check",
+  "//#fallow:audit:check",
+  "//#fallow:health:check",
+  "//#fallow:health:advisory",
+  "//#fallow:boundaries:advisory",
+  "//#fallow:flags:advisory",
+  "//#fallow:security:advisory",
+  "//#fallow:fix-preview:advisory",
+  "//#jsdoc:inventory:check",
+  "//#changeset:status",
+  "//#lint:circular",
+  "//#lint:effect-imports-markdown",
+  "//#lint:ecosystem-polarity",
+  "//#goals:index-check",
+  "//#lint:reflection-artifacts",
+  "//#fallow:dead-code:check",
+  "//#config-sync:check",
+  "//#repo-sanity:changeset-graph",
+  "//#repo-sanity:syncpack",
+  "//#repo-sanity:sherif",
+  "//#repo-sanity:versions",
+  "//#repo-sanity:bun-audit",
+  "//#fallow:boundaries:config-check",
+  "//#topo-sort",
+] as const;
 const TURBO_CONFIG_PROOF_SELECTOR_VALUES = ["affected", "filter-range"] as const;
-const defaultProofTasks: ReadonlyArray<TurboConfigProofTaskName> = ["lint", "check", "test", "docgen"];
+const defaultProofTasks: ReadonlyArray<TurboConfigProofTaskName> = ["lint", "check", "test", "docgen", "doctest"];
 
 /**
  * Turbo task names supported by the scoped-config proof harness.

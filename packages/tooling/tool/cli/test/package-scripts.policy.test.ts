@@ -166,7 +166,7 @@ describe("package scripts policy", () => {
         const b = yield* fs.readFileString(`${root}/packages/b/package.json`);
         expect(a).not.toContain('"doctest"');
         expect(b).toContain('"doctest": "bun run beep:doctest"');
-        expect(b).toContain('"beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run"');
+        expect(b).toContain('"beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run"');
         expect(yield* fs.readFileString(`${root}/scratchpad/package.json`)).toBe(before);
         expect(yield* fs.readFileString(`${root}/infra/lambda/x/package.json`)).toContain("out of domain");
       })
@@ -197,6 +197,10 @@ describe("package scripts policy", () => {
           name: "doctest",
           reason: "Marked sources use a vitest config that bypasses vitest.shared.ts",
         });
+        const fs = yield* FileSystem.FileSystem;
+        const storybook = yield* fs.readFileString(`${root}/apps/storybook/package.json`);
+        expect(storybook).not.toContain('"doctest":');
+        expect(storybook).not.toContain('"beep:doctest":');
       })
     )
   );

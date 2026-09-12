@@ -14,7 +14,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { isDoctestSourcePath } from "../jsdoc/DoctestSource.ts";
+import { doctestSourceMarker, isDoctestSourcePath } from "../jsdoc/DoctestSource.ts";
 import {
   CodegenGeneratorPackage,
   implScriptDefaults,
@@ -243,7 +243,7 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
       });
       const markedSource = Effect.fnUntraced(function* (repoRoot: string, source: string) {
         if (!isDoctestSourcePath(source)) return false;
-        return Str.includes("import.meta.vitest")(yield* fs.readFileString(path.join(repoRoot, source)));
+        return Str.includes(doctestSourceMarker)(yield* fs.readFileString(path.join(repoRoot, source)));
       });
       const collectBypasses = Effect.fnUntraced(function* (
         repoRoot: string,
