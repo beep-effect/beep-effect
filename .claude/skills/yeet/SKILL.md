@@ -278,9 +278,11 @@ build, lint, check, test, or docgen lane starts. `yeet repair` applies its
 deterministic fixers, runs the same collected tier, and stops before heavy
 feedback if a cheap gate still fails. The fixers end by regenerating the
 git-ignored local projections (`goals/INDEX.md`, `explorations/ATLAS.md`, and
-the generated README status regions), so a stale copy left behind by a pull
-never fails `goals:index-check` or `explore:atlas-check`; hosted lanes never
-carry those ignored files, so that red was always local-only.
+the generated README status regions). `goals:index-check` and
+`explore:atlas-check` refresh a stale ignored copy left behind by a pull in
+place (hosted lanes never carry those files, so that red was always
+local-only); drift in the tracked README status regions still fails
+`explore:atlas-check`.
 
 The full proof then dispatches the *hosted lane bodies themselves* — `beep ci lane`
 `check`, bare `lint`, `lint-policy`, bare `test-unit`, and `test-integration`,
