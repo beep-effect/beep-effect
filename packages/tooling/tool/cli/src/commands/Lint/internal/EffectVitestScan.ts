@@ -47,7 +47,7 @@ const decodeEffectVitestPackageMetadata = S.decodeEffect(EffectVitestPackageMeta
  *
  * **Example** (Build the version guard)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the version guard"
  * import { verifyEffectVitestPin } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
  *
@@ -56,7 +56,7 @@ const decodeEffectVitestPackageMetadata = S.decodeEffect(EffectVitestPackageMeta
  * const program = readEffectVitestPrimitiveGraph(process.cwd()).pipe(
  *   Effect.flatMap((graph) => verifyEffectVitestPin(process.cwd(), graph))
  * )
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @category validation
@@ -102,12 +102,12 @@ const findingOrder = Order.mapInput(Order.String, (finding: EffectVitestFinding)
  *
  * **Example** (Count empty and unterminated sources)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Count empty and unterminated sources"
  * import { countEffectVitestSourceLines } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(countEffectVitestSourceLines("")) // 0
- * console.log(countEffectVitestSourceLines("one\ntwo")) // 2
- * console.log(countEffectVitestSourceLines("one\n")) // 1
+ * countEffectVitestSourceLines("") // => 0
+ * countEffectVitestSourceLines("one\ntwo") // => 2
+ * countEffectVitestSourceLines("one\n") // => 1
  * ```
  *
  * @param text - Complete source text, including any final newline.
@@ -129,12 +129,12 @@ export const countEffectVitestSourceLines = (text: string): number =>
  *
  * **Example** (Discover files beneath a repository root)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Discover files beneath a repository root"
  * import { discoverEffectVitestSourcePaths } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
  *
  * const program = discoverEffectVitestSourcePaths(process.cwd())
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @category resources
@@ -203,11 +203,11 @@ const membershipKeys = (current: ReadonlyArray<EffectVitestFinding>, baseline: R
  *
  * **Example** (Preserve an exception reason)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Preserve an exception reason"
  * import { preserveEffectVitestExceptions } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
  *
- * console.log(preserveEffectVitestExceptions([], O.none()).length) // 0
+ * preserveEffectVitestExceptions([], O.none()).length // => 0
  * ```
  *
  * @category utilities
@@ -263,10 +263,10 @@ type EffectVitestFindingDifference = {
  *
  * **Example** (Classify baseline growth)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Classify baseline growth"
  * import { diffEffectVitestFindings } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(diffEffectVitestFindings([], []).introduced.length) // 0
+ * diffEffectVitestFindings([], []).introduced.length // => 0
  * ```
  *
  * @category utilities
@@ -329,10 +329,10 @@ const fileCountOrder = Order.mapInput(Order.String, (entry: EffectVitestFileCoun
  *
  * **Example** (Group introduced rows by file)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Group introduced rows by file"
  * import { formatEffectVitestIntroducedReport } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(formatEffectVitestIntroducedReport([]).length) // 0
+ * formatEffectVitestIntroducedReport([]).length // => 0
  * ```
  *
  * @param introduced - Live findings absent from the committed baseline.
@@ -384,13 +384,13 @@ const reportMembership = Effect.fnUntraced(function* (
  *
  * **Example** (Build the default ratchet effect)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the default ratchet effect"
  * import { EffectVitestLintOptions, runEffectVitestLint } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const options = EffectVitestLintOptions.make({ census: false, write: false, rows: O.none() })
- * console.log(Effect.isEffect(runEffectVitestLint(options))) // true
+ * Effect.isEffect(runEffectVitestLint(options)) // => true
  * ```
  *
  * @category use-cases
