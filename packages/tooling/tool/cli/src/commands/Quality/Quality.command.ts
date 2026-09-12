@@ -2079,13 +2079,14 @@ const extractEffectTsgoExampleConfigFragment = (readme: string): O.Option<string
  * ```ts
  * import { extractEffectTsgoReadmePluginOptionNamesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
+ * const fence = "`".repeat(3)
  * const readme = [
  *   "<!-- example-config:start -->",
- *   "```jsonc",
+ *   `${fence}jsonc`,
  *   '{ "compilerOptions": { "plugins": [ { "name": "@effect/language-service", "refactors": true, "diagnosticSeverity": {} } ] } }',
- *   "```",
+ *   fence,
  *   "<!-- example-config:end -->",
- * ].join("\\n")
+ * ].join("\n")
  * console.log(extractEffectTsgoReadmePluginOptionNamesForTesting(readme)) // => ["diagnosticSeverity", "refactors"]
  * ```
  *
