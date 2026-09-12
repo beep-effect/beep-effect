@@ -172,6 +172,13 @@ const timerFlags = {
 const resolveOperatorPath = (home: string, resolve: (input: string) => string, input: string): string =>
   resolve(Str.startsWith("~/")(input) ? `${home}/${Str.slice(2)(input)}` : input);
 
+const defaultStateDir = (home: string, path: Path.Path, configured: O.Option<string>): string =>
+  resolveOperatorPath(
+    home,
+    path.resolve,
+    O.getOrElse(configured, () => path.join(home, ".local", "state", "beep-graft"))
+  );
+
 const renderStatus = (status: GraftDeepRefreshStatus): string =>
   A.join(
     [
@@ -213,99 +220,187 @@ const renderStatus = (status: GraftDeepRefreshStatus): string =>
     "\n"
   );
 
-const deepRefreshCommand = Command.make(
-  "refresh",
-  deepFlags,
-  Effect.fn("GraftCommand.deepRefresh")(function* (options) {
-    const path = yield* Path.Path;
-    const home = yield* Effect.orDie(Config.String("HOME"));
-    const decoded = yield* decodeRefreshOptions({
-      owner: resolveOperatorPath(home, path.resolve, options.owner),
-      jobs: options.jobs,
-      minCoverage: options.minCoverage,
-      seed: options.seed,
-      rebuild: options.rebuild,
-      rebuildConcurrency: options.rebuildConcurrency,
-      stateDir: resolveOperatorPath(
-        home,
-        path.resolve,
-        O.getOrElse(options.stateDir, () => path.join(home, ".local", "state", "beep-graft"))
-      ),
-      ...O.getOrElse(
-        O.map(options.model, (model) => ({ model })),
-        () => ({})
-      ),
-    }).pipe(
-      Effect.mapError((cause) =>
-        GraftDeepPreflightError.make({ path: options.owner, message: "Invalid refresh options.", cause })
+/**
+ * Runs one nightly meaning-tier refresh and renders or encodes its status.
+ *
+ * **Details**
+ *
+ * Exported so the handler can be driven under a scripted subprocess runner:
+ * the command wiring only supplies flags and the live layer. `--json`
+ * suppresses the per-phase lines so the encoded document is the only output.
+ *
+ * **Example** (Build a refresh program without running it)
+ *
+ * ```ts import.meta.vitest name="Build a refresh program without running it"
+ * import { runDeepRefresh } from "@beep/repo-cli/commands/Graft"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * const program = runDeepRefresh({
+ *   owner: "/clones/beep-effect0",
+ *   model: O.none(),
+ *   jobs: 16,
+ *   minCoverage: 0.95,
+ *   seed: true,
+ *   rebuild: true,
+ *   rebuildConcurrency: 2,
+ *   stateDir: O.some("/state/beep-graft"),
+ *   json: false,
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Resolved `graft deep refresh` flags.
+ * @returns The rendered or encoded status of the finished run.
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const runDeepRefresh = Effect.fn("GraftCommand.runDeepRefresh")(function* (options: {
+  readonly owner: string;
+  readonly model: O.Option<string>;
+  readonly jobs: number;
+  readonly minCoverage: number;
+  readonly seed: boolean;
+  readonly rebuild: boolean;
+  readonly rebuildConcurrency: number;
+  readonly stateDir: O.Option<string>;
+  readonly json: boolean;
+}) {
+  const path = yield* Path.Path;
+  const home = yield* Effect.orDie(Config.String("HOME"));
+  const decoded = yield* decodeRefreshOptions({
+    owner: resolveOperatorPath(home, path.resolve, options.owner),
+    jobs: options.jobs,
+    minCoverage: options.minCoverage,
+    seed: options.seed,
+    rebuild: options.rebuild,
+    rebuildConcurrency: options.rebuildConcurrency,
+    stateDir: defaultStateDir(home, path, options.stateDir),
+    ...O.getOrElse(
+      O.map(options.model, (model) => ({ model })),
+      () => ({})
+    ),
+  }).pipe(
+    Effect.mapError((cause) =>
+      GraftDeepPreflightError.make({ path: options.owner, message: "Invalid refresh options.", cause })
+    )
+  );
+  const refresh = yield* GraftDeepRefresh;
+  const status = yield* refresh
+    .run(decoded)
+    .pipe(
+      Effect.provideService(GraftDeepRefreshProgress, (phase) =>
+        options.json ? Effect.void : Console.log(`graft deep refresh: ${phase.phase}`)
       )
     );
-    const refresh = yield* GraftDeepRefresh;
-    const status = yield* refresh
-      .run(decoded)
-      .pipe(
-        Effect.provideService(GraftDeepRefreshProgress, (phase) =>
-          options.json ? Effect.void : Console.log(`graft deep refresh: ${phase.phase}`)
-        )
-      );
-    yield* emit(options.json, status, GraftDeepRefreshStatus, renderStatus(status));
-  })
-).pipe(
+  yield* emit(options.json, status, GraftDeepRefreshStatus, renderStatus(status));
+});
+
+/**
+ * Renders the recorded refresh status, or says that none was recorded.
+ *
+ * **Details**
+ *
+ * An in-flight run is readable: its status carries a phase and no outcome.
+ *
+ * **Example** (Build a status program without running it)
+ *
+ * ```ts import.meta.vitest name="Build a status program without running it"
+ * import { runDeepStatus } from "@beep/repo-cli/commands/Graft"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * const program = runDeepStatus({ stateDir: O.none(), json: true })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Resolved `graft deep status` flags.
+ * @returns The rendered or encoded status, when one is recorded.
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (options: {
+  readonly stateDir: O.Option<string>;
+  readonly json: boolean;
+}) {
+  const path = yield* Path.Path;
+  const home = yield* Effect.orDie(Config.String("HOME"));
+  const stateDir = defaultStateDir(home, path, options.stateDir);
+  const refresh = yield* GraftDeepRefresh;
+  const status = yield* refresh.readStatus(stateDir);
+  if (O.isNone(status)) {
+    return yield* Console.log(`No refresh recorded under ${stateDir}.`);
+  }
+  yield* emit(options.json, status.value, GraftDeepRefreshStatus, renderStatus(status.value));
+});
+
+/**
+ * Installs or removes the nightly refresh systemd user timer.
+ *
+ * **Details**
+ *
+ * The installer stats the environment file and refuses a missing one; an
+ * uninstall reports only the unit files it actually removed.
+ *
+ * **Example** (Build an install program without running it)
+ *
+ * ```ts import.meta.vitest name="Build an install program without running it"
+ * import { runDeepInstallTimer } from "@beep/repo-cli/commands/Graft"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * const program = runDeepInstallTimer({
+ *   owner: "/clones/beep-effect0",
+ *   onCalendar: "*-*-* 02:30:00",
+ *   envFile: O.none(),
+ *   uninstall: false,
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Resolved `graft deep install-timer` flags.
+ * @returns Nothing; the written or removed unit paths are printed.
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")(function* (options: {
+  readonly owner: string;
+  readonly onCalendar: string;
+  readonly envFile: O.Option<string>;
+  readonly uninstall: boolean;
+}) {
+  const path = yield* Path.Path;
+  const home = yield* Effect.orDie(Config.String("HOME"));
+  const refresh = yield* GraftDeepRefresh;
+  const units = yield* refresh.installTimer(
+    GraftDeepTimerOptions.make({
+      owner: resolveOperatorPath(home, path.resolve, options.owner),
+      bunPath: process.execPath,
+      onCalendar: options.onCalendar,
+      envFile: resolveOperatorPath(
+        home,
+        path.resolve,
+        O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env"))
+      ),
+      uninstall: options.uninstall,
+    })
+  );
+  const headline = options.uninstall ? "graft deep install-timer: removed" : "graft deep install-timer: wrote";
+  yield* Console.log(
+    A.isReadonlyArrayNonEmpty(units)
+      ? A.join(A.prepend(units, headline), "\n")
+      : "graft deep install-timer: no unit files were installed"
+  );
+});
+
+const deepRefreshCommand = Command.make("refresh", deepFlags, runDeepRefresh).pipe(
   Command.withDescription("Rebuild the meaning tier in the owner clone, then seed and rebuild the siblings"),
   Command.provide(GraftDeepRefreshLive)
 );
 
-const deepStatusCommand = Command.make(
-  "status",
-  statusFlags,
-  Effect.fn("GraftCommand.deepStatus")(function* (options) {
-    const path = yield* Path.Path;
-    const home = yield* Effect.orDie(Config.String("HOME"));
-    const stateDir = resolveOperatorPath(
-      home,
-      path.resolve,
-      O.getOrElse(options.stateDir, () => path.join(home, ".local", "state", "beep-graft"))
-    );
-    const refresh = yield* GraftDeepRefresh;
-    const status = yield* refresh.readStatus(stateDir);
-    if (O.isNone(status)) {
-      return yield* Console.log(`No refresh recorded under ${stateDir}.`);
-    }
-    yield* emit(options.json, status.value, GraftDeepRefreshStatus, renderStatus(status.value));
-  })
-).pipe(
+const deepStatusCommand = Command.make("status", statusFlags, runDeepStatus).pipe(
   Command.withDescription("Render the most recent refresh status, including an in-flight run"),
   Command.provide(GraftDeepRefreshLive)
 );
 
-const deepInstallTimerCommand = Command.make(
-  "install-timer",
-  timerFlags,
-  Effect.fn("GraftCommand.deepInstallTimer")(function* (options) {
-    const path = yield* Path.Path;
-    const home = yield* Effect.orDie(Config.String("HOME"));
-    const refresh = yield* GraftDeepRefresh;
-    const units = yield* refresh.installTimer(
-      GraftDeepTimerOptions.make({
-        owner: resolveOperatorPath(home, path.resolve, options.owner),
-        bunPath: process.execPath,
-        onCalendar: options.onCalendar,
-        envFile: resolveOperatorPath(
-          home,
-          path.resolve,
-          O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env"))
-        ),
-        uninstall: options.uninstall,
-      })
-    );
-    yield* Console.log(
-      A.join(
-        A.prepend(units, options.uninstall ? "graft deep install-timer: removed" : "graft deep install-timer: wrote"),
-        "\n"
-      )
-    );
-  })
-).pipe(
+const deepInstallTimerCommand = Command.make("install-timer", timerFlags, runDeepInstallTimer).pipe(
   Command.withDescription("Install or remove the nightly refresh systemd user timer"),
   Command.provide(GraftDeepRefreshLive)
 );

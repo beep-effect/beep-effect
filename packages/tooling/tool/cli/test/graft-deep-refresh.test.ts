@@ -14,6 +14,9 @@ import {
   graftCommand,
   parseDeepCoverage,
   renderGraftDeepRefreshUnits,
+  runDeepInstallTimer,
+  runDeepRefresh,
+  runDeepStatus,
 } from "@beep/repo-cli/commands/Graft";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { CapturedStep, formatCommandLine } from "@beep/repo-cli/test/Process";
@@ -22,7 +25,8 @@ import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect, it, layer } from "@effect/vitest";
+import { assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Dur from "effect/Duration";
@@ -183,10 +187,56 @@ const refreshOptions = (input: {
     ),
   });
 
+const liveRunnerLayer = GraftDeepRunnerLive.pipe(Layer.provide(NodeServices.layer));
+const cruxRetriesLayer = ConfigProvider.layer(ConfigProvider.fromUnknown({ GRAFT_CRUX_EMPTY_RETRIES: "5" }));
+
+const withLiveRunner = () => provideScopedLayer(liveRunnerLayer);
+const withCruxRetries = () => provideScopedLayer(cruxRetriesLayer);
+
 const refreshWith = (runner: Layer.Layer<GraftDeepRunner>) =>
   provideScopedLayer(GraftDeepRefreshLayer.pipe(Layer.provide(Layer.mergeAll(runner, GraftCacheSyncLive))));
 
 const withHome = (home: string) => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ HOME: home })));
+
+// Both the command tree and the exported handlers write through Console and
+// the JSON reference; capturing them is how a handler's rendering is asserted.
+const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
+  const current = yield* Console.Console;
+  let output: ReadonlyArray<unknown> = [];
+  const result = yield* Effect.result(
+    effect.pipe(
+      Effect.provideService(Console.Console, {
+        ...current,
+        log: (...values: ReadonlyArray<unknown>) => {
+          output = A.appendAll(output, values);
+        },
+      }),
+      Effect.provideService(CommandJsonOutput, (text) =>
+        Effect.sync(() => {
+          output = A.append(output, text);
+        })
+      )
+    )
+  );
+  return { result, output };
+});
+
+const refreshFlags = (input: {
+  readonly owner: string;
+  readonly stateDir: string;
+  readonly json?: boolean;
+  readonly model?: string;
+}) => ({
+  owner: input.owner,
+  model: O.fromUndefinedOr(input.model),
+  jobs: 16,
+  minCoverage: 0.95,
+  seed: true,
+  rebuild: true,
+  rebuildConcurrency: 2,
+  stateDir: O.some(input.stateDir),
+  json: input.json ?? false,
+});
 
 const runCommand = Effect.fn("GraftDeepRefreshTest.runCommand")(function* (args: ReadonlyArray<string>) {
   const current = yield* Console.Console;
@@ -212,25 +262,60 @@ const runCommand = Effect.fn("GraftDeepRefreshTest.runCommand")(function* (args:
 const commandLines = (calls: ReadonlyArray<GraftDeepRunnerStep>): ReadonlyArray<string> =>
   A.map(calls, (call) => formatCommandLine(call.command, call.args));
 
+const assertJsonRoundTrip = Effect.fn("GraftDeepRefreshTest.assertJsonRoundTrip")(function* <A, I>(
+  codec: S.Codec<A, I>,
+  value: A
+) {
+  const json = S.fromJsonString(codec);
+  const encoded = yield* S.encodeEffect(json)(value);
+  const decoded = yield* S.decodeEffect(json)(encoded);
+  // Re-encoding what came back reproduces the document byte for byte, so a
+  // dropped or renamed field fails here. Comparing the decoded instance
+  // directly would instead compare an explicitly undefined optional key
+  // against an absent one, which JSON cannot represent either way.
+  expect(yield* S.encodeEffect(json)(decoded)).toBe(encoded);
+});
+
+it.effect.prop(
+  "round-trips arbitrary refresh statuses and coverage counts without losing optional fields",
+  [GraftDeepRefreshStatus, GraftDeepCoverage],
+  ([status, coverage]) =>
+    Effect.map(
+      Effect.all([
+        assertJsonRoundTrip(GraftDeepRefreshStatus, status),
+        assertJsonRoundTrip(GraftDeepCoverage, coverage),
+      ]),
+      () => true
+    )
+);
+
 // The real clock, not the test clock: this suite drives filesystem work, a
 // bounded retry inside the lock steal, and an interrupt delivered by a timeout.
-layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (it) => {
+layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })("Graft deep refresh", (it) => {
   it.effect(
     "parses coverage from both summary lines, carriage-return progress, and reports none without a coverage line",
     Effect.fn(function* () {
       const both = parseDeepCoverage(`${FULL_COVERAGE}1 file(s) failed to summarize.\n`);
-      expect(O.map(both, (coverage) => [coverage.covered, coverage.total, coverage.failedFiles])).toEqual(
-        O.some([38_520, 39_115, 1])
+      assertSome(
+        O.map(both, (coverage) => [coverage.covered, coverage.total, coverage.failedFiles]),
+        [38_520, 39_115, 1]
       );
       // A build that summarized every file never prints the failure line.
-      expect(O.map(parseDeepCoverage(FULL_COVERAGE), (coverage) => coverage.failedFiles)).toEqual(O.some(0));
-      const noisy = `crux 4137/4138\rcrux 4138/4138\r${FULL_COVERAGE}`;
-      expect(O.map(parseDeepCoverage(noisy), (coverage) => coverage.covered)).toEqual(O.some(38_520));
-      // The last coverage line describes the finished build.
-      expect(O.map(parseDeepCoverage(`${LOW_COVERAGE}${FULL_COVERAGE}`), (coverage) => coverage.covered)).toEqual(
-        O.some(38_520)
+      assertSome(
+        O.map(parseDeepCoverage(FULL_COVERAGE), (coverage) => coverage.failedFiles),
+        NonNegativeInt.make(0)
       );
-      expect(parseDeepCoverage("graft build --deep: nothing to do\n")).toEqual(O.none());
+      const noisy = `crux 4137/4138\rcrux 4138/4138\r${FULL_COVERAGE}`;
+      assertSome(
+        O.map(parseDeepCoverage(noisy), (coverage) => coverage.covered),
+        NonNegativeInt.make(38_520)
+      );
+      // The last coverage line describes the finished build.
+      assertSome(
+        O.map(parseDeepCoverage(`${LOW_COVERAGE}${FULL_COVERAGE}`), (coverage) => coverage.covered),
+        NonNegativeInt.make(38_520)
+      );
+      assertNone(parseDeepCoverage("graft build --deep: nothing to do\n"));
     })
   );
 
@@ -305,8 +390,9 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       // Nothing but the operator notification ran: the fence is checked before
       // any Git command, and the live run's status file is left alone.
       expect(A.map(calls, (call) => call.command)).toEqual(["notify-send"]);
-      expect(A.last(A.flatMap(calls, (call) => A.fromIterable(call.args)))).toEqual(
-        O.some(`Refresh lock ${lockPath} is held by live process ${process.pid}.`)
+      assertSome(
+        A.last(A.flatMap(calls, (call) => A.fromIterable(call.args))),
+        `Refresh lock ${lockPath} is held by live process ${process.pid}.`
       );
       expect(yield* fs.exists(path.join(stateDir, "status.json"))).toBe(false);
     })
@@ -410,7 +496,7 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
         GraftDeepRefresh.use((refresh) => refresh.run(refreshOptions({ owner, stateDir }))).pipe(refreshWith(runner)),
         Dur.seconds(2)
       );
-      expect(interrupted).toEqual(O.none());
+      assertNone(interrupted);
       const recorded = yield* decodeStatusJson(yield* fs.readFileString(path.join(stateDir, "status.json")));
       expect(recorded.outcome).toBe("failed");
       expect(recorded.message).toEqual(expect.stringContaining("interrupted during build"));
@@ -475,8 +561,14 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       expect(status.outcome).toBe("ok");
       expect(status.head).toBe(OWNER_HEAD_AFTER);
       expect(status.model).toBe("(env default)");
-      expect(O.map(O.fromUndefinedOr(status.coverage), (coverage) => coverage.covered)).toEqual(O.some(38_520));
-      expect(O.map(O.fromUndefinedOr(status.seed), (seed) => seed.copied)).toEqual(O.some(12));
+      assertSome(
+        O.map(O.fromUndefinedOr(status.coverage), (coverage) => coverage.covered),
+        NonNegativeInt.make(38_520)
+      );
+      assertSome(
+        O.map(O.fromUndefinedOr(status.seed), (seed) => seed.copied),
+        NonNegativeInt.make(12)
+      );
       expect(A.map(status.rebuilt, (entry) => entry.root)).toEqual(siblings);
       expect(A.every(status.rebuilt, (entry) => entry.exitCode === 0)).toBe(true);
       expect(status.message).toBeUndefined();
@@ -490,8 +582,14 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       const build = A.findFirst(calls, (call) =>
         Str.startsWith("graft build --deep")(formatCommandLine(call.command, call.args))
       );
-      expect(O.map(build, (call) => call.env?.GRAFT_CRUX_EMPTY_RETRIES)).toEqual(O.some("2"));
-      expect(O.map(build, (call) => call.env?.GRAFT_MODEL)).toEqual(O.some(undefined));
+      assertSome(
+        O.map(build, (call) => call.env?.GRAFT_CRUX_EMPTY_RETRIES),
+        "2"
+      );
+      assertSome(
+        O.map(build, (call) => call.env?.GRAFT_MODEL),
+        undefined
+      );
       expect(A.filter(commandLines(calls), (line) => line === "graft build")).toHaveLength(2);
       // The lockfile diff spans the revisions the pull actually moved between.
       expect(commandLines(calls)).toContain(`git diff --quiet ${OWNER_HEAD} ${OWNER_HEAD_AFTER} -- bun.lock`);
@@ -533,7 +631,10 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       const build = A.findFirst(calls, (call) =>
         Str.startsWith("graft build --deep")(formatCommandLine(call.command, call.args))
       );
-      expect(O.map(build, (call) => call.source)).toEqual(O.some(undefined));
+      assertSome(
+        O.map(build, (call) => call.source),
+        undefined
+      );
     }),
     30_000
   );
@@ -549,7 +650,10 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       ).pipe(refreshWith(runner));
       expect(status.outcome).toBe("degraded");
       expect(status.message).toEqual(expect.stringContaining("below the 95% target"));
-      expect(O.map(O.fromUndefinedOr(status.seed), (seed) => seed.refused)).toEqual(O.some(0));
+      assertSome(
+        O.map(O.fromUndefinedOr(status.seed), (seed) => seed.refused),
+        NonNegativeInt.make(0)
+      );
       expect(yield* fs.exists(path.join(siblings[0] ?? "", "graft", "INDEX.md"))).toBe(true);
       // A degraded night is not a failure, so no operator notification fires.
       expect(A.some(commandLines(calls), Str.startsWith("notify-send"))).toBe(false);
@@ -616,9 +720,9 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
           "Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin",
           "Environment=CI=true",
           `EnvironmentFile=${path.join(stateDir, "env")}`,
-          `ExecStartPre=/usr/bin/git -C ${owner} pull --ff-only --quiet origin main`,
-          "ExecStartPre=/usr/bin/bun install --frozen-lockfile",
-          `ExecStart=/usr/bin/bun run beep graft deep refresh --owner ${owner} --jobs 16`,
+          `ExecStartPre=/usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
+          'ExecStartPre="/usr/bin/bun" install --frozen-lockfile',
+          `ExecStart="/usr/bin/bun" run beep graft deep refresh --owner "${owner}" --jobs 16`,
           "TimeoutStartSec=8h",
           "TimeoutStopSec=90",
           "KillMode=mixed",
@@ -670,6 +774,44 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       expect(untrusted._tag).toBe("GraftDeepPreflightError");
       expect(untrusted.message).toEqual(expect.stringContaining("untrusted config"));
       expect(A.some(commandLines(untrustedCalls), Str.startsWith("systemctl"))).toBe(false);
+      // The unit resolves node through the mise shims, so a mise that exits
+      // non-zero or cannot run at all refuses the install rather than leaving
+      // a timer that fails every night.
+      const brokenMise = yield* Effect.flip(GraftDeepRefresh.use((refresh) => refresh.installTimer(options))).pipe(
+        refreshWith(
+          scriptedRunner({
+            alive: [],
+            calls: [],
+            replies: repliesFor(owner, FULL_COVERAGE, [["mise trust --show", reply(127, "command not found")]]),
+          })
+        )
+      );
+      expect(brokenMise._tag).toBe("GraftDeepPreflightError");
+      expect(brokenMise.message).toEqual(expect.stringContaining("exited with 127"));
+      const absentMise = yield* Effect.flip(GraftDeepRefresh.use((refresh) => refresh.installTimer(options))).pipe(
+        refreshWith(
+          scriptedRunner({
+            alive: [],
+            calls: [],
+            intercept: (step) =>
+              step.command === "mise"
+                ? O.some(
+                    Effect.fail(
+                      GraftDeepStepError.make({
+                        step: "preflight",
+                        exitCode: 1,
+                        log: "",
+                        message: "mise trust --show could not spawn.",
+                      })
+                    )
+                  )
+                : O.none(),
+            replies: happyReplies(owner, FULL_COVERAGE),
+          })
+        )
+      );
+      expect(absentMise._tag).toBe("GraftDeepPreflightError");
+      expect(absentMise.message).toEqual(expect.stringContaining("could not run"));
       // A unit that fetches over SSH would fail every night: the user manager
       // has no agent to answer for the key.
       const sshCalls: Array<GraftDeepRunnerStep> = [];
@@ -696,7 +838,7 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       const { directory } = yield* fixture();
       const version = yield* GraftDeepRunner.use((runner) =>
         runner.run({ args: ["--version"], command: process.execPath, cwd: directory, phase: "build" })
-      ).pipe(provideScopedLayer(GraftDeepRunnerLive.pipe(Layer.provide(NodeServices.layer))));
+      ).pipe(withLiveRunner());
       expect(version.exitCode).toBe(0);
       expect(Str.isNonEmpty(version.output)).toBe(true);
       const missing = yield* Effect.flip(
@@ -709,7 +851,7 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
             phase: "build",
           })
         )
-      ).pipe(provideScopedLayer(GraftDeepRunnerLive.pipe(Layer.provide(NodeServices.layer))));
+      ).pipe(withLiveRunner());
       expect(missing._tag).toBe("GraftDeepStepError");
       expect(missing.step).toBe("build");
       expect(missing.log).toBe("/state/run.log");
@@ -722,7 +864,7 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
             yield* runner.isPidAlive(0x3ff_ffff),
           ];
         })
-      ).pipe(provideScopedLayer(GraftDeepRunnerLive.pipe(Layer.provide(NodeServices.layer))));
+      ).pipe(withLiveRunner());
       expect(liveness).toEqual([true, true, false]);
     }),
     30_000
@@ -734,14 +876,15 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       const { fs, path, owner, stateDir } = yield* fixture();
       const calls: Array<GraftDeepRunnerStep> = [];
       const runner = scriptedRunner({ alive: [], calls, replies: happyReplies(owner, FULL_COVERAGE) });
-      expect(yield* GraftDeepRefresh.use((refresh) => refresh.readStatus(stateDir)).pipe(refreshWith(runner))).toEqual(
-        O.none()
-      );
+      assertNone(yield* GraftDeepRefresh.use((refresh) => refresh.readStatus(stateDir)).pipe(refreshWith(runner)));
       yield* GraftDeepRefresh.use((refresh) => refresh.run(refreshOptions({ owner, stateDir }))).pipe(
         refreshWith(runner)
       );
       const read = yield* GraftDeepRefresh.use((refresh) => refresh.readStatus(stateDir)).pipe(refreshWith(runner));
-      expect(O.map(read, (status) => status.outcome)).toEqual(O.some("ok"));
+      assertSome(
+        O.map(read, (status) => status.outcome),
+        "ok"
+      );
       yield* fs.writeFileString(path.join(stateDir, "status.json"), "{ not a status }\n");
       const corrupt = yield* Effect.flip(GraftDeepRefresh.use((refresh) => refresh.readStatus(stateDir))).pipe(
         refreshWith(runner)
@@ -771,17 +914,23 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       const build = A.findFirst(calls, (call) =>
         Str.startsWith("graft build --deep")(formatCommandLine(call.command, call.args))
       );
-      expect(O.map(build, (call) => call.env?.GRAFT_MODEL)).toEqual(O.some("grok-4.6(low)"));
+      assertSome(
+        O.map(build, (call) => call.env?.GRAFT_MODEL),
+        "grok-4.6(low)"
+      );
       // An operator-set crux retry budget is forwarded rather than overwritten.
       const configuredCalls: Array<GraftDeepRunnerStep> = [];
       yield* GraftDeepRefresh.use((refresh) => refresh.run(refreshOptions({ owner, stateDir }))).pipe(
         refreshWith(scriptedRunner({ alive: [], calls: configuredCalls, replies: happyReplies(owner, FULL_COVERAGE) })),
-        provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ GRAFT_CRUX_EMPTY_RETRIES: "5" })))
+        withCruxRetries()
       );
       const configuredBuild = A.findFirst(configuredCalls, (call) =>
         Str.startsWith("graft build --deep")(formatCommandLine(call.command, call.args))
       );
-      expect(O.map(configuredBuild, (call) => call.env?.GRAFT_CRUX_EMPTY_RETRIES)).toEqual(O.some("5"));
+      assertSome(
+        O.map(configuredBuild, (call) => call.env?.GRAFT_CRUX_EMPTY_RETRIES),
+        "5"
+      );
     }),
     30_000
   );
@@ -936,7 +1085,7 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
     Effect.fn(function* () {
       const { fs, path, owner, siblings, stateDir } = yield* fixture();
       const empty = yield* runCommand(["deep", "status", "--state-dir", stateDir]);
-      expect(Result.isSuccess(empty.result)).toBe(true);
+      assertSuccess(empty.result, undefined);
       expect(empty.output).toEqual([`No refresh recorded under ${stateDir}.`]);
       const calls: Array<GraftDeepRunnerStep> = [];
       const runner = scriptedRunner({ alive: [], calls, replies: happyReplies(owner, FULL_COVERAGE) });
@@ -944,13 +1093,13 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
         refreshWith(runner)
       );
       const rendered = yield* runCommand(["deep", "status", "--state-dir", stateDir]);
-      expect(Result.isSuccess(rendered.result)).toBe(true);
+      assertSuccess(rendered.result, undefined);
       expect(rendered.output[0]).toEqual(expect.stringContaining("Graft deep refresh: done (ok)"));
       expect(rendered.output[0]).toEqual(expect.stringContaining("Coverage: 38520/39115 symbols (98.5%)"));
       expect(rendered.output[0]).toEqual(expect.stringContaining("Seeded: 12 copied"));
       expect(rendered.output[0]).toEqual(expect.stringContaining(`Rebuilt: ${A.length(siblings)} clone(s), 0 failing`));
       const encoded = yield* runCommand(["deep", "status", "--state-dir", stateDir, "--json"]);
-      expect(Result.isSuccess(encoded.result)).toBe(true);
+      assertSuccess(encoded.result, undefined);
       const decoded = yield* decodeStatusJson(encoded.output[0]);
       expect(decoded.head).toBe(OWNER_HEAD_AFTER);
       // A degraded note is rendered for the operator when one is recorded.
@@ -962,10 +1111,9 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
       expect(noted.output[0]).toEqual(expect.stringContaining("Note: one sibling rebuild failed"));
       // Invalid option values are refused before the service ever starts.
       const invalid = yield* runCommand(["deep", "refresh", "--owner", owner, "--state-dir", stateDir, "--jobs", "0"]);
-      expect(O.map(Result.getFailure(invalid.result), (failure) => failure)).toEqual(
-        O.some(
-          expect.objectContaining({ _tag: "GraftDeepPreflightError", path: owner, message: "Invalid refresh options." })
-        )
+      assertSome(
+        O.map(Result.getFailure(invalid.result), (error) => error._tag),
+        "GraftDeepPreflightError"
       );
       // A status with no head, coverage, or seed receipt still renders.
       yield* fs.writeFileString(
@@ -996,12 +1144,237 @@ layer(NodeServices.layer, { excludeTestServices: true })("Graft deep refresh", (
         "--env-file",
         path.join(stateDir, "absent-env"),
       ]);
-      expect(Result.isFailure(timer.result)).toBe(true);
+      assertSome(
+        O.map(Result.getFailure(timer.result), (error) => error._tag),
+        "GraftDeepPreflightError"
+      );
       const group = yield* runCommand(["deep"]);
       expect(group.output[0]).toEqual(expect.stringContaining("Graft deep commands: refresh"));
       const root = yield* runCommand([]);
       expect(root.output[0]).toEqual(expect.stringContaining("deep refresh|status|install-timer"));
     }),
     30_000
+  );
+
+  it.effect(
+    "quotes every path argument systemd would otherwise split",
+    Effect.fn(function* () {
+      const spaced = GraftDeepTimerOptions.make({
+        owner: "/clones/beep effect0",
+        bunPath: "/opt/bun 1/bin/bun",
+        onCalendar: "*-*-* 02:30:00",
+        envFile: "/home/op/beep graft/env",
+        uninstall: false,
+      });
+      const service = renderGraftDeepRefreshUnits(spaced)[0]?.text ?? "";
+      expect(A.filter(Str.split("\n")(service), Str.startsWith("Exec"))).toEqual([
+        'ExecStartPre=/usr/bin/git -C "/clones/beep effect0" pull --ff-only --quiet origin main',
+        'ExecStartPre="/opt/bun 1/bin/bun" install --frozen-lockfile',
+        'ExecStart="/opt/bun 1/bin/bun" run beep graft deep refresh --owner "/clones/beep effect0" --jobs 16',
+      ]);
+      // systemd reads these two as whole lines, so quoting them would make the
+      // quotes part of the path.
+      expect(Str.includes("WorkingDirectory=/clones/beep effect0")(service)).toBe(true);
+      expect(Str.includes("EnvironmentFile=/home/op/beep graft/env")(service)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "reports a failing uninstall instead of claiming units were removed",
+    Effect.fn(function* () {
+      const { fs, path, directory, owner, stateDir } = yield* fixture();
+      const home = path.join(directory, "home");
+      yield* fs.makeDirectory(stateDir, { recursive: true });
+      yield* fs.writeFileString(path.join(stateDir, "env"), "GRAFT_PROVIDER=openai\n");
+      const options = GraftDeepTimerOptions.make({
+        owner,
+        bunPath: "/usr/bin/bun",
+        onCalendar: "*-*-* 02:30:00",
+        envFile: path.join(stateDir, "env"),
+        uninstall: false,
+      });
+      const trusted = repliesFor(owner, FULL_COVERAGE, [["mise trust --show", reply(0, `${owner}: trusted`)]]);
+      const installed = yield* GraftDeepRefresh.use((refresh) => refresh.installTimer(options)).pipe(
+        refreshWith(scriptedRunner({ alive: [], calls: [], replies: trusted })),
+        withHome(home)
+      );
+      const failure = yield* Effect.flip(
+        GraftDeepRefresh.use((refresh) =>
+          refresh.installTimer(GraftDeepTimerOptions.make({ ...options, uninstall: true }))
+        )
+      ).pipe(
+        refreshWith(
+          scriptedRunner({
+            alive: [],
+            calls: [],
+            replies: A.appendAll(
+              [["systemctl --user disable", reply(1, "Failed to disable unit: Access denied")] as const],
+              trusted
+            ),
+          })
+        ),
+        withHome(home)
+      );
+      expect(failure._tag).toBe("GraftDeepStepError");
+      expect(failure.message).toEqual(expect.stringContaining("Access denied"));
+      // The units are still installed, so nothing may claim they were removed.
+      expect(yield* Effect.forEach(installed, (unit) => fs.exists(unit))).toEqual([true, true]);
+    }),
+    30_000
+  );
+
+  it.effect(
+    "drives the refresh, status, and install-timer handlers the command tree wires",
+    Effect.fn(function* () {
+      const { fs, path, directory, owner, siblings, stateDir } = yield* fixture();
+      const home = path.join(directory, "home");
+      const calls: Array<GraftDeepRunnerStep> = [];
+      const runner = scriptedRunner({ alive: [], calls, replies: happyReplies(owner, FULL_COVERAGE) });
+
+      // With no --state-dir the handler falls back under HOME.
+      const defaultDir = yield* captureOutput(
+        runDeepStatus({ stateDir: O.none(), json: false }).pipe(refreshWith(runner), withHome(home))
+      );
+      expect(defaultDir.output).toEqual([
+        `No refresh recorded under ${path.join(home, ".local", "state", "beep-graft")}.`,
+      ]);
+
+      // A `~/` path is expanded against HOME; no shell is involved to do it.
+      const tilde = yield* captureOutput(
+        runDeepStatus({ stateDir: O.some("~/nowhere-graft"), json: false }).pipe(refreshWith(runner), withHome(home))
+      );
+      expect(tilde.output).toEqual([`No refresh recorded under ${path.join(home, "nowhere-graft")}.`]);
+
+      // No run recorded yet.
+      const empty = yield* captureOutput(
+        runDeepStatus({ stateDir: O.some(stateDir), json: false }).pipe(refreshWith(runner))
+      );
+      expect(empty.output).toEqual([`No refresh recorded under ${stateDir}.`]);
+
+      // The human refresh prints one line per phase, then the summary.
+      const human = yield* captureOutput(runDeepRefresh(refreshFlags({ owner, stateDir })).pipe(refreshWith(runner)));
+      assertSuccess(human.result, undefined);
+      expect(A.take(human.output, 7)).toEqual([
+        "graft deep refresh: preflight",
+        "graft deep refresh: pull",
+        "graft deep refresh: install",
+        "graft deep refresh: build",
+        "graft deep refresh: seed",
+        "graft deep refresh: rebuild",
+        "graft deep refresh: done",
+      ]);
+      expect(human.output[7]).toEqual(expect.stringContaining("Graft deep refresh: done (ok)"));
+      expect(human.output[7]).toEqual(expect.stringContaining(`Rebuilt: ${A.length(siblings)} clone(s), 0 failing`));
+
+      // `--json` suppresses the phase lines and emits the encoded document.
+      const encoded = yield* captureOutput(
+        runDeepRefresh(refreshFlags({ owner, stateDir, json: true, model: "grok-4.6(low)" })).pipe(refreshWith(runner))
+      );
+      expect(encoded.output).toHaveLength(1);
+      expect((yield* decodeStatusJson(encoded.output[0])).model).toBe("grok-4.6(low)");
+
+      // Status renders and encodes the recorded run.
+      const rendered = yield* captureOutput(
+        runDeepStatus({ stateDir: O.some(stateDir), json: false }).pipe(refreshWith(runner))
+      );
+      expect(rendered.output[0]).toEqual(expect.stringContaining("Coverage: 38520/39115 symbols (98.5%)"));
+      const statusJson = yield* captureOutput(
+        runDeepStatus({ stateDir: O.some(stateDir), json: true }).pipe(refreshWith(runner))
+      );
+      expect((yield* decodeStatusJson(statusJson.output[0])).head).toBe(OWNER_HEAD_AFTER);
+
+      // A failing build surfaces its typed error through the handler.
+      const failed = yield* captureOutput(
+        runDeepRefresh(refreshFlags({ owner, stateDir })).pipe(
+          refreshWith(
+            scriptedRunner({
+              alive: [],
+              calls: [],
+              replies: repliesFor(owner, FULL_COVERAGE, [["graft build --deep", reply(1, "provider refused")]]),
+            })
+          )
+        )
+      );
+      assertSome(
+        O.map(Result.getFailure(failed.result), (error) => error._tag),
+        "GraftDeepStepError"
+      );
+
+      // So does a lock held by a live process.
+      yield* fs.writeFileString(
+        path.join(stateDir, "refresh.lock"),
+        yield* encodeLockJson(GraftDeepLock.make({ pid: process.pid, startedAt: "2026-09-11T02:30:00.000Z" }))
+      );
+      const locked = yield* captureOutput(
+        runDeepRefresh(refreshFlags({ owner, stateDir })).pipe(
+          refreshWith(scriptedRunner({ alive: [process.pid], calls: [], replies: happyReplies(owner, FULL_COVERAGE) }))
+        )
+      );
+      assertSome(
+        O.map(Result.getFailure(locked.result), (error) => error._tag),
+        "GraftDeepLockError"
+      );
+      yield* fs.remove(path.join(stateDir, "refresh.lock"));
+
+      // A status whose build summarized nothing renders without dividing by zero.
+      yield* fs.writeFileString(
+        path.join(stateDir, "status.json"),
+        yield* encodeStatusJson(
+          GraftDeepRefreshStatus.make({
+            schemaVersion: "beep-graft-deep-refresh/v1",
+            owner,
+            model: "(env default)",
+            jobs: PosInt.make(16),
+            startedAt: "2026-09-11T02:30:00.000Z",
+            phase: "done",
+            outcome: "degraded",
+            coverage: GraftDeepCoverage.make({
+              covered: NonNegativeInt.make(0),
+              total: NonNegativeInt.make(0),
+              failedFiles: NonNegativeInt.make(0),
+            }),
+            rebuilt: [],
+            log: path.join(stateDir, "runs", "20260911T023000Z.log"),
+          })
+        )
+      );
+      const zero = yield* captureOutput(
+        runDeepStatus({ stateDir: O.some(stateDir), json: false }).pipe(refreshWith(runner))
+      );
+      expect(zero.output[0]).toEqual(expect.stringContaining("Coverage: 0/0 symbols (0%)"));
+
+      // install-timer writes, then removes, then has nothing left to remove.
+      const timerRunner = scriptedRunner({
+        alive: [],
+        calls: [],
+        replies: repliesFor(owner, FULL_COVERAGE, [["mise trust --show", reply(0, `${owner}: trusted`)]]),
+      });
+      yield* fs.writeFileString(path.join(stateDir, "env"), "GRAFT_PROVIDER=openai\n");
+      const timerFlags = { owner, onCalendar: "*-*-* 02:30:00", envFile: O.some(path.join(stateDir, "env")) };
+      const wrote = yield* captureOutput(
+        runDeepInstallTimer({ ...timerFlags, uninstall: false }).pipe(refreshWith(timerRunner), withHome(home))
+      );
+      expect(wrote.output[0]).toEqual(expect.stringContaining("graft deep install-timer: wrote"));
+      const removed = yield* captureOutput(
+        runDeepInstallTimer({ ...timerFlags, uninstall: true }).pipe(refreshWith(timerRunner), withHome(home))
+      );
+      expect(removed.output[0]).toEqual(expect.stringContaining("graft deep install-timer: removed"));
+      const again = yield* captureOutput(
+        runDeepInstallTimer({ ...timerFlags, uninstall: true }).pipe(refreshWith(timerRunner), withHome(home))
+      );
+      expect(again.output).toEqual(["graft deep install-timer: no unit files were installed"]);
+      // A default environment file is resolved under HOME when none is given.
+      const defaulted = yield* captureOutput(
+        runDeepInstallTimer({ owner, onCalendar: "*-*-* 02:30:00", envFile: O.none(), uninstall: false }).pipe(
+          refreshWith(timerRunner),
+          withHome(home)
+        )
+      );
+      assertSome(
+        O.map(Result.getFailure(defaulted.result), (error) => error._tag),
+        "GraftDeepPreflightError"
+      );
+    }),
+    60_000
   );
 });

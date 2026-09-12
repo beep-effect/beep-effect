@@ -224,10 +224,12 @@ git -C ~/YeeBois/projects/beep-effect0 remote set-url origin \
 
 The `mise trust` line is not optional either: the timer resolves `graft`
 through the mise node shim, and an untrusted config makes that shim refuse to
-run. `install-timer` checks it and refuses rather than installing a unit that
-will fail every night. The first seed is what saves the first night's full
-build: the refresh re-summarizes only changed files, so the owner starts from a
-meaning tier rather than from nothing.
+run. `install-timer` runs `mise trust --show` in the owner and fails closed on
+every answer but a clean one, so a mise that is missing, broken, or reporting an
+untrusted config refuses the install instead of leaving a unit that fails every
+night. The first seed is what saves the first night's full build: the refresh
+re-summarizes only changed files, so the owner starts from a meaning tier rather
+than from nothing.
 
 The provider keys live in `~/.config/beep-graft/env`, which systemd reads as
 the unit's `EnvironmentFile`. It holds the same keys as the deep-build

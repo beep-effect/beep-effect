@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 /**
- * Graft command group root.
+ * Graft command group root and its testable deep-refresh handlers.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export { graftCommand } from "./Graft.command.ts";
+export { graftCommand, runDeepInstallTimer, runDeepRefresh, runDeepStatus } from "./Graft.command.ts";
 /**
  * Typed source, target, I/O, lock, preflight, and step failures.
  *
@@ -64,5 +64,4 @@ export type {
   GraftDeepRefreshFailure,
   GraftDeepRefreshShape,
   GraftDeepRunnerShape,
-  GraftDeepRunnerStep,
 } from "./GraftDeep.service.ts";

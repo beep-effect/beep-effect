@@ -31,11 +31,12 @@ import {
   GraftDeepLock,
   GraftDeepRefreshOutcome,
   GraftDeepRefreshStatus,
+  GraftDeepRunnerStep,
   GraftDeepSiblingRebuild,
   parseDeepCoverage,
 } from "./Graft.schemas.ts";
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
-import type { CapturedStep, CaptureSource } from "../../internal/process/StepExec.ts";
+import type { CapturedStep } from "../../internal/process/StepExec.ts";
 import type { GraftCacheSourceError, GraftCacheTargetError } from "./Graft.errors.ts";
 import type {
   GraftCacheSyncReport,
@@ -69,27 +70,6 @@ const REBUILD_UNFINISHED_EXIT = 124;
 
 const isIntegerExit = S.is(S.Int);
 const exitCodeOf = (value: number): number => (isIntegerExit(value) ? value : 1);
-
-/**
- * One subprocess a refresh run needs, named by the phase that owns it.
- *
- * @category models
- * @since 0.0.0
- */
-export interface GraftDeepRunnerStep {
-  readonly args: ReadonlyArray<string>;
-  readonly command: string;
-  readonly cwd: string;
-  readonly env?: Record<string, string | undefined> | undefined;
-  readonly log?: string | undefined;
-  readonly phase: GraftDeepRefreshPhase;
-  /**
-   * `"stdout"` for a step whose output is parsed, `"merge"` (the default) for a
-   * step whose output only reaches the run log.
-   */
-  readonly source?: CaptureSource | undefined;
-  readonly timeout?: Dur.Input | undefined;
-}
 
 /**
  * The only seam through which a refresh reaches the operating system.
@@ -253,7 +233,7 @@ export type GraftDeepRefreshFailure =
 export interface GraftDeepRefreshShape {
   readonly installTimer: (
     options: GraftDeepTimerOptions
-  ) => Effect.Effect<ReadonlyArray<string>, GraftDeepPreflightError | GraftDeepStepError>;
+  ) => Effect.Effect<ReadonlyArray<string>, GraftDeepPreflightError | GraftDeepStepError | GraftCacheIoError>;
   readonly readStatus: (stateDir: string) => Effect.Effect<O.Option<GraftDeepRefreshStatus>, GraftCacheIoError>;
   readonly run: (options: GraftDeepRefreshOptions) => Effect.Effect<GraftDeepRefreshStatus, GraftDeepRefreshFailure>;
 }
@@ -337,9 +317,12 @@ export const renderGraftDeepRefreshUnits = (
         `Environment=PATH=${REFRESH_UNIT_PATH}`,
         "Environment=CI=true",
         `EnvironmentFile=${options.envFile}`,
-        `ExecStartPre=/usr/bin/git -C ${options.owner} pull --ff-only --quiet origin main`,
-        `ExecStartPre=${options.bunPath} install --frozen-lockfile`,
-        `ExecStart=${options.bunPath} run beep graft deep refresh --owner ${options.owner} --jobs 16`,
+        // systemd splits Exec* lines on whitespace with no shell involved, so
+        // every path argument is quoted. WorkingDirectory and EnvironmentFile
+        // take whole lines and must stay unquoted.
+        `ExecStartPre=/usr/bin/git -C "${options.owner}" pull --ff-only --quiet origin main`,
+        `ExecStartPre="${options.bunPath}" install --frozen-lockfile`,
+        `ExecStart="${options.bunPath}" run beep graft deep refresh --owner "${options.owner}" --jobs 16`,
         "TimeoutStartSec=8h",
         "TimeoutStopSec=90",
         "KillMode=mixed",
@@ -505,7 +488,16 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
   ) {
     const probe = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
       const captured = yield* runner
-        .run({ args, command: "git", cwd: owner, phase: "preflight", source: "stdout", timeout: "2 minutes" })
+        .run(
+          GraftDeepRunnerStep.make({
+            args,
+            command: "git",
+            cwd: owner,
+            phase: "preflight",
+            source: "stdout",
+            timeout: "2 minutes",
+          })
+        )
         .pipe(Effect.mapError((cause) => GraftDeepPreflightError.make({ path: owner, message: cause.message, cause })));
       yield* appendLog(`$ ${formatCommandLine("git", args)}\n${captured.output}\n`);
       if (!Eq.equals(exitCodeOf(captured.exitCode), 0)) {
@@ -588,7 +580,7 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
     });
 
     const step = Effect.fnUntraced(function* (input: GraftDeepRunnerStep) {
-      const captured = yield* runner.run({ ...input, log: logPath });
+      const captured = yield* runner.run(GraftDeepRunnerStep.make({ ...input, log: logPath }));
       yield* appendLog(`$ ${formatCommandLine(input.command, input.args)}\n${captured.output}\n`);
       return captured;
     });
@@ -607,7 +599,15 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
       yield* commit({ phase: "preflight" });
       yield* checkoutPreflight(owner, appendLog);
       const graftVersion = yield* runner
-        .run({ args: ["--version"], command: "graft", cwd: owner, phase: "preflight", timeout: "2 minutes" })
+        .run(
+          GraftDeepRunnerStep.make({
+            args: ["--version"],
+            command: "graft",
+            cwd: owner,
+            phase: "preflight",
+            timeout: "2 minutes",
+          })
+        )
         .pipe(
           Effect.mapError((cause) =>
             GraftDeepPreflightError.make({
@@ -626,7 +626,15 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
       yield* appendLog(`$ graft --version\n${graftVersion.output}\n`);
       const patchKit = path.join(owner, "scripts", "graft", "apply-dist-patches.sh");
       const patches = yield* runner
-        .run({ args: ["--check"], command: patchKit, cwd: owner, phase: "preflight", timeout: "5 minutes" })
+        .run(
+          GraftDeepRunnerStep.make({
+            args: ["--check"],
+            command: patchKit,
+            cwd: owner,
+            phase: "preflight",
+            timeout: "5 minutes",
+          })
+        )
         .pipe(
           Effect.mapError((cause) => GraftDeepPreflightError.make({ path: patchKit, message: cause.message, cause }))
         );
@@ -639,75 +647,89 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
       }
 
       yield* commit({ phase: "pull" });
-      const before = yield* mustSucceed({
-        args: ["rev-parse", "HEAD"],
-        command: "git",
-        cwd: owner,
-        phase: "pull",
-        source: "stdout",
-        timeout: "2 minutes",
-      });
-      yield* mustSucceed({
-        args: ["fetch", "--quiet", "origin"],
-        command: "git",
-        cwd: owner,
-        phase: "pull",
-        timeout: "15 minutes",
-      });
-      yield* mustSucceed({
-        args: ["merge", "--ff-only", "origin/main"],
-        command: "git",
-        cwd: owner,
-        phase: "pull",
-        timeout: "5 minutes",
-      });
-      const after = yield* mustSucceed({
-        args: ["rev-parse", "HEAD"],
-        command: "git",
-        cwd: owner,
-        phase: "pull",
-        source: "stdout",
-        timeout: "2 minutes",
-      });
-      const lockDiff = yield* step({
-        args: ["diff", "--quiet", before.output, after.output, "--", "bun.lock"],
-        command: "git",
-        cwd: owner,
-        phase: "pull",
-        timeout: "5 minutes",
-      });
+      const before = yield* mustSucceed(
+        GraftDeepRunnerStep.make({
+          args: ["rev-parse", "HEAD"],
+          command: "git",
+          cwd: owner,
+          phase: "pull",
+          source: "stdout",
+          timeout: "2 minutes",
+        })
+      );
+      yield* mustSucceed(
+        GraftDeepRunnerStep.make({
+          args: ["fetch", "--quiet", "origin"],
+          command: "git",
+          cwd: owner,
+          phase: "pull",
+          timeout: "15 minutes",
+        })
+      );
+      yield* mustSucceed(
+        GraftDeepRunnerStep.make({
+          args: ["merge", "--ff-only", "origin/main"],
+          command: "git",
+          cwd: owner,
+          phase: "pull",
+          timeout: "5 minutes",
+        })
+      );
+      const after = yield* mustSucceed(
+        GraftDeepRunnerStep.make({
+          args: ["rev-parse", "HEAD"],
+          command: "git",
+          cwd: owner,
+          phase: "pull",
+          source: "stdout",
+          timeout: "2 minutes",
+        })
+      );
+      const lockDiff = yield* step(
+        GraftDeepRunnerStep.make({
+          args: ["diff", "--quiet", before.output, after.output, "--", "bun.lock"],
+          command: "git",
+          cwd: owner,
+          phase: "pull",
+          timeout: "5 minutes",
+        })
+      );
       yield* commit({ head: after.output, phase: "install" });
       if (!Eq.equals(exitCodeOf(lockDiff.exitCode), 0)) {
-        yield* mustSucceed({
-          args: ["install", "--frozen-lockfile"],
-          command: "bun",
-          cwd: owner,
-          phase: "install",
-          timeout: "30 minutes",
-        });
+        yield* mustSucceed(
+          GraftDeepRunnerStep.make({
+            args: ["install", "--frozen-lockfile"],
+            command: "bun",
+            cwd: owner,
+            phase: "install",
+            timeout: "30 minutes",
+          })
+        );
       }
 
       yield* commit({ phase: "build" });
       const cruxRetries = yield* Effect.orDie(Config.String("GRAFT_CRUX_EMPTY_RETRIES").pipe(Config.option));
-      const build = yield* mustSucceed({
-        args: ["build", "--deep", "-j", `${options.jobs}`, "--allow-partial"],
-        command: "graft",
-        cwd: owner,
-        env: {
-          ...pipe(
-            O.fromUndefinedOr(options.model),
-            O.map((model) => ({ GRAFT_MODEL: model })),
-            O.getOrElse(() => ({}))
-          ),
-          ...pipe(
-            cruxRetries,
-            O.map((retries) => ({ GRAFT_CRUX_EMPTY_RETRIES: retries })),
-            O.getOrElse(() => ({ GRAFT_CRUX_EMPTY_RETRIES: "2" }))
-          ),
-        },
-        phase: "build",
-        timeout: "5 hours",
-      });
+      const build = yield* mustSucceed(
+        GraftDeepRunnerStep.make({
+          args: ["build", "--deep", "-j", `${options.jobs}`, "--allow-partial"],
+          command: "graft",
+          cwd: owner,
+          env: {
+            ...pipe(
+              O.fromUndefinedOr(options.model),
+              O.map((model) => ({ GRAFT_MODEL: model })),
+              O.getOrElse(() => ({}))
+            ),
+            ...pipe(
+              cruxRetries,
+              O.map((retries) => ({ GRAFT_CRUX_EMPTY_RETRIES: retries })),
+              O.getOrElse(() => ({ GRAFT_CRUX_EMPTY_RETRIES: "2" }))
+            ),
+          },
+          phase: "build",
+          timeout: "5 hours",
+        })
+      );
       const coverage = parseDeepCoverage(build.output);
 
       yield* commit({
@@ -745,7 +767,15 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
             // and throw away every result the night already earned.
             const [elapsed, attempted] = yield* Effect.timed(
               Effect.result(
-                step({ args: ["build"], command: "graft", cwd: root, phase: "rebuild", timeout: "15 minutes" })
+                step(
+                  GraftDeepRunnerStep.make({
+                    args: ["build"],
+                    command: "graft",
+                    cwd: root,
+                    phase: "rebuild",
+                    timeout: "15 minutes",
+                  })
+                )
               )
             );
             return GraftDeepSiblingRebuild.make({
@@ -799,13 +829,15 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
     // must not replace the real cause.
     const notifyFailure = Effect.fnUntraced(function* (message: string) {
       yield* Effect.ignore(
-        runner.run({
-          args: ["--urgency=critical", "beep graft deep refresh failed", message],
-          command: "notify-send",
-          cwd: stateDir,
-          phase: status.phase,
-          timeout: "30 seconds",
-        })
+        runner.run(
+          GraftDeepRunnerStep.make({
+            args: ["--urgency=critical", "beep graft deep refresh failed", message],
+            command: "notify-send",
+            cwd: stateDir,
+            phase: status.phase,
+            timeout: "30 seconds",
+          })
+        )
       );
     });
     const recordFailure = Effect.fnUntraced(function* (message: string) {
@@ -851,13 +883,15 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
   });
 
   const runSystemctl = Effect.fnUntraced(function* (args: ReadonlyArray<string>, cwd: string) {
-    const captured = yield* runner.run({
-      args: ["--user", ...args],
-      command: "systemctl",
-      cwd,
-      phase: "preflight",
-      timeout: "2 minutes",
-    });
+    const captured = yield* runner.run(
+      GraftDeepRunnerStep.make({
+        args: ["--user", ...args],
+        command: "systemctl",
+        cwd,
+        phase: "preflight",
+        timeout: "2 minutes",
+      })
+    );
     return yield* ensureZeroExit(captured, (exitCode) =>
       GraftDeepStepError.make({
         step: "preflight",
@@ -883,10 +917,17 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
       const units = renderGraftDeepRefreshUnits(options);
       const unitPaths = A.map(units, (unit) => path.join(unitDir, unit.fileName));
       if (options.uninstall) {
-        yield* Effect.ignore(runSystemctl(["disable", "--now", `${REFRESH_UNIT_BASE_NAME}.timer`], home));
-        yield* Effect.forEach(unitPaths, (unit) => Effect.ignore(fs.remove(unit, { force: true })));
+        // Nothing installed is nothing to undo, so an absent unit is skipped
+        // rather than disabled; a unit that is present and refuses to be
+        // disabled or deleted is reported, because the next daemon-reload
+        // would load it again and the operator would believe it was gone.
+        const present = yield* Effect.filter(unitPaths, (unit) => fs.exists(unit).pipe(Effect.mapError(ioError(unit))));
+        if (A.isReadonlyArrayNonEmpty(present)) {
+          yield* runSystemctl(["disable", "--now", `${REFRESH_UNIT_BASE_NAME}.timer`], home);
+        }
+        yield* Effect.forEach(present, (unit) => fs.remove(unit).pipe(Effect.mapError(ioError(unit))));
         yield* runSystemctl(["daemon-reload"], home);
-        return unitPaths;
+        return present;
       }
       // Stat only: the environment file holds the proxy token and is never read
       // by this process.
@@ -900,23 +941,36 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
         )
       );
       yield* checkoutPreflight(options.owner, () => Effect.void);
-      // mise owns the node shim the graft launcher resolves; an untrusted
-      // config makes that shim refuse to run under the timer.
-      const trust = yield* Effect.result(
-        runner.run({
-          args: ["trust", "--show"],
-          command: "mise",
-          cwd: options.owner,
-          phase: "preflight",
-          source: "stdout",
-          timeout: "2 minutes",
-        })
-      );
-      if (
-        Result.isSuccess(trust) &&
-        Eq.equals(exitCodeOf(trust.success.exitCode), 0) &&
-        A.some(Str.split("\n")(trust.success.output), Str.includes(": untrusted"))
-      ) {
+      // mise owns the node shim the rendered unit resolves `graft` through, so
+      // a mise that cannot answer is refused rather than assumed fine: the
+      // alternative is a timer that fails silently every night.
+      const trust = yield* runner
+        .run(
+          GraftDeepRunnerStep.make({
+            args: ["trust", "--show"],
+            command: "mise",
+            cwd: options.owner,
+            phase: "preflight",
+            source: "stdout",
+            timeout: "2 minutes",
+          })
+        )
+        .pipe(
+          Effect.mapError((cause) =>
+            GraftDeepPreflightError.make({
+              path: options.owner,
+              message: `mise trust --show could not run in ${options.owner}; install mise and run "mise trust" there, because the rendered unit resolves node through the mise shims.`,
+              cause,
+            })
+          )
+        );
+      if (!Eq.equals(exitCodeOf(trust.exitCode), 0)) {
+        return yield* GraftDeepPreflightError.make({
+          path: options.owner,
+          message: `mise trust --show exited with ${trust.exitCode} in ${options.owner}; install mise and run "mise trust" there, because the rendered unit resolves node through the mise shims.`,
+        });
+      }
+      if (A.some(Str.split("\n")(trust.output), Str.includes(": untrusted"))) {
         return yield* GraftDeepPreflightError.make({
           path: options.owner,
           message: `mise reports an untrusted config under ${options.owner}; run "mise trust" there before installing the timer.`,

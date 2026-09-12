@@ -6,6 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { DurationUnit } from "@beep/schema/Duration";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { pipe } from "effect";
 import * as A from "effect/Array";
@@ -545,5 +546,86 @@ export class GraftDeepTimerOptions extends S.Class<GraftDeepTimerOptions>($I`Gra
   { owner: S.String, bunPath: S.String, onCalendar: S.String, envFile: S.String, uninstall: S.Boolean },
   $I.annote("GraftDeepTimerOptions", {
     description: "Owner clone, Bun path, calendar expression, and environment file of the refresh timer.",
+  })
+) {}
+
+/**
+ * How a refresh step's output is captured.
+ *
+ * **Details**
+ *
+ * A step read for its value takes `stdout` alone: Git writes advisory warnings
+ * to stderr, and merging them would make `status --porcelain` look dirty or
+ * corrupt a parsed revision. A step whose output only reaches the run log takes
+ * `merge`, where a failure explains itself.
+ *
+ * **Example** (Recognize the parsed-output source)
+ *
+ * ```ts import.meta.vitest name="Recognize the parsed-output source"
+ * import { GraftDeepCaptureSource } from "@beep/repo-cli/commands/Graft"
+ * console.log(GraftDeepCaptureSource.is.stdout("stdout")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraftDeepCaptureSource = LiteralKit(["all", "merge", "stdout"]).pipe(
+  $I.annoteSchema("GraftDeepCaptureSource", {
+    description: "Which subprocess streams a refresh step captures.",
+  })
+);
+
+/**
+ * A capture strategy for one refresh step.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GraftDeepCaptureSource = typeof GraftDeepCaptureSource.Type;
+
+// A duration the child-process runner accepts verbatim; constraining the field
+// to this shape is what keeps an unparseable bound out of a spawned step.
+const DurationExpression = S.TemplateLiteral([S.Finite, " ", DurationUnit]);
+
+/**
+ * One subprocess a refresh run needs, named by the phase that owns it.
+ *
+ * **Details**
+ *
+ * `timeout` is a Duration expression such as `"15 minutes"`. `log` is the run
+ * log a spawn failure is attributed to, and is absent for steps that run before
+ * a run log exists.
+ *
+ * **Example** (Describe a bounded probe)
+ *
+ * ```ts import.meta.vitest name="Describe a bounded probe"
+ * import { GraftDeepRunnerStep } from "@beep/repo-cli/commands/Graft"
+ * const step = GraftDeepRunnerStep.make({
+ *   command: "git",
+ *   args: ["status", "--porcelain"],
+ *   cwd: "/clones/beep-effect0",
+ *   phase: "preflight",
+ *   source: "stdout",
+ *   timeout: "2 minutes",
+ * })
+ * console.log(step.source) // stdout
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GraftDeepRunnerStep extends S.Class<GraftDeepRunnerStep>($I`GraftDeepRunnerStep`)(
+  {
+    command: S.String,
+    args: S.Array(S.String),
+    cwd: S.String,
+    env: S.optional(S.Record(S.String, S.String)),
+    log: S.optional(S.String),
+    phase: GraftDeepRefreshPhase,
+    source: S.optional(GraftDeepCaptureSource),
+    timeout: S.optional(DurationExpression),
+  },
+  $I.annote("GraftDeepRunnerStep", {
+    description: "Command, working directory, environment, and bound of one refresh subprocess.",
   })
 ) {}
