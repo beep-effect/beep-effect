@@ -3883,7 +3883,14 @@ describe("yeet publish scope helpers", () => {
               stepId: proofStep.id,
               commandText: "bun run beep quality github-checks pre-push",
               exitCode: 1,
-              output: "[beep-cli] lint:typos: typos\nerror: misspelling found",
+              // The typos marker sits inside the red lint lane's own segment;
+              // the record names that lane, so no whole-output scan runs.
+              output: [
+                "[beep-cli] quality:lint: bun run beep ci lane lint",
+                "[beep-cli] lint:typos: typos",
+                "error: misspelling found",
+                "[beep-cli] quality:lint: failed in 12ms",
+              ].join("\n"),
             }),
             step: proofStep,
           }),
