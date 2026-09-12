@@ -73,8 +73,6 @@ import {
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.ts";
 import {
-  CoverageScopeOwner,
-  coverageDependentOwners,
   coverageScopeWeightSeconds,
   planCoverageFullShards,
   planWorkspaceCoverageAffectedScope,
@@ -122,7 +120,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
-import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
+import type { CoverageBaselineRowDelta, CoverageScopeOwner } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
@@ -692,37 +690,91 @@ const resolveNonAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveNon
   }
 );
 
-// Resolve Turbo graph selectors before deciding which Vitest shape to use.
-// Unknown syntax or an unmatched selector conservatively includes the long pole.
+const isResolvableCoverageSelector = S.is(
+  S.String.check(S.isPattern(/^(?:\.\.\.\^?)?(?:\{\.\/[^{}![\]^]+\}|[^{}![\]^]+?)(?:\^?\.\.\.)?$/u))
+);
+
+const coverageGraphClosure = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  seeds: ReadonlyArray<string>,
+  dependencies: boolean
+): ReadonlyArray<string> => {
+  let selected = seeds;
+  let frontier = seeds;
+  while (A.isReadonlyArrayNonEmpty(frontier)) {
+    const next = dependencies
+      ? A.flatMap(
+          A.filter(owners, (owner) => A.contains(frontier, owner.packageName)),
+          (owner: CoverageScopeOwner) => owner.workspaceDependencies
+        )
+      : A.map(
+          A.filter(owners, (owner) => A.some(owner.workspaceDependencies, (name) => A.contains(frontier, name))),
+          (owner) => owner.packageName
+        );
+    frontier = A.difference(
+      A.intersection(
+        next,
+        A.map(owners, (owner) => owner.packageName)
+      ),
+      selected
+    );
+    selected = A.union(selected, frontier);
+  }
+  return selected;
+};
+
+/**
+ * Resolve a Turbo package or directory selector against the workspace graph.
+ *
+ * **Example** (Resolve an exact package)
+ *
+ * ```ts
+ * import { resolveCoverageSelector } from "@beep/repo-cli/commands/Quality/Tasks"
+ *
+ * const result = resolveCoverageSelector([], "missing")
+ * console.log(result._tag) // "None"
+ * ```
+ *
+ * @param owners - Complete workspace inventory, including packages without coverage.
+ * @param selector - Turbo name, name glob, or directory selector with graph operators.
+ * @returns Sorted selected names, or None for unsupported or unmatched selectors.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveCoverageSelector: {
+  (owners: ReadonlyArray<CoverageScopeOwner>, selector: string): O.Option<ReadonlyArray<string>>;
+  (selector: string): (owners: ReadonlyArray<CoverageScopeOwner>) => O.Option<ReadonlyArray<string>>;
+} = dual(2, (owners: ReadonlyArray<CoverageScopeOwner>, selector: string): O.Option<ReadonlyArray<string>> => {
+  if (!isResolvableCoverageSelector(selector)) return O.none();
+  const pattern = Str.replace(/^(?:\.\.\.\^?)|(?:\^?\.\.\.)$/gu, "")(selector);
+  const directory = Str.startsWith("./")(pattern) || Str.startsWith("{./")(pattern);
+  const normalized = Str.replace(/^\{?|\}$/gu, "")(pattern);
+  const matches = globMatches(Str.replace(/^\.\//u, "")(normalized));
+  const seeds = A.map(
+    A.filter(owners, (owner) => matches(directory ? owner.packagePath : owner.packageName)),
+    (owner) => owner.packageName
+  );
+  if (A.isReadonlyArrayEmpty(seeds)) return O.none();
+  const dependencies = Str.endsWith("...")(selector) ? coverageGraphClosure(owners, seeds, true) : seeds;
+  const dependents = Str.startsWith("...")(selector) ? coverageGraphClosure(owners, seeds, false) : seeds;
+  const selected = A.union(dependencies, dependents);
+  return O.some(A.sort(Str.contains("^")(selector) ? A.difference(selected, seeds) : selected, Order.String));
+});
+
+// Unsupported or unmatched selectors retain the conservative long-pole topology.
 const coverageSelectorPackageNames = (
   owners: ReadonlyArray<CoverageScopeOwner>,
   selectors: ReadonlyArray<string>
-): ReadonlyArray<string> => {
-  if (A.isReadonlyArrayEmpty(selectors)) return COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES;
-  return A.flatMap(selectors, (selector) => {
-    const pattern = Str.replace(/^(?:\.\.\.)?\^?|(?:\^?\.\.\.)$/gu, "")(selector);
-    const seeds = A.map(
-      A.filter(owners, (owner) => globMatches(pattern)(owner.packageName)),
-      (owner) => owner.packageName
-    );
-    if (A.isReadonlyArrayEmpty(seeds)) return COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES;
-    const graph =
-      Str.endsWith("...")(selector) || Str.startsWith("^")(selector)
-        ? A.map(owners, (owner) =>
-            CoverageScopeOwner.make({
-              ...owner,
-              workspaceDependencies: A.map(
-                A.filter(owners, (candidate) => A.contains(candidate.workspaceDependencies, owner.packageName)),
-                (candidate) => candidate.packageName
-              ),
-            })
-          )
-        : owners;
-    return Str.contains("...")(selector) || Str.startsWith("^")(selector)
-      ? A.union(seeds, coverageDependentOwners(graph, seeds))
-      : seeds;
-  });
-};
+): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(selectors)
+    ? A.map(owners, (owner) => owner.packageName)
+    : pipe(
+        selectors,
+        A.flatMap((selector) =>
+          O.getOrElse(resolveCoverageSelector(owners, selector), () => COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES)
+        ),
+        A.dedupe
+      );
 
 /**
  * The Vitest passthrough every coverage producer appends.

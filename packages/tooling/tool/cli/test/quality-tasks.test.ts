@@ -21,6 +21,7 @@ import {
   collectQualityTaskLaneRunsForTesting,
   parseTestLaneSelectionForTesting,
   readLintPolicySweeps,
+  resolveCoverageSelector,
   runQualityTaskGithubCheckLaneWaves,
   runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
@@ -3286,28 +3287,61 @@ describe("quality task adapter", () => {
     expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
   });
 
-  it("resolves graph and glob selectors before choosing direct ratchet topology", () => {
+  it("resolves Turbo selector sets and their matching worker topology", () => {
     const owners = [
+      CoverageScopeOwner.make({ packageName: "A", packagePath: "packages/a", hasCoverage: false }),
+      CoverageScopeOwner.make({
+        packageName: "B",
+        packagePath: "packages/b",
+        hasCoverage: true,
+        workspaceDependencies: ["A"],
+      }),
+      CoverageScopeOwner.make({
+        packageName: "C",
+        packagePath: "packages/c",
+        hasCoverage: true,
+        workspaceDependencies: ["B"],
+      }),
       CoverageScopeOwner.make({
         packageName: "@beep/repo-cli",
         packagePath: "packages/cli",
         hasCoverage: true,
-        workspaceDependencies: ["@beep/schema"],
+        workspaceDependencies: ["B"],
       }),
-      CoverageScopeOwner.make({ packageName: "@beep/schema", packagePath: "packages/schema", hasCoverage: true }),
     ];
-    for (const selector of ["@beep/repo-cli...", "@beep/repo-*", "...@beep/schema", "missing[selector]"]) {
+    const cases: ReadonlyArray<readonly [string, ReadonlyArray<string>, number]> = [
+      ["B", ["B"], 1],
+      ["B...", ["A", "B"], 1],
+      ["...B", ["@beep/repo-cli", "B", "C"], 2],
+      ["...B...", ["@beep/repo-cli", "A", "B", "C"], 2],
+      ["B^...", ["A"], 1],
+      ["...^B", ["@beep/repo-cli", "C"], 2],
+      ["...^B...", ["@beep/repo-cli", "A", "C"], 2],
+      ["./packages/b", ["B"], 1],
+      ["./packages/b...", ["A", "B"], 1],
+      ["{./packages/b}", ["B"], 1],
+      ["...{./packages/b}", ["@beep/repo-cli", "B", "C"], 2],
+      ["...^{./packages/b}...", ["@beep/repo-cli", "A", "C"], 2],
+      ["{./packages/*}", ["@beep/repo-cli", "A", "B", "C"], 2],
+      ["@beep/repo-*", ["@beep/repo-cli"], 2],
+      ["...^@beep/repo-cli", [], 1],
+      ["C...", ["A", "B", "C"], 1],
+      ["...A", ["@beep/repo-cli", "A", "B", "C"], 2],
+    ];
+    for (const [selector, names, workers] of cases) {
+      expect(resolveCoverageSelector(owners, selector)).toEqual(O.some(names));
       expect(A.takeRight(coverageStepForTesting("/repo", [`--filter=${selector}`], owners).args, 3)).toEqual([
         "--",
         "--fileParallelism=true",
+        `--maxWorkers=${workers}`,
+      ]);
+    }
+    for (const selector of ["missing[selector]", "missing", "!B"]) {
+      expect(resolveCoverageSelector(owners, selector)).toEqual(O.none());
+      expect(A.takeRight(coverageStepForTesting("/repo", [`--filter=${selector}`], owners).args, 1)).toEqual([
         "--maxWorkers=2",
       ]);
     }
-    expect(A.takeRight(coverageStepForTesting("/repo", ["--filter=@beep/sch*"], owners).args, 3)).toEqual([
-      "--",
-      "--fileParallelism=true",
-      "--maxWorkers=1",
-    ]);
   });
 
   it("ends every coverage producer's argv with one Vitest topology", () => {
@@ -4438,6 +4472,58 @@ describe("quality task adapter", () => {
           "goals/fallow-quality-enforcement/research/feature-matrix.jsonc: configured repository fixture coverage owner is unavailable",
         ],
       });
+    });
+
+    it("treats the ciops extraction tree as coverage-inert", () => {
+      const owners = [
+        CoverageScopeOwner.make({
+          packageName: "@beep/ciops",
+          packagePath: "apps/labs/ciops",
+          hasCoverage: false,
+        }),
+      ];
+      expect(
+        planCoverageAffectedScope(owners, [
+          "explorations/beep-ci-operational-ontology/ontology/extraction/s6/output.json",
+        ])._tag
+      ).toBe("noop");
+    });
+
+    it("rejects a registered fixture consumer in labs even with a coverage script", () => {
+      const owners = [
+        CoverageScopeOwner.make({
+          packageName: "@beep/repo-cli",
+          packagePath: "apps/labs/cli",
+          hasCoverage: true,
+        }),
+      ];
+      const files = ["goals/fallow-quality-enforcement/research/feature-matrix.jsonc"];
+      expect(planCoverageAffectedScope(owners, files)._tag).toBe("full");
+      expect(changedCoverageOwners(owners, files)).toEqual([]);
+    });
+
+    it("registers only coverage-executed drizzle fixture consumers", () => {
+      const owners = A.map(
+        [
+          "epistemic-server",
+          "workspace-server",
+          "documents-server",
+          "architecture-lab-server",
+          "law-practice-server",
+          "repo-cli",
+        ],
+        (name) =>
+          CoverageScopeOwner.make({
+            packageName: `@beep/${name}`,
+            packagePath: `packages/${name}`,
+            hasCoverage: true,
+          })
+      );
+      expect(changedCoverageOwners(owners, ["packages/_internal/db-admin/drizzle/0001.sql"])).toEqual([
+        "@beep/epistemic-server",
+        "@beep/law-practice-server",
+        "@beep/repo-cli",
+      ]);
     });
 
     it("terminates on dependency cycles and excludes the seeds themselves", () => {

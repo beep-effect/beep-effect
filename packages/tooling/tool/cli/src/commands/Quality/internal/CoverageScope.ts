@@ -65,7 +65,7 @@ const COVERAGE_NOOP_FILES = [
 
 const COVERAGE_NOOP_PREFIXES = [".changeset/", "docs/", "explorations/", "goals/", "research/"] as const;
 
-// Live repository inputs read or executed by package tests. File entries also
+// Live repository inputs read or executed by coverage-executed package tests. File entries also
 // accept globs for inventories discovered by tests (goal manifests and workspace
 // manifests). Prefixes cover recursively consumed trees; all matching consumers
 // are retained alongside the ordinary workspace owner.
@@ -97,15 +97,11 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string
   ["apps/architecture-lab-proof/", "@beep/repo-cli"],
   ["packages/_internal/db-admin/", "@beep/repo-cli"],
   ["packages/agents/", "@beep/agents-domain"],
-  ["explorations/beep-ci-operational-ontology/ontology/extraction/s6/", "@beep/ciops"],
   ...A.map(
-    [
-      "@beep/epistemic-server",
-      "@beep/workspace-server",
-      "@beep/documents-server",
-      "@beep/architecture-lab-server",
-      "@beep/law-practice-server",
-    ],
+    // Register coverage-executed reads, not any test read. Epistemic explicitly
+    // includes ContradictionTriage.pglite; law-practice reads from top-level tests.
+    // The other server consumers exclude their integration-only readers.
+    ["@beep/epistemic-server", "@beep/law-practice-server"],
     (packageName): readonly [string, string] => ["packages/_internal/db-admin/drizzle/", packageName]
   ),
 ];
@@ -601,7 +597,7 @@ const repositoryFixtureCoverageOwnersForFile = (
 ): ReadonlyArray<CoverageScopeOwner> =>
   A.filter(
     owners,
-    (owner) => owner.hasCoverage && A.contains(repositoryFixtureOwnerNamesForFile(filePath), owner.packageName)
+    (owner) => isMeasurableOwner(owner) && A.contains(repositoryFixtureOwnerNamesForFile(filePath), owner.packageName)
   );
 
 const packageJsonPath = (owner: CoverageScopeOwner): string => `${owner.packagePath}/package.json`;
@@ -624,7 +620,7 @@ const fullReasonForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: 
 
   if (A.isReadonlyArrayNonEmpty(repositoryFixtureOwnerNamesForFile(filePath))) {
     return A.every(repositoryFixtureOwnerNamesForFile(filePath), (name) =>
-      A.some(owners, (owner) => owner.packageName === name && owner.hasCoverage)
+      A.some(owners, (owner) => owner.packageName === name && isMeasurableOwner(owner))
     )
       ? O.none()
       : O.some(`${filePath}: configured repository fixture coverage owner is unavailable`);
