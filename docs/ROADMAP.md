@@ -155,7 +155,10 @@ that provision Tom's practice rather than ship product code, each gated on an
 operator-attended step and therefore outside the lane count:
 [`practice-m365-contacts`](../goals/practice-m365-contacts/README.md) and
 [`practice-mail-backfill`](../goals/practice-mail-backfill/README.md)
-(graduated 2026-08-30 from practice-office-provisioning; M365 admin consent),
+(graduated 2026-08-30 from practice-office-provisioning; contacts access is
+granted only through the Exchange RBAC-for-Applications assignment scoped to
+the attorney's mailbox, never a tenant-wide admin consent of
+`Contacts.ReadWrite`; the backfill runs operator-attended only),
 and
 [`oppold-corpus-salvage-restoration`](../goals/oppold-corpus-salvage-restoration/README.md)
 (graduated 2026-08-24; feeds the practice-kg bundle v2 corpus gate above).
@@ -177,8 +180,9 @@ Only packets that directly feed Lane 1:
   (3/5, untouched since 2026-07-14; resumes when practice-kg-mcp P8 hands off).
 - [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
   (2/4) — the span-provenance substrate whose close unblocks the dormant
-  chain `citation-extraction-engine` → `law-doc-structure-oa-slice` and the
-  paused `attributed-multi-claim-span`; the cheapest Lane 1 unlock in the
+  consumers `citation-extraction-engine` and `law-doc-structure-oa-slice`
+  (independent of each other; the OA slice excludes citation parsing) and
+  the paused `attributed-multi-claim-span`; the cheapest Lane 1 unlock in the
   portfolio (added 2026-09-12).
 - [`patent-document-schema`](../goals/patent-document-schema/README.md) (2/5)
   — closes to unblock `document-ast-pattern-classification` →
@@ -218,9 +222,12 @@ machinery-first holds):**
    sequenced after time-to-certainty C3.4 merges; both edit
    `vitest.shared.ts`.
 3. [`runner-trust-boundary`](../goals/runner-trust-boundary/README.md) (8/9)
-   and
+   — P8 post-release JIT containment is a security acceptance gate, not a
+   closeout: it closes only when live proof shows no recoverable handoff
+   credential, or server-side replay rejection after the original listener
+   ends, from both the original and a second host.
    [`schema-utils-selective-codec-statics`](../goals/schema-utils-selective-codec-statics/README.md)
-   (4/6) — closeouts, no gate.
+   (4/6) — closeout, no gate.
 4. [`boolean-creep`](../goals/boolean-creep/README.md) (2/6) — after the
    operator ratifies GATE 1.
 5. [`knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md)
@@ -232,9 +239,10 @@ machinery-first holds):**
 6. [`slice-topology-audit`](../goals/slice-topology-audit/README.md) (0/5) →
    [`canonical-proof-reconciliation`](../goals/canonical-proof-reconciliation/README.md)
    (0/5, blockedBy the audit) — after C4.
-7. The Turborepo quartet, parked below — after C4;
-   `turborepo-task-qualification` first, the other three in parallel behind
-   its early contract.
+7. The Turborepo quartet, parked below — after C4 and only once the operator
+   re-authorizes `turborepo-task-qualification` from its 2026-09-09
+   checkpoint; the three unstarted scaffolds follow in parallel behind its
+   early contract.
 
 [`codex-security-findings-2026-09-08`](../goals/codex-security-findings-2026-09-08/README.md)
 runs under the maintenance rule (all thirteen findings shipped in PRs #1026,
@@ -254,7 +262,7 @@ so the map stays true.
   [`semantica-atlas-sync`](../goals/semantica-atlas-sync/README.md) first
   (the verdict lane), then
   [`semantica-storage-inversion`](../goals/semantica-storage-inversion/README.md)
-  after atlas-sync P0, with
+  after the atlas-sync P1 verdict lane, with
   [`semantica-reasoning-spike`](../goals/semantica-reasoning-spike/README.md)
   P1 (fixture only) free to run alongside and P2+ after the storage verdict.
 
@@ -330,10 +338,12 @@ renders their current local status view.
 | [`attributed-multi-claim-span`](../goals/attributed-multi-claim-span/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution, no blocker recorded). Resumes when `citation-verified-span-substrate` closes and a Lane 2 slot pulls the LangExtract-to-ClaimGate proof. |
 | [`effect-native-legal-eval`](../goals/effect-native-legal-eval/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes when a Lane 2 slot pulls the C&H baseline; `tracked-changes-ingest-wedge` is blockedBy it and waits with it. |
 | [`patent-drafting-episode-ledger`](../goals/patent-drafting-episode-ledger/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes after practice-kg-mcp P8 hands off and `agentic-professional-runtime` closes; also needs `citation-verified-span-substrate`. |
-| [`turborepo-task-qualification`](../goals/turborepo-task-qualification/README.md), [`turborepo-cache-conformance`](../goals/turborepo-cache-conformance/README.md), [`turborepo-cache-trust-observability`](../goals/turborepo-cache-trust-observability/README.md), [`turborepo-quality-cache-adoption`](../goals/turborepo-quality-cache-adoption/README.md) | Scaffolded paused 2026-09-08. Lane 3 queue item 7: after time-to-certainty C4, qualification first, the other three in parallel behind its early contract. |
+| [`turborepo-task-qualification`](../goals/turborepo-task-qualification/README.md) | Paused by operator request 2026-09-09 mid-execution (P0–P2 in progress; checkpoint saved as a draft PR and `research/paused-pr-verification.json`). Resumes only on explicit operator authorization from that checkpoint, after time-to-certainty C4; Lane 3 queue item 7 leads with it. |
+| [`turborepo-cache-conformance`](../goals/turborepo-cache-conformance/README.md), [`turborepo-cache-trust-observability`](../goals/turborepo-cache-trust-observability/README.md), [`turborepo-quality-cache-adoption`](../goals/turborepo-quality-cache-adoption/README.md) | Scaffolded paused 2026-09-08, unstarted. Resume in parallel behind task-qualification's early contract once it is re-authorized. |
 | [`lejeune-knowledge-desk-lab`](../goals/lejeune-knowledge-desk-lab/README.md) | Paused 2026-08-26. Resumes when `lejeune-demo-corpus-and-ontology` closes and a pitch date exists. |
 | [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md) | Paused 2026-08-23 (1/8). Resumes when a Lane 3 slot frees and a capped-step incident recurs. |
 | [`configurable-full-document-editor`](../goals/configurable-full-document-editor/README.md) | Paused 2026-08-24. Resumes when intake P5 (viewer) pulls an editor surface. |
+| [`repo-cli-modularization`](../goals/repo-cli-modularization/README.md) | Paused 2026-08-30 with all ten phases complete but no delivered PR (delivery PR #339 closed after #326 overlapped). Resumes for current-main reconciliation, authoritative proof, and a replacement delivery PR driven to mergeable; its completion gate stays unsatisfied until that PR merges. |
 
 Beyond `domain-kernel-hardening`, this cohort has three vintages. The eight
 rows through `voice-composer-slice` were graduated 2026-07-14 and saw zero
@@ -403,7 +413,7 @@ packet the 2026-08-17 map did not name: `time-to-certainty`,
 the Turborepo quartet in Lane 3 or its queue; the three `semantica-*`
 successors in Labs; `practice-m365-contacts`, `practice-mail-backfill` and
 `lejeune-demo-corpus-and-ontology` under Lane 1 practice operations;
-`lejeune-knowledge-desk-lab` parked; `citation-verified-span-substrate` and
+`lejeune-knowledge-desk-lab` and `repo-cli-modularization` parked; `citation-verified-span-substrate` and
 `patent-document-schema` in Lane 2 as chain unlocks; the 2026-08-13 vintage
 listed under the parked table; and `todox-marketing-site` closed (#1101).
 The rule held for none of them; the funnel policy stands, and the next
