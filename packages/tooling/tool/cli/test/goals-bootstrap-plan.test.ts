@@ -436,7 +436,7 @@ describe("goals adopt --plan index parity", () => {
 describe("goals index command", () => {
   const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 
-  it("accepts an absent or matching local projection and rejects drift", () =>
+  it("accepts an absent or matching local projection and reports a stale copy as an advisory", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
         Effect.gen(function* () {
@@ -447,8 +447,11 @@ describe("goals index command", () => {
           expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--write"])))).toBe(true);
           expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])))).toBe(true);
 
+          // A stale copy is git-ignored workstation state (left behind by any pull that lands a
+          // manifest change) that no hosted lane carries, so it must not fail the check.
           yield* fs.writeFileString(PORTFOLIO_INDEX_PATH, "# stale local projection\n");
-          expectReportedExit(yield* Effect.exit(runGoalsCommand(["index", "--check"])));
+          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])))).toBe(true);
+          expect(yield* fs.readFileString(PORTFOLIO_INDEX_PATH)).toBe("# stale local projection\n");
         })
       ).pipe(provideScopedLayer(commandTestLayer))
     ));

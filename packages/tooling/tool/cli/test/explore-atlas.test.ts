@@ -353,7 +353,7 @@ Does this fail closed?
       )
     ));
 
-  it("names every drifting projection and the git-ignored Atlas before the silent reported exit", () =>
+  it("refuses README drift, names the git-ignored Atlas alongside it, and only advises on a stale Atlas", () =>
     Effect.runPromise(
       provideTestLayer(
         Effect.gen(function* () {
@@ -371,28 +371,37 @@ Does this fail closed?
           const driftHeader =
             "[explore:atlas] 1 generated projection(s) drift; run `bun run beep explore atlas --write`:";
 
+          const authoredReadme = yield* fs.readFileString(readmePath);
           const readmeDrift = yield* checkExplorationAtlas(root).pipe(Effect.flip);
           yield* writeExplorationAtlas(root);
-          yield* fs.writeFileString(atlasPath, `${yield* fs.readFileString(atlasPath)}authored doctrine\n`);
-          const atlasDrift = yield* checkExplorationAtlas(root).pipe(Effect.flip);
+          const staleAtlas = `${yield* fs.readFileString(atlasPath)}authored doctrine\n`;
+          yield* fs.writeFileString(atlasPath, staleAtlas);
+          // A stale Atlas alone is git-ignored workstation state no hosted lane carries: advisory only.
+          yield* checkExplorationAtlas(root);
+          expect(yield* fs.readFileString(atlasPath)).toBe(staleAtlas);
+          // README drift still refuses, and the stale Atlas is named alongside it.
+          yield* fs.writeFileString(readmePath, authoredReadme);
+          const bothDrift = yield* checkExplorationAtlas(root).pipe(Effect.flip);
           yield* writeExplorationAtlas(root);
           yield* checkExplorationAtlas(root);
 
-          const sentinel = {
+          const sentinel = (count: number) => ({
             _tag: "CliReportedExit",
             exitCode: 1,
-            message: "explore atlas: 1 generated projection(s) drift; run `bun run beep explore atlas --write`.",
-          };
-          expect(readmeDrift).toMatchObject(sentinel);
-          expect(atlasDrift).toMatchObject(sentinel);
+            message: `explore atlas: ${count} generated projection(s) drift; run \`bun run beep explore atlas --write\`.`,
+          });
+          expect(readmeDrift).toMatchObject(sentinel(1));
+          expect(bothDrift).toMatchObject(sentinel(2));
           expect(yield* errorLines()).toEqual([
             driftHeader,
             `- ${readmePath}`,
-            driftHeader,
+            "[explore:atlas] 2 generated projection(s) drift; run `bun run beep explore atlas --write`:",
+            `- ${readmePath}`,
             "- explorations/ATLAS.md",
             "[explore:atlas] explorations/ATLAS.md is a git-ignored local projection: a stale copy fails only local checks, and the rewrite never appears in git diff.",
           ]);
           expect(A.filter(yield* TestConsole.logLines, P.isString)).toEqual([
+            "[explore:atlas] advisory: explorations/ATLAS.md is stale (git-ignored local projection); run `bun run beep explore atlas --write`.",
             "[explore:atlas] OK: D3 Atlas and README projections are current.",
           ]);
           yield* fs.remove(root, { recursive: true });
