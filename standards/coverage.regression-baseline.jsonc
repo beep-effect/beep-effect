@@ -23847,6 +23847,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts": {
+          "lines": 95.43,
+          "statements": 95.36,
+          "branches": 88.05,
+          "functions": 89.1,
+          "uncovered": {
+            "lines": 13,
+            "statements": 14,
+            "branches": 8,
+            "functions": 11
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Graft/index.ts": {
           "lines": 100,
           "statements": 100,
