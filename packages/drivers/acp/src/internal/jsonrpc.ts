@@ -183,9 +183,9 @@ const decodeJsonRpcFrame = (frame: unknown): Result.Result<ReadonlyArray<AcpWire
  * @since 0.0.0
  */
 export const makeNdJsonRpcFrameDecoder = (): ((
-  chunk: string | Uint8Array
+  chunk: Uint8Array
 ) => Result.Result<ReadonlyArray<AcpWireMessage>, AcpFrameDecodeError>) => {
-  let decoder: TextDecoder | undefined;
+  const decoder = new TextDecoder();
   let buffer = "";
   const exceeds = (size: number): boolean => size > DEFAULT_MAX_BUFFER_SIZE;
   const failBufferSize = (): Result.Result<never, RpcSerialization.MaxBufferSizeExceeded> => {
@@ -193,7 +193,7 @@ export const makeNdJsonRpcFrameDecoder = (): ((
     return Result.fail(new RpcSerialization.MaxBufferSizeExceeded({ maxBufferSize: DEFAULT_MAX_BUFFER_SIZE }));
   };
   return (chunk) => {
-    buffer += P.isString(chunk) ? chunk : (decoder ??= new TextDecoder()).decode(chunk, { stream: true });
+    buffer += decoder.decode(chunk, { stream: true });
     const batches = A.empty<ReadonlyArray<AcpWireMessage>>();
     let position = 0;
     let newline = buffer.indexOf("\n", position);

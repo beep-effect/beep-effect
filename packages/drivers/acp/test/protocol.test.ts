@@ -827,3 +827,106 @@ it.layer(NodeServices.layer)("effect-acp frame decoder parity", (it) => {
     })
   );
 });
+
+const expectParseTermination = (error: AcpError.AcpError): unknown =>
+  AcpError.AcpError.match(error, {
+    AcpProcessExitedError: () => assert.fail("expected a protocol parse error"),
+    AcpProtocolParseError: (failure) => O.getOrThrow(failure.cause),
+    AcpRequestError: () => assert.fail("expected a protocol parse error"),
+    AcpSpawnError: () => assert.fail("expected a protocol parse error"),
+    AcpTransportError: () => assert.fail("expected a protocol parse error"),
+  });
+
+it.layer(NodeServices.layer)("effect-acp frame decoder edge cases", (it) => {
+  it.effect(
+    "routes the remaining control frames, cause shapes, and params-less requests",
+    Effect.fnUntraced(function* () {
+      const { stdio, input } = yield* makeInMemoryStdio();
+      const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio,
+        serverRequestMethods: HashSet.make("session/request_permission"),
+      });
+      const serverSeen = yield* Queue.unbounded<unknown>();
+      const clientSeen = yield* Queue.unbounded<unknown>();
+      yield* transport.serverProtocol
+        .run((_clientId, message) => Queue.offer(serverSeen, message).pipe(Effect.asVoid))
+        .pipe(Effect.forkScoped);
+      yield* transport.clientProtocol
+        .run(0, (message) => Queue.offer(clientSeen, message).pipe(Effect.asVoid))
+        .pipe(Effect.forkScoped);
+
+      const serverFrames = [
+        '{"jsonrpc":"2.0","method":"@effect/rpc/Interrupt","params":{"requestId":3}}',
+        '{"jsonrpc":"2.0","method":"@effect/rpc/Eof"}',
+        '{"jsonrpc":"2.0","id":12,"method":"session/request_permission"}',
+        '{"jsonrpc":"2.0","id":16,"method":"session/request_permission","params":{},"headers":[["x-trace","1"]]}',
+      ];
+      for (const line of serverFrames) {
+        yield* Queue.offer(input, encoder.encode(`${line}\n`));
+        assert.deepEqual([yield* Queue.take(serverSeen)], oracle(line));
+      }
+
+      yield* Queue.offer(input, encoder.encode('{"jsonrpc":"2.0","method":"@effect/rpc/Pong"}\n'));
+      assert.deepEqual(yield* Queue.take(clientSeen), { _tag: "Pong" });
+      const idLess = '{"jsonrpc":"2.0","result":1}';
+      yield* Queue.offer(input, encoder.encode(`${idLess}\n`));
+      assert.deepEqual([yield* Queue.take(clientSeen)], oracle(idLess));
+
+      // An Interrupt cause entry always materialises its fiberId key, and cause data that is not a
+      // cause array degrades to a single Die entry carrying the whole error object.
+      yield* Queue.offer(
+        input,
+        encoder.encode(
+          '{"jsonrpc":"2.0","id":13,"error":{"_tag":"Cause","code":1,"message":"stop","data":[{"_tag":"Interrupt"}]}}\n'
+        )
+      );
+      assert.deepEqual(yield* Queue.take(clientSeen), {
+        _tag: "Exit",
+        requestId: "13",
+        exit: { _tag: "Failure", cause: [{ _tag: "Interrupt", fiberId: undefined }] },
+      });
+      yield* Queue.offer(
+        input,
+        encoder.encode('{"jsonrpc":"2.0","id":14,"error":{"_tag":"Cause","code":2,"message":"odd","data":"oops"}}\n')
+      );
+      assert.deepEqual(yield* Queue.take(clientSeen), {
+        _tag: "Exit",
+        requestId: "14",
+        exit: {
+          _tag: "Failure",
+          cause: [{ _tag: "Die", defect: { _tag: "Cause", code: 2, message: "odd", data: "oops" } }],
+        },
+      });
+    })
+  );
+
+  const terminations: ReadonlyArray<readonly [title: string, frame: Uint8Array, tag: string]> = [
+    ["an empty chunk result", encoder.encode('{"jsonrpc":"2.0","id":15,"chunk":true,"result":[]}\n'), "SchemaError"],
+    [
+      "a control frame without a requestId",
+      encoder.encode('{"jsonrpc":"2.0","method":"@effect/rpc/Ack","params":{}}\n'),
+      "SchemaError",
+    ],
+    [
+      "a line longer than the buffer limit",
+      encoder.encode(`${" ".repeat(16 * 1024 * 1024 + 1)}\n`),
+      "MaxBufferSizeExceeded",
+    ],
+  ];
+  for (const [title, frame, tag] of terminations) {
+    it.effect(
+      `terminates with a parse error on ${title}`,
+      Effect.fnUntraced(function* () {
+        const { stdio, input } = yield* makeInMemoryStdio();
+        const termination = yield* Deferred.make<AcpError.AcpError>();
+        yield* AcpProtocol.makeAcpPatchedProtocol({
+          stdio,
+          serverRequestMethods: HashSet.empty(),
+          onTermination: (error) => Deferred.succeed(termination, error).pipe(Effect.asVoid),
+        });
+        yield* Queue.offer(input, frame);
+        assert.include(expectParseTermination(yield* Deferred.await(termination)), { _tag: tag });
+      })
+    );
+  }
+});

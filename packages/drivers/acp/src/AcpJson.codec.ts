@@ -449,11 +449,11 @@ const decodeJsonTextGetter = SchemaGetter.onSome<unknown, string>((input, option
  *
  * ```ts
  * import { fromJsonText } from "@beep/acp/json"
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  *
- * const codec = fromJsonText(Schema.Record(Schema.String, Schema.Boolean))
- * const encoded = Schema.encodeSync(codec)({ "\n": true })
- * console.log(Schema.decodeSync(codec)(encoded)) // { "\n": true }
+ * const codec = fromJsonText(S.Record(S.String, S.Boolean))
+ * const encoded = S.encodeSync(codec)({ "\n": true })
+ * console.log(S.decodeSync(codec)(encoded)) // { "\n": true }
  * ```
  *
  * @category codecs
