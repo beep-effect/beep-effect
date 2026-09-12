@@ -3,7 +3,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, Order, Path, pipe } from "effect";
+import { DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -271,7 +271,10 @@ export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const runsDirectory = path.join(repoRoot, ".turbo", "runs");
-  const startedAt = Date.parse(startedAtIso);
+  const startedAt = O.map(DateTime.make(startedAtIso), DateTime.toEpochMillis);
+  if (O.isNone(startedAt)) {
+    return O.none<TurboLaneDigest>();
+  }
   const entries = yield* fs.readDirectory(runsDirectory).pipe(Effect.orElseSucceed(A.empty<string>));
   const summaries = yield* Effect.forEach(
     A.filter(entries, Str.endsWith(".json")),
@@ -280,7 +283,7 @@ export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")
   );
   const fresh = pipe(
     A.getSomes(summaries),
-    A.filter((summary) => summary.execution.startTime >= startedAt),
+    A.filter((summary) => summary.execution.startTime >= startedAt.value),
     A.sortBy(summaryStartOrder)
   );
   const selected = A.flatMap(fresh, (summary) => selectTasks(summary, taskNames));

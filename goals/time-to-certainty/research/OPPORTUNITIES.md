@@ -1219,6 +1219,8 @@ was attempted under the marker-only amendment.
   1.4.2 locally, so the loss is a property of the runner's stdout, not of Bun in general. The real
   red was `lint:schema-first` (an exported pure-data interface) — visible only because that task's
   lines landed before the cut.
-- Would have prevented it: rendering captured output in newline-aligned chunks (landed here:
-  `renderStepOutput` logs ≤ 32 KiB per write) and, longer term, `--output-logs=errors-only` on
-  grouped Turbo runs so a red task's log is the only large thing rendered.
+- Would have prevented it: routing CLI output through the process stream instead of the global
+  console. Chunked `console.log` calls (32 KiB) did not help — round 8 kept 64 KiB plus one partial
+  chunk — so the CLI now provides an Effect `Console` whose lines go through `process.stdout.write`
+  (queued and drained by the stream) and drains both streams before its forced exit. Longer term,
+  `--output-logs=errors-only` on grouped Turbo runs keeps a red task's log the only large render.

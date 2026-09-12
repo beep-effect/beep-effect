@@ -37095,27 +37095,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/step-output-chunks.test.ts:32:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-output-chunks.test.ts",
-      "line": 32,
-      "endLine": 44,
-      "symbol": "runSync",
-      "occurrence": "v2:73586d7461a929a407695a7c24e5ba3005db47a3409976610a06cf7b45274b16",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect( S.String.pipe(S.Array, Arbitrary.schema), (raw) => { const output = A.join(A.map(raw, stripNewlines), \"\\n\"); const chunks = chunkStepOutputForTesting(output); ex",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:171:runPromise@4#1",
       "lens": "resource",
       "ruleId": "EV001",
@@ -153824,27 +153803,6 @@
       "occurrence": "v2:d393a22cda74f56f5bb24610d90020245441a0ca77d3d3e5e571bb38b66dab8a",
       "class": "direct-arbitrary-check",
       "evidence": "Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(BakeReport)]), ([original]) => { const encoded = Effect.runSync(BakeReportJson.encode(original)); expect(Effect.runSync(BakeReportJson.decode(enco",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/tooling/tool/cli/test/step-output-chunks.test.ts:33:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-output-chunks.test.ts",
-      "line": 33,
-      "endLine": 43,
-      "symbol": "checkEffect",
-      "occurrence": "v2:73586d7461a929a407695a7c24e5ba3005db47a3409976610a06cf7b45274b16",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( S.String.pipe(S.Array, Arbitrary.schema), (raw) => { const output = A.join(A.map(raw, stripNewlines), \"\\n\"); const chunks = chunkStepOutputForTesting(output); expect(A.join(chun",
       "replacement": {
         "primitive": "it.effect.prop",
         "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
