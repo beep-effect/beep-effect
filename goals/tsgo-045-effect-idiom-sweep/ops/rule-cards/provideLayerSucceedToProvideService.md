@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `provideLayerSucceedToProvideService`
 - Since: 0.42.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - ``Effect.{0}` provides this inline single-service layer directly. effect(provideLayerSucceedToProvideService)`
+  - `Effect.{0}` provides this inline single-service layer directly. effect(provideLayerSucceedToProvideService)
 
 ## What the compiler detects
 

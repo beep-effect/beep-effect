@@ -118,8 +118,10 @@ in the same PR as the last work.
 
 ## Rules that never bend
 
-- No `@effect-diagnostics` directive, anywhere, for any reason. A lane that
-  wants one has found a card gap: send it back with the gap named.
+- No new `@effect-diagnostics` directive, anywhere, for any reason, and no
+  removal of the two declared exemptions (`vitest.setup.ts`,
+  `FileSystemConformance.ts`) that D1 keeps. A lane that wants a directive has
+  found a card gap: send it back with the gap named.
 - No severity below `error`, no allowance counts, no baselines for tsgo.
 - No test deleted, no schema weakened, no `flakyTest`, no property floor
   moved to make a diagnostic pass.

@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `runOfExitToRunExit`
 - Since: 0.42.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - ``Effect.{0}` of `Effect.exit` re-implements `Effect.{1}`. Use the dedicated Exit runner directly. effect(runOfExitToRunExit)`
+  - `Effect.{0}` of `Effect.exit` re-implements `Effect.{1}`. Use the dedicated Exit runner directly. effect(runOfExitToRunExit)
 
 ## What the compiler detects
 

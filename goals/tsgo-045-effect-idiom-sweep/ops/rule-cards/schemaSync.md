@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `schemaSync`
 - Since: 0.45.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - ``{0}` executes synchronously. Use `Schema.{1}` to compose this operation through Effect without throwing. effect(schemaSync)`
+  - `{0}` executes synchronously. Use `Schema.{1}` to compose this operation through Effect without throwing. effect(schemaSync)
 
 ## What the compiler detects
 

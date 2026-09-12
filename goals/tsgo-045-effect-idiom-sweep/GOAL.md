@@ -18,8 +18,8 @@ D1–D13 are locked in DECISIONS.md. Do not reopen them; record friction in
 research/OPPORTUNITIES.md at the moment it happens.
 
 Order (PLAN.md): P1 foundations PR at 0.39.1 (Id.ts deletion, inverted lint,
-doc-text 60-seed proof, allowlist and widened roots and key parity in
-Quality.command.ts, Cursor lane smoke test). P2 rule cards from the clones
+doc-text 60-seed proof, allowlist and key parity in Quality.command.ts, Cursor
+lane smoke test; the S01 PR widens the scanned roots). P2 rule cards from the clones
 at $HOME/YeeBois/dev/effect (rc.115) and $HOME/YeeBois/dev/effect-tsgo
 (0.45.0) plus a worktree-local 0.45 install that is never committed. P3
 remediation lanes per ops/shards.json, Match first, schema shard early,

@@ -9,7 +9,7 @@ the session scratchpad as `cursor-smoke.ndjson`.
 | --- | --- |
 | `history/cursor-smoke.txt` exists with `OK` | pass (file written by the lane) |
 | Transcript shows `bun run beep --help` output | pass (3 transcript lines reference the command; the lane reported the first output line `$ bun run packages/tooling/tool/cli/src/bin.ts -- --help`) |
-| `rg -c '"command":"git'` over the transcript | 0 |
+| No git invocation in the transcript | 0: every `"command"` value was extracted (`grep -oE '"command":"[^"]*"'`, one distinct value: `bun run beep --help`) and none contains `git` anywhere, so shell-wrapped forms such as `bash -lc "git ..."` are covered too |
 | `git status --porcelain` after the run | only the smoke file (plus this session's own edits) |
 | `--sandbox enabled` blocked a needed write | no; the lane wrote the file and ran Bun under the sandbox |
 | Exit code / wall time | 0 / 25.9 s |

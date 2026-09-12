@@ -20,18 +20,22 @@ Pass criteria, recorded in `history/2026-09-12-cursor-smoke.md`:
 
 - the file exists with `OK`;
 - the transcript shows the `bun run beep --help` output;
-- `rg -c '"command":"git' "$SCRATCH/cursor-smoke.ndjson"` is 0;
+- no extracted `"command"` value contains `git` anywhere:
+  `grep -oE '"command":"[^"]*"' "$SCRATCH/cursor-smoke.ndjson" | grep -cE '\bgit\b'`
+  is 0 (this also catches shell-wrapped forms such as `bash -lc "git ..."`);
 - `git status --porcelain` shows only the smoke file;
-- note whether `--sandbox enabled` blocked any needed write; if it did,
-  rerun with `--sandbox disabled` and record that the lane then relies on
-  worktree isolation and the no-git rule alone.
+- note whether `--sandbox enabled` blocked any needed write. If it did, stop
+  and report the blocked path; never rerun with `--sandbox disabled`
+  (`--trust` and `--force` do not replace the sandbox boundary that keeps
+  protected files and the network out of reach). The 2026-09-12 smoke test
+  needed no such write.
 
 ## Real lane
 
 ```sh
-cursor-agent -p --trust --force --sandbox <mode from smoke> \
+cursor-agent -p --trust --force --sandbox enabled \
   --model claude-fable-5-thinking-xhigh --output-format stream-json \
-  "$(cat ops/prompts/20-fixer-shard.agent.md | sed -e "s/{{SHARD_ID}}/L03-capability/g" ...)" \
+  "$(sed -e "s/{{SHARD_ID}}/L03-capability/g" -e 's#{{SHARD_PATHS}}#packages/foundation/capability#g' goals/tsgo-045-effect-idiom-sweep/ops/prompts/20-fixer-shard.agent.md)" \
   </dev/null > "$SCRATCH/L03.ndjson" 2>&1
 ```
 

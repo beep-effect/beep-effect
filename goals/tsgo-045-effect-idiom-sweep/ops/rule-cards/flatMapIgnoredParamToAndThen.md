@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `flatMapIgnoredParamToAndThen`
 - Since: 0.45.0 (new, #742)
 - Message(s) as shipped in 0.45.0:
-  - ``Effect.andThen` expresses this sequencing more directly than `Effect.flatMap` with a zero-parameter callback. effect(flatMapIgnoredParamToAndThen)`
+  - `Effect.andThen` expresses this sequencing more directly than `Effect.flatMap` with a zero-parameter callback. effect(flatMapIgnoredParamToAndThen)
 
 ## What the compiler detects
 

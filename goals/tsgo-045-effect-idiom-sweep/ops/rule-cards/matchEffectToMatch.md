@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `matchEffectToMatch`
 - Since: 0.42.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - ``Effect.{0}` expresses this non-effectful fold more directly than `Effect.{1}` with `Effect.succeed` handlers. effect(matchEffectToMatch)`
+  - `Effect.{0}` expresses this non-effectful fold more directly than `Effect.{1}` with `Effect.succeed` handlers. effect(matchEffectToMatch)
 
 ## What the compiler detects
 

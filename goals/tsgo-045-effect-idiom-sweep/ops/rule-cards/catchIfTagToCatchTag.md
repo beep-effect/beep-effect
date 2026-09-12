@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `catchIfTagToCatchTag`
 - Since: new in 0.40–0.45
 - Message(s) as shipped in 0.45.0:
-  - `Effect.catchTag expresses tagged error recovery more directly than Effect.catchIf with a `_tag` equality predicate. effect(catchIfTagToCatchTag)`
+  - Effect.catchTag expresses tagged error recovery more directly than Effect.catchIf with a `_tag` equality predicate. effect(catchIfTagToCatchTag)
 
 ## What the compiler detects
 

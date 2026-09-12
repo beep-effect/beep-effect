@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `catchAllTagDispatchToCatchTag`
 - Since: 0.42.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - `Branching on `{0}._tag` inside `Effect.{1}` hand-rolls tagged error dispatch; use `Effect.catchTag` or `Effect.catchTags`, which re-fail unmatched errors automatically. effect(catchAllTagDispatchToCatchTag)`
+  - Branching on `{0}._tag` inside `Effect.{1}` hand-rolls tagged error dispatch; use `Effect.catchTag` or `Effect.catchTags`, which re-fail unmatched errors automatically. effect(catchAllTagDispatchToCatchTag)
 
 ## What the compiler detects
 

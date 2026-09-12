@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `schemaNumber`
 - Since: existing; 2 scratchpad directives; 0.40 no longer fires on isFinite/isInt
 - Message(s) as shipped in 0.45.0:
-  - `This Schema number API accepts `NaN`, `Infinity`, and `-Infinity`. Use `{0}` for finite domain numbers. If non-finite values are intentional, disable this diagnostic for that line. effect(schemaNumber)`
+  - This Schema number API accepts `NaN`, `Infinity`, and `-Infinity`. Use `{0}` for finite domain numbers. If non-finite values are intentional, disable this diagnostic for that line. effect(schemaNumber)
 
 ## What the compiler detects
 

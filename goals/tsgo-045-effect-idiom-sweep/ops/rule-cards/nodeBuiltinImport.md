@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `nodeBuiltinImport`
 - Since: existing; extended in 0.43 (console, timers, stream, crypto)
 - Message(s) as shipped in 0.45.0:
-  - `This module reference uses the `{2}` module, the corresponding Effect API is `{0}` from `{1}`. effect(nodeBuiltinImport)`
+  - This module reference uses the `{2}` module, the corresponding Effect API is `{0}` from `{1}`. effect(nodeBuiltinImport)
 
 ## What the compiler detects
 

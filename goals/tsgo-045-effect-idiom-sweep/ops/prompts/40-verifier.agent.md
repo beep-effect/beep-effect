@@ -13,23 +13,31 @@ struck by the orchestrator.
 ## Checks (all required)
 
 1. **Scope:** `git status --porcelain` (read-only) shows only paths inside
-   `{{SHARD_PATHS}}`; `package.json`, `bun.lock`, `tsconfig*.json` are
+   `{{SHARD_PATHS}}` plus the lane's own artifacts
+   (`goals/tsgo-045-effect-idiom-sweep/ops/inventory/{{SHARD_ID}}.report.md`
+   and your verdict file); `package.json`, `bun.lock`, `tsconfig*.json` are
    untouched.
 2. **Diagnostics:** re-run the 0.45 compiler on the shard paths; every rule
    in the inventory reports zero for those paths. Paste the summary line.
-3. **Directives:** `rg -n '@effect-diagnostics' {{SHARD_PATHS}}` returns
-   nothing new. The two allowlisted files are `vitest.setup.ts` (outside
+3. **Directives:** run `bun run beep quality tsgo-rules` (it applies the
+   allowlist predicate from `Quality.command.ts`: exact path and exact
+   skip-file line) and require the `disabled Effect diagnostic directives`
+   section to be absent. Then `rg -n '@effect-diagnostics' {{SHARD_PATHS}}`
+   and compare against the two allowlisted files: `vitest.setup.ts` (outside
    every shard; S01 owns the sibling `vitest.shared.ts`) and
    `packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts`
-   (inside L07); each is the only permitted hit where it lives.
+   (inside L07). Any other hit is a rejection; the allowlisted hits are the
+   only permitted ones where they live.
 4. **Canon:** in test files, `rg -n 'Effect\.runSync\(\s*S(chema)?\.decode'`
    returns nothing; decodes go through `it.effect`.
 5. **Behavior:** sample five rewritten sites against the card's "When NOT to
    rewrite" rows; for each, state why the rewrite is behavior-preserving or
    flag it.
-6. **Handoff:** the report's `verify` section names `package-verify` for
-   every touched package and the status lines say passed. Re-run one at
-   random and compare.
+6. **Handoff:** enumerate every workspace package that owns a touched path
+   (`git status --porcelain` mapped to the nearest `package.json` name) and
+   re-run `bun run beep quality package-verify <pkg>` for each one yourself;
+   the report's status lines are not evidence. Paste each command's last
+   line.
 7. **Residuals:** every residual has a reason that maps to a card row or a
    named card gap.
 

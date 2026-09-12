@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `strictEffectProvide`
 - Since: existing; 16 scratchpad directives + D14 exemption
 - Message(s) as shipped in 0.45.0:
-  - `Effect.provide with a Layer should only be used at application entry points. If this is an entry point, you can safely disable this diagnostic. Otherwise, using Effect.provide may break scope lifetimes. Compose all layers at your entry point and provide them at once. effect(strictEffectProvide)`
+  - Effect.provide with a Layer should only be used at application entry points. If this is an entry point, you can safely disable this diagnostic. Otherwise, using Effect.provide may break scope lifetimes. Compose all layers at your entry point and provide them at once. effect(strictEffectProvide)
 
 ## What the compiler detects
 

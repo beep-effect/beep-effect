@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `obsoleteSchemaImport`
 - Since: 0.44.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - `This module reference imports `{0}`, which is obsolete in Effect v4. In Effect v4, Schema is provided directly by `Schema` from `effect` (or `effect/Schema`). effect(obsoleteSchemaImport)`
+  - This module reference imports `{0}`, which is obsolete in Effect v4. In Effect v4, Schema is provided directly by `Schema` from `effect` (or `effect/Schema`). effect(obsoleteSchemaImport)
 
 ## What the compiler detects
 

@@ -130,9 +130,12 @@ until ~3,000 sites are fixed. How do PRs land?
 **Answer.**
 
 1. **PR A, foundations at 0.39.1:** annoteError retirement and inverted lint
-   (D4), the declared-exemption allowlist mechanism (D1) scanning scratchpad
-   and root with the current rule set, key-set parity in the gate for the keys
-   0.39.1 reads (D3), packet files.
+   (D4), the declared-exemption allowlist mechanism (D1) with the scanned
+   roots unchanged, key-set parity in the gate for the keys 0.39.1 reads (D3),
+   packet files. *Amended 2026-09-12 during P1:* widening the scanned roots
+   to `scratchpad` and the repository root is owned by the S01 lane PR,
+   because `vitest.shared.ts` needs a generated include file rather than a
+   directive fix; the ratchet PR only confirms the widened roots.
 2. **Lane PRs to main,** each green on today's gate: schemaSync shards by
    family, Match plus its lint law, scratchpad directives, the small-rule
    bundle, `vitest.shared.ts`. Lanes see the new diagnostics through a

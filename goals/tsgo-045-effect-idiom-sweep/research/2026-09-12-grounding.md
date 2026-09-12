@@ -72,8 +72,8 @@ Blast radius at error (rough `rg` counts, src+test, packages+apps+scratchpad):
 | --- | --- |
 | schemaSync (`S.decode*Sync`, `S.encode*Sync`) | 1,887 src + 1,020 test |
 | matchEffectToMatch / matchEffectToMapBoth (`Effect.match(Cause)?Effect(`) | 55 |
-| nodeBuiltinImport extension (`node:crypto|console|timers|stream`) | 42 |
-| provideLayerSucceedToProvideService (`provide(Layer.succeed|effect(`) | 31 |
+| nodeBuiltinImport extension (`node:crypto\|console\|timers\|stream`) | 42 |
+| provideLayerSucceedToProvideService (`provide(Layer.succeed\|effect(`) | 31 |
 | flatMapIgnoredParamToAndThen (`flatMap(() =>`) | 30 |
 | timeoutCatchTagToTimeoutOrElse (`catchTag("TimeoutError"`) | 6 |
 | runOfExitToRunExit | 4 |

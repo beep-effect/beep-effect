@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `matchEffectToMapBoth`
 - Since: 0.42.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - ``Effect.mapBoth` expresses these failure and success transformations more directly than `Effect.matchEffect`. effect(matchEffectToMapBoth)`
+  - `Effect.mapBoth` expresses these failure and success transformations more directly than `Effect.matchEffect`. effect(matchEffectToMapBoth)
 
 ## What the compiler detects
 

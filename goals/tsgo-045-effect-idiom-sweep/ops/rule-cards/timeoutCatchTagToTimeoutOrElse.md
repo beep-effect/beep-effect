@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `timeoutCatchTagToTimeoutOrElse`
 - Since: 0.44.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - `Use `Effect.{0}` to handle this timeout directly. effect(timeoutCatchTagToTimeoutOrElse)`
+  - Use `Effect.{0}` to handle this timeout directly. effect(timeoutCatchTagToTimeoutOrElse)
 
 ## What the compiler detects
 

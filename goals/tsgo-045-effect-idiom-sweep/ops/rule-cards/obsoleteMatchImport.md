@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `obsoleteMatchImport`
 - Since: 0.44.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - `This module reference imports `{0}`, which is obsolete in Effect v4. In Effect v4, pattern matching is provided directly by `Match` from `effect` (or `effect/Match`). effect(obsoleteMatchImport)`
+  - This module reference imports `{0}`, which is obsolete in Effect v4. In Effect v4, pattern matching is provided directly by `Match` from `effect` (or `effect/Match`). effect(obsoleteMatchImport)
 
 ## What the compiler detects
 

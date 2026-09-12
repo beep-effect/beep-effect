@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `missingPipeableSignature`
 - Since: existing; 60 scratchpad directives
 - Message(s) as shipped in 0.45.0:
-  - `Exported function `{0}` has no pipeable overload corresponding to its signature `{1}`. effect(missingPipeableSignature)`
+  - Exported function `{0}` has no pipeable overload corresponding to its signature `{1}`. effect(missingPipeableSignature)
 
 ## What the compiler detects
 

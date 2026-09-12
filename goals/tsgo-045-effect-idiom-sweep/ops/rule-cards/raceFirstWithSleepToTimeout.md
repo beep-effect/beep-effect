@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `raceFirstWithSleepToTimeout`
 - Since: 0.40.0 (new)
 - Message(s) as shipped in 0.45.0:
-  - `This Effect first-completion race has exactly one sleep- or delay-based timer arm. `Effect.timeoutOrElse` expresses the timeout and fallback directly. effect(raceFirstWithSleepToTimeout)`
+  - This Effect first-completion race has exactly one sleep- or delay-based timer arm. `Effect.timeoutOrElse` expresses the timeout and fallback directly. effect(raceFirstWithSleepToTimeout)
 
 ## What the compiler detects
 

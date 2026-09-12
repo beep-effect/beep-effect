@@ -8,7 +8,7 @@ rejects a card with any `TODO` left).
 - tsgo rule id: `importFromBarrel`
 - Since: new; needs barrelImportPackages
 - Message(s) as shipped in 0.45.0:
-  - `Importing from barrel module {0} is not allowed. effect(importFromBarrel)`
+  - Importing from barrel module {0} is not allowed. effect(importFromBarrel)
 
 ## What the compiler detects
 
