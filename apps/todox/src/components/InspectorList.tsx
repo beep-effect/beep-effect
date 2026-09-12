@@ -29,6 +29,27 @@ const $I = $TodoxId.create("components/InspectorList");
 /**
  * One inspectable row: what the cursor addresses and what the inspector opens.
  *
+ * **Example** (Make a resting row)
+ *
+ * ```ts
+ * import { InspectableRow } from "@/components/InspectorList"
+ * import * as O from "effect/Option"
+ *
+ * const row = InspectableRow.make({
+ *   id: "demo:CLM 0101",
+ *   no: "CLM 0101",
+ *   text: "The Park household needs about $150,000 available by June 3, 2026.",
+ *   state: O.some("CANDIDATE"),
+ *   actor: "FIXTURE RUNTIME",
+ *   time: "09:41",
+ *   evidence: [],
+ *   receipt: O.none(),
+ *   detail: [],
+ *   postDelayMs: O.none(),
+ * })
+ * console.log(row.no, O.getOrNull(row.state))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -50,6 +71,28 @@ export class InspectableRow extends S.Class<InspectableRow>($I`InspectableRow`)(
 
 /**
  * A headed group of rows (packet sections) or a single unheaded group.
+ *
+ * **Example** (Group rows under a heading)
+ *
+ * ```ts
+ * import { InspectableRow, RowGroup } from "@/components/InspectorList"
+ * import * as O from "effect/Option"
+ *
+ * const row = InspectableRow.make({
+ *   id: "demo:CLM 0101",
+ *   no: "CLM 0101",
+ *   text: "Client cash need",
+ *   state: O.some("CANDIDATE"),
+ *   actor: "FIXTURE RUNTIME",
+ *   time: "09:41",
+ *   evidence: [],
+ *   receipt: O.none(),
+ *   detail: [],
+ *   postDelayMs: O.none(),
+ * })
+ * const group = RowGroup.make({ heading: O.some("WHAT CHANGED"), rows: [row] })
+ * console.log(group.rows.length)
+ * ```
  *
  * @category models
  * @since 0.0.0
