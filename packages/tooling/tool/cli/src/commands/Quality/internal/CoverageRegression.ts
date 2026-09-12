@@ -4089,7 +4089,7 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
       // A green run still owes the operator the floors it accepted and the
       // measured values that would tighten them again.
       tighten: A.match(renderCoverageLoweredFloors(result), {
-        onEmpty: () => O.none<ReadonlyArray<string>>(),
+        onEmpty: O.none<ReadonlyArray<string>>,
         onNonEmpty: O.some<ReadonlyArray<string>>,
       }),
     });

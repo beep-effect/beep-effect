@@ -424,6 +424,33 @@ describe("ai-metrics command", () => {
     )
   );
 
+  it.effect("resolves the forwarder timer Bun shim, fallback, and explicit pin", () =>
+    withTempDirectory(
+      Effect.fn(function* (home) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const shim = path.join(home, ".local/share/mise/shims/bun");
+        const render = Effect.fn(function* (flags: ReadonlyArray<string>) {
+          yield* runAiMetricsCommand([
+            "forwarder",
+            "timer",
+            "--target",
+            "local",
+            "--data-root",
+            path.join(home, "metrics"),
+            ...flags,
+          ]).pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ HOME: home }))));
+          return yield* loggedText();
+        }, provideScopedLayer(TestConsole.layer));
+        expect(yield* render([])).toContain(process.execPath);
+        yield* writeText(shim, "");
+        yield* fs.chmod(shim, 0o755);
+        expect(yield* render([])).toContain(shim);
+        expect(yield* render(["--bun-path", "~/tools/bun"])).toContain(path.join(home, "tools/bun"));
+      })
+    )
+  );
+
   it.effect("renders a bounded dankserver forwarder timer command", () =>
     withTempDirectory((tmpDir) =>
       Effect.gen(function* () {
@@ -450,8 +477,7 @@ describe("ai-metrics command", () => {
         expect(output).toContain("--parquet-mode");
         expect(output).toContain("none");
         expect(output).toContain("OnUnitInactiveSec=30m");
-        expect(output).toContain("pins the Bun executable path");
-        expect(output).toContain(process.execPath);
+        expect(output).toContain("uses the resolved Bun executable");
         expect(output).toContain("packages/tooling/tool/cli/src/bin.ts");
         expect(output).toContain("ai-metrics");
         expect(output).toContain("forwarder");

@@ -1299,7 +1299,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(plan.serviceUnit).toContain('"status":"failed"');
       expect(plan.serviceUnit).toContain("json.dumps");
       expect(plan.serviceUnit).toContain('decode("utf-8","replace")');
-      expect(plan.serviceUnit).toContain("pins the Bun executable path");
+      expect(plan.serviceUnit).toContain("uses the resolved Bun executable");
       expect(plan.serviceUnit).toContain("'/home/example/.bun/bin/bun'");
       expect(plan.serviceUnit).toMatch(/exit_code=0; > .*latest\.json\.stderr\.tmp.*; if flock -n/su);
       expect(plan.serviceUnit).not.toContain("sed 's/");
