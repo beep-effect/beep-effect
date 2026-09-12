@@ -2144,7 +2144,8 @@
       ],
       "@beep/test-utils/test/Vitest": [
         "./packages/tooling/test-kit/test-utils/src/test/Vitest.test-kit.ts"
-      ]
+      ],
+      "@beep/acp/json": ["./packages/drivers/acp/src/AcpJson.codec.ts"]
     }
   }
 }

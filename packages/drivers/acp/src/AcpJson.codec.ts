@@ -145,6 +145,12 @@ const readLiteral = <A>(cursor: Cursor, literal: string, value: A): A => {
   return value;
 };
 
+const literalReaders = HashMap.make(
+  [LATIN_SMALL_T, (cursor: Cursor): unknown => readLiteral(cursor, "true", true)],
+  [LATIN_SMALL_F, (cursor: Cursor): unknown => readLiteral(cursor, "false", false)],
+  [LATIN_SMALL_N, (cursor: Cursor): unknown => readLiteral(cursor, "null", null)]
+);
+
 const readNumber = (cursor: Cursor): number => {
   numberPattern.lastIndex = cursor.index;
   return O.match(O.fromNullishOr(numberPattern.exec(cursor.text)), {
@@ -156,6 +162,38 @@ const readNumber = (cursor: Cursor): number => {
   });
 };
 
+// Reads the escape sequence starting at the reverse solidus at `index`; returns the decoded text
+// and the index just past the sequence.
+const readEscapeSequence = (cursor: Cursor, index: number): readonly [decoded: string, next: number] => {
+  const text = cursor.text;
+  const escape = text.charCodeAt(index + 1);
+  if (escape === LATIN_SMALL_U) {
+    const hex = text.slice(index + 2, index + 6);
+    if (!unicodeEscapePattern.test(hex)) {
+      cursor.index = index;
+      return cursor.fail("Invalid unicode escape sequence");
+    }
+    return [String.fromCharCode(Number.parseInt(hex, 16)), index + 6];
+  }
+  return O.match(HashMap.get(singleCharacterEscapes, escape), {
+    onNone: () => {
+      cursor.index = index;
+      return cursor.fail("Invalid escape sequence");
+    },
+    onSome: (decoded) => [decoded, index + 2],
+  });
+};
+
+// Rejects the end of text and unescaped control characters inside a string.
+const ensureStringCharacter = (cursor: Cursor, index: number, code: number): void => {
+  if (Number.isNaN(code) || code < SPACE) {
+    cursor.index = index;
+    cursor.fail(
+      Number.isNaN(code) ? "Unterminated string" : `Unescaped control character ${describeCharacter(code)} in string`
+    );
+  }
+};
+
 const readString = (cursor: Cursor): string => {
   const text = cursor.text;
   let index = cursor.index + 1;
@@ -163,41 +201,31 @@ const readString = (cursor: Cursor): string => {
   let out = "";
   while (true) {
     const code = text.charCodeAt(index);
-    if (Number.isNaN(code)) {
-      cursor.index = index;
-      return cursor.fail("Unterminated string");
-    }
     if (code === QUOTATION_MARK) {
       cursor.index = index + 1;
       return out + text.slice(start, index);
     }
     if (code === REVERSE_SOLIDUS) {
-      out += text.slice(start, index);
-      const escape = text.charCodeAt(index + 1);
-      if (escape === LATIN_SMALL_U) {
-        const hex = text.slice(index + 2, index + 6);
-        if (!unicodeEscapePattern.test(hex)) {
-          cursor.index = index;
-          return cursor.fail("Invalid unicode escape sequence");
-        }
-        out += String.fromCharCode(Number.parseInt(hex, 16));
-        index += 6;
-      } else {
-        out += O.getOrElse(HashMap.get(singleCharacterEscapes, escape), () => {
-          cursor.index = index;
-          return cursor.fail("Invalid escape sequence");
-        });
-        index += 2;
-      }
-      start = index;
+      const [decoded, next] = readEscapeSequence(cursor, index);
+      out += text.slice(start, index) + decoded;
+      index = next;
+      start = next;
       continue;
     }
-    if (code < SPACE) {
-      cursor.index = index;
-      return cursor.fail(`Unescaped control character ${describeCharacter(code)} in string`);
-    }
+    ensureStringCharacter(cursor, index, code);
     index += 1;
   }
+};
+
+// Consumes the separator after an element; returns whether `closing` ended the collection.
+const readSeparator = (cursor: Cursor, closing: number, expected: string): boolean => {
+  cursor.skipWhitespace();
+  const code = cursor.peek();
+  if (code === COMMA || code === closing) {
+    cursor.index += 1;
+    return code === closing;
+  }
+  return cursor.fail(expected);
 };
 
 const readArray = (cursor: Cursor): ReadonlyArray<unknown> => {
@@ -205,26 +233,30 @@ const readArray = (cursor: Cursor): ReadonlyArray<unknown> => {
   cursor.index += 1;
   const items = A.empty<unknown>();
   cursor.skipWhitespace();
-  if (cursor.peek() === RIGHT_BRACKET) {
+  let closed = cursor.peek() === RIGHT_BRACKET;
+  if (closed) {
     cursor.index += 1;
-    cursor.leave();
-    return items;
   }
-  while (true) {
+  while (!closed) {
     A.appendInPlace(items, readValue(cursor));
-    cursor.skipWhitespace();
-    const code = cursor.peek();
-    if (code === COMMA) {
-      cursor.index += 1;
-      continue;
-    }
-    if (code === RIGHT_BRACKET) {
-      cursor.index += 1;
-      cursor.leave();
-      return items;
-    }
-    return cursor.fail("Expected , or ] after array element");
+    closed = readSeparator(cursor, RIGHT_BRACKET, "Expected , or ] after array element");
   }
+  cursor.leave();
+  return items;
+};
+
+const readMemberKey = (cursor: Cursor): string => {
+  cursor.skipWhitespace();
+  if (cursor.peek() !== QUOTATION_MARK) {
+    return cursor.fail("Expected string property key");
+  }
+  const key = readString(cursor);
+  cursor.skipWhitespace();
+  if (cursor.peek() !== COLON) {
+    return cursor.fail("Expected : after property key");
+  }
+  cursor.index += 1;
+  return key;
 };
 
 const readObject = (cursor: Cursor): Record<string, unknown> => {
@@ -232,36 +264,17 @@ const readObject = (cursor: Cursor): Record<string, unknown> => {
   cursor.index += 1;
   const out: Record<string, unknown> = {};
   cursor.skipWhitespace();
-  if (cursor.peek() === RIGHT_BRACE) {
+  let closed = cursor.peek() === RIGHT_BRACE;
+  if (closed) {
     cursor.index += 1;
-    cursor.leave();
-    return out;
   }
-  while (true) {
-    cursor.skipWhitespace();
-    if (cursor.peek() !== QUOTATION_MARK) {
-      return cursor.fail("Expected string property key");
-    }
-    const key = readString(cursor);
-    cursor.skipWhitespace();
-    if (cursor.peek() !== COLON) {
-      return cursor.fail("Expected : after property key");
-    }
-    cursor.index += 1;
+  while (!closed) {
+    const key = readMemberKey(cursor);
     assignOwnProperty(out, key, readValue(cursor));
-    cursor.skipWhitespace();
-    const code = cursor.peek();
-    if (code === COMMA) {
-      cursor.index += 1;
-      continue;
-    }
-    if (code === RIGHT_BRACE) {
-      cursor.index += 1;
-      cursor.leave();
-      return out;
-    }
-    return cursor.fail("Expected , or } after property value");
+    closed = readSeparator(cursor, RIGHT_BRACE, "Expected , or } after property value");
   }
+  cursor.leave();
+  return out;
 };
 
 const readValue = (cursor: Cursor): unknown => {
@@ -274,23 +287,22 @@ const readValue = (cursor: Cursor): unknown => {
       return readArray(cursor);
     case QUOTATION_MARK:
       return readString(cursor);
-    case LATIN_SMALL_T:
-      return readLiteral(cursor, "true", true);
-    case LATIN_SMALL_F:
-      return readLiteral(cursor, "false", false);
-    case LATIN_SMALL_N:
-      return readLiteral(cursor, "null", null);
     default:
       if (code === HYPHEN_MINUS || isDigit(code)) {
         return readNumber(cursor);
       }
-      return cursor.fail(
-        Number.isNaN(code) ? "Unexpected end of JSON text" : `Unexpected character ${describeCharacter(code)}`
-      );
+      return O.match(HashMap.get(literalReaders, code), {
+        onNone: () =>
+          cursor.fail(
+            Number.isNaN(code) ? "Unexpected end of JSON text" : `Unexpected character ${describeCharacter(code)}`
+          ),
+        onSome: (read) => read(cursor),
+      });
   }
 };
 
 const isJsonTextSyntaxError = S.is(JsonTextSyntaxError);
+const decodeNativeJsonText = S.decodeResult(S.fromJsonString(S.Unknown));
 
 const readStrict = (text: string): Result.Result<unknown, JsonTextSyntaxError> => {
   const cursor = new Cursor(text);
@@ -335,34 +347,39 @@ const readStrict = (text: string): Result.Result<unknown, JsonTextSyntaxError> =
  * @category predicates
  * @since 0.0.0
  */
+// Finds the closing quotation mark of the string opened at `start`; returns its index (or -1 when
+// the string is unterminated) and whether the string contains an escape sequence.
+const scanString = (text: string, start: number): readonly [end: number, escaped: boolean] => {
+  let escaped = false;
+  let end = start + 1;
+  while (end < Str.length(text)) {
+    const code = text.charCodeAt(end);
+    if (code === QUOTATION_MARK) {
+      return [end, escaped];
+    }
+    escaped = escaped || code === REVERSE_SOLIDUS;
+    end += code === REVERSE_SOLIDUS ? 2 : 1;
+  }
+  return [-1, escaped];
+};
+
+const isPropertyKeyEnd = (text: string, end: number): boolean => {
+  let next = end + 1;
+  while (isWhitespace(text.charCodeAt(next))) {
+    next += 1;
+  }
+  return text.charCodeAt(next) === COLON;
+};
+
 export const hasEscapedPropertyKey = (text: string): boolean => {
   let index = text.indexOf('"');
   while (index !== -1) {
-    let escaped = false;
-    let end = index + 1;
-    while (end < Str.length(text)) {
-      const code = text.charCodeAt(end);
-      if (code === REVERSE_SOLIDUS) {
-        escaped = true;
-        end += 2;
-        continue;
-      }
-      if (code === QUOTATION_MARK) {
-        break;
-      }
-      end += 1;
-    }
-    if (end >= Str.length(text)) {
+    const [end, escaped] = scanString(text, index);
+    if (end === -1) {
       return false;
     }
-    if (escaped) {
-      let next = end + 1;
-      while (isWhitespace(text.charCodeAt(next))) {
-        next += 1;
-      }
-      if (text.charCodeAt(next) === COLON) {
-        return true;
-      }
+    if (escaped && isPropertyKeyEnd(text, end)) {
+      return true;
     }
     index = text.indexOf('"', end + 1);
   }
@@ -402,18 +419,15 @@ export const hasEscapedPropertyKey = (text: string): boolean => {
  * @category codecs
  * @since 0.0.0
  */
-export const readJsonText = (text: string): Result.Result<unknown, JsonTextSyntaxError> => {
-  if (hasEscapedPropertyKey(text)) {
-    return readStrict(text);
-  }
-  try {
-    // Native parsing is only unsafe for escaped property keys, and this text has none.
-    return Result.succeed(JSON.parse(text));
-  } catch {
-    // Re-read strictly so the failure carries a position instead of a host-specific message.
-    return readStrict(text);
-  }
-};
+export const readJsonText = (text: string): Result.Result<unknown, JsonTextSyntaxError> =>
+  hasEscapedPropertyKey(text)
+    ? readStrict(text)
+    : Result.match(decodeNativeJsonText(text), {
+        // Native parsing is only unsafe for escaped property keys, and this text has none.
+        onSuccess: Result.succeed,
+        // Re-read strictly so the failure carries a position instead of a host-specific message.
+        onFailure: () => readStrict(text),
+      });
 
 const JsonText = S.String.annotate({
   expected: "a JSON text",

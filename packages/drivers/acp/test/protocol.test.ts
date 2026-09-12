@@ -123,23 +123,26 @@ it.prop(
 // `{ " ": …, "\\": … }` exists in the isolate, `{" ":0,"\u0000":1}` decodes with a "\\" key. The
 // property above found this on 2026-09-11 (replay
 // `[0,"5464242726500343",5009,3,[0,0,0,0,0,0],"PropertyError"]`); this pins the shrunk shape.
-it("keeps escaped _meta keys after the host materialised a backslash key at the same position", () => {
-  assert.deepEqual(decodeJsonWithHostParser('{" ":0,"\\\\":0}'), { " ": 0, "\\": 0 });
-  const notification = {
-    jsonrpc: "2.0" as const,
-    method: "session/cancel" as const,
-    params: {
-      _meta: {
-        "9z({": { " ": -8.82839006083749e-189, "\u0000": { "<b^~+3>": [], ",i": 1.3931731468853144e287 } },
+it.effect(
+  "keeps escaped _meta keys after the host materialised a backslash key at the same position",
+  Effect.fnUntraced(function* () {
+    assert.deepEqual(decodeJsonWithHostParser('{" ":0,"\\\\":0}'), { " ": 0, "\\": 0 });
+    const notification = {
+      jsonrpc: "2.0" as const,
+      method: "session/cancel" as const,
+      params: {
+        _meta: {
+          "9z({": { " ": -8.82839006083749e-189, "\u0000": { "<b^~+3>": [], ",i": 1.3931731468853144e287 } },
+        },
+        sessionId: "session-1",
       },
-      sessionId: "session-1",
-    },
-  };
-  const encoded = Effect.runSync(encodeSessionCancelNotification(notification));
-  const decoded = Effect.runSync(decodeSessionCancelNotification(encoded));
-  assert.equal(Effect.runSync(encodeSessionCancelNotification(decoded)), encoded);
-  assert.deepEqual(decoded.params._meta, notification.params._meta);
-});
+    };
+    const encoded = yield* encodeSessionCancelNotification(notification);
+    const decoded = yield* decodeSessionCancelNotification(encoded);
+    assert.equal(yield* encodeSessionCancelNotification(decoded), encoded);
+    assert.deepEqual(decoded.params._meta, notification.params._meta);
+  })
+);
 
 it("keeps handwritten ACP schema encoded shapes byte-identical", () => {
   assert.deepEqual(

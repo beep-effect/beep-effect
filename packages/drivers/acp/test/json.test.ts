@@ -124,7 +124,8 @@ it("rejects texts outside the JSON grammar with the failing position", () => {
 });
 
 it("bounds nesting depth on the strict path", () => {
-  assert.isTrue(Result.isSuccess(AcpJson.readJsonText(nestedArraysInsideEscapedKey(1023))));
+  const deepest = nestedArraysInsideEscapedKey(1023);
+  assert.equal(encodeJsonText(decodeJson(read(deepest))), deepest);
   assert.equal(readFailure(nestedArraysInsideEscapedKey(1024)).reason, "Nesting depth exceeds 1024");
 });
 

@@ -153,20 +153,17 @@ const decodeJsonRpcMessage = (frame: unknown): Result.Result<AcpWireMessage, S.S
 const decodeJsonRpcFrame = (frame: unknown): Result.Result<ReadonlyArray<AcpWireMessage>, S.SchemaError> =>
   isJsonArray(frame) ? Result.all(A.map(frame, decodeJsonRpcMessage)) : Result.map(decodeJsonRpcMessage(frame), A.of);
 
-export const makeNdJsonRpcDecoder = (options?: { readonly maxBufferSize?: number | "unbounded" | undefined }) => {
-  const maxBufferSize = options?.maxBufferSize ?? DEFAULT_MAX_BUFFER_SIZE;
+export const makeNdJsonRpcFrameDecoder = (): ((
+  chunk: string | Uint8Array
+) => Result.Result<ReadonlyArray<AcpWireMessage>, AcpFrameDecodeError>) => {
   let decoder: TextDecoder | undefined;
   let buffer = "";
-  const exceeds = (size: number): boolean => maxBufferSize !== "unbounded" && size > maxBufferSize;
+  const exceeds = (size: number): boolean => size > DEFAULT_MAX_BUFFER_SIZE;
   const failBufferSize = (): Result.Result<never, RpcSerialization.MaxBufferSizeExceeded> => {
     buffer = "";
-    return Result.fail(
-      new RpcSerialization.MaxBufferSizeExceeded({
-        maxBufferSize: maxBufferSize === "unbounded" ? Number.POSITIVE_INFINITY : maxBufferSize,
-      })
-    );
+    return Result.fail(new RpcSerialization.MaxBufferSizeExceeded({ maxBufferSize: DEFAULT_MAX_BUFFER_SIZE }));
   };
-  const decode = (chunk: string | Uint8Array): Result.Result<ReadonlyArray<AcpWireMessage>, AcpFrameDecodeError> => {
+  return (chunk) => {
     buffer += P.isString(chunk) ? chunk : (decoder ??= new TextDecoder()).decode(chunk, { stream: true });
     const batches = A.empty<ReadonlyArray<AcpWireMessage>>();
     let position = 0;
@@ -191,5 +188,4 @@ export const makeNdJsonRpcDecoder = (options?: { readonly maxBufferSize?: number
     }
     return Result.succeed(A.flatten(batches));
   };
-  return { decode } as const;
 };

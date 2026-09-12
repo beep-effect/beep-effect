@@ -19,7 +19,7 @@ import * as RpcServer from "effect/unstable/rpc/RpcServer";
 import { CLIENT_METHODS } from "./_generated/meta.gen.ts";
 import * as AcpSchema from "./_generated/schema.gen.ts";
 import * as AcpError from "./Acp.errors.ts";
-import { makeNdJsonRpcDecoder } from "./internal/jsonrpc.ts";
+import { makeNdJsonRpcFrameDecoder } from "./internal/jsonrpc.ts";
 import type * as Cause from "effect/Cause";
 import type * as Scope from "effect/Scope";
 import type * as Stdio from "effect/Stdio";
@@ -487,7 +487,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   // Electron 36 and 37) resolves an escaped object key through an existing map transition whenever
   // the raw source prefix matches it, turning `_meta` keys such as "\n" into "\\". The package
   // reader keeps native parsing for texts without escaped keys and reads the rest strictly.
-  const frameDecoder = makeNdJsonRpcDecoder();
+  const decodeFrames = makeNdJsonRpcFrameDecoder();
   const serverQueue = yield* Queue.bounded<RpcMessage.FromClientEncoded>(ACP_PROTOCOL_QUEUE_CAPACITY);
   const clientQueue = yield* Queue.bounded<RpcMessage.FromServerEncoded>(ACP_PROTOCOL_QUEUE_CAPACITY);
   const notificationQueue = yield* Queue.bounded<AcpIncomingNotification>(ACP_PROTOCOL_QUEUE_CAPACITY);
@@ -777,7 +777,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
         stage: "raw",
       }).pipe(
         Effect.flatMap(() =>
-          Effect.fromResult(frameDecoder.decode(data)).pipe(
+          Effect.fromResult(decodeFrames(data)).pipe(
             Effect.mapBoth({
               onFailure: (cause) =>
                 AcpError.AcpProtocolParseError.make({
