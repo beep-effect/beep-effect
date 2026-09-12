@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
 import { printCommandJson } from "../../internal/cli/Json.ts";
+import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
 import { GraftCacheIoError, GraftCacheTargetError, GraftDeepPreflightError } from "./Graft.errors.ts";
 import {
   GraftCacheSyncAction,
@@ -27,8 +28,9 @@ import {
   GraftDeepRefresh,
   GraftDeepRefreshLive,
   GraftDeepRefreshProgress,
-  resolveGraftDeepBunPath,
+  readRecordedGraftDeepTimer,
 } from "./GraftDeep.service.ts";
+import type { GraftDeepRecordedTimer } from "./Graft.schemas.ts";
 
 const flags = {
   from: Flag.String("from").pipe(Flag.withDescription("Source clone containing graft/.cache/summaries.json")),
@@ -157,8 +159,21 @@ const statusFlags = {
   json: deepFlags.json,
 };
 
+const DEFAULT_REFRESH_CALENDAR = "*-*-* 02:30:00";
+
 const timerFlags = {
-  owner: deepFlags.owner,
+  owner: Flag.String("owner").pipe(
+    Flag.withDefault(""),
+    Flag.withDescription(
+      "Owner clone the refresh pins to main and rebuilds in (required unless --refresh reuses the installed unit's)"
+    )
+  ),
+  refresh: Flag.Boolean("refresh").pipe(
+    Flag.withDefault(false),
+    Flag.withDescription(
+      "Re-render the installed units from their recorded owner, environment file, and calendar with the current Bun resolution"
+    )
+  ),
   bunPath: Flag.String("bun-path").pipe(
     Flag.optional,
     Flag.withDescription(
@@ -166,8 +181,10 @@ const timerFlags = {
     )
   ),
   onCalendar: Flag.String("on-calendar").pipe(
-    Flag.withDefault("*-*-* 02:30:00"),
-    Flag.withDescription("systemd OnCalendar expression for the nightly refresh")
+    Flag.optional,
+    Flag.withDescription(
+      `systemd OnCalendar expression for the nightly refresh (default ${DEFAULT_REFRESH_CALENDAR}; --refresh keeps the recorded one unless given)`
+    )
   ),
   envFile: Flag.String("env-file").pipe(
     Flag.optional,
@@ -179,16 +196,11 @@ const timerFlags = {
   ),
 };
 
-// Operators type `~/...` and relative paths; systemd and the lock file need
-// absolute ones, and no shell is involved to expand either.
-const resolveOperatorPath = (home: string, resolve: (input: string) => string, input: string): string =>
-  resolve(Str.startsWith("~/")(input) ? `${home}/${Str.slice(2)(input)}` : input);
-
 const defaultStateDir = (home: string, path: Path.Path, configured: O.Option<string>): string =>
   resolveOperatorPath(
+    O.getOrElse(configured, () => path.join(home, ".local", "state", "beep-graft")),
     home,
-    path.resolve,
-    O.getOrElse(configured, () => path.join(home, ".local", "state", "beep-graft"))
+    path.resolve
   );
 
 const renderStatus = (status: GraftDeepRefreshStatus): string =>
@@ -280,7 +292,7 @@ export const runDeepRefresh = Effect.fn("GraftCommand.runDeepRefresh")(function*
   const path = yield* Path.Path;
   const home = yield* Effect.orDie(Config.String("HOME"));
   const decoded = yield* decodeRefreshOptions({
-    owner: resolveOperatorPath(home, path.resolve, options.owner),
+    owner: resolveOperatorPath(options.owner, home, path.resolve),
     jobs: options.jobs,
     minCoverage: options.minCoverage,
     seed: options.seed,
@@ -355,8 +367,10 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
  * `--bun-path` the unit runs the mise Bun shim when this user can execute
  * one under the home directory, then a standalone `$HOME/.bun` install, and
  * only then the Bun running this command, so a `mise.toml` bump is picked up
- * the next night. A path systemd would reinterpret inside the unit is refused
- * before anything is written.
+ * the next night. `--refresh` re-renders the installed units from the owner,
+ * environment file, and calendar they recorded, so an agent can bring them up
+ * to date after a merge without repeating the original flags. A path systemd
+ * would reinterpret inside the unit is refused before anything is written.
  *
  * **Example** (Build an install program without running it)
  *
@@ -367,7 +381,7 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
  * const program = runDeepInstallTimer({
  *   owner: "/clones/beep-effect0",
  *   bunPath: O.none(),
- *   onCalendar: "*-*-* 02:30:00",
+ *   onCalendar: O.none(),
  *   envFile: O.none(),
  *   uninstall: false,
  * })
@@ -382,8 +396,9 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
 export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")(function* (options: {
   readonly owner: string;
   readonly bunPath: O.Option<string>;
-  readonly onCalendar: string;
+  readonly onCalendar: O.Option<string>;
   readonly envFile: O.Option<string>;
+  readonly refresh?: boolean;
   readonly uninstall: boolean;
 }) {
   const refresh = yield* GraftDeepRefresh;
@@ -398,35 +413,71 @@ export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")
   );
 });
 
+const recordedGraftDeepTimer = Effect.fn("GraftCommand.recordedGraftDeepTimer")(function* (home: string) {
+  const recorded = yield* readRecordedGraftDeepTimer(home);
+  if (O.isNone(recorded)) {
+    return yield* GraftDeepPreflightError.make({
+      path: home,
+      message:
+        "--refresh found no installed beep-graft-deep-refresh.service; install first with `graft deep install-timer --owner <clone>`.",
+    });
+  }
+  return recorded.value;
+});
+
 const installTimer = Effect.fn("GraftCommand.installTimer")(function* (options: {
   readonly owner: string;
   readonly bunPath: O.Option<string>;
-  readonly onCalendar: string;
+  readonly onCalendar: O.Option<string>;
   readonly envFile: O.Option<string>;
+  readonly refresh?: boolean;
 }) {
   const path = yield* Path.Path;
   const home = yield* Effect.orDie(Config.String("HOME"));
   const refresh = yield* GraftDeepRefresh;
-  // An explicit path is the operator's pin and is only made absolute; the
-  // default follows the mise shim so a Bun bump never strands the unit.
-  const bunPath = yield* O.match(options.bunPath, {
-    onNone: () => resolveGraftDeepBunPath(home),
-    onSome: (given) => Effect.succeed(resolveOperatorPath(home, path.resolve, given)),
-  });
+  // A refresh reuses what the installed units recorded (owner, environment
+  // file, calendar) unless a flag overrides it, and re-resolves only the Bun.
+  const recorded =
+    options.refresh === true ? O.some(yield* recordedGraftDeepTimer(home)) : O.none<GraftDeepRecordedTimer>();
+  const owner = Str.isNonEmpty(options.owner)
+    ? options.owner
+    : O.getOrElse(
+        O.flatMap(recorded, (unit) => unit.owner),
+        () => ""
+      );
+  if (Str.isEmpty(owner)) {
+    return yield* GraftDeepPreflightError.make({
+      path: home,
+      message: "--owner is required unless --refresh finds an installed unit to reuse.",
+    });
+  }
+  const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
   const decoded = yield* decodeTimerOptions({
-    owner: resolveOperatorPath(home, path.resolve, options.owner),
+    owner: resolveOperatorPath(owner, home, path.resolve),
     bunPath,
-    onCalendar: options.onCalendar,
+    // An explicit calendar always wins, the default included; a refresh keeps
+    // the recorded one only when no flag was given.
+    onCalendar: O.getOrElse(options.onCalendar, () =>
+      O.getOrElse(
+        O.flatMap(recorded, (unit) => unit.onCalendar),
+        () => DEFAULT_REFRESH_CALENDAR
+      )
+    ),
     envFile: resolveOperatorPath(
+      O.getOrElse(options.envFile, () =>
+        O.getOrElse(
+          O.flatMap(recorded, (unit) => unit.envFile),
+          () => path.join(home, ".config", "beep-graft", "env")
+        )
+      ),
       home,
-      path.resolve,
-      O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env"))
+      path.resolve
     ),
   }).pipe(
     Effect.mapError((cause) =>
       GraftDeepPreflightError.make({
         path: bunPath,
-        message: `Invalid timer options: the owner, Bun, and environment file paths must be free of double quotes, backslashes, percent signs, dollar signs, and control characters, which systemd would reinterpret in the unit.`,
+        message: `Invalid timer options: the owner, Bun, and environment file paths must be ${systemdUnitPathRule}.`,
         cause,
       })
     )

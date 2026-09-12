@@ -26811,6 +26811,30 @@
             "functions": 4
           }
         },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts": {
           "lines": 63.6,
           "statements": 63.6,
@@ -27891,6 +27915,42 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/systemd/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/internal/tsmorph/JsDoc.ts": {
           "lines": 100,
           "statements": 100,
@@ -28204,6 +28264,18 @@
           }
         },
         "packages/tooling/tool/cli/src/test/SyncDataToTs.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/test/Systemd.test-kit.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -37339,15 +37411,15 @@
           }
         },
         "packages/foundation/modeling/utils/src/HostProcess.ts": {
-          "lines": 71.42,
-          "statements": 71.42,
-          "branches": 100,
-          "functions": 0,
+          "lines": 100,
+          "statements": 100,
+          "branches": 50,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 0,
-            "functions": 2
+            "lines": 0,
+            "statements": 0,
+            "branches": 2,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/utils/src/Html.ts": {

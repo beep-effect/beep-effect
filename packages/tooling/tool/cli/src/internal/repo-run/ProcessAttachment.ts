@@ -9,6 +9,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, Match, pipe } from "effect";
 import * as A from "effect/Array";
+import { constant } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -199,4 +202,53 @@ export const scanProcessAttachments = Effect.fnUntraced(function* (
     concurrency: PID_SCAN_CONCURRENCY,
   });
   return O.some(A.flatten(attachments));
+});
+
+const PARENT_PID_LINE = /^PPid:\s*(\d+)\s*$/mu;
+
+// The walk ends at init, whose parent is 0; a shared thunk, not a lambda per call.
+const noParent = constant(0);
+
+const parentPidOf = (status: string): O.Option<number> =>
+  O.flatMap(O.fromNullishOr(PARENT_PID_LINE.exec(status)), (match) => O.flatMap(O.fromNullishOr(match[1]), N.parse));
+
+/**
+ * The pids of this process and every ancestor up to init, read from `/proc`.
+ *
+ * **Details**
+ *
+ * A retirement started from inside a lane has the invoking CLI, its shell,
+ * and the agent session above them all holding that lane as their cwd. They
+ * are the party asking for the removal, not writers whose later output the
+ * archive could lose, so the quiescence fence may exempt exactly this chain
+ * and nothing else. A `/proc` entry that cannot be read ends the walk early;
+ * the set then names fewer processes, never more.
+ *
+ * **Example** (Build the ancestry effect)
+ *
+ * ```ts
+ * import { invokerAncestryPids } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(invokerAncestryPids())) // true
+ * ```
+ *
+ * @returns The pid set of the current process and its ancestors.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const invokerAncestryPids = Effect.fnUntraced(function* (): Effect.fn.Return<
+  HashSet.HashSet<number>,
+  never,
+  FileSystem.FileSystem
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const seen = MutableHashSet.empty<number>();
+  let pid = process.pid;
+  while (pid > 0 && !MutableHashSet.has(seen, pid)) {
+    MutableHashSet.add(seen, pid);
+    const status = yield* fs.readFileString(`/proc/${pid}/status`).pipe(Effect.option);
+    pid = O.getOrElse(O.flatMap(status, parentPidOf), noParent);
+  }
+  return HashSet.fromIterable(seen);
 });

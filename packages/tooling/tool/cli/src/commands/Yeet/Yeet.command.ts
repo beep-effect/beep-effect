@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { yeetStateRootEnvVar, yeetStateRootFlag } from "../../internal/cli/Flags.ts";
+import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
 import {
   runYeetFallowFeedback,
   runYeetFallowFixtureCheck,
@@ -42,6 +43,20 @@ const decodeOptionalPositiveInt = S.decodeEffect(S.Option(PositiveInt));
 const baseFlag = Flag.String("base").pipe(
   Flag.withDescription("Base ref for affected feedback planning"),
   Flag.withDefault("origin/main")
+);
+
+const retireFlag = Flag.Boolean("retire").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "Inside a linked worktree whose PR is MERGED: archive-retire this worktree into its owning clone, delete the branch, then sweep the clone"
+  )
+);
+
+const laneFlag = Flag.String("lane").pipe(
+  Flag.optional,
+  Flag.withDescription(
+    "With --retire: the linked worktree to retire when the command runs from its owning clone (default: the worktree the command runs in)"
+  )
 );
 
 const branchFlag = Flag.String("branch").pipe(
@@ -442,7 +457,9 @@ const sweepFlags = {
   ...porcelainFlags,
   branch: branchFlag,
   json: jsonFlag,
+  lane: laneFlag,
   plan: planFlag,
+  retire: retireFlag,
 } as const;
 
 const closeoutFlags = {
@@ -618,7 +635,10 @@ const yeetMonitorCommand = Command.make(
 ).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
 
 const yeetSweepCommand = Command.make("sweep", sweepFlags, (options) => runYeetSweep(options)).pipe(
-  Command.withDescription("Reset the clone after a merge: prune refs, fast-forward main, delete merged branches")
+  Command.withDescription(
+    "Reset the clone after a merge: prune refs, fast-forward main, delete merged branches; --retire first archive-retires the linked worktree it runs in"
+  ),
+  Command.provide(WorktreeRemovalServiceLive)
 );
 
 const yeetMergeCommand = Command.make("merge", porcelainFlags, (options) => runYeetMerge(options)).pipe(

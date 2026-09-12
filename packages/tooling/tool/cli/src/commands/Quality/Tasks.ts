@@ -54,6 +54,7 @@ import {
   turboCachePlanNeedsSecretSession,
   turboCachePullRequestPosture,
 } from "../../internal/cli/TurboCache.ts";
+import { globMatches } from "../../internal/GlobPattern.ts";
 import {
   CapturedStep,
   formatCommandLine,
@@ -75,6 +76,7 @@ import {
   coverageScopeWeightSeconds,
   planCoverageFullShards,
   planWorkspaceCoverageAffectedScope,
+  workspaceCoverageScopeOwners,
 } from "./internal/CoverageScope.ts";
 import {
   detectNoLocationTs2589Flake,
@@ -118,7 +120,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
-import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
+import type { CoverageBaselineRowDelta, CoverageScopeOwner } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
@@ -159,9 +161,10 @@ const COVERAGE_FULL_SHARD_COUNT = 10;
 const COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES = ["@beep/repo-cli"] as const;
 // repo-cli deliberately disables file parallelism for ordinary package runs,
 // but serial imports consumed 728.76 seconds in the rejected live coverage
-// candidate. Full coverage and full baseline regeneration share this shard
-// worker shape so V8 instrumentation remains comparable. Scoped baseline
-// writes retain the two-worker shape used by the long-pole packages.
+// candidate. Every coverage producer — the full shards, scoped baseline writes,
+// and the narrow ratchet invocation — derives its Vitest topology from
+// `coverageVitestTopologyArgs`, so a row a writer records is measured under the
+// same worker shape the lane that judges it uses.
 const COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG = "--fileParallelism=true";
 const COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG = "--maxWorkers=2";
 const COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG = "--maxWorkers=1";
@@ -173,11 +176,6 @@ const COVERAGE_FULL_VITEST_WORKER_CAP = 11;
 // (`@beep/md` alone pulls 17 owners including `@beep/professional-desktop`),
 // where the full run's prebuild + capped-worker shards are the proven shape.
 const COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS = 300;
-const COVERAGE_SCOPED_BASELINE_VITEST_ARGS = [
-  "--",
-  COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
-  COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG,
-] as const;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const COVERAGE_REPLACE_ALL_ARG = "--replace-all";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
@@ -252,6 +250,7 @@ type RootAuditSelectionState = {
 };
 
 type CoverageTaskOptions = {
+  readonly topologyPackageNames?: ReadonlyArray<string>;
   readonly args: ReadonlyArray<string>;
   readonly expectedPackageNames: ReadonlyArray<string>;
   readonly replaceAll: boolean;
@@ -682,13 +681,134 @@ const resolveExplicitCoveragePackageNames = Effect.fn("QualityTasks.resolveExpli
 const resolveNonAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveNonAffectedCoverageTaskOptions")(
   function* (repoRoot: string, args: ReadonlyArray<string>, parsed: CoverageTaskOptions) {
     if (!parsed.writeBaseline || !parsed.scoped) {
-      return parsed;
+      const owners = yield* workspaceCoverageScopeOwners(repoRoot);
+      return { ...parsed, topologyPackageNames: coverageSelectorPackageNames(owners, explicitTurboFilterValues(args)) };
     }
 
     const expectedPackageNames = yield* resolveExplicitCoveragePackageNames(repoRoot, args);
     return { ...parsed, expectedPackageNames };
   }
 );
+
+const isResolvableCoverageSelector = S.is(
+  S.String.check(S.isPattern(/^(?:\.\.\.\^?)?(?:\{\.\/[^{}![\]^]+\}|[^{}![\]^]+?)(?:\^?\.\.\.)?$/u))
+);
+
+const coverageGraphClosure = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  seeds: ReadonlyArray<string>,
+  dependencies: boolean
+): ReadonlyArray<string> => {
+  let selected = seeds;
+  let frontier = seeds;
+  while (A.isReadonlyArrayNonEmpty(frontier)) {
+    const next = dependencies
+      ? A.flatMap(
+          A.filter(owners, (owner) => A.contains(frontier, owner.packageName)),
+          (owner: CoverageScopeOwner) => owner.workspaceDependencies
+        )
+      : A.map(
+          A.filter(owners, (owner) => A.some(owner.workspaceDependencies, (name) => A.contains(frontier, name))),
+          (owner) => owner.packageName
+        );
+    frontier = A.difference(
+      A.intersection(
+        next,
+        A.map(owners, (owner) => owner.packageName)
+      ),
+      selected
+    );
+    selected = A.union(selected, frontier);
+  }
+  return selected;
+};
+
+/**
+ * Resolve a Turbo package or directory selector against the workspace graph.
+ *
+ * **Example** (Resolve an exact package)
+ *
+ * ```ts
+ * import { resolveCoverageSelector } from "@beep/repo-cli/commands/Quality/Tasks"
+ *
+ * const result = resolveCoverageSelector([], "missing")
+ * console.log(result._tag) // "None"
+ * ```
+ *
+ * @param owners - Complete workspace inventory, including packages without coverage.
+ * @param selector - Turbo name, name glob, or directory selector with graph operators.
+ * @returns Sorted selected names, or None for unsupported or unmatched selectors.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveCoverageSelector: {
+  (owners: ReadonlyArray<CoverageScopeOwner>, selector: string): O.Option<ReadonlyArray<string>>;
+  (selector: string): (owners: ReadonlyArray<CoverageScopeOwner>) => O.Option<ReadonlyArray<string>>;
+} = dual(2, (owners: ReadonlyArray<CoverageScopeOwner>, selector: string): O.Option<ReadonlyArray<string>> => {
+  if (!isResolvableCoverageSelector(selector)) return O.none();
+  const pattern = Str.replace(/^(?:\.\.\.\^?)|(?:\^?\.\.\.)$/gu, "")(selector);
+  const directory = Str.startsWith("./")(pattern) || Str.startsWith("{./")(pattern);
+  const normalized = Str.replace(/^\{?|\}$/gu, "")(pattern);
+  const matches = globMatches(Str.replace(/^\.\//u, "")(normalized));
+  const seeds = A.map(
+    A.filter(owners, (owner) => matches(directory ? owner.packagePath : owner.packageName)),
+    (owner) => owner.packageName
+  );
+  if (A.isReadonlyArrayEmpty(seeds)) return O.none();
+  const dependencies = Str.endsWith("...")(selector) ? coverageGraphClosure(owners, seeds, true) : seeds;
+  const dependents = Str.startsWith("...")(selector) ? coverageGraphClosure(owners, seeds, false) : seeds;
+  const selected = A.union(dependencies, dependents);
+  return O.some(A.sort(Str.contains("^")(selector) ? A.difference(selected, seeds) : selected, Order.String));
+});
+
+// Unsupported or unmatched selectors retain the conservative long-pole topology.
+const coverageSelectorPackageNames = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  selectors: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(selectors)
+    ? A.map(owners, (owner) => owner.packageName)
+    : pipe(
+        selectors,
+        A.flatMap((selector) =>
+          O.getOrElse(resolveCoverageSelector(owners, selector), () => COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES)
+        ),
+        A.dedupe
+      );
+
+/**
+ * The Vitest passthrough every coverage producer appends.
+ *
+ * **Details**
+ *
+ * Worker count is the only axis that varies, and it varies by package: the
+ * serial-import long poles get two workers, everything else gets one. File
+ * parallelism is always on. A baseline written under one topology and judged
+ * under another produces a per-file V8 snapshot the writer's own rows cannot
+ * satisfy, which is why the full shards, scoped writes, and the narrow ratchet
+ * invocation all read their argv from here.
+ *
+ * **Example** (A long-pole selection earns two workers)
+ *
+ * ```ts
+ * import { coverageVitestTopologyArgs } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(coverageVitestTopologyArgs(["@beep/repo-cli"]))
+ * // [ "--", "--fileParallelism=true", "--maxWorkers=2" ]
+ * ```
+ *
+ * @param packageNames - Coverage owners this invocation measures.
+ * @returns The passthrough delimiter followed by the Vitest topology flags.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageVitestTopologyArgs = (packageNames: ReadonlyArray<string>): ReadonlyArray<string> => [
+  "--",
+  COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
+  A.some(packageNames, (packageName) => A.contains(COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES, packageName))
+    ? COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG
+    : COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG,
+];
 
 const isCoverageAffectedArg = (arg: string): boolean => arg === "--affected";
 const withoutCoverageAffectedArg: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
@@ -740,11 +860,9 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
   args: ReadonlyArray<string>
 ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const parsed = parseCoverageTaskOptions(args);
-  if (parsed.replaceAll && parsed.scoped) {
-    return yield* QualityTaskConfigurationError.new(
-      `${COVERAGE_REPLACE_ALL_ARG} only applies to an unscoped ${COVERAGE_WRITE_BASELINE_ARG} run.`
-    );
-  }
+  // A scoped `--replace-all` is the deliberate re-measure path: it adopts every
+  // package this run measured, and the hosted pull-request run judges every row
+  // it raises.
   if (parsed.replaceAll && !parsed.writeBaseline) {
     return yield* QualityTaskConfigurationError.new(
       `${COVERAGE_REPLACE_ALL_ARG} requires ${COVERAGE_WRITE_BASELINE_ARG}; it only controls coverage baseline replacement.`
@@ -2217,20 +2335,25 @@ const turboStep = (cwd: string, label: string, tasks: ReadonlyArray<string>, arg
   });
 };
 
-const coverageStep = (cwd: string, options: CoverageTaskOptions) =>
-  QualityTaskStep.make({
+const coverageStep = (cwd: string, options: CoverageTaskOptions) => {
+  // A narrow ratchet run resolves its owners through the planner, but a direct
+  // invocation only carries them as turbo filters.
+  const topologyPackageNames =
+    options.topologyPackageNames ??
+    (A.isReadonlyArrayNonEmpty(options.expectedPackageNames)
+      ? options.expectedPackageNames
+      : explicitTurboFilterValues(options.args));
+  return QualityTaskStep.make({
     label: options.writeBaseline ? "coverage:baseline" : "coverage:ratchet",
     command: "bunx",
-    args: turboRunArgs(
-      ["coverage"],
-      options.writeBaseline ? [...options.args, ...COVERAGE_SCOPED_BASELINE_VITEST_ARGS] : options.args
-    ),
+    args: turboRunArgs(["coverage"], [...options.args, ...coverageVitestTopologyArgs(topologyPackageNames)]),
     cwd,
     env: {
       ...coverageEnvironment(),
       ...(options.writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
     },
   });
+};
 
 const coverageFullShardStep = (
   cwd: string,
@@ -2250,11 +2373,7 @@ const coverageFullShardStep = (
         "--summarize",
         ...passthroughArgs,
         ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
-        "--",
-        COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
-        A.some(packageNames, (packageName) => A.contains(COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES, packageName))
-          ? COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG
-          : COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG,
+        ...coverageVitestTopologyArgs(packageNames),
       ]
     ),
     cwd,
@@ -3128,17 +3247,23 @@ export const coverageSelectedStepsForTesting: {
  *
  * @param repoRoot - Repository root directory.
  * @param args - Caller-visible coverage args, `--` passthrough included.
+ * @param owners - Optional workspace graph for exercising direct selector resolution.
  * @returns The ratchet or baseline-write coverage step.
  * @category testing
  * @since 0.0.0
  */
 export const coverageStepForTesting: {
-  (repoRoot: string, args: ReadonlyArray<string>): QualityTaskStep;
-  (args: ReadonlyArray<string>): (repoRoot: string) => QualityTaskStep;
+  (repoRoot: string, args: ReadonlyArray<string>, owners?: ReadonlyArray<CoverageScopeOwner>): QualityTaskStep;
+  (args: ReadonlyArray<string>, owners?: ReadonlyArray<CoverageScopeOwner>): (repoRoot: string) => QualityTaskStep;
 } = dual(
-  2,
-  (repoRoot: string, args: ReadonlyArray<string>): QualityTaskStep =>
-    coverageStep(repoRoot, parseCoverageTaskOptions(args))
+  (args) => P.isString(args[0]),
+  (repoRoot: string, args: ReadonlyArray<string>, owners?: ReadonlyArray<CoverageScopeOwner>): QualityTaskStep =>
+    coverageStep(repoRoot, {
+      ...parseCoverageTaskOptions(args),
+      ...(owners === undefined
+        ? {}
+        : { topologyPackageNames: coverageSelectorPackageNames(owners, explicitTurboFilterValues(args)) }),
+    })
 );
 
 /**

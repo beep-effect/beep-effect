@@ -310,6 +310,12 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     artifactPath: coverageRegressionBaselinePath,
     gateId: "coverage-regression",
     kind: "baseline",
+    // This field is rendered as a runnable command, so it stays the repo-wide
+    // form. It is safe to paste now: every baseline write routes through one
+    // plan that holds a measured package owning no changed file, so a
+    // stale-artifact repair cannot rewrite rows the change set never went near.
+    // Reach for `coverageScopedBaselineWriteCommand` when the regressed package
+    // names are known and the whole workspace need not be measured.
     regenerateCommand: coverageRegressionRegenerationCommand,
     scope: "repo-code",
   }),

@@ -588,6 +588,12 @@ const forwarderRunCommand = Command.make(
 const forwarderTimerCommand = Command.make(
   "timer",
   {
+    bunPath: Flag.String("bun-path").pipe(
+      Flag.optional,
+      Flag.withDescription(
+        "Bun executable the unit runs (default: the mise shim, then ~/.bun/bin/bun, then the Bun running this command)"
+      )
+    ),
     dataRoot: dataRootFlag,
     hashSaltSecretRef: hashSaltSecretRefFlag,
     intervalMinutes: intervalMinutesFlag,
@@ -603,6 +609,7 @@ const forwarderTimerCommand = Command.make(
     target: targetFlag,
   },
   ({
+    bunPath,
     dataRoot,
     hashSaltSecretRef,
     intervalMinutes,
@@ -619,6 +626,7 @@ const forwarderTimerCommand = Command.make(
   }) =>
     runAiMetricsProgram(
       makeForwarderTimerProgram({
+        bunPath,
         dataRoot,
         hashSaltSecretRef,
         intervalMinutes,

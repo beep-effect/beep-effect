@@ -13,7 +13,6 @@ import * as DateTime from "effect/DateTime";
 import * as Dur from "effect/Duration";
 import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
-import { constFalse } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -26,11 +25,16 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcessSpawner } from "effect/unstable/process";
 import { ensureZeroExit, formatCommandLine, OutputBound, runCaptured } from "../../internal/process/StepExec.ts";
+import {
+  readInstalledSystemdUnit,
+  systemdEnvironmentFile,
+  systemdUnitDirective,
+} from "../../internal/systemd/index.ts";
 import { GraftCacheIoError, GraftDeepLockError, GraftDeepPreflightError, GraftDeepStepError } from "./Graft.errors.ts";
 import {
   GraftCacheSyncAction,
-  GraftDeepBunCandidate,
   GraftDeepLock,
+  GraftDeepRecordedTimer,
   GraftDeepRefreshOutcome,
   GraftDeepRefreshStatus,
   GraftDeepRunnerStep,
@@ -441,7 +445,7 @@ export class GraftDeepRefresh extends Context.Service<GraftDeepRefresh, GraftDee
  * **Details**
  *
  * The service unit is returned first and the timer second. Every path is a
- * `GraftDeepUnitPath`, so quoting the `Exec*` arguments is all the escaping a
+ * `SystemdUnitPath`, so quoting the `Exec*` arguments is all the escaping a
  * unit needs. `EnvironmentFile` carries no leading dash on purpose: a missing
  * environment file must fail the unit loudly instead of starting a build with
  * no API key. The two `ExecStartPre` lines update the owner clone before the
@@ -527,47 +531,48 @@ export const renderGraftDeepRefreshUnits = (
 ];
 
 /**
- * Resolves the Bun the rendered unit runs when no `--bun-path` is given.
+ * Reads what the installed refresh units recorded, or `None` when none is installed.
  *
  * **Details**
  *
- * Each {@link GraftDeepBunCandidate} is probed under `home` in order and the
- * first regular file this user can execute wins, so a unit installed on a
- * mise-managed workstation runs whichever Bun the repo's `mise.toml` pins on
- * the night it fires. A candidate that is missing, unreadable, a directory,
- * or a leftover without execute permission is skipped rather than pinned, so
- * the probe never fails. The installer's own `process.execPath` is the
- * fallback only when no candidate qualifies: it is one version's binary, and
- * a unit pinned to it keeps running that version after a bump, or fails
- * outright once the version is pruned.
+ * `--refresh` rebuilds the units from these values with a fresh Bun resolution,
+ * so an agent can bring the timer up to date after a merge without knowing the
+ * owner clone or environment file the operator chose. Only a unit this user
+ * cannot read is an error; an absent unit is `None`.
  *
- * **Example** (Prepare a resolution under an operator home)
+ * **Example** (Prepare a read)
  *
- * ```ts import.meta.vitest name="Prepare a resolution under an operator home"
- * import { resolveGraftDeepBunPath } from "@beep/repo-cli/commands/Graft"
+ * ```ts import.meta.vitest name="Prepare a recorded timer read"
+ * import { readRecordedGraftDeepTimer } from "@beep/repo-cli/commands/Graft"
  * import * as Effect from "effect/Effect"
- * console.log(Effect.isEffect(resolveGraftDeepBunPath("/home/op"))) // true
+ * console.log(Effect.isEffect(readRecordedGraftDeepTimer("/home/op"))) // true
  * ```
  *
- * @param home - The operator home directory the candidates are probed under.
- * @returns The absolute path of the Bun executable the unit should run.
+ * @param home - The operator home directory the units are installed under.
+ * @returns The recorded owner, environment file, and calendar when installed.
  * @category formatting
  * @since 0.0.0
  */
-export const resolveGraftDeepBunPath = Effect.fn("GraftDeepRefresh.resolveBunPath")(function* (home: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  // stat follows the shim's symlink, so the executable bits are those of the
-  // binary the unit would actually run.
-  const found = yield* Effect.findFirst(
-    A.map(GraftDeepBunCandidate.Options, (candidate) => path.join(home, candidate)),
-    (candidate) =>
-      fs.stat(candidate).pipe(
-        Effect.map((info) => Eq.equals(info.type, "File") && (info.mode & 0o111) !== 0),
-        Effect.orElseSucceed(constFalse)
+export const readRecordedGraftDeepTimer = Effect.fn("GraftDeepRefresh.readRecordedTimer")(function* (home: string) {
+  const readUnit = (fileName: string) =>
+    readInstalledSystemdUnit({ home, fileName }).pipe(
+      Effect.mapError((cause) =>
+        GraftDeepPreflightError.make({
+          path: fileName,
+          message: `Failed reading the installed ${fileName} unit.`,
+          cause,
+        })
       )
+    );
+  const service = yield* readUnit(REFRESH_SERVICE_FILE_NAME);
+  const timer = yield* readUnit(REFRESH_TIMER_FILE_NAME);
+  return O.map(service, (unit) =>
+    GraftDeepRecordedTimer.make({
+      owner: systemdUnitDirective(unit, "WorkingDirectory"),
+      envFile: systemdEnvironmentFile(unit),
+      onCalendar: O.flatMap(timer, systemdUnitDirective("OnCalendar")),
+    })
   );
-  return O.getOrElse(found, () => process.execPath);
 });
 
 const statusCodec = S.fromJsonString(GraftDeepRefreshStatus);

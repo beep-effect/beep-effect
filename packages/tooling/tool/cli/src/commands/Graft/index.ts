@@ -45,8 +45,8 @@ export {
   GraftDeepRefreshProgress,
   GraftDeepRunner,
   GraftDeepRunnerLive,
+  readRecordedGraftDeepTimer,
   renderGraftDeepRefreshUnits,
-  resolveGraftDeepBunPath,
 } from "./GraftDeep.service.ts";
 /**
  * Cache sync service contract.

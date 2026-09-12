@@ -14,6 +14,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { SystemdUnitPath } from "../../internal/systemd/index.ts";
 
 const $I = $RepoCliId.create("commands/Graft/Graft.schemas");
 
@@ -518,82 +519,41 @@ export class GraftDeepLock extends S.Class<GraftDeepLock>($I`GraftDeepLock`)(
 ) {}
 
 /**
- * Home-relative Bun executables the timer installer probes, in preference order.
+ * What the installed refresh units recorded that `graft deep install-timer --refresh` reuses.
  *
  * **Details**
  *
- * The mise shim comes first because it follows the repo's pinned Bun across
- * upgrades; a standalone `$HOME/.bun` install is the fallback. The installer's
- * own executable is used only when neither is executable and is not a member
- * here: it names one version's binary, which a later prune removes while the
- * unit still points at it.
+ * The owner is the service's `WorkingDirectory`, the environment file its
+ * `EnvironmentFile`, and the calendar the timer's `OnCalendar`; each is absent
+ * when the installed unit does not carry the directive.
  *
- * **Example** (Inspect probe order)
+ * **Example** (Make a recorded timer)
  *
- * ```ts import.meta.vitest name="Inspect probe order"
- * import { GraftDeepBunCandidate } from "@beep/repo-cli/commands/Graft"
- * console.log(GraftDeepBunCandidate.Options) // [".local/share/mise/shims/bun", ".bun/bin/bun"]
+ * ```ts import.meta.vitest name="Make a recorded timer"
+ * import { GraftDeepRecordedTimer } from "@beep/repo-cli/commands/Graft"
+ * import * as O from "effect/Option"
+ * const recorded = GraftDeepRecordedTimer.make({
+ *   owner: O.some("/clones/beep-effect0"),
+ *   envFile: O.none(),
+ *   onCalendar: O.some("*-*-* 02:30:00"),
+ * })
+ * console.log(O.getOrNull(recorded.onCalendar)) // *-*-* 02:30:00
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const GraftDeepBunCandidate = LiteralKit([".local/share/mise/shims/bun", ".bun/bin/bun"]).pipe(
-  $I.annoteSchema("GraftDeepBunCandidate", {
-    description: "Home-relative Bun executables probed for the refresh unit, in preference order.",
-  })
-);
-
-/**
- * A home-relative Bun executable the timer installer may choose.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type GraftDeepBunCandidate = typeof GraftDeepBunCandidate.Type;
-
-// systemd parses Exec= arguments with its own quoting and escape rules and
-// substitutes `%` specifiers and `$` variables throughout a unit, so a path
-// carrying any of those characters would render a unit that runs something
-// other than what the operator named.
-const SYSTEMD_UNIT_PATH_PATTERN = /^[^"\\%$\p{Cc}]+$/u;
-
-/**
- * A path that reaches a rendered systemd unit verbatim.
- *
- * **Details**
- *
- * Double quotes, backslashes, percent signs, dollar signs, and control
- * characters are refused: quoting an argument only protects whitespace, and
- * systemd would reinterpret each of those inside the quotes. Spaces are fine
- * because every path argument is rendered quoted.
- *
- * **Example** (Accept a spaced path and refuse a quoted one)
- *
- * ```ts import.meta.vitest name="Accept a spaced path and refuse a quoted one"
- * import { GraftDeepUnitPath } from "@beep/repo-cli/commands/Graft"
- * import * as S from "effect/Schema"
- * console.log(S.is(GraftDeepUnitPath)("/opt/bun 1/bin/bun")) // true
- * console.log(S.is(GraftDeepUnitPath)('/opt/"bun"/bin/bun')) // false
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const GraftDeepUnitPath = S.String.check(S.isPattern(SYSTEMD_UNIT_PATH_PATTERN)).pipe(
-  $I.annoteSchema("GraftDeepUnitPath", {
+export class GraftDeepRecordedTimer extends S.Class<GraftDeepRecordedTimer>($I`GraftDeepRecordedTimer`)(
+  {
+    owner: S.Option(S.String),
+    envFile: S.Option(S.String),
+    onCalendar: S.Option(S.String),
+  },
+  $I.annote("GraftDeepRecordedTimer", {
     description:
-      "Path free of the quote, escape, specifier, and control characters systemd would reinterpret in a unit.",
+      "Owner clone, environment file, and calendar an installed refresh unit runs with, read back for a refresh.",
   })
-);
-
-/**
- * A path accepted into a rendered systemd unit.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type GraftDeepUnitPath = typeof GraftDeepUnitPath.Type;
+) {}
 
 /**
  * Inputs for installing the nightly refresh systemd user timer.
@@ -605,9 +565,10 @@ export type GraftDeepUnitPath = typeof GraftDeepUnitPath.Type;
  * `envFile` is only ever stat-ed by the installer; its contents reach the
  * refresh through systemd's `EnvironmentFile`, never through this process.
  * `bunPath` is the operator's `--bun-path` made absolute or, when none is
- * given, the first {@link GraftDeepBunCandidate} this user can execute under
- * the home directory, falling back to the installer's own executable. Every
- * path is a {@link GraftDeepUnitPath}, so the renderer's quoting is enough.
+ * given, the first shared Bun candidate (the mise shim, then `~/.bun/bin/bun`)
+ * this user can execute under the home directory, falling back to the
+ * installer's own executable. Every path is a systemd unit path, so the
+ * renderer's quoting is enough.
  *
  * **Example** (Describe a nightly schedule)
  *
@@ -627,10 +588,10 @@ export type GraftDeepUnitPath = typeof GraftDeepUnitPath.Type;
  */
 export class GraftDeepTimerOptions extends S.Class<GraftDeepTimerOptions>($I`GraftDeepTimerOptions`)(
   {
-    owner: GraftDeepUnitPath,
-    bunPath: GraftDeepUnitPath,
+    owner: SystemdUnitPath,
+    bunPath: SystemdUnitPath,
     onCalendar: S.String,
-    envFile: GraftDeepUnitPath,
+    envFile: SystemdUnitPath,
   },
   $I.annote("GraftDeepTimerOptions", {
     description: "Owner clone, Bun executable, calendar expression, and environment file of the refresh timer.",
