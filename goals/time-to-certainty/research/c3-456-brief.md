@@ -249,3 +249,24 @@ the marker compose it at runtime.
    packages. Report the schema thread-shutdown warning text verbatim (one line) and whether it
    changes the exit code.
 5. Lane split unchanged (Bun-only checks; Fable runs package-verify, docgen:local, coverage).
+
+## Amendment 2 (2026-09-11, after Stage B2) — Stage B3: doctests run on Node
+
+Evidence (Fable, schema alone in `packages/foundation/modeling/schema`): the package script
+`BEEP_VITEST_DOCTEST=1 bunx --bun vitest run` (Bun, thread pool) times out 9 trivial examples at
+30 s; Bun's fork pool never completes vitest's startup handshake (Stage B); Node
+(`BEEP_VITEST_DOCTEST=1 bunx vitest run`, no `--bun`) passes 120 files / 363 assertions in 8.0 s
+wall, exit 0. The retired root lane ran on Node. Ruling 34: the doctest package script runs on
+Node; the Bun `--bun` launcher stays for ordinary `beep:test`.
+
+1. `PackageScripts.schemas.ts`: every kind's `beep:doctest` impl default becomes
+   `BEEP_VITEST_DOCTEST=1 bunx vitest run`. `bun run beep lint package-scripts --write`
+   regenerates the owner manifests (expect exactly the 27 owners plus the doctest-lane fixture if
+   it is generated; list them); `--check` green; `lint policy-fingerprint --write` + `--check`.
+2. `vitest.shared.ts`: remove the `pool: "threads"` doctest override and its comment; keep the
+   rest of the doctest branch.
+3. `test/doctest-lane.test.ts` and its fixture package follow the new script text; any test that
+   pins `--bun` in a doctest script updates. The parity and discovery tests stay.
+4. Rerun the exact Stage B cold/warm pair with a fresh `TURBO_CACHE_DIR`: require 27/27 successful
+   cold and 27/27 `HIT` warm; record wall, lifetime p50/max, the two slowest packages, max RSS.
+5. Do not write a changeset (Fable runs `yeet repair` at publish). Lane split unchanged.

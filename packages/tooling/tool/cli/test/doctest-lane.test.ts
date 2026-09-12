@@ -1,3 +1,4 @@
+import { doctestFenceInfo, doctestSourceMarker } from "@beep/repo-cli/test/Docgen";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtils, FsUtilsLive, findRepoRoot, readPackageJsonFile, resolveWorkspacePackages } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -8,6 +9,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { resolveConfig } from "vitest/node";
 
 const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
 const fixture = new URL("./fixtures/doctest-lane/package/", import.meta.url).pathname;
@@ -46,7 +48,7 @@ const decodeTurboInputs = S.decodeEffect(
 );
 // A fresh config process observes the startup flag exactly as the package script does.
 // Vite and Effect retain boot snapshots in a long-lived test worker.
-const resolvedConfig = Effect.fn("DoctestTest.resolvedConfig")(function* (root: string, active = true) {
+const resolvedConfig = Effect.fn("DoctestTest.resolvedConfig")(function* (root: string, active: boolean) {
   const child = yield* StepExec.runCaptured({
     command: "bun",
     args: [
@@ -89,7 +91,7 @@ describe("doctest lane fixture", { concurrent: false }, () => {
         const scripts = O.getOrElse(manifest.scripts, () => ({}));
         if (!("doctest" in scripts) && !("beep:doctest" in scripts)) continue;
         owners++;
-        const config = yield* resolvedConfig(dir);
+        const config = yield* resolvedConfig(dir, true);
         expect(config.include, name).toEqual([]);
         expect(config.includeSource, name).toEqual(["src/**/*.{ts,tsx}"]);
         expect(config.passWithNoTests, name).toBe(false);
@@ -99,6 +101,14 @@ describe("doctest lane fixture", { concurrent: false }, () => {
           fs.readFileString(path.join(dir, file)).pipe(Effect.map(Str.includes("import.meta.vitest")))
         );
         expect(marked.length, name).toBeGreaterThan(0);
+        // Inspect every source, including excluded paths: the marker must name a fence.
+        const allSources = yield* fsUtils.globFiles(["src/**/*.{ts,tsx}"], { cwd: dir });
+        for (const file of allSources) {
+          const source = yield* fs.readFileString(path.join(dir, file));
+          if (Str.includes(doctestSourceMarker)(source)) {
+            expect(source, `${name}: ${file}`).toMatch(/^\s*\*?\s*`{3}(?:ts|tsx|typescript)\s+import\.meta\.vitest\b/m);
+          }
+        }
         // Production Turbo input expansion must cover every resolved setup/global setup file.
         const probe = yield* StepExec.runCaptured({
           command: path.join(root, "node_modules/.bin/turbo"),
@@ -122,6 +132,49 @@ describe("doctest lane fixture", { concurrent: false }, () => {
       expect(HashMap.has(workspaces, "@beep/storybook")).toBe(true);
     }, providePlatform),
     { timeout: 180_000 }
+  );
+
+  it.effect(
+    "selects a marked fence but not a runtime-composed template in-process",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const fsUtils = yield* FsUtils;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "doctest-marker-parity-" });
+      yield* fs.makeDirectory(path.join(root, "src"));
+      yield* fs.writeFileString(path.join(root, "src/template.ts"), 'export const marker = "import.meta." + "vitest";');
+      yield* fs.writeFileString(
+        path.join(root, "src/marked.ts"),
+        [
+          "/**",
+          " * **Example** (Add numbers)",
+          ` * \`\`\`${doctestFenceInfo("Add numbers")}`,
+          " * 1 + 1 // => 2",
+          " * ```",
+          " */",
+          "export const sum = 2;",
+        ].join("\n")
+      );
+      const { vitestConfig: config } = yield* Effect.promise(() =>
+        resolveConfig({
+          root,
+          config: false,
+          watch: false,
+          include: [],
+          includeSource: ["src/**/*.{ts,tsx}"],
+          passWithNoTests: false,
+        })
+      );
+      const sources = yield* fsUtils.globFiles(config.includeSource ?? [], { cwd: root, ignore: config.exclude });
+      expect(sources).toContain("src/template.ts");
+      expect(sources).toContain("src/marked.ts");
+      const selected = yield* Effect.filter(sources, (file) =>
+        fs.readFileString(path.join(root, file)).pipe(Effect.map(Str.includes("import.meta.vitest")))
+      );
+      expect(selected).toEqual(["src/marked.ts"]);
+      expect(doctestSourceMarker).toBe("import.meta.vitest");
+      expect(doctestFenceInfo("Add numbers")).toBe('ts import.meta.vitest name="Add numbers"');
+    }, providePlatform)
   );
 
   it.effect(

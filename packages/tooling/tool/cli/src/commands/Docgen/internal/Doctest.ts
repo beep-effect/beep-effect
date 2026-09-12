@@ -6,7 +6,7 @@ import { Effect, FileSystem, flow, Hash, HashMap, Layer, MutableHashMap, Order, 
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import { Node, SyntaxKind } from "ts-morph";
-import { isDoctestSourcePath } from "../../../internal/jsdoc/DoctestSource.ts";
+import { doctestSourceMarker, isDoctestSourcePath } from "../../../internal/jsdoc/DoctestSource.ts";
 import {
   jsdocOwnersByStart,
   ownJSDocNodeName,
@@ -488,13 +488,13 @@ const parseFenceInfo = (raw: string): FenceInfo => {
   const name = nameMatch === null ? O.none<string>() : O.fromUndefinedOr(nameMatch[1] ?? nameMatch[2] ?? nameMatch[3]);
   return FenceInfo.make({
     lang: language,
-    markerPresent: Str.includes("import.meta.vitest")(normalized),
+    markerPresent: Str.includes(doctestSourceMarker)(normalized),
     ...O.getSomesStruct({ name }),
   });
 };
 
 const canonicalInfoString = (title: string): O.Option<string> =>
-  O.map(quotedDoctestName(title), (name) => `ts import.meta.vitest ${name}`);
+  O.map(quotedDoctestName(title), (name) => `ts ${doctestSourceMarker} ${name}`);
 
 type ScannedFence = {
   readonly code: string;
@@ -680,7 +680,7 @@ const findingForFence = (source: string, fence: ScannedFence): ReadonlyArray<Doc
       addMarker: !info.markerPresent,
       ...O.getSomesStruct({
         addName: O.isNone(O.fromUndefinedOr(info.name))
-          ? O.some(Str.slice("ts import.meta.vitest ".length)(canonical.value))
+          ? O.some(Str.slice(`ts ${doctestSourceMarker} `.length)(canonical.value))
           : O.none<string>(),
       }),
       consoleRewrites,

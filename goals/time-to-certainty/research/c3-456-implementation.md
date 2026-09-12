@@ -492,3 +492,142 @@ write the Turbo hash documentation. This lane made no Stage C registrations or
 Stage D consumer changes. Keep doctest's compatibility flag until the admitted
 main workflow no longer needs it; do not remove it as incidental Stage C cleanup.
 Stop after Stage B.
+
+
+## Stage B2
+
+Implemented only Amendment 1, marker-literal parity. **The marker defect is fixed,
+but Stage B2 activation acceptance remains blocked:** the cold/warm fleet reruns
+fail in untouched `@beep/schema` tests. No Stage C–E work, git writes, graft commands,
+Node verification launches, or network operations ran.
+
+### Decisions and rejected alternatives
+
+1. Added `doctestSourceMarker`, composed from two strings at runtime, and
+   `doctestFenceInfo(name)` in the existing `DoctestSource.ts`. Both have Details,
+   Gotchas, and examples whose output does not spell the marker. Exposed them through
+   the existing documented test-kit export so examples and tests use an exported path.
+2. Replaced marker literals in exactly the five named sources. The schema's example
+   calls the fence helper; package generation and vocabulary templates render the same
+   fence text as before. The analyzer retains its existing single/double-quote title
+   handling and uses the marker constant, avoiding a change to its quoting semantics.
+   Package-script derivation still uses the identical literal predicate at runtime.
+3. Extended the Stage B discovery test: for each live owner, scan all source TS/TSX
+   files, including excluded paths, and require a marked fence whenever marker text
+   occurs. Kept owner config/discovery/setup-input checks intact. Added an in-process
+   synthetic `resolveConfig` fixture: both files match includeSource, but only the
+   marked example matches Vitest's literal predicate. It also asserts exact helper output.
+   Tests use runtime-neutral APIs; the existing owner-resolution child-process strategy
+   remains unchanged. Node execution remains Fable-owned, not claimed here.
+4. Rejected selector replacement, additional excludes, pass-with-no-tests, empty tests,
+   unrelated schema fixes, increased timeouts, and changing concurrency. The amendment
+   does not authorize runtime/schema repairs to force the fleet green.
+5. Explicitly typed the existing discovery helper's `active` parameter as a required boolean after
+   stored test-typecheck diagnostics exposed its inferred-any condition. No behavior change. The final Biome pass removed the redundant default-parameter
+   annotation; made the argument required and passed `true` explicitly to retain
+   the type while satisfying both tools. Final verification is recorded below.
+6. Ran the exact Stage B command shape with a fresh cache, then its warm counterpart.
+   Both failed on schema, so repeated once using a second fresh cache. Preserve all
+   failed evidence; none of these timings establish a passing migration.
+
+### Stage B2 — files
+
+Modified (no source files created or deleted):
+
+- `packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts`
+- `packages/tooling/tool/cli/src/test/Docgen.test-kit.ts`
+- `packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts`
+- `packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts`
+- `packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts`
+- `packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityExportBlock.ts`
+- `packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/VocabTerms.ts`
+- `packages/tooling/tool/cli/test/doctest-lane.test.ts`
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+- `goals/time-to-certainty/research/c3-456-implementation.md`
+
+The fingerprint writer rewrote byte-identical `standards/policy-tools.fingerprint.json`
+(no diff). No workspace manifest changed. Disposable scripts and logs are under
+`/tmp/ttc-stage-b2/`; generated build/typecheck artifacts, `.turbo/runs/` summaries,
+and `.beep/c3-456-stage-b2-doctest{,-retry}-cache` are verification artifacts, not
+source handoff files, and must not be staged.
+
+### Verification commands and exit codes
+
+Root cwd unless marked CLI cwd (`packages/tooling/tool/cli`). Log redirects are
+`/tmp/ttc-stage-b2/<name>.log`; the commands below are otherwise exact.
+
+| Exact command | Exit | Result |
+| --- | ---: | --- |
+| `bunx --bun biome check --write packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts packages/tooling/tool/cli/src/test/Docgen.test-kit.ts packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityExportBlock.ts packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/VocabTerms.ts packages/tooling/tool/cli/test/doctest-lane.test.ts` | 0 | 8 files checked; formatting/import ordering repaired. Final full pass exposed the annotation conflict documented above. |
+| `bunx --bun eslint --no-warn-ignored --max-warnings=0 --config eslint.config.mjs packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts packages/tooling/tool/cli/src/test/Docgen.test-kit.ts packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityExportBlock.ts packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/VocabTerms.ts` | 0 | Zero diagnostics. |
+| `bun run beep lint policy-fingerprint --write` | 0 | Written; byte-identical. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Current. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests; zero drift. |
+| `bunx --bun turbo run check package-test-typecheck --filter=@beep/repo-cli --cache=local:rw` | 0 on all three runs | 34/34 each time. First stored verdict failed; final stored verdict clean after boolean annotation. |
+| `python3 /tmp/ttc-stage-b2/verdict.py` | 0 | Final stored repo-cli test-typecheck exit 0, empty diagnostics. Earlier inline read-back exited 1 and exposed the condition diagnostic. |
+| `bunx --bun vitest run test/doctest-lane.test.ts test/doctest.test.ts test/package-scripts.policy.test.ts --pool=threads` | 0 | CLI cwd: 3 suites, 33 tests, 87.45 s. Annotation-only repair followed this run; final typecheck and fleet run use the annotated source. |
+| `bunx --bun vitest run test/doctest-lane.test.ts --pool=threads` | 0 | CLI cwd, final required-argument repair: 4/4 tests, 68.77 s. |
+| `python3 /tmp/ttc-stage-b2/measure.py` | 0 | Reads all four summaries; checks cold/warm hash identity within each pair. |
+| `git --no-optional-locks diff --check` | 0 | Read-only whitespace verification. |
+
+Final formatting and stored-verdict read-back after the required-argument repair:
+`bunx --bun biome check --write packages/tooling/tool/cli/test/doctest-lane.test.ts`
+exited 0 with no fixes; the third filtered Turbo run exited 0, and
+`python3 /tmp/ttc-stage-b2/verdict.py` exited 0 with empty stored diagnostics.
+
+### Cold/warm rerun measurements
+
+Cold means an empty local Turbo task cache, not cold filesystem/module caches.
+Remote cache is disabled. No other verification command ran concurrently with a
+measurement. All 27 owner hashes match within each pair. The final explicit-argument test-only
+repair changes repo-cli's test-input hash; these summaries are attempt-specific
+evidence, not a final-source cache receipt. Task lifetime is Turbo
+execution start through end; it is not separately instrumented pure boot time.
+
+| Attempt | Exact command | Exit | Wall | Success | HIT | Lifetime p50 / max |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| cold | `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b2-doctest-cache" /usr/bin/time -f 'wall=%e maxRSS=%M exit=%x' bunx --bun turbo run doctest --concurrency=4 --summarize --cache=local:rw` | 1 | 40.63 s | 26/27 | 0/27 | 3.353 / 39.312 s |
+| warm | `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b2-doctest-cache" /usr/bin/time -f 'wall=%e maxRSS=%M exit=%x' bunx --bun turbo run doctest --concurrency=4 --summarize --cache=local:rw` | 1 | 38.83 s | 26/27 | 26/27 | 0.000 / 38.712 s |
+| cold-retry | `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b2-doctest-retry-cache" /usr/bin/time -f 'wall=%e maxRSS=%M exit=%x' bunx --bun turbo run doctest --concurrency=4 --summarize --cache=local:rw` | 1 | 39.11 s | 26/27 | 0/27 | 3.013 / 38.290 s |
+| warm-retry | `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b2-doctest-retry-cache" /usr/bin/time -f 'wall=%e maxRSS=%M exit=%x' bunx --bun turbo run doctest --concurrency=4 --summarize --cache=local:rw` | 1 | 37.34 s | 26/27 | 26/27 | 0.000 / 37.226 s |
+
+cold slowest: **@beep/schema**, 39.312 s (exit 1), **@beep/repo-cli**, 11.998 s (exit 0).
+
+cold-retry slowest: **@beep/schema**, 38.290 s (exit 1), **@beep/nlp-processing**, 9.738 s (exit 0).
+
+Attempt summaries:
+
+- cold: `.turbo/runs/3JChtEcBenvKmusyRjDTqBaq73W.json`.
+- warm: `.turbo/runs/3JChzohqVcrmW6EM6AnwBnwiosx.json`.
+- cold-retry: `.turbo/runs/3JCi5atgcqDB59zQgbbF99uPYEB.json`.
+- warm-retry: `.turbo/runs/3JCiB4jK7tKTJjdVPjNbapKo75o.json`.
+
+Schema warning, one full line verbatim from the first cold log (as requested):
+
+```text
+@beep/schema:doctest: [vitest-pool]: Timeout terminating threads worker for test files ~/…/ttc-c3-456/packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts.
+```
+
+The warning coexists with exit 1 in these attempts, but the reported test failures
+are 30,000 ms assertion timeouts. This does not isolate a causal exit-code effect
+from the warning itself; Stage B's warning-only success is not reproduced here.
+The first cold and warm each report 12 failed and 351 passed schema assertions.
+Repo-cli's six real doctest files pass all 14 assertions and warm-replay successfully.
+
+### Blockers and residual for Stage C
+
+**27/27 successful cold and 27/27 HIT warm are not met.** The five-file marker blocker
+is resolved; the remaining blocker is repeatable schema test timeouts on this Bun
+thread runtime. Schema source/config was not edited in B2, but the exact cause is
+unproven, so this is not labeled a confirmed environment-only failure. Do not activate
+or claim a passing migration based on repo-cli's success or the parity fixture alone.
+Fable must investigate that runtime failure and obtain the required passing pair
+before activation. Full logs preserve all timeout and shutdown diagnostics.
+
+Fable retains `CI=true TMPDIR=/tmp bun run beep quality package-verify @beep/repo-cli`,
+`bun run docgen:local`, scoped Node coverage, and hosted verification, per the explicit
+lane split. No package-verify, docgen, Node coverage, or hosted success is claimed.
+The compatibility `--mode` flag and strict selector remain as Stage B specified.
+Stage C remains only the brief's root-task registrations, proofs/input fixtures, and
+Turbo hash documentation. No Stage C registrations or Stage D consumer changes ran.
+Stop after Stage B2.

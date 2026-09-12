@@ -957,3 +957,43 @@ subprocess diagnostics would make inventory stalls attributable.
   Turbo process is not sufficient evidence for this collecting task. A direct
   legacy `test/tsconfig.json` probe also hits inherited TS6059 rootDir errors;
   use the canonical synthetic-config task and its artifact instead.
+
+## 2026-09-11 — Stage B2: collecting test-typecheck needs verdict read-back
+
+- Doing: verify the marker-parity extension through the prescribed Turbo tasks.
+- Evidence: the outer command returned exit 0 (34 successful tasks), while repo-cli's
+  stored verdict returned exit 1: `Unexpected any type in condition` at the existing
+  discovery helper's `active` parameter.
+- Resolution: explicitly annotated `active: boolean`, reran the tasks, and confirmed
+  stored exit 0 with empty diagnostics. No selector or mode behavior changed.
+- Prevention: make the stored verdict read-back part of every collecting-task handoff;
+  the outer Turbo result alone cannot establish test-typecheck success.
+
+## 2026-09-11 — Stage B2: schema cold fleet timeout
+
+- Doing: rerun the exact doctest cold/warm pair at concurrency four with a fresh cache.
+- Evidence: cold finished 26/27, exit 1; repo-cli passed, but schema reported 12
+  `Test timed out in 30000ms.` failures and thread-termination warnings.
+- Attribution: schema source/config is untouched by B2; the literal-marker defect is
+  cleared. The timeout cause is not established by this run. Warm replay and a fresh
+  cold retry will distinguish a repeatable failure from a transient runtime result.
+- Prevention: retain per-package exits and warnings alongside fleet timing, and verify
+  thread shutdown on the hosted runtime before activation; do not increase timeouts or
+  change concurrency inside this marker-only amendment.
+
+### Stage B2 follow-up: default-parameter annotation conflict
+
+- Evidence: final `biome check --write` removed the explicit boolean annotation as
+  redundant, recreating the collecting typecheck's inference problem.
+- Resolution: made the helper's boolean argument required and passed `true` explicitly
+  at its default-mode call site. Rerun formatting, typecheck verdict, and discovery suite.
+- Prevention: use explicit typed arguments where Effect function inference and automatic
+  removal of default-parameter annotations disagree; verify after the final formatter.
+
+### Stage B2 measurement outcome
+
+Both cold/warm pairs finished 26/27, exit 1. Both warm runs replayed 26 successful
+cache entries; schema remained the sole failing MISS. One fresh-cache retry did not
+clear the failure. Preserve this as an activation blocker for Fable; marker parity
+and repo-cli's six real doctest files pass. No schema or runtime configuration repair
+was attempted under the marker-only amendment.

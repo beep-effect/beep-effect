@@ -375,3 +375,16 @@ before the next launches; hosted proof is the whole PR. Because a pull request r
 accepting the flag as a no-op until the `heavy.yml` edit in the same PR reaches `main`, after
 which a janitor PR removes the flag. Post-merge accounting (§7.1.4: first cold run, second run's
 per-lane hit ratio) is recorded in a closeout receipt, not claimed in the PR.
+
+## 2026-09-11 — C3.4 runtime, round 13 (one ruling, proposed by the orchestrator, ratified by merge of the one-PR train)
+
+Inputs: `research/c3-456-implementation.md` Stage B (Bun fork workers fail vitest's startup
+handshake), Stage B2 (repeatable 30 s timeouts on trivial `@beep/schema` examples under the Bun
+thread pool, cold and warm), and the orchestrator's isolated comparison (schema alone: Bun threads
+9 timeouts; Node 120 files / 363 assertions in 8.0 s), plus the retired root `doctest` script,
+which ran `vitest run --config vitest.docs.ts` on Node.
+
+**Ruling 34 — the `doctest` package task runs on Node.** The generated `beep:doctest` script is
+`BEEP_VITEST_DOCTEST=1 bunx vitest run` (no `--bun`), the shared doctest branch carries no pool
+override, and `beep:test` keeps the Bun launcher. Amends P10 of the table (revision 8); D7 and
+ruling 22 unchanged.
