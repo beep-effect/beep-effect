@@ -23,19 +23,21 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 Auditor run 3 is closed and projected; run-4 pre-work is in flight. What is open:
 
-1. **PR #1092** (`chore/auditor-skill-seat-effort`): auditor skill v15 — required
-   per-seat `effort` provenance on the run-manifest contract with its own self-test
-   family (158 families), and the kind-level denotation-grain sentence with a
-   null-record clause. Lane brief and report:
-   [research/run4-lanes/](./research/run4-lanes/). The steward merges.
-2. **Run-4 intake docket** (`research/auditor-run4-intake.md`, the next PR, written
-   as a pre-pin draft): the 84 run-3 unresolved rows and 54 carried parks with fresh
-   evidence duties, the flagged accepts' deferrals (TAXONOMY `flags`), the eight
-   withdrawn proposals awaiting organic lease/ticket-eviction evidence, the
-   VerificationResultArtifact content-snapshot rival, CQ-019/CQ-020 leftovers,
-   `corpus_tree`/`corpus_base` for S6 POLICY, and the engine follow-ups queued for a
-   later pin (NDJSON configuration support, historical archive-path handling, index
-   rows that can reference more than one proposal per observation).
+1. **PR #1092 is merged** (`e16e7a9297`): auditor skill v15 — required per-seat
+   `effort` provenance on the run-manifest contract with its own self-test family
+   (158 families), and the kind-level denotation-grain sentence with its
+   empty-candidate clause. Lane brief and report:
+   [research/run4-lanes/](./research/run4-lanes/).
+2. **Run-4 intake docket drafted** as a pre-pin draft in
+   [research/auditor-run4-intake.md](./research/auditor-run4-intake.md) (this PR):
+   the prior-run chain (`b9c140ccd31b`, 284 rows), Queue A (15 flagged TAXONOMY
+   records), Queue B (rat-047..052), Queue C (all 138 unresolved rows exactly once:
+   84 live in three buckets, 54 carried by the fifteen sitting-2 clusters), Queue D
+   (the eight withdrawals and today's organic eviction census), Queue E (CQ-019/020
+   leftovers), Queue F (S6 POLICY `corpus_tree`/`corpus_base`), and the engine
+   follow-ups queued for a later pin (NDJSON configuration support, historical
+   archive-path handling, index rows referencing more than one proposal per
+   observation). Every count is re-verified at the run-4 pin.
 3. **Run 4 proper** waits on time-to-certainty C4 (the proof-ledger writer): the
    Ruling-17 issuance and custody flags (rat-047/048/051/052) cannot discharge before
    it. Choreography is run 3's: pin commit → evidence tag → frozen run in a detached
@@ -179,6 +181,13 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-11: Run-4 intake docket drafted (pre-pin) at `research/auditor-run4-intake.md`
+  after PR #1092 merged as `e16e7a9297`: prior chain `b9c140ccd31b` recomputed, 138
+  unresolved rows placed exactly once (84 live, 54 carried by sitting-2 cluster), 15
+  flagged TAXONOMY records, rat-047..052 routing, the eight withdrawals with an organic
+  eviction census (2 lease, 1 ticket, 20 withdrawals in 442 v3 rows), CQ/POLICY leftovers,
+  and the v15 engine deltas. Authored by the orchestrator because the Codex pool was
+  exhausted until 2026-09-17 (steward ruling). Run 4 stays gated on time-to-certainty C4.
 - 2026-09-11: Run-4 pre-work PR #1092 opened: auditor skill v15 (required per-seat
   `effort` on the run-manifest contract with a self-test family, the kind-level
   denotation-grain sentence with its null-record clause, `EFFORT` on the SKILL.md seat
