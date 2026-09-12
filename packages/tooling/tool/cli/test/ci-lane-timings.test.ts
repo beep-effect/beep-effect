@@ -18,6 +18,7 @@ import {
   renderCiLaneTimingsSummary,
   renderCiLaneTimingsTsv,
   renderCiLaneTimingWindowMarkdown,
+  renderCiLaneTimingWindowSummary,
   renderCiLaneTimingWindowTsv,
   withCiLanePeakRss,
 } from "@beep/repo-cli/commands/Ci";
@@ -122,6 +123,14 @@ const REQUIRED_CONTEXTS = [
 const RULESET_18_JSON =
   '[{"ruleset_id":10240248,"type":"required_status_checks","parameters":{"required_status_checks":[{"context":"Heavy / Check"},{"context":"Codegen Drift"},{"context":"Commitlint"},{"context":"Heavy / Coverage Regression"},{"context":"Heavy / Docgen"},{"context":"Heavy / Doctest"},{"context":"Knip"},{"context":"Lint"},{"context":"Heavy / Lint Policy"},{"context":"Nix Shell"},{"context":"Professional Desktop IPC Stdio"},{"context":"Repo Sanity"},{"context":"SAST"},{"context":"Secret Scanning"},{"context":"Security"},{"context":"Heavy / Test Integration"},{"context":"Test Unit"},{"context":"JSDoc Ratchet"}]}}]';
 
+const RULESET_HISTORY_JSON =
+  '[{"version_id":49479116,"updated_at":"2026-09-11T20:46:53.354-05:00"},{"version_id":47676581,"updated_at":"2026-08-25T23:16:24.765-05:00"},{"version_id":48600030,"updated_at":"2026-09-03T12:12:53.589-05:00"}]';
+const RULESET_SNAPSHOT_18_JSON = `{"state":{"rules":${RULESET_18_JSON}}}`;
+const RULESET_SNAPSHOT_17_JSON = Str.replace(
+  '{"context":"Heavy / Coverage Regression"},',
+  ""
+)(RULESET_SNAPSHOT_18_JSON);
+
 const windowRun = (overrides: Partial<CiWorkflowWindowRun> = {}) =>
   CiWorkflowWindowRun.make({
     created_at: DateTime.makeUnsafe("2026-09-04T00:00:00Z"),
@@ -182,6 +191,18 @@ const windowJobsResponse = Effect.fn("TestCiLaneTimingGithubClient.windowJobsRes
 });
 
 const windowGithubRoutes = [
+  {
+    matches: Str.endsWith("/history/49479116"),
+    respond: staticWindowGithubResponse(RULESET_SNAPSHOT_17_JSON),
+  },
+  {
+    matches: Str.endsWith("/history/48600030"),
+    respond: staticWindowGithubResponse(RULESET_SNAPSHOT_18_JSON),
+  },
+  {
+    matches: Str.endsWith("/history"),
+    respond: staticWindowGithubResponse(RULESET_HISTORY_JSON),
+  },
   {
     matches: Str.includes("rules/branches/main"),
     respond: staticWindowGithubResponse(RULESET_18_JSON),
@@ -773,6 +794,12 @@ describe("ci lane timing admission window", () => {
       const report = yield* collectCiLaneTimingWindow(".", windowOptions({ headSha: O.some("included") }));
 
       expect(report.runCount).toBe(1);
+      expect(report.contextCount).toBe(18);
+      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
+      const population = "ruleset 10240248 version 48600030 effective 2026-09-03T17:12:53.589Z";
+      expect(renderCiLaneTimingWindowSummary(report)).toContain(population);
+      expect(renderCiLaneTimingWindowMarkdown(report)).toContain(population);
+      expect(A.some(commands, Str.includes("rules/branches/main"))).toBe(false);
       const runPageCommands = A.filter(commands, (command) => Str.includes("/actions/workflows/")(command));
       expect(runPageCommands).toHaveLength(4);
       expect(
@@ -798,6 +825,59 @@ describe("ci lane timing admission window", () => {
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
 
+  it.effect("fails closed against the 17-context version after the removal", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        collectCiLaneTimingWindow(
+          ".",
+          windowOptions({
+            until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z"),
+          })
+        )
+      );
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
+        "Ruleset 10240248 must expose exactly 18 required contexts; observed 17."
+      );
+      expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(true);
+      expect(A.some(commands, Str.includes("/actions/"))).toBe(false);
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("excludes a ruleset version effective exactly at the exclusive end", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({
+          until: DateTime.makeUnsafe("2026-09-12T01:46:53.354Z"),
+        })
+      );
+      expect(report.contextCount).toBe(18);
+      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
+      expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(false);
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("fails closed when no ruleset version strictly precedes the window end", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        collectCiLaneTimingWindow(
+          ".",
+          windowOptions({
+            since: DateTime.makeUnsafe("2026-08-25T00:00:00Z"),
+            until: DateTime.makeUnsafe("2026-08-26T04:16:24.765Z"),
+          })
+        )
+      );
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
+        "Ruleset 10240248 has no history version strictly before 2026-08-26T04:16:24.765Z."
+      );
+      expect(commands).toHaveLength(1);
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
   it.effect("rejects reversed collection bounds before reading GitHub", () => {
     const commands = A.empty<string>();
     return Effect.gen(function* () {
@@ -815,9 +895,9 @@ describe("ci lane timing admission window", () => {
   it.effect("fails closed when a workflow-run page is empty before total_count is reached", () => {
     const commands = A.empty<string>();
     const response = (endpoint: string) =>
-      Effect.succeed(
-        Str.includes("rules/branches/main")(endpoint) ? RULESET_18_JSON : '{"total_count":1,"workflow_runs":[]}'
-      );
+      Str.includes("/rulesets/")(endpoint)
+        ? windowGithubResponse(endpoint)
+        : Effect.succeed('{"total_count":1,"workflow_runs":[]}');
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(collectCiLaneTimingWindow(".", windowOptions({ event: "pull_request" })));
 
