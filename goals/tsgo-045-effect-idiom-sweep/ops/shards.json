@@ -34,9 +34,11 @@
         "packages/foundation/modeling/identity",
         "packages/foundation/modeling/pandoc-ast",
         "packages/foundation/modeling/ontology",
-        "packages/foundation/modeling/md"
+        "packages/foundation/modeling/md",
+        "packages/foundation/modeling/utils"
       ],
-      "approxSites": 195
+      "approxSites": 195,
+      "note": "Includes modeling/utils (two node:crypto test imports at least)."
     },
     {
       "id": "L03-capability",
@@ -80,7 +82,11 @@
       "paths": ["packages/documents"],
       "approxSites": 164
     },
-    { "id": "L11-drivers", "paths": ["packages/drivers"], "approxSites": 90 },
+    {
+      "id": "L11-drivers",
+      "paths": ["packages/drivers"],
+      "approxSites": 90
+    },
     {
       "id": "L12-agents-ontology-lab",
       "paths": [
@@ -93,7 +99,11 @@
       ],
       "approxSites": 190
     },
-    { "id": "L13-apps", "paths": ["apps"], "approxSites": 40 },
+    {
+      "id": "L13-apps",
+      "paths": ["apps"],
+      "approxSites": 40
+    },
     {
       "id": "S01-scratchpad",
       "paths": ["scratchpad", "vitest.shared.ts"],

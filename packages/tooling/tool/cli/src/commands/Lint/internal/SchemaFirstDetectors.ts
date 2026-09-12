@@ -1051,25 +1051,6 @@ const equivalenceEntryFromVariableDeclaration = (
   );
 };
 
-const sourceImportsNamedTaggedError = (sourceFile: import("ts-morph").SourceFile): boolean =>
-  A.some(
-    sourceFile.getImportDeclarations(),
-    (declaration) =>
-      declaration.getModuleSpecifierValue() === "effect/Schema" &&
-      A.some(
-        declaration.getNamedImports(),
-        (namedImport) => namedImport.getName() === "TaggedError" && namedImport.getAliasNode() === undefined
-      )
-  );
-
-const sourceHasTaggedErrorSignal = (sourceFile: import("ts-morph").SourceFile): boolean => {
-  const sourceText = sourceFile.getFullText();
-  return (
-    TAGGED_ERROR_SIGNAL_PATTERN.test(sourceText) &&
-    (NAMESPACED_TAGGED_ERROR_SIGNAL_PATTERN.test(sourceText) || sourceImportsNamedTaggedError(sourceFile))
-  );
-};
-
 // Every Schema class factory (`makeClass` upstream) derives `toEquivalence` from the declared
 // field struct by construction since effect@4.0.0-rc.113, so a class-level hook is redundant on
 // all four. The annotations argument follows the fields for `Class`/`Error` and follows the tag
@@ -1083,18 +1064,41 @@ const schemaClassAnnotationArgumentIndex = SchemaClassFactoryName.$match({
   TaggedError: () => 2,
 });
 
+// Unaliased named imports of the Schema class factories from "effect/Schema"; an aliased
+// import is not tracked because the local identifier no longer names the factory.
+const namedSchemaClassFactoryImports = (
+  sourceFile: import("ts-morph").SourceFile
+): ReadonlyArray<typeof SchemaClassFactoryName.Type> =>
+  pipe(
+    sourceFile.getImportDeclarations(),
+    A.filter((declaration) => declaration.getModuleSpecifierValue() === "effect/Schema"),
+    A.flatMap((declaration) => declaration.getNamedImports()),
+    A.filter((namedImport) => namedImport.getAliasNode() === undefined),
+    A.map((namedImport) => namedImport.getName()),
+    A.filter(isSchemaClassFactoryName)
+  );
+
+const sourceHasTaggedErrorSignal = (sourceFile: import("ts-morph").SourceFile): boolean => {
+  const sourceText = sourceFile.getFullText();
+  return (
+    TAGGED_ERROR_SIGNAL_PATTERN.test(sourceText) &&
+    (NAMESPACED_TAGGED_ERROR_SIGNAL_PATTERN.test(sourceText) ||
+      A.isReadonlyArrayNonEmpty(namedSchemaClassFactoryImports(sourceFile)))
+  );
+};
+
 const namespacedSchemaClassFactoryName = (factory: Node): O.Option<typeof SchemaClassFactoryName.Type> =>
   Node.isPropertyAccessExpression(factory) &&
   (factory.getExpression().getText() === "S" || factory.getExpression().getText() === "Schema")
     ? pipe(factory.getName(), O.liftPredicate(isSchemaClassFactoryName))
     : O.none();
 
-const namedImportTaggedErrorFactoryName = (
+const namedImportSchemaClassFactoryName = (
   factory: Node,
   sourceFile: import("ts-morph").SourceFile
 ): O.Option<typeof SchemaClassFactoryName.Type> =>
-  Node.isIdentifier(factory) && factory.getText() === "TaggedError" && sourceImportsNamedTaggedError(sourceFile)
-    ? O.some("TaggedError")
+  Node.isIdentifier(factory)
+    ? A.findFirst(namedSchemaClassFactoryImports(sourceFile), (name) => name === factory.getText())
     : O.none();
 
 interface SchemaClassDeclarationCall {
@@ -1116,7 +1120,7 @@ const schemaClassDeclarationCall = (declaration: ClassDeclaration): O.Option<Sch
   const factory = factoryCall.getExpression();
   return pipe(
     namespacedSchemaClassFactoryName(factory),
-    O.orElse(() => namedImportTaggedErrorFactoryName(factory, declaration.getSourceFile())),
+    O.orElse(() => namedImportSchemaClassFactoryName(factory, declaration.getSourceFile())),
     O.map((factoryName) => ({
       factoryName,
       annotation: A.get(outerCall.getArguments(), schemaClassAnnotationArgumentIndex(factoryName)),

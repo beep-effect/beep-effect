@@ -37,7 +37,7 @@ in parallel with disjoint ownership. P4 waits for every P3 PR to merge.
 | --- | --- | --- |
 | A | Id.ts hook deletion, inverted `SFV4-tagged-error-equivalence`, doc-text proof, allowlist + widened roots + key parity in `Quality.command.ts`, packet | 0.39.1 gate, repo-cli ships alone rule satisfied by scoping A to repo-cli + identity + doc-text |
 | L1..Ln | One PR per shard in `ops/shards.json` | 0.39.1 gate; package-verify per touched package |
-| M | Match audit + `match-shapes` law + fixtures + empty baseline | 0.39.1 gate; `lint match-shapes` green |
+| M | Match audit + `match-shapes` law + fixtures + empty baseline | 0.39.1 gate; the `match-shapes` law green |
 | S | scratchpad directives (78) + `vitest.shared.ts` (2) | widened-root directive census returns only the allowlist |
 | Z | tsgo 0.45.0 bump + 13 rules + keys + inventory regen | `tsgo-rules` green at 0.45.0; all hosted checks |
 

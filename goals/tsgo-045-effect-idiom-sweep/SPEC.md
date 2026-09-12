@@ -80,7 +80,7 @@ it.
       returns only the two allowlisted files.
 - [ ] `quality:check`, `quality:lint`, `quality:lint-policy`, and
       `quality:test-unit` green on hosted checks for the final ratchet PR.
-- [ ] `beep lint match-shapes` green with an empty baseline; the repo has no
+- [ ] the `match-shapes` lint law green with an empty baseline; the repo has no
       `Match.tag`/`Match.discriminator` chain closed by `Match.exhaustive`
       where an exhaustive handler map applies.
 - [ ] `adoptDeclaredFieldsEquivalence` no longer exists; the inverted
@@ -98,7 +98,7 @@ it.
 | Rule and key parity | `bun run beep quality tsgo-rules` | Passes at 0.45.0 |
 | Directive census | `rg -l '@effect-diagnostics' -t ts packages apps scratchpad *.ts` | Exactly the two allowlisted files |
 | Compiler | `bun run turbo check --affected` in lane worktrees; hosted `quality:check` on PRs | Green |
-| Match law | `bun run beep lint match-shapes` | Green, empty baseline |
+| Match law | the `match-shapes` lint law (a repo-cli `Lint` family command added in P3) | Green, empty baseline |
 | annoteError proof | doc-text 60-seed run under Bun (command in `research/2026-09-12-grounding.md`) | 0 / 24,000 unequal |
 | Package handoff | `bun run beep quality package-verify <pkg>` per touched package | Green |
 | PR state | `bun run beep yeet monitor` | `merge-ready: yes` |

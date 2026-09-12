@@ -30,7 +30,7 @@ new repo lint law `match-shapes`. No other lane rewrites Match combinators.
    value, keep it and record the reason.
 4. Implement `match-shapes` in the repo-cli `Lint` family: syntax-level
    detector, positive/negative fixtures under
-   `packages/tooling/tool/cli/test/fixtures/match-shapes/`, an empty
+   the repo-cli test fixtures directory for `match-shapes` (created in P3), an empty
    committed baseline, tests, and the `lint:policy` hosted seat wiring used
    by the effect-vitest ratchet (#1098). Follow schema-first: the finding
    row is an `S.Class`, shape ids are a `LiteralKit` domain.

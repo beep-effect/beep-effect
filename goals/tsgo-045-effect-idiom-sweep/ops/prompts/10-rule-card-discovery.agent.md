@@ -8,7 +8,11 @@ edit any file outside `goals/tsgo-045-effect-idiom-sweep/ops/rule-cards/`.
 
 - `{{CARDS}}` — 3–4 rule ids, e.g. `schemaSync, matchEffectToMatch, matchEffectToMapBoth`.
 - Clones: effect `$HOME/YeeBois/dev/effect` (rc.115), tsgo
-  `$HOME/YeeBois/dev/effect-tsgo` (0.45.0). These are the only API authorities.
+  `$HOME/YeeBois/dev/effect-tsgo` (0.45.0). These are the API authorities; on a checkout without them, use the
+  repo's sanctioned Effect reference symlink `.repos/effect` (provisioned by
+  `scripts/setup-effect-ref.sh`) for effect and the installed
+  `node_modules/@effect/tsgo` README plus its rule docs for tsgo, and say so
+  in the card.
 - Repo at the worktree root, for real before/after sites.
 
 ## Authority

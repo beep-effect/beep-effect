@@ -18,8 +18,10 @@ struck by the orchestrator.
 2. **Diagnostics:** re-run the 0.45 compiler on the shard paths; every rule
    in the inventory reports zero for those paths. Paste the summary line.
 3. **Directives:** `rg -n '@effect-diagnostics' {{SHARD_PATHS}}` returns
-   nothing new (the two allowlisted files are outside every shard except
-   S01, where they are the only permitted hits).
+   nothing new. The two allowlisted files are `vitest.setup.ts` (outside
+   every shard; S01 owns the sibling `vitest.shared.ts`) and
+   `packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts`
+   (inside L07); each is the only permitted hit where it lives.
 4. **Canon:** in test files, `rg -n 'Effect\.runSync\(\s*S(chema)?\.decode'`
    returns nothing; decodes go through `it.effect`.
 5. **Behavior:** sample five rewritten sites against the card's "When NOT to

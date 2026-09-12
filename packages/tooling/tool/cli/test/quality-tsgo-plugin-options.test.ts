@@ -55,6 +55,17 @@ describe("quality tsgo plugin option parity", () => {
     ).toEqual([]);
   });
 
+  it("returns no names when the example config is malformed JSONC", () => {
+    const readme = readmeWithExample(
+      [
+        '        "name": "@effect/language-service",',
+        '        "refactors": true,',
+        '        "diagnosticSeverity": {',
+      ].join("\n")
+    );
+    expect(extractEffectTsgoReadmePluginOptionNamesForTesting(readme)).toEqual([]);
+  });
+
   it("reports options that are documented but unset, and set but undocumented", () => {
     expect(
       collectTsgoPluginOptionParityDiagnosticsForTesting({

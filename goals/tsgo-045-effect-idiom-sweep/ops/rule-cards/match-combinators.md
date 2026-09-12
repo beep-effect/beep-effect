@@ -42,6 +42,6 @@ TODO: open unions, handlers needing the full value plus a fallthrough,
 ## Law design
 
 - Detector: syntax-level over the TS AST (mirror `EffectVitestDetectors`),
-  positive and negative fixtures under `packages/tooling/tool/cli/test/fixtures/match-shapes/`.
+  positive and negative fixtures under the repo-cli test fixtures directory for `match-shapes` (created in P3).
 - Baseline: committed empty JSONL; the law fails on any new row.
 - Hosted seat: `lint:policy` lane, like the effect-vitest ratchet (#1098).

@@ -68,8 +68,10 @@ via `cursor-agent -p`, after a smoke test.
    enough; otherwise widen roots in the S01 PR.
 5. Cursor lane smoke test per `ops/prompts/50-cursor-lane.md`; record the
    transcript summary in `history/`.
-6. `bun run beep quality package-verify` for `@beep/repo-cli`, `@beep/identity`,
-   `@beep/doc-text`. Publish with
+6. `bun run beep quality package-verify` for every package the PR touches (at
+   least `@beep/repo-cli`, `@beep/identity`, `@beep/doc-text`,
+   `@beep/effect-drizzle`, `@beep/db-admin`, `@beep/professional-desktop`, and
+   any app whose tsconfig profile restates the plugin block). Publish with
    `bun run beep yeet publish --start-pr-early --monitor --pr`, answer every
    review thread, reach `merge-ready: yes`. Benjamin merges.
 
@@ -134,6 +136,6 @@ in the same PR as the last work.
 `tsgo-rules` green at 0.45.0 with widened roots and the two-entry allowlist;
 the directive census equals the allowlist; hosted `quality:check`,
 `quality:lint`, `quality:lint-policy`, `quality:test-unit` green on PR Z;
-`lint match-shapes` green with an empty baseline; 0/24,000 unequal in the
+the `match-shapes` law green with an empty baseline; 0/24,000 unequal in the
 doc-text proof; every PR merge-ready and merged by Benjamin; upstream tasks
 filed or deferred; reflection written and state flipped in the same PR.

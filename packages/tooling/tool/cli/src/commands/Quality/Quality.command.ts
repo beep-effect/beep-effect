@@ -2046,6 +2046,14 @@ const extractEffectTsgoReadmeRuleNames = flow(
   O.getOrElse(A.empty<string>)
 );
 
+// A README whose example config no longer parses cleanly must read as "no catalog", not as
+// whatever partial record the tolerant parser recovered before the first error.
+const parseEffectTsgoExampleConfig = (jsonc: string): O.Option<unknown> => {
+  const errors: Array<ParseError> = [];
+  const config: unknown = parse(jsonc, errors, { allowTrailingComma: true, disallowComments: false });
+  return A.isReadonlyArrayEmpty(errors) ? O.some(config) : O.none();
+};
+
 const extractEffectTsgoExampleConfigFragment = (readme: string): O.Option<string> => {
   const start = readme.indexOf(effectTsgoExampleConfigStartMarker);
   const end = readme.indexOf(effectTsgoExampleConfigEndMarker);
@@ -2090,7 +2098,7 @@ export const extractEffectTsgoReadmePluginOptionNamesForTesting = (readme: strin
   pipe(
     extractEffectTsgoExampleConfigFragment(readme),
     O.flatMap((fragment) => O.fromUndefinedOr(effectTsgoExampleConfigFencePattern.exec(fragment)?.[1])),
-    O.map((jsonc) => parse(jsonc, [], { allowTrailingComma: true, disallowComments: false })),
+    O.flatMap(parseEffectTsgoExampleConfig),
     O.flatMap((config) => A.head(findEffectLanguageServicePlugins(config))),
     O.map((plugin) =>
       pipe(

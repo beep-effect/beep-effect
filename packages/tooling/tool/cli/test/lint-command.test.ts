@@ -878,6 +878,29 @@ describe("schema-first lint command", { concurrent: false }, () => {
       ).pipe(provideScopedLayer(testLayer))
     ));
 
+  it("reports named effect/Schema Class imports that install a redundant toEquivalence hook", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeSchemaFirstSourceFixture([
+            'import { Class, String as StringSchema } from "effect/Schema";',
+            "const sameWidget = (_self: Widget, _that: Widget): boolean => true;",
+            "export class Widget extends Class<Widget>()(",
+            "  { widgetId: StringSchema },",
+            "  { toEquivalence: () => sameWidget }",
+            ") {}",
+            "",
+          ]);
+
+          const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+
+          const logLines = yield* TestConsole.logLines;
+          expectReportedExit(exit);
+          expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
   it("reports S.Class declarations that install a redundant toEquivalence hook", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
