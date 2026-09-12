@@ -19,7 +19,7 @@ import * as Bool from "effect/Boolean";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual } from "effect/Function";
+import { constFalse, dual } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
@@ -27,7 +27,7 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { worktreeReapCommand } from "./Reap.command.ts";
-import { WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
+import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeExistsError } from "./Worktree.errors.ts";
 import {
   parseWorktreePorcelain,
@@ -843,12 +843,28 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
       WorktreeCommandError.new("Worktree name must be one non-empty path component without control characters.")
     )
   );
-  const targetPath = path.join(context.worktreesRoot, name);
-  const exists = yield* fs.exists(targetPath).pipe(Effect.orElseSucceed(() => false));
+  // A lane lives under the sibling root or, for Claude Code's desktop app,
+  // nested inside the clone. Only registered worktrees count, in the order the
+  // standard documents (sibling first), so a stale directory never shadows a
+  // registered lane and a name that is registered in both places is refused
+  // rather than guessed.
+  const managedTarget = path.join(context.worktreesRoot, name);
+  const nestedTarget = path.join(context.mainCheckout, CLAUDE_WORKTREES_RELATIVE_ROOT, name);
+  const registered = A.filter([managedTarget, nestedTarget], (candidate) =>
+    A.some(context.entries, (entry) => entry.path === candidate)
+  );
+  if (A.length(registered) > 1) {
+    return yield* WorktreeCommandError.make({
+      message: `Both ${managedTarget} and ${nestedTarget} are registered worktrees named ${name}; retire the nested lane by path with \`bun run beep yeet sweep --retire --lane ${nestedTarget}\` or rename one.`,
+      path: managedTarget,
+    });
+  }
+  const targetPath = O.getOrElse(A.head(registered), () => managedTarget);
+  const exists = yield* fs.exists(targetPath).pipe(Effect.orElseSucceed(constFalse));
   if (!exists) {
     return yield* WorktreeCommandError.make({
-      message: `No worktree found at ${targetPath}.`,
-      path: targetPath,
+      message: `No worktree found at ${managedTarget} or ${nestedTarget}.`,
+      path: managedTarget,
     });
   }
   const removed = A.findFirst(context.entries, (entry) => entry.path === targetPath);
@@ -916,7 +932,9 @@ const worktreeNewCommand = Command.make(
 const worktreeRemoveCommand = Command.make(
   "remove",
   {
-    name: Argument.String("name").pipe(Argument.withDescription("Worktree name under the worktrees root")),
+    name: Argument.String("name").pipe(
+      Argument.withDescription("Worktree name under the worktrees root or the clone's .claude/worktrees")
+    ),
     archive: Flag.Boolean("archive").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Preserve dirty files and unpushed commits before removing the worktree")
