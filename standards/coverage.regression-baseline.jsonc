@@ -25203,6 +25203,18 @@
             "functions": 23
           }
         },
+        "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts": {
+          "lines": 97.05,
+          "statements": 97.14,
+          "branches": 90,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Research/Research.command.ts": {
           "lines": 55.76,
           "statements": 54.71,
