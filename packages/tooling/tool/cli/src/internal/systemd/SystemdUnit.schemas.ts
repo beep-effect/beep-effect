@@ -30,7 +30,7 @@ const $I = $RepoCliId.create("internal/systemd/SystemdUnit.schemas");
  * **Example** (Inspect probe order)
  *
  * ```ts
- * import { SystemdBunCandidate } from "@beep/repo-cli/internal/systemd"
+ * import { SystemdBunCandidate } from "@beep/repo-cli/test/Systemd"
  *
  * console.log(SystemdBunCandidate.Options) // [".local/share/mise/shims/bun", ".bun/bin/bun"]
  * ```
@@ -64,7 +64,7 @@ const SYSTEMD_UNIT_PATH_PATTERN = /^[^"\\%$\p{Cc}]+$/u;
  * **Example** (Compose a refusal)
  *
  * ```ts
- * import { systemdUnitPathRule } from "@beep/repo-cli/internal/systemd"
+ * import { systemdUnitPathRule } from "@beep/repo-cli/test/Systemd"
  *
  * console.log(`Paths must be ${systemdUnitPathRule}.`)
  * ```
@@ -88,7 +88,7 @@ export const systemdUnitPathRule =
  * **Example** (Accept a spaced path and refuse a quoted one)
  *
  * ```ts
- * import { SystemdUnitPath } from "@beep/repo-cli/internal/systemd"
+ * import { SystemdUnitPath } from "@beep/repo-cli/test/Systemd"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(SystemdUnitPath)("/opt/bun 1/bin/bun")) // true

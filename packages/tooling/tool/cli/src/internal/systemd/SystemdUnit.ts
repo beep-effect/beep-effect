@@ -25,23 +25,24 @@ import { SystemdBunCandidate } from "./SystemdUnit.schemas.ts";
  * **Example** (Expand a home-relative pin)
  *
  * ```ts
- * import { resolveOperatorPath } from "@beep/repo-cli/internal/systemd"
+ * import { resolveOperatorPath } from "@beep/repo-cli/test/Systemd"
+ * import { pipe } from "effect"
  *
- * console.log(resolveOperatorPath("/home/op", (input) => input, "~/tools/bun")) // /home/op/tools/bun
- * console.log(resolveOperatorPath("/home/op", (input) => input)("/usr/bin/bun")) // /usr/bin/bun
+ * console.log(resolveOperatorPath("~/tools/bun", "/home/op", (input) => input)) // /home/op/tools/bun
+ * console.log(pipe("/usr/bin/bun", resolveOperatorPath("/home/op", (input) => input))) // /usr/bin/bun
  * ```
  *
+ * @param input - The path as the operator typed it; the data-last form takes it alone.
  * @param home - The operator home directory a leading `~/` expands to.
  * @param resolve - The platform path resolver applied to the expanded input.
- * @param input - The path as the operator typed it.
  * @returns The absolute path systemd can run.
  * @category utilities
  * @since 0.0.0
  */
 export const resolveOperatorPath: {
-  (home: string, resolve: (input: string) => string, input: string): string;
+  (input: string, home: string, resolve: (input: string) => string): string;
   (home: string, resolve: (input: string) => string): (input: string) => string;
-} = dual(3, (home: string, resolve: (input: string) => string, input: string): string =>
+} = dual(3, (input: string, home: string, resolve: (input: string) => string): string =>
   resolve(Str.startsWith("~/")(input) ? `${home}/${Str.slice(2)(input)}` : input)
 );
 
@@ -63,7 +64,7 @@ export const resolveOperatorPath: {
  * **Example** (Prepare a resolution under an operator home)
  *
  * ```ts
- * import { resolveSystemdBunPath } from "@beep/repo-cli/internal/systemd"
+ * import { resolveSystemdBunPath } from "@beep/repo-cli/test/Systemd"
  * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(resolveSystemdBunPath("/home/op"))) // true
@@ -103,7 +104,7 @@ export const resolveSystemdBunPath = Effect.fn("SystemdUnit.resolveBunPath")(fun
  * **Example** (Prepare a pinned resolution)
  *
  * ```ts
- * import { resolveUnitBunPath } from "@beep/repo-cli/internal/systemd"
+ * import { resolveUnitBunPath } from "@beep/repo-cli/test/Systemd"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
@@ -122,6 +123,6 @@ export const resolveUnitBunPath = Effect.fn("SystemdUnit.resolveUnitBunPath")(fu
   const path = yield* Path.Path;
   return yield* O.match(options.pinned, {
     onNone: () => resolveSystemdBunPath(options.home),
-    onSome: (given) => Effect.succeed(resolveOperatorPath(options.home, path.resolve, given)),
+    onSome: (given) => Effect.succeed(resolveOperatorPath(given, options.home, path.resolve)),
   });
 });

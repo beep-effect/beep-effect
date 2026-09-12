@@ -63996,13 +63996,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/research-timers.test.ts:358:withoutHome@10#1",
+      "id": "EV002:packages/tooling/tool/cli/test/research-timers.test.ts:361:withoutHome@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/research-timers.test.ts",
-      "line": 358,
-      "endLine": 358,
+      "line": 361,
+      "endLine": 361,
       "symbol": "withoutHome",
       "occurrence": "v2:d79e9706bbb3d30177e1a7502d8d5a21b8135ad64b4f635dc9669e19dbbbc8d1",
       "class": "unresolved-layer-provide",
@@ -64017,13 +64017,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/research-timers.test.ts:373:provideScopedLayer@53#1",
+      "id": "EV002:packages/tooling/tool/cli/test/research-timers.test.ts:376:provideScopedLayer@53#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/research-timers.test.ts",
-      "line": 373,
-      "endLine": 373,
+      "line": 376,
+      "endLine": 376,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:57438ff33de7a518aa70ad27040b715670f69d1ebecaf996fb25f9bf360c5efc",
       "class": "unresolved-layer-provide",

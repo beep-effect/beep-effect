@@ -177,9 +177,9 @@ const timerFlags = {
 
 const defaultStateDir = (home: string, path: Path.Path, configured: O.Option<string>): string =>
   resolveOperatorPath(
+    O.getOrElse(configured, () => path.join(home, ".local", "state", "beep-graft")),
     home,
-    path.resolve,
-    O.getOrElse(configured, () => path.join(home, ".local", "state", "beep-graft"))
+    path.resolve
   );
 
 const renderStatus = (status: GraftDeepRefreshStatus): string =>
@@ -271,7 +271,7 @@ export const runDeepRefresh = Effect.fn("GraftCommand.runDeepRefresh")(function*
   const path = yield* Path.Path;
   const home = yield* Effect.orDie(Config.String("HOME"));
   const decoded = yield* decodeRefreshOptions({
-    owner: resolveOperatorPath(home, path.resolve, options.owner),
+    owner: resolveOperatorPath(options.owner, home, path.resolve),
     jobs: options.jobs,
     minCoverage: options.minCoverage,
     seed: options.seed,
@@ -400,13 +400,13 @@ const installTimer = Effect.fn("GraftCommand.installTimer")(function* (options: 
   const refresh = yield* GraftDeepRefresh;
   const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
   const decoded = yield* decodeTimerOptions({
-    owner: resolveOperatorPath(home, path.resolve, options.owner),
+    owner: resolveOperatorPath(options.owner, home, path.resolve),
     bunPath,
     onCalendar: options.onCalendar,
     envFile: resolveOperatorPath(
+      O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env")),
       home,
-      path.resolve,
-      O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env"))
+      path.resolve
     ),
   }).pipe(
     Effect.mapError((cause) =>

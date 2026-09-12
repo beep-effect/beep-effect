@@ -9,7 +9,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
-import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
+import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -138,9 +138,12 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       );
       expect(unreachable).toBe(process.execPath);
       // Operator pins expand `~/` against HOME and otherwise resolve as typed.
-      expect(resolveOperatorPath(home, path.resolve, "~/tools/bun")).toBe(path.join(home, "tools", "bun"));
-      expect(resolveOperatorPath(home, path.resolve, "/usr/bin/bun")).toBe("/usr/bin/bun");
-      expect(resolveOperatorPath(home, path.resolve, "tools/bun")).toBe(path.resolve("tools/bun"));
+      expect(resolveOperatorPath("~/tools/bun", home, path.resolve)).toBe(path.join(home, "tools", "bun"));
+      expect(resolveOperatorPath("/usr/bin/bun", home, path.resolve)).toBe("/usr/bin/bun");
+      expect(resolveOperatorPath("tools/bun", home, path.resolve)).toBe(path.resolve("tools/bun"));
+      // The data-last form takes the typed path alone, so it composes in a pipe.
+      expect(resolveOperatorPath(home, path.resolve)("~/tools/bun")).toBe(path.join(home, "tools", "bun"));
+      expect(pipe("/usr/bin/bun", resolveOperatorPath(home, path.resolve))).toBe("/usr/bin/bun");
     })
   );
 
