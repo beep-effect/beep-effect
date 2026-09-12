@@ -120,6 +120,7 @@ const cacheCommand = Command.make("cache", {}, () =>
 ).pipe(Command.withDescription("Manage clone-local Graft meaning artifacts"), Command.withSubcommands([syncCommand]));
 
 const decodeRefreshOptions = S.decodeEffect(GraftDeepRefreshOptions);
+const decodeTimerOptions = S.decodeEffect(GraftDeepTimerOptions);
 
 const deepFlags = {
   owner: Flag.String("owner").pipe(Flag.withDescription("Owner clone the refresh pins to main and rebuilds in")),
@@ -350,9 +351,11 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
  *
  * The installer stats the environment file and refuses a missing one; an
  * uninstall reports only the unit files it actually removed. Without
- * `--bun-path` the unit runs the mise Bun shim when the home directory has
- * one, then a standalone `$HOME/.bun` install, and only then the Bun running
- * this command, so a `mise.toml` bump is picked up the next night.
+ * `--bun-path` the unit runs the mise Bun shim when this user can execute
+ * one under the home directory, then a standalone `$HOME/.bun` install, and
+ * only then the Bun running this command, so a `mise.toml` bump is picked up
+ * the next night. A path systemd would reinterpret inside the unit is refused
+ * before anything is written.
  *
  * **Example** (Build an install program without running it)
  *
@@ -386,24 +389,32 @@ export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")
   const home = yield* Effect.orDie(Config.String("HOME"));
   const refresh = yield* GraftDeepRefresh;
   // An explicit path is the operator's pin and is only made absolute; the
-  // default follows the mise shim so a Bun bump never strands the unit.
+  // default follows the mise shim so a Bun bump never strands the unit. The
+  // probe cannot fail, so an uninstall is never blocked by it.
   const bunPath = yield* O.match(options.bunPath, {
     onNone: () => resolveGraftDeepBunPath(home),
     onSome: (given) => Effect.succeed(resolveOperatorPath(home, path.resolve, given)),
   });
-  const units = yield* refresh.installTimer(
-    GraftDeepTimerOptions.make({
-      owner: resolveOperatorPath(home, path.resolve, options.owner),
-      bunPath,
-      onCalendar: options.onCalendar,
-      envFile: resolveOperatorPath(
-        home,
-        path.resolve,
-        O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env"))
-      ),
-      uninstall: options.uninstall,
-    })
+  const decoded = yield* decodeTimerOptions({
+    owner: resolveOperatorPath(home, path.resolve, options.owner),
+    bunPath,
+    onCalendar: options.onCalendar,
+    envFile: resolveOperatorPath(
+      home,
+      path.resolve,
+      O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env"))
+    ),
+    uninstall: options.uninstall,
+  }).pipe(
+    Effect.mapError((cause) =>
+      GraftDeepPreflightError.make({
+        path: bunPath,
+        message: `Invalid timer options: the owner, Bun, and environment file paths must be free of double quotes, backslashes, percent signs, dollar signs, and control characters, which systemd would reinterpret in the unit.`,
+        cause,
+      })
+    )
   );
+  const units = yield* refresh.installTimer(decoded);
   const headline = options.uninstall ? "graft deep install-timer: removed" : "graft deep install-timer: wrote";
   yield* Console.log(
     A.isReadonlyArrayNonEmpty(units)

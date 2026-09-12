@@ -263,8 +263,12 @@ almost none, and `CI=true` so the repo CLI never waits on a prompt. Its
 `$HOME/.bun/bin/bun`, and only otherwise the Bun that ran the installer: the
 shim resolves the repo's `mise.toml` pin on the night the unit fires, whereas
 the installer's own binary is one version that a bump leaves behind and a
-prune removes. Pass `--bun-path` to pin a different executable, `--on-calendar`
-for a different schedule, and `--uninstall` to disable and remove both units.
+prune removes; a candidate this user cannot execute is skipped. Pass
+`--bun-path` to pin a different executable, `--on-calendar` for a different
+schedule, and `--uninstall` to disable and remove both units. A path that
+carries a double quote, backslash, percent sign, dollar sign, or control
+character is refused before anything is written, because systemd would
+reinterpret it inside the unit.
 
 Two `ExecStartPre` lines pull the owner clone and reinstall its dependencies
 before the CLI boots, so each night runs main's current `beep graft deep

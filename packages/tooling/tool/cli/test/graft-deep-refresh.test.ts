@@ -11,6 +11,7 @@ import {
   GraftDeepRunnerLive,
   GraftDeepStepError,
   GraftDeepTimerOptions,
+  GraftDeepUnitPath,
   graftCommand,
   parseDeepCoverage,
   renderGraftDeepRefreshUnits,
@@ -64,6 +65,7 @@ const LOW_COVERAGE = "meaning coverage: 900/1000 symbols (90%).\n";
 const decodeStatusJson = S.decodeUnknownEffect(S.fromJsonString(GraftDeepRefreshStatus));
 const encodeStatusJson = S.encodeEffect(S.fromJsonString(GraftDeepRefreshStatus));
 const encodeLockJson = S.encodeEffect(S.fromJsonString(GraftDeepLock));
+const decodeUnitPath = S.decodeUnknownEffect(GraftDeepUnitPath);
 
 // A clone tree the real cache sync accepts: an owner with the paid meaning tier
 // and two sibling clones whose basenames share its digit-stripped prefix.
@@ -1192,22 +1194,30 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       const touch = Effect.fn("GraftDeepRefreshTest.touch")(function* (file: string) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
         yield* fs.writeFileString(file, "");
+        yield* fs.chmod(file, 0o755);
       });
       yield* Effect.forEach([shim, standalone], touch);
-      // Both present: the shim wins because it follows the repo's pinned Bun.
+      // Both executable: the shim wins because it follows the repo's pinned Bun.
       expect(yield* resolveGraftDeepBunPath(home)).toBe(shim);
-      yield* fs.remove(shim);
+      // A leftover without execute permission is skipped, not pinned.
+      yield* fs.chmod(shim, 0o644);
       expect(yield* resolveGraftDeepBunPath(home)).toBe(standalone);
+      // So is a directory sitting where the executable should be.
       yield* fs.remove(standalone);
+      yield* fs.makeDirectory(standalone);
       expect(yield* resolveGraftDeepBunPath(home)).toBe(process.execPath);
-      // A candidate that cannot be probed fails the resolution loudly instead
-      // of silently pinning the running executable.
+      // Neither candidate: the running executable is the fallback.
+      yield* fs.remove(standalone, { recursive: true });
+      yield* fs.remove(shim);
+      expect(yield* resolveGraftDeepBunPath(home)).toBe(process.execPath);
+      // A candidate this user cannot even reach is skipped rather than failing
+      // the install, so an uninstall is never blocked by the probe either.
+      yield* touch(shim);
       yield* fs.chmod(path.dirname(shim), 0o000);
-      const refused = yield* Effect.flip(resolveGraftDeepBunPath(home)).pipe(
+      const unreachable = yield* resolveGraftDeepBunPath(home).pipe(
         Effect.ensuring(Effect.orDie(fs.chmod(path.dirname(shim), 0o755)))
       );
-      expect(refused._tag).toBe("GraftCacheIoError");
-      expect(refused.path).toBe(shim);
+      expect(unreachable).toBe(process.execPath);
 
       // The resolved default reaches the written unit verbatim, quoted for systemd.
       yield* touch(shim);
@@ -1249,6 +1259,37 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       ]);
     }),
     30_000
+  );
+
+  it.effect(
+    "refuses a unit path systemd would reinterpret before writing anything",
+    Effect.fn(function* () {
+      const { fs, path, directory, owner, stateDir } = yield* fixture();
+      const home = path.join(directory, "home");
+      yield* fs.makeDirectory(stateDir, { recursive: true });
+      yield* fs.writeFileString(path.join(stateDir, "env"), "GRAFT_PROVIDER=openai\n");
+      const runner = scriptedRunner({ alive: [], calls: [], replies: [] });
+      const refused = yield* captureOutput(
+        runDeepInstallTimer({
+          owner,
+          bunPath: O.some('/opt/"bun"/bin/bun'),
+          onCalendar: "*-*-* 02:30:00",
+          envFile: O.some(path.join(stateDir, "env")),
+          uninstall: false,
+        }).pipe(refreshWith(runner), withHome(home))
+      );
+      assertSome(
+        O.map(Result.getFailure(refused.result), (error) => error._tag),
+        "GraftDeepPreflightError"
+      );
+      expect(yield* fs.exists(path.join(home, ".config", "systemd", "user"))).toBe(false);
+      // The refinement is the single home of that rule: spaces pass because
+      // every path argument is rendered quoted; the rest systemd would rewrite.
+      expect(yield* decodeUnitPath("/opt/bun 1/bin/bun")).toBe("/opt/bun 1/bin/bun");
+      yield* Effect.forEach(["/opt/%h/bun", "/opt/$HOME/bun", "/opt\\bun", "/opt/bun\n"], (bad) =>
+        Effect.map(Effect.result(decodeUnitPath(bad)), (result) => expect(Result.isFailure(result)).toBe(true))
+      );
+    })
   );
 
   it.effect(

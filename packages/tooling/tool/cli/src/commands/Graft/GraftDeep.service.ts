@@ -13,6 +13,7 @@ import * as DateTime from "effect/DateTime";
 import * as Dur from "effect/Duration";
 import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
+import { constFalse } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -432,14 +433,16 @@ export class GraftDeepRefresh extends Context.Service<GraftDeepRefresh, GraftDee
  *
  * **Details**
  *
- * The service unit is returned first and the timer second. `EnvironmentFile`
- * carries no leading dash on purpose: a missing environment file must fail the
- * unit loudly instead of starting a build with no API key. The two
- * `ExecStartPre` lines update the owner clone before the CLI boots, so each
- * night runs main's current `beep graft deep refresh` rather than whatever the
- * clone held when the timer was installed. `KillMode=mixed` with
- * `TimeoutStopSec=90` sends `SIGTERM` to the CLI alone first, which `runMain`
- * turns into a fiber interrupt, leaving time to record the interrupted run.
+ * The service unit is returned first and the timer second. Every path is a
+ * `GraftDeepUnitPath`, so quoting the `Exec*` arguments is all the escaping a
+ * unit needs. `EnvironmentFile` carries no leading dash on purpose: a missing
+ * environment file must fail the unit loudly instead of starting a build with
+ * no API key. The two `ExecStartPre` lines update the owner clone before the
+ * CLI boots, so each night runs main's current `beep graft deep refresh`
+ * rather than whatever the clone held when the timer was installed.
+ * `KillMode=mixed` with `TimeoutStopSec=90` sends `SIGTERM` to the CLI alone
+ * first, which `runMain` turns into a fiber interrupt, leaving time to record
+ * the interrupted run.
  *
  * **Example** (Render the timer calendar line)
  *
@@ -523,11 +526,14 @@ export const renderGraftDeepRefreshUnits = (
  * **Details**
  *
  * Each {@link GraftDeepBunCandidate} is probed under `home` in order and the
- * first that exists wins, so a unit installed on a mise-managed workstation
- * runs whichever Bun the repo's `mise.toml` pins on the night it fires. The
- * installer's own `process.execPath` is the fallback only when no candidate
- * exists: it is one version's binary, and a unit pinned to it keeps running
- * that version after a bump, or fails outright once the version is pruned.
+ * first regular file this user can execute wins, so a unit installed on a
+ * mise-managed workstation runs whichever Bun the repo's `mise.toml` pins on
+ * the night it fires. A candidate that is missing, unreadable, a directory,
+ * or a leftover without execute permission is skipped rather than pinned, so
+ * the probe never fails. The installer's own `process.execPath` is the
+ * fallback only when no candidate qualifies: it is one version's binary, and
+ * a unit pinned to it keeps running that version after a bump, or fails
+ * outright once the version is pruned.
  *
  * **Example** (Prepare a resolution under an operator home)
  *
@@ -545,17 +551,14 @@ export const renderGraftDeepRefreshUnits = (
 export const resolveGraftDeepBunPath = Effect.fn("GraftDeepRefresh.resolveBunPath")(function* (home: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  // stat follows the shim's symlink, so the executable bits are those of the
+  // binary the unit would actually run.
   const found = yield* Effect.findFirst(
     A.map(GraftDeepBunCandidate.Options, (candidate) => path.join(home, candidate)),
     (candidate) =>
-      fs.exists(candidate).pipe(
-        Effect.mapError((cause) =>
-          GraftCacheIoError.make({
-            path: candidate,
-            message: `Failed probing ${candidate} for the Bun the refresh unit runs.`,
-            cause,
-          })
-        )
+      fs.stat(candidate).pipe(
+        Effect.map((info) => Eq.equals(info.type, "File") && (info.mode & 0o111) !== 0),
+        Effect.orElseSucceed(constFalse)
       )
   );
   return O.getOrElse(found, () => process.execPath);
