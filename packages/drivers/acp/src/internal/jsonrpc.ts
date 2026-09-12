@@ -19,6 +19,12 @@ import type { JsonTextSyntaxError } from "../AcpJson.codec.ts";
 const EFFECT_RPC_METHOD_PREFIX = "@effect/rpc/";
 const DEFAULT_MAX_BUFFER_SIZE = 16 * 1024 * 1024;
 
+/**
+ * Union of the transport-encoded RPC messages that cross the ACP wire in either direction.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type AcpWireMessage = RpcMessage.FromClientEncoded | RpcMessage.FromServerEncoded;
 
 type AcpFrameDecodeError = JsonTextSyntaxError | S.SchemaError | RpcSerialization.MaxBufferSizeExceeded;
@@ -153,6 +159,29 @@ const decodeJsonRpcMessage = (frame: unknown): Result.Result<AcpWireMessage, S.S
 const decodeJsonRpcFrame = (frame: unknown): Result.Result<ReadonlyArray<AcpWireMessage>, S.SchemaError> =>
   isJsonArray(frame) ? Result.all(A.map(frame, decodeJsonRpcMessage)) : Result.map(decodeJsonRpcMessage(frame), A.of);
 
+/**
+ * Builds a stateful ndjson frame decoder for the ACP transport.
+ *
+ * **Details**
+ *
+ * Each call to the returned function appends one chunk to a line buffer, reads every complete
+ * line through {@link readJsonText}, and maps the JSON-RPC envelope to the encoded RPC messages
+ * that effect's `RpcSerialization.ndJsonRpc` produces. A line or trailing remainder above 16 MiB
+ * fails with `MaxBufferSizeExceeded` and discards the buffer.
+ *
+ * **Example** (Decode one notification frame)
+ *
+ * ```ts
+ * import { makeNdJsonRpcFrameDecoder } from "./jsonrpc.ts"
+ * import * as Result from "effect/Result"
+ *
+ * const decode = makeNdJsonRpcFrameDecoder()
+ * console.log(Result.isSuccess(decode('{"jsonrpc":"2.0","method":"x/ping"}\n')))
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeNdJsonRpcFrameDecoder = (): ((
   chunk: string | Uint8Array
 ) => Result.Result<ReadonlyArray<AcpWireMessage>, AcpFrameDecodeError>) => {

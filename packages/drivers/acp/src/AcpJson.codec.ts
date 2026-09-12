@@ -145,12 +145,6 @@ const readLiteral = <A>(cursor: Cursor, literal: string, value: A): A => {
   return value;
 };
 
-const literalReaders = HashMap.make(
-  [LATIN_SMALL_T, (cursor: Cursor): unknown => readLiteral(cursor, "true", true)],
-  [LATIN_SMALL_F, (cursor: Cursor): unknown => readLiteral(cursor, "false", false)],
-  [LATIN_SMALL_N, (cursor: Cursor): unknown => readLiteral(cursor, "null", null)]
-);
-
 const readNumber = (cursor: Cursor): number => {
   numberPattern.lastIndex = cursor.index;
   return O.match(O.fromNullishOr(numberPattern.exec(cursor.text)), {
@@ -277,28 +271,28 @@ const readObject = (cursor: Cursor): Record<string, unknown> => {
   return out;
 };
 
+const valueReaders = HashMap.make(
+  [LEFT_BRACE, (cursor: Cursor): unknown => readObject(cursor)],
+  [LEFT_BRACKET, (cursor: Cursor): unknown => readArray(cursor)],
+  [QUOTATION_MARK, (cursor: Cursor): unknown => readString(cursor)],
+  [LATIN_SMALL_T, (cursor: Cursor): unknown => readLiteral(cursor, "true", true)],
+  [LATIN_SMALL_F, (cursor: Cursor): unknown => readLiteral(cursor, "false", false)],
+  [LATIN_SMALL_N, (cursor: Cursor): unknown => readLiteral(cursor, "null", null)]
+);
+
 const readValue = (cursor: Cursor): unknown => {
   cursor.skipWhitespace();
   const code = cursor.peek();
-  switch (code) {
-    case LEFT_BRACE:
-      return readObject(cursor);
-    case LEFT_BRACKET:
-      return readArray(cursor);
-    case QUOTATION_MARK:
-      return readString(cursor);
-    default:
-      if (code === HYPHEN_MINUS || isDigit(code)) {
-        return readNumber(cursor);
-      }
-      return O.match(HashMap.get(literalReaders, code), {
-        onNone: () =>
-          cursor.fail(
-            Number.isNaN(code) ? "Unexpected end of JSON text" : `Unexpected character ${describeCharacter(code)}`
-          ),
-        onSome: (read) => read(cursor),
-      });
+  if (code === HYPHEN_MINUS || isDigit(code)) {
+    return readNumber(cursor);
   }
+  return O.match(HashMap.get(valueReaders, code), {
+    onNone: () =>
+      cursor.fail(
+        Number.isNaN(code) ? "Unexpected end of JSON text" : `Unexpected character ${describeCharacter(code)}`
+      ),
+    onSome: (read) => read(cursor),
+  });
 };
 
 const isJsonTextSyntaxError = S.is(JsonTextSyntaxError);

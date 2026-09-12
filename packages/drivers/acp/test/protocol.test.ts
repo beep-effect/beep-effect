@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
@@ -22,6 +23,7 @@ import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import * as RpcSerialization from "effect/unstable/rpc/RpcSerialization";
 import {
   encodeJsonl,
   jsonRpcNotification,
@@ -697,6 +699,131 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       );
       assert.instanceOf(error, AcpError.AcpProcessExitedError);
       assert.equal(O.getOrThrow(error.code), 0);
+    })
+  );
+});
+
+const encoder = new TextEncoder();
+const effectFrameParser = RpcSerialization.ndJsonRpc().makeUnsafe();
+
+// The transport stringifies JSON-RPC ids at its parser boundary; applying the same coercion to
+// effect's own ndjson decoder output gives the parity oracle for the package frame decoder.
+const stringifyWireIds = (message: unknown): unknown => {
+  if (!P.isObject(message)) {
+    return message;
+  }
+  if (message._tag === "Request" && P.hasProperty(message, "id")) {
+    return { ...message, id: String(message.id) };
+  }
+  if (P.hasProperty(message, "requestId")) {
+    return { ...message, requestId: String(message.requestId) };
+  }
+  return message;
+};
+
+const oracle = (line: string): ReadonlyArray<unknown> => A.map(effectFrameParser.decode(`${line}\n`), stringifyWireIds);
+
+it.layer(NodeServices.layer)("effect-acp frame decoder parity", (it) => {
+  it.effect(
+    "routes every JSON-RPC frame kind exactly like effect's ndjson serializer",
+    Effect.fnUntraced(function* () {
+      const { stdio, input } = yield* makeInMemoryStdio();
+      const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio,
+        serverRequestMethods: HashSet.make("session/request_permission"),
+      });
+      const serverSeen = yield* Queue.unbounded<unknown>();
+      const clientSeen = yield* Queue.unbounded<unknown>();
+      yield* transport.serverProtocol
+        .run((_clientId, message) => Queue.offer(serverSeen, message).pipe(Effect.asVoid))
+        .pipe(Effect.forkScoped);
+      yield* transport.clientProtocol
+        .run(0, (message) => Queue.offer(clientSeen, message).pipe(Effect.asVoid))
+        .pipe(Effect.forkScoped);
+
+      const serverFrames = [
+        '{"jsonrpc":"2.0","id":7,"method":"session/request_permission","params":{"sessionId":"s","toolCall":{"toolCallId":"t","title":"x"},"options":[]}}',
+        '{"jsonrpc":"2.0","method":"@effect/rpc/Ping"}',
+        '{"jsonrpc":"2.0","method":"@effect/rpc/Ack","params":{"requestId":"r1"}}',
+      ];
+      for (const line of serverFrames) {
+        yield* Queue.offer(input, encoder.encode(`${line}\n`));
+        assert.deepEqual([yield* Queue.take(serverSeen)], oracle(line));
+      }
+
+      const clientFrames = [
+        '{"jsonrpc":"2.0","id":"abc","result":{"ok":true}}',
+        '{"jsonrpc":"2.0","id":8,"error":{"code":-32000,"message":"boom","data":{"k":1}}}',
+        '{"jsonrpc":"2.0","id":9,"error":{"_tag":"Cause","code":-32602,"message":"bad","data":[{"_tag":"Fail","error":{"code":-32602,"message":"bad"}},{"_tag":"Die","defect":"x"}]}}',
+        '{"jsonrpc":"2.0","id":10,"error":{"_tag":"Defect","code":-32603,"message":"defect","data":{"boom":true}}}',
+        '{"jsonrpc":"2.0","id":11,"chunk":true,"result":[1,2]}',
+      ];
+      for (const line of clientFrames) {
+        yield* Queue.offer(input, encoder.encode(`${line}\n`));
+        assert.deepEqual([yield* Queue.take(clientSeen)], oracle(line));
+      }
+    })
+  );
+
+  it.effect(
+    "splits batch frames and reassembles UTF-8 fragmented across chunks",
+    Effect.fnUntraced(function* () {
+      const { stdio, input } = yield* makeInMemoryStdio();
+      const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio,
+        serverRequestMethods: HashSet.empty(),
+      });
+      const notifications = yield* Queue.unbounded<AcpProtocol.AcpIncomingNotification>();
+      yield* transport.incoming.pipe(
+        Stream.runForEach((notification) => Queue.offer(notifications, notification)),
+        Effect.forkScoped
+      );
+
+      yield* Queue.offer(
+        input,
+        encoder.encode(
+          '[{"jsonrpc":"2.0","method":"x/one","params":1},{"jsonrpc":"2.0","method":"x/two","params":2}]\n'
+        )
+      );
+      assert.deepEqual(yield* Queue.take(notifications), { _tag: "ExtNotification", method: "x/one", params: 1 });
+      assert.deepEqual(yield* Queue.take(notifications), { _tag: "ExtNotification", method: "x/two", params: 2 });
+
+      const bytes = encoder.encode('{"jsonrpc":"2.0","method":"x/utf8","params":{"text":"😀é"}}\n');
+      // Cut inside the four-byte emoji, then again right before the newline.
+      const insideEmoji = bytes.indexOf(0xf0) + 2;
+      yield* Queue.offer(input, bytes.slice(0, insideEmoji));
+      yield* Queue.offer(input, bytes.slice(insideEmoji, bytes.length - 1));
+      yield* Queue.offer(input, bytes.slice(bytes.length - 1));
+      assert.deepEqual(yield* Queue.take(notifications), {
+        _tag: "ExtNotification",
+        method: "x/utf8",
+        params: { text: "😀é" },
+      });
+    })
+  );
+
+  it.effect(
+    "terminates with a parse error when a frame exceeds the buffer limit",
+    Effect.fnUntraced(function* () {
+      const { stdio, input } = yield* makeInMemoryStdio();
+      const termination = yield* Deferred.make<AcpError.AcpError>();
+      yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio,
+        serverRequestMethods: HashSet.empty(),
+        onTermination: (error) => Deferred.succeed(termination, error).pipe(Effect.asVoid),
+      });
+
+      yield* Queue.offer(input, new Uint8Array(16 * 1024 * 1024 + 1).fill(0x20));
+
+      const error = yield* Deferred.await(termination);
+      const cause = AcpError.AcpError.match(error, {
+        AcpProcessExitedError: () => assert.fail("expected a protocol parse error"),
+        AcpProtocolParseError: (failure) => O.getOrThrow(failure.cause),
+        AcpRequestError: () => assert.fail("expected a protocol parse error"),
+        AcpSpawnError: () => assert.fail("expected a protocol parse error"),
+        AcpTransportError: () => assert.fail("expected a protocol parse error"),
+      });
+      assert.include(cause, { _tag: "MaxBufferSizeExceeded", maxBufferSize: 16 * 1024 * 1024 });
     })
   );
 });
