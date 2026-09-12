@@ -198,6 +198,8 @@ const decodeTurboPlanJson = S.decodeUnknownEffect(S.fromJsonString(TurboPlan));
  * console.log(isCacheTaskInspectionArg("--dry=json")) // true
  * ```
  *
+ * @param arg - A Turbo option before the task argument separator.
+ * @returns Whether the option requests inspection instead of task execution.
  * @category predicates
  * @since 0.0.0
  */
@@ -451,7 +453,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
       [
         ".github/workflows/*.{yml,yaml}",
         ".github/actions/**/action.{yml,yaml}",
-        "packages/tooling/tool/cli/src/commands/{Ci,Quality,Yeet}/**/*.ts",
+        "packages/tooling/tool/cli/src/commands/{Cache,Ci,Quality,Yeet}/**/*.ts",
       ],
       { cwd: root, absolute: false }
     )
@@ -481,7 +483,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
     entrypointSources,
     unresolved: [
       "Classify nested workspace and root command semantics.",
-      "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts.",
+      "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts.",
     ],
   });
 }, CacheCommandError.mapError("Executable census failed."));

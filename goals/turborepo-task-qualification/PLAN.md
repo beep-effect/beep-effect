@@ -901,3 +901,63 @@ exhaustive transitive closure. Extend the execution-source inventory and refresh
 its review evidence before P0/P1 closure; the runner integration cannot count as
 fully inventoried while its new authority sits outside the source inventory.
 The runtime boundary receipt records the current census hash and concrete gaps.
+
+#### Integration repair commit and inventory expansion (2026-09-11)
+
+Commit `2b9cbdd586` retains the runtime enforcement increment and repairs both P0
+findings from the full audit. The targeted lint-worker file passes all 19 tests
+from the package working directory, and docgen passes all 1,666 examples. Both
+P0 inbox rows are acknowledged against that commit. Full package verification is
+rerunning rather than being inferred from the targeted results.
+
+Entry-source discovery now includes the Cache command directory. A fresh native
+census reports 125 sources instead of 107: 18 Cache files were added, all old
+sources were retained, and the four confirmed missing execution sources are now
+present. Workspace and graph populations remain 143 and 3,269. This repairs the
+identified source-glob omission; it does not establish completed semantic review
+or a complete transitive dependency review. The runtime boundary receipt records
+the comparison and new census hash.
+
+#### Current command review inventory (2026-09-11)
+
+The existing command-group recipe was rerun against the 125-source census.
+Every one of the 1,892 executable computations occurs exactly once in its groups;
+1,377 graph-only nodes are excluded. There are 38 top-level command strings,
+70 distinct wrapper-definition strings across 1,240 wrapper definitions, and
+73 root scripts. A bounded, exact `bun run beep:*` alias expansion resolved
+1,038 computations without missing or cyclic local aliases. The remaining
+854 top-level commands were not expanded by that deliberately narrow syntax
+rule. Across the result there are 76 distinct terminal command strings.
+These are manifest facts, not semantic purity findings. Compound shell commands,
+external program behavior and dynamic dispatch still require review. Private full
+artifacts and their hashes are retained in the runtime boundary receipt.
+
+#### Runner verification and nested manifest boundaries (2026-09-11)
+
+The complete CLI package verification rerun passed: audit 437.3s and docgen
+17.0s under Node 22.22.3. This verifies the runner integration and source-inventory
+repairs together. The runtime boundary receipt retains the terminal log hash.
+
+The command decomposition review now records the current nested audit,
+generation, compiler, Lambda installation, cross-workspace glob, mutation and
+persistent-service boundaries. Selected nested manifest definitions are retained
+with a hash. This advances source review without treating command grouping as
+semantic qualification. Current runtime matrices, signed remote comparisons and
+complete operational source-review integration remain outstanding.
+
+#### Operational source-review refresh (2026-09-11)
+
+Fresh local and hosted planner recipes captured 72 CI plans, nine Quality modes,
+15 partition plans and four local dispatch shapes per context, plus 30 Yeet
+branch/mode plans and three hardware profiles per context. Ten local workflow
+and action documents were captured without executing their contents. The review
+recipe now also binds the runtime environment-policy helper, process runner and
+runtime tests.
+
+The native census accepted `entrypoint-review-runtime-routing.json`, binding
+299 current source files, six complete snapshots and the current command review.
+The manifest registers those artifacts and the runtime boundary receipt retains
+the accepted census hash. Six unresolved obligations remain in the operational
+census. This completes the current attachment refresh, while dynamic interpreter
+coverage, per-computation semantic evidence and signed/shadow runtime proof remain
+open. No source snapshot or planner scenario counts as an observed task execution.

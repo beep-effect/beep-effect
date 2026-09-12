@@ -254,7 +254,14 @@
     "research/paused-pr-checkpoint.md",
     "research/paused-pr-verification.json",
     "research/resumption-preflight.json",
-    "research/runtime-enforcement-boundary.json"
+    "research/runtime-enforcement-boundary.json",
+    "research/command-groups-runtime-routing.json",
+    "research/entrypoint-plans-runtime-routing.json",
+    "research/entrypoint-plans-hosted-runtime-routing.json",
+    "research/yeet-plans-runtime-routing.json",
+    "research/yeet-plans-hosted-runtime-routing.json",
+    "research/workflow-sources-runtime-routing.json",
+    "research/entrypoint-review-runtime-routing.json"
   ],
   "agentLaunchers": [
     {
@@ -316,5 +323,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Resumed by operator on 2026-09-11 after PR #1068 merged. Fresh main 662823dd96 census: 143 workspaces, 1892 executable computations; policy audit has zero findings and 1340 unassessed entries. Separate stable and canary native matrices with startup-library identity each pass 67 observations, 40 checks and ten shadows. See research/resumption-preflight.json. P0/P1/P2 remain in progress; later phases remain pending. Client linkage retention is implemented with passing focused tests, aggregate test typechecking and full CLI package verification. New stable and canary native receipts now pass independent digest reconstruction. Ordinary runtime-key enforcement, remaining semantic/capture observations, accepted signed sibling evidence, adoption handoff and final Yeet acceptance remain required. No real computation is qualified; live pilot reuse remains disabled."
+  "statusNote": "Resumed by operator on 2026-09-11 after PR #1068 merged. Current census: 143 workspaces, 1892 executable computations, 1377 graph-only nodes and 125 entrypoint sources. Ordinary Quality/CI execution now uses Cache runtime-key enforcement; full CLI package verification passes. Current source-review attachment is accepted with 299 bound sources and six snapshots; six interpretation/runtime obligations remain explicit. P0/P1/P2 remain in progress. Refresh final-code native matrices, finish semantic/capture review, obtain accepted signed sibling evidence, complete adoption handoff and final Yeet acceptance. No real computation is qualified; live pilot reuse remains disabled."
 }

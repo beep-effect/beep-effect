@@ -134,6 +134,8 @@ export const runCacheRuntimeTasks = Effect.fn("Cache.runRuntimeTasks")(function*
  * step before applying this rewrite. The child invokes this checkout's CLI
  * directly without reloading environment files. Inspection commands are unchanged.
  *
+ * @param step - The original planned invocation whose environment policy is retained.
+ * @returns The routed execution step, or the original inspection or non-Turbo step.
  * @category execution
  * @since 0.0.0
  */

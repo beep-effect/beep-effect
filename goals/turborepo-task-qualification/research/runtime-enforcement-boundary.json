@@ -441,11 +441,12 @@
         "controlTaskRan": false
       },
       "fullPackageVerify": {
-        "status": "failed; both reported failures repaired with targeted proof; full rerun pending",
+        "status": "rerunning after targeted repairs",
         "log": ".beep/qualification-local-preflight/runtime-routing-package.log",
         "failedTests": 2,
         "passedTests": 3756,
-        "docgenFailure": "QualityTaskStep example import was not exported by the Quality public facade"
+        "docgenFailure": "QualityTaskStep example import was not exported by the Quality public facade",
+        "rerunLog": ".beep/qualification-local-preflight/runtime-routing-package-rerun.log"
       },
       "finalTestTypecheck": {
         "exitCode": 0,
@@ -462,7 +463,8 @@
         "tests": 19,
         "log": ".beep/qualification-local-preflight/runtime-routing-lint-workers-package.log",
         "sha256": "2a4918b3c3119cd4889c7e34f0e7f4720328aa5eac3b6b7b0fbe51e5eaf73d22"
-      }
+      },
+      "repairCommit": "2b9cbdd586"
     },
     "evidence": [
       {
@@ -507,5 +509,130 @@
       "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts."
     ],
     "scope": "These four confirmed omissions are a minimum, not a complete transitive execution-source inventory."
+  },
+  "sourceInventoryRepair": {
+    "sourceCountBefore": 107,
+    "sourceCountAfter": 125,
+    "addedSources": [
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.linker.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.capture.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/index.ts"
+    ],
+    "requiredSourcesPresent": true,
+    "oldSourcesPreserved": true,
+    "graphNodes": 3269,
+    "workspaceCount": 143,
+    "censusSha256": "a86f00d589254c1a03a4849566211627c84e53c8788d4c6c9e54516cadff60d5",
+    "scope": "Adds Cache-owned source files; semantic and transitive execution review remains incomplete"
+  },
+  "currentCommandReviewInventory": {
+    "scope": "Source grouping and exact local alias expansion only; no semantic purity or qualification claim",
+    "groups": {
+      "schemaVersion": "cache-command-groups/v1",
+      "authority": "Exact manifest strings; semantic review and runtime observation remain separate obligations. No qualification granted.",
+      "censusSha256": "a86f00d589254c1a03a4849566211627c84e53c8788d4c6c9e54516cadff60d5",
+      "commandGroupsSha256": "fc679a32ed021dc71fd7c3746df90ce077e28903d4ba0361bd5f33301b7f0832",
+      "executableComputations": 1892,
+      "topLevelCommandStrings": 38,
+      "wrapperDefinitionStrings": 70,
+      "wrapperDefinitions": 1240,
+      "rootScripts": 73,
+      "graphOnlyNodes": 1377,
+      "exactExecutableMembership": true
+    },
+    "aliases": {
+      "censusSha256": "a86f00d589254c1a03a4849566211627c84e53c8788d4c6c9e54516cadff60d5",
+      "artifactSha256": "a62c6a2b156808a8c0b686afb80e9a60cad1deef2adb509134ace88172a18229",
+      "computations": 1892,
+      "expandedLocalAliasComputations": 1038,
+      "unexpandedTopLevelComputations": 854,
+      "distinctTerminalCommandStrings": 76,
+      "problems": []
+    },
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/runtime-command-groups.json",
+        "sha256": "fc679a32ed021dc71fd7c3746df90ce077e28903d4ba0361bd5f33301b7f0832"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-alias-expansion.py",
+        "sha256": "9d12d298a969dbcfe7c038de3e7dc038ff645383746f068038fa41ef9f72e305"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-alias-expansion.json",
+        "sha256": "a62c6a2b156808a8c0b686afb80e9a60cad1deef2adb509134ace88172a18229"
+      }
+    ],
+    "nestedManifestBoundaries": {
+      "path": ".beep/qualification-local-preflight/runtime-nested-manifest-boundaries.json",
+      "sha256": "b88db3f66f8a756317715fd27e7ccf62537db795f453d43318827451eed1b8ea",
+      "selectedScriptKeys": [
+        "beep:audit",
+        "generate",
+        "babel",
+        "beep:check:tests",
+        "beep:check:scripts",
+        "beep:check:stories",
+        "beep:check:examples",
+        "beep:type-test",
+        "test:lambda",
+        "codegen",
+        "codegen:check",
+        "migrations:check",
+        "storybook:build"
+      ],
+      "authority": "Source review only; no qualification granted"
+    }
+  },
+  "runnerIntegrationVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "nodeVersion": "22.22.3",
+    "exitCode": 0,
+    "auditSeconds": 437.3,
+    "docgenSeconds": 17.0,
+    "scope": "Working tree with Cache source inventory and documentation repairs; no signed remote qualification proof",
+    "evidence": {
+      "path": ".beep/qualification-local-preflight/runtime-routing-package-rerun.log",
+      "sha256": "a4d4da0a583dc0900b4fa043adb2b103ae821fdb746077e81204f5e419c026e9"
+    }
+  },
+  "operationalSourceReview": {
+    "authority": "source-review-only",
+    "accepted": true,
+    "sourceCount": 299,
+    "snapshotCount": 6,
+    "reviewCount": 1,
+    "unresolved": [
+      "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+      "Classify nested workspace and root command semantics.",
+      "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+      "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+      "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts.",
+      "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes."
+    ],
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/entrypoint-review-runtime-routing.json",
+      "sha256": "98a2ddb3f87d0bc6a02ebbf7bb913e33e95ecb86551c05f09b805c6da0ed19a2"
+    },
+    "census": {
+      "path": ".beep/qualification-local-preflight/runtime-reviewed-census.json",
+      "sha256": "25ed24c337b77d923f169dc85c3cd7dea599e0f0640c3518b03b274c461f8fce"
+    },
+    "scope": "Current local and hosted planner snapshots, workflow documents and command grouping; no runtime qualification or remote proof"
   }
 }
