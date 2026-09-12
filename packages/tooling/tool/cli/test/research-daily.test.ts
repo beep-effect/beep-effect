@@ -6,10 +6,13 @@ import {
   ResearchCommandServiceLive,
   ResearchDailyOptions,
 } from "@beep/repo-cli/commands/Research";
-import { COGNEE_CREDENTIALS_MISSING } from "@beep/repo-cli/commands/Research/internal/CogneeClient";
-import { cognifyImpl } from "@beep/repo-cli/commands/Research/internal/Cognify";
-import { commitVault, dailyImpl } from "@beep/repo-cli/commands/Research/internal/Daily";
-import { VAULT_DIRS } from "@beep/repo-cli/commands/Research/internal/Vault";
+import {
+  COGNEE_CREDENTIALS_MISSING,
+  cognifyImpl,
+  commitVault,
+  dailyImpl,
+  VAULT_DIRS,
+} from "@beep/repo-cli/test/Research";
 import { NonNegativeInt } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
