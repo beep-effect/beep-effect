@@ -54,6 +54,7 @@ import {
   turboCachePlanNeedsSecretSession,
   turboCachePullRequestPosture,
 } from "../../internal/cli/TurboCache.ts";
+import { globMatches } from "../../internal/GlobPattern.ts";
 import {
   CapturedStep,
   formatCommandLine,
@@ -75,6 +76,7 @@ import {
   coverageScopeWeightSeconds,
   planCoverageFullShards,
   planWorkspaceCoverageAffectedScope,
+  workspaceCoverageScopeOwners,
 } from "./internal/CoverageScope.ts";
 import {
   detectNoLocationTs2589Flake,
@@ -118,7 +120,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
-import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
+import type { CoverageBaselineRowDelta, CoverageScopeOwner } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
@@ -248,6 +250,7 @@ type RootAuditSelectionState = {
 };
 
 type CoverageTaskOptions = {
+  readonly topologyPackageNames?: ReadonlyArray<string>;
   readonly args: ReadonlyArray<string>;
   readonly expectedPackageNames: ReadonlyArray<string>;
   readonly replaceAll: boolean;
@@ -678,13 +681,100 @@ const resolveExplicitCoveragePackageNames = Effect.fn("QualityTasks.resolveExpli
 const resolveNonAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveNonAffectedCoverageTaskOptions")(
   function* (repoRoot: string, args: ReadonlyArray<string>, parsed: CoverageTaskOptions) {
     if (!parsed.writeBaseline || !parsed.scoped) {
-      return parsed;
+      const owners = yield* workspaceCoverageScopeOwners(repoRoot);
+      return { ...parsed, topologyPackageNames: coverageSelectorPackageNames(owners, explicitTurboFilterValues(args)) };
     }
 
     const expectedPackageNames = yield* resolveExplicitCoveragePackageNames(repoRoot, args);
     return { ...parsed, expectedPackageNames };
   }
 );
+
+const isResolvableCoverageSelector = S.is(
+  S.String.check(S.isPattern(/^(?:\.\.\.\^?)?(?:\{\.\/[^{}![\]^]+\}|[^{}![\]^]+?)(?:\^?\.\.\.)?$/u))
+);
+
+const coverageGraphClosure = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  seeds: ReadonlyArray<string>,
+  dependencies: boolean
+): ReadonlyArray<string> => {
+  let selected = seeds;
+  let frontier = seeds;
+  while (A.isReadonlyArrayNonEmpty(frontier)) {
+    const next = dependencies
+      ? A.flatMap(
+          A.filter(owners, (owner) => A.contains(frontier, owner.packageName)),
+          (owner: CoverageScopeOwner) => owner.workspaceDependencies
+        )
+      : A.map(
+          A.filter(owners, (owner) => A.some(owner.workspaceDependencies, (name) => A.contains(frontier, name))),
+          (owner) => owner.packageName
+        );
+    frontier = A.difference(
+      A.intersection(
+        next,
+        A.map(owners, (owner) => owner.packageName)
+      ),
+      selected
+    );
+    selected = A.union(selected, frontier);
+  }
+  return selected;
+};
+
+/**
+ * Resolve a Turbo package or directory selector against the workspace graph.
+ *
+ * **Example** (Resolve an exact package)
+ *
+ * ```ts
+ * import { resolveCoverageSelector } from "@beep/repo-cli/commands/Quality/Tasks"
+ *
+ * const result = resolveCoverageSelector([], "missing")
+ * console.log(result._tag) // "None"
+ * ```
+ *
+ * @param owners - Complete workspace inventory, including packages without coverage.
+ * @param selector - Turbo name, name glob, or directory selector with graph operators.
+ * @returns Sorted selected names, or None for unsupported or unmatched selectors.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveCoverageSelector: {
+  (owners: ReadonlyArray<CoverageScopeOwner>, selector: string): O.Option<ReadonlyArray<string>>;
+  (selector: string): (owners: ReadonlyArray<CoverageScopeOwner>) => O.Option<ReadonlyArray<string>>;
+} = dual(2, (owners: ReadonlyArray<CoverageScopeOwner>, selector: string): O.Option<ReadonlyArray<string>> => {
+  if (!isResolvableCoverageSelector(selector)) return O.none();
+  const pattern = Str.replace(/^(?:\.\.\.\^?)|(?:\^?\.\.\.)$/gu, "")(selector);
+  const directory = Str.startsWith("./")(pattern) || Str.startsWith("{./")(pattern);
+  const normalized = Str.replace(/^\{?|\}$/gu, "")(pattern);
+  const matches = globMatches(Str.replace(/^\.\//u, "")(normalized));
+  const seeds = A.map(
+    A.filter(owners, (owner) => matches(directory ? owner.packagePath : owner.packageName)),
+    (owner) => owner.packageName
+  );
+  if (A.isReadonlyArrayEmpty(seeds)) return O.none();
+  const dependencies = Str.endsWith("...")(selector) ? coverageGraphClosure(owners, seeds, true) : seeds;
+  const dependents = Str.startsWith("...")(selector) ? coverageGraphClosure(owners, seeds, false) : seeds;
+  const selected = A.union(dependencies, dependents);
+  return O.some(A.sort(Str.contains("^")(selector) ? A.difference(selected, seeds) : selected, Order.String));
+});
+
+// Unsupported or unmatched selectors retain the conservative long-pole topology.
+const coverageSelectorPackageNames = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  selectors: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(selectors)
+    ? A.map(owners, (owner) => owner.packageName)
+    : pipe(
+        selectors,
+        A.flatMap((selector) =>
+          O.getOrElse(resolveCoverageSelector(owners, selector), () => COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES)
+        ),
+        A.dedupe
+      );
 
 /**
  * The Vitest passthrough every coverage producer appends.
@@ -2248,9 +2338,11 @@ const turboStep = (cwd: string, label: string, tasks: ReadonlyArray<string>, arg
 const coverageStep = (cwd: string, options: CoverageTaskOptions) => {
   // A narrow ratchet run resolves its owners through the planner, but a direct
   // invocation only carries them as turbo filters.
-  const topologyPackageNames = A.isReadonlyArrayNonEmpty(options.expectedPackageNames)
-    ? options.expectedPackageNames
-    : explicitTurboFilterValues(options.args);
+  const topologyPackageNames =
+    options.topologyPackageNames ??
+    (A.isReadonlyArrayNonEmpty(options.expectedPackageNames)
+      ? options.expectedPackageNames
+      : explicitTurboFilterValues(options.args));
   return QualityTaskStep.make({
     label: options.writeBaseline ? "coverage:baseline" : "coverage:ratchet",
     command: "bunx",
@@ -3155,17 +3247,23 @@ export const coverageSelectedStepsForTesting: {
  *
  * @param repoRoot - Repository root directory.
  * @param args - Caller-visible coverage args, `--` passthrough included.
+ * @param owners - Optional workspace graph for exercising direct selector resolution.
  * @returns The ratchet or baseline-write coverage step.
  * @category testing
  * @since 0.0.0
  */
 export const coverageStepForTesting: {
-  (repoRoot: string, args: ReadonlyArray<string>): QualityTaskStep;
-  (args: ReadonlyArray<string>): (repoRoot: string) => QualityTaskStep;
+  (repoRoot: string, args: ReadonlyArray<string>, owners?: ReadonlyArray<CoverageScopeOwner>): QualityTaskStep;
+  (args: ReadonlyArray<string>, owners?: ReadonlyArray<CoverageScopeOwner>): (repoRoot: string) => QualityTaskStep;
 } = dual(
-  2,
-  (repoRoot: string, args: ReadonlyArray<string>): QualityTaskStep =>
-    coverageStep(repoRoot, parseCoverageTaskOptions(args))
+  (args) => P.isString(args[0]),
+  (repoRoot: string, args: ReadonlyArray<string>, owners?: ReadonlyArray<CoverageScopeOwner>): QualityTaskStep =>
+    coverageStep(repoRoot, {
+      ...parseCoverageTaskOptions(args),
+      ...(owners === undefined
+        ? {}
+        : { topologyPackageNames: coverageSelectorPackageNames(owners, explicitTurboFilterValues(args)) }),
+    })
 );
 
 /**
