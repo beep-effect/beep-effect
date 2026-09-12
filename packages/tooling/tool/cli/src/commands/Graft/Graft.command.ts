@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
 import { printCommandJson } from "../../internal/cli/Json.ts";
+import { resolveOperatorPath, resolveSystemdBunPath } from "../../internal/systemd/index.ts";
 import { GraftCacheIoError, GraftCacheTargetError, GraftDeepPreflightError } from "./Graft.errors.ts";
 import {
   GraftCacheSyncAction,
@@ -23,12 +24,7 @@ import {
   GraftDeepTimerOptions,
 } from "./Graft.schemas.ts";
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
-import {
-  GraftDeepRefresh,
-  GraftDeepRefreshLive,
-  GraftDeepRefreshProgress,
-  resolveGraftDeepBunPath,
-} from "./GraftDeep.service.ts";
+import { GraftDeepRefresh, GraftDeepRefreshLive, GraftDeepRefreshProgress } from "./GraftDeep.service.ts";
 
 const flags = {
   from: Flag.String("from").pipe(Flag.withDescription("Source clone containing graft/.cache/summaries.json")),
@@ -178,11 +174,6 @@ const timerFlags = {
     Flag.withDescription("Disable and remove the refresh timer and service units")
   ),
 };
-
-// Operators type `~/...` and relative paths; systemd and the lock file need
-// absolute ones, and no shell is involved to expand either.
-const resolveOperatorPath = (home: string, resolve: (input: string) => string, input: string): string =>
-  resolve(Str.startsWith("~/")(input) ? `${home}/${Str.slice(2)(input)}` : input);
 
 const defaultStateDir = (home: string, path: Path.Path, configured: O.Option<string>): string =>
   resolveOperatorPath(
@@ -410,7 +401,7 @@ const installTimer = Effect.fn("GraftCommand.installTimer")(function* (options: 
   // An explicit path is the operator's pin and is only made absolute; the
   // default follows the mise shim so a Bun bump never strands the unit.
   const bunPath = yield* O.match(options.bunPath, {
-    onNone: () => resolveGraftDeepBunPath(home),
+    onNone: () => resolveSystemdBunPath(home),
     onSome: (given) => Effect.succeed(resolveOperatorPath(home, path.resolve, given)),
   });
   const decoded = yield* decodeTimerOptions({

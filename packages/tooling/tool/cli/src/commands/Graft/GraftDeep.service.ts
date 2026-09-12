@@ -13,7 +13,6 @@ import * as DateTime from "effect/DateTime";
 import * as Dur from "effect/Duration";
 import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
-import { constFalse } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -29,7 +28,6 @@ import { ensureZeroExit, formatCommandLine, OutputBound, runCaptured } from "../
 import { GraftCacheIoError, GraftDeepLockError, GraftDeepPreflightError, GraftDeepStepError } from "./Graft.errors.ts";
 import {
   GraftCacheSyncAction,
-  GraftDeepBunCandidate,
   GraftDeepLock,
   GraftDeepRefreshOutcome,
   GraftDeepRefreshStatus,
@@ -441,7 +439,7 @@ export class GraftDeepRefresh extends Context.Service<GraftDeepRefresh, GraftDee
  * **Details**
  *
  * The service unit is returned first and the timer second. Every path is a
- * `GraftDeepUnitPath`, so quoting the `Exec*` arguments is all the escaping a
+ * `SystemdUnitPath`, so quoting the `Exec*` arguments is all the escaping a
  * unit needs. `EnvironmentFile` carries no leading dash on purpose: a missing
  * environment file must fail the unit loudly instead of starting a build with
  * no API key. The two `ExecStartPre` lines update the owner clone before the
@@ -525,50 +523,6 @@ export const renderGraftDeepRefreshUnits = (
     ),
   },
 ];
-
-/**
- * Resolves the Bun the rendered unit runs when no `--bun-path` is given.
- *
- * **Details**
- *
- * Each {@link GraftDeepBunCandidate} is probed under `home` in order and the
- * first regular file this user can execute wins, so a unit installed on a
- * mise-managed workstation runs whichever Bun the repo's `mise.toml` pins on
- * the night it fires. A candidate that is missing, unreadable, a directory,
- * or a leftover without execute permission is skipped rather than pinned, so
- * the probe never fails. The installer's own `process.execPath` is the
- * fallback only when no candidate qualifies: it is one version's binary, and
- * a unit pinned to it keeps running that version after a bump, or fails
- * outright once the version is pruned.
- *
- * **Example** (Prepare a resolution under an operator home)
- *
- * ```ts import.meta.vitest name="Prepare a resolution under an operator home"
- * import { resolveGraftDeepBunPath } from "@beep/repo-cli/commands/Graft"
- * import * as Effect from "effect/Effect"
- * console.log(Effect.isEffect(resolveGraftDeepBunPath("/home/op"))) // true
- * ```
- *
- * @param home - The operator home directory the candidates are probed under.
- * @returns The absolute path of the Bun executable the unit should run.
- * @category formatting
- * @since 0.0.0
- */
-export const resolveGraftDeepBunPath = Effect.fn("GraftDeepRefresh.resolveBunPath")(function* (home: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  // stat follows the shim's symlink, so the executable bits are those of the
-  // binary the unit would actually run.
-  const found = yield* Effect.findFirst(
-    A.map(GraftDeepBunCandidate.Options, (candidate) => path.join(home, candidate)),
-    (candidate) =>
-      fs.stat(candidate).pipe(
-        Effect.map((info) => Eq.equals(info.type, "File") && (info.mode & 0o111) !== 0),
-        Effect.orElseSucceed(constFalse)
-      )
-  );
-  return O.getOrElse(found, () => process.execPath);
-});
 
 const statusCodec = S.fromJsonString(GraftDeepRefreshStatus);
 const decodeStatusJson = S.decodeUnknownEffect(statusCodec);

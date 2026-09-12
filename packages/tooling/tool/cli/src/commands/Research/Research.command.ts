@@ -5,13 +5,14 @@
  * @since 0.0.0
  */
 
-import { Config, Effect } from "effect";
+import { Config, Effect, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { installResearchTimers } from "./internal/Timers.ts";
+import { resolveOperatorPath, resolveSystemdBunPath } from "../../internal/systemd/index.ts";
+import { installResearchTimers, uninstallResearchTimers } from "./internal/Timers.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";
 import { ResearchCommandError } from "./Research.errors.ts";
 import { printResearchIndex } from "./Research.render.ts";
@@ -24,6 +25,7 @@ import {
   ResearchNotionPullOptions,
   ResearchRepoCardOptions,
   ResearchStatusOptions,
+  ResearchTimerOptions,
 } from "./Research.schemas.ts";
 import {
   captureResearchUrl,
@@ -39,6 +41,7 @@ import {
 
 const decodeUnknownResearchDailyOptions = S.decodeUnknownEffect(ResearchDailyOptions);
 const decodeUnknownResearchHistorySiftOptions = S.decodeUnknownEffect(ResearchHistorySiftOptions);
+const decodeUnknownResearchTimerOptions = S.decodeUnknownEffect(ResearchTimerOptions);
 
 /** @since 0.0.0 */
 const vaultFlag = Flag.Directory("vault", { mustExist: true }).pipe(
@@ -281,16 +284,84 @@ const uninstallFlag = Flag.Boolean("uninstall").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Disable and remove the research systemd user timers")
 );
+/** @since 0.0.0 */
+const bunPathFlag = Flag.String("bun-path").pipe(
+  Flag.withDescription(
+    "Bun executable the units run (default: the mise shim, then ~/.bun/bin/bun, then the Bun running this command)"
+  ),
+  Flag.optional
+);
+
+const installTimers = Effect.fn("ResearchCommand.installTimers")(function* (options: {
+  readonly bunPath: O.Option<string>;
+  readonly page: O.Option<string>;
+}) {
+  const path = yield* Path.Path;
+  const home = yield* Config.String("HOME").pipe(
+    ResearchCommandError.mapError("HOME is not set; cannot locate systemd user directory.")
+  );
+  // An explicit path is the operator's pin and is only made absolute; the
+  // default follows the mise shim so a Bun bump never strands the units.
+  const bunPath = yield* O.match(options.bunPath, {
+    onNone: () => resolveSystemdBunPath(home),
+    onSome: (given) => Effect.succeed(resolveOperatorPath(home, path.resolve, given)),
+  });
+  const decoded = yield* decodeUnknownResearchTimerOptions({
+    bunPath,
+    repoRoot: process.cwd(),
+    ...(O.isNone(options.page) ? {} : { notionPage: options.page.value }),
+  }).pipe(
+    ResearchCommandError.mapError(
+      "Invalid install-timers options: --page must be a bare Notion page id ([A-Za-z0-9-]), and the repo root and Bun paths must be free of double quotes, backslashes, percent signs, dollar signs, and control characters, which systemd would reinterpret in the unit."
+    )
+  );
+  yield* installResearchTimers(decoded);
+});
+
+/**
+ * Install or remove the research systemd user timers.
+ *
+ * **Details**
+ *
+ * An uninstall reads only `HOME`, never the install paths. Without
+ * `--bun-path` the units run the mise Bun shim when this user can execute one
+ * under the home directory, then a standalone `$HOME/.bun` install, and only
+ * then the Bun running this command, so a `mise.toml` bump is picked up the
+ * next time a timer fires. A page id or path systemd would reinterpret inside
+ * a unit is refused before anything is written.
+ *
+ * **Example** (Build an install program without running it)
+ *
+ * ```ts
+ * import { runResearchInstallTimers } from "@beep/repo-cli/commands/Research"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = runResearchInstallTimers({ bunPath: O.none(), page: O.none(), uninstall: false })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const runResearchInstallTimers = Effect.fn("ResearchCommand.runResearchInstallTimers")(function* (options: {
+  readonly bunPath: O.Option<string>;
+  readonly page: O.Option<string>;
+  readonly uninstall: boolean;
+}) {
+  // An uninstall needs only HOME: the paths an install validates and probes
+  // are never read, so nothing about them can keep a unit from being removed.
+  yield* options.uninstall ? uninstallResearchTimers : installTimers(options);
+});
 
 const researchInstallTimersCommand = Command.make(
   "install-timers",
   {
+    bunPath: bunPathFlag,
     page: pageFlag,
     uninstall: uninstallFlag,
   },
-  Effect.fn(function* ({ page, uninstall }) {
-    yield* installResearchTimers(process.cwd(), process.execPath, uninstall, page);
-  })
+  runResearchInstallTimers
 ).pipe(
   Command.withDescription("Install systemd user timers for the daily pipeline and weekly repo-card refresh"),
   Command.provide(ResearchCommandServiceLive)
