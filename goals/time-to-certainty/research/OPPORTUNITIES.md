@@ -997,3 +997,24 @@ cache entries; schema remained the sole failing MISS. One fresh-cache retry did 
 clear the failure. Preserve this as an activation blocker for Fable; marker parity
 and repo-cli's six real doctest files pass. No schema or runtime configuration repair
 was attempted under the marker-only amendment.
+
+### Stage B3 — doctest defaults do not migrate existing implementations
+
+- Doing: regenerate the 27 doctest owners after changing the six implementation defaults to Node.
+- Evidence: `bun run beep lint package-scripts --write` exited 0 with `142 manifests, 0 drifting, 0 written`; `seedImplementation` preserves present implementation keys.
+- Resolution: remove only the exact legacy `beep:doctest` implementation from the 27 owner manifests, then let the canonical writer seed the new default. No generator policy expansion.
+- Prevention: document that implementation defaults seed absent keys; include an explicit existing-owner migration step when changing a default.
+
+### Stage B3 — Node package-script fixture timeout
+
+- Doing: run the amended doctest fixture and retained discovery/parity tests under the lane's Bun thread test runner.
+- Evidence: `bunx --bun vitest run test/doctest-lane.test.ts test/package-scripts.policy.test.ts --pool=threads` exited 1: 11 passed, package-script fixture timed out at 90,000 ms.
+- Next evidence: run the authorized exact fleet cold/warm commands to distinguish fixture behavior from production execution; no timeout or unrelated runtime edits.
+- Prevention: exercise the Node child launch in the same sandbox/runtime envelope before treating a launcher-text change as execution proof.
+
+### Stage B3 — exact outer launcher retains a Bun node shim
+
+- Doing: execute the amended Node doctest scripts through the mandated Stage B cold/warm command (`bunx --bun turbo run doctest --concurrency=4 --summarize --cache=local:rw`).
+- Evidence: both attempts exited 1 after roughly 60 seconds; four tasks launched, zero successful, zero HIT. Minimal error: `[vitest-pool-runner]: Timeout waiting for worker to respond`. The logged temporary launcher directory has both `bun` and `node` symlinked to Bun 1.4.2. This supports inherited launcher substitution; direct worker runtime was not instrumented.
+- Prevention: pin the runtime at the complete launch boundary, and ratify a measurement command that exercises it. Removing `--bun` only from an inner script does not prove Node execution under a parent launcher that substitutes `node`.
+- Residual: Fable must resolve the exact-command/runtime contract and rerun all 27 owners; the implementer does not silently replace the mandated command or widen into CI launch policy.

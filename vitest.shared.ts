@@ -220,9 +220,6 @@ const config: ViteUserConfig = {
     sequence: {
       concurrent: !vitestDoctestActive,
     },
-    // Package doctests run on Bun; its fork workers cannot complete Vitest's
-    // startup handshake. Keep the ordinary pool default and use threads here.
-    ...(vitestDoctestActive ? { pool: "threads" } : {}),
     include: vitestDoctestActive ? [] : fcDeepSweepActive ? [...propertySweepInclude] : ["test/**/*.test.{ts,tsx}"],
     includeSource: vitestDoctestActive ? ["src/**/*.{ts,tsx}"] : [],
     coverage: {

@@ -95,7 +95,8 @@ describe("doctest lane fixture", { concurrent: false }, () => {
         expect(config.include, name).toEqual([]);
         expect(config.includeSource, name).toEqual(["src/**/*.{ts,tsx}"]);
         expect(config.passWithNoTests, name).toBe(false);
-        expect(config.pool, name).toBe("threads");
+        expect(config.pool, name).toBe("forks");
+        expect(scripts["beep:doctest"], name).toBe("BEEP_VITEST_DOCTEST=1 bunx vitest run");
         const sources = yield* fsUtils.globFiles(config.includeSource ?? [], { cwd: dir, ignore: config.exclude });
         const marked = yield* Effect.filter(sources, (file) =>
           fs.readFileString(path.join(dir, file)).pipe(Effect.map(Str.includes("import.meta.vitest")))

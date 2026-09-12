@@ -631,3 +631,187 @@ The compatibility `--mode` flag and strict selector remain as Stage B specified.
 Stage C remains only the brief's root-task registrations, proofs/input fixtures, and
 Turbo hash documentation. No Stage C registrations or Stage D consumer changes ran.
 Stop after Stage B2.
+
+## Stage B3
+
+Implemented only Amendment 2 (ruling 34): package doctests run on Node.
+No git writes, graft commands, changeset, or Stage C–E work ran.
+
+### Decisions and rejected alternatives
+
+1. Changed all six package-kind `beep:doctest` implementation defaults to
+   `BEEP_VITEST_DOCTEST=1 bunx vitest run`. Ordinary test defaults are preserved.
+2. The initial canonical generator run exited 0 but wrote zero manifests: existing
+   implementation keys are intentionally preserved by `seedImplementation`. Removed
+   only the exact legacy doctest implementation from the 27 owners, then reran
+   `bun run beep lint package-scripts --write`: 142 manifests, zero drift, 27 written.
+   Parsed before/after manifests prove that only the doctest implementation values
+   changed. The writer additionally reordered existing script keys in observability
+   and identity. Rejected widening generator ownership or adding a permanent migration
+   policy for this one-time runtime change. Recorded the friction when discovered.
+3. Removed the doctest-only thread-pool override and its comment from the shared
+   Vitest configuration; strict discovery, marker parity, and the rest of the
+   doctest branch remain. The discovery test now pins the default fork pool and
+   the Node script for every owner. The policy test and non-workspace fixture
+   manifest use the new script; the fixture is edited directly, not generated.
+4. Rejected changing assertion timeouts, schema examples, concurrency, the selector,
+   or pass-with-no-tests. Retained the exact Stage B outer Bun/Turbo command: the
+   generated inner Vitest launcher is the amended Node command.
+
+### Stage B3 — files
+
+Modified source, configuration, fixture, and report paths (no deletions or new
+production files):
+
+- `packages/foundation/capability/api-transport/package.json`
+- `packages/foundation/capability/chalk/package.json`
+- `packages/foundation/capability/colors/package.json`
+- `packages/foundation/capability/file-processing/package.json`
+- `packages/foundation/capability/langextract/package.json`
+- `packages/foundation/capability/mcp-kit/package.json`
+- `packages/foundation/capability/nlp-processing/package.json`
+- `packages/foundation/capability/observability/package.json`
+- `packages/foundation/capability/semantic-web/package.json`
+- `packages/foundation/modeling/html/package.json`
+- `packages/foundation/modeling/identity/package.json`
+- `packages/foundation/modeling/lexical/package.json`
+- `packages/foundation/modeling/md/package.json`
+- `packages/foundation/modeling/nlp/package.json`
+- `packages/foundation/modeling/ontology/package.json`
+- `packages/foundation/modeling/pandoc-ast/package.json`
+- `packages/foundation/modeling/provenance/package.json`
+- `packages/foundation/modeling/rdf/package.json`
+- `packages/foundation/modeling/schema/package.json`
+- `packages/foundation/modeling/skill-contract/package.json`
+- `packages/foundation/modeling/utils/package.json`
+- `packages/foundation/primitive/data/package.json`
+- `packages/foundation/primitive/types/package.json`
+- `packages/foundation/ui-system/dock/package.json`
+- `packages/foundation/ui-system/editor/package.json`
+- `packages/foundation/ui-system/ui/package.json`
+- `packages/tooling/tool/cli/package.json`
+- `packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts`
+- `packages/tooling/tool/cli/test/doctest-lane.test.ts`
+- `packages/tooling/tool/cli/test/package-scripts.policy.test.ts`
+- `packages/tooling/tool/cli/test/fixtures/doctest-lane/package/package.json`
+- `vitest.shared.ts`
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+- `goals/time-to-certainty/research/c3-456-implementation.md`
+
+The fingerprint writer also rewrote byte-identical
+`standards/policy-tools.fingerprint.json` (no diff). Disposable evidence lives in
+`/tmp/ttc-stage-b3/`: named verification logs, `owners.txt`, `dry-run.json`,
+`dry-run.stderr`, `measure.py`, `measurements.json`, and `report-draft.md`.
+Generated build/typecheck artifacts, package `.turbo/` logs, `.turbo/runs/`
+summary files, the default local Turbo cache, and
+`.beep/c3-456-stage-b3-doctest-cache/` are verification artifacts, not handoff
+source files; do not stage them.
+
+### Verification commands and exit codes
+
+Root cwd unless marked CLI cwd (`packages/tooling/tool/cli`). Command output was
+redirected to `/tmp/ttc-stage-b3/<name>.log` unless noted. No separate Node
+verification suite, coverage, package-verify, or docgen run is claimed: the
+amendment's lane split leaves those with Fable. The amended package-script
+fixture and required fleet launches are the only attempted Node doctest runs.
+
+| Exact command | Exit | Result |
+| --- | ---: | --- |
+| `bun run beep lint package-scripts --write` | 0, twice | First: zero written; after removing exact legacy implementation keys: 27 written, 142 manifests, zero drift. |
+| `bunx --bun biome check --write packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts packages/tooling/tool/cli/test/doctest-lane.test.ts packages/tooling/tool/cli/test/package-scripts.policy.test.ts packages/tooling/tool/cli/test/fixtures/doctest-lane/package/package.json vitest.shared.ts` | 0 | Five files checked; no fixes. |
+| `bun run beep lint policy-fingerprint --write` | 0 | Written, byte-identical. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Current. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, zero drift. |
+| `bunx --bun eslint --no-warn-ignored --max-warnings=0 --config eslint.config.mjs packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts` | 0 | No diagnostics. |
+| `bunx --bun turbo run check package-test-typecheck --filter=@beep/repo-cli --cache=local:rw` | 0 | 34/34 successful, zero cached, 22.876 s. |
+| `python3 /tmp/ttc-stage-b2/verdict.py` | 0 | Reads current repo-cli stored test-typecheck verdict: exit 0, empty diagnostics. This reuses only the prior helper, not prior verification evidence. |
+| `bunx --bun tsgo -p tsconfig.configs.json --noEmit` | 0 | Config typecheck clean. |
+| `bunx --bun vitest run test/doctest-lane.test.ts test/package-scripts.policy.test.ts --pool=threads` (CLI cwd) | 1 | 11 passed, one failed, 196.60 s. Discovery, parity, include overrides and policy checks pass; real package-script fixture times out at 90,000 ms. |
+| `bunx --bun turbo run doctest --dry-run=json --cache=local:rw` | 0 | Production graph resolves. |
+| `test ! -e .beep/c3-456-stage-b3-doctest-cache` | 0 | Fresh cache absent before cold run. |
+| `python3 /tmp/ttc-stage-b3/measure.py` | 1 | Captures partial summaries and checks matching completed-task hashes; deliberately fails required 27-task acceptance assertion. Not a successful fleet validation. |
+| `git --no-optional-locks diff --check` | 0 | Read-only whitespace check, also rerun after report append. |
+| `bun --version` / `node --version` | 0 / 0 | Outer shell: Bun 1.4.2, Node v24.20.0. Does not prove child runtime. |
+
+A read-only Python comparison against `git show HEAD:<manifest>` also checked all
+27 parsed manifests: changing only the old doctest value to the new value yields
+exact equality. Ordinary test scripts and all non-script values are preserved.
+
+### Cold/warm rerun measurements
+
+Cold means an absent local Turbo cache, not cold filesystem/module caches. Remote
+cache is disabled. No verification ran concurrently with either measured attempt;
+the warm attempt uses the same cache and unchanged task inputs as cold. The exact
+outer command is retained as required. The warm attempt is a repeated invocation,
+not a successful cache-replay measurement, because the cold run cached no successes.
+
+| Attempt | Exact command | Exit | Wall | Turbo wall | Successful / launched | HIT | Max RSS (KiB) |
+| --- | --- | ---: | ---: | ---: | --- | --- | ---: |
+| cold | `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b3-doctest-cache" /usr/bin/time -f 'wall=%e maxRSS=%M exit=%x' bunx --bun turbo run doctest --concurrency=4 --summarize --cache=local:rw` | 1 | 60.62 s | 60.510 s | 0 / 4 | 0 / 4 | 523,828 |
+| warm | `TURBO_CACHE_DIR="$PWD/.beep/c3-456-stage-b3-doctest-cache" /usr/bin/time -f 'wall=%e maxRSS=%M exit=%x' bunx --bun turbo run doctest --concurrency=4 --summarize --cache=local:rw` | 1 | 60.52 s | 60.475 s | 0 / 4 | 0 / 4 | 524,204 |
+
+Both attempts launched **@beep/types, @beep/identity, @beep/utils, @beep/data**.
+All four log fork-startup errors before assertions. Turbo stops on the first
+reported failure and records a complete execution interval only for @beep/types:
+**60.256 s cold**, **60.264 s warm**, exit 1, MISS, same hash. The other three
+launched tasks have no execution intervals in the summaries. Thus the completed
+sample p50/max is 60.256/60.256 s cold and 60.264/60.264 s warm (**n=1 each**).
+**Fleet lifetime p50/max and the two slowest packages are unavailable**; ranking
+four startup failures from one recorded interval would fabricate measurement.
+The remaining 23 owners, including schema, were not reached. No schema shutdown
+warning result is available in B3. GNU time RSS is the timed command's maximum
+RSS measurement, not summed concurrent worker RSS.
+
+Attempt summaries:
+
+- cold: `.turbo/runs/3JCjfbK7DFbJLXDAW0UGHL2QAZu.json`.
+- warm: `.turbo/runs/3JCjoSKvsrm41cpBYJSSGHYTl1B.json`.
+
+Minimal diagnostic shared by both attempts:
+
+```text
+[vitest-pool-runner]: Timeout waiting for worker to respond
+```
+
+The exact-command logs identify a temporary `/tmp/bun-node-…/bun` launcher.
+Read-only inspection of that same directory finds both `bun` and `node` symlinked
+to the installed Bun 1.4.2 binary. This supports the inference that the outer
+`bunx --bun` launch can retain Bun substitution for the inner `bunx vitest run`.
+The worker's runtime was not directly instrumented, so neither confirmed Node
+execution nor a confirmed environment-only failure is claimed. Fable's direct
+Node schema result in Amendment 2 is external evidence, not reproduced by this
+exact-command attempt. No alternate measurement command was substituted.
+
+### Blockers and residual for Stage C
+
+**Stage B3 source changes are implemented; activation acceptance is blocked.**
+The required 27/27 successful cold and 27/27 HIT warm are not met, and the real
+package-script fixture also fails. Fable must reconcile the mandated outer
+`bunx --bun turbo` command with the Node-runtime requirement, validate the complete
+launch path, and obtain a passing exact agreed cold/warm pair. Any change to the
+outer measurement command or CI launcher policy needs an explicit follow-up scope;
+this lane does not silently widen Stage B3 or relax its tests.
+
+Fable retains package handoff verification (including the 27 manifest owners),
+`CI=true TMPDIR=/tmp bun run beep quality package-verify @beep/repo-cli`,
+`bun run docgen:local`, scoped Node coverage, and hosted verification. The strict
+selector, parity test, discovery test, compatibility `--mode` flag, ordinary test
+scripts, and Stage C–E responsibilities remain as specified in the brief.
+Stage C residual is the remaining root task registrations, proof/input/affected
+fixtures, and Turbo hash documentation, after resolving the activation blocker.
+No Stage C registration or Stage D consumer change was made. Stop after Stage B3.
+
+### Orchestrator verdict on Stage B3 (Fable, outside the sandbox)
+
+The lane's fleet runs failed only because its mandated `bunx --bun` launcher installs Bun's
+`node` shim for the whole process tree, so the Node doctest scripts ran on Bun again. The CI lane
+launches `bunx turbo` and package scripts run through `bun run`, neither of which installs the
+shim. Fable ran the exact pair without `--bun` from a fresh `TURBO_CACHE_DIR`:
+
+| Attempt | Summary | Turbo wall | Tasks | Successful | HIT | Lifetime p50 / max | Two slowest |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- |
+| cold | `.turbo/runs/3JCkNZQUJ1YQQRevyz15nJdJnHE.json` | 103.6 s | 27 | 27 | 0 | 10.57 s / 37.82 s | @beep/repo-cli 37.8 s, @beep/skill-contract 21.8 s |
+| warm | `.turbo/runs/3JCkNae7JjGF8PUMnxxivtjl1L5.json` | 0.12 s | 27 | 27 | 27 | replay | — |
+
+`bunx vitest run test/doctest-lane.test.ts test/package-scripts.policy.test.ts` on Node: 2 files,
+12 tests, exit 0. The activation acceptance (27/27 cold, 27/27 HIT warm) is met on Node.
