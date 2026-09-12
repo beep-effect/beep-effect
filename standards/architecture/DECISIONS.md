@@ -1826,6 +1826,94 @@ that main stays green on that row.
 This extends the 2026-08-24 rule that the hosted lane is the authority for the
 floors: a raised row is now proven by the hosted lane before it can merge.
 
+## 2026-09-12: Pull Requests Lower Floors Only Where They Could Not Have Moved Them; Scoped Writes Hold Untouched Packages
+
+- **Status:** Active
+
+Decision:
+
+On a base-pinned coverage run (`TURBO_SCM_BASE` set, which is every
+pull-request run of the `Heavy / Coverage Regression` lane), a row metric the
+pull request lowered is judged at the lowered value when the package could not
+have moved it. Three questions decide that, all answered from the change set
+the run already collects (`base...HEAD` plus dirty files):
+
+1. the package owns no changed file, source or test, through the same
+   ownership tables affected-scope planning uses, repository fixtures included;
+2. the package is not a workspace dependent of a package that owns one; and
+3. no changed path other than `standards/coverage.regression-baseline.jsonc`
+   itself yields a full-run reason — a pull request that edits `vitest.shared.ts`,
+   a tsconfig, `turbo.json`, `patches/`, or `.github/` gets no self-judging exit
+   on any package.
+
+Authorship is decided against the merge-base document, not the base tip: a row
+is lowered by this pull request only when the workspace document is looser than
+`git show <merge-base>:standards/coverage.regression-baseline.jsonc`. Reading
+the tip would attribute every row `main` raised after the branch diverged to the
+branch and silently downgrade floors the branch never touched. Both reads fail
+closed: an unreadable merge-base document or an unresolvable change set leaves
+every row at the base floor, which is the behaviour before this entry.
+
+A lowered row on a package that is not self-judge eligible keeps the base floor
+and its diagnostic names both the value the branch proposed and the witness that
+withheld it (`package owns changed file X`, `dependent of @beep/y`, or
+`global input Z changed`). Rows the pull request raised keep the 2026-09-11
+verdict unchanged, and the raised and lowered rules never claim the same metric:
+a row stricter than the base tip is the raised rule's. Policy fields (`epsilon`,
+`minimum`, `exemptions`, `follow_ups`) stay sourced from the base document, so a
+pull request cannot relax the tier or add a follow-up through its own copy. The
+vanished-file rule and the tier minimum keep judging at the base floors: lowering
+a row cannot make a disappearance benign, and the writer cannot lift a package
+above the repository tier. A package present in the base document, measured by
+the run, and absent from the pull request's document fails with the distinct
+reason `package-row-removed`; the only sanctioned delete path remains the
+workspace-removal subtraction.
+
+Every lowered floor is reported — through the ratchet's tighten slot on a green
+run and inside the regression block on a red one — with the base value, the
+lowered value, and what the lane measured. When the lane measures strictly above
+a lowered floor the line carries a `tighten` advisory naming the measured value.
+A hard `row-lowered-below-reach` verdict is deliberately deferred until a week of
+tighten lines is on record. Every path a failure reports also prints the row this
+run measured, encoded through the same schema the committed document uses, so an
+operator pastes hosted evidence instead of running a local writer.
+
+A coverage baseline write — scoped or unscoped — now shares one plan. A measured
+package is adopted only when it owns a changed file or is a workspace dependent
+of one; every other measured package holds its committed row byte-for-byte, and
+a scoped run carries the committed rows it never measured. `--replace-all` is
+valid on a scoped write as the deliberate re-measure path, and every raise it
+records is judged on the pull request by the 2026-09-11 rule. Each write reports
+its per-package disposition, says so loudly when it held everything it measured,
+and names every value it raised above the committed rows.
+
+The full-coverage shards, scoped baseline writes, and the narrow ratchet
+invocation all derive their Vitest passthrough from one function: file
+parallelism on, worker count chosen from the packages the invocation measures.
+
+Rationale:
+
+Between 2026-09-10 and 09-12 the lane was red on `main` and on every pull
+request because a local scoped `--write-baseline` (#1068) replaced the whole
+`@beep/repo-cli` block with one workstation snapshot, raising two rows on files
+that pull request never touched above what the lane measures. The restore PR
+(#1090) was red on its own run because a base-pinned run judged every surviving
+row at the base tip's floor, so no pull request could lower a floor. Zero of the
+31 failed coverage jobs that week were memory failures. #1091 already fails a
+pull request that raises a row beyond hosted reach; this entry closes the other
+half of the deadlock and stops the reflex regeneration from rewriting untouched
+packages. The topology unification removes the last way a writer and the lane
+that judges it can disagree about how a row was measured.
+
+Supersedes one clause of the 2026-09-11 entry: "rows the pull request lowered or
+left unchanged are judged by the base floors alone" now holds only for unchanged
+rows and for packages that are not self-judge eligible. Supersedes the
+2026-08-25 sentence that the remediation "names the scoped regeneration command
+for exactly the regressed packages": a drop on an existing row now prints the
+measured rows and names no writer, and the scoped writer is named only for a new
+file or a new package. Everything else in the 2026-08-24, 2026-08-25, and
+2026-09-11 entries stays active.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

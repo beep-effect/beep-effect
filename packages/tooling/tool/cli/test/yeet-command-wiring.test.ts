@@ -1,10 +1,17 @@
 import { yeetCommand, yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet";
 import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import {
+  buildYeetRunPlanWithMode,
+  RepoRunContext,
+  TurboPlanSnapshot,
+  YeetRunPlanModeOptions,
+} from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import { Command } from "effect/unstable/cli";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
@@ -59,6 +66,63 @@ describe("yeet merge-loop command wiring", () => {
     expect(subcommandNames).toEqual(
       expect.arrayContaining(["verify", "repair", "publish", "monitor", "closeout", "status", "resume"])
     );
+  });
+});
+
+describe("yeet publish plan wiring", () => {
+  // Dispatching `yeet --plan` against the live checkout only reaches the publish
+  // planner when the checkout happens to sit on a feature branch: on `main` and
+  // on the detached HEAD hosted runners check out, the PR-branch-only guard
+  // refuses first. That made one plan step executable locally and unreachable
+  // hosted, and the row minted from the local measurement turned `main` red.
+  // Planning from a fixed context reaches it on every checkout.
+  const planContext = RepoRunContext.make({
+    base: "origin/main",
+    branch: "feat/yeet-command-wiring",
+    cwd: "/repo",
+    head: "HEAD",
+    originalArgv: [],
+    packetDir: ".beep/yeet",
+    repoRoot: "/repo",
+    turbo: TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
+  });
+  const publishPlanArgs = (options: { readonly amend: boolean; readonly noEdit: boolean }): ReadonlyArray<string> =>
+    pipe(
+      buildYeetRunPlanWithMode(
+        planContext,
+        O.none(),
+        YeetRunPlanModeOptions.make({
+          amend: options.amend,
+          fast: false,
+          mode: "publish",
+          monitor: false,
+          noEdit: options.noEdit,
+          pushOnly: false,
+          startPrEarly: false,
+          tier: "full",
+        })
+      ).steps,
+      A.findFirst((step) => step.id === "commit:01-git-commit"),
+      O.map((step) => step.args),
+      O.getOrElse(() => A.empty<string>())
+    );
+
+  it("plans the commit step with the required-message placeholder", () => {
+    expect(publishPlanArgs({ amend: false, noEdit: false })).toEqual([
+      "commit",
+      "-m",
+      "<required-conventional-commit-message>",
+    ]);
+  });
+
+  it("plans the amended commit step with the same placeholder", () => {
+    expect(publishPlanArgs({ amend: true, noEdit: false })).toEqual([
+      "commit",
+      "--amend",
+      "-m",
+      "<required-conventional-commit-message>",
+    ]);
+    expect(publishPlanArgs({ amend: true, noEdit: true })).toEqual(["commit", "--amend", "--no-edit"]);
   });
 });
 
