@@ -390,7 +390,7 @@ false`, unfiltered, ledger `undeclared`.
 | `quality test-tsgo` aggregate | **cli** (existing Turbo aggregate) | | | | F, G(`cheap-gates:test-tsgo`) | |
 | `changeset:status` | root task | `bun run beep quality changeset-status` | `.changeset/**`, `**/package.json` (explanatory) | D2 (`git diff since`) | C(repo-sanity), F, W, G | Repo Sanity 5.14% |
 | `config-sync:check` | root task | `bun run beep tsconfig-sync --check` | `**/package.json`, `**/tsconfig*.json`, `**/docgen.json`, `syncpack.config.ts`, `tsconfig.base.json` | | C(repo-sanity), F, W(`repo-sanity:tsconfig-sync`), G | |
-| `ci:repo-sanity:changeset-graph` | ★ `repo-sanity:changeset-graph` | `bun run beep quality changeset-graph` | `.changeset/**`, `**/package.json`, `bun.lock` | | C(repo-sanity), W(`repo-sanity:changeset-graph`), G | |
+| `ci:repo-sanity:changeset-graph` | ★ `repo-sanity:changeset-graph` | `bun run beep quality changeset-graph` | `.changeset/**`, `**/package.json`, `bun.lock`, `standards/changesets.retired-packages.json` (revision 8: the checker reads the retirement record) | | C(repo-sanity), W(`repo-sanity:changeset-graph`), G | |
 | `ci:repo-sanity` syncpack | ★ `repo-sanity:syncpack` | `bunx syncpack lint` (`GithubChecks.ts:409`) | `syncpack.config.ts`, `**/package.json`, `bun.lock` | | C, W(`repo-sanity:syncpack`) | |
 | `ci:repo-sanity` sherif | ★ `repo-sanity:sherif` | `bunx sherif@1.10.0 -r non-existent-packages` (`GithubChecks.ts:415`) | `**/package.json`, `bun.lock` | | C, W(`repo-sanity:sherif`) | |
 | `ci:repo-sanity` versions | ★ `repo-sanity:versions` | `bun run version-sync --skip-network` (`GithubChecks.ts:403`; the existing root script plus its offline flag) | `.bun-version`, `.nvmrc`, `**/package.json`, `mise.toml` | | C, W(`repo-sanity:versions`) | |

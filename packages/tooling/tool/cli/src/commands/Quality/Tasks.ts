@@ -1657,14 +1657,26 @@ type QualityTaskLaneRunObserver = (
 const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 
 // A `bunx turbo run <tasks…> --summarize` step names its tasks bare (F-A); those names select
-// the rows of the attempt's own summary that fold into the lane digest.
-const turboSummarizeTaskNames = (step: QualityTaskStep): O.Option<ReadonlyArray<string>> =>
-  step.command === "bunx" &&
-  O.contains(A.get(step.args, 0), "turbo") &&
-  O.contains(A.get(step.args, 1), "run") &&
-  A.contains(step.args, "--summarize")
-    ? O.some(pipe(A.drop(step.args, 2), A.takeWhile(P.not(Str.startsWith("-")))))
-    : O.none();
+// the rows of the attempt's own summary that fold into the lane digest. A wrapper-backed lane
+// (`bun run beep ci lane <id>`) runs Turbo inside its child with `--summarize`, so every task in
+// every summary it wrote folds in (an empty selection).
+const turboSummarizeTaskNames = (step: QualityTaskStep): O.Option<ReadonlyArray<string>> => {
+  if (
+    step.command === "bunx" &&
+    O.contains(A.get(step.args, 0), "turbo") &&
+    O.contains(A.get(step.args, 1), "run") &&
+    A.contains(step.args, "--summarize")
+  ) {
+    return O.some(pipe(A.drop(step.args, 2), A.takeWhile(P.not(Str.startsWith("-")))));
+  }
+  const wrapperLane =
+    step.command === "bun" &&
+    O.contains(A.get(step.args, 0), "run") &&
+    O.contains(A.get(step.args, 1), "beep") &&
+    O.contains(A.get(step.args, 2), "ci") &&
+    O.contains(A.get(step.args, 3), "lane");
+  return wrapperLane ? O.some(A.empty<string>()) : O.none();
+};
 
 const resolveLaneInputDigest = Effect.fn("QualityTasks.resolveLaneInputDigest")(function* (
   outcome: StreamingStepOutcome,

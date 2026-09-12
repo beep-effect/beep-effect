@@ -1014,7 +1014,12 @@
       "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint"],
-      "inputs": [".changeset/**", "**/package.json", "bun.lock"]
+      "inputs": [
+        ".changeset/**",
+        "**/package.json",
+        "bun.lock",
+        "standards/changesets.retired-packages.json"
+      ]
     },
     "//#repo-sanity:syncpack": {
       "cache": true,

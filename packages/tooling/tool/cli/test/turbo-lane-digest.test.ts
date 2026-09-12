@@ -60,7 +60,7 @@ describe("Turbo lane digests", () => {
     if (O.isSome(forward) && O.isSome(reversed)) {
       expect(forward.value.digest).toBe(reversed.value.digest);
       expect(A.map(forward.value.tasks, (row) => row.taskId)).toEqual(["//#lint:allowlist", "@beep/schema#lint:laws"]);
-      expect(forward.value.summaryId).toBe("run");
+      expect(forward.value.summaryIds).toEqual(["run"]);
     }
     const everything = turboLaneDigestFromSummary(summary("run", 100, rows), []);
     expect(O.map(everything, (digest) => A.length(digest.tasks))).toEqual(O.some(3));
@@ -91,14 +91,30 @@ describe("Turbo lane digests", () => {
       yield* fs.writeFileString(path.join(runs, "broken.json"), "{not json");
 
       const digest = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.000Z", ["lint:allowlist"]);
-      expect(O.map(digest, (value) => value.summaryId)).toEqual(O.some("fresh"));
-      expect(O.map(digest, (value) => value.tasks[0]?.hash)).toEqual(O.some("new"));
+      expect(digest).toEqual(O.none());
+      yield* fs.remove(path.join(runs, "newest-red.json"));
+      const folded = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.000Z", ["lint:allowlist"]);
+      expect(O.map(folded, (value) => value.summaryIds)).toEqual(O.some(["fresh"]));
+      expect(O.map(folded, (value) => value.tasks[0]?.hash)).toEqual(O.some("new"));
 
       const beforeAny = yield* readTurboLaneDigest(root, "2026-09-12T05:00:00.000Z", ["lint:allowlist"]);
       expect(beforeAny).toEqual(O.none());
 
       const noRuns = yield* readTurboLaneDigest(path.join(root, "elsewhere"), "2026-09-12T04:00:00.000Z", []);
       expect(noRuns).toEqual(O.none());
+
+      yield* write(
+        "second.json",
+        summary("second", startedAt + 3_000, [
+          task("//#lint:allowlist", "newer", "HIT"),
+          task("//#lint:typos", "t1", "MISS"),
+        ])
+      );
+      const every = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.000Z", []);
+      expect(O.map(every, (value) => value.summaryIds)).toEqual(O.some(["fresh", "second"]));
+      expect(O.map(every, (value) => A.map(value.tasks, (row) => `${row.taskId}=${row.hash}`))).toEqual(
+        O.some(["//#lint:allowlist=newer", "//#lint:typos=t1"])
+      );
     }, providePlatform)
   );
 });

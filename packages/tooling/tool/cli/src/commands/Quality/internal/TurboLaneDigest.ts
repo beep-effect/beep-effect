@@ -5,6 +5,7 @@ import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 
@@ -12,6 +13,14 @@ const $I = $RepoCliId.create("commands/Quality/internal/TurboLaneDigest");
 
 /**
  * Cache verdict Turbo records for one task in a run summary.
+ *
+ * **Example** (Check a cache status)
+ *
+ * ```ts
+ * import { TurboSummaryCacheStatus } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(TurboSummaryCacheStatus.is("HIT")) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -89,6 +98,15 @@ export class TurboRunSummary extends S.Class<TurboRunSummary>($I`TurboRunSummary
 /**
  * One task's contribution to a lane digest.
  *
+ * **Example** (Describe a folded task)
+ *
+ * ```ts
+ * import { TurboLaneTaskHash } from "@beep/repo-cli/test/Quality"
+ *
+ * const row = TurboLaneTaskHash.make({ taskId: "//#lint:typos", hash: "b2", cacheStatus: "HIT" })
+ * console.log(row.cacheStatus) // "HIT"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -98,20 +116,30 @@ export class TurboLaneTaskHash extends S.Class<TurboLaneTaskHash>($I`TurboLaneTa
 ) {}
 
 /**
- * A lane's Turbo-derived input digest: the summary it came from and the task hashes it folds.
+ * A lane's Turbo-derived input digest: the summaries it came from and the task hashes it folds.
  *
  * **Details**
  *
  * The digest is the SHA-256 of the sorted `taskId=hash` lines, so it does not depend on Turbo's
  * task ordering and changes whenever any folded task hash changes. Only tasks that passed
  * (`execution.exitCode === 0`) or replayed from cache (`HIT`) fold in; a failed task yields no
- * digest, so a lane never records a reusable digest for a red run.
+ * digest, so a lane never records a reusable digest for a red run. A lane that ran several Turbo
+ * invocations (the Fallow CI lane writes one summary per sublane) folds every summary it wrote.
+ *
+ * **Example** (Build a digest by hand)
+ *
+ * ```ts
+ * import { TurboLaneDigest } from "@beep/repo-cli/test/Quality"
+ *
+ * const digest = TurboLaneDigest.make({ digest: "ab12", summaryIds: ["run"], tasks: [] })
+ * console.log(digest.summaryIds.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class TurboLaneDigest extends S.Class<TurboLaneDigest>($I`TurboLaneDigest`)(
-  { digest: S.String, summaryId: S.String, tasks: S.Array(TurboLaneTaskHash) },
+  { digest: S.String, summaryIds: S.Array(S.String), tasks: S.Array(TurboLaneTaskHash) },
   $I.annote("TurboLaneDigest", { description: "Lane input digest folded from one Turbo run summary's task hashes." })
 ) {}
 
@@ -126,6 +154,33 @@ const bareTaskName = (taskId: string): string =>
 
 const taskPassed = (task: TurboSummaryTask): boolean =>
   task.cache.status === "HIT" || (task.execution?.exitCode ?? null) === 0;
+
+const rowOrder = Order.mapInput(Order.String, (row: TurboLaneTaskHash) => row.taskId);
+
+const selectedRows = (tasks: ReadonlyArray<TurboSummaryTask>): ReadonlyArray<TurboLaneTaskHash> =>
+  A.map(tasks, (task) =>
+    TurboLaneTaskHash.make({ taskId: task.taskId, hash: task.hash, cacheStatus: task.cache.status })
+  );
+
+const digestRows = (summaryIds: ReadonlyArray<string>, rows: ReadonlyArray<TurboLaneTaskHash>): TurboLaneDigest => {
+  const sorted = pipe(rows, A.sortBy(rowOrder));
+  const digest = createHash("sha256")
+    .update(
+      A.join(
+        A.map(sorted, (row) => `${row.taskId}=${row.hash}`),
+        "\n"
+      )
+    )
+    .digest("hex");
+  return TurboLaneDigest.make({ digest, summaryIds, tasks: sorted });
+};
+
+const selectTasks = (summary: TurboRunSummary, taskNames: ReadonlyArray<string>): ReadonlyArray<TurboSummaryTask> => {
+  const wanted = HashSet.fromIterable(taskNames);
+  return A.isReadonlyArrayEmpty(taskNames)
+    ? summary.tasks
+    : A.filter(summary.tasks, (task) => HashSet.has(wanted, bareTaskName(task.taskId)));
+};
 
 /**
  * Fold the task hashes of one summary into a lane digest, selecting tasks by bare name.
@@ -163,39 +218,25 @@ export const turboLaneDigestFromSummary: {
   (taskNames: ReadonlyArray<string>): (summary: TurboRunSummary) => O.Option<TurboLaneDigest>;
   (summary: TurboRunSummary, taskNames: ReadonlyArray<string>): O.Option<TurboLaneDigest>;
 } = dual(2, (summary: TurboRunSummary, taskNames: ReadonlyArray<string>): O.Option<TurboLaneDigest> => {
-  const wanted = HashSet.fromIterable(taskNames);
-  const selected = A.isReadonlyArrayEmpty(taskNames)
-    ? summary.tasks
-    : A.filter(summary.tasks, (task) => HashSet.has(wanted, bareTaskName(task.taskId)));
+  const selected = selectTasks(summary, taskNames);
   if (A.isReadonlyArrayEmpty(selected) || !A.every(selected, taskPassed)) {
     return O.none();
   }
-  const rows = pipe(
-    selected,
-    A.map((task) => TurboLaneTaskHash.make({ taskId: task.taskId, hash: task.hash, cacheStatus: task.cache.status })),
-    A.sortBy(Order.mapInput(Order.String, (row: TurboLaneTaskHash) => row.taskId))
-  );
-  const digest = createHash("sha256")
-    .update(
-      A.join(
-        A.map(rows, (row) => `${row.taskId}=${row.hash}`),
-        "\n"
-      )
-    )
-    .digest("hex");
-  return O.some(TurboLaneDigest.make({ digest, summaryId: summary.id, tasks: rows }));
+  return O.some(digestRows([summary.id], selectedRows(selected)));
 });
 
 const summaryStartOrder = Order.mapInput(Order.Number, (summary: TurboRunSummary) => summary.execution.startTime);
 
 /**
- * Read the newest run summary the current attempt wrote and fold its task hashes.
+ * Fold the task hashes of every run summary the current attempt wrote into one lane digest.
  *
  * **Details**
  *
  * Only summaries whose `execution.startTime` is at or after `startedAtIso` count as this
  * attempt's own (§7.1.5 freshness); older summaries in `.turbo/runs` are ignored, and files that
- * fail to decode are skipped rather than failing the lane.
+ * fail to decode are skipped rather than failing the lane. When a task id appears in several fresh
+ * summaries (a re-run inside the lane) the newest summary's hash wins; any selected task that
+ * neither passed nor replayed from cache yields `None`.
  *
  * **Example** (Digest after a lane step)
  *
@@ -210,7 +251,7 @@ const summaryStartOrder = Order.mapInput(Order.Number, (summary: TurboRunSummary
  * @param repoRoot - Repository root that owns `.turbo/runs`.
  * @param startedAtIso - ISO timestamp the lane step started at; older summaries are ignored.
  * @param taskNames - Bare task names the lane invoked.
- * @returns The newest fresh digest, or `None` when no fresh passing summary covers the tasks.
+ * @returns The folded digest, or `None` when no fresh passing summary covers the tasks.
  * @category digests
  * @since 0.0.0
  */
@@ -229,12 +270,23 @@ export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")
     (entry) => fs.readFileString(path.join(runsDirectory, entry)).pipe(Effect.flatMap(decodeSummary), Effect.option),
     { concurrency: 4 }
   );
-  return pipe(
+  const fresh = pipe(
     A.getSomes(summaries),
     A.filter((summary) => summary.execution.startTime >= startedAt),
-    A.sortBy(summaryStartOrder),
-    A.reverse,
-    A.findFirst((summary) => O.isSome(turboLaneDigestFromSummary(summary, taskNames))),
-    O.flatMap((summary) => turboLaneDigestFromSummary(summary, taskNames))
+    A.sortBy(summaryStartOrder)
+  );
+  const selected = A.flatMap(fresh, (summary) => selectTasks(summary, taskNames));
+  if (A.isReadonlyArrayEmpty(selected) || !A.every(selected, taskPassed)) {
+    return O.none<TurboLaneDigest>();
+  }
+  // Newest summary last: a later re-run of the same task id overwrites the earlier hash.
+  const newestByTask = A.reduce(selectedRows(selected), HashMap.empty<string, TurboLaneTaskHash>(), (acc, row) =>
+    HashMap.set(acc, row.taskId, row)
+  );
+  return O.some(
+    digestRows(
+      A.map(fresh, (summary) => summary.id),
+      A.fromIterable(HashMap.values(newestByTask))
+    )
   );
 });

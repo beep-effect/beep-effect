@@ -102,6 +102,15 @@ export class YeetStatusWorktree extends S.Class<YeetStatusWorktree>($I`YeetStatu
 /**
  * One verdict lane that recorded a Turbo-derived input digest (C3.6 per-lane hashes).
  *
+ * **Example** (Name a lane digest)
+ *
+ * ```ts
+ * import { YeetStatusLaneDigest } from "@beep/repo-cli/test/Yeet"
+ *
+ * const lane = YeetStatusLaneDigest.make({ id: "quality:knip", inputDigest: "0d5970886d36b416" })
+ * console.log(lane.id) // "quality:knip"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
