@@ -1927,6 +1927,29 @@ the measured-row proposals nor the self-judge paragraphs: a dropped row there
 says to restore the coverage or open a pull request that lowers only those rows
 to the values the run printed, which is the runbook line for a red `main`.
 
+## 2026-09-12: Stale Ignored Projections Are Refreshed by Their Checks
+
+- **Status:** Active (amends 2026-08-27 "The Exploration Atlas Is an Untracked D3 Projection")
+
+Decision:
+
+`beep explore atlas --check` and `beep goals index --check` keep proving that every projection is
+derivable, and README-region drift still fails the Atlas check. A present `explorations/ATLAS.md`
+or `goals/INDEX.md` whose bytes differ from the projection is no longer rejected: the check rewrites
+the ignored file from the projection, logs the refresh, and succeeds. When README drift is refused,
+a stale Atlas beside it is named, not rewritten. `--check` never writes a tracked file; `--write`
+remains the only path that rewrites README status regions.
+
+Rationale:
+
+Both files are git-ignored workstation state, so no hosted lane ever carries one and the rejection
+could only fire locally: every fast-forward that landed a packet manifest change left the local
+copy stale and turned `bun run lint` red on a head CI had just proven green (acked as "stale local
+INDEX.md" three times in the Yeet inbox). Rejecting the bytes protected nothing that refreshing does
+not protect better: the projection may carry no authored doctrine, and overwriting an authored-into
+copy enforces that rule instead of leaving the copy in place behind a red. The whole-file projection
+contract is unchanged; only the remedy moved from the operator to the check.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:
