@@ -192,7 +192,9 @@ const config: ViteUserConfig = {
     // Deep property sweeps (BEEP_FC_NUM_RUNS raises fast-check run counts
     // 8-20x for the property lane and nightly sweep) scale test wall time
     // the same way instrumentation does; give them the same generous cap.
-    testTimeout: vitestDoctestActive ? 30_000 : vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 30_000,
+    // In doctest mode the first example of a file pays the module transform; under the fleet's
+    // 4-way task concurrency on a 4-vCPU runner that exceeded 30 s (C3.4 hosted round 1).
+    testTimeout: vitestDoctestActive ? 120_000 : vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 30_000,
     hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 10_000,
     // Baseline generation/regeneration must tolerate test-less packages;
     // the ratchet compare, not vitest, decides coverage outcomes.
@@ -220,6 +222,8 @@ const config: ViteUserConfig = {
     sequence: {
       concurrent: !vitestDoctestActive,
     },
+    // One doctest owner per worker pair keeps 4 concurrent Turbo tasks inside the runner's CPU.
+    ...(vitestDoctestActive ? { maxWorkers: 2 } : {}),
     include: vitestDoctestActive ? [] : fcDeepSweepActive ? [...propertySweepInclude] : ["test/**/*.test.{ts,tsx}"],
     includeSource: vitestDoctestActive ? ["src/**/*.{ts,tsx}"] : [],
     coverage: {

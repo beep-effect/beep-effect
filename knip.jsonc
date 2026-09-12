@@ -185,7 +185,7 @@
   // system Python project runner — binaries not provided as resolvable dependency imports.
   // readlink is a POSIX/coreutils system binary (root `instructions:drift` script), never an
   // npm-installable dependency.
-  "ignoreBinaries": ["op", "beep-cli", "portless", "readlink", "uv"],
+  "ignoreBinaries": ["op", "beep-cli", "portless", "readlink", "uv", "typos"],
   // Scratchpad is a private experiment workspace kept in the root install graph
   // for dependency/TS trials but excluded from Knip's package graph. Scaffolded
   // test fixtures are likewise deliberately outside dependency-drift review.

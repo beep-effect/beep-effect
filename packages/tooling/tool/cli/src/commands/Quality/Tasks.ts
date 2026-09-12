@@ -2659,31 +2659,47 @@ const rootRepoLintPolicySteps = (
 
 // Run each Turbo process graph in order. Hosted runs collect every failure;
 // local runs stop after a red cheap phase. Never compare a stale inventory.
+// The JSDoc ratchet compare only reads an inventory the same run refreshed; skip it once the
+// phase that owns the inventory is red. Keyed by the PLANNED label: the resolved step may carry
+// a secret-session suffix.
+const ratchetCompareBlocked = (
+  step: QualityTaskStep,
+  full: boolean,
+  failedPlannedLabels: MutableHashSet.MutableHashSet<string>
+): boolean =>
+  step.label === "ci:jsdoc-ratchet:ratchet" &&
+  MutableHashSet.has(failedPlannedLabels, full ? "lint:policy:medium" : "lint:policy:state");
+
+// Local runs stop after a red cheap phase; hosted runs collect every phase.
+const stopsAfterCheapRed = (step: QualityTaskStep, full: boolean, result: QualityTaskStepOutput): boolean =>
+  !full && step.label === "lint:policy:cheap" && result.exitCode !== 0;
+
+const runPolicyStep = Effect.fn("QualityTasks.runPolicyStep")(function* (step: QualityTaskStep) {
+  const resolved = yield* withTurboSecretSession(step);
+  yield* Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`);
+  const result = yield* collectResolvedStepOutput(resolved);
+  yield* renderStepOutput(result);
+  return result;
+});
+
 const runPolicySteps = Effect.fn("QualityTasks.runPolicySteps")(function* (
   steps: ReadonlyArray<QualityTaskStep>,
   full: boolean
 ) {
   const results = A.empty<QualityTaskStepOutput>();
-  // Keyed by the PLANNED label: the resolved step may carry a secret-session suffix.
   const failedPlannedLabels = MutableHashSet.empty<string>();
   yield* Console.log(`[beep-cli] lint:policy: running ${A.length(steps)} ordered step(s)`);
   for (const step of steps) {
-    if (
-      step.label === "ci:jsdoc-ratchet:ratchet" &&
-      MutableHashSet.has(failedPlannedLabels, full ? "lint:policy:medium" : "lint:policy:state")
-    ) {
+    if (ratchetCompareBlocked(step, full, failedPlannedLabels)) {
       yield* Console.log("[beep-cli] jsdoc ratchet skipped: fresh inventory phase failed");
       continue;
     }
-    const resolved = yield* withTurboSecretSession(step);
-    yield* Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`);
-    const result = yield* collectResolvedStepOutput(resolved);
-    yield* renderStepOutput(result);
+    const result = yield* runPolicyStep(step);
     A.appendInPlace(results, result);
     if (result.exitCode !== 0) {
       MutableHashSet.add(failedPlannedLabels, step.label);
     }
-    if (!full && step.label === "lint:policy:cheap" && result.exitCode !== 0) {
+    if (stopsAfterCheapRed(step, full, result)) {
       yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
     }
   }

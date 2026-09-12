@@ -1143,3 +1143,23 @@ was attempted under the marker-only amendment.
 - Would have prevented it: keeping the planned step identity on the resolved step (a `plannedLabel`
   or id field) instead of rewriting `label`, so no consumer has to know about the suffix; and a test
   environment that can turn the secret-session rewrite on without a real session.
+
+## 2026-09-12 — Whole-tree root tasks overflow the cache-policy census capture
+
+- Doing: first hosted round of the one-PR train (#1102); `quality:cache-policy` red in Repo Sanity.
+- Evidence: `Census subprocess failed or exceeded its 64 MiB capture bound.` after 21 s — the census
+  captures `turbo run --dry-run=json` for the whole graph, and each `**/*`-style root task now lists
+  every matched file in `tasks[].inputs`, so 41 root tasks push the JSON past the bound sized for the
+  package-only graph. Fixed by raising the bound to 512 MiB and the timeout to 180 s.
+- Would have prevented it: a census that reads `tasks[].hash` and `resolvedTaskDefinition` without
+  the per-file `inputs` maps (a `--dry-run` field filter, or hashing inputs to a digest before capture).
+
+## 2026-09-12 — The first doctest example per file pays the module transform on hosted runners
+
+- Doing: the same round; `Heavy / Doctest` red on `@beep/observability` (7) and `@beep/nlp-processing` (2).
+- Evidence: every failed example was the first of its file and timed out at exactly 30 s; later
+  examples in the same file ran in milliseconds. With `--concurrency=4` on a 4-vCPU runner, four Node
+  vitest processes with default worker counts contend for the CPU during the first snippet's transform.
+  Fixed by a 120 s doctest `testTimeout` and `maxWorkers: 2` in the doctest branch of `vitest.shared.ts`.
+- Would have prevented it: the R1 accounting run on the hosted runner class before the task landed
+  (§7.1.4 asks for it; the workstation has 32 cores and never showed the contention).

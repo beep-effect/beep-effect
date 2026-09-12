@@ -1384,3 +1384,16 @@ secret-session prefix, `--cache=` tokens and the CI-only `--force`, compare labe
 fresh-inventory guard in `runPolicySteps` compared the resolved label, so under a live session a
 failed inventory phase did not suppress the JSDoc ratchet compare (it now records failed planned
 labels).
+
+### Hosted round 1 (PR #1102, head 8643596f31)
+
+Yeet's local cheap gates and the hosted lanes agreed on the introduced reds: a changeset for the 34
+product workspaces the doctest scripts and vitest configs touch; the cache-policy census overflowing
+its 64 MiB capture (bound raised to 512 MiB; receipt); knip's `typos` binary from the new root script
+(ignored in `knip.jsonc`); the effect-vitest inventory rows for the new and edited test files; four
+fallow complexity findings (the Stage C fixture builder, `runPolicySteps`, the fail-fast test body and
+the doctest discovery test — each split into helpers); and `Heavy / Doctest` timing out the first
+example of nine files under 4-way contention (doctest `testTimeout` 120 s, `maxWorkers: 2`; receipt).
+Environment-only: the openclaw reviewer failed before reviewing (Codex usage limits, not a required
+context), `Test Unit (unit-a)` hit the known test-utils watchdog flake, and the goals index and
+explorations atlas are git-ignored local projections rewritten in place.

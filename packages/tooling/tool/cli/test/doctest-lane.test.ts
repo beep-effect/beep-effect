@@ -75,6 +75,52 @@ const resolvedConfig = Effect.fn("DoctestTest.resolvedConfig")(function* (root: 
   return yield* decodeConfig(child.output);
 });
 
+const isDoctestOwner = (scripts: Readonly<Record<string, string>>): boolean =>
+  "doctest" in scripts || "beep:doctest" in scripts;
+
+// Every source that spells the marker must carry a marked fence (Amendment 1 parity).
+const expectMarkedFencesOnly = Effect.fn("DoctestLaneTest.expectMarkedFencesOnly")(function* (
+  dir: string,
+  name: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const fsUtils = yield* FsUtils;
+  const path = yield* Path.Path;
+  const allSources = yield* fsUtils.globFiles(["src/**/*.{ts,tsx}"], { cwd: dir });
+  for (const file of allSources) {
+    const source = yield* fs.readFileString(path.join(dir, file));
+    if (Str.includes(doctestSourceMarker)(source)) {
+      expect(source, `${name}: ${file}`).toMatch(/^\s*\*?\s*`{3}(?:ts|tsx|typescript)\s+import\.meta\.vitest\b/m);
+    }
+  }
+});
+
+// Production Turbo input expansion must cover every resolved setup/global setup file.
+const expectSetupInputsCovered = Effect.fn("DoctestLaneTest.expectSetupInputsCovered")(function* (
+  root: string,
+  dir: string,
+  name: string,
+  setupFiles: ReadonlyArray<string>
+) {
+  const path = yield* Path.Path;
+  const probe = yield* StepExec.runCaptured({
+    command: path.join(root, "node_modules/.bin/turbo"),
+    args: ["run", "doctest", `--filter=${name}`, "--dry-run=json", "--cache=local:rw"],
+    cwd: root,
+    source: "stdout",
+    timeout: "30 seconds",
+    env: { TURBO_TELEMETRY_DISABLED: "1" },
+    extendEnv: true,
+  });
+  expect(probe.exitCode, probe.output).toBe(0);
+  const summary = yield* decodeTurboInputs(probe.output);
+  const task = O.getOrThrow(A.findFirst(summary.tasks, (entry) => entry.taskId === `${name}#doctest`));
+  for (const setup of setupFiles) {
+    const relative = path.relative(dir, setup);
+    expect(task.inputs[relative], `${name}: ${relative}`).toBeDefined();
+  }
+});
+
 describe("doctest lane fixture", { concurrent: false }, () => {
   it.effect(
     "resolves every owner to non-empty in-source discovery and hashes its setup files",
@@ -89,7 +135,7 @@ describe("doctest lane fixture", { concurrent: false }, () => {
         const dir = workspace.dir;
         const manifest = yield* readPackageJsonFile(path.join(dir, "package.json"));
         const scripts = O.getOrElse(manifest.scripts, () => ({}));
-        if (!("doctest" in scripts) && !("beep:doctest" in scripts)) continue;
+        if (!isDoctestOwner(scripts)) continue;
         owners++;
         const config = yield* resolvedConfig(dir, true);
         expect(config.include, name).toEqual([]);
@@ -102,31 +148,8 @@ describe("doctest lane fixture", { concurrent: false }, () => {
           fs.readFileString(path.join(dir, file)).pipe(Effect.map(Str.includes("import.meta.vitest")))
         );
         expect(marked.length, name).toBeGreaterThan(0);
-        // Inspect every source, including excluded paths: the marker must name a fence.
-        const allSources = yield* fsUtils.globFiles(["src/**/*.{ts,tsx}"], { cwd: dir });
-        for (const file of allSources) {
-          const source = yield* fs.readFileString(path.join(dir, file));
-          if (Str.includes(doctestSourceMarker)(source)) {
-            expect(source, `${name}: ${file}`).toMatch(/^\s*\*?\s*`{3}(?:ts|tsx|typescript)\s+import\.meta\.vitest\b/m);
-          }
-        }
-        // Production Turbo input expansion must cover every resolved setup/global setup file.
-        const probe = yield* StepExec.runCaptured({
-          command: path.join(root, "node_modules/.bin/turbo"),
-          args: ["run", "doctest", `--filter=${name}`, "--dry-run=json", "--cache=local:rw"],
-          cwd: root,
-          source: "stdout",
-          timeout: "30 seconds",
-          env: { TURBO_TELEMETRY_DISABLED: "1" },
-          extendEnv: true,
-        });
-        expect(probe.exitCode, probe.output).toBe(0);
-        const summary = yield* decodeTurboInputs(probe.output);
-        const task = O.getOrThrow(A.findFirst(summary.tasks, (entry) => entry.taskId === `${name}#doctest`));
-        for (const setup of [...config.setupFiles, ...config.globalSetup]) {
-          const relative = path.relative(dir, setup);
-          expect(task.inputs[relative], `${name}: ${relative}`).toBeDefined();
-        }
+        yield* expectMarkedFencesOnly(dir, name);
+        yield* expectSetupInputsCovered(root, dir, name, [...config.setupFiles, ...config.globalSetup]);
       }
       yield* Console.log(`doctest discovery: ${owners} owners with non-empty source discovery and covered setup files`);
       expect(owners).toBeGreaterThan(0);

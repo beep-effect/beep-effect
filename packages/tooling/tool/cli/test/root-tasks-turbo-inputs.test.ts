@@ -131,6 +131,35 @@ const writeFile = Effect.fn("RootTasksFixture.writeFile")(function* (root: strin
 const writeJson = Effect.fn("RootTasksFixture.writeJson")(function* (root: string, file: string, value: unknown) {
   yield* writeFile(root, file, `${yield* jsonStringifyPretty(value)}\n`);
 });
+const rootScriptName = Str.slice(3);
+const isFallowEnvelope = (name: string): boolean =>
+  Str.startsWith("fallow:")(name) && name !== "fallow:boundaries:config-check";
+const expectsFingerprintEdge = (id: string, script: string): boolean =>
+  id !== fingerprintId &&
+  (Str.startsWith("bun run beep")(script) || Str.startsWith("beep-cli")(script) || id === "//#repo-sanity:versions");
+const expectedOutputs = (id: string, name: string): ReadonlyArray<string> => {
+  if (isFallowEnvelope(name)) {
+    const lane = O.getOrThrow(A.get(Str.split(":")(name), 1));
+    const mode = Str.endsWith(":check")(name) ? "check" : "advisory";
+    return [`.beep/fallow/${lane}.${mode}.json`, `.beep/fallow/raw/${lane}.${mode}.*`];
+  }
+  return id === "//#jsdoc:inventory:check" ? [".beep/ci/jsdoc-documentation.inventory.*"] : [];
+};
+// One row of the §2.2 contract: script presence, fingerprint edge, cache flag, env and outputs.
+const expectRootTaskContract = (id: string, task: RootTask, scripts: Readonly<Record<string, string>>): void => {
+  const name = rootScriptName(id);
+  expect(isProofTaskName(id), id).toBe(true);
+  expect(R.has(directInputs, name), id).toBe(true);
+  expect(R.has(scripts, name), id).toBe(true);
+  if (expectsFingerprintEdge(id, O.getOrThrow(R.get(scripts, name)))) {
+    expect(task.dependsOn, id).toEqual([fingerprintId]);
+  }
+  expect(task.cache, id).toBe(!A.contains(nonReusableTasks, name));
+  expect(task.env, id).toEqual(isFallowEnvelope(name) ? ["BEEP_PROOF_BASE"] : []);
+  expect(task.passThroughEnv, id).toEqual(id === "//#knowledge:semantic-delta" ? ["GITHUB_EVENT_PATH"] : []);
+  expect(task.outputs, id).toEqual(expectedOutputs(id, name));
+};
+
 const fixture = Effect.fn("RootTasksFixture.make")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -146,30 +175,7 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
   const tasks = R.fromEntries(rootEntries);
   expect(A.length(rootEntries)).toBe(A.length(R.keys(directInputs)));
   for (const [id, task] of rootEntries) {
-    expect(isProofTaskName(id), id).toBe(true);
-    expect(R.has(directInputs, Str.slice(3)(id)), id).toBe(true);
-    expect(R.has(manifest.scripts, Str.slice(3)(id)), id).toBe(true);
-    const script = O.getOrThrow(R.get(manifest.scripts, Str.slice(3)(id)));
-    if (
-      id !== fingerprintId &&
-      (Str.startsWith("bun run beep")(script) || Str.startsWith("beep-cli")(script) || id === "//#repo-sanity:versions")
-    ) {
-      expect(task.dependsOn, id).toEqual([fingerprintId]);
-    }
-    expect(task.cache, id).toBe(!A.contains(nonReusableTasks, Str.slice(3)(id)));
-    const name = Str.slice(3)(id);
-    const fallowEnvelope = Str.startsWith("fallow:")(name) && name !== "fallow:boundaries:config-check";
-    expect(task.env, id).toEqual(fallowEnvelope ? ["BEEP_PROOF_BASE"] : []);
-    expect(task.passThroughEnv, id).toEqual(id === "//#knowledge:semantic-delta" ? ["GITHUB_EVENT_PATH"] : []);
-    if (fallowEnvelope) {
-      const lane = O.getOrThrow(A.get(Str.split(":")(name), 1));
-      const mode = Str.endsWith(":check")(name) ? "check" : "advisory";
-      expect(task.outputs, id).toEqual([`.beep/fallow/${lane}.${mode}.json`, `.beep/fallow/raw/${lane}.${mode}.*`]);
-    } else {
-      expect(task.outputs, id).toEqual(
-        id === "//#jsdoc:inventory:check" ? [".beep/ci/jsdoc-documentation.inventory.*"] : []
-      );
-    }
+    expectRootTaskContract(id, task, manifest.scripts);
   }
   const root = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "root-tasks-turbo-" });
   yield* writeFile(root, ".gitignore", "node_modules\n.turbo\n");

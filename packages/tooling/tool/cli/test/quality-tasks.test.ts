@@ -550,6 +550,40 @@ const policyCommandKey = (text: string): string =>
 // A live 1Password session suffixes the resolved step label with " (op run)".
 const policyLabelKey = Str.replace(" (op run)", "");
 
+const policyStepCommand = (step: QualityTaskStep) => A.join([step.command, ...step.args], " ");
+
+// A red policy run fails as one group whose failures name exactly the red planned label.
+const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel: string): void => {
+  expect(Exit.isFailure(exit)).toBe(true);
+  if (Exit.isFailure(exit)) {
+    const failure = Cause.squash(exit.cause);
+    expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+    if (isQualityTaskGroupFailed(failure)) {
+      expect(A.map(failure.failures, (step) => policyLabelKey(step.label))).toEqual([failedLabel]);
+    }
+  }
+};
+
+// Local runs stop after a red cheap phase; every run skips the ratchet compare once the
+// inventory phase is red.
+const expectedPolicyRun = (
+  plan: ReadonlyArray<QualityTaskStep>,
+  full: boolean,
+  failedLabel: string
+): ReadonlyArray<QualityTaskStep> =>
+  !full && failedLabel === "lint:policy:cheap"
+    ? A.take(plan, 1)
+    : A.filter(plan, (step) => failedLabel === "lint:policy:cheap" || step.label !== "ci:jsdoc-ratchet:ratchet");
+
+// Session probes (`op …`) and git reads are spawned around the plan; only commands with a
+// step launcher token are plan steps.
+const spawnedPolicyCommands = (spawned: ReadonlyArray<string>): ReadonlyArray<string> =>
+  pipe(
+    spawned,
+    A.map(policyCommandKey),
+    A.filter((key) => key !== "" && !Str.startsWith("git ")(key))
+  );
+
 const cheapGatesSpawner = (
   spawned: Array<string>,
   failedCommands: ReadonlyArray<string>,
@@ -3253,38 +3287,19 @@ describe("quality task adapter", () => {
                       O.getOrThrow
                     );
                     const spawned = A.empty<string>();
-                    const command = (step: QualityTaskStep) => A.join([step.command, ...step.args], " ");
                     const exit = yield* runRootLintPolicyTask(full, "review-base").pipe(
                       Effect.provideService(
                         ChildProcessSpawner.ChildProcessSpawner,
-                        cheapGatesSpawner(spawned, [command(failed)], policyCommandKey)
+                        cheapGatesSpawner(spawned, [policyStepCommand(failed)], policyCommandKey)
                       ),
                       Effect.exit
                     );
-                    expect(Exit.isFailure(exit)).toBe(true);
-                    if (Exit.isFailure(exit)) {
-                      const failure = Cause.squash(exit.cause);
-                      expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
-                      if (isQualityTaskGroupFailed(failure)) {
-                        expect(A.map(failure.failures, (step) => policyLabelKey(step.label))).toEqual([failedLabel]);
-                      }
-                    }
-                    const expected =
-                      !full && failedLabel === "lint:policy:cheap"
-                        ? A.take(plan, 1)
-                        : A.filter(
-                            plan,
-                            (step) => failedLabel === "lint:policy:cheap" || step.label !== "ci:jsdoc-ratchet:ratchet"
-                          );
-                    // Session probes (`op …`) and git reads are spawned around the plan; only
-                    // commands with a step launcher token are plan steps.
-                    expect(
-                      pipe(
-                        spawned,
-                        A.map(policyCommandKey),
-                        A.filter((key) => key !== "" && !Str.startsWith("git ")(key))
+                    expectPolicyGroupFailure(exit, failedLabel);
+                    expect(spawnedPolicyCommands(spawned)).toEqual(
+                      A.map(expectedPolicyRun(plan, full, failedLabel), (step) =>
+                        policyCommandKey(policyStepCommand(step))
                       )
-                    ).toEqual(A.map(expected, (step) => policyCommandKey(command(step))));
+                    );
                   }
                 }
               })
