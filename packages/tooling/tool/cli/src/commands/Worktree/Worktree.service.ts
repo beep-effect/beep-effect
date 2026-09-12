@@ -417,6 +417,19 @@ const runPreservationCommand = Effect.fn("WorktreeRemovalService.runPreservation
   return yield* runGitOutput(cwd, args, preservationErrorAdapter(step, failMessage, affectedPath));
 });
 
+const runPreservationProbe = Effect.fn("WorktreeRemovalService.runPreservationProbe")(function* (
+  cwd: string,
+  args: ReadonlyArray<string>,
+  step: WorktreePreservationError["step"],
+  failMessage: string,
+  affectedPath?: string
+): Effect.fn.Return<string, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+  // Machine-read probes take stdout alone: a zero-exit git diagnostic on stderr
+  // (a warning, advice, or trace line) must never pass for a ref name or a count.
+  const output = yield* runGitRawOutput(cwd, args, preservationErrorAdapter(step, failMessage, affectedPath));
+  return Str.trim(output);
+});
+
 const decodeCount = Effect.fn("WorktreeRemovalService.decodeCount")(function* (
   output: string,
   step: WorktreePreservationError["step"]
@@ -431,7 +444,7 @@ const countCommits = Effect.fn("WorktreeRemovalService.countCommits")(function* 
   revision: string,
   step: WorktreePreservationError["step"]
 ): Effect.fn.Return<NonNegativeInt, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* runPreservationCommand(
+  const output = yield* runPreservationProbe(
     targetPath,
     ["rev-list", "--count", revision, "--"],
     step,
@@ -453,20 +466,21 @@ const refExists = Effect.fn("WorktreeRemovalService.refExists")(function* (
 ): Effect.fn.Return<boolean, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
   // for-each-ref also lists refs nested under the pattern, so only an exact
   // refname line proves that the ref itself exists.
-  const output = yield* runPreservationCommand(
+  const output = yield* runPreservationProbe(
     targetPath,
     ["for-each-ref", "--format=%(refname)", ref],
     step,
     failMessage,
     targetPath
   );
-  return A.contains(Str.split(Str.trim(output), "\n"), ref);
+  return A.contains(Str.split(output, "\n"), ref);
 });
 
 const resolveOriginDefaultBranch = Effect.fn("WorktreeRemovalService.resolveOriginDefaultBranch")(function* (
   targetPath: string
 ): Effect.fn.Return<string, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
-  const symref = yield* runPreservationCommand(
+  // A dangling origin/HEAD lists nothing, so the probe falls back to `main`.
+  const symref = yield* runPreservationProbe(
     targetPath,
     ["for-each-ref", "--format=%(symref:lstrip=3)", "refs/remotes/origin/HEAD"],
     "inspect-origin-main",
@@ -474,7 +488,7 @@ const resolveOriginDefaultBranch = Effect.fn("WorktreeRemovalService.resolveOrig
     targetPath
   );
   return pipe(
-    Str.trim(symref),
+    symref,
     O.liftPredicate(Str.isNonEmpty),
     O.getOrElse(() => ORIGIN_DEFAULT_BRANCH)
   );
@@ -487,14 +501,13 @@ const inspectUpstreamState = Effect.fn("WorktreeRemovalService.inspectUpstreamSt
   return yield* O.match(branch, {
     onNone: () => Effect.succeed(UPSTREAM_UNSET),
     onSome: Effect.fn("WorktreeRemovalService.inspectBranchUpstream")(function* (branchName) {
-      const upstream = yield* runPreservationCommand(
+      const ref = yield* runPreservationProbe(
         targetPath,
         ["for-each-ref", "--format=%(upstream)", `refs/heads/${branchName}`],
         "inspect-upstream",
         `Failed to inspect the upstream for ${branchName}.`,
         targetPath
       );
-      const ref = Str.trim(upstream);
       if (Str.isEmpty(ref)) {
         return UPSTREAM_UNSET;
       }

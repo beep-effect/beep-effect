@@ -1357,6 +1357,21 @@ describe("worktree git operations", () => {
           `  upstream: refs/remotes/origin/${unpushedBranch} no longer resolves (pruned); unpushed commits were counted against origin/trunk..HEAD instead`
         );
         expect(yield* fs.exists(unpushedPath)).toBe(false);
+
+        // A dangling origin/HEAD names no default branch, so the probe falls back to main
+        // instead of archiving a merged lane as unpushed.
+        yield* runGit(repoRoot, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/gone"]);
+        const danglingBranch = defaultWorktreeBranch("dangling-lane");
+        const danglingPath = yield* addWorktree(context, "dangling-lane", danglingBranch);
+        yield* runGit(danglingPath, ["push", "--set-upstream", "origin", danglingBranch]);
+        yield* pruneUpstream(danglingPath, danglingBranch);
+
+        const danglingReceipt = yield* removeArchived("dangling-lane", danglingPath);
+
+        expect(danglingReceipt.reason).toBe("clean");
+        expect(O.isNone(danglingReceipt.manifest)).toBe(true);
+        expect(O.getOrThrow(danglingReceipt.unpushedInspection).baseRange).toBe("origin/main..HEAD");
+        expect(yield* fs.exists(danglingPath)).toBe(false);
       })
     )
   );
