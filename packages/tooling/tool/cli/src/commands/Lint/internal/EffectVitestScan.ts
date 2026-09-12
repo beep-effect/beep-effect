@@ -310,13 +310,62 @@ export const diffEffectVitestFindings: {
   };
 });
 
+type EffectVitestFileCount = readonly [file: string, count: number];
+
+const fileCountOrder = Order.mapInput(Order.String, (entry: EffectVitestFileCount) => entry[0]);
+
+/**
+ * Render the introduced-finding report as the stable count line, one line per
+ * file in path order, then the total.
+ *
+ * **Details**
+ *
+ * The first line stays byte-identical to the historical
+ * `[effect-vitest] N new finding(s)` message so log-scanning hints keep
+ * matching. The per-file lines name the scanned test files whose rows are
+ * missing from `standards/effect-vitest.inventory.jsonc`, which is what an
+ * operator needs to attribute a stale inventory to the change that added the
+ * tests. An empty introduced set renders no lines.
+ *
+ * **Example** (Group introduced rows by file)
+ *
+ * ```ts
+ * import { formatEffectVitestIntroducedReport } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(formatEffectVitestIntroducedReport([]).length) // 0
+ * ```
+ *
+ * @param introduced - Live findings absent from the committed baseline.
+ * @returns Report lines in print order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const formatEffectVitestIntroducedReport = (
+  introduced: ReadonlyArray<EffectVitestFinding>
+): ReadonlyArray<string> => {
+  if (A.isReadonlyArrayEmpty(introduced)) {
+    return A.empty<string>();
+  }
+  const countsByFile = A.reduce(introduced, HashMap.empty<string, number>(), (counts, finding) =>
+    HashMap.modifyAt(counts, finding.file, (count) => O.some(O.getOrElse(count, () => 0) + 1))
+  );
+  const entries: ReadonlyArray<EffectVitestFileCount> = A.sort(HashMap.toEntries(countsByFile), fileCountOrder);
+  return [
+    `[effect-vitest] ${introduced.length} new finding(s)`,
+    ...A.map(entries, ([file, count]) => `[effect-vitest]   ${file}: ${count} new finding(s)`),
+    `[effect-vitest] total: ${introduced.length} new finding(s) in ${entries.length} file(s); refresh with \`bun run beep lint effect-vitest --write\` after reviewing them`,
+  ];
+};
+
 const reportMembership = Effect.fnUntraced(function* (
   merged: ReadonlyArray<EffectVitestFinding>,
   baseline: ReadonlyArray<EffectVitestFinding>
 ) {
   const difference = diffEffectVitestFindings(merged, baseline);
   if (difference.introduced.length > 0) {
-    yield* Console.error(`[effect-vitest] ${difference.introduced.length} new finding(s)`);
+    yield* Effect.forEach(formatEffectVitestIntroducedReport(difference.introduced), (line) => Console.error(line), {
+      discard: true,
+    });
     return yield* failWithReportedExit("effect-vitest: ratchet failed on new instances.");
   }
   yield* Console.log(
