@@ -596,10 +596,12 @@ export const GraftDeepUnitPath = S.String.check(S.isPattern(SYSTEMD_UNIT_PATH_PA
 export type GraftDeepUnitPath = typeof GraftDeepUnitPath.Type;
 
 /**
- * Inputs for installing or removing the nightly refresh systemd user timer.
+ * Inputs for installing the nightly refresh systemd user timer.
  *
  * **Details**
  *
+ * Removing the timer takes none of these: an uninstall reads only `HOME`, so
+ * no path here can keep a unit from being disabled and deleted.
  * `envFile` is only ever stat-ed by the installer; its contents reach the
  * refresh through systemd's `EnvironmentFile`, never through this process.
  * `bunPath` is the operator's `--bun-path` made absolute or, when none is
@@ -616,7 +618,6 @@ export type GraftDeepUnitPath = typeof GraftDeepUnitPath.Type;
  *   bunPath: "/usr/bin/bun",
  *   onCalendar: "*-*-* 02:30:00",
  *   envFile: "/home/op/.config/beep-graft/env",
- *   uninstall: false,
  * })
  * console.log(options.onCalendar) // *-*-* 02:30:00
  * ```
@@ -630,7 +631,6 @@ export class GraftDeepTimerOptions extends S.Class<GraftDeepTimerOptions>($I`Gra
     bunPath: GraftDeepUnitPath,
     onCalendar: S.String,
     envFile: GraftDeepUnitPath,
-    uninstall: S.Boolean,
   },
   $I.annote("GraftDeepTimerOptions", {
     description: "Owner clone, Bun executable, calendar expression, and environment file of the refresh timer.",

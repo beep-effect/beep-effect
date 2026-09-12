@@ -52,6 +52,8 @@ const $I = $RepoCliId.create("commands/Graft/GraftDeep.service");
 
 const REFRESH_STATUS_VERSION = "beep-graft-deep-refresh/v1";
 const REFRESH_UNIT_BASE_NAME = "beep-graft-deep-refresh";
+const REFRESH_SERVICE_FILE_NAME = `${REFRESH_UNIT_BASE_NAME}.service`;
+const REFRESH_TIMER_FILE_NAME = `${REFRESH_UNIT_BASE_NAME}.timer`;
 const REFRESH_UNIT_DESCRIPTION = "beep graft deep refresh (nightly meaning-tier rebuild + sibling seed)";
 // A systemd user unit starts with a nearly empty PATH. The refresh spawns
 // `graft` (an npm global whose shebang resolves `node` through the mise shims)
@@ -389,7 +391,8 @@ export type GraftDeepRefreshFailure =
  * **Details**
  *
  * Every method is safe to call concurrently with a running refresh: `run`
- * fences itself with a lock file and `readStatus` only reads.
+ * fences itself with a lock file and `readStatus` only reads. `uninstallTimer`
+ * takes no options because removing the units needs only `HOME`.
  *
  * @category services
  * @since 0.0.0
@@ -400,6 +403,10 @@ export interface GraftDeepRefreshShape {
   ) => Effect.Effect<ReadonlyArray<string>, GraftDeepPreflightError | GraftDeepStepError | GraftCacheIoError>;
   readonly readStatus: (stateDir: string) => Effect.Effect<O.Option<GraftDeepRefreshStatus>, GraftCacheIoError>;
   readonly run: (options: GraftDeepRefreshOptions) => Effect.Effect<GraftDeepRefreshStatus, GraftDeepRefreshFailure>;
+  readonly uninstallTimer: Effect.Effect<
+    ReadonlyArray<string>,
+    GraftDeepPreflightError | GraftDeepStepError | GraftCacheIoError
+  >;
 }
 
 /**
@@ -456,7 +463,6 @@ export class GraftDeepRefresh extends Context.Service<GraftDeepRefresh, GraftDee
  *     bunPath: "/usr/bin/bun",
  *     onCalendar: "*-*-* 02:30:00",
  *     envFile: "/home/op/.config/beep-graft/env",
- *     uninstall: false,
  *   })
  * )
  * console.log(Str.includes("OnCalendar=*-*-* 02:30:00")(units[1]?.text ?? "")) // true
@@ -471,7 +477,7 @@ export const renderGraftDeepRefreshUnits = (
   options: GraftDeepTimerOptions
 ): ReadonlyArray<{ readonly fileName: string; readonly text: string }> => [
   {
-    fileName: `${REFRESH_UNIT_BASE_NAME}.service`,
+    fileName: REFRESH_SERVICE_FILE_NAME,
     text: A.join(
       [
         "[Unit]",
@@ -500,7 +506,7 @@ export const renderGraftDeepRefreshUnits = (
     ),
   },
   {
-    fileName: `${REFRESH_UNIT_BASE_NAME}.timer`,
+    fileName: REFRESH_TIMER_FILE_NAME,
     text: A.join(
       [
         "[Unit]",
@@ -1040,33 +1046,45 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
     );
   });
 
+  const readHome = (anchor: string) =>
+    Config.String("HOME").pipe(
+      Effect.mapError((cause) =>
+        GraftDeepPreflightError.make({
+          path: anchor,
+          message: "HOME is not set; cannot locate the systemd user unit directory.",
+          cause,
+        })
+      )
+    );
+
+  const unitDirOf = (home: string) => path.join(home, ".config", "systemd", "user");
+
+  // A value, not a function: removing the units takes no input beyond HOME.
+  const uninstallTimer: GraftDeepRefreshShape["uninstallTimer"] = Effect.gen(function* () {
+    const home = yield* readHome(REFRESH_TIMER_FILE_NAME);
+    const unitDir = unitDirOf(home);
+    const unitPaths = A.map([REFRESH_SERVICE_FILE_NAME, REFRESH_TIMER_FILE_NAME], (fileName) =>
+      path.join(unitDir, fileName)
+    );
+    // Nothing installed is nothing to undo, so an absent unit is skipped
+    // rather than disabled; a unit that is present and refuses to be
+    // disabled or deleted is reported, because the next daemon-reload
+    // would load it again and the operator would believe it was gone.
+    const present = yield* Effect.filter(unitPaths, (unit) => fs.exists(unit).pipe(Effect.mapError(ioError(unit))));
+    if (A.isReadonlyArrayNonEmpty(present)) {
+      yield* runSystemctl(["disable", "--now", REFRESH_TIMER_FILE_NAME], home);
+    }
+    yield* Effect.forEach(present, (unit) => fs.remove(unit).pipe(Effect.mapError(ioError(unit))));
+    yield* runSystemctl(["daemon-reload"], home);
+    return present;
+  }).pipe(Effect.withSpan("GraftDeepRefresh.uninstallTimer"));
+
   const installTimer: GraftDeepRefreshShape["installTimer"] = Effect.fn("GraftDeepRefresh.installTimer")(
     function* (options) {
-      const home = yield* Config.String("HOME").pipe(
-        Effect.mapError((cause) =>
-          GraftDeepPreflightError.make({
-            path: options.owner,
-            message: "HOME is not set; cannot locate the systemd user unit directory.",
-            cause,
-          })
-        )
-      );
-      const unitDir = path.join(home, ".config", "systemd", "user");
+      const home = yield* readHome(options.owner);
+      const unitDir = unitDirOf(home);
       const units = renderGraftDeepRefreshUnits(options);
       const unitPaths = A.map(units, (unit) => path.join(unitDir, unit.fileName));
-      if (options.uninstall) {
-        // Nothing installed is nothing to undo, so an absent unit is skipped
-        // rather than disabled; a unit that is present and refuses to be
-        // disabled or deleted is reported, because the next daemon-reload
-        // would load it again and the operator would believe it was gone.
-        const present = yield* Effect.filter(unitPaths, (unit) => fs.exists(unit).pipe(Effect.mapError(ioError(unit))));
-        if (A.isReadonlyArrayNonEmpty(present)) {
-          yield* runSystemctl(["disable", "--now", `${REFRESH_UNIT_BASE_NAME}.timer`], home);
-        }
-        yield* Effect.forEach(present, (unit) => fs.remove(unit).pipe(Effect.mapError(ioError(unit))));
-        yield* runSystemctl(["daemon-reload"], home);
-        return present;
-      }
       // Stat only: the environment file holds the proxy token and is never read
       // by this process.
       yield* fs.stat(options.envFile).pipe(
@@ -1138,12 +1156,12 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
         })
       );
       yield* runSystemctl(["daemon-reload"], home);
-      yield* runSystemctl(["enable", "--now", `${REFRESH_UNIT_BASE_NAME}.timer`], home);
+      yield* runSystemctl(["enable", "--now", REFRESH_TIMER_FILE_NAME], home);
       return unitPaths;
     }
   );
 
-  return GraftDeepRefresh.of({ installTimer, readStatus, run });
+  return GraftDeepRefresh.of({ installTimer, readStatus, run, uninstallTimer });
 });
 
 /**

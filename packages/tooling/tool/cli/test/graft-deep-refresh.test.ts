@@ -28,7 +28,7 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
-import { assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Dur from "effect/Duration";
@@ -705,7 +705,6 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         bunPath: "/usr/bin/bun",
         onCalendar: "*-*-* 02:30:00",
         envFile: path.join(stateDir, "env"),
-        uninstall: false,
       });
       const units = renderGraftDeepRefreshUnits(options);
       expect(A.map(units, (unit) => unit.fileName)).toEqual([
@@ -1029,7 +1028,6 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         bunPath: "/usr/bin/bun",
         onCalendar: "*-*-* 02:30:00",
         envFile: path.join(stateDir, "env"),
-        uninstall: false,
       });
       const calls: Array<GraftDeepRunnerStep> = [];
       const runner = scriptedRunner({
@@ -1053,9 +1051,10 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         "systemctl --user enable --now beep-graft-deep-refresh.timer",
       ]);
       const removedCalls: Array<GraftDeepRunnerStep> = [];
-      const removed = yield* GraftDeepRefresh.use((refresh) =>
-        refresh.installTimer(GraftDeepTimerOptions.make({ ...options, uninstall: true }))
-      ).pipe(refreshWith(scriptedRunner({ alive: [], calls: removedCalls, replies: [] })), withHome(home));
+      const removed = yield* GraftDeepRefresh.use((refresh) => refresh.uninstallTimer).pipe(
+        refreshWith(scriptedRunner({ alive: [], calls: removedCalls, replies: [] })),
+        withHome(home)
+      );
       expect(removed).toEqual(written);
       expect(yield* fs.exists(written[0] ?? "")).toBe(false);
       expect(yield* fs.exists(written[1] ?? "")).toBe(false);
@@ -1169,7 +1168,6 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         bunPath: "/opt/bun 1/bin/bun",
         onCalendar: "*-*-* 02:30:00",
         envFile: "/home/op/beep graft/env",
-        uninstall: false,
       });
       const service = renderGraftDeepRefreshUnits(spaced)[0]?.text ?? "";
       expect(A.filter(Str.split("\n")(service), Str.startsWith("Exec"))).toEqual([
@@ -1268,26 +1266,50 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       const home = path.join(directory, "home");
       yield* fs.makeDirectory(stateDir, { recursive: true });
       yield* fs.writeFileString(path.join(stateDir, "env"), "GRAFT_PROVIDER=openai\n");
-      const runner = scriptedRunner({ alive: [], calls: [], replies: [] });
+      const runner = scriptedRunner({
+        alive: [],
+        calls: [],
+        replies: repliesFor(owner, FULL_COVERAGE, [["mise trust --show", reply(0, `${owner}: trusted`)]]),
+      });
+      const flags = { owner, onCalendar: "*-*-* 02:30:00", envFile: O.some(path.join(stateDir, "env")) };
       const refused = yield* captureOutput(
-        runDeepInstallTimer({
-          owner,
-          bunPath: O.some('/opt/"bun"/bin/bun'),
-          onCalendar: "*-*-* 02:30:00",
-          envFile: O.some(path.join(stateDir, "env")),
-          uninstall: false,
-        }).pipe(refreshWith(runner), withHome(home))
+        runDeepInstallTimer({ ...flags, bunPath: O.some('/opt/"bun"/bin/bun'), uninstall: false }).pipe(
+          refreshWith(runner),
+          withHome(home)
+        )
       );
       assertSome(
         O.map(Result.getFailure(refused.result), (error) => error._tag),
         "GraftDeepPreflightError"
       );
-      expect(yield* fs.exists(path.join(home, ".config", "systemd", "user"))).toBe(false);
+      const unitDir = path.join(home, ".config", "systemd", "user");
+      expect(yield* fs.exists(unitDir)).toBe(false);
+      // An uninstall never reads the install paths, so none of them can keep
+      // an installed unit from being removed.
+      const installed = yield* captureOutput(
+        runDeepInstallTimer({ ...flags, bunPath: O.some("/usr/bin/bun"), uninstall: false }).pipe(
+          refreshWith(runner),
+          withHome(home)
+        )
+      );
+      assertSuccess(installed.result, undefined);
+      const removed = yield* captureOutput(
+        runDeepInstallTimer({
+          owner: '/clones/"gone"',
+          bunPath: O.some("/opt/%h/bun"),
+          onCalendar: "*-*-* 02:30:00",
+          envFile: O.some("/env/$HOME/gone"),
+          uninstall: true,
+        }).pipe(refreshWith(runner), withHome(home))
+      );
+      assertSuccess(removed.result, undefined);
+      expect(removed.output[0]).toEqual(expect.stringContaining("graft deep install-timer: removed"));
+      expect(yield* fs.exists(path.join(unitDir, "beep-graft-deep-refresh.timer"))).toBe(false);
       // The refinement is the single home of that rule: spaces pass because
       // every path argument is rendered quoted; the rest systemd would rewrite.
       expect(yield* decodeUnitPath("/opt/bun 1/bin/bun")).toBe("/opt/bun 1/bin/bun");
       yield* Effect.forEach(["/opt/%h/bun", "/opt/$HOME/bun", "/opt\\bun", "/opt/bun\n"], (bad) =>
-        Effect.map(Effect.result(decodeUnitPath(bad)), (result) => expect(Result.isFailure(result)).toBe(true))
+        Effect.map(Effect.flip(decodeUnitPath(bad)), (failure) => strictEqual(failure._tag, "SchemaError"))
       );
     })
   );
@@ -1304,18 +1326,13 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         bunPath: "/usr/bin/bun",
         onCalendar: "*-*-* 02:30:00",
         envFile: path.join(stateDir, "env"),
-        uninstall: false,
       });
       const trusted = repliesFor(owner, FULL_COVERAGE, [["mise trust --show", reply(0, `${owner}: trusted`)]]);
       const installed = yield* GraftDeepRefresh.use((refresh) => refresh.installTimer(options)).pipe(
         refreshWith(scriptedRunner({ alive: [], calls: [], replies: trusted })),
         withHome(home)
       );
-      const failure = yield* Effect.flip(
-        GraftDeepRefresh.use((refresh) =>
-          refresh.installTimer(GraftDeepTimerOptions.make({ ...options, uninstall: true }))
-        )
-      ).pipe(
+      const failure = yield* Effect.flip(GraftDeepRefresh.use((refresh) => refresh.uninstallTimer)).pipe(
         refreshWith(
           scriptedRunner({
             alive: [],

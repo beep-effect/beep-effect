@@ -350,7 +350,8 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
  * **Details**
  *
  * The installer stats the environment file and refuses a missing one; an
- * uninstall reports only the unit files it actually removed. Without
+ * uninstall reads only `HOME`, never the install paths, and reports only the
+ * unit files it actually removed. Without
  * `--bun-path` the unit runs the mise Bun shim when this user can execute
  * one under the home directory, then a standalone `$HOME/.bun` install, and
  * only then the Bun running this command, so a `mise.toml` bump is picked up
@@ -385,12 +386,29 @@ export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")
   readonly envFile: O.Option<string>;
   readonly uninstall: boolean;
 }) {
+  const refresh = yield* GraftDeepRefresh;
+  // An uninstall needs only HOME: the paths an install validates and probes
+  // are never read, so nothing about them can keep a unit from being removed.
+  const units = options.uninstall ? yield* refresh.uninstallTimer : yield* installTimer(options);
+  const headline = options.uninstall ? "graft deep install-timer: removed" : "graft deep install-timer: wrote";
+  yield* Console.log(
+    A.isReadonlyArrayNonEmpty(units)
+      ? A.join(A.prepend(units, headline), "\n")
+      : "graft deep install-timer: no unit files were installed"
+  );
+});
+
+const installTimer = Effect.fn("GraftCommand.installTimer")(function* (options: {
+  readonly owner: string;
+  readonly bunPath: O.Option<string>;
+  readonly onCalendar: string;
+  readonly envFile: O.Option<string>;
+}) {
   const path = yield* Path.Path;
   const home = yield* Effect.orDie(Config.String("HOME"));
   const refresh = yield* GraftDeepRefresh;
   // An explicit path is the operator's pin and is only made absolute; the
-  // default follows the mise shim so a Bun bump never strands the unit. The
-  // probe cannot fail, so an uninstall is never blocked by it.
+  // default follows the mise shim so a Bun bump never strands the unit.
   const bunPath = yield* O.match(options.bunPath, {
     onNone: () => resolveGraftDeepBunPath(home),
     onSome: (given) => Effect.succeed(resolveOperatorPath(home, path.resolve, given)),
@@ -404,7 +422,6 @@ export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")
       path.resolve,
       O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env"))
     ),
-    uninstall: options.uninstall,
   }).pipe(
     Effect.mapError((cause) =>
       GraftDeepPreflightError.make({
@@ -414,13 +431,7 @@ export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")
       })
     )
   );
-  const units = yield* refresh.installTimer(decoded);
-  const headline = options.uninstall ? "graft deep install-timer: removed" : "graft deep install-timer: wrote";
-  yield* Console.log(
-    A.isReadonlyArrayNonEmpty(units)
-      ? A.join(A.prepend(units, headline), "\n")
-      : "graft deep install-timer: no unit files were installed"
-  );
+  return yield* refresh.installTimer(decoded);
 });
 
 const deepRefreshCommand = Command.make("refresh", deepFlags, runDeepRefresh).pipe(
