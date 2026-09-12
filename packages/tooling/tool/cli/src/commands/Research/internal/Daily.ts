@@ -42,6 +42,9 @@ const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
  * the command line and exits 1 ("The following paths are ignored by one of
  * your .gitignore files"), independent of `advice.addIgnoredFile`. When the
  * vault does not ignore it, the exclude pathspec is what keeps it out.
+ *
+ * @param checkIgnoreExit - Exit code of `git check-ignore -q <state dir>` in the vault.
+ * @returns Pathspecs for `git add -A --`, or a typed failure for an unexpected exit code.
  */
 const stagePathspecs = (checkIgnoreExit: number): Effect.Effect<ReadonlyArray<string>, ResearchCommandError> =>
   Match.value(checkIgnoreExit).pipe(

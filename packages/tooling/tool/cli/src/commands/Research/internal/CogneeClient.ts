@@ -36,6 +36,14 @@ const $I = $RepoCliId.create("commands/Research/internal/CogneeClient");
  * `apiUrl` is required; `email` and `password` fall back to Cognee's default
  * user when unset.
  *
+ * **Example** (Read the API URL variable name)
+ *
+ * ```ts
+ * import { COGNEE_ENV } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
+ *
+ * console.log(COGNEE_ENV.apiUrl) // "COGNEE_API_URL"
+ * ```
+ *
  * @internal
  * @category utilities
  */
@@ -52,6 +60,15 @@ const DEFAULT_COGNEE_PASSWORD = "default_password";
  * Message used when no Cognee connection is configured: `research daily`
  * skips cognify with it and `research cognify` fails with it.
  *
+ * **Example** (Skip reason names the variable and the file)
+ *
+ * ```ts
+ * import { COGNEE_CREDENTIALS_MISSING } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
+ *
+ * console.log(COGNEE_CREDENTIALS_MISSING.includes("COGNEE_API_URL")) // true
+ * console.log(COGNEE_CREDENTIALS_MISSING.includes(".config/beep-research/env")) // true
+ * ```
+ *
  * @internal
  * @category utilities
  */
@@ -60,6 +77,14 @@ export const COGNEE_CREDENTIALS_MISSING = `no Cognee credentials configured; set
 /**
  * Message used when Cognee settings are present but fail validation, for
  * example a malformed `COGNEE_API_EMAIL`.
+ *
+ * **Example** (Validation failure names every variable)
+ *
+ * ```ts
+ * import { COGNEE_SETTINGS_INVALID } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
+ *
+ * console.log(COGNEE_SETTINGS_INVALID.includes("COGNEE_API_EMAIL")) // true
+ * ```
  *
  * @internal
  * @category utilities
@@ -85,6 +110,23 @@ export class CogneeCardUpload extends S.Class<CogneeCardUpload>($I`CogneeCardUpl
 
 /**
  * Cognee connection settings resolved from the environment.
+ *
+ * **Example** (Build settings with a redacted password)
+ *
+ * ```ts
+ * import { CogneeSettings } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
+ * import { Email } from "@beep/schema"
+ * import { Redacted } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const settings = CogneeSettings.make({
+ *   apiUrl: "http://127.0.0.1:8010",
+ *   email: S.decodeSync(Email)("default_user@example.com"),
+ *   password: Redacted.make("default_password")
+ * })
+ * console.log(settings.apiUrl) // "http://127.0.0.1:8010"
+ * console.log(Redacted.isRedacted(settings.password)) // true
+ * ```
  *
  * @internal
  * @category models
@@ -133,6 +175,19 @@ const decodeLoginResponse = S.decodeUnknownEffect(LoginResponse);
  * `None` when `COGNEE_API_URL` is unset or blank; the caller decides whether
  * that skips cognify (the daily pipeline) or fails it (an explicit cognify).
  *
+ * **Example** (No URL configured resolves to None)
+ *
+ * ```ts
+ * import { readCogneeSettings } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
+ * import { ConfigProvider, Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = readCogneeSettings.pipe(
+ *   Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))
+ * )
+ * console.log(O.isNone(Effect.runSync(program))) // true
+ * ```
+ *
  * @internal
  * @category utilities
  */
@@ -166,6 +221,9 @@ const describeCause = (cause: unknown, depth: number): string => {
 /**
  * Render an HTTP client failure with its transport cause, so a refused
  * connection reads as such in the journal instead of a bare "request failed".
+ *
+ * @param error - HTTP client failure raised by `HttpClient.execute`.
+ * @returns The error message followed by the transport cause chain when present.
  */
 const describeHttpFailure = (error: HttpClientError.HttpClientError): string => {
   const cause = P.hasProperty(error.reason, "cause") ? error.reason.cause : undefined;
@@ -189,6 +247,24 @@ const failStatus = Effect.fn("CogneeClient.failStatus")(function* (
 
 /**
  * Log in to the Cognee API and return a bearer token.
+ *
+ * **Example** (Describe a login program)
+ *
+ * ```ts
+ * import { CogneeSettings, cogneeLogin } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
+ * import { Email } from "@beep/schema"
+ * import { Effect, Redacted } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const program = cogneeLogin(
+ *   CogneeSettings.make({
+ *     apiUrl: "http://127.0.0.1:8010",
+ *     email: S.decodeSync(Email)("default_user@example.com"),
+ *     password: Redacted.make("default_password")
+ *   })
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
  *
  * @internal
  * @category utilities
