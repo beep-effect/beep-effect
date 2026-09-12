@@ -580,11 +580,16 @@ export class CoverageBaselineChangeSet extends S.Class<CoverageBaselineChangeSet
  *
  * The nested change set records the exact changed-owner adoption set and any
  * independent reasons the measurement planner selected the full workspace.
+ * `carriedUnmeasured` names the packages a scoped write would have adopted but
+ * never measured, so the report can say their committed rows were kept rather
+ * than let the carry pass unmentioned; it is empty for an unscoped write, which
+ * prunes unmeasured rows instead of carrying them.
  *
  * **Gotchas**
  *
  * A `replaced` disposition is driven by a changed owner or `--replace-all`,
- * never merely by a non-empty full-reason list.
+ * never merely by a non-empty full-reason list. A `carriedUnmeasured` name has
+ * no entry in `dispositions` on purpose: the write did nothing to that row.
  *
  * **Example** (Represent an empty first-write plan)
  *
@@ -596,7 +601,7 @@ export class CoverageBaselineChangeSet extends S.Class<CoverageBaselineChangeSet
  *   packages: {},
  *   dispositions: {}
  * })
- * console.log(plan.packages) // {}
+ * console.log(plan.carriedUnmeasured) // []
  * ```
  *
  * @category models
@@ -607,9 +612,11 @@ export class CoverageBaselineWritePlan extends S.Class<CoverageBaselineWritePlan
     changeSet: CoverageBaselineChangeSet,
     packages: S.Record(S.String, CoveragePackageBaseline),
     dispositions: S.Record(S.String, CoverageBaselineRowDisposition),
+    carriedUnmeasured: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
   },
   $I.annote("CoverageBaselineWritePlan", {
-    description: "Coverage baseline package rows to write plus the disposition of every measured or removed package.",
+    description:
+      "Coverage baseline package rows to write, the disposition of every measured or removed package, and the adoption-set packages a scoped run never measured.",
   })
 ) {}
 
@@ -1363,6 +1370,29 @@ const coverageAdoptedPackageNames = (
     onFalse: () => changeSet.packageNames,
   });
 
+// A `--filter=@beep/changed` run adopts the whole change set on paper but only
+// measures what the filter selected, so the rest of the adoption set keeps its
+// committed rows. Holding is the fail-safe direction — the hosted pull-request
+// run still judges those packages at the base floors — but it must not be
+// silent, so the names travel on the plan for the report to print.
+const coverageCarriedUnmeasuredNames = (
+  changeSet: CoverageBaselineChangeSet,
+  entries: ReadonlyArray<CoverageSnapshotEntry>,
+  carryUnmeasured: boolean
+): ReadonlyArray<string> =>
+  Bool.match(carryUnmeasured, {
+    onTrue: () =>
+      pipe(
+        HashSet.difference(
+          HashSet.fromIterable(coverageAdoptedPackageNames(changeSet, true)),
+          HashSet.fromIterable(A.map(entries, (entry) => entry.packageName))
+        ),
+        A.fromIterable,
+        A.sort(Order.String)
+      ),
+    onFalse: A.empty<string>,
+  });
+
 // A measured package is adopted at the run's own row when the write replaces
 // it, added when the committed document has no row for it, and otherwise held
 // at the committed row this run must not move.
@@ -1450,6 +1480,11 @@ export class CoverageBaselineWriteOptions extends S.Class<CoverageBaselineWriteO
  * changed-owner set. Rows are emitted in package-name order so a write that
  * touches two packages produces a two-package diff.
  *
+ * A `--filter` run narrows measurement without narrowing the adoption set, so
+ * an adopted package the run never measured keeps its committed row. Those
+ * names land on `carriedUnmeasured` for the report to print, because a carry
+ * nobody mentions reads as an adoption that happened.
+ *
  * **Example** (Hold an unchanged measured package)
  *
  * ```ts
@@ -1485,7 +1520,7 @@ export class CoverageBaselineWriteOptions extends S.Class<CoverageBaselineWriteO
  * @param entries - Full-workspace package rows measured by the current run.
  * @param changeSet - Changed-owner adoption set, full-run reasons, and comparison-base provenance.
  * @param options - Whether to replace every measured row, and whether unmeasured committed rows are carried instead of pruned.
- * @returns Rows to write and one disposition for every measured or pruned package.
+ * @returns Rows to write, one disposition for every measured or pruned package, and the adoption-set packages this run never measured.
  * @category utilities
  * @since 0.0.0
  */
@@ -1537,6 +1572,7 @@ export const planCoverageBaselineWrite: {
     }
 
     return CoverageBaselineWritePlan.make({
+      carriedUnmeasured: coverageCarriedUnmeasuredNames(changeSet, entries, options.carryUnmeasured),
       changeSet,
       dispositions,
       packages: R.fromEntries(A.sort(R.toEntries(packages), coveragePackageRowByNameOrder)),
@@ -2289,6 +2325,18 @@ const coverageDispositionLine = (packageName: string, disposition: CoverageBasel
     Match.exhaustive
   )}`;
 
+// Name every adopted package the scoped run never measured. Holding is the
+// fail-safe direction, but an operator reading only disposition lines would
+// conclude the whole change set was adopted.
+const coverageCarriedUnmeasuredLines = (carriedUnmeasured: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.match(carriedUnmeasured, {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (names) =>
+      A.of(
+        `[coverage-ratchet] ${names.length} package(s) in this change set were not measured by this scoped run and keep their committed rows: ${A.join(A.map(names, coverageDiagnosticFragment), ", ")}. The hosted pull-request run still judges them at the base floors; pass --filter=<package> for each one, or run --affected, to re-measure them.`
+      ),
+  });
+
 /**
  * Render what a baseline write did to every package it measured, and which
  * committed values it raised.
@@ -2297,8 +2345,10 @@ const coverageDispositionLine = (packageName: string, disposition: CoverageBasel
  *
  * Adoption is per package and never silent: a run that held every package it
  * measured says so, because the operator's next move is `--replace-all` rather
- * than a second identical run. Every raised value is named because the hosted
- * pull-request run judges exactly those rows.
+ * than a second identical run. A scoped run that adopted packages it never
+ * measured names them too, so a `--filter` write cannot read as a full-change-set
+ * adoption. Every raised value is named because the hosted pull-request run
+ * judges exactly those rows.
  *
  * **Example** (An empty plan reports nothing to adopt)
  *
@@ -2315,7 +2365,7 @@ const coverageDispositionLine = (packageName: string, disposition: CoverageBasel
  *
  * @param plan - The plan the write applied.
  * @param previousPackages - Package rows the committed document carried before the write.
- * @returns One disposition line per measured package, then the raised-value report.
+ * @returns One disposition line per measured package, any carried-unmeasured notice, then the raised-value report.
  * @category formatting
  * @since 0.0.0
  */
@@ -2347,12 +2397,15 @@ export const coverageBaselineWriteReport: {
 
     return A.appendAll(
       A.appendAll(
-        A.map(dispositions, ([packageName, disposition]) => coverageDispositionLine(packageName, disposition)),
-        heldEverything
-          ? A.of(
-              "[coverage-ratchet] every measured package was held; this run changed no row. Pass --replace-all to re-measure them."
-            )
-          : A.empty<string>()
+        A.appendAll(
+          A.map(dispositions, ([packageName, disposition]) => coverageDispositionLine(packageName, disposition)),
+          heldEverything
+            ? A.of(
+                "[coverage-ratchet] every measured package was held; this run changed no row. Pass --replace-all to re-measure them."
+              )
+            : A.empty<string>()
+        ),
+        coverageCarriedUnmeasuredLines(plan.carriedUnmeasured)
       ),
       A.match(raises, {
         onEmpty: A.empty<string>,

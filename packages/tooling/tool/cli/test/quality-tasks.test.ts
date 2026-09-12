@@ -249,6 +249,10 @@ const coveragePackageBaseline = (path: string, metric = 50): CoveragePackageBase
     uncovered: coverageUncovered(0),
     files: {},
   });
+// The carried-unmeasured notice is one line among the disposition and raise
+// lines, so absence is asserted by filtering rather than by a whole-report match.
+const carriedUnmeasuredNotices = (report: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.filter(report, (line) => Str.includes("were not measured by this scoped run")(line));
 const coverageUncovered = (count: number): CoverageUncoveredCounts => {
   const decoded = NonNegativeInt.make(count);
   return CoverageUncoveredCounts.make({
@@ -6297,6 +6301,86 @@ describe("quality task adapter", () => {
       "@beep/changed": "replaced",
       "@beep/dependent": "held",
     });
+  });
+
+  it("names the adopted packages a scoped filter run never measured", () => {
+    const previous = {
+      "@beep/changed": coveragePackageBaseline("packages/changed", 50),
+      "@beep/dependent": coveragePackageBaseline("packages/dependent", 61),
+    };
+    const changeSet = CoverageBaselineChangeSet.make({
+      baseDescription: "origin/main merge-base a1b2c3d",
+      packageNames: ["@beep/changed"],
+      dependentPackageNames: ["@beep/dependent"],
+      fullReasons: [],
+    });
+
+    // --filter=@beep/changed narrows measurement without narrowing adoption, so
+    // the dependent keeps its committed row instead of being adopted at a floor
+    // this run never measured.
+    const plan = planCoverageBaselineWrite(
+      previous,
+      [{ packageName: "@beep/changed", baseline: coveragePackageBaseline("packages/changed", 80) }],
+      changeSet,
+      CoverageBaselineWriteOptions.make({ replaceAll: false, carryUnmeasured: true })
+    );
+
+    expect(plan.carriedUnmeasured).toEqual(["@beep/dependent"]);
+    expect(plan.dispositions).toEqual({ "@beep/changed": "replaced" });
+    expect(plan.packages["@beep/dependent"]?.lines).toBe(61);
+    expect(coverageBaselineWriteReport(plan, previous)).toContain(
+      "[coverage-ratchet] 1 package(s) in this change set were not measured by this scoped run and keep their committed rows: @beep/dependent. The hosted pull-request run still judges them at the base floors; pass --filter=<package> for each one, or run --affected, to re-measure them."
+    );
+  });
+
+  it("carries nothing on an unscoped write, which prunes unmeasured rows instead", () => {
+    const previous = {
+      "@beep/changed": coveragePackageBaseline("packages/changed", 50),
+      "@beep/dependent": coveragePackageBaseline("packages/dependent", 61),
+    };
+    const plan = planCoverageBaselineWrite(
+      previous,
+      [{ packageName: "@beep/changed", baseline: coveragePackageBaseline("packages/changed", 80) }],
+      CoverageBaselineChangeSet.make({
+        baseDescription: "origin/main merge-base a1b2c3d",
+        packageNames: ["@beep/changed"],
+        dependentPackageNames: ["@beep/dependent"],
+        fullReasons: [],
+      }),
+      CoverageBaselineWriteOptions.make({ replaceAll: false })
+    );
+
+    expect(plan.carriedUnmeasured).toEqual([]);
+    expect(plan.dispositions["@beep/dependent"]).toBe("pruned");
+    expect(carriedUnmeasuredNotices(coverageBaselineWriteReport(plan, previous))).toEqual([]);
+  });
+
+  it("stays quiet when a scoped write measured every package it adopts", () => {
+    const previous = {
+      "@beep/changed": coveragePackageBaseline("packages/changed", 50),
+      "@beep/dependent": coveragePackageBaseline("packages/dependent", 61),
+      "@beep/unrelated": coveragePackageBaseline("packages/unrelated", 70),
+    };
+    const plan = planCoverageBaselineWrite(
+      previous,
+      [
+        { packageName: "@beep/changed", baseline: coveragePackageBaseline("packages/changed", 80) },
+        { packageName: "@beep/dependent", baseline: coveragePackageBaseline("packages/dependent", 93) },
+      ],
+      CoverageBaselineChangeSet.make({
+        baseDescription: "origin/main merge-base a1b2c3d",
+        packageNames: ["@beep/changed"],
+        dependentPackageNames: ["@beep/dependent"],
+        fullReasons: [],
+      }),
+      CoverageBaselineWriteOptions.make({ replaceAll: false, carryUnmeasured: true })
+    );
+
+    // @beep/unrelated is carried too, but it was never in the adoption set, so
+    // naming it would drown the packages whose floors this write left behind.
+    expect(plan.carriedUnmeasured).toEqual([]);
+    expect(plan.packages["@beep/unrelated"]?.lines).toBe(70);
+    expect(carriedUnmeasuredNotices(coverageBaselineWriteReport(plan, previous))).toEqual([]);
   });
 
   it("adopts every measured package when a scoped write passes replace-all", () => {
