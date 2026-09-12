@@ -1,0 +1,9 @@
+trimmed nonempty: PASS
+list decode: PASS
+list encode: PASS
+double special number: PASS
+uint32 upper bound: PASS
+binary base64 roundtrip: PASS
+decimal number roundtrip: PASS
+duration object: PASS
+effect declaration: PASS

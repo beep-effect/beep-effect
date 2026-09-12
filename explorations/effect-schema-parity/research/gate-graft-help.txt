@@ -1,0 +1,66 @@
+Usage: graft [options] [command]
+
+Build a repo's context graph as linked markdown, and keep it in sync with the
+code.
+
+Options:
+  -v, --version                     output the version number
+  --dir <path>                      context graph directory (default:
+                                    <repo>/graft)
+  --provider <name>                 LLM wire format: openai | anthropic |
+                                    litellm | orcarouter (env GRAFT_PROVIDER)
+  --model <id>                      model id for the LLM pass (env GRAFT_MODEL)
+  --api-key <key>                   provider API key (env GRAFT_API_KEY)
+  --base-url <url>                  OpenAI-compatible endpoint URL (env
+                                    GRAFT_BASE_URL)
+  -h, --help                        display help for command
+
+Commands:
+  telemetry [action]                Show, inspect, or turn off the anonymous
+                                    usage stats (see TELEMETRY.md)
+  version                           Print the installed version and the latest
+                                    published on npm
+  upgrade                           Upgrade the globally installed graft to the
+                                    latest version on npm
+  build [options] [dir]             Build graft/ from your code — wiring graph +
+                                    per-file cards ($0, no key). Add --deep for
+                                    the LLM concept map + per-symbol
+                                    summaries/crux.
+  ask [options] <query> [dir]       Query the graft/ graph — returns ranked
+                                    nodes + exact file:line, routed to prose or
+                                    wiring ($0, no key)
+  skeleton [options] <file> [dir]   Signatures-only view of one file from the
+                                    wiring graph — the cheapest way to see a
+                                    file's API surface
+  check [options] [dir]             Fail if graft/ is stale relative to the code
+                                    (for CI)
+  stats [options] [dir]             Show this agent session's graft-vs-source
+                                    usage mix and tokens saved
+  viz [options] [dir]               Serve an interactive visualization of the
+                                    context graph (and graph.json when present)
+  mcp [dir]                         Serve the graph over MCP (stdio) — exposes
+                                    graft_find_code, graft_trace_calls,
+                                    graft_find_all, graft_file_api,
+                                    graft_repo_map and graft_check_freshness as
+                                    tools
+  callers [options] <symbol> [dir]  Who calls/references a symbol ($0, no LLM).
+                                    --direction out gives callees (what it
+                                    calls); --depth N (or all) walks
+                                    transitively for full blast radius
+  blast [options] [dir]             Blast radius of a diff: what depends on the
+                                    lines this change touched ($0, no LLM).
+                                    Built for CI — `--format markdown` is a PR
+                                    comment with a Mermaid diagram.
+  grep [options] <pattern> [dir]    Regex search over indexed files, hits
+                                    grouped by enclosing symbol and ranked by
+                                    coupling ($0, no LLM)
+  map [options] [dir]               Token-budgeted repo orientation — directory
+                                    clusters, per-directory hubs, and global
+                                    hotspots from the wiring graph ($0, no LLM)
+  init [options] [dir]              Wire Graft into the AI coding agents used
+                                    with this repo (instruction files + MCP
+                                    server; full hooks + statusline + MCP for
+                                    Claude Code)
+  uninstall [options] [dir]         Remove every file and config entry graft has
+                                    written to this repo (the inverse of init)
+  help [command]                    display help for command

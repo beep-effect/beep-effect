@@ -1,0 +1,377 @@
+{
+  "construction": {
+    "pattern": "\\b(?:S|Schema)\\.(?:Struct|Class|TaggedClass|TaggedErrorClass|TemplateLiteral|Record)\\b",
+    "matching_lines": 7096,
+    "files": 1141,
+    "examples": [
+      "apps/todox/src/session/Session.schema.ts:201:export class SpanRef extends S.Class<SpanRef>($I`SpanRef`)(",
+      "apps/todox/src/session/Session.schema.ts:240:export class SourceSpan extends S.Class<SourceSpan>($I`SourceSpan`)(",
+      "apps/todox/src/session/Session.schema.ts:265:export class SourceArtifact extends S.Class<SourceArtifact>($I`SourceArtifact`)("
+    ]
+  },
+  "json_import": {
+    "pattern": "\\bfromJsonSchema(?:Multi)?Document\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "arbitrary_constraint_old": {
+    "pattern": "\\bToArbitrary\\.Constraint\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "arbitrary_constraint_new": {
+    "pattern": "\\bFilterConstraint\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "json_export": {
+    "pattern": "\\btoJsonSchema(?:Multi)?Document\\b",
+    "matching_lines": 12,
+    "files": 5,
+    "examples": [
+      "packages/agents/domain/test/AgentsDomain.test.ts:196:    const assistantContentDocument = S.toJsonSchemaDocument(AssistantContent);",
+      "packages/agents/domain/test/AgentsDomain.test.ts:215:    expect(S.toJsonSchemaDocument(RootAssistantBlock)).toStrictEqual(S.toJsonSchemaDocument(AssistantBlock));",
+      "packages/agents/domain/test/AgentsDomain.test.ts:216:    expect(S.toJsonSchemaDocument(AssistantContentSubpath.AssistantBlock)).toStrictEqual("
+    ]
+  },
+  "old_transform": {
+    "pattern": "\\btransformOrFail\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "new_transform": {
+    "pattern": "\\btransformEffect\\b",
+    "matching_lines": 73,
+    "files": 48,
+    "examples": [
+      "packages/ecosystem/effect-drizzle/typetests/contracts.tst.ts:20:import { transformEffect } from \"effect/SchemaGetter\";",
+      "packages/ecosystem/effect-drizzle/typetests/contracts.tst.ts:215:      decode: transformEffect((value) => CodecService.use((service) => succeed(service.normalize(value)))),",
+      "packages/ecosystem/effect-drizzle/typetests/contracts.tst.ts:216:      encode: transformEffect((value) => CodecService.use((service) => succeed(service.normalize(value)))),"
+    ]
+  },
+  "parse_removed": {
+    "pattern": "\\bpropertyOrder\\b|onExcessProperty\\s*:\\s*[\"\\x27]preserve[\"\\x27]",
+    "matching_lines": 1,
+    "files": 1,
+    "examples": [
+      "packages/foundation/modeling/schema/src/SchemaUtils/isCodecDataFirst.ts:14:  P.hasProperty(input, \"propertyOrder\") ||"
+    ]
+  },
+  "parse_options": {
+    "pattern": "\\bparseOptions\\b",
+    "matching_lines": 12,
+    "files": 5,
+    "examples": [
+      "packages/foundation/modeling/schema/src/MutableHashMap.ts:208:      return (input, ast, parseOptions) => {",
+      "packages/foundation/modeling/schema/src/MutableHashMap.ts:213:        return Effect.mapBothEager(SchemaParser.decodeEffect(entries)(A.fromIterable(input), parseOptions), {",
+      "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts:77:    parseOptions: csvCodecOptionsParseOptions,"
+    ]
+  },
+  "network": {
+    "pattern": "\\b(?:MacAddress|Ipv[46]Address|IpAddress|Ipv[46]Interface|IpInterface|Ipv[46]Network|IpNetwork|InetAddress(?:V[46])?|UnixPathAddress|SocketAddress)(?:FromString)?\\b",
+    "matching_lines": 2,
+    "files": 2,
+    "examples": [
+      "packages/tooling/library/qa-capture/src/Collector.service.ts:247:    Match.tag(\"InetAddressV4\", \"InetAddressV6\", (address) => address.port),",
+      "packages/foundation/capability/observability/src/experimental/server/DevToolsRelay.ts:85:    readonly address: Effect.Effect<NetAddress.SocketAddress>;"
+    ]
+  },
+  "port": {
+    "pattern": "\\bPort\\b",
+    "matching_lines": 129,
+    "files": 39,
+    "examples": [
+      "apps/labs/ciops/src/main.ts:11:  const port = yield* Config.Port(\"PORT\").pipe(Config.withDefault(8787));",
+      "apps/labs/lejeune-bolt-workbench/vite.config.ts:14:    // Port and strictPort come from the portless-wrapped `dev` script",
+      "apps/labs/semantica/vite.config.ts:14:    // Port and strictPort come from the portless-wrapped `dev` script"
+    ]
+  },
+  "ip_local": {
+    "pattern": "\\b(?:IPv4|IPv6|IPAddress|IpV4|IpV6)\\b",
+    "matching_lines": 32,
+    "files": 10,
+    "examples": [
+      "packages/drivers/box/src/Box.streaming.ts:786: * cloud-metadata destinations (including IPv4-mapped IPv6 forms) before any",
+      "packages/drivers/tailscale/test/tailscale.test.ts:83:  it.effect(\"detects Tailnet IPv4 addresses\", () =>",
+      "packages/drivers/tailscale/src/Tailscale.service.ts:81: * Check whether a string is an IPv4 address in Tailscale's assigned range."
+    ]
+  },
+  "new_template": {
+    "pattern": "\\bTemplateLiteralParser\\b",
+    "matching_lines": 4,
+    "files": 3,
+    "examples": [
+      "packages/workspace/server/src/SourceText/WorkspaceSourceTextResolver.ts:46:const WorkspaceScopeRefParts = S.TemplateLiteralParser([\"workspace:\", S.FiniteFromString]).pipe(",
+      "packages/foundation/modeling/lexical/src/Lexical.codec.ts:118:const ArtifactUriParts = S.TemplateLiteralParser([ARTIFACT_URI_PREFIX, ArtifactRefId]).pipe(",
+      "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts:986:export const ProjectScopeIdParts = S.TemplateLiteralParser(["
+    ]
+  },
+  "all_template": {
+    "pattern": "\\bTemplateLiteral\\b",
+    "matching_lines": 29,
+    "files": 25,
+    "examples": [
+      "packages/ecosystem/effect-drizzle/src/sqlite/Column.ts:435:    matchTag(\"TemplateLiteral\", () => some(Text.make({ mode: \"text\" }))),",
+      "packages/ecosystem/effect-drizzle/src/pg/derive.ts:276:    matchTag(\"TemplateLiteral\", () => \"string\"),",
+      "packages/ecosystem/effect-drizzle/src/pg/combinators.ts:90:    matchTag(\"TemplateLiteral\", constTrue),"
+    ]
+  },
+  "encode_to": {
+    "pattern": "\\bencodeTo\\b",
+    "matching_lines": 1,
+    "files": 1,
+    "examples": [
+      "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts:369:      hasPropertyAccessCall(calls, \"S\", [\"decodeTo\", \"encodeTo\", \"fromJsonString\"]) ||"
+    ]
+  },
+  "schema_error": {
+    "pattern": "\\bisSchemaError\\b",
+    "matching_lines": 6,
+    "files": 5,
+    "examples": [
+      "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts:183:    O.filter(S.isSchemaError),",
+      "packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts:307:      expect(S.isSchemaError(error)).toBe(true);",
+      "packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts:308:      if (S.isSchemaError(error)) {"
+    ]
+  },
+  "bracket_tree": {
+    "pattern": "\\b(?:makeTreeRecord|decodeFormData|decodeURLSearchParams)\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "json_pointer": {
+    "pattern": "\\b(?:parseUriFragment|formatUriFragment)\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "array_ensure": {
+    "pattern": "\\bArrayEnsure\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "field_option": {
+    "pattern": "\\bFieldOption\\b",
+    "matching_lines": 2,
+    "files": 1,
+    "examples": [
+      "packages/ecosystem/effect-drizzle/test/unit.test.ts:765:  it(\"derives nullable columns from OptionFromNullOr and effect FieldOption\", () => {",
+      "packages/ecosystem/effect-drizzle/test/unit.test.ts:768:      opt2: EffectModel.FieldOption(StringSchema),"
+    ]
+  },
+  "variant": {
+    "pattern": "\\bVariantSchema\\b",
+    "matching_lines": 97,
+    "files": 14,
+    "examples": [
+      "packages/ecosystem/effect-drizzle/README.md:3497:Effect schema class (via `@beep/effect-drizzle`'s own `VariantSchema.make` instance \u2014 the same",
+      "packages/ecosystem/effect-drizzle/README.md:3678:type EffectiveSchema<I> = Field.SchemaFrom<I> extends VariantSchema.Field.Any",
+      "packages/ecosystem/effect-drizzle/README.md:3694:declare const FieldExcept: <const Keys extends ReadonlyArray<\"update\" | \"insert\" | \"select\" | \"json\" | \"jsonCreate\" | \"jsonUpdate\">>(keys: Keys) => <S extends Top>(schema: S) => VariantSchema.Field<{ readonly [K in Exclude<\"update\", Keys[number]> | Exclude<\"insert\", Keys[number]> | Exclude<\"select\", Keys[number]> | Exclude<\"json\", Keys[number]> | Exclude<\"jsonCreate\", Keys[number]> | Exclude<\"jsonUpdate\", Keys[number]>]: S; }>"
+    ]
+  },
+  "declaration_run": {
+    "pattern": "\\bDeclarationRun\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "byte_size": {
+    "pattern": "\\bByteSize(?:FromString|FromBigInt|FromNumber)?\\b",
+    "matching_lines": 30,
+    "files": 8,
+    "examples": [
+      "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts:78:import * as ByteSize from \"effect/ByteSize\";",
+      "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts:495:        const size = yield* ByteSize.toNumber(info.size).pipe(",
+      "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:14:import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from \"effect\";"
+    ]
+  },
+  "graph_proto": {
+    "pattern": "\\bGraph\\.Proto\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "http_old": {
+    "pattern": "\\b(?:CookiesSchema|CookieSchema|HeadersSchema|UrlParamsSchema|schemaJsonField)\\b|\\b(?:Cookies|UrlParams)\\.schemaRecord\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "headers_local": {
+    "pattern": "\\bHttpHeaders\\b",
+    "matching_lines": 8,
+    "files": 3,
+    "examples": [
+      "packages/foundation/modeling/schema/package.json:190:    \"./HttpHeaders\": \"./src/HttpHeaders/index.ts\",",
+      "packages/foundation/modeling/schema/package.json:191:    \"./HttpHeaders/*\": null,",
+      "packages/foundation/modeling/schema/package.json:483:      \"./HttpHeaders\": \"./dist/HttpHeaders/index.js\","
+    ]
+  },
+  "http_new": {
+    "pattern": "\\b(?:S|Schema)\\.(?:Cookies|Cookie|Headers|UrlParams|RecordFromCookies|RecordFromUrlParams|JsonFromUrlParamsField)\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "ast_base": {
+    "pattern": "\\b(?:SchemaAST|AST)\\.Base\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "prototype": {
+    "pattern": "\\b(?:SchemaAST|SchemaIssue|SchemaGetter|SchemaTransformation)\\.[A-Za-z]+\\.prototype\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "xml_encoder": {
+    "pattern": "\\btoEncoderXml\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "reviver": {
+    "pattern": "\\b(?:makeDeclarationReviver|makeFilterReviver|makeFilterGroupReviver|makeReviverDeclaration|makeReviverFilter|makeReviverFilterGroup|[A-Za-z]+Reviver)\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "boolean_literals": {
+    "pattern": "\\b(?:TrueLiterals|FalseLiterals|BooleanLiterals)\\b",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "mutable": {
+    "pattern": "\\b(?:S|Schema)\\.mutable\\b",
+    "matching_lines": 34,
+    "files": 11,
+    "examples": [
+      "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts:32:  S.String.pipe(S.Array, S.mutable, SchemaUtils.withKeyDefaults(emptyStringList)).annotateKey({ description });",
+      "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts:289:    allowedDevOrigins: AllowedDevOrigin.pipe(S.Array, S.mutable).annotateKey({",
+      "packages/tooling/policy-pack/repo-configs/src/next/NextConfig.model.ts:50:const StringArray = S.String.pipe(S.Array, S.mutable);"
+    ]
+  },
+  "old_marker": {
+    "pattern": "~effect/SchemaError/SchemaError",
+    "matching_lines": 0,
+    "files": 0,
+    "examples": []
+  },
+  "old_arbitrary": {
+    "pattern": "\\btoArbitrary\\b|effect/testing/FastCheck",
+    "matching_lines": 15,
+    "files": 10,
+    "examples": [
+      "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts:299:// Self-typed annotations (examples, toArbitrary, ...) must live in an explicitly",
+      "packages/tooling/tool/cli/test/schema-first.test.ts:149:          \"const WorkerArbitrary = S.toArbitrary(Worker)(fc);\",",
+      "packages/tooling/tool/cli/test/schema-first.test.ts:160:          \"const WorkerArbitrary = S.toArbitrary(Worker)(fc);\","
+    ]
+  },
+  "native_arbitrary": {
+    "pattern": "effect/unstable/arbitrary|\\bArbitrary\\.(?:schema|sampleEffect|checkEffect)\\b",
+    "matching_lines": 1626,
+    "files": 342,
+    "examples": [
+      "apps/labs/ciops/test/projection.test.ts:14:import * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\";",
+      "apps/labs/ciops/test/projection.test.ts:59:const PendingRequestArbitrary = Arbitrary.schema(PendingRequest);",
+      "apps/labs/ciops/test/projection.test.ts:75:  Arbitrary.schema(S.Array(PendingRequest).check(S.isMaxLength(12))).pipe("
+    ]
+  },
+  "arbitrary_files": {
+    "pattern": "\\bArbitrary\\b",
+    "matching_lines": 2007,
+    "files": 355,
+    "examples": [
+      "packages/agents/tables/test/ProviderInstanceTable.test.ts:16:import * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\";",
+      "packages/agents/tables/test/ProviderInstanceTable.test.ts:22:const ProviderInstanceArbitrary = Arbitrary.schema(DomainProviderInstance.ProviderInstance);",
+      "packages/agents/tables/test/ProviderInstanceTable.test.ts:124:        Arbitrary.checkEffect("
+    ]
+  },
+  "equivalence": {
+    "pattern": "\\btoEquivalence\\b",
+    "matching_lines": 714,
+    "files": 386,
+    "examples": [
+      "packages/ecosystem/effect-drizzle/scripts/assemble-readme.ts:24:  { toEquivalence: (typeParameters) => declaredFieldsEquivalence<ReadmeAssemblyError>(typeParameters) }",
+      "packages/ecosystem/effect-drizzle/test/TaggedErrors.equivalence.test.ts:29:    const same = S.toEquivalence(constructor);",
+      "packages/ecosystem/effect-drizzle/test/TaggedErrors.equivalence.test.ts:71:    const same = S.toEquivalence(ModelInvariantError);"
+    ]
+  },
+  "equivalence_wrapper": {
+    "pattern": "SchemaUtils\\.toEquivalence|@beep/schema/SchemaUtils/toEquivalence",
+    "matching_lines": 32,
+    "files": 17,
+    "examples": [
+      "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.fixture-service.ts:45:const sameScope = SchemaUtils.toEquivalence(RuntimeScope);",
+      "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts:94:  static readonly equivalence = SchemaUtils.toEquivalence(EffectLawsAllowlistLookupKey);",
+      "packages/tooling/tool/cli/test/lint-command.test.ts:773:            '\"remediation\":\"Derive comparison from S.toEquivalence(schema) or SchemaUtils.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ.\"}';"
+    ]
+  },
+  "graph_local": {
+    "pattern": "@beep/schema/Graph",
+    "matching_lines": 54,
+    "files": 8,
+    "examples": [
+      "packages/foundation/modeling/schema/test/Graph.test.ts:2:import * as GraphSchema from \"@beep/schema/Graph\";",
+      "packages/foundation/modeling/schema/test/Graph.test.ts:309:    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(\"Expected @beep/schema/Graph/GraphFromSelf\");",
+      "packages/foundation/modeling/schema/src/Graph/Graph.transforms.ts:28: * import { DirectedGraph } from \"@beep/schema/Graph\""
+    ]
+  },
+  "forbidden_encoding": {
+    "pattern": "SchemaGetter\\.forbidden\\(",
+    "matching_lines": 18,
+    "files": 8,
+    "examples": [
+      "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts:476:    encode: SchemaGetter.forbidden(() => \"JSDoc category normalization is decode-only.\"),",
+      "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts:571:    encode: SchemaGetter.forbidden(",
+      "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts:1278:    encode: SchemaGetter.forbidden("
+    ]
+  },
+  "native_hooks": {
+    "pattern": "\\b(?:arbitraryConstraint|toCodecArbitrary)\\b",
+    "matching_lines": 83,
+    "files": 54,
+    "examples": [
+      "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts:59:  arbitraryConstraint: {",
+      "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts:85:    arbitraryConstraint: {",
+      "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts:117:    arbitraryConstraint: {"
+    ]
+  },
+  "schema_ast": {
+    "pattern": "effect/SchemaAST|\\bSchemaAST\\b",
+    "matching_lines": 252,
+    "files": 89,
+    "examples": [
+      "packages/ecosystem/effect-drizzle/src/sqlite/Column.ts:43:import type { AST, Literal } from \"effect/SchemaAST\";",
+      "packages/ecosystem/effect-drizzle/src/sqlite/derive.ts:12:import { toEncoded } from \"effect/SchemaAST\";",
+      "packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts:24:import type { Check } from \"effect/SchemaAST\";"
+    ]
+  },
+  "json_additional": {
+    "pattern": "\\badditionalProperties\\b",
+    "matching_lines": 232,
+    "files": 17,
+    "examples": [
+      "packages/tooling/tool/docgen/schema.json:27:      \"additionalProperties\": {",
+      "packages/tooling/tool/docgen/schema.json:1226:      \"additionalProperties\": false",
+      "packages/tooling/tool/docgen/schema.json:1297:      \"additionalProperties\": false"
+    ]
+  },
+  "json_constraints": {
+    "pattern": "\\b(?:isMultipleOf|UniqueSymbol|isCapitalized|isUncapitalized)\\b",
+    "matching_lines": 2,
+    "files": 2,
+    "examples": [
+      "packages/foundation/modeling/schema/test/collectAnnotationsAt.test.ts:119:      [\"unique-symbol\", S.UniqueSymbol(Symbol.for(\"collectAnnotationsAt\"))],",
+      "packages/foundation/modeling/schema/src/SchemaUtils/collectAnnotationsAt.ts:104:    UniqueSymbol: () => undefined,"
+    ]
+  }
+}

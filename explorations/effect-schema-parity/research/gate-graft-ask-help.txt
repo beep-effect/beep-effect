@@ -1,0 +1,23 @@
+Usage: graft ask [options] <query> [dir]
+
+Query the graft/ graph — returns ranked nodes + exact file:line, routed to prose
+or wiring ($0, no key)
+
+Arguments:
+  query            what you want to understand, in plain words
+  dir              repository root (default: nearest ancestor with a graft/
+                   index)
+
+Options:
+  -n, --limit <n>  max results (default: "8")
+  --source         inline the source at each file:line hit (retriever mode — the
+                   pack IS the answer, no need to re-open files)
+  --full           with --source: inline whole definition spans instead of the
+                   default ≤8-line crux excerpts
+  --in <path>      narrow to nodes under this path prefix, filtered before
+                   scoring (segment-aware, like scopeOf)
+  --json           output the result as JSON
+  --no-graph-rank  rank by lexical relevance only, without the
+                   graph-connectivity re-rank (ablation/eval)
+  --no-refresh     skip the freshness check — answer from the graph as-is
+  -h, --help       display help for command

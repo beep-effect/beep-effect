@@ -1,0 +1,259 @@
+[
+  {
+    "path": "packages/effect/src/unstable/ai/McpSchema.ts",
+    "lines": 398,
+    "evidence": [
+      "packages/effect/src/unstable/ai/McpSchema.ts:21",
+      "packages/effect/src/unstable/ai/McpSchema.ts:40"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/ai/AnthropicStructuredOutput.ts",
+    "lines": 5,
+    "evidence": [
+      "packages/effect/src/unstable/ai/AnthropicStructuredOutput.ts:14",
+      "packages/effect/src/unstable/ai/AnthropicStructuredOutput.ts:20"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/ai/Prompt.ts",
+    "lines": 239,
+    "evidence": [
+      "packages/effect/src/unstable/ai/Prompt.ts:18",
+      "packages/effect/src/unstable/ai/Prompt.ts:40"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/ai/Tool.ts",
+    "lines": 149,
+    "evidence": [
+      "packages/effect/src/unstable/ai/Tool.ts:21",
+      "packages/effect/src/unstable/ai/Tool.ts:142"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/ai/Toolkit.ts",
+    "lines": 21,
+    "evidence": [
+      "packages/effect/src/unstable/ai/Toolkit.ts:23",
+      "packages/effect/src/unstable/ai/Toolkit.ts:43"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/ai/Response.ts",
+    "lines": 289,
+    "evidence": [
+      "packages/effect/src/unstable/ai/Response.ts:17",
+      "packages/effect/src/unstable/ai/Response.ts:165"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/devtools/DevToolsSchema.ts",
+    "lines": 93,
+    "evidence": [
+      "packages/effect/src/unstable/devtools/DevToolsSchema.ts:15",
+      "packages/effect/src/unstable/devtools/DevToolsSchema.ts:25"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/encoding/Yaml.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/encoding/Toml.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/encoding/SchemaBinary.ts",
+    "lines": 98,
+    "evidence": [
+      "packages/effect/src/unstable/encoding/SchemaBinary.ts:2",
+      "packages/effect/src/unstable/encoding/SchemaBinary.ts:32"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/encoding/Ini.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/encoding/Ndjson.ts",
+    "lines": 27,
+    "evidence": [
+      "packages/effect/src/unstable/encoding/Ndjson.ts:16",
+      "packages/effect/src/unstable/encoding/Ndjson.ts:117"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/Mime.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpStatus.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpIncomingMessage.ts",
+    "lines": 14,
+    "evidence": [
+      "packages/effect/src/unstable/http/HttpIncomingMessage.ts:19",
+      "packages/effect/src/unstable/http/HttpIncomingMessage.ts:61"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpClientError.ts",
+    "lines": 5,
+    "evidence": [
+      "packages/effect/src/unstable/http/HttpClientError.ts:14",
+      "packages/effect/src/unstable/http/HttpClientError.ts:302"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpServerRespondable.ts",
+    "lines": 1,
+    "evidence": [
+      "packages/effect/src/unstable/http/HttpServerRespondable.ts:89"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpBody.ts",
+    "lines": 3,
+    "evidence": [
+      "packages/effect/src/unstable/http/HttpBody.ts:23",
+      "packages/effect/src/unstable/http/HttpBody.ts:349"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpTraceContext.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/Multipart.ts",
+    "lines": 22,
+    "evidence": [
+      "packages/effect/src/unstable/http/Multipart.ts:29",
+      "packages/effect/src/unstable/http/Multipart.ts:290"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpServerRequest.ts",
+    "lines": 27,
+    "evidence": [
+      "packages/effect/src/unstable/http/HttpServerRequest.ts:24",
+      "packages/effect/src/unstable/http/HttpServerRequest.ts:197"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpClientRequest.ts",
+    "lines": 2,
+    "evidence": [
+      "packages/effect/src/unstable/http/HttpClientRequest.ts:26",
+      "packages/effect/src/unstable/http/HttpClientRequest.ts:735"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpStaticServer.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpMethod.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/MultipartParser.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpServerError.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/Headers.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpServerResponse.ts",
+    "lines": 3,
+    "evidence": [
+      "packages/effect/src/unstable/http/HttpServerResponse.ts:25",
+      "packages/effect/src/unstable/http/HttpServerResponse.ts:319"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/HttpClientResponse.ts",
+    "lines": 10,
+    "evidence": [
+      "packages/effect/src/unstable/http/HttpClientResponse.ts:17",
+      "packages/effect/src/unstable/http/HttpClientResponse.ts:103"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/http/Template.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/Url.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/http/UrlParams.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/httpapi/HttpApiSchema.ts",
+    "lines": 99,
+    "evidence": [
+      "packages/effect/src/unstable/httpapi/HttpApiSchema.ts:14",
+      "packages/effect/src/unstable/httpapi/HttpApiSchema.ts:23"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/net/NetAddress.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/net/IpInterface.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/net/IpNetwork.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/observability/OtlpSerialization.ts",
+    "lines": 0,
+    "evidence": []
+  },
+  {
+    "path": "packages/effect/src/unstable/rpc/RpcSchema.ts",
+    "lines": 10,
+    "evidence": [
+      "packages/effect/src/unstable/rpc/RpcSchema.ts:16",
+      "packages/effect/src/unstable/rpc/RpcSchema.ts:29"
+    ]
+  },
+  {
+    "path": "packages/effect/src/unstable/sql/SqlSchema.ts",
+    "lines": 20,
+    "evidence": [
+      "packages/effect/src/unstable/sql/SqlSchema.ts:17",
+      "packages/effect/src/unstable/sql/SqlSchema.ts:33"
+    ]
+  }
+]

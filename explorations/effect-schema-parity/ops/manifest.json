@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "effect-schema-parity",
+    "title": "Effect Schema Parity",
+    "status": "active",
+    "stage": "align",
+    "openQuestions": [
+      "LiteralKit (536 consumers): retire under the same-intent rule, or KEEP with a written reason; what replaces the standing 'use LiteralKit' coding rule",
+      "Role B adoption: may Role B modules be retirement targets for HttpMethod/HttpStatus/MimeType/Jsonl/Toml/Yaml, or do they stay KEEP",
+      "SchemaUtils survivor (collectAnnotationsAt) vs the active goal schema-utils-selective-codec-statics",
+      "Wire-shape policy for retired transports (Timestamp, Duration inputs, ArrayBuffer->Uint8Array, mutable Map/Set, Graph snapshots)",
+      "Case-string brands (Kebab/Pascal/Snake): accept upstream normalization or KEEP where rejection is policy",
+      "First gate cut: which of the 21 idiom families become detectors; retire obsolete F26 tagged-error equivalence detector",
+      "Inventory home + identity contract ((module, symbol, kind) rows in a repo-cli fixture) and the per-bump refresh generator",
+      "Performance acceptance: adopt the three-package --extendedDiagnostics baseline and pick upstream typeperf fixtures to mirror",
+      "Doctrine entry timing: with the goal PR or ahead of it",
+      "Evidence retention: which research/ receipts (3.7 MB) are committed"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-09-12",
+    "updated": "2026-09-12"
+  }
+}

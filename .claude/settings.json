@@ -256,10 +256,15 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
+  },
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": false,
     "serena@claude-plugins-official": false,
-    "compound-engineering@compound-engineering-plugin": false
+    "compound-engineering@compound-engineering-plugin": false,
+    "coderabbit@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "compound-engineering-plugin": {
@@ -269,9 +274,5 @@
       }
     }
   },
-  "autoMemoryDirectory": "~/.claude/memory/beep-effect",
-  "statusLine": {
-    "type": "command",
-    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
-  }
+  "autoMemoryDirectory": "~/.claude/memory/beep-effect"
 }

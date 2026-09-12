@@ -1,0 +1,69 @@
+{
+  "source": "51d4a2f08a5c7691dc876415bc9fc0ecf467e153",
+  "checks": [
+    {
+      "name": "literal mapping directions",
+      "value": "OK -> 200; 404 -> NO"
+    },
+    {
+      "name": "hash set iso deduplicates",
+      "value": "array roundtrip has one a"
+    },
+    {
+      "name": "graph canonical snapshot",
+      "value": {
+        "type": "directed",
+        "nodes": [
+          {
+            "index": 0,
+            "data": "A"
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "name": "regexp JSON carries flags",
+      "value": {
+        "source": "x",
+        "flags": "i"
+      }
+    },
+    {
+      "name": "constructor and decoding defaults",
+      "value": 3
+    },
+    {
+      "name": "upstream split empty input changes behavior",
+      "value": []
+    },
+    {
+      "name": "promise guard accepts non-native object",
+      "value": true
+    },
+    {
+      "name": "timestamps allow before Unix epoch",
+      "value": -1
+    },
+    {
+      "name": "signed32 bounds",
+      "value": "lower accepted / upper+1 rejected"
+    },
+    {
+      "name": "unsigned32 bounds",
+      "value": "upper accepted / negative rejected"
+    },
+    {
+      "name": "native arbitrary schema construction",
+      "value": true
+    },
+    {
+      "name": "JSON Schema importer call shape",
+      "value": "string schema imported"
+    },
+    {
+      "name": "one-way transform uses forbidden callback",
+      "value": "decode succeeds / encode forbidden"
+    }
+  ]
+}
