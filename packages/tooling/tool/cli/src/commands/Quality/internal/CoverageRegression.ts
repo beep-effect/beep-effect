@@ -45,7 +45,9 @@ import {
   CoverageSelfJudgeExclusion,
   CoverageSelfJudgeScope,
   changedCoverageOwners,
+  coverageDependentOwners,
   coverageSelfJudgeExclusion,
+  dependentSeedOwners,
   planCoverageAffectedScope,
   planCoverageSelfJudgeScope,
   workspaceCoverageScopeOwners,
@@ -1828,7 +1830,21 @@ export const coverageBaselineRowDeltaFromBase = Effect.fn("CoverageRegression.co
 export const coverageBaselineWriterChangedFiles: (changedFiles: ReadonlyArray<string>) => ReadonlyArray<string> =
   A.filter((filePath) => !Str.equivalence(filePath, coverageRegressionBaselinePath));
 
-const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
+/**
+ * Resolve writer ownership independently of the measurement plan's breadth.
+ *
+ * **Example** (Construct a writer change-set effect)
+ *
+ * ```ts
+ * import { coverageBaselineChangeSetFromChangedFiles } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ * console.log(Effect.isEffect(coverageBaselineChangeSetFromChangedFiles("/repo", [], "test"))) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
   "CoverageRegression.coverageBaselineChangeSetFromChangedFiles"
 )(function* (
   repoRoot: string,
@@ -1849,12 +1865,7 @@ const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
   // commit floors the next hosted run cannot reach. An unscoped write keeps the
   // 2026-08-24 direct-owners rule, because one foundation edit closes over most
   // of the workspace and a dependent's drop must stay a visible decision.
-  const dependentPackageNames = Match.value(scope).pipe(
-    Match.discriminator("_tag")("selected", ({ dependentPackageNames: names }) => names),
-    Match.discriminator("_tag")("full", A.empty<string>),
-    Match.discriminator("_tag")("noop", A.empty<string>),
-    Match.exhaustive
-  );
+  const dependentPackageNames = coverageDependentOwners(owners, dependentSeedOwners(owners, writerChangedFiles));
   const packageNames = A.sort(changedCoverageOwners(owners, writerChangedFiles), Order.String);
 
   return CoverageBaselineChangeSet.make({

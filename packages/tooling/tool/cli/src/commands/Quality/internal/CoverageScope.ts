@@ -14,6 +14,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
+import { globMatches } from "../../../internal/GlobPattern.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 import { discoverWorkspacePackages } from "./QualityArtifactSupport.ts";
 import type { FileSystem } from "effect";
@@ -64,15 +65,49 @@ const COVERAGE_NOOP_FILES = [
 
 const COVERAGE_NOOP_PREFIXES = [".changeset/", "docs/", "explorations/", "goals/", "research/"] as const;
 
-// These tracked goal artifacts are executable test inputs, not documentation.
-// Keep the mapping next to the no-op policy so a goal-only change can remain
-// scoped without hiding the package whose tests consume the fixture.
+// Live repository inputs read or executed by package tests. File entries also
+// accept globs for inventories discovered by tests (goal manifests and workspace
+// manifests). Prefixes cover recursively consumed trees; all matching consumers
+// are retained alongside the ordinary workspace owner.
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, string]> = [
   ["goals/fallow-quality-enforcement/research/feature-matrix.jsonc", "@beep/repo-cli"],
+  ["goals/lexical-playground-capability-atlas/research/capability-atlas.json", "@beep/editor"],
+  ["goals/ship-velocity/research/branch-protection-contexts.json", "@beep/repo-cli"],
+  ["goals/*/ops/manifest.json", "@beep/repo-cli"],
+  ["standards/schema-crispening.policy.jsonc", "@beep/repo-cli"],
+  ["standards/effect-laws.allowlist.jsonc", "@beep/repo-configs"],
+  [".claude/skills/effect-first-development/SKILL.md", "@beep/repo-configs"],
+  [".claude/hooks/yeet-inbox.sh", "@beep/repo-cli"],
+  [".claude/hooks/circuit-breaker.sh", "@beep/repo-ai-metrics"],
+  [".claude/hooks/hook-pulse.sh", "@beep/repo-ai-metrics"],
+  [".claude/hooks/hook-pulse-switch.sh", "@beep/repo-ai-metrics"],
+  [".claude/hooks/sequence-break-notifier.sh", "@beep/repo-ai-metrics"],
+  ["biome.jsonc", "@beep/lint-rules"],
+  ["package.json", "@beep/repo-cli"],
+  ["turbo.json", "@beep/repo-cli"],
+  ["packages/foundation/**/package.json", "@beep/repo-cli"],
 ];
 
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string, string]> = [
   ["goals/speed-loop/ops/runner-burst/", "@beep/repo-cli"],
+  ["scripts/", "@beep/repo-cli"],
+  [".github/", "@beep/repo-cli"],
+  [".claude/helpers/", "@beep/repo-cli"],
+  ["packages/architecture-lab/", "@beep/repo-cli"],
+  ["apps/architecture-lab-proof/", "@beep/repo-cli"],
+  ["packages/_internal/db-admin/", "@beep/repo-cli"],
+  ["packages/agents/", "@beep/agents-domain"],
+  ["explorations/beep-ci-operational-ontology/ontology/extraction/s6/", "@beep/ciops"],
+  ...A.map(
+    [
+      "@beep/epistemic-server",
+      "@beep/workspace-server",
+      "@beep/documents-server",
+      "@beep/architecture-lab-server",
+      "@beep/law-practice-server",
+    ],
+    (packageName): readonly [string, string] => ["packages/_internal/db-admin/drizzle/", packageName]
+  ),
 ];
 
 // Seconds observed in the correctness-green Coverage Regression run for PR
@@ -550,26 +585,23 @@ const isCoverageNoopInput = (filePath: string): boolean =>
   hasPrefix(COVERAGE_NOOP_PREFIXES, filePath) ||
   isStandardsDocument(filePath);
 
-const repositoryFixtureOwnerNameForFile = (filePath: string): O.Option<string> =>
+const repositoryFixtureOwnerNamesForFile = (filePath: string): ReadonlyArray<string> =>
   pipe(
-    COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES,
-    A.findFirst(([fixturePath]) => fixturePath === filePath),
-    O.orElse(() =>
-      pipe(
-        COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES,
-        A.findFirst(([prefix]) => Str.startsWith(prefix)(filePath))
-      )
+    A.appendAll(
+      A.filter(COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES, ([pattern]) => globMatches(pattern)(filePath)),
+      A.filter(COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES, ([prefix]) => Str.startsWith(prefix)(filePath))
     ),
-    O.map(([, packageName]) => packageName)
+    A.map(([, packageName]) => packageName),
+    A.dedupe
   );
 
-const repositoryFixtureCoverageOwnerForFile = (
+const repositoryFixtureCoverageOwnersForFile = (
   owners: ReadonlyArray<CoverageScopeOwner>,
   filePath: string
-): O.Option<CoverageScopeOwner> =>
-  pipe(
-    repositoryFixtureOwnerNameForFile(filePath),
-    O.flatMap((packageName) => A.findFirst(owners, (owner) => owner.packageName === packageName && owner.hasCoverage))
+): ReadonlyArray<CoverageScopeOwner> =>
+  A.filter(
+    owners,
+    (owner) => owner.hasCoverage && A.contains(repositoryFixtureOwnerNamesForFile(filePath), owner.packageName)
   );
 
 const packageJsonPath = (owner: CoverageScopeOwner): string => `${owner.packagePath}/package.json`;
@@ -586,8 +618,14 @@ const fullReasonForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: 
     return O.none();
   }
 
-  if (O.isSome(repositoryFixtureOwnerNameForFile(filePath))) {
-    return O.isSome(repositoryFixtureCoverageOwnerForFile(owners, filePath))
+  if (A.some(owners, (owner) => filePath === packageJsonPath(owner))) {
+    return O.some(`${filePath}: package identity or coverage task may have changed`);
+  }
+
+  if (A.isReadonlyArrayNonEmpty(repositoryFixtureOwnerNamesForFile(filePath))) {
+    return A.every(repositoryFixtureOwnerNamesForFile(filePath), (name) =>
+      A.some(owners, (owner) => owner.packageName === name && owner.hasCoverage)
+    )
       ? O.none()
       : O.some(`${filePath}: configured repository fixture coverage owner is unavailable`);
   }
@@ -600,10 +638,7 @@ const fullReasonForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: 
     ownerForFile(owners, filePath),
     O.match({
       onNone: () => O.some(`${filePath}: no current workspace owner`),
-      onSome: (owner) =>
-        filePath === packageJsonPath(owner)
-          ? O.some(`${filePath}: package identity or coverage task may have changed`)
-          : O.none(),
+      onSome: O.none,
     })
   );
 };
@@ -611,12 +646,12 @@ const fullReasonForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: 
 const isMeasurableOwner = (owner: CoverageScopeOwner): boolean =>
   owner.hasCoverage && !isLabsWorkspacePath(owner.packagePath);
 
-const selectedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: string): O.Option<string> =>
+const selectedOwnersForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: string): ReadonlyArray<string> =>
   pipe(
-    repositoryFixtureCoverageOwnerForFile(owners, filePath),
-    O.orElse(() => ownerForFile(owners, filePath)),
-    O.filter(isMeasurableOwner),
-    O.map((owner) => owner.packageName)
+    A.appendAll(repositoryFixtureCoverageOwnersForFile(owners, filePath), O.toArray(ownerForFile(owners, filePath))),
+    A.filter(isMeasurableOwner),
+    A.map((owner) => owner.packageName),
+    A.dedupe
   );
 
 // A package's own test tree is not part of what dependents import, so a
@@ -809,21 +844,37 @@ export const changedCoverageOwners: {
   2,
   (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): ReadonlyArray<string> =>
     pipe(
-      A.getSomes(A.map(changedFiles, (filePath) => selectedOwnerForFile(owners, filePath))),
+      A.flatMap(changedFiles, (filePath) => selectedOwnersForFile(owners, filePath)),
       A.dedupe,
       A.sort(Order.String)
     )
 );
 
-const dependentSeedOwners = (
-  owners: ReadonlyArray<CoverageScopeOwner>,
-  changedFiles: ReadonlyArray<string>
-): ReadonlyArray<string> =>
-  pipe(
-    A.getSomes(A.map(changedFiles, (filePath) => dependentSeedOwnerForFile(owners, filePath))),
-    A.dedupe,
-    A.sort(Order.String)
-  );
+/**
+ * Find workspace owners whose changed files can affect their dependents.
+ *
+ * **Example** (Test-only edits do not seed dependents)
+ *
+ * ```ts
+ * import { dependentSeedOwners } from "@beep/repo-cli/test/Quality"
+ * console.log(dependentSeedOwners([], [])) // []
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const dependentSeedOwners: {
+  (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): ReadonlyArray<string>;
+  (changedFiles: ReadonlyArray<string>): (owners: ReadonlyArray<CoverageScopeOwner>) => ReadonlyArray<string>;
+} = dual(
+  2,
+  (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): ReadonlyArray<string> =>
+    pipe(
+      A.getSomes(A.map(changedFiles, (filePath) => dependentSeedOwnerForFile(owners, filePath))),
+      A.dedupe,
+      A.sort(Order.String)
+    )
+);
 
 class CoverageSelfJudgeChangedFileExclusion extends S.TaggedClass<CoverageSelfJudgeChangedFileExclusion>(
   $I`CoverageSelfJudgeChangedFileExclusion`
@@ -998,11 +1049,9 @@ export const planCoverageSelfJudgeScope: {
     // named file is stable across runs.
     const ownedByPackageName = R.empty<string, string>();
     for (const filePath of sortedFiles) {
-      pipe(
-        selectedOwnerForFile(owners, filePath),
-        O.filter((packageName) => !R.has(ownedByPackageName, packageName)),
-        O.map((packageName) => R.assignProperty(ownedByPackageName, packageName, filePath))
-      );
+      for (const packageName of selectedOwnersForFile(owners, filePath)) {
+        if (!R.has(ownedByPackageName, packageName)) R.assignProperty(ownedByPackageName, packageName, filePath);
+      }
     }
     for (const [packageName, filePath] of R.toEntries(ownedByPackageName)) {
       R.assignProperty(packageExclusions, packageName, CoverageSelfJudgeChangedFileExclusion.make({ filePath }));

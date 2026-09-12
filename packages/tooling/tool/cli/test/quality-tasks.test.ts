@@ -44,6 +44,7 @@ import {
   compareCoverageRegressionSnapshotsWithProposedForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
+  coverageBaselineChangeSetFromChangedFiles,
   coverageBaselineRowDelta,
   coverageBaselineRowDeltaFromBase,
   coverageBaselineWriteReport,
@@ -3285,6 +3286,30 @@ describe("quality task adapter", () => {
     expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
   });
 
+  it("resolves graph and glob selectors before choosing direct ratchet topology", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/repo-cli",
+        packagePath: "packages/cli",
+        hasCoverage: true,
+        workspaceDependencies: ["@beep/schema"],
+      }),
+      CoverageScopeOwner.make({ packageName: "@beep/schema", packagePath: "packages/schema", hasCoverage: true }),
+    ];
+    for (const selector of ["@beep/repo-cli...", "@beep/repo-*", "...@beep/schema", "missing[selector]"]) {
+      expect(A.takeRight(coverageStepForTesting("/repo", [`--filter=${selector}`], owners).args, 3)).toEqual([
+        "--",
+        "--fileParallelism=true",
+        "--maxWorkers=2",
+      ]);
+    }
+    expect(A.takeRight(coverageStepForTesting("/repo", ["--filter=@beep/sch*"], owners).args, 3)).toEqual([
+      "--",
+      "--fileParallelism=true",
+      "--maxWorkers=1",
+    ]);
+  });
+
   it("ends every coverage producer's argv with one Vitest topology", () => {
     const longPole = ["@beep/repo-cli", "@beep/schema"];
     const mixed = ["@beep/schema", "@beep/types"];
@@ -4352,6 +4377,41 @@ describe("quality task adapter", () => {
               packageNames: ["@beep/a", "@beep/b"],
               dependentPackageNames: ["@beep/a"],
             });
+            yield* writePackage("packages/editor", { name: "@beep/editor", scripts: { coverage: "vitest" } });
+            const atlasPath = "goals/lexical-playground-capability-atlas/research/capability-atlas.json";
+            const atlasOwners = yield* workspaceCoverageScopeOwners(repoRoot);
+            expect(planCoverageSelfJudgeScope(atlasOwners, [atlasPath]).packageExclusions["@beep/editor"]).toEqual({
+              _tag: "owns-changed-file",
+              filePath: atlasPath,
+            });
+            const atlasChangeSet = yield* coverageBaselineChangeSetFromChangedFiles(repoRoot, [atlasPath], "test");
+            expect(atlasChangeSet.packageNames).toEqual(["@beep/editor"]);
+            for (const globalInput of ["vitest.shared.ts", "packages/b/package.json"]) {
+              const changeSet = yield* coverageBaselineChangeSetFromChangedFiles(
+                repoRoot,
+                ["packages/b/src/B.ts", globalInput],
+                "test"
+              );
+              expect(changeSet.dependentPackageNames).toEqual(["@beep/a"]);
+              expect(A.isReadonlyArrayNonEmpty(changeSet.fullReasons)).toBe(true);
+              const previous = {
+                "@beep/a": coveragePackageBaseline("packages/a", 80),
+                "@beep/b": coveragePackageBaseline("packages/b", 80),
+              };
+              const measured = A.map(["a", "b"], (name) => ({
+                packageName: `@beep/${name}`,
+                baseline: coveragePackageBaseline(`packages/${name}`, 60),
+              }));
+              expect(
+                planCoverageBaselineWrite(
+                  previous,
+                  measured,
+                  changeSet,
+                  CoverageBaselineWriteOptions.make({ replaceAll: false, carryUnmeasured: true })
+                ).dispositions
+              ).toEqual({ "@beep/a": "replaced", "@beep/b": "replaced" });
+            }
+
             expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, ["packages/c/src/C.ts"])).toEqual({
               _tag: "selected",
               packageNames: ["@beep/a"],
