@@ -82,6 +82,7 @@ export {
   countEffectVitestSourceLines,
   diffEffectVitestFindings,
   discoverEffectVitestSourcePaths,
+  formatEffectVitestIntroducedReport,
   preserveEffectVitestExceptions,
   runEffectVitestLint,
   verifyEffectVitestPin,
