@@ -159,9 +159,10 @@ const COVERAGE_FULL_SHARD_COUNT = 10;
 const COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES = ["@beep/repo-cli"] as const;
 // repo-cli deliberately disables file parallelism for ordinary package runs,
 // but serial imports consumed 728.76 seconds in the rejected live coverage
-// candidate. Full coverage and full baseline regeneration share this shard
-// worker shape so V8 instrumentation remains comparable. Scoped baseline
-// writes retain the two-worker shape used by the long-pole packages.
+// candidate. Every coverage producer — the full shards, scoped baseline writes,
+// and the narrow ratchet invocation — derives its Vitest topology from
+// `coverageVitestTopologyArgs`, so a row a writer records is measured under the
+// same worker shape the lane that judges it uses.
 const COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG = "--fileParallelism=true";
 const COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG = "--maxWorkers=2";
 const COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG = "--maxWorkers=1";
@@ -173,11 +174,6 @@ const COVERAGE_FULL_VITEST_WORKER_CAP = 11;
 // (`@beep/md` alone pulls 17 owners including `@beep/professional-desktop`),
 // where the full run's prebuild + capped-worker shards are the proven shape.
 const COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS = 300;
-const COVERAGE_SCOPED_BASELINE_VITEST_ARGS = [
-  "--",
-  COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
-  COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG,
-] as const;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const COVERAGE_REPLACE_ALL_ARG = "--replace-all";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
@@ -690,6 +686,40 @@ const resolveNonAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveNon
   }
 );
 
+/**
+ * The Vitest passthrough every coverage producer appends.
+ *
+ * **Details**
+ *
+ * Worker count is the only axis that varies, and it varies by package: the
+ * serial-import long poles get two workers, everything else gets one. File
+ * parallelism is always on. A baseline written under one topology and judged
+ * under another produces a per-file V8 snapshot the writer's own rows cannot
+ * satisfy, which is why the full shards, scoped writes, and the narrow ratchet
+ * invocation all read their argv from here.
+ *
+ * **Example** (A long-pole selection earns two workers)
+ *
+ * ```ts
+ * import { coverageVitestTopologyArgs } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(coverageVitestTopologyArgs(["@beep/repo-cli"]))
+ * // [ "--", "--fileParallelism=true", "--maxWorkers=2" ]
+ * ```
+ *
+ * @param packageNames - Coverage owners this invocation measures.
+ * @returns The passthrough delimiter followed by the Vitest topology flags.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageVitestTopologyArgs = (packageNames: ReadonlyArray<string>): ReadonlyArray<string> => [
+  "--",
+  COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
+  A.some(packageNames, (packageName) => A.contains(COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES, packageName))
+    ? COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG
+    : COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG,
+];
+
 const isCoverageAffectedArg = (arg: string): boolean => arg === "--affected";
 const withoutCoverageAffectedArg: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
   (arg) => !isCoverageAffectedArg(arg)
@@ -740,11 +770,9 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
   args: ReadonlyArray<string>
 ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const parsed = parseCoverageTaskOptions(args);
-  if (parsed.replaceAll && parsed.scoped) {
-    return yield* QualityTaskConfigurationError.new(
-      `${COVERAGE_REPLACE_ALL_ARG} only applies to an unscoped ${COVERAGE_WRITE_BASELINE_ARG} run.`
-    );
-  }
+  // A scoped `--replace-all` is the deliberate re-measure path: it adopts every
+  // package this run measured, and the hosted pull-request run judges every row
+  // it raises.
   if (parsed.replaceAll && !parsed.writeBaseline) {
     return yield* QualityTaskConfigurationError.new(
       `${COVERAGE_REPLACE_ALL_ARG} requires ${COVERAGE_WRITE_BASELINE_ARG}; it only controls coverage baseline replacement.`
@@ -2217,20 +2245,23 @@ const turboStep = (cwd: string, label: string, tasks: ReadonlyArray<string>, arg
   });
 };
 
-const coverageStep = (cwd: string, options: CoverageTaskOptions) =>
-  QualityTaskStep.make({
+const coverageStep = (cwd: string, options: CoverageTaskOptions) => {
+  // A narrow ratchet run resolves its owners through the planner, but a direct
+  // invocation only carries them as turbo filters.
+  const topologyPackageNames = A.isReadonlyArrayNonEmpty(options.expectedPackageNames)
+    ? options.expectedPackageNames
+    : explicitTurboFilterValues(options.args);
+  return QualityTaskStep.make({
     label: options.writeBaseline ? "coverage:baseline" : "coverage:ratchet",
     command: "bunx",
-    args: turboRunArgs(
-      ["coverage"],
-      options.writeBaseline ? [...options.args, ...COVERAGE_SCOPED_BASELINE_VITEST_ARGS] : options.args
-    ),
+    args: turboRunArgs(["coverage"], [...options.args, ...coverageVitestTopologyArgs(topologyPackageNames)]),
     cwd,
     env: {
       ...coverageEnvironment(),
       ...(options.writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
     },
   });
+};
 
 const coverageFullShardStep = (
   cwd: string,
@@ -2250,11 +2281,7 @@ const coverageFullShardStep = (
         "--summarize",
         ...passthroughArgs,
         ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
-        "--",
-        COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
-        A.some(packageNames, (packageName) => A.contains(COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES, packageName))
-          ? COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG
-          : COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG,
+        ...coverageVitestTopologyArgs(packageNames),
       ]
     ),
     cwd,
