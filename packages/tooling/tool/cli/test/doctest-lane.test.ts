@@ -134,7 +134,7 @@ describe("doctest lane fixture", { concurrent: false }, () => {
       for (const [name, workspace] of workspaces) {
         const dir = workspace.dir;
         const manifest = yield* readPackageJsonFile(path.join(dir, "package.json"));
-        const scripts = O.getOrElse(manifest.scripts, () => ({}));
+        const scripts: Readonly<Record<string, string>> = O.getOrElse(manifest.scripts, () => ({}));
         if (!isDoctestOwner(scripts)) continue;
         owners++;
         const config = yield* resolvedConfig(dir, true);
