@@ -89,3 +89,39 @@ export const resolveSystemdBunPath = Effect.fn("SystemdUnit.resolveBunPath")(fun
   );
   return O.getOrElse(found, () => process.execPath);
 });
+
+/**
+ * Resolves the Bun a unit runs from the operator's pin or, absent one, the probe.
+ *
+ * **Details**
+ *
+ * An explicit pin is the operator's choice and is only made absolute (a
+ * leading `~/` expands against `home`); the default follows
+ * {@link resolveSystemdBunPath} so a Bun bump never strands the unit. Both
+ * timer installers call this, so their `--bun-path` flags behave identically.
+ *
+ * **Example** (Prepare a pinned resolution)
+ *
+ * ```ts
+ * import { resolveUnitBunPath } from "@beep/repo-cli/internal/systemd"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(Effect.isEffect(resolveUnitBunPath({ home: "/home/op", pinned: O.some("~/tools/bun") }))) // true
+ * ```
+ *
+ * @param options - The operator home and the optional `--bun-path` pin.
+ * @returns The absolute path of the Bun executable the unit should run.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveUnitBunPath = Effect.fn("SystemdUnit.resolveUnitBunPath")(function* (options: {
+  readonly home: string;
+  readonly pinned: O.Option<string>;
+}) {
+  const path = yield* Path.Path;
+  return yield* O.match(options.pinned, {
+    onNone: () => resolveSystemdBunPath(options.home),
+    onSome: (given) => Effect.succeed(resolveOperatorPath(options.home, path.resolve, given)),
+  });
+});

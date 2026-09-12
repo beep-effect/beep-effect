@@ -13,7 +13,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
 import { printCommandJson } from "../../internal/cli/Json.ts";
-import { resolveOperatorPath, resolveSystemdBunPath } from "../../internal/systemd/index.ts";
+import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
 import { GraftCacheIoError, GraftCacheTargetError, GraftDeepPreflightError } from "./Graft.errors.ts";
 import {
   GraftCacheSyncAction,
@@ -398,12 +398,7 @@ const installTimer = Effect.fn("GraftCommand.installTimer")(function* (options: 
   const path = yield* Path.Path;
   const home = yield* Effect.orDie(Config.String("HOME"));
   const refresh = yield* GraftDeepRefresh;
-  // An explicit path is the operator's pin and is only made absolute; the
-  // default follows the mise shim so a Bun bump never strands the unit.
-  const bunPath = yield* O.match(options.bunPath, {
-    onNone: () => resolveSystemdBunPath(home),
-    onSome: (given) => Effect.succeed(resolveOperatorPath(home, path.resolve, given)),
-  });
+  const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
   const decoded = yield* decodeTimerOptions({
     owner: resolveOperatorPath(home, path.resolve, options.owner),
     bunPath,
@@ -417,7 +412,7 @@ const installTimer = Effect.fn("GraftCommand.installTimer")(function* (options: 
     Effect.mapError((cause) =>
       GraftDeepPreflightError.make({
         path: bunPath,
-        message: `Invalid timer options: the owner, Bun, and environment file paths must be free of double quotes, backslashes, percent signs, dollar signs, and control characters, which systemd would reinterpret in the unit.`,
+        message: `Invalid timer options: the owner, Bun, and environment file paths must be ${systemdUnitPathRule}.`,
         cause,
       })
     )

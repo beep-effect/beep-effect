@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 
-import { Config, Effect, Path } from "effect";
+import { Config, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { resolveOperatorPath, resolveSystemdBunPath } from "../../internal/systemd/index.ts";
+import { resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
 import { installResearchTimers, uninstallResearchTimers } from "./internal/Timers.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";
 import { ResearchCommandError } from "./Research.errors.ts";
@@ -296,23 +296,17 @@ const installTimers = Effect.fn("ResearchCommand.installTimers")(function* (opti
   readonly bunPath: O.Option<string>;
   readonly page: O.Option<string>;
 }) {
-  const path = yield* Path.Path;
   const home = yield* Config.String("HOME").pipe(
     ResearchCommandError.mapError("HOME is not set; cannot locate systemd user directory.")
   );
-  // An explicit path is the operator's pin and is only made absolute; the
-  // default follows the mise shim so a Bun bump never strands the units.
-  const bunPath = yield* O.match(options.bunPath, {
-    onNone: () => resolveSystemdBunPath(home),
-    onSome: (given) => Effect.succeed(resolveOperatorPath(home, path.resolve, given)),
-  });
+  const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
   const decoded = yield* decodeUnknownResearchTimerOptions({
     bunPath,
     repoRoot: process.cwd(),
     ...(O.isNone(options.page) ? {} : { notionPage: options.page.value }),
   }).pipe(
     ResearchCommandError.mapError(
-      "Invalid install-timers options: --page must be a bare Notion page id ([A-Za-z0-9-]), and the repo root and Bun paths must be free of double quotes, backslashes, percent signs, dollar signs, and control characters, which systemd would reinterpret in the unit."
+      `Invalid install-timers options: --page must be a bare Notion page id ([A-Za-z0-9-]), and the repo root and Bun paths must be ${systemdUnitPathRule}.`
     )
   );
   yield* installResearchTimers(decoded);

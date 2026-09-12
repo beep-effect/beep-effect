@@ -59,6 +59,23 @@ export type SystemdBunCandidate = typeof SystemdBunCandidate.Type;
 const SYSTEMD_UNIT_PATH_PATTERN = /^[^"\\%$\p{Cc}]+$/u;
 
 /**
+ * The rule a {@link SystemdUnitPath} enforces, phrased for an operator-facing error.
+ *
+ * **Example** (Compose a refusal)
+ *
+ * ```ts
+ * import { systemdUnitPathRule } from "@beep/repo-cli/internal/systemd"
+ *
+ * console.log(`Paths must be ${systemdUnitPathRule}.`)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const systemdUnitPathRule =
+  "free of double quotes, backslashes, percent signs, dollar signs, and control characters, which systemd would reinterpret in the unit";
+
+/**
  * A path that reaches a rendered systemd unit verbatim.
  *
  * **Details**
