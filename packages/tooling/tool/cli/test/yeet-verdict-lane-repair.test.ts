@@ -11,6 +11,7 @@ import {
   YeetExecutedStep,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -139,9 +140,27 @@ const cheapGatesOutput = [
   "[beep-cli]     command: bun run beep goals index --check",
 ].join("\n");
 
+// Concurrent pre-push tier: security launches first, lint-policy launches
+// second, security finishes after lint-policy launched, and only then does
+// lint-policy print its typos marker and fail. A sibling outcome line used to
+// end lint-policy's segment before the marker.
+const concurrentTypoOutput = [
+  "[beep-cli] pre-push: running lane quality:security",
+  "[beep-cli] pre-push: running lane quality:lint-policy",
+  "[beep-cli] quality:security: bun run beep quality github-checks security",
+  "[beep-cli] quality:lint-policy: bun run beep ci lane lint-policy",
+  "No vulnerabilities found (checked 2309 packages, 2 ignored)",
+  "[beep-cli] quality:security: ok in 4200ms",
+  "[beep-cli] lint:typos: typos",
+  "error: misspelling found in docs/README.md",
+  "[beep-cli] lint:typos: failed in 12ms",
+  "[beep-cli] quality:lint-policy: failed in 40ms",
+  "[beep-cli] pre-push: first red quality:lint-policy; skipped 0 lane(s) after red",
+].join("\n");
+
 describe("yeet verdict lane repair commands", () => {
   it("documents the whole-output scan trap the lane-run record replaces", () => {
-    expect(O.getOrUndefined(knownSubLaneRemediationFromOutput(fullProofOutput))).toBe(OSV_HINT);
+    assertSome(knownSubLaneRemediationFromOutput(fullProofOutput), OSV_HINT);
     expect(O.getOrUndefined(knownSubLaneRemediationFromOutput(cheapGatesOutput))).toContain(CHANGESET_HINT_PREFIX);
   });
 
@@ -201,6 +220,31 @@ describe("yeet verdict lane repair commands", () => {
     expect(laneById(verdict, "quality:lint-policy").repairCommand).toBe(TYPOS_HINT);
   });
 
+  it("gives the tier lane the wrapper's own command when the red lane carries no repair command", () => {
+    // `commandText` is optional in `quality-task-lane-run/v1`. A red lane with
+    // neither a catalog hint nor a launch command must not send the tier lane
+    // back to the whole-output scan, where the passing OSV marker wins.
+    const verdict = buildVerdict(fullProofStep, fullProofOutput, [
+      laneRun("quality:security", "passed", O.some("bun run beep quality github-checks security")),
+      laneRun("quality:coverage", "failed"),
+    ]);
+
+    expect(laneById(verdict, fullProofStep.id).repairCommand).toBe("bun run beep quality github-checks pre-push");
+    expect(laneById(verdict, "quality:coverage").repairCommand).toBeUndefined();
+    expect(laneById(verdict, "quality:security").repairCommand).toBeUndefined();
+  });
+
+  it("still finds the red lane's marker when a concurrent sibling finished after the lane launched", () => {
+    const verdict = buildVerdict(fullProofStep, concurrentTypoOutput, [
+      laneRun("quality:security", "passed", O.some("bun run beep quality github-checks security")),
+      laneRun("quality:lint-policy", "failed", O.some("bun run beep ci lane lint-policy")),
+    ]);
+
+    expect(laneById(verdict, fullProofStep.id).repairCommand).toBe(TYPOS_HINT);
+    expect(laneById(verdict, "quality:lint-policy").repairCommand).toBe(TYPOS_HINT);
+    expect(laneById(verdict, "quality:security").repairCommand).toBeUndefined();
+  });
+
   it("follows the first red lane in record order when several lanes failed", () => {
     const verdict = buildVerdict(fullProofStep, "", [
       laneRun("quality:check", "failed", O.some("bun run beep ci lane check")),
@@ -236,16 +280,15 @@ describe("yeet verdict lane repair commands", () => {
 
 describe("lane-run hint helpers", () => {
   it("matches catalog hints by exact lane id only", () => {
-    expect(O.getOrUndefined(knownSubLaneRemediationForLaneId("goals:index-check"))).toBe(GOALS_INDEX_HINT);
-    expect(O.isNone(knownSubLaneRemediationForLaneId("quality:coverage"))).toBe(true);
-    expect(O.isNone(knownSubLaneRemediationForLaneId("repo-sanity:changeset-graph"))).toBe(true);
+    assertSome(knownSubLaneRemediationForLaneId("goals:index-check"), GOALS_INDEX_HINT);
+    assertNone(knownSubLaneRemediationForLaneId("quality:coverage"));
+    assertNone(knownSubLaneRemediationForLaneId("repo-sanity:changeset-graph"));
   });
 
   it("slices one lane's segment between its launch line and its outcome line", () => {
     const siblings = HashSet.make("quality:security", "quality:coverage");
-    const segment = O.getOrUndefined(laneOutputSegment(fullProofOutput, "quality:coverage", siblings));
-
-    expect(segment).toBe(
+    assertSome(
+      laneOutputSegment(fullProofOutput, "quality:coverage", siblings),
       [
         "[beep-cli] quality:coverage: bun run beep ci lane coverage",
         "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
@@ -253,7 +296,8 @@ describe("lane-run hint helpers", () => {
         "[beep-cli] quality:coverage: failed in 91000ms",
       ].join("\n")
     );
-    expect(O.getOrUndefined(laneOutputSegment(fullProofOutput, "quality:security", siblings))).toBe(
+    assertSome(
+      laneOutputSegment(fullProofOutput, "quality:security", siblings),
       [
         "[beep-cli] quality:security: bun run beep quality github-checks security",
         "[github-checks] security: osv scan",
@@ -262,7 +306,7 @@ describe("lane-run hint helpers", () => {
         "[beep-cli] quality:security: ok in 4200ms",
       ].join("\n")
     );
-    expect(O.isNone(laneOutputSegment(fullProofOutput, "quality:docgen", siblings))).toBe(true);
+    assertNone(laneOutputSegment(fullProofOutput, "quality:docgen", siblings));
   });
 
   it("cuts a segment at a sibling launch line when the lane never printed an outcome", () => {
@@ -274,12 +318,56 @@ describe("lane-run hint helpers", () => {
     ].join("\n");
     const siblings = HashSet.make("goals:index-check", "quality:changeset-status");
 
-    expect(O.getOrUndefined(laneOutputSegment(output, "goals:index-check", siblings))).toBe(
+    assertSome(
+      laneOutputSegment(output, "goals:index-check", siblings),
       [
         "[beep-cli] goals:index-check: bun run beep goals index --check",
         "local goals/INDEX.md drifts from goals/*/ops/manifest.json",
       ].join("\n")
     );
+  });
+
+  it("lets a sibling's later outcome line through the segment but drops it from the text", () => {
+    const siblings = HashSet.make("quality:security", "quality:lint-policy");
+
+    assertSome(
+      laneOutputSegment(concurrentTypoOutput, "quality:lint-policy", siblings),
+      [
+        "[beep-cli] quality:lint-policy: bun run beep ci lane lint-policy",
+        "No vulnerabilities found (checked 2309 packages, 2 ignored)",
+        "[beep-cli] lint:typos: typos",
+        "error: misspelling found in docs/README.md",
+        "[beep-cli] lint:typos: failed in 12ms",
+        "[beep-cli] quality:lint-policy: failed in 40ms",
+      ].join("\n")
+    );
+    assertSome(
+      knownSubLaneRemediationFromLaneOutput(concurrentTypoOutput, "quality:lint-policy", siblings),
+      TYPOS_HINT
+    );
+  });
+
+  it("keeps a passing sibling's outcome label from naming the hint", () => {
+    // `docgen` is a catalog needle; the docgen lane passing inside coverage's
+    // window must not turn a coverage failure into a docgen hint.
+    const output = [
+      "[beep-cli] quality:docgen: bun run beep ci lane docgen",
+      "[beep-cli] quality:coverage: bun run beep ci lane coverage",
+      "[beep-cli] quality:docgen: ok in 3000ms",
+      "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
+      "[beep-cli] quality:coverage: failed in 91000ms",
+    ].join("\n");
+    const siblings = HashSet.make("quality:docgen", "quality:coverage");
+
+    assertSome(
+      laneOutputSegment(output, "quality:coverage", siblings),
+      [
+        "[beep-cli] quality:coverage: bun run beep ci lane coverage",
+        "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
+        "[beep-cli] quality:coverage: failed in 91000ms",
+      ].join("\n")
+    );
+    assertNone(knownSubLaneRemediationFromLaneOutput(output, "quality:coverage", siblings));
   });
 
   it("scans only tagged lines inside the lane segment for markers", () => {
@@ -290,10 +378,8 @@ describe("lane-run hint helpers", () => {
       "[beep-cli] quality:coverage: failed in 91000ms",
     ].join("\n");
 
-    expect(O.isNone(knownSubLaneRemediationFromLaneOutput(fullProofOutput, "quality:coverage", siblings))).toBe(true);
-    expect(O.isNone(knownSubLaneRemediationFromLaneOutput(unixNoise, "quality:coverage", siblings))).toBe(true);
-    expect(O.getOrUndefined(knownSubLaneRemediationFromLaneOutput(fullProofOutput, "quality:security", siblings))).toBe(
-      OSV_HINT
-    );
+    assertNone(knownSubLaneRemediationFromLaneOutput(fullProofOutput, "quality:coverage", siblings));
+    assertNone(knownSubLaneRemediationFromLaneOutput(unixNoise, "quality:coverage", siblings));
+    assertSome(knownSubLaneRemediationFromLaneOutput(fullProofOutput, "quality:security", siblings), OSV_HINT);
   });
 });

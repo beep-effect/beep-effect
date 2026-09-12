@@ -16,6 +16,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -292,8 +293,11 @@ describe("inner-lane report selectors", () => {
   });
 
   it("finds the first red lane and none when every lane passed", () => {
-    expect(O.map(firstRedLaneRun(fullProofLanes), (lane) => lane.id)).toEqual(O.some("quality:coverage"));
-    expect(O.isNone(firstRedLaneRun([laneRun("quality:security", "passed")]))).toBe(true);
+    assertSome(
+      O.map(firstRedLaneRun(fullProofLanes), (lane) => lane.id),
+      "quality:coverage"
+    );
+    assertNone(firstRedLaneRun([laneRun("quality:security", "passed")]));
   });
 });
 
@@ -310,16 +314,17 @@ const withTempRepo = <Result, Error, Requirements>(
       Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(repoRoot, { recursive: true }).pipe(Effect.orDie))
   ).pipe(provideScopedLayer(NodeServices.layer));
 
-const readIssueIndex = (repoContext: RepoRunContext) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const artifactDir = yield* artifactDirForContext(repoContext);
-    const index = yield* fs
-      .readFileString(path.join(artifactDir, "quality-issue-index.json"))
-      .pipe(Effect.flatMap(decodeIndex));
-    return { artifactDir, index };
-  });
+const readIssueIndex = Effect.fn("YeetPacketIssueLaneRecordTest.readIssueIndex")(function* (
+  repoContext: RepoRunContext
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const artifactDir = yield* artifactDirForContext(repoContext);
+  const index = yield* fs
+    .readFileString(path.join(artifactDir, "quality-issue-index.json"))
+    .pipe(Effect.flatMap(decodeIndex));
+  return { artifactDir, index };
+});
 
 describe("failWithIssueArtifacts", () => {
   it.effect("threads the run's durable lane-run record into the failure packet", () =>
@@ -337,7 +342,9 @@ describe("failWithIssueArtifacts", () => {
             reportFor("full:other", [laneRun("security:osv-scan", "failed", O.some("docker run osv-scanner"))]),
             reportFor(fullProofStep.id, A.drop(fullProofLanes, 1)),
           ],
-          encodeReport
+          // `encodeReport` also accepts `ParseOptions`, so passing it bare would
+          // select the data-last `forEach` overload and leak `unknown` channels.
+          (report) => encodeReport(report)
         );
         yield* fs.writeFileString(reportPath, `${A.join(lines, "\n")}\n`);
 

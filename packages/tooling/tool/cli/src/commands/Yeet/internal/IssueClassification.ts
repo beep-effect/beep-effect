@@ -6,7 +6,7 @@
  */
 
 import * as A from "effect/Array";
-import { dual, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -546,11 +546,23 @@ const isLaneOutcomeLine = (line: string, laneLabel: string): boolean =>
   O.contains(laneLogLabel(line), laneLabel) &&
   LANE_OUTCOME_PATTERN.test(Str.slice(LANE_LOG_PREFIX.length + laneLabel.length + 2)(line));
 
+const siblingLogLabel = (line: string, siblingLabels: HashSet.HashSet<string>): O.Option<string> =>
+  O.filter(laneLogLabel(line), (label) => HashSet.has(siblingLabels, label));
+
+// Only a sibling's launch line ends the segment. Concurrent siblings finish
+// after the target launched, so a sibling outcome line (`ok in 12ms`) must not
+// cut the target's segment before its own marker or failure output.
+const isSiblingLaunchLine = (line: string, siblingLabels: HashSet.HashSet<string>): boolean =>
+  O.exists(siblingLogLabel(line, siblingLabels), (label) => !isLaneOutcomeLine(line, label));
+
+const isSiblingOutcomeLine = (line: string, siblingLabels: HashSet.HashSet<string>): boolean =>
+  O.exists(siblingLogLabel(line, siblingLabels), (label) => isLaneOutcomeLine(line, label));
+
 const isLaneBoundaryLine = (line: string, siblingLabels: HashSet.HashSet<string>): boolean =>
   A.some(LANE_REPORT_PREFIXES, (prefix) => Str.startsWith(prefix)(line)) ||
   (Str.startsWith(LANE_LOG_PREFIX)(line) &&
     (Str.includes(": running lane ")(line) || Str.includes(": first red ")(line))) ||
-  O.exists(laneLogLabel(line), (label) => HashSet.has(siblingLabels, label));
+  isSiblingLaunchLine(line, siblingLabels);
 
 /**
  * Slice one lane's own output out of a wrapper's captured output.
@@ -561,8 +573,11 @@ const isLaneBoundaryLine = (line: string, siblingLabels: HashSet.HashSet<string>
  * last launch line (`[beep-cli] <label>: <command>`), ends at its outcome line
  * (`[beep-cli] <label>: failed in 12ms`, kept), and is cut short by the next
  * sibling launch line, tier `running lane` / `first red` line, or embedded
- * lane-run report. Nested child steps keep their own labels, so they never end
- * the segment early.
+ * lane-run report. A sibling's outcome line
+ * (`[beep-cli] <sibling>: ok in 10ms`) never ends the segment, because
+ * concurrent siblings finish after the target launched; it is dropped from
+ * the segment instead so its label cannot feed the marker scan. Nested child
+ * steps keep their own labels, so they never end the segment early.
  *
  * **Example** (Slice a red lane's output away from a passing sibling)
  *
@@ -587,7 +602,7 @@ const isLaneBoundaryLine = (line: string, siblingLabels: HashSet.HashSet<string>
  * @param output - Captured wrapper output.
  * @param laneLabel - Label of the lane whose segment is wanted.
  * @param siblingLabels - Labels of every lane the wrapper ran; their launch
- * lines end the segment.
+ * lines end the segment and their outcome lines are dropped from it.
  * @returns The lane's launch line, body, and outcome line when the launch
  * line is present.
  * @category utilities
@@ -610,22 +625,27 @@ export const laneOutputSegment: {
           A.drop(own, 1),
           (line) => !isLaneOutcomeLine(line, laneLabel) && !isLaneBoundaryLine(line, siblingLabels)
         );
-        const outcomeLength = O.exists(A.get(own, A.length(body) + 1), (line) => isLaneOutcomeLine(line, laneLabel))
-          ? 1
-          : 0;
-        return pipe(own, A.take(A.length(body) + 1 + outcomeLength), A.join("\n"));
+        const outcome = pipe(
+          A.get(own, A.length(body) + 1),
+          O.filter((line) => isLaneOutcomeLine(line, laneLabel)),
+          A.fromOption
+        );
+        return pipe(
+          A.take(own, 1),
+          A.appendAll(A.filter(body, (line) => !isSiblingOutcomeLine(line, siblingLabels))),
+          A.appendAll(outcome),
+          A.join("\n")
+        );
       })
     );
   }
 );
 
-const taggedLines = (segment: string): string =>
-  pipe(
-    segment,
-    Str.split("\n"),
-    A.filter((line) => TAGGED_LINE_PATTERN.test(line)),
-    A.join("\n")
-  );
+const taggedLines: (segment: string) => string = flow(
+  Str.split("\n"),
+  A.filter((line) => TAGGED_LINE_PATTERN.test(line)),
+  A.join("\n")
+);
 
 /**
  * Return the known sub-lane hint whose marker sits inside one lane's own

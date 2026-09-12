@@ -674,10 +674,13 @@ export class YeetExecutedStep extends S.Class<YeetExecutedStep>($I`YeetExecutedS
 ) {}
 
 // A wrapper (tier) lane repairs whatever its first red inner lane repairs. The
-// lane-run record names that lane; scanning the whole wrapper output for
-// markers is only the fallback for wrappers that emitted no record, because a
-// passing sibling's marker (`security:osv-scan`, `changeset-status`) sits in
-// the same log as the real failure and used to win the hint.
+// lane-run record names that lane, and a recorded red lane that yields no
+// repair command (no catalog hint, no marker in its own segment, and no
+// `commandText`, which is optional in `quality-task-lane-run/v1`) falls back
+// to the wrapper's own command. Scanning the whole wrapper output for markers
+// happens only when the record names no red inner lane, because a passing
+// sibling's marker (`security:osv-scan`, `changeset-status`) sits in the same
+// log as the real failure and used to win the hint.
 const laneFromExecuted = (
   executed: YeetExecutedStep,
   tier: O.Option<YeetProofTier>,
@@ -687,10 +690,11 @@ const laneFromExecuted = (
   const status = executed.status ?? (failed ? "failed" : "passed");
   const repairCommand = YeetLaneStatus.is.failed(status)
     ? pipe(
-        innerLanes,
-        A.findFirst((lane) => YeetLaneStatus.is.failed(lane.status)),
-        O.flatMap((lane) => O.fromUndefinedOr(lane.repairCommand)),
-        O.orElse(() => knownSubLaneRemediationFromOutput(executed.result.output)),
+        A.findFirst(innerLanes, (lane) => YeetLaneStatus.is.failed(lane.status)),
+        O.match({
+          onNone: () => knownSubLaneRemediationFromOutput(executed.result.output),
+          onSome: (lane) => O.fromUndefinedOr(lane.repairCommand),
+        }),
         O.orElseSome(() => commandTextForStep(executed.step))
       )
     : O.none<string>();

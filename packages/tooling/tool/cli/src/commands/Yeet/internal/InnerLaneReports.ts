@@ -8,7 +8,7 @@
 
 import { Effect, FileSystem, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { constFalse, dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -83,7 +83,7 @@ export const readInnerLaneReports = Effect.fn("Yeet.readInnerLaneReports")(funct
 ): Effect.fn.Return<ReadonlyArray<QualityTaskLaneRunReport>, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const reportPath = yield* runArtifactPathForContext(context, INNER_LANE_REPORT_FILE_NAME);
-  if (!(yield* fs.exists(reportPath).pipe(Effect.orElseSucceed(() => false)))) {
+  if (!(yield* fs.exists(reportPath).pipe(Effect.orElseSucceed(constFalse)))) {
     return A.empty();
   }
   const text = yield* fs

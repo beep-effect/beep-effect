@@ -576,11 +576,14 @@ turbo work, so they are cheap to run mid-loop.
   else the lane's recorded launch command). The failure packet
   (`quality-issue-index.json`, the per-package packet, the inbox capsule)
   follows the same record: a wrapper step's raw issue takes its sub-category,
-  category, message, and remediation from its first red inner lane. Broad log
-  scanning of the whole wrapper output is only the fallback for wrappers that
-  emitted no lane-run record. Prefer the suggested repair command in
-  `yeet status`, the packet, or `verdict.json` over rerunning the whole loop
-  blindly.
+  category, message, and remediation from its first red inner lane. A red
+  inner lane that yields no repair command (no catalog hint, no marker in its
+  own segment, no recorded launch command) gives the tier lane the wrapper's
+  own command instead. Broad log scanning of the whole wrapper output is only
+  the fallback when the record names no red inner lane, which includes
+  wrappers that emitted no record at all. Prefer the suggested repair command
+  in `yeet status`, the packet, or `verdict.json` over rerunning the whole
+  loop blindly.
 - Root composite lanes prefer streaming accumulation where child commands are
   independent. For example, root `lint` streams the Turbo/Biome aggregate and
   then still runs repo-law policy lints, so one lint-family failure does not
