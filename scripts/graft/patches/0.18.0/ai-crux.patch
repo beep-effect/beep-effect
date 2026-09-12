@@ -1,0 +1,48 @@
+--- a/ai/crux.js
++++ b/ai/crux.js
+@@ -79,8 +79,10 @@
+     return obj.symbols
+         .map((s) => s)
+         .filter((s) => typeof s.id === "string")
++        // Local patch (2026-09-09): grok echoes the whole target row ("id | kind | lines Lx-Ly")
++        // as the id; keep the verbatim id segment so entries match graph node ids.
+         .map((s) => ({
+-        id: s.id,
++        id: s.id.split(" | ")[0].trim(),
+         summary: typeof s.summary === "string" ? s.summary.trim() : "",
+         crux_start: num(s.crux_start),
+         crux_end: num(s.crux_end),
+@@ -117,7 +119,7 @@
+         this.lastMiss = null;
+         if (input.nodes.length === 0)
+             return [];
+-        const res = await this.model.create({
++        const request = {
+             temperature: 0,
+             maxTokens: 8192,
+             tools: [
+@@ -132,9 +134,21 @@
+                 { role: "system", content: SYSTEM_PROMPT },
+                 { role: "user", content: userContent(input) },
+             ],
+-        });
+-        const parsed = parseResults(argsFromResponse(res));
+-        this.lastMiss = classifyCruxMiss(res, parsed);
++        };
++        // Local patch (2026-09-09): grok-class models ignore the forced tool call on a
++        // share of crux requests and answer in prose; retry those before recording a miss.
++        const emptyRetries = Number(process.env.GRAFT_CRUX_EMPTY_RETRIES ?? 2);
++        const isEmpty = (r) => ((r && (r.size ?? r.length)) ?? 0) === 0;
++        let res = await this.model.create(request);
++        let parsed = parseResults(argsFromResponse(res));
++        let miss = classifyCruxMiss(res, parsed);
++        for (let attempt = 1; isEmpty(parsed) && miss && miss.kind !== "truncated" && attempt <= emptyRetries; attempt++) {
++            console.error(`  crux ${input.path ?? ""}: ${miss.kind}, retry ${attempt}/${emptyRetries}`);
++            res = await this.model.create(request);
++            parsed = parseResults(argsFromResponse(res));
++            miss = classifyCruxMiss(res, parsed);
++        }
++        this.lastMiss = miss;
+         return parsed;
+     }
+ }

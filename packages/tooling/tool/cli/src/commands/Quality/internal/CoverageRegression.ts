@@ -606,8 +606,9 @@ export class CoverageBaselineWritePlan extends S.Class<CoverageBaselineWritePlan
 
 /**
  * One coverage comparison failure, distinguished by whether an existing
- * baseline dropped or a new file introduced uncovered units without a prior
- * file identity to compare.
+ * baseline dropped, a new file introduced uncovered units without a prior
+ * file identity to compare, or a pull request raised a row beyond what the
+ * lane measured.
  *
  * **Example** (Reporting one dropped metric)
  *
@@ -652,9 +653,27 @@ class CoverageNewUncoveredFileFailure extends S.TaggedClass<CoverageNewUncovered
   })
 ) {}
 
+class CoverageRaisedRowFailure extends S.TaggedClass<CoverageRaisedRowFailure>($I`CoverageRaisedRowFailure`)(
+  "row-raised-beyond-reach",
+  {
+    ...CoverageComparisonFailureFields,
+    base: Percentage,
+    proposed: Percentage,
+    // A row can be stricter by count alone (same percentage, fewer uncovered
+    // units), so the counts travel with the percentages for the diagnostic.
+    baseUncovered: NonNegativeInt,
+    proposedUncovered: NonNegativeInt,
+    actualUncovered: NonNegativeInt,
+  },
+  $I.annote("CoverageRaisedRowFailure", {
+    description:
+      "A baseline row this pull request raised above the base revision's row and beyond what the lane measured.",
+  })
+) {}
+
 /**
- * Runtime schema for a tagged coverage regression caused by either a baseline
- * drop or a newly uncovered file.
+ * Runtime schema for a tagged coverage regression caused by a baseline drop,
+ * a newly uncovered file, or a row a pull request raised beyond reach.
  *
  * **Example** (Decode a baseline drop)
  *
@@ -679,10 +698,15 @@ class CoverageNewUncoveredFileFailure extends S.TaggedClass<CoverageNewUncovered
  * @category schemas
  * @since 0.0.0
  */
-export const CoverageComparisonFailure = S.Union([CoverageBaselineDropFailure, CoverageNewUncoveredFileFailure]).pipe(
+export const CoverageComparisonFailure = S.Union([
+  CoverageBaselineDropFailure,
+  CoverageNewUncoveredFileFailure,
+  CoverageRaisedRowFailure,
+]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("CoverageComparisonFailure", {
-    description: "Tagged coverage regression reason for a baseline drop or newly uncovered file.",
+    description:
+      "Tagged coverage regression reason for a baseline drop, a newly uncovered file, or a row raised beyond reach.",
   })
 );
 
@@ -697,8 +721,10 @@ export type CoverageComparisonFailure = typeof CoverageComparisonFailure.Type;
 
 /**
  * Outcome of comparing current coverage against the committed baseline:
- * metric drops (failures), packages missing a current summary, and packages
- * new since the baseline was written.
+ * metric drops (failures), rows a pull request raised beyond what the run
+ * measured (raisedRowFailures, with the count of raised row metrics judged),
+ * packages missing a current summary, and packages new since the baseline
+ * was written.
  *
  * **Example** (Deciding whether a run regressed)
  *
@@ -715,6 +741,8 @@ export class CoverageComparisonResult extends S.Class<CoverageComparisonResult>(
   {
     comparedCount: S.Int,
     failures: S.Array(CoverageComparisonFailure),
+    raisedRowFailures: S.Array(CoverageComparisonFailure),
+    raisedRowsJudged: S.Int,
     minimumFailures: S.Array(CoverageComparisonFailure),
     missingActuals: S.Array(S.String),
     newPackages: S.Array(CoverageSnapshotEntry),
@@ -724,6 +752,58 @@ export class CoverageComparisonResult extends S.Class<CoverageComparisonResult>(
     description: "Outcome of comparing current coverage against the committed baseline.",
   })
 ) {}
+
+/**
+ * The documents one coverage comparison reads: the floors the measurement is
+ * judged against and, on a base-pinned pull-request run, the branch's own
+ * baseline so rows it raised can be judged against their proposed values.
+ *
+ * **Details**
+ *
+ * `baseline` is the base revision's document with the workspace's file
+ * identity (base floors for surviving files, branch rows for new files).
+ * `proposed` is the branch's committed document when `TURBO_SCM_BASE` pins a
+ * base, and `None` on main pushes and local runs, where the workspace
+ * document is the only floor and nothing is re-judged.
+ *
+ * **Example** (Base-only comparison input)
+ *
+ * ```ts
+ * import { CoverageComparisonBaselines, CoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
+ * import { Percentage } from "@beep/schema/Percentage"
+ * import * as O from "effect/Option"
+ *
+ * const zero = Percentage.make(0)
+ * const baseline = CoverageRegressionBaseline.make({
+ *   schema_version: 2,
+ *   generated_at: "2026-09-11T00:00:00.000Z",
+ *   git_sha: "example",
+ *   command: "bun run coverage:baseline:write",
+ *   epsilon: 0.001,
+ *   minimum: { lines: zero, statements: zero, branches: zero, functions: zero },
+ *   exemptions: {},
+ *   follow_ups: {},
+ *   packages: {},
+ * })
+ * const baselines = CoverageComparisonBaselines.make({ baseline, proposed: O.none() })
+ * console.log(O.isNone(baselines.proposed)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageComparisonBaselines extends S.Class<CoverageComparisonBaselines>($I`CoverageComparisonBaselines`)(
+  {
+    baseline: CoverageRegressionBaseline,
+    proposed: S.Option(CoverageRegressionBaseline),
+  },
+  $I.annote("CoverageComparisonBaselines", {
+    description: "Base-pinned comparison floors plus the branch's own baseline rows when a base is pinned.",
+  })
+) {}
+
+const baseOnlyComparison = (baseline: CoverageRegressionBaseline): CoverageComparisonBaselines =>
+  CoverageComparisonBaselines.make({ baseline, proposed: O.none() });
 
 const decodeVitestCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(VitestCoverageSummary));
 
@@ -1635,13 +1715,13 @@ const readBaseline = Effect.fn("CoverageRegression.readBaseline")(function* (
 const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBaseline")(function* (
   repoRoot: string
 ): Effect.fn.Return<
-  CoverageRegressionBaseline,
+  CoverageComparisonBaselines,
   CoverageRegressionError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const configuredBase = yield* configStringOption("TURBO_SCM_BASE");
   return yield* O.match(configuredBase, {
-    onNone: () => readBaseline(repoRoot),
+    onNone: () => readBaseline(repoRoot).pipe(Effect.map(baseOnlyComparison)),
     onSome: Effect.fn("CoverageRegression.readBaseComparisonBaseline")(function* (base) {
       const baseBaseline = yield* runGitRawOutput(
         repoRoot,
@@ -1654,7 +1734,7 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
         )
       );
       const workspaceBaseline = yield* readBaseline(repoRoot);
-      return CoverageRegressionBaseline.make({
+      const baseline = CoverageRegressionBaseline.make({
         ...baseBaseline,
         packages: R.map(baseBaseline.packages, (basePackage, packageName) =>
           pipe(
@@ -1676,12 +1756,17 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
           )
         ),
       });
+      // The branch's own document rides along: rows it raised above the base
+      // are judged against their proposed values, which is what main will
+      // apply on its first push after the merge.
+      return CoverageComparisonBaselines.make({ baseline, proposed: O.some(workspaceBaseline) });
     }),
   });
 });
 
 /**
- * Read the base-pinned baseline used by a coverage comparison.
+ * Read the base-pinned floors a coverage comparison judges against and, when a
+ * base is pinned, the branch's own baseline rows.
  *
  * **Example** (Build the comparison read)
  *
@@ -2072,6 +2157,11 @@ export const subtractPackageFromCoverageRegressionBaseline = Effect.fn(
 const actualByPackageName = (actuals: ReadonlyArray<CoverageSnapshotEntry>) =>
   R.fromEntries(A.map(actuals, (entry) => [entry.packageName, entry] as const));
 
+const packageEntryByNameOrder = Order.mapInput(
+  Order.String,
+  (entry: readonly [string, CoveragePackageBaseline]) => entry[0]
+);
+
 /**
  * Whether a metric's percentage drop reflects lost coverage rather than
  * deleted covered code.
@@ -2277,17 +2367,195 @@ const belowMinimumMetrics = (
     )
   );
 
-const compareCoverage = (
+/**
+ * Whether the pull request's row is a stricter floor than the base revision's
+ * for one metric: a higher percentage (beyond epsilon) or fewer uncovered
+ * units. Only such rows can turn main red after a merge, because main judges
+ * its first push against the merged document while the pull request was judged
+ * against the base rows. Lowered and unchanged rows stay governed by the base
+ * comparison, so a floor-lowering fix proposes nothing this check can reject.
+ *
+ * @param metric - Metric being compared.
+ * @param base - Row from the base revision's document.
+ * @param proposed - Row from the pull request's own document.
+ * @param epsilon - Percentage-point tolerance for floating-point noise.
+ * @returns `true` when the proposed row is the stricter floor for the metric.
+ */
+const rowRaised = (
+  metric: CoverageMetricName,
+  base: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
+  proposed: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
+  epsilon: number
+): boolean => proposed[metric] > base[metric] + epsilon || proposed.uncovered[metric] < base.uncovered[metric];
+
+// One entry per raised metric: `Some` when the measurement does not reach the
+// proposed row under the same drop rule main applies after the merge.
+const raisedFileRowJudgements = (
+  packageName: string,
+  packagePath: string,
+  filePath: string,
+  base: CoverageFileBaseline,
+  proposed: CoverageFileBaseline,
+  actual: CoverageFileBaseline,
+  epsilon: number
+): ReadonlyArray<O.Option<CoverageComparisonFailure>> =>
+  pipe(
+    metricNames,
+    A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
+    A.map((metric) =>
+      fileMetricRegressed(metric, proposed, actual, epsilon)
+        ? O.some(
+            CoverageRaisedRowFailure.make({
+              packageName,
+              packagePath,
+              filePath: O.some(filePath),
+              metric,
+              base: base[metric],
+              proposed: proposed[metric],
+              actual: actual[metric],
+              baseUncovered: base.uncovered[metric],
+              proposedUncovered: proposed.uncovered[metric],
+              actualUncovered: actual.uncovered[metric],
+            })
+          )
+        : O.none()
+    )
+  );
+
+const raisedPackageRowJudgements = (
+  packageName: string,
+  base: CoveragePackageBaseline,
+  proposed: CoveragePackageBaseline,
+  actual: CoveragePackageBaseline,
+  epsilon: number
+): ReadonlyArray<O.Option<CoverageComparisonFailure>> =>
+  pipe(
+    metricNames,
+    A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
+    A.map((metric) =>
+      metricRegressed(metric, proposed, actual, epsilon)
+        ? O.some(
+            CoverageRaisedRowFailure.make({
+              packageName,
+              packagePath: proposed.path,
+              filePath: O.none(),
+              metric,
+              base: base[metric],
+              proposed: proposed[metric],
+              actual: actual[metric],
+              baseUncovered: base.uncovered[metric],
+              proposedUncovered: proposed.uncovered[metric],
+              actualUncovered: actual.uncovered[metric],
+            })
+          )
+        : O.none()
+    )
+  );
+
+// A raised file row the run did not measure at all: main applies the vanished-
+// path rule to the merged document, so every raised metric with a positive
+// proposed percentage fails there. The base comparison only reports vanished
+// metrics whose base value is positive, so a row raised from zero would
+// otherwise slip through. Absent measurements read as zero, like that rule.
+const raisedVanishedFileRowJudgements = (
+  packageName: string,
+  packagePath: string,
+  filePath: string,
+  base: CoverageFileBaseline,
+  proposed: CoverageFileBaseline,
+  epsilon: number
+): ReadonlyArray<O.Option<CoverageComparisonFailure>> =>
+  pipe(
+    metricNames,
+    A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
+    A.map((metric) =>
+      proposed[metric] > ZERO_PERCENTAGE
+        ? O.some(
+            CoverageRaisedRowFailure.make({
+              packageName,
+              packagePath,
+              filePath: O.some(filePath),
+              metric,
+              base: base[metric],
+              proposed: proposed[metric],
+              actual: ZERO_PERCENTAGE,
+              baseUncovered: base.uncovered[metric],
+              proposedUncovered: proposed.uncovered[metric],
+              actualUncovered: NonNegativeInt.make(0),
+            })
+          )
+        : O.none()
+    )
+  );
+
+// Judge every row the branch raised above the base floors against the branch's
+// own value. Only rows with a base row in a measured package are candidates:
+// new files already carry the branch row in `baseline`, so they are never
+// stricter than it, and unmeasured packages have nothing to judge. A raised
+// file row missing from the package measurement is judged as vanished.
+const judgeRaisedRows = (
   baseline: CoverageRegressionBaseline,
+  proposed: CoverageRegressionBaseline,
+  actualsByName: Record<string, CoverageSnapshotEntry>
+): ReadonlyArray<O.Option<CoverageComparisonFailure>> =>
+  pipe(
+    R.toEntries(proposed.packages),
+    A.sort(packageEntryByNameOrder),
+    A.flatMap(([packageName, proposedPackage]) =>
+      pipe(
+        O.all([R.get(baseline.packages, packageName), R.get(actualsByName, packageName)]),
+        O.map(([basePackage, actual]) =>
+          A.appendAll(
+            pipe(
+              R.toEntries(proposedPackage.files),
+              A.sort(coverageFileByPathOrder),
+              A.flatMap(([filePath, proposedFile]) =>
+                pipe(
+                  R.get(basePackage.files, filePath),
+                  O.map((baseFile) =>
+                    O.match(R.get(actual.baseline.files, filePath), {
+                      onNone: () =>
+                        raisedVanishedFileRowJudgements(
+                          packageName,
+                          proposedPackage.path,
+                          filePath,
+                          baseFile,
+                          proposedFile,
+                          baseline.epsilon
+                        ),
+                      onSome: (actualFile) =>
+                        raisedFileRowJudgements(
+                          packageName,
+                          proposedPackage.path,
+                          filePath,
+                          baseFile,
+                          proposedFile,
+                          actualFile,
+                          baseline.epsilon
+                        ),
+                    })
+                  ),
+                  O.getOrElse(A.empty<O.Option<CoverageComparisonFailure>>)
+                )
+              )
+            ),
+            raisedPackageRowJudgements(packageName, basePackage, proposedPackage, actual.baseline, baseline.epsilon)
+          )
+        ),
+        O.getOrElse(A.empty<O.Option<CoverageComparisonFailure>>)
+      )
+    )
+  );
+
+const compareCoverage = (
+  baselines: CoverageComparisonBaselines,
   actuals: ReadonlyArray<CoverageSnapshotEntry>,
   scoped: boolean,
   expectedPackageNames: ReadonlyArray<string> = A.empty<string>()
 ): CoverageComparisonResult => {
+  const baseline = baselines.baseline;
   const actualsByName = actualByPackageName(actuals);
-  const baselineEntries = A.sort(
-    R.toEntries(baseline.packages),
-    Order.mapInput(Order.String, (entry: readonly [string, CoveragePackageBaseline]) => entry[0])
-  );
+  const baselineEntries = A.sort(R.toEntries(baseline.packages), packageEntryByNameOrder);
   const failures = pipe(
     baselineEntries,
     A.flatMap(([packageName, packageBaseline]) =>
@@ -2298,6 +2566,11 @@ const compareCoverage = (
         O.getOrElse(A.empty<CoverageComparisonFailure>)
       )
     )
+  );
+  const raisedRowJudgements = pipe(
+    baselines.proposed,
+    O.map((proposed) => judgeRaisedRows(baseline, proposed, actualsByName)),
+    O.getOrElse(A.empty<O.Option<CoverageComparisonFailure>>)
   );
   const minimumFailures = pipe(
     actuals,
@@ -2322,6 +2595,8 @@ const compareCoverage = (
   return {
     comparedCount: A.length(actuals) - A.length(newPackages),
     failures,
+    raisedRowFailures: A.getSomes(raisedRowJudgements),
+    raisedRowsJudged: A.length(raisedRowJudgements),
     minimumFailures,
     missingActuals,
     newPackages,
@@ -2345,7 +2620,75 @@ export const compareCoverageRegressionSnapshotsForTesting: {
     actuals: ReadonlyArray<CoverageSnapshotEntry>,
     scoped: boolean
   ): CoverageComparisonResult;
-} = dual(3, compareCoverage);
+} = dual(
+  3,
+  (
+    baseline: CoverageRegressionBaseline,
+    actuals: ReadonlyArray<CoverageSnapshotEntry>,
+    scoped: boolean
+  ): CoverageComparisonResult => compareCoverage(baseOnlyComparison(baseline), actuals, scoped)
+);
+
+/**
+ * Pure comparison that also judges the rows a pull request raised against its
+ * own proposed values, exposed for package-local tests.
+ *
+ * **Example** (Judge a branch that proposes the base document unchanged)
+ *
+ * ```ts
+ * import {
+ *   CoverageComparisonBaselines,
+ *   CoverageRegressionBaseline,
+ *   compareCoverageRegressionSnapshotsWithProposedForTesting
+ * } from "@beep/repo-cli/test/Quality"
+ * import { Percentage } from "@beep/schema/Percentage"
+ * import * as O from "effect/Option"
+ *
+ * const zero = Percentage.make(0)
+ * const baseline = CoverageRegressionBaseline.make({
+ *   schema_version: 2,
+ *   generated_at: "2026-09-11T00:00:00.000Z",
+ *   git_sha: "example",
+ *   command: "bun run coverage:baseline:write",
+ *   epsilon: 0.001,
+ *   minimum: { lines: zero, statements: zero, branches: zero, functions: zero },
+ *   exemptions: {},
+ *   follow_ups: {},
+ *   packages: {},
+ * })
+ * const result = compareCoverageRegressionSnapshotsWithProposedForTesting(
+ *   CoverageComparisonBaselines.make({ baseline, proposed: O.some(baseline) }),
+ *   [],
+ *   false
+ * )
+ * console.log(result.raisedRowsJudged) // 0
+ * ```
+ *
+ * @param baselines - Base floors plus the branch's own document.
+ * @param actuals - Coverage summaries produced by the run.
+ * @param scoped - Whether the run was intentionally filtered or affected-scoped.
+ * @returns Regression findings including raised rows the run did not reach.
+ * @category testing
+ * @since 0.0.0
+ */
+export const compareCoverageRegressionSnapshotsWithProposedForTesting: {
+  (
+    actuals: ReadonlyArray<CoverageSnapshotEntry>,
+    scoped: boolean
+  ): (baselines: CoverageComparisonBaselines) => CoverageComparisonResult;
+  (
+    baselines: CoverageComparisonBaselines,
+    actuals: ReadonlyArray<CoverageSnapshotEntry>,
+    scoped: boolean
+  ): CoverageComparisonResult;
+} = dual(
+  3,
+  (
+    baselines: CoverageComparisonBaselines,
+    actuals: ReadonlyArray<CoverageSnapshotEntry>,
+    scoped: boolean
+  ): CoverageComparisonResult => compareCoverage(baselines, actuals, scoped)
+);
 
 /**
  * Compare a scoped snapshot while requiring every explicitly selected package
@@ -2393,7 +2736,7 @@ export const compareCoverageRegressionSnapshotsForExpectedPackagesForTesting: {
     baseline: CoverageRegressionBaseline,
     actuals: ReadonlyArray<CoverageSnapshotEntry>,
     expectedPackageNames: ReadonlyArray<string>
-  ): CoverageComparisonResult => compareCoverage(baseline, actuals, true, expectedPackageNames)
+  ): CoverageComparisonResult => compareCoverage(baseOnlyComparison(baseline), actuals, true, expectedPackageNames)
 );
 
 const coverageFailureLocation = (failure: CoverageComparisonFailure): string =>
@@ -2414,6 +2757,11 @@ const renderCoverageFailure = (failure: CoverageComparisonFailure): string =>
       "new-uncovered-file",
       (newFile) =>
         `  - ${coverageDiagnosticFragment(newFile.packageName)} (${coverageFailureLocation(newFile)}) ${newFile.metric}: new file has ${newFile.uncovered} uncovered unit(s) at ${newFile.actual}% (no baseline file identity)`
+    ),
+    Match.tag(
+      "row-raised-beyond-reach",
+      (raised) =>
+        `  - ${coverageDiagnosticFragment(raised.packageName)} (${coverageFailureLocation(raised)}) ${raised.metric}: row raised beyond hosted reach: this pull request raised the row from ${raised.base} (${raised.baseUncovered} uncovered) to ${raised.proposed} (${raised.proposedUncovered} uncovered) but the lane measured ${raised.actual} (${raised.actualUncovered} uncovered)`
     ),
     Match.exhaustive
   );
@@ -2495,6 +2843,13 @@ const regressionLines = (
         ...renderCoverageFailuresForTesting(failures),
       ],
     }),
+    ...A.match(result.raisedRowFailures, {
+      onEmpty: A.empty<string>,
+      onNonEmpty: (failures) => [
+        "[coverage-ratchet] baseline row(s) raised beyond hosted reach (judged against this pull request's own rows, not the base floors):",
+        ...renderCoverageFailuresForTesting(failures),
+      ],
+    }),
     ...A.match(result.minimumFailures, {
       onEmpty: A.empty<string>,
       onNonEmpty: (failures) => [
@@ -2536,10 +2891,13 @@ const failurePackageNames = (failures: ReadonlyArray<CoverageComparisonFailure>)
  * Baseline regressions get the exact scoped regeneration command for the
  * regressed packages so an agent never reaches for the repo-wide writer, with
  * the two legitimate outcomes stated: restore the coverage, or accept the new
- * floors after review. Tier-minimum breaches get a restore-only hint: the
- * writer records floors, it cannot lift a package above the repository tier.
- * Missing summaries and disposition gaps get no command because they are
- * configuration problems, not floors.
+ * floors after review. Rows a pull request raised beyond what the lane
+ * measured get a lower-the-row hint and no writer command: a local
+ * regeneration is what mints such rows, so rerunning it cannot prove them.
+ * Tier-minimum breaches get a restore-only hint: the writer records floors,
+ * it cannot lift a package above the repository tier. Missing summaries and
+ * disposition gaps get no command because they are configuration problems,
+ * not floors.
  *
  * **Example** (Nothing regressed)
  *
@@ -2549,6 +2907,8 @@ const failurePackageNames = (failures: ReadonlyArray<CoverageComparisonFailure>)
  * const clean = CoverageComparisonResult.make({
  *   comparedCount: 0,
  *   failures: [],
+ *   raisedRowFailures: [],
+ *   raisedRowsJudged: 0,
  *   minimumFailures: [],
  *   missingActuals: [],
  *   newPackages: [],
@@ -2569,6 +2929,12 @@ export const renderCoverageRemediation = (result: CoverageComparisonResult): Rea
       "[coverage-ratchet] remediation: restore the lost coverage with tests, or, once a reviewer accepts the new floors, regenerate only the regressed rows:",
       `  ${sanitizeCoverageDiagnostic(coverageScopedBaselineWriteCommand(packageNames))}`,
       `  (the scoped run measures only those packages and merges their rows; never run ${coverageRegressionRegenerationCommand} for a per-package drop)`,
+    ],
+  }),
+  ...A.match(failurePackageNames(result.raisedRowFailures), {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (packageNames) => [
+      `[coverage-ratchet] remediation: ${sanitizeCoverageDiagnostic(A.join(packageNames, ", "))} carry row(s) this pull request raised above what the hosted lane measures; set each named row in ${coverageRegressionBaselinePath} to the measured value or lower. A local regeneration minted these floors and cannot prove them; merged as-is they turn main red on its first push.`,
     ],
   }),
   ...A.match(failurePackageNames(result.minimumFailures), {
@@ -2598,9 +2964,10 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
     CoverageRegressionError | QualityTaskFailed,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > {
-    const baseline = yield* readComparisonBaseline(repoRoot);
+    const baselines = yield* readComparisonBaseline(repoRoot);
+    const baseline = baselines.baseline;
     const actuals = yield* collectCoverageSnapshot(repoRoot);
-    const result = compareCoverage(baseline, actuals, scoped, expectedPackageNames);
+    const result = compareCoverage(baselines, actuals, scoped, expectedPackageNames);
     const path = yield* Path.Path;
     const dispositionGaps = yield* workspaceCoverageDispositionGaps(repoRoot, path, baseline.exemptions);
 
@@ -2635,6 +3002,7 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
         {
           present:
             A.isReadonlyArrayNonEmpty(result.failures) ||
+            A.isReadonlyArrayNonEmpty(result.raisedRowFailures) ||
             A.isReadonlyArrayNonEmpty(result.minimumFailures) ||
             A.isReadonlyArrayNonEmpty(result.missingActuals) ||
             A.isReadonlyArrayNonEmpty(dispositionGaps),
@@ -2642,7 +3010,18 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
           error: QualityTaskFailed.new(1, "coverage:ratchet", "beep-cli coverage"),
         },
       ],
-      okLine: `[coverage-ratchet] ok: compared ${result.comparedCount} package(s) with epsilon ${baseline.epsilon}`,
+      okLine: A.join(
+        [
+          `[coverage-ratchet] ok: compared ${result.comparedCount} package(s) with epsilon ${baseline.epsilon}`,
+          ...O.match(baselines.proposed, {
+            onNone: A.empty<string>,
+            onSome: () => [
+              `${result.raisedRowsJudged} raised row metric(s) judged against this pull request's own rows`,
+            ],
+          }),
+        ],
+        "; "
+      ),
       tighten: O.none(),
     });
   }

@@ -1783,6 +1783,49 @@ failing closed on handoff integrity, reusing the existing receipt vocabulary,
 and withholding publisher authority address those observed failure modes. Work
 packet: `explorations/grok-bot-automation/`.
 
+## 2026-09-11: Pull Requests Are Judged Against the Baseline Rows They Raise
+
+- **Status:** Active
+
+Decision:
+
+On a base-pinned coverage run (`TURBO_SCM_BASE` set, which is every
+pull-request run of the `Heavy / Coverage Regression` lane), the ratchet keeps
+judging the measurement against the base revision's rows and additionally
+judges every row the pull request raised against the pull request's own value.
+A row is raised, per metric, when the branch's
+`standards/coverage.regression-baseline.jsonc` carries a stricter floor than
+the base revision's document: a higher percentage (beyond epsilon) or fewer
+uncovered units. Package total rows and file rows are both covered. New files
+already use the branch row and are not re-judged; rows the pull request lowered
+or left unchanged are judged by the base floors alone. A raised row the lane
+does not reach fails with the distinct reason `row raised beyond hosted reach`,
+naming the row, the base value, the proposed value, and the measured value,
+under its own section, with a remediation that says to set the row to the
+measured value or lower. The scoped writer is not offered for that failure,
+because a local regeneration is what mints such rows. The ok line reports how
+many raised row metrics were judged. Runs without a pinned base (main pushes
+and local runs) behave as before.
+
+Rationale:
+
+PR #1068 regenerated the baseline locally and raised the
+`Lint/Lint.command.ts` and `Yeet/internal/Planner.ts` rows above what the
+hosted lane measures. The pull-request run was green because it compared the
+measurement against main's rows; main went red on the first push after the
+merge and every later pull request inherited that red until a floor-restoring
+PR landed. The lane had already measured both files on the pull request and
+produced the exact numbers main later failed on, so the verdict was available
+before the merge and simply not asked for. Judging only raised rows keeps the
+one legitimate direction open: a floor-lowering fix proposes nothing stricter
+than main and stays governed by the base comparison it was already subject to.
+The predicate reused for the raised-row verdict is the same drop rule main
+applies after the merge, so a pull-request pass on a raised row is a prediction
+that main stays green on that row.
+
+This extends the 2026-08-24 rule that the hosted lane is the authority for the
+floors: a raised row is now proven by the hosted lane before it can merge.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

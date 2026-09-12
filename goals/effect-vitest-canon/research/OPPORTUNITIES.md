@@ -1593,3 +1593,21 @@ missing prerequisite without launching a scanner. Both failures are retained;
 the path was corrected and the fixed three-run cohort above followed. Stop
 dependent commands after an unsuccessful prerequisite rather than issuing
 them in the same orchestration batch.
+
+### Inventory not refreshed by the PR that added tests, 2026-09-11
+
+While publishing the coverage-ratchet hardening (`fix/coverage-raised-rows-own-floors`,
+PR #1091) the local Yeet cheap gate `lint:effect-vitest` went red with
+`[effect-vitest] 93 new finding(s)` and no per-finding listing. Attribution by
+content key (file, rule, symbol, evidence) against `HEAD:standards/effect-vitest.inventory.jsonc`
+showed 90 of 91 content-new findings in the cache test files that #1068 added
+(`packages/tooling/tool/cli/test/cache-*.test.ts`, `CacheQualification.policy.test.ts`)
+and one in the branch's own test file (an EV006 `expect(...).toEqual(O.some(...))`,
+fixed with `assertSome`). #1068 merged after the canon foundation (#1067) without
+refreshing the inventory, so every publish from main has failed this gate since,
+while the hosted lanes stay green because no hosted lane runs the linter. The
+inventory refresh was left out of #1091 to keep the diff focused; it needs its own
+`bun run beep lint effect-vitest --write` commit. What would have prevented it:
+the linter printing the new findings grouped by file (the count alone forced a
+hand attribution), and a hosted `lint:effect-vitest` lane or a main-push check so
+a stale inventory reds the PR that introduces it rather than every later publish.

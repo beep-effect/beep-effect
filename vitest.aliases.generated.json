@@ -678,6 +678,7 @@
   "@beep/acp/rpc": ["./packages/drivers/acp/src/AcpRpc.models.ts"],
   "@beep/acp/schema": ["./packages/drivers/acp/src/Acp.models.ts"],
   "@beep/acp/terminal": ["./packages/drivers/acp/src/AcpTerminal.models.ts"],
+  "@beep/acp/json": ["./packages/drivers/acp/src/AcpJson.codec.ts"],
   "@beep/postgres/client": [
     "./packages/drivers/postgres/src/PostgresClient.service.ts"
   ],
