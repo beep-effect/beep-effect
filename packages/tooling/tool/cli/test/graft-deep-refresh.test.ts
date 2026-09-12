@@ -11,17 +11,16 @@ import {
   GraftDeepRunnerLive,
   GraftDeepStepError,
   GraftDeepTimerOptions,
-  GraftDeepUnitPath,
   graftCommand,
   parseDeepCoverage,
   renderGraftDeepRefreshUnits,
-  resolveGraftDeepBunPath,
   runDeepInstallTimer,
   runDeepRefresh,
   runDeepStatus,
 } from "@beep/repo-cli/commands/Graft";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { CapturedStep, formatCommandLine } from "@beep/repo-cli/test/Process";
+import { resolveSystemdBunPath, SystemdUnitPath } from "@beep/repo-cli/test/Systemd";
 import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -65,7 +64,7 @@ const LOW_COVERAGE = "meaning coverage: 900/1000 symbols (90%).\n";
 const decodeStatusJson = S.decodeUnknownEffect(S.fromJsonString(GraftDeepRefreshStatus));
 const encodeStatusJson = S.encodeEffect(S.fromJsonString(GraftDeepRefreshStatus));
 const encodeLockJson = S.encodeEffect(S.fromJsonString(GraftDeepLock));
-const decodeUnitPath = S.decodeUnknownEffect(GraftDeepUnitPath);
+const decodeUnitPath = S.decodeUnknownEffect(SystemdUnitPath);
 
 // A clone tree the real cache sync accepts: an owner with the paid meaning tier
 // and two sibling clones whose basenames share its digit-stripped prefix.
@@ -1196,23 +1195,23 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       });
       yield* Effect.forEach([shim, standalone], touch);
       // Both executable: the shim wins because it follows the repo's pinned Bun.
-      expect(yield* resolveGraftDeepBunPath(home)).toBe(shim);
+      expect(yield* resolveSystemdBunPath(home)).toBe(shim);
       // A leftover without execute permission is skipped, not pinned.
       yield* fs.chmod(shim, 0o644);
-      expect(yield* resolveGraftDeepBunPath(home)).toBe(standalone);
+      expect(yield* resolveSystemdBunPath(home)).toBe(standalone);
       // So is a directory sitting where the executable should be.
       yield* fs.remove(standalone);
       yield* fs.makeDirectory(standalone);
-      expect(yield* resolveGraftDeepBunPath(home)).toBe(process.execPath);
+      expect(yield* resolveSystemdBunPath(home)).toBe(process.execPath);
       // Neither candidate: the running executable is the fallback.
       yield* fs.remove(standalone, { recursive: true });
       yield* fs.remove(shim);
-      expect(yield* resolveGraftDeepBunPath(home)).toBe(process.execPath);
+      expect(yield* resolveSystemdBunPath(home)).toBe(process.execPath);
       // A candidate this user cannot even reach is skipped rather than failing
       // the install, so an uninstall is never blocked by the probe either.
       yield* touch(shim);
       yield* fs.chmod(path.dirname(shim), 0o000);
-      const unreachable = yield* resolveGraftDeepBunPath(home).pipe(
+      const unreachable = yield* resolveSystemdBunPath(home).pipe(
         Effect.ensuring(Effect.orDie(fs.chmod(path.dirname(shim), 0o755)))
       );
       expect(unreachable).toBe(process.execPath);
