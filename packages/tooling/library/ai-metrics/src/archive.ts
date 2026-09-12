@@ -41,6 +41,9 @@ const STANDARD_BASE64_PATTERN = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9
  *
  * `S.isBase64` backtracks per four-character group, rejecting large ciphertext
  * in Bun and overflowing Node's stack. The pattern here is generation metadata only.
+ *
+ * @param annotations - Filter annotations (identifier, title, description, message) merged over the defaults.
+ * @returns A string filter that passes only standard Base64 text.
  */
 const isStandardBase64 = (annotations: S.Annotations.Filter) =>
   S.makeFilter<string>((value) => Result.isSuccess(Encoding.decodeBase64(value)), {

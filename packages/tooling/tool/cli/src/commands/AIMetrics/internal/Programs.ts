@@ -156,6 +156,7 @@ class AiMetricsArchiveDrillRow extends S.Class<AiMetricsArchiveDrillRow>($I`AiMe
 ) {}
 
 const decodeArchiveDrillRows = S.decodeUnknownEffect(S.Array(AiMetricsArchiveDrillRow));
+const decodeSystemdUnitPath = S.decodeUnknownEffect(SystemdUnitPath);
 
 const readInputFile = Effect.fn("AIMetrics.readInputFile")(function* (input: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -1872,7 +1873,7 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
     )
   );
   const executable = yield* resolveUnitBunPath({ home, pinned: bunPath }).pipe(
-    Effect.flatMap(S.decodeUnknownEffect(SystemdUnitPath)),
+    Effect.flatMap(decodeSystemdUnitPath),
     Effect.mapError((cause) =>
       AiMetricsCommandError.make({
         cause,
