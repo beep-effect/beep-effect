@@ -671,6 +671,8 @@
       "dependsOn": ["//#lint:policy-fingerprint"],
       "inputs": [
         "**/*",
+        "!.git/**",
+        "!**/.git/**",
         "!**/node_modules/**",
         "!.beep/**",
         "!**/dist/**",
@@ -692,6 +694,8 @@
         ".gitignore",
         "**/.gitignore",
         "**/*",
+        "!.git/**",
+        "!**/.git/**",
         "!graft/**",
         "!packages/drivers/*/openapi.json",
         "!packages/drivers/*/spec/*.json",

@@ -2614,10 +2614,10 @@ const rootRepoLintPolicySteps = (
       // because any tracked document can introduce a machine-local reference.
       repoCliStep(repoRoot, "knowledge:refs-check", ["knowledge", "refs", "--check"]),
       repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
-      policyLintTurboStep(repoRoot, "lint:laws", ["lint:laws", "//#lint:native-runtime:roots"], base),
+      policyLintTurboStep(repoRoot, "lint:laws", ["lint:laws", "lint:native-runtime:roots"], base),
       P.isUndefined(base)
         ? bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"])
-        : policyLintTurboStep(repoRoot, "lint:jsdoc", ["lint:jsdoc", "//#lint:jsdoc:root"], base),
+        : policyLintTurboStep(repoRoot, "lint:jsdoc", ["lint:jsdoc", "lint:jsdoc:root"], base),
       repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
       repoCliStep(repoRoot, "lint:circular", ["lint", "circular"]),
       ...scopedRepoCliStep(

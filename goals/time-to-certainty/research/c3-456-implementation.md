@@ -990,3 +990,121 @@ eslint sweep behavior, D2 unfiltered execution, lane identities, and fresh inven
 before the JSDoc compare. Wave seed task-ID notes and artifact readers remain with
 the later stage specified by the brief; no Stage D or E implementation was started.
 Stop after Stage C.
+
+## Stage C2
+
+Executed **only Amendment 3: selectors, Git exclusions, and affected fixtures**.
+Read the brief in full and the Stage C record. Entry checkout was clean. No graft
+commands or checkout Git writes ran; synthetic Git initialization, staging,
+commits, branch creation, and loose-object writes occurred only inside scoped
+`/tmp/root-tasks-turbo-*` fixtures. No Stage D/E migration was started.
+Applied the Effect-first skill for test implementation and Yeet skill for the
+required inbox acknowledgement.
+
+### Decisions and rejected alternatives
+
+1. Added `!.git/**` and `!**/.git/**` to both whole-tree root input lists:
+   `//#lint:roadmap-refs` and `//#lint:typos`. Typos has config prefixes before
+   `**/*`, so checking only the first input would miss it. Preserved all other
+   root/package task configuration and cache flags. No binary walker was promoted
+   to reusable cache status.
+2. Changed the laws residual to bare `lint:native-runtime:roots` in both scopes,
+   avoiding a redundant scope branch for equivalent full-scope behavior. Changed
+   the affected JSDoc residual to bare `lint:jsdoc:root`. Full JSDoc remains the
+   existing eslint sweep. Updated the laws argv pin and added an explicit affected
+   JSDoc assertion that requires the bare name and rejects the qualified selector.
+3. Retained the production-derived 40-row configuration fixture and its original
+   direct-input/non-input and fingerprint-closure hash tests. All Git fixtures
+   now commit configuration, create `base` at the first commit, then commit only
+   a README change; `git status --porcelain` proves the resulting working tree
+   is clean. Dry runs use `TURBO_SCM_BASE=base`, `TURBO_SCM_HEAD=HEAD`.
+4. README remains an input of the two whole-tree rows. The exact clean affected
+   set is therefore `//#lint:roadmap-refs`, `//#lint:typos`, and their shared
+   `//#lint:policy-fingerprint` prerequisite. Removing README from production
+   inputs solely to force an empty fixture result would weaken their contract.
+   A non-input edit adds no task to this baseline; requesting the other bare
+   names returns an empty result.
+5. Each of the 40 declared-input edits is asserted with exact task-set equality
+   both when requesting that row alone and when requesting that row plus the two
+   whole-tree rows, including dependency edges. This avoids the old weak
+   `toContain` assertion and prevents the shared prerequisite from masking a
+   row's own selection. An all-40 request cannot generally select only one row:
+   production rows intentionally overlap (Fallow rows share `.fallow/plugins`,
+   for example). Isolated requests preserve the amendment's per-row proof without
+   inventing disjoint production inputs.
+6. Added F-A regression evidence: for the same non-input mutation, all 40 explicit
+   `//#` selectors return all 40 tasks under `--affected`, while bare names retain
+   filtering. Added F-B evidence: compute a blob ID, prove its object path absent,
+   write it with `git hash-object -w`, prove the path exists, add nested Git
+   metadata, then require all 40 hashes unchanged and no Git paths in any input
+   map. No mock hashes, permanent skips, or narrowed test-name invocation remain.
+7. Appended the F-A/F-B amendment to `c3-turbo-facts.md`; left the lane table,
+   rulings, plan and lifecycle edits to Fable. Regenerated the policy fingerprint;
+   the output was byte-identical, with no tracked fingerprint diff. No scripts
+   schema changed, so package-scripts required only its check.
+8. Triaged the pre-existing required P0 audit row. Its capsule contains command
+   and exit 1 but no diagnostic cause. Acknowledged exactly once as `wontfix`
+   with explicit deferral to Fable's Amendment 3 package-verify/Node ownership.
+   This is a scoped deferral, not a repair, waiver, or environment-only claim.
+   Recorded that friction and the shared-cache sandbox warning immediately in
+   `OPPORTUNITIES.md`.
+
+### Stage C2 — files
+
+Modified handoff source/documentation files:
+
+- `turbo.json`
+- `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts`
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts`
+- `packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts`
+- `goals/time-to-certainty/research/c3-turbo-facts.md`
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+- `goals/time-to-certainty/research/c3-456-implementation.md`
+
+Created/deleted handoff files: none. Generated
+`standards/policy-tools.fingerprint.json` was rewritten byte-identically.
+The ignored acknowledgement receipt is
+`.beep/inbox/acks/local-shard-2c38e6923e66`; verification also produced ignored
+package `.turbo` results/logs and dependency build outputs. Temporary verification
+log: `/tmp/ttc-stage-c2-typecheck.log`; cache: `/tmp/ttc-stage-c2-turbo-cache`.
+Scoped synthetic repositories are removed at scope exit. Do not stage these
+local verification artifacts or the inbox receipt.
+
+### Verification commands and exit codes
+
+Root cwd unless marked **CLI cwd** (`packages/tooling/tool/cli`). These are Bun
+lane results, not Node-runtime, package-audit, docgen, coverage or hosted proof.
+
+| Exact command | Exit | Result |
+| --- | ---: | --- |
+| `bunx --bun biome check --write turbo.json packages/tooling/tool/cli/src/commands/Quality/Tasks.ts packages/tooling/tool/cli/test/quality-tasks.test.ts packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts` | 0 on three passes | Initial two passes formatted the fixture; final pass clean. |
+| `bunx --bun eslint --no-warn-ignored --max-warnings=0 --config eslint.config.mjs packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` | 0 | Zero warnings/diagnostics on touched production source. |
+| `bunx --bun vitest run test/root-tasks-turbo-inputs.test.ts --pool=threads` (**CLI cwd**) | 0, 0 | Full suite: 5/5 both times. Final strengthened suite 10.76 s total, 6.84 s tests; all 40 direct-input and hash rows covered, real Git affected and metadata probes executed. |
+| `bunx --bun vitest run test/quality-tasks.test.ts --pool=threads` (**CLI cwd**) | 0 | 208/208, 5.87 s total. Printed TS2589 snippets belong to test fixtures for error classification; no failed test or real xai/ui build occurred in this suite. |
+| `bunx --bun turbo run check package-test-typecheck --filter=@beep/repo-cli --cache=local:rw` | 0 | 34/34, 11.543 s; shared-cache writes warned about read-only filesystem. Stored package-test verdict exit 0, empty diagnostics. |
+| `TURBO_CACHE_DIR=/tmp/ttc-stage-c2-turbo-cache bunx --bun turbo run check package-test-typecheck --filter=@beep/repo-cli --cache=local:rw > /tmp/ttc-stage-c2-typecheck.log 2>&1` | 0 | Final source/test state: 34/34, 11.51 s, no cache hits. Writable cache removes the warning. |
+| `cat packages/tooling/tool/cli/.turbo/package-test-typecheck-result.json` | 0 on both reads | `test-tsgo-package-result/v1`, `@beep/repo-cli`, `exitCode: 0`, `output: ""`; collecting outer command did not hide diagnostics. |
+| `bun run beep lint policy-fingerprint --write` | 0 | Written; no tracked diff. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Current. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, 0 drifting, 0 written. |
+| `bun run beep yeet inbox list --json --unacked` | 0 on both reads | Initial read identified inherited audit row; final read has no unacknowledged entries. |
+| `bun run beep yeet inbox ack local-shard-2c38e6923e66 --wontfix --reason "Deferred to Fable: Stage C2 Amendment 3 explicitly assigns package-verify and Node suite to the orchestrator. Capsule records audit exit 1 without diagnostic cause; this lane makes no checkout git writes and does not claim the audit repaired."` | 0 | One explicit scoped-deferral acknowledgement. |
+| `git --no-optional-locks diff --check` | 0 | Read-only whitespace verification, repeated after final report. |
+
+### Blockers and residual for Stage D
+
+**Stage C2 implementation and its complete Bun fixture suite are complete.**
+No synthetic-Git execution blocker remains. Fable retains the unchanged lane
+split: rerun the Node root-task suite, `CI=true TMPDIR=/tmp bun run beep quality
+package-verify @beep/repo-cli`, `bun run docgen:local`, scoped Node coverage/ratchet,
+and commit/publish/hosted verification. The inherited package audit remains
+unproved despite its acknowledged inbox state; diagnose its real failing step
+when running the orchestrator verification. No merge-ready or whole-proof claim
+is made here.
+
+Stage D retains all consumer migration work listed in the Stage C handoff:
+D10 plan/aggregate sequencing, `GithubChecks.ts`, `CiLane.ts`, root preflight,
+wave notes and artifact-reader handling. Every affected root invocation must
+use **bare names**; `//#` remains the registration/dependency/summary/ledger ID
+syntax. Preserve D2 unfiltered runs, lane identities, hosted JSDoc sweep behavior,
+and fresh inventory before comparison. Stop after Stage C2.

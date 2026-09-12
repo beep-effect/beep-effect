@@ -1046,3 +1046,23 @@ was attempted under the marker-only amendment.
 - Would have prevented it: preserve the supplied Effect's error/environment parameters
   generically, and always inspect the collecting task's stored verdict. The helper now
   preserves both type parameters; the canonical filtered command and read-back are rerun.
+
+### Stage C2 — shared cache is outside the lane sandbox
+
+- Doing: the prescribed repo-cli check and package-test-typecheck Turbo run with
+  local-cache posture.
+- Evidence: dependency builds emitted `IO error: Read-only file system (os error 30)`
+  while Turbo tried to store artifacts in the shared worktree cache. Compilation
+  continued; this warning alone is not a compiler failure or evidence of cache reuse.
+- Prevention: provide a lane-writable `TURBO_CACHE_DIR` for sandbox verification;
+  inspect the collected test-typecheck verdict before claiming success.
+
+### Stage C2 — inherited audit capsule lacks diagnostics
+
+- Doing: triaging the required unacknowledged repo-cli package-audit inbox row.
+- Evidence: capsule records `bun x turbo run build --filter=@beep/repo-cli^... && bun run beep:audit`
+  and exit 1, without the failing checker or diagnostic text. Amendment 3 assigns
+  package-verify and Node verification to Fable. The lane acknowledged the row as
+  `wontfix` with that explicit deferral; no repair or environment attribution is claimed.
+- Prevention: attach the precise failed audit step and its log path to the capsule,
+  and retain the orchestrator verification handoff when launching a scoped lane.

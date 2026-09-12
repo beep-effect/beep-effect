@@ -160,7 +160,7 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
       );
     }
   }
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "root-tasks-turbo-" });
+  const root = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "root-tasks-turbo-" });
   yield* writeFile(root, ".gitignore", "node_modules\n.turbo\n");
   yield* writeJson(root, "package.json", {
     name: "root-tasks-fixture",
@@ -197,7 +197,7 @@ const dryRun = Effect.fn("RootTasksFixture.dryRun")(function* (
     source: "stdout",
     timeout: "30 seconds",
     extendEnv: true,
-    env: { TURBO_TELEMETRY_DISABLED: "1", TURBO_UI: "stream", TURBO_SCM_BASE: "HEAD", TURBO_SCM_HEAD: "HEAD" },
+    env: { TURBO_TELEMETRY_DISABLED: "1", TURBO_UI: "stream", TURBO_SCM_BASE: "base", TURBO_SCM_HEAD: "HEAD" },
   });
   expect(result.exitCode, result.output).toBe(0);
   expect(result.truncated).toBe(false);
@@ -216,6 +216,49 @@ const mutate = Effect.fn("RootTasksFixture.mutate")(function* <E, R>(
   yield* writeFile(root, file, `${original}\n`);
   yield* check.pipe(Effect.ensuring(writeFile(root, file, original).pipe(Effect.orDie)));
 });
+
+const git = Effect.fn("RootTasksFixture.git")(function* (root: string, args: ReadonlyArray<string>) {
+  const result = yield* StepExec.runCaptured({
+    command: "git",
+    args,
+    cwd: root,
+    source: "stdout",
+    extendEnv: true,
+  });
+  expect(result.exitCode, result.output).toBe(0);
+  return result;
+});
+const commit = (root: string) =>
+  git(root, [
+    "-c",
+    "user.name=Turbo Fixture",
+    "-c",
+    "user.email=turbo-fixture@example.invalid",
+    "-c",
+    "commit.gpgsign=false",
+    "commit",
+    "--no-verify",
+    "-m",
+    "fixture",
+  ]);
+const initializeGit = Effect.fn("RootTasksFixture.initializeGit")(function* (root: string) {
+  yield* git(root, ["init", "--initial-branch=main"]);
+  yield* writeFile(root, "README.md", "fixture base\n");
+  yield* git(root, ["add", "."]);
+  yield* commit(root);
+  yield* git(root, ["branch", "base"]);
+  yield* writeFile(root, "README.md", "fixture readme change\n");
+  yield* git(root, ["add", "README.md"]);
+  yield* commit(root);
+  expect((yield* git(root, ["status", "--porcelain"])).output).toBe("");
+});
+const selectedIds = (rows: ReadonlyArray<TaskSummary>) =>
+  A.sort(
+    A.map(rows, (row) => row.taskId),
+    Str.Order
+  );
+const withDependencies = (ids: ReadonlyArray<string>, rows: ReadonlyArray<TaskSummary>) =>
+  A.sort(A.dedupe([...ids, ...A.flatMap(ids, (id) => rowFor(rows, id).dependencies)]), Str.Order);
 
 describe("Stage C root task inputs", { concurrent: false }, () => {
   it.effect(
@@ -281,59 +324,109 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
     { timeout: 180_000 }
   );
 
-  // Fable runs this case separately: it writes Git state only inside its synthetic
-  // fixture. The implementer lane selects the two hash cases with -t.
   it.effect(
     "selects root tasks under --affected from declared inputs only (Git fixture)",
     Effect.fnUntraced(function* () {
       const { root, tasks, binary } = yield* fixture();
-      for (const args of [
-        ["init", "--initial-branch=main"],
-        ["add", "."],
-        [
-          "-c",
-          "user.name=Turbo Fixture",
-          "-c",
-          "user.email=turbo-fixture@example.invalid",
-          "-c",
-          "commit.gpgsign=false",
-          "commit",
-          "--no-verify",
-          "-m",
-          "fixture",
-        ],
-      ]) {
-        const result = yield* StepExec.runCaptured({
-          command: "git",
-          args,
-          cwd: root,
-          source: "stdout",
-          extendEnv: true,
-        });
-        expect(result.exitCode, result.output).toBe(0);
-      }
+      yield* initializeGit(root);
       const ids = R.keys(tasks);
-      expect(yield* dryRun(root, binary, ids, true)).toEqual([]);
+      const baseline = yield* dryRun(root, binary, ids, false);
+      const readmeIds = A.map(
+        A.filter(baseline, (row) => R.has(row.inputs, "README.md")),
+        (row) => row.taskId
+      );
+      expect(readmeIds).toEqual(expect.arrayContaining(["//#lint:roadmap-refs", "//#lint:typos"]));
+      expect(selectedIds(yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true))).toEqual(
+        withDependencies(readmeIds, baseline)
+      );
+      // Scope each independent row probe to that row and the whole-tree walkers.
+      // Other production rows intentionally share source/config globs.
+      const wholeTreeIds = A.map(
+        A.filter(R.toEntries(tasks), ([, task]) => A.contains(task.inputs, "**/*")),
+        ([id]) => id
+      );
       for (const [name, file] of R.toEntries(directInputs)) {
+        const requested = A.dedupe([`//#${name}`, ...wholeTreeIds]);
         yield* mutate(
           root,
           file,
           Effect.gen(function* () {
-            const selected = yield* dryRun(root, binary, ids, true);
-            expect(
-              A.map(selected, (row) => row.taskId),
-              `${name}: ${file}`
-            ).toContain(`//#${name}`);
+            const isolated = yield* dryRun(root, binary, [name], true);
+            expect(selectedIds(isolated), `${name}: isolated ${file}`).toEqual(
+              withDependencies([`//#${name}`], baseline)
+            );
+            const selected = yield* dryRun(root, binary, A.map(requested, Str.slice(3)), true);
+            expect(selectedIds(selected), `${name}: ${file}`).toEqual(withDependencies(requested, baseline));
           })
         );
       }
+      // README is an input of the two whole-tree walkers. A non-input edit adds
+      // no selection to that committed baseline; all other requested rows stay absent.
       yield* mutate(
         root,
         nonInput,
         Effect.gen(function* () {
-          expect(yield* dryRun(root, binary, ids, true)).toEqual([]);
+          expect(selectedIds(yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true))).toEqual(
+            withDependencies(readmeIds, baseline)
+          );
+          const narrow = A.filter(ids, (id) => !A.contains(readmeIds, id));
+          expect(yield* dryRun(root, binary, A.map(narrow, Str.slice(3)), true)).toEqual([]);
         })
       );
+    }, providePlatform),
+    { timeout: 180_000 }
+  );
+
+  it.effect(
+    "explicit root selectors bypass --affected for the same non-input edit",
+    Effect.fnUntraced(function* () {
+      const { root, tasks, binary } = yield* fixture();
+      yield* initializeGit(root);
+      const ids = R.keys(tasks);
+      yield* mutate(
+        root,
+        nonInput,
+        Effect.gen(function* () {
+          expect(selectedIds(yield* dryRun(root, binary, ids, true))).toEqual(A.sort(ids, Str.Order));
+          const bare = yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true);
+          expect(selectedIds(bare)).not.toEqual(A.sort(ids, Str.Order));
+        })
+      );
+    }, providePlatform),
+    { timeout: 180_000 }
+  );
+
+  it.effect(
+    "excludes loose Git objects from every registered root task hash",
+    Effect.fnUntraced(function* () {
+      const { root, tasks, binary } = yield* fixture();
+      yield* initializeGit(root);
+      const ids = R.keys(tasks);
+      const baseline = yield* dryRun(root, binary, ids, false);
+      // Non-input bytes are absent from the initial commit, so this creates a new object.
+      yield* writeFile(root, nonInput, "untracked object payload\n");
+      const candidate = yield* git(root, ["hash-object", "--", nonInput]);
+      const fs = yield* FileSystem.FileSystem;
+      const candidateHash = Str.trim(candidate.output);
+      expect(
+        yield* fs.exists(`${root}/.git/objects/${Str.slice(0, 2)(candidateHash)}/${Str.slice(2)(candidateHash)}`)
+      ).toBe(false);
+      // Hash a new blob without adding any working-tree input or updating refs.
+      const object = yield* git(root, ["hash-object", "-w", "--", nonInput]);
+      const hash = Str.trim(object.output);
+      expect(yield* fs.exists(`${root}/.git/objects/${Str.slice(0, 2)(hash)}/${Str.slice(2)(hash)}`)).toBe(true);
+      yield* writeFile(root, "nested/.git/objects/ab/c3-probe", "nested git metadata");
+      const changed = yield* dryRun(root, binary, ids, false);
+      for (const id of ids) {
+        expect(rowFor(changed, id).hash, id).toBe(rowFor(baseline, id).hash);
+        expect(
+          A.filter(
+            R.keys(rowFor(changed, id).inputs),
+            (file) => Str.startsWith(".git/")(file) || Str.includes("/.git/")(file)
+          ),
+          id
+        ).toEqual([]);
+      }
     }, providePlatform),
     { timeout: 180_000 }
   );

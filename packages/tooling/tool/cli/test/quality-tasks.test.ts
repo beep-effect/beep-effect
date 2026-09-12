@@ -3052,6 +3052,10 @@ describe("quality task adapter", () => {
       expect(scoped.args).toEqual(
         expect.arrayContaining(["turbo", "run", "--affected", "--summarize", "--continue=dependencies-successful"])
       );
+      if (label === "lint:jsdoc") {
+        expect(scoped.args).toContain("lint:jsdoc:root");
+        expect(scoped.args).not.toContain("//#lint:jsdoc:root");
+      }
       expect(scoped.args).not.toContain(LABS_EXCLUDE_FILTER);
       expect(policyTurboScmBase(scoped)).toBe("refs/heads/review-base");
       const full = policyTurboStep(label);
@@ -3075,7 +3079,7 @@ describe("quality task adapter", () => {
           "turbo",
           "run",
           "lint:laws",
-          "//#lint:native-runtime:roots",
+          "lint:native-runtime:roots",
           ...expectedTurboCacheArgs(flags),
           ...flags,
         ]);
