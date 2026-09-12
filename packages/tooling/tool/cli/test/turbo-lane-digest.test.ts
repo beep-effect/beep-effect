@@ -16,6 +16,7 @@ import {
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -215,7 +216,7 @@ describe("Turbo lane digests", () => {
       expect(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child))).toEqual(O.some(true));
       // A digest that cannot be appended (the ledger directory is a file) is an attempt that did not land.
       const unwritable = path.join(runs, "own.json", "nested", "ledger.jsonl");
-      expect(yield* recordTurboLaneLedgerRowForTesting(O.some(unwritable), outcome(child))).toEqual(O.some(false));
+      assertSome(yield* recordTurboLaneLedgerRowForTesting(O.some(unwritable), outcome(child)), false);
       yield* closeTurboLaneLedger(ledger, 1);
       const declared = yield* readTurboLaneLedger(ledger);
       expect(O.map(declared, (value) => A.map(value.tasks, (row) => `${row.taskId}=${row.hash}`))).toEqual(

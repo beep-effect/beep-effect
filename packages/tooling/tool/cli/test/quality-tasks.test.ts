@@ -1356,7 +1356,7 @@ describe("quality task adapter", () => {
         );
         expect(rows).toEqual([{ _tag: "closed", attempted: 0 }]);
         // A closed ledger with nothing declared folds to no digest rather than an empty one.
-        expect(yield* readTurboLaneLedger(ledger)).toStrictEqual(O.none());
+        assertNone(yield* readTurboLaneLedger(ledger));
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
@@ -1407,10 +1407,12 @@ describe("quality task adapter", () => {
           ledger,
           runQualityTaskStreamingLaneGroup("ci:local", [["lint", direct, O.none()]])
         );
-        const expected = O.map(turboLaneDigestFromSummary(summary, ["lint:typos"]), (digest) => digest.digest);
-        expect(O.isSome(expected)).toBe(true);
+        const expected = yield* Effect.fromOption(turboLaneDigestFromSummary(summary, ["lint:typos"]));
         // The child declared the step's digest and closed the ledger with that one attempt.
-        expect(O.map(yield* readTurboLaneLedger(ledger), (digest) => digest.digest)).toStrictEqual(expected);
+        assertSome(
+          O.map(yield* readTurboLaneLedger(ledger), (digest) => digest.digest),
+          expected.digest
+        );
         const report = yield* pipe(
           yield* TestConsole.logLines,
           A.filter(isString),
@@ -1419,8 +1421,9 @@ describe("quality task adapter", () => {
           Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length),
           decodeQualityTaskLaneRunReportJson
         );
-        expect(report.lanes[0]?.status).toBe("passed");
-        expect(report.lanes[0]?.inputDigest).toStrictEqual(expected);
+        const lane = yield* Effect.fromOption(A.head(report.lanes));
+        expect(lane.status).toBe("passed");
+        assertSome(lane.inputDigest, expected.digest);
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
