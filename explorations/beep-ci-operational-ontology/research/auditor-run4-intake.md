@@ -27,9 +27,10 @@ Path abbreviations are packet-relative unless explicitly repo-relative:
 Run 4 proper does not launch before `goals/time-to-certainty` C4 (the proof-ledger writer). At
 `e16e7a9297` that packet's `PLAN.md` still shows C3.3, C3.4, C3.5, C3.6, C4a, C4 and C5 unchecked.
 Ruling 17's issuance and custody duties (Queue B: rat-047/048/051/052) and every C4-routed row
-below cannot discharge before it. The pin lane re-reads those checkboxes and records them in the
-run-4 manifest notes; if C4 is still open at launch, the affected rows re-park with C4 named again
-as the evidence that has not yet appeared (a changed disposition, not a verbatim re-park).
+below cannot discharge before it. The gate is hard: the pin lane re-reads those checkboxes, and
+if C4 is not checked it records the state in its report and stops without creating a pin, tag,
+manifest or seat. Only a steward ruling scribed in `DECISIONS.md` can amend the gate; this docket
+supplies no fallback.
 
 ## Prior-run chain (validator-enforced)
 
@@ -86,10 +87,10 @@ or re-flags together, as it ratified.
 - **VerificationEpisode** (class, `rat-065`): with process/event category, unity, attempt membership and closure identity explicitly deferred to run 4 as flagged.
 
 **Recorded-value reuse mappings (rat-066..rat-070, sitting-3 Ruling 2).** SeatGrant carries
-rat-066 (`admb-seat-grant`) on its TAXONOMY record; rat-067 (`att-admission-allocation`),
-rat-068 (`admb-seat-request`, SeatRequest) and rat-069 (`att-verification-attempt`,
-VerificationAttempt) ride `later_ratifications` on their S5 DISPOSITIONS rows with the reuse
-grain in the justification; VerificationResultArtifact carries rat-070 at assessment-origin
+rat-066 (`otp:admb-seat-grant:001`) on its TAXONOMY record; rat-067 (`otp:admb-seat-request:001`,
+SeatRequest), rat-068 (`otp:att-admission-allocation:001`, SeatGrant) and rat-069
+(`otp:att-verification-attempt:001`, VerificationAttempt) ride `later_ratifications` on their S5
+DISPOSITIONS rows with the reuse grain in the justification; VerificationResultArtifact carries rat-070 at assessment-origin
 grain. Routing: account-copy identity and effective authorization continuity need organic
 lease renewal/transfer chains (Stage C); demand-versus-description grain needs an organic
 withdrawal/resubmission chain with both ticket records (Stage C); equal-content assessment,
@@ -120,20 +121,25 @@ until it exists the run-3 attempt/verdict projections support record-level revie
 
 > Accept the limitation-report VerificationResultArtifact reuse, result-provenance identity deferred as flagged.
 
-> Authoritative result formation, issuance, producer, custody, copy, correction, and revocation provenance across heterogeneous VerificationResultArtifact records is required to choose content, record-token, or carrier-lineage identity.
+> Authoritative result formation, issuance, producer, custody, copy, correction, and revocation provenance across heterogeneous VerificationResultArtifact records is required to choose content, record-token, or carrier-lineage identity. A separate limitation-report term additionally requires independent issuance and a Must/Should CQ that consumes it apart from the containing result.
 
-Run-4 routing: **waits for C4**; the run-3 partial result-record evidence (embedded verdicts,
-the S7 replay report) stays recorded against the flag without lifting it.
+Run-4 routing: **waits for C4** for the result-provenance identity; the run-3 partial
+result-record evidence (embedded verdicts, the S7 replay report) stays recorded against the
+flag without lifting it. The separate limitation-report term still needs its own independent
+issuance and a Must/Should CQ that consumes it apart from the containing result; neither exists.
 
 #### rat-049: `otp:pa-yeet-verification-workflow:001`
 
 > Accept the yeet-workflow VerificationPlanSpecification reuse, plan-identity contract deferred as flagged.
 
-> An authoritative identity contract across heterogeneous verification plans must define content, contextual-copy, replacement, and revision identity. A separate Yeet specialization additionally requires governed authority and version lineage.
+> An authoritative identity contract across heterogeneous verification plans must define content, contextual-copy, replacement, and revision identity. A separate Yeet specialization additionally requires governed authority and version lineage deciding whether cheap-gates, review-fix, and monitor are one plan or coordinated subplans, plus a Must/Should CQ requiring it.
 
 Run-4 routing: a **contract duty independent of C4.** Discharge needs an authored plan-identity
 contract (content, contextual copy, replacement, revision) that the yeet planner and lane plans
-are observed to follow; the run-3 checkout bindings supply revision context only.
+are observed to follow, plus, for the Yeet specialization, the governed authority and version
+lineage deciding whether cheap-gates, review-fix and monitor are one plan or coordinated
+subplans and a Must/Should CQ that requires that decision; the run-3 checkout bindings supply
+revision context only.
 
 #### rat-050: `otp:pb-admission-priority-class:001`
 
@@ -149,9 +155,11 @@ membership-change rule and the shared-versus-copied domain decision across plann
 
 > Accept the planned-lane-status VerificationResultArtifact reuse, result-provenance identity deferred as flagged.
 
-> Authoritative result formation, issuance, producer, custody, copy, correction, and revocation provenance across heterogeneous VerificationResultArtifact records is required to choose content, record-token, or carrier-lineage identity.
+> Authoritative result formation, issuance, producer, custody, copy, correction, and revocation provenance across heterogeneous VerificationResultArtifact records is required to choose content, record-token, or carrier-lineage identity. A separate planned-lane-status term additionally requires retained issuance, parent-attempt and execution joins, and a Must/Should CQ that consumes it separately.
 
-Run-4 routing: **waits for C4**; parent-attempt joins from run 3 are recorded, not discharging.
+Run-4 routing: **waits for C4** for the result-provenance identity; the run-3 parent-attempt
+joins are recorded, not discharging. The separate planned-lane-status term still needs
+retained issuance, the parent-attempt and execution joins, and its own Must/Should CQ.
 
 #### rat-052: `otp:pb-verification-evidence-receipt:001`
 
