@@ -55,6 +55,7 @@ import {
   coverageScopeWeightSeconds,
   coverageSelectedStepsForTesting,
   coverageStepForTesting,
+  coverageVitestTopologyArgs,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
@@ -3274,6 +3275,50 @@ describe("quality task adapter", () => {
     expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
   });
 
+  it("ends every coverage producer's argv with one Vitest topology", () => {
+    const longPole = ["@beep/repo-cli", "@beep/schema"];
+    const mixed = ["@beep/schema", "@beep/types"];
+    const topologyOf = (step: QualityTaskStep | undefined): ReadonlyArray<string> =>
+      A.takeRight(step?.args ?? A.empty<string>(), 3);
+    const filtersOf = (step: QualityTaskStep): ReadonlyArray<string> =>
+      pipe(
+        step.args,
+        A.filter((arg) => Str.startsWith("--filter=")(arg)),
+        A.map((arg) => Str.slice(9)(arg))
+      );
+
+    expect(coverageVitestTopologyArgs(longPole)).toEqual(["--", "--fileParallelism=true", "--maxWorkers=2"]);
+    expect(coverageVitestTopologyArgs(mixed)).toEqual(["--", "--fileParallelism=true", "--maxWorkers=1"]);
+
+    // The narrow ratchet invocation reads its owners from the turbo filters it
+    // carries, so a direct long-pole run measures like the shard that judges it.
+    expect(topologyOf(coverageStepForTesting("/repo", ["--filter=@beep/repo-cli"]))).toEqual(
+      coverageVitestTopologyArgs(longPole)
+    );
+    expect(topologyOf(coverageStepForTesting("/repo", ["--filter=@beep/schema"]))).toEqual(
+      coverageVitestTopologyArgs(mixed)
+    );
+    expect(topologyOf(coverageStepForTesting("/repo", ["--write-baseline", "--filter=@beep/repo-cli"]))).toEqual(
+      coverageVitestTopologyArgs(longPole)
+    );
+    expect(topologyOf(coverageStepForTesting("/repo", ["--write-baseline", "--filter=@beep/schema"]))).toEqual(
+      coverageVitestTopologyArgs(mixed)
+    );
+
+    for (const packageNames of [longPole, mixed]) {
+      const shards = A.drop(coverageFullStepsForTesting("/repo", packageNames, []), 1);
+      const writeShards = A.drop(
+        coverageSelectedStepsForTesting("/repo", packageNames, [], { hosted: true, writeBaseline: true }),
+        1
+      );
+      expect(A.isReadonlyArrayNonEmpty(shards)).toBe(true);
+      expect(A.isReadonlyArrayNonEmpty(writeShards)).toBe(true);
+      for (const shard of A.appendAll(shards, writeShards)) {
+        expect(topologyOf(shard)).toEqual(coverageVitestTopologyArgs(filtersOf(shard)));
+      }
+    }
+  });
+
   it("builds the coverage invocation as the ratchet gate by default", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
       withEnvVar("NODE_OPTIONS", undefined, () => [coverageStepOf([])])
@@ -3283,7 +3328,11 @@ describe("quality task adapter", () => {
     expect(steps[0]).toMatchObject({
       label: "coverage:ratchet",
       command: "bunx",
-      args: localOnlyTurboCacheArgs(expectedRootTurboArgs("coverage", [])),
+      // The ratchet invocation carries the same Vitest topology the writer and
+      // the full shards use, so all three measure the same rows.
+      args: localOnlyTurboCacheArgs(
+        expectedRootTurboArgs("coverage", ["--", "--fileParallelism=true", "--maxWorkers=1"])
+      ),
       env: {
         BEEP_FC_SEED: "20260708",
         CI: "true",
@@ -3377,7 +3426,7 @@ describe("quality task adapter", () => {
       label: "coverage:baseline",
       command: "bunx",
       args: localOnlyTurboCacheArgs(
-        expectedTurboArgs("coverage", ["--concurrency=1", "--force", "--", "--fileParallelism=true", "--maxWorkers=2"])
+        expectedTurboArgs("coverage", ["--concurrency=1", "--force", "--", "--fileParallelism=true", "--maxWorkers=1"])
       ),
       env: {
         BEEP_FC_SEED: "20260708",
@@ -6786,10 +6835,14 @@ describe("labs turbo exclusion", () => {
     );
     expectEndsWithLabsExclude(rootQualityStepsForTesting("/repo", getInvocation(["lint"]))[0]);
 
+    // Coverage argvs end with the Vitest topology passthrough, so the labs
+    // exclude is the last turbo-owned argument instead of the last argument.
     const coverage = withEnvVar("BEEP_FC_SEED", undefined, () =>
       withEnvVar("NODE_OPTIONS", undefined, () => [coverageStepOf([])])
     );
-    expectEndsWithLabsExclude(coverage[0]);
+    const coverageArgs = argsOf(coverage[0]);
+    expect(argIndexOf(coverageArgs, LABS_EXCLUDE_FILTER)).toBeGreaterThan(-1);
+    expect(argIndexOf(coverageArgs, "--")).toBe(argIndexOf(coverageArgs, LABS_EXCLUDE_FILTER) + 1);
   });
 
   it("composes an explicit user filter with the labs exclude while still dropping repo-wide steps", () => {
