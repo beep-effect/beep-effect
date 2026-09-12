@@ -1175,3 +1175,35 @@ was attempted under the marker-only amendment.
 - Would have prevented it: sizing the capture bound per invocation shape (one bound for a single
   worker, a larger one for a grouped Turbo run), or `--output-logs=errors-only` on grouped runs so
   green tasks print nothing and a red task's log arrives intact.
+
+## 2026-09-12 — Wrapper lanes had no ownership signal for their child's Turbo summaries
+
+- Doing: hosted round 5 of #1102; Greptile flagged that a wrapper-backed lane
+  (`bun run beep ci lane <id>`) folded every fresh summary in the shared `.turbo/runs` directory,
+  so a concurrent lane's hashes could enter its digest and a concurrent red could erase it.
+- Evidence: the per-lane digest selected rows by task name for direct `turbo run … --summarize`
+  steps, but a wrapper step names no tasks, and `ci local` runs several wrappers at once in one
+  worktree; Turbo offers no per-run summary directory and no tag that lands in the summary.
+- Would have prevented it: designing the digest with an ownership channel from the start — the
+  child now declares each direct step's digest to a JSONL ledger the parent names through
+  `BEEP_TURBO_LANE_LEDGER`, and the parent folds only what its child declared.
+
+## 2026-09-12 — Package vitest configs silently clamp a shared doctest ceiling
+
+- Doing: the same review round; three doctest owners (`@beep/repo-cli`, `@beep/lexical-schema`,
+  `@beep/semantic-web`) re-pin `testTimeout` after merging the shared config, so the 120 s doctest
+  ceiling never reached them.
+- Evidence: `mergeConfig(shared, { test: { testTimeout: … } })` overrides the shared branch; the
+  doctest guard test asserted pool, include, and setup inputs per owner but not the timeout.
+- Would have prevented it: a shared `packageTestTimeout(focusedMs)` helper as the only way a
+  package sets its timeout, plus the guard asserting the resolved doctest timeout per owner (both
+  landed here).
+
+## 2026-09-12 — The bounded docgen proof refuses a one-package edit on a branch that touched turbo.json
+
+- Doing: proving three new JSDoc examples in `@beep/repo-cli` before pushing.
+- Evidence: `bun run docgen:local` exits 1 with "full docgen proof required" because the branch
+  changed `turbo.json`, `package.json`, and the doctest tooling, even though the edit under proof
+  is one package; `bunx turbo run docgen --filter=@beep/repo-cli` proved it in one task.
+- Would have prevented it: letting `docgen:local` fall back to the touched packages when the
+  global-input change is already proven green by a hosted `Heavy / Docgen` run on the branch.

@@ -90,7 +90,12 @@ import {
   standaloneQuarantineRerunStep,
 } from "./internal/FlakeQuarantine.ts";
 import { hasReusableLaneProof, persistLaneProofs, prepareLaneProofSession } from "./internal/LaneProofReuse.ts";
-import { readTurboLaneDigest } from "./internal/TurboLaneDigest.ts";
+import {
+  appendTurboLaneLedger,
+  readTurboLaneDigest,
+  readTurboLaneLedger,
+  TURBO_LANE_LEDGER_ENV,
+} from "./internal/TurboLaneDigest.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
 import {
   decodePackageJsonDocument,
@@ -124,6 +129,7 @@ import type { CaptureCommandTimedOutError } from "../../internal/process/index.t
 import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
+import type { TurboLaneDigest } from "./internal/TurboLaneDigest.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
 import type { GithubCheckLaneWaveSpec, PackageJsonDocument, PackageJsonWorkspacesDocument } from "./Quality.schemas.ts";
 
@@ -1515,6 +1521,65 @@ type StreamingOutcomeObserver = (
 
 const ignoreStreamingOutcome: StreamingOutcomeObserver = () => Effect.void;
 
+// A `bunx turbo run <tasks…> --summarize` step names its tasks bare (F-A); those names select
+// the rows of the attempt's own summary that fold into the lane digest. A wrapper-backed lane
+// (`bun run beep ci lane <id>`) runs Turbo inside its child, which shares `.turbo/runs` with
+// every concurrent lane, so the child declares its own digests to a ledger the parent names
+// through `TURBO_LANE_LEDGER_ENV` instead of the parent folding every fresh summary.
+const argAt = (step: QualityTaskStep, index: number, expected: string): boolean =>
+  O.contains(A.get(step.args, index), expected);
+
+const isDirectTurboSummarizeStep = (step: QualityTaskStep): boolean =>
+  step.command === "bunx" && argAt(step, 0, "turbo") && argAt(step, 1, "run") && A.contains(step.args, "--summarize");
+
+const isWrapperLaneStep = (step: QualityTaskStep): boolean =>
+  step.command === "bun" &&
+  argAt(step, 0, "run") &&
+  argAt(step, 1, "beep") &&
+  argAt(step, 2, "ci") &&
+  argAt(step, 3, "lane");
+
+const directTurboTaskNames = (step: QualityTaskStep): O.Option<ReadonlyArray<string>> =>
+  isDirectTurboSummarizeStep(step)
+    ? O.some(pipe(A.drop(step.args, 2), A.takeWhile(P.not(Str.startsWith("-")))))
+    : O.none();
+
+const turboLaneLedgerPath = (): O.Option<string> => O.fromUndefinedOr(Bun.env[TURBO_LANE_LEDGER_ENV]);
+
+const turboLaneLedgerDirectory = (path: Path.Path, cwd: string): string =>
+  path.join(cwd, ".beep", "quality", "lane-ledgers");
+
+const withTurboLaneLedger = (path: Path.Path, step: QualityTaskStep, name: string): QualityTaskStep =>
+  QualityTaskStep.make({
+    ...step,
+    env: { ...step.env, [TURBO_LANE_LEDGER_ENV]: path.join(turboLaneLedgerDirectory(path, step.cwd), `${name}.jsonl`) },
+  });
+
+const removeTurboLaneLedger = Effect.fn("QualityTasks.removeTurboLaneLedger")(function* (ledgerPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.remove(ledgerPath).pipe(Effect.ignore);
+});
+
+// The child side of the handoff: after each direct Turbo step, declare its digest to the ledger
+// the parent named. Any failure to declare leaves the parent without a digest, never with a
+// wrong one.
+const recordTurboLaneLedgerRow = Effect.fn("QualityTasks.recordTurboLaneLedgerRow")(function* (
+  ledger: O.Option<string>,
+  outcome: StreamingStepOutcome
+) {
+  const tasks = directTurboTaskNames(outcome.step);
+  if (O.isNone(ledger) || O.isNone(tasks) || O.isSome(outcome.failure)) {
+    return;
+  }
+  const digest = yield* readTurboLaneDigest(outcome.step.cwd, outcome.startedAt, tasks.value).pipe(
+    Effect.orElseSucceed(O.none<TurboLaneDigest>)
+  );
+  yield* O.match(digest, {
+    onNone: () => Effect.void,
+    onSome: (declared) => appendTurboLaneLedger(ledger.value, declared).pipe(Effect.ignore),
+  });
+});
+
 const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingStepOutcomes")(function* (
   label: string,
   steps: ReadonlyArray<QualityTaskStep>,
@@ -1525,6 +1590,7 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
     return A.empty<StreamingStepOutcome>();
   }
 
+  const ledger = turboLaneLedgerPath();
   yield* Console.log(`[beep-cli] ${label}: running ${A.length(steps)} streaming step(s)`);
   const incidents = yield* Ref.make<ReadonlyArray<FlakeQuarantineIncident>>(A.empty());
   const artifactCwd = quarantineArtifactCwd(steps);
@@ -1542,6 +1608,7 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
       yield* Console.log(`[beep-cli] ${step.label}: ${O.isNone(failure) ? "ok" : "failed"} in ${durationMs}ms`);
       const outcome = { durationMs, endedAt, failure, startedAt, step };
       yield* onOutcome(outcome, index);
+      yield* recordTurboLaneLedgerRow(ledger, outcome);
       return outcome;
     }),
     { concurrency }
@@ -1656,45 +1723,55 @@ type QualityTaskLaneRunObserver = (
 
 const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 
-// A `bunx turbo run <tasks…> --summarize` step names its tasks bare (F-A); those names select
-// the rows of the attempt's own summary that fold into the lane digest. A wrapper-backed lane
-// (`bun run beep ci lane <id>`) runs Turbo inside its child with `--summarize`, so every task in
-// every summary it wrote folds in (an empty selection).
-const argAt = (step: QualityTaskStep, index: number, expected: string): boolean =>
-  O.contains(A.get(step.args, index), expected);
+const digestValue = (digest: TurboLaneDigest): string => digest.digest;
 
-const isDirectTurboSummarizeStep = (step: QualityTaskStep): boolean =>
-  step.command === "bunx" && argAt(step, 0, "turbo") && argAt(step, 1, "run") && A.contains(step.args, "--summarize");
-
-const isWrapperLaneStep = (step: QualityTaskStep): boolean =>
-  step.command === "bun" &&
-  argAt(step, 0, "run") &&
-  argAt(step, 1, "beep") &&
-  argAt(step, 2, "ci") &&
-  argAt(step, 3, "lane");
-
-const turboSummarizeTaskNames = (step: QualityTaskStep): O.Option<ReadonlyArray<string>> =>
-  isDirectTurboSummarizeStep(step)
-    ? O.some(pipe(A.drop(step.args, 2), A.takeWhile(P.not(Str.startsWith("-")))))
-    : isWrapperLaneStep(step)
-      ? O.some(A.empty<string>())
-      : O.none();
-
-const resolveLaneInputDigest = Effect.fn("QualityTasks.resolveLaneInputDigest")(function* (
+const resolveLaneInputDigestSource = Effect.fn("QualityTasks.resolveLaneInputDigestSource")(function* (
   outcome: StreamingStepOutcome,
-  declared: O.Option<string>
+  declared: O.Option<string>,
+  ledger: O.Option<string>
 ) {
   if (O.isSome(declared) || O.isSome(outcome.failure)) {
     return declared;
   }
-  return yield* O.match(turboSummarizeTaskNames(outcome.step), {
+  if (isWrapperLaneStep(outcome.step)) {
+    return yield* O.match(ledger, {
+      onNone: () => Effect.succeed(O.none<string>()),
+      onSome: (ledgerPath) =>
+        readTurboLaneLedger(ledgerPath).pipe(Effect.map(O.map(digestValue)), Effect.orElseSucceed(O.none<string>)),
+    });
+  }
+  return yield* O.match(directTurboTaskNames(outcome.step), {
     onNone: () => Effect.succeed(O.none<string>()),
     onSome: (tasks) =>
       readTurboLaneDigest(outcome.step.cwd, outcome.startedAt, tasks).pipe(
-        Effect.map(O.map((digest) => digest.digest)),
+        Effect.map(O.map(digestValue)),
         Effect.orElseSucceed(O.none<string>)
       ),
   });
+});
+
+// The parent side of the handoff: a wrapper lane's digest is whatever its child declared to
+// the ledger this parent named on the step; the ledger is removed once read, pass or fail.
+const resolveLaneInputDigest = Effect.fn("QualityTasks.resolveLaneInputDigest")(function* (
+  outcome: StreamingStepOutcome,
+  declared: O.Option<string>
+) {
+  const ledger = isWrapperLaneStep(outcome.step)
+    ? O.fromUndefinedOr(outcome.step.env?.[TURBO_LANE_LEDGER_ENV])
+    : O.none<string>();
+  return yield* resolveLaneInputDigestSource(outcome, declared, ledger).pipe(
+    Effect.ensuring(O.match(ledger, { onNone: () => Effect.void, onSome: removeTurboLaneLedger }))
+  );
+});
+
+const laneStepsWithLedgers = Effect.fn("QualityTasks.laneStepsWithLedgers")(function* (
+  lanes: ReadonlyArray<QualityTaskLaneInput>
+) {
+  const path = yield* Path.Path;
+  const stamp = yield* DateTime.now.pipe(Effect.map(DateTime.toEpochMillis));
+  return A.map(lanes, ([, step], index) =>
+    isWrapperLaneStep(step) ? withTurboLaneLedger(path, step, `${stamp}-${index}`) : step
+  );
 });
 
 const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLaneRuns")(function* (
@@ -1704,24 +1781,21 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
   onLaneRun: QualityTaskLaneRunObserver = appendQualityTaskLaneRun
 ) {
   const digests = MutableHashMap.empty<number, O.Option<string>>();
-  const outcomes = yield* collectStreamingStepOutcomes(
-    label,
-    A.map(lanes, ([, step]) => step),
-    concurrency,
-    (outcome, index) =>
-      pipe(
-        A.get(lanes, index),
-        O.match({
-          onNone: () => Effect.void,
-          onSome: ([id, , inputDigest, decision]) =>
-            resolveLaneInputDigest(outcome, inputDigest).pipe(
-              Effect.flatMap((digest) => {
-                MutableHashMap.set(digests, index, digest);
-                return onLaneRun(qualityTaskLaneRunFromOutcome(id, digest, outcome, O.fromUndefinedOr(decision)));
-              })
-            ),
-        })
-      )
+  const steps = yield* laneStepsWithLedgers(lanes);
+  const outcomes = yield* collectStreamingStepOutcomes(label, steps, concurrency, (outcome, index) =>
+    pipe(
+      A.get(lanes, index),
+      O.match({
+        onNone: () => Effect.void,
+        onSome: ([id, , inputDigest, decision]) =>
+          resolveLaneInputDigest(outcome, inputDigest).pipe(
+            Effect.flatMap((digest) => {
+              MutableHashMap.set(digests, index, digest);
+              return onLaneRun(qualityTaskLaneRunFromOutcome(id, digest, outcome, O.fromUndefinedOr(decision)));
+            })
+          ),
+      })
+    )
   );
   return {
     report: QualityTaskLaneRunReport.make({
@@ -3643,6 +3717,78 @@ export const runQualityTaskStepGroupForTesting = runQualityTaskStepGroup;
  * @since 0.0.0
  */
 export const runQualityTaskStreamingStepGroupForTesting = runQualityTaskStreamingStepGroup;
+
+/**
+ * Timing and failure facts one streaming step produced, as the lane digest handoff sees them.
+ *
+ * **Example** (Describe a passed step)
+ *
+ * ```ts
+ * import type { StreamingStepOutcome } from "@beep/repo-cli/commands/Quality"
+ * import { QualityTaskStep } from "@beep/repo-cli/commands/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const outcome: StreamingStepOutcome = {
+ *   durationMs: 1,
+ *   startedAt: "2026-09-12T00:00:00.000Z",
+ *   endedAt: "2026-09-12T00:00:00.001Z",
+ *   failure: O.none(),
+ *   step: QualityTaskStep.make({ label: "lint", command: "bunx", args: ["turbo", "run", "lint"], cwd: "." }),
+ * }
+ * console.log(outcome.step.label) // "lint"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export type { StreamingStepOutcome };
+
+/**
+ * Declare one direct Turbo step's digest to a wrapper lane ledger, exposed for tests.
+ *
+ * **Example** (Declare without a ledger)
+ *
+ * ```ts
+ * import { recordTurboLaneLedgerRowForTesting } from "@beep/repo-cli/commands/Quality"
+ * import { QualityTaskStep } from "@beep/repo-cli/commands/Quality"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const step = QualityTaskStep.make({ label: "lint", command: "bunx", args: ["turbo", "run", "lint"], cwd: "." })
+ * const outcome = { durationMs: 1, startedAt: "", endedAt: "", failure: O.none(), step }
+ * console.log(Effect.isEffect(recordTurboLaneLedgerRowForTesting(O.none(), outcome))) // true
+ * ```
+ *
+ * @param ledger - The ledger path the parent named, if any.
+ * @param outcome - The finished step.
+ * @category testing
+ * @since 0.0.0
+ */
+export const recordTurboLaneLedgerRowForTesting = recordTurboLaneLedgerRow;
+
+/**
+ * Resolve a lane's input digest from its declared value, its ledger, or its own summaries,
+ * exposed for tests.
+ *
+ * **Example** (A declared digest wins)
+ *
+ * ```ts
+ * import { resolveLaneInputDigestForTesting } from "@beep/repo-cli/commands/Quality"
+ * import { QualityTaskStep } from "@beep/repo-cli/commands/Quality"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const step = QualityTaskStep.make({ label: "lint", command: "bunx", args: ["turbo", "run", "lint"], cwd: "." })
+ * const outcome = { durationMs: 1, startedAt: "", endedAt: "", failure: O.none(), step }
+ * console.log(Effect.isEffect(resolveLaneInputDigestForTesting(outcome, O.some("abc")))) // true
+ * ```
+ *
+ * @param outcome - The finished lane step.
+ * @param declared - The digest the executor already declared, if any.
+ * @category testing
+ * @since 0.0.0
+ */
+export const resolveLaneInputDigestForTesting = resolveLaneInputDigest;
 
 /**
  * Collect existing changed files for the root lint fix fast path.

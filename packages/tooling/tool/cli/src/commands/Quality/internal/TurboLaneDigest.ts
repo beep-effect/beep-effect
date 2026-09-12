@@ -227,6 +227,14 @@ export const turboLaneDigestFromSummary: {
 
 const summaryStartOrder = Order.mapInput(Order.Number, (summary: TurboRunSummary) => summary.execution.startTime);
 
+// Rows arrive oldest first: a later row for the same task id overwrites the earlier hash.
+const newestRowsByTask = (rows: ReadonlyArray<TurboLaneTaskHash>): ReadonlyArray<TurboLaneTaskHash> =>
+  A.fromIterable(
+    HashMap.values(
+      A.reduce(rows, HashMap.empty<string, TurboLaneTaskHash>(), (acc, row) => HashMap.set(acc, row.taskId, row))
+    )
+  );
+
 /**
  * Fold the task hashes of every run summary the current attempt wrote into one lane digest.
  *
@@ -279,14 +287,123 @@ export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")
   if (A.isReadonlyArrayEmpty(selected) || !A.every(selected, taskPassed)) {
     return O.none<TurboLaneDigest>();
   }
-  // Newest summary last: a later re-run of the same task id overwrites the earlier hash.
-  const newestByTask = A.reduce(selectedRows(selected), HashMap.empty<string, TurboLaneTaskHash>(), (acc, row) =>
-    HashMap.set(acc, row.taskId, row)
-  );
   return O.some(
     digestRows(
       A.map(fresh, (summary) => summary.id),
-      A.fromIterable(HashMap.values(newestByTask))
+      newestRowsByTask(selectedRows(selected))
     )
   );
+});
+
+/**
+ * Environment variable through which a parent quality step names the JSONL ledger a wrapper
+ * lane child (`bun run beep ci lane <id>`) declares its own Turbo digests to.
+ *
+ * **Example** (Name the ledger variable)
+ *
+ * ```ts
+ * import { TURBO_LANE_LEDGER_ENV } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(TURBO_LANE_LEDGER_ENV) // "BEEP_TURBO_LANE_LEDGER"
+ * ```
+ *
+ * @category digests
+ * @since 0.0.0
+ */
+export const TURBO_LANE_LEDGER_ENV = "BEEP_TURBO_LANE_LEDGER";
+
+/**
+ * Fold the digests a wrapper lane child declared, in declaration order, into one lane digest.
+ *
+ * **Example** (A later declaration overrides an earlier hash)
+ *
+ * ```ts
+ * import { TurboLaneDigest, foldTurboLaneDigests } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const row = (hash: string, cacheStatus: "HIT" | "MISS") => ({ taskId: "//#lint:typos", hash, cacheStatus })
+ * const first = TurboLaneDigest.make({ digest: "a", summaryIds: ["run-1"], tasks: [row("h1", "MISS")] })
+ * const second = TurboLaneDigest.make({ digest: "b", summaryIds: ["run-2"], tasks: [row("h2", "HIT")] })
+ * const folded = foldTurboLaneDigests([first, second])
+ * console.log(O.getOrElse(O.map(folded, (digest) => digest.tasks[0]?.hash), () => "none")) // "h2"
+ * ```
+ *
+ * **Gotchas**
+ *
+ * An empty declaration list folds to `None`, so a child that ran no direct Turbo step reports no
+ * digest rather than an empty one.
+ *
+ * @param digests - Digests in the order the child declared them.
+ * @returns The folded digest, or `None` when nothing was declared.
+ * @category digests
+ * @since 0.0.0
+ */
+export const foldTurboLaneDigests = (digests: ReadonlyArray<TurboLaneDigest>): O.Option<TurboLaneDigest> =>
+  A.isReadonlyArrayEmpty(digests)
+    ? O.none()
+    : O.some(
+        digestRows(
+          A.flatMap(digests, (digest) => digest.summaryIds),
+          newestRowsByTask(A.flatMap(digests, (digest) => digest.tasks))
+        )
+      );
+
+const encodeLedgerLine = S.encodeSync(S.fromJsonString(TurboLaneDigest));
+const decodeLedgerLine = S.decodeUnknownEffect(S.fromJsonString(TurboLaneDigest));
+
+/**
+ * Append one declared digest to a wrapper lane ledger, creating the ledger directory on demand.
+ *
+ * **Example** (Declare a digest)
+ *
+ * ```ts
+ * import { TurboLaneDigest, appendTurboLaneLedger } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * const digest = TurboLaneDigest.make({ digest: "a", summaryIds: ["run-1"], tasks: [] })
+ * console.log(Effect.isEffect(appendTurboLaneLedger("/tmp/lane-ledger.jsonl", digest))) // true
+ * ```
+ *
+ * @param ledgerPath - The JSONL file the parent named through `TURBO_LANE_LEDGER_ENV`.
+ * @param digest - The digest of one direct Turbo step the child ran.
+ * @category digests
+ * @since 0.0.0
+ */
+export const appendTurboLaneLedger = Effect.fn("QualityTasks.appendTurboLaneLedger")(function* (
+  ledgerPath: string,
+  digest: TurboLaneDigest
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(path.dirname(ledgerPath), { recursive: true });
+  yield* fs.writeFileString(ledgerPath, `${encodeLedgerLine(digest)}\n`, { flag: "a" });
+});
+
+/**
+ * Read a wrapper lane ledger and fold every digest the child declared.
+ *
+ * **Example** (Read a ledger)
+ *
+ * ```ts
+ * import { readTurboLaneLedger } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(readTurboLaneLedger("/tmp/lane-ledger.jsonl"))) // true
+ * ```
+ *
+ * **Gotchas**
+ *
+ * A missing ledger reads as no declarations. A malformed line fails the read, so a corrupt
+ * ledger never yields a partial digest.
+ *
+ * @param ledgerPath - The JSONL file the parent named through `TURBO_LANE_LEDGER_ENV`.
+ * @returns The folded digest, or `None` when the child declared nothing.
+ * @category digests
+ * @since 0.0.0
+ */
+export const readTurboLaneLedger = Effect.fn("QualityTasks.readTurboLaneLedger")(function* (ledgerPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs.readFileString(ledgerPath).pipe(Effect.orElseSucceed(() => ""));
+  const rows = yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) => decodeLedgerLine(line));
+  return foldTurboLaneDigests(rows);
 });

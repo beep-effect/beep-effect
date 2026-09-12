@@ -37,6 +37,7 @@ const ResolvedDoctestConfig = S.Struct({
   passWithNoTests: S.Boolean,
   setupFiles: S.Array(S.String),
   globalSetup: S.Array(S.String),
+  testTimeout: S.Finite,
 });
 const decodeConfig = S.decodeEffect(S.fromJsonString(ResolvedDoctestConfig));
 const decodeTurboInputs = S.decodeEffect(
@@ -61,6 +62,7 @@ const resolvedConfig = Effect.fn("DoctestTest.resolvedConfig")(function* (root: 
       console.log(await Effect.runPromise(jsonStringifyPretty({
         pool: c.pool, include: c.include, includeSource: c.includeSource ?? [], exclude: c.exclude,
         passWithNoTests: c.passWithNoTests, setupFiles: c.setupFiles, globalSetup: c.globalSetup,
+        testTimeout: c.testTimeout,
       })));
     `,
       root,
@@ -142,6 +144,9 @@ describe("doctest lane fixture", { concurrent: false }, () => {
         expect(config.includeSource, name).toEqual(["src/**/*.{ts,tsx}"]);
         expect(config.passWithNoTests, name).toBe(false);
         expect(config.pool, name).toBe("forks");
+        // Package configs merge after the shared one; a literal testTimeout there would clamp
+        // doctest mode back to the focused value (Greptile, PR #1102).
+        expect(config.testTimeout, name).toBe(120_000);
         expect(scripts["beep:doctest"], name).toBe("BEEP_VITEST_DOCTEST=1 bunx vitest run");
         const sources = yield* fsUtils.globFiles(config.includeSource ?? [], { cwd: dir, ignore: config.exclude });
         const marked = yield* Effect.filter(sources, (file) =>

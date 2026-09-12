@@ -79,6 +79,28 @@ const parsedFcNumRuns = pipe(
 );
 export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
 
+/**
+ * Per-test ceiling every doctest owner inherits in doctest mode. The first example of a file
+ * pays the module transform, which exceeded 30 s under the fleet's 4-way task concurrency on a
+ * 4-vCPU runner (C3.4 hosted round 1).
+ */
+export const vitestDoctestTestTimeoutMs = 120_000;
+
+/**
+ * Resolve a package's per-test timeout without losing the shared doctest and instrumentation
+ * ceilings. Package configs merge after this one, so a literal `testTimeout` there would clamp
+ * doctest mode back to the focused value.
+ *
+ * **Example** (Keep focused headroom while doctests and coverage keep their ceilings)
+ *
+ * ```ts
+ * import { packageTestTimeout } from "./vitest.shared.ts"
+ * const testTimeout = packageTestTimeout(60_000)
+ * ```
+ */
+export const packageTestTimeout = (focusedMs: number): number =>
+  vitestDoctestActive ? vitestDoctestTestTimeoutMs : vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : focusedMs;
+
 // Quality-lane audit A1 (D10): the deep sweep only changes the behaviour of
 // files that draw from fast-check, so under an active floor the include list
 // is resolved at config time to the test files that import `fast-check` or
@@ -194,7 +216,7 @@ const config: ViteUserConfig = {
     // the same way instrumentation does; give them the same generous cap.
     // In doctest mode the first example of a file pays the module transform; under the fleet's
     // 4-way task concurrency on a 4-vCPU runner that exceeded 30 s (C3.4 hosted round 1).
-    testTimeout: vitestDoctestActive ? 120_000 : vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 30_000,
+    testTimeout: packageTestTimeout(30_000),
     hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 10_000,
     // Baseline generation/regeneration must tolerate test-less packages;
     // the ratchet compare, not vitest, decides coverage outcomes.

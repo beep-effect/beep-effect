@@ -1,5 +1,5 @@
 import { defineConfig, mergeConfig } from "vitest/config";
-import shared, { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
+import shared, { fcDeepSweepActive, packageTestTimeout, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
 
 export default mergeConfig(
   shared,
@@ -21,7 +21,7 @@ export default mergeConfig(
       // coverage or a deep property sweep) instead of clamping it back to a
       // coverage-unaware constant; keep focused non-coverage headroom over
       // the 30s shared default.
-      testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 60_000,
+      testTimeout: packageTestTimeout(60_000),
     },
   })
 );
