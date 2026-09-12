@@ -203,11 +203,11 @@ can assume a clean checkout on `main` and pin it without asking. Bootstrap it
 once against an existing clone's object store:
 
 ```sh
-git clone --reference $HOME/YeeBois/projects/beep-effect \
-  https://github.com/beep-effect/beep-effect.git $HOME/YeeBois/projects/beep-effect0
-cd $HOME/YeeBois/projects/beep-effect0 && bun install --frozen-lockfile && graft build
-mise trust $HOME/YeeBois/projects/beep-effect0/mise.toml
-bun run beep graft cache sync --from $HOME/YeeBois/projects/beep-effect --to $HOME/YeeBois/projects/beep-effect0
+git clone --reference "$HOME/YeeBois/projects/beep-effect" \
+  https://github.com/beep-effect/beep-effect.git "$HOME/YeeBois/projects/beep-effect0"
+cd "$HOME/YeeBois/projects/beep-effect0" && bun install --frozen-lockfile && graft build
+mise trust "$HOME/YeeBois/projects/beep-effect0/mise.toml"
+bun run beep graft cache sync --from "$HOME/YeeBois/projects/beep-effect" --to "$HOME/YeeBois/projects/beep-effect0"
 ```
 
 The HTTPS remote is load-bearing, not a preference. The systemd user manager
@@ -218,7 +218,7 @@ fetches with no credentials at all. Both `refresh` and `install-timer` read
 `https://`. An owner clone that already exists over SSH is re-pointed in place:
 
 ```sh
-git -C $HOME/YeeBois/projects/beep-effect0 remote set-url origin \
+git -C "$HOME/YeeBois/projects/beep-effect0" remote set-url origin \
   https://github.com/beep-effect/beep-effect.git
 ```
 
@@ -243,9 +243,9 @@ Copy an existing deep-build environment file rather than starting from an
 empty one, then set the model the nightly job should spend:
 
 ```sh
-install -m 600 $HOME/.cache/beep/graft-deep-grok.env $HOME/.config/beep-graft/env
-${EDITOR:-nano} $HOME/.config/beep-graft/env   # set GRAFT_MODEL=
-bun run beep graft deep install-timer --owner $HOME/YeeBois/projects/beep-effect0
+install -m 600 "$HOME/.cache/beep/graft-deep-grok.env" "$HOME/.config/beep-graft/env"
+${EDITOR:-nano} "$HOME/.config/beep-graft/env"   # set GRAFT_MODEL=
+bun run beep graft deep install-timer --owner "$HOME/YeeBois/projects/beep-effect0"
 ```
 
 The nightly job on this workstation runs `GRAFT_MODEL=claude-opus-5` through
@@ -302,8 +302,8 @@ Run it by hand the same way the timer does, which is also how to test a change
 to the schedule before trusting it overnight:
 
 ```sh
-bun run beep graft deep refresh --owner $HOME/YeeBois/projects/beep-effect0 --jobs 16
-bun run beep graft deep refresh --owner $HOME/YeeBois/projects/beep-effect0 --no-seed --no-rebuild
+bun run beep graft deep refresh --owner "$HOME/YeeBois/projects/beep-effect0" --jobs 16
+bun run beep graft deep refresh --owner "$HOME/YeeBois/projects/beep-effect0" --no-seed --no-rebuild
 ```
 
 `--model` overrides `GRAFT_MODEL` for the build; leaving it off keeps the
