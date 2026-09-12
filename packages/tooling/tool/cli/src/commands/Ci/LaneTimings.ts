@@ -1520,7 +1520,35 @@ const fetchCiWorkflowWindowJobsPage = Effect.fn("Ci.fetchCiWorkflowWindowJobsPag
   );
 });
 
-const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(function* (
+/**
+ * Collect the raw required status-check contexts of ruleset 10240248.
+ *
+ * **Details**
+ *
+ * With a history version the contexts come from that version's frozen
+ * snapshot (`rulesets/10240248/history/<version>`), so a window is judged
+ * against the population that was in force when it closed. Without one the
+ * live effective rules for `main` are read and filtered to the ruleset's
+ * `required_status_checks` rule; rules that carry no parameters contribute
+ * nothing. Contexts are returned as the API spells them, before the
+ * `Heavy / ` prefix is normalized away.
+ *
+ * **Example** (Prepare a live-rules collection effect)
+ *
+ * ```ts
+ * import { collectRequiredContexts } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(collectRequiredContexts(".")))
+ * ```
+ *
+ * @param repoRoot - Repository root from which the captured `gh api` calls run.
+ * @param version - Historical ruleset version to snapshot; `O.none()` reads the live rules.
+ * @returns The ruleset's required contexts in API order, not yet normalized.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(function* (
   repoRoot: string,
   version: O.Option<CiRulesetHistoryVersion> = O.none()
 ): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, CiLaneTimingGithubClient> {
