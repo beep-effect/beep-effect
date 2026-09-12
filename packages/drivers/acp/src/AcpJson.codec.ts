@@ -321,6 +321,30 @@ const readStrict = (text: string): Result.Result<unknown, JsonTextSyntaxError> =
   }
 };
 
+// Finds the closing quotation mark of the string opened at `start`; returns its index (or -1 when
+// the string is unterminated) and whether the string contains an escape sequence.
+const scanString = (text: string, start: number): readonly [end: number, escaped: boolean] => {
+  let escaped = false;
+  let end = start + 1;
+  while (end < Str.length(text)) {
+    const code = text.charCodeAt(end);
+    if (code === QUOTATION_MARK) {
+      return [end, escaped];
+    }
+    escaped = escaped || code === REVERSE_SOLIDUS;
+    end += code === REVERSE_SOLIDUS ? 2 : 1;
+  }
+  return [-1, escaped];
+};
+
+const isPropertyKeyEnd = (text: string, end: number): boolean => {
+  let next = end + 1;
+  while (isWhitespace(text.charCodeAt(next))) {
+    next += 1;
+  }
+  return text.charCodeAt(next) === COLON;
+};
+
 /**
  * Reports whether a JSON text contains an object property key with an escape sequence.
  *
@@ -347,30 +371,6 @@ const readStrict = (text: string): Result.Result<unknown, JsonTextSyntaxError> =
  * @category predicates
  * @since 0.0.0
  */
-// Finds the closing quotation mark of the string opened at `start`; returns its index (or -1 when
-// the string is unterminated) and whether the string contains an escape sequence.
-const scanString = (text: string, start: number): readonly [end: number, escaped: boolean] => {
-  let escaped = false;
-  let end = start + 1;
-  while (end < Str.length(text)) {
-    const code = text.charCodeAt(end);
-    if (code === QUOTATION_MARK) {
-      return [end, escaped];
-    }
-    escaped = escaped || code === REVERSE_SOLIDUS;
-    end += code === REVERSE_SOLIDUS ? 2 : 1;
-  }
-  return [-1, escaped];
-};
-
-const isPropertyKeyEnd = (text: string, end: number): boolean => {
-  let next = end + 1;
-  while (isWhitespace(text.charCodeAt(next))) {
-    next += 1;
-  }
-  return text.charCodeAt(next) === COLON;
-};
-
 export const hasEscapedPropertyKey = (text: string): boolean => {
   let index = text.indexOf('"');
   while (index !== -1) {
