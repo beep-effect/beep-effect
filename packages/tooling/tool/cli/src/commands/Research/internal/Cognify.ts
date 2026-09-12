@@ -15,7 +15,14 @@ import { ResearchCommandError } from "../Research.errors.ts";
 import { ResearchCognifySummary } from "../Research.schemas.ts";
 import { INSERT_CAPTURE_LOG, runWithResearchDb } from "./Catalog.ts";
 import { catalogDbPath } from "./CatalogOps.ts";
-import { cogneeAdd, cogneeCognify, cogneeLogin, datasetForSourceType } from "./CogneeClient.ts";
+import {
+  COGNEE_CREDENTIALS_MISSING,
+  cogneeAdd,
+  cogneeCognify,
+  cogneeLogin,
+  datasetForSourceType,
+  readCogneeSettings,
+} from "./CogneeClient.ts";
 import type { ResearchCognifyOptions } from "../Research.schemas.ts";
 import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
@@ -117,7 +124,11 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
     );
   }
 
-  const connection = yield* cogneeLogin();
+  const settings = yield* readCogneeSettings;
+  if (O.isNone(settings)) {
+    return yield* ResearchCommandError.make({ message: COGNEE_CREDENTIALS_MISSING });
+  }
+  const connection = yield* cogneeLogin(settings.value);
   for (const dataset of datasets) {
     const uploads = MutableHashMap.get(byDataset, dataset).pipe(O.getOrElse((): Array<CognifyUpload> => []));
     for (let index = 0; index < A.length(uploads); index += COGNEE_ADD_BATCH_SIZE) {

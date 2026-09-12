@@ -43,3 +43,27 @@ front end) and from the private out-of-repo knowledge vault managed by the
   reflections requirement. `RUN.json.frictions[]` is the friction-receipt
   surface; the weekly consolidation rolls recurring frictions up for a human.
 - **Delivery is PR-only** from the routine's dedicated clone; a human merges.
+
+## Vault pipeline credentials
+
+`bun run beep research install-timers` installs the systemd user units
+`beep-research-daily` (nightly `research daily --commit`) and
+`beep-research-repo-card` (weekly). Both declare
+`EnvironmentFile=-$HOME/.config/beep-research/env`; the unit runs without it,
+but every step that needs a secret then skips or fails. The file is plain
+`KEY=value` lines read by systemd itself, so `op://` references do not resolve
+there: keep it mode `0600` and render it from 1Password (for example `op
+inject`) rather than pasting values into the repo or a transcript.
+
+| Variable | Needed by | When unset |
+| --- | --- | --- |
+| `COGNEE_API_URL` | daily `cognify` step, `research cognify` | daily skips cognify with `no Cognee credentials configured; set COGNEE_API_URL in $HOME/.config/beep-research/env`; explicit cognify fails with the same message |
+| `COGNEE_API_EMAIL` | Cognee login | Cognee's default user email |
+| `COGNEE_API_PASSWORD` | Cognee login | Cognee's default user password |
+| `NOTION_API_KEY` | daily `notion-pull` step (`--page`), `research notion-pull` | notion-pull fails |
+| `FIRECRAWL_API_KEY` | `research capture` | capture fails |
+| `BEEP_KNOWLEDGE_VAULT` | every vault command | vault defaults to `$HOME/YeeBois/knowledge` |
+
+A configured `COGNEE_API_URL` whose server is down is reported as a failed
+step (`Cognee login request to <url> failed: ...`), not a skip: remove the
+variable to turn cognify off deliberately.

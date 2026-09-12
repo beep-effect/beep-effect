@@ -1,10 +1,14 @@
 /**
  * Minimal Cognee REST client for research cognify.
  *
- * Talks to the running Cognee API (`COGNEE_API_URL`) with the default-user
- * login flow; card markdown is added per dataset and cognified in one call.
- * Cognee deduplicates added documents by content hash, so re-pushing an
- * unchanged card is a no-op while a changed card lands as fresh content.
+ * Talks to the running Cognee API with the default-user login flow; card
+ * markdown is added per dataset and cognified in one call. Cognee
+ * deduplicates added documents by content hash, so re-pushing an unchanged
+ * card is a no-op while a changed card lands as fresh content.
+ *
+ * Connection settings come from the environment variables named by
+ * {@link COGNEE_ENV}; the research timers load them from the EnvironmentFile
+ * named by `RESEARCH_ENV_FILE_HINT`.
  *
  * @internal
  * @packageDocumentation
@@ -12,14 +16,55 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Email } from "@beep/schema";
 import { Config, Effect, Redacted } from "effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { ResearchCommandError } from "../Research.errors.ts";
+import { RESEARCH_ENV_FILE_HINT } from "./ResearchEnv.ts";
+import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 
 const $I = $RepoCliId.create("commands/Research/internal/CogneeClient");
+
+/**
+ * Environment variable names that configure the Cognee connection.
+ *
+ * `apiUrl` is required; `email` and `password` fall back to Cognee's default
+ * user when unset.
+ *
+ * @internal
+ * @category utilities
+ */
+export const COGNEE_ENV = {
+  apiUrl: "COGNEE_API_URL",
+  email: "COGNEE_API_EMAIL",
+  password: "COGNEE_API_PASSWORD",
+} as const;
+
+const DEFAULT_COGNEE_EMAIL = S.decodeSync(Email)("default_user@example.com");
+const DEFAULT_COGNEE_PASSWORD = "default_password";
+
+/**
+ * Message used when no Cognee connection is configured: `research daily`
+ * skips cognify with it and `research cognify` fails with it.
+ *
+ * @internal
+ * @category utilities
+ */
+export const COGNEE_CREDENTIALS_MISSING = `no Cognee credentials configured; set ${COGNEE_ENV.apiUrl} in ${RESEARCH_ENV_FILE_HINT}`;
+
+/**
+ * Message used when Cognee settings are present but fail validation, for
+ * example a malformed `COGNEE_API_EMAIL`.
+ *
+ * @internal
+ * @category utilities
+ */
+export const COGNEE_SETTINGS_INVALID = `Cognee settings failed validation; check ${COGNEE_ENV.apiUrl}, ${COGNEE_ENV.email}, and ${COGNEE_ENV.password} in ${RESEARCH_ENV_FILE_HINT}.`;
 
 /**
  * One markdown card queued for a Cognee dataset.
@@ -35,6 +80,24 @@ export class CogneeCardUpload extends S.Class<CogneeCardUpload>($I`CogneeCardUpl
   $I.annote("CogneeCardUpload", {
     title: "Cognee Card Upload",
     description: "One markdown card queued for upload to a Cognee dataset.",
+  })
+) {}
+
+/**
+ * Cognee connection settings resolved from the environment.
+ *
+ * @internal
+ * @category models
+ */
+export class CogneeSettings extends S.Class<CogneeSettings>($I`CogneeSettings`)(
+  {
+    apiUrl: S.String,
+    email: Email,
+    password: S.Redacted(S.String),
+  },
+  $I.annote("CogneeSettings", {
+    title: "Cognee Settings",
+    description: "Cognee API URL plus the login email and redacted password research cognify authenticates with.",
   })
 ) {}
 
@@ -64,6 +127,56 @@ class LoginResponse extends S.Class<LoginResponse>($I`LoginResponse`)(
 ) {}
 const decodeLoginResponse = S.decodeUnknownEffect(LoginResponse);
 
+/**
+ * Read the Cognee connection settings from the environment.
+ *
+ * `None` when `COGNEE_API_URL` is unset or blank; the caller decides whether
+ * that skips cognify (the daily pipeline) or fails it (an explicit cognify).
+ *
+ * @internal
+ * @category utilities
+ */
+export const readCogneeSettings: Effect.Effect<O.Option<CogneeSettings>, ResearchCommandError> = Effect.gen(
+  function* () {
+    const apiUrl = (yield* Config.String(COGNEE_ENV.apiUrl).pipe(Config.option)).pipe(
+      O.map(Str.trim),
+      O.filter(Str.isNonEmpty)
+    );
+    if (O.isNone(apiUrl)) {
+      return O.none();
+    }
+    const email = yield* Config.schema(Email, COGNEE_ENV.email).pipe(Config.withDefault(DEFAULT_COGNEE_EMAIL));
+    const password = yield* Config.Redacted(COGNEE_ENV.password).pipe(
+      Config.withDefault(Redacted.make(DEFAULT_COGNEE_PASSWORD))
+    );
+    return O.some(CogneeSettings.make({ apiUrl: apiUrl.value, email, password }));
+  }
+).pipe(ResearchCommandError.mapError(COGNEE_SETTINGS_INVALID), Effect.withSpan("CogneeClient.readCogneeSettings"));
+
+const describeCause = (cause: unknown, depth: number): string => {
+  if (!(cause instanceof Error)) {
+    return String(cause);
+  }
+  const nested = cause.cause;
+  return depth < 2 && nested !== undefined && nested !== null
+    ? `${cause.message}: ${describeCause(nested, depth + 1)}`
+    : cause.message;
+};
+
+/**
+ * Render an HTTP client failure with its transport cause, so a refused
+ * connection reads as such in the journal instead of a bare "request failed".
+ */
+const describeHttpFailure = (error: HttpClientError.HttpClientError): string => {
+  const cause = P.hasProperty(error.reason, "cause") ? error.reason.cause : undefined;
+  return cause === undefined ? error.message : `${error.message}: ${describeCause(cause, 0)}`;
+};
+
+const requestFailed =
+  (label: string, apiUrl: string) =>
+  (error: HttpClientError.HttpClientError): ResearchCommandError =>
+    ResearchCommandError.new(error, `Cognee ${label} request to ${apiUrl} failed: ${describeHttpFailure(error)}`);
+
 const failStatus = Effect.fn("CogneeClient.failStatus")(function* (
   label: string,
   status: number,
@@ -77,36 +190,20 @@ const failStatus = Effect.fn("CogneeClient.failStatus")(function* (
 /**
  * Log in to the Cognee API and return a bearer token.
  *
- * Connection comes from `COGNEE_API_URL` (required), `COGNEE_API_EMAIL`, and
- * `COGNEE_API_PASSWORD` (defaulting to the Cognee default user).
- *
  * @internal
  * @category utilities
  */
-export const cogneeLogin = Effect.fn("CogneeClient.cogneeLogin")(function* (): Effect.fn.Return<
-  CogneeConnection,
-  ResearchCommandError,
-  HttpClient.HttpClient
-> {
+export const cogneeLogin = Effect.fn("CogneeClient.cogneeLogin")(function* (
+  settings: CogneeSettings
+): Effect.fn.Return<CogneeConnection, ResearchCommandError, HttpClient.HttpClient> {
   const client = yield* HttpClient.HttpClient;
-  const apiUrl = yield* Config.String("COGNEE_API_URL").pipe(
-    ResearchCommandError.mapError(
-      "COGNEE_API_URL is not set; point it at the running Cognee API (e.g. http://100.84.76.60:8010)."
-    )
-  );
-  const email = yield* Effect.orDie(
-    Config.String("COGNEE_API_EMAIL").pipe(Config.withDefault("default_user@example.com"))
-  );
-  const password = yield* Effect.orDie(
-    Config.Redacted("COGNEE_API_PASSWORD").pipe(Config.withDefault(Redacted.make("default_password")))
-  );
-  const request = HttpClientRequest.post(`${apiUrl}/api/v1/auth/login`).pipe(
+  const request = HttpClientRequest.post(`${settings.apiUrl}/api/v1/auth/login`).pipe(
     HttpClientRequest.bodyUrlParams({
-      password: Redacted.value(password),
-      username: email,
+      password: Redacted.value(settings.password),
+      username: Redacted.value(settings.email),
     })
   );
-  const response = yield* client.execute(request).pipe(ResearchCommandError.mapError("Cognee login request failed."));
+  const response = yield* client.execute(request).pipe(Effect.mapError(requestFailed("login", settings.apiUrl)));
   if (response.status >= 400) {
     const text = yield* response.text.pipe(Effect.orElseSucceed(() => ""));
     return yield* failStatus("login", response.status, text);
@@ -115,7 +212,7 @@ export const cogneeLogin = Effect.fn("CogneeClient.cogneeLogin")(function* (): E
   const decoded = yield* decodeLoginResponse(raw).pipe(
     ResearchCommandError.mapError("Cognee login response failed schema validation.")
   );
-  return CogneeConnection.make({ apiUrl, token: decoded.access_token });
+  return CogneeConnection.make({ apiUrl: settings.apiUrl, token: decoded.access_token });
 });
 
 /**
@@ -141,7 +238,7 @@ export const cogneeAdd = Effect.fn("CogneeClient.cogneeAdd")(function* (
   );
   const response = yield* client
     .execute(request)
-    .pipe(ResearchCommandError.mapError(`Cognee add failed for dataset "${datasetName}".`));
+    .pipe(Effect.mapError(requestFailed(`add (dataset "${datasetName}")`, connection.apiUrl)));
   if (response.status >= 400) {
     const text = yield* response.text.pipe(Effect.orElseSucceed(() => ""));
     return yield* failStatus(`add (dataset "${datasetName}")`, response.status, text);
@@ -165,7 +262,7 @@ export const cogneeCognify = Effect.fn("CogneeClient.cogneeCognify")(function* (
     HttpClientRequest.setHeader("Authorization", `Bearer ${connection.token}`),
     HttpClientRequest.bodyJsonUnsafe({ datasets: [...datasets], runInBackground })
   );
-  const response = yield* client.execute(request).pipe(ResearchCommandError.mapError("Cognee cognify request failed."));
+  const response = yield* client.execute(request).pipe(Effect.mapError(requestFailed("cognify", connection.apiUrl)));
   if (response.status >= 400) {
     const text = yield* response.text.pipe(Effect.orElseSucceed(() => ""));
     return yield* failStatus("cognify", response.status, text);

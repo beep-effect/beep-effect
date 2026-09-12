@@ -4,8 +4,9 @@
  * Renders service+timer unit pairs into `~/.config/systemd/user/` and
  * enables them. The daily unit runs `beep research daily`; a weekly unit
  * refreshes repo cards.
- * Secrets (FIRECRAWL_API_KEY, NOTION_API_KEY, COGNEE_*) load from an optional
- * `~/.config/beep-research/env` EnvironmentFile.
+ * Secrets (FIRECRAWL_API_KEY, NOTION_API_KEY, COGNEE_API_URL and the optional
+ * COGNEE_API_EMAIL / COGNEE_API_PASSWORD) load from an optional
+ * `$HOME/.config/beep-research/env` EnvironmentFile.
  *
  * @internal
  * @packageDocumentation
@@ -17,6 +18,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
+import { RESEARCH_ENV_FILE_RELATIVE } from "./ResearchEnv.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ResearchTimerOptions } from "../Research.schemas.ts";
 
@@ -27,8 +29,6 @@ import type { ResearchTimerOptions } from "../Research.schemas.ts";
  * @category utilities
  */
 export const RESEARCH_UNITS = ["beep-research-daily", "beep-research-repo-card"] as const;
-
-const ENV_FILE_RELATIVE = ".config/beep-research/env";
 
 type ResearchTimerRequirements = ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path;
 
@@ -75,7 +75,7 @@ const renderService = (unit: UnitPair, options: ResearchTimerOptions, home: stri
       // involved, so the Bun path is quoted there and the page id is one
       // token by schema.
       `WorkingDirectory=${options.repoRoot}`,
-      `EnvironmentFile=-${home}/${ENV_FILE_RELATIVE}`,
+      `EnvironmentFile=-${home}/${RESEARCH_ENV_FILE_RELATIVE}`,
       `ExecStart="${options.bunPath}" run beep ${unit.execArgs}`,
       "TimeoutStartSec=1800",
       "",
@@ -190,5 +190,5 @@ export const installResearchTimers = Effect.fn("ResearchTimers.installResearchTi
       ", "
     )}.`
   );
-  yield* Console.log(`research install-timers: secrets load from ${home}/${ENV_FILE_RELATIVE} when present.`);
+  yield* Console.log(`research install-timers: secrets load from ${home}/${RESEARCH_ENV_FILE_RELATIVE} when present.`);
 });

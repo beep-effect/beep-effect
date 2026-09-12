@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { Config, Console, DateTime, Effect, Result } from "effect";
+import { Console, DateTime, Effect, Match, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -19,6 +19,7 @@ import {
   ResearchHistorySiftOptions,
   ResearchNotionPullOptions,
 } from "../Research.schemas.ts";
+import { COGNEE_CREDENTIALS_MISSING, readCogneeSettings } from "./CogneeClient.ts";
 import { cognifyImpl } from "./Cognify.ts";
 import { digestImpl } from "./Digest.ts";
 import { historySiftImpl } from "./HistorySift.ts";
@@ -33,7 +34,38 @@ const decodeResearchHistorySiftOptions = S.decodeEffect(ResearchHistorySiftOptio
 const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
 
 /**
+ * Pathspecs that stage the vault without its machine-state directory, chosen
+ * from the `git check-ignore -q <state dir>` exit code.
+ *
+ * A vault whose `.gitignore` already ignores the state directory must not name
+ * it in an `:(exclude)` pathspec: git treats that as an ignored path named on
+ * the command line and exits 1 ("The following paths are ignored by one of
+ * your .gitignore files"), independent of `advice.addIgnoredFile`. When the
+ * vault does not ignore it, the exclude pathspec is what keeps it out.
+ */
+const stagePathspecs = (checkIgnoreExit: number): Effect.Effect<ReadonlyArray<string>, ResearchCommandError> =>
+  Match.value(checkIgnoreExit).pipe(
+    Match.when(0, () => Effect.succeed(["."])),
+    Match.when(1, () => Effect.succeed([".", `:(exclude)${VAULT_DIRS.state}/**`])),
+    Match.orElse((exitCode) =>
+      Effect.fail(
+        ResearchCommandError.make({
+          message: `git check-ignore -q ${VAULT_DIRS.state} exited with ${exitCode} in the vault.`,
+        })
+      )
+    )
+  );
+
+/**
  * Commit changed vault files when the daily pipeline is configured to commit.
+ *
+ * **Details**
+ *
+ * The vault's machine-state directory (`.beep`) never enters the commit: when
+ * the vault's `.gitignore` already ignores it a plain `git add -A` leaves it
+ * out, and otherwise an `:(exclude)` pathspec does. The two cases are told
+ * apart with `git check-ignore`, because naming an ignored path in the
+ * exclude pathspec makes `git add` exit 1.
  *
  * **Example** (Commit vault git changes)
  *
@@ -52,21 +84,23 @@ const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
 export const commitVault = Effect.fn("Research.commitVault")(function* (
   vaultRoot: string
 ): Effect.fn.Return<void, ResearchCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const run = (args: ReadonlyArray<string>) =>
+  const git = (args: ReadonlyArray<string>) =>
     runToExit({
       command: "git",
       args,
       cwd: vaultRoot,
       stdio: "ignore",
-    }).pipe(
-      ResearchCommandError.mapError(`Failed running git ${A.join(args, " ")} in the vault.`),
+    }).pipe(ResearchCommandError.mapError(`Failed running git ${A.join(args, " ")} in the vault.`));
+  const run = (args: ReadonlyArray<string>) =>
+    git(args).pipe(
       Effect.filterOrFail(
         (exitCode) => exitCode === 0,
         (exitCode) =>
           ResearchCommandError.make({ message: `git ${A.join(args, " ")} exited with ${exitCode} in the vault.` })
       )
     );
-  yield* run(["add", "-A", "--", ".", `:(exclude)${VAULT_DIRS.state}/**`]);
+  const pathspecs = yield* git(["check-ignore", "-q", VAULT_DIRS.state]).pipe(Effect.flatMap(stagePathspecs));
+  yield* run(["add", "-A", "--", ...pathspecs]);
   const status = yield* runToExit({
     command: "git",
     args: ["diff", "--cached", "--quiet"],
@@ -89,6 +123,12 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
 
 /**
  * Run the daily research pipeline steps in order.
+ *
+ * **Details**
+ *
+ * Cognify runs only when Cognee credentials are configured; otherwise the step
+ * is reported as skipped with the EnvironmentFile that should carry them, so
+ * an unconfigured machine does not log a failed login every night.
  *
  * **Example** (Daily pipeline with options)
  *
@@ -158,12 +198,24 @@ export const dailyImpl = Effect.fn("Research.dailyImpl")(function* (
     );
   }
 
-  const cogneeUrl = yield* Effect.orDie(Config.String("COGNEE_API_URL").pipe(Config.option));
-  if (O.isNone(cogneeUrl)) {
-    skipped.push("cognify (COGNEE_API_URL unset)");
-  } else {
-    yield* step("cognify", cognifyImpl(ResearchCognifyOptions.make({ dryRun: false, vaultRoot: options.vaultRoot })));
-  }
+  // Unset credentials skip cognify; present-but-invalid ones are a failed step,
+  // never an aborted pipeline.
+  yield* readCogneeSettings.pipe(
+    Effect.result,
+    Effect.flatMap(
+      Result.match({
+        onFailure: (error) => step("cognify", Effect.fail(error)),
+        onSuccess: O.match({
+          onNone: () =>
+            Effect.sync(() => {
+              skipped.push(`cognify (${COGNEE_CREDENTIALS_MISSING})`);
+            }),
+          onSome: () =>
+            step("cognify", cognifyImpl(ResearchCognifyOptions.make({ dryRun: false, vaultRoot: options.vaultRoot }))),
+        }),
+      })
+    )
+  );
 
   yield* step("digest", digestImpl(ResearchDigestOptions.make({ vaultRoot: options.vaultRoot })));
 
