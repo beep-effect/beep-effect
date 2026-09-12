@@ -201,7 +201,7 @@ const windowGithubRoutes = [
     respond: staticWindowGithubResponse(RULESET_SNAPSHOT_18_JSON),
   },
   {
-    matches: Str.endsWith("/history"),
+    matches: Str.includes("/history?"),
     respond: staticWindowGithubResponse(RULESET_HISTORY_JSON),
   },
   {
@@ -858,6 +858,29 @@ describe("ci lane timing admission window", () => {
       expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
       expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(false);
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("selects a ruleset version that only appears on the second history page", () => {
+    const commands = A.empty<string>();
+    // A full first page of versions newer than the window end must not end the
+    // search: the qualifying version lives on page two.
+    const laterHistoryPageJson = `[${A.join(
+      A.makeBy(100, (index) => `{"version_id":${90_000 + index},"updated_at":"2026-09-12T02:00:00.000Z"}`),
+      ","
+    )}]`;
+    const response = (endpoint: string) =>
+      Str.includes("/history?")(endpoint)
+        ? Effect.succeed(Str.endsWith("&page=1")(endpoint) ? laterHistoryPageJson : RULESET_HISTORY_JSON)
+        : windowGithubResponse(endpoint);
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(".", windowOptions({ headSha: O.some("included") }));
+
+      expect(report.contextCount).toBe(18);
+      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
+      const historyCommands = A.filter(commands, Str.includes("/history?"));
+      expect(historyCommands).toHaveLength(2);
+      expect(A.some(historyCommands, Str.includes("per_page=100&page=2"))).toBe(true);
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 
   it.effect("fails closed when no ruleset version strictly precedes the window end", () => {

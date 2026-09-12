@@ -1596,16 +1596,37 @@ class CiWindowPopulation extends S.Class<CiWindowPopulation>($I`CiWindowPopulati
   })
 ) {}
 
+const CI_RULESET_HISTORY_PAGE_SIZE = 100;
+
+const ciRulesetHistoryEndpoint = (pageNumber: number): string =>
+  `repos/{owner}/{repo}/rulesets/${CI_LANE_TIMING_RULESET_ID}/history?per_page=${CI_RULESET_HISTORY_PAGE_SIZE}&page=${pageNumber}`;
+
+// GitHub pages the ruleset history (30 entries by default), so a version that
+// predates the first page must still be reachable: keep paging until a short
+// page proves the history is exhausted, independent of the page ordering.
+const collectCiRulesetHistory = Effect.fn("Ci.collectCiRulesetHistory")(function* (
+  repoRoot: string,
+  pageNumber = 1,
+  collected: ReadonlyArray<CiRulesetHistoryVersion> = A.empty()
+): Effect.fn.Return<ReadonlyArray<CiRulesetHistoryVersion>, CiCommandError, CiLaneTimingGithubClient> {
+  const github = yield* CiLaneTimingGithubClient;
+  const endpoint = ciRulesetHistoryEndpoint(pageNumber);
+  const json = yield* github.getJson(repoRoot, endpoint, O.some("[.[]|{version_id,updated_at}]"));
+  const page = yield* decodeCiRulesetHistory(json).pipe(
+    CiCommandError.mapError(`Failed to decode the ruleset history returned by ${endpoint}.`)
+  );
+  const history = A.appendAll(collected, page);
+  if (A.length(page) < CI_RULESET_HISTORY_PAGE_SIZE) {
+    return history;
+  }
+  return yield* collectCiRulesetHistory(repoRoot, pageNumber + 1, history);
+});
+
 const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (
   repoRoot: string,
   until: DateTime.Utc
 ) {
-  const github = yield* CiLaneTimingGithubClient;
-  const endpoint = `repos/{owner}/{repo}/rulesets/${CI_LANE_TIMING_RULESET_ID}/history`;
-  const json = yield* github.getJson(repoRoot, endpoint, O.some("[.[]|{version_id,updated_at}]"));
-  const history = yield* decodeCiRulesetHistory(json).pipe(
-    CiCommandError.mapError(`Failed to decode the ruleset history returned by ${endpoint}.`)
-  );
+  const history = yield* collectCiRulesetHistory(repoRoot);
   const version = yield* pipe(
     history,
     A.filter((entry) => DateTime.toEpochMillis(entry.updated_at) < DateTime.toEpochMillis(until)),
