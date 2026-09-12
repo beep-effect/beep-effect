@@ -17,7 +17,9 @@ import { Config, Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { runCaptured } from "../../../internal/process/StepExec.ts";
+import { readInstalledSystemdUnit, systemdUnitDirective, systemdUserUnitDir } from "../../../internal/systemd/index.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
+import { ResearchRecordedTimer } from "../Research.schemas.ts";
 import { RESEARCH_ENV_FILE_RELATIVE } from "./ResearchEnv.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ResearchTimerOptions } from "../Research.schemas.ts";
@@ -111,7 +113,7 @@ const readHome = Config.String("HOME").pipe(
   ResearchCommandError.mapError("HOME is not set; cannot locate systemd user directory.")
 );
 
-const unitDirOf = (path: Path.Path, home: string): string => path.join(home, ".config", "systemd", "user");
+const unitDirOf = systemdUserUnitDir;
 
 const runSystemctl = Effect.fn("ResearchTimers.runSystemctl")(function* (
   args: ReadonlyArray<string>
@@ -126,6 +128,33 @@ const runSystemctl = Effect.fn("ResearchTimers.runSystemctl")(function* (
       message: `systemctl --user ${A.join(args, " ")} exited with ${result.exitCode}: ${result.output}`,
     });
   }
+});
+
+const PAGE_ARGUMENT_PATTERN = /--page (\S+)/;
+
+/**
+ * Read the repo root and Notion page the installed daily unit runs with.
+ *
+ * `None` when no daily unit is installed; the page is absent when the unit was
+ * installed without `--page`.
+ *
+ * @internal
+ * @category utilities
+ */
+export const readRecordedResearchTimer = Effect.fn("ResearchTimers.readRecordedResearchTimer")(function* (
+  home: string
+): Effect.fn.Return<O.Option<ResearchRecordedTimer>, ResearchCommandError, FileSystem.FileSystem | Path.Path> {
+  const unit = yield* readInstalledSystemdUnit({ home, fileName: `${RESEARCH_UNITS[0]}.service` }).pipe(
+    ResearchCommandError.mapError(`Failed reading the installed ${RESEARCH_UNITS[0]}.service unit.`)
+  );
+  return O.map(unit, (installed) =>
+    ResearchRecordedTimer.make({
+      repoRoot: systemdUnitDirective(installed, "WorkingDirectory"),
+      notionPage: O.flatMap(systemdUnitDirective(installed, "ExecStart"), (exec) =>
+        O.flatMap(O.fromNullishOr(PAGE_ARGUMENT_PATTERN.exec(exec)), (match) => O.fromNullishOr(match[1]))
+      ),
+    })
+  );
 });
 
 /**

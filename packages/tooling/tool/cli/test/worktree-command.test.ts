@@ -1,6 +1,7 @@
 import {
   addWorktree,
   branchDeleteCommand,
+  CLAUDE_WORKTREES_RELATIVE_ROOT,
   copyLocalFiles,
   defaultWorktreeBranch,
   parseWorktreePorcelain,
@@ -855,6 +856,50 @@ describe("worktree git operations", () => {
     )
   );
 
+  it.effect("refuses a name registered under both roots and never lets a stale nested directory shadow a sibling", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const sibling = yield* addWorktree(context, "dup", defaultWorktreeBranch("dup"));
+        const nested = path.join(repoRoot, CLAUDE_WORKTREES_RELATIVE_ROOT, "dup");
+        yield* fs.makeDirectory(path.dirname(nested), { recursive: true });
+        yield* runGit(repoRoot, ["worktree", "add", "-b", "claude/dup", nested]);
+        const previousCwd = process.cwd;
+        yield* Effect.acquireUseRelease(
+          Effect.sync(() => {
+            process.cwd = () => repoRoot;
+          }),
+          () =>
+            Effect.gen(function* () {
+              const before = A.length(yield* TestConsole.errorLines);
+              yield* Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "dup", "--archive"]).pipe(
+                Effect.flip
+              );
+              expect(A.join(A.filter(A.drop(yield* TestConsole.errorLines, before), P.isString), "\n")).toContain(
+                "are registered worktrees named dup"
+              );
+              expect(yield* fs.exists(sibling)).toBe(true);
+              expect(yield* fs.exists(nested)).toBe(true);
+              // Unregister the nested lane but leave a stale directory behind:
+              // the registered sibling still wins and the stale one is untouched.
+              yield* runGit(repoRoot, ["worktree", "remove", "--force", nested]);
+              yield* runGit(repoRoot, ["branch", "-D", "claude/dup"]);
+              yield* fs.makeDirectory(nested, { recursive: true });
+              yield* Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "dup", "--archive"]);
+              expect(yield* fs.exists(sibling)).toBe(false);
+              expect(yield* fs.exists(nested)).toBe(true);
+            }),
+          () =>
+            Effect.sync(() => {
+              process.cwd = previousCwd;
+            })
+        );
+      })
+    )
+  );
+
   it.effect("rejects branch deletion outside archive retirement", () =>
     withScratchRepo((repoRoot) =>
       Effect.gen(function* () {
@@ -1569,6 +1614,42 @@ describe("worktree git operations", () => {
         // exists and the branch survives alongside the named fenced copy.
         expect(yield* runGitText(repoRoot, ["for-each-ref", "refs/archive/worktrees/sticky-demo/"])).not.toBe("");
         expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).not.toBe("");
+      })
+    )
+  );
+});
+
+describe("nested worktree removal", { concurrent: false }, () => {
+  it.effect("removes a nested lane and its branch while retaining the sibling context root", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const siblingRoot = path.join(path.dirname(repoRoot), `${path.basename(repoRoot)}-worktrees`);
+        expect(context.worktreesRoot).toBe(siblingRoot);
+        const targetPath = path.join(repoRoot, CLAUDE_WORKTREES_RELATIVE_ROOT, "nested-lane");
+        yield* runGit(repoRoot, ["worktree", "add", "-b", "feat/nested-lane", targetPath]);
+        const previousCwd = process.cwd;
+        yield* Effect.acquireUseRelease(
+          Effect.sync(() => {
+            process.cwd = () => repoRoot;
+          }),
+          () =>
+            Command.runWith(worktreeCommand, { version: "0.0.0" })([
+              "remove",
+              "nested-lane",
+              "--archive",
+              "--delete-branch",
+            ]).pipe(Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(siblingRoot))),
+          () =>
+            Effect.sync(() => {
+              process.cwd = previousCwd;
+            })
+        );
+        expect(yield* fs.exists(targetPath)).toBe(false);
+        expect(yield* runGitText(repoRoot, ["branch", "--list", "feat/nested-lane"])).toBe("");
+        expect((yield* resolveWorktreeContext(repoRoot)).worktreesRoot).toBe(siblingRoot);
       })
     )
   );

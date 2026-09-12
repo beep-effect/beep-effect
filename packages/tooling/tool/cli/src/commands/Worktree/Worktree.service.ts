@@ -23,15 +23,18 @@ import { A, O, Str } from "@beep/utils";
 import { Config, Context, DateTime, Effect, FileSystem, Layer, Match, Path, pipe, Result } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import {
   collectUntrackedPaths,
+  invokerAncestryPids,
   ProcessAttachmentKind,
   resolveGitCommit,
   runGitOutput,
   runGitRawOutput,
   scanProcessAttachments,
 } from "../../internal/repo-run/index.ts";
+import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
   parseWorktreePorcelain,
@@ -802,13 +805,17 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   const path = yield* Path.Path;
   const target = path.resolve(request.targetPath);
   const managedRoot = path.join(path.dirname(request.mainCheckout), `${path.basename(request.mainCheckout)}-worktrees`);
+  // Claude Code's desktop app nests its lanes under the clone itself; both
+  // roots are retirement-eligible, and the target must sit in exactly one.
+  const nestedRoot = path.join(request.mainCheckout, CLAUDE_WORKTREES_RELATIVE_ROOT);
+  const root = target === path.resolve(nestedRoot, request.name) ? nestedRoot : managedRoot;
   const invalid = () =>
     WorktreeCommandError.make({
       message:
-        "Removal target must be an exact registered worktree beneath the managed root with the same Git common directory.",
+        "Removal target must be an exact registered worktree beneath the managed or nested worktrees root with the same Git common directory.",
       path: request.targetPath,
     });
-  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(managedRoot, request.name)) {
+  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(root, request.name)) {
     return yield* invalid();
   }
   const listed = yield* runWorktreeGitCapture(
@@ -820,7 +827,7 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
     return yield* invalid();
   }
-  const canonicalRoot = yield* fs.realPath(managedRoot).pipe(Effect.mapError(invalid));
+  const canonicalRoot = yield* fs.realPath(root).pipe(Effect.mapError(invalid));
   const canonicalTarget = yield* fs.realPath(target).pipe(Effect.mapError(invalid));
   if (canonicalTarget !== path.join(canonicalRoot, request.name)) {
     return yield* invalid();
@@ -1067,9 +1074,13 @@ const assertQuiescentFence = Effect.fnUntraced(function* (
       message: `Refusing to retire ${request.targetPath}: the processes attached to it could not be enumerated, so the archive cannot be proven complete.`,
     });
   }
-  if (A.isReadonlyArrayNonEmpty(scan.value)) {
+  // The invoker's own chain (CLI, shell, agent session) is the party asking
+  // for the retirement, so a request that says so may exempt exactly it.
+  const exempt = request.exemptInvokerAncestry === true ? yield* invokerAncestryPids() : HashSet.empty<number>();
+  const holders = A.filter(scan.value, (attachment) => !HashSet.has(exempt, attachment.pid));
+  if (A.isReadonlyArrayNonEmpty(holders)) {
     return yield* WorktreeCommandError.make({
-      message: `Refusing to retire ${request.targetPath}: ${describeAttachedProcesses(scan.value)} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
+      message: `Refusing to retire ${request.targetPath}: ${describeAttachedProcesses(holders)} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
     });
   }
 });
