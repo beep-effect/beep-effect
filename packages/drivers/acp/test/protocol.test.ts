@@ -1,4 +1,10 @@
-import { Client as AcpClient, Errors as AcpError, Protocol as AcpProtocol, Schema as AcpSchema } from "@beep/acp";
+import {
+  Client as AcpClient,
+  Errors as AcpError,
+  Json as AcpJson,
+  Protocol as AcpProtocol,
+  Schema as AcpSchema,
+} from "@beep/acp";
 import { fcRuns } from "@beep/test-utils";
 import { A, currentHostPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -36,11 +42,11 @@ const RequestPermissionRequest = jsonRpcRequest("session/request_permission", Ac
 const RequestPermissionResponse = jsonRpcResponse(AcpSchema.RequestPermissionResponse);
 const ExtRequest = jsonRpcRequest("x/test", Schema.Struct({ hello: Schema.String }));
 const ExtResponse = jsonRpcResponse(Schema.Struct({ ok: Schema.Boolean }));
-const decodeSessionCancelNotification = Schema.decodeEffect(Schema.fromJsonString(SessionCancelNotification));
-const decodeExtRequest = Schema.decodeEffect(Schema.fromJsonString(ExtRequest));
-const decodeRequestPermissionResponse = Schema.decodeEffect(Schema.fromJsonString(RequestPermissionResponse));
-const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonString(SessionCancelNotification));
-const encodeRequestPermissionResponse = Schema.encodeEffect(Schema.fromJsonString(RequestPermissionResponse));
+const decodeSessionCancelNotification = Schema.decodeEffect(AcpJson.fromJsonText(SessionCancelNotification));
+const decodeExtRequest = Schema.decodeEffect(AcpJson.fromJsonText(ExtRequest));
+const decodeRequestPermissionResponse = Schema.decodeEffect(AcpJson.fromJsonText(RequestPermissionResponse));
+const encodeSessionCancelNotification = Schema.encodeEffect(AcpJson.fromJsonText(SessionCancelNotification));
+const encodeRequestPermissionResponse = Schema.encodeEffect(AcpJson.fromJsonText(RequestPermissionResponse));
 const SessionCancelNotificationArbitrary = Arbitrary.schema(SessionCancelNotification);
 const RequestPermissionResponseArbitrary = Arbitrary.schema(RequestPermissionResponse);
 const AcpProtocolLogEventArbitrary = Arbitrary.schema(AcpProtocol.AcpProtocolLogEvent);
@@ -58,6 +64,7 @@ const AcpErrorArbitrary = Arbitrary.schema(AcpError.AcpError).pipe(
   )
 );
 const childProcessProtocolTestTimeout = 30_000;
+const decodeJsonWithHostParser = Schema.decodeSync(Schema.fromJsonString(Schema.Json));
 const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(import.meta.dirname, "fixtures/acp-mock-peer.ts")
 );
@@ -110,6 +117,29 @@ it.prop(
   },
   { arbitrary: fcRuns(25) }
 );
+
+// Node 24 (V8 12.8 through 13.7) `JSON.parse` resolves an escaped one-character object key through
+// an existing map transition whenever the raw source prefix matches it, so once any object shaped
+// `{ " ": …, "\\": … }` exists in the isolate, `{" ":0,"\u0000":1}` decodes with a "\\" key. The
+// property above found this on 2026-09-11 (replay
+// `[0,"5464242726500343",5009,3,[0,0,0,0,0,0],"PropertyError"]`); this pins the shrunk shape.
+it("keeps escaped _meta keys after the host materialised a backslash key at the same position", () => {
+  assert.deepEqual(decodeJsonWithHostParser('{" ":0,"\\\\":0}'), { " ": 0, "\\": 0 });
+  const notification = {
+    jsonrpc: "2.0" as const,
+    method: "session/cancel" as const,
+    params: {
+      _meta: {
+        "9z({": { " ": -8.82839006083749e-189, "\u0000": { "<b^~+3>": [], ",i": 1.3931731468853144e287 } },
+      },
+      sessionId: "session-1",
+    },
+  };
+  const encoded = Effect.runSync(encodeSessionCancelNotification(notification));
+  const decoded = Effect.runSync(decodeSessionCancelNotification(encoded));
+  assert.equal(Effect.runSync(encodeSessionCancelNotification(decoded)), encoded);
+  assert.deepEqual(decoded.params._meta, notification.params._meta);
+});
 
 it("keeps handwritten ACP schema encoded shapes byte-identical", () => {
   assert.deepEqual(
@@ -263,6 +293,49 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       const [update, completion] = yield* Deferred.await(notifications);
       assert.equal(update?._tag, "SessionUpdate");
       assert.equal(completion?._tag, "ElicitationComplete");
+    })
+  );
+
+  it.effect(
+    "decodes escaped _meta keys on inbound frames after the host materialised a backslash key",
+    Effect.fnUntraced(function* () {
+      assert.deepEqual(decodeJsonWithHostParser('{"beep-acp-regression":0,"\\\\":0}'), {
+        "beep-acp-regression": 0,
+        "\\": 0,
+      });
+      const { stdio, input } = yield* makeInMemoryStdio();
+      const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio,
+        serverRequestMethods: HashSet.empty(),
+      });
+      const notifications = yield* Deferred.make<ReadonlyArray<AcpProtocol.AcpIncomingNotification>>();
+      yield* transport.incoming.pipe(
+        Stream.take(1),
+        Stream.runCollect,
+        Effect.flatMap((notificationChunk) => Deferred.succeed(notifications, notificationChunk)),
+        Effect.forkScoped
+      );
+      const meta = { "beep-acp-regression": 0, "\n": true };
+      yield* Queue.offer(
+        input,
+        yield* encodeJsonl(SessionUpdateNotification, {
+          jsonrpc: "2.0",
+          method: "session/update",
+          params: {
+            _meta: meta,
+            sessionId: "session-1",
+            update: {
+              sessionUpdate: "plan",
+              entries: [{ content: "Inspect repository", priority: "high", status: "in_progress" }],
+            },
+          },
+        })
+      );
+      const [update] = yield* Deferred.await(notifications);
+      assert.equal(update?._tag, "SessionUpdate");
+      if (update?._tag === "SessionUpdate") {
+        assert.deepEqual(update.params._meta, meta);
+      }
     })
   );
 

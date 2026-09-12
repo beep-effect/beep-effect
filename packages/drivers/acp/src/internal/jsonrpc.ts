@@ -1,0 +1,228 @@
+import { $AcpId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
+import { A } from "@beep/utils";
+import * as O from "@beep/utils/Option";
+import * as Match from "effect/Match";
+import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import * as RpcSerialization from "effect/unstable/rpc/RpcSerialization";
+import { readJsonText } from "../AcpJson.codec.ts";
+import type * as RpcMessage from "effect/unstable/rpc/RpcMessage";
+import type { JsonTextSyntaxError } from "../AcpJson.codec.ts";
+
+// Inbound JSON-RPC frame decoding. This mirrors the private envelope mapping inside effect's
+// `RpcSerialization.ndJsonRpc` (4.0.0-rc.113) so that the JSON text itself can be read through
+// `readJsonText`, which the effect parser does not allow injecting. Batch responses are not
+// correlated (ACP never sends JSON-RPC batches); every message is encoded individually.
+
+const $I = $AcpId.create("internal/jsonrpc");
+const EFFECT_RPC_METHOD_PREFIX = "@effect/rpc/";
+const DEFAULT_MAX_BUFFER_SIZE = 16 * 1024 * 1024;
+
+export type AcpWireMessage = RpcMessage.FromClientEncoded | RpcMessage.FromServerEncoded;
+
+export class JsonRpcFrameError extends S.TaggedError<JsonRpcFrameError>($I`JsonRpcFrameError`)(
+  "JsonRpcFrameError",
+  {
+    reason: S.String,
+    frame: S.Unknown,
+  },
+  $I.annoteError<JsonRpcFrameError>("JsonRpcFrameError", {
+    description: "Failure raised when a decoded JSON-RPC frame cannot be mapped to an RPC message.",
+  })
+) {
+  override get message() {
+    return `Invalid JSON-RPC frame: ${this.reason}`;
+  }
+}
+
+export type AcpFrameDecodeError =
+  | JsonTextSyntaxError
+  | JsonRpcFrameError
+  | S.SchemaError
+  | RpcSerialization.MaxBufferSizeExceeded;
+
+const JsonRpcId = S.Union([S.Finite, S.String, S.Null]);
+const JsonRpcHeaders = S.Array(S.Tuple([S.String, S.String]));
+const JsonRpcControlTag = LiteralKit(["Ack", "Interrupt", "Ping", "Eof", "Pong"]);
+const JsonRpcErrorTag = LiteralKit(["Cause", "Defect"]);
+const JsonRpcRequestFrame = S.Struct({
+  method: S.String,
+  id: S.optionalKey(JsonRpcId),
+  params: S.optionalKey(S.Unknown),
+  headers: S.optionalKey(JsonRpcHeaders),
+  traceId: S.optionalKey(S.String),
+  spanId: S.optionalKey(S.String),
+  sampled: S.optionalKey(S.Boolean),
+});
+const JsonRpcErrorFrame = S.Struct({
+  code: S.Finite,
+  message: S.String,
+  data: S.optionalKey(S.Unknown),
+  _tag: S.optionalKey(JsonRpcErrorTag),
+});
+const JsonRpcResponseFrame = S.Struct({
+  id: S.optionalKey(JsonRpcId),
+  result: S.optionalKey(S.Unknown),
+  chunk: S.optionalKey(S.Boolean),
+  error: JsonRpcErrorFrame.pipe(S.NullOr, S.optionalKey),
+});
+const JsonRpcCauseEntry = S.Union([
+  S.TaggedStruct("Fail", { error: S.Unknown }),
+  S.TaggedStruct("Die", { defect: S.Unknown }),
+  S.TaggedStruct("Interrupt", { fiberId: S.optionalKey(S.Finite) }),
+]);
+
+type ExitCause = Extract<RpcMessage.ExitEncoded<unknown, unknown>, { readonly _tag: "Failure" }>["cause"];
+type ExitCauseEntry = ExitCause[number];
+
+const decodeRequestFrame = S.decodeUnknownResult(JsonRpcRequestFrame);
+const decodeResponseFrame = S.decodeUnknownResult(JsonRpcResponseFrame);
+const decodeCauseEntries = S.decodeUnknownResult(S.Array(JsonRpcCauseEntry));
+const decodeChunkValues = S.decodeUnknownResult(S.NonEmptyArray(S.Unknown));
+const decodeControlTag = S.decodeUnknownResult(JsonRpcControlTag);
+const isJsonArray = S.is(S.Array(S.Unknown));
+
+const toCauseEntry = Match.type<(typeof JsonRpcCauseEntry)["Type"]>().pipe(
+  Match.tag("Interrupt", (entry): ExitCauseEntry => ({ _tag: "Interrupt", fiberId: entry.fiberId })),
+  Match.orElse((entry): ExitCauseEntry => entry)
+);
+
+const toHeader = ([name, value]: readonly [string, string]): [string, string] => [name, value];
+
+const toControlMessage = (
+  frame: unknown,
+  tag: string,
+  params: unknown
+): Result.Result<AcpWireMessage, S.SchemaError | JsonRpcFrameError> =>
+  Result.flatMap(decodeControlTag(tag), (control) => {
+    const requestId = P.isObject(params) ? params.requestId : undefined;
+    const withRequestId = (
+      make: (requestId: string | number) => AcpWireMessage
+    ): Result.Result<AcpWireMessage, JsonRpcFrameError> =>
+      P.isString(requestId) || P.isNumber(requestId)
+        ? Result.succeed(make(requestId))
+        : Result.fail(
+            JsonRpcFrameError.make({
+              reason: `${control} control message requires a string or number requestId`,
+              frame,
+            })
+          );
+    return Match.value(control).pipe(
+      Match.when("Ack", () => withRequestId((requestId) => ({ _tag: "Ack", requestId }))),
+      Match.when("Interrupt", () => withRequestId((requestId) => ({ _tag: "Interrupt", requestId }))),
+      Match.when("Ping", () => Result.succeed<AcpWireMessage>({ _tag: "Ping" })),
+      Match.when("Eof", () => Result.succeed<AcpWireMessage>({ _tag: "Eof" })),
+      Match.when("Pong", () => Result.succeed<AcpWireMessage>({ _tag: "Pong" })),
+      Match.exhaustive
+    );
+  });
+
+const toRequestMessage = (
+  frame: unknown,
+  request: (typeof JsonRpcRequestFrame)["Type"]
+): Result.Result<AcpWireMessage, S.SchemaError | JsonRpcFrameError> => {
+  const id = O.fromNullishOr(request.id);
+  if (O.isNone(id) && Str.startsWith(EFFECT_RPC_METHOD_PREFIX)(request.method)) {
+    return toControlMessage(frame, Str.slice(Str.length(EFFECT_RPC_METHOD_PREFIX))(request.method), request.params);
+  }
+  return Result.succeed<AcpWireMessage>({
+    _tag: "Request",
+    id: O.getOrElse(id, () => ""),
+    tag: request.method,
+    payload: request.params ?? null,
+    headers: A.map(request.headers ?? [], toHeader),
+    ...(P.hasProperty(frame, "id") ? {} : { isNotification: true as const }),
+    ...O.getSomesStruct({
+      traceId: O.fromUndefinedOr(request.traceId),
+      spanId: O.fromUndefinedOr(request.spanId),
+      sampled: O.fromUndefinedOr(request.sampled),
+    }),
+  });
+};
+
+const toResponseMessage = (
+  response: (typeof JsonRpcResponseFrame)["Type"]
+): Result.Result<AcpWireMessage, S.SchemaError | JsonRpcFrameError> => {
+  const requestId = O.getOrElse(O.fromNullishOr(response.id), () => "");
+  const error = O.fromNullishOr(response.error);
+  if (O.isSome(error) && error.value._tag === "Defect") {
+    return Result.succeed<AcpWireMessage>({ _tag: "Defect", defect: error.value.data });
+  }
+  if (response.chunk === true) {
+    return Result.map(
+      decodeChunkValues(response.result),
+      (values): AcpWireMessage => ({ _tag: "Chunk", requestId, values })
+    );
+  }
+  return Result.succeed<AcpWireMessage>({
+    _tag: "Exit",
+    requestId,
+    exit: O.match(error, {
+      onNone: (): RpcMessage.ExitEncoded<unknown, unknown> => ({ _tag: "Success", value: response.result }),
+      onSome: (error): RpcMessage.ExitEncoded<unknown, unknown> => ({
+        _tag: "Failure",
+        cause:
+          error._tag === "Cause"
+            ? Result.getOrElse(
+                Result.map(decodeCauseEntries(error.data), A.map(toCauseEntry)),
+                (): ExitCause => [{ _tag: "Die", defect: error }]
+              )
+            : [{ _tag: "Die", defect: error }],
+      }),
+    }),
+  });
+};
+
+const decodeJsonRpcMessage = (frame: unknown): Result.Result<AcpWireMessage, S.SchemaError | JsonRpcFrameError> =>
+  P.hasProperty(frame, "method")
+    ? Result.flatMap(decodeRequestFrame(frame), (request) => toRequestMessage(frame, request))
+    : Result.flatMap(decodeResponseFrame(frame), toResponseMessage);
+
+export const decodeJsonRpcFrame = (
+  frame: unknown
+): Result.Result<ReadonlyArray<AcpWireMessage>, S.SchemaError | JsonRpcFrameError> =>
+  isJsonArray(frame) ? Result.all(A.map(frame, decodeJsonRpcMessage)) : Result.map(decodeJsonRpcMessage(frame), A.of);
+
+export const makeNdJsonRpcDecoder = (options?: { readonly maxBufferSize?: number | "unbounded" | undefined }) => {
+  const maxBufferSize = options?.maxBufferSize ?? DEFAULT_MAX_BUFFER_SIZE;
+  let decoder: TextDecoder | undefined;
+  let buffer = "";
+  const exceeds = (size: number): boolean => maxBufferSize !== "unbounded" && size > maxBufferSize;
+  const failBufferSize = (): Result.Result<never, RpcSerialization.MaxBufferSizeExceeded> => {
+    buffer = "";
+    return Result.fail(
+      new RpcSerialization.MaxBufferSizeExceeded({
+        maxBufferSize: maxBufferSize === "unbounded" ? Number.POSITIVE_INFINITY : maxBufferSize,
+      })
+    );
+  };
+  const decode = (chunk: string | Uint8Array): Result.Result<ReadonlyArray<AcpWireMessage>, AcpFrameDecodeError> => {
+    buffer += P.isString(chunk) ? chunk : (decoder ??= new TextDecoder()).decode(chunk, { stream: true });
+    const batches = A.empty<ReadonlyArray<AcpWireMessage>>();
+    let position = 0;
+    let newline = buffer.indexOf("\n", position);
+    while (newline !== -1) {
+      if (exceeds(newline - position)) {
+        return failBufferSize();
+      }
+      const line = buffer.slice(position, newline);
+      position = newline + 1;
+      const decoded = Result.flatMap(readJsonText(line), decodeJsonRpcFrame);
+      if (Result.isFailure(decoded)) {
+        buffer = buffer.slice(position);
+        return Result.fail(decoded.failure);
+      }
+      A.appendInPlace(batches, decoded.success);
+      newline = buffer.indexOf("\n", position);
+    }
+    buffer = buffer.slice(position);
+    if (exceeds(Str.length(buffer))) {
+      return failBufferSize();
+    }
+    return Result.succeed(A.flatten(batches));
+  };
+  return { decode } as const;
+};
