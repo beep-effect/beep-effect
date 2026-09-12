@@ -118,6 +118,40 @@ describe("stream console", () => {
     }
   });
 
+  it("holds the drain until the last of several in-flight writes completes", () => {
+    const callbacks: Array<() => void> = [];
+    const originalOut = process.stdout.write;
+    const originalErr = process.stderr.write;
+    const queueWrite = ((_chunk: string | Uint8Array, callback?: () => void) => {
+      if (callback !== undefined) {
+        callbacks.push(callback);
+      }
+      return true;
+    }) as WriteFn;
+    process.stdout.write = queueWrite;
+    process.stderr.write = queueWrite;
+    try {
+      streamConsole.log("first");
+      streamConsole.error("second");
+      streamConsole.log("third");
+      expect(callbacks).toHaveLength(3);
+      let drained = false;
+      drainProcessStreams(() => {
+        drained = true;
+      });
+      // Settling the writes out of order leaves the drain pending while any write is in flight.
+      callbacks[2]?.();
+      expect(drained).toBe(false);
+      callbacks[0]?.();
+      expect(drained).toBe(false);
+      callbacks[1]?.();
+      expect(drained).toBe(true);
+    } finally {
+      process.stdout.write = originalOut;
+      process.stderr.write = originalErr;
+    }
+  });
+
   it.effect(
     "delivers a large block through a pipe before a forced exit under Bun",
     Effect.fnUntraced(function* () {

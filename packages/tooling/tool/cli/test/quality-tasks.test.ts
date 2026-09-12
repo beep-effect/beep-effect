@@ -108,6 +108,7 @@ import {
   qualityCommandPrimitiveHelpersForTesting,
   qualityProfileConfigForTesting,
   readCoverageComparisonBaselineForTesting,
+  readTurboLaneLedger,
   renderCoverageFailuresForTesting,
   renderCoverageLoweredFloors,
   renderCoverageMeasuredRowProposals,
@@ -124,8 +125,12 @@ import {
   runSqlIntegrationTestLaneForTesting,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
+  TURBO_LANE_LEDGER_ENV,
   TurboLaneDigest,
+  TurboLaneLedgerRow,
+  TurboRunSummary,
   testTsgoPlanningForTesting,
+  turboLaneDigestFromSummary,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
   validateCoverageTaskArgsForTesting,
@@ -199,6 +204,8 @@ const encodeCoverageSelfJudgeScopeSync = S.encodeSync(CoverageSelfJudgeScope);
 const decodeCoverageFileBaselineUnknownSync = S.decodeUnknownSync(CoverageFileBaseline);
 const encodeCoverageRegressionBaseline = S.encodeEffect(CoverageRegressionBaseline);
 const encodeGithubCheckRunReportSync = S.encodeSync(GithubCheckRunReport);
+const decodeTurboLaneLedgerRow = S.decodeUnknownEffect(S.fromJsonString(TurboLaneLedgerRow));
+const encodeTurboRunSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -1324,6 +1331,96 @@ describe("quality task adapter", () => {
           .readDirectory(path.join(tempDir, ".beep", "quality", "lane-ledgers"))
           .pipe(Effect.orElseSucceed(() => A.empty<string>()));
         expect(leftovers).toEqual([]);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("closes the ledger a parent named with zero attempts when no direct Turbo step ran", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const ledger = path.join(tempDir, "lane", "ledger.jsonl");
+        yield* withEnvVarEffect(
+          TURBO_LANE_LEDGER_ENV,
+          ledger,
+          runQualityTaskStreamingLaneGroup("ci:local", [
+            ["check", bunScriptStep("ci:check", "process.exit(0)"), O.none()],
+          ])
+        );
+        const rows = yield* pipe(
+          yield* fs.readFileString(ledger),
+          Str.split("\n"),
+          A.filter(Str.isNonEmpty),
+          Effect.forEach(decodeTurboLaneLedgerRow)
+        );
+        expect(rows).toEqual([{ _tag: "closed", attempted: 0 }]);
+        // A closed ledger with nothing declared folds to no digest rather than an empty one.
+        expect(yield* readTurboLaneLedger(ledger)).toStrictEqual(O.none());
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("declares a direct Turbo step's digest to the ledger the parent named", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const bin = path.join(tempDir, "bin");
+        yield* fs.makeDirectory(bin, { recursive: true });
+        // A stand-in `bunx` that leaves the run summary `turbo run --summarize` would have written.
+        // The summary starts far enough in the future to count as this attempt's own.
+        const summary = TurboRunSummary.make({
+          id: "fixture",
+          execution: { startTime: 4_102_444_800_000, endTime: 4_102_444_800_010, exitCode: 0 },
+          tasks: [
+            {
+              taskId: "//#lint:typos",
+              task: "lint:typos",
+              hash: "h1",
+              cache: { status: "MISS" },
+              execution: { exitCode: 0 },
+            },
+          ],
+        });
+        yield* fs.writeFileString(path.join(bin, "summary.json"), yield* encodeTurboRunSummary(summary));
+        const fakeBunx = path.join(bin, "bunx");
+        yield* fs.writeFileString(
+          fakeBunx,
+          A.join(
+            ["#!/bin/sh", "mkdir -p .turbo/runs", 'cp "$(dirname "$0")/summary.json" .turbo/runs/fixture.json'],
+            "\n"
+          )
+        );
+        yield* fs.chmod(fakeBunx, 0o755);
+        const ambientPath = O.getOrElse(O.fromUndefinedOr(Bun.env.PATH), () => "");
+        const direct = QualityTaskStep.make({
+          label: "ci:lint",
+          command: "bunx",
+          args: ["turbo", "run", "lint:typos", "--summarize"],
+          cwd: tempDir,
+          env: { PATH: `${bin}${path.delimiter}${ambientPath}` },
+        });
+        const ledger = path.join(tempDir, "lane", "ledger.jsonl");
+        yield* withEnvVarEffect(
+          TURBO_LANE_LEDGER_ENV,
+          ledger,
+          runQualityTaskStreamingLaneGroup("ci:local", [["lint", direct, O.none()]])
+        );
+        const expected = O.map(turboLaneDigestFromSummary(summary, ["lint:typos"]), (digest) => digest.digest);
+        expect(O.isSome(expected)).toBe(true);
+        // The child declared the step's digest and closed the ledger with that one attempt.
+        expect(O.map(yield* readTurboLaneLedger(ledger), (digest) => digest.digest)).toStrictEqual(expected);
+        const report = yield* pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
+          O.getOrThrow,
+          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length),
+          decodeQualityTaskLaneRunReportJson
+        );
+        expect(report.lanes[0]?.status).toBe("passed");
+        expect(report.lanes[0]?.inputDigest).toStrictEqual(expected);
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 

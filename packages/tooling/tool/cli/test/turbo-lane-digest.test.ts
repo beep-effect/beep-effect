@@ -213,6 +213,9 @@ describe("Turbo lane digests", () => {
       expect(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(unmatched))).toEqual(O.some(false));
       expect(yield* fs.exists(ledger)).toBe(false);
       expect(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child))).toEqual(O.some(true));
+      // A digest that cannot be appended (the ledger directory is a file) is an attempt that did not land.
+      const unwritable = path.join(runs, "own.json", "nested", "ledger.jsonl");
+      expect(yield* recordTurboLaneLedgerRowForTesting(O.some(unwritable), outcome(child))).toEqual(O.some(false));
       yield* closeTurboLaneLedger(ledger, 1);
       const declared = yield* readTurboLaneLedger(ledger);
       expect(O.map(declared, (value) => A.map(value.tasks, (row) => `${row.taskId}=${row.hash}`))).toEqual(
