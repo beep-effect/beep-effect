@@ -1,0 +1,76 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-09-12",
+  "status": "partial",
+  "supervised": false,
+  "firstRun": false,
+  "window": {
+    "start": "2026-09-10T09:10:00-05:00",
+    "end": "2026-09-12T08:14:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 24,
+    "note": "Delta since lastSuccessfulRun of research/2026-09-10 (#1088 merged 2026-09-10 ~11:15 AM CT). No open research PR at preflight. Window ~47h. Saturday: no weekly consolidation / tombstone reaper. Local gh CLI token invalid; GitHub MCP used for remote reads."
+  },
+  "claimsEmitted": 26,
+  "collisionRate": 0.423,
+  "collisionNote": "11/26=0.423 URL collisions are intentional refute re-cites. Novel-URL collision rate 0. SPEC 40% self-reject gate evaluated on novel-URL collision. selfReject false.",
+  "selfReject": false,
+  "sourcesSeen": {
+    "web": 12,
+    "arxiv": 3,
+    "github": 11,
+    "x": 0
+  },
+  "quotaPools": {
+    "search": "grok-bot+web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": {
+    "attempted": 10,
+    "held": 7,
+    "broken": 3,
+    "moved": 1,
+    "heldAndMoved": 1,
+    "standingClaims": [
+      "USPTO ODP four fields",
+      "iManage/TR CoCounsel MCP not GA",
+      "Harvey-Everlaw MCP fall 2026 not GA",
+      "effect@4.0.0-rc.113 tip",
+      "Effect #7265 MCP adapter still OPEN",
+      "drizzle TaggedErrorClass #6162",
+      "Instant Cloud sunset 2027-08-31",
+      "Jazz alpha.54 tip post-cut",
+      "SEP-2640 Accepted not Final",
+      "MCP #3306 Enterprise IdP docs"
+    ],
+    "note": "BROKEN: rc.115 tip (past rc.113); #7265 MERGED (npm still pending rc.116 via #8201); rc.113 tip claim. HOLD: ODP, TR partnership MCP, Harvey-Everlaw, drizzle, Instant, Jazz alpha.54 tip, #3306. HOLD+MOVED: SEP-2640 (SDK refs added Sep 11)."
+  },
+  "frictions": [
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "Native X post/news search attempted; all returned client-not-enrolled (client_id 29986667). x=0."
+    },
+    {
+      "id": "gh-cli-bad-credentials",
+      "severity": "tooling",
+      "detail": "Local gh CLI token invalid (401). Used GitHub MCP (user-Github connected) for PR/release/issue reads. Cloud agent publisher uses Cursor GitHub connection."
+    },
+    {
+      "id": "firecrawl-cli-missing",
+      "severity": "tooling",
+      "detail": "firecrawl CLI not on PATH this run; used WebSearch/WebFetch/arXiv API/npm registry instead."
+    },
+    {
+      "id": "no-sol-luna",
+      "severity": "verify",
+      "detail": "Sol/Luna blinded verify unavailable. Packet stays partial."
+    }
+  ],
+  "sunday": false,
+  "tombstonesEmitted": 0,
+  "weeklyConsolidation": false
+}
