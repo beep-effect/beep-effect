@@ -1471,6 +1471,45 @@ export const writeYeetStatusSnapshot = Effect.fn("YeetStatus.writeYeetStatusSnap
 export const yeetStatusPathForTesting = statusPathForContext;
 
 /**
+ * Project a decoded verdict into the status artifact, exposed for tests.
+ *
+ * **Example** (Carry a lane digest into the artifact)
+ *
+ * ```ts
+ * import { yeetStatusArtifactFromVerdictForTesting, YeetVerdict, YeetVerdictLane } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const lane = YeetVerdictLane.make({ id: "quality:knip", label: "quality:knip", phase: "full", status: "passed", inputDigest: O.some("abc") })
+ * const verdict = YeetVerdict.make({
+ *   schemaVersion: "yeet-verdict/v2",
+ *   base: "origin/main",
+ *   branch: "feat/x",
+ *   committed: true,
+ *   createdAt: "2026-09-12T00:00:00.000Z",
+ *   head: "HEAD",
+ *   lanes: [lane],
+ *   message: "ok",
+ *   mode: "publish",
+ *   outcome: "success",
+ *   packetPaths: [],
+ *   pushed: true,
+ *   runId: "feat_x",
+ * })
+ * console.log(yeetStatusArtifactFromVerdictForTesting("verdict.json", verdict).laneDigests?.length) // 1
+ * ```
+ *
+ * @param path - The verdict artifact path recorded on the artifact.
+ * @param verdict - The decoded verdict.
+ * @returns The status artifact with its lane digests and first repair command.
+ * @category testing
+ * @since 0.0.0
+ */
+export const yeetStatusArtifactFromVerdictForTesting: {
+  (verdict: YeetVerdict): (path: string) => YeetStatusArtifact;
+  (path: string, verdict: YeetVerdict): YeetStatusArtifact;
+} = dual(2, artifactFromVerdict);
+
+/**
  * Expose next-command selection to focused tests.
  *
  * @category testing

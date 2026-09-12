@@ -38,6 +38,7 @@ export {
   yeetRerunDecisionText,
   yeetRerunJobListingCommand,
   yeetReviewThreadExcerpt,
+  yeetStatusArtifactFromVerdictForTesting,
   yeetStatusNextCommandForTesting,
   yeetStatusPathForTesting,
 } from "./internal/Status.ts";

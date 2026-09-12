@@ -1,4 +1,4 @@
-import { doctestFenceInfo, doctestSourceMarker } from "@beep/repo-cli/test/Docgen";
+import { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-cli/test/Docgen";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtils, FsUtilsLive, findRepoRoot, readPackageJsonFile, resolveWorkspacePackages } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -124,6 +124,18 @@ const expectSetupInputsCovered = Effect.fn("DoctestLaneTest.expectSetupInputsCov
 });
 
 describe("doctest lane fixture", { concurrent: false }, () => {
+  it("admits only workspace source files under src, in either TypeScript flavour", () => {
+    expect(isDoctestSourcePath("packages/example/src/index.ts")).toBe(true);
+    expect(isDoctestSourcePath("apps/example/src/App.tsx")).toBe(true);
+    expect(isDoctestSourcePath("packages/example/src/index.d.ts")).toBe(false);
+    expect(isDoctestSourcePath("packages/example/src/index.js")).toBe(false);
+    expect(isDoctestSourcePath("scripts/src/index.ts")).toBe(false);
+    expect(isDoctestSourcePath("packages/example/test/index.ts")).toBe(false);
+    expect(isDoctestSourcePath("packages/example/src/test/fixtures/index.ts")).toBe(false);
+    expect(isDoctestSourcePath("packages/example/src/node_modules/dep/index.ts")).toBe(false);
+    expect(isDoctestSourcePath("packages/example/src/.context/index.ts")).toBe(false);
+  });
+
   it.effect(
     "resolves every owner to non-empty in-source discovery and hashes its setup files",
     Effect.fnUntraced(function* () {

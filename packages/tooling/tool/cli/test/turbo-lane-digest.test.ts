@@ -108,6 +108,8 @@ describe("Turbo lane digests", () => {
 
       const beforeAny = yield* readTurboLaneDigest(root, "2026-09-12T05:00:00.000Z", ["lint:allowlist"]);
       expect(beforeAny).toEqual(O.none());
+      const unparseable = yield* readTurboLaneDigest(root, "not-a-timestamp", ["lint:allowlist"]);
+      expect(unparseable).toEqual(O.none());
 
       const noRuns = yield* readTurboLaneDigest(path.join(root, "elsewhere"), "2026-09-12T04:00:00.000Z", []);
       expect(noRuns).toEqual(O.none());
@@ -193,6 +195,14 @@ describe("Turbo lane digests", () => {
         cwd: root,
       });
       yield* recordTurboLaneLedgerRowForTesting(O.none(), outcome(child));
+      expect(yield* fs.exists(ledger)).toBe(false);
+      const unmatched = QualityTaskStep.make({
+        label: "ci:lint",
+        command: "bunx",
+        args: ["turbo", "run", "lint:nothing-ran", "--summarize"],
+        cwd: root,
+      });
+      yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(unmatched));
       expect(yield* fs.exists(ledger)).toBe(false);
       yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child));
       const declared = yield* readTurboLaneLedger(ledger);

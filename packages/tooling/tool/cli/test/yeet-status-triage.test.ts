@@ -3,6 +3,7 @@ import {
   GateUnproven,
   GhStatusCheck,
   PrCloseoutReport,
+  renderYeetLaneDigestBlock,
   renderYeetReviewThreadBlock,
   renderYeetStatusSummary,
   summarizeRemoteChecksForTesting,
@@ -12,7 +13,10 @@ import {
   YeetStatusSnapshot,
   YeetStatusSnapshotJson,
   YeetStatusWorktree,
+  YeetVerdict,
+  YeetVerdictLane,
   yeetReviewThreadExcerpt,
+  yeetStatusArtifactFromVerdictForTesting,
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { A } from "@beep/utils";
@@ -526,4 +530,35 @@ describe("yeet status snapshot rendering and encoding", () => {
       expect(decoded.unprovenGates).toStrictEqual([]);
     })
   );
+
+  it("projects verdict lanes with digests into the artifact and renders them", () => {
+    const lane = (id: string, inputDigest: O.Option<string>, status: "passed" | "failed") =>
+      YeetVerdictLane.make({
+        id,
+        label: id,
+        phase: "full",
+        status,
+        inputDigest,
+        ...(status === "failed" ? { repairCommand: `bun run beep ${id}` } : {}),
+      });
+    const verdict = YeetVerdict.make({
+      schemaVersion: "yeet-verdict/v2",
+      base: "origin/main",
+      branch: "feat/x",
+      committed: true,
+      createdAt: "2026-09-12T00:00:00.000Z",
+      head: "HEAD",
+      lanes: [lane("quality:knip", O.some("abc"), "passed"), lane("quality:check", O.none(), "failed")],
+      message: "one lane failed",
+      mode: "publish",
+      outcome: "failure",
+      packetPaths: [],
+      pushed: false,
+      runId: "feat_x",
+    });
+    const artifact = yeetStatusArtifactFromVerdictForTesting("verdict.json", verdict);
+    expect(artifact.laneDigests).toEqual([{ id: "quality:knip", inputDigest: "abc" }]);
+    expect(artifact.repairCommand).toBe("bun run beep quality:check");
+    expect(renderYeetLaneDigestBlock(artifact)).toBe("lane digests: 1 lane(s)\n  quality:knip: abc");
+  });
 });

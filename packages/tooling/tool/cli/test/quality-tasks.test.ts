@@ -59,6 +59,7 @@ import {
   FallowReportFinding,
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
   FlakeQuarantineArtifactJson,
+  foldTurboLaneDigests,
   GateOrderSeed,
   GateOrderSeedRow,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
@@ -115,6 +116,7 @@ import {
   runSqlIntegrationTestLaneForTesting,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
+  TurboLaneDigest,
   testTsgoPlanningForTesting,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
@@ -1265,6 +1267,49 @@ describe("quality task adapter", () => {
           (line) => decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)),
           { discard: true }
         );
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("hands a wrapper lane a ledger and records the digest its child declared", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        // The fixture stands in for `beep ci lane`: it declares one digest to the ledger the parent named.
+        yield* fs.writeFileString(
+          path.join(tempDir, "package.json"),
+          "{\"name\": \"wrapper-lane-fixture\", \"private\": true, \"scripts\": {\"beep\": \"bun -e \\\"const fs = require('node:fs'); const path = require('node:path'); const ledger = process.env.BEEP_TURBO_LANE_LEDGER; fs.mkdirSync(path.dirname(ledger), { recursive: true }); fs.appendFileSync(ledger, JSON.stringify({ digest: 'declared', summaryIds: ['run-1'], tasks: [{ taskId: '//#lint:typos', hash: 'h1', cacheStatus: 'HIT' }] }) + '\\\\\\\\n');\\\"\"}}"
+        );
+        const wrapper = QualityTaskStep.make({
+          label: "quality:lint",
+          command: "bun",
+          args: ["run", "beep", "ci", "lane", "lint"],
+          cwd: tempDir,
+        });
+        yield* runQualityTaskStreamingLaneGroup("ci:local", [["lint", wrapper, O.none()]]);
+        const report = yield* pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
+          O.getOrThrow,
+          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length),
+          decodeQualityTaskLaneRunReportJson
+        );
+        const expected = foldTurboLaneDigests([
+          TurboLaneDigest.make({
+            digest: "declared",
+            summaryIds: ["run-1"],
+            tasks: [{ taskId: "//#lint:typos", hash: "h1", cacheStatus: "HIT" }],
+          }),
+        ]);
+        expect(report.lanes[0]?.status).toBe("passed");
+        expect(report.lanes[0]?.inputDigest).toStrictEqual(O.map(expected, (digest) => digest.digest));
+        // The parent consumes the ledger once read.
+        const leftovers = yield* fs
+          .readDirectory(path.join(tempDir, ".beep", "quality", "lane-ledgers"))
+          .pipe(Effect.orElseSucceed(() => A.empty<string>()));
+        expect(leftovers).toEqual([]);
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
