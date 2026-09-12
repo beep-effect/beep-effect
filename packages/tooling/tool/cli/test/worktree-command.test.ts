@@ -21,6 +21,7 @@ import {
   WorktreeRemovalServiceLive,
   WorktreeRepositoryHash,
   WorktreeResidueManifest,
+  WorktreeUnpushedInspection,
   worktreeAddArgs,
   worktreeArchivePlan,
   worktreeArchiveRefArgs,
@@ -43,6 +44,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
+import type { WorktreeUpstreamState } from "@beep/repo-cli/commands/Worktree";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -359,6 +361,21 @@ describe("WorktreeResidueManifest", () => {
     })
   );
 
+  it("decodes a legacy receipt that predates the unpushed inspection", () => {
+    const decoded = S.decodeSync(removalReceiptJson)(
+      JSON.stringify({
+        targetPath: "/repo-worktrees/feature-x",
+        branch: "feat/feature-x",
+        reason: "clean",
+        manifest: null,
+        branchDeleted: false,
+      })
+    );
+
+    expect(O.isNone(decoded.unpushedInspection)).toBe(true);
+    expect(O.getOrThrow(decoded.branch)).toBe("feat/feature-x");
+  });
+
   it("round-trips arbitrary archive models through their JSON codecs", () => {
     expect(
       Effect.runSync(
@@ -601,6 +618,44 @@ describe("worktree output rendering", () => {
       expect(archivedLines).toContain("  untracked files: 0");
       expect(archivedLines).toContain("  branch deleted: feat/feature-x");
       expect(detachedLines).toContain("  branch deleted: (detached HEAD)");
+    }).pipe(provideScopedLayer(TestConsole.layer))
+  );
+
+  it.effect("names the default-branch range that judged a pruned upstream", () =>
+    Effect.gen(function* () {
+      const base = WorktreeRemovalReceipt.make({
+        targetPath: "/repo-worktrees/feature-x",
+        branch: O.some("feat/feature-x"),
+        reason: "unpushed-commits",
+        manifest: O.some(residueManifest(O.none(), [])),
+        branchDeleted: true,
+      });
+      const inspected = (upstream: WorktreeUpstreamState) =>
+        WorktreeRemovalReceipt.make({
+          ...base,
+          unpushedInspection: O.some(
+            WorktreeUnpushedInspection.make({ unpushed: true, baseRange: "origin/main..HEAD", upstream })
+          ),
+        });
+      const isUpstreamLine = Str.startsWith("  upstream:");
+      const prunedLines = yield* collectRemovalReceiptLines(
+        inspected({ _tag: "pruned", ref: "refs/remotes/origin/feat/feature-x" }),
+        true
+      );
+      const liveLines = yield* collectRemovalReceiptLines(
+        inspected({ _tag: "live", ref: "refs/remotes/origin/feat/feature-x" }),
+        true
+      );
+      const unsetLines = yield* collectRemovalReceiptLines(inspected({ _tag: "unset" }), true);
+      const legacyLines = yield* collectRemovalReceiptLines(base, true);
+
+      expect(O.isNone(base.unpushedInspection)).toBe(true);
+      expect(prunedLines).toContain(
+        "  upstream: refs/remotes/origin/feat/feature-x no longer resolves (pruned); unpushed commits were counted against origin/main..HEAD instead"
+      );
+      expect(A.some(liveLines, isUpstreamLine)).toBe(false);
+      expect(A.some(unsetLines, isUpstreamLine)).toBe(false);
+      expect(A.some(legacyLines, isUpstreamLine)).toBe(false);
     }).pipe(provideScopedLayer(TestConsole.layer))
   );
 });
@@ -1254,6 +1309,114 @@ describe("worktree git operations", () => {
         expect(cleanReceipt.branchDeleted).toBe(true);
         expect(yield* fs.exists(cleanPath)).toBe(false);
         expect(afterCleanRemoval).toEqual(beforeCleanRemoval);
+      })
+    )
+  );
+
+  it.effect("retires a lane whose upstream was pruned after merge and still preserves unpushed commits", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const removalService = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const configProvider = residueConfigProvider(context.worktreesRoot);
+        const removeArchived = (name: string, targetPath: string) =>
+          removalService
+            .remove(
+              WorktreeRemovalRequest.make({
+                name: NonEmptyTrimmedStr.make(name),
+                targetPath,
+                mainCheckout: context.mainCheckout,
+                branch: O.some(defaultWorktreeBranch(name)),
+                archive: true,
+                deleteBranch: false,
+                expectedHead: O.none(),
+              })
+            )
+            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider));
+        const doctorUnpushed = (targetPath: string) =>
+          resolveWorktreeContext(repoRoot).pipe(
+            Effect.flatMap(worktreeDoctorReportForContext),
+            Effect.map(
+              (report) => O.getOrThrow(A.findFirst(report.entries, (entry) => entry.path === targetPath)).unpushed
+            )
+          );
+        // GitHub deletes the head branch after the merge; the next `git fetch --prune`
+        // drops the remote-tracking ref while branch configuration keeps naming it.
+        const pruneUpstream = Effect.fn(function* (targetPath: string, branch: string) {
+          yield* runGit(repoRoot, ["push", "origin", "--delete", branch]);
+          yield* runGit(repoRoot, ["fetch", "--prune", "origin"]);
+          expect(yield* runGitText(targetPath, ["for-each-ref", "--format=%(upstream)", `refs/heads/${branch}`])).toBe(
+            `refs/remotes/origin/${branch}`
+          );
+          expect(yield* runGitText(targetPath, ["for-each-ref", `refs/remotes/origin/${branch}`])).toBe("");
+        });
+
+        const mergedBranch = defaultWorktreeBranch("merged-lane");
+        const mergedPath = yield* addWorktree(context, "merged-lane", mergedBranch);
+        yield* runGit(mergedPath, ["push", "--set-upstream", "origin", mergedBranch]);
+        expect(yield* doctorUnpushed(mergedPath)).toBe(false);
+        yield* pruneUpstream(mergedPath, mergedBranch);
+        expect(yield* doctorUnpushed(mergedPath)).toBe(false);
+
+        const mergedReceipt = yield* removeArchived("merged-lane", mergedPath);
+
+        expect(mergedReceipt.reason).toBe("clean");
+        expect(O.isNone(mergedReceipt.manifest)).toBe(true);
+        expect(O.getOrThrow(mergedReceipt.unpushedInspection)).toEqual(
+          WorktreeUnpushedInspection.make({
+            unpushed: false,
+            baseRange: "origin/main..HEAD",
+            upstream: { _tag: "pruned", ref: `refs/remotes/origin/${mergedBranch}` },
+          })
+        );
+        expect(yield* fs.exists(mergedPath)).toBe(false);
+
+        // The default branch comes from origin/HEAD, not a hardcoded main.
+        yield* runGit(repoRoot, ["branch", "trunk", "main"]);
+        yield* runGit(repoRoot, ["push", "origin", "trunk"]);
+        yield* runGit(repoRoot, ["remote", "set-head", "origin", "trunk"]);
+        const unpushedBranch = defaultWorktreeBranch("unpushed-lane");
+        const unpushedPath = yield* addWorktree(context, "unpushed-lane", unpushedBranch);
+        yield* runGit(unpushedPath, ["push", "--set-upstream", "origin", unpushedBranch]);
+        yield* fs.writeFileString(path.join(unpushedPath, "README.md"), "# unpushed lane change\n");
+        yield* runGit(unpushedPath, ["commit", "-am", "unpushed lane commit"]);
+        const unpushedHead = yield* runGitText(unpushedPath, ["rev-parse", "HEAD"]);
+        yield* pruneUpstream(unpushedPath, unpushedBranch);
+        expect(yield* doctorUnpushed(unpushedPath)).toBe(true);
+
+        const unpushedReceipt = yield* removeArchived("unpushed-lane", unpushedPath);
+        const manifest = O.getOrThrow(unpushedReceipt.manifest);
+
+        expect(unpushedReceipt.reason).toBe("unpushed-commits");
+        expect(yield* runGitText(repoRoot, ["rev-parse", manifest.archiveRef])).toBe(unpushedHead);
+        expect(O.getOrThrow(unpushedReceipt.unpushedInspection)).toEqual(
+          WorktreeUnpushedInspection.make({
+            unpushed: true,
+            baseRange: "origin/trunk..HEAD",
+            upstream: { _tag: "pruned", ref: `refs/remotes/origin/${unpushedBranch}` },
+          })
+        );
+        expect(yield* collectRemovalReceiptLines(unpushedReceipt, true)).toContain(
+          `  upstream: refs/remotes/origin/${unpushedBranch} no longer resolves (pruned); unpushed commits were counted against origin/trunk..HEAD instead`
+        );
+        expect(yield* fs.exists(unpushedPath)).toBe(false);
+
+        // A dangling origin/HEAD names no default branch, so the probe falls back to main
+        // instead of archiving a merged lane as unpushed.
+        yield* runGit(repoRoot, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/gone"]);
+        const danglingBranch = defaultWorktreeBranch("dangling-lane");
+        const danglingPath = yield* addWorktree(context, "dangling-lane", danglingBranch);
+        yield* runGit(danglingPath, ["push", "--set-upstream", "origin", danglingBranch]);
+        yield* pruneUpstream(danglingPath, danglingBranch);
+
+        const danglingReceipt = yield* removeArchived("dangling-lane", danglingPath);
+
+        expect(danglingReceipt.reason).toBe("clean");
+        expect(O.isNone(danglingReceipt.manifest)).toBe(true);
+        expect(O.getOrThrow(danglingReceipt.unpushedInspection).baseRange).toBe("origin/main..HEAD");
+        expect(yield* fs.exists(danglingPath)).toBe(false);
       })
     )
   );

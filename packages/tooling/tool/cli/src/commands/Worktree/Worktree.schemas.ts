@@ -318,12 +318,96 @@ export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`W
 ) {}
 
 /**
+ * Where a branch's configured upstream stands when unpushed commits are counted.
+ *
+ * **Details**
+ *
+ * `unset` covers detached checkouts and branches without an upstream. `live`
+ * names an upstream ref that resolves, so `<ref>..HEAD` can be counted.
+ * `pruned` names an upstream that branch configuration still points at but
+ * that no longer exists locally: `git fetch --prune` drops
+ * `refs/remotes/origin/<branch>` once the hosted branch is deleted after a
+ * merge, so the remote default branch has to answer in its place.
+ *
+ * **Example** (Describe a pruned upstream)
+ *
+ * ```ts
+ * import { WorktreeUpstreamState } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const state: WorktreeUpstreamState = { _tag: "pruned", ref: "refs/remotes/origin/feat/feature-x" }
+ * console.log(state._tag) // "pruned"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WorktreeUpstreamState = S.TaggedUnion({
+  unset: {},
+  live: { ref: S.String },
+  pruned: { ref: S.String },
+}).pipe(
+  $I.annoteSchema("WorktreeUpstreamState", {
+    description:
+      "A branch's configured upstream as the unpushed-commit probe sees it: unset, live, or pruned after a merge.",
+  })
+);
+
+/**
+ * Decoded upstream-state union.
+ *
+ * @see {@link WorktreeUpstreamState} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
+
+/**
+ * Answer of the unpushed-commit probe shared by doctor and archive retirement.
+ *
+ * **Details**
+ *
+ * `baseRange` is the comparison against the remote default branch
+ * (`origin/<default>..HEAD`, or plain `HEAD` when that ref is absent). When
+ * `upstream` is `pruned`, no upstream range could be counted, so `baseRange`
+ * decided `unpushed` on its own instead of aborting the probe.
+ *
+ * **Example** (Record a probe that fell back to the default branch)
+ *
+ * ```ts
+ * import { WorktreeUnpushedInspection } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const inspection = WorktreeUnpushedInspection.make({
+ *   unpushed: false,
+ *   baseRange: "origin/main..HEAD",
+ *   upstream: { _tag: "pruned", ref: "refs/remotes/origin/feat/feature-x" },
+ * })
+ * console.log(inspection.upstream._tag) // "pruned"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeUnpushedInspection extends S.Class<WorktreeUnpushedInspection>($I`WorktreeUnpushedInspection`)(
+  {
+    unpushed: S.Boolean,
+    baseRange: S.String,
+    upstream: WorktreeUpstreamState,
+  },
+  $I.annote("WorktreeUnpushedInspection", {
+    description:
+      "Whether HEAD holds commits absent from the remote default branch or the branch upstream, with the ranges that answered.",
+  })
+) {}
+
+/**
  * Result returned after a worktree removal completes.
  *
  * **Details**
  *
  * `manifest` is present only when archive mode found dirty state or unpushed
  * commits. Clean archive removals therefore leave no residue directory.
+ * `unpushedInspection` records how archive mode judged unpushed commits and
+ * is absent for legacy removals, which never inspect them.
  *
  * **Example** (Represent a clean archive removal)
  *
@@ -351,6 +435,10 @@ export class WorktreeRemovalReceipt extends S.Class<WorktreeRemovalReceipt>($I`W
     reason: WorktreeResidueReason,
     manifest: S.OptionFromNullOr(WorktreeResidueManifest),
     branchDeleted: S.Boolean,
+    unpushedInspection: S.OptionFromNullOr(WorktreeUnpushedInspection).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.withDecodingDefaultKey(Effect.succeed(null))
+    ),
   },
   $I.annote("WorktreeRemovalReceipt", {
     description: "Completed worktree removal receipt with optional preserved residue manifest.",
