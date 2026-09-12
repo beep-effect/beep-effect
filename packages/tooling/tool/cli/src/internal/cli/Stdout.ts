@@ -44,21 +44,21 @@ const noop = (): void => undefined;
  * `error`, `warn`, `trace`, and failed `assert` lines go through `process.stderr.write`. Grouping,
  * counting, and timing calls render their arguments as plain lines or nothing at all.
  *
- * **Example** (Provide the stream console to a program)
- *
- * ```ts
- * import { streamConsole } from "@beep/repo-cli/internal/cli/Stdout"
- * import { Console, Effect } from "effect"
- *
- * const program = Console.log("hello").pipe(Effect.provideService(Console.Console, streamConsole))
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
  * **Details**
  *
  * The stream path queues a write the kernel pipe buffer cannot take and drains it from the event
  * loop, so a large rendered block arrives whole. A hosted runner kept exactly the first 64 KiB of
  * one `console.log` and dropped the rest, including the Turbo footer naming the failed task.
+ *
+ * **Example** (Provide the stream console to a program)
+ *
+ * ```ts
+ * import { streamConsole } from "@beep/repo-cli/test/Cli"
+ * import { Console, Effect } from "effect"
+ *
+ * const program = Console.log("hello").pipe(Effect.provideService(Console.Console, streamConsole))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
  *
  * @category services
  * @since 0.0.0
@@ -93,18 +93,18 @@ export const streamConsole: Console.Console = {
  * Continue once every line written through the stream console has reached the kernel. Used
  * before a forced process exit so a queued render is not dropped.
  *
- * **Example** (Drain before exiting)
- *
- * ```ts
- * import { drainProcessStreams } from "@beep/repo-cli/internal/cli/Stdout"
- *
- * drainProcessStreams(() => console.log("drained"))
- * ```
- *
  * **Gotchas**
  *
  * Only writes made through `streamConsole` are tracked; a raw `process.stdout.write` elsewhere
  * is not waited for. When nothing is in flight the continuation runs synchronously.
+ *
+ * **Example** (Drain before exiting)
+ *
+ * ```ts
+ * import { drainProcessStreams } from "@beep/repo-cli/test/Cli"
+ *
+ * drainProcessStreams(() => console.log("drained"))
+ * ```
  *
  * @param onDrained - Continuation invoked once every tracked write has completed.
  * @category services

@@ -211,7 +211,7 @@ const selectTasks = (summary: TurboRunSummary, taskNames: ReadonlyArray<string>)
  * @param summary - A decoded Turbo run summary.
  * @param taskNames - Bare task names (`lint:allowlist`, never `//#lint:allowlist`) to fold.
  * @returns The digest, or `None` when no selected task exists or one of them failed.
- * @category digests
+ * @category mapping
  * @since 0.0.0
  */
 export const turboLaneDigestFromSummary: {
@@ -260,7 +260,7 @@ const newestRowsByTask = (rows: ReadonlyArray<TurboLaneTaskHash>): ReadonlyArray
  * @param startedAtIso - ISO timestamp the lane step started at; older summaries are ignored.
  * @param taskNames - Bare task names the lane invoked.
  * @returns The folded digest, or `None` when no fresh passing summary covers the tasks.
- * @category digests
+ * @category decoding
  * @since 0.0.0
  */
 export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")(function* (
@@ -310,7 +310,7 @@ export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")
  * console.log(TURBO_LANE_LEDGER_ENV) // "BEEP_TURBO_LANE_LEDGER"
  * ```
  *
- * @category digests
+ * @category constants
  * @since 0.0.0
  */
 export const TURBO_LANE_LEDGER_ENV = "BEEP_TURBO_LANE_LEDGER";
@@ -338,7 +338,7 @@ export const TURBO_LANE_LEDGER_ENV = "BEEP_TURBO_LANE_LEDGER";
  *
  * @param digests - Digests in the order the child declared them.
  * @returns The folded digest, or `None` when nothing was declared.
- * @category digests
+ * @category folding
  * @since 0.0.0
  */
 export const foldTurboLaneDigests = (digests: ReadonlyArray<TurboLaneDigest>): O.Option<TurboLaneDigest> =>
@@ -365,7 +365,7 @@ export const foldTurboLaneDigests = (digests: ReadonlyArray<TurboLaneDigest>): O
  * console.log(row._tag) // "closed"
  * ```
  *
- * @category digests
+ * @category models
  * @since 0.0.0
  */
 export const TurboLaneLedgerRow = S.Union([
@@ -378,7 +378,7 @@ export const TurboLaneLedgerRow = S.Union([
 /**
  * The decoded shape of {@link TurboLaneLedgerRow}.
  *
- * @category digests
+ * @category models
  * @since 0.0.0
  */
 export type TurboLaneLedgerRow = typeof TurboLaneLedgerRow.Type;
@@ -416,7 +416,7 @@ const appendLedgerRow = Effect.fn("QualityTasks.appendLedgerRow")(function* (
  *
  * @param ledgerPath - The JSONL file the parent named through `TURBO_LANE_LEDGER_ENV`.
  * @param digest - The digest of one direct Turbo step the child ran.
- * @category digests
+ * @category encoding
  * @since 0.0.0
  */
 export const appendTurboLaneLedger = Effect.fn("QualityTasks.appendTurboLaneLedger")(function* (
@@ -441,7 +441,7 @@ export const appendTurboLaneLedger = Effect.fn("QualityTasks.appendTurboLaneLedg
  *
  * @param ledgerPath - The JSONL file the parent named through `TURBO_LANE_LEDGER_ENV`.
  * @param attempted - Direct Turbo steps this group tried to declare, declared or not.
- * @category digests
+ * @category encoding
  * @since 0.0.0
  */
 export const closeTurboLaneLedger = Effect.fn("QualityTasks.closeTurboLaneLedger")(function* (
@@ -471,7 +471,7 @@ export const closeTurboLaneLedger = Effect.fn("QualityTasks.closeTurboLaneLedger
  *
  * @param ledgerPath - The JSONL file the parent named through `TURBO_LANE_LEDGER_ENV`.
  * @returns The folded digest, or `None` when the ledger is absent, unclosed, or incomplete.
- * @category digests
+ * @category decoding
  * @since 0.0.0
  */
 export const readTurboLaneLedger = Effect.fn("QualityTasks.readTurboLaneLedger")(function* (ledgerPath: string) {
