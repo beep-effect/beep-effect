@@ -1,13 +1,19 @@
 # Roadmap
 
-Freshness: 2026-08-17. Re-eval after the exploration-portfolio closeout:
-Lane 3 finished its entire scope and hands its slot to
-[`packet-control-plane-core`](../goals/packet-control-plane-core/README.md);
-[`agentic-cad-patent-tooling`](../goals/agentic-cad-patent-tooling/README.md)
-queues in Lane 1 behind the practice-kg-mcp handoff; the eight zero-execution
-goals graduated 2026-07-14 move to the parked/queue section under the
-portfolio-as-queue doctrine. Prior freshness: 2026-07-27 (first-user delivery
-decision); 2026-07-14 (portfolio consolidation, PR #401).
+Freshness: 2026-09-12. Re-eval after the 2026-08-25 → 2026-09-12 machinery
+sprint: 120 PRs merged and none of them touched Lane 1, so this file now says
+what the portfolio actually did — **machinery-first until
+[`time-to-certainty`](../goals/time-to-certainty/README.md) C4 lands or Lane
+1's attorney-side blockers clear, whichever comes first** — and gives that
+order an expiry instead of pretending the 2026-08-17 lane map held.
+[`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
+closed 2026-08-26 and its Lane 3 slot passes to `time-to-certainty`; the
+[`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md) revisit
+gate is satisfied but the revisit waits for the C4 proof ledger; every active
+or paused packet the 2026-08-17 map did not name is reconciled below; three
+untouched 2026-08-13 graduations are paused with resume conditions. Prior
+freshness: 2026-08-17 (exploration-portfolio closeout); 2026-07-27
+(first-user delivery decision); 2026-07-14 (portfolio consolidation, PR #401).
 This file supersedes the *frame* of
 [`docs/mirror/2026-07-08-roadmap.md`](./mirror/2026-07-08-roadmap.md) (which
 remains a dated personal snapshot). Where the two disagree, this file wins.
@@ -58,26 +64,47 @@ checks went from hours to minutes with faster backpressure, and its named
 consumer is every subsequent goal — most concretely the paused
 goal-portfolio-driver, which is uneconomic at hours-per-iteration.
 
-**The one finish-first goal (2026-08-17):**
+**The one finish-first goal (2026-09-12):**
+[`time-to-certainty`](../goals/time-to-certainty/README.md) replaces
 [`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-is the single accelerator that should *finish before the rest* — it is the
-trust substrate for autonomous execution. The dependency chain is explicit:
-CI speed (paid) + control-plane state truth (this goal) → the
-goal-portfolio-driver revisit.
+(closed 2026-08-26, 6/6) as the single accelerator that should *finish before
+the rest*. It passes both accelerator tests: its named consumers are every
+Yeet closeout (proof reuse, cheap-gates-first ordering) and the paused
+goal-portfolio-driver, and its payback lands before any Lane 1 phase would
+finish anyway. The dependency chain is now: CI speed (paid) + control-plane
+state truth (paid) + proof certainty (this goal, C4 shadow mode with a
+disagreement report) → the goal-portfolio-driver revisit.
+
+**Machinery-first, with an expiry (2026-09-12):** between 2026-08-25 and
+2026-09-12 the portfolio merged 120 PRs, all machinery, and Lane 1 has had no
+merged PR since 2026-07-30. That order is ratified here as the realized
+priority, on two conditions: it ends when `time-to-certainty` C4 lands or
+when Lane 1's attorney-side inputs arrive (practice-kg-mcp P5: the AC-2
+provenance defect B-2 and Tom's G-1..G-5 calls), whichever comes first; and
+no new machinery packet starts a lane slot while it holds — machinery work
+is the Lane 3 queue below, drained in order, not a license to scaffold.
 
 Execution note: [`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md)
-is **paused (2026-08-17)** pending its revisit gate — exploration wrap-up
-complete + packet-control-plane-core closed. Its 2026-07-14 locked 25-packet
-queue is stale and will be relocked from control-plane derived state at
-revisit; until then the portfolio drains through ordinary operator-driven
-sessions. Priority stays owned by this file; lifecycle stays owned by
-tracked packet manifests. Run `bun run beep goals index` for the local
-generated portfolio view.
+stays **paused**; its revisit gate (exploration wrap-up complete +
+packet-control-plane-core closed) was verified satisfied on 2026-09-12, but
+the relock needs the C4 proof ledger to score what is certain, so the revisit
+is sequenced immediately after C4. Its 2026-07-14 locked 25-packet queue is
+stale (8 of 25 drained, 13 dormant); until the relock the portfolio drains
+through ordinary operator-driven sessions in the order this file gives.
+Priority stays owned by this file; lifecycle stays owned by tracked packet
+manifests. Run `bun run beep goals index` for the local generated portfolio
+view.
 
 ### Lane 1 — Product
 
-**Live front (this week):**
-[`practice-kg-mcp`](../goals/practice-kg-mcp/README.md) — the first-user
+**Live front (stalled since 2026-07-30; first to resume):**
+[`practice-kg-mcp`](../goals/practice-kg-mcp/README.md) — P0–P4 shipped
+(bundle, host package, OA candidate claims, .mcpb distribution); P5
+acceptance evidence has been in progress since 2026-07-30 with no commit
+since, waiting on the AC-2 provenance defect (B-2) and Tom's G-1..G-5 calls.
+Resume order is P5 close → P6 graph-integrity repair → P7 server hardening →
+P8 handoff, each its own PR; P6 and P7 do not need Tom and may start while
+P5 waits. The cut itself is unchanged — the first-user
 delivery cut (decision 2026-07-27): a read-only, local-first stdio MCP server
 over a portable data bundle (deterministic docket-family spine + OA candidate
 claims + email edges + corpus full-text) into Tom's Claude Desktop, .mcpb
@@ -123,6 +150,19 @@ stack distribution packet (revives
 currently in conversation; per-firm KG onboarding is a separate later packet
 gated on first-user dogfood evidence.
 
+**Practice operations (attended, slot-free; added 2026-09-12):** packets
+that provision Tom's practice rather than ship product code, each gated on an
+operator-attended step and therefore outside the lane count:
+[`practice-m365-contacts`](../goals/practice-m365-contacts/README.md) and
+[`practice-mail-backfill`](../goals/practice-mail-backfill/README.md)
+(graduated 2026-08-30 from practice-office-provisioning; M365 admin consent),
+and
+[`oppold-corpus-salvage-restoration`](../goals/oppold-corpus-salvage-restoration/README.md)
+(graduated 2026-08-24; feeds the practice-kg bundle v2 corpus gate above).
+[`lejeune-demo-corpus-and-ontology`](../goals/lejeune-demo-corpus-and-ontology/README.md)
+(3/4, graduated 2026-08-26) closes as a demo deliverable on the same footing;
+its lab companion is parked below.
+
 P3 Box sync shipped in PR #386; the live-Box/OAuth deferral is recorded in
 the intake packet as a tracked exception. The
 [`professional-desktop-adversarial-qa`](../goals/professional-desktop-adversarial-qa/README.md)
@@ -133,7 +173,17 @@ clean; it does not consume a lane slot.
 
 Only packets that directly feed Lane 1:
 
-- [`agentic-professional-runtime`](../goals/agentic-professional-runtime/README.md) (3/5)
+- [`agentic-professional-runtime`](../goals/agentic-professional-runtime/README.md)
+  (3/5, untouched since 2026-07-14; resumes when practice-kg-mcp P8 hands off).
+- [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
+  (2/4) — the span-provenance substrate whose close unblocks the dormant
+  chain `citation-extraction-engine` → `law-doc-structure-oa-slice` and the
+  paused `attributed-multi-claim-span`; the cheapest Lane 1 unlock in the
+  portfolio (added 2026-09-12).
+- [`patent-document-schema`](../goals/patent-document-schema/README.md) (2/5)
+  — closes to unblock `document-ast-pattern-classification` →
+  `spar-document-annotation-wire` → `folio-lynx-taxonomy-browse` (added
+  2026-09-12).
 - [`semantic-foundation`](../goals/semantic-foundation/README.md) (3/6) — closed
   after **M1 Intake-Serving Semantic Seed**. Feeder research phases R1-R4 are
   complete; M2-M4 remain gated future capabilities.
@@ -147,15 +197,48 @@ The previous Harness & metrics scope closed whole:
 [`harness-otel-adoption`](../goals/harness-otel-adoption/README.md),
 [`harness-hygiene-mechanical`](../goals/harness-hygiene-mechanical/README.md),
 and [`ai-metrics-stack`](../goals/ai-metrics-stack/README.md) are all
-completed-retained (2026-08-17 re-eval). The freed slot goes to:
+completed-retained (2026-08-17 re-eval), and
+[`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
+(6/6, completed-retained 2026-08-26) took and finished the freed slot: the
+packet system's event fold, guarded writers, and derived projections,
+self-hosting in advisory mode per D9. The slot passes (2026-09-12) to:
 
-- [`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-  (6/6, completed-retained 2026-08-26) — the packet system's event fold,
-  guarded writers, and derived projections. It is the instrument that makes
-  the *next* roadmap re-eval
-  mechanical (derived pulse: what can start, what is blocked, what awaits the
-  operator), scaffolded 2026-08-17 from the ratified packet-system-redesign MAP
-  with proofs pre-specified. Self-hosts in advisory mode per D9.
+- [`time-to-certainty`](../goals/time-to-certainty/README.md) (P1 in
+  progress; the C3.3–C3.6 package-task train is PR #1102) — the slot holder
+  and the finish-first goal above. Its close is C4 shadow mode with a
+  disagreement report; P3 hands the ordering to the portfolio-driver revisit.
+
+**Lane 3 queue (drained in this order, one slot, no new starts while
+machinery-first holds):**
+
+1. [`ci-lane-economics`](../goals/ci-lane-economics/README.md) P3 — the
+   2026-09-04 → 2026-09-11 admission census; its close fires
+   [`ci-fleet-endgame`](../goals/ci-fleet-endgame/README.md) P6 (4/7).
+2. [`effect-vitest-canon`](../goals/effect-vitest-canon/README.md) (7/11) —
+   sequenced after time-to-certainty C3.4 merges; both edit
+   `vitest.shared.ts`.
+3. [`runner-trust-boundary`](../goals/runner-trust-boundary/README.md) (8/9)
+   and
+   [`schema-utils-selective-codec-statics`](../goals/schema-utils-selective-codec-statics/README.md)
+   (4/6) — closeouts, no gate.
+4. [`boolean-creep`](../goals/boolean-creep/README.md) (2/6) — after the
+   operator ratifies GATE 1.
+5. [`knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md)
+   (3/7),
+   [`coding-agent-effectiveness-evidence-loop`](../goals/coding-agent-effectiveness-evidence-loop/README.md)
+   (2/9) and
+   [`nightly-research-routine`](../goals/nightly-research-routine/README.md)
+   (1/5) — fillers while the slot holder waits on review.
+6. [`slice-topology-audit`](../goals/slice-topology-audit/README.md) (0/5) →
+   [`canonical-proof-reconciliation`](../goals/canonical-proof-reconciliation/README.md)
+   (0/5, blockedBy the audit) — after C4.
+7. The Turborepo quartet, parked below — after C4;
+   `turborepo-task-qualification` first, the other three in parallel behind
+   its early contract.
+
+[`codex-security-findings-2026-09-08`](../goals/codex-security-findings-2026-09-08/README.md)
+runs under the maintenance rule (all thirteen findings shipped in PRs #1026,
+#1032 and #1037; closeout only) and consumes no slot.
 
 ### Labs — slot-free canaries (2026-08-24)
 
@@ -164,12 +247,16 @@ A goal packet whose code home is a lab (`apps/labs/*`, ceremony-exempt per
 and that ships no product scope does not consume a lane slot; it is listed here
 so the map stays true.
 
-- [`semantica-canary`](../goals/semantica-canary/README.md) — the staged
-  Semantica-port canary C0→C1→C2 (headless, F1 + W1, replay-identical
-  `EvalReport`s), graduated from
-  [`explorations/semantica-lab`](../explorations/semantica-lab/README.md);
-  [`openai-driver`](../goals/openai-driver/README.md) rides as its enabling
-  driver (C1 embeddings).
+- [`semantica-canary`](../goals/semantica-canary/README.md) — closed
+  (completed-retained; PR #996) with
+  [`openai-driver`](../goals/openai-driver/README.md) as its enabling driver.
+  Its three 2026-09-03 successors take the Labs list (added 2026-09-12):
+  [`semantica-atlas-sync`](../goals/semantica-atlas-sync/README.md) first
+  (the verdict lane), then
+  [`semantica-storage-inversion`](../goals/semantica-storage-inversion/README.md)
+  after atlas-sync P0, with
+  [`semantica-reasoning-spike`](../goals/semantica-reasoning-spike/README.md)
+  P1 (fixture only) free to run alongside and P2+ after the storage verdict.
 
 ### Maintenance rule (always allowed, any packet, any lane state)
 
@@ -240,14 +327,50 @@ renders their current local status view.
 | [`voice-composer-slice`](../goals/voice-composer-slice/README.md) | Voice capture re-enters the product bet. |
 | [`belief-view-engine`](../goals/belief-view-engine/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or an epistemic consumer pulls it. |
 | [`model-arrangement-admission-core`](../goals/model-arrangement-admission-core/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or the approval-gate consumer pulls it. |
+| [`attributed-multi-claim-span`](../goals/attributed-multi-claim-span/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution, no blocker recorded). Resumes when `citation-verified-span-substrate` closes and a Lane 2 slot pulls the LangExtract-to-ClaimGate proof. |
+| [`effect-native-legal-eval`](../goals/effect-native-legal-eval/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes when a Lane 2 slot pulls the C&H baseline; `tracked-changes-ingest-wedge` is blockedBy it and waits with it. |
+| [`patent-drafting-episode-ledger`](../goals/patent-drafting-episode-ledger/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes after practice-kg-mcp P8 hands off and `agentic-professional-runtime` closes; also needs `citation-verified-span-substrate`. |
+| [`turborepo-task-qualification`](../goals/turborepo-task-qualification/README.md), [`turborepo-cache-conformance`](../goals/turborepo-cache-conformance/README.md), [`turborepo-cache-trust-observability`](../goals/turborepo-cache-trust-observability/README.md), [`turborepo-quality-cache-adoption`](../goals/turborepo-quality-cache-adoption/README.md) | Scaffolded paused 2026-09-08. Lane 3 queue item 7: after time-to-certainty C4, qualification first, the other three in parallel behind its early contract. |
+| [`lejeune-knowledge-desk-lab`](../goals/lejeune-knowledge-desk-lab/README.md) | Paused 2026-08-26. Resumes when `lejeune-demo-corpus-and-ontology` closes and a pitch date exists. |
+| [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md) | Paused 2026-08-23 (1/8). Resumes when a Lane 3 slot frees and a capped-step incident recurs. |
+| [`configurable-full-document-editor`](../goals/configurable-full-document-editor/README.md) | Paused 2026-08-24. Resumes when intake P5 (viewer) pulls an editor surface. |
 
-Beyond `domain-kernel-hardening`, this cohort has two vintages. The eight
+Beyond `domain-kernel-hardening`, this cohort has three vintages. The eight
 rows through `voice-composer-slice` were graduated 2026-07-14 and saw zero
 execution; the 2026-08-17 re-eval moved them here explicitly rather than
 leaving them implied-active, and their manifests stay `active` (they are
 executable) while this file owns the fact that they are queued, not in
-flight. The last two rows were scaffolded `paused` on 2026-08-17 as queue
-goals; their manifests already record that lifecycle.
+flight. `belief-view-engine` and `model-arrangement-admission-core` were
+scaffolded `paused` on 2026-08-17 as queue goals. The rows from
+`attributed-multi-claim-span` on were added at the 2026-09-12 re-eval: the
+three 2026-08-13 graduations that `goals doctor` flagged as stale-active
+(21+ days untouched, no blocker, no status note) were paused via
+`set-status` in the same PR, and the paused packets that graduated without
+lane rows since 2026-08-17 now carry their resume conditions here.
+
+**2026-08-13 vintage, still `active` (queued, not in flight):** the rest of
+that graduation cohort is chained and waits on its `blockedBy` edges rather
+than on this file —
+[`document-ast-pattern-classification`](../goals/document-ast-pattern-classification/README.md)
+→ [`spar-document-annotation-wire`](../goals/spar-document-annotation-wire/README.md)
+→ [`folio-lynx-taxonomy-browse`](../goals/folio-lynx-taxonomy-browse/README.md)
+behind `patent-document-schema`;
+[`citation-extraction-engine`](../goals/citation-extraction-engine/README.md)
+and [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md)
+behind `citation-verified-span-substrate`;
+[`tracked-changes-ingest-wedge`](../goals/tracked-changes-ingest-wedge/README.md)
+behind the paused `effect-native-legal-eval`;
+[`law-docketing-patent-spine`](../goals/law-docketing-patent-spine/README.md)
+⇄ [`law-docketing-reliability`](../goals/law-docketing-reliability/README.md)
+as a pair, also behind `law-doc-structure-oa-slice`; and
+[`thread-virtualization`](../goals/thread-virtualization/README.md),
+[`epistemic-memory-retention-projections`](../goals/epistemic-memory-retention-projections/README.md),
+[`agentic-governance-laws`](../goals/agentic-governance-laws/README.md),
+[`epistemic-contradiction-detection`](../goals/epistemic-contradiction-detection/README.md),
+[`epistemic-contradiction-triage`](../goals/epistemic-contradiction-triage/README.md)
+and [`openclaw-workstation-agent`](../goals/openclaw-workstation-agent/README.md),
+which carry their own status notes and resume when a Lane 1 or Lane 2 slot
+pulls them. None of these starts while machinery-first holds.
 
 Completed packets record their own reopening triggers; deleted packets' living
 visions were re-captured under `explorations/`:
@@ -267,10 +390,24 @@ lane slot — NEXT/LATER entries name candidates for freed slots; they do not
 bypass the slot requirement. **Lab-canary exception (2026-08-24):** a packet whose
 code home is a lab and that ships no product scope graduates slot-free into the
 Labs list above, with its enabling driver packets riding along. **Drift note
-(2026-08-24):** `ci-step-watchdog` (#773), `skill-contract-kernel` (#779),
-`configurable-full-document-editor` (#781) and
-`oppold-corpus-salvage-restoration` (#782) graduated without lane entries;
-reconcile them at the next re-eval rather than pretending the rule held. The gold-intake cohort's
+(2026-08-24, reconciled 2026-09-12):** `ci-step-watchdog` (#773),
+`skill-contract-kernel` (#779), `configurable-full-document-editor` (#781)
+and `oppold-corpus-salvage-restoration` (#782) graduated without lane
+entries; they now sit, respectively, in the parked table, closed
+(completed-retained), in the parked table, and under Lane 1 practice
+operations. The same reconciliation placed every other active or paused
+packet the 2026-08-17 map did not name: `time-to-certainty`,
+`effect-vitest-canon`, `boolean-creep`, `runner-trust-boundary`,
+`schema-utils-selective-codec-statics`, `slice-topology-audit`,
+`canonical-proof-reconciliation`, `codex-security-findings-2026-09-08` and
+the Turborepo quartet in Lane 3 or its queue; the three `semantica-*`
+successors in Labs; `practice-m365-contacts`, `practice-mail-backfill` and
+`lejeune-demo-corpus-and-ontology` under Lane 1 practice operations;
+`lejeune-knowledge-desk-lab` parked; `citation-verified-span-substrate` and
+`patent-document-schema` in Lane 2 as chain unlocks; the 2026-08-13 vintage
+listed under the parked table; and `todox-marketing-site` closed (#1101).
+The rule held for none of them; the funnel policy stands, and the next
+graduation names its lane row in the same PR. The gold-intake cohort's
 pre-drafted DECISIONS files are the shaping queue;
 `bun run beep explore atlas` renders the local status board from D3 state.
 

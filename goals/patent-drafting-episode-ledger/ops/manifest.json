@@ -3,13 +3,14 @@
   "initiative": {
     "id": "patent-drafting-episode-ledger",
     "title": "Patent Drafting Episode Ledger",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-09-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/patent-drafting-episode-ledger",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "2026-09-12: paused at the roadmap re-eval (graduated 2026-08-13, zero execution, flagged stale-active by goals doctor). Resumes after practice-kg-mcp P8 hands off and goals/agentic-professional-runtime closes; also needs goals/citation-verified-span-substrate; see the docs/ROADMAP.md parked table.",
   "mission": "Ship the law-owned DraftingEpisode, support-set promotion gate, answer annex, and rebuildable projection proof.",
   "executionCapable": true,
   "reflectionRequired": true,
