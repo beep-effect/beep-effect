@@ -2274,9 +2274,27 @@ const collectStepOutputInternal = Effect.fn("QualityTasks.collectStepOutput")(fu
   return yield* collectResolvedStepOutput(resolved);
 });
 
+const STEP_OUTPUT_LOG_CHUNK_CHARS = 32 * 1024;
+
+// A hosted runner kept exactly the first 64 KiB of one large console write and dropped the rest
+// (round 7 of #1102 rendered 65 590 bytes of a 130 KiB policy block, footer included in the loss),
+// so captured output is logged in newline-aligned chunks small enough to land whole.
+const chunkStepOutput = (output: string): ReadonlyArray<string> =>
+  A.unfold(0, (start) => {
+    if (start >= output.length) {
+      return O.none();
+    }
+    const limit = Math.min(start + STEP_OUTPUT_LOG_CHUNK_CHARS, output.length);
+    const newline = output.lastIndexOf("\n", limit - 1);
+    const end = limit === output.length || newline < start ? limit : newline;
+    const next = end < output.length && output[end] === "\n" ? end + 1 : end;
+    return O.some([output.slice(start, end), next] as const);
+  });
+
 const renderStepOutput = Effect.fn("QualityTasks.renderStepOutput")(function* (result: QualityTaskStepOutput) {
   if (Str.isNonEmpty(result.output)) {
-    yield* Console.log(`[beep-cli] ${result.step.label} output:\n${result.output}`);
+    yield* Console.log(`[beep-cli] ${result.step.label} output:`);
+    yield* Effect.forEach(chunkStepOutput(result.output), (chunk) => Console.log(chunk), { discard: true });
   }
 });
 
@@ -3719,29 +3737,23 @@ export const runQualityTaskStepGroupForTesting = runQualityTaskStepGroup;
 export const runQualityTaskStreamingStepGroupForTesting = runQualityTaskStreamingStepGroup;
 
 /**
- * Timing and failure facts one streaming step produced, as the lane digest handoff sees them.
+ * Split captured step output into the newline-aligned chunks the renderer logs one at a time,
+ * exposed for tests.
  *
- * **Example** (Describe a passed step)
+ * **Example** (Short output stays one chunk)
  *
  * ```ts
- * import type { StreamingStepOutcome } from "@beep/repo-cli/commands/Quality"
- * import { QualityTaskStep } from "@beep/repo-cli/commands/Quality"
- * import * as O from "effect/Option"
+ * import { chunkStepOutputForTesting } from "@beep/repo-cli/commands/Quality"
  *
- * const outcome: StreamingStepOutcome = {
- *   durationMs: 1,
- *   startedAt: "2026-09-12T00:00:00.000Z",
- *   endedAt: "2026-09-12T00:00:00.001Z",
- *   failure: O.none(),
- *   step: QualityTaskStep.make({ label: "lint", command: "bunx", args: ["turbo", "run", "lint"], cwd: "." }),
- * }
- * console.log(outcome.step.label) // "lint"
+ * console.log(chunkStepOutputForTesting("one\ntwo")) // [ "one\ntwo" ]
  * ```
  *
+ * @param output - The captured output of one step.
+ * @returns Chunks whose newline-joined concatenation restores the output when every line fits.
  * @category testing
  * @since 0.0.0
  */
-export type { StreamingStepOutcome };
+export const chunkStepOutputForTesting = chunkStepOutput;
 
 /**
  * Declare one direct Turbo step's digest to a wrapper lane ledger, exposed for tests.

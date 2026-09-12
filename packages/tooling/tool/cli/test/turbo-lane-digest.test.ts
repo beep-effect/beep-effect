@@ -20,9 +20,9 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import type { StreamingStepOutcome } from "@beep/repo-cli/test/Quality";
 
 const providePlatform = provideScopedLayer(NodeServices.layer);
+type StreamingStepOutcome = Parameters<typeof resolveLaneInputDigestForTesting>[0];
 const encodeSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
 const decodeSummary = S.decodeEffect(S.fromJsonString(TurboRunSummary));
 const summaryEquivalent = S.toEquivalence(TurboRunSummary);

@@ -1207,3 +1207,18 @@ was attempted under the marker-only amendment.
   is one package; `bunx turbo run docgen --filter=@beep/repo-cli` proved it in one task.
 - Would have prevented it: letting `docgen:local` fall back to the touched packages when the
   global-input change is already proven green by a hosted `Heavy / Docgen` run on the branch.
+
+## 2026-09-12 — A hosted runner keeps 64 KiB of one large console write and drops the rest
+
+- Doing: hosted round 7 of #1102; `Heavy / Lint Policy` red on `lint:policy:medium` with the rendered
+  block ending mid-line at `//:lint:schem` and no Turbo footer — the same shape as round 4, which
+  was mis-read as a capture-bound overflow.
+- Evidence: the rendered block measures 65 590 bytes from its header to the cut (≈ 64 KiB) against a
+  ~130 KiB local rendering of the same phase; the capture itself carried no truncation notice. A
+  200 KB single `console.log` through a pipe and through a slow reader loses nothing under Bun
+  1.4.2 locally, so the loss is a property of the runner's stdout, not of Bun in general. The real
+  red was `lint:schema-first` (an exported pure-data interface) — visible only because that task's
+  lines landed before the cut.
+- Would have prevented it: rendering captured output in newline-aligned chunks (landed here:
+  `renderStepOutput` logs ≤ 32 KiB per write) and, longer term, `--output-logs=errors-only` on
+  grouped Turbo runs so a red task's log is the only large thing rendered.
