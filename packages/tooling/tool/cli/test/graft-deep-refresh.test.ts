@@ -14,6 +14,7 @@ import {
   graftCommand,
   parseDeepCoverage,
   renderGraftDeepRefreshUnits,
+  resolveGraftDeepBunPath,
   runDeepInstallTimer,
   runDeepRefresh,
   runDeepStatus,
@@ -1143,6 +1144,8 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         owner,
         "--env-file",
         path.join(stateDir, "absent-env"),
+        "--bun-path",
+        "/usr/bin/bun",
       ]);
       assertSome(
         O.map(Result.getFailure(timer.result), (error) => error._tag),
@@ -1177,6 +1180,75 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       expect(Str.includes("WorkingDirectory=/clones/beep effect0")(service)).toBe(true);
       expect(Str.includes("EnvironmentFile=/home/op/beep graft/env")(service)).toBe(true);
     })
+  );
+
+  it.effect(
+    "runs the unit through the mise shim, then a standalone Bun, then this executable, unless --bun-path pins one",
+    Effect.fn(function* () {
+      const { fs, path, directory, owner, stateDir } = yield* fixture();
+      const home = path.join(directory, "home");
+      const shim = path.join(home, ".local", "share", "mise", "shims", "bun");
+      const standalone = path.join(home, ".bun", "bin", "bun");
+      const touch = Effect.fn("GraftDeepRefreshTest.touch")(function* (file: string) {
+        yield* fs.makeDirectory(path.dirname(file), { recursive: true });
+        yield* fs.writeFileString(file, "");
+      });
+      yield* Effect.forEach([shim, standalone], touch);
+      // Both present: the shim wins because it follows the repo's pinned Bun.
+      expect(yield* resolveGraftDeepBunPath(home)).toBe(shim);
+      yield* fs.remove(shim);
+      expect(yield* resolveGraftDeepBunPath(home)).toBe(standalone);
+      yield* fs.remove(standalone);
+      expect(yield* resolveGraftDeepBunPath(home)).toBe(process.execPath);
+      // A candidate that cannot be probed fails the resolution loudly instead
+      // of silently pinning the running executable.
+      yield* fs.chmod(path.dirname(shim), 0o000);
+      const refused = yield* Effect.flip(resolveGraftDeepBunPath(home)).pipe(
+        Effect.ensuring(Effect.orDie(fs.chmod(path.dirname(shim), 0o755)))
+      );
+      expect(refused._tag).toBe("GraftCacheIoError");
+      expect(refused.path).toBe(shim);
+
+      // The resolved default reaches the written unit verbatim, quoted for systemd.
+      yield* touch(shim);
+      yield* fs.makeDirectory(stateDir, { recursive: true });
+      yield* fs.writeFileString(path.join(stateDir, "env"), "GRAFT_PROVIDER=openai\n");
+      const runner = scriptedRunner({
+        alive: [],
+        calls: [],
+        replies: repliesFor(owner, FULL_COVERAGE, [["mise trust --show", reply(0, `${owner}: trusted`)]]),
+      });
+      const service = path.join(home, ".config", "systemd", "user", "beep-graft-deep-refresh.service");
+      const execLines = Effect.fn("GraftDeepRefreshTest.execLines")(function* () {
+        return A.filter(Str.split("\n")(yield* fs.readFileString(service)), Str.startsWith("Exec"));
+      });
+      const flags = {
+        owner,
+        onCalendar: "*-*-* 02:30:00",
+        envFile: O.some(path.join(stateDir, "env")),
+        uninstall: false,
+      };
+      const defaulted = yield* captureOutput(
+        runDeepInstallTimer({ ...flags, bunPath: O.none() }).pipe(refreshWith(runner), withHome(home))
+      );
+      assertSuccess(defaulted.result, undefined);
+      expect(yield* execLines()).toEqual([
+        `ExecStartPre=/usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
+        `ExecStartPre="${shim}" install --frozen-lockfile`,
+        `ExecStart="${shim}" run beep graft deep refresh --owner "${owner}" --jobs 16`,
+      ]);
+      // An explicit --bun-path is pinned as given, with `~/` expanded against HOME.
+      const pinned = yield* captureOutput(
+        runDeepInstallTimer({ ...flags, bunPath: O.some("~/tools/bun") }).pipe(refreshWith(runner), withHome(home))
+      );
+      assertSuccess(pinned.result, undefined);
+      expect(yield* execLines()).toEqual([
+        `ExecStartPre=/usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
+        `ExecStartPre="${path.join(home, "tools", "bun")}" install --frozen-lockfile`,
+        `ExecStart="${path.join(home, "tools", "bun")}" run beep graft deep refresh --owner "${owner}" --jobs 16`,
+      ]);
+    }),
+    30_000
   );
 
   it.effect(
@@ -1350,7 +1422,12 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         replies: repliesFor(owner, FULL_COVERAGE, [["mise trust --show", reply(0, `${owner}: trusted`)]]),
       });
       yield* fs.writeFileString(path.join(stateDir, "env"), "GRAFT_PROVIDER=openai\n");
-      const timerFlags = { owner, onCalendar: "*-*-* 02:30:00", envFile: O.some(path.join(stateDir, "env")) };
+      const timerFlags = {
+        owner,
+        bunPath: O.none(),
+        onCalendar: "*-*-* 02:30:00",
+        envFile: O.some(path.join(stateDir, "env")),
+      };
       const wrote = yield* captureOutput(
         runDeepInstallTimer({ ...timerFlags, uninstall: false }).pipe(refreshWith(timerRunner), withHome(home))
       );
@@ -1365,10 +1442,13 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       expect(again.output).toEqual(["graft deep install-timer: no unit files were installed"]);
       // A default environment file is resolved under HOME when none is given.
       const defaulted = yield* captureOutput(
-        runDeepInstallTimer({ owner, onCalendar: "*-*-* 02:30:00", envFile: O.none(), uninstall: false }).pipe(
-          refreshWith(timerRunner),
-          withHome(home)
-        )
+        runDeepInstallTimer({
+          owner,
+          bunPath: O.none(),
+          onCalendar: "*-*-* 02:30:00",
+          envFile: O.none(),
+          uninstall: false,
+        }).pipe(refreshWith(timerRunner), withHome(home))
       );
       assertSome(
         O.map(Result.getFailure(defaulted.result), (error) => error._tag),

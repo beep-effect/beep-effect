@@ -23,7 +23,12 @@ import {
   GraftDeepTimerOptions,
 } from "./Graft.schemas.ts";
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
-import { GraftDeepRefresh, GraftDeepRefreshLive, GraftDeepRefreshProgress } from "./GraftDeep.service.ts";
+import {
+  GraftDeepRefresh,
+  GraftDeepRefreshLive,
+  GraftDeepRefreshProgress,
+  resolveGraftDeepBunPath,
+} from "./GraftDeep.service.ts";
 
 const flags = {
   from: Flag.String("from").pipe(Flag.withDescription("Source clone containing graft/.cache/summaries.json")),
@@ -153,6 +158,12 @@ const statusFlags = {
 
 const timerFlags = {
   owner: deepFlags.owner,
+  bunPath: Flag.String("bun-path").pipe(
+    Flag.optional,
+    Flag.withDescription(
+      "Bun executable the unit runs (default: the mise shim, then ~/.bun/bin/bun, then the Bun running this command)"
+    )
+  ),
   onCalendar: Flag.String("on-calendar").pipe(
     Flag.withDefault("*-*-* 02:30:00"),
     Flag.withDescription("systemd OnCalendar expression for the nightly refresh")
@@ -338,7 +349,10 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
  * **Details**
  *
  * The installer stats the environment file and refuses a missing one; an
- * uninstall reports only the unit files it actually removed.
+ * uninstall reports only the unit files it actually removed. Without
+ * `--bun-path` the unit runs the mise Bun shim when the home directory has
+ * one, then a standalone `$HOME/.bun` install, and only then the Bun running
+ * this command, so a `mise.toml` bump is picked up the next night.
  *
  * **Example** (Build an install program without running it)
  *
@@ -348,6 +362,7 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
  * import * as O from "effect/Option"
  * const program = runDeepInstallTimer({
  *   owner: "/clones/beep-effect0",
+ *   bunPath: O.none(),
  *   onCalendar: "*-*-* 02:30:00",
  *   envFile: O.none(),
  *   uninstall: false,
@@ -362,6 +377,7 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
  */
 export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")(function* (options: {
   readonly owner: string;
+  readonly bunPath: O.Option<string>;
   readonly onCalendar: string;
   readonly envFile: O.Option<string>;
   readonly uninstall: boolean;
@@ -369,10 +385,16 @@ export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")
   const path = yield* Path.Path;
   const home = yield* Effect.orDie(Config.String("HOME"));
   const refresh = yield* GraftDeepRefresh;
+  // An explicit path is the operator's pin and is only made absolute; the
+  // default follows the mise shim so a Bun bump never strands the unit.
+  const bunPath = yield* O.match(options.bunPath, {
+    onNone: () => resolveGraftDeepBunPath(home),
+    onSome: (given) => Effect.succeed(resolveOperatorPath(home, path.resolve, given)),
+  });
   const units = yield* refresh.installTimer(
     GraftDeepTimerOptions.make({
       owner: resolveOperatorPath(home, path.resolve, options.owner),
-      bunPath: process.execPath,
+      bunPath,
       onCalendar: options.onCalendar,
       envFile: resolveOperatorPath(
         home,

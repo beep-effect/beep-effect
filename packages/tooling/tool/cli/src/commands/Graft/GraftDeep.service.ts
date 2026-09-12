@@ -28,6 +28,7 @@ import { ensureZeroExit, formatCommandLine, OutputBound, runCaptured } from "../
 import { GraftCacheIoError, GraftDeepLockError, GraftDeepPreflightError, GraftDeepStepError } from "./Graft.errors.ts";
 import {
   GraftCacheSyncAction,
+  GraftDeepBunCandidate,
   GraftDeepLock,
   GraftDeepRefreshOutcome,
   GraftDeepRefreshStatus,
@@ -515,6 +516,50 @@ export const renderGraftDeepRefreshUnits = (
     ),
   },
 ];
+
+/**
+ * Resolves the Bun the rendered unit runs when no `--bun-path` is given.
+ *
+ * **Details**
+ *
+ * Each {@link GraftDeepBunCandidate} is probed under `home` in order and the
+ * first that exists wins, so a unit installed on a mise-managed workstation
+ * runs whichever Bun the repo's `mise.toml` pins on the night it fires. The
+ * installer's own `process.execPath` is the fallback only when no candidate
+ * exists: it is one version's binary, and a unit pinned to it keeps running
+ * that version after a bump, or fails outright once the version is pruned.
+ *
+ * **Example** (Prepare a resolution under an operator home)
+ *
+ * ```ts import.meta.vitest name="Prepare a resolution under an operator home"
+ * import { resolveGraftDeepBunPath } from "@beep/repo-cli/commands/Graft"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(resolveGraftDeepBunPath("/home/op"))) // true
+ * ```
+ *
+ * @param home - The operator home directory the candidates are probed under.
+ * @returns The absolute path of the Bun executable the unit should run.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const resolveGraftDeepBunPath = Effect.fn("GraftDeepRefresh.resolveBunPath")(function* (home: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const found = yield* Effect.findFirst(
+    A.map(GraftDeepBunCandidate.Options, (candidate) => path.join(home, candidate)),
+    (candidate) =>
+      fs.exists(candidate).pipe(
+        Effect.mapError((cause) =>
+          GraftCacheIoError.make({
+            path: candidate,
+            message: `Failed probing ${candidate} for the Bun the refresh unit runs.`,
+            cause,
+          })
+        )
+      )
+  );
+  return O.getOrElse(found, () => process.execPath);
+});
 
 const statusCodec = S.fromJsonString(GraftDeepRefreshStatus);
 const decodeStatusJson = S.decodeUnknownEffect(statusCodec);
