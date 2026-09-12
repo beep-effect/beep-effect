@@ -47,7 +47,7 @@ import { GOALS_DOCTOR_BASELINE_PATH } from "../../Goals/Doctor.ts";
 import { SchemaFirstInventoryPath } from "../../Lint/Lint.schemas.ts";
 import {
   coverageRegressionBaselinePath,
-  coverageRegressionRegenerationCommand,
+  coverageScopedBaselineWriteCommand,
 } from "../../Quality/internal/CoverageRegression.ts";
 import { defaultJSDocDocumentationInventoryMarkdownPath } from "../../Quality/internal/JSDocDocumentationInventory.ts";
 import {
@@ -310,7 +310,11 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     artifactPath: coverageRegressionBaselinePath,
     gateId: "coverage-regression",
     kind: "baseline",
-    regenerateCommand: coverageRegressionRegenerationCommand,
+    // The scoped form is the one an operator should reach for: it holds every
+    // measured package that owns no changed file, so a stale-artifact repair
+    // cannot rewrite rows the change set never went near. The repo-wide command
+    // remains in the document's own header for a full regeneration.
+    regenerateCommand: coverageScopedBaselineWriteCommand(["<package>"]),
     scope: "repo-code",
   }),
   GateArtifactDescriptor.make({

@@ -44,6 +44,7 @@ import {
   compareKnipFindingsForTesting,
   coverageBaselineRowDelta,
   coverageBaselineRowDeltaFromBase,
+  coverageBaselineWriteReport,
   coverageBaselineWriterChangedFiles,
   coverageBaselineWriteSummary,
   coverageDependentOwners,
@@ -80,7 +81,6 @@ import {
   KnipFinding,
   LaneProofSession,
   lintFixChangedStepForTesting,
-  mergeCoverageBaselinePackagesForTesting,
   missingTestTsgoTaskMessageForTesting,
   normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
@@ -3399,7 +3399,7 @@ describe("quality task adapter", () => {
   });
 
   it.effect(
-    "rejects replace-all without baseline writing or with scoped baseline writing",
+    "rejects replace-all without baseline writing and accepts it on a scoped write",
     Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(validateCoverageTaskArgsForTesting("/repo", ["--replace-all"]));
 
@@ -3408,18 +3408,24 @@ describe("quality task adapter", () => {
         assert.include(Cause.pretty(exit.cause), "--replace-all requires --write-baseline");
       }
 
-      for (const scopeArg of ["--filter=@beep/repo-cli", "--since=origin/main", "--affected"]) {
-        const scopedExit = yield* Effect.exit(
-          validateCoverageTaskArgsForTesting("/repo", ["--write-baseline", "--replace-all", scopeArg])
-        );
+      // A scoped `--replace-all` is the deliberate re-measure path, so the only
+      // refusals left are the ones that were already there for scoped writes.
+      const repoRoot = yield* findRepoRoot();
+      const scoped = yield* validateCoverageTaskArgsForTesting(repoRoot, [
+        "--write-baseline",
+        "--replace-all",
+        "--filter=@beep/repo-cli",
+      ]);
+      expect(scoped.replaceAll).toBe(true);
+      expect(scoped.scoped).toBe(true);
+      expect(scoped.expectedPackageNames).toEqual(["@beep/repo-cli"]);
 
-        assert.isTrue(Exit.isFailure(scopedExit));
-        if (Exit.isFailure(scopedExit)) {
-          assert.include(
-            Cause.pretty(scopedExit.cause),
-            "--replace-all only applies to an unscoped --write-baseline run"
-          );
-        }
+      const rangeExit = yield* Effect.exit(
+        validateCoverageTaskArgsForTesting(repoRoot, ["--write-baseline", "--replace-all", "--since=origin/main"])
+      );
+      assert.isTrue(Exit.isFailure(rangeExit));
+      if (Exit.isFailure(rangeExit)) {
+        assert.include(Cause.pretty(rangeExit.cause), "require exact --filter=<workspace-package> selectors");
       }
     }, provideScopedLayer(PlatformLayer))
   );
@@ -6113,18 +6119,89 @@ describe("quality task adapter", () => {
     );
   });
 
-  it("merges a scoped snapshot over the committed packages instead of replacing them", () => {
-    const merged = mergeCoverageBaselinePackagesForTesting(
-      {
-        "@beep/existing": coveragePackageBaseline("packages/existing", 50),
-        "@beep/untouched": coveragePackageBaseline("packages/untouched", 70),
-      },
-      [{ packageName: "@beep/existing", baseline: coveragePackageBaseline("packages/existing", 80) }]
+  it("holds a measured package a scoped write never changed and carries every unmeasured row", () => {
+    const committedHeld = CoveragePackageBaseline.make({
+      path: "packages/held",
+      ...coveragePercentages(61),
+      uncovered: coverageUncovered(7),
+      files: { "packages/held/src/Index.ts": coverageFileBaseline(61, 7) },
+    });
+    const measuredHeld = CoveragePackageBaseline.make({
+      ...committedHeld,
+      ...coveragePercentages(93),
+      uncovered: coverageUncovered(1),
+      files: { "packages/held/src/Index.ts": coverageFileBaseline(93, 1) },
+    });
+    const previous = {
+      "@beep/changed": coveragePackageBaseline("packages/changed", 50),
+      "@beep/held": committedHeld,
+      "@beep/unmeasured": coveragePackageBaseline("packages/unmeasured", 70),
+    };
+    const entries = [
+      { packageName: "@beep/changed", baseline: coveragePackageBaseline("packages/changed", 80) },
+      { packageName: "@beep/held", baseline: measuredHeld },
+    ];
+    const changeSet = CoverageBaselineChangeSet.make({
+      baseDescription: "dirty worktree only",
+      packageNames: ["@beep/changed"],
+      fullReasons: [],
+    });
+
+    const plan = planCoverageBaselineWrite(previous, entries, changeSet, {
+      replaceAll: false,
+      carryUnmeasured: true,
+    });
+
+    // The package the change set named is adopted whole; the other measured
+    // package keeps its committed row, and the unmeasured row is carried.
+    expect(plan.dispositions).toEqual({ "@beep/changed": "replaced", "@beep/held": "held" });
+    expect(R.keys(plan.packages)).toEqual(["@beep/changed", "@beep/held", "@beep/unmeasured"]);
+    expect(plan.packages["@beep/changed"]?.lines).toBe(80);
+    expect(plan.packages["@beep/held"]).toEqual(committedHeld);
+    expect(plan.packages["@beep/unmeasured"]?.lines).toBe(70);
+
+    const report = coverageBaselineWriteReport(plan, previous);
+    expect(report).toContain("[coverage-ratchet] @beep/changed: adopted");
+    expect(report).toContain(
+      "[coverage-ratchet] @beep/held: held (owns no changed file; pass --replace-all to re-measure it)"
+    );
+    expect(report).toContain(
+      "[coverage-ratchet] value(s) this write raised above the committed rows (the hosted pull-request run judges each one):"
+    );
+    expect(report).toContain("  - @beep/changed totals branches: 50 -> 80 (0 -> 0 uncovered)");
+  });
+
+  it("adopts every measured package when a scoped write passes replace-all", () => {
+    const previous = {
+      "@beep/held": coveragePackageBaseline("packages/held", 61),
+      "@beep/unmeasured": coveragePackageBaseline("packages/unmeasured", 70),
+    };
+    const plan = planCoverageBaselineWrite(
+      previous,
+      [{ packageName: "@beep/held", baseline: coveragePackageBaseline("packages/held", 93) }],
+      CoverageBaselineChangeSet.make({ baseDescription: "dirty worktree only", packageNames: [], fullReasons: [] }),
+      { replaceAll: true, carryUnmeasured: true }
     );
 
-    expect(R.keys(merged).sort()).toEqual(["@beep/existing", "@beep/untouched"]);
-    expect(merged["@beep/existing"]?.lines).toBe(80);
-    expect(merged["@beep/untouched"]?.lines).toBe(70);
+    expect(plan.dispositions).toEqual({ "@beep/held": "replaced" });
+    expect(plan.packages["@beep/held"]?.lines).toBe(93);
+    expect(plan.packages["@beep/unmeasured"]?.lines).toBe(70);
+  });
+
+  it("says so loudly when a scoped write held every package it measured", () => {
+    const previous = { "@beep/held": coveragePackageBaseline("packages/held", 61) };
+    const plan = planCoverageBaselineWrite(
+      previous,
+      [{ packageName: "@beep/held", baseline: coveragePackageBaseline("packages/held", 93) }],
+      CoverageBaselineChangeSet.make({ baseDescription: "dirty worktree only", packageNames: [], fullReasons: [] }),
+      { replaceAll: false, carryUnmeasured: true }
+    );
+    const report = coverageBaselineWriteReport(plan, previous);
+
+    expect(report).toEqual([
+      "[coverage-ratchet] @beep/held: held (owns no changed file; pass --replace-all to re-measure it)",
+      "[coverage-ratchet] every measured package was held; this run changed no row. Pass --replace-all to re-measure them.",
+    ]);
   });
 
   it("names the live baseline entries an unscoped replacement would delete", () => {

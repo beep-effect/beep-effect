@@ -199,7 +199,9 @@ describe("gate staleness reporting", () => {
     expect(A.every(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand.length > 0)).toBe(true);
     expect(YEET_GATE_AUXILIARY_ARTIFACT_PATHS).toStrictEqual(["standards/jsdoc-documentation.inventory.md"]);
     expect(A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand)).toStrictEqual([
-      "bun run coverage:baseline:write",
+      // The scoped form holds every measured package that owns no changed file,
+      // so a stale-artifact repair cannot rewrite untouched rows.
+      "bun run coverage -- --filter=<package> --write-baseline",
       "bun run beep quality jsdoc-inventory && bun run beep quality jsdoc-ratchet --write-baseline",
       "bun run beep quality knip --write-baseline",
       "bun run beep lint package-test-typecheck --write-baseline",

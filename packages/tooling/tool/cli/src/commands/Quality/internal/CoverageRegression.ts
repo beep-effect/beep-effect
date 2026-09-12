@@ -967,6 +967,27 @@ const decodeVitestCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(Vites
 
 const metricNames = CoverageMetricName.Options;
 
+/**
+ * Whether the pull request's row is a stricter floor than the base revision's
+ * for one metric: a higher percentage (beyond epsilon) or fewer uncovered
+ * units. Only such rows can turn main red after a merge, because main judges
+ * its first push against the merged document while the pull request was judged
+ * against the base rows. Lowered and unchanged rows stay governed by the base
+ * comparison, so a floor-lowering fix proposes nothing this check can reject.
+ *
+ * @param metric - Metric being compared.
+ * @param base - Row from the base revision's document.
+ * @param proposed - Row from the pull request's own document.
+ * @param epsilon - Percentage-point tolerance for floating-point noise.
+ * @returns `true` when the proposed row is the stricter floor for the metric.
+ */
+const rowRaised = (
+  metric: CoverageMetricName,
+  base: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
+  proposed: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
+  epsilon: number
+): boolean => proposed[metric] > base[metric] + epsilon || proposed.uncovered[metric] < base.uncovered[metric];
+
 const hasCoverageScript = (info: WorkspacePackageInfo): boolean =>
   pipe(info.packageJson.scripts ?? {}, R.get("coverage"), O.isSome);
 
@@ -1315,20 +1336,59 @@ const replaceMeasuredPackage = (
   });
 };
 
+const coveragePackageRowByNameOrder = Order.mapInput(
+  Order.String,
+  (entry: readonly [string, CoveragePackageBaseline]) => entry[0]
+);
+
+const coverageDispositionByNameOrder = Order.mapInput(
+  Order.String,
+  (entry: readonly [string, CoverageBaselineRowDisposition]) => entry[0]
+);
+
 /**
- * Plan an unscoped coverage baseline write without reading files or running Git.
+ * How one coverage baseline write treats measured and unmeasured rows.
+ *
+ * **Details**
+ *
+ * `replaceAll` adopts every package the run measured. `carryUnmeasured` marks a
+ * scoped run, where committed rows the run never measured are carried through
+ * instead of pruned.
+ *
+ * **Example** (A scoped write that adopts only changed owners)
+ *
+ * ```ts
+ * import type { CoverageBaselineWriteOptions } from "@beep/repo-cli/test/Quality"
+ *
+ * const options: CoverageBaselineWriteOptions = { replaceAll: false, carryUnmeasured: true }
+ * console.log(options.carryUnmeasured) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CoverageBaselineWriteOptions = {
+  readonly carryUnmeasured?: boolean;
+  readonly replaceAll: boolean;
+};
+
+/**
+ * Plan a coverage baseline write without reading files or running Git.
  *
  * **Details**
  *
  * Measured rows owned by changed files are adopted. Other measured packages
  * hold committed rows when present and are added when absent. Committed rows
- * absent from the validated full-workspace snapshot are pruned.
+ * absent from the validated full-workspace snapshot are pruned, unless
+ * `carryUnmeasured` marks the run as scoped, where an unmeasured committed row
+ * is carried through untouched because the run never looked at it.
  *
  * **Gotchas**
  *
  * Full-run reasons describe measurement breadth only and never widen adoption.
  * `replaceAll` is the sole whole-document replacement path and overrides the
- * changed-owner set.
+ * changed-owner set. Rows are emitted in package-name order so a write that
+ * touches two packages produces a two-package diff.
  *
  * **Example** (Hold an unchanged measured package)
  *
@@ -1364,7 +1424,7 @@ const replaceMeasuredPackage = (
  * @param previousPackages - Package rows from the committed schema-v2 baseline.
  * @param entries - Full-workspace package rows measured by the current run.
  * @param changeSet - Changed-owner adoption set, full-run reasons, and comparison-base provenance.
- * @param options - Whether to replace every measured row regardless of changed ownership.
+ * @param options - Whether to replace every measured row, and whether unmeasured committed rows are carried instead of pruned.
  * @returns Rows to write and one disposition for every measured or pruned package.
  * @category utilities
  * @since 0.0.0
@@ -1373,13 +1433,13 @@ export const planCoverageBaselineWrite: {
   (
     entries: ReadonlyArray<CoverageSnapshotEntry>,
     changeSet: CoverageBaselineChangeSet,
-    options: { readonly replaceAll: boolean }
+    options: CoverageBaselineWriteOptions
   ): (previousPackages: Record<string, CoveragePackageBaseline>) => CoverageBaselineWritePlan;
   (
     previousPackages: Record<string, CoveragePackageBaseline>,
     entries: ReadonlyArray<CoverageSnapshotEntry>,
     changeSet: CoverageBaselineChangeSet,
-    options: { readonly replaceAll: boolean }
+    options: CoverageBaselineWriteOptions
   ): CoverageBaselineWritePlan;
 } = dual(
   4,
@@ -1387,7 +1447,7 @@ export const planCoverageBaselineWrite: {
     previousPackages: Record<string, CoveragePackageBaseline>,
     entries: ReadonlyArray<CoverageSnapshotEntry>,
     changeSet: CoverageBaselineChangeSet,
-    options: { readonly replaceAll: boolean }
+    options: CoverageBaselineWriteOptions
   ): CoverageBaselineWritePlan => {
     const measuredNames = HashSet.fromIterable(A.map(entries, (entry) => entry.packageName));
     const shouldReplace = replaceMeasuredPackage(changeSet.packageNames, options.replaceAll);
@@ -1417,43 +1477,28 @@ export const planCoverageBaselineWrite: {
     }
 
     for (const packageName of A.sort(R.keys(previousPackages), Order.String)) {
-      if (!HashSet.has(measuredNames, packageName)) {
-        R.assignProperty(dispositions, packageName, CoverageBaselineRowDisposition.Enum.pruned);
+      if (HashSet.has(measuredNames, packageName)) {
+        continue;
       }
+      // A scoped run measured a handful of packages; every other committed row
+      // is carried through untouched rather than pruned, because "not measured"
+      // and "no longer exists" are different answers.
+      if (options.carryUnmeasured === true) {
+        pipe(
+          R.get(previousPackages, packageName),
+          O.map((committed) => R.assignProperty(packages, packageName, committed))
+        );
+        continue;
+      }
+      R.assignProperty(dispositions, packageName, CoverageBaselineRowDisposition.Enum.pruned);
     }
 
-    return CoverageBaselineWritePlan.make({ changeSet, dispositions, packages });
+    return CoverageBaselineWritePlan.make({
+      changeSet,
+      dispositions,
+      packages: R.fromEntries(A.sort(R.toEntries(packages), coveragePackageRowByNameOrder)),
+    });
   }
-);
-
-/**
- * Merge a snapshot over the packages a previous baseline recorded.
- *
- * Only packages the run actually measured are replaced; everything else is
- * carried through untouched. A scoped run measures a handful of packages, so
- * without this the written document would contain only those and silently drop
- * every other entry.
- *
- * @param previous - Packages recorded by the committed baseline.
- * @param entries - Packages this run measured.
- * @returns The committed packages with the measured ones replaced.
- * @category testing
- * @since 0.0.0
- */
-export const mergeCoverageBaselinePackagesForTesting: {
-  (
-    entries: ReadonlyArray<CoverageSnapshotEntry>
-  ): (previous: Record<string, CoveragePackageBaseline>) => Record<string, CoveragePackageBaseline>;
-  (
-    previous: Record<string, CoveragePackageBaseline>,
-    entries: ReadonlyArray<CoverageSnapshotEntry>
-  ): Record<string, CoveragePackageBaseline>;
-} = dual(
-  2,
-  (
-    previous: Record<string, CoveragePackageBaseline>,
-    entries: ReadonlyArray<CoverageSnapshotEntry>
-  ): Record<string, CoveragePackageBaseline> => ({ ...previous, ...snapshotPackages(entries) })
 );
 
 /**
@@ -1720,10 +1765,22 @@ const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
     Match.discriminator("_tag")("noop", A.empty<string>),
     Match.exhaustive
   );
+  // A dependent's measured rows move when the package it imports changes, so
+  // the writer adopts dependents alongside direct owners. Holding them instead
+  // would commit floors the next hosted run cannot reach.
+  const dependentPackageNames = Match.value(scope).pipe(
+    Match.discriminator("_tag")("selected", ({ dependentPackageNames: names }) => names),
+    Match.discriminator("_tag")("full", A.empty<string>),
+    Match.discriminator("_tag")("noop", A.empty<string>),
+    Match.exhaustive
+  );
 
   return CoverageBaselineChangeSet.make({
     baseDescription,
-    packageNames: changedCoverageOwners(owners, writerChangedFiles),
+    packageNames: pipe(
+      A.union(changedCoverageOwners(owners, writerChangedFiles), dependentPackageNames),
+      A.sort(Order.String)
+    ),
     fullReasons,
   });
 });
@@ -1845,14 +1902,12 @@ const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocum
       O.map((document) => document.follow_ups),
       O.getOrElse(() => ({}))
     ),
+    // Every write that has a committed schema-v2 document to work from is
+    // planned; the snapshot-only branch is the first write of a new document.
     packages: pipe(
       writePlan,
       O.map((plan) => plan.packages),
-      O.getOrElse(() =>
-        scoped && O.isSome(currentPrevious)
-          ? mergeCoverageBaselinePackagesForTesting(currentPrevious.value.packages, entries)
-          : snapshotPackages(entries)
-      )
+      O.getOrElse(() => snapshotPackages(entries))
     ),
   });
 });
@@ -2019,6 +2074,9 @@ const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* 
   return [
     "// Coverage regression baseline. Do not edit by hand.",
     `// Regenerate the rows you changed with: ${coverageScopedBaselineWriteCommand(["<package>"])}`,
+    "// A write adopts only packages that own a changed file (dependents included);",
+    "// every other measured package is held at its committed row. Add --replace-all",
+    "// to adopt every package the run measured instead.",
     `// Regenerate the whole document with: ${coverageRegressionRegenerationCommand}`,
     "// Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.",
     jsonc,
@@ -2139,18 +2197,137 @@ export const coverageBaselineWriteSummary: {
   });
 });
 
+const coverageRowRaiseLines = (
+  packageName: string,
+  committed: CoveragePackageBaseline,
+  written: CoveragePackageBaseline
+): ReadonlyArray<string> => {
+  const raises = (
+    location: string,
+    before: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
+    after: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">
+  ): ReadonlyArray<string> =>
+    pipe(
+      metricNames,
+      A.filter((metric) => rowRaised(metric, before, after, coverageRegressionEpsilon)),
+      A.map(
+        (metric) =>
+          `  - ${coverageDiagnosticFragment(packageName)} ${coverageDiagnosticFragment(location)} ${metric}: ${before[metric]} -> ${after[metric]} (${before.uncovered[metric]} -> ${after.uncovered[metric]} uncovered)`
+      )
+    );
+
+  return A.appendAll(
+    raises("totals", committed, written),
+    pipe(
+      R.toEntries(written.files),
+      A.sort(coverageFileByPathOrder),
+      A.flatMap(([filePath, writtenFile]) =>
+        pipe(
+          R.get(committed.files, filePath),
+          O.map((committedFile) => raises(filePath, committedFile, writtenFile)),
+          O.getOrElse(A.empty<string>)
+        )
+      )
+    )
+  );
+};
+
+const coverageDispositionLine = (packageName: string, disposition: CoverageBaselineRowDisposition): string =>
+  `[coverage-ratchet] ${coverageDiagnosticFragment(packageName)}: ${Match.value(disposition).pipe(
+    Match.when("replaced", () => "adopted"),
+    Match.when("added", () => "added (no committed row)"),
+    Match.when("held", () => "held (owns no changed file; pass --replace-all to re-measure it)"),
+    Match.when("pruned", () => "pruned (no longer a workspace package)"),
+    Match.exhaustive
+  )}`;
+
+/**
+ * Render what a baseline write did to every package it measured, and which
+ * committed values it raised.
+ *
+ * **Details**
+ *
+ * Adoption is per package and never silent: a run that held every package it
+ * measured says so, because the operator's next move is `--replace-all` rather
+ * than a second identical run. Every raised value is named because the hosted
+ * pull-request run judges exactly those rows.
+ *
+ * **Example** (An empty plan reports nothing to adopt)
+ *
+ * ```ts
+ * import { CoverageBaselineWritePlan, coverageBaselineWriteReport } from "@beep/repo-cli/test/Quality"
+ *
+ * const plan = CoverageBaselineWritePlan.make({
+ *   changeSet: { baseDescription: "dirty worktree only", packageNames: [], fullReasons: [] },
+ *   packages: {},
+ *   dispositions: {}
+ * })
+ * console.log(coverageBaselineWriteReport(plan, {})) // []
+ * ```
+ *
+ * @param plan - The plan the write applied.
+ * @param previousPackages - Package rows the committed document carried before the write.
+ * @returns One disposition line per measured package, then the raised-value report.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const coverageBaselineWriteReport: {
+  (
+    previousPackages: Record<string, CoveragePackageBaseline>
+  ): (plan: CoverageBaselineWritePlan) => ReadonlyArray<string>;
+  (plan: CoverageBaselineWritePlan, previousPackages: Record<string, CoveragePackageBaseline>): ReadonlyArray<string>;
+} = dual(
+  2,
+  (
+    plan: CoverageBaselineWritePlan,
+    previousPackages: Record<string, CoveragePackageBaseline>
+  ): ReadonlyArray<string> => {
+    const dispositions = A.sort(R.toEntries(plan.dispositions), coverageDispositionByNameOrder);
+    const measured = A.filter(dispositions, ([, disposition]) => disposition !== "pruned");
+    const heldEverything =
+      A.isReadonlyArrayNonEmpty(measured) && A.every(measured, ([, disposition]) => disposition === "held");
+    const raises = pipe(
+      A.sort(R.toEntries(plan.packages), coveragePackageRowByNameOrder),
+      A.flatMap(([packageName, written]) =>
+        pipe(
+          R.get(previousPackages, packageName),
+          O.map((committed) => coverageRowRaiseLines(packageName, committed, written)),
+          O.getOrElse(A.empty<string>)
+        )
+      )
+    );
+
+    return A.appendAll(
+      A.appendAll(
+        A.map(dispositions, ([packageName, disposition]) => coverageDispositionLine(packageName, disposition)),
+        heldEverything
+          ? A.of(
+              "[coverage-ratchet] every measured package was held; this run changed no row. Pass --replace-all to re-measure them."
+            )
+          : A.empty<string>()
+      ),
+      A.match(raises, {
+        onEmpty: A.empty<string>,
+        onNonEmpty: (lines) => [
+          "[coverage-ratchet] value(s) this write raised above the committed rows (the hosted pull-request run judges each one):",
+          ...lines,
+        ],
+      })
+    );
+  }
+);
+
 /**
  * Write the committed coverage regression baseline from generated summaries.
  *
  * **Details**
  *
- * A scoped run measures only the packages it was filtered to, so its snapshot
- * is merged over the committed document and every unmeasured entry is carried
- * through. An unscoped schema-v2 write adopts measured rows only for workspace
- * owners of changed files, holds committed rows for every other measured
- * package, adds new packages, and prunes deleted packages. The affected planner
- * still determines measurement breadth, while `replaceAll` is the only path
- * that adopts the whole measured document.
+ * Scoped and unscoped writes share one plan: measured rows are adopted only for
+ * workspace owners of changed files and their dependents, every other measured
+ * package holds its committed row, new packages are added, and deleted packages
+ * are pruned. A scoped run additionally carries every committed row it never
+ * measured. The affected planner still determines measurement breadth, while
+ * `replaceAll` is the only path that adopts the whole measured document.
  *
  * **Gotchas**
  *
@@ -2229,29 +2406,50 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     }
 
     const currentPrevious = pipe(previous, O.filter(isCurrentCoverageRegressionBaseline));
-    const writePlan =
-      !scoped && O.isSome(currentPrevious)
-        ? O.some(
-            planCoverageBaselineWrite(
-              currentPrevious.value.packages,
-              entries,
-              yield* collectCoverageBaselineChangeSet(repoRoot),
-              { replaceAll }
-            )
+    // Scoped and unscoped writes share one plan. A scoped write used to spread
+    // its whole measured block over the committed document, so one workstation
+    // run replaced every row of every package it touched — including files the
+    // change set never went near.
+    const writePlan = O.isSome(currentPrevious)
+      ? O.some(
+          planCoverageBaselineWrite(
+            currentPrevious.value.packages,
+            entries,
+            yield* collectCoverageBaselineChangeSet(repoRoot),
+            { replaceAll, carryUnmeasured: scoped }
           )
-        : O.none<CoverageBaselineWritePlan>();
+        )
+      : O.none<CoverageBaselineWritePlan>();
     const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, previous, scoped, writePlan);
     yield* writeBaselineDocument(repoRoot, baseline);
     yield* Console.log(
-      scoped
-        ? `[coverage-ratchet] merged ${A.length(entries)} measured package(s) into ${coverageRegressionBaselinePath} (${R.size(baseline.packages)} total)`
-        : pipe(
-            writePlan,
-            O.map((plan) => coverageBaselineWriteSummary(plan, replaceAll)),
-            O.getOrElse(
-              () => `[coverage-ratchet] wrote ${coverageRegressionBaselinePath} with ${A.length(entries)} package(s)`
+      pipe(
+        writePlan,
+        O.map((plan) => coverageBaselineWriteSummary(plan, replaceAll)),
+        O.getOrElse(
+          () => `[coverage-ratchet] wrote ${coverageRegressionBaselinePath} with ${A.length(entries)} package(s)`
+        )
+      )
+    );
+    yield* pipe(
+      writePlan,
+      O.match({
+        onNone: () => Effect.void,
+        onSome: (plan) =>
+          Console.log(
+            A.join(
+              coverageBaselineWriteReport(
+                plan,
+                pipe(
+                  currentPrevious,
+                  O.map((document) => document.packages),
+                  O.getOrElse(() => R.empty<string, CoveragePackageBaseline>())
+                )
+              ),
+              "\n"
             )
-          )
+          ),
+      })
     );
   }
 );
@@ -2554,27 +2752,6 @@ const belowMinimumMetrics = (
       })
     )
   );
-
-/**
- * Whether the pull request's row is a stricter floor than the base revision's
- * for one metric: a higher percentage (beyond epsilon) or fewer uncovered
- * units. Only such rows can turn main red after a merge, because main judges
- * its first push against the merged document while the pull request was judged
- * against the base rows. Lowered and unchanged rows stay governed by the base
- * comparison, so a floor-lowering fix proposes nothing this check can reject.
- *
- * @param metric - Metric being compared.
- * @param base - Row from the base revision's document.
- * @param proposed - Row from the pull request's own document.
- * @param epsilon - Percentage-point tolerance for floating-point noise.
- * @returns `true` when the proposed row is the stricter floor for the metric.
- */
-const rowRaised = (
-  metric: CoverageMetricName,
-  base: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
-  proposed: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
-  epsilon: number
-): boolean => proposed[metric] > base[metric] + epsilon || proposed.uncovered[metric] < base.uncovered[metric];
 
 // One entry per raised metric: `Some` when the measurement does not reach the
 // proposed row under the same drop rule main applies after the merge.

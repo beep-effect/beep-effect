@@ -740,11 +740,9 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
   args: ReadonlyArray<string>
 ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const parsed = parseCoverageTaskOptions(args);
-  if (parsed.replaceAll && parsed.scoped) {
-    return yield* QualityTaskConfigurationError.new(
-      `${COVERAGE_REPLACE_ALL_ARG} only applies to an unscoped ${COVERAGE_WRITE_BASELINE_ARG} run.`
-    );
-  }
+  // A scoped `--replace-all` is the deliberate re-measure path: it adopts every
+  // package this run measured, and the hosted pull-request run judges every row
+  // it raises.
   if (parsed.replaceAll && !parsed.writeBaseline) {
     return yield* QualityTaskConfigurationError.new(
       `${COVERAGE_REPLACE_ALL_ARG} requires ${COVERAGE_WRITE_BASELINE_ARG}; it only controls coverage baseline replacement.`

@@ -1079,9 +1079,10 @@ export const coverageSelfJudgeExclusion: {
  * **Gotchas**
  *
  * A full verdict controls measurement breadth only. Baseline adoption remains
- * the package owners returned by {@link changedCoverageOwners} unless the
- * operator explicitly passes `--replace-all`; dependents are measured and
- * compared, never adopted.
+ * the package owners returned by {@link changedCoverageOwners} plus the
+ * dependents named here, unless the operator explicitly passes `--replace-all`.
+ * A dependent is adopted because the change it depends on moves its measured
+ * rows; a package outside both sets is held at its committed row.
  *
  * **Example** (Select a changed owner and its dependent)
  *
