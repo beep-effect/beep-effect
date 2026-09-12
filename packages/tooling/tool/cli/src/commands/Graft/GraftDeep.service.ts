@@ -68,6 +68,161 @@ const deepOutputBound = OutputBound.make({
 // reported an exit code is recorded under it rather than losing the run.
 const REBUILD_UNFINISHED_EXIT = 124;
 
+type RefreshContext = {
+  readonly appendLog: (text: string) => Effect.Effect<void, GraftCacheIoError>;
+  readonly mustSucceed: (
+    input: GraftDeepRunnerStep
+  ) => Effect.Effect<CapturedStep, GraftDeepStepError | GraftCacheIoError>;
+  readonly options: GraftDeepRefreshOptions;
+  readonly owner: string;
+  readonly step: (input: GraftDeepRunnerStep) => Effect.Effect<CapturedStep, GraftDeepStepError | GraftCacheIoError>;
+};
+
+const revParseHeadStep = (owner: string) =>
+  GraftDeepRunnerStep.make({
+    args: ["rev-parse", "HEAD"],
+    command: "git",
+    cwd: owner,
+    phase: "pull",
+    source: "stdout",
+    timeout: "2 minutes",
+  });
+
+const fetchStep = (owner: string) =>
+  GraftDeepRunnerStep.make({
+    args: ["fetch", "--quiet", "origin"],
+    command: "git",
+    cwd: owner,
+    phase: "pull",
+    timeout: "15 minutes",
+  });
+
+const mergeStep = (owner: string) =>
+  GraftDeepRunnerStep.make({
+    args: ["merge", "--ff-only", "origin/main"],
+    command: "git",
+    cwd: owner,
+    phase: "pull",
+    timeout: "5 minutes",
+  });
+
+const lockDiffStep = (owner: string, before: string, after: string) =>
+  GraftDeepRunnerStep.make({
+    args: ["diff", "--quiet", before, after, "--", "bun.lock"],
+    command: "git",
+    cwd: owner,
+    phase: "pull",
+    timeout: "5 minutes",
+  });
+
+const bunInstallStep = (owner: string) =>
+  GraftDeepRunnerStep.make({
+    args: ["install", "--frozen-lockfile"],
+    command: "bun",
+    cwd: owner,
+    phase: "install",
+    timeout: "30 minutes",
+  });
+
+const deepBuildStep = (options: GraftDeepRefreshOptions, cruxRetries: O.Option<string>) =>
+  GraftDeepRunnerStep.make({
+    args: ["build", "--deep", "-j", `${options.jobs}`, "--allow-partial"],
+    command: "graft",
+    cwd: options.owner,
+    env: {
+      ...pipe(
+        O.fromUndefinedOr(options.model),
+        O.map((model) => ({ GRAFT_MODEL: model })),
+        O.getOrElse(() => ({}))
+      ),
+      ...pipe(
+        cruxRetries,
+        O.map((retries) => ({ GRAFT_CRUX_EMPTY_RETRIES: retries })),
+        O.getOrElse(() => ({ GRAFT_CRUX_EMPTY_RETRIES: "2" }))
+      ),
+    },
+    phase: "build",
+    timeout: "5 hours",
+  });
+
+const siblingBuildStep = (root: string) =>
+  GraftDeepRunnerStep.make({
+    args: ["build"],
+    command: "graft",
+    cwd: root,
+    phase: "rebuild",
+    timeout: "15 minutes",
+  });
+
+const coverageRatio = (coverage: O.Option<GraftDeepCoverage>): O.Option<number> =>
+  O.map(coverage, (value) => (Eq.equals(value.total, 0) ? 0 : value.covered / value.total));
+
+// Absent coverage has two very different causes: a build that printed no
+// coverage line, and a build whose line was cut off by the capture bound. The
+// operator needs to know which before rerunning anything.
+const coverageNote = (input: {
+  readonly minCoverage: number;
+  readonly ratio: O.Option<number>;
+  readonly truncated: boolean;
+}): string =>
+  O.match(input.ratio, {
+    onNone: () =>
+      input.truncated
+        ? "the build printed no readable coverage line because its output was truncated at the capture bound"
+        : "the build printed no coverage line",
+    onSome: (value) =>
+      value < input.minCoverage
+        ? `coverage is ${Num.round(value * 100, 1)}%, below the ${Num.round(input.minCoverage * 100, 1)}% target`
+        : "",
+  });
+
+const refusalNote = (refusals: number): string =>
+  refusals > 0 ? `${refusals} seed destination(s) were refused and nothing was seeded` : "";
+
+const rebuildNote = (failures: number): string =>
+  failures > 0 ? `${failures} sibling rebuild(s) exited non-zero` : "";
+
+/** Verdict and operator note for a run that reached its final phase. */
+const decideOutcome = (input: {
+  readonly coverage: O.Option<GraftDeepCoverage>;
+  readonly minCoverage: number;
+  readonly rebuilt: ReadonlyArray<GraftDeepSiblingRebuild>;
+  readonly refusals: number;
+  readonly truncated: boolean;
+}): { readonly message: O.Option<string>; readonly outcome: GraftDeepRefreshOutcome } => {
+  const ratio = coverageRatio(input.coverage);
+  const belowTarget = O.getOrElse(
+    O.map(ratio, (value) => value < input.minCoverage),
+    () => true
+  );
+  const failures = A.length(A.filter(input.rebuilt, (entry) => !Eq.equals(entry.exitCode, 0)));
+  const notes = A.filter(
+    [
+      coverageNote({ minCoverage: input.minCoverage, ratio, truncated: input.truncated }),
+      refusalNote(input.refusals),
+      rebuildNote(failures),
+    ],
+    Str.isNonEmpty
+  );
+  const degraded = belowTarget || input.refusals > 0 || failures > 0;
+  return {
+    message: A.isReadonlyArrayNonEmpty(notes) ? O.some(A.join(notes, "; ")) : O.none<string>(),
+    outcome: degraded ? GraftDeepRefreshOutcome.Enum.degraded : GraftDeepRefreshOutcome.Enum.ok,
+  };
+};
+
+// Only a seed that was actually applied has clones worth rebuilding.
+const rebuildTargets = (
+  options: GraftDeepRefreshOptions,
+  seeded: O.Option<GraftCacheSyncReport>
+): ReadonlyArray<string> =>
+  pipe(
+    seeded,
+    O.filter(() => options.rebuild),
+    O.map((report) => A.sort(A.dedupe(A.map(report.plan.entries, (entry) => entry.target.root)), Order.String)),
+    O.getOrElse((): ReadonlyArray<string> => [])
+  );
+
 const isIntegerExit = S.is(S.Int);
 const exitCodeOf = (value: number): number => (isIntegerExit(value) ? value : 1);
 
@@ -126,8 +281,10 @@ const makeGraftDeepRunner = Effect.fnUntraced(function* () {
       source: step.source ?? "merge",
       tee: false,
       trim: true,
-      ...(step.env === undefined ? {} : { env: step.env }),
-      ...(step.timeout === undefined ? {} : { timeout: step.timeout }),
+      // Both fields are declared `| undefined` by the runner, so an absent
+      // bound or environment is passed as the value rather than spread in.
+      env: step.env,
+      timeout: step.timeout,
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.mapError((cause) =>
@@ -361,7 +518,7 @@ const lockCodec = S.fromJsonString(GraftDeepLock);
 const decodeLockJson = S.decodeUnknownEffect(lockCodec);
 const encodeLockJson = S.encodeEffect(lockCodec);
 
-const compactTimestamp = (iso: string): string => pipe(iso, Str.replaceAll(/[-:]/gu, ""), Str.replace(/\.\d+Z$/u, "Z"));
+const compactTimestamp: (iso: string) => string = flow(Str.replaceAll(/[-:]/gu, ""), Str.replace(/\.\d+Z$/u, "Z"));
 
 const refreshFailureMessage = Match.type<GraftDeepRefreshFailure>().pipe(
   Match.tag("GraftDeepLockError", (error) => `Refresh lock ${error.path} is held by live process ${error.holderPid}.`),
@@ -549,6 +706,112 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
     return canonical;
   });
 
+  const assertGraftOnPath = Effect.fnUntraced(function* (ctx: RefreshContext) {
+    const captured = yield* runner
+      .run(
+        GraftDeepRunnerStep.make({
+          args: ["--version"],
+          command: "graft",
+          cwd: ctx.owner,
+          phase: "preflight",
+          timeout: "2 minutes",
+        })
+      )
+      .pipe(
+        Effect.mapError((cause) =>
+          GraftDeepPreflightError.make({
+            path: ctx.owner,
+            message: `graft does not resolve on PATH for the refresh: ${cause.message}`,
+            cause,
+          })
+        )
+      );
+    if (!Eq.equals(exitCodeOf(captured.exitCode), 0)) {
+      return yield* GraftDeepPreflightError.make({
+        path: ctx.owner,
+        message: `graft --version exited with ${captured.exitCode}; the meaning tier cannot be rebuilt.`,
+      });
+    }
+    yield* ctx.appendLog(`$ graft --version\n${captured.output}\n`);
+  });
+
+  const assertPatchKit = Effect.fnUntraced(function* (ctx: RefreshContext) {
+    const patchKit = path.join(ctx.owner, "scripts", "graft", "apply-dist-patches.sh");
+    const captured = yield* runner
+      .run(
+        GraftDeepRunnerStep.make({
+          args: ["--check"],
+          command: patchKit,
+          cwd: ctx.owner,
+          phase: "preflight",
+          timeout: "5 minutes",
+        })
+      )
+      .pipe(
+        Effect.mapError((cause) => GraftDeepPreflightError.make({ path: patchKit, message: cause.message, cause }))
+      );
+    yield* ctx.appendLog(`$ ${formatCommandLine(patchKit, ["--check"])}\n${captured.output}\n`);
+    if (!Eq.equals(exitCodeOf(captured.exitCode), 0)) {
+      return yield* GraftDeepPreflightError.make({
+        path: patchKit,
+        message: `${patchKit} --check exited with ${captured.exitCode}; the installed Graft is missing repo patches.`,
+      });
+    }
+  });
+
+  const preflightPhase = Effect.fnUntraced(function* (ctx: RefreshContext) {
+    yield* checkoutPreflight(ctx.owner, ctx.appendLog);
+    yield* assertGraftOnPath(ctx);
+    yield* assertPatchKit(ctx);
+  });
+
+  const pullPhase = Effect.fnUntraced(function* (ctx: RefreshContext) {
+    const before = yield* ctx.mustSucceed(revParseHeadStep(ctx.owner));
+    yield* ctx.mustSucceed(fetchStep(ctx.owner));
+    yield* ctx.mustSucceed(mergeStep(ctx.owner));
+    const after = yield* ctx.mustSucceed(revParseHeadStep(ctx.owner));
+    const lockDiff = yield* ctx.step(lockDiffStep(ctx.owner, before.output, after.output));
+    return { head: after.output, lockChanged: !Eq.equals(exitCodeOf(lockDiff.exitCode), 0) };
+  });
+
+  const installPhase = Effect.fnUntraced(function* (ctx: RefreshContext, lockChanged: boolean) {
+    if (!lockChanged) return;
+    yield* ctx.mustSucceed(bunInstallStep(ctx.owner));
+  });
+
+  const buildPhase = Effect.fnUntraced(function* (ctx: RefreshContext) {
+    const cruxRetries = yield* Effect.orDie(Config.String("GRAFT_CRUX_EMPTY_RETRIES").pipe(Config.option));
+    return yield* ctx.mustSucceed(deepBuildStep(ctx.options, cruxRetries));
+  });
+
+  const seedPhase = Effect.fnUntraced(function* (ctx: RefreshContext) {
+    if (!ctx.options.seed) return { refusals: 0, seeded: O.none<GraftCacheSyncReport>() };
+    const plan = yield* sync.plan(ctx.owner, yield* sync.discoverSiblings(ctx.owner));
+    const refusals = A.length(A.filter(plan.entries, (entry) => GraftCacheSyncAction.is.refuse(entry.action)));
+    // A refused destination fails closed in the sync service too; recording the
+    // refusal and moving on keeps the nightly job from paging.
+    const seeded = Eq.equals(refusals, 0) ? O.some(yield* sync.apply(plan)) : O.none<GraftCacheSyncReport>();
+    return { refusals, seeded };
+  });
+
+  // A clone that times out or cannot spawn is recorded, not raised: failing
+  // here would interrupt the sibling rebuilds still running and throw away
+  // every result the night already earned.
+  const rebuildClone = Effect.fnUntraced(function* (ctx: RefreshContext, root: string) {
+    const [elapsed, attempted] = yield* Effect.timed(Effect.result(ctx.step(siblingBuildStep(root))));
+    return GraftDeepSiblingRebuild.make({
+      root,
+      exitCode: Result.isSuccess(attempted) ? exitCodeOf(attempted.success.exitCode) : REBUILD_UNFINISHED_EXIT,
+      seconds: NonNegativeInt.make(Num.round(Dur.toSeconds(elapsed), 0)),
+    });
+  });
+
+  const rebuildPhase = Effect.fnUntraced(function* (ctx: RefreshContext, seeded: O.Option<GraftCacheSyncReport>) {
+    return yield* Effect.forEach(rebuildTargets(ctx.options, seeded), (root) => rebuildClone(ctx, root), {
+      concurrency: ctx.options.rebuildConcurrency,
+    });
+  });
+
   const run: GraftDeepRefreshShape["run"] = Effect.fn("GraftDeepRefresh.run")(function* (options) {
     const owner = path.resolve(options.owner);
     const stateDir = path.resolve(options.stateDir);
@@ -595,141 +858,19 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
       );
     });
 
+    const ctx: RefreshContext = { appendLog, mustSucceed, options, owner, step };
     const refresh = Effect.fnUntraced(function* () {
       yield* commit({ phase: "preflight" });
-      yield* checkoutPreflight(owner, appendLog);
-      const graftVersion = yield* runner
-        .run(
-          GraftDeepRunnerStep.make({
-            args: ["--version"],
-            command: "graft",
-            cwd: owner,
-            phase: "preflight",
-            timeout: "2 minutes",
-          })
-        )
-        .pipe(
-          Effect.mapError((cause) =>
-            GraftDeepPreflightError.make({
-              path: owner,
-              message: `graft does not resolve on PATH for the refresh: ${cause.message}`,
-              cause,
-            })
-          )
-        );
-      if (!Eq.equals(exitCodeOf(graftVersion.exitCode), 0)) {
-        return yield* GraftDeepPreflightError.make({
-          path: owner,
-          message: `graft --version exited with ${graftVersion.exitCode}; the meaning tier cannot be rebuilt.`,
-        });
-      }
-      yield* appendLog(`$ graft --version\n${graftVersion.output}\n`);
-      const patchKit = path.join(owner, "scripts", "graft", "apply-dist-patches.sh");
-      const patches = yield* runner
-        .run(
-          GraftDeepRunnerStep.make({
-            args: ["--check"],
-            command: patchKit,
-            cwd: owner,
-            phase: "preflight",
-            timeout: "5 minutes",
-          })
-        )
-        .pipe(
-          Effect.mapError((cause) => GraftDeepPreflightError.make({ path: patchKit, message: cause.message, cause }))
-        );
-      yield* appendLog(`$ ${formatCommandLine(patchKit, ["--check"])}\n${patches.output}\n`);
-      if (!Eq.equals(exitCodeOf(patches.exitCode), 0)) {
-        return yield* GraftDeepPreflightError.make({
-          path: patchKit,
-          message: `${patchKit} --check exited with ${patches.exitCode}; the installed Graft is missing repo patches.`,
-        });
-      }
+      yield* preflightPhase(ctx);
 
       yield* commit({ phase: "pull" });
-      const before = yield* mustSucceed(
-        GraftDeepRunnerStep.make({
-          args: ["rev-parse", "HEAD"],
-          command: "git",
-          cwd: owner,
-          phase: "pull",
-          source: "stdout",
-          timeout: "2 minutes",
-        })
-      );
-      yield* mustSucceed(
-        GraftDeepRunnerStep.make({
-          args: ["fetch", "--quiet", "origin"],
-          command: "git",
-          cwd: owner,
-          phase: "pull",
-          timeout: "15 minutes",
-        })
-      );
-      yield* mustSucceed(
-        GraftDeepRunnerStep.make({
-          args: ["merge", "--ff-only", "origin/main"],
-          command: "git",
-          cwd: owner,
-          phase: "pull",
-          timeout: "5 minutes",
-        })
-      );
-      const after = yield* mustSucceed(
-        GraftDeepRunnerStep.make({
-          args: ["rev-parse", "HEAD"],
-          command: "git",
-          cwd: owner,
-          phase: "pull",
-          source: "stdout",
-          timeout: "2 minutes",
-        })
-      );
-      const lockDiff = yield* step(
-        GraftDeepRunnerStep.make({
-          args: ["diff", "--quiet", before.output, after.output, "--", "bun.lock"],
-          command: "git",
-          cwd: owner,
-          phase: "pull",
-          timeout: "5 minutes",
-        })
-      );
-      yield* commit({ head: after.output, phase: "install" });
-      if (!Eq.equals(exitCodeOf(lockDiff.exitCode), 0)) {
-        yield* mustSucceed(
-          GraftDeepRunnerStep.make({
-            args: ["install", "--frozen-lockfile"],
-            command: "bun",
-            cwd: owner,
-            phase: "install",
-            timeout: "30 minutes",
-          })
-        );
-      }
+      const pulled = yield* pullPhase(ctx);
+
+      yield* commit({ head: pulled.head, phase: "install" });
+      yield* installPhase(ctx, pulled.lockChanged);
 
       yield* commit({ phase: "build" });
-      const cruxRetries = yield* Effect.orDie(Config.String("GRAFT_CRUX_EMPTY_RETRIES").pipe(Config.option));
-      const build = yield* mustSucceed(
-        GraftDeepRunnerStep.make({
-          args: ["build", "--deep", "-j", `${options.jobs}`, "--allow-partial"],
-          command: "graft",
-          cwd: owner,
-          env: {
-            ...pipe(
-              O.fromUndefinedOr(options.model),
-              O.map((model) => ({ GRAFT_MODEL: model })),
-              O.getOrElse(() => ({}))
-            ),
-            ...pipe(
-              cruxRetries,
-              O.map((retries) => ({ GRAFT_CRUX_EMPTY_RETRIES: retries })),
-              O.getOrElse(() => ({ GRAFT_CRUX_EMPTY_RETRIES: "2" }))
-            ),
-          },
-          phase: "build",
-          timeout: "5 hours",
-        })
-      );
+      const build = yield* buildPhase(ctx);
       const coverage = parseDeepCoverage(build.output);
 
       yield* commit({
@@ -739,89 +880,33 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
           () => ({})
         ),
       });
-      let refusals = 0;
-      let seeded = O.none<GraftCacheSyncReport>();
-      if (options.seed) {
-        const plan = yield* sync.plan(owner, yield* sync.discoverSiblings(owner));
-        refusals = A.length(A.filter(plan.entries, (entry) => GraftCacheSyncAction.is.refuse(entry.action)));
-        // A refused destination fails closed in the sync service too; recording
-        // the refusal and moving on keeps the nightly job from paging.
-        seeded = Eq.equals(refusals, 0) ? O.some(yield* sync.apply(plan)) : O.none<GraftCacheSyncReport>();
-      }
+      const seed = yield* seedPhase(ctx);
 
       yield* commit({
         phase: "rebuild",
         ...O.getOrElse(
-          O.map(seeded, (report) => ({ seed: report })),
+          O.map(seed.seeded, (report) => ({ seed: report })),
           () => ({})
         ),
       });
-      let rebuilt: ReadonlyArray<GraftDeepSiblingRebuild> = [];
-      if (options.rebuild && O.isSome(seeded)) {
-        const roots = A.sort(A.dedupe(A.map(seeded.value.plan.entries, (entry) => entry.target.root)), Order.String);
-        rebuilt = yield* Effect.forEach(
-          roots,
-          Effect.fnUntraced(function* (root) {
-            // A clone that times out or cannot spawn is recorded, not raised:
-            // failing here would interrupt the sibling rebuilds still running
-            // and throw away every result the night already earned.
-            const [elapsed, attempted] = yield* Effect.timed(
-              Effect.result(
-                step(
-                  GraftDeepRunnerStep.make({
-                    args: ["build"],
-                    command: "graft",
-                    cwd: root,
-                    phase: "rebuild",
-                    timeout: "15 minutes",
-                  })
-                )
-              )
-            );
-            return GraftDeepSiblingRebuild.make({
-              root,
-              exitCode: Result.isSuccess(attempted) ? exitCodeOf(attempted.success.exitCode) : REBUILD_UNFINISHED_EXIT,
-              seconds: NonNegativeInt.make(Num.round(Dur.toSeconds(elapsed), 0)),
-            });
-          }),
-          { concurrency: options.rebuildConcurrency }
-        );
-      }
+      const rebuilt = yield* rebuildPhase(ctx, seed.seeded);
 
-      const ratio = O.map(coverage, (value) => (Eq.equals(value.total, 0) ? 0 : value.covered / value.total));
-      const belowTarget = O.getOrElse(
-        O.map(ratio, (value) => value < options.minCoverage),
-        () => true
-      );
-      const rebuildFailures = A.length(A.filter(rebuilt, (entry) => !Eq.equals(entry.exitCode, 0)));
-      const degraded = belowTarget || refusals > 0 || rebuildFailures > 0;
-      // Absent coverage has two very different causes: a build that printed no
-      // coverage line, and a build whose line was cut off by the capture bound.
-      // The operator needs to know which before rerunning anything.
-      const coverageNote = O.match(ratio, {
-        onNone: () =>
-          build.truncated
-            ? "the build printed no readable coverage line because its output was truncated at the capture bound"
-            : "the build printed no coverage line",
-        onSome: (value) =>
-          value < options.minCoverage
-            ? `coverage is ${Num.round(value * 100, 1)}%, below the ${Num.round(options.minCoverage * 100, 1)}% target`
-            : "",
+      const decided = decideOutcome({
+        coverage,
+        minCoverage: options.minCoverage,
+        rebuilt,
+        refusals: seed.refusals,
+        truncated: build.truncated,
       });
-      const notes = A.filter(
-        [
-          coverageNote,
-          refusals > 0 ? `${refusals} seed destination(s) were refused and nothing was seeded` : "",
-          rebuildFailures > 0 ? `${rebuildFailures} sibling rebuild(s) exited non-zero` : "",
-        ],
-        Str.isNonEmpty
-      );
       return yield* commit({
         finishedAt: DateTime.formatIso(yield* DateTime.now),
-        outcome: degraded ? GraftDeepRefreshOutcome.Enum.degraded : GraftDeepRefreshOutcome.Enum.ok,
+        outcome: decided.outcome,
         phase: "done",
         rebuilt,
-        ...(A.isReadonlyArrayNonEmpty(notes) ? { message: A.join(notes, "; ") } : {}),
+        ...O.getOrElse(
+          O.map(decided.message, (message) => ({ message })),
+          () => ({})
+        ),
       });
     });
 
