@@ -140,7 +140,7 @@ models and effort levels they actually recorded.
   memory): agent worktrees belong in the sibling `-worktrees` root, disposable
   installs under `~/.cache/beep/`. `beep quality tmpfs-reap` is the janitor;
   retire a lane with `bun run beep worktree remove <name> --archive [--delete-branch]`
-  (sibling root or the clone's `.claude/worktrees/`), or from inside it after
+  (sibling root or the clone's `.claude/worktrees/<name>`), or from inside it after
   the merge with `bun run beep yeet sweep --retire`.
 
 ## Touch → Skill / Command

@@ -105,11 +105,12 @@ export const retireBlocker: {
  *
  * The lane is the checkout the command runs in, or the one `--lane` names
  * when the command runs from the owning clone (or anywhere else in the same
- * repository). The owning clone is the parent of `git rev-parse
- * --git-common-dir`; when the lane's top level equals it the lane is the clone
- * itself and the plan fails, because there is nothing to retire and a plain
- * `yeet sweep` is the right command. A detached lane has no branch to retire
- * and fails the same way, and a `--lane` from another repository is refused.
+ * repository). The owning clone is the parent of the git common dir
+ * (`git rev-parse --git-common-dir`); when the lane's top level equals it the
+ * lane is the clone itself and the plan fails: there is nothing to retire and
+ * a plain `yeet sweep` is the right command. A detached lane has no branch to
+ * retire and fails the same way, and a `--lane` from another repository is
+ * refused.
  *
  * **Example** (Build a plan effect)
  *

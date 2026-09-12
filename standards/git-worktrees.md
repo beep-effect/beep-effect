@@ -171,7 +171,7 @@ bun run beep worktree remove <name> --archive [--delete-branch]
 ```
 
 `<name>` resolves under the sibling worktrees root first and then under the
-clone's `.claude/worktrees/`, so a Claude Code desktop lane retires with the
+clone's `.claude/worktrees/<name>`, so a Claude Code desktop lane retires with the
 same command. After its pull request merged, the one-shot form is
 `bun run beep yeet sweep --retire [--lane <path>]`: it archive-retires the
 lane (the invoking worktree, or the one `--lane` names when run from the
