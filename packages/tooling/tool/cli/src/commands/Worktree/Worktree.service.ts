@@ -41,6 +41,8 @@ import {
   WorktreeRepositoryHash,
   WorktreeResidueManifest,
   WorktreeResidueReason,
+  WorktreeUnpushedInspection,
+  WorktreeUpstreamState,
 } from "./Worktree.schemas.ts";
 import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -304,7 +306,13 @@ export const worktreeResidueReason: {
  * @since 0.0.0
  */
 export interface WorktreeRemovalServiceShape {
-  /** Inspect whether `HEAD` contains commits absent from `origin/main` or its upstream. @since 0.0.0 */
+  /**
+   * Inspect whether `HEAD` contains commits absent from the remote default
+   * branch or the branch upstream; a pruned upstream defers to the default
+   * branch instead of failing.
+   *
+   * @since 0.0.0
+   */
   readonly hasUnpushedCommits: (
     targetPath: string,
     branch: O.Option<string>
@@ -409,6 +417,19 @@ const runPreservationCommand = Effect.fn("WorktreeRemovalService.runPreservation
   return yield* runGitOutput(cwd, args, preservationErrorAdapter(step, failMessage, affectedPath));
 });
 
+const runPreservationProbe = Effect.fn("WorktreeRemovalService.runPreservationProbe")(function* (
+  cwd: string,
+  args: ReadonlyArray<string>,
+  step: WorktreePreservationError["step"],
+  failMessage: string,
+  affectedPath?: string
+): Effect.fn.Return<string, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+  // Machine-read probes take stdout alone: a zero-exit git diagnostic on stderr
+  // (a warning, advice, or trace line) must never pass for a ref name or a count.
+  const output = yield* runGitRawOutput(cwd, args, preservationErrorAdapter(step, failMessage, affectedPath));
+  return Str.trim(output);
+});
+
 const decodeCount = Effect.fn("WorktreeRemovalService.decodeCount")(function* (
   output: string,
   step: WorktreePreservationError["step"]
@@ -423,7 +444,7 @@ const countCommits = Effect.fn("WorktreeRemovalService.countCommits")(function* 
   revision: string,
   step: WorktreePreservationError["step"]
 ): Effect.fn.Return<NonNegativeInt, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* runPreservationCommand(
+  const output = yield* runPreservationProbe(
     targetPath,
     ["rev-list", "--count", revision, "--"],
     step,
@@ -433,44 +454,116 @@ const countCommits = Effect.fn("WorktreeRemovalService.countCommits")(function* 
   return yield* decodeCount(output, step);
 });
 
-const inspectUnpushed = Effect.fn("WorktreeRemovalService.inspectUnpushed")(function* (
+const ORIGIN_REMOTE_PREFIX = "refs/remotes/origin/";
+const ORIGIN_DEFAULT_BRANCH = "main";
+const UPSTREAM_UNSET: WorktreeUpstreamState = { _tag: "unset" };
+
+const refExists = Effect.fn("WorktreeRemovalService.refExists")(function* (
   targetPath: string,
-  branch: O.Option<string>
+  ref: string,
+  step: WorktreePreservationError["step"],
+  failMessage: string
 ): Effect.fn.Return<boolean, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
-  const originMain = yield* runPreservationCommand(
+  // for-each-ref also lists refs nested under the pattern, so only an exact
+  // refname line proves that the ref itself exists.
+  const output = yield* runPreservationProbe(
     targetPath,
-    ["for-each-ref", "--format=%(objectname)", "refs/remotes/origin/main"],
-    "inspect-origin-main",
-    "Failed to inspect origin/main.",
+    ["for-each-ref", "--format=%(refname)", ref],
+    step,
+    failMessage,
     targetPath
   );
-  const originMainRevision = Str.isNonEmpty(Str.trim(originMain)) ? "origin/main..HEAD" : "HEAD";
-  const originMainCount = yield* countCommits(targetPath, originMainRevision, "inspect-origin-main");
+  return A.contains(Str.split(output, "\n"), ref);
+});
 
-  const upstreamCount = yield* O.match(branch, {
-    onNone: () => Effect.succeed(NonNegativeInt.make(0)),
+const resolveOriginDefaultBranch = Effect.fn("WorktreeRemovalService.resolveOriginDefaultBranch")(function* (
+  targetPath: string
+): Effect.fn.Return<string, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+  // A dangling origin/HEAD lists nothing, so the probe falls back to `main`.
+  const symref = yield* runPreservationProbe(
+    targetPath,
+    ["for-each-ref", "--format=%(symref:lstrip=3)", "refs/remotes/origin/HEAD"],
+    "inspect-origin-main",
+    "Failed to inspect origin/HEAD.",
+    targetPath
+  );
+  return pipe(
+    symref,
+    O.liftPredicate(Str.isNonEmpty),
+    O.getOrElse(() => ORIGIN_DEFAULT_BRANCH)
+  );
+});
+
+const inspectUpstreamState = Effect.fn("WorktreeRemovalService.inspectUpstreamState")(function* (
+  targetPath: string,
+  branch: O.Option<string>
+): Effect.fn.Return<WorktreeUpstreamState, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* O.match(branch, {
+    onNone: () => Effect.succeed(UPSTREAM_UNSET),
     onSome: Effect.fn("WorktreeRemovalService.inspectBranchUpstream")(function* (branchName) {
-      const upstream = yield* runPreservationCommand(
+      const ref = yield* runPreservationProbe(
         targetPath,
         ["for-each-ref", "--format=%(upstream)", `refs/heads/${branchName}`],
         "inspect-upstream",
         `Failed to inspect the upstream for ${branchName}.`,
         targetPath
       );
-      const upstreamRef = Str.trim(upstream);
-      return Str.isEmpty(upstreamRef)
-        ? NonNegativeInt.make(0)
-        : yield* countCommits(targetPath, `${upstreamRef}..HEAD`, "inspect-upstream");
+      if (Str.isEmpty(ref)) {
+        return UPSTREAM_UNSET;
+      }
+      // Branch configuration keeps naming the upstream after `git fetch --prune`
+      // drops the remote-tracking ref of a merged branch, so `<ref>..HEAD` would
+      // be unresolvable; report it pruned instead of failing the inspection.
+      const resolves = yield* refExists(
+        targetPath,
+        ref,
+        "inspect-upstream",
+        `Failed to resolve the upstream ${ref} for ${branchName}.`
+      );
+      return Bool.match(resolves, {
+        onFalse: (): WorktreeUpstreamState => ({ _tag: "pruned", ref }),
+        onTrue: (): WorktreeUpstreamState => ({ _tag: "live", ref }),
+      });
     }),
   });
+});
 
-  return originMainCount > 0 || upstreamCount > 0;
+const inspectUnpushed = Effect.fn("WorktreeRemovalService.inspectUnpushed")(function* (
+  targetPath: string,
+  branch: O.Option<string>
+): Effect.fn.Return<WorktreeUnpushedInspection, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+  const defaultBranch = yield* resolveOriginDefaultBranch(targetPath);
+  const baseExists = yield* refExists(
+    targetPath,
+    `${ORIGIN_REMOTE_PREFIX}${defaultBranch}`,
+    "inspect-origin-main",
+    `Failed to inspect origin/${defaultBranch}.`
+  );
+  const baseRange = Bool.match(baseExists, {
+    onFalse: () => "HEAD",
+    onTrue: () => `origin/${defaultBranch}..HEAD`,
+  });
+  const baseCount = yield* countCommits(targetPath, baseRange, "inspect-origin-main");
+  const upstream = yield* inspectUpstreamState(targetPath, branch);
+  // A pruned upstream leaves nothing to count, so the default-branch range answers for it.
+  const upstreamCount = yield* WorktreeUpstreamState.match<
+    Effect.Effect<NonNegativeInt, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner>
+  >(upstream, {
+    unset: () => Effect.succeed(NonNegativeInt.make(0)),
+    pruned: () => Effect.succeed(baseCount),
+    live: ({ ref }) => countCommits(targetPath, `${ref}..HEAD`, "inspect-upstream"),
+  });
+  return WorktreeUnpushedInspection.make({
+    unpushed: baseCount > 0 || upstreamCount > 0,
+    baseRange,
+    upstream,
+  });
 });
 
 const inspectUnpushedAsCommandError = Effect.fn("WorktreeRemovalService.inspectUnpushedAsCommandError")(function* (
   targetPath: string,
   branch: O.Option<string>
-): Effect.fn.Return<boolean, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<WorktreeUnpushedInspection, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   return yield* inspectUnpushed(targetPath, branch).pipe(
     Effect.mapError((error) =>
       WorktreeCommandError.make({
@@ -750,7 +843,8 @@ const makeRemovalReceipt = (
   request: WorktreeRemovalRequest,
   reason: WorktreeResidueReasonType,
   manifest: O.Option<WorktreeResidueManifest>,
-  branchDeleted: boolean
+  branchDeleted: boolean,
+  unpushedInspection: O.Option<WorktreeUnpushedInspection>
 ): WorktreeRemovalReceipt =>
   WorktreeRemovalReceipt.make({
     targetPath: request.targetPath,
@@ -758,6 +852,7 @@ const makeRemovalReceipt = (
     reason,
     manifest,
     branchDeleted,
+    unpushedInspection,
   });
 
 const inspectRemovalChanges = Effect.fn("WorktreeRemovalService.inspectRemovalChanges")(function* <Error>(
@@ -854,19 +949,21 @@ const preserveArchiveResidue = Effect.fn("WorktreeRemovalService.preserveArchive
   });
 });
 
+type ArchiveRemovalPlan = {
+  readonly reason: WorktreeResidueReasonType;
+  readonly manifest: O.Option<WorktreeResidueManifest>;
+  readonly unpushedInspection: WorktreeUnpushedInspection;
+};
+
 const planArchiveRemoval = Effect.fn("WorktreeRemovalService.planArchiveRemoval")(function* (
   request: WorktreeRemovalRequest,
   head: GitObjectId,
   dirty: boolean
-): Effect.fn.Return<
-  readonly [WorktreeResidueReasonType, O.Option<WorktreeResidueManifest>],
-  WorktreePreservationError,
-  WorktreeRemovalServiceRequirements
-> {
-  const unpushed = yield* inspectUnpushed(request.targetPath, request.branch);
-  const reason = worktreeResidueReason(dirty, unpushed);
-  const manifest = yield* preserveArchiveResidue(request, head, reason, dirty || unpushed);
-  return [reason, manifest];
+): Effect.fn.Return<ArchiveRemovalPlan, WorktreePreservationError, WorktreeRemovalServiceRequirements> {
+  const unpushedInspection = yield* inspectUnpushed(request.targetPath, request.branch);
+  const reason = worktreeResidueReason(dirty, unpushedInspection.unpushed);
+  const manifest = yield* preserveArchiveResidue(request, head, reason, dirty || unpushedInspection.unpushed);
+  return { reason, manifest, unpushedInspection };
 });
 
 const removeWorktree = Effect.fn("WorktreeRemovalService.removeWorktree")(function* (
@@ -941,7 +1038,7 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   return yield* A.match(changes, {
     onEmpty: () =>
       removeWorktree(request, false).pipe(
-        Effect.as(makeRemovalReceipt(request, WorktreeResidueReason.Enum.clean, O.none(), false))
+        Effect.as(makeRemovalReceipt(request, WorktreeResidueReason.Enum.clean, O.none(), false, O.none()))
       ),
     onNonEmpty: (dirtyChanges) => WorktreeDirtyError.new(request.targetPath, A.length(dirtyChanges)),
   });
@@ -981,7 +1078,7 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   request: WorktreeRemovalRequest,
   fenced: WorktreeRemovalRequest
 ): Effect.fn.Return<
-  readonly [WorktreeResidueReasonType, O.Option<WorktreeResidueManifest>, GitObjectId],
+  ArchiveRemovalPlan & { readonly head: GitObjectId },
   WorktreeCommandError | WorktreePreservationError,
   WorktreeRemovalServiceRequirements
 > {
@@ -999,8 +1096,8 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   // Authority is re-tied to the state actually being archived: the fenced HEAD must
   // still be the object id the caller's decision was made under.
   yield* assertAuthorizedHead(request, head);
-  const [reason, manifest] = yield* planArchiveRemoval(fenced, head, A.isReadonlyArrayNonEmpty(changes));
-  return [reason, manifest, head] as const;
+  const plan = yield* planArchiveRemoval(fenced, head, A.isReadonlyArrayNonEmpty(changes));
+  return { ...plan, head };
 });
 
 const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedWorktree")(function* (
@@ -1049,7 +1146,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
     );
     return yield* planned.failure;
   }
-  const [reason, manifest, head] = planned.success;
+  const { reason, manifest, head, unpushedInspection } = planned.success;
   // Re-verify quiescence after capture and before the destructive remove. A scan is a
   // one-time observation, so a same-uid process could have attached to the fenced copy
   // during the capture phase (git status, patch, file copy) — the longest part of the
@@ -1076,7 +1173,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // the shared object store intact, and the branch ref falls only to this
   // compare-and-swap on the archived head.
   const branchDeleted = yield* deleteArchivedBranch(request, head);
-  return makeRemovalReceipt(request, reason, manifest, branchDeleted);
+  return makeRemovalReceipt(request, reason, manifest, branchDeleted, O.some(unpushedInspection));
 });
 
 const removeImpl = Effect.fn("WorktreeRemovalService.remove")(function* (
@@ -1100,7 +1197,10 @@ const makeWorktreeRemovalService = Effect.fn("WorktreeRemovalService.make")(func
       removeImpl(request).pipe(Effect.provide(runtimeContext))
     ),
     hasUnpushedCommits: Effect.fn("WorktreeRemovalService.hasUnpushedCommits")((targetPath, branch) =>
-      inspectUnpushedAsCommandError(targetPath, branch).pipe(Effect.provide(runtimeContext))
+      inspectUnpushedAsCommandError(targetPath, branch).pipe(
+        Effect.map((inspection) => inspection.unpushed),
+        Effect.provide(runtimeContext)
+      )
     ),
   });
 });
