@@ -1,4 +1,3 @@
-import { $AcpId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -17,36 +16,17 @@ import type { JsonTextSyntaxError } from "../AcpJson.codec.ts";
 // `readJsonText`, which the effect parser does not allow injecting. Batch responses are not
 // correlated (ACP never sends JSON-RPC batches); every message is encoded individually.
 
-const $I = $AcpId.create("internal/jsonrpc");
 const EFFECT_RPC_METHOD_PREFIX = "@effect/rpc/";
 const DEFAULT_MAX_BUFFER_SIZE = 16 * 1024 * 1024;
 
 export type AcpWireMessage = RpcMessage.FromClientEncoded | RpcMessage.FromServerEncoded;
 
-export class JsonRpcFrameError extends S.TaggedError<JsonRpcFrameError>($I`JsonRpcFrameError`)(
-  "JsonRpcFrameError",
-  {
-    reason: S.String,
-    frame: S.Unknown,
-  },
-  $I.annoteError<JsonRpcFrameError>("JsonRpcFrameError", {
-    description: "Failure raised when a decoded JSON-RPC frame cannot be mapped to an RPC message.",
-  })
-) {
-  override get message() {
-    return `Invalid JSON-RPC frame: ${this.reason}`;
-  }
-}
-
-export type AcpFrameDecodeError =
-  | JsonTextSyntaxError
-  | JsonRpcFrameError
-  | S.SchemaError
-  | RpcSerialization.MaxBufferSizeExceeded;
+type AcpFrameDecodeError = JsonTextSyntaxError | S.SchemaError | RpcSerialization.MaxBufferSizeExceeded;
 
 const JsonRpcId = S.Union([S.Finite, S.String, S.Null]);
 const JsonRpcHeaders = S.Array(S.Tuple([S.String, S.String]));
 const JsonRpcControlTag = LiteralKit(["Ack", "Interrupt", "Ping", "Eof", "Pong"]);
+const JsonRpcControlParams = S.Struct({ requestId: S.Union([S.String, S.Finite]) });
 const JsonRpcErrorTag = LiteralKit(["Cause", "Defect"]);
 const JsonRpcRequestFrame = S.Struct({
   method: S.String,
@@ -83,6 +63,7 @@ const decodeResponseFrame = S.decodeUnknownResult(JsonRpcResponseFrame);
 const decodeCauseEntries = S.decodeUnknownResult(S.Array(JsonRpcCauseEntry));
 const decodeChunkValues = S.decodeUnknownResult(S.NonEmptyArray(S.Unknown));
 const decodeControlTag = S.decodeUnknownResult(JsonRpcControlTag);
+const decodeControlParams = S.decodeUnknownResult(JsonRpcControlParams);
 const isJsonArray = S.is(S.Array(S.Unknown));
 
 const toCauseEntry = Match.type<(typeof JsonRpcCauseEntry)["Type"]>().pipe(
@@ -92,24 +73,12 @@ const toCauseEntry = Match.type<(typeof JsonRpcCauseEntry)["Type"]>().pipe(
 
 const toHeader = ([name, value]: readonly [string, string]): [string, string] => [name, value];
 
-const toControlMessage = (
-  frame: unknown,
-  tag: string,
-  params: unknown
-): Result.Result<AcpWireMessage, S.SchemaError | JsonRpcFrameError> =>
+const toControlMessage = (tag: string, params: unknown): Result.Result<AcpWireMessage, S.SchemaError> =>
   Result.flatMap(decodeControlTag(tag), (control) => {
-    const requestId = P.isObject(params) ? params.requestId : undefined;
     const withRequestId = (
       make: (requestId: string | number) => AcpWireMessage
-    ): Result.Result<AcpWireMessage, JsonRpcFrameError> =>
-      P.isString(requestId) || P.isNumber(requestId)
-        ? Result.succeed(make(requestId))
-        : Result.fail(
-            JsonRpcFrameError.make({
-              reason: `${control} control message requires a string or number requestId`,
-              frame,
-            })
-          );
+    ): Result.Result<AcpWireMessage, S.SchemaError> =>
+      Result.map(decodeControlParams(params), ({ requestId }) => make(requestId));
     return Match.value(control).pipe(
       Match.when("Ack", () => withRequestId((requestId) => ({ _tag: "Ack", requestId }))),
       Match.when("Interrupt", () => withRequestId((requestId) => ({ _tag: "Interrupt", requestId }))),
@@ -123,10 +92,10 @@ const toControlMessage = (
 const toRequestMessage = (
   frame: unknown,
   request: (typeof JsonRpcRequestFrame)["Type"]
-): Result.Result<AcpWireMessage, S.SchemaError | JsonRpcFrameError> => {
+): Result.Result<AcpWireMessage, S.SchemaError> => {
   const id = O.fromNullishOr(request.id);
   if (O.isNone(id) && Str.startsWith(EFFECT_RPC_METHOD_PREFIX)(request.method)) {
-    return toControlMessage(frame, Str.slice(Str.length(EFFECT_RPC_METHOD_PREFIX))(request.method), request.params);
+    return toControlMessage(Str.slice(Str.length(EFFECT_RPC_METHOD_PREFIX))(request.method), request.params);
   }
   return Result.succeed<AcpWireMessage>({
     _tag: "Request",
@@ -145,7 +114,7 @@ const toRequestMessage = (
 
 const toResponseMessage = (
   response: (typeof JsonRpcResponseFrame)["Type"]
-): Result.Result<AcpWireMessage, S.SchemaError | JsonRpcFrameError> => {
+): Result.Result<AcpWireMessage, S.SchemaError> => {
   const requestId = O.getOrElse(O.fromNullishOr(response.id), () => "");
   const error = O.fromNullishOr(response.error);
   if (O.isSome(error) && error.value._tag === "Defect") {
@@ -176,14 +145,12 @@ const toResponseMessage = (
   });
 };
 
-const decodeJsonRpcMessage = (frame: unknown): Result.Result<AcpWireMessage, S.SchemaError | JsonRpcFrameError> =>
+const decodeJsonRpcMessage = (frame: unknown): Result.Result<AcpWireMessage, S.SchemaError> =>
   P.hasProperty(frame, "method")
     ? Result.flatMap(decodeRequestFrame(frame), (request) => toRequestMessage(frame, request))
     : Result.flatMap(decodeResponseFrame(frame), toResponseMessage);
 
-export const decodeJsonRpcFrame = (
-  frame: unknown
-): Result.Result<ReadonlyArray<AcpWireMessage>, S.SchemaError | JsonRpcFrameError> =>
+const decodeJsonRpcFrame = (frame: unknown): Result.Result<ReadonlyArray<AcpWireMessage>, S.SchemaError> =>
   isJsonArray(frame) ? Result.all(A.map(frame, decodeJsonRpcMessage)) : Result.map(decodeJsonRpcMessage(frame), A.of);
 
 export const makeNdJsonRpcDecoder = (options?: { readonly maxBufferSize?: number | "unbounded" | undefined }) => {
