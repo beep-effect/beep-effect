@@ -113,8 +113,11 @@ export const COGNEE_API_URL_INSECURE = `${COGNEE_ENV.apiUrl} must use https:// (
 
 const LOOPBACK_HOSTS: ReadonlyArray<string> = ["localhost", "127.0.0.1", "[::1]"];
 const decodeUnknownURLOption = S.decodeUnknownOption(S.URLFromString);
+const IPV4_LOOPBACK_PATTERN = /^127(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+const Ipv4LoopbackHost = S.String.check(S.isPattern(IPV4_LOOPBACK_PATTERN));
+const isIpv4LoopbackHost = S.is(Ipv4LoopbackHost);
 const isLoopbackHost = (hostname: string): boolean =>
-  A.contains(LOOPBACK_HOSTS, hostname) || Str.endsWith(".localhost")(hostname) || Str.startsWith("127.")(hostname);
+  A.contains(LOOPBACK_HOSTS, hostname) || Str.endsWith(".localhost")(hostname) || isIpv4LoopbackHost(hostname);
 const isCogneeApiUrl = (input: unknown): input is string =>
   O.exists(
     decodeUnknownURLOption(input),

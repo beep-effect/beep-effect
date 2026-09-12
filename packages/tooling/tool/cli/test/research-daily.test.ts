@@ -278,6 +278,10 @@ layer(testLayer, { timeout: "30 seconds" })("research daily cognify gate", (it) 
       const loopback = yield* readCogneeSettings.pipe(withConfig({ COGNEE_API_URL: UNREACHABLE_COGNEE_URL }));
       expect(O.map(loopback, (settings) => settings.apiUrl)).toEqual(O.some(UNREACHABLE_COGNEE_URL));
       expect(isCogneeApiUrl("http://localhost:8010")).toBe(true);
+      expect(isCogneeApiUrl("http://127.0.0.1:8010")).toBe(true);
+      expect(isCogneeApiUrl("http://127.255.255.254")).toBe(true);
+      expect(isCogneeApiUrl("http://127.example.com")).toBe(false);
+      expect(isCogneeApiUrl("http://127.0.0.256")).toBe(false);
       expect(isCogneeApiUrl("not a url")).toBe(false);
     })
   );
