@@ -9,18 +9,27 @@ import { Order } from "effect";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { decodeSchemaFirstPolicyFindingLine } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
 import { commandTextForStep, TurboWorkspacePackage, turboTaskForStep } from "../../../internal/repo-run/index.ts";
 import { QualityIssue } from "../Yeet.schemas.ts";
-import { categoryForStep, knownSubLaneHintFromOutput, routeForCategory } from "./IssueClassification.ts";
+import { firstRedLaneRun, laneRunLabels } from "./InnerLaneReports.ts";
+import {
+  categoryForLabel,
+  categoryForStep,
+  knownSubLaneHintForLaneRun,
+  knownSubLaneHintFromOutput,
+  routeForCategory,
+} from "./IssueClassification.ts";
 import type {
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
   TurboPlanTask,
 } from "../../../internal/repo-run/index.ts";
+import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
 import type { QualityIssueCategory, QualityIssueSeverity } from "../Yeet.schemas.ts";
 
 const MAX_RAW_EXCERPT_CHARS = 4 * 1024;
@@ -313,57 +322,86 @@ const schemaFirstPolicyIssueFromLine = (
     })
   );
 
+type StepFailureAttribution = {
+  readonly category: QualityIssueCategory;
+  readonly message: string;
+  readonly subCategory: O.Option<string>;
+  readonly remediation: O.Option<string>;
+};
+
+// The lane-run record names the red lane precisely, so the packet issue
+// follows it the same way the verdict's `repairCommand` does: the red lane's
+// catalog hint by id, else a marker inside its own output segment, else the
+// lane itself (its id, label, and recorded launch command). Scanning the whole
+// wrapper output for markers is only the fallback when the record names no red
+// lane, because a passing sibling's marker (`security:osv-scan`,
+// `changeset-status`) sits in the same log as the real failure and used to win
+// the hint.
+const stepFailureAttribution = (
+  step: RepoPlanStep,
+  result: RepoStepRunResult,
+  laneRuns: ReadonlyArray<QualityTaskLaneRun>
+): StepFailureAttribution => {
+  const redLane = firstRedLaneRun(laneRuns);
+  const hint = O.match(redLane, {
+    onNone: () => knownSubLaneHintFromOutput(result.output),
+    onSome: (lane) => knownSubLaneHintForLaneRun(lane, laneRunLabels(laneRuns), result.output),
+  });
+  const failedIn = pipe(
+    O.map(hint, (value) => value.subCategory),
+    O.orElse(() => O.map(redLane, (lane) => lane.label))
+  );
+  return {
+    category: pipe(
+      O.map(hint, (value) => value.category),
+      O.orElse(() => O.flatMap(redLane, (lane) => categoryForLabel(lane.label))),
+      O.getOrElse(() => categoryForStep(step))
+    ),
+    message: O.match(failedIn, {
+      onNone: () => `${step.label} failed with exit code ${result.exitCode}.`,
+      onSome: (name) => `${step.label} failed in ${name} with exit code ${result.exitCode}.`,
+    }),
+    subCategory: pipe(
+      O.map(hint, (value) => value.subCategory),
+      O.orElse(() => O.map(redLane, (lane) => lane.id))
+    ),
+    remediation: pipe(
+      O.map(hint, (value) => value.remediation),
+      O.orElse(() => O.flatMap(redLane, (lane) => lane.commandText))
+    ),
+  };
+};
+
 const fallbackIssueFromResult = (
   context: RepoRunContext,
   step: RepoPlanStep,
   result: RepoStepRunResult,
+  attribution: StepFailureAttribution,
   inferredPackageName: O.Option<string> = O.none()
-): QualityIssue => {
-  const subLaneHint = knownSubLaneHintFromOutput(result.output);
-  const category = pipe(
-    subLaneHint,
-    O.map((hint) => hint.category),
-    O.getOrElse(() => categoryForStep(step))
-  );
-  const message = pipe(
-    subLaneHint,
-    O.map((hint) => `${step.label} failed in ${hint.subCategory} with exit code ${result.exitCode}.`),
-    O.getOrElse(() => `${step.label} failed with exit code ${result.exitCode}.`)
-  );
-  return QualityIssue.make({
-    ...issueBase(context, step, result, category, message, inferredPackageName),
-    id: issueId(step, category, message, inferredPackageName, O.none(), O.none()),
+): QualityIssue =>
+  QualityIssue.make({
+    ...issueBase(context, step, result, attribution.category, attribution.message, inferredPackageName),
+    id: issueId(step, attribution.category, attribution.message, inferredPackageName, O.none(), O.none()),
     severity: "error",
     confidence: "raw",
-    ...optionalProp(
-      "subCategory",
-      pipe(
-        subLaneHint,
-        O.map((hint) => hint.subCategory)
-      )
-    ),
-    ...optionalProp(
-      "remediation",
-      pipe(
-        subLaneHint,
-        O.map((hint) => hint.remediation)
-      )
-    ),
+    ...optionalProp("subCategory", attribution.subCategory),
+    ...optionalProp("remediation", attribution.remediation),
   });
-};
 
 const fallbackIssuesFromResult = (
   context: RepoRunContext,
   step: RepoPlanStep,
-  result: RepoStepRunResult
+  result: RepoStepRunResult,
+  laneRuns: ReadonlyArray<QualityTaskLaneRun>
 ): ReadonlyArray<QualityIssue> => {
   const packageNames = filteredPackageNamesForStep(step);
+  const attribution = stepFailureAttribution(step, result, laneRuns);
   return A.isReadonlyArrayNonEmpty(packageNames)
     ? pipe(
         packageNames,
-        A.map((packageName) => fallbackIssueFromResult(context, step, result, O.some(packageName)))
+        A.map((packageName) => fallbackIssueFromResult(context, step, result, attribution, O.some(packageName)))
       )
-    : [fallbackIssueFromResult(context, step, result)];
+    : [fallbackIssueFromResult(context, step, result, attribution)];
 };
 
 /**
@@ -399,32 +437,63 @@ const fallbackIssuesFromResult = (
  * console.log(qualityIssuesFromStepResult(context, step, result))
  * ```
  *
+ * **Details**
+ *
+ * `laneRuns` are the inner lanes the step recorded in the durable
+ * `quality-task-lane-run/v1` report. When the step failed without a structured
+ * finding, the raw issue's sub-category, category, message, and remediation
+ * follow the first red recorded lane; the whole-output marker scan runs only
+ * when the record names no red lane.
+ *
  * @param context - Shared run context.
  * @param step - Planned step that produced the result.
  * @param result - Captured step result.
+ * @param laneRuns - Inner lanes the step recorded, in record order; empty for
+ * steps that emit no lane-run report.
  * @returns Structured or raw issues; successful results produce no issues.
  * @category parsing
  * @since 0.0.0
  */
 export const qualityIssuesFromStepResult: {
-  (context: RepoRunContext, step: RepoPlanStep, result: RepoStepRunResult): ReadonlyArray<QualityIssue>;
-  (step: RepoPlanStep, result: RepoStepRunResult): (context: RepoRunContext) => ReadonlyArray<QualityIssue>;
-} = dual(3, (context: RepoRunContext, step: RepoPlanStep, result: RepoStepRunResult): ReadonlyArray<QualityIssue> => {
-  if (result.exitCode === 0) {
-    return A.empty();
+  (
+    context: RepoRunContext,
+    step: RepoPlanStep,
+    result: RepoStepRunResult,
+    laneRuns?: ReadonlyArray<QualityTaskLaneRun>
+  ): ReadonlyArray<QualityIssue>;
+  (
+    step: RepoPlanStep,
+    result: RepoStepRunResult,
+    laneRuns?: ReadonlyArray<QualityTaskLaneRun>
+  ): (context: RepoRunContext) => ReadonlyArray<QualityIssue>;
+} = dual(
+  // Both forms accept three arguments, so arity cannot tell them apart: the
+  // data-first form is the one whose first argument is the run context.
+  (args) => P.hasProperty(args[0], "repoRoot"),
+  (
+    context: RepoRunContext,
+    step: RepoPlanStep,
+    result: RepoStepRunResult,
+    laneRuns: ReadonlyArray<QualityTaskLaneRun> = A.empty()
+  ): ReadonlyArray<QualityIssue> => {
+    if (result.exitCode === 0) {
+      return A.empty();
+    }
+
+    const parsedIssues = pipe(
+      result.output ?? "",
+      nonEmptyLines,
+      A.map((line) =>
+        pipe(
+          schemaFirstPolicyIssueFromLine(context, step, result, line),
+          O.orElse(() => diagnosticIssueFromLine(context, step, result, line))
+        )
+      ),
+      A.getSomes
+    );
+
+    return A.isReadonlyArrayNonEmpty(parsedIssues)
+      ? parsedIssues
+      : fallbackIssuesFromResult(context, step, result, laneRuns);
   }
-
-  const parsedIssues = pipe(
-    result.output ?? "",
-    nonEmptyLines,
-    A.map((line) =>
-      pipe(
-        schemaFirstPolicyIssueFromLine(context, step, result, line),
-        O.orElse(() => diagnosticIssueFromLine(context, step, result, line))
-      )
-    ),
-    A.getSomes
-  );
-
-  return A.isReadonlyArrayNonEmpty(parsedIssues) ? parsedIssues : fallbackIssuesFromResult(context, step, result);
-});
+);

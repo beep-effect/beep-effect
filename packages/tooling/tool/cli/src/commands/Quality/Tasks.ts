@@ -1654,6 +1654,7 @@ const qualityTaskLaneRunFromOutcome = (
     ),
     inputDigest,
     redSchedulingDecision: O.isSome(outcome.failure) ? redSchedulingDecision : O.none(),
+    commandText: O.some(commandText(outcome.step.command, outcome.step.args)),
   });
 
 const skippedQualityTaskLaneRun = (lane: GithubCheckLaneWaveSpec["lanes"][number]): QualityTaskLaneRun =>
@@ -1662,6 +1663,7 @@ const skippedQualityTaskLaneRun = (lane: GithubCheckLaneWaveSpec["lanes"][number
     label: lane.step.label,
     status: "not-run-early-stop",
     inputDigest: O.none(),
+    commandText: O.some(commandText(lane.step.command, lane.step.args)),
   });
 
 const appendSkippedQualityTaskLaneRun = Effect.fn("QualityTasks.appendSkippedLaneRun")(function* (
@@ -1764,6 +1766,7 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
           label: lane.step.label,
           status: "reused",
           inputDigest: O.none(),
+          commandText: O.some(commandText(lane.step.command, lane.step.args)),
         })
       ),
       failures: A.empty<QualityTaskFailed>(),
