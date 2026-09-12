@@ -79,12 +79,10 @@ const parsedFcNumRuns = pipe(
 );
 export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
 
-/**
- * Per-test ceiling every doctest owner inherits in doctest mode. The first example of a file
- * pays the module transform, which exceeded 30 s under the fleet's 4-way task concurrency on a
- * 4-vCPU runner (C3.4 hosted round 1).
- */
-export const vitestDoctestTestTimeoutMs = 120_000;
+// Per-test ceiling every doctest owner inherits in doctest mode. The first example of a file
+// pays the module transform, which exceeded 30 s under the fleet's 4-way task concurrency on a
+// 4-vCPU runner (C3.4 hosted round 1). The doctest guard asserts this value per owner.
+const vitestDoctestTestTimeoutMs = 120_000;
 
 /**
  * Resolve a package's per-test timeout without losing the shared doctest and instrumentation
