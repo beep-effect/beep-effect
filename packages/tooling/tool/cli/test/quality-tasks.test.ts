@@ -4772,6 +4772,42 @@ describe("quality task adapter", () => {
         );
       });
 
+      it("passes a raised package total the lane reaches", () => {
+        const result = compare(
+          proposing(packageRow(90, 10, { [filePath]: coverageFileBaseline(80, 20) })),
+          packageRow(90, 10, { [filePath]: coverageFileBaseline(80, 20) })
+        );
+
+        expect(result.raisedRowsJudged).toBe(4);
+        expect(result.raisedRowFailures).toEqual([]);
+        expect(result.failures).toEqual([]);
+      });
+
+      it("does not fail a vanished file whose raised metric proposes zero percent", () => {
+        const newFile = "packages/existing/src/New.ts";
+        const zeroRaise = compareCoverageRegressionSnapshotsWithProposedForTesting(
+          CoverageComparisonBaselines.make({
+            baseline: withRows({
+              "@beep/existing": packageRow(80, 20, { [filePath]: coverageFileBaseline(0, 5) }),
+            }),
+            // Stricter by count only, still 0%: main's vanished-path rule needs a
+            // positive percentage, so nothing fails. The file unknown to the base
+            // document is not a candidate at all.
+            proposed: proposing(
+              packageRow(80, 20, {
+                [filePath]: coverageFileBaseline(0, 2),
+                [newFile]: coverageFileBaseline(50, 1),
+              })
+            ),
+          }),
+          [{ packageName: "@beep/existing", baseline: packageRow(80, 20, {}) }],
+          false
+        );
+
+        expect(zeroRaise.raisedRowsJudged).toBe(4);
+        expect(zeroRaise.raisedRowFailures).toEqual([]);
+      });
+
       it("judges nothing without a pinned base or without a measured package", () => {
         const actual = packageRow(85, 15, { [filePath]: coverageFileBaseline(85, 15) });
 
