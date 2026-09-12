@@ -4,6 +4,7 @@ import {
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
 import { RepoRunContext } from "@beep/repo-cli/test/RepoRun";
+import { GhPrView } from "@beep/repo-cli/test/SharedInternals";
 import {
   planRetire,
   renderRetirement,
@@ -19,6 +20,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
@@ -51,19 +53,18 @@ const runGitText = Effect.fn("YeetRetireTest.runGitText")(function* (cwd: string
   return Str.trim(output);
 });
 
+const encodePrView = S.encodeEffect(S.fromJsonString(GhPrView));
+
 const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN") =>
   Layer.effect(
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.gen(function* () {
       const real = yield* ChildProcessSpawner.ChildProcessSpawner;
+      // The fake answers with the same document a real `gh pr view --json` prints,
+      // encoded through the schema the sweep decodes it with.
       const output = Stream.make(
         new TextEncoder().encode(
-          JSON.stringify({
-            number: 1,
-            headRefName: "claude/lane",
-            state,
-            headRefOid,
-          })
+          yield* encodePrView(GhPrView.make({ number: 1, headRefName: "claude/lane", state, headRefOid }))
         )
       );
       const handle = ChildProcessSpawner.makeHandle({
