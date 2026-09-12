@@ -109,3 +109,27 @@ Receipts recorded at the moment friction happened, per the repo's friction-first
   not its log line. Note the shape — the first receipt on this page is about a gate reaching a
   confident wrong conclusion from insufficient evidence, and it reached a confident wrong
   conclusion from insufficient evidence.
+
+## 2026-09-12 — the worktree remover assumed a live upstream
+
+- **Doing:** retiring the lane worktree `beep-effect6-worktrees/graft-deep-coverage-rows` with
+  `bun run beep worktree remove graft-deep-coverage-rows --archive --delete-branch` after PR #1099
+  merged.
+- **Evidence:** the command refused with `Preservation step inspect-upstream failed: Failed to
+  count commits in refs/remotes/origin/graft-deep-coverage-rows..HEAD` (git exit 128, `unknown
+  revision`). The repo sets `delete_branch_on_merge`, so GitHub deleted the head branch at merge,
+  and a later `git fetch --prune` dropped `refs/remotes/origin/graft-deep-coverage-rows` — while
+  `branch.<name>.remote` / `branch.<name>.merge` kept naming it. `git for-each-ref
+  --format=%(upstream)` prints that name straight from configuration, so the probe handed an
+  unresolvable range to `git rev-list --count`. The 2026-09-02 repair in #956 covered only a branch
+  with no upstream at all (empty `%(upstream)`), not a configured-but-pruned one.
+- **Cost:** one refused retirement; the operator retired the worktree by hand with
+  `git worktree remove` plus a branch delete, which bypasses the archive receipt the command
+  exists to write.
+- **Prevention:** the probe now classifies the upstream as `unset` / `live` / `pruned`
+  (`WorktreeUpstreamState`) and, when pruned, judges unpushed commits against
+  `origin/<default>..HEAD` (default from `refs/remotes/origin/HEAD`, `main` otherwise); the
+  receipt names the fallback range, and the doctor row no longer errors. Rule: a ref name taken
+  from branch configuration (`%(upstream)`, `%(push)`) is a name, not proof of existence —
+  resolve it before building a revision range on it, and prove existence with an exact
+  `for-each-ref --format=%(refname)` line, because the pattern form also matches nested refs.

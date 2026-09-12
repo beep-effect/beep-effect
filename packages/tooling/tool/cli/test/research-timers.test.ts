@@ -1,14 +1,22 @@
 import { researchCommand, runResearchInstallTimers } from "@beep/repo-cli/commands/Research";
 import {
+  parseSystemdUnit,
+  readInstalledSystemdUnit,
   resolveOperatorPath,
   resolveSystemdBunPath,
   SystemdBunCandidate,
+  SystemdInstalledUnit,
+  SystemdUnitDirective,
   SystemdUnitPath,
+  systemdEnvironmentFile,
+  systemdUnitDirective,
+  systemdUserUnitDir,
+  unquoteSystemdArgument,
 } from "@beep/repo-cli/test/Systemd";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -391,6 +399,233 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         "systemctl --user disable --now beep-research-repo-card.timer",
         "systemctl --user daemon-reload",
       ]);
+    })
+  );
+  it.effect(
+    "parses systemd directives in order and supports data-first and data-last readers",
+    Effect.fn(function* () {
+      const text =
+        "[Unit]\n# Description=ignored\n; ignored=yes\n\n Description=  daily job  \n[Service]\nWorkingDirectory= /clone \nEnvironment=FIRST=one\nEnvironment=SECOND=two\n";
+      const expected = SystemdInstalledUnit.make({
+        fileName: "test.service",
+        directives: [
+          SystemdUnitDirective.make({ key: "Description", value: "daily job" }),
+          SystemdUnitDirective.make({ key: "WorkingDirectory", value: "/clone" }),
+          SystemdUnitDirective.make({ key: "Environment", value: "FIRST=one" }),
+          SystemdUnitDirective.make({ key: "Environment", value: "SECOND=two" }),
+        ],
+      });
+      const unit = parseSystemdUnit(text, "test.service");
+      expect(unit).toEqual(expected);
+      expect(pipe(text, parseSystemdUnit("test.service"))).toEqual(expected);
+      assertSome(systemdUnitDirective(unit, "Environment"), "FIRST=one");
+      assertSome(pipe(unit, systemdUnitDirective("WorkingDirectory")), "/clone");
+      assertNone(systemdUnitDirective(unit, "Missing"));
+      assertNone(pipe(unit, systemdUnitDirective("Missing")));
+    })
+  );
+
+  it.effect(
+    "unquotes systemd arguments and strips optional environment-file dashes",
+    Effect.fn(function* () {
+      expect(unquoteSystemdArgument('"/opt/bun 1/bin/bun"')).toBe("/opt/bun 1/bin/bun");
+      expect(unquoteSystemdArgument("/usr/bin/bun")).toBe("/usr/bin/bun");
+      expect(unquoteSystemdArgument("")).toBe("");
+      expect(unquoteSystemdArgument('"')).toBe('"');
+      expect(unquoteSystemdArgument('""')).toBe("");
+      expect(unquoteSystemdArgument('"/usr/bin/bun')).toBe('"/usr/bin/bun');
+      assertSome(systemdEnvironmentFile(parseSystemdUnit("EnvironmentFile=-/env", "x.service")), "/env");
+      assertSome(systemdEnvironmentFile(parseSystemdUnit("EnvironmentFile=/env", "x.service")), "/env");
+      assertNone(systemdEnvironmentFile(parseSystemdUnit("[Service]", "x.service")));
+    })
+  );
+
+  it.effect(
+    "reads absent and written systemd units from the user unit directory",
+    Effect.fn(function* () {
+      const { fs, path, home, unitDir } = yield* fixture();
+      expect(systemdUserUnitDir(path, home)).toBe(unitDir);
+      expect(pipe(path, systemdUserUnitDir(home))).toBe(unitDir);
+      const options = { home, fileName: "test.service" };
+      assertNone(yield* readInstalledSystemdUnit(options));
+      yield* fs.makeDirectory(unitDir, { recursive: true });
+      yield* fs.writeFileString(path.join(unitDir, options.fileName), "[Service]\nWorkingDirectory= /clone \n");
+      assertSome(
+        yield* readInstalledSystemdUnit(options),
+        SystemdInstalledUnit.make({
+          fileName: options.fileName,
+          directives: [SystemdUnitDirective.make({ key: "WorkingDirectory", value: "/clone" })],
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "installs with an explicit repo root and expands a home-relative repo root",
+    Effect.fn(function* () {
+      const { fs, path, home, readUnit } = yield* fixture();
+      const root = path.join(home, "clone");
+      yield* fs.makeDirectory(root);
+      yield* Effect.forEach(
+        [root, "~/clone"],
+        Effect.fn(function* (repoRoot) {
+          const installed = yield* captureOutput(
+            runResearchInstallTimers({
+              repoRoot: O.some(repoRoot),
+              bunPath: O.some("/usr/bin/bun"),
+              page: O.none(),
+              uninstall: false,
+            }).pipe(withSystemctl([]), withHome(home))
+          );
+          assertSuccess(installed.result, undefined);
+          expect(Str.split(yield* readUnit("beep-research-daily.service"), "\n")).toContain(`WorkingDirectory=${root}`);
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "refuses a repo root that is a file, not a directory",
+    Effect.fn(function* () {
+      const { fs, path, home, unitDir } = yield* fixture();
+      const file = path.join(home, "not-a-clone");
+      yield* fs.writeFileString(file, "");
+      const refused = yield* captureOutput(
+        runResearchInstallTimers({
+          bunPath: O.some("/usr/bin/bun"),
+          page: O.none(),
+          repoRoot: O.some(file),
+          uninstall: false,
+        }).pipe(withSystemctl([]), withHome(home))
+      );
+      assertSome(O.map(failureMessage(refused.result), Str.includes("is not an existing directory")), true);
+      expect(yield* fs.exists(unitDir)).toBe(false);
+    })
+  );
+
+  it.effect(
+    "refuses a missing repo root before creating the unit directory",
+    Effect.fn(function* () {
+      const { fs, path, home, unitDir } = yield* fixture();
+      const calls: Array<string> = [];
+      const refused = yield* captureOutput(
+        runResearchInstallTimers({
+          repoRoot: O.some(path.join(home, "missing")),
+          bunPath: O.some("/usr/bin/bun"),
+          page: O.none(),
+          uninstall: false,
+        }).pipe(withSystemctl(calls), withHome(home))
+      );
+      assertSome(failureTag(refused.result), "ResearchCommandError");
+      assertSome(O.map(failureMessage(refused.result), Str.includes("is not an existing directory")), true);
+      expect(yield* fs.exists(unitDir)).toBe(false);
+      expect(calls).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "refuses research timer refresh before the first install",
+    Effect.fn(function* () {
+      const { fs, home, unitDir } = yield* fixture();
+      const calls: Array<string> = [];
+      const refused = yield* captureOutput(
+        runResearchInstallTimers({
+          refresh: true,
+          repoRoot: O.none(),
+          bunPath: O.none(),
+          page: O.none(),
+          uninstall: false,
+        }).pipe(withSystemctl(calls), withHome(home))
+      );
+      assertSome(failureTag(refused.result), "ResearchCommandError");
+      assertSome(O.map(failureMessage(refused.result), Str.includes("install first")), true);
+      expect(yield* fs.exists(unitDir)).toBe(false);
+      expect(calls).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "refreshes both research services onto the shim while preserving the repo root and overriding the recorded page",
+    Effect.fn(function* () {
+      const { fs, path, home, touch, readUnit, execLine } = yield* fixture();
+      const root = path.join(home, "clone");
+      yield* fs.makeDirectory(root);
+      const installed = yield* captureOutput(
+        runResearchInstallTimers({
+          repoRoot: O.some(root),
+          bunPath: O.some("/usr/bin/bun"),
+          page: O.some(PAGE_ID),
+          uninstall: false,
+        }).pipe(withSystemctl([]), withHome(home))
+      );
+      assertSuccess(installed.result, undefined);
+      const shim = path.join(home, ".local", "share", "mise", "shims", "bun");
+      yield* touch(shim);
+      const otherPage = "11111111111111111111111111111111";
+      yield* Effect.forEach(
+        [O.none<string>(), O.some(otherPage)],
+        Effect.fn(function* (page) {
+          const refreshed = yield* captureOutput(
+            runResearchInstallTimers({
+              refresh: true,
+              repoRoot: O.none(),
+              bunPath: O.none(),
+              page,
+              uninstall: false,
+            }).pipe(withSystemctl([]), withHome(home))
+          );
+          assertSuccess(refreshed.result, undefined);
+          assertSome(
+            yield* execLine("beep-research-daily.service"),
+            `ExecStart="${shim}" run beep research daily --commit --page ${O.getOrElse(page, () => PAGE_ID)}`
+          );
+          assertSome(
+            yield* execLine("beep-research-repo-card.service"),
+            `ExecStart="${shim}" run beep research repo-card`
+          );
+          expect(Str.split(yield* readUnit("beep-research-daily.service"), "\n")).toContain(`WorkingDirectory=${root}`);
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "wires --repo-root and --refresh through the research command tree",
+    Effect.fn(function* () {
+      const { fs, path, home, touch, execLine, readUnit, unitsPresent } = yield* fixture();
+      const root = path.join(home, "clone");
+      yield* fs.makeDirectory(root);
+      const calls: Array<string> = [];
+      const runCommand = (args: ReadonlyArray<string>) =>
+        captureOutput(Command.runWith(researchCommand, { version: "test", renderErrors: false })(args)).pipe(
+          withSystemctl(calls),
+          withHome(home),
+          provideScopedLayer(FetchHttpClient.layer)
+        );
+      const installed = yield* runCommand(["install-timers", "--repo-root", root, "--bun-path", "/usr/bin/bun"]);
+      assertSuccess(installed.result, undefined);
+      const shim = path.join(home, ".local", "share", "mise", "shims", "bun");
+      yield* touch(shim);
+      const refreshed = yield* runCommand(["install-timers", "--refresh"]);
+      assertSuccess(refreshed.result, undefined);
+      expect(yield* unitsPresent).toEqual([true, true, true, true]);
+      assertSome(
+        yield* execLine("beep-research-daily.service"),
+        `ExecStart="${shim}" run beep research daily --commit`
+      );
+      expect(Str.split(yield* readUnit("beep-research-daily.service"), "\n")).toContain(`WorkingDirectory=${root}`);
+      expect(calls).toEqual(
+        A.flatten(
+          A.replicate(
+            [
+              "systemctl --user daemon-reload",
+              "systemctl --user enable --now beep-research-daily.timer",
+              "systemctl --user enable --now beep-research-repo-card.timer",
+            ],
+            2
+          )
+        )
+      );
     })
   );
 });
