@@ -3,13 +3,14 @@
   "initiative": {
     "id": "attributed-multi-claim-span",
     "title": "Attributed Multi-Claim Span",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-09-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/attributed-multi-claim-span",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "2026-09-12: paused at the roadmap re-eval (graduated 2026-08-13, zero execution, flagged stale-active by goals doctor). Resumes when goals/citation-verified-span-substrate closes and a Lane 2 slot pulls the LangExtract-to-ClaimGate proof; see the docs/ROADMAP.md parked table.",
   "mission": "Ship attributed, supersedable multi-claim annotations over TextAnchor/EvidenceSpan and prove the LangExtract-to-ClaimGate loop.",
   "executionCapable": true,
   "reflectionRequired": true,

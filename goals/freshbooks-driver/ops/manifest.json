@@ -11,6 +11,7 @@
   },
   "packetPath": "goals/freshbooks-driver",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 987,
   "mission": "Ship @beep/freshbooks on the hubspot pattern: rotation-safe token helper, clients/invoices/payments reads, and spike-gated invoice-PDF retrieval",
   "statusNote": "2026-09-03: closed via PR #987 (driven to mergeable with yeet). Shipped: @beep/freshbooks with single-refresh-owner token rotation (concurrent-refresh proof), schema-decoded identity/clients/invoices/payments read verbs over distinct account_id/business_id namespaces, and the P0 spike report (request limits, webhook retry schedule). Not shipped: the invoice-PDF verb stays out per SPEC because its live validation needs a one-time operator OAuth grant (redirect-URI registration + Authorize consent) an agent cannot perform; the ready harness is research/live-spike-harness.md and the operator-export fallback is recorded in the closeout reflection.",
   "blockedBy": [],

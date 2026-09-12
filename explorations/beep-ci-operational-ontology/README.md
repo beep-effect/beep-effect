@@ -28,21 +28,31 @@ Auditor run 3 is closed and projected; run-4 pre-work is in flight. What is open
    (158 families), and the kind-level denotation-grain sentence with its
    empty-candidate clause. Lane brief and report:
    [research/run4-lanes/](./research/run4-lanes/).
-2. **Run-4 intake docket drafted** as a pre-pin draft in
-   [research/auditor-run4-intake.md](./research/auditor-run4-intake.md) (this PR):
+2. **Run-4 intake docket merged in PR #1095** (`9292600368`) as a pre-pin draft in
+   [research/auditor-run4-intake.md](./research/auditor-run4-intake.md):
    the prior-run chain (`b9c140ccd31b`, 284 rows), Queue A (15 flagged TAXONOMY
    records), Queue B (rat-047..052), Queue C (all 138 unresolved rows exactly once:
    84 live in three buckets, 54 carried by the fifteen sitting-2 clusters), Queue D
-   (the eight withdrawals and today's organic eviction census), Queue E (CQ-019/020
+   (the eight withdrawals and a dated organic eviction census), Queue E (CQ-019/020
    leftovers), Queue F (S6 POLICY `corpus_tree`/`corpus_base`), and the engine
    follow-ups queued for a later pin (NDJSON configuration support, historical
    archive-path handling, index rows referencing more than one proposal per
-   observation). Every count is re-verified at the run-4 pin.
+   observation). The 2026-09-12 verification restored omitted evidence duties and
+   recorded a dated census; its corrections and the three routing decisions (J01
+   rebucketed to C(iii), J02 reworded as independent instrumentation requirements, J03
+   left to the run-4 sitting) landed with
+   [the verification report](./research/run4-lanes/run4-docket-verification-report.md).
+   Every count is re-verified at the run-4 pin.
 3. **Run 4 proper** waits on time-to-certainty C4 (the proof-ledger writer): the
    Ruling-17 issuance and custody flags (rat-047/048/051/052) cannot discharge before
    it. Choreography is run 3's: pin commit → evidence tag → frozen run in a detached
    worktree at the tag → seats → gate → sittings → one PR, with gate fixes pushed the
-   moment they appear.
+   moment they appear. C3.3, C3.4, C3.5, C3.6, C4a, C4 and C5 are all unchecked
+   in `goals/time-to-certainty/PLAN.md` at this verification.
+
+The provisional `ciops-prov:` namespace keeps open closure and exclusion from
+negation/ratified typing. Sitting 3 presented no separate namespace proposal;
+S8 IRI design remains deferred.
 
 Routing for token-heavy Codex work stays `gpt-6-astra` at `medium`
 ([decision update](./DECISIONS.md)); auditor seats keep the packet's 2026-08-27
@@ -181,6 +191,14 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-12: Verified the merged PR #1095 docket against the authority records.
+  All 138 unresolved IDs, the 54 carried-cluster assignments, 15 TAXONOMY flags,
+  six Queue B quote pairs and engine digests match. Restored complete index and
+  withdrawal evidence duties, removed unsupported carried-row retirement routes,
+  and dated the live census. The corrections landed with the report; the orchestrator
+  resolved its three routing findings (J01 rebucketed, J02 reworded, J03 deferred to
+  the run-4 sitting). C4 stays unchecked. See
+  [the verification report](./research/run4-lanes/run4-docket-verification-report.md).
 - 2026-09-11: Run-4 intake docket drafted (pre-pin) at `research/auditor-run4-intake.md`
   after PR #1092 merged as `e16e7a9297`: prior chain `b9c140ccd31b` recomputed, 138
   unresolved rows placed exactly once (84 live, 54 carried by sitting-2 cluster), 15

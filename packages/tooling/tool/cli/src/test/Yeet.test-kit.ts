@@ -62,6 +62,8 @@ export * from "../commands/Yeet/internal/Reply.schemas.ts";
 export * from "../commands/Yeet/internal/Reply.ts";
 export * from "../commands/Yeet/internal/Resume.schemas.ts";
 export * from "../commands/Yeet/internal/Resume.ts";
+export * from "../commands/Yeet/internal/Retire.schemas.ts";
+export * from "../commands/Yeet/internal/Retire.ts";
 export { GhStatusCheck, summarizeRemoteChecksForTesting } from "../commands/Yeet/internal/Status.ts";
 export * from "../commands/Yeet/internal/Sweep.schemas.ts";
 export * from "../commands/Yeet/internal/Sweep.ts";
