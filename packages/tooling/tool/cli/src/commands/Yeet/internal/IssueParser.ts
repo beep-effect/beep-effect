@@ -9,18 +9,25 @@ import { Order } from "effect";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { decodeSchemaFirstPolicyFindingLine } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
-import { commandTextForStep, TurboWorkspacePackage, turboTaskForStep } from "../../../internal/repo-run/index.ts";
-import { QualityIssue } from "../Yeet.schemas.ts";
-import { categoryForStep, knownSubLaneHintFromOutput, routeForCategory } from "./IssueClassification.ts";
-import type {
-  RepoPlanStep,
+import {
+  commandTextForStep,
   RepoRunContext,
-  RepoStepRunResult,
-  TurboPlanTask,
+  TurboWorkspacePackage,
+  turboTaskForStep,
 } from "../../../internal/repo-run/index.ts";
+import { QualityIssue } from "../Yeet.schemas.ts";
+import {
+  categoryForStep,
+  knownSubLaneHintForFirstRedLane,
+  knownSubLaneHintFromOutput,
+  routeForCategory,
+} from "./IssueClassification.ts";
+import type { RepoPlanStep, RepoStepRunResult, TurboPlanTask } from "../../../internal/repo-run/index.ts";
+import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
 import type { QualityIssueCategory, QualityIssueSeverity } from "../Yeet.schemas.ts";
 
 const MAX_RAW_EXCERPT_CHARS = 4 * 1024;
@@ -313,13 +320,20 @@ const schemaFirstPolicyIssueFromLine = (
     })
   );
 
+// The lane-run record names the red lane; the whole-output marker scan is only
+// the fallback for wrappers that emitted no record (or a red lane no rule
+// could resolve), because a passing sibling's marker used to win the hint.
 const fallbackIssueFromResult = (
   context: RepoRunContext,
   step: RepoPlanStep,
   result: RepoStepRunResult,
+  innerLanes: ReadonlyArray<QualityTaskLaneRun>,
   inferredPackageName: O.Option<string> = O.none()
 ): QualityIssue => {
-  const subLaneHint = knownSubLaneHintFromOutput(result.output);
+  const subLaneHint = pipe(
+    knownSubLaneHintForFirstRedLane(innerLanes, result.output),
+    O.orElse(() => knownSubLaneHintFromOutput(result.output))
+  );
   const category = pipe(
     subLaneHint,
     O.map((hint) => hint.category),
@@ -355,16 +369,19 @@ const fallbackIssueFromResult = (
 const fallbackIssuesFromResult = (
   context: RepoRunContext,
   step: RepoPlanStep,
-  result: RepoStepRunResult
+  result: RepoStepRunResult,
+  innerLanes: ReadonlyArray<QualityTaskLaneRun>
 ): ReadonlyArray<QualityIssue> => {
   const packageNames = filteredPackageNamesForStep(step);
   return A.isReadonlyArrayNonEmpty(packageNames)
     ? pipe(
         packageNames,
-        A.map((packageName) => fallbackIssueFromResult(context, step, result, O.some(packageName)))
+        A.map((packageName) => fallbackIssueFromResult(context, step, result, innerLanes, O.some(packageName)))
       )
-    : [fallbackIssueFromResult(context, step, result)];
+    : [fallbackIssueFromResult(context, step, result, innerLanes)];
 };
+
+const isRepoRunContext = S.is(RepoRunContext);
 
 /**
  * Convert a failed step result into quality issues.
@@ -402,29 +419,50 @@ const fallbackIssuesFromResult = (
  * @param context - Shared run context.
  * @param step - Planned step that produced the result.
  * @param result - Captured step result.
+ * @param innerLanes - Lane runs the wrapper recorded for this step; the first
+ * red one classifies a raw failure before any output scan.
  * @returns Structured or raw issues; successful results produce no issues.
  * @category parsing
  * @since 0.0.0
  */
 export const qualityIssuesFromStepResult: {
-  (context: RepoRunContext, step: RepoPlanStep, result: RepoStepRunResult): ReadonlyArray<QualityIssue>;
-  (step: RepoPlanStep, result: RepoStepRunResult): (context: RepoRunContext) => ReadonlyArray<QualityIssue>;
-} = dual(3, (context: RepoRunContext, step: RepoPlanStep, result: RepoStepRunResult): ReadonlyArray<QualityIssue> => {
-  if (result.exitCode === 0) {
-    return A.empty();
+  (
+    context: RepoRunContext,
+    step: RepoPlanStep,
+    result: RepoStepRunResult,
+    innerLanes?: ReadonlyArray<QualityTaskLaneRun>
+  ): ReadonlyArray<QualityIssue>;
+  (
+    step: RepoPlanStep,
+    result: RepoStepRunResult,
+    innerLanes?: ReadonlyArray<QualityTaskLaneRun>
+  ): (context: RepoRunContext) => ReadonlyArray<QualityIssue>;
+} = dual(
+  (args) => isRepoRunContext(args[0]),
+  (
+    context: RepoRunContext,
+    step: RepoPlanStep,
+    result: RepoStepRunResult,
+    innerLanes: ReadonlyArray<QualityTaskLaneRun> = A.empty()
+  ): ReadonlyArray<QualityIssue> => {
+    if (result.exitCode === 0) {
+      return A.empty();
+    }
+
+    const parsedIssues = pipe(
+      result.output ?? "",
+      nonEmptyLines,
+      A.map((line) =>
+        pipe(
+          schemaFirstPolicyIssueFromLine(context, step, result, line),
+          O.orElse(() => diagnosticIssueFromLine(context, step, result, line))
+        )
+      ),
+      A.getSomes
+    );
+
+    return A.isReadonlyArrayNonEmpty(parsedIssues)
+      ? parsedIssues
+      : fallbackIssuesFromResult(context, step, result, innerLanes);
   }
-
-  const parsedIssues = pipe(
-    result.output ?? "",
-    nonEmptyLines,
-    A.map((line) =>
-      pipe(
-        schemaFirstPolicyIssueFromLine(context, step, result, line),
-        O.orElse(() => diagnosticIssueFromLine(context, step, result, line))
-      )
-    ),
-    A.getSomes
-  );
-
-  return A.isReadonlyArrayNonEmpty(parsedIssues) ? parsedIssues : fallbackIssuesFromResult(context, step, result);
-});
+);

@@ -543,10 +543,16 @@ turbo work, so they are cheap to run mid-loop.
   stale-base refusals. Intent refusals print a summarized path list on stderr;
   the full list lives in the packet. Known sub-lane hints cover typos,
   terse-effect, every cheap gate, docgen, changeset status, secrets, SAST,
-  security, and Nix. Hint selection prefers output near the
-  actual failure marker before falling back to broad log scanning. Prefer the
-  suggested repair command in `yeet status`, the packet, or `verdict.json` over
-  rerunning the whole loop blindly.
+  security, and Nix. Hint selection follows the lane-run record: a tier lane's
+  `repairCommand` in `verdict.json` is its first red inner lane's repair
+  command, and each red inner lane carries its own (the catalog hint for its
+  exact lane id, else a known marker inside that lane's own output segment,
+  else the lane's recorded launch command). Broad log scanning of the whole
+  wrapper output is only the fallback for wrappers that emitted no lane-run
+  record. The failure packet's issue index and inbox capsule classify a raw
+  wrapper failure through the same resolver, so `verdict.json` and the packet
+  never disagree. Prefer the suggested repair command in `yeet status`, the
+  packet, or `verdict.json` over rerunning the whole loop blindly.
 - Root composite lanes prefer streaming accumulation where child commands are
   independent. For example, root `lint` streams the Turbo/Biome aggregate and
   then still runs repo-law policy lints, so one lint-family failure does not

@@ -15,13 +15,15 @@ import { O } from "@beep/utils";
 import { Effect, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import { dual, identity, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/RepoRun.models.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import { GithubCheckFailurePolicy, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
+import { laneRunsForWrapper } from "./InnerLaneReports.ts";
 import { GIT_PUSH_STEP_ID, YeetProofTier } from "./Planner.ts";
-import { knownSubLaneRemediationFromOutput } from "./QualityIssueIndex.ts";
+import { knownSubLaneHintForLaneRun, knownSubLaneRemediationFromOutput } from "./QualityIssueIndex.ts";
 import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Verdict");
@@ -667,18 +669,27 @@ export class YeetExecutedStep extends S.Class<YeetExecutedStep>($I`YeetExecutedS
   })
 ) {}
 
-const laneFromExecuted = (executed: YeetExecutedStep, tier: O.Option<YeetProofTier>): YeetVerdictLane => {
+// A wrapper (tier) lane repairs whatever its first red inner lane repairs. The
+// lane-run record names that lane; scanning the whole wrapper output for
+// markers is only the fallback for wrappers that emitted no record, because a
+// passing sibling's marker (`security:osv-scan`, `changeset-status`) sits in
+// the same log as the real failure and used to win the hint.
+const laneFromExecuted = (
+  executed: YeetExecutedStep,
+  tier: O.Option<YeetProofTier>,
+  innerLanes: ReadonlyArray<YeetVerdictLane>
+): YeetVerdictLane => {
   const failed = executed.result.exitCode !== 0;
   const status = executed.status ?? (failed ? "failed" : "passed");
-  const repairCommand =
-    status === "failed"
-      ? O.some(
-          pipe(
-            knownSubLaneRemediationFromOutput(executed.result.output),
-            O.getOrElse(() => commandTextForStep(executed.step))
-          )
-        )
-      : O.none<string>();
+  const repairCommand = YeetLaneStatus.is.failed(status)
+    ? pipe(
+        innerLanes,
+        A.findFirst((lane) => YeetLaneStatus.is.failed(lane.status)),
+        O.flatMap((lane) => O.fromUndefinedOr(lane.repairCommand)),
+        O.orElse(() => knownSubLaneRemediationFromOutput(executed.result.output)),
+        O.orElseSome(() => commandTextForStep(executed.step))
+      )
+    : O.none<string>();
   return YeetVerdictLane.make({
     id: executed.step.id,
     label: executed.step.label,
@@ -708,7 +719,25 @@ const laneFromPlanned = (step: RepoPlanStep, tier: O.Option<YeetProofTier>): Yee
     inputDigest: O.none(),
   });
 
-const laneFromQualityTaskRun = (lane: QualityTaskLaneRun, tier: O.Option<YeetProofTier>): YeetVerdictLane =>
+// A red inner lane's repair command comes from the lane itself (catalog hint
+// by exact lane id, then a known marker inside its own output segment, then
+// its recorded launch command); the failure packet classifies through the
+// same resolver so verdict and packet never disagree.
+const laneRunRepairCommand = (
+  lane: QualityTaskLaneRun,
+  siblingLabels: HashSet.HashSet<string>,
+  wrapperOutput: string | undefined
+): O.Option<string> =>
+  pipe(
+    knownSubLaneHintForLaneRun(lane, siblingLabels, wrapperOutput),
+    O.map((hint) => hint.remediation)
+  );
+
+const laneFromQualityTaskRun = (
+  lane: QualityTaskLaneRun,
+  tier: O.Option<YeetProofTier>,
+  repairCommand: O.Option<string>
+): YeetVerdictLane =>
   YeetVerdictLane.make({
     id: lane.id,
     label: lane.label,
@@ -721,19 +750,22 @@ const laneFromQualityTaskRun = (lane: QualityTaskLaneRun, tier: O.Option<YeetPro
     ...O.getSomesStruct({
       durationMs: lane.durationMs,
       exitCode: lane.exitCode,
+      repairCommand,
     }),
   });
 
 const innerLanesForWrapper = (
   reports: ReadonlyArray<QualityTaskLaneRunReport>,
   wrapperLaneId: string,
-  tier: O.Option<YeetProofTier>
-): ReadonlyArray<YeetVerdictLane> =>
-  pipe(
-    reports,
-    A.filter((report) => O.exists(report.parentLaneId, (parentLaneId) => parentLaneId === wrapperLaneId)),
-    A.flatMap((report) => A.map(report.lanes, (lane) => laneFromQualityTaskRun(lane, tier)))
+  tier: O.Option<YeetProofTier>,
+  wrapperOutput: string | undefined
+): ReadonlyArray<YeetVerdictLane> => {
+  const runs = laneRunsForWrapper(reports, wrapperLaneId);
+  const siblingLabels = HashSet.fromIterable(A.map(runs, (lane) => lane.label));
+  return A.map(runs, (lane) =>
+    laneFromQualityTaskRun(lane, tier, laneRunRepairCommand(lane, siblingLabels, wrapperOutput))
   );
+};
 
 /**
  * Run identity, outcome, planned steps, and executed results used to build the run verdict.
@@ -819,15 +851,14 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
     input.executed,
     A.map((entry) => entry.step.id)
   );
+  const wrappers = A.map(input.executed, (entry) => ({
+    entry,
+    inner: innerLanesForWrapper(input.innerLaneReports, entry.step.id, input.proofTier, entry.result.output),
+  }));
   const lanes = pipe(
-    input.executed,
-    A.map((entry) => laneFromExecuted(entry, input.proofTier)),
-    A.appendAll(
-      pipe(
-        input.executed,
-        A.flatMap((entry) => innerLanesForWrapper(input.innerLaneReports, entry.step.id, input.proofTier))
-      )
-    ),
+    wrappers,
+    A.map(({ entry, inner }) => laneFromExecuted(entry, input.proofTier, inner)),
+    A.appendAll(A.flatMap(wrappers, ({ inner }) => inner)),
     A.appendAll(
       pipe(
         input.planned,

@@ -24,7 +24,14 @@ export {
   QualityIssueRouting,
   QualityIssueSeverity,
 } from "../Yeet.schemas.ts";
-export { knownSubLaneRemediationFromOutput } from "./IssueClassification.ts";
+export {
+  knownSubLaneHintForFirstRedLane,
+  knownSubLaneHintForLaneRun,
+  knownSubLaneRemediationForLaneId,
+  knownSubLaneRemediationFromLaneOutput,
+  knownSubLaneRemediationFromOutput,
+  laneOutputSegment,
+} from "./IssueClassification.ts";
 export { qualityIssuesFromStepResult } from "./IssueParser.ts";
 
 const issueOrder: Order.Order<QualityIssue> = Order.combine(

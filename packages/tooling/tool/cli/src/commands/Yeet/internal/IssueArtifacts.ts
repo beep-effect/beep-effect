@@ -15,9 +15,11 @@ import { renderPackageQualityPacketMarkdown } from "../Yeet.render.ts";
 import { YeetRunResult } from "../Yeet.schemas.ts";
 import { artifactDirForContext, safeArtifactName } from "./ArtifactPaths.ts";
 import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
+import { laneRunsForWrapper, readInnerLaneReports } from "./InnerLaneReports.ts";
 import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
+import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { PackageQualityReport, QualityIssue, QualityIssueIndex } from "../Yeet.schemas.ts";
 
 const commandFailure = (result: RepoStepRunResult, message: string): YeetCommandError =>
@@ -271,14 +273,17 @@ export const writeIssueArtifacts = Effect.fn("Yeet.writeIssueArtifacts")(functio
 const issuesFromResults = (
   context: RepoRunContext,
   steps: ReadonlyArray<RepoPlanStep>,
-  results: ReadonlyArray<RepoStepRunResult>
+  results: ReadonlyArray<RepoStepRunResult>,
+  innerLaneReports: ReadonlyArray<QualityTaskLaneRunReport>
 ): ReadonlyArray<QualityIssue> =>
   pipe(
     results,
     A.flatMap((result) =>
       pipe(
         A.findFirst(steps, (step) => step.id === result.stepId),
-        O.map((step) => qualityIssuesFromStepResult(context, step, result)),
+        O.map((step) =>
+          qualityIssuesFromStepResult(context, step, result, laneRunsForWrapper(innerLaneReports, step.id))
+        ),
         O.getOrElse(A.empty<QualityIssue>)
       )
     )
@@ -456,7 +461,12 @@ export const failWithIssueArtifacts = Effect.fn("Yeet.failWithIssueArtifacts")(f
   results: ReadonlyArray<RepoStepRunResult>,
   message: string
 ): Effect.fn.Return<never, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const index = buildQualityIssueIndex(issuesFromResults(context, steps, results));
+  // The side channel is advisory for packets: a read failure must not replace
+  // the real command failure this Effect exists to report.
+  const innerLaneReports = yield* readInnerLaneReports(context).pipe(
+    Effect.orElseSucceed(A.empty<QualityTaskLaneRunReport>)
+  );
+  const index = buildQualityIssueIndex(issuesFromResults(context, steps, results, innerLaneReports));
   const artifacts = yield* writeIssueArtifacts(context, index);
   yield* Console.error(`${message}\nYeet quality packets written to ${artifacts.artifactDir}`);
   for (const packetPath of artifacts.packetPaths) {
