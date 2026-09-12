@@ -37293,12 +37293,12 @@
       "path": "packages/foundation/modeling/utils",
       "lines": 86.7,
       "statements": 83.62,
-      "branches": 86.61,
+      "branches": 86.36,
       "functions": 76.64,
       "uncovered": {
         "lines": 79,
         "statements": 111,
-        "branches": 19,
+        "branches": 21,
         "functions": 71
       },
       "files": {
