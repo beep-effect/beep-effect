@@ -25,10 +25,16 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcessSpawner } from "effect/unstable/process";
 import { ensureZeroExit, formatCommandLine, OutputBound, runCaptured } from "../../internal/process/StepExec.ts";
+import {
+  readInstalledSystemdUnit,
+  systemdEnvironmentFile,
+  systemdUnitDirective,
+} from "../../internal/systemd/index.ts";
 import { GraftCacheIoError, GraftDeepLockError, GraftDeepPreflightError, GraftDeepStepError } from "./Graft.errors.ts";
 import {
   GraftCacheSyncAction,
   GraftDeepLock,
+  GraftDeepRecordedTimer,
   GraftDeepRefreshOutcome,
   GraftDeepRefreshStatus,
   GraftDeepRunnerStep,
@@ -523,6 +529,51 @@ export const renderGraftDeepRefreshUnits = (
     ),
   },
 ];
+
+/**
+ * Reads what the installed refresh units recorded, or `None` when none is installed.
+ *
+ * **Details**
+ *
+ * `--refresh` rebuilds the units from these values with a fresh Bun resolution,
+ * so an agent can bring the timer up to date after a merge without knowing the
+ * owner clone or environment file the operator chose. Only a unit this user
+ * cannot read is an error; an absent unit is `None`.
+ *
+ * **Example** (Prepare a read)
+ *
+ * ```ts import.meta.vitest name="Prepare a recorded timer read"
+ * import { readRecordedGraftDeepTimer } from "@beep/repo-cli/commands/Graft"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(readRecordedGraftDeepTimer("/home/op"))) // true
+ * ```
+ *
+ * @param home - The operator home directory the units are installed under.
+ * @returns The recorded owner, environment file, and calendar when installed.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const readRecordedGraftDeepTimer = Effect.fn("GraftDeepRefresh.readRecordedTimer")(function* (home: string) {
+  const readUnit = (fileName: string) =>
+    readInstalledSystemdUnit({ home, fileName }).pipe(
+      Effect.mapError((cause) =>
+        GraftDeepPreflightError.make({
+          path: fileName,
+          message: `Failed reading the installed ${fileName} unit.`,
+          cause,
+        })
+      )
+    );
+  const service = yield* readUnit(REFRESH_SERVICE_FILE_NAME);
+  const timer = yield* readUnit(REFRESH_TIMER_FILE_NAME);
+  return O.map(service, (unit) =>
+    GraftDeepRecordedTimer.make({
+      owner: systemdUnitDirective(unit, "WorkingDirectory"),
+      envFile: systemdEnvironmentFile(unit),
+      onCalendar: O.flatMap(timer, systemdUnitDirective("OnCalendar")),
+    })
+  );
+});
 
 const statusCodec = S.fromJsonString(GraftDeepRefreshStatus);
 const decodeStatusJson = S.decodeUnknownEffect(statusCodec);

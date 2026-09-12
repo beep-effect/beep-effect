@@ -457,3 +457,31 @@
 - **Proposal:** Make clean-HEAD preflight directories self-cleaning on success,
   failure, and interruption, and add a capacity preflight that reports and
   safely reclaims stale Yeet-owned directories before copying dependencies.
+
+## Forwarder outage surfaced as a bare `Schema validation failed`
+
+- **Work:** Diagnosing the 2026-09-11 23:48 CDT `beep-ai-metrics-forwarder.service`
+  failures that ended in `start-limit-hit`.
+- **Friction:** The rendered unit captures 2000 bytes of stderr into
+  `status/latest.json`, but the CLI appends the failure cause only under
+  `--verbose` or `--log-level debug`, so the status file held nothing beyond
+  `Schema validation failed`. The archive envelope was built with the throwing
+  `.make`, so the typed forwarder stage message never fired either. The failing
+  check (`AesGcmCiphertextBase64ShapeCheck`) only appeared after an in-process
+  rerun with `--log-level=debug`, and only a runtime experiment showed that
+  Effect's regex-based `S.isBase64` returns `false` on Bun (and throws
+  `RangeError` on Node) once the Base64 string passes roughly 7.5 million
+  characters. Seven Codex sessions of 6-11.5 MB recorded between 19:41 and 20:26 that
+  evening entered the newest-50 window, and every run since selected them.
+- **Evidence:** `status/latest.json` recorded
+  `{"status":"failed","exitCode":1,"stderr":"Schema validation failed\n"}`;
+  the verbose rerun printed a `Composite` issue at `ciphertextBase64`; a
+  `RegExp.test` bisection on Bun 1.4.0 passed at 7,427,416 characters and
+  failed at 7,514,796; upstream `effect-smol` `main` still implements
+  `isBase64` with the quantified-group regex. Envelopes of 44-63 MB written
+  before #882 introduced the check are still on disk.
+- **Proposal:** Render the timer unit with cause rendering enabled (the status
+  file is local and already stores hashed paths), construct archive envelopes
+  through the effectful constructor so schema failures carry the stage message,
+  and never validate payload-sized strings with `S.isBase64`; report the regex
+  behaviour upstream.

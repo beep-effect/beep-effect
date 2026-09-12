@@ -71,7 +71,7 @@ export type CaptureSource = "all" | "merge" | "stdout";
  * **Example** (Cap captured output at 4 KiB)
  *
  * ```ts
- * import { OutputBound } from "@beep/repo-cli/internal/process"
+ * import { OutputBound } from "@beep/repo-cli/test/Process"
  *
  * const bound = OutputBound.make({ maxChars: 4096, truncatedNotice: "\n[cli] truncated" })
  * console.log(bound.maxChars)
@@ -96,7 +96,7 @@ export class OutputBound extends S.Class<OutputBound>($I`OutputBound`)(
  * **Example** (Seed a fold accumulator)
  *
  * ```ts
- * import { BoundedOutput } from "@beep/repo-cli/internal/process"
+ * import { BoundedOutput } from "@beep/repo-cli/test/Process"
  *
  * const state = BoundedOutput.make({ text: "captured", truncated: false })
  * console.log(state.truncated)
@@ -121,7 +121,7 @@ export class BoundedOutput extends S.Class<BoundedOutput>($I`BoundedOutput`)(
  * **Example** (Read a captured exit code)
  *
  * ```ts
- * import { CapturedStep } from "@beep/repo-cli/internal/process"
+ * import { CapturedStep } from "@beep/repo-cli/test/Process"
  *
  * const result = CapturedStep.make({ exitCode: 0, output: "ok", truncated: false })
  * console.log(result.exitCode)
@@ -147,7 +147,7 @@ export class CapturedStep extends S.Class<CapturedStep>($I`CapturedStep`)(
  * **Example** (Read stdout without stderr noise)
  *
  * ```ts
- * import { CapturedStreams } from "@beep/repo-cli/internal/process"
+ * import { CapturedStreams } from "@beep/repo-cli/test/Process"
  *
  * const result = CapturedStreams.make({ exitCode: 0, stdout: "out", stderr: "", truncated: false })
  * console.log(result.stdout)
@@ -182,7 +182,7 @@ export class CapturedStreams extends S.Class<CapturedStreams>($I`CapturedStreams
  * **Example** (Narrow a policy literal)
  *
  * ```ts
- * import { StepFlakeQuarantinePolicy } from "@beep/repo-cli/internal/process"
+ * import { StepFlakeQuarantinePolicy } from "@beep/repo-cli/test/Process"
  *
  * console.log(StepFlakeQuarantinePolicy.is["ts2589-no-location"]("ts2589-no-location"))
  * ```
@@ -217,7 +217,7 @@ export type StepFlakeQuarantinePolicy = typeof StepFlakeQuarantinePolicy.Type;
  * **Example** (Plan a turbo check step)
  *
  * ```ts
- * import { QualityTaskStep } from "@beep/repo-cli/internal/process"
+ * import { QualityTaskStep } from "@beep/repo-cli/test/Process"
  *
  * const step = QualityTaskStep.make({
  *   label: "check",
@@ -253,7 +253,7 @@ export class QualityTaskStep extends S.Class<QualityTaskStep>($I`QualityTaskStep
  * **Example** (Start a fold from the untruncated seed)
  *
  * ```ts
- * import { emptyBoundedOutput } from "@beep/repo-cli/internal/process"
+ * import { emptyBoundedOutput } from "@beep/repo-cli/test/Process"
  *
  * console.log(emptyBoundedOutput.truncated)
  * ```
@@ -272,7 +272,7 @@ export const emptyBoundedOutput = BoundedOutput.make({
  * **Example** (Read the repo-run character cap)
  *
  * ```ts
- * import { repoRunOutputBound } from "@beep/repo-cli/internal/process"
+ * import { repoRunOutputBound } from "@beep/repo-cli/test/Process"
  *
  * console.log(repoRunOutputBound.maxChars)
  * ```
@@ -291,7 +291,7 @@ export const repoRunOutputBound = OutputBound.make({
  * **Example** (Read the grouped-step character cap)
  *
  * ```ts
- * import { qualityStepOutputBound } from "@beep/repo-cli/internal/process"
+ * import { qualityStepOutputBound } from "@beep/repo-cli/test/Process"
  *
  * console.log(qualityStepOutputBound.maxChars)
  * ```
@@ -321,7 +321,7 @@ export const qualityStepOutputBound = OutputBound.make({
  * **Example** (Overflow a four-character bound)
  *
  * ```ts
- * import { boundedChunkReducer, emptyBoundedOutput, OutputBound } from "@beep/repo-cli/internal/process"
+ * import { boundedChunkReducer, emptyBoundedOutput, OutputBound } from "@beep/repo-cli/test/Process"
  *
  * const step = boundedChunkReducer(OutputBound.make({ maxChars: 4, truncatedNotice: "!" }))
  * console.log(step(emptyBoundedOutput, "abcdef"))
@@ -366,7 +366,7 @@ export const boundedChunkReducer =
  * **Example** (Fold a byte stream under the repo-run bound)
  *
  * ```ts
- * import { collectBoundedText, repoRunOutputBound } from "@beep/repo-cli/internal/process"
+ * import { collectBoundedText, repoRunOutputBound } from "@beep/repo-cli/test/Process"
  * import { Stream } from "effect"
  *
  * const fold = collectBoundedText(repoRunOutputBound)
@@ -399,7 +399,7 @@ export const collectBoundedText =
  * **Example** (Collect a short stream in full)
  *
  * ```ts
- * import { collectText } from "@beep/repo-cli/internal/process"
+ * import { collectText } from "@beep/repo-cli/test/Process"
  * import { Stream } from "effect"
  *
  * console.log(collectText(Stream.make(new TextEncoder().encode("hi"))))
@@ -422,7 +422,7 @@ export const collectText = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effe
  * **Example** (Render a git invocation for an error message)
  *
  * ```ts
- * import { formatCommandLine } from "@beep/repo-cli/internal/process"
+ * import { formatCommandLine } from "@beep/repo-cli/test/Process"
  *
  * console.log(formatCommandLine("git", ["status", "--short"]))
  * ```
@@ -453,7 +453,7 @@ type SpawnFields = {
  * **Example** (Handle a registration failure)
  *
  * ```ts
- * import { AdmissionWorkloadRegistrationError } from "@beep/repo-cli/internal/process"
+ * import { AdmissionWorkloadRegistrationError } from "@beep/repo-cli/test/Process"
  *
  * const error = AdmissionWorkloadRegistrationError.make({
  *   message: "Could not observe the child process generation.",
@@ -983,7 +983,7 @@ export type RunCapturedWatchedOptions<E, R> = RunCapturedOptions & {
  * **Example** (Capture a trimmed git status)
  *
  * ```ts
- * import { runCaptured, repoRunOutputBound } from "@beep/repo-cli/internal/process"
+ * import { runCaptured, repoRunOutputBound } from "@beep/repo-cli/test/Process"
  *
  * const captured = runCaptured({
  *   command: "git",
@@ -1024,7 +1024,7 @@ export interface RunCaptured {
  * **Example** (Capture a command result)
  *
  * ```ts
- * import { runCaptured } from "@beep/repo-cli/internal/process"
+ * import { runCaptured } from "@beep/repo-cli/test/Process"
  *
  * const result = runCaptured({
  *   args: ["--version"],
@@ -1139,7 +1139,7 @@ export type RunCapturedStreamsOptions = SpawnFields & {
  * **Example** (Capture a version probe with streams kept apart)
  *
  * ```ts
- * import { runCapturedStreams } from "@beep/repo-cli/internal/process"
+ * import { runCapturedStreams } from "@beep/repo-cli/test/Process"
  *
  * const captured = runCapturedStreams({
  *   command: "bun",
@@ -1230,7 +1230,7 @@ export type RunToExitOptions = SpawnFields & {
  * **Example** (Run an installer with inherited stdio)
  *
  * ```ts
- * import { runToExit } from "@beep/repo-cli/internal/process"
+ * import { runToExit } from "@beep/repo-cli/test/Process"
  *
  * const exitCode = runToExit({
  *   command: "bun",
@@ -1277,7 +1277,7 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
  * **Example** (Turn a nonzero git exit into a typed failure)
  *
  * ```ts
- * import { ensureZeroExit, runCaptured } from "@beep/repo-cli/internal/process"
+ * import { ensureZeroExit, runCaptured } from "@beep/repo-cli/test/Process"
  * import { Effect } from "effect"
  *
  * const proven = runCaptured({ command: "git", args: ["status"] }).pipe(

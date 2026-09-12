@@ -140,11 +140,11 @@ authoritative and the manifest fields are checked compatibility mirrors.
 decodes the manifest fields required for projection and fails on underivable
 stream authority or generated README/Atlas drift, printing every underivable
 input or drifting path on stderr before it exits. `explorations/ATLAS.md` is
-git-ignored, so a stale local copy fails only local proofs (hosted lanes never
-carry one) and the `--write` rewrite never appears in `git diff`. Run
-`bun run beep yeet repair` after a pull that touches packet manifests: its
-last fixers regenerate the ignored Atlas and the README status regions before
-the cheap tier proves them. The remaining v1 shape (`openQuestions`, links,
+git-ignored, so hosted lanes never carry one; a stale or authored-into local
+copy is rewritten from the projection by the check itself (decision log
+2026-09-12) and the rewrite never appears in `git diff`. `bun run beep yeet
+repair` still regenerates the ignored Atlas and the README status regions
+before the cheap tier proves them. The remaining v1 shape (`openQuestions`, links,
 and sources) is still conversational and checked by the skill; the fleet
 convention migration owns full-schema lint.
 
