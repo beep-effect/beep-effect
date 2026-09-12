@@ -64395,6 +64395,48 @@
       "status": "open"
     },
     {
+      "id": "EV002:packages/tooling/tool/cli/test/research-timers.test.ts:361:withoutHome@10#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/research-timers.test.ts",
+      "line": 361,
+      "endLine": 361,
+      "symbol": "withoutHome",
+      "occurrence": "v2:d79e9706bbb3d30177e1a7502d8d5a21b8135ad64b4f635dc9669e19dbbbc8d1",
+      "class": "unresolved-layer-provide",
+      "evidence": "withoutHome",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/research-timers.test.ts:376:provideScopedLayer@53#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/research-timers.test.ts",
+      "line": 376,
+      "endLine": 376,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:57438ff33de7a518aa70ad27040b715670f69d1ebecaf996fb25f9bf360c5efc",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(FetchHttpClient.layer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV002:packages/tooling/tool/cli/test/residue-reap.test.ts:192:provideScopedLayer@11#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -162003,13 +162045,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/graft-deep-refresh.test.ts:29:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/graft-deep-refresh.test.ts:28:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/graft-deep-refresh.test.ts",
-      "line": 29,
-      "endLine": 29,
+      "line": 28,
+      "endLine": 28,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -162913,6 +162955,27 @@
       "file": "packages/tooling/tool/cli/test/research-command.test.ts",
       "line": 11,
       "endLine": 11,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/research-timers.test.ts:9:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/research-timers.test.ts",
+      "line": 9,
+      "endLine": 9,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",

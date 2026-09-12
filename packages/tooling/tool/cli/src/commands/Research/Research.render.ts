@@ -55,7 +55,7 @@ export const printResearchIndex = printLines([
   "- bun run beep research cognify [--dry-run] (needs COGNEE_API_URL)",
   "- bun run beep research digest [--date YYYY-MM-DD]",
   "- bun run beep research daily --commit [--page <notion-page-id>]",
-  "- bun run beep research install-timers [--uninstall] [--page <notion-page-id>]",
+  "- bun run beep research install-timers [--uninstall] [--page <notion-page-id>] [--bun-path <bun>]",
   "- bun run beep research status",
   "Vault resolution: --vault flag, BEEP_KNOWLEDGE_VAULT env, or ~/YeeBois/knowledge.",
 ]);
