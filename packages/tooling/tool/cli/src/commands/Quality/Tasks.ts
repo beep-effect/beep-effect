@@ -92,6 +92,7 @@ import {
 import { hasReusableLaneProof, persistLaneProofs, prepareLaneProofSession } from "./internal/LaneProofReuse.ts";
 import {
   appendTurboLaneLedger,
+  closeTurboLaneLedger,
   readTurboLaneDigest,
   readTurboLaneLedger,
   TURBO_LANE_LEDGER_ENV,
@@ -1549,36 +1550,56 @@ const turboLaneLedgerPath = (): O.Option<string> => O.fromUndefinedOr(Bun.env[TU
 const turboLaneLedgerDirectory = (path: Path.Path, cwd: string): string =>
   path.join(cwd, ".beep", "quality", "lane-ledgers");
 
-const withTurboLaneLedger = (path: Path.Path, step: QualityTaskStep, name: string): QualityTaskStep =>
-  QualityTaskStep.make({
+// Each wrapper step owns a freshly created directory under the lane-ledgers root, so concurrent
+// collectors in one checkout never share a ledger; the directory is removed once the ledger is read.
+const withTurboLaneLedger = Effect.fn("QualityTasks.withTurboLaneLedger")(function* (step: QualityTaskStep) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = turboLaneLedgerDirectory(path, step.cwd);
+  yield* fs.makeDirectory(root, { recursive: true });
+  const directory = yield* fs.makeTempDirectory({ directory: root, prefix: "lane-" });
+  return QualityTaskStep.make({
     ...step,
-    env: { ...step.env, [TURBO_LANE_LEDGER_ENV]: path.join(turboLaneLedgerDirectory(path, step.cwd), `${name}.jsonl`) },
+    env: { ...step.env, [TURBO_LANE_LEDGER_ENV]: path.join(directory, "ledger.jsonl") },
   });
+});
 
 const removeTurboLaneLedger = Effect.fn("QualityTasks.removeTurboLaneLedger")(function* (ledgerPath: string) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(ledgerPath).pipe(Effect.ignore);
+  const path = yield* Path.Path;
+  yield* fs.remove(path.dirname(ledgerPath), { recursive: true }).pipe(Effect.ignore);
 });
 
 // The child side of the handoff: after each direct Turbo step, declare its digest to the ledger
-// the parent named. Any failure to declare leaves the parent without a digest, never with a
-// wrong one.
+// the parent named. The result says whether a declaration was attempted (`Some`) and whether it
+// landed (`Some(true)`); the group's close record carries the attempt count so the parent can
+// refuse a ledger missing any declaration.
 const recordTurboLaneLedgerRow = Effect.fn("QualityTasks.recordTurboLaneLedgerRow")(function* (
   ledger: O.Option<string>,
   outcome: StreamingStepOutcome
 ) {
   const tasks = directTurboTaskNames(outcome.step);
   if (O.isNone(ledger) || O.isNone(tasks) || O.isSome(outcome.failure)) {
-    return;
+    return O.none<boolean>();
   }
   const digest = yield* readTurboLaneDigest(outcome.step.cwd, outcome.startedAt, tasks.value).pipe(
     Effect.orElseSucceed(O.none<TurboLaneDigest>)
   );
-  yield* O.match(digest, {
-    onNone: () => Effect.void,
-    onSome: (declared) => appendTurboLaneLedger(ledger.value, declared).pipe(Effect.ignore),
+  return yield* O.match(digest, {
+    onNone: () => Effect.succeedSome(false),
+    onSome: (declared) =>
+      appendTurboLaneLedger(ledger.value, declared).pipe(
+        Effect.as(O.some(true)),
+        Effect.orElseSucceed(() => O.some(false))
+      ),
   });
 });
+
+const closeTurboLaneLedgerIfNamed = (ledger: O.Option<string>, attempted: number) =>
+  O.match(ledger, {
+    onNone: () => Effect.void,
+    onSome: (ledgerPath) => closeTurboLaneLedger(ledgerPath, attempted).pipe(Effect.ignore),
+  });
 
 const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingStepOutcomes")(function* (
   label: string,
@@ -1591,6 +1612,7 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
   }
 
   const ledger = turboLaneLedgerPath();
+  const ledgerAttempts = yield* Ref.make(0);
   yield* Console.log(`[beep-cli] ${label}: running ${A.length(steps)} streaming step(s)`);
   const incidents = yield* Ref.make<ReadonlyArray<FlakeQuarantineIncident>>(A.empty());
   const artifactCwd = quarantineArtifactCwd(steps);
@@ -1608,11 +1630,15 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
       yield* Console.log(`[beep-cli] ${step.label}: ${O.isNone(failure) ? "ok" : "failed"} in ${durationMs}ms`);
       const outcome = { durationMs, endedAt, failure, startedAt, step };
       yield* onOutcome(outcome, index);
-      yield* recordTurboLaneLedgerRow(ledger, outcome);
+      const declaration = yield* recordTurboLaneLedgerRow(ledger, outcome);
+      if (O.isSome(declaration)) {
+        yield* Ref.update(ledgerAttempts, (attempts) => attempts + 1);
+      }
       return outcome;
     }),
     { concurrency }
   );
+  yield* closeTurboLaneLedgerIfNamed(ledger, yield* Ref.get(ledgerAttempts));
   yield* O.match(artifactCwd, {
     onNone: () => Effect.void,
     onSome: (cwd) => Effect.flatMap(Ref.get(incidents), (recorded) => writeFlakeQuarantineArtifact(cwd, recorded)),
@@ -1767,11 +1793,9 @@ const resolveLaneInputDigest = Effect.fn("QualityTasks.resolveLaneInputDigest")(
 const laneStepsWithLedgers = Effect.fn("QualityTasks.laneStepsWithLedgers")(function* (
   lanes: ReadonlyArray<QualityTaskLaneInput>
 ) {
-  const path = yield* Path.Path;
-  const stamp = yield* DateTime.now.pipe(Effect.map(DateTime.toEpochMillis));
-  return A.map(lanes, ([, step], index) =>
-    isWrapperLaneStep(step) ? withTurboLaneLedger(path, step, `${stamp}-${index}`) : step
-  );
+  return yield* Effect.forEach(lanes, ([, step]) =>
+    isWrapperLaneStep(step) ? withTurboLaneLedger(step) : Effect.succeed(step)
+  ).pipe(QualityTaskConfigurationError.mapError("Failed to prepare a wrapper lane ledger"));
 });
 
 const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLaneRuns")(function* (

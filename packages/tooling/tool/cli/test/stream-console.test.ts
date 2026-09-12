@@ -1,7 +1,11 @@
 import { drainProcessStreams, streamConsole } from "@beep/repo-cli/test/Cli";
+import { StepExec } from "@beep/repo-cli/test/PackageScripts";
+import { provideScopedLayer } from "@beep/test-utils";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Str from "effect/String";
 
 type WriteFn = typeof process.stdout.write;
 
@@ -12,12 +16,15 @@ const captureStreams = <A>(
   const stderr: Array<string> = [];
   const originalOut = process.stdout.write;
   const originalErr = process.stderr.write;
-  process.stdout.write = ((chunk: string | Uint8Array) => {
+  // Settle every write at once so the module's in-flight counter returns to zero.
+  process.stdout.write = ((chunk: string | Uint8Array, callback?: () => void) => {
     stdout.push(String(chunk));
+    callback?.();
     return true;
   }) as WriteFn;
-  process.stderr.write = ((chunk: string | Uint8Array) => {
+  process.stderr.write = ((chunk: string | Uint8Array, callback?: () => void) => {
     stderr.push(String(chunk));
+    callback?.();
     return true;
   }) as WriteFn;
   try {
@@ -80,9 +87,60 @@ describe("stream console", () => {
     expect(stdout).toEqual(["through effect\n"]);
   });
 
-  it.effect("drains both streams before continuing", () =>
-    Effect.callback<boolean>((resume) => {
-      drainProcessStreams(() => resume(Effect.succeed(true)));
-    }).pipe(Effect.map((drained) => expect(drained).toBe(true)))
+  it("waits for the tracked writes to complete before continuing", () => {
+    const callbacks: Array<() => void> = [];
+    const originalOut = process.stdout.write;
+    process.stdout.write = ((_chunk: string | Uint8Array, callback?: () => void) => {
+      if (callback !== undefined) {
+        callbacks.push(callback);
+      }
+      return true;
+    }) as WriteFn;
+    try {
+      streamConsole.log("queued");
+      let drained = false;
+      drainProcessStreams(() => {
+        drained = true;
+      });
+      expect(drained).toBe(false);
+      for (const callback of callbacks) {
+        callback();
+      }
+      expect(drained).toBe(true);
+      // Nothing in flight: the continuation runs synchronously.
+      let immediate = false;
+      drainProcessStreams(() => {
+        immediate = true;
+      });
+      expect(immediate).toBe(true);
+    } finally {
+      process.stdout.write = originalOut;
+    }
+  });
+
+  it.effect(
+    "delivers a large block through a pipe before a forced exit under Bun",
+    Effect.fnUntraced(function* () {
+      const modulePath = new URL("../src/internal/cli/Stdout.ts", import.meta.url).pathname;
+      const script = [
+        "const { streamConsole, drainProcessStreams } = await import(process.argv[1]);",
+        'streamConsole.log("x".repeat(1024 * 1024) + "FOOTER");',
+        "drainProcessStreams(() => process.exit(0));",
+      ].join("\n");
+      const child = yield* StepExec.runCaptured({
+        command: "bun",
+        args: ["--eval", script, modulePath],
+        cwd: new URL("..", import.meta.url).pathname,
+        source: "stdout",
+        bound: StepExec.OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "\n[test] truncated" }),
+        timeout: "60 seconds",
+        extendEnv: true,
+      });
+      expect(child.exitCode).toBe(0);
+      expect(child.truncated).toBe(false);
+      expect(Str.length(child.output)).toBe(1024 * 1024 + Str.length("FOOTER\n"));
+      expect(Str.endsWith("FOOTER\n")(child.output)).toBe(true);
+    }, provideScopedLayer(NodeServices.layer)),
+    { timeout: 90_000 }
   );
 });

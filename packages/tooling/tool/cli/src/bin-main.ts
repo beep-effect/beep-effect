@@ -179,8 +179,11 @@ const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
       renderCliFailure(exit);
       restoreSharedTerminal();
       Runtime.defaultTeardown(exit, (code) => {
-        onExit(code);
-        drainProcessStreams(() => process.exit(code));
+        // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
+        drainProcessStreams(() => {
+          onExit(code);
+          process.exit(code);
+        });
       });
     },
   });

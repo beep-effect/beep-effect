@@ -1397,3 +1397,52 @@ example of nine files under 4-way contention (doctest `testTimeout` 120 s, `maxW
 Environment-only: the openclaw reviewer failed before reviewing (Codex usage limits, not a required
 context), `Test Unit (unit-a)` hit the known test-utils watchdog flake, and the goals index and
 explorations atlas are git-ignored local projections rewritten in place.
+
+## Hosted rounds (PR #1102)
+
+One entry per hosted round, oldest first: the head, what turned red with its attribution
+(introduced / inherited / environment-only), and the commit that answered it. A fix commit
+records the response to a red; the next round's board is the proof.
+
+- Round 1 — head `be70cc985a`. Reds, all introduced: missing changeset for the 34 touched
+  workspaces; cache-policy census capture overflow (64 MiB bound); cache qualification baseline
+  drift after the turbo.json edits; Knip on the `typos` binary; stale effect-vitest inventory
+  rows; four fallow complexity findings; doctest first-example timeouts under 4-way task
+  concurrency. Fix: `1c14a6312e` (with `8643596f31` recording the digest module's baseline row
+  and `fc8d559cd7` merging main).
+- Round 2 — head `1c14a6312e`. Superseded within minutes by `6500f74f9f` (wrapper-lane digest
+  export completion) and the merge `3303ac7fda`; no board attributed.
+- Round 3 — head `3303ac7fda`. `Heavy / Check` `quality:test-tsgo`: introduced TS7053 in
+  `doctest-lane.test.ts` (a helper removed the inline `in` narrowing). `Test Unit (unit-a)`:
+  environment-only test-utils watchdog flake. Fix: `843ac4362a`, typing the owner scripts record.
+- Round 4 — head `843ac4362a`. `Heavy / Lint Policy`: introduced effect-vitest stale
+  inventory and a cut `lint:policy:medium` block. `Test Unit (unit-a)`: environment-only
+  test-utils watchdog flake. Fix: `1536f01175`, refreshing inventory and enlarging step
+  capture. The cut was later attributed to hosted stdout loss at about 64 KiB and answered
+  by the stream-output fix in `2b1663bdbe`.
+- Round 5 — head `1536f01175`. The required board was fully green; no required check red.
+  Two Greptile P1s identified introduced defects: package configs overriding the doctest
+  timeout ceiling, and wrapper-lane digests admitting concurrent lanes' Turbo summaries.
+  Fix: `2ffffb4763`, routing package timeouts through `packageTestTimeout` and adding the
+  child-owned digest ledger. Both were review findings answered after the green board.
+- Round 6 — head `2ffffb4763`. Knip only: introduced unused exported doctest ceiling
+  constant. Fix: `ef90e9b306`, making the constant private.
+- Round 7 — head `ef90e9b306`. `Heavy / Lint Policy`: introduced `lint:schema-first`
+  finding on exported pure-data interface `StreamingStepOutcome`; the rendered medium
+  block also cut at about 64 KiB, an environment-only hosted stdout symptom exposed by
+  grouped output. Fix attempt: `36b71ab11f`, making the interface private and rendering
+  in 32 KiB chunks. Chunking did not cure the cut; `2b1663bdbe` supplied the stream fix.
+- Round 8 — head `36b71ab11f`. `Test Unit (unit-a)`: environment-only watchdog flake.
+  `Heavy / Lint Policy`: introduced `lint:laws` use of `Date.parse` in `TurboLaneDigest.ts`;
+  the rendered-block cut persisted. Fix: `2b1663bdbe`, answering the laws finding and
+  routing Effect Console output through process streams with a drain before forced exit.
+- Round 9 — head `2b1663bdbe`. `Test Unit (unit-a)`: environment-only watchdog flake.
+  Coverage Regression: introduced gaps across five file rows: `Quality/Tasks.ts`,
+  `TurboLaneDigest.ts`, `Yeet/internal/Status.ts`, `DoctestSource.ts`, and `cli/Stdout.ts`.
+  The log has six metric findings because `TurboLaneDigest.ts` drops both branches and
+  lines; `Stdout.ts` is a new uncovered file. Fix: `0593072ed1`, adding ledger handoff,
+  stream console, status digest, and related coverage tests. `Heavy / Lint Policy` was
+  green, proving the stream-console repair on the hosted lane.
+- Round 10 — head `318be00d23`. Merge of main after #1103 carrying the coverage tests of
+  `0593072ed1`; the coverage-tests head itself got no hosted run because GitHub reported the
+  PR conflicting on the generated effect-vitest inventory. Board recorded at closeout.

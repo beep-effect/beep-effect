@@ -1,5 +1,6 @@
 import {
   appendTurboLaneLedger,
+  closeTurboLaneLedger,
   foldTurboLaneDigests,
   QualityTaskStep,
   readTurboLaneDigest,
@@ -152,12 +153,18 @@ describe("Turbo lane digests", () => {
       });
       yield* appendTurboLaneLedger(ledger, first);
       yield* appendTurboLaneLedger(ledger, second);
+      // Unclosed ledgers read as none: the child may still be declaring, or it died mid-way.
+      expect(yield* readTurboLaneLedger(ledger)).toEqual(O.none());
+      yield* closeTurboLaneLedger(ledger, 2);
       const folded = yield* readTurboLaneLedger(ledger);
       expect(O.map(folded, (value) => value.summaryIds)).toEqual(O.some(["run-1", "run-2"]));
       expect(O.map(folded, (value) => A.map(value.tasks, (task) => `${task.taskId}=${task.hash}`))).toEqual(
         O.some(["//#lint:allowlist=h2", "//#lint:typos=t1"])
       );
       expect(folded).toEqual(foldTurboLaneDigests([first, second]));
+      // A close record naming more attempts than declarations marks a lost declaration.
+      yield* closeTurboLaneLedger(ledger, 1);
+      expect(yield* readTurboLaneLedger(ledger)).toEqual(O.none());
 
       yield* fs.writeFileString(ledger, "{not json\n", { flag: "a" });
       expect(Exit.isFailure(yield* Effect.exit(readTurboLaneLedger(ledger)))).toBe(true);
@@ -180,7 +187,7 @@ describe("Turbo lane digests", () => {
       yield* write("own.json", summary("own", startedAt + 1_000, [task("//#lint:typos", "mine", "MISS")]));
       yield* write("other.json", summary("other", startedAt + 1_500, [task("//#lint:allowlist", "theirs", "MISS", 1)]));
 
-      const ledger = path.join(root, "lane.jsonl");
+      const ledger = path.join(root, "lane-a", "ledger.jsonl");
       const outcome = (step: QualityTaskStep): StreamingStepOutcome => ({
         durationMs: 1,
         startedAt: startedAtIso,
@@ -194,7 +201,7 @@ describe("Turbo lane digests", () => {
         args: ["turbo", "run", "lint:typos", "--summarize"],
         cwd: root,
       });
-      yield* recordTurboLaneLedgerRowForTesting(O.none(), outcome(child));
+      expect(yield* recordTurboLaneLedgerRowForTesting(O.none(), outcome(child))).toEqual(O.none());
       expect(yield* fs.exists(ledger)).toBe(false);
       const unmatched = QualityTaskStep.make({
         label: "ci:lint",
@@ -202,9 +209,11 @@ describe("Turbo lane digests", () => {
         args: ["turbo", "run", "lint:nothing-ran", "--summarize"],
         cwd: root,
       });
-      yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(unmatched));
+      // An attempted declaration with no matching summary is reported, not silently skipped.
+      expect(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(unmatched))).toEqual(O.some(false));
       expect(yield* fs.exists(ledger)).toBe(false);
-      yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child));
+      expect(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child))).toEqual(O.some(true));
+      yield* closeTurboLaneLedger(ledger, 1);
       const declared = yield* readTurboLaneLedger(ledger);
       expect(O.map(declared, (value) => A.map(value.tasks, (row) => `${row.taskId}=${row.hash}`))).toEqual(
         O.some(["//#lint:typos=mine"])
@@ -220,8 +229,8 @@ describe("Turbo lane digests", () => {
       });
       const resolved = yield* resolveLaneInputDigestForTesting(outcome(wrapper), O.none());
       expect(resolved).toEqual(O.map(declared, (value) => value.digest));
-      // The ledger is consumed once read; a wrapper without one reports no digest at all.
-      expect(yield* fs.exists(ledger)).toBe(false);
+      // The ledger directory is consumed once read; a wrapper without one reports no digest at all.
+      expect(yield* fs.exists(path.dirname(ledger))).toBe(false);
       const bare = QualityTaskStep.make({ label: "quality:lint", command: "bun", args: wrapperArgs, cwd: root });
       expect(yield* resolveLaneInputDigestForTesting(outcome(bare), O.none())).toEqual(O.none());
       expect(yield* resolveLaneInputDigestForTesting(outcome(wrapper), O.some("declared"))).toEqual(O.some("declared"));

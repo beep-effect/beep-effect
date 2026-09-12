@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { A, Str } from "@beep/utils";
+import { A, P, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -351,8 +351,55 @@ export const foldTurboLaneDigests = (digests: ReadonlyArray<TurboLaneDigest>): O
         )
       );
 
-const encodeLedgerLine = S.encodeSync(S.fromJsonString(TurboLaneDigest));
-const decodeLedgerLine = S.decodeUnknownEffect(S.fromJsonString(TurboLaneDigest));
+/**
+ * One line of a wrapper lane ledger: a digest the child declared, or the close record naming how
+ * many direct Turbo steps the child attempted to declare.
+ *
+ * **Example** (Decode a close record)
+ *
+ * ```ts
+ * import { TurboLaneLedgerRow } from "@beep/repo-cli/test/Quality"
+ * import * as S from "effect/Schema"
+ *
+ * const row = S.decodeUnknownSync(TurboLaneLedgerRow)({ _tag: "closed", attempted: 2 })
+ * console.log(row._tag) // "closed"
+ * ```
+ *
+ * @category digests
+ * @since 0.0.0
+ */
+export const TurboLaneLedgerRow = S.Union([
+  S.TaggedStruct("declared", { digest: TurboLaneDigest }),
+  S.TaggedStruct("closed", { attempted: S.Finite }),
+]).annotate(
+  $I.annote("TurboLaneLedgerRow", { description: "A declared digest or the close record of a lane ledger." })
+);
+
+/**
+ * The decoded shape of {@link TurboLaneLedgerRow}.
+ *
+ * @category digests
+ * @since 0.0.0
+ */
+export type TurboLaneLedgerRow = typeof TurboLaneLedgerRow.Type;
+
+type DeclaredLedgerRow = Extract<TurboLaneLedgerRow, { readonly _tag: "declared" }>;
+type ClosedLedgerRow = Extract<TurboLaneLedgerRow, { readonly _tag: "closed" }>;
+const isDeclaredRow = (row: TurboLaneLedgerRow): row is DeclaredLedgerRow => P.isTagged("declared")(row);
+const isClosedRow = (row: TurboLaneLedgerRow): row is ClosedLedgerRow => P.isTagged("closed")(row);
+
+const encodeLedgerLine = S.encodeSync(S.fromJsonString(TurboLaneLedgerRow));
+const decodeLedgerLine = S.decodeUnknownEffect(S.fromJsonString(TurboLaneLedgerRow));
+
+const appendLedgerRow = Effect.fn("QualityTasks.appendLedgerRow")(function* (
+  ledgerPath: string,
+  row: TurboLaneLedgerRow
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(path.dirname(ledgerPath), { recursive: true });
+  yield* fs.writeFileString(ledgerPath, `${encodeLedgerLine(row)}\n`, { flag: "a" });
+});
 
 /**
  * Append one declared digest to a wrapper lane ledger, creating the ledger directory on demand.
@@ -376,10 +423,32 @@ export const appendTurboLaneLedger = Effect.fn("QualityTasks.appendTurboLaneLedg
   ledgerPath: string,
   digest: TurboLaneDigest
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  yield* fs.makeDirectory(path.dirname(ledgerPath), { recursive: true });
-  yield* fs.writeFileString(ledgerPath, `${encodeLedgerLine(digest)}\n`, { flag: "a" });
+  yield* appendLedgerRow(ledgerPath, { _tag: "declared", digest });
+});
+
+/**
+ * Append the close record of one streaming group: how many direct Turbo steps it attempted to
+ * declare. The parent accepts the ledger only when every attempt has its declaration.
+ *
+ * **Example** (Close a ledger)
+ *
+ * ```ts
+ * import { closeTurboLaneLedger } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(closeTurboLaneLedger("/tmp/lane-ledger.jsonl", 1))) // true
+ * ```
+ *
+ * @param ledgerPath - The JSONL file the parent named through `TURBO_LANE_LEDGER_ENV`.
+ * @param attempted - Direct Turbo steps this group tried to declare, declared or not.
+ * @category digests
+ * @since 0.0.0
+ */
+export const closeTurboLaneLedger = Effect.fn("QualityTasks.closeTurboLaneLedger")(function* (
+  ledgerPath: string,
+  attempted: number
+) {
+  yield* appendLedgerRow(ledgerPath, { _tag: "closed", attempted });
 });
 
 /**
@@ -396,11 +465,12 @@ export const appendTurboLaneLedger = Effect.fn("QualityTasks.appendTurboLaneLedg
  *
  * **Gotchas**
  *
- * A missing ledger reads as no declarations. A malformed line fails the read, so a corrupt
- * ledger never yields a partial digest.
+ * A missing ledger reads as no declarations. A malformed line fails the read. A ledger with no
+ * close record, or whose close records name more attempts than there are declarations, reads as
+ * `None`: a child that failed to declare one step never yields a partial digest.
  *
  * @param ledgerPath - The JSONL file the parent named through `TURBO_LANE_LEDGER_ENV`.
- * @returns The folded digest, or `None` when the child declared nothing.
+ * @returns The folded digest, or `None` when the ledger is absent, unclosed, or incomplete.
  * @category digests
  * @since 0.0.0
  */
@@ -408,5 +478,11 @@ export const readTurboLaneLedger = Effect.fn("QualityTasks.readTurboLaneLedger")
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(ledgerPath).pipe(Effect.orElseSucceed(() => ""));
   const rows = yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) => decodeLedgerLine(line));
-  return foldTurboLaneDigests(rows);
+  const declared = A.map(A.filter(rows, isDeclaredRow), (row) => row.digest);
+  const closes = A.filter(rows, isClosedRow);
+  const attempted = A.reduce(closes, 0, (sum, row) => sum + row.attempted);
+  if (A.isReadonlyArrayEmpty(closes) || attempted !== A.length(declared)) {
+    return O.none<TurboLaneDigest>();
+  }
+  return foldTurboLaneDigests(declared);
 });

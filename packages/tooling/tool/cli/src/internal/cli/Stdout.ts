@@ -6,6 +6,7 @@
 
 import { A, P } from "@beep/utils";
 import { toStringUnknown } from "effect/Inspectable";
+import * as MutableRef from "effect/MutableRef";
 import type * as Console from "effect/Console";
 
 const formatArgs = (args: ReadonlyArray<unknown>): string =>
@@ -14,8 +15,26 @@ const formatArgs = (args: ReadonlyArray<unknown>): string =>
     " "
   );
 
+// Every line written through the stream console registers its completion callback here so the
+// exit drain can wait for the bytes to reach the kernel. An empty write's callback is no barrier
+// under Bun (a 1 MiB block lost everything past 128 KiB at exit); a real write's callback is.
+const inflightWrites = MutableRef.make(0);
+const drainWaiters = MutableRef.make<ReadonlyArray<() => void>>(A.empty());
+
+const settleWrite = (): void => {
+  if (MutableRef.decrementAndGet(inflightWrites) > 0) {
+    return;
+  }
+  const waiters = MutableRef.get(drainWaiters);
+  MutableRef.set(drainWaiters, A.empty());
+  for (const waiter of waiters) {
+    waiter();
+  }
+};
+
 const writeLine = (stream: NodeJS.WriteStream, args: ReadonlyArray<unknown>): void => {
-  stream.write(`${formatArgs(args)}\n`);
+  MutableRef.incrementAndGet(inflightWrites);
+  stream.write(`${formatArgs(args)}\n`, settleWrite);
 };
 
 const noop = (): void => undefined;
@@ -71,8 +90,8 @@ export const streamConsole: Console.Console = {
 };
 
 /**
- * Wait until every write already queued on stdout and stderr has been handed to the kernel, then
- * continue. Used before a forced process exit so a queued render is not dropped.
+ * Continue once every line written through the stream console has reached the kernel. Used
+ * before a forced process exit so a queued render is not dropped.
  *
  * **Example** (Drain before exiting)
  *
@@ -82,12 +101,19 @@ export const streamConsole: Console.Console = {
  * drainProcessStreams(() => console.log("drained"))
  * ```
  *
- * @param onDrained - Continuation invoked once both streams report their queues flushed.
+ * **Gotchas**
+ *
+ * Only writes made through `streamConsole` are tracked; a raw `process.stdout.write` elsewhere
+ * is not waited for. When nothing is in flight the continuation runs synchronously.
+ *
+ * @param onDrained - Continuation invoked once every tracked write has completed.
  * @category services
  * @since 0.0.0
  */
 export const drainProcessStreams = (onDrained: () => void): void => {
-  process.stdout.write("", () => {
-    process.stderr.write("", () => onDrained());
-  });
+  if (MutableRef.get(inflightWrites) === 0) {
+    onDrained();
+    return;
+  }
+  MutableRef.update(drainWaiters, A.append(onDrained));
 };

@@ -1277,10 +1277,9 @@ describe("quality task adapter", () => {
         const path = yield* Path.Path;
         const tempDir = yield* fs.makeTempDirectory();
         // The fixture stands in for `beep ci lane`: it declares one digest to the ledger the parent named.
-        yield* fs.writeFileString(
-          path.join(tempDir, "package.json"),
-          "{\"name\": \"wrapper-lane-fixture\", \"private\": true, \"scripts\": {\"beep\": \"bun -e \\\"const fs = require('node:fs'); const path = require('node:path'); const ledger = process.env.BEEP_TURBO_LANE_LEDGER; fs.mkdirSync(path.dirname(ledger), { recursive: true }); fs.appendFileSync(ledger, JSON.stringify({ digest: 'declared', summaryIds: ['run-1'], tasks: [{ taskId: '//#lint:typos', hash: 'h1', cacheStatus: 'HIT' }] }) + '\\\\\\\\n');\\\"\"}}"
-        );
+        const manifest =
+          "{\"name\": \"wrapper-lane-fixture\", \"private\": true, \"scripts\": {\"beep\": \"bun -e \\\"const fs = require('node:fs'); const path = require('node:path'); const ledger = process.env.BEEP_TURBO_LANE_LEDGER; fs.mkdirSync(path.dirname(ledger), { recursive: true }); fs.appendFileSync(ledger, JSON.stringify({ _tag: 'declared', digest: { digest: 'declared', summaryIds: ['run-1'], tasks: [{ taskId: '//#lint:typos', hash: 'h1', cacheStatus: 'HIT' }] } }) + '\\\\\\\\n'); fs.appendFileSync(ledger, JSON.stringify({ _tag: 'closed', attempted: 1 }) + '\\\\\\\\n');\\\"\"}}";
+        yield* fs.writeFileString(path.join(tempDir, "package.json"), manifest);
         const wrapper = QualityTaskStep.make({
           label: "quality:lint",
           command: "bun",

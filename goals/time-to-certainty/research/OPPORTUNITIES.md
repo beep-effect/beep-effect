@@ -1224,3 +1224,20 @@ was attempted under the marker-only amendment.
   chunk — so the CLI now provides an Effect `Console` whose lines go through `process.stdout.write`
   (queued and drained by the stream) and drains both streams before its forced exit. Longer term,
   `--output-logs=errors-only` on grouped Turbo runs keeps a red task's log the only large render.
+
+## 2026-09-12 — A Codex review probe found what the unit tests and Greptile could not
+
+- Doing: adversarial Codex review (`gpt-6-astra`, medium, read-only lane) of the stream console
+  and the wrapper-lane ledger before merge of #1102.
+- Evidence: four grounded defects, each reproduced by the reviewer with a runtime probe: the exit
+  drain ran after the runner's hard-exit callback (unreachable on a nonzero code); an empty
+  `process.stdout.write("")` callback is no flush barrier under Bun (a 1 MiB block lost everything
+  past 128 KiB at exit) while my unit test only asserted that the continuation ran; a child that
+  failed to declare one step still yielded a partial lane digest; ledger names built from an epoch
+  millisecond plus a lane index collide across concurrent collectors. One residual stays documented:
+  two concurrent invocations of the same task name in one worktree remain indistinguishable by
+  time window and task name.
+- Would have prevented it: a subprocess pipe test as the proof for any output guarantee (landed:
+  a 1 MiB block through a pipe with a forced exit), fail-closed ledgers with a close record naming
+  the attempts (landed), exclusively created per-lane directories (landed), and the review lane
+  before the push rather than after the tenth hosted round.
