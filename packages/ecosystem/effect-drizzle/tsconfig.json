@@ -29,6 +29,35 @@
           "Schema": "S",
           "Equal": "Eq"
         },
+        "refactors": true,
+        "diagnostics": true,
+        "quickinfo": true,
+        "completions": true,
+        "goto": true,
+        "renames": true,
+        "debug": false,
+        "inlays": false,
+        "mermaidProvider": "mermaid.live",
+        "noExternal": false,
+        "layerGraphFollowDepth": 0,
+        "barrelImportPackages": [],
+        "topLevelNamedReexports": "ignore",
+        "keyPatterns": [
+          {
+            "target": "service",
+            "pattern": "default",
+            "skipLeadingPath": ["src/"]
+          },
+          {
+            "target": "custom",
+            "pattern": "default",
+            "skipLeadingPath": ["src/"]
+          }
+        ],
+        "extendedKeyDetection": false,
+        "pipeableMinArgCount": 2,
+        "allowedDuplicatedPackages": [],
+        "overrides": [],
         "diagnosticSeverity": {
           "abortControllerInEffect": "error",
           "acquireReleaseDisposable": "error",

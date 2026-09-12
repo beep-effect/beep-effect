@@ -1414,9 +1414,44 @@ checklist. Keeping the CI lane non-required prevents a stale lab from blocking
 unrelated upstream work, while requiring the lab's own PR to pass preserves the
 claim that it is a faithful proving ground.
 
-## 2026-08-24: Tagged Errors Declare Diagnostic Equivalence
+## 2026-09-12: Schema Classes Derive Equivalence By Construction
 
 - **Status:** Active
+- **Supersedes:** 2026-08-24 Tagged Errors Declare Diagnostic Equivalence
+
+Decision:
+
+No Schema class (`S.Class`, `S.TaggedClass`, `S.Error`, `S.TaggedError`)
+declares a class-level `toEquivalence` annotation. Effect derives a class's
+equivalence from its declared field struct by construction
+(`effect@4.0.0-rc.113`, upstream `84864bc30c`, "Fix Schema class equivalence
+derivation"), so `S.toEquivalence(ErrorClass)` already compares declared
+fields only and ignores `Error` runtime metadata. `$I.annoteError` returns
+identity metadata and documentation extras and installs no hook; the
+`adoptDeclaredFieldsEquivalence` and `declaredFieldsEquivalence` helpers are
+deleted. A field that must not take part in identity declares an always-equal
+equivalence on its own schema (`Defect` from `@beep/schema`, or
+`S.Unknown.annotate({ toEquivalence: () => () => true })` for a local opaque
+payload); nothing is excluded at the class.
+
+The schema-first rule `SFV4-tagged-error-equivalence` is inverted: it now
+reports a `toEquivalence` key reached from the annotations argument of any
+Schema class factory call, including through a referenced annotation record.
+Intentional divergences enter `standards/schema-first.inventory.jsonc` through
+`bun run beep lint schema-first --write` with a justification.
+
+Rationale:
+
+The 2026-08-24 rule encoded a premise that upstream removed two RCs later. A
+lint that demands the hook teaches every new error class the wrong thing and
+hides the derived law behind a ritual. The 60-seed by 400-run measurement on
+`packages/drivers/doc-text` that motivated the hook (682/24,000 unequal on
+rc.109 without it) reports 0/24,000 on rc.113 with the hook deleted
+(`goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md`).
+
+## 2026-08-24: Tagged Errors Declare Diagnostic Equivalence
+
+- **Status:** Superseded by 2026-09-12 (Schema classes derive equivalence by construction)
 
 Decision:
 

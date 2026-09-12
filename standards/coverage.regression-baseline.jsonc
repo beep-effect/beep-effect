@@ -6240,18 +6240,6 @@
             "functions": 2
           }
         },
-        "packages/ecosystem/effect-drizzle/src/core/declaredFieldsEquivalence.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/ecosystem/effect-drizzle/src/core/entity-id.ts": {
           "lines": 100,
           "statements": 100,

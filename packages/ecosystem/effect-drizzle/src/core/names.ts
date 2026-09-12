@@ -6,7 +6,6 @@
 
 import { dual } from "effect/Function";
 import { String as StringSchema, TaggedError } from "effect/Schema";
-import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 
 /**
  * Compile-time diagnostic carrier exposed by SQL naming validation.
@@ -106,7 +105,6 @@ class SqlNameError extends TaggedError<SqlNameError>("@beep/effect-drizzle/SqlNa
   },
   {
     description: "A SQL identifier or enum label violates a dialect naming invariant.",
-    toEquivalence: (typeParameters) => declaredFieldsEquivalence<SqlNameError>(typeParameters),
   }
 ) {}
 
