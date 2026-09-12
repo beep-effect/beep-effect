@@ -1,0 +1,25 @@
+{
+  "findings": [
+    {
+      "evidence": [
+        {
+          "eventIds": [118, 122, 127],
+          "frameRange": [4, 4],
+          "kind": "frame",
+          "path": "frames/animation-w9_00004.png"
+        }
+      ],
+      "fix": "Suppress the resting cursor while the row set has focus-within on another row (.rowsets:focus-within .row[data-cursor]:not(:focus-visible) .row__no::after { content: none }).",
+      "id": "R11-01",
+      "lens": "focus-ring",
+      "repro": "Focus the first review row, press ArrowDown three times at ~600 ms; while TSK 0202 shows the inverse-video focus cursor, CLM 0101 still shows its resting cursor glyph.",
+      "severity": "P2",
+      "title": "Two cursor marks show at once while a row other than the resting row holds keyboard focus"
+    }
+  ],
+  "judge": { "effort": "medium", "model": "claude-fable-5-1" },
+  "requiredCount": 0,
+  "round": 11,
+  "schemaVersion": "qa-inventory/v1",
+  "sessionRef": "session.json"
+}

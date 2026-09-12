@@ -3521,9 +3521,13 @@
       {
         "from": "@beep/todox",
         "allow": [
+          "@beep/identity",
+          "@beep/schema",
           "@beep/todox"
         ],
         "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
           "@beep/todox"
         ]
       },

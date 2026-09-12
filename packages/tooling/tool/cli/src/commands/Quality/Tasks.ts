@@ -2686,6 +2686,11 @@ const rootRepoLintPolicySteps = (
         "--check",
       ]),
       repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
+      // Full-scan membership ratchet against standards/effect-vitest.inventory.jsonc (about
+      // 8-10 s). Hosted here so a PR that adds test files without refreshing the inventory
+      // reds itself instead of every later local cheap-gates proof; the cheap-gates lane
+      // repeats this step under the same id (TTC ruling 28).
+      repoCliStep(repoRoot, "lint:effect-vitest", ["lint", "effect-vitest"]),
       // Structural replacement for the apps' former second compiler pass (D5): every
       // tsconfig.check.json may only turn emit machinery off, never widen the program.
       repoCliStep(repoRoot, "lint:tsconfig-overlay", ["lint", "tsconfig-overlay"]),
@@ -2799,7 +2804,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
   yield* Console.log(
-    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, tsconfig-overlay, reflection-artifacts, roadmap-refs, goals, schema-first, jsdoc-module-tags, docgen, circular, typos, oxlint"
+    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, effect-vitest, tsconfig-overlay, reflection-artifacts, roadmap-refs, goals, schema-first, jsdoc-module-tags, docgen, circular, typos, oxlint"
   );
   yield* runStepGroup(
     "lint:policy",

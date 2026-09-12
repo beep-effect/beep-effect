@@ -34,6 +34,12 @@ source-to-review mechanism and requests a walkthrough.
 
 ## Positioning
 
+Updated 2026-09-11 from the Todox Notion workspace (product vision, battle
+card, skills series) after Benjamin rejected the Terminal of Record
+direction: Todox is a local-first, provider-agnostic advisor runtime. Public
+copy speaks in a confident product voice, names no competitor, claims no
+certification, and labels every demonstration synthetic.
+
 Control, evidence, and ledgers made tangible:
 
 - firm-controlled data and action authority;
@@ -93,8 +99,10 @@ evidence-bounded context packet.
 ## Brand Commitments
 
 - Name: Todox; public site identity todox.ai (confirmed 2026-08-27).
-- No existing logo, wordmark, palette, or typography commitments — the visual
-  world is established later through Impeccable new-work.
+- Visual world pinned by Benjamin 2026-09-11: a standard product site in his
+  palette — deep-green ink and a mint glow on parchment, forest-dark bands for
+  the hero and the live demonstration (Fraunces display, Geist body, Martian
+  Mono for records). The earlier Terminal of Record direction is withdrawn.
 - Reference material is reference-only: no third-party logos, wordmarks,
   screenshots, photography, illustrations, faces, proprietary fonts, exact
   palettes, copy, or compositions; no Mariner or AdvicePeriod trade dress.

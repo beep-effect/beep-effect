@@ -1,0 +1,22 @@
+{
+  "artifacts": [],
+  "eventsPath": "~/YeeBois/projects/beep-effect5/.beep/qa/round-15/events.ndjson",
+  "schemaVersion": "beep.qa.capture-session.v1",
+  "session": {
+    "commitDirty": true,
+    "commitSha": "662823dd960367046ba7d73dd8fd25d15782865a",
+    "id": "qa-round-15-1789180464115",
+    "lane": "playwright",
+    "round": 15,
+    "scenario": "apps/todox/.beep/qa-capture.mjs",
+    "startedAtEpochMs": 1789180464115,
+    "toolVersions": {
+      "bun": "1.4.2",
+      "ffmpeg": "ffmpeg version n9.0.1 Copyright (c) 2000-2026 the FFmpeg developers",
+      "exiftool": "13.55"
+    },
+    "url": "http://todox.beep.localhost:1355",
+    "viewport": { "height": 1000, "width": 1600 }
+  },
+  "videoPath": "~/YeeBois/projects/beep-effect5/.beep/qa/round-15/video/capture.webm"
+}

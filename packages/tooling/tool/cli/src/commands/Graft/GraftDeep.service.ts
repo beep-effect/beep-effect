@@ -13,6 +13,7 @@ import * as DateTime from "effect/DateTime";
 import * as Dur from "effect/Duration";
 import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
+import { constFalse } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -28,6 +29,7 @@ import { ensureZeroExit, formatCommandLine, OutputBound, runCaptured } from "../
 import { GraftCacheIoError, GraftDeepLockError, GraftDeepPreflightError, GraftDeepStepError } from "./Graft.errors.ts";
 import {
   GraftCacheSyncAction,
+  GraftDeepBunCandidate,
   GraftDeepLock,
   GraftDeepRefreshOutcome,
   GraftDeepRefreshStatus,
@@ -50,6 +52,8 @@ const $I = $RepoCliId.create("commands/Graft/GraftDeep.service");
 
 const REFRESH_STATUS_VERSION = "beep-graft-deep-refresh/v1";
 const REFRESH_UNIT_BASE_NAME = "beep-graft-deep-refresh";
+const REFRESH_SERVICE_FILE_NAME = `${REFRESH_UNIT_BASE_NAME}.service`;
+const REFRESH_TIMER_FILE_NAME = `${REFRESH_UNIT_BASE_NAME}.timer`;
 const REFRESH_UNIT_DESCRIPTION = "beep graft deep refresh (nightly meaning-tier rebuild + sibling seed)";
 // A systemd user unit starts with a nearly empty PATH. The refresh spawns
 // `graft` (an npm global whose shebang resolves `node` through the mise shims)
@@ -387,7 +391,8 @@ export type GraftDeepRefreshFailure =
  * **Details**
  *
  * Every method is safe to call concurrently with a running refresh: `run`
- * fences itself with a lock file and `readStatus` only reads.
+ * fences itself with a lock file and `readStatus` only reads. `uninstallTimer`
+ * takes no options because removing the units needs only `HOME`.
  *
  * @category services
  * @since 0.0.0
@@ -398,6 +403,10 @@ export interface GraftDeepRefreshShape {
   ) => Effect.Effect<ReadonlyArray<string>, GraftDeepPreflightError | GraftDeepStepError | GraftCacheIoError>;
   readonly readStatus: (stateDir: string) => Effect.Effect<O.Option<GraftDeepRefreshStatus>, GraftCacheIoError>;
   readonly run: (options: GraftDeepRefreshOptions) => Effect.Effect<GraftDeepRefreshStatus, GraftDeepRefreshFailure>;
+  readonly uninstallTimer: Effect.Effect<
+    ReadonlyArray<string>,
+    GraftDeepPreflightError | GraftDeepStepError | GraftCacheIoError
+  >;
 }
 
 /**
@@ -431,14 +440,16 @@ export class GraftDeepRefresh extends Context.Service<GraftDeepRefresh, GraftDee
  *
  * **Details**
  *
- * The service unit is returned first and the timer second. `EnvironmentFile`
- * carries no leading dash on purpose: a missing environment file must fail the
- * unit loudly instead of starting a build with no API key. The two
- * `ExecStartPre` lines update the owner clone before the CLI boots, so each
- * night runs main's current `beep graft deep refresh` rather than whatever the
- * clone held when the timer was installed. `KillMode=mixed` with
- * `TimeoutStopSec=90` sends `SIGTERM` to the CLI alone first, which `runMain`
- * turns into a fiber interrupt, leaving time to record the interrupted run.
+ * The service unit is returned first and the timer second. Every path is a
+ * `GraftDeepUnitPath`, so quoting the `Exec*` arguments is all the escaping a
+ * unit needs. `EnvironmentFile` carries no leading dash on purpose: a missing
+ * environment file must fail the unit loudly instead of starting a build with
+ * no API key. The two `ExecStartPre` lines update the owner clone before the
+ * CLI boots, so each night runs main's current `beep graft deep refresh`
+ * rather than whatever the clone held when the timer was installed.
+ * `KillMode=mixed` with `TimeoutStopSec=90` sends `SIGTERM` to the CLI alone
+ * first, which `runMain` turns into a fiber interrupt, leaving time to record
+ * the interrupted run.
  *
  * **Example** (Render the timer calendar line)
  *
@@ -452,7 +463,6 @@ export class GraftDeepRefresh extends Context.Service<GraftDeepRefresh, GraftDee
  *     bunPath: "/usr/bin/bun",
  *     onCalendar: "*-*-* 02:30:00",
  *     envFile: "/home/op/.config/beep-graft/env",
- *     uninstall: false,
  *   })
  * )
  * console.log(Str.includes("OnCalendar=*-*-* 02:30:00")(units[1]?.text ?? "")) // true
@@ -467,7 +477,7 @@ export const renderGraftDeepRefreshUnits = (
   options: GraftDeepTimerOptions
 ): ReadonlyArray<{ readonly fileName: string; readonly text: string }> => [
   {
-    fileName: `${REFRESH_UNIT_BASE_NAME}.service`,
+    fileName: REFRESH_SERVICE_FILE_NAME,
     text: A.join(
       [
         "[Unit]",
@@ -496,7 +506,7 @@ export const renderGraftDeepRefreshUnits = (
     ),
   },
   {
-    fileName: `${REFRESH_UNIT_BASE_NAME}.timer`,
+    fileName: REFRESH_TIMER_FILE_NAME,
     text: A.join(
       [
         "[Unit]",
@@ -515,6 +525,50 @@ export const renderGraftDeepRefreshUnits = (
     ),
   },
 ];
+
+/**
+ * Resolves the Bun the rendered unit runs when no `--bun-path` is given.
+ *
+ * **Details**
+ *
+ * Each {@link GraftDeepBunCandidate} is probed under `home` in order and the
+ * first regular file this user can execute wins, so a unit installed on a
+ * mise-managed workstation runs whichever Bun the repo's `mise.toml` pins on
+ * the night it fires. A candidate that is missing, unreadable, a directory,
+ * or a leftover without execute permission is skipped rather than pinned, so
+ * the probe never fails. The installer's own `process.execPath` is the
+ * fallback only when no candidate qualifies: it is one version's binary, and
+ * a unit pinned to it keeps running that version after a bump, or fails
+ * outright once the version is pruned.
+ *
+ * **Example** (Prepare a resolution under an operator home)
+ *
+ * ```ts import.meta.vitest name="Prepare a resolution under an operator home"
+ * import { resolveGraftDeepBunPath } from "@beep/repo-cli/commands/Graft"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(resolveGraftDeepBunPath("/home/op"))) // true
+ * ```
+ *
+ * @param home - The operator home directory the candidates are probed under.
+ * @returns The absolute path of the Bun executable the unit should run.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const resolveGraftDeepBunPath = Effect.fn("GraftDeepRefresh.resolveBunPath")(function* (home: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  // stat follows the shim's symlink, so the executable bits are those of the
+  // binary the unit would actually run.
+  const found = yield* Effect.findFirst(
+    A.map(GraftDeepBunCandidate.Options, (candidate) => path.join(home, candidate)),
+    (candidate) =>
+      fs.stat(candidate).pipe(
+        Effect.map((info) => Eq.equals(info.type, "File") && (info.mode & 0o111) !== 0),
+        Effect.orElseSucceed(constFalse)
+      )
+  );
+  return O.getOrElse(found, () => process.execPath);
+});
 
 const statusCodec = S.fromJsonString(GraftDeepRefreshStatus);
 const decodeStatusJson = S.decodeUnknownEffect(statusCodec);
@@ -992,33 +1046,45 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
     );
   });
 
+  const readHome = (anchor: string) =>
+    Config.String("HOME").pipe(
+      Effect.mapError((cause) =>
+        GraftDeepPreflightError.make({
+          path: anchor,
+          message: "HOME is not set; cannot locate the systemd user unit directory.",
+          cause,
+        })
+      )
+    );
+
+  const unitDirOf = (home: string) => path.join(home, ".config", "systemd", "user");
+
+  // A value, not a function: removing the units takes no input beyond HOME.
+  const uninstallTimer: GraftDeepRefreshShape["uninstallTimer"] = Effect.gen(function* () {
+    const home = yield* readHome(REFRESH_TIMER_FILE_NAME);
+    const unitDir = unitDirOf(home);
+    const unitPaths = A.map([REFRESH_SERVICE_FILE_NAME, REFRESH_TIMER_FILE_NAME], (fileName) =>
+      path.join(unitDir, fileName)
+    );
+    // Nothing installed is nothing to undo, so an absent unit is skipped
+    // rather than disabled; a unit that is present and refuses to be
+    // disabled or deleted is reported, because the next daemon-reload
+    // would load it again and the operator would believe it was gone.
+    const present = yield* Effect.filter(unitPaths, (unit) => fs.exists(unit).pipe(Effect.mapError(ioError(unit))));
+    if (A.isReadonlyArrayNonEmpty(present)) {
+      yield* runSystemctl(["disable", "--now", REFRESH_TIMER_FILE_NAME], home);
+    }
+    yield* Effect.forEach(present, (unit) => fs.remove(unit).pipe(Effect.mapError(ioError(unit))));
+    yield* runSystemctl(["daemon-reload"], home);
+    return present;
+  }).pipe(Effect.withSpan("GraftDeepRefresh.uninstallTimer"));
+
   const installTimer: GraftDeepRefreshShape["installTimer"] = Effect.fn("GraftDeepRefresh.installTimer")(
     function* (options) {
-      const home = yield* Config.String("HOME").pipe(
-        Effect.mapError((cause) =>
-          GraftDeepPreflightError.make({
-            path: options.owner,
-            message: "HOME is not set; cannot locate the systemd user unit directory.",
-            cause,
-          })
-        )
-      );
-      const unitDir = path.join(home, ".config", "systemd", "user");
+      const home = yield* readHome(options.owner);
+      const unitDir = unitDirOf(home);
       const units = renderGraftDeepRefreshUnits(options);
       const unitPaths = A.map(units, (unit) => path.join(unitDir, unit.fileName));
-      if (options.uninstall) {
-        // Nothing installed is nothing to undo, so an absent unit is skipped
-        // rather than disabled; a unit that is present and refuses to be
-        // disabled or deleted is reported, because the next daemon-reload
-        // would load it again and the operator would believe it was gone.
-        const present = yield* Effect.filter(unitPaths, (unit) => fs.exists(unit).pipe(Effect.mapError(ioError(unit))));
-        if (A.isReadonlyArrayNonEmpty(present)) {
-          yield* runSystemctl(["disable", "--now", `${REFRESH_UNIT_BASE_NAME}.timer`], home);
-        }
-        yield* Effect.forEach(present, (unit) => fs.remove(unit).pipe(Effect.mapError(ioError(unit))));
-        yield* runSystemctl(["daemon-reload"], home);
-        return present;
-      }
       // Stat only: the environment file holds the proxy token and is never read
       // by this process.
       yield* fs.stat(options.envFile).pipe(
@@ -1090,12 +1156,12 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
         })
       );
       yield* runSystemctl(["daemon-reload"], home);
-      yield* runSystemctl(["enable", "--now", `${REFRESH_UNIT_BASE_NAME}.timer`], home);
+      yield* runSystemctl(["enable", "--now", REFRESH_TIMER_FILE_NAME], home);
       return unitPaths;
     }
   );
 
-  return GraftDeepRefresh.of({ installTimer, readStatus, run });
+  return GraftDeepRefresh.of({ installTimer, readStatus, run, uninstallTimer });
 });
 
 /**

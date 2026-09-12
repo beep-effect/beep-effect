@@ -1611,3 +1611,35 @@ inventory refresh was left out of #1091 to keep the diff focused; it needs its o
 the linter printing the new findings grouped by file (the count alone forced a
 hand attribution), and a hosted `lint:effect-vitest` lane or a main-push check so
 a stale inventory reds the PR that introduces it rather than every later publish.
+
+### Grouped ratchet report and a hosted seat for `lint:effect-vitest`, 2026-09-11
+
+Follow-through on the receipt above. `bun run beep lint effect-vitest` now prints the
+introduced findings grouped by file under the unchanged `[effect-vitest] N new finding(s)`
+first line (one line per file in path order, then a total with the refresh command), so
+a stale inventory names the change that added the tests instead of forcing a hand
+attribution by content key. Exercised against origin/main e16e7a9297 from a fresh
+`beep worktree new` checkout: the ratchet reported `2 new finding(s)` and the new lines
+attributed both to `packages/tooling/tool/cli/test/quality-tasks.test.ts`. A `--write`
+refresh from that head changed no content key at all (8,228 rows before and after,
+0 gone / 0 added by `(file, ruleId, symbol, evidence)`), so the two rows were duplicate
+fingerprints whose lines moved after the #1093 refresh and whose id-based membership
+refuses to bridge; the 488/488-line inventory diff is id churn only.
+
+Hosted decision: `lint:effect-vitest` joins the `lint:policy` step list beside
+`lint:package-test-typecheck`, so the hosted Lint Policy lane runs it on every PR and
+main push. The cheap-gates lane keeps the same step id (TTC ruling 28: one command, one
+name across tiers), no hosted check name changes, and the cost is one full scan of about
+8-10 s (R3 cohort 10.3-10.7 s, 8.0-8.3 s here) inside a lane whose measured wall time is
+about 363 s. The alternative, a dedicated `check.yml` job like JSDoc Ratchet, would add a
+new hosted check name and a runner spin-up for a 10 s scan; a note-only outcome would
+leave every later local `yeet publish` as the first place a stale inventory is noticed,
+which is the failure this receipt records. The same-tier repeat costs the local
+`lint policy` proof one extra scan, matching how `lint:schema-first` already runs in both.
+
+Second live case while this branch was open: main moved to 9292600368 and #1094 added
+`packages/tooling/tool/cli/test/graft-deep-refresh.test.ts` without a refresh. After the
+fast-forward the report read `1 new finding(s)` attributed to that file (EV010, a
+`@effect/platform-node` import), and the refresh added exactly that content key with none
+gone. With the hosted seat in place, #1094's own Lint Policy run would have been the place
+that red surfaced instead of this branch.
