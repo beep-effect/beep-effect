@@ -810,6 +810,259 @@ const dependentSeedOwners = (
     A.sort(Order.String)
   );
 
+class CoverageSelfJudgeChangedFileExclusion extends S.TaggedClass<CoverageSelfJudgeChangedFileExclusion>(
+  $I`CoverageSelfJudgeChangedFileExclusion`
+)(
+  "owns-changed-file",
+  { filePath: S.String },
+  $I.annote("CoverageSelfJudgeChangedFileExclusion", {
+    description: "The package owns a file the change set touched, so the change set could have moved its rows.",
+  })
+) {}
+
+class CoverageSelfJudgeDependentExclusion extends S.TaggedClass<CoverageSelfJudgeDependentExclusion>(
+  $I`CoverageSelfJudgeDependentExclusion`
+)(
+  "dependent-of-changed-package",
+  { packageName: S.String },
+  $I.annote("CoverageSelfJudgeDependentExclusion", {
+    description: "The package depends on a workspace package the change set touched.",
+  })
+) {}
+
+class CoverageSelfJudgeGlobalInputExclusion extends S.TaggedClass<CoverageSelfJudgeGlobalInputExclusion>(
+  $I`CoverageSelfJudgeGlobalInputExclusion`
+)(
+  "global-input-changed",
+  { filePath: S.String, reason: S.String },
+  $I.annote("CoverageSelfJudgeGlobalInputExclusion", {
+    description: "A changed path that forces the full run, which can move every measured row.",
+  })
+) {}
+
+/**
+ * Why one package's measured rows could have been moved by a change set.
+ *
+ * **Details**
+ *
+ * A package is self-judge eligible when none of these hold: it owns no changed
+ * file, it is not a workspace dependent of a changed package, and no changed
+ * path is a global coverage input. The three exclusions are the negative
+ * witnesses, carrying the exact path or package name a diagnostic names.
+ *
+ * **Example** (Decode an ownership exclusion)
+ *
+ * ```ts
+ * import { CoverageSelfJudgeExclusion } from "@beep/repo-cli/test/Quality"
+ * import * as S from "effect/Schema"
+ *
+ * const exclusion = S.decodeUnknownSync(CoverageSelfJudgeExclusion)({
+ *   _tag: "owns-changed-file",
+ *   filePath: "packages/example/src/Index.ts"
+ * })
+ * console.log(exclusion._tag) // "owns-changed-file"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CoverageSelfJudgeExclusion = S.Union([
+  CoverageSelfJudgeChangedFileExclusion,
+  CoverageSelfJudgeDependentExclusion,
+  CoverageSelfJudgeGlobalInputExclusion,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("CoverageSelfJudgeExclusion", {
+    description: "Tagged reason a package's coverage rows are not judged at the pull request's own values.",
+  })
+);
+
+/**
+ * Decoded reason a package cannot be judged at the pull request's own rows.
+ *
+ * @see {@link CoverageSelfJudgeExclusion} for runtime decoding and tag discrimination.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CoverageSelfJudgeExclusion = typeof CoverageSelfJudgeExclusion.Type;
+
+/**
+ * Which measured packages a change set could have moved, and why.
+ *
+ * **Details**
+ *
+ * `packageExclusions` names the packages that own a changed file or depend on
+ * one that does. `globalExclusion` is present when any changed path forces the
+ * full workspace run, which withdraws self-judging from every package at once.
+ * The committed coverage baseline itself is excluded from the global test: a
+ * pull request that edits only rows has not changed what the lane measures.
+ *
+ * **Example** (Nothing changed, so nothing is excluded)
+ *
+ * ```ts
+ * import { CoverageSelfJudgeScope } from "@beep/repo-cli/test/Quality"
+ *
+ * const scope = CoverageSelfJudgeScope.make({})
+ * console.log(scope.packageExclusions) // {}
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageSelfJudgeScope extends S.Class<CoverageSelfJudgeScope>($I`CoverageSelfJudgeScope`)(
+  {
+    packageExclusions: S.Record(S.String, CoverageSelfJudgeExclusion).pipe(
+      SchemaUtils.withConstantDefault<Record<string, CoverageSelfJudgeExclusion>>({})
+    ),
+    globalExclusion: CoverageSelfJudgeExclusion.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("CoverageSelfJudgeScope", {
+    description: "Packages whose coverage rows a change set could have moved, keyed by the witness that says so.",
+  })
+) {}
+
+// The seed that reached each dependent, so a diagnostic can name the changed
+// package rather than asserting an unexplained dependency edge. Seeds are never
+// their own dependents, matching `coverageDependentOwners`.
+const dependentOriginByPackageName = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  seedPackageNames: ReadonlyArray<string>
+): ReadonlyArray<readonly [string, string]> => {
+  const dependents = dependentsByPackageName(owners);
+  const visited = MutableHashSet.fromIterable(seedPackageNames);
+  const origins = MutableHashMap.empty<string, string>();
+  const pending = A.copy(A.map(seedPackageNames, (packageName) => [packageName, packageName] as const));
+
+  for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+    const [current, seed] = next;
+    for (const dependent of O.getOrElse(MutableHashMap.get(dependents, current), A.empty<string>)) {
+      if (!MutableHashSet.has(visited, dependent)) {
+        MutableHashSet.add(visited, dependent);
+        MutableHashMap.set(origins, dependent, seed);
+        pending.push([dependent, seed] as const);
+      }
+    }
+  }
+
+  const measurable = MutableHashSet.fromIterable(
+    pipe(
+      owners,
+      A.filter(isMeasurableOwner),
+      A.map((owner) => owner.packageName)
+    )
+  );
+  return pipe(
+    A.fromIterable(origins),
+    A.map(([packageName, seed]) => [packageName, seed] as const),
+    A.filter(([packageName]) => MutableHashSet.has(measurable, packageName)),
+    A.sort(Order.mapInput(Order.String, ([packageName]: readonly [string, string]) => packageName))
+  );
+};
+
+/**
+ * Decide which measured packages a change set could have moved.
+ *
+ * **Details**
+ *
+ * Ownership uses the same tables as {@link changedCoverageOwners}, so a
+ * repository fixture counts as a changed file for the package whose tests read
+ * it. Dependents use the same inverted graph as {@link coverageDependentOwners}.
+ * A changed path that {@link planCoverageAffectedScope} would call a full-run
+ * reason withdraws self-judging from every package; the committed coverage
+ * baseline is the one path exempt from that test, because editing rows does not
+ * change what the lane measures.
+ *
+ * **Example** (A changed source file excludes its own package)
+ *
+ * ```ts
+ * import { CoverageScopeOwner, planCoverageSelfJudgeScope } from "@beep/repo-cli/test/Quality"
+ *
+ * const owner = CoverageScopeOwner.make({
+ *   packageName: "@beep/example",
+ *   packagePath: "packages/example",
+ *   hasCoverage: true
+ * })
+ * const scope = planCoverageSelfJudgeScope([owner], ["packages/example/src/Index.ts"])
+ * console.log(scope.packageExclusions["@beep/example"]?._tag) // "owns-changed-file"
+ * ```
+ *
+ * @param owners - Current workspace packages, their coverage capability, and workspace dependencies.
+ * @param changedFiles - Repository-relative changed paths, committed and dirty.
+ * @returns The exclusion witnesses keyed by package, plus any global-input witness.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const planCoverageSelfJudgeScope: {
+  (changedFiles: ReadonlyArray<string>): (owners: ReadonlyArray<CoverageScopeOwner>) => CoverageSelfJudgeScope;
+  (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): CoverageSelfJudgeScope;
+} = dual(
+  2,
+  (owners: ReadonlyArray<CoverageScopeOwner>, changedFiles: ReadonlyArray<string>): CoverageSelfJudgeScope => {
+    const sortedFiles = pipe(changedFiles, A.dedupe, A.sort(Order.String));
+    const globalExclusion = pipe(
+      sortedFiles,
+      A.filter((filePath) => !isCoverageBaselinePath(filePath)),
+      A.map((filePath) =>
+        O.map(fullReasonForFile(owners, filePath), (reason) =>
+          CoverageSelfJudgeGlobalInputExclusion.make({ filePath, reason })
+        )
+      ),
+      A.getSomes,
+      A.head
+    );
+    const packageExclusions = R.empty<string, CoverageSelfJudgeExclusion>();
+
+    for (const [packageName, seed] of dependentOriginByPackageName(owners, dependentSeedOwners(owners, sortedFiles))) {
+      R.assignProperty(packageExclusions, packageName, CoverageSelfJudgeDependentExclusion.make({ packageName: seed }));
+    }
+
+    // Direct ownership is the more precise witness, so it overwrites a
+    // dependency witness; the first changed path in sorted order wins so the
+    // named file is stable across runs.
+    const ownedByPackageName = R.empty<string, string>();
+    for (const filePath of sortedFiles) {
+      pipe(
+        selectedOwnerForFile(owners, filePath),
+        O.filter((packageName) => !R.has(ownedByPackageName, packageName)),
+        O.map((packageName) => R.assignProperty(ownedByPackageName, packageName, filePath))
+      );
+    }
+    for (const [packageName, filePath] of R.toEntries(ownedByPackageName)) {
+      R.assignProperty(packageExclusions, packageName, CoverageSelfJudgeChangedFileExclusion.make({ filePath }));
+    }
+
+    return CoverageSelfJudgeScope.make({ packageExclusions, globalExclusion });
+  }
+);
+
+/**
+ * The witness that stops one package from being judged at a pull request's own
+ * rows, or `None` when the package is self-judge eligible.
+ *
+ * **Example** (An untouched package is eligible)
+ *
+ * ```ts
+ * import { coverageSelfJudgeExclusion, CoverageSelfJudgeScope } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(coverageSelfJudgeExclusion(CoverageSelfJudgeScope.make({}), "@beep/example"))) // true
+ * ```
+ *
+ * @param scope - Exclusion witnesses planned for this change set.
+ * @param packageName - Workspace package whose rows are being judged.
+ * @returns The package's own witness, otherwise the global one, otherwise `None`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageSelfJudgeExclusion: {
+  (packageName: string): (scope: CoverageSelfJudgeScope) => O.Option<CoverageSelfJudgeExclusion>;
+  (scope: CoverageSelfJudgeScope, packageName: string): O.Option<CoverageSelfJudgeExclusion>;
+} = dual(
+  2,
+  (scope: CoverageSelfJudgeScope, packageName: string): O.Option<CoverageSelfJudgeExclusion> =>
+    O.orElse(R.get(scope.packageExclusions, packageName), () => scope.globalExclusion)
+);
+
 /**
  * Derive a conservative coverage plan from changed files and current workspace owners.
  *

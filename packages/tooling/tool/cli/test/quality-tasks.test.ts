@@ -89,6 +89,7 @@ import {
   planCoverageAffectedScopeWithBaseline,
   planCoverageBaselineWrite,
   planCoverageFullShards,
+  planCoverageSelfJudgeScope,
   planWorkspaceCoverageAffectedScope,
   prepareLaneProofSession,
   promotedFallowGithubCheckLaneIdsForTesting,
@@ -102,6 +103,8 @@ import {
   qualityProfileConfigForTesting,
   readCoverageComparisonBaselineForTesting,
   renderCoverageFailuresForTesting,
+  renderCoverageLoweredFloors,
+  renderCoverageMeasuredRowProposals,
   renderCoverageRemediation,
   reviewFixDocgenLocalArgsForTesting,
   rootLintPolicyStepsForTesting,
@@ -183,6 +186,7 @@ const decodeGithubCheckFailurePolicy = S.decodeEffect(GithubCheckFailurePolicy);
 const decodeGithubCheckRunReport = S.decodeEffect(GithubCheckRunReport);
 const decodeGithubCheckRunReportSync = S.decodeSync(GithubCheckRunReport);
 const decodeUnknownCoverageRegressionBaseline = S.decodeUnknownEffect(CoverageRegressionBaseline);
+const encodeCoverageFileBaselineSync = S.encodeSync(CoverageFileBaseline);
 const encodeCoverageRegressionBaseline = S.encodeEffect(CoverageRegressionBaseline);
 const encodeGithubCheckRunReportSync = S.encodeSync(GithubCheckRunReport);
 
@@ -4703,7 +4707,7 @@ describe("quality task adapter", () => {
         expect(renderCoverageRemediation(result)).toEqual([]);
       });
 
-      it("leaves lowered rows to the base floors so a floor-lowering fix is judged by main alone", () => {
+      it("leaves lowered rows to the base floors when no merge base or change set is available", () => {
         const result = compare(
           proposing(packageRow(80, 20, { [filePath]: coverageFileBaseline(70, 30) })),
           packageRow(80, 20, { [filePath]: coverageFileBaseline(75, 25) })
@@ -4711,7 +4715,9 @@ describe("quality task adapter", () => {
 
         expect(result.raisedRowsJudged).toBe(0);
         expect(result.raisedRowFailures).toEqual([]);
-        // The base floor still governs: 75 < 80 with more uncovered units is a drop.
+        expect(result.loweredFloors).toEqual([]);
+        // Fail closed: without the merge-base document nothing is attributed to
+        // this pull request, so 75 < 80 with more uncovered units is a drop.
         expect(A.map(result.failures, (failure) => failure._tag)).toEqual(A.makeBy(4, () => "baseline-drop"));
       });
 
@@ -4831,6 +4837,357 @@ describe("quality task adapter", () => {
         expect(unmeasured.raisedRowsJudged).toBe(0);
         expect(unmeasured.raisedRowFailures).toEqual([]);
       });
+    });
+
+    describe("rows a pull request lowered are judged by whether it could have moved them", () => {
+      const filePath = "packages/existing/src/Index.ts";
+      const packageRow = (
+        metric: number,
+        uncovered: number,
+        files: Record<string, CoverageFileBaseline>
+      ): CoveragePackageBaseline =>
+        CoveragePackageBaseline.make({
+          ...coveragePackageBaseline("packages/existing", metric),
+          uncovered: coverageUncovered(uncovered),
+          files,
+        });
+      const owners = [
+        CoverageScopeOwner.make({ packageName: "@beep/dep", packagePath: "packages/dep", hasCoverage: true }),
+        CoverageScopeOwner.make({
+          packageName: "@beep/existing",
+          packagePath: "packages/existing",
+          hasCoverage: true,
+          workspaceDependencies: ["@beep/dep"],
+        }),
+      ];
+      const rows = (row: CoveragePackageBaseline) => withRows({ "@beep/existing": row });
+      const allMetrics = ["branches", "functions", "lines", "statements"];
+      const judge = (
+        base: CoveragePackageBaseline,
+        mergeBase: CoveragePackageBaseline,
+        proposed: CoveragePackageBaseline,
+        actual: CoveragePackageBaseline,
+        changedFiles: ReadonlyArray<string> = []
+      ) =>
+        compareCoverageRegressionSnapshotsWithProposedForTesting(
+          CoverageComparisonBaselines.make({
+            baseline: rows(base),
+            proposed: O.some(rows(proposed)),
+            mergeBase: O.some(rows(mergeBase)),
+            selfJudge: O.some(planCoverageSelfJudgeScope(owners, changedFiles)),
+          }),
+          [{ packageName: "@beep/existing", baseline: actual }],
+          false
+        );
+      const base = packageRow(80, 20, { [filePath]: coverageFileBaseline(80, 20) });
+      const lowered = packageRow(70, 30, { [filePath]: coverageFileBaseline(70, 30) });
+
+      it("judges a lowered row at its own value on a package the pull request could not have moved", () => {
+        const result = judge(base, base, lowered, lowered);
+
+        expect(result.failures).toEqual([]);
+        expect(result.selfJudgeEligiblePackageNames).toEqual(["@beep/existing"]);
+        // Four file metrics plus four package metrics.
+        expect(A.length(result.loweredFloors)).toBe(8);
+        expect(A.map(result.loweredFloors, (floor) => floor.metric)).toEqual([...allMetrics, ...allMetrics]);
+        expect(renderCoverageLoweredFloors(result)[0]).toBe(
+          "[coverage-ratchet] 8 floor(s) lowered by this pull request on packages it could not have moved (judged at the lowered value):"
+        );
+        expect(renderCoverageLoweredFloors(result)[1]).toBe(
+          `  - @beep/existing (${filePath}) branches: 80 -> 70; lane measured 70`
+        );
+        expect(renderCoverageLoweredFloors(result)[5]).toBe(
+          "  - @beep/existing (packages/existing) branches: 80 -> 70; lane measured 70"
+        );
+      });
+
+      it("adds a tighten advisory when the lane measures above the lowered floor", () => {
+        const result = judge(base, base, lowered, packageRow(71, 29, { [filePath]: coverageFileBaseline(71, 29) }));
+
+        expect(result.failures).toEqual([]);
+        expect(A.every(result.loweredFloors, (floor) => floor.tighten)).toBe(true);
+        expect(renderCoverageLoweredFloors(result)[1]).toBe(
+          `  - @beep/existing (${filePath}) branches: 80 -> 70; lane measured 71 (tighten: adopt the measured row)`
+        );
+      });
+
+      it("keeps the base floor when the package owns a changed file", () => {
+        const result = judge(base, base, lowered, lowered, [filePath]);
+
+        expect(result.loweredFloors).toEqual([]);
+        expect(result.selfJudgeEligiblePackageNames).toEqual([]);
+        expect(A.map(result.failures, (failure) => failure._tag)).toEqual(A.makeBy(4, () => "baseline-drop"));
+        expect(renderCoverageFailuresForTesting(result.failures)[0]).toBe(
+          `  - @beep/existing (${filePath}) branches: 70 < 80 [row lowered by this pull request to 70; judged at the base floor because package owns changed file ${filePath}]`
+        );
+      });
+
+      it("keeps the base floor when the package is a dependent of a changed package", () => {
+        const result = judge(base, base, lowered, lowered, ["packages/dep/src/Index.ts"]);
+
+        expect(result.loweredFloors).toEqual([]);
+        expect(renderCoverageFailuresForTesting(result.failures)[0]).toBe(
+          `  - @beep/existing (${filePath}) branches: 70 < 80 [row lowered by this pull request to 70; judged at the base floor because dependent of @beep/dep]`
+        );
+      });
+
+      it("keeps the base floor when a global coverage input changed", () => {
+        const result = judge(base, base, lowered, lowered, ["vitest.shared.ts"]);
+
+        expect(result.loweredFloors).toEqual([]);
+        expect(renderCoverageFailuresForTesting(result.failures)[0]).toBe(
+          `  - @beep/existing (${filePath}) branches: 70 < 80 [row lowered by this pull request to 70; judged at the base floor because global input vitest.shared.ts changed]`
+        );
+      });
+
+      it("does not attribute a row main raised after the branch diverged to the pull request", () => {
+        // The base tip is stricter than the merge base because main raised the
+        // row while this branch was open; the branch itself proposes the merge
+        // base's value, so nothing here was lowered by it.
+        const result = judge(
+          packageRow(80, 20, { [filePath]: coverageFileBaseline(80, 20) }),
+          lowered,
+          lowered,
+          packageRow(75, 25, { [filePath]: coverageFileBaseline(75, 25) })
+        );
+
+        expect(result.loweredFloors).toEqual([]);
+        expect(A.map(result.failures, (failure) => failure.baseline)).toEqual([80, 80, 80, 80]);
+        expect(renderCoverageFailuresForTesting(result.failures)[0]).toBe(
+          `  - @beep/existing (${filePath}) branches: 75 < 80`
+        );
+      });
+
+      it("passes the #1076 shape when the package total is lowered with its file rows", () => {
+        const firstFile = "packages/existing/src/code-block-node.tsx";
+        const secondFile = "packages/existing/src/mermaid-node.tsx";
+        const withEditorFiles = (metric: number, uncovered: number, fileMetric: number, fileUncovered: number) =>
+          packageRow(metric, uncovered, {
+            [firstFile]: coverageFileBaseline(fileMetric, fileUncovered),
+            [secondFile]: coverageFileBaseline(fileMetric, fileUncovered),
+          });
+        const editorBase = withEditorFiles(80, 20, 27.27, 8);
+        const editorLowered = withEditorFiles(60, 30, 0, 11);
+
+        const adopted = judge(editorBase, editorBase, editorLowered, editorLowered);
+        expect(adopted.failures).toEqual([]);
+        expect(A.length(adopted.loweredFloors)).toBe(12);
+
+        // The file rows are lowered but the package total is left at the base
+        // floor, so the package comparison still fails.
+        const packageStillHigh = judge(
+          editorBase,
+          editorBase,
+          withEditorFiles(80, 20, 0, 11),
+          withEditorFiles(60, 30, 0, 11)
+        );
+        expect(A.map(packageStillHigh.failures, (failure) => failure._tag)).toEqual(A.makeBy(4, () => "baseline-drop"));
+        expect(A.every(packageStillHigh.failures, (failure) => O.isNone(failure.filePath))).toBe(true);
+        expect(renderCoverageMeasuredRowProposals(packageStillHigh)[1]).toBe(
+          `  "@beep/existing" totals: ${JSON.stringify(encodeCoverageFileBaselineSync(coverageFileBaseline(60, 30)))}`
+        );
+      });
+
+      it("passes the #1090 shape where every lowered row equals the hosted value", () => {
+        const paths = A.makeBy(6, (index) => `packages/existing/src/Row${index}.ts`);
+        const files = (metric: number, uncovered: number) =>
+          R.fromEntries(A.map(paths, (path) => [path, coverageFileBaseline(metric, uncovered)] as const));
+        const restoredBase = packageRow(80, 20, files(80, 20));
+        const restored = packageRow(78, 24, files(78, 24));
+
+        const result = judge(restoredBase, restoredBase, restored, restored);
+        expect(result.failures).toEqual([]);
+        expect(A.length(result.loweredFloors)).toBe(28);
+      });
+
+      it("sources policy fields from the base document, not the pull request's", () => {
+        const measured = packageRow(50, 0, {});
+        const strictBase = CoverageRegressionBaseline.make({
+          ...rows(measured),
+          minimum: coveragePercentages(60),
+        });
+        const laxProposed = CoverageRegressionBaseline.make({
+          ...rows(measured),
+          minimum: coveragePercentages(0),
+          exemptions: { "@beep/existing": "user-excluded" },
+          follow_ups: { "@beep/existing": "tracked debt" },
+        });
+        const result = compareCoverageRegressionSnapshotsWithProposedForTesting(
+          CoverageComparisonBaselines.make({
+            baseline: strictBase,
+            proposed: O.some(laxProposed),
+            mergeBase: O.some(strictBase),
+            selfJudge: O.some(planCoverageSelfJudgeScope(owners, [])),
+          }),
+          [{ packageName: "@beep/existing", baseline: measured }],
+          false
+        );
+
+        expect(A.map(result.minimumFailures, (failure) => failure.metric)).toEqual(allMetrics);
+      });
+
+      it("fails when the pull request removes a row for a package the lane still measures", () => {
+        const result = compareCoverageRegressionSnapshotsWithProposedForTesting(
+          CoverageComparisonBaselines.make({
+            baseline: rows(base),
+            proposed: O.some(CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, packages: {} })),
+            mergeBase: O.some(rows(base)),
+            selfJudge: O.some(planCoverageSelfJudgeScope(owners, [])),
+          }),
+          [{ packageName: "@beep/existing", baseline: base }],
+          false
+        );
+
+        expect(A.map(result.packageRowRemovals, (removal) => removal.packageName)).toEqual(["@beep/existing"]);
+        expect(A.map(result.packageRowRemovals, (removal) => removal.packagePath)).toEqual(["packages/existing"]);
+      });
+
+      it("proposes the measured row for every reported path and round-trips it", () => {
+        const result = judge(base, base, lowered, lowered, [filePath]);
+        const lines = renderCoverageMeasuredRowProposals(result);
+
+        expect(lines[0]).toBe(
+          "[coverage-ratchet] measured rows for the reported paths (hosted evidence; paste into standards/coverage.regression-baseline.jsonc):"
+        );
+        expect(lines[1]).toBe(
+          `  "@beep/existing" totals: ${JSON.stringify(encodeCoverageFileBaselineSync(coverageFileBaseline(70, 30)))}`
+        );
+        expect(lines[2]).toBe(
+          `  "@beep/existing" files["${filePath}"]: ${JSON.stringify(encodeCoverageFileBaselineSync(coverageFileBaseline(70, 30)))}`
+        );
+        const decoded = A.map(A.drop(lines, 1), (line) =>
+          S.decodeUnknownSync(CoverageFileBaseline)(JSON.parse(O.getOrElse(A.last(Str.split(": ")(line)), () => "")))
+        );
+        expect(A.map(decoded, (row) => row.lines)).toEqual([70, 70]);
+      });
+
+      it("names the writer only for a new file, never for a drop on an existing row", () => {
+        const droppedRemediation = A.join(
+          renderCoverageRemediation(judge(base, base, lowered, lowered, [filePath])),
+          "\n"
+        );
+        expect(droppedRemediation).not.toContain("--write-baseline");
+        expect(droppedRemediation).toContain("lowering such a row in this pull request does not pass");
+
+        const untouchedDrop = judge(base, base, base, packageRow(70, 30, { [filePath]: coverageFileBaseline(70, 30) }));
+        const untouchedRemediation = A.join(renderCoverageRemediation(untouchedDrop), "\n");
+        expect(untouchedRemediation).not.toContain("--write-baseline");
+        expect(untouchedRemediation).toContain(`this pull request changed nothing that runs under ${filePath}`);
+
+        const newFile = "packages/existing/src/New.ts";
+        const newFileRemediation = A.join(
+          renderCoverageRemediation(
+            judge(
+              base,
+              base,
+              base,
+              packageRow(80, 20, {
+                [filePath]: coverageFileBaseline(80, 20),
+                [newFile]: coverageFileBaseline(50, 3),
+              })
+            )
+          ),
+          "\n"
+        );
+        expect(newFileRemediation).toContain("bun run coverage -- --filter=@beep/existing --write-baseline");
+        expect(newFileRemediation).toContain("packages that own no changed file are held");
+      });
+
+      it("reads the merge base and the change set from a pinned base in a real repository", () =>
+        Effect.runPromise(
+          withTempRepo(
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const repoRoot = process.cwd();
+              const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+              const writeBaseline = (document: CoverageRegressionBaseline) =>
+                encodeCoverageRegressionBaseline(document).pipe(
+                  Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+                );
+              const workspaceRow = (packageName: string, metric: number, uncovered: number) =>
+                CoveragePackageBaseline.make({
+                  ...coveragePackageBaseline(`packages/${packageName}`, metric),
+                  uncovered: coverageUncovered(uncovered),
+                  files: {},
+                });
+
+              yield* fs.makeDirectory(path.join(repoRoot, "packages/touched/src"), { recursive: true });
+              yield* fs.makeDirectory(path.join(repoRoot, "packages/untouched/src"), { recursive: true });
+              yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+              yield* fs.writeFileString(
+                path.join(repoRoot, "package.json"),
+                encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
+              );
+              yield* Effect.forEach(["touched", "untouched"], (name) =>
+                Effect.all([
+                  fs.writeFileString(
+                    path.join(repoRoot, `packages/${name}/package.json`),
+                    encodeJson({ name: `@beep/${name}`, private: true, scripts: { coverage: "vitest" } })
+                  ),
+                  fs.writeFileString(path.join(repoRoot, `packages/${name}/src/Index.ts`), "export const v = 1;\n"),
+                ])
+              );
+              yield* writeBaseline(
+                withRows({
+                  "@beep/touched": workspaceRow("touched", 80, 20),
+                  "@beep/untouched": workspaceRow("untouched", 80, 20),
+                })
+              );
+              yield* runGit(repoRoot, ["init"]);
+              yield* runGit(repoRoot, ["config", "user.email", "coverage-lowered@example.test"]);
+              yield* runGit(repoRoot, ["config", "user.name", "Coverage Lowered Test"]);
+              yield* runGit(repoRoot, ["add", "--all"]);
+              yield* runGit(repoRoot, ["commit", "-m", "seed"]);
+
+              // The branch lowers both rows but only touches one package.
+              yield* writeBaseline(
+                withRows({
+                  "@beep/touched": workspaceRow("touched", 70, 30),
+                  "@beep/untouched": workspaceRow("untouched", 70, 30),
+                })
+              );
+              yield* fs.writeFileString(path.join(repoRoot, "packages/touched/src/Index.ts"), "export const v = 2;\n");
+
+              const baselines = yield* readCoverageComparisonBaselineForTesting(repoRoot).pipe(
+                Effect.provideService(
+                  ConfigProvider.ConfigProvider,
+                  ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "HEAD" })
+                )
+              );
+              assertSome(
+                O.map(baselines.mergeBase, (document) => document.packages["@beep/touched"]?.lines),
+                80
+              );
+              assertSome(
+                O.map(baselines.selfJudge, (scope) => scope.packageExclusions["@beep/touched"]?._tag),
+                "owns-changed-file"
+              );
+              expect(
+                O.getOrElse(
+                  O.map(baselines.selfJudge, (scope) => R.has(scope.packageExclusions, "@beep/untouched")),
+                  () => true
+                )
+              ).toBe(false);
+
+              const result = compareCoverageRegressionSnapshotsWithProposedForTesting(
+                baselines,
+                [
+                  { packageName: "@beep/touched", baseline: workspaceRow("touched", 70, 30) },
+                  { packageName: "@beep/untouched", baseline: workspaceRow("untouched", 70, 30) },
+                ],
+                false
+              );
+
+              expect(A.map(result.failures, (failure) => failure.packageName)).toEqual(
+                A.makeBy(4, () => "@beep/touched")
+              );
+              expect(A.map(result.loweredFloors, (floor) => floor.packageName)).toEqual(
+                A.makeBy(4, () => "@beep/untouched")
+              );
+            })
+          )
+        ));
     });
 
     it("resolves an affected run from a dirty row-only baseline edit against the workspace", () =>
@@ -4955,7 +5312,7 @@ describe("quality task adapter", () => {
       });
     });
 
-    it("prints the scoped regeneration command for exactly the regressed packages", () => {
+    it("never offers the writer for a drop on an existing row", () => {
       const baseline = withRows({
         "@beep/a": coveragePackageBaseline("packages/a", 50),
         "@beep/b": coveragePackageBaseline("packages/b", 50),
@@ -4979,10 +5336,13 @@ describe("quality task adapter", () => {
         "bun run coverage -- --filter=@beep/md --filter=@beep/pandoc-ast --write-baseline"
       );
       const lines = renderCoverageRemediation(result);
-      expect(lines).toHaveLength(3);
-      expect(lines[0]).toContain("[coverage-ratchet] remediation:");
-      expect(lines[1]).toBe("  bun run coverage -- --filter=@beep/a --filter=@beep/b --write-baseline");
-      expect(lines[2]).toContain("never run bun run coverage:baseline:write for a per-package drop");
+      // The writer cannot move a floor the run is judged against, so a drop on
+      // an existing row states the two real outcomes and names no command.
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toContain(
+        "[coverage-ratchet] remediation: @beep/a, @beep/b lost coverage on rows judged at the base floors"
+      );
+      expect(lines[0]).not.toContain("--write-baseline");
 
       // A tier-minimum breach is not a floor the writer can move: no write command.
       const tiered = CoverageRegressionBaseline.make({ ...baseline, minimum: coveragePercentages(60) });
