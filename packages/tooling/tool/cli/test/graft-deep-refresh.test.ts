@@ -1232,7 +1232,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       });
       const flags = {
         owner,
-        onCalendar: "*-*-* 02:30:00",
+        onCalendar: O.none(),
         envFile: O.some(path.join(stateDir, "env")),
         uninstall: false,
       };
@@ -1271,7 +1271,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         calls: [],
         replies: repliesFor(owner, FULL_COVERAGE, [["mise trust --show", reply(0, `${owner}: trusted`)]]),
       });
-      const flags = { owner, onCalendar: "*-*-* 02:30:00", envFile: O.some(path.join(stateDir, "env")) };
+      const flags = { owner, onCalendar: O.none<string>(), envFile: O.some(path.join(stateDir, "env")) };
       const refused = yield* captureOutput(
         runDeepInstallTimer({ ...flags, bunPath: O.some('/opt/"bun"/bin/bun'), uninstall: false }).pipe(
           refreshWith(runner),
@@ -1297,7 +1297,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         runDeepInstallTimer({
           owner: '/clones/"gone"',
           bunPath: O.some("/opt/%h/bun"),
-          onCalendar: "*-*-* 02:30:00",
+          onCalendar: O.none(),
           envFile: O.some("/env/$HOME/gone"),
           uninstall: true,
         }).pipe(refreshWith(runner), withHome(home))
@@ -1483,7 +1483,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       const timerFlags = {
         owner,
         bunPath: O.none(),
-        onCalendar: "*-*-* 02:30:00",
+        onCalendar: O.none(),
         envFile: O.some(path.join(stateDir, "env")),
       };
       const wrote = yield* captureOutput(
@@ -1503,7 +1503,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         runDeepInstallTimer({
           owner,
           bunPath: O.none(),
-          onCalendar: "*-*-* 02:30:00",
+          onCalendar: O.none(),
           envFile: O.none(),
           uninstall: false,
         }).pipe(refreshWith(timerRunner), withHome(home))
@@ -1548,7 +1548,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
               refresh,
               bunPath: O.none(),
               envFile: O.none(),
-              onCalendar: "*-*-* 02:30:00",
+              onCalendar: O.none(),
               uninstall: false,
             }).pipe(refreshWith(runner), withHome(home))
           );
@@ -1594,7 +1594,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
           owner,
           envFile: O.some(envFile),
           bunPath: O.some("/usr/bin/bun"),
-          onCalendar: "*-*-* 03:00:00",
+          onCalendar: O.some("*-*-* 03:00:00"),
           uninstall: false,
         }).pipe(refreshWith(runner), withHome(home))
       );
@@ -1616,8 +1616,11 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       const unitDir = path.join(home, ".config", "systemd", "user");
       yield* Effect.forEach(
         [
-          { onCalendar: "*-*-* 02:30:00", expected: "*-*-* 03:00:00" },
-          { onCalendar: "*-*-* 04:00:00", expected: "*-*-* 04:00:00" },
+          // No flag keeps the recorded calendar; an explicit one always wins,
+          // the documented default included, so a customized timer can be reset.
+          { onCalendar: O.none<string>(), expected: "*-*-* 03:00:00" },
+          { onCalendar: O.some("*-*-* 04:00:00"), expected: "*-*-* 04:00:00" },
+          { onCalendar: O.some("*-*-* 02:30:00"), expected: "*-*-* 02:30:00" },
         ],
         Effect.fn(function* ({ onCalendar, expected }) {
           const refreshed = yield* captureOutput(

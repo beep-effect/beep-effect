@@ -35,7 +35,8 @@ Three things rot it:
 `--refresh` is the answer to the third: it re-renders the installed units from
 what they recorded — `WorkingDirectory` (repo root / owner), the `--page` in
 `ExecStart` (research), `EnvironmentFile` and the timer's `OnCalendar` (graft)
-— with a fresh Bun resolution and no other input:
+— with a fresh Bun resolution; a flag given alongside `--refresh` still
+wins over the recorded value:
 
 ```bash
 bun run beep research install-timers --refresh
@@ -52,9 +53,12 @@ The agent that shipped the change, as part of post-merge closeout, per
 `AGENTS.md`. The permissions are granted to agents on purpose:
 `Bash(bun run beep research install-timers:*)`,
 `Bash(bun run beep graft deep install-timer:*)`, and the read-only
-`systemctl --user list-timers`, `systemctl --user status`, and
-`journalctl --user` queries used to verify. The CLI spawns `systemctl --user`
-itself; agents never need a broader `systemctl` grant.
+`systemctl --user list-timers`, `systemctl --user status beep-…`, and
+`journalctl --user -u beep-…` queries used to verify. The status and journal
+grants are scoped to the `beep-` unit namespace on purpose: a unit's status
+and journal can carry whatever that unit logged, so an agent gets the Beep
+timers' logs and nothing else's. The CLI spawns `systemctl --user` itself;
+agents never need a broader `systemctl` grant.
 
 Two agent surfaces cannot do this and must hand it to a Claude session:
 a sandboxed `codex exec` lane cannot reach the systemd user bus (its

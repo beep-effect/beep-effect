@@ -6,7 +6,6 @@
  */
 import { Config, Console, Effect } from "effect";
 import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -182,8 +181,10 @@ const timerFlags = {
     )
   ),
   onCalendar: Flag.String("on-calendar").pipe(
-    Flag.withDefault(DEFAULT_REFRESH_CALENDAR),
-    Flag.withDescription("systemd OnCalendar expression for the nightly refresh")
+    Flag.optional,
+    Flag.withDescription(
+      `systemd OnCalendar expression for the nightly refresh (default ${DEFAULT_REFRESH_CALENDAR}; --refresh keeps the recorded one unless given)`
+    )
   ),
   envFile: Flag.String("env-file").pipe(
     Flag.optional,
@@ -380,7 +381,7 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
  * const program = runDeepInstallTimer({
  *   owner: "/clones/beep-effect0",
  *   bunPath: O.none(),
- *   onCalendar: "*-*-* 02:30:00",
+ *   onCalendar: O.none(),
  *   envFile: O.none(),
  *   uninstall: false,
  * })
@@ -395,7 +396,7 @@ export const runDeepStatus = Effect.fn("GraftCommand.runDeepStatus")(function* (
 export const runDeepInstallTimer = Effect.fn("GraftCommand.runDeepInstallTimer")(function* (options: {
   readonly owner: string;
   readonly bunPath: O.Option<string>;
-  readonly onCalendar: string;
+  readonly onCalendar: O.Option<string>;
   readonly envFile: O.Option<string>;
   readonly refresh?: boolean;
   readonly uninstall: boolean;
@@ -427,7 +428,7 @@ const recordedGraftDeepTimer = Effect.fn("GraftCommand.recordedGraftDeepTimer")(
 const installTimer = Effect.fn("GraftCommand.installTimer")(function* (options: {
   readonly owner: string;
   readonly bunPath: O.Option<string>;
-  readonly onCalendar: string;
+  readonly onCalendar: O.Option<string>;
   readonly envFile: O.Option<string>;
   readonly refresh?: boolean;
 }) {
@@ -454,14 +455,14 @@ const installTimer = Effect.fn("GraftCommand.installTimer")(function* (options: 
   const decoded = yield* decodeTimerOptions({
     owner: resolveOperatorPath(owner, home, path.resolve),
     bunPath,
-    // The calendar flag always carries a value, so under --refresh only an
-    // explicit non-default calendar overrides the one the timer recorded.
-    onCalendar: Eq.equals(options.onCalendar, DEFAULT_REFRESH_CALENDAR)
-      ? O.getOrElse(
-          O.flatMap(recorded, (unit) => unit.onCalendar),
-          () => options.onCalendar
-        )
-      : options.onCalendar,
+    // An explicit calendar always wins, the default included; a refresh keeps
+    // the recorded one only when no flag was given.
+    onCalendar: O.getOrElse(options.onCalendar, () =>
+      O.getOrElse(
+        O.flatMap(recorded, (unit) => unit.onCalendar),
+        () => DEFAULT_REFRESH_CALENDAR
+      )
+    ),
     envFile: resolveOperatorPath(
       O.getOrElse(options.envFile, () =>
         O.getOrElse(

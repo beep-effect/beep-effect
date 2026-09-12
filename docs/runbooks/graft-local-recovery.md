@@ -271,8 +271,8 @@ character is refused before anything is written, because systemd would
 reinterpret it inside the unit. The written units are snapshots: after a merge
 that changes how they are rendered, `bun run beep graft deep install-timer
 --refresh` re-renders them from the owner, environment file, and calendar they
-recorded, with a fresh Bun resolution and no other flags (see
-`docs/runbooks/systemd-timers.md`).
+recorded, with a fresh Bun resolution; any flag given alongside `--refresh`
+still wins over the recorded value (see `docs/runbooks/systemd-timers.md`).
 
 Two `ExecStartPre` lines pull the owner clone and reinstall its dependencies
 before the CLI boots, so each night runs main's current `beep graft deep
