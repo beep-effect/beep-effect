@@ -1460,38 +1460,35 @@ const collectFiles = Effect.fn("QualityScriptCommands.collectFiles")(function* (
     return A.empty<string>();
   }
 
+  // Symlinks are never followed; a directory contributes its subtree unless skipped, a file
+  // contributes itself when included, and anything else contributes nothing.
+  const visitEntry = Effect.fn("QualityScriptCommands.collectFiles.visitEntry")(function* (
+    currentPath: string,
+    entry: string
+  ): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+    const childPath = path.join(currentPath, entry);
+    const normalized = normalizePath(childPath);
+    const symlinkTarget = yield* fs.readLink(childPath).pipe(Effect.option);
+    if (O.isSome(symlinkTarget)) {
+      return A.empty<string>();
+    }
+
+    const stat = yield* fs.stat(childPath).pipe(QualityScriptCommandError.mapError(`Failed to stat ${childPath}.`));
+    if (stat.type === "Directory") {
+      return shouldSkipDirectory(`${normalized}/`, entry) ? A.empty<string>() : yield* visit(childPath);
+    }
+    return stat.type === "File" && shouldInclude(normalized, entry) ? A.of(childPath) : A.empty<string>();
+  });
+
   const visit = Effect.fn("QualityScriptCommands.collectFiles.visit")(function* (
     currentPath: string
   ): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
     const entries = yield* fs
       .readDirectory(currentPath)
       .pipe(QualityScriptCommandError.mapError(`Failed to read directory ${currentPath}.`));
-    let files = A.empty<string>();
-
-    for (const entry of entries) {
-      const childPath = path.join(currentPath, entry);
-      const normalized = normalizePath(childPath);
-      const symlinkTarget = yield* fs.readLink(childPath).pipe(Effect.option);
-
-      if (O.isSome(symlinkTarget)) {
-        continue;
-      }
-
-      const stat = yield* fs.stat(childPath).pipe(QualityScriptCommandError.mapError(`Failed to stat ${childPath}.`));
-
-      if (stat.type === "Directory") {
-        if (!shouldSkipDirectory(`${normalized}/`, entry)) {
-          files = A.appendAll(files, yield* visit(childPath));
-        }
-        continue;
-      }
-
-      if (stat.type === "File" && shouldInclude(normalized, entry)) {
-        files = A.append(files, childPath);
-      }
-    }
-
-    return files;
+    return yield* Effect.forEach(entries, (entry) => visitEntry(currentPath, entry), { concurrency: 1 }).pipe(
+      Effect.map(A.flatten)
+    );
   });
 
   return pipe(yield* visit(searchRoot), A.sort(Order.String));
@@ -2674,6 +2671,40 @@ const assembleTsgoRuleDiagnostics = (
   ...renderTsgoRuleDiagnostics("disabled Effect diagnostic directives", disabledDirectives),
 ];
 
+interface InstalledEffectTsgoCatalog {
+  readonly documentedOptionNames: ReadonlyArray<string>;
+  readonly installedRuleNames: ReadonlyArray<string>;
+}
+
+// The installed README is the only catalog: its diagnostics table names every rule and its
+// example config names every plugin option. Either set coming back empty means the README
+// layout moved under us, which must fail loudly rather than verify nothing.
+const readInstalledEffectTsgoCatalog = Effect.fn("QualityScriptCommands.readInstalledEffectTsgoCatalog")(function* (
+  repoRoot: string
+): Effect.fn.Return<InstalledEffectTsgoCatalog, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const readmePath = path.join(repoRoot, "node_modules", "@effect", "tsgo", "README.md");
+  const readmeText = yield* fs
+    .readFileString(readmePath)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read ${readmePath}.`));
+  const installedRuleNames = extractEffectTsgoReadmeRuleNames(readmeText);
+  const documentedOptionNames = extractEffectTsgoReadmePluginOptionNamesForTesting(readmeText);
+  if (A.isReadonlyArrayEmpty(installedRuleNames)) {
+    return yield* QualityScriptCommandError.make({
+      message: "Failed to discover @effect/tsgo diagnostic rules from the installed README.",
+      exitCode: 1,
+    });
+  }
+  if (A.isReadonlyArrayEmpty(documentedOptionNames)) {
+    return yield* QualityScriptCommandError.make({
+      message: "Failed to discover @effect/tsgo plugin options from the installed README example config.",
+      exitCode: 1,
+    });
+  }
+  return { documentedOptionNames, installedRuleNames };
+});
+
 /**
  * Check that the root tsgo Effect diagnostics configuration enables every installed rule as an error.
  *
@@ -2694,28 +2725,10 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   QualityScriptEnvironment
 > {
   const { fs, path, repoRoot } = yield* qualityFileContext();
-  const readmePath = path.join(repoRoot, "node_modules", "@effect", "tsgo", "README.md");
   const tsconfigPath = path.join(repoRoot, "tsconfig.base.json");
   const rootTsconfigPath = path.join(repoRoot, "tsconfig.json");
   const generatedVitestAliasesPath = path.join(repoRoot, "vitest.aliases.generated.json");
-  const readmeText = yield* fs
-    .readFileString(readmePath)
-    .pipe(QualityScriptCommandError.mapError(`Failed to read ${readmePath}.`));
-  const installedRuleNames = extractEffectTsgoReadmeRuleNames(readmeText);
-  const documentedOptionNames = extractEffectTsgoReadmePluginOptionNamesForTesting(readmeText);
-
-  if (A.isReadonlyArrayEmpty(installedRuleNames)) {
-    return yield* QualityScriptCommandError.make({
-      message: "Failed to discover @effect/tsgo diagnostic rules from the installed README.",
-      exitCode: 1,
-    });
-  }
-  if (A.isReadonlyArrayEmpty(documentedOptionNames)) {
-    return yield* QualityScriptCommandError.make({
-      message: "Failed to discover @effect/tsgo plugin options from the installed README example config.",
-      exitCode: 1,
-    });
-  }
+  const { documentedOptionNames, installedRuleNames } = yield* readInstalledEffectTsgoCatalog(repoRoot);
 
   const configText = yield* fs
     .readFileString(tsconfigPath)

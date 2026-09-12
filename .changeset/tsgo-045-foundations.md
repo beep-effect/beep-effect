@@ -5,6 +5,8 @@
 "@beep/db-admin": patch
 "@beep/professional-desktop": patch
 "@beep/doc-text": patch
+"@beep/oip-web": patch
+"@beep/todox": patch
 ---
 
 Retire the redundant TaggedError equivalence hook now that Effect derives Schema
