@@ -928,6 +928,121 @@ describe("schema-first lint command", { concurrent: false }, () => {
       ).pipe(provideScopedLayer(testLayer))
     ));
 
+  it("reports S.Error declarations that install a redundant toEquivalence hook", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeSchemaFirstSourceFixture([
+            'import * as S from "effect/Schema";',
+            "const sameWorkerError = (_self: WorkerError, _that: WorkerError): boolean => true;",
+            'export class WorkerError extends S.Error<WorkerError>("WorkerError")(',
+            "  { workerId: S.String },",
+            '  { description: "Worker execution failed.", toEquivalence: () => sameWorkerError }',
+            ") {}",
+            "",
+          ]);
+
+          const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+
+          const logLines = yield* TestConsole.logLines;
+          const errorLines = yield* TestConsole.errorLines;
+          expectReportedExit(exit);
+          expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
+          expect(errorLines).toContain(
+            '- packages/example/src/Example.ts :: WorkerError [schema-policy-advisory] S.Error declaration "WorkerError" declares a toEquivalence hook at the class. Effect derives a Schema class\'s equivalence from its declared field struct by construction (effect@4.0.0-rc.113 and later), so the hook is redundant and hides the derived law. Remove it; a field that must not take part in identity declares an always-equal equivalence on its own schema (Defect from @beep/schema).'
+          );
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("reports S.TaggedClass declarations that install a redundant toEquivalence hook", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeSchemaFirstSourceFixture([
+            'import * as S from "effect/Schema";',
+            "const sameWidget = (_self: Widget, _that: Widget): boolean => true;",
+            "export class Widget extends S.TaggedClass<Widget>()(",
+            '  "Widget",',
+            "  { widgetId: S.String },",
+            "  { toEquivalence: () => sameWidget }",
+            ") {}",
+            "",
+          ]);
+
+          const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+
+          const logLines = yield* TestConsole.logLines;
+          const errorLines = yield* TestConsole.errorLines;
+          expectReportedExit(exit);
+          expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
+          expect(errorLines).toContain(
+            '- packages/example/src/Example.ts :: Widget [schema-policy-advisory] S.TaggedClass declaration "Widget" declares a toEquivalence hook at the class. Effect derives a Schema class\'s equivalence from its declared field struct by construction (effect@4.0.0-rc.113 and later), so the hook is redundant and hides the derived law. Remove it; a field that must not take part in identity declares an always-equal equivalence on its own schema (Defect from @beep/schema).'
+          );
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("ignores class declarations whose heritage is not a Schema class factory call", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeSchemaFirstSourceFixture([
+            'import * as S from "effect/Schema";',
+            "const makeBase = (_name: string) => class {};",
+            "export class WorkerError extends S.TaggedError<WorkerError>()(",
+            '  "WorkerError",',
+            "  { workerId: S.String },",
+            '  { description: "Worker execution failed." }',
+            ") {}",
+            "export class LegacyError extends Error {}",
+            'export class LocalBase extends makeBase("LocalBase") {}',
+            "",
+          ]);
+
+          yield* runSchemaFirstAndExpectNoErrors();
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("follows annotation aliases up to three hops before giving up on the reference chain", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeSchemaFirstSourceFixture([
+            'import * as S from "effect/Schema";',
+            "const sameError = (_self: unknown, _that: unknown): boolean => true;",
+            "const hookAnnotations = { toEquivalence: () => sameError };",
+            "const hopOne = hookAnnotations;",
+            "const hopTwo = hopOne;",
+            "const hopThree = hopTwo;",
+            "export class NearError extends S.TaggedError<NearError>()(",
+            '  "NearError",',
+            "  { workerId: S.String },",
+            "  hopTwo",
+            ") {}",
+            "export class FarError extends S.TaggedError<FarError>()(",
+            '  "FarError",',
+            "  { workerId: S.String },",
+            "  hopThree",
+            ") {}",
+            "",
+          ]);
+
+          const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+
+          const logLines = yield* TestConsole.logLines;
+          const errorLines = yield* TestConsole.errorLines;
+          expectReportedExit(exit);
+          expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
+          expect(errorLines).toContain(
+            '- packages/example/src/Example.ts :: NearError [schema-policy-advisory] S.TaggedError declaration "NearError" declares a toEquivalence hook at the class. Effect derives a Schema class\'s equivalence from its declared field struct by construction (effect@4.0.0-rc.113 and later), so the hook is redundant and hides the derived law. Remove it; a field that must not take part in identity declares an always-equal equivalence on its own schema (Defect from @beep/schema).'
+          );
+          expect(A.some(A.filter(errorLines, P.isString), Str.includes(":: FarError "))).toBe(false);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
   it("accepts field-level toEquivalence annotations inside the declared fields", () =>
     Effect.runPromise(
       withTempWorkingDirectory(
