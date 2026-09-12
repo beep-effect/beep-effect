@@ -190,6 +190,8 @@ const decodeGithubCheckRunReport = S.decodeEffect(GithubCheckRunReport);
 const decodeGithubCheckRunReportSync = S.decodeSync(GithubCheckRunReport);
 const decodeUnknownCoverageRegressionBaseline = S.decodeUnknownEffect(CoverageRegressionBaseline);
 const encodeCoverageFileBaselineSync = S.encodeSync(CoverageFileBaseline);
+const encodeCoverageSelfJudgeScopeSync = S.encodeSync(CoverageSelfJudgeScope);
+const decodeCoverageFileBaselineUnknownSync = S.decodeUnknownSync(CoverageFileBaseline);
 const encodeCoverageRegressionBaseline = S.encodeEffect(CoverageRegressionBaseline);
 const encodeGithubCheckRunReportSync = S.encodeSync(GithubCheckRunReport);
 
@@ -4398,7 +4400,7 @@ describe("quality task adapter", () => {
       // Dependents are assigned first, in package-name order, then direct
       // ownership overwrites any dependency witness for the same package.
       expect(R.keys(scope.packageExclusions)).toEqual(["@beep/y", "@beep/z", "@beep/w", "@beep/x"]);
-      expect(S.encodeSync(CoverageSelfJudgeScope)(scope).packageExclusions).toEqual({
+      expect(encodeCoverageSelfJudgeScopeSync(scope).packageExclusions).toEqual({
         "@beep/y": { _tag: "dependent-of-changed-package", packageName: "@beep/x" },
         "@beep/z": { _tag: "dependent-of-changed-package", packageName: "@beep/x" },
         "@beep/x": { _tag: "owns-changed-file", filePath: "packages/x/src/Alpha.ts" },
@@ -5142,7 +5144,7 @@ describe("quality task adapter", () => {
           `  "@beep/existing" files["${filePath}"]: ${JSON.stringify(encodeCoverageFileBaselineSync(coverageFileBaseline(70, 30)))}`
         );
         const decoded = A.map(A.drop(lines, 1), (line) =>
-          S.decodeUnknownSync(CoverageFileBaseline)(JSON.parse(O.getOrElse(A.last(Str.split(": ")(line)), () => "")))
+          decodeCoverageFileBaselineUnknownSync(JSON.parse(O.getOrElse(A.last(Str.split(": ")(line)), () => "")))
         );
         expect(A.map(decoded, (row) => row.lines)).toEqual([70, 70]);
       });
