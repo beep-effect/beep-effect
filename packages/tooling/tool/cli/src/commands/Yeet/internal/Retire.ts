@@ -51,37 +51,65 @@ const unknownText = constant("unknown");
 
 const optionText = (value: O.Option<string>): string => O.getOrElse(value, unknownText);
 
-// The first reason a retirement must not proceed, in the order an operator
-// would check them: no PR observed, PR not MERGED, PR heading another branch.
-const retireBlocker = (plan: YeetRetirePlan, state: SweepGitState): O.Option<string> =>
-  O.map(
-    A.findFirst(
-      [
-        [O.isNone(state.pullRequestState), `no pull request was observed for ${plan.branch}`] as const,
+/**
+ * The first reason a retirement must not proceed, in the order an operator would check them.
+ *
+ * **Details**
+ *
+ * No pull request observed, pull request not MERGED, pull request heading a
+ * different branch. `None` means the gate is open.
+ *
+ * **Example** (Read the gate)
+ *
+ * ```ts
+ * import { retireBlocker } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof retireBlocker) // function
+ * ```
+ *
+ * @param plan - The retirement plan under review.
+ * @param state - The observed git and pull request facts for its branch.
+ * @returns The blocking reason when the gate is closed.
+ * @category planning
+ * @since 0.0.0
+ */
+export const retireBlocker: {
+  (plan: YeetRetirePlan, state: SweepGitState): O.Option<string>;
+  (state: SweepGitState): (plan: YeetRetirePlan) => O.Option<string>;
+} = dual(
+  2,
+  (plan: YeetRetirePlan, state: SweepGitState): O.Option<string> =>
+    O.map(
+      A.findFirst(
         [
-          !O.exists(state.pullRequestState, (value) => Eq.equals(value, "MERGED")),
-          `the pull request for ${plan.branch} is ${optionText(state.pullRequestState)}, not MERGED`,
-        ] as const,
-        [
-          !O.exists(state.pullRequestHeadBranch, (head) => Eq.equals(head, plan.branch)),
-          `the resolved pull request heads ${optionText(state.pullRequestHeadBranch)}, not ${plan.branch}`,
-        ] as const,
-      ],
-      ([blocked]) => blocked
-    ),
-    ([, reason]) => reason
-  );
+          [O.isNone(state.pullRequestState), `no pull request was observed for ${plan.branch}`] as const,
+          [
+            !O.exists(state.pullRequestState, (value) => Eq.equals(value, "MERGED")),
+            `the pull request for ${plan.branch} is ${optionText(state.pullRequestState)}, not MERGED`,
+          ] as const,
+          [
+            !O.exists(state.pullRequestHeadBranch, (head) => Eq.equals(head, plan.branch)),
+            `the resolved pull request heads ${optionText(state.pullRequestHeadBranch)}, not ${plan.branch}`,
+          ] as const,
+        ],
+        ([blocked]) => blocked
+      ),
+      ([, reason]) => reason
+    )
+);
 
 /**
  * Locate the linked worktree the sweep runs in and the clone that owns it.
  *
  * **Details**
  *
- * The owning clone is the parent of `git rev-parse --git-common-dir`; when it
- * equals the checkout's own top level the command is not inside a linked
- * worktree and the plan fails, because there is nothing to retire and a plain
- * `yeet sweep` is the right command. A detached checkout has no branch to
- * retire and fails the same way.
+ * The lane is the checkout the command runs in, or the one `--lane` names
+ * when the command runs from the owning clone (or anywhere else in the same
+ * repository). The owning clone is the parent of `git rev-parse
+ * --git-common-dir`; when the lane's top level equals it the lane is the clone
+ * itself and the plan fails, because there is nothing to retire and a plain
+ * `yeet sweep` is the right command. A detached lane has no branch to retire
+ * and fails the same way, and a `--lane` from another repository is refused.
  *
  * **Example** (Build a plan effect)
  *
@@ -93,26 +121,43 @@ const retireBlocker = (plan: YeetRetirePlan, state: SweepGitState): O.Option<str
  * ```
  *
  * @param context - Repo run context whose repo root is the checkout the sweep started in.
+ * @param lane - The lane to retire when it is not the checkout the command runs in.
  * @returns The worktree, owning clone, and branch a retirement would act on.
  * @category planning
  * @since 0.0.0
  */
-export const planRetire = Effect.fn("Yeet.planRetire")(function* (context: RepoRunContext) {
+export const planRetire = Effect.fn("Yeet.planRetire")(function* (context: RepoRunContext, lane: O.Option<string>) {
   const path = yield* Path.Path;
-  const common = yield* gitOutput(context.repoRoot, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
-  const toplevel = yield* gitOutput(context.repoRoot, ["rev-parse", "--show-toplevel"]);
+  const anchor = O.match(lane, { onNone: () => context.repoRoot, onSome: (given) => path.resolve(given) });
+  const common = yield* gitOutput(anchor, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+  const toplevel = yield* gitOutput(anchor, ["rev-parse", "--show-toplevel"]);
   const worktreePath = path.resolve(toplevel);
   const owningClone = path.dirname(path.resolve(common));
   if (Eq.equals(worktreePath, owningClone)) {
     return yield* YeetCommandError.make({
-      message: `yeet sweep --retire runs inside a linked worktree, but ${worktreePath} is the clone itself; run \`yeet sweep\` without --retire.`,
+      message: O.isSome(lane)
+        ? `yeet sweep --retire --lane names a linked worktree, but ${worktreePath} is the clone itself.`
+        : `yeet sweep --retire runs inside a linked worktree, but ${worktreePath} is the clone itself; run \`yeet sweep\` without --retire, or name a lane with --lane.`,
     });
   }
+  // A lane named from elsewhere must belong to this repository, so the sweep
+  // that follows resets the clone the lane came from.
+  const invokingCommon = yield* gitOutput(context.repoRoot, [
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-common-dir",
+  ]);
+  if (!Eq.equals(path.dirname(path.resolve(invokingCommon)), owningClone)) {
+    return yield* YeetCommandError.make({
+      message: `yeet sweep --retire --lane ${worktreePath} belongs to ${owningClone}, not to the clone this command runs in.`,
+    });
+  }
+  const branch = O.isSome(lane) ? yield* gitOutput(anchor, ["rev-parse", "--abbrev-ref", "HEAD"]) : context.branch;
   return yield* decodeRetirePlan({
     worktreePath,
     owningClone,
     name: path.basename(worktreePath),
-    branch: context.branch,
+    branch: Eq.equals(branch, "HEAD") ? "" : branch,
   }).pipe(
     Effect.mapError(
       YeetCommandError.new(
@@ -130,7 +175,12 @@ export const planRetire = Effect.fn("Yeet.planRetire")(function* (context: RepoR
  * The gate is the same one the sweep's own branch deletion uses: the pull
  * request resolved for the branch must be MERGED and must head that branch.
  * Retirement always archives, so dirty files and unpushed commits are
- * preserved under the residue root rather than blocking the closeout.
+ * preserved under the residue root rather than blocking the closeout. The
+ * archive fence refuses a lane any process still stands in; this command
+ * first moves its own working directory to the owning clone and asks the
+ * fence to exempt the invoker's ancestry (the shell and agent session that
+ * started it), so retiring the lane one is standing in works, while any
+ * other holder still refuses it with the command that would work instead.
  *
  * **Example** (Build the retirement effect)
  *
@@ -158,9 +208,15 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
     });
   }
   const service = yield* WorktreeRemovalService;
+  const path = yield* Path.Path;
   const name = yield* decodeWorktreeName(plan.name).pipe(
     Effect.mapError(YeetCommandError.new(`Worktree name ${plan.name} is not one safe path component.`))
   );
+  // Leave the lane before it is renamed away: a process whose cwd is inside
+  // it would be a holder, and later steps run against the owning clone anyway.
+  if (isWithin(path, plan.worktreePath, process.cwd())) {
+    yield* Effect.sync(() => process.chdir(plan.owningClone));
+  }
   return yield* service
     .remove(
       WorktreeRemovalRequest.make({
@@ -171,10 +227,57 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
         archive: true,
         deleteBranch: true,
         expectedHead: O.none(),
+        exemptInvokerAncestry: true,
       })
     )
-    .pipe(Effect.mapError(YeetCommandError.new(`yeet sweep --retire could not retire ${plan.worktreePath}.`)));
+    .pipe(
+      Effect.mapError((error) =>
+        YeetCommandError.make({
+          message: retirementFailureMessage(plan, error.message),
+          cause: error,
+        })
+      )
+    );
 });
+
+// Two absolute paths on one filesystem relate by a relative path; only a
+// leading `..` means the candidate lies outside the root.
+const isWithin = (path: Path.Path, root: string, candidate: string): boolean =>
+  !Str.startsWith("..")(path.relative(root, candidate));
+
+/**
+ * The message a failed retirement reports, with the working form appended when a holder blocked it.
+ *
+ * **Details**
+ *
+ * A holder the fence could not exempt is usually a shell or editor left in the
+ * lane; the form that works runs from the owning clone and names the lane.
+ * Any other removal failure is reported as the service phrased it.
+ *
+ * **Example** (Append the hint only for a holder)
+ *
+ * ```ts
+ * import { retirementFailureMessage, YeetRetirePlan } from "@beep/repo-cli/test/Yeet"
+ *
+ * const plan = YeetRetirePlan.make({ worktreePath: "/c/.claude/worktrees/l", owningClone: "/c", name: "l", branch: "b" })
+ * console.log(retirementFailureMessage(plan, "pid 7 via cwd still hold it").includes("--lane")) // true
+ * console.log(retirementFailureMessage(plan, "disk full").includes("--lane")) // false
+ * ```
+ *
+ * @param plan - The retirement that failed; the data-last form takes it alone.
+ * @param message - The removal service's own message.
+ * @returns The message to report.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const retirementFailureMessage: {
+  (plan: YeetRetirePlan, message: string): string;
+  (message: string): (plan: YeetRetirePlan) => string;
+} = dual(2, (plan: YeetRetirePlan, message: string): string =>
+  Str.includes("still hold it")(message)
+    ? `yeet sweep --retire could not retire ${plan.worktreePath}: ${message} Leave the lane first: cd "${plan.owningClone}" && bun run beep yeet sweep --retire --lane "${plan.worktreePath}"`
+    : `yeet sweep --retire could not retire ${plan.worktreePath}: ${message}`
+);
 
 /**
  * The sweep context for the owning clone, so the sweep resets the right checkout.

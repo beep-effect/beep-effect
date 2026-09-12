@@ -130,7 +130,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(bun run beep lint:*)",
   "Bash(bun run beep laws:*)",
   "Bash(bun run beep research install-timers:*)",
-  "Bash(bun run beep graft deep install-timer:*)",
+  "Bash(bun run beep graft deep install-timer --refresh:*)",
   "Bash(systemctl --user list-timers:*)",
   "Bash(systemctl --user status beep-:*)",
   "Bash(journalctl --user -u beep-:*)",

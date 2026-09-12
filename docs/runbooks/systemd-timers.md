@@ -52,7 +52,9 @@ owning clone after `bun run beep yeet sweep --retire`, or any fresh worktree).
 The agent that shipped the change, as part of post-merge closeout, per
 `AGENTS.md`. The permissions are granted to agents on purpose:
 `Bash(bun run beep research install-timers:*)`,
-`Bash(bun run beep graft deep install-timer:*)`, and the read-only
+`Bash(bun run beep graft deep install-timer --refresh:*)` (the graft
+installer's only agent-allowed form, because a first install schedules a
+nightly model-spending job), and the read-only
 `systemctl --user list-timers`, `systemctl --user status beep-…`, and
 `journalctl --user -u beep-…` queries used to verify. The status and journal
 grants are scoped to the `beep-` unit namespace on purpose: a unit's status
@@ -64,6 +66,25 @@ Two agent surfaces cannot do this and must hand it to a Claude session:
 a sandboxed `codex exec` lane cannot reach the systemd user bus (its
 socket lives under `$XDG_RUNTIME_DIR`, outside the workspace-write sandbox),
 and hosted CI has no user manager at all.
+
+## Retiring the lane that ran the closeout
+
+`bun run beep yeet sweep --retire` archive-retires the linked worktree it is
+run in. The archive fence refuses a lane that any process still stands in, and
+it exempts exactly the invoker's ancestry (the CLI, its shell, the agent
+session above them); anything else holding the lane still refuses it and the
+error prints the working form. Run it as the last command of the session, from
+the lane, with the shell stepping out first:
+
+```bash
+cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire --lane "$OLDPWD"
+```
+
+`--lane <path>` names the lane when the command runs from the owning clone;
+without it the command retires the checkout it runs in. `--json` prints one
+schema-owned document (`yeet-retire-sweep-plan/v1` with `--plan`,
+`yeet-retire-sweep-report/v1` otherwise). `--branch` is refused alongside
+`--retire`: the lane's own HEAD is the branch that is retired.
 
 ## Verify
 

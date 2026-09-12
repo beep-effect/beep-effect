@@ -23,9 +23,11 @@ import { A, O, Str } from "@beep/utils";
 import { Config, Context, DateTime, Effect, FileSystem, Layer, Match, Path, pipe, Result } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import {
   collectUntrackedPaths,
+  invokerAncestryPids,
   ProcessAttachmentKind,
   resolveGitCommit,
   runGitOutput,
@@ -975,9 +977,13 @@ const assertQuiescentFence = Effect.fnUntraced(function* (
       message: `Refusing to retire ${request.targetPath}: the processes attached to it could not be enumerated, so the archive cannot be proven complete.`,
     });
   }
-  if (A.isReadonlyArrayNonEmpty(scan.value)) {
+  // The invoker's own chain (CLI, shell, agent session) is the party asking
+  // for the retirement, so a request that says so may exempt exactly it.
+  const exempt = request.exemptInvokerAncestry === true ? yield* invokerAncestryPids() : HashSet.empty<number>();
+  const holders = A.filter(scan.value, (attachment) => !HashSet.has(exempt, attachment.pid));
+  if (A.isReadonlyArrayNonEmpty(holders)) {
     return yield* WorktreeCommandError.make({
-      message: `Refusing to retire ${request.targetPath}: ${describeAttachedProcesses(scan.value)} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
+      message: `Refusing to retire ${request.targetPath}: ${describeAttachedProcesses(holders)} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
     });
   }
 });

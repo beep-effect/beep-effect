@@ -52,6 +52,13 @@ const retireFlag = Flag.Boolean("retire").pipe(
   )
 );
 
+const laneFlag = Flag.String("lane").pipe(
+  Flag.optional,
+  Flag.withDescription(
+    "With --retire: the linked worktree to retire when the command runs from its owning clone (default: the worktree the command runs in)"
+  )
+);
+
 const branchFlag = Flag.String("branch").pipe(
   Flag.withDescription("Sweep this branch instead of the checked-out one, so a second pass can finish a merged branch"),
   Flag.withDefault("")
@@ -450,6 +457,7 @@ const sweepFlags = {
   ...porcelainFlags,
   branch: branchFlag,
   json: jsonFlag,
+  lane: laneFlag,
   plan: planFlag,
   retire: retireFlag,
 } as const;

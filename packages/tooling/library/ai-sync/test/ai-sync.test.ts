@@ -617,7 +617,8 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep research install-timers:*)");
-      assert.include(settings.permissions.allow, "Bash(bun run beep graft deep install-timer:*)");
+      assert.include(settings.permissions.allow, "Bash(bun run beep graft deep install-timer --refresh:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(bun run beep graft deep install-timer:*)");
       assert.include(settings.permissions.allow, "Bash(systemctl --user list-timers:*)");
       assert.include(settings.permissions.allow, "Bash(systemctl --user status beep-:*)");
       assert.include(settings.permissions.allow, "Bash(journalctl --user -u beep-:*)");

@@ -27,6 +27,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
+import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
@@ -35,10 +36,17 @@ import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
 import { runGhPullRequestView } from "./PullRequest.ts";
 import { renderYeetReplyFailureVerdict, replyReportPathForContext, runYeetReply } from "./Reply.ts";
 import {
+  YeetRetireSweepPlan,
+  YeetRetireSweepPlanJson,
+  YeetRetireSweepReport,
+  YeetRetireSweepReportJson,
+} from "./Retire.schemas.ts";
+import {
   owningCloneContext,
   planRetire,
   renderRetirement,
   renderRetirePlan,
+  retireBlocker,
   retireInvokingWorktree,
 } from "./Retire.ts";
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
@@ -47,12 +55,15 @@ import { runYeetWatchStream, yeetWatchExitFailure } from "./WatchMode.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import type { RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import type { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import type { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import type { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
 import type { YeetMonitorTerminalState } from "./MonitorLoop.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { ReplyReport } from "./Reply.schemas.ts";
+import type { YeetRetirePlan } from "./Retire.schemas.ts";
 import type { SweepPlan, SweepPlanStep, SweepReport } from "./Sweep.schemas.ts";
+import type { SweepGitState } from "./Sweep.ts";
 
 /**
  * The parsed flag values every merge-loop subcommand accepts, matching the
@@ -94,6 +105,7 @@ const hydrateMonitoredContext = Effect.fn("Yeet.hydrateMonitoredContext")(functi
 interface YeetSweepOptions extends YeetPorcelainOptions {
   readonly branch: string;
   readonly json: boolean;
+  readonly lane?: O.Option<string>;
   readonly plan: boolean;
   readonly retire?: boolean;
 }
@@ -130,22 +142,79 @@ const sweepClone = Effect.fn("Yeet.sweepClone")(function* (options: YeetSweepOpt
   yield* Console.log(yield* renderReportOutput(options.json, yield* executeSweep(context)));
 });
 
+const encodeRetireSweepPlan = (document: YeetRetireSweepPlan): Effect.Effect<string, YeetCommandError> =>
+  YeetRetireSweepPlanJson.encode(document).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to encode the yeet retire plan."))
+  );
+
+const encodeRetireSweepReport = (document: YeetRetireSweepReport): Effect.Effect<string, YeetCommandError> =>
+  YeetRetireSweepReportJson.encode(document).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to encode the yeet retire report."))
+  );
+
+// One document in JSON mode, prose otherwise: automation that asked for
+// --json must be able to decode stdout as a whole.
+const printRetirePlan = Effect.fn("Yeet.printRetirePlan")(function* (
+  options: YeetSweepOptions,
+  retire: YeetRetirePlan,
+  state: SweepGitState,
+  sweep: SweepPlan
+) {
+  const text = options.json
+    ? yield* encodeRetireSweepPlan(
+        YeetRetireSweepPlan.make({
+          schemaVersion: "yeet-retire-sweep-plan/v1",
+          retire,
+          blocker: retireBlocker(retire, state),
+          sweep,
+        })
+      )
+    : A.join([renderRetirePlan(retire, state), renderSweepPlan(sweep)], "\n");
+  yield* Console.log(text);
+});
+
+const printRetireReport = Effect.fn("Yeet.printRetireReport")(function* (
+  options: YeetSweepOptions,
+  retire: YeetRetirePlan,
+  receipt: WorktreeRemovalReceipt,
+  sweep: SweepReport
+) {
+  const text = options.json
+    ? yield* encodeRetireSweepReport(
+        YeetRetireSweepReport.make({ schemaVersion: "yeet-retire-sweep-report/v1", retire, receipt, sweep })
+      )
+    : A.join([renderRetirement(retire, receipt), renderSweepReport(sweep)], "\n");
+  yield* Console.log(text);
+});
+
 // Inside a linked worktree the merged branch is checked out right here and
 // main lives in the owning clone, so --retire removes this worktree first and
-// then sweeps the clone instead of the checkout it was started in.
+// then sweeps the clone instead of the checkout it was started in. The lane's
+// own HEAD is the branch that is retired; --branch would let a merged PR for
+// one branch authorize removing another branch's worktree, so it is refused.
 const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
   options: YeetSweepOptions,
-  branched: RepoRunContext
+  hydrated: RepoRunContext
 ) {
-  const retirePlan = yield* planRetire(branched);
-  const state = yield* observeSweepGitState(branched);
-  if (options.plan) {
-    yield* Console.log(renderRetirePlan(retirePlan, state));
-  } else {
-    const receipt = yield* retireInvokingWorktree(retirePlan, state);
-    yield* Console.log(renderRetirement(retirePlan, receipt));
+  if (Str.isNonEmpty(options.branch)) {
+    return yield* YeetCommandError.make({
+      message: "yeet sweep --retire retires the branch checked out in the lane; --branch cannot override it.",
+    });
   }
-  yield* sweepClone(options, owningCloneContext(branched, retirePlan));
+  const retire = yield* planRetire(hydrated, options.lane ?? O.none<string>());
+  const laneContext = RepoRunContext.make({
+    ...hydrated,
+    repoRoot: retire.worktreePath,
+    cwd: retire.worktreePath,
+    branch: retire.branch,
+  });
+  const state = yield* observeSweepGitState(laneContext);
+  const cloneContext = owningCloneContext(laneContext, retire);
+  if (options.plan) {
+    return yield* printRetirePlan(options, retire, state, yield* planSweep(cloneContext));
+  }
+  const receipt = yield* retireInvokingWorktree(retire, state);
+  yield* printRetireReport(options, retire, receipt, yield* executeSweep(cloneContext));
 });
 
 /**
@@ -181,8 +250,11 @@ export const runYeetSweep = Effect.fn("Yeet.runSweepCommand")(function* (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
 > {
   const hydrated = yield* hydrateYeetReadOnlyContext(options);
+  if (options.retire === true) {
+    return yield* retireThenSweep(options, hydrated);
+  }
   const branched = Str.isEmpty(options.branch) ? hydrated : yield* overrideSweepBranch(hydrated, options.branch);
-  yield* options.retire === true ? retireThenSweep(options, branched) : sweepClone(options, branched);
+  yield* sweepClone(options, branched);
 });
 
 /**

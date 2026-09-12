@@ -801,6 +801,50 @@ describe("worktree git operations", () => {
     )
   );
 
+  it.effect("refuses a name registered under both roots and never lets a stale nested directory shadow a sibling", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const sibling = yield* addWorktree(context, "dup", defaultWorktreeBranch("dup"));
+        const nested = path.join(repoRoot, CLAUDE_WORKTREES_RELATIVE_ROOT, "dup");
+        yield* fs.makeDirectory(path.dirname(nested), { recursive: true });
+        yield* runGit(repoRoot, ["worktree", "add", "-b", "claude/dup", nested]);
+        const previousCwd = process.cwd;
+        yield* Effect.acquireUseRelease(
+          Effect.sync(() => {
+            process.cwd = () => repoRoot;
+          }),
+          () =>
+            Effect.gen(function* () {
+              const before = A.length(yield* TestConsole.errorLines);
+              yield* Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "dup", "--archive"]).pipe(
+                Effect.flip
+              );
+              expect(A.join(A.filter(A.drop(yield* TestConsole.errorLines, before), P.isString), "\n")).toContain(
+                "are registered worktrees named dup"
+              );
+              expect(yield* fs.exists(sibling)).toBe(true);
+              expect(yield* fs.exists(nested)).toBe(true);
+              // Unregister the nested lane but leave a stale directory behind:
+              // the registered sibling still wins and the stale one is untouched.
+              yield* runGit(repoRoot, ["worktree", "remove", "--force", nested]);
+              yield* runGit(repoRoot, ["branch", "-D", "claude/dup"]);
+              yield* fs.makeDirectory(nested, { recursive: true });
+              yield* Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "dup", "--archive"]);
+              expect(yield* fs.exists(sibling)).toBe(false);
+              expect(yield* fs.exists(nested)).toBe(true);
+            }),
+          () =>
+            Effect.sync(() => {
+              process.cwd = previousCwd;
+            })
+        );
+      })
+    )
+  );
+
   it.effect("rejects branch deletion outside archive retirement", () =>
     withScratchRepo((repoRoot) =>
       Effect.gen(function* () {

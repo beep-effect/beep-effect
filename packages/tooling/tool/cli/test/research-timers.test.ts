@@ -485,6 +485,25 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
   );
 
   it.effect(
+    "refuses a repo root that is a file, not a directory",
+    Effect.fn(function* () {
+      const { fs, path, home, unitDir } = yield* fixture();
+      const file = path.join(home, "not-a-clone");
+      yield* fs.writeFileString(file, "");
+      const refused = yield* captureOutput(
+        runResearchInstallTimers({
+          bunPath: O.some("/usr/bin/bun"),
+          page: O.none(),
+          repoRoot: O.some(file),
+          uninstall: false,
+        }).pipe(withSystemctl([]), withHome(home))
+      );
+      assertSome(O.map(failureMessage(refused.result), Str.includes("is not an existing directory")), true);
+      expect(yield* fs.exists(unitDir)).toBe(false);
+    })
+  );
+
+  it.effect(
     "refuses a missing repo root before creating the unit directory",
     Effect.fn(function* () {
       const { fs, path, home, unitDir } = yield* fixture();
@@ -498,7 +517,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         }).pipe(withSystemctl(calls), withHome(home))
       );
       assertSome(failureTag(refused.result), "ResearchCommandError");
-      assertSome(O.map(failureMessage(refused.result), Str.includes("does not exist")), true);
+      assertSome(O.map(failureMessage(refused.result), Str.includes("is not an existing directory")), true);
       expect(yield* fs.exists(unitDir)).toBe(false);
       expect(calls).toEqual([]);
     })

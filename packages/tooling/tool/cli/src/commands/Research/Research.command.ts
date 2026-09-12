@@ -7,6 +7,8 @@
 
 import { Config, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
+import { constFalse } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -346,12 +348,13 @@ const installTimers = Effect.fn("ResearchCommand.installTimers")(function* (opti
   // A unit whose WorkingDirectory is gone fails silently on its first tick,
   // which is how the pipeline went dead before; refuse it while the operator
   // is still watching.
-  const present = yield* fs
-    .exists(repoRoot)
-    .pipe(ResearchCommandError.mapError(`Failed probing repo root "${repoRoot}".`));
-  if (!present) {
+  const isDirectory = yield* fs.stat(repoRoot).pipe(
+    Effect.map((info) => Eq.equals(info.type, "Directory")),
+    Effect.orElseSucceed(constFalse)
+  );
+  if (!isDirectory) {
     return yield* ResearchCommandError.make({
-      message: `Repo root "${repoRoot}" does not exist, so the units would point at nothing; pass --repo-root <durable clone>.`,
+      message: `Repo root "${repoRoot}" is not an existing directory, so systemd could not start the units there; pass --repo-root <durable clone>.`,
     });
   }
   const page = O.orElse(options.page, () => O.flatMap(recorded, (unit) => unit.notionPage));

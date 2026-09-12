@@ -819,13 +819,23 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
     )
   );
   // A lane lives under the sibling root or, for Claude Code's desktop app,
-  // nested inside the clone; the nested one is tried first because that is
-  // where an agent retiring its own lane is standing.
+  // nested inside the clone. Only registered worktrees count, in the order the
+  // standard documents (sibling first), so a stale directory never shadows a
+  // registered lane and a name that is registered in both places is refused
+  // rather than guessed.
   const managedTarget = path.join(context.worktreesRoot, name);
   const nestedTarget = path.join(context.mainCheckout, CLAUDE_WORKTREES_RELATIVE_ROOT, name);
-  const nestedExists = yield* fs.exists(nestedTarget).pipe(Effect.orElseSucceed(constFalse));
-  const targetPath = nestedExists ? nestedTarget : managedTarget;
-  const exists = nestedExists || (yield* fs.exists(managedTarget).pipe(Effect.orElseSucceed(constFalse)));
+  const registered = A.filter([managedTarget, nestedTarget], (candidate) =>
+    A.some(context.entries, (entry) => entry.path === candidate)
+  );
+  if (A.length(registered) > 1) {
+    return yield* WorktreeCommandError.make({
+      message: `Both ${managedTarget} and ${nestedTarget} are registered worktrees named ${name}; retire the nested lane by path with \`bun run beep yeet sweep --retire --lane ${nestedTarget}\` or rename one.`,
+      path: managedTarget,
+    });
+  }
+  const targetPath = O.getOrElse(A.head(registered), () => managedTarget);
+  const exists = yield* fs.exists(targetPath).pipe(Effect.orElseSucceed(constFalse));
   if (!exists) {
     return yield* WorktreeCommandError.make({
       message: `No worktree found at ${managedTarget} or ${nestedTarget}.`,

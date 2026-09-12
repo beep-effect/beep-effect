@@ -212,8 +212,13 @@ bun run beep yeet sweep
 
 ```bash
 bun run beep yeet sweep --retire --plan
-bun run beep yeet sweep --retire
+cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire --lane "$OLDPWD"
 ```
+
+  The `cd` keeps your shell out of the directory being removed; `--lane` names
+  the lane from the clone. The fence exempts the invoking session's own
+  ancestry and refuses any other process still standing in the lane. `--json`
+  prints one document; `--branch` is refused with `--retire`.
 
 - Post and resolve the drafted review-thread replies for this branch's PR:
 

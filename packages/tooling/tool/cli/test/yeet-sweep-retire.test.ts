@@ -4,7 +4,15 @@ import {
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
 import { RepoRunContext } from "@beep/repo-cli/test/RepoRun";
-import { planRetire, renderRetirement, runYeetSweep, YeetRetirePlan } from "@beep/repo-cli/test/Yeet";
+import {
+  planRetire,
+  renderRetirement,
+  retirementFailureMessage,
+  runYeetSweep,
+  YeetRetirePlan,
+  YeetRetireSweepPlanJson,
+  YeetRetireSweepReportJson,
+} from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -120,6 +128,11 @@ const withScratchRepo = <A, E, R>(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+      // The CLI moves its own cwd into the owning clone while retiring, and
+      // that clone is this scratch tree; put the process back before the tree
+      // is deleted so the next test does not inherit a vanished cwd.
+      const previousCwd = process.cwd();
+      yield* Effect.addFinalizer(() => Effect.sync(() => process.chdir(previousCwd)));
       const tmp = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-retire-test-" });
       const repoRoot = path.join(tmp, "main");
       const origin = path.join(tmp, "origin.git");
@@ -159,8 +172,41 @@ const withScratchRepo = <A, E, R>(
     }).pipe(provideScopedLayer(testLayer))
   );
 
-const sweep = (packetDir: string, plan = false) =>
-  runYeetSweep({ base: "origin/main", head: "HEAD", packetDir, branch: "", json: false, plan, retire: true });
+const sweep = (
+  packetDir: string,
+  extra: Partial<{
+    readonly plan: boolean;
+    readonly json: boolean;
+    readonly branch: string;
+    readonly lane: O.Option<string>;
+  }> = {}
+) =>
+  runYeetSweep({
+    base: "origin/main",
+    head: "HEAD",
+    packetDir,
+    branch: "",
+    json: false,
+    plan: false,
+    retire: true,
+    ...extra,
+  });
+
+// The real working directory, not the `process.cwd` override `withCwd` installs:
+// the archive fence reads `/proc`, so only the OS-level cwd counts for it.
+const withRealCwd = <A, E, R>(cwd: string, effect: Effect.Effect<A, E, R>) =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const previous = process.cwd();
+      process.chdir(cwd);
+      return previous;
+    }),
+    () => effect,
+    (previous) =>
+      Effect.sync(() => {
+        process.chdir(previous);
+      })
+  );
 
 describe("yeet sweep --retire", { concurrent: false }, () => {
   it.effect("retires the merged nested lane, deletes its branch, and fast-forwards the owning clone", () =>
@@ -216,7 +262,7 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         const fs = yield* FileSystem.FileSystem;
         const before = yield* runGitText(repoRoot, ["rev-parse", "main"]);
         const output = yield* captureOutput(
-          withCwd(lane, sweep(packetDir, true)).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+          withCwd(lane, sweep(packetDir, { plan: true })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
         );
         expect(output).toContain("[yeet] retire");
         expect(output).toContain("gate: pull request MERGED");
@@ -255,7 +301,7 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const output = yield* captureOutput(
-          withCwd(lane, sweep(packetDir, true)).pipe(provideScopedLayer(ghLayer(tip, "OPEN")))
+          withCwd(lane, sweep(packetDir, { plan: true })).pipe(provideScopedLayer(ghLayer(tip, "OPEN")))
         );
         expect(output).toContain("blocked: the pull request for claude/lane is OPEN, not MERGED");
         expect(yield* fs.exists(lane)).toBe(true);
@@ -278,11 +324,46 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           repoRoot: bare,
           turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
         });
-        const error = yield* Effect.flip(planRetire(context));
+        const error = yield* Effect.flip(planRetire(context, O.none()));
         expect(error._tag).toBe("YeetCommandError");
         expect(error.message).toContain("git rev-parse --path-format=absolute --git-common-dir exited with");
       })
     ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it("appends the working form only when a holder blocked the retirement", () => {
+    const plan = YeetRetirePlan.make({
+      worktreePath: "/clones/x/.claude/worktrees/lane",
+      owningClone: "/clones/x",
+      name: "lane",
+      branch: "claude/lane",
+    });
+    expect(retirementFailureMessage(plan, "pid 7 via cwd still hold it, and any write would be lost.")).toContain(
+      'cd "/clones/x" && bun run beep yeet sweep --retire --lane "/clones/x/.claude/worktrees/lane"'
+    );
+    expect(retirementFailureMessage(plan, "Could not write the residue manifest.")).not.toContain("--lane");
+    expect(pipe(plan, retirementFailureMessage("disk full"))).toBe(retirementFailureMessage(plan, "disk full"));
+  });
+
+  it.effect("refuses --lane that belongs to another clone of the repository", () =>
+    withScratchRepo(({ repoRoot, tip, packetDir }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const origin = yield* runGitText(repoRoot, ["remote", "get-url", "origin"]);
+        const other = path.join(path.dirname(repoRoot), "other");
+        yield* runGit(path.dirname(repoRoot), ["clone", "--quiet", origin, other]);
+        const otherLane = path.join(other, CLAUDE_WORKTREES_RELATIVE_ROOT, "lane");
+        yield* fs.makeDirectory(path.dirname(otherLane), { recursive: true });
+        yield* runGit(other, ["worktree", "add", "-b", "claude/elsewhere", otherLane]);
+        const error = yield* Effect.flip(
+          withCwd(repoRoot, sweep(packetDir, { lane: O.some(otherLane) })).pipe(
+            provideScopedLayer(ghLayer(tip, "MERGED"))
+          )
+        );
+        expect(error.message).toContain(`belongs to ${other}, not to the clone this command runs in`);
+      })
+    )
   );
 
   it("renders a retirement that archived nothing and kept its branch", () => {
@@ -306,4 +387,118 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     expect(text).toContain("branch claude/lane: kept");
     expect(pipe(plan, renderRetirement(receipt))).toBe(text);
   });
+
+  it.effect("retires a lane named with --lane from the owning clone", () =>
+    withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const output = yield* captureOutput(
+          withCwd(repoRoot, sweep(packetDir, { lane: O.some(lane) })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+        );
+        expect(yield* fs.exists(lane)).toBe(false);
+        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        expect(yield* runGitText(repoRoot, ["rev-parse", "main"])).toBe(tip);
+        expect(output).toContain(`[yeet] retired ${lane}`);
+      })
+    )
+  );
+
+  it.effect("refuses --lane when it names the clone itself", () =>
+    withScratchRepo(({ repoRoot, tip, packetDir }) =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          withCwd(repoRoot, sweep(packetDir, { lane: O.some(repoRoot) })).pipe(
+            provideScopedLayer(ghLayer(tip, "MERGED"))
+          )
+        );
+        expect(error.message).toContain("is the clone itself");
+      })
+    )
+  );
+
+  it.effect("refuses --lane on a detached lane, which has no branch to retire", () =>
+    withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
+      Effect.gen(function* () {
+        yield* runGit(lane, ["checkout", "--detach"]);
+        const error = yield* Effect.flip(
+          withCwd(repoRoot, sweep(packetDir, { lane: O.some(lane) })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+        );
+        expect(error.message).toContain("detached HEAD has nothing to retire");
+      })
+    )
+  );
+
+  it.effect("retires the lane the process is actually standing in", () =>
+    withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        // The real cwd is inside the lane, exactly where an agent's shell and
+        // session sit; the CLI moves itself out and the fence exempts the rest.
+        yield* withRealCwd(
+          lane,
+          Effect.gen(function* () {
+            yield* captureOutput(withCwd(lane, sweep(packetDir)).pipe(provideScopedLayer(ghLayer(tip, "MERGED"))));
+            expect(process.cwd()).toBe(repoRoot);
+          })
+        );
+        expect(yield* fs.exists(lane)).toBe(false);
+        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+      })
+    )
+  );
+
+  it.effect("refuses while another process holds the lane and prints the working form", () =>
+    withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const holder = yield* ChildProcess.make("sleep", ["60"], {
+            cwd: lane,
+            stdin: "ignore",
+            stdout: "ignore",
+            stderr: "ignore",
+          });
+          const error = yield* Effect.flip(
+            withCwd(lane, sweep(packetDir)).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+          ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
+          expect(error.message).toContain("still hold it");
+          expect(error.message).toContain(`cd "${repoRoot}" && bun run beep yeet sweep --retire --lane "${lane}"`);
+          expect(yield* fs.exists(lane)).toBe(true);
+        })
+      )
+    )
+  );
+
+  it.effect("refuses --branch alongside --retire", () =>
+    withScratchRepo(({ lane, tip, packetDir }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const error = yield* Effect.flip(
+          withCwd(lane, sweep(packetDir, { branch: "claude/other" })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+        );
+        expect(error.message).toContain("--branch cannot override it");
+        expect(yield* fs.exists(lane)).toBe(true);
+      })
+    )
+  );
+
+  it.effect("prints one decodable document in JSON mode for the plan and the run", () =>
+    withScratchRepo(({ lane, tip, packetDir }) =>
+      Effect.gen(function* () {
+        const planOutput = yield* captureOutput(
+          withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+        );
+        const plan = yield* YeetRetireSweepPlanJson.decode(planOutput);
+        expect(plan.retire.branch).toBe("claude/lane");
+        expect(O.isNone(plan.blocker)).toBe(true);
+        expect(plan.sweep.steps.length).toBeGreaterThan(0);
+        const runOutput = yield* captureOutput(
+          withCwd(lane, sweep(packetDir, { json: true })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+        );
+        const report = yield* YeetRetireSweepReportJson.decode(runOutput);
+        expect(report.receipt.branchDeleted).toBe(true);
+        expect(report.sweep.steps.length).toBeGreaterThan(0);
+      })
+    )
+  );
 });
