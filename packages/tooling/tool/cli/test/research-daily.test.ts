@@ -30,6 +30,7 @@ import { ChildProcess } from "effect/unstable/process";
 // Nothing in this suite may reach a Cognee server: the one URL used points at
 // the loopback discard port so the login request is refused immediately.
 const UNREACHABLE_COGNEE_URL = "http://127.0.0.1:9";
+const isCogneeApiUrl = S.is(CogneeApiUrl);
 
 const fakeFirecrawlClient = {
   scrape: (url: string) =>
@@ -276,8 +277,8 @@ layer(testLayer, { timeout: "30 seconds" })("research daily cognify gate", (it) 
 
       const loopback = yield* readCogneeSettings.pipe(withConfig({ COGNEE_API_URL: UNREACHABLE_COGNEE_URL }));
       expect(O.map(loopback, (settings) => settings.apiUrl)).toEqual(O.some(UNREACHABLE_COGNEE_URL));
-      expect(S.is(CogneeApiUrl)("http://localhost:8010")).toBe(true);
-      expect(S.is(CogneeApiUrl)("not a url")).toBe(false);
+      expect(isCogneeApiUrl("http://localhost:8010")).toBe(true);
+      expect(isCogneeApiUrl("not a url")).toBe(false);
     })
   );
 
@@ -287,7 +288,7 @@ layer(testLayer, { timeout: "30 seconds" })("research daily cognify gate", (it) 
         const settings = yield* readCogneeSettings.pipe(withConfig({ COGNEE_API_URL: baseUrl }));
         const error = yield* Effect.flip(
           O.match(settings, {
-            onNone: () => Effect.dieMessage("Cognee settings were expected for a loopback URL"),
+            onNone: () => Effect.die(new Error("Cognee settings were expected for a loopback URL")),
             onSome: cogneeLogin,
           })
         );
