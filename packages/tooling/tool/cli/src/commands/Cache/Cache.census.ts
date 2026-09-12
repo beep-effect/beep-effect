@@ -50,6 +50,12 @@ const TurboPlan = S.Struct({
   ),
 });
 
+const TurboRuntimePlan = S.Struct({
+  ...TurboPlan.fields,
+  envMode: S.Literals(["strict", "loose"]),
+});
+const decodeTurboRuntimePlanJson = S.decodeUnknownEffect(S.fromJsonString(TurboRuntimePlan));
+
 /**
  * Resolve an already-installed native Turbo binary without launcher overrides or installation fallback.
  *
@@ -297,7 +303,8 @@ export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(funct
  * **Details**
  * No tasks execute and no toolchain profile is required. Transit nodes retain
  * their absent command, so callers can distinguish them from executable tasks.
- * This discovers a selection; it neither calculates an identity nor grants reuse.
+ * Governed executable cache tasks require the native plan to report strict
+ * environment mode. This neither calculates an identity nor grants reuse.
  *
  * @category queries
  * @since 0.0.0
@@ -311,7 +318,7 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
   const root = paths.resolve(repoRoot);
   const turbo = yield* resolveCacheTurboBinary(root);
   const dry = yield* capture(root, turbo, selectedArgs).pipe(
-    Effect.flatMap(decodeTurboPlanJson),
+    Effect.flatMap(decodeTurboRuntimePlanJson),
     CacheCommandError.mapError("Native task selection did not produce a valid dry plan.")
   );
   const workspaces = yield* resolveWorkspacePackages(root);
@@ -334,7 +341,20 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
       )
     ),
   ];
-  return yield* joinCacheCensusPlan(rows, dry);
+  const nodes = yield* joinCacheCensusPlan(rows, dry);
+  if (
+    dry.envMode !== "strict" &&
+    A.some(
+      nodes,
+      (node) =>
+        O.isSome(node.command) &&
+        node.configuration.cache &&
+        A.contains(node.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST")
+    )
+  ) {
+    return yield* CacheCommandError.new("Governed cache execution requires strict Turbo environment mode.");
+  }
+  return nodes;
 }, CacheCommandError.mapError("Cannot collect the native runtime task selection."));
 
 /**
