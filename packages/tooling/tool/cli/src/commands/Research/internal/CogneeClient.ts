@@ -289,7 +289,7 @@ export const readCogneeSettings: Effect.Effect<
   Effect.flatMap(
     O.match({
       onNone: () => Effect.succeed(O.none<CogneeSettings>()),
-      onSome: (raw) => Effect.map(secureCogneeSettings(raw), O.some),
+      onSome: (raw) => Effect.asSome(secureCogneeSettings(raw)),
     })
   ),
   Effect.withSpan("CogneeClient.readCogneeSettings")

@@ -55,7 +55,7 @@ const requireCogneeSettings: Effect.Effect<O.Option<CogneeSettings>, ResearchCom
   Effect.flatMap(
     O.match({
       onNone: () => Effect.fail(ResearchCommandError.make({ message: COGNEE_CREDENTIALS_MISSING })),
-      onSome: (settings) => Effect.succeed(O.some(settings)),
+      onSome: Effect.succeedSome,
     })
   )
 );
