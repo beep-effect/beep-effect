@@ -439,6 +439,22 @@ describe("yeet status snapshot rendering and encoding", () => {
     expect(summary).toContain("- merge-ready: no, blocked on threads-resolved (greptile 5/5)");
   });
 
+  it("renders the per-lane Turbo digests recorded on the verdict", () => {
+    const summary = renderYeetStatusSummary(
+      YeetStatusSnapshot.make({
+        ...snapshot,
+        verdict: YeetStatusArtifact.make({
+          ...snapshot.verdict,
+          laneDigests: [{ id: "quality:knip", inputDigest: "0d5970886d36b416" }],
+        }),
+      })
+    );
+
+    expect(summary).toContain("- lane digests: 1 lane(s)");
+    expect(summary).toContain("  quality:knip: 0d5970886d36b416");
+    expect(renderYeetStatusSummary(snapshot)).toContain("- lane digests: none recorded");
+  });
+
   it("renders missing gate artifacts as unproven rather than clean", () => {
     const summary = renderYeetStatusSummary(
       YeetStatusSnapshot.make({

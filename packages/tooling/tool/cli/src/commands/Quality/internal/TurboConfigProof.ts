@@ -52,6 +52,7 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#lint:typos",
   "//#knip:check",
   "//#fallow:audit:check",
+  "//#fallow:health:check",
   "//#fallow:health:advisory",
   "//#fallow:boundaries:advisory",
   "//#fallow:flags:advisory",

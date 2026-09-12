@@ -783,6 +783,27 @@
         "standards/fallow.pilot.inventory.jsonc"
       ]
     },
+    "//#fallow:health:check": {
+      "cache": false,
+      "outputs": [
+        ".beep/fallow/health.check.json",
+        ".beep/fallow/raw/health.check.*"
+      ],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "env": ["BEEP_PROOF_BASE"],
+      "inputs": [
+        ".fallowrc.jsonc",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "apps/**",
+        "packages/**",
+        "infra/**",
+        "scripts/**",
+        ".claude/skills/**",
+        ".fallow/plugins/**",
+        "standards/fallow.pilot.inventory.jsonc"
+      ]
+    },
     "//#fallow:health:advisory": {
       "cache": false,
       "outputs": [

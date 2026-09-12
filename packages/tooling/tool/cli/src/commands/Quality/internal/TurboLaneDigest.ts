@@ -1,0 +1,240 @@
+import { createHash } from "node:crypto";
+import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
+import { Effect, FileSystem, Order, Path, pipe } from "effect";
+import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as S from "effect/Schema";
+
+const $I = $RepoCliId.create("commands/Quality/internal/TurboLaneDigest");
+
+/**
+ * Cache verdict Turbo records for one task in a run summary.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const TurboSummaryCacheStatus = LiteralKit(["HIT", "MISS"]).annotate(
+  $I.annote("TurboSummaryCacheStatus", { description: "Turbo run-summary cache status for one task." })
+);
+
+const TurboSummaryExecution = S.Struct({ exitCode: S.Finite.pipe(S.NullOr, S.optionalKey) }).annotate(
+  $I.annote("TurboSummaryExecution", { description: "Exit code Turbo recorded for one executed task." })
+);
+
+/**
+ * The slice of one `tasks[]` entry a lane digest needs: identity, hash, cache verdict, exit code.
+ *
+ * **Example** (Decode a task entry)
+ *
+ * ```ts
+ * import { TurboSummaryTask } from "@beep/repo-cli/test/Quality"
+ *
+ * const task = TurboSummaryTask.make({
+ *   taskId: "//#lint:schema-first",
+ *   task: "lint:schema-first",
+ *   hash: "0d5970886d36b416",
+ *   cache: { status: "MISS" },
+ *   execution: { exitCode: 0 },
+ * })
+ * console.log(task.task) // "lint:schema-first"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TurboSummaryTask extends S.Class<TurboSummaryTask>($I`TurboSummaryTask`)(
+  {
+    taskId: S.String,
+    task: S.String,
+    hash: S.String,
+    cache: S.Struct({ status: TurboSummaryCacheStatus }),
+    execution: TurboSummaryExecution.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("TurboSummaryTask", {
+    description: "One Turbo run-summary task row: id, bare name, hash, cache status, exit.",
+  })
+) {}
+
+/**
+ * The slice of a `.turbo/runs/<id>.json` summary a lane digest reads.
+ *
+ * **Example** (Decode a run summary)
+ *
+ * ```ts
+ * import { TurboRunSummary } from "@beep/repo-cli/test/Quality"
+ *
+ * const summary = TurboRunSummary.make({
+ *   id: "3JCkNZQUJ1YQQRevyz15nJdJnHE",
+ *   execution: { startTime: 1_789_178_636_688, endTime: 1_789_178_649_774, exitCode: 0 },
+ *   tasks: [],
+ * })
+ * console.log(summary.tasks.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TurboRunSummary extends S.Class<TurboRunSummary>($I`TurboRunSummary`)(
+  {
+    id: S.String,
+    execution: S.Struct({ startTime: S.Finite, endTime: S.Finite, exitCode: S.Finite }),
+    tasks: S.Array(TurboSummaryTask),
+  },
+  $I.annote("TurboRunSummary", { description: "Turbo run summary subset: id, execution window and task rows." })
+) {}
+
+/**
+ * One task's contribution to a lane digest.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TurboLaneTaskHash extends S.Class<TurboLaneTaskHash>($I`TurboLaneTaskHash`)(
+  { taskId: S.String, hash: S.String, cacheStatus: TurboSummaryCacheStatus },
+  $I.annote("TurboLaneTaskHash", { description: "Task id, Turbo hash and cache status folded into a lane digest." })
+) {}
+
+/**
+ * A lane's Turbo-derived input digest: the summary it came from and the task hashes it folds.
+ *
+ * **Details**
+ *
+ * The digest is the SHA-256 of the sorted `taskId=hash` lines, so it does not depend on Turbo's
+ * task ordering and changes whenever any folded task hash changes. Only tasks that passed
+ * (`execution.exitCode === 0`) or replayed from cache (`HIT`) fold in; a failed task yields no
+ * digest, so a lane never records a reusable digest for a red run.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TurboLaneDigest extends S.Class<TurboLaneDigest>($I`TurboLaneDigest`)(
+  { digest: S.String, summaryId: S.String, tasks: S.Array(TurboLaneTaskHash) },
+  $I.annote("TurboLaneDigest", { description: "Lane input digest folded from one Turbo run summary's task hashes." })
+) {}
+
+const decodeSummary = S.decodeUnknownEffect(S.fromJsonString(TurboRunSummary));
+
+const bareTaskName = (taskId: string): string =>
+  pipe(
+    Str.split(taskId, "#"),
+    A.last,
+    O.getOrElse(() => taskId)
+  );
+
+const taskPassed = (task: TurboSummaryTask): boolean =>
+  task.cache.status === "HIT" || (task.execution?.exitCode ?? null) === 0;
+
+/**
+ * Fold the task hashes of one summary into a lane digest, selecting tasks by bare name.
+ *
+ * **Example** (Digest two root tasks)
+ *
+ * ```ts
+ * import { TurboRunSummary, turboLaneDigestFromSummary } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const summary = TurboRunSummary.make({
+ *   id: "run",
+ *   execution: { startTime: 1, endTime: 2, exitCode: 0 },
+ *   tasks: [
+ *     { taskId: "//#lint:allowlist", task: "lint:allowlist", hash: "a1", cache: { status: "MISS" }, execution: { exitCode: 0 } },
+ *     { taskId: "//#lint:typos", task: "lint:typos", hash: "b2", cache: { status: "HIT" } },
+ *   ],
+ * })
+ * const digest = turboLaneDigestFromSummary(summary, ["lint:allowlist", "lint:typos"])
+ * console.log(O.isSome(digest)) // true
+ * ```
+ *
+ * **Gotchas**
+ *
+ * An empty task list selects every task in the summary. Any selected task that neither passed
+ * nor replayed from cache makes the result `None`.
+ *
+ * @param summary - A decoded Turbo run summary.
+ * @param taskNames - Bare task names (`lint:allowlist`, never `//#lint:allowlist`) to fold.
+ * @returns The digest, or `None` when no selected task exists or one of them failed.
+ * @category digests
+ * @since 0.0.0
+ */
+export const turboLaneDigestFromSummary: {
+  (taskNames: ReadonlyArray<string>): (summary: TurboRunSummary) => O.Option<TurboLaneDigest>;
+  (summary: TurboRunSummary, taskNames: ReadonlyArray<string>): O.Option<TurboLaneDigest>;
+} = dual(2, (summary: TurboRunSummary, taskNames: ReadonlyArray<string>): O.Option<TurboLaneDigest> => {
+  const wanted = HashSet.fromIterable(taskNames);
+  const selected = A.isReadonlyArrayEmpty(taskNames)
+    ? summary.tasks
+    : A.filter(summary.tasks, (task) => HashSet.has(wanted, bareTaskName(task.taskId)));
+  if (A.isReadonlyArrayEmpty(selected) || !A.every(selected, taskPassed)) {
+    return O.none();
+  }
+  const rows = pipe(
+    selected,
+    A.map((task) => TurboLaneTaskHash.make({ taskId: task.taskId, hash: task.hash, cacheStatus: task.cache.status })),
+    A.sortBy(Order.mapInput(Order.String, (row: TurboLaneTaskHash) => row.taskId))
+  );
+  const digest = createHash("sha256")
+    .update(
+      A.join(
+        A.map(rows, (row) => `${row.taskId}=${row.hash}`),
+        "\n"
+      )
+    )
+    .digest("hex");
+  return O.some(TurboLaneDigest.make({ digest, summaryId: summary.id, tasks: rows }));
+});
+
+const summaryStartOrder = Order.mapInput(Order.Number, (summary: TurboRunSummary) => summary.execution.startTime);
+
+/**
+ * Read the newest run summary the current attempt wrote and fold its task hashes.
+ *
+ * **Details**
+ *
+ * Only summaries whose `execution.startTime` is at or after `startedAtIso` count as this
+ * attempt's own (§7.1.5 freshness); older summaries in `.turbo/runs` are ignored, and files that
+ * fail to decode are skipped rather than failing the lane.
+ *
+ * **Example** (Digest after a lane step)
+ *
+ * ```ts
+ * import { readTurboLaneDigest } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = readTurboLaneDigest("/repo", "2026-09-12T04:00:00.000Z", ["lint:allowlist"])
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - Repository root that owns `.turbo/runs`.
+ * @param startedAtIso - ISO timestamp the lane step started at; older summaries are ignored.
+ * @param taskNames - Bare task names the lane invoked.
+ * @returns The newest fresh digest, or `None` when no fresh passing summary covers the tasks.
+ * @category digests
+ * @since 0.0.0
+ */
+export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")(function* (
+  repoRoot: string,
+  startedAtIso: string,
+  taskNames: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const runsDirectory = path.join(repoRoot, ".turbo", "runs");
+  const startedAt = Date.parse(startedAtIso);
+  const entries = yield* fs.readDirectory(runsDirectory).pipe(Effect.orElseSucceed(A.empty<string>));
+  const summaries = yield* Effect.forEach(
+    A.filter(entries, Str.endsWith(".json")),
+    (entry) => fs.readFileString(path.join(runsDirectory, entry)).pipe(Effect.flatMap(decodeSummary), Effect.option),
+    { concurrency: 4 }
+  );
+  return pipe(
+    A.getSomes(summaries),
+    A.filter((summary) => summary.execution.startTime >= startedAt),
+    A.sortBy(summaryStartOrder),
+    A.reverse,
+    A.findFirst((summary) => O.isSome(turboLaneDigestFromSummary(summary, taskNames))),
+    O.flatMap((summary) => turboLaneDigestFromSummary(summary, taskNames))
+  );
+});

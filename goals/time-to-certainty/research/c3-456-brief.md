@@ -302,3 +302,20 @@ implementation record):
    --pool=threads`).
 4. Record F-A and F-B as an amendment section in `research/c3-turbo-facts.md`.
 5. Lane split unchanged; Fable reruns package-verify and the Node suite.
+
+## Amendment 4 (2026-09-11, after Stage D) — Stage E additions
+
+1. **`fallow:health:check` root task.** Live CI promoted Fallow health to blocking after the table
+   was written, so Stage D kept a direct health worker. Stage E registers `//#fallow:health:check`
+   exactly like `//#fallow:audit:check` (script `bun run beep quality fallow health --check --base
+   "$BEEP_PROOF_BASE" --out .beep/fallow/health.check.json --quiet`, audit inputs, `cache: false`,
+   `env: ["BEEP_PROOF_BASE"]`, `outputs: [".beep/fallow/health.check.json", ".beep/fallow/raw/health.check.*"]`,
+   the fingerprint edge), adds the row to `TurboConfigProof`, the root-task fixture and the
+   `WaveOrder` note, and switches the CI health consumer to the task with the same envelope checks.
+   The table gains the row in revision 8 (orchestrator).
+2. `lint:tsconfig-overlay` and the committed-inventory JSDoc comparison stay CLI aggregates; record
+   them in the ledger report as `uncacheable` rows with no task hash, never as missing.
+3. The ledger report (Stage E item 1) accounts for: four local policy summaries; two or three
+   hosted summaries depending on the deprecated-API sweep program; per-sublane Fallow summaries;
+   D2 tasks (`cache: false`) as `uncacheable`; a failed inventory phase as `skipped` for the
+   comparison; the retained legacy eslint/shard steps as rows without a hash.

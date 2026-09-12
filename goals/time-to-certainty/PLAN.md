@@ -97,15 +97,19 @@ orchestrator owns schemas, contracts, and judgment.
           placeholder removal and root `codegen` split (ruling 23, 24).
     - [x] C3.2 `lint:deprecated-apis` and `lint:jsdoc` package tasks (eslint profiles); the 4-way
           shard runner retires (ruling 21).
-    - [ ] C3.3 `lint:laws` package task (sub-second laws plus package-test-imports); `beep:policy`
-          retires (ruling 21).
-    - [ ] C3.4 `doctest` package task; mode branch in `vitest.shared.ts`; the root doctest config
-          and the file-list lane retire (ruling 22).
-    - [ ] C3.5 Turbo root tasks for the graph-wide sublanes (knip, fallow, oxlint, circular,
+    - [x] C3.3 `lint:laws` package task (sub-second laws plus package-test-imports); `beep:policy`
+          retires (ruling 21) — scanner + task merged 2026-09-11 (#1082); plan switch and
+          `beep:policy` retirement in the one-PR train (`ttc/c3-4-5-6-turbo-tasks`, rulings 32–34).
+    - [x] C3.4 `doctest` package task; mode branch in `vitest.shared.ts`; the root doctest config
+          and the file-list lane retire (ruling 22) — one-PR train, 2026-09-11; runs on Node (ruling 34).
+    - [x] C3.5 Turbo root tasks for the graph-wide sublanes (knip, fallow, oxlint, circular,
           identity-registry, semantic-delta, refs-check, schema-first check, tsgo-rules,
           jsdoc-inventory, roadmap-refs); `lint policy` and `beep:preflight` run one Turbo plan
-          (ruling 19, 20).
-    - [ ] C3.6 economics re-run over the migrated lanes; the ledger report shows per-lane hashes.
+          (ruling 19, 20) — one-PR train, 2026-09-12: 41 root tasks, D10 plan with bare task
+          names (facts F-A/F-B in `research/c3-turbo-facts.md`).
+    - [x] C3.6 economics baseline before merge (`research/c3-456-economics.md`); per-lane Turbo
+          task digests recorded on lane runs and shown by `yeet status`; the post-merge cold/hit
+          accounting is owed as a closeout receipt (§7.1.4).
   - [ ] Labs — three task-hash sets rather than one declared action; must keep the PR path gate and
         zero-labs-is-green.
 - [ ] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`

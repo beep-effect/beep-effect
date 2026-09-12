@@ -1066,3 +1066,80 @@ was attempted under the marker-only amendment.
   `wontfix` with that explicit deferral; no repair or environment attribution is claimed.
 - Prevention: attach the precise failed audit step and its log path to the capsule,
   and retain the orchestrator verification handoff when launching a scoped lane.
+
+### C3.5 Stage D — consumer contract census drift (2026-09-11)
+
+- Doing: migrate the D10 policy, preflight, GitHub and hosted CI consumers to Stage C tasks.
+- Evidence: the live pre-D policy plan has 25 labels, not the table's 26; `lint:tsconfig-overlay`
+  has no root task. `CiLane.ts` and the promoted Fallow matrix require blocking health and
+  `health.check.json`, but Stage C registers only `fallow:health:advisory`. Preserved both
+  existing blocking checks as CLI workers instead of losing coverage or changing promotion.
+  Fallow still executes per-sublane tasks to retain status accounting and deferred failures.
+- Would have prevented it: validate the registration census against live consumers and the
+  promotion matrix at the stage boundary; include blocking health and tsconfig-overlay in a
+  ratified follow-up before claiming every consumer is task-backed.
+
+### C3.5 Stage D — thread-worker verification constraint (2026-09-11)
+
+- Doing: run `bunx --bun vitest run test/quality-tasks.test.ts test/ci-lane.test.ts --pool=threads`.
+- Evidence: CI's existing unreadable-workspace-inventory fixture reports `process.chdir()`
+  unsupported in its thread worker. Earlier Stage B recorded the same case. Excluded exactly
+  that test on the rerun; Node-runtime verification remains Fable-owned. The outer `--bun`
+  launcher supplies Bun's node shim to descendants, so these observations cannot certify or
+  condemn the actual Node lane.
+- Would have prevented it: a runtime-neutral cwd boundary in that fixture, or the orchestrator's
+  independent Node suite rather than inferring runtime from the child command name.
+
+## 2026-09-10 — Codegen Drift job on PR #1082 died in checkout (GitHub 408) before running
+- Doing: babysitting #1082 head 57ccc21150.
+- Evidence: job 102838007150, `##[error]error: RPC failed; HTTP 408 curl 22`, `fatal: expected 'packfile'`,
+  `could not fetch <sha> from promisor remote` inside actions/checkout; no drift step ran. `gh run rerun --failed`
+  refused while sibling jobs of run 34466945324 were still running.
+- Would have prevented it: a checkout retry (second `git fetch` attempt) in the shared setup action, and a lane
+  policy that a job failing before its first repo step is auto-rerun once.
+
+## 2026-09-10 — Hosted green on a PR does not survive main moving under it
+- Doing: #1082/#1083 were fully green; main then merged #1060 (rc.113 pin, fast-check bridge removed). #1083 went
+  to CONFLICTING on one hunk; #1082 stayed "mergeable" while its tests would have failed after merge
+  (`S.toArbitrary is not a function` at suite load) because GitHub never re-ran checks on the moved base.
+- Evidence: `git merge-tree` showed no conflict for #1082; `vitest run test/laws-package.test.ts` on the merged
+  tree failed to load; both suites passed again only after converting to `Arbitrary.schema`/`checkEffect`.
+- Would have prevented it: a required "branch up to date with main" rule or merge queue on `main`, or a Yeet
+  monitor row that flags "base moved N commits since last hosted run" so the operator merges main before
+  merging the PR.
+
+## 2026-09-12 — The bounded lane-timings census fails closed on a required-check ruleset drift
+
+- Doing: recording the C3.6 pre-merge economics baseline with
+  `bun run beep ci lane-timings --window --since … --until …`.
+- Evidence: `Ruleset 10240248 must expose exactly 18 required contexts; observed 17.` (exit 1, no rows);
+  the recent-runs census (`--runs 60 --tsv`) works and was used instead.
+- Would have prevented it: the census reporting the drift as a labelled warning row (which context is
+  missing) and continuing, so an unrelated ruleset edit cannot block a measurement; a ruleset check in
+  `beep ci lane-timings` that names the expected contexts.
+
+## 2026-09-12 — Exact-argv policy tests are decided by the ambient cache posture
+
+- Doing: running `package-verify @beep/repo-cli` on the Stage D tree.
+- Evidence: `quality-tasks.test.ts > fails fast on local cheap reds…` red only inside package-verify
+  (`expected false to be true`), green in every direct run with `CI=true`. The runtime resolves each
+  Turbo step through the secret session (`withTurboSecretSession`) and rewrites its `--cache=` posture
+  from the ambient environment, so the spawned command no longer equals the planned step's argv and the
+  fake spawner never fails it; under CI the runner also prepends `--force`, and a live 1Password
+  session suffixes the resolved label with ` (op run)`. Fixed by comparing commands through a key that
+  drops the session prefix, `--cache=` tokens and `--force` (`policyCommandKey`) and labels without the
+  suffix (`policyLabelKey`).
+- Would have prevented it: a test-kit spawner that matches steps by label or by a stable command key
+  instead of exact text, and the environment-only rewrite being visible in the planned step (a
+  `cachePosture` field) rather than applied at spawn time.
+
+## 2026-09-12 — The fresh-inventory guard compared a resolved label and missed under a live session
+
+- Doing: the same package-verify runs (the environment with a live 1Password session).
+- Evidence: `runPolicySteps` skipped the JSDoc ratchet compare only when a failed result's
+  `step.label` equalled `lint:policy:medium`; the resolved step's label was
+  `lint:policy:medium (op run)`, so a failed inventory phase no longer suppressed the compare (8
+  spawned steps vs 7 expected). The guard now records failed *planned* labels.
+- Would have prevented it: keeping the planned step identity on the resolved step (a `plannedLabel`
+  or id field) instead of rewriting `label`, so no consumer has to know about the suffix; and a test
+  environment that can turn the secret-session rewrite on without a real session.

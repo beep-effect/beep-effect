@@ -1108,3 +1108,279 @@ wave notes and artifact-reader handling. Every affected root invocation must
 use **bare names**; `//#` remains the registration/dependency/summary/ledger ID
 syntax. Preserve D2 unfiltered runs, lane identities, hosted JSDoc sweep behavior,
 and fresh inventory before comparison. Stop after Stage C2.
+
+## Stage D
+
+Executed only C3.5 consumer work. Read the brief and Amendments 1–3, the preceding
+Stage A–C2 implementation record, and the consumer/D10 contracts. The checkout
+was clean at entry. No checkout git writes or graft commands ran. Synthetic Git
+writes occurred only inside the existing scoped system-temp root-task fixtures.
+No Stage E ledger/economics implementation, publication, commit, or merge ran.
+Applied the Effect-first skill. The implementable consumer migration and Bun
+verification are finished; the registration/census discrepancies below remain
+explicit residuals, not silently weakened checks.
+
+### Decisions and rejected alternatives
+
+1. Replaced the independent policy subprocess fan-out with D10's ordered plan.
+   Local: cheap affected tasks; medium affected tasks; unfiltered state/binary
+   tasks; bounded affected deprecated APIs; then CLI aggregates. Every affected
+   selector is **bare**, including both root residuals, as required by F-A.
+   Every policy Turbo invocation has `--continue=dependencies-successful`,
+   `--summarize`, the existing cache-plan resolution and secret-session wrapper,
+   and the existing four-worker default/Check concurrency overrides. No labs
+   exclusion is applied. Scope comes from the caller's base; the planner does
+   not read CI or use the supplied compatibility file list to prune checks.
+2. Cheap tasks are the known short file-based policy checks plus both generated
+   gates. Identity-registry, circular, and effect-imports stay with the medium
+   work because the table records 22/18/12 seconds. The state group contains
+   semantic-delta, refs-check, jsdoc-module-tags, goals doctor, fresh JSDoc
+   inventory, and the uncertified oxlint/typos walkers. Rejected putting oxlint
+   into an affected group merely because it is cheap: its row explicitly
+   requires unfiltered execution. No D2 or binary-walker cache flag changed.
+3. Full/hosted combines medium and state tasks, keeps the root
+   `eslint . --max-warnings=0` JSDoc sweep, and uses the deprecated-API shard
+   worker when `sweeps.deprecatedApis === "shards"`. Consequently the live
+   default produces **two Turbo summaries plus two legacy worker steps**;
+   selecting the full Turbo deprecated sweep produces three summaries plus the
+   root JSDoc worker. Local policy produces four summaries. Rejected replacing
+   the measured hosted programs merely to obtain three literal Turbo processes;
+   rulings 30–31 and the Stage C handoff expressly preserve them.
+4. Retired `LINT_POLICY_STEP_CONCURRENCY`, `scopedRepoCliStep`, both remaining
+   predicates, and the obsolete root-lint fan-out constant. `scopedLawStep` was
+   already absent. Root `lint` also runs its aggregate and policy steps in
+   order, retaining aggregate failures while running the policy diagnostics.
+   Local policy stops after a red cheap phase. Hosted policy collects nonzero
+   results through the remaining phases. A failed inventory-containing phase
+   suppresses the ratchet comparison; an unrelated failure in that phase also
+   suppresses it conservatively rather than risking a stale artifact. Tests
+   execute all four combinations of local/full and cheap/inventory-phase red
+   in-process and assert the exact scheduled command sequence and retained red.
+5. **Live census:** the pre-D policy has 25 labels, not the table's stale 26.
+   `lint:tsconfig-overlay` has no Stage C task. Kept that existing CLI check,
+   the package-test-typecheck inventory, and the requested test-tsgo aggregate;
+   added the fresh-inventory task and the CLI JSDoc comparison. No check from
+   the actual 25-label policy was removed. Rejected inventing a 26th historical
+   check, dropping overlay coverage, or registering an unreviewed Stage C task.
+6. Root `beep:preflight` is now exactly the six requested generators
+   (tsconfig-sync, Fallow boundaries write, JSDoc inventory, schema-first write,
+   package-scripts write, fingerprint write), followed by local `beep lint policy`.
+   This removes the old standalone preflight repo-sanity/Knip/ratchet dispatches;
+   test-tsgo and a fresh ratchet now live in policy. Repo Sanity and Knip remain
+   in their existing hosted/pre-push consumers. The policy equality proof below
+   is **not** a claim that the new preflight includes every former standalone
+   preflight lane. No scripts-schema change was needed; the root orchestration
+   script is explicitly owned by this stage.
+7. GitHub Knip, config-sync, effect-imports, schema-first, allowlist, goals doctor,
+   goals index, Fallow audit/dead-code, and boundaries config-check now invoke
+   the registered bare task with `--summarize`. The cache arguments use the
+   shared cache-plan resolver; local collector posture stays local. Fallow
+   audit/dead-code explicitly forward `BEEP_PROOF_BASE=origin/main`, matching
+   the existing local CI replay base. Lane IDs/labels and tiers are unchanged.
+   There is no remaining standalone cheap tsgo-rules route in this checkout;
+   its policy owner now invokes the task. No duplicate lane was introduced.
+8. CI Knip and fresh JSDoc inventory use the same registered tasks and existing
+   CI cache resolver. JSDoc retains explicit `--inventory` reuse; default
+   inventory and comparison execute as a dependency chain, so failed inventory
+   cannot trigger comparison through the general collect-all step runner.
+   Added an in-process regression proving only the failed inventory task runs.
+   Hosted `lint-policy` remains `beep lint policy --full`.
+9. **Fallow contract discrepancy:** live CI and the promoted matrix require
+   blocking health and `health.check.json`; the task table/Stage C expose only
+   `fallow:health:advisory`. Preserved the blocking health CLI worker. Migrated
+   audit, dead-code and the four actual advisory consumers to their tasks, with
+   the caller base forwarded through `BEEP_PROOF_BASE`. Kept one task invocation
+   per sublane, the existing per-sublane status accounting, deferred blocking
+   exit, envelope existence/validation, and artifact names. Rejected demoting
+   health or collapsing all sublanes into one exit code that loses their status
+   rows. Therefore the table's seven-task bundled Fallow command is not claimed
+   as implemented; its health census requires Fable's disposition first.
+10. The `quality:jsdoc-ratchet:committed` cheap lane remains its distinct CLI
+    comparison of committed inventory, an aggregate rather than a registered
+    scanner task. Routing it through the full hosted dispatcher would make two
+    unchanged IDs run the same command, violating ruling 28. Kept the original
+    uniqueness test intact instead of adding an exemption. The hosted/pre-push
+    JSDoc scanner is task-backed. No root task for the committed compare exists.
+11. Added `taskIds` comments beside the migrated wave seed rows without changing
+    their IDs, ordering measurements, schema, or historical provenance. The
+    policy note explicitly calls out legacy workers without hashes, and health
+    has no task ID. Inspected `Planner.ts`: its Fallow feedback still reads
+    `--from .beep/fallow`; no edit was needed because artifact locations remain.
+    Rejected Stage E ledger schema/hash ingestion work in this lane.
+
+### Stage D — files
+
+Modified handoff files (every changed source/document path):
+
+- `package.json`
+- `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts`
+- `packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts`
+- `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts`
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts`
+- `packages/tooling/tool/cli/test/ci-lane.test.ts`
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+- `goals/time-to-certainty/research/c3-456-implementation.md`
+
+Created/deleted handoff files: none. The fingerprint writer also rewrote
+`standards/policy-tools.fingerprint.json` and `turbo.json` byte-identically;
+neither has a diff. No workspace package manifest or generated scripts schema changed.
+Verification produced ignored dependency build outputs and package `.turbo`
+results, including `packages/tooling/tool/cli/.turbo/package-test-typecheck-result.json`.
+These outputs must not be staged.
+
+Disposable files under `/tmp/ttc-stage-d/`: `edit.py`, `consumers.py`, `tests.py`,
+`fix-tests.py`, `runtime-tests.py`; `typecheck.log`, `typecheck-final.log`,
+`typecheck-third.log`, `typecheck-acceptance.log`; `tests.log`, `tests-second.log`,
+`tests-final.log`, `tests-acceptance.log`; `eslint.log`, `eslint-final.log`,
+`eslint-acceptance.log`; `fingerprint-write.log`, `fingerprint-check.log`,
+`scripts-check.log`, `dry-run.json`, `dry-run.stderr`; and `turbo-cache/`.
+Scoped synthetic repositories are removed by the test fixture finalizers.
+
+### Before/after check-coverage proof
+
+`quality-tasks.test.ts` pins the **literal** pre-D set of 25 labels:
+
+```text
+lint:deprecated-apis       knowledge:semantic-delta  knowledge:refs-check
+lint:schema-first          lint:laws                 lint:jsdoc
+lint:identity-registry     lint:circular             lint:effect-imports
+lint:effect-imports-markdown                         lint:package-test-typecheck
+lint:tsconfig-overlay      lint:tsgo-rules           lint:oxlint
+lint:ecosystem-polarity     lint:allowlist            lint:jsdoc-module-tags
+goals:doctor               goals:index-check         lint:reflection-artifacts
+lint:roadmap-refs           lint:judge-rubric         lint:package-scripts
+lint:policy-fingerprint    lint:typos
+```
+
+For local and full plans the test extracts each Turbo argv's bare task names,
+adds the remaining CLI step labels, deduplicates, and requires exact sorted-set
+agreement with that historical set after these explicitly enumerated expansions:
+
+| Expansion/addition | Treatment in equality |
+| --- | --- |
+| `lint:native-runtime:roots` | Residual already covered by the old `lint:laws` label. |
+| `lint:jsdoc:root` (local) | Residual already covered by the old `lint:jsdoc` label. |
+| `jsdoc:inventory:check` | New fresh-inventory prerequisite. |
+| `quality:test-tsgo` | Requested aggregate moved from preflight. |
+| `ci:jsdoc-ratchet:ratchet` | Requested comparison moved from preflight. |
+
+Thus **before label set = after policy task set + retained aggregates**, with
+residual tasks normalized to their old covering label and the three new checks
+listed separately. A second assertion rejects any unexplained new name. Local
+has 30 distinct names before normalization, full 29 because full JSDoc remains
+one root ESLint label. This is an executable equality, not a count-only test.
+The adjacent argv test pins every phase's ordered task list, bare selectors,
+no labs filter, caller base, unfiltered state group, explicit sweep selection,
+and CLI compare path. The general lane-identity test still requires that no
+command runs under multiple lane IDs.
+
+### Verification commands and exit codes
+
+Root cwd unless marked **CLI cwd** (`packages/tooling/tool/cli`). All Vitest,
+ESLint and Turbo launchers here use `--bun`; **these are Bun-lane observations**.
+The node shim reaches descendants, so no result below independently certifies
+Node execution. Fable's Stage B3 Node verdict is prior orchestrator evidence,
+not a Node rerun in this stage. Redirected logs are the files listed above.
+
+| Exact command | Exit | Result |
+| --- | ---: | --- |
+| `bunx --bun biome check --write packages/tooling/tool/cli/src/commands/Quality/Tasks.ts packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts packages/tooling/tool/cli/src/commands/Ci/CiLane.ts packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts package.json` | 0 | Initial source formatting. |
+| `bunx --bun biome check --write packages/tooling/tool/cli/test/quality-tasks.test.ts packages/tooling/tool/cli/test/ci-lane.test.ts` | 0 | Test formatting. |
+| `bunx --bun biome check --write packages/tooling/tool/cli/src/commands/Quality/Tasks.ts packages/tooling/tool/cli/src/commands/Ci/CiLane.ts packages/tooling/tool/cli/test/quality-tasks.test.ts` | 0 | Intermediate formatting after repairs. |
+| `bunx --bun biome check --write packages/tooling/tool/cli/test/quality-tasks.test.ts` | 0 | New execution test formatting. |
+| `bunx --bun biome check --write packages/tooling/tool/cli/src/commands/Quality/Tasks.ts packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts packages/tooling/tool/cli/src/commands/Ci/CiLane.ts packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts packages/tooling/tool/cli/test/quality-tasks.test.ts packages/tooling/tool/cli/test/ci-lane.test.ts package.json` | 0 | Final seven-file pass; import formatting only after acceptance tests. |
+| `TURBO_CACHE_DIR=/tmp/ttc-stage-d/turbo-cache bunx --bun turbo run check package-test-typecheck --filter=@beep/repo-cli --cache=local:rw` | 1 initially; 0 on three subsequent runs | Initial introduced missing predicate import/output-row property fixed. First outer-zero rerun still stored two test pipe-style diagnostics; fixed rather than treating outer success as proof. Final 34/34, 32 hits, 10.508 s. |
+| `cat packages/tooling/tool/cli/.turbo/package-test-typecheck-result.json` | 0 | Final stored verdict: `exitCode: 0`, `output: ""`; inspected after final typecheck. |
+| `bunx --bun eslint --no-warn-ignored --max-warnings=0 --config eslint.config.mjs packages/tooling/tool/cli/src/commands/Quality/Tasks.ts packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts packages/tooling/tool/cli/src/commands/Ci/CiLane.ts packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts` | 0 on all three runs | Final source has zero diagnostics/warnings. |
+| `bunx --bun vitest run test/quality-tasks.test.ts test/ci-lane.test.ts --pool=threads` (**CLI cwd**) | 1 | Initial 12 failures: introduced missing predicate/old argv expectations and the inherited unreadable-inventory `process.chdir()` thread-worker case. Introduced failures repaired. |
+| `bunx --bun vitest run test/quality-tasks.test.ts test/ci-lane.test.ts --pool=threads -t '^(?!.*maps an unreadable workspace inventory)'` (**CLI cwd**) | 0 twice | First 269 pass/1 excluded. Final **271 pass/1 excluded**, 10.38 s, including new execution and inventory-failure tests. Complete quality suite; only the named CI cwd case is excluded. |
+| `bunx --bun vitest run test/quality-tasks.test.ts test/ci-lane.test.ts test/root-tasks-turbo-inputs.test.ts --pool=threads -t '^(?!.*maps an unreadable workspace inventory)'` (**CLI cwd**) | 0 | 275 pass/1 excluded before the final CI dependency test was added; all five root-task fixtures executed, including F-A, F-B and all 40 production root rows. Together with the final consumer run: 276 distinct passing tests. |
+| `bun run beep lint policy-fingerprint --write` | 0 | Written; generated files byte-identical. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Current. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, zero drift, zero writes. |
+| `git --no-optional-locks diff --check` | 0 | Read-only whitespace verification. |
+
+Exact combined full-scope **dry-run** command (exit **0**):
+
+```sh
+TURBO_CACHE_DIR=/tmp/ttc-stage-d/turbo-cache bunx --bun turbo run lint:package-scripts lint:policy-fingerprint lint:tsgo-rules lint:ecosystem-polarity lint:allowlist goals:index-check lint:reflection-artifacts lint:roadmap-refs lint:judge-rubric lint:laws lint:native-runtime:roots lint:schema-first lint:identity-registry lint:circular lint:effect-imports lint:effect-imports-markdown lint:jsdoc lint:jsdoc:root knowledge:semantic-delta knowledge:refs-check lint:jsdoc-module-tags goals:doctor lint:oxlint lint:typos jsdoc:inventory:check lint:deprecated-apis knip:check config-sync:check fallow:audit:check fallow:dead-code:check fallow:boundaries:advisory fallow:flags:advisory fallow:security:advisory fallow:fix-preview:advisory fallow:boundaries:config-check --concurrency=4 --continue=dependencies-successful --summarize --cache=local:rw --dry-run=json
+```
+
+The dry-run resolves **569 graph nodes, 447 executable commands and 32 root task
+IDs**. This deliberately combines selectors to verify registration/resolution;
+it is not the runtime D10 scheduling command or a successful checker execution.
+The affected-selection proof uses only the synthetic fixture; no checkout
+commit was made to enable a live affected experiment. Test output's TS2589
+snippets are intentional classifier-fixture text, not failing real dependency
+builds. No full policy execution, cold/warm consumer benchmark, hosted result,
+package audit, docgen, or Node coverage is claimed from these checks.
+
+### Blockers and precise residual for Stage E / Fable
+
+- No introduced static/type/test failure remains in the lane-owned checks.
+  The one excluded CI cwd fixture and Node-runtime validation belong to Fable's
+  verification split; `bunx --bun` cannot settle its actual Node behavior.
+- The fully task-backed Fallow requirement cannot match the current registered
+  task table while retaining blocking health. Fable must authorize/register and
+  fixture-prove `fallow:health:check`, or explicitly revise the promotion contract.
+  Until then health remains direct and has no task hash. The four existing
+  advisory consumers remain advisory; none was promoted/demoted by this lane.
+- The unregistered tsconfig-overlay check and committed-inventory JSDoc comparison
+  remain direct aggregates. Ruling-28 identity is preserved. The table's bundled
+  Fallow invocation and universal three-summary description must be reconciled
+  with the live per-sublane accounting and retained hosted sweep exception before
+  claiming literal table parity. These discrepancies were recorded in the ledger.
+- Fable owns `CI=true TMPDIR=/tmp bun run beep quality package-verify @beep/repo-cli`,
+  `bun run docgen:local`, Node suites and scoped coverage/ratchet, the inherited
+  audit investigation, commit/publish and hosted checks. Filtered checks above
+  do not substitute for those gates. No merge-ready or whole-packet completion
+  claim is made.
+- Stage E is still only ledger per-attempt task-hash ingestion and economics.
+  Account for four local policy summaries, two/three hosted summaries depending
+  on the explicit deprecated sweep, non-Turbo legacy/aggregate steps, per-sublane
+  Fallow summaries, non-reusable state tasks, failed inventory skips, and the
+  retained direct health row. Keep skipped/missing/failed/uncacheable distinct.
+  Freshness comes from the attempt's own summaries, never the dry-run output.
+  Stage D supplies no new cold/warm checker timings; do not use test/typecheck
+  durations as savings or a whole-proof denominator. PLAN, decisions, table,
+  lifecycle and publication remain Fable-owned. **Stop after Stage D.**
+
+## Stage D verdict and Stage E (Fable, 2026-09-12; the Codex pool was exhausted until 2026-09-17)
+
+Stage D gates: Node suites green; the live local `beep lint policy` executed the D10 plan end to end
+(cheap 9/9, medium 283/283, state 7/8, typed 141/141, 1,208 s wall with the whole fleet affected
+because `turbo.json` changed). Three corrections followed, all made by the orchestrator:
+
+1. `lint:oxlint` was the one state red: a real `no-inline-schema-compile` finding in the Stage C
+   fixture (`S.is(...)` in a loop), hoisted to module scope.
+2. The package handoff failed on tests that pin the check-route argv: the lane had hardcoded
+   `ci: false` in `rootTaskLane`, which would also have forced local-only caching on hosted runs;
+   the routes now resolve the cache posture from `CI` like every other Turbo lane.
+3. The fail-fast policy test could not take its local branch under `CI=true` because the policy
+   task called the sticky `isCi()` itself (C3.2 lesson): the `lint policy` command now reads `CI`
+   through `Config` and passes the effective scope; the task never reads the environment.
+   `lint-workers.test.ts` finds the deprecated-API step by label instead of index.
+
+Stage E (Amendment 4):
+
+- `//#fallow:health:check` registered (script, task row cloned from audit with the health
+  artifacts, proof id, fixture rows, CI health consumer on the task, wave note, table revision 8).
+- Per-lane Turbo digests: `Quality/internal/TurboLaneDigest.ts` decodes the attempt's own
+  `.turbo/runs` summaries (freshness = `execution.startTime` at or after the lane step's start),
+  folds the bare-named tasks' hashes into a SHA-256 over sorted `taskId=hash` lines, refuses a digest
+  when any folded task failed, and `collectQualityTaskLaneRuns` records it as the lane run's
+  `inputDigest`; the verdict carries it and `yeet status` prints a `lane digests:` block.
+- `research/c3-456-economics.md` records the pre-merge hosted baseline (recent-runs census; the
+  bounded census fails closed on a required-check ruleset drift, receipt recorded) and the local
+  cold/warm numbers; the post-merge accounting is owed as a closeout receipt.
+- PLAN C3.3–C3.6 ticked; `lint:tsconfig-overlay` and the committed-inventory JSDoc compare stay
+  CLI aggregates without a task hash.
+
+Package-handoff rounds on the complete tree (the environment with a live 1Password session, which
+no direct run reproduces): the policy tests compare spawned commands through a key that drops the
+secret-session prefix, `--cache=` tokens and the CI-only `--force`, compare labels without the
+` (op run)` suffix, and ignore session probes; and one runtime defect surfaced and was fixed — the
+fresh-inventory guard in `runPolicySteps` compared the resolved label, so under a live session a
+failed inventory phase did not suppress the JSDoc ratchet compare (it now records failed planned
+labels).

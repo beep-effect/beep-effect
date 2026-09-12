@@ -53,7 +53,6 @@ const $I = $RepoCliId.create("commands/Ci/CiLane");
 type CiLaneEnvironment = FileSystem.FileSystem | FsUtils | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
-const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory.md";
 const STORYBOOK_PACKAGE_NAME = "@beep/storybook";
 const STORYBOOK_BUILD_TASK = "storybook:build";
 const STORYBOOK_TURBO_SELECT_FILTER = `--filter=${STORYBOOK_PACKAGE_NAME}`;
@@ -767,6 +766,15 @@ const directTurboArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<strin
   ...args,
 ];
 
+const rootTaskStep = (repoRoot: string, label: string, task: string, base?: string): QualityTaskStep =>
+  QualityTaskStep.make({
+    label,
+    command: "bunx",
+    cwd: repoRoot,
+    args: directTurboArgs([task], ["--summarize"]),
+    ...(base === undefined ? {} : { env: { BEEP_PROOF_BASE: base } }),
+  });
+
 const CI_LANE_PARTITION_REPAIR =
   "Regenerate the deterministic LPT placement from goals/ci-lane-economics/research/tail-attribution.md and update the partition table.";
 
@@ -1210,24 +1218,12 @@ const fallowReportPath = (lane: string, advisory: boolean): string =>
   `.beep/fallow/${lane}.${advisory ? "advisory" : "check"}.json`;
 
 const fallowRunStep = (repoRoot: string, lane: string, gateFlag: string, base: string): QualityTaskStep =>
-  QualityTaskStep.make({
-    label: `ci:fallow:${lane}`,
-    command: "bun",
-    args: [
-      "run",
-      "beep",
-      "quality",
-      "fallow",
-      lane,
-      gateFlag,
-      "--base",
-      base,
-      "--out",
-      fallowReportPath(lane, gateFlag === "--advisory"),
-      "--quiet",
-    ],
-    cwd: repoRoot,
-  });
+  rootTaskStep(
+    repoRoot,
+    `ci:fallow:${lane}`,
+    `fallow:${lane}:${gateFlag === "--advisory" ? "advisory" : "check"}`,
+    base
+  );
 
 const fallowEnvelopeCheckStep = (repoRoot: string, lane: string, advisory: boolean): QualityTaskStep =>
   QualityTaskStep.make({
@@ -1376,21 +1372,13 @@ export const ciLaneStepsForTesting: {
           O.fromUndefinedOr(options.inventory),
           O.match({
             onNone: () => [
-              bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", [
-                "beep",
-                "quality",
-                "jsdoc-inventory",
-                "--output-json",
-                JSDOC_CI_INVENTORY_JSON_PATH,
-                "--output-markdown",
-                JSDOC_CI_INVENTORY_MARKDOWN_PATH,
-              ]),
+              rootTaskStep(repoRoot, "ci:jsdoc-ratchet:inventory", "jsdoc:inventory:check"),
               jsdocRatchetStep(repoRoot, JSDOC_CI_INVENTORY_JSON_PATH),
             ],
             onSome: (inventoryPath) => [jsdocRatchetStep(repoRoot, inventoryPath)],
           })
         ),
-      knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
+      knip: () => [rootTaskStep(repoRoot, "ci:knip", "knip:check")],
       // lab-apps-lifecycle P2 (ratified row 10): one bundled turbo invocation
       // over the labs glob. Deliberately no --affected — turbo unions filter
       // selectors, so --affected plus the positive labs filter would WIDEN the
@@ -1742,6 +1730,12 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
     return;
   }
 
+  if (laneId === "jsdoc-ratchet") {
+    // The general step group collects failures. Inventory and compare are a
+    // dependency chain: never compare yesterday's artifact after a failed scan.
+    yield* Effect.forEach(steps, (step) => runQualityTaskStreamingStepGroup(`ci:${laneId}`, [step]), { discard: true });
+    return;
+  }
   yield* runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
 });
 

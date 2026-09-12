@@ -26,6 +26,7 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, HashMap, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
@@ -73,7 +74,8 @@ const commandHandle = (output = "", exitCode = 0) =>
 const ciExecutionLayer = (
   changedFiles: ReadonlyArray<string>,
   sources: ReadonlyArray<readonly [string, string]>,
-  spawned: Array<string>
+  spawned: Array<string>,
+  failedTask?: string
 ) => {
   const fileSystemLayer = FileSystem.layerNoop({
     exists: (file) =>
@@ -104,7 +106,9 @@ const ciExecutionLayer = (
       }
       spawned.push(A.join([command.command, ...command.args], " "));
       const output = command.command === "git" ? A.join(changedFiles, "\n") : "";
-      return Effect.succeed(commandHandle(output));
+      return Effect.succeed(
+        commandHandle(output, failedTask !== undefined && A.contains(command.args, failedTask) ? 1 : 0)
+      );
     })
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
@@ -954,14 +958,11 @@ describe("ciLaneStepsForTesting", () => {
     const labels = A.map(steps, (step) => step.label);
     expect(labels).toEqual(["ci:jsdoc-ratchet:inventory", "ci:jsdoc-ratchet:ratchet"]);
     expect(steps[0]?.args).toEqual([
+      "turbo",
       "run",
-      "beep",
-      "quality",
-      "jsdoc-inventory",
-      "--output-json",
-      ".beep/ci/jsdoc-documentation.inventory.jsonc",
-      "--output-markdown",
-      ".beep/ci/jsdoc-documentation.inventory.md",
+      "jsdoc:inventory:check",
+      ...expectedTurboCacheArgs(["--summarize"]),
+      "--summarize",
     ]);
     expect(steps[1]?.args).toEqual([
       "run",
@@ -1145,6 +1146,41 @@ describe("ciLaneStepsForTesting", () => {
     expect(A.length(validated)).toBe(14);
     const lastLabel = lastOf(validated).label;
     expect(lastLabel).toBe("ci:fallow:envelope-check:health");
+  });
+
+  it("routes Knip and Fallow tasks unfiltered with explicit proof base", () => {
+    const knip = firstOf(ciLaneStepsForTesting(REPO_ROOT, "knip", prShapeOptions));
+    expect(knip.args).toEqual([
+      "turbo",
+      "run",
+      "knip:check",
+      ...expectedTurboCacheArgs(["--summarize"]),
+      "--summarize",
+    ]);
+    expect(knip.env).toBeUndefined();
+    const steps = ciLaneStepsForTesting(
+      REPO_ROOT,
+      "fallow",
+      CiLaneRunOptions.make({ ...prShapeOptions, base: "review-base" })
+    );
+    for (const [index, task] of [
+      [0, "fallow:audit:check"],
+      [1, "fallow:dead-code:check"],
+      [2, "fallow:health:check"],
+      [3, "fallow:boundaries:advisory"],
+      [4, "fallow:flags:advisory"],
+      [5, "fallow:security:advisory"],
+      [6, "fallow:fix-preview:advisory"],
+    ] as const) {
+      expect(steps[index]?.args).toEqual([
+        "turbo",
+        "run",
+        task,
+        ...expectedTurboCacheArgs(["--summarize"]),
+        "--summarize",
+      ]);
+      expect(steps[index]?.env).toEqual({ BEEP_PROOF_BASE: "review-base" });
+    }
   });
 
   it("builds the property lane with the 400-run floor, fixed seed, and cache-partitioning env", () => {
@@ -1618,11 +1654,26 @@ layer(ciExecutionLayer([], fallowReports, fallowCommands))("Fallow CI lane execu
       yield* runCiLane("fallow", CiLaneRunOptions.make({ ...baseOptions, validateEnvelopes: true }));
 
       expect(fallowCommands).toHaveLength(14);
-      expect(fallowCommands[0]).toContain("beep quality fallow audit --check");
-      expect(fallowCommands[1]).toContain("beep quality fallow dead-code --check");
-      expect(fallowCommands[2]).toContain("beep quality fallow health --check");
+      expect(fallowCommands[0]).toContain("turbo run fallow:audit:check");
+      expect(fallowCommands[1]).toContain("turbo run fallow:dead-code:check");
+      expect(fallowCommands[2]).toContain("turbo run fallow:health:check");
       expect(fallowCommands[11]).toContain("fallow envelope-check .beep/fallow/audit.check.json");
       expect(fallowCommands[13]).toContain("fallow envelope-check .beep/fallow/health.check.json");
     })
   );
 });
+
+const failedInventoryCommands = A.empty<string>();
+layer(ciExecutionLayer([], [], failedInventoryCommands, "jsdoc:inventory:check"))(
+  "JSDoc inventory dependency",
+  (it) => {
+    it.effect("does not compare a stale inventory after the Turbo inventory task fails", () =>
+      Effect.gen(function* () {
+        const result = yield* runCiLane("jsdoc-ratchet", baseOptions).pipe(Effect.exit);
+        expect(Exit.isFailure(result)).toBe(true);
+        expect(failedInventoryCommands).toHaveLength(1);
+        expect(failedInventoryCommands[0]).toContain("turbo run jsdoc:inventory:check");
+      })
+    );
+  }
+);

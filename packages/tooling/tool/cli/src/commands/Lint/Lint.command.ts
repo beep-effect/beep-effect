@@ -805,7 +805,10 @@ const lintPolicyCommand = Command.make(
     full: lintFullFlag.pipe(Flag.withDescription("Run the full policy sweep locally")),
     base: lintBaseFlag,
   },
-  ({ full, base }) => runRootLintPolicyTask(full, base)
+  Effect.fn("Lint.policy")(function* ({ full, base }) {
+    const ci = yield* Config.String("CI").pipe(Config.withDefault(""));
+    return yield* runRootLintPolicyTask(full || ci === "true", base);
+  })
 ).pipe(
   Command.withDescription(
     "Run repo-wide lint policy checks; laws use affected Turbo tasks locally and full scope with --full or CI"

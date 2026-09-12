@@ -26,6 +26,8 @@ import {
   Ref,
 } from "effect";
 import { dual } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -88,6 +90,7 @@ import {
   standaloneQuarantineRerunStep,
 } from "./internal/FlakeQuarantine.ts";
 import { hasReusableLaneProof, persistLaneProofs, prepareLaneProofSession } from "./internal/LaneProofReuse.ts";
+import { readTurboLaneDigest } from "./internal/TurboLaneDigest.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
 import {
   decodePackageJsonDocument,
@@ -182,19 +185,6 @@ const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const COVERAGE_REPLACE_ALL_ARG = "--replace-all";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
-// Full root lint runs the aggregate Turbo graph plus repo policy tools. Keep
-// its group fan-out aligned with the root Turbo cap so hosted main checks do
-// not start multiple CPU/memory-heavy process graphs at once.
-const ROOT_LINT_STEP_CONCURRENCY = 3;
-// Lint-policy steps are independent read-only tools (oxlint, eslint-jsdoc, law
-// checks, madge...). Running them grouped-concurrent
-// converts the lane from sum-of-steps to max-of-steps. After the P1 shard
-// parallelism landed (PR #678) the lane became sum-bound at 2 (~1124s total
-// work / 2 ≈ 9.5 min hosted); 3 puts the floor back under the deprecated-apis
-// long pole (~435s) on the 64 GiB heavy runner. The worst LPT co-resident trio
-// (deprecated shards ~12-16 GiB, docgen, semantic-delta) fits; evidence:
-// goals/lint-policy-single-digit (P1 hosted profile + closeout).
-const LINT_POLICY_STEP_CONCURRENCY = 3;
 // A single lost child-exit signal must fail with the command name while the
 // workflow still has time to report and clean up. The longest healthy policy
 // child is under eight minutes on the hosted heavy runner.
@@ -1666,12 +1656,40 @@ type QualityTaskLaneRunObserver = (
 
 const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 
+// A `bunx turbo run <tasks…> --summarize` step names its tasks bare (F-A); those names select
+// the rows of the attempt's own summary that fold into the lane digest.
+const turboSummarizeTaskNames = (step: QualityTaskStep): O.Option<ReadonlyArray<string>> =>
+  step.command === "bunx" &&
+  O.contains(A.get(step.args, 0), "turbo") &&
+  O.contains(A.get(step.args, 1), "run") &&
+  A.contains(step.args, "--summarize")
+    ? O.some(pipe(A.drop(step.args, 2), A.takeWhile(P.not(Str.startsWith("-")))))
+    : O.none();
+
+const resolveLaneInputDigest = Effect.fn("QualityTasks.resolveLaneInputDigest")(function* (
+  outcome: StreamingStepOutcome,
+  declared: O.Option<string>
+) {
+  if (O.isSome(declared) || O.isSome(outcome.failure)) {
+    return declared;
+  }
+  return yield* O.match(turboSummarizeTaskNames(outcome.step), {
+    onNone: () => Effect.succeed(O.none<string>()),
+    onSome: (tasks) =>
+      readTurboLaneDigest(outcome.step.cwd, outcome.startedAt, tasks).pipe(
+        Effect.map(O.map((digest) => digest.digest)),
+        Effect.orElseSucceed(O.none<string>)
+      ),
+  });
+});
+
 const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLaneRuns")(function* (
   label: string,
   lanes: ReadonlyArray<QualityTaskLaneInput>,
   concurrency = 1,
   onLaneRun: QualityTaskLaneRunObserver = appendQualityTaskLaneRun
 ) {
+  const digests = MutableHashMap.empty<number, O.Option<string>>();
   const outcomes = yield* collectStreamingStepOutcomes(
     label,
     A.map(lanes, ([, step]) => step),
@@ -1682,15 +1700,25 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
         O.match({
           onNone: () => Effect.void,
           onSome: ([id, , inputDigest, decision]) =>
-            onLaneRun(qualityTaskLaneRunFromOutcome(id, inputDigest, outcome, O.fromUndefinedOr(decision))),
+            resolveLaneInputDigest(outcome, inputDigest).pipe(
+              Effect.flatMap((digest) => {
+                MutableHashMap.set(digests, index, digest);
+                return onLaneRun(qualityTaskLaneRunFromOutcome(id, digest, outcome, O.fromUndefinedOr(decision)));
+              })
+            ),
         })
       )
   );
   return {
     report: QualityTaskLaneRunReport.make({
       schemaVersion: "quality-task-lane-run/v1",
-      lanes: A.map(A.zip(lanes, outcomes), ([[id, , inputDigest, decision], outcome]) =>
-        qualityTaskLaneRunFromOutcome(id, inputDigest, outcome, O.fromUndefinedOr(decision))
+      lanes: A.map(A.zip(lanes, outcomes), ([[id, , inputDigest, decision], outcome], index) =>
+        qualityTaskLaneRunFromOutcome(
+          id,
+          O.getOrElse(MutableHashMap.get(digests, index), () => inputDigest),
+          outcome,
+          O.fromUndefinedOr(decision)
+        )
       ),
     }),
     failures: pipe(
@@ -2492,40 +2520,6 @@ const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
   }),
 ];
 
-const isLawSourcePath = (filePath: string): boolean =>
-  (Str.startsWith("apps/")(filePath) || Str.startsWith("packages/")(filePath) || Str.startsWith("infra/")(filePath)) &&
-  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
-
-const isEcosystemPolarityPath = (filePath: string): boolean => {
-  const segments = Str.split(filePath, "/");
-  const memberPathHead = A.get(segments, 3);
-
-  return (
-    O.exists(A.get(segments, 0), Str.equivalence("packages")) &&
-    O.exists(A.get(segments, 1), Str.equivalence("ecosystem")) &&
-    O.exists(A.get(segments, 2), Str.isNonEmpty) &&
-    O.exists(memberPathHead, (segment) => Str.equivalence("package.json")(segment) || Str.equivalence("src")(segment))
-  );
-};
-
-const scopedRepoCliStep = (
-  repoRoot: string,
-  label: string,
-  args: ReadonlyArray<string>,
-  isRelevant: (filePath: string) => boolean,
-  files?: ReadonlyArray<string>
-): ReadonlyArray<QualityTaskStep> => {
-  if (P.isUndefined(files)) {
-    return A.of(repoCliStep(repoRoot, label, args));
-  }
-
-  return A.match(A.filter(files, isRelevant), {
-    onEmpty: A.empty,
-    onNonEmpty: (relevantFiles) =>
-      A.of(repoCliStep(repoRoot, label, [...args, "--include", A.join(relevantFiles, ",")])),
-  });
-};
-
 // Policy lint retains Check's accepted overrides and adds its four-worker budget.
 const PolicyLintConcurrency = LiteralKit([...QualityCheckConcurrency.Options, "4"]).pipe(
   $RepoCliId.create("commands/Quality/Tasks").annoteSchema("PolicyLintConcurrency", {
@@ -2593,84 +2587,108 @@ export const readLintPolicySweeps = Effect.fn("QualityTasks.readLintPolicySweeps
     );
 });
 
+// D10 partitions the existing policy checks. D2 and uncertified binary walkers
+// are unfiltered even locally; their non-file state cannot drive affected selection.
+const policyCheapTasks = [
+  "lint:package-scripts",
+  "lint:policy-fingerprint",
+  "lint:tsgo-rules",
+  "lint:ecosystem-polarity",
+  "lint:allowlist",
+  "goals:index-check",
+  "lint:reflection-artifacts",
+  "lint:roadmap-refs",
+  "lint:judge-rubric",
+];
+const policyMediumTasks = [
+  "lint:laws",
+  "lint:native-runtime:roots",
+  "lint:schema-first",
+  "lint:identity-registry",
+  "lint:circular",
+  "lint:effect-imports",
+  "lint:effect-imports-markdown",
+];
+const policyStateTasks = [
+  "knowledge:semantic-delta",
+  "knowledge:refs-check",
+  "lint:jsdoc-module-tags",
+  "goals:doctor",
+  "lint:oxlint",
+  "lint:typos",
+  "jsdoc:inventory:check",
+];
+
 const rootRepoLintPolicySteps = (
   repoRoot: string,
-  files: ReadonlyArray<string> | undefined,
+  _files: ReadonlyArray<string> | undefined,
   base: string | undefined,
   sweeps: LintPolicySweeps
-): ReadonlyArray<QualityTaskStep> =>
-  A.map(
+): ReadonlyArray<QualityTaskStep> => {
+  const full = P.isUndefined(base);
+  return A.map(
     [
-      // Static LPT order from research/00-evidence-brief.md (run 31683014887):
-      // deprecated-apis 975199ms, semantic-delta 78127ms,
-      // schema-first 51162ms, then every remaining step in descending measured duration.
-      P.isUndefined(base) && sweeps.deprecatedApis === "shards"
+      policyLintTurboStep(repoRoot, "lint:policy:cheap", policyCheapTasks, base),
+      policyLintTurboStep(
+        repoRoot,
+        "lint:policy:medium",
+        [...policyMediumTasks, ...(full ? policyStateTasks : ["lint:jsdoc", "lint:jsdoc:root"])],
+        base
+      ),
+      ...(full ? [] : [policyLintTurboStep(repoRoot, "lint:policy:state", policyStateTasks)]),
+      // Ruling 31 retains the hosted root ESLint program independently of the
+      // deprecated-API sweep switch. It has no Turbo summary of its own.
+      ...(full ? [bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"])] : []),
+      full && sweeps.deprecatedApis === "shards"
         ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
         : deprecatedApisTurboStep(repoRoot, base),
-      // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
-      // introduced by this branch and lets the corpus keep its inherited ones.
-      repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
-      // Whole-tree census with a zero-tolerance gate on live host-path classes; never file-scoped
-      // because any tracked document can introduce a machine-local reference.
-      repoCliStep(repoRoot, "knowledge:refs-check", ["knowledge", "refs", "--check"]),
-      repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
-      policyLintTurboStep(repoRoot, "lint:laws", ["lint:laws", "lint:native-runtime:roots"], base),
-      P.isUndefined(base)
-        ? bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"])
-        : policyLintTurboStep(repoRoot, "lint:jsdoc", ["lint:jsdoc", "lint:jsdoc:root"], base),
-      repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
-      repoCliStep(repoRoot, "lint:circular", ["lint", "circular"]),
-      ...scopedRepoCliStep(
-        repoRoot,
-        "lint:effect-imports",
-        ["laws", "effect-imports", "--check"],
-        isLawSourcePath,
-        files
-      ),
-      // Standalone Markdown is invisible to Biome and the JSDoc inventory. Keep this
-      // full authored-corpus pass advisory until the final per-module import flip.
-      repoCliStep(repoRoot, "lint:effect-imports-markdown", [
-        "laws",
-        "effect-imports",
-        "--mode",
-        "markdown",
-        "--check",
-      ]),
-      repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
-      // Structural replacement for the apps' former second compiler pass (D5): every
-      // tsconfig.check.json may only turn emit machinery off, never widen the program.
+      // No Stage C registration exists for the overlay inventory; preserve it.
       repoCliStep(repoRoot, "lint:tsconfig-overlay", ["lint", "tsconfig-overlay"]),
-      repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
-      // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
-      // backlog so the policy lane stays readable. `bun run lint:oxlint` stays verbose.
-      // --disable-nested-config: the root config is the only real one; a live agent
-      // worktree under .claude/worktrees/ carries a copy whose same-named `beep`
-      // jsPlugin otherwise double-registers and aborts the run.
-      bunxStep(repoRoot, "lint:oxlint", ["oxlint", "--quiet", "--disable-nested-config"]),
-      ...scopedRepoCliStep(
-        repoRoot,
-        "lint:ecosystem-polarity",
-        ["lint", "ecosystem-polarity"],
-        isEcosystemPolarityPath,
-        files
-      ),
-      repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
-      repoCliStep(repoRoot, "lint:jsdoc-module-tags", ["quality", "jsdoc-module-tags"]),
-      repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
-      repoCliStep(repoRoot, "goals:index-check", ["goals", "index", "--check"]),
-      repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
-      repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
-      repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
-      repoCliStep(repoRoot, "lint:package-scripts", ["lint", "package-scripts", "--check"]),
-      repoCliStep(repoRoot, "lint:policy-fingerprint", ["lint", "policy-fingerprint", "--check"]),
-      bunxStep(repoRoot, "lint:typos", ["typos"]),
+      repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
+      repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]),
+      repoCliStep(repoRoot, "ci:jsdoc-ratchet:ratchet", [
+        "quality",
+        "jsdoc-ratchet",
+        "--inventory",
+        ".beep/ci/jsdoc-documentation.inventory.jsonc",
+      ]),
     ],
-    (step) =>
-      QualityTaskStep.make({
-        ...step,
-        captureTimeoutMillis: QUALITY_CAPTURE_TIMEOUT_MILLIS,
-      })
+    (step) => QualityTaskStep.make({ ...step, captureTimeoutMillis: QUALITY_CAPTURE_TIMEOUT_MILLIS })
   );
+};
+
+// Run each Turbo process graph in order. Hosted runs collect every failure;
+// local runs stop after a red cheap phase. Never compare a stale inventory.
+const runPolicySteps = Effect.fn("QualityTasks.runPolicySteps")(function* (
+  steps: ReadonlyArray<QualityTaskStep>,
+  full: boolean
+) {
+  const results = A.empty<QualityTaskStepOutput>();
+  // Keyed by the PLANNED label: the resolved step may carry a secret-session suffix.
+  const failedPlannedLabels = MutableHashSet.empty<string>();
+  yield* Console.log(`[beep-cli] lint:policy: running ${A.length(steps)} ordered step(s)`);
+  for (const step of steps) {
+    if (
+      step.label === "ci:jsdoc-ratchet:ratchet" &&
+      MutableHashSet.has(failedPlannedLabels, full ? "lint:policy:medium" : "lint:policy:state")
+    ) {
+      yield* Console.log("[beep-cli] jsdoc ratchet skipped: fresh inventory phase failed");
+      continue;
+    }
+    const resolved = yield* withTurboSecretSession(step);
+    yield* Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`);
+    const result = yield* collectResolvedStepOutput(resolved);
+    yield* renderStepOutput(result);
+    A.appendInPlace(results, result);
+    if (result.exitCode !== 0) {
+      MutableHashSet.add(failedPlannedLabels, step.label);
+    }
+    if (!full && step.label === "lint:policy:cheap" && result.exitCode !== 0) {
+      yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
+    }
+  }
+  yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
+});
 
 /**
  * Build the repo-wide root lint policy subprocess steps.
@@ -2684,7 +2702,7 @@ const rootRepoLintPolicySteps = (
  * ```
  *
  * @param repoRoot - Repository root directory.
- * @param files - Optional changed-file scope for naturally file-scoped policy steps.
+ * @param files - Compatibility input; Turbo now owns file selection from the caller base.
  * @param base - Caller base for affected Turbo tasks; omitted for full scope.
  * @param sweeps - Explicit sweep selection; pure test plans default to shards.
  * @returns Planned subprocess steps for policy-only lint verification.
@@ -2737,7 +2755,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
   const cwd = path.resolve(process.cwd());
   const repoRoot = yield* findRepoRoot(cwd);
   const sweeps = yield* readLintPolicySweeps(repoRoot);
-  const runFull = full || isCi();
+  const runFull = full;
   let files: ReadonlyArray<string> | undefined;
   if (!runFull) {
     files = yield* collectChangedFiles(repoRoot, base, "HEAD");
@@ -2749,14 +2767,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
   );
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
-  yield* Console.log(
-    "[beep-cli] lint:policy: full-state checks: allowlist, tsgo-rules, identity-registry, judge-rubric, package-test-typecheck, tsconfig-overlay, reflection-artifacts, roadmap-refs, goals, schema-first, jsdoc-module-tags, docgen, circular, typos, oxlint"
-  );
-  yield* runStepGroup(
-    "lint:policy",
-    rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps),
-    LINT_POLICY_STEP_CONCURRENCY
-  );
+  yield* runPolicySteps(rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps), runFull);
 });
 
 /**
@@ -2772,7 +2783,8 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
  * console.log(Effect.isEffect(program))
  * ```
  *
- * @param full - Run the full-repo sweep instead of the changed-scope default.
+ * @param full - Run the full-repo sweep instead of the changed-scope default; the
+ *   command decides this from `--full` or `CI`, so the task never reads the environment.
  * @param base - Caller base for changed files and affected Turbo tasks.
  * @returns The lint policy battery effect.
  * @category tasks
@@ -2857,7 +2869,7 @@ const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
     return;
   }
 
-  yield* runStepGroup("lint", steps, ROOT_LINT_STEP_CONCURRENCY);
+  yield* runPolicySteps(steps, true);
 });
 
 const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {

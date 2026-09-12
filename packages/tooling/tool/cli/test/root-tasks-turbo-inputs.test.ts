@@ -2,7 +2,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -12,11 +12,13 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const $I = $RepoCliId.create("test/root-tasks-turbo-inputs");
 const fingerprintId = "//#lint:policy-fingerprint";
 const nonInput = ".beep/c3-fixture-excluded.bin";
 const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const isProofTaskName = S.is(TurboConfigProofTaskName);
 const Strings = S.Array(S.String).pipe(S.withDecodingDefaultKey(Effect.succeed([])));
 
 class RootTask extends S.Class<RootTask>($I`RootTask`)(
@@ -43,6 +45,13 @@ const decodeConfiguration = S.decodeEffect(S.fromJsonString(Configuration));
 const decodeManifest = S.decodeEffect(S.fromJsonString(Manifest));
 const decodeTask = S.decodeUnknownEffect(RootTask);
 const decodeSummary = S.decodeEffect(S.fromJsonString(Summary));
+const encodeTaskSummary = S.encodeEffect(S.fromJsonString(TaskSummary));
+const decodeTaskSummary = S.decodeEffect(S.fromJsonString(TaskSummary));
+const encodeRootTask = S.encodeEffect(S.fromJsonString(RootTask));
+const decodeRootTask = S.decodeEffect(S.fromJsonString(RootTask));
+const taskSummaryEquivalent = S.toEquivalence(TaskSummary);
+const rootTaskEquivalent = S.toEquivalence(RootTask);
+const fixtureArbitrary = Arbitrary.all([Arbitrary.schema(TaskSummary), Arbitrary.schema(RootTask)]);
 
 // One direct read per §2.2 row, including expanded Fallow rows. These are independent
 // probes, not strings derived from the input globs whose behavior we are testing.
@@ -55,6 +64,7 @@ const nonReusableTasks: ReadonlyArray<string> = [
   "lint:typos",
   "knip:check",
   "fallow:audit:check",
+  "fallow:health:check",
   "fallow:health:advisory",
   "fallow:boundaries:advisory",
   "fallow:flags:advisory",
@@ -93,6 +103,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "knip:check": "standards/knip.regression-baseline.jsonc",
   "fallow:audit:check": ".fallow/plugins/c3-probe.ts",
   "fallow:dead-code:check": ".fallow/plugins/c3-probe.ts",
+  "fallow:health:check": ".fallow/plugins/c3-probe.ts",
   "fallow:health:advisory": ".fallow/plugins/c3-probe.ts",
   "fallow:boundaries:advisory": ".fallow/plugins/c3-probe.ts",
   "fallow:flags:advisory": ".fallow/plugins/c3-probe.ts",
@@ -135,7 +146,7 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
   const tasks = R.fromEntries(rootEntries);
   expect(A.length(rootEntries)).toBe(A.length(R.keys(directInputs)));
   for (const [id, task] of rootEntries) {
-    expect(S.is(TurboConfigProofTaskName)(id), id).toBe(true);
+    expect(isProofTaskName(id), id).toBe(true);
     expect(R.has(directInputs, Str.slice(3)(id)), id).toBe(true);
     expect(R.has(manifest.scripts, Str.slice(3)(id)), id).toBe(true);
     const script = O.getOrThrow(R.get(manifest.scripts, Str.slice(3)(id)));
@@ -261,6 +272,27 @@ const withDependencies = (ids: ReadonlyArray<string>, rows: ReadonlyArray<TaskSu
   A.sort(A.dedupe([...ids, ...A.flatMap(ids, (id) => rowFor(rows, id).dependencies)]), Str.Order);
 
 describe("Stage C root task inputs", { concurrent: false }, () => {
+  it("round-trips the fixture's schema-derived rows through JSON", () =>
+    expect(
+      Effect.runSync(
+        Arbitrary.checkEffect(
+          fixtureArbitrary,
+          ([summary, task]) => {
+            const encodedSummary = Effect.runSync(encodeTaskSummary(summary));
+            const decodedSummary = Effect.runSync(decodeTaskSummary(encodedSummary));
+            expect(taskSummaryEquivalent(decodedSummary, summary)).toBe(true);
+            expect(Effect.runSync(encodeTaskSummary(decodedSummary))).toBe(encodedSummary);
+            const encodedTask = Effect.runSync(encodeRootTask(task));
+            const decodedTask = Effect.runSync(decodeRootTask(encodedTask));
+            expect(rootTaskEquivalent(decodedTask, task)).toBe(true);
+            expect(Effect.runSync(encodeRootTask(decodedTask))).toBe(encodedTask);
+            return true;
+          },
+          fcRuns(25)
+        )
+      )._tag
+    ).toBe("Passed"));
+
   it.effect(
     "hashes declared inputs and excludes non-inputs for every registered root task",
     Effect.fnUntraced(function* () {

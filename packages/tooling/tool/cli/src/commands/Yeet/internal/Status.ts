@@ -100,6 +100,17 @@ export class YeetStatusWorktree extends S.Class<YeetStatusWorktree>($I`YeetStatu
 ) {}
 
 /**
+ * One verdict lane that recorded a Turbo-derived input digest (C3.6 per-lane hashes).
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetStatusLaneDigest extends S.Class<YeetStatusLaneDigest>($I`YeetStatusLaneDigest`)(
+  { id: S.String, inputDigest: S.String },
+  $I.annote("YeetStatusLaneDigest", { description: "Lane id and the input digest its Turbo summary produced." })
+) {}
+
+/**
  * Summary for a Yeet artifact read by status.
  *
  * **Details**
@@ -136,6 +147,7 @@ export class YeetStatusArtifact extends S.Class<YeetStatusArtifact>($I`YeetStatu
     reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     schemaVersion: S.optionalKey(S.String),
     greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    laneDigests: YeetStatusLaneDigest.pipe(S.Array, S.optionalKey),
   },
   $I.annote("YeetStatusArtifact", {
     description: "Compact summary for a Yeet artifact read by status, including closeout head binding.",
@@ -537,6 +549,46 @@ const firstFailedRepairCommand = (verdict: YeetVerdict): O.Option<string> =>
     O.flatMap((lane) => O.fromUndefinedOr(lane.repairCommand))
   );
 
+const verdictLaneDigests = (verdict: YeetVerdict): ReadonlyArray<YeetStatusLaneDigest> =>
+  pipe(
+    verdict.lanes,
+    A.map((lane) => O.map(lane.inputDigest, (inputDigest) => YeetStatusLaneDigest.make({ id: lane.id, inputDigest }))),
+    A.getSomes
+  );
+
+/**
+ * Render the `lane digests:` line plus one indented line per lane that recorded a Turbo digest.
+ *
+ * **Example** (Render two digests)
+ *
+ * ```ts
+ * import { renderYeetLaneDigestBlock, YeetStatusArtifact } from "@beep/repo-cli/test/Yeet"
+ *
+ * const verdict = YeetStatusArtifact.make({
+ *   detail: "verify success",
+ *   path: "verdict.json",
+ *   state: "present",
+ *   laneDigests: [{ id: "quality:knip", inputDigest: "abc" }],
+ * })
+ * console.log(renderYeetLaneDigestBlock(verdict).split("\n").length) // 2
+ * ```
+ *
+ * @param verdict - The verdict artifact summary carried by the status snapshot.
+ * @returns The header line and one indented `id: digest` line per recorded lane.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetLaneDigestBlock = (verdict: YeetStatusArtifact): string => {
+  const digests = verdict.laneDigests ?? A.empty<YeetStatusLaneDigest>();
+  if (A.isReadonlyArrayEmpty(digests)) {
+    return "lane digests: none recorded";
+  }
+  return A.join(
+    [`lane digests: ${A.length(digests)} lane(s)`, ...A.map(digests, (lane) => `  ${lane.id}: ${lane.inputDigest}`)],
+    "\n"
+  );
+};
+
 const artifactFromVerdict = (path: string, verdict: YeetVerdict): YeetStatusArtifact =>
   YeetStatusArtifact.make({
     detail: `${verdict.mode} ${verdict.outcome}: ${verdict.message}`,
@@ -545,6 +597,7 @@ const artifactFromVerdict = (path: string, verdict: YeetVerdict): YeetStatusArti
     schemaVersion: verdict.schemaVersion,
     mode: verdict.mode,
     outcome: verdict.outcome,
+    laneDigests: verdictLaneDigests(verdict),
     ...O.getSomesStruct({ repairCommand: firstFailedRepairCommand(verdict) }),
   });
 
@@ -1354,6 +1407,7 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
       `- base/head: ${snapshot.base}...${snapshot.head}`,
       `- worktree: ${renderWorktreeLine(snapshot.worktree)}`,
       `- verdict: ${snapshot.verdict.detail}`,
+      `- ${renderYeetLaneDigestBlock(snapshot.verdict)}`,
       `- closeout: ${snapshot.closeout.detail}`,
       `- remote: ${snapshot.remote.checked ? snapshot.remote.detail : "remote not checked"}`,
       `- ${renderCheckLine(snapshot.remote)}`,
