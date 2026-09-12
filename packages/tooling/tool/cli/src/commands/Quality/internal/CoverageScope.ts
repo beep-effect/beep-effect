@@ -652,6 +652,46 @@ const dependentsByPackageName = (
   return dependents;
 };
 
+// The single inverted-graph walk. It carries the seed that reached each
+// dependent so a diagnostic can name the changed package rather than asserting
+// an unexplained dependency edge; seeds are never their own dependents.
+// `coverageDependentOwners` drops the seed and keeps the names, so the affected
+// scope and the self-judge scope can never disagree about who is a dependent.
+const dependentOriginByPackageName = (
+  owners: ReadonlyArray<CoverageScopeOwner>,
+  seedPackageNames: ReadonlyArray<string>
+): ReadonlyArray<readonly [string, string]> => {
+  const dependents = dependentsByPackageName(owners);
+  const visited = MutableHashSet.fromIterable(seedPackageNames);
+  const origins = MutableHashMap.empty<string, string>();
+  const pending = A.copy(A.map(seedPackageNames, (packageName) => [packageName, packageName] as const));
+
+  for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+    const [current, seed] = next;
+    for (const dependent of O.getOrElse(MutableHashMap.get(dependents, current), A.empty<string>)) {
+      if (!MutableHashSet.has(visited, dependent)) {
+        MutableHashSet.add(visited, dependent);
+        MutableHashMap.set(origins, dependent, seed);
+        pending.push([dependent, seed] as const);
+      }
+    }
+  }
+
+  const measurable = MutableHashSet.fromIterable(
+    pipe(
+      owners,
+      A.filter(isMeasurableOwner),
+      A.map((owner) => owner.packageName)
+    )
+  );
+  return pipe(
+    A.fromIterable(origins),
+    A.map(([packageName, seed]) => [packageName, seed] as const),
+    A.filter(([packageName]) => MutableHashSet.has(measurable, packageName)),
+    A.sort(Order.mapInput(Order.String, ([packageName]: readonly [string, string]) => packageName))
+  );
+};
+
 /**
  * Collect the coverage-bearing workspace packages that transitively depend on
  * the given seed packages.
@@ -662,7 +702,9 @@ const dependentsByPackageName = (
  * inverted graph from every seed and keeps only measurable owners (coverage
  * task present, not a lab). Seeds are never returned, even when they depend on
  * one another, so the result composes with the directly changed owners by
- * plain union.
+ * plain union. This is the same walk {@link planCoverageSelfJudgeScope} uses to
+ * name a dependent's seed, so the affected scope and the self-judge scope
+ * cannot drift apart about who counts as a dependent.
  *
  * **Example** (Find one transitive dependent)
  *
@@ -692,35 +734,8 @@ export const coverageDependentOwners: {
   (owners: ReadonlyArray<CoverageScopeOwner>, seedPackageNames: ReadonlyArray<string>): ReadonlyArray<string>;
 } = dual(
   2,
-  (owners: ReadonlyArray<CoverageScopeOwner>, seedPackageNames: ReadonlyArray<string>): ReadonlyArray<string> => {
-    const dependents = dependentsByPackageName(owners);
-    const visited = MutableHashSet.fromIterable(seedPackageNames);
-    const pending = A.copy(seedPackageNames);
-    const reached = MutableHashSet.empty<string>();
-
-    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
-      for (const dependent of O.getOrElse(MutableHashMap.get(dependents, next), A.empty<string>)) {
-        if (!MutableHashSet.has(visited, dependent)) {
-          MutableHashSet.add(visited, dependent);
-          MutableHashSet.add(reached, dependent);
-          pending.push(dependent);
-        }
-      }
-    }
-
-    const measurable = MutableHashSet.fromIterable(
-      pipe(
-        owners,
-        A.filter(isMeasurableOwner),
-        A.map((owner) => owner.packageName)
-      )
-    );
-    return pipe(
-      A.fromIterable(reached),
-      A.filter((packageName) => MutableHashSet.has(measurable, packageName)),
-      A.sort(Order.String)
-    );
-  }
+  (owners: ReadonlyArray<CoverageScopeOwner>, seedPackageNames: ReadonlyArray<string>): ReadonlyArray<string> =>
+    A.map(dependentOriginByPackageName(owners, seedPackageNames), ([packageName]) => packageName)
 );
 
 /**
@@ -920,44 +935,6 @@ export class CoverageSelfJudgeScope extends S.Class<CoverageSelfJudgeScope>($I`C
     description: "Packages whose coverage rows a change set could have moved, keyed by the witness that says so.",
   })
 ) {}
-
-// The seed that reached each dependent, so a diagnostic can name the changed
-// package rather than asserting an unexplained dependency edge. Seeds are never
-// their own dependents, matching `coverageDependentOwners`.
-const dependentOriginByPackageName = (
-  owners: ReadonlyArray<CoverageScopeOwner>,
-  seedPackageNames: ReadonlyArray<string>
-): ReadonlyArray<readonly [string, string]> => {
-  const dependents = dependentsByPackageName(owners);
-  const visited = MutableHashSet.fromIterable(seedPackageNames);
-  const origins = MutableHashMap.empty<string, string>();
-  const pending = A.copy(A.map(seedPackageNames, (packageName) => [packageName, packageName] as const));
-
-  for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
-    const [current, seed] = next;
-    for (const dependent of O.getOrElse(MutableHashMap.get(dependents, current), A.empty<string>)) {
-      if (!MutableHashSet.has(visited, dependent)) {
-        MutableHashSet.add(visited, dependent);
-        MutableHashMap.set(origins, dependent, seed);
-        pending.push([dependent, seed] as const);
-      }
-    }
-  }
-
-  const measurable = MutableHashSet.fromIterable(
-    pipe(
-      owners,
-      A.filter(isMeasurableOwner),
-      A.map((owner) => owner.packageName)
-    )
-  );
-  return pipe(
-    A.fromIterable(origins),
-    A.map(([packageName, seed]) => [packageName, seed] as const),
-    A.filter(([packageName]) => MutableHashSet.has(measurable, packageName)),
-    A.sort(Order.mapInput(Order.String, ([packageName]: readonly [string, string]) => packageName))
-  );
-};
 
 /**
  * Decide which measured packages a change set could have moved.

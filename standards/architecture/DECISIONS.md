@@ -1878,14 +1878,18 @@ tighten lines is on record. Every path a failure reports also prints the row thi
 run measured, encoded through the same schema the committed document uses, so an
 operator pastes hosted evidence instead of running a local writer.
 
-A coverage baseline write — scoped or unscoped — now shares one plan. A measured
-package is adopted only when it owns a changed file or is a workspace dependent
-of one; every other measured package holds its committed row byte-for-byte, and
-a scoped run carries the committed rows it never measured. `--replace-all` is
-valid on a scoped write as the deliberate re-measure path, and every raise it
-records is judged on the pull request by the 2026-09-11 rule. Each write reports
-its per-package disposition, says so loudly when it held everything it measured,
-and names every value it raised above the committed rows.
+A coverage baseline write — scoped or unscoped — now shares one plan. A scoped
+write adopts a measured package only when it owns a changed file or is a
+workspace dependent of one; an unscoped write keeps the 2026-08-24 rule and
+adopts direct owners alone, because the seven foundation packages close over at
+least 111 of 128 owners and one reflex regeneration must not import that much
+downstream drift. Every other measured package holds its committed row
+byte-for-byte, and a scoped run carries the committed rows it never measured.
+`--replace-all` is valid on a scoped write as the deliberate re-measure path,
+and every raise it records is judged on the pull request by the 2026-09-11 rule.
+Each write reports its per-package disposition, says so loudly when it held
+everything it measured, and names every value it raised above the committed
+rows.
 
 The full-coverage shards, scoped baseline writes, and the narrow ratchet
 invocation all derive their Vitest passthrough from one function: file
@@ -1911,8 +1915,17 @@ rows and for packages that are not self-judge eligible. Supersedes the
 2026-08-25 sentence that the remediation "names the scoped regeneration command
 for exactly the regressed packages": a drop on an existing row now prints the
 measured rows and names no writer, and the scoped writer is named only for a new
-file or a new package. Everything else in the 2026-08-24, 2026-08-25, and
+file or a new package. The 2026-08-24 clause that an unscoped `--write-baseline`
+adopts only the direct owners of the changed files stays exactly as written; a
+scoped write is the one that also adopts dependents, and widening the unscoped
+writer remains deferred. Everything else in the 2026-08-24, 2026-08-25, and
 2026-09-11 entries stays active.
+
+Remediation prose is pull-request prose only on a base-pinned run. An unpinned
+run — a push to `main`, a local run without `TURBO_SCM_BASE` — prints neither
+the measured-row proposals nor the self-judge paragraphs: a dropped row there
+says to restore the coverage or open a pull request that lowers only those rows
+to the values the run printed, which is the runbook line for a red `main`.
 
 ## Known Unknowns
 

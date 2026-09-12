@@ -532,7 +532,11 @@ export type CoverageBaselineRowDisposition = typeof CoverageBaselineRowDispositi
  * **Details**
  *
  * `packageNames` is the sorted set of coverage owners for every changed file.
- * `fullReasons` comes from the affected-run planner but does not expand that
+ * `dependentPackageNames` is the sorted set of measurable workspace dependents
+ * of those owners, kept separate because only a scoped write adopts them: the
+ * 2026-08-24 rule that an unscoped write adopts direct owners alone is still
+ * active, and a foundation edit closes over most of the workspace.
+ * `fullReasons` comes from the affected-run planner but does not expand either
  * adoption set.
  *
  * **Gotchas**
@@ -561,6 +565,7 @@ export class CoverageBaselineChangeSet extends S.Class<CoverageBaselineChangeSet
   {
     baseDescription: S.NonEmptyString,
     packageNames: S.Array(S.String),
+    dependentPackageNames: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
     fullReasons: S.Array(S.String),
   },
   $I.annote("CoverageBaselineChangeSet", {
@@ -900,6 +905,7 @@ export class CoverageComparisonResult extends S.Class<CoverageComparisonResult>(
       SchemaUtils.withConstantDefault<ReadonlyArray<CoveragePackageRowRemovedFailure>>([])
     ),
     selfJudgeEligiblePackageNames: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
+    basePinned: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
   },
   $I.annote("CoverageComparisonResult", {
     description: "Outcome of comparing current coverage against the committed baseline.",
@@ -1385,6 +1391,11 @@ export type CoverageBaselineWriteOptions = {
  *
  * **Gotchas**
  *
+ * `carryUnmeasured` also widens adoption to the change set's dependents: a
+ * scoped write measured them on purpose, so holding their rows would commit
+ * floors the next hosted run cannot reach. An unscoped write ignores
+ * `dependentPackageNames` and adopts direct owners alone, because one
+ * foundation edit closes over most of the workspace.
  * Full-run reasons describe measurement breadth only and never widen adoption.
  * `replaceAll` is the sole whole-document replacement path and overrides the
  * changed-owner set. Rows are emitted in package-name order so a write that
@@ -1450,7 +1461,13 @@ export const planCoverageBaselineWrite: {
     options: CoverageBaselineWriteOptions
   ): CoverageBaselineWritePlan => {
     const measuredNames = HashSet.fromIterable(A.map(entries, (entry) => entry.packageName));
-    const shouldReplace = replaceMeasuredPackage(changeSet.packageNames, options.replaceAll);
+    // Only a scoped write (`carryUnmeasured`) adopts dependents; an unscoped
+    // regeneration stays on the changed files' direct owners.
+    const adoptedNames =
+      options.carryUnmeasured === true
+        ? A.union(changeSet.packageNames, changeSet.dependentPackageNames)
+        : changeSet.packageNames;
+    const shouldReplace = replaceMeasuredPackage(adoptedNames, options.replaceAll);
     const packages = R.empty<string, CoveragePackageBaseline>();
     const dispositions = R.empty<string, CoverageBaselineRowDisposition>();
 
@@ -1765,20 +1782,25 @@ const coverageBaselineChangeSetFromChangedFiles = Effect.fn(
     Match.discriminator("_tag")("noop", A.empty<string>),
     Match.exhaustive
   );
-  // A dependent's measured rows move when the package it imports changes, so
-  // the writer adopts dependents alongside direct owners. Holding them instead
-  // would commit floors the next hosted run cannot reach.
+  // A dependent's measured rows move when the package it imports changes, so a
+  // scoped write adopts dependents alongside direct owners: holding them would
+  // commit floors the next hosted run cannot reach. An unscoped write keeps the
+  // 2026-08-24 direct-owners rule, because one foundation edit closes over most
+  // of the workspace and a dependent's drop must stay a visible decision.
   const dependentPackageNames = Match.value(scope).pipe(
     Match.discriminator("_tag")("selected", ({ dependentPackageNames: names }) => names),
     Match.discriminator("_tag")("full", A.empty<string>),
     Match.discriminator("_tag")("noop", A.empty<string>),
     Match.exhaustive
   );
+  const packageNames = A.sort(changedCoverageOwners(owners, writerChangedFiles), Order.String);
 
   return CoverageBaselineChangeSet.make({
     baseDescription,
-    packageNames: pipe(
-      A.union(changedCoverageOwners(owners, writerChangedFiles), dependentPackageNames),
+    packageNames,
+    dependentPackageNames: pipe(
+      dependentPackageNames,
+      A.filter((packageName) => !A.contains(packageNames, packageName)),
       A.sort(Order.String)
     ),
     fullReasons,
@@ -3209,6 +3231,10 @@ const compareCoverage = (
   expectedPackageNames: ReadonlyArray<string> = A.empty<string>()
 ): CoverageComparisonResult => {
   const baseline = baselines.baseline;
+  // A base-pinned run is the only one with a pull request behind it: it read the
+  // branch's own document. Unpinned runs (main pushes, local runs) keep the
+  // pre-existing output byte for byte.
+  const basePinned = O.isSome(baselines.proposed);
   const actualsByName = actualByPackageName(actuals);
   // Floors first: rows this pull request lowered on packages it could not have
   // moved are judged at the lowered value, everything else at the base floor.
@@ -3263,12 +3289,12 @@ const compareCoverage = (
     newPackages,
     followUpDebt,
     loweredFloors: floors.lowered,
-    measuredProposals: measuredRowProposals(
-      A.appendAll(A.appendAll(failures, raisedRowFailures), minimumFailures),
-      actualsByName
-    ),
+    measuredProposals: basePinned
+      ? measuredRowProposals(A.appendAll(A.appendAll(failures, raisedRowFailures), minimumFailures), actualsByName)
+      : A.empty<CoverageMeasuredRowProposal>(),
     packageRowRemovals: floors.packageRowRemovals,
     selfJudgeEligiblePackageNames: floors.eligiblePackageNames,
+    basePinned,
   };
 };
 
@@ -3694,6 +3720,44 @@ const failuresWithTag = (
 const failureLocations = (failures: ReadonlyArray<CoverageComparisonFailure>): ReadonlyArray<string> =>
   pipe(A.map(failures, coverageFailureLocation), A.dedupe, A.sort(Order.String));
 
+const droppedRowRemediation = (result: CoverageComparisonResult): ReadonlyArray<string> =>
+  result.basePinned
+    ? [
+        ...A.match(
+          failurePackageNames(
+            A.filter(
+              failuresWithTag(result.failures, "baseline-drop"),
+              (failure) => !A.contains(result.selfJudgeEligiblePackageNames, failure.packageName)
+            )
+          ),
+          {
+            onEmpty: A.empty<string>,
+            onNonEmpty: (packageNames) => [
+              `[coverage-ratchet] remediation: ${sanitizeCoverageDiagnostic(A.join(packageNames, ", "))} lost coverage on rows judged at the base floors; restore it with tests. Rows for packages this pull request changed (or could have changed through a dependency or a global input) are judged at the base floor; lowering such a row in this pull request does not pass.`,
+            ],
+          }
+        ),
+        ...A.match(
+          failureLocations(
+            A.filter(failuresWithTag(result.failures, "baseline-drop"), (failure) =>
+              A.contains(result.selfJudgeEligiblePackageNames, failure.packageName)
+            )
+          ),
+          {
+            onEmpty: A.empty<string>,
+            onNonEmpty: (locations) => [
+              `[coverage-ratchet] remediation: this pull request changed nothing that runs under ${sanitizeCoverageDiagnostic(A.join(locations, ", "))}. If main's latest run reports the same row, set the row to the measured value printed above (it is judged at that value on this pull request). Otherwise restore the coverage.`,
+            ],
+          }
+        ),
+      ]
+    : A.match(failurePackageNames(failuresWithTag(result.failures, "baseline-drop")), {
+        onEmpty: A.empty<string>,
+        onNonEmpty: (packageNames) => [
+          `[coverage-ratchet] remediation: ${sanitizeCoverageDiagnostic(A.join(packageNames, ", "))} lost coverage on rows judged at the committed floors; restore it with tests. If the rows are right and this run measures lower, open a pull request that lowers only those rows to the values printed above; a pull request that changes nothing under a row is judged at its own value for that row.`,
+        ],
+      });
+
 /**
  * Render the remediation block the ratchet prints after a regression.
  *
@@ -3709,6 +3773,14 @@ const failureLocations = (failures: ReadonlyArray<CoverageComparisonFailure>): R
  * writer records floors, it cannot lift a package above the repository tier.
  * Missing summaries and disposition gaps get no command because they are
  * configuration problems, not floors.
+ *
+ * **Gotchas**
+ *
+ * Pull-request framing only applies to a base-pinned run, which is the only one
+ * that read a branch document. An unpinned run — a push to `main`, a local run
+ * without `TURBO_SCM_BASE` — has no pull request and no self-judge exit, so it
+ * gets the restore-or-open-a-restore-pull-request paragraph instead, naming no
+ * command: the scoped writer holds packages the push did not change.
  *
  * **Example** (Nothing regressed)
  *
@@ -3734,39 +3806,15 @@ const failureLocations = (failures: ReadonlyArray<CoverageComparisonFailure>): R
  * @since 0.0.0
  */
 export const renderCoverageRemediation = (result: CoverageComparisonResult): ReadonlyArray<string> => [
-  ...A.match(
-    failurePackageNames(
-      A.filter(
-        failuresWithTag(result.failures, "baseline-drop"),
-        (failure) => !A.contains(result.selfJudgeEligiblePackageNames, failure.packageName)
-      )
-    ),
-    {
-      onEmpty: A.empty<string>,
-      onNonEmpty: (packageNames) => [
-        `[coverage-ratchet] remediation: ${sanitizeCoverageDiagnostic(A.join(packageNames, ", "))} lost coverage on rows judged at the base floors; restore it with tests. Rows for packages this pull request changed (or could have changed through a dependency or a global input) are judged at the base floor; lowering such a row in this pull request does not pass.`,
-      ],
-    }
-  ),
-  ...A.match(
-    failureLocations(
-      A.filter(failuresWithTag(result.failures, "baseline-drop"), (failure) =>
-        A.contains(result.selfJudgeEligiblePackageNames, failure.packageName)
-      )
-    ),
-    {
-      onEmpty: A.empty<string>,
-      onNonEmpty: (locations) => [
-        `[coverage-ratchet] remediation: this pull request changed nothing that runs under ${sanitizeCoverageDiagnostic(A.join(locations, ", "))}. If main's latest run reports the same row, set the row to the measured value printed above (it is judged at that value on this pull request). Otherwise restore the coverage.`,
-      ],
-    }
-  ),
+  ...droppedRowRemediation(result),
   ...A.match(failurePackageNames(failuresWithTag(result.failures, "new-uncovered-file")), {
     onEmpty: A.empty<string>,
     onNonEmpty: (packageNames) => [
       "[coverage-ratchet] remediation: cover the new file(s) with tests, or, once a reviewer accepts the new rows, record them:",
       `  ${sanitizeCoverageDiagnostic(coverageScopedBaselineWriteCommand(packageNames))}`,
-      "  (packages that own no changed file are held; rows it raises are judged on this pull request)",
+      result.basePinned
+        ? "  (packages that own no changed file are held; rows it raises are judged on this pull request)"
+        : "  (packages that own no changed file are held; pass --replace-all to re-measure them)",
     ],
   }),
   ...A.match(failurePackageNames(result.raisedRowFailures), {

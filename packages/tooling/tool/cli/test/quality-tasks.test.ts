@@ -34,6 +34,7 @@ import {
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
   CoverageScopeOwner,
+  CoverageSelfJudgeScope,
   CoverageUncoveredCounts,
   changedCoverageOwners,
   collectEffectTsgoDiagnosticLines,
@@ -4381,6 +4382,28 @@ describe("quality task adapter", () => {
       expect(coverageDependentOwners(owners, ["@beep/x", "@beep/y"])).toEqual(["@beep/z"]);
     });
 
+    it("names one changed file per package and every dependent in package-name order", () => {
+      const owners = [owner("x"), owner("y", { dependsOn: ["x"] }), owner("z", { dependsOn: ["x"] }), owner("w")];
+      // Two changed files in @beep/x: the first path in sorted order is the one
+      // the witness names, so the diagnostic is stable across runs.
+      const scope = planCoverageSelfJudgeScope(owners, [
+        "packages/x/src/Index.ts",
+        "packages/x/src/Alpha.ts",
+        "packages/w/src/Index.ts",
+      ]);
+
+      // Dependents are assigned first, in package-name order, then direct
+      // ownership overwrites any dependency witness for the same package.
+      expect(R.keys(scope.packageExclusions)).toEqual(["@beep/y", "@beep/z", "@beep/w", "@beep/x"]);
+      expect(S.encodeSync(CoverageSelfJudgeScope)(scope).packageExclusions).toEqual({
+        "@beep/y": { _tag: "dependent-of-changed-package", packageName: "@beep/x" },
+        "@beep/z": { _tag: "dependent-of-changed-package", packageName: "@beep/x" },
+        "@beep/x": { _tag: "owns-changed-file", filePath: "packages/x/src/Alpha.ts" },
+        "@beep/w": { _tag: "owns-changed-file", filePath: "packages/w/src/Index.ts" },
+      });
+      expect(O.isNone(scope.globalExclusion)).toBe(true);
+    });
+
     it("weighs a selection with the shard planner's per-package seconds, counting duplicates once", () => {
       expect(coverageScopeWeightSeconds(["@beep/repo-cli", "@beep/repo-cli"])).toBe(720.62);
       expect(coverageScopeWeightSeconds(["@beep/unknown-a", "@beep/unknown-b"])).toBe(30);
@@ -5392,12 +5415,18 @@ describe("quality task adapter", () => {
       );
       const lines = renderCoverageRemediation(result);
       // The writer cannot move a floor the run is judged against, so a drop on
-      // an existing row states the two real outcomes and names no command.
+      // an existing row states the two real outcomes and names no command. This
+      // run has no pinned base, so it is also the main-push wording: it points
+      // at a restore pull request instead of framing the push as one.
+      expect(result.basePinned).toBe(false);
       expect(lines).toHaveLength(1);
       expect(lines[0]).toContain(
-        "[coverage-ratchet] remediation: @beep/a, @beep/b lost coverage on rows judged at the base floors"
+        "[coverage-ratchet] remediation: @beep/a, @beep/b lost coverage on rows judged at the committed floors"
       );
+      expect(lines[0]).toContain("open a pull request that lowers only those rows to the values printed above");
+      expect(lines[0]).not.toContain("this pull request");
       expect(lines[0]).not.toContain("--write-baseline");
+      expect(result.measuredProposals).toEqual([]);
 
       // A tier-minimum breach is not a floor the writer can move: no write command.
       const tiered = CoverageRegressionBaseline.make({ ...baseline, minimum: coveragePercentages(60) });
@@ -6218,6 +6247,36 @@ describe("quality task adapter", () => {
       "[coverage-ratchet] value(s) this write raised above the committed rows (the hosted pull-request run judges each one):"
     );
     expect(report).toContain("  - @beep/changed totals branches: 50 -> 80 (0 -> 0 uncovered)");
+  });
+
+  it("adopts dependents on a scoped write only, keeping the unscoped writer on direct owners", () => {
+    const previous = {
+      "@beep/changed": coveragePackageBaseline("packages/changed", 50),
+      "@beep/dependent": coveragePackageBaseline("packages/dependent", 61),
+    };
+    const entries = [
+      { packageName: "@beep/changed", baseline: coveragePackageBaseline("packages/changed", 80) },
+      { packageName: "@beep/dependent", baseline: coveragePackageBaseline("packages/dependent", 93) },
+    ];
+    const changeSet = CoverageBaselineChangeSet.make({
+      baseDescription: "dirty worktree only",
+      packageNames: ["@beep/changed"],
+      dependentPackageNames: ["@beep/dependent"],
+      fullReasons: [],
+    });
+
+    // A scoped write measured the dependent on purpose, so holding its row would
+    // commit a floor the next hosted run cannot reach.
+    expect(
+      planCoverageBaselineWrite(previous, entries, changeSet, { replaceAll: false, carryUnmeasured: true }).dispositions
+    ).toEqual({ "@beep/changed": "replaced", "@beep/dependent": "replaced" });
+
+    // An unscoped regeneration keeps the 2026-08-24 direct-owners rule: one
+    // foundation edit closes over most of the workspace.
+    expect(planCoverageBaselineWrite(previous, entries, changeSet, { replaceAll: false }).dispositions).toEqual({
+      "@beep/changed": "replaced",
+      "@beep/dependent": "held",
+    });
   });
 
   it("adopts every measured package when a scoped write passes replace-all", () => {
