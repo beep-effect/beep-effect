@@ -1295,6 +1295,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       clientSelection: "pinned-native-skip-infer",
       runtimeKeying: "toolchain-sha256-env/v1",
       runtimeKeyDigest: runtimeIdentity.toolchainDigest,
+      runtimeLinker: O.some(runtimeLinker),
       authority: "local-observation-only",
       key: current.source.key,
       sourceRevision: revision,

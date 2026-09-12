@@ -16,6 +16,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
+import { isTurboCacheControlArg } from "../../internal/cli/TurboCache.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import {
   CacheCensusNode,
@@ -186,6 +187,153 @@ const decodeTurboWorkspaceListJson = S.decodeUnknownEffect(S.fromJsonString(Turb
 const decodeTurboConfiguration = S.decodeUnknownEffect(TurboConfiguration);
 
 const decodeTurboPlanJson = S.decodeUnknownEffect(S.fromJsonString(TurboPlan));
+
+/**
+ * Identify explicit Turbo inspection modes before the task argument separator.
+ *
+ * **Example** (Recognize a dry plan option)
+ *
+ * ```ts
+ * import { isCacheTaskInspectionArg } from "@beep/repo-cli/commands/Cache"
+ * console.log(isCacheTaskInspectionArg("--dry=json")) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isCacheTaskInspectionArg = (arg: string): boolean =>
+  A.some(
+    ["--dry", "--dry-run", "--graph", "--help", "--version", "-h", "-V"],
+    (option) => arg === option || Str.startsWith(`${option}=`)(arg)
+  );
+
+/**
+ * Prepare an execution invocation for bounded native task selection.
+ *
+ * **Example** (Replace the execution cache posture)
+ *
+ * ```ts
+ * import { cacheTaskSelectionArgs } from "@beep/repo-cli/commands/Cache"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.runSync(cacheTaskSelectionArgs(["run", "lint", "--cache=remote:r"])))
+ * ```
+ *
+ * **Details**
+ * Task selectors and forwarded arguments retain their order. Existing cache
+ * controls are replaced; explicit output modes and directory overrides are
+ * rejected because this operation selects executable tasks in the supplied root.
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(function* (args: ReadonlyArray<string>) {
+  if (!O.exists(A.head(args), (arg) => arg === "run")) {
+    return yield* CacheCommandError.new("Runtime selection requires an explicit Turbo run invocation.");
+  }
+  let selected: Array<string> = [];
+  let cacheValuePending = false;
+  let optionalBooleanPending = false;
+  let forwarded = false;
+  for (const arg of args) {
+    if (forwarded) {
+      selected = A.append(selected, arg);
+      continue;
+    }
+    if (cacheValuePending) {
+      if (Str.startsWith("-")(arg) || Str.isEmpty(arg)) {
+        return yield* CacheCommandError.new("Runtime selection received a missing cache option value.");
+      }
+      cacheValuePending = false;
+      continue;
+    }
+    if (optionalBooleanPending) {
+      optionalBooleanPending = false;
+      if (arg === "true" || arg === "false") continue;
+    }
+    if (arg === "--") {
+      selected = A.appendAll(selected, ["--dry=json", "--cache=local:", arg]);
+      forwarded = true;
+      continue;
+    }
+    if (
+      isCacheTaskInspectionArg(arg) ||
+      A.some(
+        ["--cwd", "--heap", "--profile", "--trace"],
+        (option) => arg === option || Str.startsWith(`${option}=`)(arg)
+      )
+    ) {
+      return yield* CacheCommandError.new("Runtime selection does not accept output modes or directory overrides.");
+    }
+    if (arg === "--cache") {
+      cacheValuePending = true;
+      continue;
+    }
+    if (isTurboCacheControlArg(arg)) {
+      optionalBooleanPending = arg === "--force" || arg === "--remote-only" || arg === "--remote-cache-read-only";
+      continue;
+    }
+    selected = A.append(selected, arg);
+  }
+  if (cacheValuePending)
+    return yield* CacheCommandError.new("Runtime selection received a missing cache option value.");
+  return forwarded ? selected : A.appendAll(selected, ["--dry=json", "--cache=local:"]);
+});
+
+/**
+ * Select tasks through the installed native client and verify their manifest commands.
+ *
+ * **Example** (Select a package and its task dependencies)
+ *
+ * ```ts
+ * import { collectCacheTaskSelection } from "@beep/repo-cli/commands/Cache"
+ * import { Effect } from "effect"
+ *
+ * console.assert(Effect.isEffect(collectCacheTaskSelection(".", ["run", "lint", "--filter=@beep/identity"])))
+ * ```
+ *
+ * **Details**
+ * No tasks execute and no toolchain profile is required. Transit nodes retain
+ * their absent command, so callers can distinguish them from executable tasks.
+ * This discovers a selection; it neither calculates an identity nor grants reuse.
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+) {
+  const selectedArgs = yield* cacheTaskSelectionArgs(args);
+  const paths = yield* Path.Path;
+  const root = paths.resolve(repoRoot);
+  const turbo = yield* resolveCacheTurboBinary(root);
+  const dry = yield* capture(root, turbo, selectedArgs).pipe(
+    Effect.flatMap(decodeTurboPlanJson),
+    CacheCommandError.mapError("Native task selection did not produce a valid dry plan.")
+  );
+  const workspaces = yield* resolveWorkspacePackages(root);
+  const rootManifest = yield* readPackageJsonFile(paths.join(root, "package.json"));
+  const rows = [
+    CacheCensusWorkspace.make({
+      name: "//",
+      directory: ".",
+      scripts: O.getOrElse(rootManifest.scripts, () => ({})),
+    }),
+    ...pipe(
+      workspaces,
+      A.fromIterable,
+      A.map(([name, workspace]) =>
+        CacheCensusWorkspace.make({
+          name,
+          directory: paths.relative(root, workspace.dir),
+          scripts: workspace.scripts,
+        })
+      )
+    ),
+  ];
+  return yield* joinCacheCensusPlan(rows, dry);
+}, CacheCommandError.mapError("Cannot collect the native runtime task selection."));
 
 /**
  * Collect exact Turbo definitions and join them to declared workspace scripts without running tasks.

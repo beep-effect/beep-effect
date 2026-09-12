@@ -38,6 +38,7 @@ import {
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
 import { isDoctestSourcePath } from "../../internal/jsdoc/DoctestSource.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
+import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
 import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
 import {
   QualityTaskStep,
@@ -1563,15 +1564,19 @@ const renderStepCommand = (step: QualityTaskStep): string => A.join([step.comman
 const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<number, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
+    CiCommandError.mapError("Rejected a caller-provided cache runtime identity.")
+  );
   yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(step)}`);
   // Lane bodies that shell out to Turbo need the same env hygiene the root
   // quality runner applies: no interactive TUI (it can leave a killed run's
   // terminal in mouse-capture mode) and no unresolved `op://` token/team
   // references leaking through as literal values on a workstation.
   const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
+  const runtime = cacheRuntimeStep(step);
   return yield* runToExit({
-    command: step.command,
-    args: step.args,
+    command: runtime.command,
+    args: runtime.args,
     cwd: step.cwd,
     env: { ...envOverrides, ...(step.env ?? {}) },
     extendEnv: turboEnvExtendsAmbient(step.command, step.args),

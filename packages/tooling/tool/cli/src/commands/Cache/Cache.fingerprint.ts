@@ -160,6 +160,30 @@ const encodeCacheComputationConfigurationJson = S.encodeEffect(S.fromJsonString(
 const encodeCacheToolchainSnapshotJson = S.encodeEffect(S.fromJsonString(CacheToolchainSnapshot));
 
 /**
+ * Hash the canonical toolchain snapshot used by qualification and execution.
+ *
+ * **Example** (Derive a key from an observed toolchain)
+ *
+ * ```ts
+ * import { hashCacheToolchain } from "@beep/repo-cli/commands/Cache"
+ * import { collectCacheToolchain } from "@beep/repo-cli/test/Cache"
+ * import { Effect } from "effect"
+ *
+ * const key = collectCacheToolchain(".").pipe(Effect.flatMap(hashCacheToolchain))
+ * console.assert(Effect.isEffect(key))
+ * ```
+ *
+ * @category hashing
+ * @since 0.0.0
+ */
+export const hashCacheToolchain = Effect.fn("CacheFingerprint.hashToolchain")(function* (
+  toolchain: CacheToolchainSnapshot
+) {
+  const text = yield* encodeCacheToolchainSnapshotJson(toolchain);
+  return yield* hashBytes(new TextEncoder().encode(text));
+}, CacheCommandError.mapError("Cannot hash the observed toolchain."));
+
+/**
  * Bind an executable computation to all of its configured dependencies, including graph-only nodes.
  *
  * **Example** (Observe a reviewed computation)
@@ -221,9 +245,8 @@ export const fingerprintCacheComputation = Effect.fn("CacheFingerprint.computati
     ),
   });
   const configurationText = yield* encodeCacheComputationConfigurationJson(configuration);
-  const toolchainText = yield* encodeCacheToolchainSnapshotJson(toolchain);
   const configurationDigest = yield* hashBytes(new TextEncoder().encode(configurationText));
-  const toolchainDigest = yield* hashBytes(new TextEncoder().encode(toolchainText));
+  const toolchainDigest = yield* hashCacheToolchain(toolchain);
   return CacheLiveIdentity.make({ key, configuration, configurationDigest, toolchain, toolchainDigest });
 }, CacheCommandError.mapError("Cannot fingerprint the computation configuration."));
 

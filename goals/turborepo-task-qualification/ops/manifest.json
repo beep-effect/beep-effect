@@ -3,13 +3,13 @@
   "initiative": {
     "id": "turborepo-task-qualification",
     "title": "Turborepo task qualification",
-    "status": "paused",
+    "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-09",
+    "updated": "2026-09-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-task-qualification",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Make cache reuse an enforced, evidence-backed contract for each quality computation, reuse layer, environment profile and epoch.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -252,7 +252,9 @@
     "research/installed-executable-mappings.md",
     "research/installed-executable-mappings-review.json",
     "research/paused-pr-checkpoint.md",
-    "research/paused-pr-verification.json"
+    "research/paused-pr-verification.json",
+    "research/resumption-preflight.json",
+    "research/runtime-enforcement-boundary.json"
   ],
   "agentLaunchers": [
     {
@@ -314,5 +316,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Paused by operator request on 2026-09-09 for a draft PR saving the accumulated implementation and evidence. P0/P1/P2 remain incomplete; later phases are pending. Historical v5 stable and canary matrices each pass 67 observations, 40 checks and ten shadows. The latest source adds explicit startup-library identity and sandbox/post-run checks; source typechecking and 26 focused tests pass, but the native matrices have not been rerun with that identity. Full checkpoint validation is recorded in research/paused-pr-verification.json. No real computation is qualified and live pilot reuse stays disabled. Resume only after operator authorization, following research/paused-pr-checkpoint.md. Ordinary entrypoint enforcement, runtime/semantic observations, signed sibling evidence, adoption handoff and final Yeet/hosted acceptance remain required."
+  "statusNote": "Resumed by operator on 2026-09-11 after PR #1068 merged. Fresh main 662823dd96 census: 143 workspaces, 1892 executable computations; policy audit has zero findings and 1340 unassessed entries. Separate stable and canary native matrices with startup-library identity each pass 67 observations, 40 checks and ten shadows. See research/resumption-preflight.json. P0/P1/P2 remain in progress; later phases remain pending. Client linkage retention is implemented with passing focused tests, aggregate test typechecking and full CLI package verification. New stable and canary native receipts now pass independent digest reconstruction. Ordinary runtime-key enforcement, remaining semantic/capture observations, accepted signed sibling evidence, adoption handoff and final Yeet acceptance remain required. No real computation is qualified; live pilot reuse remains disabled."
 }

@@ -36,3 +36,5 @@ export {
 } from "../commands/Cache/Cache.linker.ts";
 export { extractCachePilotLog } from "../commands/Cache/Cache.pilot.capture.ts";
 export { runCachePilotForTesting } from "../commands/Cache/Cache.pilot.ts";
+export * as CacheRuntimeFileGuards from "../internal/cli/FsGuards.ts";
+export * as CacheRuntimeProcess from "../internal/process/StepExec.ts";

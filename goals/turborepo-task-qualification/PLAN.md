@@ -684,3 +684,220 @@ source/evidence boundary and resume order, and
 [checkpoint validation](./research/paused-pr-verification.json) for checks.
 The v5 native matrices predate startup-library fingerprinting and remain
 historical. Final Yeet and hosted acceptance are deferred until resumption.
+
+## Operator resumption: 2026-09-11
+
+The operator explicitly resumed qualification after the PRs merged. PR #1068
+is merged, and the continuation branch starts at main `662823dd96`. The
+September 9 pause is superseded. The packet is active; all incomplete phase
+and evidence gates remain binding.
+
+The fresh executable census reports 143 workspaces, 3,269 graph nodes and
+1,892 executable computations. Nested command semantics and dynamic
+CI/Quality/Yeet branch review remain unresolved. Refresh the activation and
+runtime evidence before reusing historical pilot requests. Signed conformance
+and trust packets still register only their initial sources and opportunities;
+merged implementation alone does not satisfy their runtime-evidence gate.
+
+The resumed source audit finds `BEEP_CACHE_TOOLCHAIN_DIGEST` assignment only
+in the pilot. `Quality/Tasks.ts` already centralizes Turbo argument and
+environment construction in `turboRunArgs`, `withTurboSecretSession` and
+`runStep`. Review their consumers before adding runtime-key enforcement;
+preserve the existing secret posture and fresh hosted execution contract.
+
+Both refreshed native matrices passed on `662823dd96`: stable 2.10.12 and
+canary 2.10.13-canary.1 each produced 67 observations, 40 passing checks and
+ten shadow decisions. The runs exercised startup-library identity checks in
+separate namespaces. See [resumption preflight](./research/resumption-preflight.json)
+for bounded results and private receipt hashes. These are local observations;
+signed replay and real-computation qualification remain incomplete. Retaining
+the complete requested-client linkage snapshot is still required for independent
+reconstruction of the runtime digest.
+
+## Pilot receipt linkage retention: 2026-09-11
+
+`CachePilotReceipt.runtimeLinker` now preserves the complete snapshot collected
+for the requested client. It reuses `CacheRuntimeLinkerSnapshot`; historical
+v5 receipts decode to explicit absence. The producer always supplies the
+observation. Process-boundary tests cover a requested dynamic client against
+a reviewed static client, JSON round trips, and historical receipt decoding.
+All 14 focused tests pass, and `quality test-tsgo` passes for 220 test files.
+Full package verification passed: audit 543.8 seconds and docgen 24.3 seconds. The previously recorded native matrices
+predate this additive receipt field and are retained unchanged; do not claim
+those receipts contain the new observation.
+
+The next runtime-key integration must cover both `Quality/Tasks.ts` spawn
+paths (`runStep` and `runStepCapturedForQuarantine`) and the direct CI step
+runner. Each currently merges step-specific env after `turboEnvOverrides`,
+so verified digest enforcement must account for that override order. Keep
+collection in Cache ownership rather than adding filesystem inspection to
+the shared environment-configuration helper.
+
+## Native linkage reconstruction: 2026-09-11
+
+Fresh stable and canary full matrices each passed 67 observations, 40 checks
+and ten shadows with the retained linkage field. An independent Python check
+verified each activation reference, reconstructed the reviewed toolchain hash,
+substituted the receipt client pin and linkage snapshot, and reproduced each
+`runtimeKeyDigest`. Changing the retained loader hash changed the digest.
+The producer/fingerprint/linker source hashes stayed unchanged during both
+runs. Evidence is registered in [resumption preflight](./research/resumption-preflight.json).
+
+The initial runs rejected stale previews after Vitest updated its generated
+results cache in node_modules. Fresh activation and dependency materialization
+resolved this attributed invalidation. A search of 124 local clone/worktree
+roots found 78 sibling packet copies, all paused with only initial registered
+reports. Signed runtime evidence remains unavailable in that inspected scope.
+Ordinary runtime-key enforcement, semantic/capture coverage, signed replay,
+real-computation qualification and final handoff/verification remain open.
+
+## Runtime enforcement boundary proof: 2026-09-11
+
+The native dry-plan regression case in
+[runtime-enforcement-boundary.json](./research/runtime-enforcement-boundary.json)
+shows that arbitrary and SHA-256-shaped unverified values both alter the
+identity task hash. The types dependency is unaffected; a types-only native
+selection excludes identity. Both tasks remain cache-disabled. This proves
+that declaration and shape checks do not establish runtime provenance.
+
+Implementation must consume native task selection, calculate the key from the
+actual child runtime in Cache ownership, and apply it after per-step env
+merging. Do not make unrelated tasks require the pilot Linux profile. Cover
+normal and captured Quality execution and direct CI execution, preserving
+wrapped secret handling and fresh required hosted proof. The execution wiring
+is not yet implemented; this receipt is a regression case and boundary design,
+not an enforcement claim.
+
+#### Ordinary runtime input guard (2026-09-11)
+
+Cache now owns a typed rejection of caller-provided `BEEP_CACHE_TOOLCHAIN_DIGEST`
+values in ambient and step environments. Quality checks before secret-session
+probing and checks its resolved output-capture path; direct CI lane execution
+checks before spawn. Both generated `bunx turbo` commands and their `op run --`
+wrappers use the existing shared classifier. Empty and SHA-shaped values are
+rejected just like arbitrary values; step overrides cannot hide ambient input.
+
+This is an input guard, not completed runtime enforcement. It does not calculate
+or inject a digest, parse arbitrary shell commands, or inspect values introduced
+later by `op run`. Native task selection, identity calculation against the actual
+child environment/client, and post-merge injection remain required before
+activation. Cache remains disabled for the pilot computations.
+
+Next execution seam: reuse `resolveCacheTurboBinary` and `collectCacheToolchain`
+inside the final resolved child environment. An outer fingerprint before
+`op run` cannot establish the inner runtime identity. Native selection must
+precede the Linux-only toolchain collector so unrelated task selections remain
+portable. The existing collector also inventories installed dependencies via
+census; preserve that completeness when designing the bounded execution path.
+This seam is planned, not implemented by the input guard.
+
+Guard validation passed: two focused tests, test typechecking for 221 files,
+full `@beep/repo-cli` package verification (audit 689.9s; docgen 19.4s), and goal
+validation with no new blocking findings. The runtime boundary receipt retains
+private log paths and hashes. These checks do not promote any cache tuple.
+
+#### Native argument-selection probe (2026-09-11)
+
+The isolated native-client fixture verified dependency closure and preservation
+of arguments after `--`, with no task-execution markers. A selected workspace
+without the governed environment key can depend on one that declares it.
+Duplicate `--dry-run` and `--cache` options fail; `--graph` overrides JSON dry
+output while returning zero. Therefore the runtime selector must normalize or
+reject conflicting execution/output options and decode the actual plan before
+concluding no key is required. Exit zero or the entry workspace alone is not
+sufficient. The runtime boundary receipt retains the six cases and probe hashes.
+
+#### Native selector implementation (2026-09-11)
+
+`cacheTaskSelectionArgs` now prepares execution arguments for bounded native
+selection, preserving the task separator and replacing cache controls. Explicit
+non-execution modes and directory overrides are rejected. `collectCacheTaskSelection`
+uses the installed native client, decodes the plan, and joins its commands to
+workspace manifests through the existing census join. It does not require the
+Linux-only toolchain collector. The actual collector confirmed identity plus its
+types dependency, and a types-only selection with no governed-key computation.
+
+Eighteen focused tests and test typechecking pass. Full package verification is
+running. This collector is not yet wired into the final child environment; digest
+calculation, injection, and wrapped execution remain incomplete.
+
+#### Final child wrapper environment constraint (2026-09-11)
+
+The existing environment helpers recognize `op run -- bunx turbo`, but not a
+rewritten `op run -- bun ... cache execute` command. A synthetic-input probe
+confirmed that computing hygiene after rewriting would restore ambient extension
+and retain an unrelated secret reference. Compute `turboEnvOverrides` and
+`turboEnvExtendsAmbient` from the original resolved Turbo step, merge its step
+environment, then replace only the executable/arguments for the Cache-owned child.
+Calculate the runtime identity inside that child after `op run` resolution.
+This constraint applies to inherited and captured Quality execution and direct CI.
+No wrapper is implemented yet; the receipt retains the exact helper observations.
+
+#### Normal execution fingerprint scope (2026-09-11)
+
+The SPEC objective governs reuse, while initial enforcement preserves ordinary
+execution and does not disable legacy settings across the repo. For the pending
+normal execution wrapper, a selected executable computation needs a calculated
+runtime key when its effective result caching is enabled and its governed key is
+declared. Disabled-cache tasks cannot reuse their own result, so they do not by
+that fact require the supported Linux fingerprint profile. A cache-enabled task
+in the native dependency closure still requires enforcement even if the entry
+workspace has caching disabled. This is the implementation interpretation of
+SPEC's reuse boundary; the explicit pilot fresh/shadow experiments continue to
+collect their evidence independently. The caller-input guard remains in force.
+
+#### Cache-owned native execution (2026-09-11)
+
+The selector's full package verification passed (audit 491.6s; docgen 17.0s).
+`cache execute -- run ...` now owns native execution inside a resolved child
+environment. It selects tasks, observes and hashes the toolchain for enabled
+caching that declares the governed key, rechecks native client bytes, and injects
+the calculated key at spawn. The canonical hash helper is shared with computation
+fingerprinting. Caller keys/client overrides are rejected; native exit codes are
+preserved. Types lint ran successfully through the real command with caching
+disabled. The real command rejected both negative inputs before task execution.
+
+Thirty-two focused tests passed, including controlled-observation key injection
+and client drift rejection. Final test typechecking and full package verification
+are running. Ordinary Quality/captured/CI steps are not yet rewritten through
+this command. Real enabled-cache qualification and signed evidence remain pending.
+
+#### Native execution argument and failure checks (2026-09-11)
+
+Final test typechecking passed for 221 files. The actual Cache command ran an
+isolated disabled-cache fixture and preserved the second argument separator:
+`--filter=@qualification/a`, `--dry=false`, and an argument containing spaces
+reached the intended task unchanged. Only workspace c executed. A deliberately
+failing task returned exit 7 through both direct native Turbo and the Cache
+command. The probe and observations are hashed in the runtime boundary receipt.
+Full package verification remains running; enabled-cache qualification and
+ordinary runner wiring are not established by these fixture checks.
+
+#### Ordinary runner integration (2026-09-11)
+
+The Cache execution command passed full package verification (audit 466.6s;
+docgen 19.4s). Normal, captured, and resolved-output Quality execution plus direct
+CI lane execution now rewrite planned Turbo task executions through that command.
+They compute environment hygiene and ambient-extension behavior from the original
+step, preserving secret-session isolation. Explicit inspection modes and other
+commands remain unchanged. The Cache child invokes the checkout CLI directly
+with `bun --no-env-file`, avoiding a second script process that could reload env
+files after sanitization.
+
+The actual Quality runner completed types lint. An isolated fixture with a local
+`.env` runtime-key value ran through the no-env-file child; the control that
+reloaded env files failed before the task. The corrected focused suite passed
+317 tests. Final typechecking and full package verification are running. This
+wiring does not promote a tuple, prove remote signature behavior, or activate the
+pilot. The earlier command-only status is superseded by this integration step.
+
+#### Post-routing discovery gap (2026-09-11)
+
+Final runner test typechecking passed for 221 files. A fresh census still reports
+143 workspaces and 3,269 graph nodes, with the same unresolved semantic review
+items. Its 107 entrypoint sources omit the now-executed Cache runtime, command,
+selection and fingerprint modules. These are four confirmed omissions, not an
+exhaustive transitive closure. Extend the execution-source inventory and refresh
+its review evidence before P0/P1 closure; the runner integration cannot count as
+fully inventoried while its new authority sits outside the source inventory.
+The runtime boundary receipt records the current census hash and concrete gaps.

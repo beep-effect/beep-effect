@@ -11,7 +11,13 @@
  * @since 0.0.0
  */
 
-export { collectCacheCensus, resolveCacheTurboBinary } from "./Cache.census.ts";
+export {
+  cacheTaskSelectionArgs,
+  collectCacheCensus,
+  collectCacheTaskSelection,
+  isCacheTaskInspectionArg,
+  resolveCacheTurboBinary,
+} from "./Cache.census.ts";
 /**
  * Cache execution and policy commands.
  *
@@ -87,6 +93,13 @@ export {
  */
 export { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
 /**
+ * Runtime identity input validation.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export { hashCacheToolchain } from "./Cache.fingerprint.ts";
+/**
  * Native pilot requests, observations and negative controls.
  *
  * @category schemas
@@ -110,6 +123,13 @@ export {
  * @since 0.0.0
  */
 export { runCachePilotExperiment } from "./Cache.pilot.ts";
+/**
+ * Execute tasks with a runtime-owned identity.
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep, runCacheRuntimeTasks } from "./Cache.runtime.ts";
 /**
  * Public cache command schemas and errors.
  *

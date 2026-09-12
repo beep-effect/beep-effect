@@ -911,3 +911,172 @@ controls disable reuse and may still run after this comparison stops reuse.
 - Prevention: inspect executable-task and dependency-output changes after a
   merge before starting another full proof. An interrupted prior-head run is
   retained as partial evidence, never treated as a pass for the new merge.
+
+## 2026-09-11: resumption state and command discovery
+
+- Resuming after the merged save PR required replacing stale worktree and
+  dependency-receipt references before native experiments. Retain explicit
+  source revision and refresh commands in future checkpoint handoffs.
+- `goals set-status ... active` updates lifecycle but preserves the old pause
+  status note. Updated that note explicitly with operator resumption and the
+  remaining gates. A transition warning for contradictory notes would help.
+- `cache audit --output ...` was rejected because audit supports `--json`.
+  The corrected command redirected JSON to a private evidence file and passed.
+  Consistent report-output flags across Cache commands would prevent this
+  invocation error.
+
+## 2026-09-11: receipt linkage compatibility
+
+The pilot calculated its runtime digest with the requested Turbo client
+linkage but omitted that snapshot from the receipt. This prevented independent
+reconstruction when the client differed from the reviewed installation. The
+receipt now retains the existing linkage schema; older receipts decode with
+explicit absence. Tests cover a dynamic client replacing a reviewed static
+client and both new and historical wire formats.
+
+The first compatibility test used `Record.omit`, which is absent from the
+pinned Effect API. The focused test failed with `omit is not a function`.
+Checked the local Effect reference and replaced it with `Struct.omit`; all
+14 process-boundary tests then passed. Consult the pinned helper module before
+using a remembered API.
+
+The aggregate `quality test-tsgo` wrapper suppressed the child command error
+for an unsupported `--strict` argument. Replaying the same Turbo task with
+error logs exposed the invocation mistake. The canonical command then found
+three introduced `preferTypedSchemaDecoder` diagnostics in the new tests;
+replaced `decodeUnknownEffect` with `decodeEffect` for schema-typed encoded
+inputs. Preserve the child diagnostic when the wrapper fails.
+
+## 2026-09-11: verification invalidates installed-tree previews
+
+Both native pilot launches rejected the previous activation preview as stale
+after package verification. Comparing the old and refreshed previews isolated
+the change to installed dependencies. Comparing the materialized trees without
+dereferencing workspace links found one changed file under
+`node_modules/.vite/vitest/*/results.json`. The dependency fingerprint includes
+that generated test cache, so verification conservatively invalidates a pilot
+preview even when native binaries and computation configuration are unchanged.
+Refreshed both the activation preview and verified dependency materialization
+before relaunching; retained the rejected-run logs. A reviewed separation of
+installed executable content from generated cache metadata could prevent these
+false misses, but requires its own completeness evidence.
+
+### Runtime guard compiler feedback (2026-09-11)
+
+- Work: share the existing Turbo command classifier with Cache-owned runtime validation.
+- Evidence: package verification and `beep quality test-tsgo` rejected the initial
+  export with `TS377101` (missing pipeable signature). The audit opened inbox
+  `local-shard-a38410bd316e`.
+- Repair: preserve command recognition and expose its two-argument form through
+  `dual`, including the pipeable overload. Commit `1ffb0878f6` contains the repair;
+  the inbox row is acknowledged against that commit.
+- Prevention: copy the adjacent `turboEnvExtendsAmbient` overload pattern when
+  exposing an existing two-argument environment helper.
+
+### Native selection mode collisions (2026-09-11)
+
+- Work: prepare the runtime task selector against the pinned native Turbo client.
+- Evidence: the isolated selection probe found duplicate `--cache` and `--dry-run`
+  arguments rejected, while `--graph --dry=json` exited zero with graph output.
+- Prevention: preserve the task argument separator, normalize execution options,
+  and require a decoded native plan rather than interpreting success as an empty
+  selection. Cases and evidence hashes are in `runtime-enforcement-boundary.json`.
+
+### Runtime selector map and provider corrections (2026-09-11)
+
+- Work: implement native task selection using existing workspace discovery.
+- Evidence: focused tests passed, but test typechecking reported `TS2339` because
+  workspace names are map keys, not fields on `WorkspacePackage`. It also reported
+  the nested pipeable opportunity. The private native harness initially lacked
+  the filesystem service required to construct `FsUtilsLive`.
+- Repair: derive names from map entries with `pipe`; provide Node services to the
+  harness layer construction. The corrected collector observes identity plus its
+  types dependency and types-only selection without requiring a toolchain profile.
+- Prevention: retain the discovery map key and satisfy layer dependencies before
+  testing a collector against the actual native client.
+
+### Wrapper recognition and environment hygiene (2026-09-11)
+
+- Work: prepare a Cache-owned child under the existing secret-session wrapper.
+- Evidence: synthetic inputs to the current environment helpers showed the original
+  Turbo command disables ambient extension and drops an unrelated reference; the
+  proposed rewritten command is unrecognized and would restore that reference.
+- Prevention: resolve hygiene using the original step, then rewrite executable
+  arguments. Preserve the resulting environment and extension policy explicitly.
+  No secret operation was performed; the probe used a fabricated reference.
+
+### Runtime command integration feedback (2026-09-11)
+
+- Work: add the Cache-owned execution command and final-spawn tests.
+- Evidence: typechecking reported `readonly unknown[]` for variadic CLI arguments;
+  Vitest rejected imports under the explicitly private `./internal/*` boundary.
+  The dispatch test also detected a changed command-list prefix.
+- Repair: decode arguments through `S.Array(S.String)`, expose module namespaces
+  through the existing source-only Cache test kit, and append the new command to
+  the command list. Thirty-two focused tests now pass, including calculated-key
+  injection, native-client drift rejection, and exit-code preservation.
+- Prevention: follow the actual CLI argument type and package export boundary
+  before building command handlers and process-level tests.
+
+- Follow-up: the hash-file spy inferred the curried overload and rejected a raw
+  `Effect` mock return during typechecking. Preserve the dual call contract in
+  mocks with `dual(2, ...)`; runtime assertions had passed before this typing fix.
+
+- The mock correction initially omitted its `dual` import; both the focused test
+  and test typecheck caught it. The import is fixed and all six runtime tests
+  pass on the corrected file. Wait for stable focused/type results before starting
+  another full audit to avoid proving an intermediate test revision.
+
+### Runner rewrite test isolation (2026-09-11)
+
+- Work: wire the Cache child into ordinary Quality and direct CI execution.
+- Evidence: the CI partition fixture shimmed `bunx` only. Rewriting execution to
+  `bun` escaped the process double and ran real local lint tasks. The focused test
+  command was intentionally terminated (exit 143); this is not a passed test run.
+- Repair: the fixture now intercepts both executables, and execution assertions
+  expect the Cache child while retaining task selection and failure checks.
+- Prevention: when changing the spawned executable, update executable-level test
+  doubles before broad tests. A default process fixture should reject unexpected
+  executables rather than falling through to the workstation toolchain.
+
+### Bun startup environment reload (2026-09-11)
+
+- Work: place Cache execution inside the resolved secret-session environment.
+- Evidence: Bun supports `--no-env-file`; a real fixture showed the routed child
+  executes with that flag, while omitting it reloads the fixture runtime-key value
+  and is rejected before task execution.
+- Prevention: invoke the checkout CLI directly with `--no-env-file`. A repository
+  script would introduce another Bun process with its own environment-file loading.
+
+### Execution ownership moved beyond the census glob (2026-09-11)
+
+- Work: review discovery coverage after routing execution through Cache.
+- Evidence: the refreshed census has 107 entrypoint sources and omits four checked
+  Cache execution modules. Its source glob still covers only CI, Quality and Yeet.
+- Prevention: update execution-source discovery whenever a new module becomes an
+  execution authority, and require a regression check for the new source path.
+  File presence alone is not completed semantic review.
+
+### Full routing verification repairs (2026-09-11)
+
+- Work: verify the integrated runtime routing across the whole CLI package.
+- Evidence: the audit passed 3,756 tests and failed two lint-worker assertions for
+  the old Turbo command shape. Docgen rejected the `QualityTaskStep` example import
+  from the Quality public facade. Both failures opened P0 inbox rows.
+- Repair: assert the Cache execution prefix while preserving task selectors and
+  environment expectations; import the step model from the existing source-only
+  Quality test kit in the example. Docgen now passes all 1,666 examples.
+- Focused-run attribution: root-CWD execution of lint-worker tests exposed existing
+  package-CWD expectations. Run this file from the same package directory as the
+  full audit rather than rewriting unrelated expectations.
+- Prevention: include all execution-shape assertion files in the targeted routing
+  suite, and use an actually exported path in documentation examples.
+
+### Toolchain digest naming in public summaries (2026-09-11)
+
+- Work: commit the verified runtime enforcement increment and P0 repairs.
+- Evidence: the secret-scanning hook classified four `runtimeKeyDigest` fields in
+  the public preflight summary as generic API keys. They are reconstructed SHA-256
+  toolchain digests, not credentials; private native receipts retain their schema.
+- Repair: name the public summary fields `toolchainSha256`, preserving all digest
+  bytes and avoiding ambiguous key terminology. No scanner rule is suppressed.

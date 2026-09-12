@@ -1,0 +1,511 @@
+{
+  "observedOn": "2026-09-11",
+  "authority": "native-dry-plan-only; no task execution or cache activation",
+  "observations": [
+    {
+      "task": "@beep/identity#lint",
+      "cacheEnabled": false,
+      "declaresRuntimeKey": true,
+      "unverifiedValueChangesHash": true,
+      "validShapeUnverifiedValueChangesHash": true
+    },
+    {
+      "task": "@beep/types#lint",
+      "cacheEnabled": false,
+      "declaresRuntimeKey": false,
+      "unverifiedValueChangesHash": false,
+      "validShapeUnverifiedValueChangesHash": false
+    }
+  ],
+  "unrelatedSelection": [
+    "@beep/types#lint"
+  ],
+  "implication": "A declared environment name hashes supplied bytes but does not establish that the digest was calculated from the actual runtime. Shape validation alone is insufficient.",
+  "implementationRequirements": [
+    "Select actual executable tasks through the native plan rather than parsing task/filter semantics.",
+    "Only require the supported runtime profile when a selected computation needs the governed key.",
+    "Collect the actual child environment and native client identity in Cache ownership.",
+    "Apply the calculated key after step environment merging for normal, captured and direct CI execution.",
+    "Cover wrapped secret execution without moving secrets into receipts or bypassing fresh hosted proof."
+  ],
+  "evidence": [
+    {
+      "path": ".beep/qualification-local-preflight/runtime-env-empty-plan.json",
+      "sha256": "b4a23ed138d35947a82240486274a2d2cdae16c4dbe80c7d03cfa163f479dcab"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/runtime-env-caller-plan.json",
+      "sha256": "6f426cdbd0c52775ad44204bde318c2c89080e990131a6b8733ce344e5200de6"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/runtime-env-valid-shape-plan.json",
+      "sha256": "389a0af240e1df5c56f49150ba7e9abccd211d7a281287294afd2e47276c263e"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/runtime-env-unrelated-plan.json",
+      "sha256": "47abc47d27eb153924d55f2312f1a6867c69e9867e88665057f8b86799c7983f"
+    }
+  ],
+  "inputGuard": {
+    "status": "implemented; full runtime enforcement remains incomplete",
+    "owner": "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+    "consumers": [
+      "Quality.withTurboSecretSession",
+      "Quality.collectResolvedStepOutput",
+      "Ci.runLaneProcess"
+    ],
+    "rejectedSources": [
+      "ambient environment",
+      "step environment"
+    ],
+    "rejectedValues": [
+      "empty string",
+      "arbitrary string",
+      "SHA-256-shaped string"
+    ],
+    "recognizedCommands": [
+      "bunx turbo",
+      "op run -- bunx turbo"
+    ],
+    "remaining": [
+      "native selected-task plan",
+      "actual child environment and client identity collection",
+      "values introduced by secret-session resolution",
+      "calculated key injection after environment merging"
+    ],
+    "validation": {
+      "focusedTests": {
+        "passed": 2,
+        "log": ".beep/qualification-local-preflight/runtime-guard-test.log",
+        "sha256": "96d923d641b1e378fe3ba3e0acf147cbfc5ebe13fe7a83fb54f1e4334a84ed85"
+      },
+      "testTypecheck": {
+        "exitCode": 0,
+        "files": 221,
+        "log": ".beep/qualification-local-preflight/runtime-guard-test-tsgo-fixed.log",
+        "sha256": "b135790bc10bfcb8f3e655bc1eb9e6129e1b5546b58740a1325ded36dc3bb571"
+      },
+      "packageVerify": {
+        "status": "passed",
+        "exitCode": 0,
+        "auditSeconds": 689.9,
+        "docgenSeconds": 19.4,
+        "log": ".beep/qualification-local-preflight/runtime-guard-package-fixed.log",
+        "sha256": "4d317aa8c9e76313391fa4ec030b360aac252d98df4e181f9b2998bed3be2e6f"
+      }
+    }
+  },
+  "nativeSelectionProbe": {
+    "binarySha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+    "cases": [
+      {
+        "case": "dependency-selection",
+        "arguments": [
+          "run",
+          "lint",
+          "--filter=@qualification/b",
+          "--dry=json",
+          "--cache=local:"
+        ],
+        "exitCode": 0,
+        "jsonPlan": true,
+        "selected": [
+          "@qualification/a#lint",
+          "@qualification/b#lint"
+        ],
+        "runtimeKeyTasks": [
+          "@qualification/a#lint"
+        ],
+        "stdoutSha256": "f3d0b2fc805aa01a7d7c04c971fc843a65d227d7982d0803b9bb5ba42bf22182",
+        "executedMarkers": []
+      },
+      {
+        "case": "unrelated-selection",
+        "arguments": [
+          "run",
+          "lint",
+          "--filter=@qualification/c",
+          "--dry=json",
+          "--cache=local:"
+        ],
+        "exitCode": 0,
+        "jsonPlan": true,
+        "selected": [
+          "@qualification/c#lint"
+        ],
+        "runtimeKeyTasks": [],
+        "stdoutSha256": "88e4fb5156e4aa758a7c372ab9a383dec60c4117046b5fd70c4f38d832c224fe",
+        "executedMarkers": []
+      },
+      {
+        "case": "forwarded-arguments",
+        "arguments": [
+          "run",
+          "lint",
+          "--filter=@qualification/b",
+          "--dry=json",
+          "--cache=local:",
+          "--",
+          "--dry=false",
+          "--filter=@qualification/c"
+        ],
+        "exitCode": 0,
+        "jsonPlan": true,
+        "selected": [
+          "@qualification/a#lint",
+          "@qualification/b#lint"
+        ],
+        "runtimeKeyTasks": [
+          "@qualification/a#lint"
+        ],
+        "stdoutSha256": "13387c8bec85546381026a81447d749ea092003b267f89d273f421b5ee14fd9b",
+        "executedMarkers": []
+      },
+      {
+        "case": "duplicate-dry",
+        "arguments": [
+          "run",
+          "lint",
+          "--filter=@qualification/b",
+          "--dry=text",
+          "--dry=json",
+          "--cache=local:"
+        ],
+        "exitCode": 1,
+        "jsonPlan": false,
+        "selected": [],
+        "runtimeKeyTasks": [],
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "executedMarkers": []
+      },
+      {
+        "case": "graph-mode",
+        "arguments": [
+          "run",
+          "lint",
+          "--filter=@qualification/b",
+          "--graph",
+          "--dry=json",
+          "--cache=local:"
+        ],
+        "exitCode": 0,
+        "jsonPlan": false,
+        "selected": [],
+        "runtimeKeyTasks": [],
+        "stdoutSha256": "95af814e1c9aeaf313c820dd127d4a4f1d853e8d36a0179d12d6f6c3fae7fe5a",
+        "executedMarkers": []
+      },
+      {
+        "case": "duplicate-cache",
+        "arguments": [
+          "run",
+          "lint",
+          "--filter=@qualification/b",
+          "--cache=remote:rw",
+          "--dry=json",
+          "--cache=local:"
+        ],
+        "exitCode": 1,
+        "jsonPlan": false,
+        "selected": [],
+        "runtimeKeyTasks": [],
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "executedMarkers": []
+      }
+    ],
+    "scope": "Isolated native-client dry-plan fixture; no production execution or activation",
+    "implications": [
+      "Preserve native dependency selection and the task argument separator.",
+      "Remove or reject conflicting dry/cache options before generating a selection plan.",
+      "A graph-mode exit zero is not a valid JSON plan; decode and validate before deciding no runtime key is needed.",
+      "The selected dependency closure can require a runtime key even when the entry workspace does not."
+    ],
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/runtime-selection-probe.py",
+        "sha256": "8907fd3fcd6a07858789618973e82b2b0ca8f2d9a8b7bb86cb1a9c2ed5b42f32"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-selection-probe.json",
+        "sha256": "68bd667f1b49bd63c74b4371b974d8de42fa2e0a7439399c5039316b30b5f290"
+      }
+    ]
+  },
+  "nativeSelectionImplementation": {
+    "status": "implemented; not yet wired into final child execution",
+    "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+    "behavior": [
+      "requires explicit run invocation",
+      "replaces cache controls with disabled dry-plan cache posture",
+      "preserves forwarded task arguments",
+      "rejects explicit dry/graph modes and directory overrides",
+      "decodes the native plan and joins selected commands to workspace manifests",
+      "does not invoke the platform-specific toolchain collector"
+    ],
+    "nativeObservations": [
+      {
+        "workspace": "@beep/identity",
+        "selected": [
+          "@beep/identity#lint",
+          "@beep/types#lint"
+        ],
+        "executable": [
+          "@beep/identity#lint",
+          "@beep/types#lint"
+        ],
+        "runtimeKeyTasks": [
+          "@beep/identity#lint"
+        ]
+      },
+      {
+        "workspace": "@beep/types",
+        "selected": [
+          "@beep/types#lint"
+        ],
+        "executable": [
+          "@beep/types#lint"
+        ],
+        "runtimeKeyTasks": []
+      }
+    ],
+    "validation": {
+      "focusedTestsPassed": 18,
+      "testTypecheckExitCode": 0,
+      "packageVerification": {
+        "status": "passed",
+        "exitCode": 0,
+        "auditSeconds": 491.6,
+        "docgenSeconds": 17.0,
+        "log": ".beep/qualification-local-preflight/runtime-selection-package.log",
+        "sha256": "24f734c578ea07696407d8bcc844135220b242233c436dddf8ee81c18168b02c"
+      }
+    },
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/runtime-selection-collector.ts",
+        "sha256": "7464e6528fa30de2939e9684d44d7cd0ac8821b54edee0931a314b048450076e"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-selection-collector.json",
+        "sha256": "6a3fd2da6b1d3bcd5beeb537a54043f06de046309ea548309dea8f783f25d4e3"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-selection-tests.log",
+        "sha256": "298108b09231842d1bc37a388785c8fceb027c0e403411b820e4b078f00b811f"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-selection-test-tsgo-fixed.log",
+        "sha256": "b135790bc10bfcb8f3e655bc1eb9e6129e1b5546b58740a1325ded36dc3bb571"
+      }
+    ]
+  },
+  "wrapperEnvironmentProbe": {
+    "scope": "Synthetic environment inputs through existing helpers; no secret resolution or subprocess execution",
+    "observations": {
+      "originalExtendsAmbient": false,
+      "rewrittenExtendsAmbient": true,
+      "originalPreservesUnrelatedReference": false,
+      "rewrittenPreservesUnrelatedReference": true,
+      "originalPreservesSafeFixture": true,
+      "remedy": "Compute environment overrides and ambient-extension policy from the original Turbo invocation before rewriting its executable."
+    },
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/runtime-wrapper-environment.ts",
+        "sha256": "e9b056d144fa99fcad30e37cfce266bfd0692d7039a09b593c74c0c76e6a9b77"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-wrapper-environment.json",
+        "sha256": "663dd04a2f0604f26593beb1abd3f54dd608e063443ada554366c03ecc6990df"
+      }
+    ]
+  },
+  "runtimeExecutionCommand": {
+    "status": "implemented; ordinary Quality/CI wrapper wiring pending",
+    "command": "beep cache execute -- run ...",
+    "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+    "behavior": [
+      "reject caller-supplied runtime keys and native-client overrides",
+      "select actual executable tasks and dependencies",
+      "calculate the canonical toolchain digest for enabled governed caching",
+      "verify native client bytes after observation",
+      "inject the calculated key at the final native spawn",
+      "preserve native exit code"
+    ],
+    "verification": {
+      "focusedTestsPassed": 32,
+      "nativeDisabledCacheTypesLintExitCode": 0,
+      "nativeNegativeCases": [
+        {
+          "case": "caller-key",
+          "exitCode": 1,
+          "taskStarted": false
+        },
+        {
+          "case": "client-override",
+          "exitCode": 1,
+          "taskStarted": false
+        }
+      ],
+      "finalTestTypecheck": {
+        "exitCode": 0,
+        "files": 221
+      },
+      "fullPackageVerify": {
+        "exitCode": 0,
+        "auditSeconds": 466.6,
+        "docgenSeconds": 19.4,
+        "log": ".beep/qualification-local-preflight/runtime-execution-package.log",
+        "sha256": "9e1a50cd678e6e53b99fa7b229f6f87a58075f2c8990971f9e26625eb94093a6"
+      },
+      "finalRuntimeTestsPassed": 6,
+      "nativeForwarding": {
+        "exitCode": 0,
+        "executedMarkers": [
+          "packages/c/TASK_ARGUMENTS.json"
+        ],
+        "forwardedArguments": [
+          "--filter=@qualification/a",
+          "--dry=false",
+          "value with spaces"
+        ]
+      },
+      "nativeFailureComparison": {
+        "nativeExitCode": 7,
+        "wrappedExitCode": 7
+      }
+    },
+    "limits": [
+      "not yet wired into normal inherited/captured Quality or direct CI execution",
+      "enabled-cache branch tested with controlled observations and spawner",
+      "no real cache tuple promoted or activated",
+      "Real forwarding/failure probes use an isolated disabled-cache fixture and do not prove enabled-cache qualification"
+    ],
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/runtime-execution-types.log",
+        "sha256": "4c7922bcb4555f637c992f7b130c27bc240c907a22ba9852ac9c91d2495e455a"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-execution-negatives.json",
+        "sha256": "ec27d7d4ae32f45199de93731d98200869f9a6763e336201efa45d8a804b7c1a"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-execution-tests-fixed.log",
+        "sha256": "297b35aba0afc19ca508faf20ddfc469627efdaf77f7eb438a8f6d5a3f2f5e0f"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-execution-spawn-tests-final.log",
+        "sha256": "73dded43002cba65cb5af43d4787d662268cd4d7e8feeb60cf1b7e076b89d907"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-execution-test-tsgo-final.log",
+        "sha256": "b135790bc10bfcb8f3e655bc1eb9e6129e1b5546b58740a1325ded36dc3bb571"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-execution-forwarding.py",
+        "sha256": "a9e4df79d73afc1762e38815e3a7a131fc7d9e0559c207217b75b29559aeb53b"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-execution-forwarding.json",
+        "sha256": "f4e8c47ce6402bdf8ae2c1949c0b7479ca0f121e87118e6f6807fac086c983eb"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-execution-failure.json",
+        "sha256": "e526405737464b4024b90b4da1afdefb262953b54a421e88151eea0e7f61ca40"
+      }
+    ]
+  },
+  "runnerIntegration": {
+    "status": "implemented; full verification running",
+    "consumers": [
+      "Quality.runStep",
+      "Quality.runStepCapturedForQuarantine",
+      "Quality.collectResolvedStepOutput",
+      "Ci.runLaneProcess"
+    ],
+    "behavior": [
+      "derive environment hygiene from original invocation",
+      "preserve secret-session prefix and original ambient-extension policy",
+      "invoke checkout CLI directly with bun --no-env-file",
+      "preserve forwarded task arguments and step metadata",
+      "leave explicit inspection modes and non-Turbo commands unchanged"
+    ],
+    "verification": {
+      "runnerTestsPassed": 317,
+      "nativeQualityTypesLintExitCode": 0,
+      "environmentIsolation": {
+        "isolatedExitCode": 0,
+        "reloadingControlExitCode": 1,
+        "isolatedTaskRan": true,
+        "controlTaskRan": false
+      },
+      "fullPackageVerify": {
+        "status": "failed; both reported failures repaired with targeted proof; full rerun pending",
+        "log": ".beep/qualification-local-preflight/runtime-routing-package.log",
+        "failedTests": 2,
+        "passedTests": 3756,
+        "docgenFailure": "QualityTaskStep example import was not exported by the Quality public facade"
+      },
+      "finalTestTypecheck": {
+        "exitCode": 0,
+        "files": 221
+      },
+      "docgenRepair": {
+        "exitCode": 0,
+        "examples": 1666,
+        "log": ".beep/qualification-local-preflight/runtime-routing-docgen-fixed.log",
+        "sha256": "31f6169b3ddb9d825256df1c928fbff0b5228b52c34fc658ee8d3b1fb5cdf038"
+      },
+      "lintWorkerRepair": {
+        "exitCode": 0,
+        "tests": 19,
+        "log": ".beep/qualification-local-preflight/runtime-routing-lint-workers-package.log",
+        "sha256": "2a4918b3c3119cd4889c7e34f0e7f4720328aa5eac3b6b7b0fbe51e5eaf73d22"
+      }
+    },
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/runtime-routing-runner-tests-fixed.log",
+        "sha256": "3324dadaa9702f52c202ba562523b7a3cc34654b4d2f27cb50f526b907c49d8a"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-routing-quality.ts",
+        "sha256": "7cbb782bd4ffef932e73048d08653ac4a5c0776ff6e42fa05e8387476f0084cb"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-routing-quality.log",
+        "sha256": "ab391326ff4a07305fe9ddd537384c8213573aa4da6061cdbc4e865441fe5c15"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-routing-environment.ts",
+        "sha256": "1b66667e5a4e93ea6b4514d0fe74215eae361b951d332bc2c8e13d9597140521"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-routing-environment.json",
+        "sha256": "c6b37e4ccc47273197b807c149df849b842244e127e12b2d6e5d53849071b98c"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/runtime-routing-test-tsgo-final.log",
+        "sha256": "b135790bc10bfcb8f3e655bc1eb9e6129e1b5546b58740a1325ded36dc3bb571"
+      }
+    ]
+  },
+  "postRoutingDiscoveryGap": {
+    "censusSha256": "1a446a03e62608d48fb0651d130853b528d44cbf719a7c6172325f6c96f67de0",
+    "entrypointSourceCount": 107,
+    "missingExecutionSources": [
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts"
+    ],
+    "workspaceCount": 143,
+    "graphNodes": 3269,
+    "unresolved": [
+      "Classify nested workspace and root command semantics.",
+      "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts."
+    ],
+    "scope": "These four confirmed omissions are a minimum, not a complete transitive execution-source inventory."
+  }
+}

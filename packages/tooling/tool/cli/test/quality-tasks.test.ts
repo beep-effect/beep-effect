@@ -5960,7 +5960,13 @@ describe("quality task adapter", () => {
           );
           yield* fs.writeFileString(
             fakeBunPath,
-            ["#!/usr/bin/env sh", "printf 'bun %s\\n' \"$*\" >> quality-commands.log", "exit 0", ""].join("\n")
+            [
+              "#!/usr/bin/env sh",
+              "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
+              'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
+              "exit 0",
+              "",
+            ].join("\n")
           );
           yield* fs.chmod(fakeBunxPath, 0o755);
           yield* fs.chmod(fakeBunPath, 0o755);
@@ -5986,7 +5992,7 @@ describe("quality task adapter", () => {
           // (LINT_POLICY_STEP_CONCURRENCY), so log order between them is not
           // guaranteed — the resilience property is that every policy check
           // still executes after the aggregate lint step fails.
-          expect(commandLog).toContain("bunx turbo run lint");
+          expect(commandLog).toContain("cache execute -- run lint");
           expect(commandLog).toContain("bun run packages/tooling/tool/cli/src/bin.ts -- laws effect-imports --check");
           expect(commandLog).toContain("bun run packages/tooling/tool/cli/src/bin.ts -- lint roadmap-refs");
           expect(commandLog).toContain("bunx typos");

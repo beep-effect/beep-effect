@@ -64,6 +64,7 @@ import {
 } from "../../internal/process/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
 import {
   cleanCoverageRegressionOutputs,
   compareCoverageRegressionBaseline,
@@ -1170,6 +1171,9 @@ const turboSecretSessionStep: {
 export const turboSecretSessionStepForTesting = turboSecretSessionStep;
 
 const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(function* (step: QualityTaskStep) {
+  yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
+    QualityTaskConfigurationError.mapError("Rejected a caller-provided cache runtime identity.")
+  );
   if (step.useLocalEnv !== true) {
     return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
@@ -1192,10 +1196,11 @@ const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(
 const runStep = Effect.fn("QualityTasks.runStep")(function* (step: QualityTaskStep) {
   const resolved = yield* withTurboSecretSession(step);
   const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
+  const runtime = cacheRuntimeStep(resolved);
   yield* Console.log(`[beep-cli] ${resolved.label}: ${commandText(resolved.command, resolved.args)}`);
   const exitCode = yield* runToExit({
-    command: resolved.command,
-    args: resolved.args,
+    command: runtime.command,
+    args: runtime.args,
     cwd: resolved.cwd,
     env: {
       ...envOverrides,
@@ -1272,11 +1277,12 @@ const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQ
 ): Effect.fn.Return<QuarantineStepAttempt, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const resolved = yield* withTurboSecretSession(step);
   const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
+  const runtime = cacheRuntimeStep(resolved);
   const command = commandText(resolved.command, resolved.args);
   yield* Console.log(`[beep-cli] ${resolved.label}: ${command}`);
   const result = yield* runCaptured({
-    command: resolved.command,
-    args: resolved.args,
+    command: runtime.command,
+    args: runtime.args,
     cwd: resolved.cwd,
     env: {
       ...envOverrides,
@@ -2117,12 +2123,16 @@ export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStrea
 const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOutput")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<QualityTaskStepOutput, QualityTaskConfigurationError, ChildProcessSpawner.ChildProcessSpawner> {
+  yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
+    QualityTaskConfigurationError.mapError("Rejected a caller-provided cache runtime identity.")
+  );
   const command = commandText(step.command, step.args);
   const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
+  const runtime = cacheRuntimeStep(step);
   const captureTimeout = step.captureTimeoutMillis;
   const result = yield* runCaptured({
-    command: step.command,
-    args: step.args,
+    command: runtime.command,
+    args: runtime.args,
     cwd: step.cwd,
     env: {
       ...envOverrides,

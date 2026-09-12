@@ -10,6 +10,7 @@ import {
   CacheLinkedFile,
   CacheLinkerResolution,
   CacheLiveIdentity,
+  CachePilotReceipt,
   CachePilotRequest,
   CacheQualificationService,
   CacheRuntimeLinkerSnapshot,
@@ -43,6 +44,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { afterEach, vi } from "vitest";
@@ -107,7 +109,10 @@ const linker = CacheRuntimeLinkerSnapshot.make({
 
 // Real contained-file operations and pilot control flow surround a deterministic
 // process double. No Git worktree, native tool, scheduler or cache service is run.
-const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (fault: typeof faultDomain.Type = "none") {
+const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
+  fault: typeof faultDomain.Type = "none",
+  requestedLinker: CacheRuntimeLinkerSnapshot = linker
+) {
   const crypto = yield* Crypto.Crypto;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -246,7 +251,8 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (fault: ty
   );
   vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockReturnValue(Effect.succeed(digest));
   vi.spyOn(Fingerprint, "fingerprintCacheComputation").mockReturnValue(Effect.succeed(source));
-  vi.spyOn(Linker, "collectCacheRuntimeLinker").mockReturnValue(Effect.succeed(linker));
+  vi.spyOn(Linker, "collectCacheRuntimeLinker").mockReturnValue(Effect.succeed(requestedLinker));
+  vi.spyOn(Linker, "inspectCacheLinkedFile").mockReturnValue(Effect.succeed(linked));
   vi.spyOn(Worktree, "resolveWorktreeContext").mockReturnValue(
     Effect.succeed(
       Worktree.WorktreeContext.make({
@@ -314,7 +320,20 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (fault: ty
             });
             const observeInvocation = Effect.fn("PilotOrchestrationTest.observeInvocation")(function* () {
               if (invocation[0] === "/usr/bin/ldd") {
-                stdout = fault === "library-mismatch" ? "/usr/lib/other (0x123)" : "statically linked";
+                const resolution = A.contains(invocation, "/tools/turbo")
+                  ? requestedLinker.executables.turbo
+                  : linker.executables.bun;
+                stdout =
+                  fault === "library-mismatch"
+                    ? "/usr/lib/other (0x123)"
+                    : CacheLinkerResolution.match(resolution, {
+                        Static: () => "statically linked",
+                        Dynamic: ({ files }) =>
+                          A.join(
+                            A.map(files, (file) => `${file.path} (0x123)`),
+                            "\n"
+                          ),
+                      });
                 return;
               }
               if (A.contains(invocation, "--version")) {
@@ -444,6 +463,25 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("pilot orchestration process boundary", () => {
   it.effect(
+    "retains the requested dynamic client linkage instead of the reviewed static client",
+    Effect.fnUntraced(function* () {
+      const requestedLinker = CacheRuntimeLinkerSnapshot.make({
+        ...linker,
+        executables: {
+          ...linker.executables,
+          turbo: CacheLinkerResolution.cases.Dynamic.make({ files: [linked] }),
+        },
+      });
+      const { run, request } = yield* fixture("none", requestedLinker);
+      const receipt = yield* run(CachePilotRequest.make({ ...request, selection: "controls" }));
+      expect(receipt.runtimeLinker).toEqual(O.some(requestedLinker));
+      const encoded = yield* S.encodeEffect(S.fromJsonString(CachePilotReceipt))(receipt);
+      const decoded = yield* S.decodeEffect(S.fromJsonString(CachePilotReceipt))(encoded);
+      expect(decoded.runtimeLinker).toEqual(O.some(requestedLinker));
+    }, provideScopedLayer(platform))
+  );
+
+  it.effect(
     "binds fresh/replay controls to native summaries, validates mutations and cleans overlays",
     Effect.fnUntraced(function* () {
       const { root, fs, path, run, sourceRoots } = yield* fixture();
@@ -454,6 +492,12 @@ describe("pilot orchestration process boundary", () => {
       expect(receipt.nonExecutions).toHaveLength(4);
       expect(receipt.runs.length).toBeGreaterThan(60);
       expect(receipt.authority).toBe("local-observation-only");
+      expect(receipt.runtimeLinker).toEqual(O.some(linker));
+      const encoded = yield* S.encodeEffect(CachePilotReceipt)(receipt);
+      const decoded = yield* S.decodeEffect(CachePilotReceipt)(encoded);
+      expect(decoded.runtimeLinker).toEqual(receipt.runtimeLinker);
+      const historical = yield* S.decodeEffect(CachePilotReceipt)(Struct.omit(encoded, ["runtimeLinker"]));
+      expect(historical.runtimeLinker).toEqual(O.none());
       expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
       for (const source of sourceRoots)
         expect(yield* fs.readFileString(path.join(source, identityDirectory, "src/index.ts"))).toBe(

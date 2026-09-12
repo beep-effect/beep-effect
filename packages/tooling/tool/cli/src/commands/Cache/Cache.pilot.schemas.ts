@@ -16,7 +16,7 @@ import { GitObjectId } from "@beep/schema/Conformance";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CacheLocalOrigin, CacheSyntheticCheck, CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
-import { CacheDependencyTree, CacheExecutablePin } from "./Cache.schemas.ts";
+import { CacheDependencyTree, CacheExecutablePin, CacheRuntimeLinkerSnapshot } from "./Cache.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.schemas");
 
@@ -276,6 +276,9 @@ export class CachePilotNonExecution extends S.Class<CachePilotNonExecution>($I`C
  * the requested native Turbo client and is provided as the declared
  * `BEEP_CACHE_TOOLCHAIN_DIGEST` input. Each run records whether native metadata
  * confirms that key; the named missing-child control can remove its declaration.
+ * `runtimeLinker` retains the requested client's observed startup libraries,
+ * including explicit static linkage. Historical receipts omit this observation
+ * and cannot independently reconstruct the library-aware runtime digest.
  *
  * **Example** (Inspect the explicit authority limit)
  *
@@ -293,6 +296,9 @@ export class CachePilotReceipt extends S.Class<CachePilotReceipt>($I`CachePilotR
     clientSelection: S.Literal("pinned-native-skip-infer"),
     runtimeKeying: S.Literal("toolchain-sha256-env/v1"),
     runtimeKeyDigest: Sha256Hex,
+    runtimeLinker: S.OptionFromOptionalKey(CacheRuntimeLinkerSnapshot).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     authority: S.Literal("local-observation-only"),
     key: CacheQualificationKey,
     sourceRevision: GitObjectId,

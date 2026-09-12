@@ -263,6 +263,9 @@ const withPartitionShim = <A, E, R>(
         )
       );
       yield* fs.chmod(bunxPath, 0o755);
+      const bunPath = path.join(binDir, "bun");
+      yield* fs.writeFileString(bunPath, yield* fs.readFileString(bunxPath));
+      yield* fs.chmod(bunPath, 0o755);
       yield* Effect.addFinalizer(() => fs.remove(tempDir, { force: true, recursive: true }).pipe(Effect.orDie));
 
       return yield* withEnvVarEffect(
@@ -721,7 +724,8 @@ describe("partitioned CI lane execution", () => {
           expect(selection).toContain("turbo run lint");
           expect(selection).toContain("--filter=!./apps/labs/** --only --dry-run=json");
           expect(selection).not.toContain("--affected");
-          expect(execution).toContain(`turbo run ${firstPackage}#lint`);
+          expect(execution).toContain(`cache execute -- run ${firstPackage}#lint`);
+          expect(execution).toContain("--no-env-file");
           expect(execution).toContain("--only --concurrency=2 --filter=!./apps/labs/**");
           expect(execution).toContain(`--filter=${firstPackage}`);
           expect(execution).toContain("--force --summarize");
@@ -1435,10 +1439,10 @@ layer(
       const lines = A.map(selectedStorybookSpawns, (spawn) => spawn.line);
       expect(lines).toHaveLength(4);
       expect(lines[0]).toBe(storybookProbeLine);
-      expect(lines[1]).toContain("turbo run storybook:build");
+      expect(lines[1]).toContain("cache execute -- run storybook:build");
       expect(lines[1]).toContain("--filter=@beep/storybook --summarize");
       expect(lines[1]).not.toContain("--affected");
-      expect(lines[2]).toContain("turbo run test:storybook");
+      expect(lines[2]).toContain("cache execute -- run test:storybook");
       expect(lines[2]).not.toContain("--affected");
       expect(lines[3]).toBe("test -f apps/storybook/storybook-static/index.html");
       expect(yield* consoleOutput).toContain(
@@ -1457,7 +1461,7 @@ layer(storybookCiLayer(storybookDryRun([]), unscopedStorybookSpawns))("storybook
       const lines = A.map(unscopedStorybookSpawns, (spawn) => spawn.line);
       expect(lines).toHaveLength(3);
       expect(A.some(lines, Str.includes("--dry-run=json"))).toBe(false);
-      expect(lines[0]).toContain("turbo run storybook:build");
+      expect(lines[0]).toContain("cache execute -- run storybook:build");
       expect(lines[2]).toBe("test -f apps/storybook/storybook-static/index.html");
     })
   );
