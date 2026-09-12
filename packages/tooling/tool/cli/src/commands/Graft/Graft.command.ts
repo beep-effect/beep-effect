@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
 import { printCommandJson } from "../../internal/cli/Json.ts";
+import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
 import { GraftCacheIoError, GraftCacheTargetError, GraftDeepPreflightError } from "./Graft.errors.ts";
 import {
   GraftCacheSyncAction,
@@ -23,12 +24,7 @@ import {
   GraftDeepTimerOptions,
 } from "./Graft.schemas.ts";
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
-import {
-  GraftDeepRefresh,
-  GraftDeepRefreshLive,
-  GraftDeepRefreshProgress,
-  resolveGraftDeepBunPath,
-} from "./GraftDeep.service.ts";
+import { GraftDeepRefresh, GraftDeepRefreshLive, GraftDeepRefreshProgress } from "./GraftDeep.service.ts";
 
 const flags = {
   from: Flag.String("from").pipe(Flag.withDescription("Source clone containing graft/.cache/summaries.json")),
@@ -179,16 +175,11 @@ const timerFlags = {
   ),
 };
 
-// Operators type `~/...` and relative paths; systemd and the lock file need
-// absolute ones, and no shell is involved to expand either.
-const resolveOperatorPath = (home: string, resolve: (input: string) => string, input: string): string =>
-  resolve(Str.startsWith("~/")(input) ? `${home}/${Str.slice(2)(input)}` : input);
-
 const defaultStateDir = (home: string, path: Path.Path, configured: O.Option<string>): string =>
   resolveOperatorPath(
+    O.getOrElse(configured, () => path.join(home, ".local", "state", "beep-graft")),
     home,
-    path.resolve,
-    O.getOrElse(configured, () => path.join(home, ".local", "state", "beep-graft"))
+    path.resolve
   );
 
 const renderStatus = (status: GraftDeepRefreshStatus): string =>
@@ -280,7 +271,7 @@ export const runDeepRefresh = Effect.fn("GraftCommand.runDeepRefresh")(function*
   const path = yield* Path.Path;
   const home = yield* Effect.orDie(Config.String("HOME"));
   const decoded = yield* decodeRefreshOptions({
-    owner: resolveOperatorPath(home, path.resolve, options.owner),
+    owner: resolveOperatorPath(options.owner, home, path.resolve),
     jobs: options.jobs,
     minCoverage: options.minCoverage,
     seed: options.seed,
@@ -407,26 +398,21 @@ const installTimer = Effect.fn("GraftCommand.installTimer")(function* (options: 
   const path = yield* Path.Path;
   const home = yield* Effect.orDie(Config.String("HOME"));
   const refresh = yield* GraftDeepRefresh;
-  // An explicit path is the operator's pin and is only made absolute; the
-  // default follows the mise shim so a Bun bump never strands the unit.
-  const bunPath = yield* O.match(options.bunPath, {
-    onNone: () => resolveGraftDeepBunPath(home),
-    onSome: (given) => Effect.succeed(resolveOperatorPath(home, path.resolve, given)),
-  });
+  const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
   const decoded = yield* decodeTimerOptions({
-    owner: resolveOperatorPath(home, path.resolve, options.owner),
+    owner: resolveOperatorPath(options.owner, home, path.resolve),
     bunPath,
     onCalendar: options.onCalendar,
     envFile: resolveOperatorPath(
+      O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env")),
       home,
-      path.resolve,
-      O.getOrElse(options.envFile, () => path.join(home, ".config", "beep-graft", "env"))
+      path.resolve
     ),
   }).pipe(
     Effect.mapError((cause) =>
       GraftDeepPreflightError.make({
         path: bunPath,
-        message: `Invalid timer options: the owner, Bun, and environment file paths must be free of double quotes, backslashes, percent signs, dollar signs, and control characters, which systemd would reinterpret in the unit.`,
+        message: `Invalid timer options: the owner, Bun, and environment file paths must be ${systemdUnitPathRule}.`,
         cause,
       })
     )

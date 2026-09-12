@@ -8,6 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
+import { SystemdUnitPath } from "../../internal/systemd/index.ts";
 
 const $I = $RepoCliId.create("commands/Research/Research.schemas");
 
@@ -729,5 +730,93 @@ export class ResearchStatusSummary extends S.Class<ResearchStatusSummary>($I`Res
   },
   $I.annote("ResearchStatusSummary", {
     description: "Aggregate vault and catalog counts reported by research status.",
+  })
+) {}
+
+/**
+ * A bare Notion page id as the research timer units embed it.
+ *
+ * **Details**
+ *
+ * systemd splits `ExecStart` on whitespace with no shell involved, so the page
+ * id the daily unit passes to `research daily --page` must be one token of
+ * letters, digits, and dashes; anything else is refused before a unit is
+ * written.
+ *
+ * **Example** (Accept a page id and refuse a URL)
+ *
+ * ```ts
+ * import { ResearchNotionPageId } from "@beep/repo-cli/commands/Research"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ResearchNotionPageId)("36869573788d8043907eddb021d99410")) // true
+ * console.log(S.is(ResearchNotionPageId)("https://notion.so/page")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ResearchNotionPageId = S.String.check(S.isPattern(/^[A-Za-z0-9-]+$/)).pipe(
+  $I.annoteSchema("ResearchNotionPageId", {
+    title: "Research Notion Page Id",
+    description:
+      "A bare Notion page id of letters, digits, and dashes: the one token the daily timer unit passes to research daily --page.",
+  })
+);
+
+/**
+ * Bare Notion page id type as the research timer units embed it.
+ *
+ * **Example** (Assign a page id)
+ *
+ * ```ts
+ * import type { ResearchNotionPageId } from "@beep/repo-cli/commands/Research"
+ *
+ * const page: ResearchNotionPageId = "36869573788d8043907eddb021d99410"
+ * console.log(page) // 36869573788d8043907eddb021d99410
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ResearchNotionPageId = typeof ResearchNotionPageId.Type;
+
+/**
+ * Validated options used by `research install-timers` to write the units.
+ *
+ * **Details**
+ *
+ * Removing the timers takes none of these: an uninstall reads only `HOME`.
+ * `bunPath` is the operator's `--bun-path` made absolute or, when none is
+ * given, the first Bun this user can execute under the home directory (the
+ * mise shim, then `~/.bun/bin/bun`), falling back to the installer's own
+ * executable. Every path is a systemd unit path, so the renderer's quoting
+ * is enough.
+ *
+ * **Example** (Make timer options)
+ *
+ * ```ts
+ * import { ResearchTimerOptions } from "@beep/repo-cli/commands/Research"
+ *
+ * const options = ResearchTimerOptions.make({
+ *   bunPath: "/home/user/.local/share/mise/shims/bun",
+ *   notionPage: "36869573788d8043907eddb021d99410",
+ *   repoRoot: "/home/user/beep-effect"
+ * })
+ * console.log(options.bunPath) // /home/user/.local/share/mise/shims/bun
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ResearchTimerOptions extends S.Class<ResearchTimerOptions>($I`ResearchTimerOptions`)(
+  {
+    bunPath: SystemdUnitPath,
+    notionPage: ResearchNotionPageId.pipe(S.optionalKey),
+    repoRoot: SystemdUnitPath,
+  },
+  $I.annote("ResearchTimerOptions", {
+    description:
+      "Validated options used by research install-timers: the repo root the units run in, the Bun executable they invoke, and the optional Notion page the daily run pulls.",
   })
 ) {}

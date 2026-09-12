@@ -2,9 +2,18 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Shipped 2026-09-12. The Todox product site landed in
+[#1097](https://github.com/beep-effect/beep-effect/pull/1097): Evergreen Ledger
+direction (deep green + parchment), Notion positioning, interactive evidence
+graph, one synthetic-session console, held demo-request form, DESIGN.md and
+`.impeccable/design.json` from the built world. Merged by Benjamin at `4079f72`
+with every required check green. Evidence: [`PLAN.md`](./PLAN.md) (redesign
+evidence log), QA archives under `history/qa/`, reflections under
+`history/reflections/`.
 
 ## Mission
 
