@@ -34,13 +34,21 @@ import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
 import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
 import { runGhPullRequestView } from "./PullRequest.ts";
 import { renderYeetReplyFailureVerdict, replyReportPathForContext, runYeetReply } from "./Reply.ts";
+import {
+  owningCloneContext,
+  planRetire,
+  renderRetirement,
+  renderRetirePlan,
+  retireInvokingWorktree,
+} from "./Retire.ts";
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
-import { executeSweep, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
+import { executeSweep, observeSweepGitState, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
 import { runYeetWatchStream, yeetWatchExitFailure } from "./WatchMode.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import type { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import type { RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import type { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
 import type { YeetMonitorTerminalState } from "./MonitorLoop.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { ReplyReport } from "./Reply.schemas.ts";
@@ -87,6 +95,7 @@ interface YeetSweepOptions extends YeetPorcelainOptions {
   readonly branch: string;
   readonly json: boolean;
   readonly plan: boolean;
+  readonly retire?: boolean;
 }
 
 const encodeSweepPlan = (plan: SweepPlan): Effect.Effect<string, YeetCommandError> =>
@@ -105,6 +114,39 @@ const renderSweepPlanStep = (planStep: SweepPlanStep): ReadonlyArray<string> => 
 
 const renderSweepPlan = (plan: SweepPlan): string =>
   A.join([`[yeet] sweep plan ${plan.branch} (dry run)`, ...A.flatMap(plan.steps, renderSweepPlanStep)], "\n");
+
+const renderPlanOutput = (json: boolean, plan: SweepPlan): Effect.Effect<string, YeetCommandError> =>
+  json ? encodeSweepPlan(plan) : Effect.succeed(renderSweepPlan(plan));
+
+const renderReportOutput = (json: boolean, report: SweepReport): Effect.Effect<string, YeetCommandError> =>
+  json ? encodeSweepReport(report) : Effect.succeed(renderSweepReport(report));
+
+// Plan or execute the sweep against `context`, whichever checkout that names.
+const sweepClone = Effect.fn("Yeet.sweepClone")(function* (options: YeetSweepOptions, context: RepoRunContext) {
+  if (options.plan) {
+    yield* Console.log(yield* renderPlanOutput(options.json, yield* planSweep(context)));
+    return;
+  }
+  yield* Console.log(yield* renderReportOutput(options.json, yield* executeSweep(context)));
+});
+
+// Inside a linked worktree the merged branch is checked out right here and
+// main lives in the owning clone, so --retire removes this worktree first and
+// then sweeps the clone instead of the checkout it was started in.
+const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
+  options: YeetSweepOptions,
+  branched: RepoRunContext
+) {
+  const retirePlan = yield* planRetire(branched);
+  const state = yield* observeSweepGitState(branched);
+  if (options.plan) {
+    yield* Console.log(renderRetirePlan(retirePlan, state));
+  } else {
+    const receipt = yield* retireInvokingWorktree(retirePlan, state);
+    yield* Console.log(renderRetirement(retirePlan, receipt));
+  }
+  yield* sweepClone(options, owningCloneContext(branched, retirePlan));
+});
 
 /**
  * Run one post-merge workspace sweep, or print the plan it would run.
@@ -136,17 +178,11 @@ export const runYeetSweep = Effect.fn("Yeet.runSweepCommand")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
 > {
   const hydrated = yield* hydrateYeetReadOnlyContext(options);
-  const context = Str.isEmpty(options.branch) ? hydrated : yield* overrideSweepBranch(hydrated, options.branch);
-  if (options.plan) {
-    const plan = yield* planSweep(context);
-    yield* Console.log(options.json ? yield* encodeSweepPlan(plan) : renderSweepPlan(plan));
-    return;
-  }
-  const report = yield* executeSweep(context);
-  yield* Console.log(options.json ? yield* encodeSweepReport(report) : renderSweepReport(report));
+  const branched = Str.isEmpty(options.branch) ? hydrated : yield* overrideSweepBranch(hydrated, options.branch);
+  yield* options.retire === true ? retireThenSweep(options, branched) : sweepClone(options, branched);
 });
 
 /**

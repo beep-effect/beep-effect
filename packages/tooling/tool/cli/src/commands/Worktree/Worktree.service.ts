@@ -32,6 +32,7 @@ import {
   runGitRawOutput,
   scanProcessAttachments,
 } from "../../internal/repo-run/index.ts";
+import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
   parseWorktreePorcelain,
@@ -709,13 +710,17 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   const path = yield* Path.Path;
   const target = path.resolve(request.targetPath);
   const managedRoot = path.join(path.dirname(request.mainCheckout), `${path.basename(request.mainCheckout)}-worktrees`);
+  // Claude Code's desktop app nests its lanes under the clone itself; both
+  // roots are retirement-eligible, and the target must sit in exactly one.
+  const nestedRoot = path.join(request.mainCheckout, CLAUDE_WORKTREES_RELATIVE_ROOT);
+  const root = target === path.resolve(nestedRoot, request.name) ? nestedRoot : managedRoot;
   const invalid = () =>
     WorktreeCommandError.make({
       message:
-        "Removal target must be an exact registered worktree beneath the managed root with the same Git common directory.",
+        "Removal target must be an exact registered worktree beneath the managed or nested worktrees root with the same Git common directory.",
       path: request.targetPath,
     });
-  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(managedRoot, request.name)) {
+  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(root, request.name)) {
     return yield* invalid();
   }
   const listed = yield* runWorktreeGitCapture(
@@ -727,7 +732,7 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
     return yield* invalid();
   }
-  const canonicalRoot = yield* fs.realPath(managedRoot).pipe(Effect.mapError(invalid));
+  const canonicalRoot = yield* fs.realPath(root).pipe(Effect.mapError(invalid));
   const canonicalTarget = yield* fs.realPath(target).pipe(Effect.mapError(invalid));
   if (canonicalTarget !== path.join(canonicalRoot, request.name)) {
     return yield* invalid();

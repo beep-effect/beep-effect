@@ -13,6 +13,7 @@ import {
   GraftDeepTimerOptions,
   graftCommand,
   parseDeepCoverage,
+  readRecordedGraftDeepTimer,
   renderGraftDeepRefreshUnits,
   runDeepInstallTimer,
   runDeepRefresh,
@@ -1513,5 +1514,138 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       );
     }),
     60_000
+  );
+  it.effect(
+    "reports an installed refresh unit this user cannot read",
+    Effect.fn(function* () {
+      const { fs, path, directory } = yield* fixture();
+      const home = path.join(directory, "home");
+      const service = path.join(home, ".config", "systemd", "user", "beep-graft-deep-refresh.service");
+      yield* fs.makeDirectory(path.dirname(service), { recursive: true });
+      yield* fs.writeFileString(service, "[Service]\nWorkingDirectory=/clones/x\n");
+      yield* fs.chmod(service, 0o000);
+      const failure = yield* Effect.flip(readRecordedGraftDeepTimer(home)).pipe(
+        Effect.ensuring(Effect.orDie(fs.chmod(service, 0o644)))
+      );
+      expect(failure._tag).toBe("GraftDeepPreflightError");
+      expect(failure.message).toContain("Failed reading the installed beep-graft-deep-refresh.service unit");
+    })
+  );
+
+  it.effect(
+    "refuses timer refresh before installation and requires an owner without refresh",
+    Effect.fn(function* () {
+      const { fs, path, directory, owner } = yield* fixture();
+      const home = path.join(directory, "home");
+      const calls: Array<GraftDeepRunnerStep> = [];
+      const runner = scriptedRunner({ alive: [], calls, replies: repliesFor(owner, FULL_COVERAGE) });
+      yield* Effect.forEach(
+        [true, false],
+        Effect.fn(function* (refresh) {
+          const refused = yield* captureOutput(
+            runDeepInstallTimer({
+              owner: "",
+              refresh,
+              bunPath: O.none(),
+              envFile: O.none(),
+              onCalendar: "*-*-* 02:30:00",
+              uninstall: false,
+            }).pipe(refreshWith(runner), withHome(home))
+          );
+          assertSome(
+            O.map(Result.getFailure(refused.result), (error) => error._tag),
+            "GraftDeepPreflightError"
+          );
+          assertSome(
+            O.map(Result.getFailure(refused.result), (error) =>
+              Str.includes(refresh ? "install first" : "--owner is required")(error.message)
+            ),
+            true
+          );
+        })
+      );
+      expect(calls).toEqual([]);
+      expect(yield* fs.exists(path.join(home, ".config", "systemd", "user"))).toBe(false);
+    })
+  );
+
+  it.effect(
+    "reads recorded timer settings and refreshes onto the shim while preserving owner, env file, and calendar",
+    Effect.fn(function* () {
+      const { fs, path, directory, owner, stateDir } = yield* fixture();
+      const home = path.join(directory, "home");
+      const shim = path.join(home, ".local", "share", "mise", "shims", "bun");
+      const touch = Effect.fn("GraftDeepRefreshTest.touch")(function* (file: string) {
+        yield* fs.makeDirectory(path.dirname(file), { recursive: true });
+        yield* fs.writeFileString(file, "");
+        yield* fs.chmod(file, 0o755);
+      });
+      const envFile = path.join(stateDir, "env");
+      yield* fs.makeDirectory(stateDir, { recursive: true });
+      yield* fs.writeFileString(envFile, "GRAFT_PROVIDER=openai\n");
+      const runner = scriptedRunner({
+        alive: [],
+        calls: [],
+        replies: repliesFor(owner, FULL_COVERAGE, [["mise trust --show", reply(0, `${owner}: trusted`)]]),
+      });
+      assertNone(yield* readRecordedGraftDeepTimer(home));
+      const installed = yield* captureOutput(
+        runDeepInstallTimer({
+          owner,
+          envFile: O.some(envFile),
+          bunPath: O.some("/usr/bin/bun"),
+          onCalendar: "*-*-* 03:00:00",
+          uninstall: false,
+        }).pipe(refreshWith(runner), withHome(home))
+      );
+      assertSuccess(installed.result, undefined);
+      const recorded = yield* readRecordedGraftDeepTimer(home);
+      assertSome(
+        O.flatMap(recorded, (unit) => unit.owner),
+        owner
+      );
+      assertSome(
+        O.flatMap(recorded, (unit) => unit.envFile),
+        envFile
+      );
+      assertSome(
+        O.flatMap(recorded, (unit) => unit.onCalendar),
+        "*-*-* 03:00:00"
+      );
+      yield* touch(shim);
+      const unitDir = path.join(home, ".config", "systemd", "user");
+      yield* Effect.forEach(
+        [
+          { onCalendar: "*-*-* 02:30:00", expected: "*-*-* 03:00:00" },
+          { onCalendar: "*-*-* 04:00:00", expected: "*-*-* 04:00:00" },
+        ],
+        Effect.fn(function* ({ onCalendar, expected }) {
+          const refreshed = yield* captureOutput(
+            runDeepInstallTimer({
+              refresh: true,
+              owner: "",
+              bunPath: O.none(),
+              envFile: O.none(),
+              onCalendar,
+              uninstall: false,
+            }).pipe(refreshWith(runner), withHome(home))
+          );
+          assertSuccess(refreshed.result, undefined);
+          const service = Str.split(
+            yield* fs.readFileString(path.join(unitDir, "beep-graft-deep-refresh.service")),
+            "\n"
+          );
+          expect(A.filter(service, Str.startsWith("Exec"))).toEqual([
+            `ExecStartPre=/usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
+            `ExecStartPre="${shim}" install --frozen-lockfile`,
+            `ExecStart="${shim}" run beep graft deep refresh --owner "${owner}" --jobs 16`,
+          ]);
+          expect(service).toContain(`WorkingDirectory=${owner}`);
+          expect(service).toContain(`EnvironmentFile=${envFile}`);
+          const timer = yield* fs.readFileString(path.join(unitDir, "beep-graft-deep-refresh.timer"));
+          expect(Str.split(timer, "\n")).toContain(`OnCalendar=${expected}`);
+        })
+      );
+    })
   );
 });

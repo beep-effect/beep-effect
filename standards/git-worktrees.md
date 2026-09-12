@@ -17,6 +17,9 @@ Why this layout:
 - It keeps worktrees **outside** the main repo directory.
 - That matches current WebStorm guidance for Git worktrees.
 - It avoids the nested-worktree layout Claude Code uses by default with `claude --worktree`.
+  The Claude Code desktop app still creates `<checkout-root>/.claude/worktrees/<name>`
+  on its own; those lanes are retirement-eligible too (see below), they are just
+  not where `bun run beep worktree new` puts anything.
 
 ## What A Worktree Actually Is
 
@@ -166,6 +169,12 @@ The sanctioned retirement command for a lane that may contain local residue is:
 ```bash
 bun run beep worktree remove <name> --archive [--delete-branch]
 ```
+
+`<name>` resolves under the sibling worktrees root first and then under the
+clone's `.claude/worktrees/`, so a Claude Code desktop lane retires with the
+same command. From inside the lane, after its pull request merged, the one-shot
+form is `bun run beep yeet sweep --retire`: it archive-retires the invoking
+worktree, deletes the branch, and sweeps the owning clone.
 
 Forced removal is unsupported and remains denied by agent policy. Archive mode
 is the only removal path for local residue: the CLI inspects tracked and

@@ -202,6 +202,19 @@ bun run beep yeet sweep --plan
 bun run beep yeet sweep
 ```
 
+- From inside a linked worktree (a Claude Code `.claude/worktrees/<name>` lane
+  or a sibling `-worktrees` lane) the sweep above only fetch-prunes, because
+  `main` lives in the owning clone and the merged branch is checked out right
+  here. `--retire` is the post-merge closeout for that case: it archive-retires
+  this worktree (dirty files and unpushed commits preserved under the residue
+  root), deletes the branch, then sweeps the owning clone. It refuses until the
+  PR is MERGED and heads this branch, so running it early is safe:
+
+```bash
+bun run beep yeet sweep --retire --plan
+bun run beep yeet sweep --retire
+```
+
 - Post and resolve the drafted review-thread replies for this branch's PR:
 
 ```bash
@@ -357,9 +370,15 @@ from a real security failure) before shipping such a fix.
     conflicted. `bun run beep yeet status --remote` prints a `merge-ready:` line
     that names the first failing criterion instead of making you read three
     surfaces.
-11. After the merge lands, run `bun run beep yeet sweep` — or let
-    `monitor --until-merged` run it on merged detection — so the next branch does
-    not start from a stale clone.
+11. After the merge lands, run `bun run beep yeet sweep` — or, from a lane
+    worktree, `bun run beep yeet sweep --retire` — or let
+    `monitor --until-merged` run the sweep on merged detection — so the next
+    branch does not start from a stale clone and the lane does not linger.
+    If the merged change touched a systemd unit renderer, re-render the
+    installed units from the swept clone with
+    `bun run beep research install-timers --refresh` and/or
+    `bun run beep graft deep install-timer --refresh` (see
+    `docs/runbooks/systemd-timers.md`). Do not hand any of this to the operator.
 
 `yeet closeout` is read-first. It classifies review threads and bot findings and
 writes Yeet artifacts locally. It posts a Greptile rerun comment only when

@@ -129,6 +129,11 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(bun run beep goals:*)",
   "Bash(bun run beep lint:*)",
   "Bash(bun run beep laws:*)",
+  "Bash(bun run beep research install-timers:*)",
+  "Bash(bun run beep graft deep install-timer:*)",
+  "Bash(systemctl --user list-timers:*)",
+  "Bash(systemctl --user status:*)",
+  "Bash(journalctl --user:*)",
   "Bash(rm -rf .beep/fallow)",
   "Bash(bunx commitlint:*)",
   "Bash(bun install:*)",
@@ -143,7 +148,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 57-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI, plus the read-only Graft code-graph query subcommands and the exact structural `graft build` (never `--deep`, which spends model quota, nor `init`/`uninstall`/`upgrade`, which rewrite tracked agent wiring and are denied outright).",
+      "Exact 62-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI, plus the read-only Graft code-graph query subcommands and the exact structural `graft build` (never `--deep`, which spends model quota, nor `init`/`uninstall`/`upgrade`, which rewrite tracked agent wiring and are denied outright).",
   })
 );
 

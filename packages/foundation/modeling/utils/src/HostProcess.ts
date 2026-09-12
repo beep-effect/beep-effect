@@ -19,16 +19,7 @@ import { Context } from "effect";
 const $I = $RepoUtilsId.create("HostProcess");
 
 /**
- * Host process handle read through `globalThis` (never a bare `process`
- * identifier) so evaluating this module — and the `@beep/utils` barrel — is
- * safe in browser bundles, where the global is absent. Mirrors the lazy
- * `globalThis.process?.getBuiltinModule` idiom in `Path.ts` / `FileSystem.ts`.
- */
-const hostProcess: { readonly platform?: string; readonly arch?: string } | undefined = globalThis.process;
-
-/**
- * The host operating system platform, read once at module load; `"browser"`
- * when no host process global exists (browser bundles).
+ * The host operating system platform, read once at module load.
  *
  * **When to use**
  *
@@ -46,11 +37,10 @@ const hostProcess: { readonly platform?: string; readonly arch?: string } | unde
  * @category constants
  * @since 0.0.0
  */
-export const currentHostPlatform: string = hostProcess?.platform ?? "browser";
+export const currentHostPlatform: string = process.platform;
 
 /**
- * The host CPU architecture, read once at module load; `"unknown"` when no
- * host process global exists (browser bundles).
+ * The host CPU architecture, read once at module load.
  *
  * **When to use**
  *
@@ -68,7 +58,7 @@ export const currentHostPlatform: string = hostProcess?.platform ?? "browser";
  * @category constants
  * @since 0.0.0
  */
-export const currentHostArchitecture: string = hostProcess?.arch ?? "unknown";
+export const currentHostArchitecture: string = process.arch;
 
 /**
  * Reference for the host operating system platform.
