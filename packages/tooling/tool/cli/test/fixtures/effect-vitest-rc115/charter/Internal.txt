@@ -1,5 +1,5 @@
 // Exact declaration excerpts from packages/vitest/src/internal/internal.ts at
-// @effect/vitest@4.0.0-rc.113 (MIT; see ../LICENSE).
+// @effect/vitest@4.0.0-rc.115 (MIT; see ../LICENSE).
 // Pinned full-file SHA-256: 155930c2d861f93c27c32f1d2d05261f3d3eb8cbade23ea53cc17df89ed1654b
 
 // @effect-vitest-anchor internal.runTest.abort-finalizers 37 51

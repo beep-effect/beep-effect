@@ -1,8 +1,8 @@
 diff --git a/dist/NodeFileSystem.js b/dist/NodeFileSystem.js
-index 532c1c7987afef3e27249000cb6c9782df4d1952..c9767b8b551252f4ce3a45973a91e20279b6d19c 100644
+index a94f50e..597a676 100644
 --- a/dist/NodeFileSystem.js
 +++ b/dist/NodeFileSystem.js
-@@ -231,7 +231,7 @@ const makeFile = /*#__PURE__*/(() => {
+@@ -232,7 +232,7 @@ const makeFile = /*#__PURE__*/(() => {
      write(buffer) {
        return Effect.suspend(() => {
          const position = this.position;
@@ -11,7 +11,7 @@ index 532c1c7987afef3e27249000cb6c9782df4d1952..c9767b8b551252f4ce3a45973a91e202
            if (!this.append) {
              this.position = position + BigInt(bytesWritten);
            }
-@@ -242,7 +242,7 @@ const makeFile = /*#__PURE__*/(() => {
+@@ -243,7 +243,7 @@ const makeFile = /*#__PURE__*/(() => {
      writeAllChunk(buffer) {
        return Effect.suspend(() => {
          const position = this.position;
@@ -21,10 +21,10 @@ index 532c1c7987afef3e27249000cb6c9782df4d1952..c9767b8b551252f4ce3a45973a91e202
              return Effect.fail(Error.systemError({
                module: "FileSystem",
 diff --git a/src/NodeFileSystem.ts b/src/NodeFileSystem.ts
-index 586142507ce0d0cceb793afbcedf066f361c4943..cc679a71013bd137b4ffa83f1f5ebd0606ef0396 100644
+index 19fabb0..4aed757 100644
 --- a/src/NodeFileSystem.ts
 +++ b/src/NodeFileSystem.ts
-@@ -370,7 +370,7 @@ const makeFile = (() => {
+@@ -371,7 +371,7 @@ const makeFile = (() => {
            this.append ? Effect.succeed(undefined) : positionToNumber(position, "write"),
            (nodePosition) =>
              Effect.map(
@@ -33,7 +33,7 @@ index 586142507ce0d0cceb793afbcedf066f361c4943..cc679a71013bd137b4ffa83f1f5ebd06
                (bytesWritten) => {
                  if (!this.append) {
                    this.position = position + BigInt(bytesWritten)
-@@ -389,7 +389,7 @@ const makeFile = (() => {
+@@ -390,7 +390,7 @@ const makeFile = (() => {
            this.append ? Effect.succeed(undefined) : positionToNumber(position, "writeAll"),
            (nodePosition) =>
              Effect.flatMap(

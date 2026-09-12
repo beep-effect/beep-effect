@@ -137,8 +137,11 @@ const cssComment = /\/\*[\s\S]*?\*\//gu;
 const cssEscape = /\\(?:([0-9a-f]{1,6})(?:\r\n|[\t\n\f\r ])?|([^\n\f\r0-9a-f]))/giu;
 const cssUrl = /url\s*\(/iu;
 const localFragmentUrl = /url\s*\(\s*(?:#([^"'()\s]+)|(["'])#([^"'()\s]+)\2)\s*\)/giu;
+// Stylesheet `url(...)` is not banned outright: `hasSafeLocalFragmentUrls` admits
+// only `url(#id)` references that resolve to one internal target (Mermaid 12
+// references its own `<filter>` drop shadows this way) and rejects every other URL.
 const unsafeStylesheetToken =
-  /@|expression\s*\(|(?:data|javascript|vbscript)\s*:|(?:-webkit-)?image-set\s*\(|image\s*\(|src\s*\(|url\s*\(/iu;
+  /@|expression\s*\(|(?:data|javascript|vbscript)\s*:|(?:-webkit-)?image-set\s*\(|image\s*\(|src\s*\(/iu;
 const layoutOffsetProperties = HashSet.make(
   "bottom",
   "inset",
@@ -350,13 +353,18 @@ const selectorsTargetRoot = (selectors: ReadonlyArray<string>, rootSelector: str
   return targetsRoot;
 };
 
-const hasUnsafeStyleRule = (rule: CSSStyleRule): boolean =>
-  (rule.cssRules?.length ?? 0) !== 0 ||
-  unsafeStylesheetToken.test(normalizeCssTokens(rule.style.cssText)) ||
-  hasUnsafeLayoutStyle(rule.style);
+const hasUnsafeStyleRule = (rule: CSSStyleRule, root: Element): boolean => {
+  const cssText = normalizeCssTokens(rule.style.cssText);
+  return (
+    (rule.cssRules?.length ?? 0) !== 0 ||
+    unsafeStylesheetToken.test(cssText) ||
+    !hasSafeLocalFragmentUrls(root, cssText) ||
+    hasUnsafeLayoutStyle(rule.style)
+  );
+};
 
-const isSafeStyleRule = (rule: CSSStyleRule, rootSelector: string): boolean => {
-  if (hasUnsafeStyleRule(rule)) return false;
+const isSafeStyleRule = (rule: CSSStyleRule, rootSelector: string, root: Element): boolean => {
+  if (hasUnsafeStyleRule(rule, root)) return false;
   const selectors = splitSelectorList(rule.selectorText);
   if (selectors === undefined) return false;
   if (A.some(selectors, (selector) => Str.includes("#")(Str.slice(Str.length(rootSelector))(selector)))) return false;
@@ -365,8 +373,9 @@ const isSafeStyleRule = (rule: CSSStyleRule, rootSelector: string): boolean => {
   return !targetsRoot || isSafeMermaidRootStyle(rule.style);
 };
 
-const isSafeMermaidStyles = (styles: string, renderId: string): boolean => {
-  if (unsafeStylesheetToken.test(normalizeCssTokens(styles))) return false;
+const isSafeMermaidStyles = (styles: string, renderId: string, root: Element): boolean => {
+  const normalizedStyles = normalizeCssTokens(styles);
+  if (unsafeStylesheetToken.test(normalizedStyles) || !hasSafeLocalFragmentUrls(root, normalizedStyles)) return false;
 
   let style: HTMLStyleElement | undefined;
   try {
@@ -380,7 +389,7 @@ const isSafeMermaidStyles = (styles: string, renderId: string): boolean => {
     if (rules === undefined) return false;
 
     for (const rule of rules) {
-      if (!(rule instanceof CSSStyleRule) || !isSafeStyleRule(rule, `#${renderId}`)) return false;
+      if (!(rule instanceof CSSStyleRule) || !isSafeStyleRule(rule, `#${renderId}`, root)) return false;
     }
     return true;
   } catch {
@@ -504,6 +513,15 @@ const rewriteMermaidTreeAttributeReferences = (
   }
 };
 
+const rewriteMermaidStylesheetReferences = (
+  root: Element,
+  ids: MutableHashMap.MutableHashMap<string, string>
+): void => {
+  for (const style of root.querySelectorAll("style")) {
+    style.textContent = rewriteLocalFragmentUrls(ids, style.textContent ?? "");
+  }
+};
+
 const namespaceMermaidIds = (root: Element, renderId: string): boolean => {
   if (globalThis.document.getElementById(renderId) !== null) return false;
 
@@ -511,6 +529,7 @@ const namespaceMermaidIds = (root: Element, renderId: string): boolean => {
   if (ids === undefined) return false;
 
   rewriteMermaidTreeAttributeReferences(root, ids);
+  rewriteMermaidStylesheetReferences(root, ids);
   return true;
 };
 
@@ -632,7 +651,7 @@ const isSafeMermaidAttribute = (element: Element, root: Element, attribute: Attr
 const isSafeMermaidElement = (element: Element, root: Element, renderId: string): boolean => {
   if (element.namespaceURI !== svgNamespace || HashSet.has(forbiddenSvgElements, element.localName.toLowerCase()))
     return false;
-  if (element.localName === "style" && !isSafeMermaidStyles(element.textContent ?? "", renderId)) return false;
+  if (element.localName === "style" && !isSafeMermaidStyles(element.textContent ?? "", renderId, root)) return false;
 
   for (const attribute of element.attributes) {
     if (!isSafeMermaidAttribute(element, root, attribute, element === root)) return false;

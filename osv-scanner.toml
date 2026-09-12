@@ -15,7 +15,8 @@
 # Retired dependency-refresh ignores are intentionally absent when the lockfile
 # resolves fixed versions. The current lock resolves esbuild 0.25.12, form-data
 # 4.0.6, protobufjs 8.6.5, and nested protobufjs 7.6.4 naturally from dependency
-# ranges. Root package.json has no active overrides object; `resolutions#` is a
+# ranges. Root package.json `overrides` pins lodash-es to ^4.18.0 because chevrotain
+# (via mermaid 12) pins the vulnerable 4.17.23 exactly; `resolutions#` is a
 # comment-only note key.
 
 [[IgnoredVulns]]

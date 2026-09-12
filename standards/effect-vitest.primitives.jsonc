@@ -1,14 +1,14 @@
-// Generated from the verified @effect/vitest@4.0.0-rc.113 source snapshot.
+// Generated from the verified @effect/vitest@4.0.0-rc.115 source snapshot.
 // Regenerate anchors, review semantic diffs, and update the pin as one change.
 {
   "schemaVersion": "effect-vitest-primitives/v1",
   "package": "@effect/vitest",
-  "version": "4.0.0-rc.113",
-  "tag": "@effect/vitest@4.0.0-rc.113",
-  "sha": "d3b837aee836f35d625d55205f7d6e61305fc198",
+  "version": "4.0.0-rc.115",
+  "tag": "@effect/vitest@4.0.0-rc.115",
+  "sha": "4a05d4914fa2327a42bd75fe77c22c188becf3b4",
   "coverage": {
     "exportStarModule": "vitest",
-    "method": "Immutable rc113 direct exports, public Vitest namespace members/options, all utils exports and every non-fenced README heading; peer Vitest export-star remains one explicit boundary. Native Arbitrary options and internal lifecycle anchors are supplementary evidence, not invented @effect/vitest exports.",
+    "method": "Immutable rc115 direct exports, public Vitest namespace members/options, all utils exports and every non-fenced README heading; peer Vitest export-star remains one explicit boundary. Native Arbitrary options and internal lifecycle anchors are supplementary evidence, not invented @effect/vitest exports.",
     "sourceFiles": [
       "packages/effect/src/Effect.ts",
       "packages/effect/src/Layer.ts",
@@ -79,7 +79,7 @@
       "startLine": 185,
       "endLine": 185,
       "signature": "() => void",
-      "description": "Calls Vitest expect.addEqualityTesters with an empty list in rc113.",
+      "description": "Calls Vitest expect.addEqualityTesters with an empty list in rc115.",
       "whenToUse": "No detector replacement: retained public API; current implementation installs no custom equality predicates.",
       "whenNotToUse": "Do not call repeatedly as a per-test migration pattern.",
       "replaces": [],
@@ -1115,15 +1115,15 @@
       "startLine": 5,
       "endLine": 14,
       "signature": "Installation",
-      "description": "rc113 requires Vitest >=5.0.0 <6.0.0 and compatible Node/Vite peers.",
+      "description": "rc115 requires Vitest >=5.0.0 <6.0.0 and compatible Node/Vite peers.",
       "whenToUse": "No detector replacement: use this section to verify the required Vitest peer and rc package installation shape.",
       "whenNotToUse": "Do not use the floating @rc command as a production pin or source anchor.",
       "replaces": [],
       "example": "import type { API } from \"@effect/vitest\"\ndeclare const api: API\nvoid api",
       "gotchas": [
-        "Installed Vitest 4.1.11 at audit time violates the rc113 Vitest peer range.",
+        "Installed Vitest 4.1.11 at audit time violates the rc115 Vitest peer range.",
         "Reference README specifies Node ^22.12.0 || ^24.0.0 || >=26.0.0 and Vite 6.4+ within majors 6-8.",
-        "Graph pins rc113 commit; README @rc installation command itself floats."
+        "Graph pins rc115 commit; README @rc installation command itself floats."
       ]
     },
     {
@@ -1140,7 +1140,7 @@
       "replaces": [],
       "example": "import { it } from \"@effect/vitest\"\nvoid it.layer",
       "gotchas": [
-        "Generated docs can move after rc113; source anchors remain immutable-tag-local."
+        "Generated docs can move after rc115; source anchors remain immutable-tag-local."
       ]
     },
     {
@@ -1395,8 +1395,8 @@
       "name": "Effect.fnUntraced",
       "kind": "function",
       "file": "packages/effect/src/Effect.ts",
-      "startLine": 13489,
-      "endLine": 13489,
+      "startLine": 13529,
+      "endLine": 13529,
       "signature": "fn.Untraced",
       "description": "Creates reusable Effect functions without trace capture.",
       "whenToUse": "No detector replacement: use for small hot-path or test callbacks where trace capture is intentionally unnecessary.",
@@ -1412,8 +1412,8 @@
       "name": "Effect.annotateLogs",
       "kind": "function",
       "file": "packages/effect/src/Effect.ts",
-      "startLine": 13952,
-      "endLine": 13988,
+      "startLine": 13992,
+      "endLine": 14028,
       "signature": "annotateLogs = dual<\n  {\n    (\n      key: string,\n      value: unknown\n    ): <A, E, R>(effect: Effect<A, E, R>) => Effect<A, E, R>\n    (\n      values: Record<string, unknown>\n    ): <A, E, R>(effect: Effect<A, E, R>) => Effect<A, E, R>\n  },\n  {\n    <A, E, R>(\n      effect: Effect<A, E, R>,\n      key: string,\n      value: unknown\n    ): Effect<A, E, R>\n    <A, E, R>(\n      effect: Effect<A, E, R>,\n      values: Record<string, unknown>\n    ): Effect<A, E, R>\n  }\n>(\n  (args) => isEffect(args[0]),\n  <A, E, R>(\n    effect: Effect<A, E, R>,\n    ...args: [Record<string, unknown>] | [key: string, value: unknown]\n  ): Effect<A, E, R> =>\n    internal.updateService(effect, CurrentLogAnnotations, (annotations) => {\n      const newAnnotations = args.length === 1 ? { ...annotations, ...args[0] } : { ...annotations }\n      if (args.length === 1) {\n        return newAnnotations\n      } else {\n        InternalRecord.assignProperty(newAnnotations, args[0], args[1])\n      }\n      return newAnnotations\n    })\n)",
       "description": "Adds log annotations around an Effect.",
       "whenToUse": "No detector replacement: use when test or production logs need structured context.",

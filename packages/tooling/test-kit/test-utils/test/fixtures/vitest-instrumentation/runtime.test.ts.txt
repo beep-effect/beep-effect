@@ -560,11 +560,14 @@ if (mode === "each-titles") {
       };
     });
   expect(collected(instrumentedTasks)).toEqual(collected(originalTasks));
-  expect(originalTasks.map((task) => task.name)).toEqual([
-    "tuple same 1 index=0 oneBased=1 escaped=% undefined",
-    "tuple same 1 index=1 oneBased=2 escaped=% undefined",
-    "object 'alpha' nested=1 index=0 oneBased=1 escaped=% { label: 'alpha', nested: { value: 1 } }",
-    "object 'beta' nested=2 index=1 oneBased=2 escaped=% { label: 'beta', nested: { value: 2 } }",
+  // Vitest 5 stopped quoting `$label` strings and appends a formatter-dependent
+  // dump of the unconsumed case argument, so pin only the interpolated title.
+  const interpolatedTitle = Str.replace(/ escaped=% .*$/, " escaped=%");
+  expect(originalTasks.map((task) => interpolatedTitle(task.name))).toEqual([
+    "tuple same 1 index=0 oneBased=1 escaped=%",
+    "tuple same 1 index=1 oneBased=2 escaped=%",
+    "object alpha nested=1 index=0 oneBased=1 escaped=%",
+    "object beta nested=2 index=1 oneBased=2 escaped=%",
   ]);
   afterAll(() => {
     expect(originalRuns).toBe(4);

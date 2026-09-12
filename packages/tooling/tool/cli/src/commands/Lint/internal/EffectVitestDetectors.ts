@@ -280,7 +280,7 @@ const dataShapeReference = (node: MorphNode, imports: EffectVitestImports): bool
   (isProvenanceExpression(node, imports, OPTION_MODULES, "Option", ["isSome", "isNone"]) ||
     isProvenanceExpression(node, imports, RESULT_MODULES, "Result", ["isSuccess", "isFailure"]) ||
     isProvenanceExpression(node, imports, EXIT_MODULES, "Exit", ["isSuccess", "isFailure"]));
-// Only these rc.113 public operations have a fixed tagged/Boolean result after full application.
+// Only these rc.115 public operations have a fixed tagged/Boolean result after full application.
 const taggedValueOperations = [
   { modules: OPTION_MODULES, namespace: "Option", members: ["all", "flatten"], arity: 1 },
   { modules: OPTION_MODULES, namespace: "Option", members: ["map", "flatMap", "filter", "contains"], arity: 2 },

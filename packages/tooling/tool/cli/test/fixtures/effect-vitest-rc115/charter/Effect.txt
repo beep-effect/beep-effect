@@ -1,6 +1,6 @@
 // Exact declaration excerpts from packages/effect/src/Effect.ts at
-// @effect/vitest@4.0.0-rc.113 (MIT; see ../LICENSE).
-// Pinned full-file SHA-256: 77e0178e2fc26844b19027a41d3f90ac8bad56266fdceb8a6bc2b87ba83c86a2
+// @effect/vitest@4.0.0-rc.115 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: f5afcafb823cf84181aabd49320d225d93d8dd8ecd63beda2bc5ba78df49e401
 
 // @effect-vitest-anchor Effect.timeoutOrElse 4637 4649
 export const timeoutOrElse: {
@@ -43,10 +43,10 @@ export const scopedWith: <A, E, R>(
   f: (scope: Scope) => Effect<A, E, R>
 ) => Effect<A, E, R> = internal.scopedWith
 
-// @effect-vitest-anchor Effect.fnUntraced 13489 13489
+// @effect-vitest-anchor Effect.fnUntraced 13529 13529
 export const fnUntraced: fn.Untraced = internal.fnUntraced
 
-// @effect-vitest-anchor Effect.annotateLogs 13952 13988
+// @effect-vitest-anchor Effect.annotateLogs 13992 14028
 export const annotateLogs = dual<
   {
     (

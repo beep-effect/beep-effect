@@ -1047,7 +1047,7 @@ export class EffectVitestPrimitiveGraphDocument extends S.Class<EffectVitestPrim
  * ```ts
  * import { EffectVitestInventoryDocument } from "@beep/repo-cli/commands/Lint"
  *
- * const document = EffectVitestInventoryDocument.make({ schemaVersion: "effect-vitest-inventory/v1", effectVitestVersion: "4.0.0-rc.113", scope: [], findings: [] })
+ * const document = EffectVitestInventoryDocument.make({ schemaVersion: "effect-vitest-inventory/v1", effectVitestVersion: "4.0.0-rc.115", scope: [], findings: [] })
  * console.log(document.findings.length)
  * ```
  *
@@ -1385,7 +1385,7 @@ export const encodeEffectVitestPrimitiveGraphDocument: {
  *
  * const decoded = decodeEffectVitestInventoryDocument({
  *   schemaVersion: "effect-vitest-inventory/v1",
- *   effectVitestVersion: "4.0.0-rc.113",
+ *   effectVitestVersion: "4.0.0-rc.115",
  *   scope: [],
  *   findings: []
  * })
@@ -1410,7 +1410,7 @@ export const decodeEffectVitestInventoryDocument: {
  *
  * const document = EffectVitestInventoryDocument.make({
  *   schemaVersion: "effect-vitest-inventory/v1",
- *   effectVitestVersion: "4.0.0-rc.113",
+ *   effectVitestVersion: "4.0.0-rc.115",
  *   scope: [],
  *   findings: []
  * })
