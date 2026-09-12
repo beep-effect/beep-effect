@@ -451,6 +451,29 @@ describe("ai-metrics command", () => {
     )
   );
 
+  it.effect("rejects a missing HOME and an unsafe --bun-path for the forwarder timer", () =>
+    withTempDirectory(
+      Effect.fn(function* (home) {
+        const path = yield* Path.Path;
+        const timerArgs = ["forwarder", "timer", "--target", "local", "--data-root", path.join(home, "metrics")];
+        const withEnvironment = (environment: Record<string, string>) =>
+          provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(environment)));
+        const missingHome = yield* Effect.flip(runAiMetricsCommand(timerArgs).pipe(withEnvironment({})));
+        expect(missingHome).toMatchObject({
+          _tag: "AiMetricsCommandError",
+          message: expect.stringContaining("HOME is not set"),
+        });
+        const unsafePin = yield* Effect.flip(
+          runAiMetricsCommand([...timerArgs, "--bun-path", '/opt/"bun"/bin/bun']).pipe(withEnvironment({ HOME: home }))
+        );
+        expect(unsafePin).toMatchObject({
+          _tag: "AiMetricsCommandError",
+          message: expect.stringContaining("Invalid forwarder timer Bun executable path"),
+        });
+      }, provideScopedLayer(TestConsole.layer))
+    )
+  );
+
   it.effect("renders a bounded dankserver forwarder timer command", () =>
     withTempDirectory((tmpDir) =>
       Effect.gen(function* () {
