@@ -1,0 +1,13 @@
+{
+  "schema": "beep.research.packet.manifest/v0",
+  "date": "2026-09-12",
+  "files": [
+    "REPORT.md",
+    "SOURCES.md",
+    "SUGGESTED_ACTIONS.md",
+    "PROMPT.md",
+    "claims.jsonl",
+    "RUN.json"
+  ],
+  "claims": 26
+}
