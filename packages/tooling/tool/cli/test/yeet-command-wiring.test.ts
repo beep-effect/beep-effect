@@ -47,6 +47,15 @@ describe("yeet merge-loop command wiring", () => {
       ],
       // Hosted runners check out a detached HEAD, where publish/monitor refuse with a
       // PR-branch-only guard after dispatch; this test proves dispatch, not the guard.
+      //
+      // Known residual: how far past the guard each route runs still depends on
+      // the checkout, so a workstation feature branch executes more of
+      // `Handler`/`Planner` here than a detached hosted HEAD does. The rows that
+      // difference can mint are the #1068 class. The publish plan — the one row
+      // it actually minted — is pinned deterministically by the
+      // "yeet publish plan wiring" block below; closing the rest needs a temp
+      // repository on a fixed branch plus a Turbo snapshot seam for
+      // `hydrateYeetRunContext`, which is its own change.
       (args) => runYeetCommand(args).pipe(Effect.catchTag("YeetCommandError", () => Effect.void)),
       { discard: true }
     ).pipe(provideScopedLayer(commandTestLayer))
