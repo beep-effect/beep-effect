@@ -225,6 +225,15 @@ export const spanRefLabel = (ref: SpanRef): string => `${ref.source}·${ref.span
 /**
  * One verbatim span of a source artifact.
  *
+ * **Example** (Make a verbatim span)
+ *
+ * ```ts
+ * import { SourceSpan } from "@/session/Session.schema"
+ *
+ * const span = SourceSpan.make({ id: "S2", text: "We need cash by the fall.", fixtureId: "email-0001" })
+ * console.log(span.id)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -239,6 +248,16 @@ export class SourceSpan extends S.Class<SourceSpan>($I`SourceSpan`)(
 
 /**
  * A source artifact (email or call note) with its spans.
+ *
+ * **Example** (Check the synthetic email)
+ *
+ * ```ts
+ * import { SourceArtifact } from "@/session/Session.schema"
+ * import { emailSource } from "@/session/session"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(SourceArtifact)(emailSource), emailSource.spans.length)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -262,6 +281,15 @@ export class SourceArtifact extends S.Class<SourceArtifact>($I`SourceArtifact`)(
  * The receipt attached to every record: requested action, reviewer, candidate
  * reference, evidence, policy basis, decision state, time, and producer.
  *
+ * **Example** (Read a record's receipt)
+ *
+ * ```ts
+ * import { reviewPassage } from "@/session/session"
+ *
+ * const receipt = reviewPassage.records[0].receipt
+ * console.log(receipt.reviewer, receipt.state)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -281,6 +309,16 @@ export class Receipt extends S.Class<Receipt>($I`Receipt`)(
 
 /**
  * One addressable record in a screen passage.
+ *
+ * **Example** (Read the cursor record)
+ *
+ * ```ts
+ * import { reviewPassage } from "@/session/session"
+ * import * as A from "effect/Array"
+ *
+ * const record = A.headNonEmpty(reviewPassage.records)
+ * console.log(record.no, record.kind, record.state)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -310,6 +348,22 @@ export class SessionRecord extends S.Class<SessionRecord>($I`SessionRecord`)(
 /**
  * The approval gate shown at the head of the review passage.
  *
+ * **Example** (Make a pending gate)
+ *
+ * ```ts
+ * import { ApprovalGate } from "@/session/Session.schema"
+ *
+ * const gate = ApprovalGate.make({
+ *   no: "GTE 0300",
+ *   reviewer: "TIA ROWAN",
+ *   state: "PENDING",
+ *   policyBasis: "Client-facing drafts wait for advisor review.",
+ *   requestedActions: ["Send the draft reply"],
+ *   fixtureId: "gate-0300",
+ * })
+ * console.log(gate.state)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -328,6 +382,15 @@ export class ApprovalGate extends S.Class<ApprovalGate>($I`ApprovalGate`)(
 /**
  * A supersession chain rendered as `CLM 0099 ⟶ CLM 0103`.
  *
+ * **Example** (Make a supersession chain)
+ *
+ * ```ts
+ * import { Chain } from "@/session/Session.schema"
+ *
+ * const chain = Chain.make({ from: "CLM 0099", to: "CLM 0103" })
+ * console.log(`${chain.from} ⟶ ${chain.to}`)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -341,6 +404,14 @@ export class Chain extends S.Class<Chain>($I`Chain`)(
 
 /**
  * One screen passage: a beat of the session with its records.
+ *
+ * **Example** (Read a passage's cursor)
+ *
+ * ```ts
+ * import { reviewPassage } from "@/session/session"
+ *
+ * console.log(reviewPassage.beat, reviewPassage.cursor)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -364,6 +435,19 @@ export class ScreenPassage extends S.Class<ScreenPassage>($I`ScreenPassage`)(
 /**
  * One entry of the meeting-preparation packet.
  *
+ * **Example** (Make a packet line)
+ *
+ * ```ts
+ * import { PacketEntry } from "@/session/Session.schema"
+ *
+ * const entry = PacketEntry.make({
+ *   text: "Client needs cash before the fall.",
+ *   refs: ["CLM 0101"],
+ *   evidence: [{ source: "SRC 0001", span: "S2" }],
+ * })
+ * console.log(entry.refs.length)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -379,6 +463,15 @@ export class PacketEntry extends S.Class<PacketEntry>($I`PacketEntry`)(
 /**
  * One packet section in the DEMO-SCRIPT order.
  *
+ * **Example** (Read the first packet section)
+ *
+ * ```ts
+ * import { packet } from "@/session/session"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.headNonEmpty(packet.sections).heading)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -392,6 +485,14 @@ export class PacketSection extends S.Class<PacketSection>($I`PacketSection`)(
 
 /**
  * The assembled meeting-preparation packet with its receipt.
+ *
+ * **Example** (Read the packet receipt)
+ *
+ * ```ts
+ * import { packet } from "@/session/session"
+ *
+ * console.log(packet.no, packet.forCall, packet.receipt.state)
+ * ```
  *
  * @category models
  * @since 0.0.0

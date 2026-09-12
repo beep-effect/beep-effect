@@ -81,6 +81,13 @@ export const metadata: Metadata = {
  * console.log(layout.type)
  * ```
  *
+ * **Details**
+ *
+ * React cannot emit a bare comment node, so the direction contract renders
+ * through the one hidden wrapper that is the first child of the body. The
+ * comment is the wrapper's only content, so a grep of the built markup for
+ * the seed key still finds it first.
+ *
  * @category constructors
  * @since 0.0.0
  */

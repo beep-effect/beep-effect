@@ -12,7 +12,15 @@
 /**
  * Page metadata strings.
  *
- * @category copy
+ * **Example** (Read the meta copy)
+ *
+ * ```ts
+ * import { meta } from "@/content/copy"
+ *
+ * console.log(meta.title)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const meta = {
@@ -25,7 +33,15 @@ export const meta = {
 /**
  * Site navigation and calls to action.
  *
- * @category copy
+ * **Example** (Read the nav copy)
+ *
+ * ```ts
+ * import { nav } from "@/content/copy"
+ *
+ * console.log(nav.primary.label)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const nav = {
@@ -43,7 +59,15 @@ export const nav = {
 /**
  * Hero.
  *
- * @category copy
+ * **Example** (Read the hero copy)
+ *
+ * ```ts
+ * import { hero } from "@/content/copy"
+ *
+ * console.log(hero.headline)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const hero = {
@@ -57,7 +81,15 @@ export const hero = {
 /**
  * Product pillars.
  *
- * @category copy
+ * **Example** (Read the pillars copy)
+ *
+ * ```ts
+ * import { pillars } from "@/content/copy"
+ *
+ * console.log(pillars.heading)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const pillars = {
@@ -87,7 +119,15 @@ export const pillars = {
 /**
  * How it works: the four beats around the interactive session.
  *
- * @category copy
+ * **Example** (Read the howItWorks copy)
+ *
+ * ```ts
+ * import { howItWorks } from "@/content/copy"
+ *
+ * console.log(howItWorks.heading)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const howItWorks = {
@@ -118,7 +158,15 @@ export const howItWorks = {
 /**
  * Skills section.
  *
- * @category copy
+ * **Example** (Read the skills copy)
+ *
+ * ```ts
+ * import { skills } from "@/content/copy"
+ *
+ * console.log(skills.heading)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const skills = {
@@ -143,7 +191,15 @@ Do:
 /**
  * Why Todox: notetaker versus runtime.
  *
- * @category copy
+ * **Example** (Read the whyTodox copy)
+ *
+ * ```ts
+ * import { whyTodox } from "@/content/copy"
+ *
+ * console.log(whyTodox.heading)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const whyTodox = {
@@ -164,7 +220,15 @@ export const whyTodox = {
 /**
  * Compliance posture.
  *
- * @category copy
+ * **Example** (Read the trust copy)
+ *
+ * ```ts
+ * import { trust } from "@/content/copy"
+ *
+ * console.log(trust.heading)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const trust = {
@@ -181,7 +245,15 @@ export const trust = {
 /**
  * FAQ.
  *
- * @category copy
+ * **Example** (Read the faq copy)
+ *
+ * ```ts
+ * import { faq } from "@/content/copy"
+ *
+ * console.log(faq.heading)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const faq = {
@@ -223,7 +295,15 @@ export const faq = {
 /**
  * Demo request section.
  *
- * @category copy
+ * **Example** (Read the contact copy)
+ *
+ * ```ts
+ * import { contact } from "@/content/copy"
+ *
+ * console.log(contact.heading)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const contact = {
@@ -246,7 +326,15 @@ export const contact = {
 /**
  * Footer and required qualification.
  *
- * @category copy
+ * **Example** (Read the footer copy)
+ *
+ * ```ts
+ * import { footer } from "@/content/copy"
+ *
+ * console.log(footer.line)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const footer = {

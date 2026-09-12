@@ -32,6 +32,14 @@ const POLICY_BASIS =
 /**
  * The fixed session date printed in every status row.
  *
+ * **Example** (Read the session date)
+ *
+ * ```ts
+ * import { SESSION_DATE } from "@/session/session"
+ *
+ * console.log(SESSION_DATE)
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -40,7 +48,15 @@ export const SESSION_DATE = "2026-04-14";
 /**
  * SRC 0001 — the incoming email, spans verbatim from the fixture body.
  *
- * @category sources
+ * **Example** (Read the client email)
+ *
+ * ```ts
+ * import { emailSource } from "@/session/session"
+ *
+ * console.log(emailSource.no, emailSource.from, emailSource.spans.length)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const emailSource = SourceArtifact.make({
@@ -82,7 +98,15 @@ export const emailSource = SourceArtifact.make({
  * SRC 0000 — the earlier planning-call note (authored) that the superseded
  * intent was drawn from.
  *
- * @category sources
+ * **Example** (Read the call note)
+ *
+ * ```ts
+ * import { callNoteSource } from "@/session/session"
+ *
+ * console.log(callNoteSource.no, callNoteSource.kind)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const callNoteSource = SourceArtifact.make({
@@ -106,7 +130,16 @@ export const callNoteSource = SourceArtifact.make({
 /**
  * Every source artifact addressable by the record inspector.
  *
- * @category sources
+ * **Example** (Count the sources)
+ *
+ * ```ts
+ * import { sources } from "@/session/session"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.length(sources))
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const sources: ReadonlyArray<SourceArtifact> = [emailSource, callNoteSource];
@@ -163,7 +196,15 @@ const tsk0201Candidate = SessionRecord.make({
 /**
  * Beat 1 — the hero session: a source lands, a span opens, a candidate posts.
  *
- * @category passages
+ * **Example** (Read the session beat)
+ *
+ * ```ts
+ * import { sessionPassage } from "@/session/session"
+ *
+ * console.log(sessionPassage.beat, sessionPassage.cursor)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const sessionPassage = ScreenPassage.make({
@@ -179,7 +220,16 @@ export const sessionPassage = ScreenPassage.make({
 /**
  * Beat 3 — supersession: the prior intent ghosts with its date, never deleted.
  *
- * @category passages
+ * **Example** (Read the supersession chain)
+ *
+ * ```ts
+ * import { supersessionPassage } from "@/session/session"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.map(O.fromUndefinedOr(supersessionPassage.chain), (chain) => chain.to))
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const supersessionPassage = ScreenPassage.make({
@@ -239,7 +289,16 @@ export const supersessionPassage = ScreenPassage.make({
 /**
  * Beat 4 — review at the gate: accept, edit, reject; the draft stays pending.
  *
- * @category passages
+ * **Example** (Read the review gate)
+ *
+ * ```ts
+ * import { reviewPassage } from "@/session/session"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.map(O.fromUndefinedOr(reviewPassage.gate), (gate) => gate.state))
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const reviewPassage = ScreenPassage.make({
@@ -351,7 +410,15 @@ const whatChanged = PacketEntry.make({
 /**
  * Beat 6 — the meeting-preparation packet and its receipt.
  *
- * @category passages
+ * **Example** (Read the packet)
+ *
+ * ```ts
+ * import { packet } from "@/session/session"
+ *
+ * console.log(packet.no, packet.sections.length)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const packet = Packet.make({
@@ -443,7 +510,16 @@ export const packet = Packet.make({
 /**
  * The three record passages in beat order.
  *
- * @category passages
+ * **Example** (Walk the passages in order)
+ *
+ * ```ts
+ * import { screenPassages } from "@/session/session"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.map(screenPassages, (passage) => passage.id))
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const screenPassages: ReadonlyArray<ScreenPassage> = [sessionPassage, supersessionPassage, reviewPassage];
@@ -469,7 +545,16 @@ const question = (no: string, text: string, span: SpanRef["span"]): SessionRecor
  * proposed for the advisor to ask, each addressed and receipted like any other
  * candidate.
  *
- * @category passages
+ * **Example** (Count the packet question records)
+ *
+ * ```ts
+ * import { packetRecords } from "@/session/session"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.length(packetRecords))
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const packetRecords: ReadonlyArray<SessionRecord> = [

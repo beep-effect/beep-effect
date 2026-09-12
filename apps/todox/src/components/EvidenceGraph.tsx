@@ -81,7 +81,16 @@ const spanText = (source: typeof emailSource, id: string): string =>
 /**
  * The authored node set, in draw order.
  *
- * @category data
+ * **Example** (Count the authored nodes)
+ *
+ * ```ts
+ * import { graphNodes } from "@/components/EvidenceGraph"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.length(graphNodes))
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const graphNodes: ReadonlyArray<GraphNode> = [
@@ -195,7 +204,16 @@ export const graphNodes: ReadonlyArray<GraphNode> = [
 /**
  * The authored edge set.
  *
- * @category data
+ * **Example** (Count the live edges)
+ *
+ * ```ts
+ * import { graphEdges } from "@/components/EvidenceGraph"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.length(A.filter(graphEdges, (edge) => edge.live)))
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const graphEdges: ReadonlyArray<GraphEdge> = [
