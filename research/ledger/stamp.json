@@ -1,11 +1,11 @@
 {
   "lastSuccessfulRun": "2026-09-12T08:14:00-05:00",
   "lastSuccessfulPacket": "research/2026-09-12",
-  "lastSuccessfulPr": 0,
+  "lastSuccessfulPr": 1123,
   "lastAttemptedRun": "2026-09-12T08:14:00-05:00",
   "lastAttemptedStatus": "partial",
   "lastAttemptedPacket": "research/2026-09-12",
-  "note": "Advances stamp after opening research/2026-09-12 as PR (number filled by publisher). Human admit is still required. Do not claim this packet merged. This run is partial (X still client-not-enrolled; no Sol/Luna; local gh CLI bad credentials — GitHub MCP used). Saturday: no tombstone reaper. Prior stamp was research/2026-09-10 / PR #1088.",
+  "note": "Advances stamp after opening research/2026-09-12 as PR #1123. Human admit is still required. Do not claim this packet merged. This run is partial (X still client-not-enrolled; no Sol/Luna; local gh CLI bad credentials — GitHub MCP used). Saturday: no tombstone reaper. Prior stamp was research/2026-09-10 / PR #1088.",
   "excludedUnmergedPackets": [
     {
       "date": "2026-08-27",
