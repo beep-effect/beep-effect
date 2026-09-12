@@ -10,8 +10,9 @@ The eight requested checks are complete. The incoming ID census, final ratificat
 bindings, Queue B quotes and engine digests pass. The prose omitted binding evidence
 duties and introduced two carried-row retirement alternatives; record-decided
 corrections are applied directly. Three judgment-dependent routing/governance findings
-(J01–J03) remain BLOCKING and unedited. A green mechanical check does not clear them.
-C4 is still unchecked, independently prohibiting run-4 launch.
+(J01–J03) were left unedited by the lane and resolved by the orchestrator the same day; see
+"Orchestrator dispositions (2026-09-12)" below for the final docket state. C4 is still
+unchecked, independently prohibiting run-4 launch.
 
 Only the docket, packet README, packet manifest and this report are authored changes.
 The incoming untracked brief remains untouched. No staging, commits, stashes,
@@ -27,7 +28,8 @@ Quotes are exact record excerpts; YAML folding and Markdown wrapping are normali
 
 ## Findings
 
-BLOCKING in an applied row describes the incoming defect. J01–J03 are unresolved.
+BLOCKING in an applied row describes the incoming defect. J01–J03 were open when the lane
+wrote this table; their orchestrator dispositions follow the table.
 
 | ID | Severity | Docket line | Record and deciding quote | Fix applied or proposed |
 | --- | --- | --- | --- | --- |
@@ -63,6 +65,28 @@ BLOCKING in an applied row describes the incoming defect. J01–J03 are unresolv
 | V06 | CONFIRMED-OK | 499 → 962 | check_manifest:1154–1168 uses relative path + newline + byte length + newline + bytes over 21 files. REVIEW-HISTORY v15: "158 families". PR #1092 review reply queues index grammar beside NDJSON and archive-path follow-ups. | All quoted digests match; four other prompts equal the run-3 manifest. Current Python 3.12 self-test passes 158 families. Denotation and seat effort are already v15; the three other follow-ups remain queued. |
 | V07 | CONFIRMED-OK | 25 → 25 | PLAN.md lines 100, 102, 104, 108, 111, 121, 124: every named checkbox is [ ]. Run-4 authoring brief: "Run 4 proper is gated" on C4. | Hard gate preserved. Verification can finish, but a pin lane must stop before creating a pin/tag/manifest/seat while C4 is unchecked. The older handoff's projection blocker is superseded by S5 amendment and current projection records. |
 | V08 | CONFIRMED-OK | 531 → 994 | Run-3 intake Not in scope and run-4 authoring brief: no scheduler/runtime work, captures, reruns, CQ/seed/contract changes, ratification/waivers or lane publication. | Section order follows run 3 after the explicit gate. All 38 generated ID lists have a preceding blank line. No prohibited Git command, seat launch, authority-record edit, capture or pin operation occurred. |
+
+## Orchestrator dispositions (2026-09-12)
+
+The three judgment findings were decided by the orchestrator after the lane's pass and applied
+to the docket in the same PR:
+
+| ID | Disposition | Docket change |
+| --- | --- | --- |
+| J01 | Accepted. `INDEX:482` describes an identity experiment with no decision prerequisite. | `so:sha256:34866c14…` moved from C(ii) to C(iii) as `assessment-model-selection` (an identity experiment over verdict records; no C4 dependence asserted). Final buckets: C(i) 14, C(ii) 2, C(iii) 68, C(iv) 54. |
+| J02 | Accepted. Ruling 17 commits C4 to issuance and custody provenance only. | The Queue A episode-closure forecast and the `recovery-durations`, `assertion-boundary` and `execution-boundaries-and-elapsed-scope` postures now state independent instrumentation requirements and say C4 is not asserted to supply them. Verbatim receipt text naming the proof-ledger writer (`ver-attempt-verdict`) is unchanged. |
+| J03 | Accepted as a governance boundary. | "The cluster lifts or re-flags together" is replaced by: the initial ratification was joint (sitting-3 Ruling 1); whether flags lift individually or only together is a run-4 sitting decision with no ruling yet. |
+
+Final docket proofs after these dispositions (2026-09-12):
+
+```text
+TOTALITY: PASS | listed: 138 | unresolved: 138 | dups: 0 | strays: 0 | missing: 0
+FIDELITY blocks=38 verbatim=138 mismatches=0
+PLACEMENT C(i): rows=14  C(ii): rows=2  C(iii): rows=68  C(iv): rows=54
+```
+
+The "Corrected docket" reproduction below records the lane's state before these dispositions
+(C(ii)=3, C(iii)=67) and is kept as the lane's evidence.
 
 ## Checks by brief item
 
@@ -328,7 +352,7 @@ than row membership.
 | `so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446` | C(i) / wall-time-evidence-class | L1174 | E07 | PASS |
 | `po:sha256:2cc77ae5391bd35d736242a9fff5ee6d2e64ee35cc18a420060b5a541f947ca6` | C(ii) / governing-specification-comparison | L47 | E08 | PASS |
 | `po:sha256:f60ddfb04ede510a8ffe6a04a36eac20caeb92175e59245f6b436897c83907b8` | C(ii) / deferred-tail | L212 | E09 | PASS |
-| `so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee` | C(ii) / assessment-model-selection | L482 | E10 | J01: bucket disputed |
+| `so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee` | C(iii) / assessment-model-selection | L482 | E10 | J01: rebucketed by the orchestrator (was C(ii) at the lane's pass) |
 | `so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a` | C(iii) / journal-entry-duplicate-payload | L227 | E11 | PASS |
 | `so:sha256:0385cf6e12920c8a96c520a7238b522f923a7c0116cd603fbeff793a7d0e6058` | C(iii) / journal-entry-duplicate-payload | L236 | E11 | PASS |
 | `so:sha256:05fa73f187683c8b5cfb25a3958ed5b6f3d344d1b984cb1ce1cdffe5a9b2674a` | C(iii) / journal-entry-duplicate-payload | L272 | E11 | PASS |
@@ -657,12 +681,11 @@ print("contracts", h.hexdigest()[:12], "files", len(files))
 
 ## Blockers and boundaries
 
-J01, J02 and J03 remain open. They need a record-backed routing correction or a
-steward decision; this lane did not select a new bucket, promise new C4 facts or
-decide the granularity of future flag lifting. The restored exact requirements
-prevent those summaries from concealing their underlying duties, but do not resolve
-the disputed instructions. The pin lane must address these findings and independently
-re-read C4 before proceeding. An unchecked C4 still requires it to stop without
+J01, J02 and J03 were open at the lane's pass and are resolved by the orchestrator
+dispositions above; the lane itself did not select a new bucket, promise new C4 facts or
+decide the granularity of future flag lifting. The restored exact requirements prevent
+the summaries from concealing their underlying duties. The pin lane re-reads C4
+independently before proceeding; an unchecked C4 still requires it to stop without
 creating a pin, tag, manifest or seat.
 
 All record-decided changes are dirty. The final checks authenticate the corrected
@@ -674,7 +697,8 @@ contracts and corpus pins remain unchanged.
 ### Files
 
 - `research/auditor-run4-intake.md` — corrected evidence duties and dated census;
-  mechanically derived ID lists remain total. J01–J03 are deliberately unedited.
+  mechanically derived ID lists remain total. J01–J03 were left unedited by the lane and
+  applied by the orchestrator (dispositions above).
 - `README.md` — current Next Open Question and dated Trail with the report and blockers.
 - `ops/manifest.json` — matching merged-PR, verification, gate and namespace state.
 - `research/run4-lanes/run4-docket-verification-report.md` — this report and full evidence.
