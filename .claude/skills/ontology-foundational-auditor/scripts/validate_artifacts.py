@@ -1,4 +1,4 @@
-"""Machine enforcement for the auditor's artifact contracts (v14).
+"""Machine enforcement for the auditor's artifact contracts (v15).
 
 v3 bound records to id strings and file bytes; round-4 seats proved id-joins
 and lone-file digests are not coherence. v4 binds CONTENT, HISTORY, and
@@ -1129,6 +1129,10 @@ def check_manifest(d, p):
         if not isinstance(a.get("model"), str) or not a.get("model").strip():
             err(p, f"agents.{role}.model must be a non-blank STRING, got "
                    f"{a.get('model')!r}")
+        if not isinstance(a.get("effort"), str) or not a.get("effort").strip():
+            err(p, f"agents.{role}.effort must be a non-blank STRING naming the "
+                   "launched reasoning-effort setting (default for a model "
+                   f"without an effort control), got {a.get('effort')!r}")
         if a.get("prompt") != expected_prompt:
             err(p, f"agents.{role}.prompt must be {expected_prompt!r} — the "
                    "role-to-prompt binding is fixed; an omitted or swapped prompt "
@@ -3514,7 +3518,54 @@ def self_test():
             "engine-history files under runs/ are not record-prefixed"
         del errors[n:]
 
-    print("SELF-TEST PASS (157 rule families fire: canonical ids, nested closure, "
+    # --- v15 field-amendment families ----------------------------------------
+    shared = SKILL_DIR.parent / "_shared"
+    effort_man = yload((shared / "schemas/run-manifest.schema.yaml").read_bytes())
+    effort_man.update({"run_id": "orun-2026-09-11T00:00:00Z",
+                       "ontology": {"name": "x"}, "first_run": True,
+                       "scope_doc": {"path": "docs/scope.md", "sha256_12": "a" * 12},
+                       "cq_suite": {"path": "docs/cqs.yaml", "sha256_12": "b" * 12,
+                                    "cq_count": 1},
+                       "adapters": [{"id": "a", "version": "1", "script": "s",
+                                     "script_sha256_12": "c" * 12,
+                                     "golden_fixture": "g"}]})
+    for role, prompt in PROMPT_ROLES.items():
+        effort_man["agents"][role].update({
+            "model": "test-model", "effort": "medium",
+            "prompt_sha256_12": sha12((SKILL_DIR / prompt).read_bytes())})
+    contracts = sorted(
+        list((shared / "schemas").glob("*.yaml")) +
+        list(shared.glob("*.yaml")) + list(shared.glob("*.md")) +
+        list(shared.glob("*.json")) +
+        list((SKILL_DIR / "templates").glob("*.yaml")),
+        key=lambda f: str(f.relative_to(SKILL_DIR.parent)))
+    hc = hashlib.sha256()
+    for cf in contracts:
+        data = cf.read_bytes()
+        hc.update(f"{cf.relative_to(SKILL_DIR.parent)}\n{len(data)}\n".encode())
+        hc.update(data)
+    effort_man["engine"] = {
+        "validator_sha256_12": sha12(Path(__file__).resolve().read_bytes()),
+        "contracts_sha256_12": hc.hexdigest()[:12]}
+    for role in PROMPT_ROLES:
+        b = copy.deepcopy(effort_man)
+        del b["agents"][role]["effort"]
+        expect_msg("seat-effort provenance missing", f"agents.{role}.effort",
+                   check_manifest, b, "self:missingeffort_man")
+        for bad in ("", " \t\n", 1, True):
+            b = copy.deepcopy(effort_man)
+            b["agents"][role]["effort"] = bad
+            expect_msg("seat-effort provenance invalid", f"agents.{role}.effort",
+                       check_manifest, b, "self:badeffort_man")
+        for good in ("max", "xhigh", "medium", "default"):
+            b = copy.deepcopy(effort_man)
+            b["agents"][role]["effort"] = good
+            n = len(errors)
+            check_manifest(b, "self:goodeffort_man")
+            assert not errors[n:], f"legal seat effort must pass: {errors[n:]}"
+            del errors[n:]
+
+    print("SELF-TEST PASS (158 rule families fire: canonical ids, nested closure, "
           "object grammar, mixed-unrep, discriminator, searched-true, warrant-XOR, "
           "parents grammar, id grammars incl. rat digits, crash-hardening, rat "
           "content binding + staleness + freshness, review edge-target/chain/"
@@ -3523,7 +3574,7 @@ def self_test():
           "live-carried bypass, row-evidence join, since-exact, digest-fresh IRI, "
           "identifier pad + negation context + provider agreement incl. "
           "boolean-vs-unresolved, boolean pin_waived, ufo_category required, "
-          "addressed-list shape, #-boundary, config pairing, vacuity-boolean, text exact-type sweep, container shapes, prior-FAIL coverage population, tri-state crash hardening, duplicate-key loader, syntax-aware pairing stripper, glued openers, mid-line bare keys, blank-line continuation, identity precedence, lexical component symlinks, run-id parser, closed shared run-id grammar + rotation parity, exact-hex digest locks, cross-line separator refusal, ini/properties quoted-payload, toml/BOM/form-feed comment boundaries, join quarantine, orphan review/rejection authority, predecessor-local row validation, symlink-loop fail-closed, bounded run-id fractions, CR line-break normalization, half-quote arm refusal, table-filter quarantine, predecessor date/grammar/reason/carried meters, control-escaped authority rendering, unexaminable-path fail-closed, referent-mapping guard, review revision-requests channel, ledger-rationale binding, revision-log digest union, closure-read fail-closed, runs-shelter poison guard)")
+          "addressed-list shape, #-boundary, config pairing, vacuity-boolean, text exact-type sweep, container shapes, prior-FAIL coverage population, tri-state crash hardening, duplicate-key loader, syntax-aware pairing stripper, glued openers, mid-line bare keys, blank-line continuation, identity precedence, lexical component symlinks, run-id parser, closed shared run-id grammar + rotation parity, exact-hex digest locks, cross-line separator refusal, ini/properties quoted-payload, toml/BOM/form-feed comment boundaries, join quarantine, orphan review/rejection authority, predecessor-local row validation, symlink-loop fail-closed, bounded run-id fractions, CR line-break normalization, half-quote arm refusal, table-filter quarantine, predecessor date/grammar/reason/carried meters, control-escaped authority rendering, unexaminable-path fail-closed, referent-mapping guard, review revision-requests channel, ledger-rationale binding, revision-log digest union, closure-read fail-closed, runs-shelter poison guard, seat-effort provenance)")
 
 
 def print_run_id(ont_root):
