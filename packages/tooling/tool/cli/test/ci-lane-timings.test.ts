@@ -14,6 +14,7 @@ import {
   ciTimestampSpanSeconds,
   collectCiLaneTimings,
   collectCiLaneTimingWindow,
+  collectRequiredContexts,
   decodeCiWorkflowJobsPage,
   renderCiLaneTimingsSummary,
   renderCiLaneTimingsTsv,
@@ -876,6 +877,23 @@ describe("ci lane timing admission window", () => {
       );
       expect(commands).toHaveLength(1);
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("reads the live main rules when no ruleset version is requested", () => {
+    const commands = A.empty<string>();
+    // One rule per filter outcome: foreign ruleset, wrong rule type, matching
+    // rule without parameters, and the matching rule that carries contexts.
+    const liveRules =
+      '[{"ruleset_id":1,"type":"required_status_checks","parameters":{"required_status_checks":[{"context":"Other"}]}},' +
+      '{"ruleset_id":10240248,"type":"pull_request"},' +
+      '{"ruleset_id":10240248,"type":"required_status_checks"},' +
+      '{"ruleset_id":10240248,"type":"required_status_checks","parameters":{"required_status_checks":[{"context":"Heavy / Check"},{"context":"Lint"}]}}]';
+    return Effect.gen(function* () {
+      const contexts = yield* collectRequiredContexts(".");
+
+      expect(contexts).toStrictEqual(["Heavy / Check", "Lint"]);
+      expect(commands).toStrictEqual(["repos/{owner}/{repo}/rules/branches/main"]);
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, staticWindowGithubResponse(liveRules))));
   });
 
   it.effect("rejects reversed collection bounds before reading GitHub", () => {
