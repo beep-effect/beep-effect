@@ -6082,15 +6082,15 @@
           }
         },
         "packages/foundation/ui-system/editor/src/mermaid-node.tsx": {
-          "lines": 35.29,
-          "statements": 30,
+          "lines": 0,
+          "statements": 0,
           "branches": 0,
-          "functions": 25,
+          "functions": 0,
           "uncovered": {
-            "lines": 11,
-            "statements": 14,
+            "lines": 17,
+            "statements": 20,
             "branches": 2,
-            "functions": 9
+            "functions": 12
           }
         },
         "packages/foundation/ui-system/editor/src/mermaid-view.tsx": {
