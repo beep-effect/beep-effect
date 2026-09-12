@@ -35104,17 +35104,29 @@
     },
     "@beep/todox": {
       "path": "apps/todox",
-      "lines": 100,
-      "statements": 100,
-      "branches": 100,
-      "functions": 100,
+      "lines": 87.14,
+      "statements": 86.19,
+      "branches": 80,
+      "functions": 76.98,
       "uncovered": {
-        "lines": 0,
-        "statements": 0,
-        "branches": 0,
-        "functions": 0
+        "lines": 27,
+        "statements": 33,
+        "branches": 10,
+        "functions": 29
       },
       "files": {
+        "apps/todox/src/app/api/request-demo/route.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "apps/todox/src/app/layout.tsx": {
           "lines": 100,
           "statements": 100,
@@ -35128,6 +35140,162 @@
           }
         },
         "apps/todox/src/app/page.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/components/ContactForm.tsx": {
+          "lines": 75,
+          "statements": 75,
+          "branches": 50,
+          "functions": 50,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "apps/todox/src/components/EvidenceGraph.tsx": {
+          "lines": 79.54,
+          "statements": 80,
+          "branches": 92.85,
+          "functions": 67.74,
+          "uncovered": {
+            "lines": 9,
+            "statements": 11,
+            "branches": 1,
+            "functions": 10
+          }
+        },
+        "apps/todox/src/components/Hero.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/components/InspectorList.tsx": {
+          "lines": 80,
+          "statements": 80,
+          "branches": 72.72,
+          "functions": 71.11,
+          "uncovered": {
+            "lines": 12,
+            "statements": 14,
+            "branches": 3,
+            "functions": 13
+          }
+        },
+        "apps/todox/src/components/ReceiptView.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/components/SessionDemo.tsx": {
+          "lines": 92.85,
+          "statements": 87.87,
+          "branches": 100,
+          "functions": 81.81,
+          "uncovered": {
+            "lines": 2,
+            "statements": 4,
+            "branches": 0,
+            "functions": 4
+          }
+        },
+        "apps/todox/src/components/SiteNav.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/components/SourcePane.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 66.66,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 4,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/components/Wordmark.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 66.66,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/content/copy.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/runtime/TodoxAtomProvider.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/session/Session.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/session/session.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

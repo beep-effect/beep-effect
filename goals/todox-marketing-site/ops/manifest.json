@@ -2,15 +2,15 @@
   "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "todox-marketing-site",
-    "title": "Todox Marketing Site",
+    "title": "Todox Product Site",
     "status": "active",
     "created": "2026-08-27",
-    "updated": "2026-08-27",
+    "updated": "2026-09-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/todox-marketing-site",
   "lifecycle": "active",
-  "mission": "Build the Terminal of Record marketing homepage for Todox in apps/todox: claim-gated copy, deterministic synthetic session, Impeccable-documented visual world.",
+  "mission": "Build the Todox product site in apps/todox: a standard marketing page in the firm's deep-green and parchment palette with the Notion positioning, an interactive evidence graph, one synthetic-session console, and a demo-request form; local-first, evidence-backed, no competitor named, no certification claimed.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -52,17 +52,17 @@
     {
       "id": "P0",
       "name": "Pre-flight: fonts, licenses, direction contract",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement: Terminal of Record build",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify: detector, finish review, browser QA, claim re-check",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
