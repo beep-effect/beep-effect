@@ -1352,7 +1352,7 @@ describe("quality task adapter", () => {
           yield* fs.readFileString(ledger),
           Str.split("\n"),
           A.filter(Str.isNonEmpty),
-          Effect.forEach(decodeTurboLaneLedgerRow)
+          Effect.forEach((line) => decodeTurboLaneLedgerRow(line))
         );
         expect(rows).toEqual([{ _tag: "closed", attempted: 0 }]);
         // A closed ledger with nothing declared folds to no digest rather than an empty one.
@@ -1399,7 +1399,8 @@ describe("quality task adapter", () => {
           command: "bunx",
           args: ["turbo", "run", "lint:typos", "--summarize"],
           cwd: tempDir,
-          env: { PATH: `${bin}${path.delimiter}${ambientPath}` },
+          // The stand-in is a POSIX shell script, so the PATH separator is fixed.
+          env: { PATH: `${bin}:${ambientPath}` },
         });
         const ledger = path.join(tempDir, "lane", "ledger.jsonl");
         yield* withEnvVarEffect(
