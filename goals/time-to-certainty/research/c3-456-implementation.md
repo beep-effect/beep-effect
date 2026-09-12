@@ -815,3 +815,178 @@ shim. Fable ran the exact pair without `--bun` from a fresh `TURBO_CACHE_DIR`:
 
 `bunx vitest run test/doctest-lane.test.ts test/package-scripts.policy.test.ts` on Node: 2 files,
 12 tests, exit 0. The activation acceptance (27/27 cold, 27/27 HIT warm) is met on Node.
+
+## Stage C
+
+Implemented only **C3.5 root task registration**. Read the complete lane brief,
+its amendments, the Stage A–B3 record including Fable's successful Node verdict,
+and the table/rulings and implementation precedents named by the brief. Entry
+checkout was clean. No Git writes or graft commands ran. Stage D consumers,
+`beep:preflight`, workflow routes, packet lifecycle, and the prior doctest work
+were not changed. Applied the schema-first and Effect-first skills.
+
+### Decisions and rejected alternatives
+
+1. Registered **37 additional root tasks**, yielding **40 root tasks** from all
+   §2.2 root rows, including expansion of the five Fallow advisory rows. Added
+   33 new root scripts and changed `lint:oxlint` to exactly
+   `oxlint --quiet --disable-nested-config`. The existing `changeset:status`,
+   `config-sync:check`, and `topo-sort` scripts gained registrations without
+   script changes. `knip` remains `knip-bun`; `knip:check` invokes the ratchet.
+   All newly registered script text matches the table after expansion of its
+   explicit ellipses/placeholders. The three previously registered rows retain
+   their existing `beep-cli` script spelling and exact definitions; the Stage C
+   instruction targets rows not yet registered. Rejected rewriting these prior
+   stages or routing consumers ahead of Stage D.
+2. Copied every concrete input list in table order. Expanded `same corpus` to
+   the semantic-delta corpus, `as audit` to the audit inputs (including the pilot
+   inventory; no dead-code regression baseline), and typos to its four prefix
+   inputs plus all **34** current `files.extend-exclude` entries, each prefixed
+   with `!`. Knip's `root tool configs` shorthand is explicit:
+   `*.config.{ts,js,mjs,cjs}`, `vitest*.ts`, `vitest.aliases.generated.json`,
+   `bunfig.toml`, `biome.jsonc`, `.oxlintrc.json`, `.fallowrc.jsonc`, `tsdoc.json`,
+   `syncpack.config.ts`. These supplement the row's other inputs and the existing
+   fingerprint closure. Rejected `$TURBO_DEFAULT$`, copied CLI source closures,
+   incidental broadening, and treating explanatory prose such as `docgen.srcDir`
+   as an input. A read-only table audit confirms the final ordered lists.
+3. All **35 CLI-backed dependent root tasks** declare exactly
+   `dependsOn: ["//#lint:policy-fingerprint"]`, including the indirect
+   `repo-sanity:versions` worker. The fingerprint itself has no self-edge; direct
+   oxlint, typos, syncpack, and sherif have no CLI dependency. All D2 rows and the
+   binary walkers remain non-reusable: **18 cache:false**, **22 cache:true** in
+   total. No D14 binary walk certification was attempted or claimed; oxlint's
+   ambient target-existence reads keep it non-reusable. Rejected enabling reuse
+   merely because a hash fixture passes.
+4. Preserved the marked environment/output contract: semantic-delta passes
+   `GITHUB_EVENT_PATH` through without hashing it; all seven Fallow envelopes
+   hash/forward `BEEP_PROOF_BASE` and declare their exact JSON/raw artifacts;
+   JSDoc inventory declares `.beep/ci/jsdoc-documentation.inventory.*`.
+   All remaining task-local env/pass-through fields are absent and outputs are
+   empty. Existing Turbo globals and every package-task definition are unchanged.
+5. Extended the existing `TurboConfigProofTaskName` LiteralKit with all 40 root
+   IDs and the three previously missing package-policy task names. Retained the
+   existing default proof selection: callers can explicitly request any new
+   root ID. No new production module, public export, service, consumer, or
+   coverage-baseline row was introduced.
+6. Added a schema-decoded fixture that loads **every live root task** from
+   `turbo.json`, retains the production globals, flags, scripts, inputs, and
+   dependency edges, and invokes the actual Turbo binary against a synthetic
+   workspace. Independent named file probes cover every root row. It also pins
+   task-domain membership, script presence, CLI dependency edges, D2 cache flags,
+   env/pass-through fields, and outputs. The negative-closure test mutates a
+   real fingerprint input omitted from each task's direct input set. Roadmap's
+   whole-tree declaration already includes all candidate tool reads; the test
+   explicitly requires that sole exception and verifies its hash changes too.
+   No input widening was needed after these probes. Rejected mock hashes,
+   JSON-text-only assertions, cumulative mutations, and a misleading claim that
+   these fixtures certify binary walker semantics or non-file state.
+7. Authored the ruling-27 `--affected` test in the same suite. It initializes and
+   commits **only its disposable synthetic fixture**, then checks clean selection,
+   each row's declared-input edit, and a non-input edit. **Did not execute it**:
+   this lane forbids all Git writes, including synthetic Git setup. The Bun
+   command selects only the two no-Git hash cases by test name. This is an explicit
+   acceptance blocker for Fable, not a skipped-green full-suite claim. No permanent
+   test skip or environment gate was added.
+8. Added the policy hash-reading documentation, root ID convention, local/hosted
+   target summary counts with the retained legacy eslint exception, per-attempt
+   freshness requirements, D2 provenance limits, and the requested hosted-script
+   task rule. Documented that Stage D still connects the consumers. Rejected
+   claiming the registered tasks already supply current consumer summaries.
+
+### Stage C — files
+
+Modified:
+
+- `package.json`
+- `turbo.json`
+- `packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts`
+- `standards/turbo-remote-cache.md`
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+- `goals/time-to-certainty/research/c3-456-implementation.md`
+
+Created:
+
+- `packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts`
+
+Deleted: none. The fingerprint generator also rewrote byte-identical
+`standards/policy-tools.fingerprint.json` (no diff); its Turbo input list remains
+unchanged. No workspace manifest changed. Disposable helpers, logs, and dry-run
+JSON live under `/tmp/ttc-stage-c/` (`register.py`, `probes.json`, `audit.py`,
+`verdict.py`, `dry-run.sh`, `verify-dry-run.py`, and named logs/JSON). The scoped
+synthetic workspaces are removed by their filesystem scopes. Dependency build
+outputs, generated verification artifacts, package `.turbo/` logs/verdicts, and
+local cache entries are not handoff source files and must not be staged.
+
+### Verification commands and exit codes
+
+Root cwd unless marked **CLI cwd** (`packages/tooling/tool/cli`). Log redirections
+are `/tmp/ttc-stage-c/<name>.log`; command arguments below are otherwise exact.
+The shell regex uses plain pipes; the table escapes them only for Markdown.
+No Node-runtime task execution, doctest fleet measurement, remote-cache operation,
+package-verify, docgen, coverage, or hosted result is claimed by this lane.
+
+| Exact command | Exit | Result |
+| --- | ---: | --- |
+| `bunx --bun biome check --write package.json turbo.json packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts` | 0 on all four passes | Four files; initial passes formatted edits, final pass has no remaining formatting issue. |
+| `bunx --bun eslint --no-warn-ignored --max-warnings=0 --config eslint.config.mjs packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts` | 0 | Zero warnings/diagnostics on touched source. |
+| `bunx --bun turbo run check package-test-typecheck --filter=@beep/repo-cli --cache=local:rw` | 0, 0 | Both 34/34; final 12.665 s, zero cache hits. Initial outer success masked the fixture error-channel diagnostics in the collecting test task; see read-back. |
+| `python3 /tmp/ttc-stage-c/verdict.py` | 0 | Final stored repo-cli test verdict: exit 0, empty diagnostics. Initial read-back (inline Python) exposed exit 1 with six `effect(anyUnknownInErrorContext)` diagnostics; fixed by preserving generic error/environment parameters. |
+| `bunx --bun vitest run test/root-tasks-turbo-inputs.test.ts --pool=threads -t 'hashes declared\|closes tool'` (**CLI cwd**) | 1, 0, 0 | First: direct-input case passed; closure candidate selection failed on roadmap's whole-tree inputs. Final: 2 passed, 1 deliberately unselected Git fixture; 9.30 s total, 3.95 s tests. |
+| `bun run beep lint policy-fingerprint --write` | 0 | Written, fingerprint declaration/input list unchanged. |
+| `bun run beep lint policy-fingerprint --check` | 0 | Current. |
+| `bun run beep lint package-scripts --check` | 0 | 142 manifests, zero drift, zero writes. Root scripts are outside the workspace writer's domain; no scripts-schema change requires a fleet rewrite. |
+| `python3 /tmp/ttc-stage-c/audit.py` | 0 on both runs | All 40 table root rows accounted for; 37 new scripts/input lists match, three existing rows unchanged. Also proves all package tasks, globals, and existing scripts except oxlint unchanged, including `beep:preflight`. |
+| `zsh /tmp/ttc-stage-c/dry-run.sh` | 0 | Runs the exact 40-target production Turbo dry run reproduced below. |
+| `python3 /tmp/ttc-stage-c/verify-dry-run.py` | 0 | 40 executable root nodes, 35 fingerprint edges, command/cache equality with production registrations, 40 distinct hashes. |
+| `git --no-optional-locks diff --check` | 0 | Read-only whitespace verification, including final report. |
+
+Exact production dry-run invocation (stdout saved as `dry-run.json`, stderr as
+`dry-run.stderr`, under `/tmp/ttc-stage-c/`):
+
+```sh
+bunx --bun turbo run '//#lint:jsdoc:root' '//#lint:policy-fingerprint' '//#lint:native-runtime:roots' '//#lint:package-scripts' '//#knowledge:semantic-delta' '//#knowledge:refs-check' '//#lint:schema-first' '//#lint:identity-registry' '//#lint:effect-imports' '//#lint:tsgo-rules' '//#lint:oxlint' '//#lint:allowlist' '//#lint:jsdoc-module-tags' '//#goals:doctor' '//#lint:roadmap-refs' '//#lint:judge-rubric' '//#lint:typos' '//#knip:check' '//#fallow:audit:check' '//#fallow:health:advisory' '//#fallow:boundaries:advisory' '//#fallow:flags:advisory' '//#fallow:security:advisory' '//#fallow:fix-preview:advisory' '//#jsdoc:inventory:check' '//#changeset:status' '//#lint:circular' '//#lint:effect-imports-markdown' '//#lint:ecosystem-polarity' '//#goals:index-check' '//#lint:reflection-artifacts' '//#fallow:dead-code:check' '//#config-sync:check' '//#repo-sanity:changeset-graph' '//#repo-sanity:syncpack' '//#repo-sanity:sherif' '//#repo-sanity:versions' '//#repo-sanity:bun-audit' '//#fallow:boundaries:config-check' '//#topo-sort' --dry-run=json --cache=local:rw
+```
+
+### Dry-run fixture results and measurements
+
+| Fixture/probe | Result | Limit |
+| --- | --- | --- |
+| Declared-input mutation, every root task | **40/40** change hash; each probe file is present in that task's resolved input map. | Synthetic dry run; does not execute the checker. |
+| Non-input mutation, every root task | **40/40** hashes stay stable on `.beep/c3-fixture-excluded.bin`; file is absent from each resolved input map. | Deliberately outside the declared and exercised tool closure. |
+| Negative tool-closure mutation | **34/34** CLI dependents with an outside-direct-input candidate change hash through D15; fingerprint hash changes too. | Candidates are actual fingerprint tool inputs; no claim about Git/clock/network state. |
+| Whole-tree tool-read mutation | Roadmap's hash changes; the fixture pins it as the sole task with every candidate already directly declared. | This is direct coverage, not evidence of an omitted edge. |
+| Exact restoration | Final direct-input suite returns the original task summaries; every mutation restores bytes before the next probe. | No cumulative-edit masking. |
+| Ruling-27 affected selection | **Authored, not run** (one unselected test). | Requires Git writes; Fable-owned acceptance blocker. |
+| Binary walk fixture | **Not attempted.** Oxlint, typos, knip stay `cache:false`. | Hash and config tests do not certify the actual tool walks. |
+| Production graph | **40/40** root nodes resolve; **549,603** matched input entries summed across tasks, 40 distinct task hashes. | Entry count is not unique files; shared inputs recur across tasks. |
+
+The production dry run used local-cache posture only. No cold/warm checker
+execution, cache-hit economics, Node-runtime conclusion, or whole-proof speed
+claim follows from these graph/hash results. The supplied Bun-node shim warning
+remains binding: Fable must run Node-backed verification outside this launch path.
+
+### Blockers and residual for Stage D
+
+**Stage C registrations and no-Git verification are complete; ruling-27 acceptance
+is pending the unexecuted Git fixture.** Fable should run, from the CLI directory:
+
+```sh
+bunx vitest run test/root-tasks-turbo-inputs.test.ts --pool=threads
+```
+
+This full Node run must pass all three tests, including the synthetic Git base and
+`--affected` mutations; none of that acceptance is inferred from the two Bun tests.
+Fable also retains `CI=true TMPDIR=/tmp bun run beep quality package-verify
+@beep/repo-cli`, `bun run docgen:local`, scoped Node coverage/ratchet for the existing
+proof module, commit/publish, and hosted verification. Before a live checkout
+`--affected` probe, Fable commits the Turbo declarations as required by the brief.
+
+Stage D remains precisely the consumer migration: `Quality/Tasks.ts`'s D10 plan
+and aggregate sequencing, `GithubChecks.ts` routes, `CiLane.ts` knip/Fallow/JSDoc
+steps with base forwarding and envelope checks, and root `beep:preflight`.
+The live Stage A note still applies: `scopedRepoCliStep` has both effect-imports
+and ecosystem-polarity consumers until that migration. Preserve ruling-31 hosted
+eslint sweep behavior, D2 unfiltered execution, lane identities, and fresh inventory
+before the JSDoc compare. Wave seed task-ID notes and artifact readers remain with
+the later stage specified by the brief; no Stage D or E implementation was started.
+Stop after Stage C.

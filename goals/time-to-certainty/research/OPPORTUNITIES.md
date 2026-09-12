@@ -1018,3 +1018,31 @@ was attempted under the marker-only amendment.
 - Evidence: both attempts exited 1 after roughly 60 seconds; four tasks launched, zero successful, zero HIT. Minimal error: `[vitest-pool-runner]: Timeout waiting for worker to respond`. The logged temporary launcher directory has both `bun` and `node` symlinked to Bun 1.4.2. This supports inherited launcher substitution; direct worker runtime was not instrumented.
 - Prevention: pin the runtime at the complete launch boundary, and ratify a measurement command that exercises it. Removing `--bun` only from an inner script does not prove Node execution under a parent launcher that substitutes `node`.
 - Residual: Fable must resolve the exact-command/runtime contract and rerun all 27 owners; the implementer does not silently replace the mandated command or widen into CI launch policy.
+
+## 2026-09-11 — C3.5 Stage C affected-fixture verification boundary
+
+- Doing: root task registration and the required synthetic Turbo `--affected` fixture.
+- Evidence: the lane contract forbids all Git writes; a synthetic affected fixture needs
+  `git init`, an index, and a committed base. Hash-only dry runs need none of these.
+- Would have prevented it: explicitly split the Git-writing fixture run into Fable's
+  verification list. Stage C authors the fixture but runs only its no-Git hash tests;
+  Fable must run the affected case before claiming ruling-27 acceptance.
+
+## 2026-09-11 — C3.5 negative-closure probe on whole-tree tasks
+
+- Doing: a candidate tool-read mutation outside each CLI-backed task's direct inputs.
+- Evidence: the first hash suite passed all direct-input probes; the closure suite failed
+  with `getOrThrow called on a None` because roadmap's `**/*` already covers every candidate.
+- Would have prevented it: distinguish a missing edge from a contract that already includes
+  the entire candidate closure. The fixture now requires that exception to be exactly roadmap,
+  then proves its tool-read hash changes as well; no task input or cache flag was relaxed.
+
+## 2026-09-11 — C3.5 stored test verdict catches fixture error-channel annotation
+
+- Doing: filtered `check package-test-typecheck` after root-task fixture authoring.
+- Evidence: Turbo exited 0 (34/34 tasks), but repo-cli's stored verdict exited 1 with
+  `effect(anyUnknownInErrorContext)` at six mutation checks. The fixture helper had
+  widened each concrete check error to `unknown`.
+- Would have prevented it: preserve the supplied Effect's error/environment parameters
+  generically, and always inspect the collecting task's stored verdict. The helper now
+  preserves both type parameters; the canonical filtered command and read-back are rerun.

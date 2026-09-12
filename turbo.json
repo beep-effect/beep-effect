@@ -509,6 +509,528 @@
         "packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
         "standards/effect-laws.allowlist.jsonc"
       ]
+    },
+    "//#lint:package-scripts": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "package.json",
+        "**/package.json",
+        "packages/**/src/**/*.{ts,tsx}",
+        "apps/**/src/**/*.{ts,tsx}",
+        "**/vitest*.config.ts",
+        "!**/node_modules/**",
+        "!**/test/fixtures/**"
+      ]
+    },
+    "//#knowledge:semantic-delta": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "passThroughEnv": ["GITHUB_EVENT_PATH"],
+      "inputs": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "goals/**",
+        "explorations/**",
+        "docs/**",
+        ".claude/**",
+        ".agents/**",
+        ".codex/**",
+        "standards/**",
+        ".github/**",
+        "**/package.json",
+        "!docs/generated/**",
+        "!docs/_internal/**"
+      ]
+    },
+    "//#knowledge:refs-check": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "goals/**",
+        "explorations/**",
+        "docs/**",
+        ".claude/**",
+        ".agents/**",
+        ".codex/**",
+        "standards/**",
+        ".github/**",
+        "**/package.json",
+        "!docs/generated/**",
+        "!docs/_internal/**"
+      ]
+    },
+    "//#lint:schema-first": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "apps/**/*.{ts,tsx}",
+        "packages/**/*.{ts,tsx}",
+        "infra/{src,test}/**/*.ts",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "standards/schema-first.inventory.jsonc",
+        "standards/schema-crispening.policy.jsonc",
+        "!**/docs/**",
+        "!**/node_modules/**"
+      ]
+    },
+    "//#lint:identity-registry": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "{packages,apps,infra,tools,scratchpad}/**/*.{ts,tsx}",
+        "**/package.json",
+        "packages/foundation/modeling/identity/src/packages.ts",
+        "!**/node_modules/**",
+        "!**/dist/**"
+      ]
+    },
+    "//#lint:effect-imports": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "{apps,packages,infra}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+        "packages/foundation/**/package.json",
+        "packages/foundation/**/src/**",
+        "!**/node_modules/**",
+        "!packages/**/docs/**"
+      ]
+    },
+    "//#lint:tsgo-rules": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "{apps,packages,tooling,infra}/**/*.{cts,mts,ts,tsx}",
+        "{apps,packages,infra,scratchpad}/**/tsconfig*.json",
+        "tsconfig.base.json",
+        "tsconfig.json",
+        "vitest.aliases.generated.json",
+        "!**/node_modules/**",
+        "!**/dist/**"
+      ]
+    },
+    "//#lint:oxlint": {
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        ".oxlintrc.json",
+        ".gitignore",
+        "**/.gitignore",
+        "*.{js,mjs,cjs,ts,tsx,jsx}",
+        "scripts/**",
+        "apps/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+        "packages/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+        "infra/**/*.{ts,js,mjs}",
+        "packages/tooling/policy-pack/lint-rules/src/**",
+        "!**/node_modules/**"
+      ]
+    },
+    "//#lint:allowlist": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "standards/effect-laws.allowlist.jsonc",
+        "packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
+        "{packages,apps,infra}/**/*.{ts,tsx}",
+        "!**/node_modules/**"
+      ]
+    },
+    "//#lint:jsdoc-module-tags": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "{.patterns,apps,packages,tooling}/**/*.{hbs,md,ts,tsx}",
+        "!apps/labs/**"
+      ]
+    },
+    "//#goals:doctor": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "goals/**",
+        "explorations/**",
+        "goals/goals-doctor.baseline.jsonc"
+      ]
+    },
+    "//#lint:roadmap-refs": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "**/*",
+        "!**/node_modules/**",
+        "!.beep/**",
+        "!**/dist/**",
+        "!**/.turbo/**",
+        "!**/coverage/**"
+      ]
+    },
+    "//#lint:judge-rubric": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [".claude/skills/browser-qa-loop/resources/judge-prompt.md"]
+    },
+    "//#lint:typos": {
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "_typos.toml",
+        ".gitignore",
+        "**/.gitignore",
+        "**/*",
+        "!graft/**",
+        "!packages/drivers/*/openapi.json",
+        "!packages/drivers/*/spec/*.json",
+        "!infra/ci-runners/sdks/**",
+        "!explorations/*/CAPTURE.md",
+        "!apps/labs/semantica/fixtures/gold/**",
+        "!patches/*.patch",
+        "!research/**",
+        "!bun.lock",
+        "!*.snap",
+        "!.repos/**",
+        "!node_modules/**",
+        "!build/**",
+        "!tmp/**",
+        "!dist/**",
+        "!coverage/**",
+        "!.next/**",
+        "!**/storybook-static/**",
+        "!.beep/**",
+        "!scratchpad/**",
+        "!explorations/**",
+        "!outputs/agent-reliability/**",
+        "!goals/**",
+        "!standards/repo-exports.catalog.jsonc",
+        "!standards/repo-exports.catalog.md",
+        "!standards/effect-vitest.inventory.jsonc",
+        "!**/internal/data/**",
+        "!packages/law-practice/domain/src/internal/generated/free-law-project/**",
+        "!**/src-tauri/gen/**",
+        "!**/src-tauri/target/**",
+        "!packages/drivers/venice-ai/swagger.yaml",
+        "!packages/foundation/modeling/html/data/**",
+        "!packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
+        "!patches/**"
+      ]
+    },
+    "//#knip:check": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "knip.jsonc",
+        "**/package.json",
+        "bun.lock",
+        "**/tsconfig*.json",
+        ".gitignore",
+        "**/.gitignore",
+        "apps/**",
+        "packages/**",
+        "infra/**",
+        "scripts/**",
+        "*.config.{ts,js,mjs,cjs}",
+        "vitest*.ts",
+        "vitest.aliases.generated.json",
+        "bunfig.toml",
+        "biome.jsonc",
+        ".oxlintrc.json",
+        ".fallowrc.jsonc",
+        "tsdoc.json",
+        "syncpack.config.ts",
+        "standards/knip.regression-baseline.jsonc",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/.turbo/**"
+      ]
+    },
+    "//#fallow:audit:check": {
+      "cache": false,
+      "outputs": [
+        ".beep/fallow/audit.check.json",
+        ".beep/fallow/raw/audit.check.*"
+      ],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "env": ["BEEP_PROOF_BASE"],
+      "inputs": [
+        ".fallowrc.jsonc",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "apps/**",
+        "packages/**",
+        "infra/**",
+        "scripts/**",
+        ".claude/skills/**",
+        ".fallow/plugins/**",
+        "standards/fallow.pilot.inventory.jsonc"
+      ]
+    },
+    "//#fallow:health:advisory": {
+      "cache": false,
+      "outputs": [
+        ".beep/fallow/health.advisory.json",
+        ".beep/fallow/raw/health.advisory.*"
+      ],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "env": ["BEEP_PROOF_BASE"],
+      "inputs": [
+        ".fallowrc.jsonc",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "apps/**",
+        "packages/**",
+        "infra/**",
+        "scripts/**",
+        ".claude/skills/**",
+        ".fallow/plugins/**",
+        "standards/fallow.pilot.inventory.jsonc"
+      ]
+    },
+    "//#fallow:boundaries:advisory": {
+      "cache": false,
+      "outputs": [
+        ".beep/fallow/boundaries.advisory.json",
+        ".beep/fallow/raw/boundaries.advisory.*"
+      ],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "env": ["BEEP_PROOF_BASE"],
+      "inputs": [
+        ".fallowrc.jsonc",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "apps/**",
+        "packages/**",
+        "infra/**",
+        "scripts/**",
+        ".claude/skills/**",
+        ".fallow/plugins/**",
+        "standards/fallow.pilot.inventory.jsonc"
+      ]
+    },
+    "//#fallow:flags:advisory": {
+      "cache": false,
+      "outputs": [
+        ".beep/fallow/flags.advisory.json",
+        ".beep/fallow/raw/flags.advisory.*"
+      ],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "env": ["BEEP_PROOF_BASE"],
+      "inputs": [
+        ".fallowrc.jsonc",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "apps/**",
+        "packages/**",
+        "infra/**",
+        "scripts/**",
+        ".claude/skills/**",
+        ".fallow/plugins/**",
+        "standards/fallow.pilot.inventory.jsonc"
+      ]
+    },
+    "//#fallow:security:advisory": {
+      "cache": false,
+      "outputs": [
+        ".beep/fallow/security.advisory.json",
+        ".beep/fallow/raw/security.advisory.*"
+      ],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "env": ["BEEP_PROOF_BASE"],
+      "inputs": [
+        ".fallowrc.jsonc",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "apps/**",
+        "packages/**",
+        "infra/**",
+        "scripts/**",
+        ".claude/skills/**",
+        ".fallow/plugins/**",
+        "standards/fallow.pilot.inventory.jsonc"
+      ]
+    },
+    "//#fallow:fix-preview:advisory": {
+      "cache": false,
+      "outputs": [
+        ".beep/fallow/fix-preview.advisory.json",
+        ".beep/fallow/raw/fix-preview.advisory.*"
+      ],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "env": ["BEEP_PROOF_BASE"],
+      "inputs": [
+        ".fallowrc.jsonc",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "apps/**",
+        "packages/**",
+        "infra/**",
+        "scripts/**",
+        ".claude/skills/**",
+        ".fallow/plugins/**",
+        "standards/fallow.pilot.inventory.jsonc"
+      ]
+    },
+    "//#jsdoc:inventory:check": {
+      "cache": false,
+      "outputs": [".beep/ci/jsdoc-documentation.inventory.*"],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "**/docgen.json",
+        "**/package.json",
+        "{packages,apps,infra}/**/*.{ts,tsx}",
+        "tsdoc.json"
+      ]
+    },
+    "//#changeset:status": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [".changeset/**", "**/package.json"]
+    },
+    "//#lint:circular": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "packages/tooling/**/src/**/*.ts",
+        "packages/foundation/**/src/**/*.{ts,tsx}",
+        "tsconfig.json",
+        "tsconfig.base.json"
+      ]
+    },
+    "//#lint:effect-imports-markdown": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        ".patterns/**/*.{md,mdx}",
+        "standards/**/*.{md,mdx}",
+        ".claude/skills/**/*.{md,mdx}",
+        "docs/**/*.{md,mdx}",
+        "goals/*/[A-Z]*.md",
+        "packages/foundation/**/package.json",
+        "packages/foundation/**/src/**"
+      ]
+    },
+    "//#lint:ecosystem-polarity": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "packages/ecosystem/*/package.json",
+        "packages/ecosystem/*/src/**/*.{ts,tsx,mts,cts}"
+      ]
+    },
+    "//#goals:index-check": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "goals/*/ops/manifest.json",
+        "goals/*/README.md",
+        "goals/*/GOAL.md",
+        "goals/INDEX.md"
+      ]
+    },
+    "//#lint:reflection-artifacts": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": ["goals/*/history/reflections/**", "goals/*/ops/manifest.json"]
+    },
+    "//#fallow:dead-code:check": {
+      "cache": false,
+      "outputs": [
+        ".beep/fallow/dead-code.check.json",
+        ".beep/fallow/raw/dead-code.check.*"
+      ],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "env": ["BEEP_PROOF_BASE"],
+      "inputs": [
+        ".fallowrc.jsonc",
+        "**/package.json",
+        "**/tsconfig*.json",
+        "apps/**",
+        "packages/**",
+        "infra/**",
+        "scripts/**",
+        ".claude/skills/**",
+        ".fallow/plugins/**",
+        "standards/fallow.pilot.inventory.jsonc"
+      ]
+    },
+    "//#config-sync:check": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "**/package.json",
+        "**/tsconfig*.json",
+        "**/docgen.json",
+        "syncpack.config.ts",
+        "tsconfig.base.json"
+      ]
+    },
+    "//#repo-sanity:changeset-graph": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [".changeset/**", "**/package.json", "bun.lock"]
+    },
+    "//#repo-sanity:syncpack": {
+      "cache": true,
+      "outputs": [],
+      "inputs": ["syncpack.config.ts", "**/package.json", "bun.lock"]
+    },
+    "//#repo-sanity:sherif": {
+      "cache": true,
+      "outputs": [],
+      "inputs": ["**/package.json", "bun.lock"]
+    },
+    "//#repo-sanity:versions": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [".bun-version", ".nvmrc", "**/package.json", "mise.toml"]
+    },
+    "//#repo-sanity:bun-audit": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": ["bun.lock", "osv-scanner.toml"]
+    },
+    "//#fallow:boundaries:config-check": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "standards/fallow.boundaries.generated.jsonc",
+        ".fallowrc.jsonc",
+        "**/package.json",
+        "apps/**",
+        "packages/**",
+        "infra/**"
+      ]
+    },
+    "//#topo-sort": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": ["**/package.json"]
     }
   }
 }

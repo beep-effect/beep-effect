@@ -270,3 +270,35 @@ Node; the Bun `--bun` launcher stays for ordinary `beep:test`.
 4. Rerun the exact Stage B cold/warm pair with a fresh `TURBO_CACHE_DIR`: require 27/27 successful
    cold and 27/27 `HIT` warm; record wall, lifetime p50/max, the two slowest packages, max RSS.
 5. Do not write a changeset (Fable runs `yeet repair` at publish). Lane split unchanged.
+
+## Amendment 3 (2026-09-11, after Stage C) — Stage C2: selectors, `.git/**`, and the affected fixture
+
+Two live Turbo 2.10.12 facts, measured by Fable in a synthetic git fixture (script in the
+implementation record):
+
+- **F-A. Explicit `//#<task>` selectors bypass `--affected`.** `turbo run //#lint:a //#lint:b
+  --affected` selects every named root task in every state; `turbo run lint:a lint:b --affected`
+  (bare names) selects by declared inputs exactly as table §0.2 P3–P7 recorded (the live probe
+  used bare names). Every affected invocation therefore names tasks bare; `//#` appears only in
+  summaries, ledgers and `turbo.json` keys.
+- **F-B. `**/*` inputs hash `.git/**`.** With a `.git` directory present, a `**/*` input glob
+  hashes the object store (37 of 46 inputs in the probe); `!.git/**` removes them.
+
+1. `turbo.json`: every root task whose inputs start with `**/*` (`//#lint:roadmap-refs`,
+   `//#lint:typos`, any other) gains `!.git/**` and `!**/.git/**`. Table §2.2 is amended by the
+   orchestrator (revision 8).
+2. `Quality/Tasks.ts`: the Stage A laws invocation and the existing `lint:jsdoc` affected
+   invocation name their root residuals bare (`lint:native-runtime:roots`, `lint:jsdoc:root`);
+   the full/hosted invocations may stay as they are. Update the `quality-tasks.test.ts` pins.
+3. `test/root-tasks-turbo-inputs.test.ts`: (a) the affected case names tasks bare, creates a
+   `base` branch at the first commit and a README-only second commit, and asserts: clean →
+   only tasks whose inputs cover README (none expected once README is not an input; otherwise
+   exactly those); each row's declared-input edit selects exactly that row (plus any `**/*`
+   row); a non-input edit selects nothing; (b) a new case proves F-A: the same edit with `//#`
+   selectors selects every named task; (c) a new hash case initializes git in the fixture,
+   writes one loose object, and asserts every root task hash is unchanged (F-B). Synthetic git
+   repositories under the system temp directory are permitted for this lane; the checkout stays
+   untouched. Run the whole suite (`bunx --bun vitest run test/root-tasks-turbo-inputs.test.ts
+   --pool=threads`).
+4. Record F-A and F-B as an amendment section in `research/c3-turbo-facts.md`.
+5. Lane split unchanged; Fable reruns package-verify and the Node suite.
