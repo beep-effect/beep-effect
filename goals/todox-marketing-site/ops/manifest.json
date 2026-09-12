@@ -3,13 +3,13 @@
   "initiative": {
     "id": "todox-marketing-site",
     "title": "Todox Product Site",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-27",
-    "updated": "2026-09-11",
+    "updated": "2026-09-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/todox-marketing-site",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Build the Todox product site in apps/todox: a standard marketing page in the firm's deep-green and parchment palette with the Notion positioning, an interactive evidence graph, one synthetic-session console, and a demo-request form; local-first, evidence-backed, no competitor named, no certification claimed.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -67,12 +67,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable (awaits explicit go)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

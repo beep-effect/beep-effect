@@ -3033,6 +3033,7 @@ describe("quality task adapter", () => {
       "lint:deprecated-apis",
       "lint:tsconfig-overlay",
       "lint:package-test-typecheck",
+      "lint:effect-vitest",
       "quality:test-tsgo",
       "ci:jsdoc-ratchet:ratchet",
     ]);
@@ -3101,6 +3102,7 @@ describe("quality task adapter", () => {
       "lint:deprecated-apis",
       "lint:tsconfig-overlay",
       "lint:package-test-typecheck",
+      "lint:effect-vitest",
       "quality:test-tsgo",
       "ci:jsdoc-ratchet:ratchet",
     ]);
@@ -3167,6 +3169,7 @@ describe("quality task adapter", () => {
         "lint:native-runtime:roots",
         "lint:jsdoc:root",
         "jsdoc:inventory:check",
+        "lint:effect-vitest",
         "quality:test-tsgo",
         "ci:jsdoc-ratchet:ratchet",
       ];

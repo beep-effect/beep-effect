@@ -1660,23 +1660,25 @@ const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 // the rows of the attempt's own summary that fold into the lane digest. A wrapper-backed lane
 // (`bun run beep ci lane <id>`) runs Turbo inside its child with `--summarize`, so every task in
 // every summary it wrote folds in (an empty selection).
-const turboSummarizeTaskNames = (step: QualityTaskStep): O.Option<ReadonlyArray<string>> => {
-  if (
-    step.command === "bunx" &&
-    O.contains(A.get(step.args, 0), "turbo") &&
-    O.contains(A.get(step.args, 1), "run") &&
-    A.contains(step.args, "--summarize")
-  ) {
-    return O.some(pipe(A.drop(step.args, 2), A.takeWhile(P.not(Str.startsWith("-")))));
-  }
-  const wrapperLane =
-    step.command === "bun" &&
-    O.contains(A.get(step.args, 0), "run") &&
-    O.contains(A.get(step.args, 1), "beep") &&
-    O.contains(A.get(step.args, 2), "ci") &&
-    O.contains(A.get(step.args, 3), "lane");
-  return wrapperLane ? O.some(A.empty<string>()) : O.none();
-};
+const argAt = (step: QualityTaskStep, index: number, expected: string): boolean =>
+  O.contains(A.get(step.args, index), expected);
+
+const isDirectTurboSummarizeStep = (step: QualityTaskStep): boolean =>
+  step.command === "bunx" && argAt(step, 0, "turbo") && argAt(step, 1, "run") && A.contains(step.args, "--summarize");
+
+const isWrapperLaneStep = (step: QualityTaskStep): boolean =>
+  step.command === "bun" &&
+  argAt(step, 0, "run") &&
+  argAt(step, 1, "beep") &&
+  argAt(step, 2, "ci") &&
+  argAt(step, 3, "lane");
+
+const turboSummarizeTaskNames = (step: QualityTaskStep): O.Option<ReadonlyArray<string>> =>
+  isDirectTurboSummarizeStep(step)
+    ? O.some(pipe(A.drop(step.args, 2), A.takeWhile(P.not(Str.startsWith("-")))))
+    : isWrapperLaneStep(step)
+      ? O.some(A.empty<string>())
+      : O.none();
 
 const resolveLaneInputDigest = Effect.fn("QualityTasks.resolveLaneInputDigest")(function* (
   outcome: StreamingStepOutcome,
@@ -2657,6 +2659,11 @@ const rootRepoLintPolicySteps = (
       // No Stage C registration exists for the overlay inventory; preserve it.
       repoCliStep(repoRoot, "lint:tsconfig-overlay", ["lint", "tsconfig-overlay"]),
       repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
+      // Full-scan membership ratchet against standards/effect-vitest.inventory.jsonc (about
+      // 8-10 s). Hosted here so a PR that adds test files without refreshing the inventory
+      // reds itself instead of every later local cheap-gates proof; the cheap-gates lane
+      // repeats this step under the same id (TTC ruling 28).
+      repoCliStep(repoRoot, "lint:effect-vitest", ["lint", "effect-vitest"]),
       repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]),
       repoCliStep(repoRoot, "ci:jsdoc-ratchet:ratchet", [
         "quality",

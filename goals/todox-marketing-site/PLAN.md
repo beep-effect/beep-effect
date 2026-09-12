@@ -2,9 +2,11 @@
 
 ## Status
 
-Status: `active` — P0–P2 complete 2026-09-11 in `apps/todox` (reviewer disposition
-`ship`, QA round 7 `requiredCount: 0`, DESIGN.md written). P3 publication is
-explicitly deferred until Benjamin's go.
+Status: `complete` — shipped in
+[#1097](https://github.com/beep-effect/beep-effect/pull/1097), merged by Benjamin
+on 2026-09-12 at head `4079f72` with every required check green. P0–P2 landed
+2026-09-11 (redesign to Evergreen Ledger the same evening); P3 ran under the
+desktop auto-fix authorization; P4 closes here.
 
 ## Phases
 
@@ -13,8 +15,8 @@ explicitly deferred until Benjamin's go.
 | P0 Pre-flight: fonts, licenses, direction contract | done 2026-09-11 | Choose typefaces against rendered specimens per ASSET-PLAN, record licenses, and write the Impeccable direction contract into the root layout from SHAPE-BRIEF. | Faces + licenses recorded ([`history/fonts-and-licenses.md`](./history/fonts-and-licenses.md)); contract is the first child of `<body>` in `apps/todox/src/app/layout.tsx` and the seed key `9ce5e740` greps out of `.next/server/app/index.html` after `next build`. |
 | P1 Implement: Terminal of Record build | done 2026-09-11 | Build the seven-passage homepage in `apps/todox`: exact DEMO-SCRIPT session, PUBLIC-COPY prose, five binding raises, authored assets only. | Page complete at production fidelity on `https://todox.beep.localhost:1355` (portless redirects the http name to https). |
 | P2 Verify: detector, finish review, browser QA, claim re-check | done 2026-09-11 (redone for the redesign the same evening) | Run the Impeccable detector once, batched screenshot rounds, the shipped finish reviewer + documenter (DESIGN.md), recorded browser QA for the record inspector, accessibility and no-JS checks, and re-run the PUBLIC-COPY claim reconciliation over shipped copy. | Reviewer disposition closed; QA has zero required findings; `bun run --cwd apps/todox audit` green; reconciliation clean. |
-| P3 Yeet: PR to mergeable (awaits explicit go) | pending | After Benjamin green-lights publication: `bun run beep yeet` repair → verify → publish `--pr` → monitor to `merge-ready: yes`. | `mergeStateStatus` CLEAN; zero unresolved review threads. |
-| P4 Close | pending | Closeout reflection, packet state flip, evidence links. | Reflection passes `bun run beep lint reflection-artifacts`; README/manifest updated. |
+| P3 Yeet: PR to mergeable (awaits explicit go) | done 2026-09-12 | After Benjamin green-lights publication: `bun run beep yeet` repair → verify → publish `--pr` → monitor to `merge-ready: yes`. | Benjamin's go 2026-09-11; #1097 opened early, five hosted reds and five Greptile threads fixed one push each (redesign evidence below); merged by Benjamin at `4079f72` with every required check green. The only red at merge was the non-required coverage lane's inherited `GraftDeep` rows, fixed on `main` by #1099. |
+| P4 Close | done 2026-09-12 | Closeout reflection, packet state flip, evidence links. | Reflection `history/reflections/2026-09-12-claude.md` passes `bun run beep lint reflection-artifacts`; README/manifest flipped to `completed-retained` in the closeout PR. |
 
 ## Evidence Log
 
@@ -77,6 +79,10 @@ Takedown" battle card, "06 — Skills (Plain English)", and
 | P2 | Confirming captures on the final code: rounds 12–14 were red only on the harness's overflow probe catching the QA witness's own fixed cursor ring (an unmarked div left at x≈800 after the 1440→360 resize; serialized colour `rgb(255, 45, 146)`); round 15 `CAPTURE-GREEN`, 307 events, 8 scenarios including the held-submit gesture. Archived at `history/qa/round-15/`. |
 
 | P2 | Documenter rewrote `apps/todox/DESIGN.md` and `apps/todox/.impeccable/design.json` from the Evergreen Ledger build (two grounds, alpha ladder on forest, Fraunces/Geist/Martian Mono ramp, hairline rules with the form and comparison table as the two bordered exceptions, subgrid step headings, container-query rows, cuts not smooth scroll, one motion moment). Dev server stopped; `bun run --cwd apps/todox audit` green (build, tsgo, 20 tests, biome); `package-verify @beep/todox` ok; contract key `evergreen-ledger` present in the built HTML. P2 complete for the redesign. |
+| P3 | Benjamin's go: "Yes, publish now". `yeet repair` → `verify` → `publish --start-pr-early --monitor --pr` opened [#1097](https://github.com/beep-effect/beep-effect/pull/1097) from `feat/todox-product-site` (changeset `@beep/todox: minor`, reviewed cache-qualification baseline in `history/cache-baseline-review.md`, `wdth` whitelisted in `_typos.toml`). Every local cheap-gates run went red on the same inherited `lint:effect-vitest` inventory drift in `packages/tooling` (files this branch never touches); each row was acked environment-only with the hosted lane as the authority. |
+| P3 | Hosted reds and their fixes, one push each: Repo Sanity `fallow-boundaries-config` (regenerated `standards/fallow.boundaries.generated.jsonc`); Vercel TS6305 because `dist/` is gitignored and plain `next build` never built `@beep/identity`/`@beep/schema` (`vercel.json` buildCommand now runs `turbo run build --filter=@beep/todox`); then Vercel `babel: dist does not exist` because its build cache restores each package's nested `node_modules/.tmp/tsconfig.tsbuildinfo` while the clone has no `dist`, so incremental `tsc -p` emitted nothing (reproduced locally; the buildCommand now purges those files first). Heavy / Coverage Regression red once on the known `@beep/test-utils` watchdog flake (rerun), then on two real causes: the placeholder app's 100% rows in `standards/coverage.regression-baseline.jsonc` (regenerated for `@beep/todox` only with the ratchet's own remediation; the scoped local run matched the hosted numbers) and four inherited `GraftDeep.service.ts` rows missing since #1094, which are red on `main` itself, are not a required check, and are flagged for their own PR. JSDoc Ratchet red on two exports without examples (`InspectableRow`, `RowGroup`), fixed. |
+| P3 | Greptile: five P2 threads over two review rounds, all addressed and resolved — titled `**Example**` sections on every value export in the session, copy, graph, and inspector modules; ad-hoc `@category` values (`copy`, `data`, `sources`, `passages`) replaced with the registry's `constants`; component examples rewritten from `tsx` fences to a single `ts` fence via `createElement`; the layout's Details section moved ahead of its Example; the favicon redrawn for Evergreen Ledger with a provenance comment; and the nested-contract note answered with the React constraint (no bare comment node) plus a documenting **Details** section. openclaw/pr-review stayed red on the Codex quota outage; it is not a required check. |
+| P4 | #1097 merged by Benjamin 2026-09-12 05:07 UTC at `4079f72` (squash `374c96be37`); every pushed commit is in the squash. Closeout reflection `history/reflections/2026-09-12-claude.md` records the P3 lessons (Vercel build-cache build-info trap, coverage floors for a new app, JSDoc grammar for React examples, inherited effect-vitest inventory drift). Packet flipped to `completed-retained`. |
 
 ## Current Blockers
 
