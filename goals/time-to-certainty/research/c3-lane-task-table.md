@@ -1,6 +1,6 @@
 # C3 lane-to-task table — design gate
 
-Status: REVISION 7, 2026-09-10 (row 2b rejected, see the revision 7 paragraph; revision 6 = D6 hosted sweep; revision 5 = D15 mechanism), after one adversarial Codex review
+Status: REVISION 8, 2026-09-11 (rows 3–6 in one PR, doctest on Node, bare selectors, `.git/**`; revision 7 = row 2b rejected; revision 6 = D6 hosted sweep; revision 5 = D15 mechanism), after one adversarial Codex review
 (`research/c3-lane-task-table.review.md`, disposition appended there), two Greptile P1s and
 twelve Codex threads on PR #1018 (all folded; see the thread replies). Ratified by the merge of #1018 (ruling 26);
 revision 5 amends D15 and revision 6 amends D6; both are ratified by the merge of the C3.2 PR
@@ -23,6 +23,17 @@ computed closure as its `inputs`, `lint policy-fingerprint --write` materializes
 `turbo.json`, every CLI-backed policy task depends on the root task, and `**/package.json` leaves
 the closure in favour of the closure members' manifests. The legend, §2.1, §2.2, §4, §7.2 and Q7
 follow. Ruling 28 (lane identity) supersedes the legend's lane-id sentence.
+
+Revision 8 changes (2026-09-11, the one-PR train for rows 3–6, rulings 32–34 and facts F-A/F-B
+of `c3-turbo-facts.md`): (1) §7.2 rows 3 (follow-up), 4, 5 and 6 land as one PR, staged one lane
+per stage; (2) P10's doctest script is `BEEP_VITEST_DOCTEST=1 bunx vitest run` on Node — Bun's fork
+workers never complete vitest's startup handshake and its thread pool times out trivial examples;
+(3) every affected Turbo invocation names tasks bare (`lint:laws lint:native-runtime:roots`), because
+explicit `//#<task>` selectors bypass `--affected`; `//#` ids appear only in summaries, ledgers and
+`turbo.json` keys; (4) the two whole-tree rows (`lint:roadmap-refs`, `lint:typos`) add `!.git/**`
+and `!**/.git/**`, because a `**/*` input hashes the object store; (5) the laws plan switch is a
+hard switch with no sweeps key (ruling 32), and `ci lane doctest` keeps `--mode` as a no-op until
+`heavy.yml` lands on `main` (ruling 33).
 
 Revision 7 changes (2026-09-10, after C3.2b Stage B): row 2b is measured and rejected; D6 keeps the
 shard program and the root `eslint .` for hosted full scope until a reference-aware typed program
@@ -364,9 +375,9 @@ false`, unfiltered, ledger `undeclared`.
 | `goals:doctor` | ★ `goals:doctor` | `bun run beep goals doctor` | `goals/**`, `explorations/**`, `goals/goals-doctor.baseline.jsonc` (explanatory) | D2 (git log, wall clock) | P, F, G(`cheap-gates:goals-doctor`) | 4 s |
 | `goals:index-check` | ★ `goals:index-check` | `bun run beep goals index --check` | `goals/*/ops/manifest.json`, `goals/*/README.md`, `goals/*/GOAL.md`, `goals/INDEX.md` | | P, F, G(`cheap-gates:goals-index`) | 4 s |
 | `lint:reflection-artifacts` | ★ `lint:reflection-artifacts` | `bun run beep lint reflection-artifacts` | `goals/*/history/reflections/**`, `goals/*/ops/manifest.json` | | P, F | 4 s |
-| `lint:roadmap-refs` | ★ `lint:roadmap-refs` | `bun run beep lint roadmap-refs` | `**/*`, `!**/node_modules/**`, `!.beep/**`, `!**/dist/**`, `!**/.turbo/**`, `!**/coverage/**` (existence check may target anything) | `WT` | P, F | 4 s |
+| `lint:roadmap-refs` | ★ `lint:roadmap-refs` | `bun run beep lint roadmap-refs` | `**/*`, `!**/node_modules/**`, `!.beep/**`, `!**/dist/**`, `!**/.turbo/**`, `!**/coverage/**`, `!.git/**`, `!**/.git/**` (existence check may target anything; revision 8: a `**/*` input hashes `.git/**`) | `WT` | P, F | 4 s |
 | `lint:judge-rubric` | ★ `lint:judge-rubric` | `bun run beep lint judge-rubric` | `.claude/skills/browser-qa-loop/resources/judge-prompt.md` | (Qa lens code is in the fingerprint) | P, F | 3 s |
-| `lint:typos` | ★ `lint:typos` | `typos` | `_typos.toml`, `.gitignore`, `**/.gitignore`, `**/*` minus the exact `files.extend-exclude` list transcribed from `_typos.toml` at implementation time; typos version pinned by the lockfile | `cache: false` until the walk fixture passes (D14) | P, F, L(stays direct with its own excludes) | 1 s |
+| `lint:typos` | ★ `lint:typos` | `typos` | `_typos.toml`, `.gitignore`, `**/.gitignore`, `**/*` minus the exact `files.extend-exclude` list transcribed from `_typos.toml` at implementation time, plus `!.git/**` and `!**/.git/**` (revision 8); typos version pinned by the lockfile | `cache: false` until the walk fixture passes (D14) | P, F, L(stays direct with its own excludes) | 1 s |
 | `ci:knip` (`beep quality knip`) | ★ `knip:check` (`knip` stays `knip-bun`) | `bun run beep quality knip` | `knip.jsonc`, `**/package.json`, `bun.lock`, `**/tsconfig*.json`, `.gitignore`, `**/.gitignore`, `apps/**`, `packages/**`, `infra/**`, `scripts/**`, root tool configs, `standards/knip.regression-baseline.jsonc`, `!**/node_modules/**`, `!**/dist/**`, `!**/.turbo/**` (explanatory) | D2 (gitignore semantics incl. `.git/info/exclude`) | F, C(knip), G(`:300`, `cheap-gates:knip`), W(`quality:knip`) | 80 s |
 | `ci:fallow:audit` | ★ `fallow:audit:check` | `bun run beep quality fallow audit --check --base "$BEEP_PROOF_BASE" --out .beep/fallow/audit.check.json --quiet` | `.fallowrc.jsonc`, `**/package.json`, `**/tsconfig*.json`, `apps/**`, `packages/**`, `infra/**`, `scripts/**`, `.claude/skills/**`, `.fallow/plugins/**`, `standards/fallow.pilot.inventory.jsonc` (explanatory) | D2; `env: ["BEEP_PROOF_BASE"]` (the worker's `--base` argument, forwarded by the wrapper as today); `outputs: [".beep/fallow/audit.check.json", ".beep/fallow/raw/audit.check.*"]` | C(fallow), G(`:485`), W(`fallow:audit`), Y | most frequent actionable red (47) |
 | `ci:fallow:dead-code` | ★ `fallow:dead-code:check` | `… fallow dead-code --check --base "$BEEP_PROOF_BASE" --out .beep/fallow/dead-code.check.json --quiet` | as audit (no baseline file: hosted does not pass it) | D2; `env: ["BEEP_PROOF_BASE"]` (forwarded by the wrapper exactly as for audit); `outputs: [".beep/fallow/dead-code.check.json", ".beep/fallow/raw/dead-code.check.*"]` | C, G(`:491`), W(`fallow:dead-code`), Y | |
@@ -686,7 +697,7 @@ const config: ViteUserConfig = {
 };
 ```
 
-Package script: `"beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run"` (P10).
+Package script: `"beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run"` (P10; revision 8 drops `--bun`: ruling 34).
 Resolved-config facts from the review: a package config that sets `test.include` while
 inheriting the shared branch runs its ordinary tests **as well as** doctests (vitest appends
 in-source files to the test list), and a config that never imports the shared config bypasses
@@ -759,6 +770,7 @@ governs in-file concurrency only; Turbo's process fan-out is measured, not assum
 | 1 | C3.1 | schema + service + `lint package-scripts` + `lint policy-fingerprint` + fingerprint file + three writers + thin workers (D16) + mode branch + fleet `--write` (docgen convergence, four new keys, codegen placeholders, `beep:policy` optional until C3.3) + `codegen` split + two root gates registered + `AGENTS.md` law line | ~190 (142 manifests) |
 | 2 | C3.2 | D15 revision 5 first (`//#lint:policy-fingerprint` root task, materialized inputs, dependency edge); `lint:deprecated-apis` + `lint:jsdoc` tasks and `//#lint:jsdoc:root`; the typed invocation for local `--affected` runs; hosted full scope keeps the shard program and the root `eslint .` (revision 6); `turbo-config-proof` tasks; fixtures; before/after | ~25 |
 | 2b | C3.2b | **measured and rejected (revision 7)**: typescript-eslint's project mode builds programs without project references, the residual project-service pass costs the root corpus again, and 13 packages lack test overlays; landed only the versioned sweep switch (`standards/lint-policy.sweeps.jsonc`) and the record (`c3-2b-implementation.md`). Any retry must change the parser's program factory (reference-aware or a shared typed server) and exclude `dist/**` from lint inputs before a `^build` edge | ~5 |
+| 3–6 | C3.3 follow-up + C3.4–C3.6 | **one PR (revision 8, ruling 33)** in branch `ttc/c3-4-5-6-turbo-tasks`; the rows below describe its stages. | ~150 |
 | 3 | C3.3 | package-local law scanner; `lint:laws` task; `//#lint:native-runtime:roots`; `scopedLawStep` retires; `beep:policy` retires from fleet (manifest touch: 2 files) and schema | ~30 |
 | 4 | C3.4 | `doctest` task, conditional package overrides (11 configs), `vitest.docs.ts` and resolver retire, `heavy.yml`, tests | ~40 |
 | 5 | C3.5 | `//#` root tasks, D9 root scripts, three-invocation plan in `lint policy` and `beep:preflight`, GithubChecks routes, knip/fallow/jsdoc-ratchet lanes on Turbo, `standards/turbo-remote-cache.md` | ~35 |
