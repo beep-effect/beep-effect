@@ -65,6 +65,7 @@ import {
   FallowReportFinding,
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
   FlakeQuarantineArtifactJson,
+  foldTurboLaneDigests,
   GateOrderSeed,
   GateOrderSeedRow,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
@@ -107,6 +108,7 @@ import {
   qualityCommandPrimitiveHelpersForTesting,
   qualityProfileConfigForTesting,
   readCoverageComparisonBaselineForTesting,
+  readTurboLaneLedger,
   renderCoverageFailuresForTesting,
   renderCoverageLoweredFloors,
   renderCoverageMeasuredRowProposals,
@@ -123,7 +125,12 @@ import {
   runSqlIntegrationTestLaneForTesting,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
+  TURBO_LANE_LEDGER_ENV,
+  TurboLaneDigest,
+  TurboLaneLedgerRow,
+  TurboRunSummary,
   testTsgoPlanningForTesting,
+  turboLaneDigestFromSummary,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
   validateCoverageTaskArgsForTesting,
@@ -161,6 +168,7 @@ import {
   Fiber,
   FileSystem,
   Inspectable,
+  identity,
   Layer,
   Order,
   Path,
@@ -196,6 +204,8 @@ const encodeCoverageSelfJudgeScopeSync = S.encodeSync(CoverageSelfJudgeScope);
 const decodeCoverageFileBaselineUnknownSync = S.decodeUnknownSync(CoverageFileBaseline);
 const encodeCoverageRegressionBaseline = S.encodeEffect(CoverageRegressionBaseline);
 const encodeGithubCheckRunReportSync = S.encodeSync(GithubCheckRunReport);
+const decodeTurboLaneLedgerRow = S.decodeUnknownEffect(S.fromJsonString(TurboLaneLedgerRow));
+const encodeTurboRunSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -379,7 +389,7 @@ const isTurboConcurrencyArg = (arg: string): boolean =>
 // excluded root turbo task must carry, inserted before any `--` passthrough
 // tail so it stays a turbo option instead of leaking into the child task argv.
 const LABS_EXCLUDE_FILTER = "--filter=!./apps/labs/**";
-const POLICY_TURBO_LABELS = ["lint:deprecated-apis", "lint:jsdoc"];
+
 const policyTurboStep = (
   label: string,
   base?: string,
@@ -550,7 +560,59 @@ const qualityCommandHandle = (output: string, exitCode: number) =>
     unref: Effect.succeed(Effect.void),
   });
 
-const cheapGatesSpawner = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
+// The runtime may wrap a Turbo step in a secret session (`op run … --`) and rewrite its
+// `--cache=` posture (and, under CI, a leading `--force`) from the ambient environment; policy
+// tests compare commands by this key so those environment-only differences never decide a test.
+const policyCommandKey = (text: string): string =>
+  pipe(
+    Str.split(text, " "),
+    A.dropWhile((word) => word !== "bunx" && word !== "bun" && word !== "./node_modules/.bin/eslint" && word !== "git"),
+    A.filter((word) => !Str.startsWith("--cache=")(word) && word !== "--force"),
+    A.join(" ")
+  );
+
+// A live 1Password session suffixes the resolved step label with " (op run)".
+const policyLabelKey = Str.replace(" (op run)", "");
+
+const policyStepCommand = (step: QualityTaskStep) => A.join([step.command, ...step.args], " ");
+
+// A red policy run fails as one group whose failures name exactly the red planned label.
+const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel: string): void => {
+  expect(Exit.isFailure(exit)).toBe(true);
+  if (Exit.isFailure(exit)) {
+    const failure = Cause.squash(exit.cause);
+    expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+    if (isQualityTaskGroupFailed(failure)) {
+      expect(A.map(failure.failures, (step) => policyLabelKey(step.label))).toEqual([failedLabel]);
+    }
+  }
+};
+
+// Local runs stop after a red cheap phase; every run skips the ratchet compare once the
+// inventory phase is red.
+const expectedPolicyRun = (
+  plan: ReadonlyArray<QualityTaskStep>,
+  full: boolean,
+  failedLabel: string
+): ReadonlyArray<QualityTaskStep> =>
+  !full && failedLabel === "lint:policy:cheap"
+    ? A.take(plan, 1)
+    : A.filter(plan, (step) => failedLabel === "lint:policy:cheap" || step.label !== "ci:jsdoc-ratchet:ratchet");
+
+// Session probes (`op …`) and git reads are spawned around the plan; only commands with a
+// step launcher token are plan steps.
+const spawnedPolicyCommands = (spawned: ReadonlyArray<string>): ReadonlyArray<string> =>
+  pipe(
+    spawned,
+    A.map(policyCommandKey),
+    A.filter((key) => key !== "" && !Str.startsWith("git ")(key))
+  );
+
+const cheapGatesSpawner = (
+  spawned: Array<string>,
+  failedCommands: ReadonlyArray<string>,
+  key: (text: string) => string = identity
+) =>
   ChildProcessSpawner.make((command) => {
     if (ChildProcess.isStandardCommand(command)) {
       const commandText = A.join([command.command, ...command.args], " ");
@@ -560,7 +622,7 @@ const cheapGatesSpawner = (spawned: Array<string>, failedCommands: ReadonlyArray
         : A.contains(command.args, "--show-current")
           ? "feature/cheap-gates"
           : "";
-      const exitCode = A.contains(failedCommands, commandText) ? 1 : 0;
+      const exitCode = A.contains(A.map(failedCommands, key), key(commandText)) ? 1 : 0;
       return Effect.succeed(qualityCommandHandle(output, exitCode));
     }
 
@@ -889,7 +951,7 @@ describe("quality task adapter", () => {
       "origin/main",
       "--summarize",
     ]);
-    expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(["run", "beep", "quality", "knip"]);
+    expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(expectedTurboArgs("knip:check", ["--summarize"]));
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
     // The repo-wide tsgo extras ride inside `quality:check` (root `bun run check`
     // keeps them under `--affected`), so no lane runs `test-tsgo` or `tsgo-smoke` again.
@@ -924,8 +986,12 @@ describe("quality task adapter", () => {
     ]);
     expect(A.every(lanes, (lane) => lane.wave === "preflight")).toBe(true);
     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual(["preflight"]);
-    expect(qualityLaneArgs(lanes, "repo-sanity:tsconfig-sync")).toEqual(["run", "config-sync:check"]);
-    expect(qualityLaneArgs(lanes, "lint:effect-imports")).toEqual(["run", "beep", "laws", "effect-imports", "--check"]);
+    expect(qualityLaneArgs(lanes, "repo-sanity:tsconfig-sync")).toEqual(
+      expectedTurboArgs("config-sync:check", ["--summarize"])
+    );
+    expect(qualityLaneArgs(lanes, "lint:effect-imports")).toEqual(
+      expectedTurboArgs("lint:effect-imports", ["--summarize"])
+    );
     expect(qualityLaneArgs(lanes, "lint:effect-vitest")).toEqual(["run", "beep", "lint", "effect-vitest"]);
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
       "run",
@@ -1087,7 +1153,7 @@ describe("quality task adapter", () => {
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-sanity")).toBe(true);
     expect(lanes[0]?.step.args).toEqual(["run", "beep", "quality", "changeset-graph"]);
-    expect(lanes[2]?.step.args).toEqual(["run", "beep", "quality", "fallow", "boundaries", "config-check", "--check"]);
+    expect(lanes[2]?.step.args).toEqual(expectedTurboArgs("fallow:boundaries:config-check", ["--summarize"]));
     expect(lanes[6]?.step.args).toEqual(["run", "check:configs"]);
     expect(lanes[7]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
     expect(qualityLaneArgs(lanes, "quality:cache-policy")).toEqual(["run", "beep", "quality", "cache-policy"]);
@@ -1223,6 +1289,142 @@ describe("quality task adapter", () => {
           (line) => decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)),
           { discard: true }
         );
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("hands a wrapper lane a ledger and records the digest its child declared", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        // The fixture stands in for `beep ci lane`: it declares one digest to the ledger the parent named.
+        const manifest =
+          "{\"name\": \"wrapper-lane-fixture\", \"private\": true, \"scripts\": {\"beep\": \"bun -e \\\"const fs = require('node:fs'); const path = require('node:path'); const ledger = process.env.BEEP_TURBO_LANE_LEDGER; fs.mkdirSync(path.dirname(ledger), { recursive: true }); fs.appendFileSync(ledger, JSON.stringify({ _tag: 'declared', digest: { digest: 'declared', summaryIds: ['run-1'], tasks: [{ taskId: '//#lint:typos', hash: 'h1', cacheStatus: 'HIT' }] } }) + '\\\\\\\\n'); fs.appendFileSync(ledger, JSON.stringify({ _tag: 'closed', attempted: 1 }) + '\\\\\\\\n');\\\"\"}}";
+        yield* fs.writeFileString(path.join(tempDir, "package.json"), manifest);
+        const wrapper = QualityTaskStep.make({
+          label: "quality:lint",
+          command: "bun",
+          args: ["run", "beep", "ci", "lane", "lint"],
+          cwd: tempDir,
+        });
+        yield* runQualityTaskStreamingLaneGroup("ci:local", [["lint", wrapper, O.none()]]);
+        const report = yield* pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
+          O.getOrThrow,
+          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length),
+          decodeQualityTaskLaneRunReportJson
+        );
+        const expected = foldTurboLaneDigests([
+          TurboLaneDigest.make({
+            digest: "declared",
+            summaryIds: ["run-1"],
+            tasks: [{ taskId: "//#lint:typos", hash: "h1", cacheStatus: "HIT" }],
+          }),
+        ]);
+        expect(report.lanes[0]?.status).toBe("passed");
+        expect(report.lanes[0]?.inputDigest).toStrictEqual(O.map(expected, (digest) => digest.digest));
+        // The parent consumes the ledger once read.
+        const leftovers = yield* fs
+          .readDirectory(path.join(tempDir, ".beep", "quality", "lane-ledgers"))
+          .pipe(Effect.orElseSucceed(() => A.empty<string>()));
+        expect(leftovers).toEqual([]);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("closes the ledger a parent named with zero attempts when no direct Turbo step ran", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const ledger = path.join(tempDir, "lane", "ledger.jsonl");
+        yield* withEnvVarEffect(
+          TURBO_LANE_LEDGER_ENV,
+          ledger,
+          runQualityTaskStreamingLaneGroup("ci:local", [
+            ["check", bunScriptStep("ci:check", "process.exit(0)"), O.none()],
+          ])
+        );
+        const rows = yield* pipe(
+          yield* fs.readFileString(ledger),
+          Str.split("\n"),
+          A.filter(Str.isNonEmpty),
+          Effect.forEach((line) => decodeTurboLaneLedgerRow(line))
+        );
+        expect(rows).toEqual([{ _tag: "closed", attempted: 0 }]);
+        // A closed ledger with nothing declared folds to no digest rather than an empty one.
+        assertNone(yield* readTurboLaneLedger(ledger));
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("declares a direct Turbo step's digest to the ledger the parent named", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const bin = path.join(tempDir, "bin");
+        yield* fs.makeDirectory(bin, { recursive: true });
+        // A stand-in `bunx` that leaves the run summary `turbo run --summarize` would have written.
+        // The summary starts far enough in the future to count as this attempt's own.
+        const summary = TurboRunSummary.make({
+          id: "fixture",
+          execution: { startTime: 4_102_444_800_000, endTime: 4_102_444_800_010, exitCode: 0 },
+          tasks: [
+            {
+              taskId: "//#lint:typos",
+              task: "lint:typos",
+              hash: "h1",
+              cache: { status: "MISS" },
+              execution: { exitCode: 0 },
+            },
+          ],
+        });
+        yield* fs.writeFileString(path.join(bin, "summary.json"), yield* encodeTurboRunSummary(summary));
+        const fakeBunx = path.join(bin, "bunx");
+        yield* fs.writeFileString(
+          fakeBunx,
+          A.join(
+            ["#!/bin/sh", "mkdir -p .turbo/runs", 'cp "$(dirname "$0")/summary.json" .turbo/runs/fixture.json'],
+            "\n"
+          )
+        );
+        yield* fs.chmod(fakeBunx, 0o755);
+        const ambientPath = O.getOrElse(O.fromUndefinedOr(Bun.env.PATH), () => "");
+        const direct = QualityTaskStep.make({
+          label: "ci:lint",
+          command: "bunx",
+          args: ["turbo", "run", "lint:typos", "--summarize"],
+          cwd: tempDir,
+          // The stand-in is a POSIX shell script, so the PATH separator is fixed.
+          env: { PATH: `${bin}:${ambientPath}` },
+        });
+        const ledger = path.join(tempDir, "lane", "ledger.jsonl");
+        yield* withEnvVarEffect(
+          TURBO_LANE_LEDGER_ENV,
+          ledger,
+          runQualityTaskStreamingLaneGroup("ci:local", [["lint", direct, O.none()]])
+        );
+        const expected = yield* Effect.fromOption(turboLaneDigestFromSummary(summary, ["lint:typos"]));
+        // The child declared the step's digest and closed the ledger with that one attempt.
+        assertSome(
+          O.map(yield* readTurboLaneLedger(ledger), (digest) => digest.digest),
+          expected.digest
+        );
+        const report = yield* pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
+          O.getOrThrow,
+          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length),
+          decodeQualityTaskLaneRunReportJson
+        );
+        const lane = yield* Effect.fromOption(A.head(report.lanes));
+        expect(lane.status).toBe("passed");
+        assertSome(lane.inputDigest, expected.digest);
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
@@ -2398,8 +2600,8 @@ describe("quality task adapter", () => {
     const spawned: Array<string> = [];
     const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
     const failedCommands = [
-      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "repo-sanity:tsconfig-sync")], " "),
-      A.join(["bun", ...qualityLaneArgs(cheapGateLanes, "lint:effect-imports")], " "),
+      A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "repo-sanity:tsconfig-sync")], " "),
+      A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "lint:effect-imports")], " "),
     ];
     const lastLane = O.getOrThrow(A.last(cheapGateLanes));
     const lastCommand = A.join([lastLane.step.command, ...lastLane.step.args], " ");
@@ -2982,124 +3184,163 @@ describe("quality task adapter", () => {
     expect(steps[0]?.args).toEqual(expectedTurboArgs("lint:fix", ["--concurrency=1"]));
   });
 
-  it("plans repo-wide root lint as aggregate and policy sibling steps", () => {
-    const steps = rootQualityStepsForTesting("/repo", getInvocation(["lint"]));
-
-    expect(A.map(steps, (step) => step.label)).toEqual([
-      "lint",
+  it("plans ordered D10 policy runs with bare affected selectors and unfiltered state checks", () => {
+    const local = rootLintPolicyStepsForTesting("/repo", ["README.md"], "review-base");
+    expect(A.map(local, (step) => step.label)).toEqual([
+      "lint:policy:cheap",
+      "lint:policy:medium",
+      "lint:policy:state",
       "lint:deprecated-apis",
-      "knowledge:semantic-delta",
-      "knowledge:refs-check",
-      "lint:schema-first",
-      "lint:terse-effect",
-      "lint:jsdoc",
-      "lint:native-runtime",
-      "lint:identity-registry",
-      "lint:frozen-grant-set",
-      "lint:circular",
-      "lint:effect-fn",
-      "lint:package-test-imports",
-      "lint:effect-imports",
-      "lint:effect-imports-markdown",
+      "lint:tsconfig-overlay",
       "lint:package-test-typecheck",
       "lint:effect-vitest",
-      "lint:tsconfig-overlay",
+      "quality:test-tsgo",
+      "ci:jsdoc-ratchet:ratchet",
+    ]);
+    const taskNames = (step: QualityTaskStep) => A.takeWhile(A.drop(step.args, 2), (arg) => !Str.startsWith("--")(arg));
+    expect(taskNames(O.getOrThrow(A.get(local, 0)))).toEqual([
+      "lint:package-scripts",
+      "lint:policy-fingerprint",
       "lint:tsgo-rules",
-      "lint:oxlint",
       "lint:ecosystem-polarity",
       "lint:allowlist",
-      "lint:jsdoc-module-tags",
-      "goals:doctor",
       "goals:index-check",
       "lint:reflection-artifacts",
       "lint:roadmap-refs",
       "lint:judge-rubric",
-      "lint:package-scripts",
-      "lint:policy-fingerprint",
-      "lint:typos",
     ]);
-    expect(steps[0]?.args).toEqual(expectedRootTurboArgs("lint", []));
-    expect(steps[0]?.captureTimeoutMillis).toBeUndefined();
-    expect(steps.slice(1).every((step) => step.captureTimeoutMillis === 15 * 60 * 1_000)).toBe(true);
-  });
-
-  it("plans repo-wide root lint policy without the aggregate lint lane", () => {
-    const steps = rootLintPolicyStepsForTesting("/repo");
-
-    expect(A.map(steps, (step) => step.label)).toEqual([
-      "lint:deprecated-apis",
-      "knowledge:semantic-delta",
-      "knowledge:refs-check",
+    expect(taskNames(O.getOrThrow(A.get(local, 1)))).toEqual([
+      "lint:laws",
+      "lint:native-runtime:roots",
       "lint:schema-first",
-      "lint:terse-effect",
-      "lint:jsdoc",
-      "lint:native-runtime",
       "lint:identity-registry",
-      "lint:frozen-grant-set",
       "lint:circular",
-      "lint:effect-fn",
-      "lint:package-test-imports",
       "lint:effect-imports",
       "lint:effect-imports-markdown",
-      "lint:package-test-typecheck",
-      "lint:effect-vitest",
-      "lint:tsconfig-overlay",
-      "lint:tsgo-rules",
-      "lint:oxlint",
-      "lint:ecosystem-polarity",
-      "lint:allowlist",
+      "lint:jsdoc",
+      "lint:jsdoc:root",
+    ]);
+    expect(taskNames(O.getOrThrow(A.get(local, 2)))).toEqual([
+      "knowledge:semantic-delta",
+      "knowledge:refs-check",
       "lint:jsdoc-module-tags",
       "goals:doctor",
-      "goals:index-check",
-      "lint:reflection-artifacts",
-      "lint:roadmap-refs",
-      "lint:judge-rubric",
-      "lint:package-scripts",
-      "lint:policy-fingerprint",
+      "lint:oxlint",
       "lint:typos",
+      "jsdoc:inventory:check",
     ]);
-    expect(steps.find((step) => step.label === "lint:package-scripts")?.args).toEqual(
-      repoCliEntryArgs("lint", "package-scripts", "--check")
+    for (const index of [0, 1, 3]) {
+      const step = O.getOrThrow(A.get(local, index));
+      expect(step.args).toContain("--affected");
+      expect(policyTurboScmBase(step)).toBe("review-base");
+      expect(A.some(step.args, Str.startsWith("//#"))).toBe(false);
+    }
+    expect(local[2]?.args).not.toContain("--affected");
+    expect(policyTurboScmBase(O.getOrThrow(A.get(local, 2)))).toBeUndefined();
+    for (const step of A.take(local, 4)) {
+      expect(step.args).toContain("--summarize");
+      expect(step.args).toContain("--continue=dependencies-successful");
+      expect(step.args).not.toContain(LABS_EXCLUDE_FILTER);
+    }
+    expect(A.last(local)).toEqual(
+      O.some(
+        expect.objectContaining({
+          args: repoCliEntryArgs(
+            "quality",
+            "jsdoc-ratchet",
+            "--inventory",
+            ".beep/ci/jsdoc-documentation.inventory.jsonc"
+          ),
+        })
+      )
     );
-    expect(steps.find((step) => step.label === "lint:policy-fingerprint")?.args).toEqual(
-      repoCliEntryArgs("lint", "policy-fingerprint", "--check")
-    );
+    const full = rootLintPolicyStepsForTesting("/repo");
+    expect(A.map(full, (step) => step.label)).toEqual([
+      "lint:policy:cheap",
+      "lint:policy:medium",
+      "lint:jsdoc",
+      "lint:deprecated-apis",
+      "lint:tsconfig-overlay",
+      "lint:package-test-typecheck",
+      "lint:effect-vitest",
+      "quality:test-tsgo",
+      "ci:jsdoc-ratchet:ratchet",
+    ]);
+    expect(taskNames(O.getOrThrow(A.get(full, 1)))).toEqual([
+      ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(7)),
+      ...pipe(A.get(local, 2), O.getOrThrow, taskNames),
+    ]);
+    expect(A.every(full, (step) => !A.contains(step.args, "--affected"))).toBe(true);
     expect(policyTurboStep("lint:jsdoc").args).toEqual(["eslint", ".", "--max-warnings=0"]);
     expect(policyTurboStep("lint:deprecated-apis").args).toEqual(repoCliEntryArgs("lint", "deprecated-apis", "--full"));
-    expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
-    expect(steps.find((step) => step.label === "lint:native-runtime")?.args).toEqual(
-      repoCliEntryArgs("laws", "native-runtime", "--check")
-    );
-    expect(steps.find((step) => step.label === "lint:effect-imports-markdown")?.args).toEqual(
-      repoCliEntryArgs("laws", "effect-imports", "--mode", "markdown", "--check")
-    );
-    expect(steps.every((step) => step.captureTimeoutMillis === 15 * 60 * 1_000)).toBe(true);
-  });
-
-  it("scopes policy Turbo tasks to the caller base and keeps full scope on the shard programs", () => {
-    for (const label of POLICY_TURBO_LABELS) {
-      const scoped = policyTurboStep(label, "refs/heads/review-base");
-      expect(scoped.command).toBe("bunx");
-      expect(scoped.args).toEqual(
-        expect.arrayContaining(["turbo", "run", "--affected", "--summarize", "--continue=dependencies-successful"])
-      );
-      expect(scoped.args).not.toContain(LABS_EXCLUDE_FILTER);
-      expect(policyTurboScmBase(scoped)).toBe("refs/heads/review-base");
-      const full = policyTurboStep(label);
-      expect(full.args).not.toContain("turbo");
-      expect(policyTurboScmBase(full)).toBeUndefined();
-    }
-  });
-
-  it("selects the full deprecated sweep without changing affected policy Turbo scope", () => {
-    const full = policyTurboStep("lint:deprecated-apis", undefined, "turbo");
-    expect(full.args).toEqual(expect.arrayContaining(["turbo", "run", "lint:deprecated-apis", "--summarize"]));
-    expect(full.args).not.toContain("--affected");
-    expect(policyTurboScmBase(full)).toBeUndefined();
-    expect(policyTurboStep("lint:jsdoc", undefined, "turbo").args).toEqual(["eslint", ".", "--max-warnings=0"]);
+    expect(policyTurboStep("lint:deprecated-apis", undefined, "turbo").args).toContain("turbo");
     expect(policyTurboStep("lint:deprecated-apis", "review-base", "turbo")).toEqual(
       policyTurboStep("lint:deprecated-apis", "review-base", "shards")
     );
+    expect(rootQualityStepsForTesting("/repo", getInvocation(["lint"]))).toEqual([
+      expect.objectContaining({ label: "lint", args: expectedRootTurboArgs("lint", []) }),
+      ...full,
+    ]);
+  });
+
+  it("preserves every pre-D policy check as a task or aggregate with explicit additions", () => {
+    const before = [
+      "lint:deprecated-apis",
+      "knowledge:semantic-delta",
+      "knowledge:refs-check",
+      "lint:schema-first",
+      "lint:laws",
+      "lint:jsdoc",
+      "lint:identity-registry",
+      "lint:circular",
+      "lint:effect-imports",
+      "lint:effect-imports-markdown",
+      "lint:package-test-typecheck",
+      "lint:tsconfig-overlay",
+      "lint:tsgo-rules",
+      "lint:oxlint",
+      "lint:ecosystem-polarity",
+      "lint:allowlist",
+      "lint:jsdoc-module-tags",
+      "goals:doctor",
+      "goals:index-check",
+      "lint:reflection-artifacts",
+      "lint:roadmap-refs",
+      "lint:judge-rubric",
+      "lint:package-scripts",
+      "lint:policy-fingerprint",
+      "lint:typos",
+    ];
+    expect(before).toHaveLength(25);
+    for (const base of [undefined, "review-base"]) {
+      const steps = rootLintPolicyStepsForTesting("/repo", undefined, base);
+      const after = pipe(
+        steps,
+        A.flatMap((step) =>
+          step.args[0] === "turbo"
+            ? A.takeWhile(A.drop(step.args, 2), (arg) => !Str.startsWith("--")(arg))
+            : [step.label]
+        ),
+        A.dedupe
+      );
+      // Residual tasks expand the existing laws/JSDoc checks; the other three
+      // checks are the new aggregate contract, not hidden losses or aliases.
+      const additions = [
+        "lint:native-runtime:roots",
+        "lint:jsdoc:root",
+        "jsdoc:inventory:check",
+        "lint:effect-vitest",
+        "quality:test-tsgo",
+        "ci:jsdoc-ratchet:ratchet",
+      ];
+      expect(
+        A.sort(
+          A.filter(after, (name) => !A.contains(additions, name)),
+          Order.String
+        )
+      ).toEqual(A.sort(before, Order.String));
+      expect(A.every(after, (name) => A.contains(before, name) || A.contains(additions, name))).toBe(true);
+    }
   });
 
   it.effect(
@@ -3136,52 +3377,13 @@ describe("quality task adapter", () => {
     }
   });
 
-  it("passes changed TypeScript files to file-oriented policy laws", () => {
-    const files = [
-      "packages/demo/src/index.ts",
-      "packages/demo/test/Example.test.ts",
-      "packages/ecosystem/demo/src/index.ts",
-      "README.md",
-    ];
-    const steps = rootLintPolicyStepsForTesting("/repo", files);
-
-    expect(steps.find((step) => step.label === "lint:effect-fn")?.args).toEqual(
-      repoCliEntryArgs(
-        "laws",
-        "effect-fn",
-        "--check",
-        "--include",
-        "packages/demo/src/index.ts,packages/demo/test/Example.test.ts,packages/ecosystem/demo/src/index.ts"
-      )
-    );
-    expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
-    expect(steps.find((step) => step.label === "lint:allowlist")?.args).toEqual(
-      repoCliEntryArgs("laws", "allowlist-check")
-    );
-    expect(steps.find((step) => step.label === "lint:package-test-imports")?.args).toContain(
-      "packages/demo/test/Example.test.ts"
-    );
-    expect(steps.find((step) => step.label === "lint:ecosystem-polarity")?.args).toEqual(
-      repoCliEntryArgs("lint", "ecosystem-polarity", "--include", "packages/ecosystem/demo/src/index.ts")
+  it("leaves changed-file selection to Turbo rather than manufacturing include arguments", () => {
+    expect(rootLintPolicyStepsForTesting("/repo", ["docs/README.md"], "base")).toEqual(
+      rootLintPolicyStepsForTesting("/repo", ["packages/demo/src/index.ts"], "base")
     );
   });
 
-  it("omits empty changed-scope policy steps instead of constructing empty includes", () => {
-    const steps = rootLintPolicyStepsForTesting("/repo", ["docs/README.md"]);
-    const labels = A.map(steps, (step) => step.label);
-
-    expect(labels).not.toContain("lint:effect-imports");
-    expect(labels).toContain("lint:effect-imports-markdown");
-    expect(labels).not.toContain("lint:terse-effect");
-    expect(labels).not.toContain("lint:effect-fn");
-    expect(labels).not.toContain("lint:frozen-grant-set");
-    expect(labels).not.toContain("lint:native-runtime");
-    expect(labels).not.toContain("lint:ecosystem-polarity");
-    expect(labels).not.toContain("lint:package-test-imports");
-    expect(A.some(steps, (step) => A.some(step.args, Str.equivalence("")))).toBe(false);
-  });
-
-  it("runs repo-wide root lint policy with hosted-stable concurrency", () =>
+  it("runs repo-wide root lint policy in D10 sequence", () =>
     Effect.runPromise(
       withTempRepo(
         Effect.gen(function* () {
@@ -3216,7 +3418,56 @@ describe("quality task adapter", () => {
           // added on another branch must not break this assertion when the two
           // land together in a merge.
           const policyStepCount = A.length(rootLintPolicyStepsForTesting(tmpDir));
-          expect(logText).toContain(`[beep-cli] lint:policy: running ${policyStepCount} step(s) with concurrency 3`);
+          expect(logText).toContain(`[beep-cli] lint:policy: running ${policyStepCount} ordered step(s)`);
+        })
+      )
+    ));
+
+  it("fails fast on local cheap reds, collects hosted reds, and refuses stale inventory comparisons", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const root = process.cwd();
+          yield* fs.makeDirectory(`${root}/standards`, { recursive: true });
+          yield* fs.writeFileString(
+            `${root}/standards/lint-policy.sweeps.jsonc`,
+            '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"shards"}'
+          );
+          yield* withEnvVarEffect(
+            "CI",
+            "false",
+            withEnvVarEffect(
+              "TURBO_CACHE",
+              "local:rw",
+              Effect.gen(function* () {
+                for (const full of [false, true]) {
+                  for (const failedLabel of ["lint:policy:cheap", full ? "lint:policy:medium" : "lint:policy:state"]) {
+                    const plan = rootLintPolicyStepsForTesting(root, undefined, full ? undefined : "review-base");
+                    const failed = pipe(
+                      plan,
+                      A.findFirst((step) => step.label === failedLabel),
+                      O.getOrThrow
+                    );
+                    const spawned = A.empty<string>();
+                    const exit = yield* runRootLintPolicyTask(full, "review-base").pipe(
+                      Effect.provideService(
+                        ChildProcessSpawner.ChildProcessSpawner,
+                        cheapGatesSpawner(spawned, [policyStepCommand(failed)], policyCommandKey)
+                      ),
+                      Effect.exit
+                    );
+                    expectPolicyGroupFailure(exit, failedLabel);
+                    expect(spawnedPolicyCommands(spawned)).toEqual(
+                      A.map(expectedPolicyRun(plan, full, failedLabel), (step) =>
+                        policyCommandKey(policyStepCommand(step))
+                      )
+                    );
+                  }
+                }
+              })
+            )
+          );
         })
       )
     ));
@@ -6722,15 +6973,15 @@ describe("quality task adapter", () => {
             [
               bunScriptStep(
                 "test:large-output",
-                "process.stdout.write('x'.repeat(300000)); console.log('tail-marker')"
+                "process.stdout.write('x'.repeat(9 * 1024 * 1024)); console.log('tail-marker')"
               ),
             ],
             1
           );
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] output truncated after 262144 characters");
-          expect(Str.length(logText)).toBeLessThan(270_000);
+          expect(logText).toContain(`[beep-cli] output truncated after ${8 * 1024 * 1024} characters`);
+          expect(Str.length(logText)).toBeLessThan(8 * 1024 * 1024 + 8_192);
         })
       )
     ));
@@ -6974,21 +7225,18 @@ describe("quality task adapter", () => {
           }
 
           const commandLog = yield* fs.readFileString(commandLogPath);
-          // The aggregate lint step and the policy steps run grouped-concurrent
-          // (LINT_POLICY_STEP_CONCURRENCY), so log order between them is not
-          // guaranteed — the resilience property is that every policy check
-          // still executes after the aggregate lint step fails.
+          // The aggregate fails first; ordered policy diagnostics still execute.
           expect(commandLog).toContain("bunx turbo run lint");
-          expect(commandLog).toContain("bun run packages/tooling/tool/cli/src/bin.ts -- laws effect-imports --check");
-          expect(commandLog).toContain("bun run packages/tooling/tool/cli/src/bin.ts -- lint roadmap-refs");
-          expect(commandLog).toContain("bunx typos");
+          expect(commandLog).toContain("lint:effect-imports");
+          expect(commandLog).toContain("lint:roadmap-refs");
+          expect(commandLog).toContain("lint:typos");
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           // Derived from the same plan the runtime executes (aggregate lane plus
           // every policy step), so a lint step added on another branch does not
           // break this assertion when the two land together in a merge.
           const lintStepCount = A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"])));
-          expect(logText).toContain(`[beep-cli] lint: running ${lintStepCount} step(s) with concurrency 3`);
+          expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
         })
       )
     ));

@@ -531,3 +531,38 @@ table in `c3-lane-task-table.md` §0.2.
 - **Probe hygiene:** an uncommitted edit to root `package.json` or `turbo.json` is a global
   input change and selects every task under `--affected`; commit probe config before
   measuring selection.
+
+## Stage C2 amendment — explicit selectors and Git metadata (2026-09-11)
+
+Verified against the installed **Turbo 2.10.12** using the production root task
+registrations, globals and dependency edges in scoped synthetic repositories
+under `/tmp`. The checkout receives no Git writes. The executable evidence is
+`packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts`; run from the CLI
+package with `bunx --bun vitest run test/root-tasks-turbo-inputs.test.ts --pool=threads`.
+
+- **F-A: explicit root selectors bypass affected filtering.** With
+  `TURBO_SCM_BASE=base`, `TURBO_SCM_HEAD=HEAD`, and `--affected`, passing all 40
+  `//#<script>` selectors returns all 40 tasks even for a non-input edit.
+  Bare names preserve declared-input filtering. Use bare task names in affected
+  invocations; retain `//#<script>` for configuration keys, dependencies, summary
+  IDs and ledger IDs. This qualifies the earlier invocation guidance and the
+  expectations in section 14; the two selector forms are not interchangeable.
+- The fixture commits its configuration, creates `base` at the first commit,
+  then makes a README-only second commit. README is an input of
+  `lint:roadmap-refs` and `lint:typos`, so the clean affected result contains those
+  two tasks plus their `lint:policy-fingerprint` prerequisite. A non-input edit
+  adds no tasks; requesting the remaining bare names returns zero tasks.
+  Every declared-input row is checked alone and alongside the two whole-tree
+  tasks, with exact task-set equality including prerequisite edges. Row isolation
+  matters because many production rows deliberately share source/config inputs.
+- **F-B: whole-tree inputs need explicit Git exclusions.** Both root tasks that
+  include `**/*` now include `!.git/**` and `!**/.git/**`. The Git fixture writes
+  a previously absent loose blob with `git hash-object -w`, confirms the object
+  exists, adds nested Git metadata, and asserts **all 40 hashes are unchanged**
+  and all resolved input maps exclude Git paths. This prevents object-store churn
+  from becoming a task input. Fable's pre-fix probe established the inclusion bug;
+  this regression case verifies the corrected production declarations.
+
+These are selection/hash proofs from real Turbo dry runs, not checker execution,
+cache-hit economics, hosted proof, or binary-walker certification. Stage D must
+use bare root task names for every affected invocation it introduces.

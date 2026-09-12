@@ -15,6 +15,7 @@ import { CoreVocab } from "@beep/identity";
 import { A, Str } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as R from "effect/Record";
+import { doctestFenceInfo } from "../../../internal/jsdoc/DoctestSource.ts";
 import { formatJson, outputFile } from "../internal/Source.ts";
 import { SyncDataTargetMetadata, SyncDataTargetProjection } from "../SyncDataToTs.schemas.ts";
 import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";
@@ -80,7 +81,7 @@ const renderTermsModule = (prefix: SharedPrefix): string => {
  *
  * **Example** (Read the ${display} namespace IRI)
  *
- * \`\`\`ts import.meta.vitest name="Read the ${display} namespace IRI"
+ * \`\`\`${doctestFenceInfo(`Read the ${display} namespace IRI`)}
  * import { ${constant}_NAMESPACE } from "@beep/rdf/Vocab/generated/${moduleName}.terms"
  *
  * ${constant}_NAMESPACE.length > 0 // => true
@@ -96,7 +97,7 @@ export const ${constant}_NAMESPACE = "${CoreVocab[prefix].iri}" as const;
  *
  * **Example** (Read the ${display} term inventory)
  *
- * \`\`\`ts import.meta.vitest name="Read the ${display} term inventory"
+ * \`\`\`${doctestFenceInfo(`Read the ${display} term inventory`)}
  * import { ${constant}_TERMS } from "@beep/rdf/Vocab/generated/${moduleName}.terms"
  *
  * ${constant}_TERMS.length > 0 // => true

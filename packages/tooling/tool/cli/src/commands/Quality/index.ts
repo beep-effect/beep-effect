@@ -20,6 +20,13 @@ export { qualityFallowCommand } from "./FallowQuality.command.ts";
  */
 export * from "./internal/TurboConfigProof.ts";
 /**
+ * Per-lane Turbo input digests folded from run summaries (C3.6).
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./internal/TurboLaneDigest.ts";
+/**
  * Public quality command export.
  *
  * @category cli-commands

@@ -49,7 +49,7 @@ jobs:
           - id: doctest
             name: Doctest
             timeout_minutes: 60
-            uses_turbo: "false"
+            uses_turbo: "true"
             install_typos: "false"
           # Quality-lane audit D12: pull requests prove the tsc emit + babel
           # build affected-scoped with remote-cache read; trusted main pushes
@@ -86,7 +86,6 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          doctest_mode=full
           eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
           if [[ "$goals_only" == "true" ]]; then
             should_run=false
@@ -99,44 +98,7 @@ jobs:
             fi
           fi
 
-          if [[ "${{ matrix.id }}" == "doctest" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            doctest_mode=affected
-            base_ref="origin/${GITHUB_BASE_REF:-main}"
-            if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
-              git fetch --quiet --no-tags --depth=100 origin \
-                "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-            fi
-
-            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
-            if grep -Eq '(^vitest\.docs\.ts$|^vitest\.shared\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/heavy\.yml$|^packages/tooling/tool/cli/src/commands/Docgen/|^packages/tooling/tool/cli/src/internal/jsdoc/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
-              doctest_mode=full
-            else
-              # Any package/app source or package-level config can
-              # affect marked examples in that workspace or its dependents.
-              # The CLI owns package-graph expansion, existence filtering,
-              # and marker discovery.
-              mapfile -t affected_inputs < <(
-                git diff --name-only "${base_ref}...HEAD" -- \
-                  ':(glob)packages/**/src/**/*.ts' \
-                  ':(glob)packages/**/src/**/*.tsx' \
-                  ':(glob)apps/**/src/**/*.ts' \
-                  ':(glob)apps/**/src/**/*.tsx' \
-                  ':(glob)packages/**/package.json' \
-                  ':(glob)packages/**/docgen.json' \
-                  ':(glob)packages/**/tsconfig*.json' \
-                  ':(glob)apps/**/package.json' \
-                  ':(glob)apps/**/docgen.json' \
-                  ':(glob)apps/**/tsconfig*.json'
-              )
-
-              if (( ${#affected_inputs[@]} == 0 )); then
-                should_run=false
-              fi
-            fi
-          fi
-
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-          echo "doctest_mode=$doctest_mode" >> "$GITHUB_OUTPUT"
 
       - name: Setup monorepo CI
         if: steps.lane-gate.outputs.should_run == 'true'
@@ -252,14 +214,7 @@ jobs:
               fi
               ;;
             doctest)
-              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                run_lane ci lane doctest \
-                  --mode "${{ steps.lane-gate.outputs.doctest_mode }}" \
-                  --base "origin/${GITHUB_BASE_REF:-main}" \
-                  --head HEAD
-              else
-                run_lane ci lane doctest --mode full
-              fi
+              run_lane ci lane doctest
               ;;
           esac
 

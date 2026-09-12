@@ -75,7 +75,7 @@ describe("StepExec bounded output fold", () => {
 
   it("exposes the divergent repo-run and quality bounds", () => {
     expect(repoRunOutputBound.maxChars).toBe(512 * 1024);
-    expect(qualityStepOutputBound.maxChars).toBe(256 * 1024);
+    expect(qualityStepOutputBound.maxChars).toBe(8 * 1024 * 1024);
     expect(repoRunOutputBound.truncatedNotice).toContain("[repo-run]");
     expect(qualityStepOutputBound.truncatedNotice).toContain("[beep-cli]");
   });

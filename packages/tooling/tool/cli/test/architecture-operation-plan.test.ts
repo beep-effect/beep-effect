@@ -689,15 +689,13 @@ describe("architecture operation plan", () => {
         audit: "bun run --if-present beep:audit",
         babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
         "beep:audit":
-          "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
+          "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
         "beep:build": "tsc -p tsconfig.json && bun run babel",
         "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
         "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
         "beep:docgen": "bunx --bun --no-install docgen",
         "beep:lint": "biome check .",
         "beep:lint:fix": "biome check . --write",
-        "beep:policy":
-          "bun --cwd ../../../ run beep lint package-test-imports --include-root packages/research-lab/domain",
         "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
         "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
         build: "bun run beep:build",
