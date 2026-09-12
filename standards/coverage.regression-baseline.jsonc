@@ -37387,15 +37387,15 @@
           }
         },
         "packages/foundation/modeling/utils/src/HostProcess.ts": {
-          "lines": 71.42,
-          "statements": 71.42,
-          "branches": 100,
-          "functions": 0,
+          "lines": 100,
+          "statements": 100,
+          "branches": 50,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 0,
-            "functions": 2
+            "lines": 0,
+            "statements": 0,
+            "branches": 2,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/utils/src/Html.ts": {
