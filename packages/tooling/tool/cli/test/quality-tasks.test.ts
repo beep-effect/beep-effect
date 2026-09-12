@@ -6035,15 +6035,15 @@ describe("quality task adapter", () => {
             [
               bunScriptStep(
                 "test:large-output",
-                "process.stdout.write('x'.repeat(300000)); console.log('tail-marker')"
+                "process.stdout.write('x'.repeat(9 * 1024 * 1024)); console.log('tail-marker')"
               ),
             ],
             1
           );
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] output truncated after 262144 characters");
-          expect(Str.length(logText)).toBeLessThan(270_000);
+          expect(logText).toContain(`[beep-cli] output truncated after ${8 * 1024 * 1024} characters`);
+          expect(Str.length(logText)).toBeLessThan(8 * 1024 * 1024 + 8_192);
         })
       )
     ));

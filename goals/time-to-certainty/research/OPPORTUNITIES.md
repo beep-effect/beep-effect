@@ -1163,3 +1163,15 @@ was attempted under the marker-only amendment.
   Fixed by a 120 s doctest `testTimeout` and `maxWorkers: 2` in the doctest branch of `vitest.shared.ts`.
 - Would have prevented it: the R1 accounting run on the hosted runner class before the task landed
   (§7.1.4 asks for it; the workstation has 32 cores and never showed the contention).
+
+## 2026-09-12 — Grouped policy invocations overflow the per-step capture bound
+
+- Doing: hosted round 4 of #1102; `Heavy / Lint Policy` red on `lint:policy:medium` with no failing
+  task in the rendered output.
+- Evidence: the rendered block ends mid-line inside `knowledge:refs-check`'s per-reference listing
+  (716 lines locally) — the D10 plan folds the census-style D2 tasks and 283 package tasks into one
+  Turbo invocation whose combined stdout exceeds the shared quality-step capture bound, and a
+  truncated capture is judged a hard failure. The old plan gave each census its own step and bound.
+- Would have prevented it: sizing the capture bound per invocation shape (one bound for a single
+  worker, a larger one for a grouped Turbo run), or `--output-logs=errors-only` on grouped runs so
+  green tasks print nothing and a red task's log arrives intact.
