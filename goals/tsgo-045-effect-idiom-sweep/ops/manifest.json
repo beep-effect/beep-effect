@@ -92,5 +92,5 @@
     "Never delete tests or weaken schemas to satisfy a diagnostic.",
     "Do not change the effect RC pin in this packet; consume whatever main pins."
   ],
-  "statusNote": "P0 complete on 2026-09-12: grill locked D1-D13, worktree tsgo-045-effect-idiom-sweep on feat/tsgo-045-effect-idiom-sweep off main 23f3919. P1 in progress 2026-09-12: hook deleted (identity + effect-drizzle copies), SFV4-tagged-error-equivalence inverted, two-entry directive allowlist and plugin option parity in tsgo-rules, doc-text proof 0/24,000, Cursor lane smoke test green; scanned-root widening deferred to the S01 PR."
+  "statusNote": "P0 complete on 2026-09-12: grill locked D1-D13, worktree tsgo-045-effect-idiom-sweep on feat/tsgo-045-effect-idiom-sweep off main 23f3919. P1 in progress 2026-09-12: hook deleted (identity + effect-drizzle copies), SFV4-tagged-error-equivalence inverted, two-entry directive allowlist and plugin option parity in tsgo-rules, doc-text proof 0/24,000, Cursor lane smoke test green; scanned-root widening deferred to the S01 PR. PR #1110 opened 2026-09-12; review round 1 resolved (9 threads); 18 rule cards authored by five Codex discovery lanes, pending copy into ops/rule-cards after PR A merges."
 }

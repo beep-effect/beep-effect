@@ -35,11 +35,11 @@ hook, and restore idiomatic Match combinators repo-wide.
 
 ## Current phase
 
-P1 Foundations PR at 0.39.1 — in progress (hook deletion, inverted lint, allowlist, key parity, proof and Cursor smoke test done in the worktree; PR publication next).
+P1 Foundations PR at 0.39.1 — PR #1110 open; review round 1 (9 threads, Greptile + Codex) answered and resolved; hosted checks on the fix head pending. P2 discovery lanes have produced all 18 rule cards (held in the session scratchpad until PR A merges).
 
 ## Latest evidence
 
-2026-09-12: grill complete; worktree created; `goals doctor` clean. P1: doc-text proof 0/24,000 on rc.113 with the hook deleted (`history/2026-09-12-annote-error-proof.md`); Cursor lane smoke test green (`history/2026-09-12-cursor-smoke.md`).
+2026-09-12: grill complete; worktree created; `goals doctor` clean. P1: doc-text proof 0/24,000 on rc.113 with the hook deleted (`history/2026-09-12-annote-error-proof.md`); Cursor lane smoke test green (`history/2026-09-12-cursor-smoke.md`). PR #1110 opened; first hosted round: lint-policy red on three packet-prose paths (fixed), unit-a red on the known test-utils watchdog flake (rerun).
 
 ## Notes
 
