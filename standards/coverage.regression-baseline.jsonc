@@ -6082,8 +6082,8 @@
           }
         },
         "packages/foundation/ui-system/editor/src/mermaid-node.tsx": {
-          "lines": 35.29,
-          "statements": 30,
+          "lines": 34.29,
+          "statements": 29,
           "branches": 0,
           "functions": 25,
           "uncovered": {
