@@ -72,6 +72,13 @@ export const metadata: Metadata = {
 /**
  * Builds the shared HTML shell for every Todox route.
  *
+ * **Details**
+ *
+ * React cannot emit a bare comment node, so the direction contract renders
+ * through the one hidden wrapper that is the first child of the body. The
+ * comment is the wrapper's only content, so a grep of the built markup for
+ * the seed key still finds it first.
+ *
  * **Example** (Render the application shell)
  *
  * ```ts
@@ -80,13 +87,6 @@ export const metadata: Metadata = {
  * const layout = RootLayout({ children: "content" })
  * console.log(layout.type)
  * ```
- *
- * **Details**
- *
- * React cannot emit a bare comment node, so the direction contract renders
- * through the one hidden wrapper that is the first child of the body. The
- * comment is the wrapper's only content, so a grep of the built markup for
- * the seed key still finds it first.
  *
  * @category constructors
  * @since 0.0.0

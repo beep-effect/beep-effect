@@ -238,10 +238,11 @@ const touches = (edge: GraphEdge, id: string): boolean => edge.from === id || ed
  *
  * **Example** (Render the graph)
  *
- * ```tsx
+ * ```ts
  * import { EvidenceGraph } from "@/components/EvidenceGraph"
+ * import { createElement } from "react"
  *
- * console.log(<EvidenceGraph />.type)
+ * console.log(createElement(EvidenceGraph).type === EvidenceGraph)
  * ```
  *
  * @category components

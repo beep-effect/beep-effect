@@ -13,10 +13,11 @@ import { EvidenceGraph } from "./EvidenceGraph";
  *
  * **Example** (Render the hero)
  *
- * ```tsx
+ * ```ts
  * import { Hero } from "@/components/Hero"
+ * import { createElement } from "react"
  *
- * console.log(<Hero />.type)
+ * console.log(createElement(Hero).type === Hero)
  * ```
  *
  * @category components

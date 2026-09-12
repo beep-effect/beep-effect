@@ -17,10 +17,11 @@ import type { Receipt } from "@/session/Session.schema";
  *
  * **Example** (Break an action name)
  *
- * ```tsx
+ * ```ts
  * import { ActionName } from "@/components/ReceiptView"
+ * import { createElement } from "react"
  *
- * console.log(<ActionName value="accept_or_edit_candidate_claims" />.props.value)
+ * console.log(createElement(ActionName, { value: "accept_or_edit_candidate_claims" }).props.value)
  * ```
  *
  * @category components
@@ -49,11 +50,12 @@ export function ActionName({ value }: { readonly value: string }) {
  *
  * **Example** (Render a receipt)
  *
- * ```tsx
+ * ```ts
  * import { ReceiptView } from "@/components/ReceiptView"
  * import { packet } from "@/session/session"
+ * import { createElement } from "react"
  *
- * const view = <ReceiptView receipt={packet.receipt} />
+ * const view = createElement(ReceiptView, { receipt: packet.receipt })
  * console.log(view.props.receipt.candidateRef)
  * ```
  *

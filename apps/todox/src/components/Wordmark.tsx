@@ -11,10 +11,11 @@
  *
  * **Example** (Render the wordmark)
  *
- * ```tsx
+ * ```ts
  * import { Wordmark } from "@/components/Wordmark"
+ * import { createElement } from "react"
  *
- * console.log(<Wordmark href="#top" />.props.href)
+ * console.log(createElement(Wordmark, { href: "#top" }).props.href)
  * ```
  *
  * @category components

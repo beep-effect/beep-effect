@@ -21,10 +21,11 @@ const heldAtom = Atom.make(false);
  *
  * **Example** (Render the form)
  *
- * ```tsx
+ * ```ts
  * import { ContactForm } from "@/components/ContactForm"
+ * import { createElement } from "react"
  *
- * console.log(<ContactForm />.type)
+ * console.log(createElement(ContactForm).type === ContactForm)
  * ```
  *
  * @category components

@@ -83,10 +83,11 @@ const litSpans = (row: InspectableRow, source: SourceArtifact) =>
  *
  * **Example** (Render one row)
  *
- * ```tsx
+ * ```ts
  * import * as O from "effect/Option"
  * import { InspectableRow, InspectorList, RowGroup } from "@/components/InspectorList"
  * import { sources } from "@/session/session"
+ * import { createElement } from "react"
  *
  * const row = InspectableRow.make({
  *   id: "demo:CLM 0101",
@@ -101,7 +102,13 @@ const litSpans = (row: InspectableRow, source: SourceArtifact) =>
  *   postDelayMs: O.none(),
  * })
  * const groups = [RowGroup.make({ heading: O.none(), rows: [row] })]
- * const list = <InspectorList passageId="demo" defaultOpen={O.some(row.id)} cursor={row.id} groups={groups} sources={sources} />
+ * const list = createElement(InspectorList, {
+ *   passageId: "demo",
+ *   defaultOpen: O.some(row.id),
+ *   cursor: row.id,
+ *   groups,
+ *   sources,
+ * })
  * console.log(list.props.passageId)
  * ```
  *

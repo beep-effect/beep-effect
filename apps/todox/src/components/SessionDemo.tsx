@@ -81,10 +81,11 @@ const entryRow =
  *
  * **Example** (Render the demo)
  *
- * ```tsx
+ * ```ts
  * import { SessionDemo } from "@/components/SessionDemo"
+ * import { createElement } from "react"
  *
- * console.log(<SessionDemo />.type)
+ * console.log(createElement(SessionDemo).type === SessionDemo)
  * ```
  *
  * @category components

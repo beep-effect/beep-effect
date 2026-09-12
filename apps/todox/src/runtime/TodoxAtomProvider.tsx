@@ -15,11 +15,12 @@ import type { ReactNode } from "react";
  *
  * **Example** (Wrap the page)
  *
- * ```tsx
+ * ```ts
  * import { TodoxAtomProvider } from "@/runtime/TodoxAtomProvider"
+ * import { createElement } from "react"
  *
- * const tree = <TodoxAtomProvider><main /></TodoxAtomProvider>
- * console.log(tree.type)
+ * const tree = createElement(TodoxAtomProvider, null, createElement("main"))
+ * console.log(tree.type === TodoxAtomProvider)
  * ```
  *
  * @category providers

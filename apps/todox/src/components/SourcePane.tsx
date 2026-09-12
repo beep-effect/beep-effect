@@ -17,11 +17,12 @@ import type { SourceArtifact, SpanId } from "@/session/Session.schema";
  *
  * **Example** (Light one span)
  *
- * ```tsx
+ * ```ts
  * import { SourcePane } from "@/components/SourcePane"
  * import { emailSource } from "@/session/session"
+ * import { createElement } from "react"
  *
- * const pane = <SourcePane artifact={emailSource} lit={["S2"]} />
+ * const pane = createElement(SourcePane, { artifact: emailSource, lit: ["S2"] })
  * console.log(pane.props.lit)
  * ```
  *

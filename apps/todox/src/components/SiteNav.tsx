@@ -13,10 +13,11 @@ import { Wordmark } from "./Wordmark";
  *
  * **Example** (Render the nav)
  *
- * ```tsx
+ * ```ts
  * import { SiteNav } from "@/components/SiteNav"
+ * import { createElement } from "react"
  *
- * console.log(<SiteNav />.type)
+ * console.log(createElement(SiteNav).type === SiteNav)
  * ```
  *
  * @category components
