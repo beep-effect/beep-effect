@@ -29,7 +29,12 @@ import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { worktreeReapCommand } from "./Reap.command.ts";
 import { WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeExistsError } from "./Worktree.errors.ts";
-import { parseWorktreePorcelain, WorktreeListEntry, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
+import {
+  parseWorktreePorcelain,
+  WorktreeListEntry,
+  WorktreeRemovalRequest,
+  WorktreeUpstreamState,
+} from "./Worktree.schemas.ts";
 import {
   branchDeleteCommand,
   runWorktreeGitCapture,
@@ -38,7 +43,7 @@ import {
 } from "./Worktree.service.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
-import type { WorktreeRemovalReceipt } from "./Worktree.schemas.ts";
+import type { WorktreeRemovalReceipt, WorktreeUnpushedInspection } from "./Worktree.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.command");
 const decodeWorktreeName = S.decodeUnknownEffect(WorktreeRemovalRequest.fields.name);
@@ -713,6 +718,23 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
   yield* renderCreationSummary(options.name, branch, targetPath, copies);
 });
 
+const renderUnpushedInspection = Effect.fn("Worktree.renderUnpushedInspection")(function* (
+  inspection: O.Option<WorktreeUnpushedInspection>
+) {
+  yield* O.match(inspection, {
+    onNone: () => Effect.void,
+    onSome: ({ baseRange, upstream }) =>
+      WorktreeUpstreamState.match<Effect.Effect<void>>(upstream, {
+        unset: () => Effect.void,
+        live: () => Effect.void,
+        pruned: ({ ref }) =>
+          Console.log(
+            `  upstream: ${ref} no longer resolves (pruned); unpushed commits were counted against ${baseRange} instead`
+          ),
+      }),
+  });
+});
+
 const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function* (
   receipt: WorktreeRemovalReceipt,
   archive: boolean
@@ -731,6 +753,7 @@ const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function
   yield* Console.log("");
   yield* Console.log(`Worktree retirement complete: ${receipt.targetPath}`);
   yield* Console.log(`  reason: ${receipt.reason}`);
+  yield* renderUnpushedInspection(receipt.unpushedInspection);
   yield* O.match(receipt.manifest, {
     onNone: Effect.fn("Worktree.renderCleanRemovalReceipt")(function* () {
       yield* Console.log("  archived: no residue needed (clean with no unpushed commits)");
@@ -771,7 +794,9 @@ const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function
  * **Details**
  *
  * Archive receipts include restoration instructions only for residue that was
- * actually preserved. Non-archive receipts retain the shorter legacy output.
+ * actually preserved. A pruned upstream is named together with the
+ * default-branch range that judged unpushed commits in its place. Non-archive
+ * receipts retain the shorter legacy output.
  *
  * **Example** (Build clean archive output)
  *
