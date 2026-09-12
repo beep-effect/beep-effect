@@ -19,10 +19,12 @@ import * as RpcServer from "effect/unstable/rpc/RpcServer";
 import { CLIENT_METHODS } from "./_generated/meta.gen.ts";
 import * as AcpSchema from "./_generated/schema.gen.ts";
 import * as AcpError from "./Acp.errors.ts";
+import { makeNdJsonRpcFrameDecoder } from "./internal/jsonrpc.ts";
 import type * as Cause from "effect/Cause";
 import type * as Scope from "effect/Scope";
 import type * as Stdio from "effect/Stdio";
 import type * as RpcMessage from "effect/unstable/rpc/RpcMessage";
+import type { AcpWireMessage } from "./internal/jsonrpc.ts";
 
 const isAcpSchemaError = S.is(AcpSchema.Error);
 
@@ -436,8 +438,6 @@ const textFromWire = (value: string | Uint8Array): string => (P.isString(value) 
 // inbound ids with `String(...)`. The ACP wire contract requires numeric
 // JSON-RPC ids while this protocol keys pending requests by string ids, so
 // those coercions are restored at the parser boundary.
-type AcpWireMessage = RpcMessage.FromClientEncoded | RpcMessage.FromServerEncoded;
-
 const toWireId = (id: string | number): string | number => (id === "" ? id : Number(id));
 
 const toWireMessage: (message: AcpWireMessage) => AcpWireMessage = Match.type<AcpWireMessage>().pipe(
@@ -483,6 +483,11 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   options: AcpPatchedProtocolOptions
 ): Effect.fn.Return<AcpPatchedProtocol, never, Scope.Scope> {
   const parser = parserFactory.makeUnsafe();
+  // Inbound frames bypass the effect ndjson parser: `JSON.parse` on V8 12.8 through 13.7 (Node 24,
+  // Electron 36 and 37) resolves an escaped object key through an existing map transition whenever
+  // the raw source prefix matches it, turning `_meta` keys such as "\n" into "\\". The package
+  // reader keeps native parsing for texts without escaped keys and reads the rest strictly.
+  const decodeFrames = makeNdJsonRpcFrameDecoder();
   const serverQueue = yield* Queue.bounded<RpcMessage.FromClientEncoded>(ACP_PROTOCOL_QUEUE_CAPACITY);
   const clientQueue = yield* Queue.bounded<RpcMessage.FromServerEncoded>(ACP_PROTOCOL_QUEUE_CAPACITY);
   const notificationQueue = yield* Queue.bounded<AcpIncomingNotification>(ACP_PROTOCOL_QUEUE_CAPACITY);
@@ -772,14 +777,16 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
         stage: "raw",
       }).pipe(
         Effect.flatMap(() =>
-          Effect.try({
-            try: () => A.map(parser.decode(data) as ReadonlyArray<AcpWireMessage>, fromWireMessage),
-            catch: (cause) =>
-              AcpError.AcpProtocolParseError.make({
-                cause: O.some(cause),
-                detail: "Failed to decode ACP wire message",
-              }),
-          })
+          Effect.fromResult(decodeFrames(data)).pipe(
+            Effect.mapBoth({
+              onFailure: (cause) =>
+                AcpError.AcpProtocolParseError.make({
+                  cause: O.some(cause),
+                  detail: "Failed to decode ACP wire message",
+                }),
+              onSuccess: (messages) => A.map(messages, fromWireMessage),
+            })
+          )
         ),
         Effect.tap((messages) =>
           logProtocol({
