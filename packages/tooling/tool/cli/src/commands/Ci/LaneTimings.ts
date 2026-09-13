@@ -1205,7 +1205,32 @@ export class CiLaneTimingPickupStat extends S.Class<CiLaneTimingPickupStat>($I`C
   })
 ) {}
 
-class CiRulesetHistoryVersion extends S.Class<CiRulesetHistoryVersion>($I`CiRulesetHistoryVersion`)(
+/**
+ * One ruleset history version and the instant it took effect.
+ *
+ * **Details**
+ *
+ * GitHub reports `updated_at` with a UTC offset; decoding normalizes it to a
+ * UTC instant so window-end selection compares moments, not strings. The
+ * window report exposes the selected version as `rulesetVersion`.
+ *
+ * **Example** (Decode a history version)
+ *
+ * ```ts
+ * import { CiRulesetHistoryVersion } from "@beep/repo-cli/commands/Ci"
+ * import * as S from "effect/Schema"
+ *
+ * const version = S.decodeUnknownSync(CiRulesetHistoryVersion)({
+ *   version_id: 48600030,
+ *   updated_at: "2026-09-03T12:12:53.589-05:00",
+ * })
+ * console.log(version.version_id)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiRulesetHistoryVersion extends S.Class<CiRulesetHistoryVersion>($I`CiRulesetHistoryVersion`)(
   {
     version_id: S.Int.check(S.isGreaterThan(0)),
     updated_at: S.DateTimeUtcFromString,
