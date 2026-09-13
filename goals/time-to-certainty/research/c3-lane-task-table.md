@@ -33,8 +33,10 @@ explicit `//#<task>` selectors bypass `--affected`; `//#` ids appear only in sum
 `turbo.json` keys; (4) the two whole-tree rows (`lint:roadmap-refs`, `lint:typos`) add `!.git/**`
 and `!**/.git/**`, because a `**/*` input hashes the object store; (5) the laws plan switch is a
 hard switch with no sweeps key (ruling 32); (6) Fallow health was promoted to blocking after the
-census, so `//#fallow:health:check` joins the D2 rows and the advisory group shrinks to four, and `ci lane doctest` keeps `--mode` as a no-op until
-`heavy.yml` lands on `main` (ruling 33).
+census, so `//#fallow:health:check` joins the D2 rows and the advisory group shrinks to four.
+The temporary `ci lane doctest --mode` compatibility flag (ruling 33) is removed
+now that `heavy.yml` on `main` invokes `ci lane doctest` without it. The doctest
+lane lists only `--base` and `--head`; docgen retains `--mode`.
 
 Revision 7 changes (2026-09-10, after C3.2b Stage B): row 2b is measured and rejected; D6 keeps the
 shard program and the root `eslint .` for hosted full scope until a reference-aware typed program

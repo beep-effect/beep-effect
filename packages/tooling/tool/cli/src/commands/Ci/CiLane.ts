@@ -441,8 +441,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "workflow-gated",
     replay: "exact",
-    flags: ["--mode", "--base", "--head"],
-    notes: "Always runs the full Turbo doctest fleet. Deprecated --mode is accepted and ignored.",
+    flags: ["--base", "--head"],
+    notes: "Always runs the full Turbo doctest fleet.",
   }),
   // This visible family context lands non-required; promotion is a later
   // branch-ruleset action after it establishes a stable green history.
@@ -1177,8 +1177,7 @@ const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyA
     full: () => [rootScriptStep(repoRoot, "ci:docgen", "docgen", A.empty<string>())],
   });
 
-// heavy.yml@main still passes --mode on PRs. All legacy modes intentionally
-// resolve to the same full-scope task plan until the workflow edit reaches main.
+// The hosted workflow runs the full doctest fleet for both PRs and pushes.
 const doctestLaneSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> => [
   QualityTaskStep.make({
     label: "ci:doctest",
@@ -2054,9 +2053,7 @@ export const ciLaneCommand = Command.make(
     ),
     mode: Flag.ChoiceWithValue("mode", docgenModeFlagChoices).pipe(
       Flag.withDefault("auto"),
-      Flag.withDescription(
-        "Docgen lane mode; auto derives none/affected/full from --base...--head. Deprecated for doctest: accepted and ignored."
-      )
+      Flag.withDescription("Docgen lane mode; auto derives none/affected/full from --base...--head.")
     ),
     from: Flag.String("from").pipe(Flag.withDescription("Commitlint range start (defaults to --base)"), Flag.optional),
     to: Flag.String("to").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Commitlint range end")),
