@@ -1302,4 +1302,4 @@ was attempted under the marker-only amendment.
 - **Would have prevented it:** an idle-wake delivery of watch transitions (conflict, thread,
   first red) into the owning session, coalesced per head so one push becomes one actionable wake,
   with attribution before any fixer lane launches. Captured as
-  `explorations/pr-event-awareness` for research; not scheduled.
+  `explorations/pr-event-awareness`, a capture-stage exploration packet; not scheduled.
