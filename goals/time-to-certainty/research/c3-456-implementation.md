@@ -1445,4 +1445,37 @@ records the response to a red; the next round's board is the proof.
   green, proving the stream-console repair on the hosted lane.
 - Round 10 — head `318be00d23`. Merge of main after #1103 carrying the coverage tests of
   `0593072ed1`; the coverage-tests head itself got no hosted run because GitHub reported the
-  PR conflicting on the generated effect-vitest inventory. Board recorded at closeout.
+  PR conflicting on the generated effect-vitest inventory. The board reached 29 green with
+  `Heavy / Lint Policy` and `Heavy / Coverage Regression` still pending when `a061232df2`
+  superseded it.
+
+- Round 11 — head `a061232df2`. Codex review fixes: drain before exit, tracked write callbacks,
+  ledger close record, and unique ledger directories; merge of main after #1104.
+  `Test Unit (unit-a)`: environment-only test-utils watchdog flake. `Heavy / Coverage Regression`:
+  `Tasks.ts` functions 86.2 < 86.41; new `Stdout.ts` branches 87.5, lines 97.22, and statements
+  97.29 < 100. Three Greptile threads: non-canonical `@category digests`; Details after Example
+  plus a blocked example import path in `Stdout.ts`; a fixture newline concern already moot
+  on that head. The teammate session answered the subsequent rounds.
+- Round 12 — head `a68215d798`. Multi-write drain and ledger close/append fallback coverage.
+  No failed check recorded; the teammate session answered this round.
+- Round 13 — head `e177b5c3c8`. Ledger digest assertions through `assertSome` and refreshed
+  vitest inventory. No failed check recorded; the teammate session answered this round.
+- Round 14 — head `c3d1e03af3`. Typed ledger row decoder call and stand-in PATH separator fix.
+  `Lint` and `Test Unit` red; the teammate session answered them. Attribution not held here.
+- Round 15 — head `b530c7df8e`. HostProcess fallbacks resolved through Option for coverage.
+  `Test Unit` and `Lint` red; the teammate session answered them. Attribution not held here.
+- Round 16 — head `e57ed87f99`. Changeset for the HostProcess Option fallback patch in
+  `@beep/utils`. `Heavy / Lint Policy` red; the teammate session answered it.
+  Attribution not held here.
+- Round 17 — head `a0f8bb79c9`. Refreshed effect-vitest inventory for quality-tasks handoff tests.
+  At merge: 31 checks green, only the two Vercel deploys red (rate limit), zero open review
+  threads. Merged.
+
+### Merge and main
+
+#1102 merged at `2026-09-12T23:26:03Z` as squash commit `e08b24b004` on main. Every heavy lane
+was green; only Commitlint was red (`footer-max-line-length`): GitHub's `* ` squash-message
+prefix made a 100-character subject 102 characters. Keep subjects at 98 characters or fewer.
+The commit is immutable; later main commits pass Commitlint. On the next main commit,
+`c8d6d2f218` (#1123), `Test Unit (unit-a)` hit the same environment-only test-utils watchdog
+case; one rerun of the failed job turned that Check run green.

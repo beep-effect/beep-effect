@@ -109,7 +109,7 @@ orchestrator owns schemas, contracts, and judgment.
           names (facts F-A/F-B in `research/c3-turbo-facts.md`).
     - [x] C3.6 economics baseline before merge (`research/c3-456-economics.md`); per-lane Turbo
           task digests recorded on lane runs and shown by `yeet status`; the post-merge cold/hit
-          accounting is owed as a closeout receipt (§7.1.4).
+          accounting is recorded in research/c3-456-economics.md (2026-09-12).
   - [ ] Labs — three task-hash sets rather than one declared action; must keep the PR path gate and
         zero-labs-is-green.
 - [ ] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`
