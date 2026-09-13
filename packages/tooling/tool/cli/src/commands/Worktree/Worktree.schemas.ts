@@ -308,8 +308,9 @@ export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`W
     deleteBranch: S.Boolean,
     expectedHead: S.OptionFromNullOr(GitObjectId),
     // `yeet sweep --retire` retires the lane its own shell and session stand in;
-    // those ancestors are the invoker, not writers the archive could lose.
-    exemptInvokerAncestry: S.optionalKey(S.Boolean),
+    // the invoking session's process tree (its root and everything under it) is
+    // the invoker, not a set of writers the archive could lose.
+    exemptInvokerSession: S.optionalKey(S.Boolean),
   },
   $I.annote("WorktreeRemovalRequest", {
     description:

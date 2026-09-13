@@ -12,6 +12,7 @@ export * from "./GitExec.ts";
 export * from "./JournalFile.ts";
 export * from "./ProcessAttachment.ts";
 export * from "./ProcessIdentity.ts";
+export * from "./ProcessTable.ts";
 export * from "./QualityScheduler.schemas.ts";
 export * from "./QualityScheduler.ts";
 export * from "./RepoRun.executor.ts";

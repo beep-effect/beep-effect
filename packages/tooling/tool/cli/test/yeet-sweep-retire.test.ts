@@ -3,7 +3,13 @@ import {
   WorktreeRemovalReceipt,
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
-import { RepoRunContext } from "@beep/repo-cli/test/RepoRun";
+import {
+  ProcessTable,
+  ProcessTableEntry,
+  processTableWithLineage,
+  procProcessTable,
+  RepoRunContext,
+} from "@beep/repo-cli/test/RepoRun";
 import { GhPrView } from "@beep/repo-cli/test/SharedInternals";
 import {
   planRetire,
@@ -209,6 +215,26 @@ const withRealCwd = <A, E, R>(cwd: string, effect: Effect.Effect<A, E, R>) =>
       })
   );
 
+// The scripted session around a real holder: the user manager (50) runs the
+// invoking agent session (60), which owns the tool shell (70) running this test
+// process and an MCP server (80); another session's shell (90) hangs off the
+// manager directly. The holder's parent decides which side of the fence it is on.
+const sessionLineage = (holderPid: number, holderParent: number) =>
+  processTableWithLineage({
+    base: procProcessTable,
+    self: process.pid,
+    entries: [
+      ProcessTableEntry.make({ pid: 1, parent: 0, command: "systemd" }),
+      ProcessTableEntry.make({ pid: 50, parent: 1, command: "systemd" }),
+      ProcessTableEntry.make({ pid: 60, parent: 50, command: "claude" }),
+      ProcessTableEntry.make({ pid: 70, parent: 60, command: "zsh" }),
+      ProcessTableEntry.make({ pid: 80, parent: 60, command: "bunx" }),
+      ProcessTableEntry.make({ pid: 90, parent: 50, command: "zsh" }),
+      ProcessTableEntry.make({ pid: process.pid, parent: 70, command: "bun" }),
+      ProcessTableEntry.make({ pid: holderPid, parent: holderParent, command: "sleep" }),
+    ],
+  });
+
 describe("yeet sweep --retire", { concurrent: false }, () => {
   it.effect("retires the merged nested lane, deletes its branch, and fast-forwards the owning clone", () =>
     withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
@@ -343,7 +369,7 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
       'cd "/clones/x" && bun run beep yeet sweep --retire --lane "/clones/x/.claude/worktrees/lane"'
     );
     expect(retirementFailureMessage(plan, "pid 7 via cwd still hold it, and any write would be lost.")).toContain(
-      "redirect output to a file instead of piping it, and rerun from the lane: bun run beep yeet sweep --retire."
+      "leave or close them and rerun from the lane: bun run beep yeet sweep --retire."
     );
     expect(retirementFailureMessage(plan, "Could not write the residue manifest.")).not.toContain("--lane");
     expect(pipe(plan, retirementFailureMessage("disk full"))).toBe(retirementFailureMessage(plan, "disk full"));
@@ -451,7 +477,7 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     )
   );
 
-  it.effect("refuses while another process holds the lane and prints the working form", () =>
+  it.effect("refuses while a process from another session holds the lane and prints the working form", () =>
     withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
       Effect.scoped(
         Effect.gen(function* () {
@@ -462,12 +488,43 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             stdout: "ignore",
             stderr: "ignore",
           });
+          // The holder stands in the lane under another session's shell.
           const error = yield* Effect.flip(
-            withCwd(lane, sweep(packetDir)).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+            withCwd(lane, sweep(packetDir)).pipe(
+              Effect.provideService(ProcessTable, sessionLineage(holder.pid, 90)),
+              provideScopedLayer(ghLayer(tip, "MERGED"))
+            )
           ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
-          expect(error.message).toContain("still hold it");
+          expect(error.message).toContain(`pid ${holder.pid} via cwd still hold it`);
           expect(error.message).toContain(`cd "${repoRoot}" && bun run beep yeet sweep --retire --lane "${lane}"`);
           expect(yield* fs.exists(lane)).toBe(true);
+        })
+      )
+    )
+  );
+
+  it.effect("exempts a holder that runs under the invoking session root", () =>
+    withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const holder = yield* ChildProcess.make("sleep", ["60"], {
+            cwd: lane,
+            stdin: "ignore",
+            stdout: "ignore",
+            stderr: "ignore",
+          });
+          // The holder stands in the lane under the session's MCP server: not
+          // in the CLI's own parent chain, but under the same session root, so
+          // it is the invoker's and the retirement proceeds around it.
+          yield* captureOutput(
+            withCwd(lane, sweep(packetDir)).pipe(
+              Effect.provideService(ProcessTable, sessionLineage(holder.pid, 80)),
+              provideScopedLayer(ghLayer(tip, "MERGED"))
+            )
+          ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
+          expect(yield* fs.exists(lane)).toBe(false);
+          expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
         })
       )
     )

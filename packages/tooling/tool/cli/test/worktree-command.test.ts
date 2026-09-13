@@ -32,6 +32,12 @@ import {
   worktreeRemoveArgs,
   worktreeResidueReason,
 } from "@beep/repo-cli/commands/Worktree";
+import {
+  ProcessTable,
+  ProcessTableEntry,
+  processTableWithLineage,
+  procProcessTable,
+} from "@beep/repo-cli/test/RepoRun";
 import { NonEmptyTrimmedStr } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
@@ -1472,6 +1478,82 @@ describe("worktree git operations", () => {
         // With the descriptor closed the identical request retires the checkout.
         expect(yield* outcome).toBe("retired");
         expect(yield* fs.exists(targetPath)).toBe(false);
+        expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).toBe("");
+      })
+    )
+  );
+
+  it.effect("exempts a holder under the invoking session root and still refuses one from another session", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const removalService = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const branch = defaultWorktreeBranch("session-demo");
+        const targetPath = yield* addWorktree(context, "session-demo", branch);
+        const configProvider = ConfigProvider.fromEnv({
+          env: {
+            BEEP_WORKTREE_RESIDUE_ROOT: path.join(context.worktreesRoot, "test-residue"),
+            HOME: context.worktreesRoot,
+          },
+        });
+        // The scripted session: the user manager (50) runs the agent session
+        // (60), which owns the tool shell (70) running the CLI (100, the table's
+        // `self`); another session's shell (90) hangs off the manager directly.
+        // This test process holds an open descriptor in the checkout and is
+        // placed under one shell, then the other.
+        const session = [
+          ProcessTableEntry.make({ pid: 1, parent: 0, command: "systemd" }),
+          ProcessTableEntry.make({ pid: 50, parent: 1, command: "systemd" }),
+          ProcessTableEntry.make({ pid: 60, parent: 50, command: "claude" }),
+          ProcessTableEntry.make({ pid: 70, parent: 60, command: "zsh" }),
+          ProcessTableEntry.make({ pid: 100, parent: 70, command: "bun" }),
+          ProcessTableEntry.make({ pid: 90, parent: 50, command: "zsh" }),
+        ];
+        const removeUnder = (parent: number) =>
+          removalService
+            .remove(
+              WorktreeRemovalRequest.make({
+                name: NonEmptyTrimmedStr.make("session-demo"),
+                targetPath,
+                mainCheckout: context.mainCheckout,
+                branch: O.some(branch),
+                archive: true,
+                deleteBranch: true,
+                expectedHead: O.none(),
+                exemptInvokerSession: true,
+              })
+            )
+            .pipe(
+              Effect.provideService(ConfigProvider.ConfigProvider, configProvider),
+              Effect.provideService(
+                ProcessTable,
+                processTableWithLineage({
+                  base: procProcessTable,
+                  self: 100,
+                  entries: A.append(session, ProcessTableEntry.make({ pid: process.pid, parent, command: "vitest" })),
+                })
+              ),
+              Effect.map(() => "retired"),
+              Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
+            );
+
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            yield* fs.open(path.join(targetPath, "README.md"), { flag: "r" });
+            // Under the other session's shell the descriptor is a foreign holder.
+            expect(yield* removeUnder(90)).toContain(
+              `Refusing to retire ${targetPath}: pid ${process.pid} via descriptor`
+            );
+            expect(yield* fs.exists(targetPath)).toBe(true);
+            // Under the session's own shell it is the invoker: the same open
+            // descriptor no longer blocks the retirement.
+            expect(yield* removeUnder(70)).toBe("retired");
+          })
+        );
+        expect(yield* fs.exists(targetPath)).toBe(false);
+        expect(A.filter(yield* fs.readDirectory(context.worktreesRoot), Str.includes(".retiring-"))).toEqual([]);
         expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).toBe("");
       })
     )

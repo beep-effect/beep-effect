@@ -27,7 +27,8 @@ import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import {
   collectUntrackedPaths,
-  invokerAncestryPids,
+  descendsFromProcess,
+  invokerSessionRoot,
   ProcessAttachmentKind,
   resolveGitCommit,
   runGitOutput,
@@ -1064,6 +1065,30 @@ const describeAttachedProcesses = (attachments: A.NonEmptyReadonlyArray<ProcessA
   return hidden > 0 ? `${listed} and ${hidden} more` : listed;
 };
 
+// The invoking session (its root process and everything running under it: the
+// CLI, its shell, the agent session, that session's MCP servers and tool
+// pipelines) is the party asking for the retirement, so a request that says so
+// exempts every holder whose parent chain passes through the session root and
+// still refuses any other: another session's shell, a stray editor.
+const pidsOutsideInvokerSession = Effect.fnUntraced(function* (
+  pids: ReadonlyArray<number>
+): Effect.fn.Return<HashSet.HashSet<number>, never, FileSystem.FileSystem> {
+  const root = yield* invokerSessionRoot();
+  const outside = yield* Effect.filter(pids, (pid) => Effect.map(descendsFromProcess(pid, root.pid), Bool.not));
+  return HashSet.fromIterable(outside);
+});
+
+const foreignHolderPids = (
+  request: WorktreeRemovalRequest,
+  attachments: ReadonlyArray<ProcessAttachment>
+): Effect.Effect<HashSet.HashSet<number>, never, FileSystem.FileSystem> => {
+  const pids = A.dedupe(A.map(attachments, (attachment) => attachment.pid));
+  return Bool.match(request.exemptInvokerSession === true, {
+    onFalse: () => Effect.succeed(HashSet.fromIterable(pids)),
+    onTrue: () => pidsOutsideInvokerSession(pids),
+  });
+};
+
 const assertQuiescentFence = Effect.fnUntraced(function* (
   request: WorktreeRemovalRequest,
   fencedPath: string
@@ -1074,10 +1099,8 @@ const assertQuiescentFence = Effect.fnUntraced(function* (
       message: `Refusing to retire ${request.targetPath}: the processes attached to it could not be enumerated, so the archive cannot be proven complete.`,
     });
   }
-  // The invoker's own chain (CLI, shell, agent session) is the party asking
-  // for the retirement, so a request that says so may exempt exactly it.
-  const exempt = request.exemptInvokerAncestry === true ? yield* invokerAncestryPids() : HashSet.empty<number>();
-  const holders = A.filter(scan.value, (attachment) => !HashSet.has(exempt, attachment.pid));
+  const foreign = yield* foreignHolderPids(request, scan.value);
+  const holders = A.filter(scan.value, (attachment) => HashSet.has(foreign, attachment.pid));
   if (A.isReadonlyArrayNonEmpty(holders)) {
     return yield* WorktreeCommandError.make({
       message: `Refusing to retire ${request.targetPath}: ${describeAttachedProcesses(holders)} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
