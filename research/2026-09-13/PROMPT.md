@@ -14,7 +14,7 @@ When #8201 merges / effect@4.0.0-rc.116 hits npm, re-pin MCP toolkit. Until then
 bun run beep research capture https://github.com/Effect-TS/effect/pull/8201 --tags effect,rc116,mcp
 ```
 
-## 3) Jazz alpha.55 + Evolu 8.11.0 staged
+## 3) Jazz tip alpha.54 / alpha.55 staged; Evolu tip 8.10.0 / 8.11.0 staged
 ```
 bun run beep research capture https://github.com/garden-co/jazz/pull/2748 --tags jazz,local-first,alpha-55
 bun run beep research capture https://github.com/evoluhq/evolu/pull/708 --tags evolu,local-first
@@ -29,5 +29,5 @@ bun run beep research capture https://github.com/73882/feature-separate-batch-ev
 ## 5) Scanners-as-skills
 ```
 bun run beep research capture https://github.com/Shubhamsaboo/awesome-llm-apps/pull/1167 --tags agents,skills,security
-bun run beep research capture https://github.com/emcf/awesome-skills-registry/pull/23 --tags agents,skills,scanner
+bun run beep research capture https://github.com/truefoundry/awesome-skills-registry/pull/23 --tags agents,skills,scanner
 ```
