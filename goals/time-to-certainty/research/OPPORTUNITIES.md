@@ -1241,3 +1241,17 @@ was attempted under the marker-only amendment.
   a 1 MiB block through a pipe with a forced exit), fail-closed ledgers with a close record naming
   the attempts (landed), exclusively created per-lane directories (landed), and the review lane
   before the push rather than after the tenth hosted round.
+
+## 2026-09-12 — Doctest flag cleanup blocked at the compiler launcher
+
+- Doing: validating removal of the deprecated doctest lane `--mode` flag.
+- Evidence: `bun run beep quality test-tsgo`,
+  `bunx turbo run check --filter=@beep/repo-cli`, and
+  `bun run beep quality package-verify @beep/repo-cli --quick` exit 1 because
+  `tools/tsgo-shim/tsgo.js:15` reports `spawnSync node EPERM` while resolving
+  the installed compiler executable, before TypeScript diagnostics. The active
+  session has managed workspace-write permissions and cannot request escalation.
+  The focused tests pass (73/73), as do ESLint, effect-vitest, JSDoc lint, and docgen.
+- Would have prevented it: verifying compiler-launch permission in the execution
+  environment before admitting the type-check gates. Keep these gates unproven
+  until their exact commands pass in a compatible session.

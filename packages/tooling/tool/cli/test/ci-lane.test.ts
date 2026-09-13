@@ -9,7 +9,6 @@ import {
   ciLaneStepsForTesting,
   ciLocalLaneInputsForTesting,
   ciLocalStepsForTesting,
-  DocgenLaneMode,
   docgenLaneModeForChangedPaths,
   proveCiLanePartition,
   runCiLane,
@@ -1072,31 +1071,29 @@ describe("ciLaneStepsForTesting", () => {
     expect(docgenLaneModeForChangedPaths(["tsconfig.base.json"])).toBe("full");
   });
 
-  it("always builds the full Turbo Doctest plan for every legacy mode and scope", () => {
-    for (const mode of DocgenLaneMode.Options) {
-      const steps = ciLaneStepsForTesting(
-        REPO_ROOT,
-        "doctest",
-        CiLaneRunOptions.make({
-          ...prShapeOptions,
-          mode,
-          filter: "@beep/schema",
-        })
-      );
-      expect(steps).toHaveLength(1);
-      const step = firstOf(steps);
-      expect(step.label).toBe("ci:doctest");
-      expect(step.command).toBe("bunx");
-      expect([...step.args]).toEqual([
-        "turbo",
-        "run",
-        "doctest",
-        ...expectedTurboCacheArgs(["--concurrency=4", "--summarize"]),
-        "--concurrency=4",
-        "--summarize",
-      ]);
-      expect(step.env).toBeUndefined();
-    }
+  it("lists mode only for Docgen, not Doctest", () => {
+    const doctest = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "doctest"));
+    const docgen = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "docgen"));
+    expect([...doctest.flags]).toEqual(["--base", "--head"]);
+    expect(doctest.flags).not.toContain("--mode");
+    expect(docgen.flags).toContain("--mode");
+  });
+
+  it("builds the full Turbo Doctest plan without a mode flag", () => {
+    const steps = ciLaneStepsForTesting(REPO_ROOT, "doctest", baseOptions);
+    expect(steps).toHaveLength(1);
+    const step = firstOf(steps);
+    expect(step.label).toBe("ci:doctest");
+    expect(step.command).toBe("bunx");
+    expect([...step.args]).toEqual([
+      "turbo",
+      "run",
+      "doctest",
+      ...expectedTurboCacheArgs(["--concurrency=4", "--summarize"]),
+      "--concurrency=4",
+      "--summarize",
+    ]);
+    expect(step.env).toBeUndefined();
   });
 
   it("always runs the changeset graph and appends changeset status on request", () => {
@@ -1631,7 +1628,7 @@ const fullDoctestCommands = A.empty<string>();
 layer(ciExecutionLayer([], [], fullDoctestCommands))("full Doctest CI lane", (it) => {
   it.effect("runs the complete documentation Vitest corpus without Git discovery", () =>
     Effect.gen(function* () {
-      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "full" }));
+      yield* runCiLane("doctest", baseOptions);
 
       expect(fullDoctestCommands).toHaveLength(1);
       expect(fullDoctestCommands[0]).toContain("bunx turbo run doctest");
