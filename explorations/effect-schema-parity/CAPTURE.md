@@ -56,7 +56,7 @@ dated heading at the bottom.
   interesting window is rc.112..main: 28 commits touching `Schema*.ts`,
   `JsonSchema.ts`, `unstable/schema/`, `SCHEMA.md`, `migration/schema.md`.
 - `migration/schema.md` lives at the effect repo root, not under
-  `packages/effect/`.
+  the upstream Effect package directory.
 - `@beep/schema` (`packages/foundation/modeling/schema`, 271 source files) is
   imported from 2,508 files across `packages/` and `apps/`.
 - Name-level overlap is weak evidence of equivalence: upstream `Toml`, `Yaml`,
