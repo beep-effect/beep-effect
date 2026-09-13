@@ -14,7 +14,7 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
+import { Config, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { constant, dual } from "effect/Function";
@@ -22,8 +22,8 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
-import { WorktreeRemovalRequest } from "../../Worktree/Worktree.schemas.ts";
+import { ProcessPid, RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { WorktreeInvokerExemption, WorktreeRemovalRequest } from "../../Worktree/Worktree.schemas.ts";
 import { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetRetirePlan } from "./Retire.schemas.ts";
@@ -32,6 +32,21 @@ import type { SweepGitState } from "./Sweep.ts";
 
 const decodeWorktreeName = S.decodeUnknownEffect(WorktreeRemovalRequest.fields.name);
 const decodeRetirePlan = S.decodeUnknownEffect(YeetRetirePlan);
+
+// Claude Code names its session process for every tool shell it spawns; that
+// harness key lives here, in the command that runs under it, so the worktree
+// service only ever learns "the pid whose subtree is the party asking".
+const SESSION_PID_ENV = "CLAUDE_PID";
+
+// The lane's own CLI always carries --retire, whatever branch the clone sits on.
+const REPO_CLI_ENTRY_PATH = "packages/tooling/tool/cli/src/bin.ts";
+
+// A malformed value is no session, not a failed retirement; the fence itself
+// drops any pid that is not an invoker ancestor.
+const invokerSessionPid = Config.option(Config.Int(SESSION_PID_ENV)).pipe(
+  Effect.orElseSucceed(O.none<number>),
+  Effect.map(O.filter(S.is(ProcessPid)))
+);
 
 const gitOutput = Effect.fn("Yeet.retireGitOutput")(function* (cwd: string, args: ReadonlyArray<string>) {
   const commandLine = `git ${A.join(args, " ")}`;
@@ -180,8 +195,12 @@ export const planRetire = Effect.fn("Yeet.planRetire")(function* (context: RepoR
  * archive fence refuses a lane any process still stands in; this command
  * first moves its own working directory to the owning clone and asks the
  * fence to exempt the invoker's ancestry (the shell and agent session that
- * started it), so retiring the lane one is standing in works, while any
- * other holder still refuses it with the command that would work instead.
+ * started it) plus, when the harness names the session process through
+ * `CLAUDE_PID`, everything that session spawned into the lane (its MCP
+ * servers, tool shells, and background jobs). Retiring the lane one is
+ * standing in therefore works from a desktop session too, while any other
+ * holder (a terminal panel, an editor, another session) still refuses it
+ * and the message names what to close.
  *
  * **Example** (Build the retirement effect)
  *
@@ -218,6 +237,7 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
   if (isWithin(path, plan.worktreePath, process.cwd())) {
     yield* Effect.sync(() => process.chdir(plan.owningClone));
   }
+  const sessionPid = yield* invokerSessionPid;
   return yield* service
     .remove(
       WorktreeRemovalRequest.make({
@@ -228,7 +248,7 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
         archive: true,
         deleteBranch: true,
         expectedHead: O.none(),
-        exemptInvokerAncestry: true,
+        exemptInvoker: WorktreeInvokerExemption.make({ sessionPid }),
       })
     )
     .pipe(
@@ -251,14 +271,16 @@ const isWithin = (path: Path.Path, root: string, candidate: string): boolean =>
  *
  * **Details**
  *
- * A holder the fence could not exempt is a process outside the invoker's own
- * ancestry: an editor or another shell left in the lane, or the other stages
- * of a shell pipeline this command's output was piped into. The hint says to
- * leave or close them, redirect the output to a file, and rerun from the lane,
- * because `bun run beep` resolves the CLI from the checkout it runs in and the
- * owning clone's `main` may still be behind the merge; the `--lane` form is
- * kept for a clone that already carries the merged CLI. Any other removal
- * failure is reported as the service phrased it.
+ * A holder the fence could not exempt is a process outside the invoking
+ * session: a desktop terminal panel, an editor, a dev server, another agent
+ * session standing in the lane, or, outside Claude Code, the other stages of
+ * a shell pipeline this command's output was piped into. The service names
+ * each one; this message says to leave or close them, redirect output to a
+ * file instead of piping it, and rerun from the lane, because `bun run beep`
+ * resolves the CLI from the checkout it runs in. It appends the form that
+ * retires the lane from the owning clone through the lane's own CLI, which
+ * carries `--retire` even when that clone's checkout predates it. Any other
+ * removal failure is reported as the service phrased it.
  *
  * **Example** (Append the hint only for a holder)
  *
@@ -266,7 +288,7 @@ const isWithin = (path: Path.Path, root: string, candidate: string): boolean =>
  * import { retirementFailureMessage, YeetRetirePlan } from "@beep/repo-cli/test/Yeet"
  *
  * const plan = YeetRetirePlan.make({ worktreePath: "/c/.claude/worktrees/l", owningClone: "/c", name: "l", branch: "b" })
- * console.log(retirementFailureMessage(plan, "pid 7 via cwd still hold it").includes("--lane")) // true
+ * console.log(retirementFailureMessage(plan, "pid 7 (zsh) via cwd still hold it").includes("--lane")) // true
  * console.log(retirementFailureMessage(plan, "disk full").includes("--lane")) // false
  * ```
  *
@@ -281,7 +303,7 @@ export const retirementFailureMessage: {
   (message: string): (plan: YeetRetirePlan) => string;
 } = dual(2, (plan: YeetRetirePlan, message: string): string =>
   Str.includes("still hold it")(message)
-    ? `yeet sweep --retire could not retire ${plan.worktreePath}: ${message} Those holders are outside this command's own ancestry (an editor, another shell, or the other stages of a pipeline its output was piped into): leave or close them, redirect output to a file instead of piping it, and rerun from the lane: bun run beep yeet sweep --retire. From a clone that already carries the merged CLI: cd "${plan.owningClone}" && bun run beep yeet sweep --retire --lane "${plan.worktreePath}"`
+    ? `yeet sweep --retire could not retire ${plan.worktreePath}: ${message} Those holders are outside this command's own session (a desktop terminal panel, an editor, another shell or agent session, or the other stages of a pipeline its output was piped into): leave or close them, redirect output to a file instead of piping it, and rerun from the lane: bun run beep yeet sweep --retire. From the owning clone, run the lane's own CLI: cd "${plan.owningClone}" && bun run "${plan.worktreePath}/${REPO_CLI_ENTRY_PATH}" -- yeet sweep --retire --lane "${plan.worktreePath}"`
     : `yeet sweep --retire could not retire ${plan.worktreePath}: ${message}`
 );
 

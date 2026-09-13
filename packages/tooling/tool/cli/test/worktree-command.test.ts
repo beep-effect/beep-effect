@@ -1463,7 +1463,10 @@ describe("worktree git operations", () => {
             return yield* outcome;
           })
         );
-        expect(refusal).toContain(`Refusing to retire ${targetPath}: pid ${process.pid} via descriptor`);
+        // The fence names each holder by its kernel command name, which is the
+        // runtime running this test (`bun` or `node`), so read it rather than guess.
+        const ownName = Str.trim(yield* fs.readFileString("/proc/self/comm"));
+        expect(refusal).toContain(`Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`);
         expect(yield* fs.exists(targetPath)).toBe(true);
         expect(A.filter(yield* fs.readDirectory(context.worktreesRoot), Str.includes(".retiring-"))).toEqual([]);
         expect(yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"])).toContain(`worktree ${targetPath}`);

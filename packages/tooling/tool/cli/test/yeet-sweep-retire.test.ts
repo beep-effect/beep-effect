@@ -123,6 +123,7 @@ const withScratchRepo = <A, E, R>(
     tip: string;
     packetDir: string;
     residueRoot: string;
+    env: Record<string, string>;
   }) => Effect.Effect<A, E, R>
 ) =>
   Effect.scoped(
@@ -162,13 +163,11 @@ const withScratchRepo = <A, E, R>(
       const tip = yield* runGitText(lane, ["rev-parse", "HEAD"]);
       expect(yield* runGitText(repoRoot, ["rev-parse", "main"])).not.toBe(tip);
       const residueRoot = path.join(tmp, "test-residue");
-      yield* use({ repoRoot, lane, tip, packetDir: path.join(tmp, "packet"), residueRoot }).pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromEnv({
-            env: { HOME: tmp, BEEP_WORKTREE_RESIDUE_ROOT: residueRoot },
-          })
-        )
+      // The fixture env stands in for the process environment, so the real
+      // session's CLAUDE_PID never leaks into a test: each case names its own.
+      const env = { HOME: tmp, BEEP_WORKTREE_RESIDUE_ROOT: residueRoot };
+      yield* use({ repoRoot, lane, tip, packetDir: path.join(tmp, "packet"), residueRoot, env }).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }))
       );
     }).pipe(provideScopedLayer(testLayer))
   );
@@ -208,6 +207,22 @@ const withRealCwd = <A, E, R>(cwd: string, effect: Effect.Effect<A, E, R>) =>
         process.chdir(previous);
       })
   );
+
+// Re-provide the fixture environment with one more key, such as the session
+// pid the harness exports for its tool shells.
+const withEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
+  Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
+
+// A holder that descends from this process without being it: `sh` forks the
+// sleep, so the lane is held by a child and a grandchild of the test process,
+// which is where a session's MCP servers and their workers sit.
+const spawnLaneHolder = (lane: string) =>
+  ChildProcess.make("sh", ["-c", "sleep 60; true"], {
+    cwd: lane,
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "ignore",
+  });
 
 describe("yeet sweep --retire", { concurrent: false }, () => {
   it.effect("retires the merged nested lane, deletes its branch, and fast-forwards the owning clone", () =>
@@ -339,8 +354,10 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
       name: "lane",
       branch: "claude/lane",
     });
-    expect(retirementFailureMessage(plan, "pid 7 via cwd still hold it, and any write would be lost.")).toContain(
-      'cd "/clones/x" && bun run beep yeet sweep --retire --lane "/clones/x/.claude/worktrees/lane"'
+    const blocked = retirementFailureMessage(plan, "pid 7 (zsh) via cwd still hold it, and any write would be lost.");
+    expect(blocked).toContain("Those holders are outside this command's own session");
+    expect(blocked).toContain(
+      'cd "/clones/x" && bun run "/clones/x/.claude/worktrees/lane/packages/tooling/tool/cli/src/bin.ts" -- yeet sweep --retire --lane "/clones/x/.claude/worktrees/lane"'
     );
     expect(retirementFailureMessage(plan, "pid 7 via cwd still hold it, and any write would be lost.")).toContain(
       "redirect output to a file instead of piping it, and rerun from the lane: bun run beep yeet sweep --retire."
@@ -407,6 +424,26 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     )
   );
 
+  it.effect("retires a sibling lane named with --lane from another lane of the same clone", () =>
+    withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        // A fresh lane at a current checkout is where a later session runs
+        // once the desktop lane that owned the merged branch has closed.
+        const sibling = path.join(repoRoot, CLAUDE_WORKTREES_RELATIVE_ROOT, "sibling");
+        yield* runGit(repoRoot, ["worktree", "add", "-b", "claude/sibling", sibling]);
+        const output = yield* captureOutput(
+          withCwd(sibling, sweep(packetDir, { lane: O.some(lane) })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+        );
+        expect(yield* fs.exists(lane)).toBe(false);
+        expect(yield* fs.exists(sibling)).toBe(true);
+        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        expect(output).toContain(`[yeet] retired ${lane}`);
+      })
+    )
+  );
+
   it.effect("refuses --lane when it names the clone itself", () =>
     withScratchRepo(({ repoRoot, tip, packetDir }) =>
       Effect.gen(function* () {
@@ -466,10 +503,70 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             withCwd(lane, sweep(packetDir)).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
           ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
           expect(error.message).toContain("still hold it");
-          expect(error.message).toContain(`cd "${repoRoot}" && bun run beep yeet sweep --retire --lane "${lane}"`);
+          expect(error.message).toContain("(sleep) via cwd");
+          expect(error.message).toContain(
+            `cd "${repoRoot}" && bun run "${lane}/packages/tooling/tool/cli/src/bin.ts" -- yeet sweep --retire --lane "${lane}"`
+          );
           expect(yield* fs.exists(lane)).toBe(true);
         })
       )
+    )
+  );
+
+  it.effect("exempts the session's own subtree when the harness names an invoker ancestor", () =>
+    withScratchRepo(({ repoRoot, lane, tip, packetDir, env }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const holder = yield* spawnLaneHolder(lane);
+          // This test process stands in for the agent session: the holders are
+          // its child and grandchild, exactly where a session's MCP servers sit.
+          const output = yield* captureOutput(
+            withEnv({ ...env, CLAUDE_PID: String(process.pid) }, withCwd(lane, sweep(packetDir))).pipe(
+              provideScopedLayer(ghLayer(tip, "MERGED"))
+            )
+          ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
+          expect(output).toContain("[yeet] retired");
+          expect(yield* fs.exists(lane)).toBe(false);
+          expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        })
+      )
+    )
+  );
+
+  it.effect("ignores a session pid that is not an invoker ancestor and still refuses the holder", () =>
+    withScratchRepo(({ lane, tip, packetDir, env }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const holder = yield* spawnLaneHolder(lane);
+          // The holder's own pid sits in its ancestry, so only the invoker-ancestor
+          // rule keeps a stale or foreign CLAUDE_PID from widening the fence.
+          const error = yield* Effect.flip(
+            withEnv({ ...env, CLAUDE_PID: String(holder.pid) }, withCwd(lane, sweep(packetDir))).pipe(
+              provideScopedLayer(ghLayer(tip, "MERGED"))
+            )
+          ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
+          expect(error.message).toContain("still hold it");
+          expect(error.message).toContain("(sh) via cwd");
+          expect(yield* fs.exists(lane)).toBe(true);
+        })
+      )
+    )
+  );
+
+  it.effect("treats a malformed session pid as no session at all", () =>
+    withScratchRepo(({ lane, tip, packetDir, env }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const output = yield* captureOutput(
+          withEnv({ ...env, CLAUDE_PID: "not-a-pid" }, withCwd(lane, sweep(packetDir))).pipe(
+            provideScopedLayer(ghLayer(tip, "MERGED"))
+          )
+        );
+        expect(output).toContain("[yeet] retired");
+        expect(yield* fs.exists(lane)).toBe(false);
+      })
     )
   );
 
