@@ -15,6 +15,8 @@
 
 import { $RepoUtilsId } from "@beep/identity";
 import { Context } from "effect";
+import { constant } from "effect/Function";
+import * as O from "effect/Option";
 
 const $I = $RepoUtilsId.create("HostProcess");
 
@@ -24,7 +26,10 @@ const $I = $RepoUtilsId.create("HostProcess");
  * safe in browser bundles, where the global is absent. Mirrors the lazy
  * `globalThis.process?.getBuiltinModule` idiom in `Path.ts` / `FileSystem.ts`.
  */
-const hostProcess: { readonly platform?: string; readonly arch?: string } | undefined = globalThis.process;
+const hostProcess = O.fromUndefinedOr<{ readonly platform?: string; readonly arch?: string }>(globalThis.process);
+
+const hostPlatform = O.flatMapNullishOr(hostProcess, (host) => host.platform);
+const hostArchitecture = O.flatMapNullishOr(hostProcess, (host) => host.arch);
 
 /**
  * The host operating system platform, read once at module load; `"browser"`
@@ -46,7 +51,7 @@ const hostProcess: { readonly platform?: string; readonly arch?: string } | unde
  * @category constants
  * @since 0.0.0
  */
-export const currentHostPlatform: string = hostProcess?.platform ?? "browser";
+export const currentHostPlatform: string = O.getOrElse(hostPlatform, constant("browser"));
 
 /**
  * The host CPU architecture, read once at module load; `"unknown"` when no
@@ -68,7 +73,7 @@ export const currentHostPlatform: string = hostProcess?.platform ?? "browser";
  * @category constants
  * @since 0.0.0
  */
-export const currentHostArchitecture: string = hostProcess?.arch ?? "unknown";
+export const currentHostArchitecture: string = O.getOrElse(hostArchitecture, constant("unknown"));
 
 /**
  * Reference for the host operating system platform.

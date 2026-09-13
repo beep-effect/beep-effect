@@ -1926,12 +1926,7 @@ const encodeManifestJson = (manifest: unknown): Effect.Effect<string, DomainErro
 // Labs are runnable apps and render through `appBaseScripts`; the package renderer never sees them.
 type PackageScriptsKind = Exclude<ScriptsPackageKind, "lab">;
 
-const packageScripts = (
-  kind: PackageScriptsKind,
-  rootRelative: string,
-  packagePath: string,
-  withStoriesTsconfig: boolean
-) => ({
+const packageScripts = (kind: PackageScriptsKind, withStoriesTsconfig: boolean) => ({
   ...scaffoldPackageScripts(kind, ["lint:fix", "test:integration", "docgen"]),
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
   "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
@@ -1941,7 +1936,6 @@ const packageScripts = (
         "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",
       }
     : {}),
-  "beep:policy": `bun --cwd ${rootRelative} run beep lint package-test-imports --include-root ${packagePath}`,
   coverage: "bunx vitest run --coverage --exclude=test/integration/**",
 });
 
@@ -2029,7 +2023,7 @@ const generatePackageJson: (
       Match.when("tool", (): PackageScriptsKind => "tool"),
       Match.orElse((): PackageScriptsKind => "library")
     );
-    const scripts = packageScripts(kind, toRootRelative(packagePath), packagePath, withStoriesTsconfig);
+    const scripts = packageScripts(kind, withStoriesTsconfig);
     if (O.isSome(ecosystemMetadata)) {
       return yield* generateEcosystemPackageJson(
         baseManifest,

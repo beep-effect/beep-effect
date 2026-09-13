@@ -44,7 +44,20 @@ const configStringEqualsSync = (name: string, expected: string): boolean =>
     Effect.runSync(Config.option(Config.String(name))),
     O.exists((value) => value === expected)
   );
-const vitestDoctestActive = configStringEqualsSync("BEEP_VITEST_DOCTEST", "1");
+/**
+ * Selects package-local in-source tests without ordinary test includes.
+ *
+ * **Example** (Preserve the doctest selector in a package config)
+ *
+ * ```ts
+ * import { vitestDoctestActive } from "./vitest.shared.ts"
+ * const include = vitestDoctestActive ? [] : ["test/example.test.ts"]
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const vitestDoctestActive = configStringEqualsSync("BEEP_VITEST_DOCTEST", "1");
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
 // Env flags do not survive every spawn chain (root script -> turbo ->
 // package script -> vitest); the vitest process's own argv is authoritative.
@@ -65,6 +78,26 @@ const parsedFcNumRuns = pipe(
   O.getOrElse(() => 0)
 );
 export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
+
+// Per-test ceiling every doctest owner inherits in doctest mode. The first example of a file
+// pays the module transform, which exceeded 30 s under the fleet's 4-way task concurrency on a
+// 4-vCPU runner (C3.4 hosted round 1). The doctest guard asserts this value per owner.
+const vitestDoctestTestTimeoutMs = 120_000;
+
+/**
+ * Resolve a package's per-test timeout without losing the shared doctest and instrumentation
+ * ceilings. Package configs merge after this one, so a literal `testTimeout` there would clamp
+ * doctest mode back to the focused value.
+ *
+ * **Example** (Keep focused headroom while doctests and coverage keep their ceilings)
+ *
+ * ```ts
+ * import { packageTestTimeout } from "./vitest.shared.ts"
+ * const testTimeout = packageTestTimeout(60_000)
+ * ```
+ */
+export const packageTestTimeout = (focusedMs: number): number =>
+  vitestDoctestActive ? vitestDoctestTestTimeoutMs : vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : focusedMs;
 
 // Quality-lane audit A1 (D10): the deep sweep only changes the behaviour of
 // files that draw from fast-check, so under an active floor the include list
@@ -179,7 +212,9 @@ const config: ViteUserConfig = {
     // Deep property sweeps (BEEP_FC_NUM_RUNS raises fast-check run counts
     // 8-20x for the property lane and nightly sweep) scale test wall time
     // the same way instrumentation does; give them the same generous cap.
-    testTimeout: vitestDoctestActive ? 30_000 : vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 30_000,
+    // In doctest mode the first example of a file pays the module transform; under the fleet's
+    // 4-way task concurrency on a 4-vCPU runner that exceeded 30 s (C3.4 hosted round 1).
+    testTimeout: packageTestTimeout(30_000),
     hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 10_000,
     // Baseline generation/regeneration must tolerate test-less packages;
     // the ratchet compare, not vitest, decides coverage outcomes.
@@ -207,6 +242,8 @@ const config: ViteUserConfig = {
     sequence: {
       concurrent: !vitestDoctestActive,
     },
+    // One doctest owner per worker pair keeps 4 concurrent Turbo tasks inside the runner's CPU.
+    ...(vitestDoctestActive ? { maxWorkers: 2 } : {}),
     include: vitestDoctestActive ? [] : fcDeepSweepActive ? [...propertySweepInclude] : ["test/**/*.test.{ts,tsx}"],
     includeSource: vitestDoctestActive ? ["src/**/*.{ts,tsx}"] : [],
     coverage: {

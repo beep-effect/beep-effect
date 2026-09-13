@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig, mergeConfig } from "vitest/config";
-import shared from "../../../vitest.shared.ts";
+import shared, { vitestDoctestActive } from "../../../vitest.shared.ts";
 
 export default mergeConfig(
   shared,
@@ -11,7 +11,7 @@ export default mergeConfig(
       },
     },
     test: {
-      include: ["test/**/*.test.ts"],
+      include: vitestDoctestActive ? [] : ["test/**/*.test.ts"],
     },
   })
 );

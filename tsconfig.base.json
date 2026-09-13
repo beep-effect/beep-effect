@@ -53,6 +53,47 @@
           "Schema": "S",
           "Equal": "Eq"
         },
+        // Editor capability toggles, kept at their upstream defaults so an upgrade cannot silently flip them.
+        "refactors": true,
+        "diagnostics": true,
+        "quickinfo": true,
+        "completions": true,
+        "goto": true,
+        "renames": true,
+        // Debug-only language-service output stays off; it is noise in tsc mode.
+        "debug": false,
+        // Inlay hints are an editor concern; the upstream default is kept explicit.
+        "inlays": false,
+        // Layer graph hovers may link to the public mermaid.live renderer; this repo is public.
+        "mermaidProvider": "mermaid.live",
+        "noExternal": false,
+        // Layer graph extraction stops at the declaring symbol; deeper follow is a hover cost with no lint value.
+        "layerGraphFollowDepth": 0,
+        // No package prefers barrel named imports: effect, @effect/* and @beep/* are namespace-imported above.
+        "barrelImportPackages": [],
+        // Top-level named re-exports are not followed for import resolution; @beep barrels re-export deliberately.
+        "topLevelNamedReexports": "ignore",
+        // deterministicKeys formulas: upstream default, made explicit so a changed default cannot move the rule.
+        "keyPatterns": [
+          {
+            "target": "service",
+            "pattern": "default",
+            "skipLeadingPath": ["src/"]
+          },
+          {
+            "target": "custom",
+            "pattern": "default",
+            "skipLeadingPath": ["src/"]
+          }
+        ],
+        // @effect-identifier constructor matching stays off; $I identity annotations are the repo's key source.
+        "extendedKeyDetection": false,
+        // missedPipeableOpportunity fires from two contiguous pipeable calls (upstream default, explicit).
+        "pipeableMinArgCount": 2,
+        // No package may ship twice in the graph; duplicatePackage reports every duplicate.
+        "allowedDuplicatedPackages": [],
+        // No per-file overrides: every rule is an error everywhere, tests included (tsgo-045 D2).
+        "overrides": [],
         "diagnosticSeverity": {
           // Every rule the compiler ships is listed explicitly, and every one is an error.
           // Rules omitted from this map run at their upstream default, so silence here

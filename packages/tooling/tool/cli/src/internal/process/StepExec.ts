@@ -299,9 +299,14 @@ export const repoRunOutputBound = OutputBound.make({
  * @category configuration
  * @since 0.0.0
  */
+// Grouped Turbo invocations (the lint-policy phases fold hundreds of package tasks and the
+// census-style root tasks into one run) need far more than the single-worker budget; a truncated
+// capture hides the Turbo footer that names the failed task.
+const QUALITY_STEP_OUTPUT_MAX_CHARS = 8 * 1024 * 1024;
+
 export const qualityStepOutputBound = OutputBound.make({
-  maxChars: 256 * 1024,
-  truncatedNotice: `\n[beep-cli] output truncated after ${256 * 1024} characters`,
+  maxChars: QUALITY_STEP_OUTPUT_MAX_CHARS,
+  truncatedNotice: `\n[beep-cli] output truncated after ${QUALITY_STEP_OUTPUT_MAX_CHARS} characters`,
 });
 
 /**
