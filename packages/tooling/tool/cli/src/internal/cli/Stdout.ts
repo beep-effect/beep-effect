@@ -133,9 +133,6 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
     const offset = MutableRef.make(0);
     const done = MutableRef.make(false);
     const complete = (): void => {
-      if (MutableRef.get(done)) {
-        return;
-      }
       MutableRef.set(done, true);
       // Drop this line only if it is the head, without a separate branch.
       MutableRef.update(
@@ -146,6 +143,9 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
       settleWrite();
     };
     const fail = (message: string): void => {
+      if (MutableRef.get(done)) {
+        return;
+      }
       recordFailure(message);
       complete();
     };
@@ -253,9 +253,11 @@ const noop = (): void => undefined;
  *
  * Each stream has a FIFO queue of UTF-8 lines. Writes contain at most 8 KiB of bytes; each
  * completion callback starts the next chunk, preserving order across log calls on the same stream;
- * stdout and stderr are independent FIFOs. Before chunking, a single multi-megabyte write lost its tail
- * under Bun on hosted runners even with its callback tracked; the bounded chunks and per-stream FIFO
- * exist to remove that hazard.
+ * stdout and stderr are independent FIFOs, with one exception: a write failure on one stream enqueues
+ * its marker line on the other stream's FIFO, where it is chunked, tracked by the drain, and counted
+ * as a dropped line if that stream fails before the marker is written. Before chunking, a single
+ * multi-megabyte write lost its tail under Bun on hosted runners even with its callback tracked;
+ * the bounded chunks and per-stream FIFO exist to remove that hazard.
  *
  * **Example** (Provide the stream console to a program)
  *

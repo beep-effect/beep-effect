@@ -129,7 +129,8 @@ describe("stream console", () => {
       "stdout survives\n",
     ]);
     expect(stderr).toEqual(["a\n"]);
-    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+    assertSome(
+      MutableRef.get(failure),
       StreamWriteFailure.make({ stream: "stderr", message: "EPIPE", droppedLines: 2 })
     );
   });
@@ -150,7 +151,8 @@ describe("stream console", () => {
     );
     expect(stdout).toEqual(["a\n"]);
     expect(stderr).toEqual(["[beep-cli] stdout write failed: EPIPE; later stdout lines are dropped\n"]);
-    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+    assertSome(
+      MutableRef.get(failure),
       StreamWriteFailure.make({ stream: "stdout", message: "EPIPE", droppedLines: 1 })
     );
   });
@@ -174,7 +176,8 @@ describe("stream console", () => {
     );
     expect(stdout).toEqual([Str.repeat(8192)("a")]);
     expect(stderr).toEqual(["[beep-cli] stdout write failed: EPIPE; later stdout lines are dropped\n"]);
-    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+    assertSome(
+      MutableRef.get(failure),
       StreamWriteFailure.make({ stream: "stdout", message: "EPIPE", droppedLines: 2 })
     );
   });
@@ -232,7 +235,8 @@ describe("stream console", () => {
     );
     expect(stderr).toEqual(["a\n"]);
     expect(stdout).toEqual(["[beep-cli] stderr write failed: EPIPE; later stderr lines are dropped\n"]);
-    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+    assertSome(
+      MutableRef.get(failure),
       StreamWriteFailure.make({ stream: "stdout", message: "EPIPE", droppedLines: 2 })
     );
   });
@@ -260,7 +264,8 @@ describe("stream console", () => {
     expect(stdout).toEqual(["aborted\n"]);
     expect(stderr).toEqual(["[beep-cli] stdout write failed: boom; later stdout lines are dropped\n"]);
     expect(MutableRef.get(continuations)).toBe(1);
-    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+    assertSome(
+      MutableRef.get(failure),
       StreamWriteFailure.make({ stream: "stdout", message: "boom", droppedLines: 1 })
     );
   });
@@ -271,7 +276,7 @@ describe("stream console", () => {
     const { stdout, stderr } = captureStreams(
       () => {
         streamConsole.log("completed");
-        streamConsole.error("pending");
+        streamConsole.log("after");
         drainProcessStreams((value) => {
           MutableRef.incrementAndGet(continuations);
           MutableRef.set(failure, value);
@@ -284,15 +289,106 @@ describe("stream console", () => {
         },
       }
     );
-    expect(stdout).toEqual(["completed\n"]);
-    expect(stderr).toEqual([
-      "[beep-cli] stdout write failed: after completion; later stdout lines are dropped\n",
-      "pending\n",
-    ]);
+    expect(stdout).toEqual(["completed\n", "after\n"]);
+    expect(stderr).toEqual([]);
     expect(MutableRef.get(continuations)).toBe(1);
-    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
-      StreamWriteFailure.make({ stream: "stdout", message: "after completion", droppedLines: 1 })
+    failure.pipe(MutableRef.get, assertNone);
+  });
+
+  it("keeps the first failure when the callback errors and the write then throws", () => {
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.log("aborted");
+        streamConsole.log("after");
+        drainProcessStreams((value) => MutableRef.set(failure, value));
+      },
+      {
+        stdoutWrite: (_chunk, callback) => {
+          callback(new Error("first"));
+          throw new Error("second");
+        },
+      }
     );
+    expect(stdout).toEqual(["aborted\n"]);
+    expect(stderr).toEqual(["[beep-cli] stdout write failed: first; later stdout lines are dropped\n"]);
+    assertSome(
+      MutableRef.get(failure),
+      StreamWriteFailure.make({ stream: "stdout", message: "first", droppedLines: 2 })
+    );
+  });
+
+  it("settles each synchronous write behaviour according to its first result", () => {
+    const cases: ReadonlyArray<{
+      readonly tag: string;
+      readonly write: (chunk: string | Uint8Array, callback: WriteCallback) => boolean;
+      readonly failure: O.Option<StreamWriteFailure>;
+    }> = [
+      {
+        tag: "ok",
+        write: (_chunk, callback) => {
+          callback();
+          return true;
+        },
+        failure: O.none(),
+      },
+      {
+        tag: "err",
+        write: (_chunk, callback) => {
+          callback(new Error("first"));
+          return false;
+        },
+        failure: O.some(StreamWriteFailure.make({ stream: "stdout", message: "first", droppedLines: 1 })),
+      },
+      {
+        tag: "throw",
+        write: () => {
+          throw new Error("first");
+        },
+        failure: O.some(StreamWriteFailure.make({ stream: "stdout", message: "first", droppedLines: 1 })),
+      },
+      {
+        tag: "ok-then-throw",
+        write: (_chunk, callback) => {
+          callback();
+          throw new Error("second");
+        },
+        failure: O.none(),
+      },
+      {
+        tag: "err-then-throw",
+        write: (_chunk, callback) => {
+          callback(new Error("first"));
+          throw new Error("second");
+        },
+        failure: O.some(StreamWriteFailure.make({ stream: "stdout", message: "first", droppedLines: 1 })),
+      },
+    ];
+    for (const testCase of cases) {
+      resetProcessStreamStateForTesting();
+      const continuations = MutableRef.make(0);
+      const { stdout, stderr } = captureStreams(
+        () => {
+          streamConsole.log(testCase.tag);
+          drainProcessStreams((failure) => {
+            MutableRef.incrementAndGet(continuations);
+            O.match(testCase.failure, {
+              onNone: () => assertNone(failure),
+              onSome: (expected) => assertSome(failure, expected),
+            });
+          });
+        },
+        { stdoutWrite: testCase.write }
+      );
+      expect(stdout).toEqual([`${testCase.tag}\n`]);
+      expect(stderr).toEqual(
+        O.match(testCase.failure, {
+          onNone: () => [],
+          onSome: ({ message }) => [`[beep-cli] stdout write failed: ${message}; later stdout lines are dropped\n`],
+        })
+      );
+      expect(MutableRef.get(continuations)).toBe(1);
+    }
   });
 
   it("ignores a double completion callback", () => {

@@ -176,21 +176,39 @@ const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
     // Keep defaultTeardown as the sole exit-code authority and force the exit
     // the runner declines on success.
     teardown: (exit, onExit) => {
-      renderCliFailure(exit);
-      restoreSharedTerminal();
+      try {
+        renderCliFailure(exit);
+      } catch {
+        // A dead stderr must not abort before the drain and exit.
+      }
+      try {
+        restoreSharedTerminal();
+      } catch {
+        // A dead terminal must not abort before the drain and exit.
+      }
+      const writeExitNotice = (preferred: NodeJS.WriteStream, fallback: NodeJS.WriteStream, line: string): void => {
+        try {
+          preferred.write(line);
+        } catch {
+          try {
+            fallback.write(line);
+          } catch {
+            // Both handles are dead; exit still proceeds.
+          }
+        }
+      };
       Runtime.defaultTeardown(exit, (code) => {
         // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
         drainProcessStreams((failure) => {
           if (Option.isSome(failure)) {
             const { stream, message, droppedLines } = failure.value;
             const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
-            try {
-              channel.write(
-                `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
-              );
-            } catch {
-              // channel is dead; exit still proceeds
-            }
+            const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
+            writeExitNotice(
+              channel,
+              fallback,
+              `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
+            );
           }
           onExit(code);
           process.exit(code);
