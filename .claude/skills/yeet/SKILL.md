@@ -212,13 +212,17 @@ bun run beep yeet sweep
 
 ```bash
 bun run beep yeet sweep --retire --plan
-cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire --lane "$OLDPWD"
+CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"
 ```
 
-  The `cd` keeps your shell out of the directory being removed; `--lane` names
-  the lane from the clone. The fence exempts the invoking session's own
-  ancestry and refuses any other process still standing in the lane. `--json`
-  prints one document; `--branch` is refused with `--retire`.
+  Run it from inside the lane: `bun run beep` resolves the CLI from the
+  checkout it runs in, and the owning clone's `main` may still be behind the
+  merge and reject `--retire` as an unknown flag. The command steps its own
+  process out of the lane before removal; the trailing `cd` moves your shell
+  to the swept clone. `--lane <path>` is for a clone that already carries the
+  merged CLI. The fence exempts the invoking session's own ancestry and
+  refuses any other process still standing in the lane. `--json` prints one
+  document; `--branch` is refused with `--retire`.
 
 - Post and resolve the drafted review-thread replies for this branch's PR:
 
