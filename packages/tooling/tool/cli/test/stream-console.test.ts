@@ -1,17 +1,26 @@
-import { drainProcessStreams, streamConsole } from "@beep/repo-cli/test/Cli";
+import {
+  drainProcessStreams,
+  resetProcessStreamStateForTesting,
+  StreamWriteFailure,
+  streamConsole,
+} from "@beep/repo-cli/test/Cli";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { provideScopedLayer } from "@beep/test-utils";
 import { P } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as MutableRef from "effect/MutableRef";
+import * as O from "effect/Option";
 import * as Str from "effect/String";
 
 type WriteFn = typeof process.stdout.write;
+type WriteCallback = (error?: Error | null) => void;
 
 const captureStreams = <A>(
-  run: () => A
+  run: () => A,
+  options: { readonly stdoutWrite?: (chunk: string | Uint8Array, callback: WriteCallback) => boolean } = {}
 ): { readonly result: A; readonly stdout: ReadonlyArray<string>; readonly stderr: ReadonlyArray<string> } => {
   const stdout: Array<string> = [];
   const stderr: Array<string> = [];
@@ -22,12 +31,15 @@ const captureStreams = <A>(
   const originalOut = process.stdout.write;
   const originalErr = process.stderr.write;
   // Settle every write at once so the module's in-flight counter returns to zero.
-  process.stdout.write = ((chunk: string | Uint8Array, callback?: () => void) => {
+  process.stdout.write = ((chunk: string | Uint8Array, callback?: WriteCallback) => {
     stdout.push(P.isString(chunk) ? chunk : decodeOut.decode(chunk, { stream: true }));
+    if (options.stdoutWrite !== undefined && callback !== undefined) {
+      return options.stdoutWrite(chunk, callback);
+    }
     callback?.();
     return true;
   }) as WriteFn;
-  process.stderr.write = ((chunk: string | Uint8Array, callback?: () => void) => {
+  process.stderr.write = ((chunk: string | Uint8Array, callback?: WriteCallback) => {
     stderr.push(P.isString(chunk) ? chunk : decodeErr.decode(chunk, { stream: true }));
     callback?.();
     return true;
@@ -49,6 +61,133 @@ const captureStreams = <A>(
 };
 
 describe("stream console", () => {
+  beforeEach(resetProcessStreamStateForTesting);
+
+  it("aborts a line and drops later stdout lines after a write error", () => {
+    const drained = MutableRef.make(false);
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.log(Str.repeat(100 * 1024)("a"));
+        streamConsole.log("later one");
+        streamConsole.log("later two");
+        streamConsole.error("stderr survives");
+        drainProcessStreams((value) => {
+          MutableRef.set(drained, true);
+          MutableRef.set(failure, value);
+        });
+        expect(MutableRef.get(drained)).toBe(true);
+      },
+      {
+        stdoutWrite: (_chunk, callback) => {
+          callback(new Error("EPIPE"));
+          return false;
+        },
+      }
+    );
+    expect(stdout).toHaveLength(1);
+    expect(new TextEncoder().encode(O.getOrThrow(A.head(stdout))).byteLength).toBeLessThanOrEqual(8192);
+    expect(stderr).toEqual([
+      "[beep-cli] stdout write failed: EPIPE; later stdout lines are dropped\n",
+      "stderr survives\n",
+    ]);
+    expect(O.isSome(MutableRef.get(failure))).toBe(true);
+    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+      StreamWriteFailure.make({
+        stream: "stdout",
+        message: "EPIPE",
+        droppedLines: 3,
+      })
+    );
+  });
+
+  it("treats a synchronous write throw as a write error", () => {
+    const drained = MutableRef.make(false);
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.log(Str.repeat(100 * 1024)("a"));
+        streamConsole.log("later one");
+        streamConsole.log("later two");
+        streamConsole.error("stderr survives");
+        drainProcessStreams((value) => {
+          MutableRef.set(drained, true);
+          MutableRef.set(failure, value);
+        });
+        expect(MutableRef.get(drained)).toBe(true);
+      },
+      {
+        stdoutWrite: () => {
+          throw new Error("boom");
+        },
+      }
+    );
+    expect(stdout).toHaveLength(1);
+    expect(new TextEncoder().encode(O.getOrThrow(A.head(stdout))).byteLength).toBeLessThanOrEqual(8192);
+    expect(stderr).toEqual([
+      "[beep-cli] stdout write failed: boom; later stdout lines are dropped\n",
+      "stderr survives\n",
+    ]);
+    expect(O.isSome(MutableRef.get(failure))).toBe(true);
+    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+      StreamWriteFailure.make({
+        stream: "stdout",
+        message: "boom",
+        droppedLines: 3,
+      })
+    );
+  });
+
+  it("ignores a double completion callback", () => {
+    const continuations = MutableRef.make(0);
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.log("first");
+        streamConsole.log("second");
+        streamConsole.log("third");
+        drainProcessStreams((failure) => {
+          MutableRef.incrementAndGet(continuations);
+          expect(O.isNone(failure)).toBe(true);
+        });
+      },
+      {
+        stdoutWrite: (_chunk, callback) => {
+          callback();
+          callback();
+          return true;
+        },
+      }
+    );
+    expect(stdout).toEqual(["first\n", "second\n", "third\n"]);
+    expect(stderr).toEqual([]);
+    expect(MutableRef.get(continuations)).toBe(1);
+  });
+
+  it("waits for a pending callback instead of timing out", () => {
+    const callback = MutableRef.make<O.Option<WriteCallback>>(O.none());
+    const drained = MutableRef.make(false);
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.log("pending");
+        drainProcessStreams((failure) => {
+          MutableRef.set(drained, true);
+          expect(O.isNone(failure)).toBe(true);
+        });
+        expect(MutableRef.get(drained)).toBe(false);
+        O.getOrThrow(MutableRef.get(callback))();
+        expect(MutableRef.get(drained)).toBe(true);
+      },
+      {
+        stdoutWrite: (_chunk, onWritten) => {
+          MutableRef.set(callback, O.some(onWritten));
+          return false;
+        },
+      }
+    );
+    expect(stdout).toEqual(["pending\n"]);
+    expect(stderr).toEqual([]);
+  });
+
   it("routes log-like calls to stdout and error-like calls to stderr as single lines", () => {
     const { stdout, stderr } = captureStreams(() => {
       streamConsole.log("hello", 1, { a: [1, 2] });
@@ -116,7 +255,7 @@ describe("stream console", () => {
   it("waits for the tracked writes to complete before continuing", () => {
     const callbacks: Array<() => void> = [];
     const originalOut = process.stdout.write;
-    process.stdout.write = ((_chunk: string | Uint8Array, callback?: () => void) => {
+    process.stdout.write = ((_chunk: string | Uint8Array, callback?: WriteCallback) => {
       if (callback !== undefined) {
         callbacks.push(callback);
       }
@@ -148,7 +287,7 @@ describe("stream console", () => {
     const callbacks: Array<() => void> = [];
     const originalOut = process.stdout.write;
     const originalErr = process.stderr.write;
-    const queueWrite = ((_chunk: string | Uint8Array, callback?: () => void) => {
+    const queueWrite = ((_chunk: string | Uint8Array, callback?: WriteCallback) => {
       if (callback !== undefined) {
         callbacks.push(callback);
       }
@@ -187,7 +326,7 @@ describe("stream console", () => {
     expect(encoder.encode(line).byteLength).toBe(100 * 1024);
     const expected = encoder.encode(`${line}\nFOOTER\n`);
     const originalOut = process.stdout.write;
-    process.stdout.write = ((chunk: string | Uint8Array, callback?: () => void) => {
+    process.stdout.write = ((chunk: string | Uint8Array, callback?: WriteCallback) => {
       chunks.push(P.isString(chunk) ? encoder.encode(chunk) : chunk);
       if (callback !== undefined) {
         callbacks.push(callback);

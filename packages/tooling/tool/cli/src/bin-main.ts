@@ -90,7 +90,7 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
-const { Cause, Console, Effect, Exit, Layer, Runtime } = await import("effect");
+const { Cause, Console, Effect, Exit, Layer, Option, Runtime } = await import("effect");
 const { drainProcessStreams, streamConsole } = await import("./internal/cli/Stdout.ts");
 const O = await import("effect/Option");
 const P = await import("effect/Predicate");
@@ -180,7 +180,13 @@ const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
       restoreSharedTerminal();
       Runtime.defaultTeardown(exit, (code) => {
         // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
-        drainProcessStreams(() => {
+        drainProcessStreams((failure) => {
+          if (Option.isSome(failure)) {
+            const { stream, message, droppedLines } = failure.value;
+            process.stderr.write(
+              `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
+            );
+          }
           onExit(code);
           process.exit(code);
         });

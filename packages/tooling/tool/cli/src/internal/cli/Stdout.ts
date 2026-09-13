@@ -4,16 +4,79 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { A, P } from "@beep/utils";
 import { toStringUnknown } from "effect/Inspectable";
 import * as MutableRef from "effect/MutableRef";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type * as Console from "effect/Console";
+
+const $I = $RepoCliId.create("internal/cli/Stdout");
+
+/**
+ * Identifies the independent process output FIFOs.
+ *
+ * **Example** (Identify stdout)
+ *
+ * ```ts
+ * import { ProcessStreamName } from "@beep/repo-cli/test/Cli"
+ *
+ * console.log(ProcessStreamName.is.stdout("stdout")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProcessStreamName = LiteralKit(["stdout", "stderr"]).pipe(
+  $I.annoteSchema("ProcessStreamName", { description: "Process output stream owning an independent line FIFO." })
+);
+
+/**
+ * A process output stream name.
+ *
+ * **Example** (Choose an output stream)
+ *
+ * ```ts
+ * import type { ProcessStreamName } from "@beep/repo-cli/test/Cli"
+ *
+ * const stream: ProcessStreamName = "stdout"
+ * console.log(stream)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProcessStreamName = typeof ProcessStreamName.Type;
+
+/**
+ * Records the first write error on a stream and the number of abandoned lines, including the aborted line.
+ *
+ * **Example** (Describe a lost line)
+ *
+ * ```ts
+ * import { StreamWriteFailure } from "@beep/repo-cli/test/Cli"
+ *
+ * const failure = StreamWriteFailure.make({ stream: "stdout", message: "EPIPE", droppedLines: 1 })
+ * console.log(failure.droppedLines) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class StreamWriteFailure extends S.Class<StreamWriteFailure>($I`StreamWriteFailure`)(
+  { stream: ProcessStreamName, message: S.String, droppedLines: S.Natural },
+  $I.annote("StreamWriteFailure", { description: "First process stream write error and count of abandoned lines." })
+) {}
 
 const formatArgs = (args: ReadonlyArray<unknown>): string =>
   A.join(
     A.map(args, (arg) => (P.isString(arg) ? arg : toStringUnknown(arg))),
     " "
   );
+
+const causeMessage = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
 
 // Count queued lines, including the active line until its final chunk callback fires.
 const inflightWrites = MutableRef.make(0);
@@ -22,7 +85,8 @@ const utf8Encoder = new TextEncoder();
 const STREAM_CHUNK_SIZE_BYTES = 8 * 1024;
 
 const settleWrite = (): void => {
-  if (MutableRef.decrementAndGet(inflightWrites) > 0) {
+  MutableRef.update(inflightWrites, (n) => Math.max(0, n - 1));
+  if (MutableRef.get(inflightWrites) > 0) {
     return;
   }
   const waiters = MutableRef.get(drainWaiters);
@@ -32,8 +96,31 @@ const settleWrite = (): void => {
   }
 };
 
-const makeLineWriter = (stream: () => NodeJS.WriteStream) => {
+const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStream) => {
   const queue = MutableRef.make<ReadonlyArray<() => void>>(A.empty());
+  const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+  const failed = (): boolean => failure.pipe(MutableRef.get, O.isSome);
+  const dropLine = (): void => {
+    MutableRef.update(
+      failure,
+      O.map((value) =>
+        StreamWriteFailure.make({
+          ...value,
+          droppedLines: value.droppedLines + 1,
+        })
+      )
+    );
+  };
+  const recordFailure = (message: string): void => {
+    if (failed()) {
+      dropLine();
+      return;
+    }
+    MutableRef.set(failure, O.some(StreamWriteFailure.make({ stream: name, message, droppedLines: 1 })));
+    if (ProcessStreamName.is.stdout(name)) {
+      writeStderrLine([`[beep-cli] stdout write failed: ${message}; later stdout lines are dropped`]);
+    }
+  };
   const startNext = (): void => {
     A.match(MutableRef.get(queue), {
       onEmpty: () => undefined,
@@ -41,31 +128,107 @@ const makeLineWriter = (stream: () => NodeJS.WriteStream) => {
     });
   };
 
-  return (args: ReadonlyArray<unknown>): void => {
+  const write = (args: ReadonlyArray<unknown>): void => {
+    MutableRef.incrementAndGet(inflightWrites);
+    if (failed()) {
+      dropLine();
+      settleWrite();
+      return;
+    }
     const bytes = utf8Encoder.encode(`${formatArgs(args)}\n`);
     const offset = MutableRef.make(0);
-    const writeNext = (): void => {
+    const done = MutableRef.make(false);
+    const complete = (): void => {
+      if (MutableRef.get(done)) {
+        return;
+      }
+      MutableRef.set(done, true);
+      if (O.exists(A.head(MutableRef.get(queue)), (head) => head === writeNext)) {
+        MutableRef.update(queue, A.drop(1));
+      }
+      startNext();
+      settleWrite();
+    };
+    const fail = (message: string): void => {
+      recordFailure(message);
+      complete();
+    };
+    const writeNext = (error?: Error | null): void => {
+      if (MutableRef.get(done)) {
+        return;
+      }
+      const cause = O.fromNullishOr(error);
+      if (O.isSome(cause)) {
+        fail(cause.value.message);
+        return;
+      }
+      if (failed()) {
+        dropLine();
+        complete();
+        return;
+      }
       const start = MutableRef.get(offset);
       if (start >= bytes.byteLength) {
-        MutableRef.update(queue, A.drop(1));
-        startNext();
-        settleWrite();
+        complete();
         return;
       }
       MutableRef.set(offset, start + STREAM_CHUNK_SIZE_BYTES);
-      stream().write(bytes.subarray(start, start + STREAM_CHUNK_SIZE_BYTES), writeNext);
+      // Each chunk also owns its callback: duplicate callbacks must not advance a later chunk.
+      const called = MutableRef.make(false);
+      const onWritten = (error?: Error | null): void => {
+        if (MutableRef.get(called)) {
+          return;
+        }
+        MutableRef.set(called, true);
+        writeNext(error);
+      };
+      try {
+        stream().write(bytes.subarray(start, start + STREAM_CHUNK_SIZE_BYTES), onWritten);
+      } catch (cause) {
+        fail(causeMessage(cause));
+      }
     };
     const idle = A.isReadonlyArrayEmpty(MutableRef.get(queue));
-    MutableRef.incrementAndGet(inflightWrites);
     MutableRef.update(queue, A.append(writeNext));
     if (idle) {
       startNext();
     }
   };
+  return { write, failure };
 };
 
-const writeStdoutLine = makeLineWriter(() => process.stdout);
-const writeStderrLine = makeLineWriter(() => process.stderr);
+const stdoutWriter = makeLineWriter("stdout", () => process.stdout);
+const stderrWriter = makeLineWriter("stderr", () => process.stderr);
+const writeStdoutLine = stdoutWriter.write;
+const writeStderrLine = stderrWriter.write;
+const currentFailure = (): O.Option<StreamWriteFailure> =>
+  O.orElse(MutableRef.get(stdoutWriter.failure), () => MutableRef.get(stderrWriter.failure));
+
+/**
+ * Clears process stream failure records and their dropped-line counts between tests.
+ *
+ * **Gotchas**
+ *
+ * Call only when both queues and the in-flight counter are empty.
+ *
+ * **Example** (Reset after draining a test)
+ *
+ * ```ts
+ * import { drainProcessStreams, resetProcessStreamStateForTesting } from "@beep/repo-cli/test/Cli"
+ *
+ * drainProcessStreams(() => {
+ *   resetProcessStreamStateForTesting()
+ *   console.log("stream state reset")
+ * })
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const resetProcessStreamStateForTesting = (): void => {
+  MutableRef.set(stdoutWriter.failure, O.none());
+  MutableRef.set(stderrWriter.failure, O.none());
+};
 
 const noop = (): void => undefined;
 
@@ -77,8 +240,9 @@ const noop = (): void => undefined;
  * **Details**
  *
  * Each stream has a FIFO queue of UTF-8 lines. Writes contain at most 8 KiB of bytes; each
- * completion callback starts the next chunk, preserving order across log calls. Large single
- * writes can lose their tail under Bun on hosted runners, even when their callback is tracked.
+ * completion callback starts the next chunk, preserving order across log calls on the same stream;
+ * stdout and stderr are independent FIFOs. Large single writes can lose their tail under Bun on
+ * hosted runners, even when their callback is tracked.
  *
  * **Example** (Provide the stream console to a program)
  *
@@ -120,11 +284,17 @@ export const streamConsole: Console.Console = {
 };
 
 /**
- * Continue once every line written through the stream console has reached the kernel. Used
+ * Continue once every tracked line has reached the kernel or been abandoned after a write error. Used
  * before a forced process exit so a queued render is not dropped.
+ *
+ * **Details**
+ *
+ * Reports the first failure, preferring stdout when both streams fail, or `O.none()` on success.
  *
  * **Gotchas**
  *
+ * There is no watchdog or timeout: a slow pipe reader is legitimate backpressure, and the CLI
+ * must not truncate its own output on a timer. A missing callback therefore keeps the drain pending.
  * Only writes made through `streamConsole` are tracked; a raw `process.stdout.write` elsewhere
  * is not waited for. When nothing is in flight the continuation runs synchronously.
  *
@@ -140,10 +310,13 @@ export const streamConsole: Console.Console = {
  * @category services
  * @since 0.0.0
  */
-export const drainProcessStreams = (onDrained: () => void): void => {
+export const drainProcessStreams = (onDrained: (failure: O.Option<StreamWriteFailure>) => void): void => {
   if (MutableRef.get(inflightWrites) === 0) {
-    onDrained();
+    onDrained(currentFailure());
     return;
   }
-  MutableRef.update(drainWaiters, A.append(onDrained));
+  MutableRef.update(
+    drainWaiters,
+    A.append(() => onDrained(currentFailure()))
+  );
 };
