@@ -38,6 +38,8 @@ export default [
     ".grok/**",
     ".github/skills/impeccable/**",
     "infra/lambda/**/build/**",
+    // Generated subprocess fixtures are checked through their owning runtime tests.
+    "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**",
   ]),
   ...selectedESLintConfig,
 ];

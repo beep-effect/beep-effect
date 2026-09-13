@@ -1,17 +1,16 @@
 import { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-cli/test/Docgen";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtils, FsUtilsLive, findRepoRoot, readPackageJsonFile, resolveWorkspacePackages } from "@beep/repo-utils";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import { Console, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { resolveConfig } from "vitest/node";
+import type {} from "vitest/config";
 
-const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
 const fixture = new URL("./fixtures/doctest-lane/package/", import.meta.url).pathname;
 
 // These configs override test.include (coverage.include is a different selector).
@@ -58,7 +57,7 @@ const resolvedConfig = Effect.fn("DoctestTest.resolvedConfig")(function* (root: 
       import { resolveConfig } from "vitest/node";
       import { jsonStringifyPretty } from "@beep/repo-utils/JsonUtils";
       import { Effect } from "effect";
-      const { vitestConfig: c } = await resolveConfig({ root: process.argv[1], config: process.argv[1] + "/vitest.config.ts", watch: false });
+      const { test: c } = await resolveConfig({ root: process.argv[1], config: process.argv[1] + "/vitest.config.ts", watch: false });
       console.log(await Effect.runPromise(jsonStringifyPretty({
         pool: c.pool, include: c.include, includeSource: c.includeSource ?? [], exclude: c.exclude,
         passWithNoTests: c.passWithNoTests, setupFiles: c.setupFiles, globalSetup: c.globalSetup,
@@ -123,140 +122,148 @@ const expectSetupInputsCovered = Effect.fn("DoctestLaneTest.expectSetupInputsCov
   }
 });
 
-describe("doctest lane fixture", { concurrent: false }, () => {
-  it("admits only workspace source files under src, in either TypeScript flavour", () => {
-    expect(isDoctestSourcePath("packages/example/src/index.ts")).toBe(true);
-    expect(isDoctestSourcePath("apps/example/src/App.tsx")).toBe(true);
-    expect(isDoctestSourcePath("packages/example/src/index.d.ts")).toBe(false);
-    expect(isDoctestSourcePath("packages/example/src/index.js")).toBe(false);
-    expect(isDoctestSourcePath("scripts/src/index.ts")).toBe(false);
-    expect(isDoctestSourcePath("packages/example/test/index.ts")).toBe(false);
-    expect(isDoctestSourcePath("packages/example/src/test/fixtures/index.ts")).toBe(false);
-    expect(isDoctestSourcePath("packages/example/src/node_modules/dep/index.ts")).toBe(false);
-    expect(isDoctestSourcePath("packages/example/src/.context/index.ts")).toBe(false);
-  });
+it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { concurrent: false, timeout: "10 seconds" })(
+  "doctest lane fixture",
+  (it) => {
+    it("admits only workspace source files under src, in either TypeScript flavour", () => {
+      expect(isDoctestSourcePath("packages/example/src/index.ts")).toBe(true);
+      expect(isDoctestSourcePath("apps/example/src/App.tsx")).toBe(true);
+      expect(isDoctestSourcePath("packages/example/src/index.d.ts")).toBe(false);
+      expect(isDoctestSourcePath("packages/example/src/index.js")).toBe(false);
+      expect(isDoctestSourcePath("scripts/src/index.ts")).toBe(false);
+      expect(isDoctestSourcePath("packages/example/test/index.ts")).toBe(false);
+      expect(isDoctestSourcePath("packages/example/src/test/fixtures/index.ts")).toBe(false);
+      expect(isDoctestSourcePath("packages/example/src/node_modules/dep/index.ts")).toBe(false);
+      expect(isDoctestSourcePath("packages/example/src/.context/index.ts")).toBe(false);
+    });
 
-  it.effect(
-    "resolves every owner to non-empty in-source discovery and hashes its setup files",
-    Effect.fnUntraced(function* () {
-      const root = yield* findRepoRoot();
-      const fs = yield* FileSystem.FileSystem;
-      const fsUtils = yield* FsUtils;
-      const path = yield* Path.Path;
-      const workspaces = yield* resolveWorkspacePackages(root);
-      let owners = 0;
-      for (const [name, workspace] of workspaces) {
-        const dir = workspace.dir;
-        const manifest = yield* readPackageJsonFile(path.join(dir, "package.json"));
-        const scripts: Readonly<Record<string, string>> = O.getOrElse(manifest.scripts, () => ({}));
-        if (!isDoctestOwner(scripts)) continue;
-        owners++;
-        const config = yield* resolvedConfig(dir, true);
-        expect(config.include, name).toEqual([]);
-        expect(config.includeSource, name).toEqual(["src/**/*.{ts,tsx}"]);
-        expect(config.passWithNoTests, name).toBe(false);
-        expect(config.pool, name).toBe("forks");
-        // Package configs merge after the shared one; a literal testTimeout there would clamp
-        // doctest mode back to the focused value (Greptile, PR #1102).
-        expect(config.testTimeout, name).toBe(120_000);
-        expect(scripts["beep:doctest"], name).toBe("BEEP_VITEST_DOCTEST=1 bunx vitest run");
-        const sources = yield* fsUtils.globFiles(config.includeSource ?? [], { cwd: dir, ignore: config.exclude });
-        const marked = yield* Effect.filter(sources, (file) =>
-          fs.readFileString(path.join(dir, file)).pipe(Effect.map(Str.includes("import.meta.vitest")))
+    it.effect(
+      "resolves every owner to non-empty in-source discovery and hashes its setup files",
+      Effect.fnUntraced(function* () {
+        const root = yield* findRepoRoot();
+        const fs = yield* FileSystem.FileSystem;
+        const fsUtils = yield* FsUtils;
+        const path = yield* Path.Path;
+        const workspaces = yield* resolveWorkspacePackages(root);
+        let owners = 0;
+        for (const [name, workspace] of workspaces) {
+          const dir = workspace.dir;
+          const manifest = yield* readPackageJsonFile(path.join(dir, "package.json"));
+          const scripts: Readonly<Record<string, string>> = O.getOrElse(manifest.scripts, () => ({}));
+          if (!isDoctestOwner(scripts)) continue;
+          owners++;
+          const config = yield* resolvedConfig(dir, true);
+          expect(config.include, name).toEqual([]);
+          expect(config.includeSource, name).toEqual(["src/**/*.{ts,tsx}"]);
+          expect(config.passWithNoTests, name).toBe(false);
+          expect(config.pool, name).toBe("forks");
+          // Package configs merge after the shared one; a literal testTimeout there would clamp
+          // doctest mode back to the focused value (Greptile, PR #1102).
+          expect(config.testTimeout, name).toBe(120_000);
+          expect(scripts["beep:doctest"], name).toBe("BEEP_VITEST_DOCTEST=1 bunx vitest run");
+          const sources = yield* fsUtils.globFiles(config.includeSource ?? [], { cwd: dir, ignore: config.exclude });
+          const marked = yield* Effect.filter(sources, (file) =>
+            fs.readFileString(path.join(dir, file)).pipe(Effect.map(Str.includes("import.meta.vitest")))
+          );
+          expect(marked.length, name).toBeGreaterThan(0);
+          yield* expectMarkedFencesOnly(dir, name);
+          yield* expectSetupInputsCovered(root, dir, name, [...config.setupFiles, ...config.globalSetup]);
+        }
+        yield* Console.log(
+          `doctest discovery: ${owners} owners with non-empty source discovery and covered setup files`
         );
-        expect(marked.length, name).toBeGreaterThan(0);
-        yield* expectMarkedFencesOnly(dir, name);
-        yield* expectSetupInputsCovered(root, dir, name, [...config.setupFiles, ...config.globalSetup]);
-      }
-      yield* Console.log(`doctest discovery: ${owners} owners with non-empty source discovery and covered setup files`);
-      expect(owners).toBeGreaterThan(0);
-      expect(HashMap.has(workspaces, "@beep/storybook")).toBe(true);
-    }, providePlatform),
-    { timeout: 180_000 }
-  );
+        expect(owners).toBeGreaterThan(0);
+        expect(HashMap.has(workspaces, "@beep/storybook")).toBe(true);
+      }),
+      { timeout: 180_000 }
+    );
 
-  it.effect(
-    "selects a marked fence but not a runtime-composed template in-process",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const fsUtils = yield* FsUtils;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "doctest-marker-parity-" });
-      yield* fs.makeDirectory(path.join(root, "src"));
-      yield* fs.writeFileString(path.join(root, "src/template.ts"), 'export const marker = "import.meta." + "vitest";');
-      yield* fs.writeFileString(
-        path.join(root, "src/marked.ts"),
-        [
-          "/**",
-          " * **Example** (Add numbers)",
-          ` * \`\`\`${doctestFenceInfo("Add numbers")}`,
-          " * 1 + 1 // => 2",
-          " * ```",
-          " */",
-          "export const sum = 2;",
-        ].join("\n")
-      );
-      const { vitestConfig: config } = yield* Effect.promise(() =>
-        resolveConfig({
-          root,
-          config: false,
-          watch: false,
-          include: [],
-          includeSource: ["src/**/*.{ts,tsx}"],
-          passWithNoTests: false,
-        })
-      );
-      const sources = yield* fsUtils.globFiles(config.includeSource ?? [], { cwd: root, ignore: config.exclude });
-      expect(sources).toContain("src/template.ts");
-      expect(sources).toContain("src/marked.ts");
-      const selected = yield* Effect.filter(sources, (file) =>
-        fs.readFileString(path.join(root, file)).pipe(Effect.map(Str.includes("import.meta.vitest")))
-      );
-      expect(selected).toEqual(["src/marked.ts"]);
-      expect(doctestSourceMarker).toBe("import.meta.vitest");
-      expect(doctestFenceInfo("Add numbers")).toBe('ts import.meta.vitest name="Add numbers"');
-    }, providePlatform)
-  );
-
-  it.effect(
-    "keeps ordinary includes and suppresses every inheriting override in doctest mode",
-    Effect.fnUntraced(function* () {
-      const root = yield* findRepoRoot();
-      for (const active of [false, true]) {
-        yield* Effect.forEach(
-          includeOverrides,
-          Effect.fnUntraced(function* (dir) {
-            const config = yield* resolvedConfig(`${root}/${dir}`, active);
-            expect(config.include.length === 0, `${dir}: mode=${active}`).toBe(active);
-            expect(config.passWithNoTests, dir).toBe(!active);
-            expect(config.includeSource, dir).toEqual(active ? ["src/**/*.{ts,tsx}"] : []);
-          }),
-          { concurrency: 1 }
+    it.effect(
+      "selects a marked fence but not a runtime-composed template in-process",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const fsUtils = yield* FsUtils;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "doctest-marker-parity-" });
+        yield* fs.makeDirectory(path.join(root, "src"));
+        yield* fs.writeFileString(
+          path.join(root, "src/template.ts"),
+          'export const marker = "import.meta." + "vitest";'
         );
-      }
-    }, providePlatform),
-    { timeout: 120_000 }
-  );
+        yield* fs.writeFileString(
+          path.join(root, "src/marked.ts"),
+          [
+            "/**",
+            " * **Example** (Add numbers)",
+            ` * \`\`\`${doctestFenceInfo("Add numbers")}`,
+            " * 1 + 1 // => 2",
+            " * ```",
+            " */",
+            "export const sum = 2;",
+          ].join("\n")
+        );
+        const { test: config } = yield* Effect.promise(() =>
+          resolveConfig({
+            root,
+            config: false,
+            watch: false,
+            include: [],
+            includeSource: ["src/**/*.{ts,tsx}"],
+            passWithNoTests: false,
+          })
+        );
+        const sources = yield* fsUtils.globFiles(config.includeSource ?? [], { cwd: root, ignore: config.exclude });
+        expect(sources).toContain("src/template.ts");
+        expect(sources).toContain("src/marked.ts");
+        const selected = yield* Effect.filter(sources, (file) =>
+          fs.readFileString(path.join(root, file)).pipe(Effect.map(Str.includes("import.meta.vitest")))
+        );
+        expect(selected).toEqual(["src/marked.ts"]);
+        expect(doctestSourceMarker).toBe("import.meta.vitest");
+        expect(doctestFenceInfo("Add numbers")).toBe('ts import.meta.vitest name="Add numbers"');
+      })
+    );
 
-  it.effect(
-    "runs the package script through the shared doctest mode",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "doctest-lane-" });
-      const resultPath = `${temp}/result.json`;
-      const child = yield* StepExec.runCaptured({
-        command: "bun",
-        args: ["run", "doctest", "--maxWorkers=1", "--reporter=json", `--outputFile=${resultPath}`],
-        cwd: fixture,
-        env: { BEEP_VITEST_DOCTEST: "1", VITEST: "", VITEST_MODE: "", VITEST_POOL_ID: "", VITEST_WORKER_ID: "" },
-        extendEnv: true,
-        timeout: "60 seconds",
-      });
-      expect(child.exitCode, child.output).toBe(0);
-      const result = yield* fs.readFileString(resultPath);
-      expect(result).toContain('"numPassedTestSuites":2');
-      expect(result).toContain('"numPassedTests":2');
-    }, providePlatform),
-    { timeout: 90_000 }
-  );
-});
+    it.effect(
+      "keeps ordinary includes and suppresses every inheriting override in doctest mode",
+      Effect.fnUntraced(function* () {
+        const root = yield* findRepoRoot();
+        for (const active of [false, true]) {
+          yield* Effect.forEach(
+            includeOverrides,
+            Effect.fnUntraced(function* (dir) {
+              const config = yield* resolvedConfig(`${root}/${dir}`, active);
+              expect(config.include.length === 0, `${dir}: mode=${active}`).toBe(active);
+              expect(config.passWithNoTests, dir).toBe(!active);
+              expect(config.includeSource, dir).toEqual(active ? ["src/**/*.{ts,tsx}"] : []);
+            }),
+            { concurrency: 1 }
+          );
+        }
+      }),
+      { timeout: 120_000 }
+    );
+
+    it.effect(
+      "runs the package script through the shared doctest mode",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const temp = yield* fs.makeTempDirectoryScoped({ prefix: "doctest-lane-" });
+        const resultPath = `${temp}/result.json`;
+        const child = yield* StepExec.runCaptured({
+          command: "bun",
+          args: ["run", "doctest", "--maxWorkers=1", "--reporter=json", `--outputFile=${resultPath}`],
+          cwd: fixture,
+          env: { BEEP_VITEST_DOCTEST: "1", VITEST: "", VITEST_MODE: "", VITEST_POOL_ID: "", VITEST_WORKER_ID: "" },
+          extendEnv: true,
+          timeout: "60 seconds",
+        });
+        expect(child.exitCode, child.output).toBe(0);
+        const result = yield* fs.readFileString(resultPath);
+        expect(result).toContain('"numPassedTestSuites":2');
+        expect(result).toContain('"numPassedTests":2');
+      }),
+      { timeout: 90_000 }
+    );
+  }
+);

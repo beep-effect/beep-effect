@@ -21,6 +21,8 @@ export default mergeConfig(
   defineConfig({
     test: {
       coverage: coverageThresholds,
+      // Runtime fixture subprocesses opt in with an explicit instrumentation mode.
+      exclude: process.env.BEEP_INSTRUMENTED_IT_FIXTURE ? [] : ["test/fixtures/**"],
       globals: true,
       // This package owns the shared PGLite integration harness. The CI server
       // is single-connection, so package files cannot run concurrently when the
