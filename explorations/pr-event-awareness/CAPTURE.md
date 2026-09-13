@@ -155,3 +155,18 @@ and a session-manager `send_message` that reaches an idle session.
   quota; Fable stays the judge.
 - CLIProxyAPI's real role, if any: none in the relay; possibly the model for
   a headless fixer lane.
+
+## 2026-09-12 (later) — correction from PR #1135 review round 1
+
+The inventory above overstates ship-velocity A4. Operator PR #921
+(2026-08-30, recorded in `goals/ship-velocity` SPEC "Operator supersession")
+retired the published-PR ownership lease, its watcher, the automatic
+dead-owner takeover, and the mutation fence, keeping P0 inbox delivery and
+the hard Stop gate. Live Yeet has no PR-ownership takeover path; the A4 prose
+in `Remediation.ts` is historical narration, not a brick. Read "A1–A4",
+"A4 leases", "`yeet resume` and A4 takeover exist", and "A4 warm fixer" above
+as: A1 streaming watch + remediate, A2 hook-mutex + ACK inbox, and A3 Stop
+gate are live; the resume footer and PR session registry are live; the
+dead-owner fallthrough is `yeet resume` or manual reconstitution from the
+footer only, and any automatic takeover would be reversing an explicit
+operator fence, which is a decision for align, not settled doctrine.

@@ -28,7 +28,7 @@ unless stated; package `@beep/repo-cli`. Verified 2026-09-12.
 |-------|------|----------------------|-------------|
 | `YeetWatchEvent` | `WatchStream.ts` | typed PR transition union (check, thread, mergeability, head, comment) | reuse |
 | `runYeetWatchStream` | `WatchMode.ts` | 10 s poll, NDJSON transitions, inbox convergence | extend (push source) |
-| wave record | `Remediation.ts` | per-head coalescing of check reds; supersede on push | extend (threads, conflicts, lane dispatch) |
+| wave record | `Remediation.ts` | per-head coalescing of check reds; supersede on push (its A4 lease prose is historical) | extend (threads, conflicts, lane dispatch) |
 | `YeetInboxRow` | `Inbox.ts` | P0/P1 checkout inbox rows with deterministic ids | extend |
 | comment watermarks | `MonitorComments.ts` | REST comment polling cursors | reuse |
 | flake fingerprints | `MonitorLoop.ts` | one rerun per job per head; attribution before dispatch | reuse |
@@ -42,9 +42,12 @@ unless stated; package `@beep/repo-cli`. Verified 2026-09-12.
 
 ## 5. Cross-links & provenance
 
-- [`goals/ship-velocity`](../../../goals/ship-velocity/README.md) — A1
-  streaming watch + remediate, A2 hook-mutex + ACK inbox, A3 Stop gate, A4
-  dead-owner takeover + warm fixer, A7 monitor hardening (completed-retained).
+- [`goals/ship-velocity`](../../../goals/ship-velocity/README.md) — live:
+  A1 streaming watch + remediate, A2 hook-mutex + ACK inbox, A3 Stop gate,
+  A7 monitor hardening (completed-retained). Retired: A4 dead-owner takeover
+  + warm fixer, removed by operator PR #921 (2026-08-30) together with the
+  published-PR lease, watcher, and mutation fence; only stale `Remediation.ts`
+  comments still narrate it.
 - [`goals/yeet-pr-resume-footer`](../../../goals/yeet-pr-resume-footer/README.md)
   — the resume footer, session registry, and `yeet resume` (completed-retained;
   PR 2 surfaces still listed in its PLAN).
